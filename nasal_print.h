@@ -5,6 +5,7 @@
 #include<cstring>
 #include "nasal_hash.h"
 #include "nasal_list.h"
+
 namespace nasal
 {
 	
@@ -27,6 +28,14 @@ void PrintVar(char Var)
 void PrintVar(long long int Var)
 {
 	std::cout<<Var;
+}
+void PrintVar(NasalHash &Var)
+{
+	Var.PrintHash();
+}
+void PrintVar(NasalList &Var)
+{
+	Var.PrintList();
 }
 
 
@@ -64,7 +73,7 @@ void PrintString(std::string &PrintInfo)
 					break;
 				default:
 					//error occurred
-					std::cout<<std::endl<<"[Error]: Incorrect escape character \'"<<PrintInfo[i]<<PrintInfo[i+1]<<"\' .";
+					std::cout<<"[Error]: Incorrect escape character \'"<<PrintInfo[i]<<PrintInfo[i+1]<<"\' .";
 					++i;
 					break;
 			}
@@ -72,7 +81,7 @@ void PrintString(std::string &PrintInfo)
 		else if(PrintInfo[i]=='\\' && i+1>=(int)PrintInfo.length())
 		{
 			//error occurred
-			std::cout<<std::endl<<"[Error]: Missing character after \'\\\'";
+			std::cout<<"[Error]: Missing character after \'\\\'";
 		}
 		else
 			std::cout<<PrintInfo[i];
@@ -114,7 +123,7 @@ void PrintString(const char *PrintInfo)
 					break;
 				default:
 					//error occurred
-					std::cout<<std::endl<<"[Error]: Incorrect escape character \'"<<PrintInfo[i]<<PrintInfo[i+1]<<"\' .";
+					std::cout<<"[Error]: Incorrect escape character \'"<<PrintInfo[i]<<PrintInfo[i+1]<<"\' ."<<std::endl;
 					++i;
 					break;
 			}
@@ -122,7 +131,7 @@ void PrintString(const char *PrintInfo)
 		else if(PrintInfo[i]=='\\' && i+1>=strlen(PrintInfo))
 		{
 			//error occurred
-			std::cout<<std::endl<<"[Error]: Missing character after \'\\\'";
+			std::cout<<"[Error]: Missing character after \'\\\'"<<std::endl;
 		}
 		else
 			std::cout<<PrintInfo[i];
