@@ -3,8 +3,8 @@
 
 #include<iostream>
 #include<cstring>
-#include "nasal_hash.h"
-#include "nasal_list.h"
+#include "nasal_hash.cpp"
+#include "nasal_list.cpp"
 
 namespace nasal
 {
