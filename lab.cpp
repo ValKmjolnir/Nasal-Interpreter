@@ -72,6 +72,45 @@ int main()
 	qthash.Append("int",&a,"int");
 	qt.Append(&qthash,"hash");
 	qt.PrintList();
+	std::cout<<std::endl;
+	
+	NasalList _l;
+	_l.Append(&a,"int");
+	_l.SetSize(10);
+	_l.PrintList();
+	std::cout<<std::endl;
+	_l.SetSize(3);
+	_l.PrintList();
+	std::cout<<std::endl;
+	
+	_l.SetSize(0);
+	_l.PrintList();
+	std::cout<<std::endl;
+	_l.Append(&a,"int");
+	_l.Append(&a,"int");
+	_l.Append(&a,"int");
+	_l.Append(&a,"int");
+	_l.Append(&a,"int");
+	_l.Append(&a,"int");
+	NasalList _k;
+	_l.PrintList();
+	std::cout<<std::endl;
+	_k=_l.SubVec(9,4);
+	_k.PrintList();
+	std::cout<<std::endl;
+	_k=_l.SubVec(1,10);
+	_k.PrintList();
+	std::cout<<std::endl;
+	
+	NasalList _m;
+	var _temp=_k.Pop();
+	_m.Append(&_temp,"var");
+	_k.PrintList();
+	std::cout<<std::endl;
+	_m.PrintList();
+	std::cout<<std::endl;
+	qthash.Append("var",&_temp,"var");
+	qthash.PrintHash();
 	
 	return 0;
 }

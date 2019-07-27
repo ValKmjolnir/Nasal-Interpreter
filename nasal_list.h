@@ -7,6 +7,11 @@
 
 namespace nasal
 {
+#ifndef nil
+#define nil -1
+#endif
+
+class var;
 
 struct ListUnit
 {
@@ -25,7 +30,24 @@ class NasalList
 		~NasalList();
 		void PrintList();
 		void Append(void *,const char *);
+		void Append(void *,std::string &);
 		NasalList& operator=(const NasalList &);
+		void SetSize(const int);
+		NasalList SubVec(const int,const int);
+		var Pop();
+		void Sort(bool,bool);
+};
+
+class var
+{
+	public:
+		std::string Type;
+		void *data;
+		var()
+		{
+			data=NULL;
+		}
+		~var();
 };
 
 }
