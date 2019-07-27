@@ -12,6 +12,7 @@ NasalHash::NasalHash()
 	head->data=NULL;
 	head->next=NULL;
 }
+
 NasalHash::NasalHash(NasalHash &Source)
 {
 	HashUnit *temp;
@@ -34,37 +35,37 @@ NasalHash::NasalHash(NasalHash &Source)
 			temp->data=new int;
 			*((int *)temp->data)=*((int *)SourceTemp->data);
 		}
-		if(temp->Type=="float")
+		else if(temp->Type=="float")
 		{
 			temp->data=new float;
 			*((float *)temp->data)=*((float *)SourceTemp->data);
 		}
-		if(temp->Type=="double")
+		else if(temp->Type=="double")
 		{
 			temp->data=new double;
 			*((double *)temp->data)=*((double *)SourceTemp->data);
 		}
-		if(temp->Type=="char")
+		else if(temp->Type=="char")
 		{
 			temp->data=new char;
 			*((char *)temp->data)=*((char *)SourceTemp->data);
 		}
-		if(temp->Type=="long long int")
+		else if(temp->Type=="long long int")
 		{
 			temp->data=new long long int;
 			*((long long int *)temp->data)=*((long long int *)SourceTemp->data);
 		}
-		if(temp->Type=="string")
+		else if(temp->Type=="string")
 		{
 			temp->data=new std::string;
 			*((std::string *)temp->data)=*((std::string *)SourceTemp->data);
 		}
-		if(temp->Type=="array")
+		else if(temp->Type=="array")
 		{
 			temp->data=new NasalList;
 			*((NasalList *)temp->data)=*((NasalList *)SourceTemp->data);
 		}
-		if(temp->Type=="hash")
+		else if(temp->Type=="hash")
 		{
 			temp->data=new NasalHash;
 			*((NasalHash *)temp->data)=*((NasalHash *)SourceTemp->data);
@@ -72,6 +73,7 @@ NasalHash::NasalHash(NasalHash &Source)
 		temp->next=NULL;
 	}
 }
+
 NasalHash::~NasalHash()
 {
 	HashUnit *temp=head;
@@ -82,19 +84,19 @@ NasalHash::~NasalHash()
 		{
 			if(temp->Type=="int")
 				delete (int *)temp->data;
-			if(temp->Type=="float")
+			else if(temp->Type=="float")
 				delete (float *)temp->data;
-			if(temp->Type=="double")
+			else if(temp->Type=="double")
 				delete (double *)temp->data;
-			if(temp->Type=="char")
+			else if(temp->Type=="char")
 				delete (char *)temp->data;
-			if(temp->Type=="long long int")
+			else if(temp->Type=="long long int")
 				delete (long long int *)temp->data;
-			if(temp->Type=="string")
+			else if(temp->Type=="string")
 				delete (std::string *)temp->data;
-			if(temp->Type=="array")
+			else if(temp->Type=="array")
 				delete (NasalList *)temp->data;
-			if(temp->Type=="hash")
+			else if(temp->Type=="hash")
 				delete (NasalHash *)temp->data;
 		}
 		delete temp;
@@ -104,23 +106,24 @@ NasalHash::~NasalHash()
 	{
 		if(temp->Type=="int")
 			delete (int *)temp->data;
-		if(temp->Type=="float")
+		else if(temp->Type=="float")
 			delete (float *)temp->data;
-		if(temp->Type=="double")
+		else if(temp->Type=="double")
 			delete (double *)temp->data;
-		if(temp->Type=="char")
+		else if(temp->Type=="char")
 			delete (char *)temp->data;
-		if(temp->Type=="long long int")
+		else if(temp->Type=="long long int")
 			delete (long long int *)temp->data;
-		if(temp->Type=="string")
+		else if(temp->Type=="string")
 			delete (std::string *)temp->data;
-		if(temp->Type=="array")
+		else if(temp->Type=="array")
 			delete (NasalList *)temp->data;
-		if(temp->Type=="hash")
+		else if(temp->Type=="hash")
 			delete (NasalHash *)temp->data;
 	}
 	delete temp;
 }
+
 void NasalHash::PrintHash()
 {
 	HashUnit *temp=head;
@@ -133,22 +136,22 @@ void NasalHash::PrintHash()
 		{
 			if(temp->Type=="int")
 				std::cout<<*((int *)temp->data)<<", ";
-			if(temp->Type=="float")
+			else if(temp->Type=="float")
 				std::cout<<*((float *)temp->data)<<", ";
-			if(temp->Type=="double")
+			else if(temp->Type=="double")
 				std::cout<<*((double *)temp->data)<<", ";
-			if(temp->Type=="char")
+			else if(temp->Type=="char")
 				std::cout<<"\""<<*((char *)temp->data)<<"\", ";
-			if(temp->Type=="long long int")
+			else if(temp->Type=="long long int")
 				std::cout<<*((long long int *)temp->data)<<", ";
-			if(temp->Type=="string")
+			else if(temp->Type=="string")
 				std::cout<<"\""<<*((std::string *)temp->data)<<"\", ";
-			if(temp->Type=="array")
+			else if(temp->Type=="array")
 			{
 				((NasalList *)temp->data)->PrintList();
 				std::cout<<", ";
 			}
-			if(temp->Type=="hash")
+			else if(temp->Type=="hash")
 			{
 				((NasalHash *)temp->data)->PrintHash();
 				std::cout<<", ";
@@ -158,24 +161,25 @@ void NasalHash::PrintHash()
 		{
 			if(temp->Type=="int")
 				std::cout<<*((int *)temp->data);
-			if(temp->Type=="float")
+			else if(temp->Type=="float")
 				std::cout<<*((float *)temp->data);
-			if(temp->Type=="double")
+			else if(temp->Type=="double")
 				std::cout<<*((double *)temp->data);
-			if(temp->Type=="char")
+			else if(temp->Type=="char")
 				std::cout<<"\""<<*((char *)temp->data)<<"\"";
-			if(temp->Type=="long long int")
+			else if(temp->Type=="long long int")
 				std::cout<<*((long long int *)temp->data);
-			if(temp->Type=="string")
+			else if(temp->Type=="string")
 				std::cout<<"\""<<*((std::string *)temp->data)<<"\"";
-			if(temp->Type=="array")
+			else if(temp->Type=="array")
 				((NasalList *)temp->data)->PrintList();
-			if(temp->Type=="hash")
+			else if(temp->Type=="hash")
 				((NasalHash *)temp->data)->PrintHash();
 		}
 	}
 	std::cout<<"}";
 }
+
 void NasalHash::Append(const char *VariaName,void *AppendData,const char *TypeName)
 {
 	NasalHash TempHash;//sometimes user may use n.append(n)
@@ -231,6 +235,50 @@ void NasalHash::Append(const char *VariaName,void *AppendData,const char *TypeNa
 		NewHashMember->data=new NasalHash;
 		*((NasalHash *)NewHashMember->data)=TempHash;
 	}
+	else if(TypeName=="var")
+	{
+		NewHashMember->Type=(*(var *)AppendData).Type;
+		if((*(var *)AppendData).Type=="int")
+		{
+			NewHashMember->data=new int;
+			*((int *)NewHashMember->data)=*((int *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="float")
+		{
+			NewHashMember->data=new float;
+			*((float *)NewHashMember->data)=*((float *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="double")
+		{
+			NewHashMember->data=new double;
+			*((double *)NewHashMember->data)=*((double *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="char")
+		{
+			NewHashMember->data=new char;
+			*((char *)NewHashMember->data)=*((char *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="long long int")
+		{
+			NewHashMember->data=new long long int;
+			*((long long int *)NewHashMember->data)=*((long long int *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="string")
+		{
+			NewHashMember->data=new std::string;
+			*((std::string *)NewHashMember->data)=*((std::string *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="array")
+		{
+			NewHashMember->data=new NasalList;
+			*((NasalList *)NewHashMember->data)=*((NasalList *)(*(var *)AppendData).data);
+		}
+		else if((*(var *)AppendData).Type=="hash")
+		{
+			NewHashMember->data=new NasalHash;
+			*((NasalHash *)NewHashMember->data)=*((NasalHash *)(*(var *)AppendData).data);
+		}
+	}
 	NewHashMember->next=NULL;
 }
 int NasalHash::Contains(const char *VariaName)
@@ -244,6 +292,7 @@ int NasalHash::Contains(const char *VariaName)
 	}
 	return 0;
 }
+
 NasalList NasalHash::Keys()
 {
 	NasalList FeedBackList;
@@ -255,6 +304,7 @@ NasalList NasalHash::Keys()
 	}
 	return FeedBackList;
 }
+
 void NasalHash::Delete(const char *VariaName)
 {
 	HashUnit *temp=head;
@@ -268,19 +318,19 @@ void NasalHash::Delete(const char *VariaName)
 			LastNode->next=temp->next;
 			if(temp->Type=="int")
 				delete (int *)temp->data;
-			if(temp->Type=="float")
+			else if(temp->Type=="float")
 				delete (float *)temp->data;
-			if(temp->Type=="double")
+			else if(temp->Type=="double")
 				delete (double *)temp->data;
-			if(temp->Type=="char")
+			else if(temp->Type=="char")
 				delete (char *)temp->data;
-			if(temp->Type=="long long int")
+			else if(temp->Type=="long long int")
 				delete (long long int *)temp->data;
-			if(temp->Type=="string")
+			else if(temp->Type=="string")
 				delete (std::string *)temp->data;
-			if(temp->Type=="array")
+			else if(temp->Type=="array")
 				delete (NasalList *)temp->data;
-			if(temp->Type=="hash")
+			else if(temp->Type=="hash")
 				delete (NasalHash *)temp->data;
 			delete temp;
 			return;
@@ -289,6 +339,7 @@ void NasalHash::Delete(const char *VariaName)
 	std::cout<<"[Error]: Could not find this element \""<<VariaName<<"\"."<<std::endl;
 	return;
 }
+
 NasalHash& NasalHash::operator=(const NasalHash &Source)
 {
 	HashUnit *temp=head;
@@ -300,19 +351,19 @@ NasalHash& NasalHash::operator=(const NasalHash &Source)
 		{
 			if(temp->Type=="int")
 				delete (int *)temp->data;
-			if(temp->Type=="float")
+			else if(temp->Type=="float")
 				delete (float *)temp->data;
-			if(temp->Type=="double")
+			else if(temp->Type=="double")
 				delete (double *)temp->data;
-			if(temp->Type=="char")
+			else if(temp->Type=="char")
 				delete (char *)temp->data;
-			if(temp->Type=="long long int")
+			else if(temp->Type=="long long int")
 				delete (long long int *)temp->data;
-			if(temp->Type=="string")
+			else if(temp->Type=="string")
 				delete (std::string *)temp->data;
-			if(temp->Type=="array")
+			else if(temp->Type=="array")
 				delete (NasalList *)temp->data;
-			if(temp->Type=="hash")
+			else if(temp->Type=="hash")
 				delete (NasalHash *)temp->data;
 		}
 		delete temp;
@@ -322,19 +373,19 @@ NasalHash& NasalHash::operator=(const NasalHash &Source)
 	{
 		if(temp->Type=="int")
 			delete (int *)temp->data;
-		if(temp->Type=="float")
+		else if(temp->Type=="float")
 			delete (float *)temp->data;
-		if(temp->Type=="double")
+		else if(temp->Type=="double")
 			delete (double *)temp->data;
-		if(temp->Type=="char")
+		else if(temp->Type=="char")
 			delete (char *)temp->data;
-		if(temp->Type=="long long int")
+		else if(temp->Type=="long long int")
 			delete (long long int *)temp->data;
-		if(temp->Type=="string")
+		else if(temp->Type=="string")
 			delete (std::string *)temp->data;
-		if(temp->Type=="array")
+		else if(temp->Type=="array")
 			delete (NasalList *)temp->data;
-		if(temp->Type=="hash")
+		else if(temp->Type=="hash")
 			delete (NasalHash *)temp->data;
 	}
 	delete temp;
@@ -354,37 +405,37 @@ NasalHash& NasalHash::operator=(const NasalHash &Source)
 			temp->data=new int;
 			*((int *)temp->data)=*((int *)SourceTemp->data);
 		}
-		if(temp->Type=="float")
+		else if(temp->Type=="float")
 		{
 			temp->data=new float;
 			*((float *)temp->data)=*((float *)SourceTemp->data);
 		}
-		if(temp->Type=="double")
+		else if(temp->Type=="double")
 		{
 			temp->data=new double;
 			*((double *)temp->data)=*((double *)SourceTemp->data);
 		}
-		if(temp->Type=="char")
+		else if(temp->Type=="char")
 		{
 			temp->data=new char;
 			*((char *)temp->data)=*((char *)SourceTemp->data);
 		}
-		if(temp->Type=="long long int")
+		else if(temp->Type=="long long int")
 		{
 			temp->data=new long long int;
 			*((long long int *)temp->data)=*((long long int *)SourceTemp->data);
 		}
-		if(temp->Type=="string")
+		else if(temp->Type=="string")
 		{
 			temp->data=new std::string;
 			*((std::string *)temp->data)=*((std::string *)SourceTemp->data);
 		}
-		if(temp->Type=="array")
+		else if(temp->Type=="array")
 		{
 			temp->data=new NasalList;
 			*((NasalList *)temp->data)=*((NasalList *)SourceTemp->data);
 		}
-		if(temp->Type=="hash")
+		else if(temp->Type=="hash")
 		{
 			temp->data=new NasalHash;
 			*((NasalHash *)temp->data)=*((NasalHash *)SourceTemp->data);

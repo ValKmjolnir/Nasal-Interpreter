@@ -7,6 +7,9 @@
 
 namespace nasal
 {
+#ifndef nil
+#define nil -1
+#endif
 
 struct HashUnit
 {
