@@ -688,9 +688,135 @@ var NasalList::Pop()
 	return TempVar;
 }
 
-void NasalList::Sort(bool _cmp_1,bool _cmp_2)
+#ifndef __SORT_TYPE__
+#define SORT_INT 1
+#define SORT_STRING 2
+#endif
+
+NasalList NasalList::Sort(const int SortType,const int _cmp)
 {
-	return;
+	NasalList TempList;
+	if(SortType==SORT_INT)
+	{
+		ListUnit *temp=head;
+		while(temp->next)
+		{
+			temp=temp->next;
+			if(temp->Type!="int")
+			{
+				std::cout<<"[Error] Incorrect type inside: "<<temp->Type<<".But type must be int."<<std::endl;
+				TempList.SetSize(1);
+				return TempList;
+			}
+		}
+		if(temp->Type!="int")
+		{
+			std::cout<<"[Error] Incorrect type inside: "<<temp->Type<<".But type must be int."<<std::endl;
+			TempList.SetSize(1);
+			return TempList;
+		}
+		TempList=*this;
+		
+		
+		ListUnit *FirstTempThis;
+		ListUnit *SecondTempThis;
+		ListUnit *NodeThis;
+		FirstTempThis=TempList.head->next;
+		while(FirstTempThis->next)
+		{
+			NodeThis=FirstTempThis;
+			SecondTempThis=FirstTempThis->next;
+			while(SecondTempThis->next)
+			{
+				if(_cmp>0 && *((int *)NodeThis->data)>*((int *)SecondTempThis->data))//from small to large
+				{
+					NodeThis=SecondTempThis;
+				}
+				else if(_cmp<=0 && *((int *)NodeThis->data)<*((int *)SecondTempThis->data))//from large to small
+				{
+					NodeThis=SecondTempThis;
+				}
+				SecondTempThis=SecondTempThis->next;
+			}
+			if(_cmp>0 && *((int *)NodeThis->data)>*((int *)SecondTempThis->data))//from small to large func(a,b) a-b
+			{
+				NodeThis=SecondTempThis;
+			}
+			else if(_cmp<=0 && *((int *)NodeThis->data)<*((int *)SecondTempThis->data))//from large to small func(a,b) b-a
+			{
+				NodeThis=SecondTempThis;
+			}
+			if(NodeThis!=FirstTempThis)
+			{
+				int t;
+				t=*((int *)FirstTempThis->data);
+				*((int *)FirstTempThis->data)=*((int *)NodeThis->data);
+				*((int *)NodeThis->data)=t;
+			}
+			FirstTempThis=FirstTempThis->next;
+		}
+	}
+	else if(SortType==SORT_STRING)
+	{
+		ListUnit *temp=head;
+		while(temp->next)
+		{
+			temp=temp->next;
+			if(temp->Type!="string")
+			{
+				std::cout<<"[Error] Incorrect type inside: "<<temp->Type<<".But type must be string."<<std::endl;
+				TempList.SetSize(1);
+				return TempList;
+			}
+		}
+		if(temp->Type!="string")
+		{
+			std::cout<<"[Error] Incorrect type inside: "<<temp->Type<<".But type must be string."<<std::endl;
+			TempList.SetSize(1);
+			return TempList;
+		}
+		TempList=*this;
+		
+		
+		ListUnit *FirstTempThis;
+		ListUnit *SecondTempThis;
+		ListUnit *NodeThis;
+		FirstTempThis=TempList.head->next;
+		while(FirstTempThis->next)
+		{
+			NodeThis=FirstTempThis;
+			SecondTempThis=FirstTempThis->next;
+			while(SecondTempThis->next)
+			{
+				if(_cmp>0 && *((std::string *)NodeThis->data)>*((std::string *)SecondTempThis->data))//from small to large
+				{
+					NodeThis=SecondTempThis;
+				}
+				else if(_cmp<=0 && *((std::string *)NodeThis->data)<*((std::string *)SecondTempThis->data))//from large to small
+				{
+					NodeThis=SecondTempThis;
+				}
+				SecondTempThis=SecondTempThis->next;
+			}
+			if(_cmp>0 && *((std::string *)NodeThis->data)>*((std::string *)SecondTempThis->data))//from small to large func(a,b) cmp(a,b)
+			{
+				NodeThis=SecondTempThis;
+			}
+			else if(_cmp<=0 && *((std::string *)NodeThis->data)<*((std::string *)SecondTempThis->data))//from large to small func(a,b) -cmp(a,b) or cmp(b,a)
+			{
+				NodeThis=SecondTempThis;
+			}
+			if(NodeThis!=FirstTempThis)
+			{
+				std::string t;
+				t=*((std::string *)FirstTempThis->data);
+				*((std::string *)FirstTempThis->data)=*((std::string *)NodeThis->data);
+				*((std::string *)NodeThis->data)=t;
+			}
+			FirstTempThis=FirstTempThis->next;
+		}
+	}
+	return TempList;
 }
 
 var::~var()
