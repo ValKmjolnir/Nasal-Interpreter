@@ -47,7 +47,10 @@ class var
 		{
 			data=NULL;
 		}
+		var(var &);
 		~var();
+		var& operator=(const var &);
+		void Print();
 };
 
 }
