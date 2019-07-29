@@ -36,4 +36,42 @@ NasalHash: Hash in nasal {}
 
   keys
   
+  # Now complete Lexical Analysis!
   
+  What it looks like?
+  
+( - , ---- )
+
+( 标识符 , U )
+
+( - , ---- )
+
+( 标识符 , V )
+
+( " , ---- )
+
+( , , ---- )
+
+( Number , 1 )
+
+( ) , ---- )
+
+( ; , ---- )
+
+( Reserve Word , var )
+
+( 标识符 , bwdANode )
+
+( = , ---- )
+
+( 标识符 , props.getNode )
+
+( ( , ---- )
+
+( " , ---- )
+
+( / , ---- )
+
+( 标识符 , systems )
+
+This is what it outputs.
