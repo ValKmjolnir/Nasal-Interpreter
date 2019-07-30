@@ -819,6 +819,27 @@ NasalList NasalList::Sort(const int SortType,const int _cmp)
 	return TempList;
 }
 
+void NasalList::SearchElement(const int n)
+{
+	if(n<0)
+	{
+		std::cout<<"[Error] "<<n<<" is less than 0."<<std::endl;
+	}
+	ListUnit *temp=head;
+	int cnt=-1;
+	while(temp->next)
+	{
+		temp=temp->next;
+		cnt++;
+		if(cnt==n)
+		{
+			return;
+		}
+	}
+	std::cout<<"[Error] Out of range: real end: "<<cnt<<", less than "<<n<<"."<<std::endl;
+	return;
+}
+
 var::var(var &p)
 {
 	Type=p.Type;
@@ -965,7 +986,7 @@ void var::Print()
 	else if(Type=="long long int")
 		std::cout<<*((long long int *)data);
 	else if(Type=="string")
-		std::cout<<*((std::string *)data);
+		std::cout<<"\""<<*((std::string *)data)<<"\"";
 	else if(Type=="array")
 		(*((NasalList *)data)).PrintList();
 	else if(Type=="hash")
