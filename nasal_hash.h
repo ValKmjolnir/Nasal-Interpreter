@@ -33,6 +33,7 @@ class NasalHash
 		NasalList Keys();
 		void Delete(const char *);
 		NasalHash& operator=(const NasalHash&);
+		void SearchElement(std::string &);
 };
 
 }

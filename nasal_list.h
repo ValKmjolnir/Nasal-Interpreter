@@ -36,6 +36,7 @@ class NasalList
 		NasalList SubVec(const int,const int);
 		var Pop();
 		NasalList Sort(const int,const int);
+		void SearchElement(const int);
 };
 
 class var

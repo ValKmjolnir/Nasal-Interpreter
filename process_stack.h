@@ -10,9 +10,9 @@ namespace nasal
 
 struct process_stack_unit
 {
-	int line;           //place the unit first appear
-	std::string Name;//content of the unit or name of the var/class/function
-	std::string type;   //var class function
+	int line;                  //place the unit first appear
+	std::string name;          //content of the unit or name of the var/class/function
+	std::string format_type;   //var class function string info
 	var unitdata;
 	bool global;
 	process_stack_unit *next;
@@ -29,9 +29,9 @@ class process_stack
 		{
 			head=new process_stack_unit;
 			head->line=0;
-			head->Name="InterpreterInfo";
+			head->name="InterpreterInfo";
+			head->format_type="Info";
 			head->global=false;
-			head->type="information";
 			head->unitdata.Type="string";
 			head->unitdata.data=new std::string;
 			*((std::string *)head->unitdata.data)="# Nasal language for FlightGear.";
@@ -68,9 +68,9 @@ class process_stack
 			last_node->next=temp;
 			temp->next=NULL;
 			
-			temp->Name=p.Name;
+			temp->name=p.name;
 			temp->line=p.line;
-			temp->type=p.type;
+			temp->format_type=p.format_type;
 			temp->global=p.global;
 			temp->unitdata=p.unitdata;
 			
@@ -80,19 +80,48 @@ class process_stack
 		{
 			process_stack_unit *temp=head;
 			std::cout<<"In stack: "<<std::endl;
-			std::cout<<temp->line<<": |"<<temp->type<<"| \""<<temp->Name<<"\""<<std::endl;
-			while(temp->next)
-			{
-				temp=temp->next;
-				std::cout<<temp->line<<": |"<<temp->type<<"| \""<<temp->Name<<"\""<<std::endl;
-			}
 			if(reverse_mode_used)
+			{
+				while(temp->next)
+					temp=temp->next;
 				while(temp->last)
 				{
-					std::cout<<temp->line<<": |"<<temp->type<<"| \""<<temp->Name<<"\""<<std::endl;
+					std::cout<<"line "<<temp->line<<": |"<<temp->format_type<<"|"<<temp->name<<"|\n\t|";
+					temp->unitdata.Print();
+					std::cout<<std::endl;
 					temp=temp->last;
 				}
+				std::cout<<"line "<<temp->line<<": |"<<temp->format_type<<"|"<<temp->name<<"|\n\t|";
+				temp->unitdata.Print();
+				std::cout<<std::endl;
+			}
+			else
+			{
+				std::cout<<"line "<<temp->line<<": |"<<temp->format_type<<"|"<<temp->name<<"|\n\t|";
+				temp->unitdata.Print();
+				std::cout<<std::endl;
+				while(temp->next)
+				{
+					temp=temp->next;
+					std::cout<<"line "<<temp->line<<": |"<<temp->format_type<<"|"<<temp->name<<"|\n\t|";
+					temp->unitdata.Print();
+					std::cout<<std::endl;
+				}
+			}
 			std::cout<<"End."<<std::endl;
+			return;
+		}
+		void pop()
+		{
+			process_stack_unit *temp=head;
+			process_stack_unit *last_node;
+			while(temp->next)
+			{
+				last_node=temp;
+				temp=temp->next;
+			}
+			last_node->next=NULL;
+			delete temp;
 			return;
 		}
 		bool check_stack(std::string &ElementName)
@@ -101,7 +130,7 @@ class process_stack
 			while(temp->next)
 			{
 				temp=temp->next;
-				if(temp->Name==ElementName)
+				if(temp->name==ElementName)
 					return true;
 			}
 			return false;
@@ -112,7 +141,7 @@ class process_stack
 			while(temp->next)
 			{
 				temp=temp->next;
-				if(temp->Name==ElementName)
+				if(temp->name==ElementName)
 				{
 					temp->unitdata.Print();
 					return;

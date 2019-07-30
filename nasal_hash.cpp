@@ -445,5 +445,36 @@ NasalHash& NasalHash::operator=(const NasalHash &Source)
 	return *this;
 }
 
+void NasalHash::SearchElement(std::string &ElementName)
+{
+	HashUnit *temp=head;
+	while(temp->next)
+	{
+		temp=temp->next;
+		if(temp->VarName==ElementName)
+		{
+			if(temp->Type=="int")
+				std::cout<<*((int *)temp->data);
+			else if(temp->Type=="float")
+				std::cout<<*((float *)temp->data);
+			else if(temp->Type=="double")
+				std::cout<<*((double *)temp->data);
+			else if(temp->Type=="char")
+				std::cout<<*((char *)temp->data);
+			else if(temp->Type=="long long int")
+				std::cout<<*((long long int *)temp->data);
+			else if(temp->Type=="string")
+				std::cout<<*((std::string *)temp->data);
+			else if(temp->Type=="array")
+				((NasalList *)temp->data)->PrintList();
+			else if(temp->Type=="hash")
+				((NasalHash *)temp->data)->PrintHash();
+			return;
+		}
+	}
+	std::cout<<"[Error] Could not find \""<<ElementName<<"\""<<std::endl;
+	return;
+}
+
 }
 #endif
