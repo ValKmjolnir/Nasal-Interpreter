@@ -40,38 +40,194 @@ NasalHash: Hash in nasal {}
   
   What it looks like?
   
-( - , ---- )
+( Identifier  | engineTimer )
 
-( 标识符 , U )
+( Operator    | . )
 
-( - , ---- )
+( Identifier  | start )
 
-( 标识符 , V )
+( Operator    | ( )
 
-( " , ---- )
+( Operator    | ) )
 
-( , , ---- )
+( Operator    | ; )
 
-( Number , 1 )
+( ReserveWord | print )
 
-( ) , ---- )
+( Operator    | ( )
 
-( ; , ---- )
+( String      | "Engine started" )
 
-( Reserve Word , var )
+( Operator    | ) )
 
-( 标识符 , bwdANode )
+( Operator    | ; )
 
-( = , ---- )
+( Operator    | } )
 
-( 标识符 , props.getNode )
+( ReserveWord | var )
 
-( ( , ---- )
+( Identifier  | stopEngine )
 
-( " , ---- )
+( Operator    | = )
 
-( / , ---- )
+( ReserveWord | func )
 
-( 标识符 , systems )
+( Operator    | ( )
+
+( Operator    | ) )
+
+( Operator    | { )
+
+( Identifier  | props )
+
+( Operator    | . )
+
+( Identifier  | getNode )
+
+( Operator    | ( )
+
+( String      | "/" )
+
+( Operator    | , )
+
+( Number      | 1 )
+
+( Operator    | ) )
+
+( Operator    | . )
+
+( Identifier  | setValue )
+
+( Operator    | ( )
+
+( String      | "/controls/engines/engine/started" )
+
+( Operator    | , )
+
+( Number      | 0 )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( Identifier  | props )
+
+( Operator    | . )
+
+( Identifier  | getNode )
+
+( Operator    | ( )
+
+( String      | "/" )
+
+( Operator    | , )
+
+( Number      | 1 )
+
+( Operator    | ) )
+
+( Operator    | . )
+
+( Identifier  | setValue )
+
+( Operator    | ( )
+
+( String      | "/fdm/jsbsim/external_reactions/engine/magnitude" )
+
+( Operator    | , )
+
+( Number      | 0 )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( Identifier  | props )
+
+( Operator    | . )
+
+( Identifier  | getNode )
+
+( Operator    | ( )
+
+( String      | "/" )
+
+( Operator    | , )
+
+( Number      | 1 )
+
+( Operator    | ) )
+
+( Operator    | . )
+
+( Identifier  | setValue )
+
+( Operator    | ( )
+
+( String      | "/systems/electrical/e-tron/switch/bat-fwd-eng" )
+
+( Operator    | , )
+
+( Number      | 0 )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( Identifier  | props )
+
+( Operator    | . )
+
+( Identifier  | getNode )
+
+( Operator    | ( )
+
+( String      | "/" )
+
+( Operator    | , )
+
+( Number      | 1 )
+
+( Operator    | ) )
+
+( Operator    | . )
+
+( Identifier  | setValue )
+
+( Operator    | ( )
+
+( String      | "/systems/electrical/e-tron/switch/bat-bwd-eng" )
+
+( Operator    | , )
+
+( Number      | 0 )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( Identifier  | engineTimer )
+
+( Operator    | . )
+
+( Identifier  | stop )
+
+( Operator    | ( )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( ReserveWord | print )
+
+( Operator    | ( )
+
+( String      | "Engine stopped" )
+
+( Operator    | ) )
+
+( Operator    | ; )
+
+( Operator    | } )
 
 This is what it outputs.
