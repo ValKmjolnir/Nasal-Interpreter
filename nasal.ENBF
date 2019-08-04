@@ -1,0 +1,63 @@
+/*
+<>术语符号
+[]最多出现一次
+{}可以出现任意次，包括0次
+()分组
+|并列选项，只能选一个
+*/
+
+<long long int> ::= <long long int>
+<double> ::= <double>
+<char> ::= <char>
+<string> ::= <string>
+<array> ::= <array>
+<hash> ::= <hash>
+<key> ::= <identifier>
+<number> ::= <long long int>|<double>
+
+<definition_var> ::= <var> <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
+<initial_value> ::= <number>|<char>|<string> <;>
+<array_initial_value> ::= <[> { <,> <number>|<char>|<string>|<array>|<hash> } <]> <;>
+<hash_initial_value> ::= <{> { <string_as_name> <:> <number>|<char>|<string>|<array>|<hash>|<function>} <}> <;>
+
+<change_var> ::= <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
+<not_global_var> ::= <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
+<change_array> ::= <array> <[> <long long int> <]> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
+<change_hash> ::= <hash> <[> <key> <]> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
+
+<append> ::= <(><array> { <,> <number>|<char>|<string>|<array>|<hash> } <)> <;>
+<setsize> ::= <(> <array> <,> <long long int> <)> <;>
+<subvec> ::= <(> <array> <,> <long long int> <,> <long long int> <)> <;>
+<pop> ::= <(> <array> <)> <;>
+<sort> ::= <(> <array> <,> <func> <(> <identifier> <,> <identifier> <)> (<identifier> <-> <identifier>)|(<cmp> <(> <identifier> <,> <identifier> <)>) <)> <;>
+<contains> ::= <(> <hash> <,> <key> <)> <;>
+<delete> ::= <(> <hash> <,> <key> <)> <;>
+<keys> ::= <(> <hash> <)> <;>
+
+<choose> ::= [ <if> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
+			 { (<else> <if>)|<elsif> }|[ <else> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
+<loop> ::= <for> <(> <var> <identifier> <=> <number> <;> <condition> <;> <identifier> <=> <identifier> <+> <number> <)> <{> { <statement> <;> } <}>
+<loop> ::= <while> <(> <condition> <)> <{> { <statement> <;> } <}>
+<loop> ::= <foreach>|<forindex> <(> <identifier> <,> <array> <)> <{> { <statement> <;> } <}>
+
+<function_definition> ::= <var> <identifier> <func> [<(> { <identifier> } <)>]
+<{>
+	{ <statement> <;> }
+<}>
+<function_use> ::= <identifier> <(> { ({<,> <number>|<char>|<string>|<array>|<hash>})|({<,> <identifier> <:> <number>|<char>|<string>|<array>|<hash>}) } <)>
+<function_reload> ::= <var> <identifier> <func> [<(> { <identifier> } <)>]
+<{>
+	{ <if> <(> <typeof> <(> <identifier> <)> <==> <typename_string> <)> ([<{> {<statement> <;>} <}>])|(<statement> <;>) }
+	<die> <(> <string> <)> <;>
+<}>
+<function_dynamic_spawn> ::= <var> <identifier> <func> [<(> { <identifier> } <)>]
+<{>
+	{ <statement> <;> }
+	<return> <func> [<(> {<,> <identifier>} <)>] 
+	<{>
+		{ <statement> <;> }
+	<}>
+<}>
+<array_print> ::= <array> <[> <number> <]>|[ <.> <key>|<array_print> ]
+<hash_print> ::= <hash> <.> <key>|<array_print>
+<print> ::= <(> { <,> <identifier>|<string>|<array_print>|<hash_print> } <)> <;>
