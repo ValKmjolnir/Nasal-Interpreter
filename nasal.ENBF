@@ -65,7 +65,7 @@
 <function_dynamic_spawn> ::= <var> <identifier> <func> [<(> { <identifier> } <)>]
 <{>
 	{ <statement> <;> }
-	<return> <func> [<(> {<,> <identifier>} <)>] 
+	<return> <func> [<(> {<,> <identifier>} <)>]
 	<{>
 		{ <statement> <;> }
 	<}>
@@ -74,3 +74,12 @@
 <array_print> ::= <array> <[> <number> <]>|[ <.> <key>|<array_print> ]
 <hash_print> ::= <hash> <.> <key>|<array_print>
 <print> ::= <(> { <,> <identifier>|<string>|<array_print>|<hash_print> } <)> <;>
+
+<error_occur> ::= <die> <(> <string> <)> <;>
+
+<multiple_declare> ::= <(> <var> { <,> <identifier> [<[> <number>|<string> <]>] } <)> <=> <(> { <number>|<char>|<string>|<array>|<hash> } <)> <;>
+<multiple_declare> ::= <var> <(> { <,> <identifier> [<[> <number>|<string> <]>] } <)> <=> <(> { <number>|<char>|<string>|<array>|<hash> } <)> <;>
+
+<swap_multiple_var> ::= <(> { <,> <identifier> [<[> <number>|<string> <]>] } <)> <=> <(> { <,> <identifier> [<[> <number>|<string> <]>] } <)> <;>
+<var_from_array> ::= <var> <(> { <,> <identifier> [<[> <number>|<string> <]>] } <)> <=> <array> <;>
+<sub_array> ::= <var> <identifier> <=> <identifier> <[> { <,> <number> }|(<number> <:> [ <number> ])|<number> <]> <;>
