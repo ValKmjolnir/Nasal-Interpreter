@@ -14,11 +14,14 @@
 <hash> ::= <hash>
 <key> ::= <identifier>
 <number> ::= <long long int>|<double>
+<class_function> ::= <identifier> [<(> { <,> <identifier> } <)>] <{> { <statement> <;> } <}>
+<initial_value> ::= <number>|<char>|<string>
+<array_initial_value> ::= <[> { <,> <number>|<char>|<string>|<array>|<hash> } <]>
+<hash_initial_value> ::= <{> { <string_as_name> <:> <number>|<char>|<string>|<array>|<hash> } <}>
+<class_initial_value> ::= <{> { <string_as_name> <:> <number>|<char>|<string>|<array>|<hash>|<class_function> } <}>
 
 <definition_var> ::= <var> <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
-<initial_value> ::= <number>|<char>|<string> <;>
-<array_initial_value> ::= <[> { <,> <number>|<char>|<string>|<array>|<hash> } <]> <;>
-<hash_initial_value> ::= <{> { <string_as_name> <:> <number>|<char>|<string>|<array>|<hash>|<function>} <}> <;>
+<definition_class> ::= <var> <identifier> <=> <class_initial_value> <;>
 
 <change_var> ::= <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
 <not_global_var> ::= <identifier> <=> <initial_value>|<array_initial_value>|<hash_initial_value> <;>
@@ -36,9 +39,18 @@
 
 <choose> ::= [ <if> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
 			 { (<else> <if>)|<elsif> }|[ <else> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
-<loop> ::= <for> <(> <var> <identifier> <=> <number> <;> <condition> <;> <identifier> <=> <identifier> <+> <number> <)> <{> { <statement> <;> } <}>
-<loop> ::= <while> <(> <condition> <)> <{> { <statement> <;> } <}>
-<loop> ::= <foreach>|<forindex> <(> <identifier> <,> <array> <)> <{> { <statement> <;> } <}>
+<loop> ::= <for> <(> <var> <identifier> <=> <number> <;> <condition> <;> <identifier> <=> <identifier> <+> <number> <)>
+<{>
+	{ <statement> <;> }
+<}>
+<loop> ::= <while> <(> <condition> <)>
+<{>
+	{ <statement> <;> }
+<}>
+<loop> ::= <foreach>|<forindex> <(> <identifier> <,> <array> <)>
+<{>
+	{ <statement> <;> }
+<}>
 
 <function_definition> ::= <var> <identifier> <func> [<(> { <identifier> } <)>]
 <{>
@@ -58,6 +70,7 @@
 		{ <statement> <;> }
 	<}>
 <}>
+
 <array_print> ::= <array> <[> <number> <]>|[ <.> <key>|<array_print> ]
 <hash_print> ::= <hash> <.> <key>|<array_print>
 <print> ::= <(> { <,> <identifier>|<string>|<array_print>|<hash_print> } <)> <;>
