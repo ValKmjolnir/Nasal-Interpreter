@@ -612,6 +612,14 @@ NasalList NasalList::SubVec(const int start,const int length=nil)
 var NasalList::Pop()
 {
 	ListUnit *temp=head;
+	if(!head->next)
+	{
+		var temp_var;
+		temp_var.data=NULL;
+		temp_var.Type="null";
+		temp_var.isGlobal=false;
+		return temp_var;
+	}
 	ListUnit *NewLastUnit;
 	while(temp->next)
 	{
@@ -819,7 +827,7 @@ NasalList NasalList::Sort(const int SortType,const int _cmp)
 	return TempList;
 }
 
-void NasalList::SearchElement(const int n)
+ListUnit NasalList::SearchElement(const int n)
 {
 	if(n<0)
 	{
@@ -832,12 +840,14 @@ void NasalList::SearchElement(const int n)
 		temp=temp->next;
 		cnt++;
 		if(cnt==n)
-		{
-			return;
-		}
+			return *temp;
 	}
 	std::cout<<"[Error] Out of range: real end: "<<cnt<<", less than "<<n<<"."<<std::endl;
-	return;
+	ListUnit nil_list;
+	nil_list.data=NULL;
+	nil_list.next=NULL;
+	nil_list.Type="null";
+	return nil_list;
 }
 
 var::var(var &p)
@@ -930,6 +940,7 @@ var& var::operator=(const var &p)
 			delete (NasalHash *)data;
 	}
 	Type=p.Type;
+	isGlobal=p.isGlobal;
 	if(Type=="int")
 	{
 		data=new int;
