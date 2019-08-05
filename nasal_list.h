@@ -36,7 +36,7 @@ class NasalList
 		NasalList SubVec(const int,const int);
 		var Pop();
 		NasalList Sort(const int,const int);
-		void SearchElement(const int);
+		ListUnit SearchElement(const int);
 };
 
 class var
@@ -44,6 +44,7 @@ class var
 	public:
 		std::string Type;
 		void *data;
+		bool isGlobal;
 		var()
 		{
 			data=NULL;

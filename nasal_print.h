@@ -9,25 +9,26 @@
 namespace nasal
 {
 	
-void PrintVar(int Var)
+void PrintVar(var &Var)
 {
-	std::cout<<Var;
-}
-void PrintVar(float Var)
-{
-	std::cout<<Var;
-}
-void PrintVar(double Var)
-{
-	std::cout<<Var;
-}
-void PrintVar(char Var)
-{
-	std::cout<<Var;
-}
-void PrintVar(long long int Var)
-{
-	std::cout<<Var;
+	if(Var.Type=="int")
+		std::cout<<*((int *)Var.data);
+	else if(var.Type=="long long int")
+		std::cout<<*((long long int Var.data));
+	else if(Var.Type=="float")
+		std::cout<<*((float *)Var.data);
+	else if(Var.Type=="double")
+		std::cout<<*((double *)Var.data);
+	else if(Var.Type=="char")
+		std::cout<<*((char *)Var.data);
+	else if(Var.Type=="string")
+		std::cout<<*((std::string *)Var.data);
+	else if(Var.Type=="array")
+		((NasalList *)Var.data)->PrintList();
+	else if(Var.Type=="hash")
+		((NasalHash *)Var.data)->PrintHash();
+	else
+		std::cout<<"null";
 }
 void PrintVar(NasalHash &Var)
 {
@@ -88,7 +89,7 @@ void PrintString(std::string &PrintInfo)
 	}
 	return;
 }
-
+/*
 void PrintString(const char *PrintInfo)
 {
 	for(int i=0;i<strlen(PrintInfo);++i)
@@ -138,6 +139,7 @@ void PrintString(const char *PrintInfo)
 	}
 	return;
 }
+*/
 
 }
 

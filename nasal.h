@@ -1,23 +1,17 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
 
-#include "nasal_hash.cpp"
+#include <iostream>
+#include <cstring>
+#include "nasal_list.h"
+#include "nasal_func.h"
+#include "nasal_hash.h"
+
 #include "nasal_list.cpp"
-#include "nasal_print.h"
+#include "nasal_hash.cpp"
 
-// int
-// char
-// long long int
-// double 
-// float
-// string
-// const char *
-// NasalHash
-// NasalList
+#include "nasal_var_stack.h"
+#include "nasal_func_stack.h"
+#include "nasal_lexer.h"
 
-/*
-NasalList->delete NasalList & NasalHash
-
-NasalHash->delete NasalList & NasalHash
-*/
 #endif
