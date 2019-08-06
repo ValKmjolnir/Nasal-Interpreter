@@ -7,6 +7,7 @@
 #include <cstring>
 #include "nasal_functional.h"
 
+
 namespace nasal
 {
 
@@ -241,32 +242,33 @@ void Scanner(int &Syn,const char Source[],std::string &token,int &ptr,int &line)
 	return;
 }
 
-token_list lexer;
+token_list nasal_lexer;
 
-void RunProcess(std::string &FileNameOrCommand)
+void RunProcess(std::string &FileName)
 {
 	int Syn=0;//token type
 	int Ptr=0;//pointer to one char in ResourcePrograme
 	int line=1;
 	std::string token;
+	nasal_lexer.delete_all();
 	
-	InputFile(FileNameOrCommand);
+	InputFile(FileName);
 	while(Syn!=SCANEND && Syn!=ERRORFOUND)
 	{
 		Scanner(Syn,ResourcePrograme,token,Ptr,line);
 		if(Syn==OPERATOR)
-			lexer.append("Operator",token,line);
+			nasal_lexer.append("Operator",token,line);
 		else if(Syn==IDENTIFIER)
-			lexer.append("Identifier",token,line);
+			nasal_lexer.append("Identifier",token,line);
 		else if(Syn==NUMBER)
-			lexer.append("Number",token,line);
+			nasal_lexer.append("Number",token,line);
 		else if(Syn==RESERVEWORD)
-			lexer.append("ReserveWord",token,line);
+			nasal_lexer.append("ReserveWord",token,line);
 		else if(Syn==STRING)
-			lexer.append("String",token,line);
+			nasal_lexer.append("String",token,line);
 	}
-	lexer.print();
-	std::cout<<">> Complete scanning \""<<FileNameOrCommand<<"\"."<<std::endl;
+	nasal_lexer.print();
+	std::cout<<">> Complete scanning \""<<FileName<<"\"."<<std::endl;
 	return;
 }
 

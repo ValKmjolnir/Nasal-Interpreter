@@ -850,7 +850,7 @@ ListUnit NasalList::SearchElement(const int n)
 	return nil_list;
 }
 
-var::var(var &p)
+var::var(const var &p)
 {
 	Type=p.Type;
 	if(Type=="int")

@@ -30,13 +30,18 @@ class var_stack
 		{
 			var_stack_unit *temp=head;
 			var_stack_unit *this_node=NULL;
-			while(temp->next)
+			if(head->next)
 			{
-				this_node=temp;
-				temp=temp->next;
-				delete this_node;
+				while(temp->next)
+				{
+					this_node=temp;
+					temp=temp->next;
+					delete this_node;
+				}
+				delete temp;
 			}
-			delete temp;
+			else
+				delete head;
 		}
 		void append_var(std::string &varia_name,var &temp_var)
 		{
@@ -55,16 +60,16 @@ class var_stack
 			while(temp->next)
 			{
 				temp=temp->next;
-				std::cout<<"["<<temp->var_detail.Type<<"]: "<<temp->var_name;
-				PrintVar(temp->var_detail);
-				std::cout<<endl;
+				std::cout<<"["<<temp->var_detail.Type<<"]: "<<temp->var_name<<" : ";
+				if(temp->var_detail.Type!="string")
+					PrintVar(temp->var_detail);
+				else
+					std::cout<<*((std::string *)temp->var_detail.data);
+				std::cout<<std::endl;
 			}
-			std::cout<<"["<<temp->var_detail.Type<<"]: "<<temp->var_name;
-			PrintVar(temp->var_detail);
-			std::cout<<endl;
 			return;
 		}
-		var &SearchVar(std::string varia_name)
+		var SearchVar(std::string varia_name)
 		{
 			var temp_var;
 			temp_var.data=NULL;
@@ -92,6 +97,22 @@ class var_stack
 			}
 			end_temp->next=NULL;
 			delete temp;
+		}
+		void delete_all()
+		{
+			var_stack_unit *temp=head->next;
+			var_stack_unit *this_node=NULL;
+			head->next=NULL;
+			if(!temp)
+				return;
+			while(temp->next)
+			{
+				this_node=temp;
+				temp=temp->next;
+				delete this_node;
+			}
+			delete temp;
+			return;
 		}
 };
 
