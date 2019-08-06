@@ -231,3 +231,19 @@ NasalHash: Hash in nasal {}
 ( Operator    | } )
 
 This is what it outputs.
+
+# Now with var_stack and function_stack
+
+By printing the two stacks you can see how vars and functions change!
+
+[long long int]a:1
+
+[double]b:3.14
+
+[string]c:"hello world!"
+
+function:swap
+
+function:__main
+
+function:hello
