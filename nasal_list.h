@@ -49,7 +49,7 @@ class var
 		{
 			data=NULL;
 		}
-		var(var &);
+		var(const var &);
 		~var();
 		var& operator=(const var &);
 		void Print();

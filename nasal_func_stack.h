@@ -29,13 +29,18 @@ class func_stack
 		{
 			func_stack_unit *temp=head;
 			func_stack_unit *this_node=NULL;
-			while(temp->next)
+			if(head->next)
 			{
-				this_node=temp;
-				temp=temp->next;
-				delete this_node;
+				while(temp->next)
+				{
+					this_node=temp;
+					temp=temp->next;
+					delete this_node;
+				}
+				delete temp;
 			}
-			delete temp;
+			else
+				delete head;
 		}
 		void append_function(std::string &function_name,func &temp_func)
 		{
@@ -94,6 +99,22 @@ class func_stack
 			}
 			end_temp->next=NULL;
 			delete temp;
+		}
+		void delete_all()
+		{
+			func_stack_unit *temp=head->next;
+			func_stack_unit *this_node=NULL;
+			head->next=NULL;
+			if(!temp)
+				return;
+			while(temp->next)
+			{
+				this_node=temp;
+				temp=temp->next;
+				delete this_node;
+			}
+			delete temp;
+			return;
 		}
 };
 
