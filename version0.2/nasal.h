@@ -25,6 +25,8 @@ namespace nasal
 //#include "nasal_func_stack.h"
 #include "nasal_functional.cpp"
 
+#include "nasal_lexer.h"
+
 }
 
 #endif
