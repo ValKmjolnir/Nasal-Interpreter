@@ -7,18 +7,9 @@
 #include <cstring>
 #include "nasal_functional.h"
 
-
-namespace nasal
-{
-
-#define IDENTIFIER  -1 //自定义标识符 
-#define OPERATOR    -2 //界符 or 运算符 
-#define NUMBER      -3 //数字 
-#define RESERVEWORD -4 //关键字 
-#define STRING      -5 //字符串类型 
-#define FAIL        -6 //失败 
-#define SCANEND     -7 //扫描完成 
-#define ERRORFOUND  -8 //异常错误 
+#define FAIL        -1 //失败 
+#define SCANEND     -2 //扫描完成 
+#define ERRORFOUND  -3 //异常错误 
 
 std::string ReserveWord[26]=
 {
@@ -256,24 +247,12 @@ void RunProcess(std::string &FileName)
 	while(Syn!=SCANEND && Syn!=ERRORFOUND)
 	{
 		Scanner(Syn,ResourcePrograme,token,Ptr,line);
-		if(Syn==OPERATOR)
-			nasal_lexer.append("Operator",token,line);
-		else if(Syn==IDENTIFIER)
-			nasal_lexer.append("Identifier",token,line);
-		else if(Syn==NUMBER)
-			nasal_lexer.append("Number",token,line);
-		else if(Syn==RESERVEWORD)
-			nasal_lexer.append("ReserveWord",token,line);
-		else if(Syn==STRING)
-			nasal_lexer.append("String",token,line);
+		if(Syn>0)//all Syn type is larger than zero
+			nasal_lexer.append(line,Syn,token);
 	}
 	//nasal_lexer.print(); //for debug mode
 	std::cout<<">> Complete scanning \""<<FileName<<"\"."<<std::endl;
 	return;
 }
 
-
-
-
-}
 #endif
