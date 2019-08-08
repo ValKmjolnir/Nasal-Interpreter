@@ -141,7 +141,7 @@ var nasal_list::pop()
 	delete temp;
 	return temp_var;
 }
-nasal_list nasal_list::sort_list(const int sort_type,bool cmp_rule=true)
+nasal_list nasal_list::sort_list(const int sort_type,const int _cmp=1)
 {
 	nasal_list temp_list;
 	if(sort_type==SORT_INT)
@@ -164,6 +164,85 @@ nasal_list nasal_list::sort_list(const int sort_type,bool cmp_rule=true)
 			return temp_list;
 		}
 		temp_list=*this;
+		nasal_list_unit *first_temp_this;
+		nasal_list_unit *second_temp_this;
+		nasal_list_unit *node_this;
+		first_temp_this=temp_list.head->next;
+		while(first_temp_this->next)
+		{
+			node_this=first_temp_this;
+			second_temp_this=first_temp_this->next;
+			while(second_temp_this->next)
+			{
+				if(_cmp>0 && *((int *)node_this->list_var.data)>*((int *)second_temp_this->list_var.data))//from small to large
+					node_this=second_temp_this;
+				else if(_cmp<=0 && *((int *)node_this->list_var.data)<*((int *)second_temp_this->list_var.data))//from large to small
+					node_this=second_temp_this;
+				second_temp_this=second_temp_this->next;
+			}
+			if(_cmp>0 && *((int *)node_this->list_var.data)>*((int *)second_temp_this->list_var.data))//from small to large func(a,b) a-b
+				node_this=second_temp_this;
+			else if(_cmp<=0 && *((int *)node_this->list_var.data)<*((int *)second_temp_this->list_var.data))//from large to small func(a,b) b-a
+				node_this=second_temp_this;
+			if(node_this!=first_temp_this)
+			{
+				int t;
+				t=*((int *)first_temp_this->list_var.data);
+				*((int *)first_temp_this->list_var.data)=*((int *)node_this->list_var.data);
+				*((int *)node_this->list_var.data)=t;
+			}
+			first_temp_this=first_temp_this->next;
+		}
+	}
+	else if(sort_type==SORT_DBL)
+	{
+		nasal_list_unit *temp=head;
+		while(temp->next)
+		{
+			temp=temp->next;
+			if(temp->list_var.type!=VAR_DOUBLE)
+			{
+				std::cout<<"[Error] Incorrect type inside: "<<temp->list_var.type<<".But type must be float."<<std::endl;
+				temp_list.setsize(1);
+				return temp_list;
+			}
+		}
+		if(temp->list_var.type!=VAR_DOUBLE)
+		{
+			std::cout<<"[Error] Incorrect type inside: "<<temp->list_var.type<<".But type must be float."<<std::endl;
+			temp_list.setsize(1);
+			return temp_list;
+		}
+		temp_list=*this;
+		nasal_list_unit *first_temp_this;
+		nasal_list_unit *second_temp_this;
+		nasal_list_unit *node_this;
+		first_temp_this=temp_list.head->next;
+		while(first_temp_this->next)
+		{
+			node_this=first_temp_this;
+			second_temp_this=first_temp_this->next;
+			while(second_temp_this->next)
+			{
+				if(_cmp>0 && *((double *)node_this->list_var.data)>*((double *)second_temp_this->list_var.data))//from small to large
+					node_this=second_temp_this;
+				else if(_cmp<=0 && *((double *)node_this->list_var.data)<*((double *)second_temp_this->list_var.data))//from large to small
+					node_this=second_temp_this;
+				second_temp_this=second_temp_this->next;
+			}
+			if(_cmp>0 && *((double *)node_this->list_var.data)>*((double *)second_temp_this->list_var.data))//from small to large func(a,b) a-b
+				node_this=second_temp_this;
+			else if(_cmp<=0 && *((double *)node_this->list_var.data)<*((double *)second_temp_this->list_var.data))//from large to small func(a,b) b-a
+				node_this=second_temp_this;
+			if(node_this!=first_temp_this)
+			{
+				double t;
+				t=*((double *)first_temp_this->list_var.data);
+				*((double *)first_temp_this->list_var.data)=*((double *)node_this->list_var.data);
+				*((double *)node_this->list_var.data)=t;
+			}
+			first_temp_this=first_temp_this->next;
+		}
 	}
 	else if(sort_type==SORT_STR)
 	{
@@ -185,6 +264,35 @@ nasal_list nasal_list::sort_list(const int sort_type,bool cmp_rule=true)
 			return temp_list;
 		}
 		temp_list=*this;
+		nasal_list_unit *first_temp_this;
+		nasal_list_unit *second_temp_this;
+		nasal_list_unit *node_this;
+		first_temp_this=temp_list.head->next;
+		while(first_temp_this->next)
+		{
+			node_this=first_temp_this;
+			second_temp_this=first_temp_this->next;
+			while(second_temp_this->next)
+			{
+				if(_cmp>0 && *((std::string *)node_this->list_var.data)>*((std::string *)second_temp_this->list_var.data))//from small to large
+					node_this=second_temp_this;
+				else if(_cmp<=0 && *((std::string *)node_this->list_var.data)<*((std::string *)second_temp_this->list_var.data))//from large to small
+					node_this=second_temp_this;
+				second_temp_this=second_temp_this->next;
+			}
+			if(_cmp>0 && *((std::string *)node_this->list_var.data)>*((std::string *)second_temp_this->list_var.data))//from small to large func(a,b) cmp(a,b)
+				node_this=second_temp_this;
+			else if(_cmp<=0 && *((std::string *)node_this->list_var.data)<*((std::string *)second_temp_this->list_var.data))//from large to small func(a,b) cmp(b,a) or -cmp(a,b)
+				node_this=second_temp_this;
+			if(node_this!=first_temp_this)
+			{
+				std::string t;
+				t=*((std::string *)first_temp_this->list_var.data);
+				*((std::string *)first_temp_this->list_var.data)=*((std::string *)node_this->list_var.data);
+				*((std::string *)node_this->list_var.data)=t;
+			}
+			first_temp_this=first_temp_this->next;
+		}
 	}
 	return temp_list;
 }
