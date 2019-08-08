@@ -1,12 +1,16 @@
 #ifndef __NASAL_LIST_H__
 #define __NASAL_LIST_H__
 
+#include "nasal_var.h"
+
+#define SORT_INT 1
+#define SORT_STR 2
+
 class nasal_hash;
 
 struct nasal_list_unit
 {
-	std::string type;
-	void *data;
+	var list_var;
 	nasal_list_unit *next;
 };
 
@@ -18,13 +22,11 @@ class nasal_list
 		nasal_list();
 		~nasal_list();
 		nasal_list& operator=(const nasal_list&);
-		void append_var(var&);
-		void append_list(nasal_list&);
-		void append_hash(nasal_hash&);
+		void append(var&);
 		void setsize(const int);
 		nasal_list subvec(const int,const int);
 		var pop();
-		void sort_list(bool);
+		nasal_list sort_list(const int,bool);
 };
 
 #endif

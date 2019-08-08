@@ -1,12 +1,12 @@
 #ifndef __NASAL_HASH_H__
 #define __NASAL_HASH_H__
 
+#include "nasal_var.h"
 
 struct nasal_hash_unit
 {
 	std::string name;
-	std::string type;
-	void *data;
+	var hash_var;
 	nasal_hash_unit *next;
 };
 
@@ -18,9 +18,7 @@ class nasal_hash
 		nasal_hash();
 		~nasal_hash();
 		nasal_hash& operator=(const nasal_hash&);
-		void append_var(var&);
-		void append_list(nasal_list&);
-		void append_hash(nasal_hash&);
+		void append(std::string&,var&);
 		int contains(std::string&);
 		int delete_element(std::string&);
 		nasal_list keys();

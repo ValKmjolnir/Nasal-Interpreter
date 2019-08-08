@@ -38,6 +38,10 @@ var::var(const var &temp)
 			data=new nasal_hash;
 			*((nasal_hash *)data)=*((nasal_hash *)temp.data);
 			break;
+		case VAR_FUNC:
+			data=new func;
+			*((func *)data)=*((func *)temp.data);
+			break;
 	}
 }
 var::~var()
@@ -63,6 +67,9 @@ var::~var()
 			case VAR_HASH:
 				delete (nasal_hash *)data;
 				break;
+			case VAR_FUNC:
+				delete (func *)data;
+				break;
 		}
 }
 var& var::operator=(const var &temp)
@@ -87,6 +94,9 @@ var& var::operator=(const var &temp)
 				break;
 			case VAR_HASH:
 				delete (nasal_hash *)data;
+				break;
+			case VAR_FUNC:
+				delete (func *)data;
 				break;
 		}
 	type=temp.type;
@@ -118,6 +128,10 @@ var& var::operator=(const var &temp)
 		case VAR_HASH:
 			data=new nasal_hash;
 			*((nasal_hash *)data)=*((nasal_hash *)temp.data);
+			break;
+		case VAR_FUNC:
+			data=new func;
+			*((func *)data)=*((func *)temp.data);
 			break;
 	}
 	return *this;

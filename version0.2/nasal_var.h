@@ -8,6 +8,7 @@
 #define VAR_STRING 4
 #define VAR_LIST   5
 #define VAR_HASH   6
+#define VAR_FUNC   7
 
 class var
 {
