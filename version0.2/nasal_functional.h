@@ -1,6 +1,8 @@
 #ifndef __NASAL_FUNCTIONAL_H__
 #define __NASAL_FUNCTIONAL_H__
 
+#include "nasal_var.h"
+
 #define FUNC_BEGIN       0
 #define FUNC_OPERATOR    1
 #define FUNC_IDENTIFIER  2
@@ -16,13 +18,22 @@ struct token_unit
 	token_unit *next;
 };
 
+struct parameter
+{
+	var param_var;
+	parameter *next;
+};
+
 class func
 {
 	private:
-		token_unit *head;
+		token_unit *statement_head;
+		parameter *parameter_head;
 	public:
 		func();
+		func(const func&);
 		~func();
+		func& operator=(const func&);
 };
 
 class token_list
