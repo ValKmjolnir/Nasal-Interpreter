@@ -4,7 +4,8 @@
 #include "nasal_var.h"
 
 #define SORT_INT 1
-#define SORT_STR 2
+#define SORT_DBL 2
+#define SORT_STR 3
 
 class nasal_hash;
 
@@ -26,7 +27,7 @@ class nasal_list
 		void setsize(const int);
 		nasal_list subvec(const int,const int);
 		var pop();
-		nasal_list sort_list(const int,bool);
+		nasal_list sort_list(const int,const int);
 };
 
 #endif
