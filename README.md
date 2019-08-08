@@ -247,3 +247,29 @@ function:swap
 function:__main
 
 function:hello
+
+# The structure of basical elements is...
+
+class var;
+
+class nasal_hash;//forward declaration
+
+struct nasal_list_unit;
+
+class nasal_list;
+
+struct nasal_hash_unit;
+
+class nasal_hash;
+
+struct token_unit;
+
+struct parameter;
+
+class func;
+
+class token_list;
+
+#include "nasal_lexer.h"
+
+main();
