@@ -2,6 +2,64 @@
 #define __NASAL_FUNCTIONAL_CPP__
 
 #include "nasal_functional.h"
+#include "nasal_var_stack.h"
+#include "nasal_func_stack.h"
+
+bool is_float(std::string &str)
+{
+	for(int i=0;i<(int)str.length();++i)
+		if(str[i]=='.')
+			return true;
+	return false;
+}
+long long int int_str2num(std::string &str)
+{
+	for(int i=0;i<(int)str.length();++i)
+		if(!(('0'<=str[i]) && (str[i]<='9') || (str[i]=='.')))
+		{
+			std::cout<<"[Error] Non-numeric string."<<std::endl;
+			return 0;
+		}
+	long long int num=0;
+	long long int acc=1;
+	for(int i=(int)str.length()-1;i>=0;--i)
+	{
+		num+=acc*((long long int)(str[i]-'0'));
+		acc*=10;
+	}
+	return num;
+}
+double double_str2num(std::string &str)
+{
+	for(int i=0;i<(int)str.length();++i)
+		if(!(('0'<=str[i]) && (str[i]<='9') || (str[i]=='.')))
+		{
+			std::cout<<"[Error] Non-numeric string."<<std::endl;
+			return 0;
+		}
+	int DotPlace=0;
+	for(int i=0;i<(int)str.length();++i)
+		if(str[i]=='.')
+		{
+			DotPlace=i;
+			break;
+		}
+	double num=0;
+	double acc=1;
+	double aff=0.1;
+	for(int i=DotPlace+1;i<(int)str.length();++i)
+	{
+		num+=aff*((double)(str[i]-'0'));
+		aff*=0.1;
+	}
+	for(int i=DotPlace-1;i>=0;--i)
+	{
+		num+=acc*((double)(str[i]-'0'));
+		acc*=10;
+	}
+	return num;
+}
+
 
 func::func()
 {
@@ -135,6 +193,7 @@ void func::append_token(const int _line,const int _type,std::string &_content)
 
 token_list::token_list()
 {
+	list_range=0;
 	head=new token_unit;
 	head->type=FUNC_BEGIN;
 	head->content="__process_begin";
@@ -152,6 +211,14 @@ token_list::~token_list()
 		delete this_node;
 	}
 	delete temp;
+}
+token_unit* token_list::get_head()
+{
+	return head;
+}
+int token_list::get_list_range()
+{
+	return list_range;
 }
 void token_list::print_line_token(const int _line)
 {
@@ -190,6 +257,7 @@ void token_list::append(const int _line,const int _type,std::string &_content)
 	token_unit *temp=head;
 	while(temp->next)
 		temp=temp->next;
+	++list_range;
 	temp->next=new token_unit;
 	temp=temp->next;
 	temp->next=NULL;
@@ -208,260 +276,305 @@ void token_list::print()
 	{
 		temp=temp->next;
 		std::cout<<"line "<<temp->line<<": ";
-		if(temp->type==FUNC_OPERATOR)
+		if(temp->type==OPERATOR)
 			std::cout<<"( Operator     | ";
-		else if(temp->type==FUNC_IDENTIFIER)
+		else if(temp->type==IDENTIFIER)
 			std::cout<<"( Identifier   | ";
-		else if(temp->type==FUNC_NUMBER)
+		else if(temp->type==NUMBER)
 			std::cout<<"( Number       | ";
-		else if(temp->type==FUNC_RESERVEWORD)
+		else if(temp->type==RESERVEWORD)
 			std::cout<<"( ReserveWord  | ";
-		else if(temp->type==FUNC_STRING)
+		else if(temp->type==STRING)
 			std::cout<<"( String       | ";
 		std::cout<<temp->content<<" )"<<std::endl;
 	}
 	return;
 }
-/*
-void token_list::run()
+
+parse::parse()
 {
-	nasal_var_stack.delete_all();
-	nasal_func_stack.delete_all();
-	token_unit *temp=head;
-	if(!head->next)
+	len=0;
+	content_array=new parse_unit[4096];
+	statement=new parse_unit[2048];
+}
+parse::~parse()
+{
+	if(content_array)
+		delete []content_array;
+	if(statement)
+		delete []statement;
+}
+void parse::content_array_set_empty()
+{
+	for(int i=0;i<4096;++i)
 	{
-		std::cout<<">> Running complete."<<std::endl;
-		return;
+		content_array[i].line=0;
+		content_array[i].type=0;
+		content_array[i].content="";
 	}
-	
+	return;
+}
+void parse::statement_set_empty()
+{
+	for(int i=0;i<2048;++i)
+	{
+		statement[i].line=0;
+		statement[i].type=0;
+		statement[i].content="";
+	}
+	return;
+}
+void parse::brace_check()
+{
+	int curve=0;
+	int bracket=0;
+	int brace=0;
+	for(int i=1;i<=len;++i)
+	{
+		if(content_array[i].content=="(")
+			++curve;
+		else if(content_array[i].content==")")
+			--curve;
+		else if(content_array[i].content=="[")
+			++bracket;
+		else if(content_array[i].content=="]")
+			--bracket;
+		else if(content_array[i].content=="{")
+			++brace;
+		else if(content_array[i].content=="}")
+			--brace;
+	}
+	if(curve>0)
+		std::cout<<"[Error] Missing \")\" ."<<std::endl;
+	else if(curve<0)
+		std::cout<<"[Error] Missing \"(\" ."<<std::endl;
+	if(bracket>0)
+		std::cout<<"[Error] Missing \"]\" ."<<std::endl;
+	else if(bracket<0)
+		std::cout<<"[Error] Missing \"[\" ."<<std::endl;
+	if(brace>0)
+		std::cout<<"[Error] Missing \"}\" ."<<std::endl;
+	else if(brace<0)
+		std::cout<<"[Error] Missing \"{\" ."<<std::endl;
+	return;
+}
+bool parse::def_function()
+{
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="func")
+		return true;
+	return false;
+}
+bool parse::def_array()
+{
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="[")
+		return true;
+	return false;
+}
+bool parse::def_hash()
+{
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="{")
+		return true;
+	return false;
+}
+bool parse::def_scalar()
+{
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && (statement[3].type==NUMBER || statement[3].type==STRING))
+	{
+		if(statement[3].type==NUMBER)
+		{
+			var temp_var;
+			if(is_float(statement[3].content))
+			{
+				temp_var.type=VAR_DOUBLE;
+				temp_var.data=new double;
+				*((double *)temp_var.data)=double_str2num(statement[3].content);
+			}
+			else
+			{
+				temp_var.type=VAR_LLINT;
+				temp_var.data=new long long int;
+				*((long long int *)temp_var.data)=int_str2num(statement[3].content);
+			}
+			nasal_var_stack.append_var(statement[1].content,temp_var);
+		}
+		else if(statement[3].type==STRING)
+		{
+			var temp_var;
+			temp_var.type=VAR_STRING;
+			temp_var.data=new std::string;
+			std::string temp_str="";
+			for(int i=1;i<(int)statement[3].content.length()-1;++i)
+				temp_str+=statement[3].content[i];
+			*((std::string *)temp_var.data)=temp_str;
+			nasal_var_stack.append_var(statement[1].content,temp_var);
+		}
+		return true;
+	}
+	return false;
+}
+void parse::definition()
+{
+	int brace=0;
+	for(int i=0;i<2048;++i)
+	{
+		if(!statement[i].line)
+		{
+			std::cout<<"[Error] line "<<statement[0].line<<": Expect a \";\" after "<<statement[0].content<<"."<<std::endl;
+			break;
+		}
+		if(statement[i].content==";" && !brace)
+			break;
+		if(statement[i].content=="{")
+			++brace;
+		if(statement[i].content=="}")
+			--brace;
+		if(!statement[i].type && brace)
+			std::cout<<"[Error] Missing \""<<(brace>0? '}':'{')<<"\" ."<<std::endl;
+	}
+	if(def_function() || def_array() || def_hash() || def_scalar())
+	{
+		;
+	}
+	else
+		std::cout<<"[Error] line "<<statement[0].line<<": Missing elements."<<std::endl;
+	return;
+}
+bool parse::asi_function()
+{
+	return false;
+}
+bool parse::asi_array()
+{
+	return false;
+}
+bool parse::asi_hash()
+{
+	return false;
+}
+bool parse::asi_scalar()
+{
+	if(statement[0].type==IDENTIFIER && statement[1].content=="=" && statement[2].type==IDENTIFIER && statement[3].content==";")
+	{
+		var temp_var=nasal_var_stack.search_var(statement[2].content);
+		nasal_var_stack.edit_var(statement[0].content,temp_var);
+		return true;
+	}
+	else if(statement[0].type==IDENTIFIER && statement[1].content=="=" && statement[2].type==NUMBER && statement[3].content==";")
+	{
+		var temp_var;
+		if(is_float(statement[2].content))
+		{
+			temp_var.type=VAR_DOUBLE;
+			temp_var.data=new double;
+			*((double *)temp_var.data)=double_str2num(statement[2].content);
+		}
+		else
+		{
+			temp_var.type=VAR_LLINT;
+			temp_var.data=new long long int;
+			*((long long int *)temp_var.data)=int_str2num(statement[2].content);
+		}
+		nasal_var_stack.edit_var(statement[0].content,temp_var);
+		return true;
+	}
+	else if(statement[0].type==IDENTIFIER && statement[1].content=="=" && statement[2].type==STRING && statement[3].content==";")
+	{
+		var temp_var;
+		temp_var.type=VAR_STRING;
+		temp_var.data=new std::string;
+		std::string temp_str="";
+		for(int i=1;i<(int)statement[2].content.length()-1;++i)
+			temp_str+=statement[2].content[i];
+		*((std::string *)temp_var.data)=temp_str;
+		nasal_var_stack.edit_var(statement[1].content,temp_var);
+		return true;
+	}
+	return false;
+}
+void parse::assignment()
+{
+	int brace=0;
+	for(int i=0;i<2048;++i)
+	{
+		if(statement[i].line==0)
+		{
+			std::cout<<"[Error] line "<<statement[0].line<<": Expect a \";\" after "<<statement[0].content<<"."<<std::endl;
+			break;
+		}
+		if(statement[i].content==";" && !brace)
+			break;
+		if(statement[i].content=="{")
+			++brace;
+		if(statement[i].content=="}")
+			--brace;
+		if(!statement[i].type && brace)
+			std::cout<<"[Error] Missing \""<<(brace>0? '}':'{')<<"\" ."<<std::endl;
+	}
+	if(asi_function() || asi_array() || asi_hash() || asi_scalar())
+	{
+		;
+	}
+	else
+		std::cout<<"[Error] line "<<statement[0].line<<": Missing elements."<<std::endl;
+	return;
+}
+void parse::total_run(token_list& p)
+{
+	len=0;
+	token_unit *temp=p.get_head();
 	while(temp->next)
 	{
 		temp=temp->next;
-		if(temp->type=="Operator")
+		++len;//begin from 1
+		content_array[len].type=temp->type;
+		content_array[len].line=temp->line;
+		content_array[len].content=temp->content;
+	}
+	brace_check();
+	for(int i=1;i<=len;++i)
+	{
+		if(content_array[i].type==RESERVEWORD && content_array[i].content=="var")
 		{
-			;
-		}
-		else if(temp->type=="Identifier")
-		{
-			;
-		}
-		else if(temp->type=="Number")
-		{
-			print_line_token(temp->line);
-			std::cout<<"line "<<temp->line<<": "<<"[Error] Number without any tokens."<<std::endl;
-			return;
-		}
-		else if(temp->type=="ReserveWord")
-		{
-			if(temp->content=="var")
+			int in_brace=0;
+			statement_set_empty();
+			for(int j=i;j<=len;++j)
 			{
-				if(temp->next)
-					temp=temp->next;
-				else
+				statement[j-i]=content_array[j];
+				if(content_array[j].type==OPERATOR && content_array[j].content==";" && in_brace==0)
 				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing elements after \"var\"."<<std::endl;
-					return;
+					i=j;
+					break;
 				}
-				//end identifier
-				std::string name_of_var;
-				if(temp->type=="Identifier")
-					name_of_var=temp->content;
-				else
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing identifier after \"var\"."<<std::endl;
-					return;
-				}
-				if(temp->next)
-					temp=temp->next;
-				else
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing operator \"=\" after identifier."<<std::endl;
-					return;
-				}
-				if(temp->content!="=")
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing operator \"=\" after identifier."<<std::endl;
-					return;
-				}
-				if(temp->next)
-					temp=temp->next;
-				else
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing value after operator \"=\" ."<<std::endl;
-					return;
-				}
-				if(temp->type=="Number")
-				{
-					temp_var.isGlobal=true;
-					if(isFloat(temp->content))
-					{
-						temp_var.Type="double";
-						temp_var.data=new double;
-						*((double *)temp_var.data)=double_Str2Num(temp->content);
-						nasal_var_stack.append_var(name_of_var,temp_var);
-						delete (double *)temp_var.data;
-						temp_var.data=NULL;
-					}
-					else
-					{
-						temp_var.Type="long long int";
-						temp_var.data=new long long int;
-						*((long long int *)temp_var.data)=int_Str2Num(temp->content);
-						nasal_var_stack.append_var(name_of_var,temp_var);
-						delete (long long int *)temp_var.data;
-						temp_var.data=NULL;
-					}
-				}
-				else if(temp->type=="String")
-				{
-					temp_var.isGlobal=true;
-					temp_var.Type="string";
-					temp_var.data=new std::string;
-					std::string temp_string="";
-					for(int i=1;i<(int)temp->content.length()-1;++i)
-						temp_string+=temp->content[i];
-					*((std::string *)temp_var.data)=temp_string;
-					nasal_var_stack.append_var(name_of_var,temp_var);
-					delete (std::string *)temp_var.data;
-					temp_var.data=NULL;
-				}
-				else if(temp->type=="Operator" && temp->content=="{")
-				{
-					bool make_pair=false;
-					int cnt=1;
-					while(temp->next)
-					{
-						temp=temp->next;
-						if(temp->type=="Operator" && temp->content=="}")
-						{
-							--cnt;
-							if(!cnt)
-							{
-								make_pair=true;
-								break;
-							}
-						}
-						else if(temp->type=="Operator" && temp->content=="{")
-							++cnt;
-					}
-					if(!make_pair)
-					{
-						print_line_token(temp->line);
-						std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \"}\"."<<std::endl;
-						return;
-					}
-				}
-				else if(temp->type=="Operator" && temp->content=="[")
-				{
-					bool make_pair=false;
-					int cnt=1;
-					while(temp->next)
-					{
-						temp=temp->next;
-						if(temp->type=="Operator" && temp->content=="]")
-						{
-							--cnt;
-							if(!cnt)
-							{
-								make_pair=true;
-								break;
-							}
-						}
-						else if(temp->type=="Operator" && temp->content=="[")
-							++cnt;
-					}
-					if(!make_pair)
-					{
-						print_line_token(temp->line);
-						std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \"]\"."<<std::endl;
-						return;
-					}
-				}
-				else
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Missing value after operator \"=\" ."<<std::endl;
-					return;
-				}
-						
-				if(!(temp->next && temp->next->content==";"))
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \";\" at the end of the statement."<<std::endl;
-					nasal_var_stack.pop_var();
-					return; 
-				} 
-				else
-					temp=temp->next;
-			//end var
+				if(content_array[j].type==OPERATOR && content_array[j].content=="{")
+					++in_brace;
+				if(content_array[j].type==OPERATOR && content_array[j].content=="}")
+					--in_brace;
 			}
-			else if(temp->content=="print")
-			{
-				if(temp->next && temp->next->content=="(")
-				{
-					temp=temp->next;
-					while(temp->next)
-					{
-						temp=temp->next;
-						if(temp->type=="String")
-						{
-							std::string temp_string="";
-							for(int i=1;i<(int)temp->content.length()-1;++i)
-								temp_string+=temp->content[i];
-							PrintString(temp_string);
-						}
-						else if(temp->type=="Identifier")
-							PrintVar(nasal_var_stack.SearchVar(temp->content));
-						else if(temp->type=="Operator" && temp->content==")")
-						{
-							if(!temp->next)
-							{
-								print_line_token(temp->line);
-								std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \";\" at the end of the statement."<<std::endl;
-								return;
-							}
-							break;
-						}
-						else if(temp->type=="Operator" && temp->content==";")
-						{
-							print_line_token(temp->line);
-							std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \")\" at the end of print."<<std::endl;
-							return;
-						}
-					}
-				}
-				else
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \"(\" after function print."<<std::endl;
-					return;
-				}
-				if(!(temp->next && temp->next->content==";"))
-				{
-					print_line_token(temp->line);
-					std::cout<<"line "<<temp->line<<": "<<"[Error] Expect a \";\" at the end of the statement."<<std::endl;
-					return;
-				}
-			}
+			definition();
 		}
-		else if(temp->type=="String")
+		else if(content_array[i].type==IDENTIFIER)
 		{
-			print_line_token(temp->line);
-			std::cout<<"line "<<temp->line<<": "<<"[Error] String without any tokens."<<std::endl;
-			return;
+			int in_brace=0;
+			statement_set_empty();
+			for(int j=i;j<=len;++j)
+			{
+				statement[j-i]=content_array[j];
+				if(content_array[j].type==OPERATOR && content_array[j].content==";" && in_brace==0)
+				{
+					i=j;
+					break;
+				}
+				if(content_array[j].type==OPERATOR && content_array[j].content=="{")
+					++in_brace;
+				if(content_array[j].type==OPERATOR && content_array[j].content=="}")
+					--in_brace;
+			}
+			assignment();
 		}
 	}
-	//nasal_var_stack.print_var(); //for debug mode
-	//nasal_func_stack.print_function(); //for debug mode
-	nasal_var_stack.delete_all();
-	nasal_func_stack.delete_all();
-	std::cout<<">> Running complete."<<std::endl;
+	nasal_var_stack.print_var();
+	nasal_func_stack.print_function();
 	return;
-}*/
+}
 
 #endif

@@ -3,9 +3,6 @@
 
 #include "nasal_print.h"
 
-namespace nasal
-{
-
 struct var_stack_unit
 {
 	std::string var_name;
@@ -41,7 +38,7 @@ class var_stack
 			else
 				delete head;
 		}
-		void append_var(std::string &varia_name,var &temp_var)
+		void append_var(std::string& varia_name,var& temp_var)
 		{
 			var_stack_unit *temp=head;
 			while(temp->next)
@@ -58,8 +55,33 @@ class var_stack
 			while(temp->next)
 			{
 				temp=temp->next;
-				std::cout<<"["<<temp->var_detail.Type<<"]: "<<temp->var_name<<" : ";
-				if(temp->var_detail.Type!="string")
+				std::cout<<"[";
+				switch(temp->var_detail.type)
+				{
+					case VAR_NONE:
+						std::cout<<"null";
+						break;
+					case VAR_LLINT:
+						std::cout<<"int";
+						break;
+					case VAR_DOUBLE:
+						std::cout<<"float";
+						break;
+					case VAR_CHAR:
+						std::cout<<"char";
+						break;
+					case VAR_STRING:
+						std::cout<<"string";
+						break;
+					case VAR_LIST:
+						std::cout<<"array";
+						break;
+					case VAR_HASH:
+						std::cout<<"hash";
+						break;
+				}
+				std::cout<<"]: "<<temp->var_name<<" : ";
+				if(temp->var_detail.type!=VAR_STRING)
 					PrintVar(temp->var_detail);
 				else
 					std::cout<<*((std::string *)temp->var_detail.data);
@@ -67,20 +89,36 @@ class var_stack
 			}
 			return;
 		}
-		var SearchVar(std::string varia_name)
+		var search_var(std::string varia_name)
 		{
 			var temp_var;
 			temp_var.data=NULL;
-			temp_var.Type="null";
-			temp_var.isGlobal=false;
+			temp_var.type=VAR_NONE;
 			var_stack_unit *temp=head;
 			while(temp->next)
 			{
 				temp=temp->next;
 				if(temp->var_name==varia_name)
+				{
 					temp_var=temp->var_detail;
+					break;
+				}
 			}
 			return temp_var;
+		}
+		void edit_var(std::string varia_name,var &temp_var)
+		{
+			var_stack_unit *temp=head;
+			while(temp->next)
+			{
+				temp=temp->next;
+				if(temp->var_name==varia_name)
+				{
+					temp->var_detail=temp_var;
+					break;
+				}
+			}
+			return;
 		}
 		void pop_var()
 		{
@@ -113,7 +151,6 @@ class var_stack
 			return;
 		}
 };
-
-}
+var_stack nasal_var_stack;
 
 #endif

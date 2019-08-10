@@ -20,13 +20,13 @@ namespace nasal
 #include "nasal_var.cpp"
 #include "nasal_list.cpp"
 #include "nasal_hash.cpp"
-//#include "nasal_print.h"
-//#include "nasal_var_stack.h"
-//#include "nasal_func_stack.h"
+#include "nasal_print.h"
+#include "nasal_var_stack.h"
+#include "nasal_func_stack.h"
 #include "nasal_functional.cpp"
 
 #include "nasal_lexer.h"
-
+#include "nasal_parse.h"
 }
 
 #endif

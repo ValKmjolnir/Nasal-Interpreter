@@ -6,9 +6,6 @@
 #include "nasal_hash.cpp"
 #include "nasal_list.cpp"
 
-namespace nasal
-{
-
 void PrintString(std::string &PrintInfo)
 {
 	for(int i=0;i<(int)PrintInfo.length();++i)
@@ -60,26 +57,20 @@ void PrintString(std::string &PrintInfo)
 }
 void PrintVar(var Var)
 {
-	if(Var.Type=="int")
-		std::cout<<*((int *)Var.data);
-	else if(Var.Type=="long long int")
+	if(Var.type==VAR_LLINT)
 		std::cout<<*((long long int *)Var.data);
-	else if(Var.Type=="float")
-		std::cout<<*((float *)Var.data);
-	else if(Var.Type=="double")
+	else if(Var.type==VAR_DOUBLE)
 		std::cout<<*((double *)Var.data);
-	else if(Var.Type=="char")
+	else if(Var.type==VAR_CHAR)
 		std::cout<<*((char *)Var.data);
-	else if(Var.Type=="string")
+	else if(Var.type==VAR_STRING)
 		PrintString(*((std::string *)Var.data));
-	else if(Var.Type=="array")
-		((NasalList *)Var.data)->PrintList();
-	else if(Var.Type=="hash")
-		((NasalHash *)Var.data)->PrintHash();
+//	else if(Var.type==VAR_LIST)
+//		((NasalList *)Var.data)->PrintList();
+//	else if(Var.type==VAR_HASH)
+//		((NasalHash *)Var.data)->PrintHash();
 	else
-		std::cout<<"null";
-}
-
+		std::cout<<"[Error] Null type or function";
 }
 
 #endif

@@ -1,11 +1,8 @@
 #ifndef __NASAL_FUNC_STACK_H__
 #define __NASAL_FUNC_STACK_H__
 
-#include "nasal_func.h"
+#include "nasal_functional.h"
 
-
-namespace nasal
-{
 
 struct func_stack_unit
 {
@@ -60,21 +57,21 @@ class func_stack
 			temp->func_statement=temp_func;
 			return;
 		}
-		void run_function(std::string &function_name)
-		{
-			func_stack_unit *temp=head;
-			while(temp->next)
-			{
-				temp=temp->next;
-				if(temp->func_name==function_name)
-				{
-					temp->func_statement.run();
-					return;
-				}
-			}
-			std::cout<<"[Error] Could not find this function."<<std::endl;
-			return;
-		}
+//		void run_function(std::string &function_name)
+//		{
+//			func_stack_unit *temp=head;
+//			while(temp->next)
+//			{
+//				temp=temp->next;
+//				if(temp->func_name==function_name)
+//				{
+//					temp->func_statement.run();
+//					return;
+//				}
+//			}
+//			std::cout<<"[Error] Could not find this function."<<std::endl;
+//			return;
+//		}
 		void print_function()
 		{
 			func_stack_unit *temp=head;
@@ -117,8 +114,6 @@ class func_stack
 			return;
 		}
 };
-
-}
-
+func_stack nasal_func_stack;
 
 #endif
