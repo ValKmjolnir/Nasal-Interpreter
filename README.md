@@ -268,8 +268,18 @@ struct parameter;
 
 class func;
 
+class var_stack;
+
+var_stack nasal_var_stack;
+
+class func_stack;
+
+func_stack nasal_func_stack;
+
 class token_list;
 
 #include "nasal_lexer.h"
+
+#include "nasal_parse.h"
 
 main();
