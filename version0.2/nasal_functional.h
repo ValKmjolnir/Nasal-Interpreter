@@ -50,13 +50,48 @@ class token_list
 {
 	private:
 		token_unit *head;
+		int list_range;
 	public:
 		token_list();
 		~token_list();
+		token_unit* get_head();
+		int get_list_range();
 		void print_line_token(const int);
 		void delete_all();
 		void append(const int,const int,std::string&);
 		void print();
+};
+
+struct parse_unit
+{
+	int type;
+	std::string content;
+	int line;
+};
+
+class parse
+{
+	private:
+		parse_unit *content_array;
+		parse_unit *statement;
+		int len;
+	public:
+		parse();
+		~parse();
+		void content_array_set_empty();
+		void statement_set_empty();
+		void brace_check();
+		bool def_function();
+		bool def_array();
+		bool def_hash();
+		bool def_scalar();
+		bool asi_function();
+		bool asi_array();
+		bool asi_hash();
+		bool asi_scalar();
+		void definition();
+		void assignment();
+		void total_run(token_list&);
 };
 
 #endif

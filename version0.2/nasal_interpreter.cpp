@@ -10,7 +10,7 @@ int main()
 	while(1)
 	{
 		std::cout<<">> ";
-		std::cin>>command;
+		std::getline(std::cin,command);
 		if(command=="help")
 		{
 			std::cout<<">> 1. input file name to run the nasal script."<<std::endl;
@@ -19,6 +19,7 @@ int main()
 			std::cout<<">> 4. command lexer to see tokens in stack."<<std::endl;
 			std::cout<<">> 5. command del to delete all elements in stack."<<std::endl;
 			std::cout<<">> 6. command run to run the programme in stack."<<std::endl;
+			std::cout<<">> 7. command rs to check the source program."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -26,15 +27,23 @@ int main()
 			//linux system("clear");
 			//macOS system("clear");
 		}
+		else if(command=="rs")
+			nasal::PrintSourceFile();
 		else if(command=="exit")
 			break;
 		else if(command=="lexer")
 			nasal::nasal_lexer.print();
 		else if(command=="del")
+		{
 			nasal::nasal_lexer.delete_all();
+			nasal::nasal_var_stack.delete_all();
+			nasal::nasal_func_stack.delete_all();
+		}
 		else if(command=="run")
 		{
-			;
+			nasal::nasal_var_stack.delete_all();
+			nasal::nasal_func_stack.delete_all();
+			nasal::nasal_parse.total_run(nasal::nasal_lexer);
 		}
 		else
 			nasal::RunProcess(command);

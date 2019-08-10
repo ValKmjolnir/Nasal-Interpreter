@@ -30,7 +30,7 @@ std::string OperatorOrDelimiter[40]=
 };
 
 std::string IdentifierTable[1000]={""};
-char ResourcePrograme[16777216];
+char ResourceProgram[16777216];
 
 int isReserveWord(std::string &p)
 {
@@ -61,37 +61,44 @@ bool isNumber(char t)
 void InputFile(std::string &FileName)
 {
 	std::ifstream fin(FileName);
-	if(fin.fail())
-	{
-		std::cout<<"[Error] Failed to load file: "<<FileName<<std::endl;
-		ResourcePrograme[0]='@';
-		fin.close();
-		return;
-	}
 	int i=0;
 	bool FindNote=false;
 	while(!fin.eof())
 	{
-		ResourcePrograme[i]=fin.get();
-		if(ResourcePrograme[i]=='\n')
+		ResourceProgram[i]=fin.get();
+		if(ResourceProgram[i]=='\n')
 			FindNote=false;
-		if(ResourcePrograme[i]!='#' && !FindNote)
+		if(ResourceProgram[i]!='#' && !FindNote)
 			++i;
-		else if(ResourcePrograme[i]=='#')
+		else if(ResourceProgram[i]=='#')
 		{
 			FindNote=true;
 		}
 		if(fin.eof())
 			break;
 	}
-	ResourcePrograme[i]='@';
-//	print source file
-//	++i;
-//	for(int j=0;j<i;++j)
-//		std::cout<<ResourcePrograme[j];
-//	std::cout<<std::endl;
+	ResourceProgram[i]=0;
+
 	fin.close();
 	return;
+}
+
+void PrintSourceFile()
+{
+	int line=1;
+	std::cout<<line<<"	";
+	for(int i=0;i<16777216;++i)
+	{
+		if(!ResourceProgram[i])
+			break;
+		std::cout<<ResourceProgram[i];
+		if(ResourceProgram[i]=='\n')
+		{
+			++line;
+			std::cout<<line<<"	";
+		}
+	}
+	std::cout<<std::endl;
 }
 
 void Scanner(int &Syn,const char Source[],std::string &token,int &ptr,int &line)
@@ -200,7 +207,7 @@ void Scanner(int &Syn,const char Source[],std::string &token,int &ptr,int &line)
 				++ptr;
 				temp=Source[ptr];
 			}
-			if(temp=='@' || temp=='\n')
+			if(temp==0 || temp=='\n')
 				break;
 		}
 		//add the last char \"
@@ -212,7 +219,7 @@ void Scanner(int &Syn,const char Source[],std::string &token,int &ptr,int &line)
 		else
 			token+=" __missing_end_of_string";
 	}
-	else if(temp=='@')
+	else if(temp==0)
 	{
 		Syn=SCANEND;
 		return;
@@ -241,12 +248,21 @@ void RunProcess(std::string &FileName)
 	int Ptr=0;//pointer to one char in ResourcePrograme
 	int line=1;
 	std::string token;
+	std::ifstream fin(FileName);
+	if(fin.fail())
+	{
+		std::cout<<"[Error] Failed to load file: "<<FileName<<std::endl;
+		fin.close();
+		return;
+	}
+	else
+		fin.close();
+	ResourceProgram[0]=0;
 	nasal_lexer.delete_all();
-	
 	InputFile(FileName);
 	while(Syn!=SCANEND && Syn!=ERRORFOUND)
 	{
-		Scanner(Syn,ResourcePrograme,token,Ptr,line);
+		Scanner(Syn,ResourceProgram,token,Ptr,line);
 		if(Syn>0)//all Syn type is larger than zero
 			nasal_lexer.append(line,Syn,token);
 	}
