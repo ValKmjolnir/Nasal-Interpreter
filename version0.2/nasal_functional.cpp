@@ -122,27 +122,33 @@ func::~func()
 }
 func& func::operator=(const func& temp)
 {
-	token_unit *statement_temp=statement_head;
+	token_unit *statement_temp=statement_head->next;
 	token_unit *temp_state=temp.statement_head;
-	parameter *parameter_temp=parameter_head;
+	parameter *parameter_temp=parameter_head->next;
 	parameter *temp_param=temp.parameter_head;
 	
 	token_unit *statement_last=NULL;
 	parameter *parameter_last=NULL;
-	while(statement_temp->next)
+	if(statement_temp)
 	{
-		statement_last=statement_temp;
-		statement_temp=statement_temp->next;
-		delete statement_last;
+		while(statement_temp->next)
+		{
+			statement_last=statement_temp;
+			statement_temp=statement_temp->next;
+			delete statement_last;
+		}
+		delete statement_temp;
 	}
-	delete statement_temp;
-	while(parameter_temp->next)
+	if(parameter_temp)
 	{
-		parameter_last=parameter_temp;
-		parameter_temp=parameter_temp->next;
-		delete parameter_last;
+			while(parameter_temp->next)
+		{
+			parameter_last=parameter_temp;
+			parameter_temp=parameter_temp->next;
+			delete parameter_last;
+		}
+		delete parameter_temp;
 	}
-	delete parameter_temp;
 	statement_head->next=NULL;
 	parameter_head->next=NULL;
 	statement_temp=statement_head;
@@ -295,7 +301,7 @@ parse::parse()
 {
 	len=0;
 	content_array=new parse_unit[4096];
-	statement=new parse_unit[2048];
+	statement=new parse_unit[1024];
 }
 parse::~parse()
 {
@@ -310,17 +316,15 @@ void parse::content_array_set_empty()
 	{
 		content_array[i].line=0;
 		content_array[i].type=0;
-		content_array[i].content="";
 	}
 	return;
 }
 void parse::statement_set_empty()
 {
-	for(int i=0;i<2048;++i)
+	for(int i=0;i<1024;++i)
 	{
 		statement[i].line=0;
 		statement[i].type=0;
-		statement[i].content="";
 	}
 	return;
 }
@@ -361,19 +365,35 @@ void parse::brace_check()
 bool parse::def_function()
 {
 	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="func")
+	{
+		func temp_func;
+		nasal_func_stack.append_function(statement[1].content,temp_func);
 		return true;
+	}
 	return false;
 }
 bool parse::def_array()
 {
-	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="[")
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="[" && statement[4].content=="]")
+	{
+		var temp_var;
+		temp_var.type=VAR_LIST;
+		temp_var.data=new nasal_list;
+		nasal_var_stack.append_var(statement[1].content,temp_var);
 		return true;
+	}
 	return false;
 }
 bool parse::def_hash()
 {
-	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="{")
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="{" && statement[4].content=="}")
+	{
+		var temp_var;
+		temp_var.type=VAR_HASH;
+		temp_var.data=new nasal_hash;
+		nasal_var_stack.append_var(statement[1].content,temp_var);
 		return true;
+	}
 	return false;
 }
 bool parse::def_scalar()

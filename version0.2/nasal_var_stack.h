@@ -25,18 +25,13 @@ class var_stack
 		{
 			var_stack_unit *temp=head;
 			var_stack_unit *this_node=NULL;
-			if(head->next)
+			while(temp->next)
 			{
-				while(temp->next)
-				{
-					this_node=temp;
-					temp=temp->next;
-					delete this_node;
-				}
-				delete temp;
+				this_node=temp;
+				temp=temp->next;
+				delete this_node;
 			}
-			else
-				delete head;
+			delete temp;
 		}
 		void append_var(std::string& varia_name,var& temp_var)
 		{

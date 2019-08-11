@@ -30,7 +30,9 @@ int main()
 		else if(command=="rs")
 			nasal::PrintSourceFile();
 		else if(command=="exit")
+		{
 			break;
+		}
 		else if(command=="lexer")
 			nasal::nasal_lexer.print();
 		else if(command=="del")
