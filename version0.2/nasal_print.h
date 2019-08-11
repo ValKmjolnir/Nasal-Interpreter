@@ -65,10 +65,10 @@ void PrintVar(var Var)
 		std::cout<<*((char *)Var.data);
 	else if(Var.type==VAR_STRING)
 		PrintString(*((std::string *)Var.data));
-//	else if(Var.type==VAR_LIST)
-//		((NasalList *)Var.data)->PrintList();
-//	else if(Var.type==VAR_HASH)
-//		((NasalHash *)Var.data)->PrintHash();
+	else if(Var.type==VAR_LIST)
+		;//((nasal_list *)Var.data)->print_list();
+	else if(Var.type==VAR_HASH)
+		;//((nasal_hash *)Var.data)->PrintHash();
 	else
 		std::cout<<"[Error] Null type or function";
 }

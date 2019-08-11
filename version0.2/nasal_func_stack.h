@@ -26,18 +26,13 @@ class func_stack
 		{
 			func_stack_unit *temp=head;
 			func_stack_unit *this_node=NULL;
-			if(head->next)
+			while(temp->next)
 			{
-				while(temp->next)
-				{
-					this_node=temp;
-					temp=temp->next;
-					delete this_node;
-				}
-				delete temp;
+				this_node=temp;
+				temp=temp->next;
+				delete this_node;
 			}
-			else
-				delete head;
+			delete temp;
 		}
 		void append_function(std::string &function_name,func &temp_func)
 		{
@@ -54,6 +49,7 @@ class func_stack
 			temp->next=new func_stack_unit;
 			temp=temp->next;
 			temp->next=NULL;
+			temp->func_name=function_name;
 			temp->func_statement=temp_func;
 			return;
 		}
@@ -80,7 +76,6 @@ class func_stack
 				temp=temp->next;
 				std::cout<<"function: "<<temp->func_name<<std::endl;
 			}
-			std::cout<<"function: "<<temp->func_name<<std::endl;
 			return;
 		}
 		void pop_function()
