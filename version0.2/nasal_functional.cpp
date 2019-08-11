@@ -72,6 +72,7 @@ func::func()
 	parameter_head=new parameter;
 	parameter_head->param_var.type=VAR_NONE;
 	parameter_head->param_var.data=NULL;
+	parameter_head->var_name="__null_var";
 	parameter_head->next=NULL;
 }
 func::func(const func& temp)
@@ -94,7 +95,9 @@ func::func(const func& temp)
 	{
 		temp_param=temp_param->next;
 		parameter_temp->next=new parameter;
+		parameter_temp=parameter_temp->next;
 		parameter_temp->param_var=temp_param->param_var;
+		parameter_temp->var_name=temp_param->var_name;
 		parameter_temp->next=NULL;
 	}
 }
@@ -141,7 +144,7 @@ func& func::operator=(const func& temp)
 	}
 	if(parameter_temp)
 	{
-			while(parameter_temp->next)
+		while(parameter_temp->next)
 		{
 			parameter_last=parameter_temp;
 			parameter_temp=parameter_temp->next;
@@ -167,19 +170,29 @@ func& func::operator=(const func& temp)
 	{
 		temp_param=temp_param->next;
 		parameter_temp->next=new parameter;
+		parameter_temp=parameter_temp->next;
 		parameter_temp->param_var=temp_param->param_var;
+		parameter_temp->var_name=temp_param->var_name;
 		parameter_temp->next=NULL;
 	}
 	return *this;
 }
-void func::append_var(var& p)
+void func::append_var(std::string& varia_name,var& p)
 {
 	parameter *parameter_temp=parameter_head;
 	while(parameter_temp->next)
+	{
 		parameter_temp=parameter_temp->next;
+		if(parameter_temp->var_name==varia_name)
+		{
+			std::cout<<"[Error] Redefinition of var \""<<varia_name<<"\" ."<<std::endl;
+			return;
+		}
+	}
 	parameter_temp->next=new parameter;
 	parameter_temp=parameter_temp->next;
 	parameter_temp->param_var=p;
+	parameter_temp->var_name=varia_name;
 	parameter_temp->next=NULL;
 	return;
 }
@@ -194,6 +207,25 @@ void func::append_token(const int _line,const int _type,std::string &_content)
 	statement_temp->type=_type;
 	statement_temp->content=_content;
 	statement_temp->next=NULL;
+	return;
+}
+void func::print_info()
+{
+	parameter *para_temp=parameter_head;
+	token_unit *token_temp=statement_head;
+	std::cout<<"\n\t[parameter] :";
+	while(para_temp->next)
+	{
+		para_temp=para_temp->next;
+		std::cout<<para_temp->var_name<<" ";
+	}
+	std::cout<<"\n\t[statement] :";
+	while(token_temp->next)
+	{
+		token_temp=token_temp->next;
+		std::cout<<token_temp->content<<" ";
+	}
+	std::cout<<std::endl;
 	return;
 }
 
@@ -364,9 +396,40 @@ void parse::brace_check()
 }
 bool parse::def_function()
 {
-	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="func")
+	if(statement[0].content=="var" && statement[1].type==IDENTIFIER && statement[2].content=="=" && statement[3].content=="func" && statement[4].content=="(")
 	{
 		func temp_func;
+		int i;
+		for(i=5;i<1024;++i)
+		{
+			if(statement[i].type==IDENTIFIER)
+			{
+				var temp_var;
+				temp_func.append_var(statement[i].content,temp_var);
+			}
+			else if(statement[i].content==")")
+				break;
+		}
+		++i;
+		if(statement[i].content=="{")
+		{
+			int brace=0;
+			for(int j=i;j<1024;++j)
+			{
+				temp_func.append_token(statement[j].line,statement[j].type,statement[j].content);
+				if(statement[j].content=="{")
+					++brace;
+				if(statement[j].content=="}")
+					--brace;
+				if(statement[j].content=="}" && !brace)
+					break;
+			}
+		}
+		else
+		{
+			std::cout<<"[Error] Missing {} module after function "<<statement[1].content<<" ."<<std::endl;
+			return false;
+		}
 		nasal_func_stack.append_function(statement[1].content,temp_func);
 		return true;
 	}
@@ -435,13 +498,18 @@ bool parse::def_scalar()
 void parse::definition()
 {
 	int brace=0;
-	for(int i=0;i<2048;++i)
+	bool is_func=false;
+	if(statement[3].content=="func")
+		is_func=true;
+	for(int i=0;i<1024;++i)
 	{
-		if(!statement[i].line)
+		if(!statement[i].line && !is_func)
 		{
 			std::cout<<"[Error] line "<<statement[0].line<<": Expect a \";\" after "<<statement[0].content<<"."<<std::endl;
 			break;
 		}
+		if(!statement[i].line && is_func)
+			break;
 		if(statement[i].content==";" && !brace)
 			break;
 		if(statement[i].content=="{")
@@ -514,7 +582,7 @@ bool parse::asi_scalar()
 void parse::assignment()
 {
 	int brace=0;
-	for(int i=0;i<2048;++i)
+	for(int i=0;i<1024;++i)
 	{
 		if(statement[i].line==0)
 		{
@@ -556,19 +624,27 @@ void parse::total_run(token_list& p)
 		if(content_array[i].type==RESERVEWORD && content_array[i].content=="var")
 		{
 			int in_brace=0;
+			bool is_func=false;
+			if(content_array[i+3].content=="func")
+				is_func=true;
 			statement_set_empty();
 			for(int j=i;j<=len;++j)
 			{
 				statement[j-i]=content_array[j];
-				if(content_array[j].type==OPERATOR && content_array[j].content==";" && in_brace==0)
-				{
-					i=j;
-					break;
-				}
 				if(content_array[j].type==OPERATOR && content_array[j].content=="{")
 					++in_brace;
 				if(content_array[j].type==OPERATOR && content_array[j].content=="}")
 					--in_brace;
+				if(content_array[j].type==OPERATOR && content_array[j].content==";" && !in_brace && !is_func)
+				{
+					i=j;
+					break;
+				}
+				if(content_array[j].content=="}" && is_func && !in_brace)
+				{
+					i=j;
+					break;
+				}
 			}
 			definition();
 		}
