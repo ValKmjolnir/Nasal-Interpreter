@@ -74,7 +74,8 @@ class func_stack
 			while(temp->next)
 			{
 				temp=temp->next;
-				std::cout<<"function: "<<temp->func_name<<std::endl;
+				std::cout<<"function: "<<temp->func_name;
+				temp->func_statement.print_info();
 			}
 			return;
 		}

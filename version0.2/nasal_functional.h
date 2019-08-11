@@ -28,6 +28,7 @@ struct token_unit
 
 struct parameter
 {
+	std::string var_name;
 	var param_var;
 	parameter *next;
 };
@@ -42,8 +43,9 @@ class func
 		func(const func&);
 		~func();
 		func& operator=(const func&);
-		void append_var(var&);
+		void append_var(std::string&,var&);
 		void append_token(const int,const int,std::string &);
+		void print_info();
 };
 
 class token_list
@@ -61,6 +63,8 @@ class token_list
 		void append(const int,const int,std::string&);
 		void print();
 };
+
+token_list nasal_lexer;
 
 struct parse_unit
 {
