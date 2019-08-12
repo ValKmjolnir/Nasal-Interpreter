@@ -1,4 +1,4 @@
-# Nasal-Interpreter
+# Nasal-- Interpreter
 
 # Nasal
 
@@ -9,6 +9,12 @@ There is a Nasal console in FlightGear but sometimes it is not so easy for every
 So this is an interpreter for Nasal written by C++.
 
 The interpreter is still in development.Anyone who interested in this could also join us!
+
+# Nasal--
+
+For some reasons i will first try to make a interpreter for nasal--(???)
+
+Maybe.Because i haven't take the lesson of 'principle of compiler'(what a shame...)
 
 # Now complete all types
 
@@ -278,8 +284,12 @@ func_stack nasal_func_stack;
 
 class token_list;
 
-#include "nasal_lexer.h"
+token_list nasal_lexer;
 
-#include "nasal_parse.h"
+class parse;
+
+parse nasal_parser;
+
+#include "nasal_lexer.h"
 
 main();
