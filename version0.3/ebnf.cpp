@@ -108,3 +108,20 @@
 <choose> ::= [ <if> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
 			 { (<else> <if>)|<elsif> }|[ <else> ] <(> <condition> <)> (<statement> <;>)|(<{> { <statement> <;> } <}>)
 
+<identifier> ::= IDENTIFIER
+<number> ::= NUMBER
+<string> ::= STRING
+<array_search> ::= <identifier> <[> <number> <]>
+<array_member> ::= (<number>|<string>|<array>|<hash>|<identifier>|<use_function>|<array_search>|<hash_search> <,>)|(<number>|<string>|<array>|<hash>|<identifier>|<use_function>|<array_search>|<hash_search>)
+<array> ::= <[> <array_member> <]>
+<hash_search> ::= <identifier> <[> <string> <]>
+<hash_member> ::= (<identifier> <:> <number>|<string>|<array>|<hash>|<function>|<use_function>|<array_search>|<hash_search> <,>)|(<identifier> <:> <number>|<string>|<array>|<hash>|<function>|<use_function>|<array_search>|<hash_search>)
+<hash> ::= <{> <hash_member> <}>
+<parameter> ::= (<identifier> <,>)|<identifier>
+<function> ::= <func> <(> <parameter> <)> <{> <statement> <}>
+<use_function> ::= <identifier> <(> <parameter> <)>
+
+<statement> ::= <definition>|<assignment>|<loop>|<ifelse>|<use_function>|<return> <;>
+
+<definition> ::= <var> <identifier> <=> <number>|<string>|<array>|<hash>|<identifier>|<function>|<use_function>|<array_search>|<hash_search> <;>
+<assignment> ::= <identifier> <=> <number>|<string>|<array>|<hash>|<identifier>|<function>|<use_function>|<array_search>|<hash_search> <;>
