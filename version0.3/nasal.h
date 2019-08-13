@@ -8,6 +8,7 @@
 #include <thread>
 #include <ctime>
 #include <cmath>
+#include <stack>
 
 namespace nasal
 {

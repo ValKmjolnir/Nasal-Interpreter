@@ -83,6 +83,8 @@
 
 //statement
 <func_return> ::= <return> <scalar>
-<statement> ::= <definition>|<assignment>|<loop>|<choose>|<use_function>|<func_return> <;>
+<loop_continue> ::= <continue>
+<loop_break> ::= <break>
+<statement> ::= <definition>|<assignment>|<loop>|<choose>|<use_function>|<func_return>|<loop_continue>|<loop_break> <;>
 <statements> ::= <statement> <statement>
 <statements> ::= <statements> <statement>
