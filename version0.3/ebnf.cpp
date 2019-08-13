@@ -19,8 +19,8 @@
 <array> ::= <[> <scalar>|<scalars> <]>
 
 //hash
-<hash_search> ::= <use_identifier> <[> <string> <]>
-<hash_member> ::= <identifier> <:> <scalar>
+<hash_search> ::= <use_identifier> <.> <use_identifier>|<use_function>
+<hash_member> ::= <identifier> <:> <scalar>|<function>
 <hash_members> ::= <hash_member> <,> <hash_member>
 <hash_members> ::= <hash_members> <,> <hash_member>
 <hash> ::= <{> <hash_member>|<hash_members> <}>
@@ -33,7 +33,19 @@
 
 //definition & assignment
 <definition> ::= <var> <identifier> <=> <scalar>|<function> <;>
-<assignment> ::= <identifier> <=> <scalar> <;>
+<assignment> ::= <identifier> <=>|<+=>|<-=>|<*=>|</=>|<~=> <scalar> <;>
+
+//calculation
+<add> ::= <scalar> <+> <scalar>
+<sub> ::= <scalar> <-> <scalar>
+<mul> ::= <scalar> <*> <scalar>
+<div> ::= <scalar> </> <scalar>
+<link> ::= <scalar> <~> <scalar>
+<calc> ::= <add>|<sub>|<mul>|<div>
+<calcs> ::= <(> <calc>|<calcs> <)>
+<calcs> ::= <calc> <+>|<->|<*>|</>|<~> <calc>
+<calcs> ::= <calcs> <+>|<->|<*>|</>|<~> <calc>
+<calcs> ::= <calc> <+>|<->|<*>|</>|<~> <calcs>
 
 //loop
 <loop_condition> ::= <statement>|<statements> <;> <condition>|<conditions> <;> <statement>|<statements>
