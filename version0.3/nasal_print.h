@@ -1,8 +1,6 @@
 #ifndef __NASAL_PRINT_H__
 #define __NASAL_PRINT_H__
 
-#include<iostream>
-#include<cstring>
 #include "nasal_hash.cpp"
 #include "nasal_list.cpp"
 

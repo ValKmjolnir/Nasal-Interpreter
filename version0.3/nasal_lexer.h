@@ -1,10 +1,6 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
-
-#include <iostream>
-#include <fstream>
-#include <cstring>
 #include "nasal_functional.h"
 
 #define FAIL        -1 //Ê§°Ü 
