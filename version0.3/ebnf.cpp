@@ -9,38 +9,38 @@
 <string> ::= STRING
 
 //scalar
-<use_identifier> ::= <identifier>|<array_search>|<hash_search>
-<scalar> ::= <number>|<string>|<array>|<hash>|<use_identifier>|<use_function>
+<identifier> ::= <identifier>|<array_search>|<hash_search>
+<identifiers> ::= <identifier> <,> <identifier>
+<identifiers> ::= <identifiers> <,> <identifier>
+<scalar> ::= <number>|<string>|<array>|<hash>|<use_function>
 <scalars> ::= <scalar> <,> <scalar>
 <scalars> ::= <scalars> <,> <scalar>
 
 //array
-<array_search> ::= <use_identifier> <[> <number> <]>
-<array> ::= <[> <scalar>|<scalars> <]>
+<array_search> ::= <identifier> <[> <number> <]>
+<array> ::= <[> <scalar>|<scalars>|<identifier>|<identifiers> <]>
 
 //hash
-<hash_search> ::= <use_identifier> <.> <use_identifier>|<use_function>
-<hash_member> ::= <identifier> <:> <scalar>|<function>
+<hash_search> ::= <identifier> <.> <identifier>|<use_function>
+<hash_member> ::= <identifier> <:> <identifier>|<scalar>|<function>
 <hash_members> ::= <hash_member> <,> <hash_member>
 <hash_members> ::= <hash_members> <,> <hash_member>
 <hash> ::= <{> <hash_member>|<hash_members> <}>
 
 //function
-<parameter> ::= <scalar>
-<parameters> ::= <scalars>
-<function> ::= <func> <(> <parameter>|<parameters> <)> <{> <statement>|<statements> <}>
-<use_function> ::= <use_identifier> <(> <parameter>|<parameters> <)>
+<function> ::= <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
+<use_function> ::= <use_identifier> <(> <scalar>|<scalars>|<identifier>|<identifiers> <)>
 
 //definition & assignment
-<definition> ::= <var> <identifier> <=> <scalar>|<function> <;>
-<assignment> ::= <identifier> <=>|<+=>|<-=>|<*=>|</=>|<~=> <scalar> <;>
+<definition> ::= <var> <identifier> <=> <scalar>|<identifier>|<function> <;>
+<assignment> ::= <identifier> <=>|<+=>|<-=>|<*=>|</=>|<~=> <scalar>|<identifier> <;>
 
 //calculation
-<add> ::= <scalar> <+> <scalar>
-<sub> ::= <scalar> <-> <scalar>
-<mul> ::= <scalar> <*> <scalar>
-<div> ::= <scalar> </> <scalar>
-<link> ::= <scalar> <~> <scalar>
+<add> ::= <scalar>|<identifier> <+> <scalar>|<identifier>
+<sub> ::= <scalar>|<identifier> <-> <scalar>|<identifier>
+<mul> ::= <scalar>|<identifier> <*> <scalar>|<identifier>
+<div> ::= <scalar>|<identifier> </> <scalar>|<identifier>
+<link> ::= <scalar>|<identifier> <~> <scalar>|<identifier>
 <calc> ::= <add>|<sub>|<mul>|<div>
 <calcs> ::= <(> <calc>|<calcs> <)>
 <calcs> ::= <calc> <+>|<->|<*>|</>|<~> <calc>
@@ -55,8 +55,8 @@
 //if else
 <condition_link_operator> ::= <and>|<or>|<!>
 <cmp_operator> ::= <==>|<>>|<<>|<<=>|<>=>|<!=>|<condition_link_operator>
-<condition> ::= <scalar>
-<condition> ::= <scalar> <cmp_operator> <scalar>
+<condition> ::= <scalar>|<identifier>
+<condition> ::= <scalar>|<identifier> <cmp_operator> <scalar>|<identifier>
 <conditions> ::= <(> <condition> <)> <condition_link_operator> <(> <condition> <)>
 <conditions> ::= <(> <conditions> <)> <condition_link_operator> <(> <condition> <)>
 <conditions> ::= <(> <condition> <)> <condition_link_operator> <(> <conditions> <)>
@@ -82,7 +82,7 @@
 <choose> ::= <_if> <else_ifs> <_else>
 
 //statement
-<func_return> ::= <return> <scalar>
+<func_return> ::= <return> <scalar>|<identifier>
 <loop_continue> ::= <continue>
 <loop_break> ::= <break>
 <statement> ::= <definition>|<assignment>|<loop>|<choose>|<use_function>|<func_return>|<loop_continue>|<loop_break> <;>
