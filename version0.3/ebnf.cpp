@@ -82,9 +82,10 @@
 <choose> ::= <_if> <else_ifs> <_else>
 
 //statement
-<func_return> ::= <return> <scalar>|<identifier>
-<loop_continue> ::= <continue>
-<loop_break> ::= <break>
-<statement> ::= <definition>|<assignment>|<loop>|<choose>|<use_function>|<func_return>|<loop_continue>|<loop_break> <;>
+<func_return> ::= <return> <scalar>|<identifier> <;>
+<loop_continue> ::= <continue> <;>
+<loop_break> ::= <break> <;>
+<print_function> ::= <print> <(> <scalar>|<scalars>|<identifier>|<identifiers> <)> <;>
+<statement> ::= <definition>|<assignment>|<loop>|<choose>|<use_function>|<func_return>|<loop_continue>|<loop_break>|<print_function>
 <statements> ::= <statement> <statement>
 <statements> ::= <statements> <statement>
