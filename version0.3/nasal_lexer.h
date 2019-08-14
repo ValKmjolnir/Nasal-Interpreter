@@ -253,6 +253,8 @@ void RunProcess(std::string &FileName)
 		fin.close();
 	ResourceProgram[0]=0;
 	nasal_lexer.delete_all();
+	nasal_var_stack.delete_all();
+	nasal_func_stack.delete_all();
 	InputFile(FileName);
 	while(Syn!=SCANEND && Syn!=ERRORFOUND)
 	{
