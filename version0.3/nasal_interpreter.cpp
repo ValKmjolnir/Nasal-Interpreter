@@ -38,15 +38,15 @@ int main()
 		else if(command=="del")
 		{
 			nasal::nasal_lexer.delete_all();
+			nasal::nasal_parse.stack_set_empty();
 			nasal::nasal_var_stack.delete_all();
 			nasal::nasal_func_stack.delete_all();
 		}
-		else if(command=="parser")
-			nasal::nasal_parse.parse_work(nasal::nasal_lexer);
-		else if(command=="run")
+		else if(command=="parser" || command=="run")
 		{
-			;
-		}
+			nasal::nasal_parse.parse_work(nasal::nasal_lexer);
+			//nasal::nasal_parse.print_stack();
+		}	
 		else
 			nasal::RunProcess(command);
 	}
