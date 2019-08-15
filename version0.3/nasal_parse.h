@@ -25,7 +25,7 @@ enum token_type
 	__array_search,__hash_search,
 	__statement,__statements,
 	__function,//function(){}
-	__use_function,
+	__use_function,__class_function,
 	__definition,__assignment,
 	__print_function,// print()
 	__loop,__loop_continue,__loop_break,// for()while() continue; break;
@@ -118,7 +118,7 @@ void parse::class_function_reduction()
 		&& tbl[7]==__left_brace && (tbl[8]==__statement || tbl[8]==__statements) && tbl[9]==__right_brace)
 	{
 		parse_unit temp_parse_unit;
-		temp_parse_unit.type=__function;
+		temp_parse_unit.type=__class_function;
 		temp_parse_unit.line=parser.top().line;
 		for(int i=0;i<7;++i)
 			parser.pop();
@@ -129,7 +129,7 @@ void parse::class_function_reduction()
 		&& (tbl[8]==__statement || tbl[8]==__statements) && tbl[9]==__right_brace)
 	{
 		parse_unit temp_parse_unit;
-		temp_parse_unit.type=__function;
+		temp_parse_unit.type=__class_function;
 		temp_parse_unit.line=parser.top().line;
 		for(int i=0;i<6;++i)
 			parser.pop();
@@ -140,7 +140,7 @@ void parse::class_function_reduction()
 		&& tbl[8]==__left_brace && tbl[9]==__right_brace)
 	{
 		parse_unit temp_parse_unit;
-		temp_parse_unit.type=__function;
+		temp_parse_unit.type=__class_function;
 		temp_parse_unit.line=parser.top().line;
 		for(int i=0;i<6;++i)
 			parser.pop();
@@ -151,7 +151,7 @@ void parse::class_function_reduction()
 		&& tbl[8]==__left_brace && tbl[9]==__right_brace)
 	{
 		parse_unit temp_parse_unit;
-		temp_parse_unit.type=__function;
+		temp_parse_unit.type=__class_function;
 		temp_parse_unit.line=parser.top().line;
 		for(int i=0;i<5;++i)
 			parser.pop();
@@ -210,7 +210,7 @@ void parse::hash_search_reduction()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if(tbl[0]==__identifier && tbl[1]==__dot && (tbl[2]==__identifier || tbl[2]==__function))
+	if(tbl[0]==__identifier && tbl[1]==__dot && (tbl[2]==__identifier || tbl[2]==__function || tbl[2]==__use_function))
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__identifier;
@@ -242,7 +242,7 @@ void parse::function_call_reduction()
 	}
 	if(tbl[0]==__identifier && tbl[1]==__left_curve
 		&& (tbl[2]==__identifier || tbl[2]==__identifiers || tbl[2]==__scalar || tbl[2]==__scalars)
-		&& tbl[3]==__right_curve && tbl[4]==__semi)
+		&& tbl[3]==__right_curve)
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__use_function;
@@ -251,7 +251,7 @@ void parse::function_call_reduction()
 			parser.pop();
 		parser.push(temp_parse_unit);
 	}
-	else if(tbl[1]==__identifier && tbl[2]==__left_curve && tbl[3]==__right_curve && tbl[4]==__semi)
+	else if(tbl[1]==__identifier && tbl[2]==__left_curve && tbl[3]==__right_curve)
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__use_function;
@@ -281,7 +281,7 @@ void parse::hash_member_reduction()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if(tbl[0]==__identifier && tbl[1]==__colon && (tbl[2]==__identifier || tbl[2]==__scalar || tbl[2]==__function))
+	if(tbl[0]==__identifier && tbl[1]==__colon && (tbl[2]==__identifier || tbl[2]==__scalar || tbl[2]==__class_function || tbl[2]==__use_function))
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__hash_member;
@@ -341,7 +341,7 @@ void parse::definition_reduction()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if(tbl[2]==__var && tbl[3]==__identifier && tbl[4]==__equal && (tbl[5]==__scalar || tbl[5]==__identifier) && tbl[6]==__semi)
+	if(tbl[2]==__var && tbl[3]==__identifier && tbl[4]==__equal && (tbl[5]==__scalar || tbl[5]==__identifier || tbl[5]==__use_function) && tbl[6]==__semi)
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__definition;
@@ -351,7 +351,7 @@ void parse::definition_reduction()
 		parser.push(temp_parse_unit);
 	}
 	else if(tbl[0]==__var && tbl[1]==__identifier && tbl[2]==__equal && tbl[3]==__left_bracket
-		&& (tbl[4]==__identifier || tbl[4]==__identifiers || tbl[4]==__scalar || tbl[4]==__scalars)
+		&& (tbl[4]==__identifier || tbl[4]==__identifiers || tbl[4]==__scalar || tbl[4]==__scalars || tbl[4]==__use_function || tbl[4]==__array_search || tbl[4]==__hash_search)
 		&& tbl[5]==__right_bracket && tbl[6]==__semi)
 	{
 		parse_unit temp_parse_unit;
@@ -495,8 +495,8 @@ void parse::scalar_reduction()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if(((tbl[0]==__scalar || tbl[0]==__scalars || tbl[0]==__identifier || tbl[0]==__identifiers) && tbl[1]==__comma && tbl[2]==__scalar)
-		|| ((tbl[0]==__scalar || tbl[0]==__scalars) && tbl[1]==__comma && tbl[2]==__identifier))
+	if(((tbl[0]==__scalar || tbl[0]==__scalars || tbl[0]==__identifier || tbl[0]==__identifiers || tbl[0]==__use_function) && tbl[1]==__comma && (tbl[2]==__scalar || tbl[2]==__use_function))
+		|| ((tbl[0]==__scalar || tbl[0]==__scalars || tbl[0]==__use_function) && tbl[1]==__comma && tbl[2]==__identifier))
 	{
 		parse_unit temp_parse_unit;
 		temp_parse_unit.type=__scalars;
