@@ -27,24 +27,36 @@
 <4><identifiers> ::=
 	<identifier>  <,> <identifier>
 	<identifiers> <,> <identifier>
-<5><definition> ::=
+<5><hash_member> ::=
+	<identifier> <:> <identifier>|<scalar>
+<6><hash_members> ::=
+	<hash_member>|<hash_members> <,> <hash_member>
+<7><definition> ::=
 	<var> <identifier> <=> <identifier> <;>
-	<var> <identifier> <=> <call_function> <;>
 	<var> <identifier> <=> <[><]> <;>
 	<var> <identifier> <=> <{><}> <;>
 	<var> <identifier> <=> <[> <scalar>|<scalars>|<identifier>|<identifiers> <]> <;>
 	<var> <identifier> <=> <{> <hash_members> <}> <;>
-<6><assignment> ::=
+<8><assignment> ::=
 	<identifier> <=> <identifier> <;>
-<7><def_func> ::=
+<9><def_func> ::=
 	<var> <identifier> <=> <func> <(><)> <{><}>
 	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{><}>
 	<var> <identifier> <=> <func> <(><)> <{> <statements> <}>
 	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statements> <}>
-<8><statement> ::=
+<10><loop> ::=
+	<...>
+<11><choose> ::=
+	<...>
+<12><statement> ::=
 	<definition>
 	<assignment>
 	<def_func>
 	<identifier> <;>
-<9><statements> ::=
+	<return> <identifier>|<scalar> <;>
+	<continue> <;>
+	<break> <;>
+	<loop>
+	<choose>
+<13><statements> ::=
 	<statement>|<statements> <statement>
