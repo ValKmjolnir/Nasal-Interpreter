@@ -7,13 +7,11 @@
 #define SCANEND     -2 //…®√ËÕÍ≥… 
 #define ERRORFOUND  -3 //“Ï≥£¥ÌŒÛ 
 
-std::string ReserveWord[26]=
+std::string ReserveWord[15]=
 {
 	"for","foreach","forindex","while",
 	"var","func","break","continue","return",
-	"if","else","elsif","nil","and","or",
-	"print","cmp","append","setsize","subvec","pop",
-	"sort","contains","delete","keys","typeof"
+	"if","else","elsif","nil","and","or"
 };
 
 std::string OperatorOrDelimiter[40]=
@@ -30,7 +28,7 @@ char ResourceProgram[16777216];
 
 int isReserveWord(std::string &p)
 {
-	for(int i=0;i<26;++i)
+	for(int i=0;i<15;++i)
 		if(ReserveWord[i]==p)
 			return i+1;
 	return FAIL;
