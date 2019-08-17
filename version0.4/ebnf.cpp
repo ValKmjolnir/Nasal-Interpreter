@@ -39,11 +39,15 @@
 	<var> <identifier> <=> <{> <hash_members> <}> <;>
 <8><assignment> ::=
 	<identifier> <=> <identifier> <;>
+	<identifier> <=> <[><]> <;>
+	<identifier> <=> <{><}> <;>
+	<identifier> <=> <[> <scalar>|<scalars>|<identifier>|<identifiers> <]> <;>
+	<identifier> <=> <{> <hash_members> <}> <;>
 <9><def_func> ::=
 	<var> <identifier> <=> <func> <(><)> <{><}>
 	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{><}>
-	<var> <identifier> <=> <func> <(><)> <{> <statements> <}>
-	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statements> <}>
+	<var> <identifier> <=> <func> <(><)> <{> <statement>|<statements> <}>
+	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
 <10><loop> ::=
 	<...>
 <11><choose> ::=
