@@ -12,14 +12,14 @@ int main()
 		if(command=="help")
 		{
 			std::cout<<">> nasal-- script by ValKmjolnir"<<std::endl;
-			std::cout<<">> 1. input file name to run the lexer."<<std::endl;
-			std::cout<<">> 2. command \"cls\" to clear the screen."<<std::endl;
-			std::cout<<">> 3. command \"exit\" to shut down the program."<<std::endl;
-			std::cout<<">> 4. command \"lexer\" to see tokens in stack."<<std::endl;
-			std::cout<<">> 5. command \"parser\" to run parser."<<std::endl;
-			std::cout<<">> 6. command \"del\" to delete all elements in stack."<<std::endl;
-			std::cout<<">> 7. command \"run\" to run the programme in stack."<<std::endl;
-			std::cout<<">> 8. command \"rs\" to check the source program."<<std::endl;
+			std::cout<<">> 1.         |input file name to run the lexer."<<std::endl;
+			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
+			std::cout<<">> 3. \"exit\"  |shut down the program."<<std::endl;
+			std::cout<<">> 4. \"lexer\" |see tokens in stack."<<std::endl;
+			std::cout<<">> 5. \"parser\"|run parser."<<std::endl;
+			std::cout<<">> 6. \"del\"   |delete all elements in stack."<<std::endl;
+			std::cout<<">> 7. \"run\"   |run the programme in stack."<<std::endl;
+			std::cout<<">> 8. \"rs\"    |check the source program."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -37,6 +37,7 @@ int main()
 			nasal::nasal_lexer.print();
 		else if(command=="del")
 		{
+			nasal::ResourceProgram[0]=0;
 			nasal::nasal_lexer.delete_all();
 			nasal::nasal_parse.stack_set_empty();
 			nasal::nasal_var_stack.delete_all();
