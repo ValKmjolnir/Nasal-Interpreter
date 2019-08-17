@@ -46,6 +46,7 @@ class parse
 		bool hashmember_check();
 		bool hashmembers_reduction();
 		bool definition_check();
+		bool assignment_check();
 		void parse_work(token_list&);
 		void print_stack();
 		void stack_set_empty();
@@ -317,6 +318,77 @@ bool parse::definition_check()
 	}
 	return false;
 }
+bool parse::assignment_check()
+{
+	int tbl[6]={0};
+	std::stack<parse_unit> temp;
+	for(int i=0;i<6;++i)
+	{
+		if(parser.empty())
+			break;
+		temp.push(parser.top());
+		tbl[i]=temp.top().type;
+		parser.pop();
+	}
+	for(int i=0;i<6;++i)
+	{
+		if(temp.empty())
+			break;
+		parser.push(temp.top());
+		temp.pop();
+	}
+	if((tbl[3]==__identifier) && (tbl[2]==__equal) && ((tbl[1]==__identifier) || (tbl[1]==__scalar)) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__assignment;
+		t.line=parser.top().line;
+		for(int i=0;i<4;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[4]==__identifier) && (tbl[3]==__equal) && (tbl[2]==__left_bracket) && (tbl[1]==__right_bracket) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__assignment;
+		t.line=parser.top().line;
+		for(int i=0;i<5;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[4]==__identifier) && (tbl[3]==__equal) && (tbl[2]==__left_brace) && (tbl[1]==__right_brace) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__assignment;
+		t.line=parser.top().line;
+		for(int i=0;i<5;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[5]==__identifier) && (tbl[4]==__equal) && (tbl[3]==__left_bracket) && ((tbl[2]==__scalar) || (tbl[2]==__scalars) || (tbl[2]==__identifier) || (tbl[2]==__identifiers)) && (tbl[1]==__right_bracket) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__assignment;
+		t.line=parser.top().line;
+		for(int i=0;i<6;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[5]==__identifier) && (tbl[4]==__equal) && (tbl[3]==__left_brace) && ((tbl[2]==__hash_member) || (tbl[2]==__hash_members)) && (tbl[1]==__right_brace) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__assignment;
+		t.line=parser.top().line;
+		for(int i=0;i<6;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	return false;
+}
 void parse::stack_set_empty()
 {
 	while(!parser.empty())
@@ -426,32 +498,41 @@ void parse::parse_work(token_list& lexer)
 		{
 			if(scalars_reduction())
 			{
-				std::cout<<"line "<<parser.top().line<<": scalars"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Scalars"<<std::endl;
 				continue;
 			}
 			if(identifier_check())
 			{
-				std::cout<<"line "<<parser.top().line<<": identifier | call function | call hash | call array"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Identifier | Call function | Call hash | Call array"<<std::endl;
 				continue;
 			}
 			if(identifiers_reduction())
 			{
-				std::cout<<"line "<<parser.top().line<<": identifiers"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Identifiers"<<std::endl;
 				continue;
 			}
 			if(hashmember_check())
 			{
-				std::cout<<"line "<<parser.top().line<<": hash member"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Hash member"<<std::endl;
 				continue;
 			}
 			if(hashmembers_reduction())
 			{
-				std::cout<<"line "<<parser.top().line<<": hash members"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Hash members"<<std::endl;
 				continue;
 			}
 			if(definition_check())
 			{
-				std::cout<<"line "<<parser.top().line<<": definition"<<std::endl;
+				std::cout<<"line "<<parser.top().line<<": Definition"<<std::endl;
+				continue;
+			}
+			//assignment check must be put behind the definition check
+			//because the assignment check has the same method to check
+			//but assignment checks without a "var" so if you put the
+			//assignment before definition,there may be a mistake.
+			if(assignment_check())
+			{
+				std::cout<<"line "<<parser.top().line<<": Assignment"<<std::endl;
 				continue;
 			}
 			reduction_complete=true;
