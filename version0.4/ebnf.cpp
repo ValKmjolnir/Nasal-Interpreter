@@ -24,25 +24,25 @@
 	<identifier> <[> <identifier>|<scalar> <]> //__array_search
 	<identifier> <.> <identifier> //__hash_search
 	<identifier> <(> <identifier>|<identifiers>|<scalar>|<scalars> <)> //__call_func
+	<identifier> <(><)> //__call_func_null
 <4><identifiers> ::=
-	<identifier>  <,> <identifier>
-	<identifiers> <,> <identifier>
+	<identifier>|<identifiers>  <,> <identifier>
 <5><hash_member> ::=
 	<identifier> <:> <identifier>|<scalar>
 <6><hash_members> ::=
 	<hash_member>|<hash_members> <,> <hash_member>
 <7><definition> ::=
-	<var> <identifier> <=> <identifier> <;>
+	<var> <identifier> <=> <identifier>|<scalar> <;>
 	<var> <identifier> <=> <[><]> <;>
 	<var> <identifier> <=> <{><}> <;>
 	<var> <identifier> <=> <[> <scalar>|<scalars>|<identifier>|<identifiers> <]> <;>
-	<var> <identifier> <=> <{> <hash_members> <}> <;>
+	<var> <identifier> <=> <{> <hash_member>|<hash_members> <}> <;>
 <8><assignment> ::=
-	<identifier> <=> <identifier> <;>
+	<identifier> <=> <identifier>|<scalar> <;>
 	<identifier> <=> <[><]> <;>
 	<identifier> <=> <{><}> <;>
 	<identifier> <=> <[> <scalar>|<scalars>|<identifier>|<identifiers> <]> <;>
-	<identifier> <=> <{> <hash_members> <}> <;>
+	<identifier> <=> <{> <hash_member>|<hash_members> <}> <;>
 <9><def_func> ::=
 	<var> <identifier> <=> <func> <(><)> <{><}>
 	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{><}>
