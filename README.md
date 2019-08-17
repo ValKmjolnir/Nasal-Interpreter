@@ -286,6 +286,32 @@ var e={e:1,e:2,e:3};
 
 var e=e[e.e];
 
+e=1;
+
+e="str";
+
+e=[];
+
+e={};
+
+e=e[0];
+
+e=e.e;
+
+e=e(0);
+
+e=e();
+
+e=e[e()];
+
+e=[1,e,1,e,1];
+
+e=[e,e,e,e];
+
+e={e:1,e:2,e:3};
+
+e=e[e.e];
+
 # The structure of basical elements is...
 
 class var;
