@@ -45,6 +45,8 @@ class parse
 		bool identifiers_reduction();
 		bool hashmember_check();
 		bool hashmembers_reduction();
+		bool statement_check();
+		bool statements_reduction();
 		bool definition_check();
 		bool assignment_check();
 		void parse_work(token_list&);
@@ -187,9 +189,9 @@ bool parse::identifiers_reduction()
 }
 bool parse::hashmember_check()
 {
-	int tbl[3]={0};
+	int tbl[9]={0};
 	std::stack<parse_unit> temp;
-	for(int i=0;i<3;++i)
+	for(int i=0;i<9;++i)
 	{
 		if(parser.empty())
 			break;
@@ -197,7 +199,7 @@ bool parse::hashmember_check()
 		tbl[i]=temp.top().type;
 		parser.pop();
 	}
-	for(int i=0;i<3;++i)
+	for(int i=0;i<9;++i)
 	{
 		if(temp.empty())
 			break;
@@ -210,6 +212,46 @@ bool parse::hashmember_check()
 		t.type=__hash_member;
 		t.line=parser.top().line;
 		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[6]==__identifier) && (tbl[5]==__colon) && (tbl[4]==__func) && (tbl[3]==__left_curve) && (tbl[2]==__right_curve) && (tbl[1]==__left_brace) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__hash_member;
+		t.line=parser.top().line;
+		for(int i=0;i<7;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[7]==__identifier) && (tbl[6]==__colon) && (tbl[5]==__func) && (tbl[4]==__left_curve) && ((tbl[3]==__identifier) || (tbl[3]==__identifiers)) && (tbl[2]==__right_curve) && (tbl[1]==__left_brace) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__hash_member;
+		t.line=parser.top().line;
+		for(int i=0;i<8;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[7]==__identifier) && (tbl[6]==__colon) && (tbl[5]==__func) && (tbl[4]==__left_curve) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__hash_member;
+		t.line=parser.top().line;
+		for(int i=0;i<8;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[8]==__identifier) && (tbl[7]==__colon) && (tbl[6]==__func) && (tbl[5]==__left_curve) && ((tbl[4]==__identifier) || (tbl[4]==__identifiers)) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__hash_member;
+		t.line=parser.top().line;
+		for(int i=0;i<9;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
@@ -389,6 +431,87 @@ bool parse::assignment_check()
 	}
 	return false;
 }
+bool parse::statement_check()
+{
+	int tbl[3]={0};
+	std::stack<parse_unit> temp;
+	for(int i=0;i<3;++i)
+	{
+		if(parser.empty())
+			break;
+		temp.push(parser.top());
+		tbl[i]=temp.top().type;
+		parser.pop();
+	}
+	for(int i=0;i<3;++i)
+	{
+		if(temp.empty())
+			break;
+		parser.push(temp.top());
+		temp.pop();
+	}
+	if((tbl[0]==__definition) || (tbl[0]==__assignment) || (tbl[0]==__func) || (tbl[0]==__loop) || (tbl[0]==__choose))
+	{
+		parse_unit t;
+		t.type=__statement;
+		t.line=parser.top().line;
+		parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[2]==__return) && ((tbl[1]==__identifier) || (tbl[1]==__scalar)) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__statement;
+		t.line=parser.top().line;
+		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[2]!=__return) && ((tbl[1]==__identifier) || (tbl[1]==__continue) || (tbl[1]==__break)) && (tbl[0]==__semi))
+	{
+		parse_unit t;
+		t.type=__statement;
+		t.line=parser.top().line;
+		for(int i=0;i<2;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	return false;
+}
+bool parse::statements_reduction()
+{
+	int tbl[2]={0};
+	std::stack<parse_unit> temp;
+	for(int i=0;i<2;++i)
+	{
+		if(parser.empty())
+			break;
+		temp.push(parser.top());
+		tbl[i]=temp.top().type;
+		parser.pop();
+	}
+	for(int i=0;i<2;++i)
+	{
+		if(temp.empty())
+			break;
+		parser.push(temp.top());
+		temp.pop();
+	}
+	if(((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__statement))
+	{
+		parse_unit t;
+		t.type=__statements;
+		t.line=parser.top().line;
+		for(int i=0;i<2;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	return false;
+}
 void parse::stack_set_empty()
 {
 	while(!parser.empty())
@@ -533,6 +656,13 @@ void parse::parse_work(token_list& lexer)
 			if(assignment_check())
 			{
 				std::cout<<"line "<<parser.top().line<<": Assignment"<<std::endl;
+				continue;
+			}
+			if(statement_check())
+			{
+				std::cout<<"line "<<parser.top().line<<": Statement"<<std::endl;
+				if(statements_reduction())
+					std::cout<<"line "<<parser.top().line<<": Statements"<<std::endl;
 				continue;
 			}
 			reduction_complete=true;
