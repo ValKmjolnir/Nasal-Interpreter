@@ -252,107 +252,57 @@ function:hello
 
 recognize all these things...
 
-print("a",e);
-
-var e=1;
-
-var e="str";
-
-var e=[];
-
-var e={};
-
-var e=e[0];
-
-var e=e.e;
-
-var e=e(0);
-
-var e=e();
-
-var e=e[e()];
-
-var e=[1,e,1,e,1];
-
-var e=[e,e,e,e];
-
-var e={e:1,e:2,e:3};
-
-var e=e[e.e];
-
-e=1;
-
-e="str";
-
-e=[];
-
-e={};
-
-e=e[0];
-
-e=e.e;
-
-e=e(0);
-
-e=e();
-
-e=e[e()];
-
-e=[1,e,1,e,1];
-
-e=[e,e,e,e];
-
-e={e:1,e:2,e:3};
-
-e=e[e.e];
-
-e=e.e();
-
-var e={
-
-    e:1,
-    
-    e:func(){},
-    
-    e:func(e,e){},
-    
-    e:func(){
-    
-        e;
-        
-        e;
-        
-    },
-    
-    e:func(e,e){
-    
-        e;
-        
-        e;
-        
-    }
-    
-};
-
-var e=func(){}
-
-var e=func(e,e){}
-
-var e=func(){e;e;}
-
-var e=func(e,e){e;e;}
-
-var e=func(e,e,e,e,e){
-
+    print("a",e);
+    var e=1;
+    var e="str";
+    var e=[];
+    var e={};
+    var e=e[0];
+    var e=e.e;
+    var e=e(0);
+    var e=e();
+    var e=e[e()];
+    var e=[1,e,1,e,1];
+    var e=[e,e,e,e];
+    var e={e:1,e:2,e:3};
+    var e=e[e.e];
     e=1;
-    
+    e="str";
+    e=[];
+    e={};
     e=e[0];
-    
-    e=e(e,e,e);
-    
-    return e;
-    
-}
+    e=e.e;
+    e=e(0);
+    e=e();
+    e=e[e()];
+    e=[1,e,1,e,1];
+    e=[e,e,e,e];
+    e={e:1,e:2,e:3};
+    e=e[e.e];
+    e=e.e();
+    var e={
+        e:1,
+        e:func(){},
+        e:func(e,e){},
+        e:func(){
+            e;
+            e;
+        },
+        e:func(e,e){
+            e;
+            e;
+        }
+    };
+    var e=func(){}
+    var e=func(e,e){}
+    var e=func(){e;e;}
+    var e=func(e,e){e;e;}
+    var e=func(e,e,e,e,e){
+        e=1;
+        e=e[0];
+        e=e(e,e,e);
+        return e;
+    }
 
 # The structure of basical elements is...
 
