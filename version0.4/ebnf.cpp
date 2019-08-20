@@ -29,6 +29,10 @@
 	<identifier>|<identifiers>  <,> <identifier>
 <5><hash_member> ::=
 	<identifier> <:> <identifier>|<scalar>|<__func>
+	<identifier> <:> <func> <(><)> <{><}>
+	<identifier> <:> <func> <(> <identifier>|<identifiers> <)> <{><}>
+	<identifier> <:> <func> <(><)> <{> <statement>|<statements> <}>
+	<identifier> <:> <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
 <6><hash_members> ::=
 	<hash_member>|<hash_members> <,> <hash_member>
 <7><definition> ::=
@@ -43,13 +47,11 @@
 	<identifier> <=> <{><}> <;>
 	<identifier> <=> <[> <scalar>|<scalars>|<identifier>|<identifiers> <]> <;>
 	<identifier> <=> <{> <hash_member>|<hash_members> <}> <;>
-<8><__func> ::=
-	<identifier> <=> <func> <(><)> <{><}>
-	<identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{><}>
-	<identifier> <=> <func> <(><)> <{> <statement>|<statements> <}>
-	<identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
-<9><def_func> ::=
-	<var> <__func>
+<9><__func> ::=
+	<var> <identifier> <=> <func> <(><)> <{><}>
+	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{><}>
+	<var> <identifier> <=> <func> <(><)> <{> <statement>|<statements> <}>
+	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
 <10><loop> ::=
 	<...>
 <11><choose> ::=
@@ -57,7 +59,7 @@
 <12><statement> ::=
 	<definition>
 	<assignment>
-	<def_func>
+	<__func>
 	<identifier> <;>
 	<return> <identifier>|<scalar> <;>
 	<continue> <;>
