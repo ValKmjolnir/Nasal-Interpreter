@@ -10,12 +10,6 @@ So this is an interpreter for Nasal written by C++.
 
 The interpreter is still in development.Anyone who interested in this could also join us!
 
-# Nasal--
-
-For some reasons i will first try to make a interpreter for nasal--(???)
-
-Maybe.Because i haven't take the lesson of 'principle of compiler'(what a shame...)
-
 # Now complete all types
 
 var: int   float   double   std::string   char   long long int
@@ -256,7 +250,7 @@ function:hello
 
 # Now the parser can...
 
-recognize these things...
+recognize all these things...
 
 print("a",e);
 
@@ -311,6 +305,54 @@ e=[e,e,e,e];
 e={e:1,e:2,e:3};
 
 e=e[e.e];
+
+e=e.e();
+
+var e={
+
+    e:1,
+    
+    e:func(){},
+    
+    e:func(e,e){},
+    
+    e:func(){
+    
+        e;
+        
+        e;
+        
+    },
+    
+    e:func(e,e){
+    
+        e;
+        
+        e;
+        
+    }
+    
+};
+
+var e=func(){}
+
+var e=func(e,e){}
+
+var e=func(){e;e;}
+
+var e=func(e,e){e;e;}
+
+var e=func(e,e,e,e,e){
+
+    e=1;
+    
+    e=e[0];
+    
+    e=e(e,e,e);
+    
+    return e;
+    
+}
 
 # The structure of basical elements is...
 
