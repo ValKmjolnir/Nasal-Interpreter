@@ -57,14 +57,8 @@
 <11><choose> ::=
 	<...>
 <12><statement> ::=
-	<definition>
-	<assignment>
-	<__func>
-	<identifier> <;>
+	<definition>|<assignment>|<__func>|<loop>|<choose>
+	<identifier>|<continue>|<break> <;>
 	<return> <identifier>|<scalar> <;>
-	<continue> <;>
-	<break> <;>
-	<loop>
-	<choose>
 <13><statements> ::=
 	<statement>|<statements> <statement>
