@@ -45,6 +45,7 @@ class parse
 		bool identifiers_reduction();
 		bool hashmember_check();
 		bool hashmembers_reduction();
+		bool function_def();
 		bool statement_check();
 		bool statements_reduction();
 		bool definition_check();
@@ -431,6 +432,67 @@ bool parse::assignment_check()
 	}
 	return false;
 }
+bool parse::function_def()
+{
+	int tbl[10]={0};
+	std::stack<parse_unit> temp;
+	for(int i=0;i<10;++i)
+	{
+		if(parser.empty())
+			break;
+		temp.push(parser.top());
+		tbl[i]=temp.top().type;
+		parser.pop();
+	}
+	for(int i=0;i<10;++i)
+	{
+		if(temp.empty())
+			break;
+		parser.push(temp.top());
+		temp.pop();
+	}
+	if((tbl[7]==__var) && (tbl[6]==__identifier) && (tbl[5]==__equal) && (tbl[4]==__func) && (tbl[3]==__left_curve) && (tbl[2]==__right_curve) && (tbl[1]==__left_brace) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__function;
+		t.line=parser.top().line;
+		for(int i=0;i<8;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[8]==__var) && (tbl[7]==__identifier) && (tbl[6]==__equal) && (tbl[5]==__func) && (tbl[4]==__left_curve) && ((tbl[3]==__identifier) || (tbl[3]==__identifiers)) && (tbl[2]==__right_curve) && (tbl[1]==__left_brace) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__function;
+		t.line=parser.top().line;
+		for(int i=0;i<9;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[8]==__var) && (tbl[7]==__identifier) && (tbl[6]==__equal) && (tbl[5]==__func) && (tbl[4]==__left_curve) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__function;
+		t.line=parser.top().line;
+		for(int i=0;i<9;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[9]==__var) && (tbl[8]==__identifier) && (tbl[7]==__equal) && (tbl[6]==__func) && (tbl[5]==__left_curve) && ((tbl[4]==__identifier) || (tbl[4]==__identifiers)) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__function;
+		t.line=parser.top().line;
+		for(int i=0;i<10;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	return false;
+}
 bool parse::statement_check()
 {
 	int tbl[3]={0};
@@ -450,7 +512,7 @@ bool parse::statement_check()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if((tbl[0]==__definition) || (tbl[0]==__assignment) || (tbl[0]==__func) || (tbl[0]==__loop) || (tbl[0]==__choose))
+	if((tbl[0]==__definition) || (tbl[0]==__assignment) || (tbl[0]==__function) || (tbl[0]==__loop) || (tbl[0]==__choose))
 	{
 		parse_unit t;
 		t.type=__statement;
@@ -656,6 +718,11 @@ void parse::parse_work(token_list& lexer)
 			if(assignment_check())
 			{
 				std::cout<<"line "<<parser.top().line<<": Assignment"<<std::endl;
+				continue;
+			}
+			if(function_def())
+			{
+				std::cout<<"line "<<parser.top().line<<": Definition for func()"<<std::endl;
 				continue;
 			}
 			if(statement_check())
