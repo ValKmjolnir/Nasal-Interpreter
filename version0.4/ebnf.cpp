@@ -18,7 +18,7 @@
 	<string> //STRING
 	<!> <identifier>|<scalar>
 	<identifier>|<scalar> <+>|<->|<*>|</>|<~>|<and>|<or>|<==>|<!=>|<<>|<<=>|<>>|<>=> <identifier>|<scalar>
-	<(> <scalar> <)>
+	<(> <identifier>|<scalar> <)>
 <2><scalars> ::=
 	<scalar>|<scalars>         <,> <scalar>|<identifier>
 	<identifier>|<identifiers> <,> <scalar>
@@ -56,9 +56,19 @@
 	<var> <identifier> <=> <func> <(><)> <{> <statement>|<statements> <}>
 	<var> <identifier> <=> <func> <(> <identifier>|<identifiers> <)> <{> <statement>|<statements> <}>
 <10><loop> ::=
-	<...>
+	<while> <(> <scalar> <)> <statement>
+	<while> <(> <scalar> <)> <{> <statement>|<statements> <}>
+	<foreach>|<forindex> <(> <statement> <identifier> <)> <statement>
+	<foreach>|<forindex> <(> <statement> <identifier> <{> <statement>|<statements> <}>
+	<for> <(> <statement> <scalar> <;> <identifier> <+=>|<-=>|<*=>|</=>|<~=>|<=> <scalar> <)> <statement>
+	<for> <(> <statement> <scalar> <;> <identifier> <+=>|<-=>|<*=>|</=>|<~=>|<=> <scalar> <)> <{> <statement>|<statements> <}>
 <11><choose> ::=
-	<...>
+	<if>|<elsif> <(> <scalar> <)> <{> <statement>|<statements> <}>
+	<if>|<elsif> <(> <scalar> <)> <statement>
+	<else> <if> <(> <scalar> <)> <{> <statement>|<statements> <}>
+	<else> <if> <(> <scalar> <)> <statement>
+	<else> <{> <statement>|<statements> <}>
+	<else> <statement>
 <12><statement> ::=
 	<definition>|<assignment>|<__func>|<loop>|<choose>
 	<identifier>|<continue>|<break> <;>
