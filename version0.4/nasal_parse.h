@@ -7,6 +7,11 @@ enum token_type
 {
 	__stack_end,
 	__equal,// =
+	__cmp_equal,// ==
+	__cmp_not_equal,// !=
+	__cmp_less,__cmp_less_or_equal,// < <=
+	__cmp_more,__cmp_more_or_equal,// > >=
+	__and_operator,__or_operator,__nor_operator,// and or !
 	__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,// + - * / ~
 	__add_equal,__sub_equal,__mul_equal,__div_equal,__link_equal,// += -= *= /= ~=
 	__left_brace,__right_brace,// {}
@@ -48,6 +53,7 @@ class parse
 		bool function_def();
 		bool statement_check();
 		bool statements_reduction();
+		bool calculation_reduction();
 		bool definition_check();
 		bool assignment_check();
 		void parse_work(token_list&);
@@ -290,6 +296,64 @@ bool parse::hashmembers_reduction()
 	}
 	return false;
 }
+bool parse::calculation_reduction() //use __scalar
+{
+	int tbl[3]={0};
+	std::stack<parse_unit> temp;
+	for(int i=0;i<3;++i)
+	{
+		if(parser.empty())
+			break;
+		temp.push(parser.top());
+		tbl[i]=temp.top().type;
+		parser.pop();
+	}
+	for(int i=0;i<3;++i)
+	{
+		if(temp.empty())
+			break;
+		parser.push(temp.top());
+		temp.pop();
+	}
+	if((tbl[2]==__left_curve) && ((tbl[1]==__identifier) || (tbl[1]==__scalar)) && (tbl[0]==__right_curve))
+	{
+		parse_unit t;
+		t.type=__scalar;
+		t.line=parser.top().line;
+		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	if((tbl[1]==__nor_operator) && ((tbl[0]==__identifier) || (tbl[0]==__scalar)))
+	{
+		parse_unit t;
+		t.type=__scalar;
+		t.line=parser.top().line;
+		for(int i=0;i<2;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if(((tbl[2]==__identifier) || (tbl[2]==__scalar))
+			&& ((tbl[1]==__add_operator) || (tbl[1]==__sub_operator)
+				|| (tbl[1]==__mul_operator) || (tbl[1]==__div_operator)
+				|| (tbl[1]==__link_operator) || (tbl[1]==__and_operator)
+				|| (tbl[1]==__or_operator) || (tbl[1]==__cmp_equal) || (tbl[1]==__cmp_not_equal)
+				|| (tbl[1]==__cmp_less) || (tbl[1]==__cmp_less_or_equal)
+				|| (tbl[1]==__cmp_more) || (tbl[1]==__cmp_more_or_equal))
+			&& ((tbl[0]==__identifier) || (tbl[0]==__scalar)))
+	{
+		parse_unit t;
+		t.type=__scalar;
+		t.line=parser.top().line;
+		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	return false;
+}
 bool parse::definition_check()
 {
 	int tbl[7]={0};
@@ -380,7 +444,10 @@ bool parse::assignment_check()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if((tbl[3]==__identifier) && (tbl[2]==__equal) && ((tbl[1]==__identifier) || (tbl[1]==__scalar)) && (tbl[0]==__semi))
+	if((tbl[3]==__identifier)
+		&& ((tbl[2]==__equal) || (tbl[2]==__add_equal) || (tbl[2]==__sub_equal)
+			|| (tbl[2]==__mul_equal) || (tbl[2]==__div_equal) || (tbl[2]==__link_equal))
+		&& ((tbl[1]==__identifier) || (tbl[1]==__scalar)) && (tbl[0]==__semi))
 	{
 		parse_unit t;
 		t.type=__assignment;
@@ -589,7 +656,7 @@ void parse::parse_work(token_list& lexer)
 	{
 		temp=temp->next;
 		temp_parse.line=temp->line;
-		if((temp->content=="var") || (temp->content=="func") || (temp->content=="return") || (temp->content=="nil") || (temp->content=="continue") || (temp->content=="break"))
+		if((temp->content=="var") || (temp->content=="func") || (temp->content=="return") || (temp->content=="nil") || (temp->content=="continue") || (temp->content=="break") || (temp->content=="and") || (temp->content=="or"))
 		{
 			if(temp->content=="var")
 				temp_parse.type=__var;
@@ -603,10 +670,29 @@ void parse::parse_work(token_list& lexer)
 				temp_parse.type=__continue;
 			else if(temp->content=="break")
 				temp_parse.type=__break;
+			else if(temp->content=="and")
+				temp_parse.type=__and_operator;
+			else if(temp->content=="or")
+				temp_parse.type=__or_operator;
 		}
 		else if(temp->type==IDENTIFIER)
 		{
 			temp_parse.type=__identifier;
+		}
+		else if((temp->content=="==") || (temp->content=="!=") || (temp->content==">") || (temp->content==">=") || (temp->content=="<") || (temp->content=="<="))
+		{
+			if(temp->content=="==")
+				temp_parse.type=__cmp_equal;
+			else if(temp->content=="!=")
+				temp_parse.type=__cmp_not_equal;
+			else if(temp->content==">")
+				temp_parse.type=__cmp_more;
+			else if(temp->content==">=")
+				temp_parse.type=__cmp_more_or_equal;
+			else if(temp->content=="<")
+				temp_parse.type=__cmp_less;
+			else if(temp->content=="<=")
+				temp_parse.type=__cmp_less_or_equal;
 		}
 		else if((temp->content==";") || (temp->content==",") || (temp->content=="=") || (temp->content==":") || (temp->content=="."))
 		{
@@ -625,7 +711,7 @@ void parse::parse_work(token_list& lexer)
 		{
 			temp_parse.type=__scalar;
 		}
-		else if((temp->content=="+") || (temp->content=="-") || (temp->content=="*") || (temp->content=="/") || (temp->content=="~"))
+		else if((temp->content=="+") || (temp->content=="-") || (temp->content=="*") || (temp->content=="/") || (temp->content=="~") || (temp->content=="!"))
 		{
 			if(temp->content=="+")
 				temp_parse.type=__add_operator;
@@ -637,6 +723,8 @@ void parse::parse_work(token_list& lexer)
 				temp_parse.type=__div_operator;
 			else if(temp->content=="~")
 				temp_parse.type=__link_operator;
+			else if(temp->content=="!")
+				temp_parse.type=__nor_operator;
 		}
 		else if((temp->content=="+=") || (temp->content=="-=") || (temp->content=="*=") || (temp->content=="/=") || (temp->content=="~="))
 		{
@@ -676,7 +764,7 @@ void parse::parse_work(token_list& lexer)
 					break;
 			}
 		}
-		parser.push(temp_parse);
+		parser.push(temp_parse);//push this into stack
 		
 		bool reduction_complete=false;
 		while(!reduction_complete)
@@ -704,6 +792,11 @@ void parse::parse_work(token_list& lexer)
 			if(hashmembers_reduction())
 			{
 				std::cout<<"line "<<parser.top().line<<": Hash members"<<std::endl;
+				continue;
+			}
+			if(calculation_reduction())
+			{
+				std::cout<<"line "<<parser.top().line<<": in Calculation"<<std::endl;
 				continue;
 			}
 			if(definition_check())

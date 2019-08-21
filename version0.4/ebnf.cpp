@@ -16,10 +16,9 @@
 <1><scalar> ::=
 	<number> //NUMBER
 	<string> //STRING
-	<(> <!> <identifier>|<scalar> <)>//first
-	<!> <identifier>|<scalar>//then
-	<(> <identifier>|<scalar> <+>|<->|<*>|</>|<~>|<and>|<or>|<==>|<!=>|<<>|<<=>|<>>|<>=> <identifier>|<scalar> <)> //first
-	<identifier>|<scalar> <+>|<->|<*>|</>|<~>|<and>|<or>|<==>|<!=>|<<>|<<=>|<>>|<>=> <identifier>|<scalar> //then
+	<!> <identifier>|<scalar>
+	<identifier>|<scalar> <+>|<->|<*>|</>|<~>|<and>|<or>|<==>|<!=>|<<>|<<=>|<>>|<>=> <identifier>|<scalar>
+	<(> <scalar> <)>
 <2><scalars> ::=
 	<scalar>|<scalars>         <,> <scalar>|<identifier>
 	<identifier>|<identifiers> <,> <scalar>
