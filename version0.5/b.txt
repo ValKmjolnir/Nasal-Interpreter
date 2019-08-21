@@ -1,0 +1,16 @@
+if(e==1)
+    print("hello world");
+else if(e==2)
+    e=3;
+else
+    print("error");
+while(1)
+{
+    print("m");
+}
+for(var i=1;i<9;i+=1)
+    print("h");
+foreach(i;keys(e))
+    print("h");
+forindex(i;keys(e))
+    print("h");
