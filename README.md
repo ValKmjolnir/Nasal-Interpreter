@@ -309,6 +309,7 @@ recognize all these things...
     e/=e;
     e~=e;
     e+=(e-e)*(e+(e/e));
+    e=e-e*(!2);
 
 
 # The structure of basical elements is...
