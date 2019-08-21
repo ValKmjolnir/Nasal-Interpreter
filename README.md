@@ -303,6 +303,13 @@ recognize all these things...
         e=e(e,e,e);
         return e;
     }
+    e+=e;
+    e-=e;
+    e*=e;
+    e/=e;
+    e~=e;
+    e+=(e-e)*(e+(e/e));
+
 
 # The structure of basical elements is...
 
