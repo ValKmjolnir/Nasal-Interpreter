@@ -250,6 +250,16 @@ bool parse::scalars_reduction()
 		parser.push(t);
 		return true;
 	}
+	else if((tbl[2]!=__scalar) && (tbl[2]!=__identifier) && (tbl[1]==__sub_operator) && (tbl[0]==__scalar))
+	{
+		parse_unit t;
+		t.type=__scalar;// !
+		t.line=parser.top().line;
+		for(int i=0;i<2;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
 	else if(((tbl[2]==__identifier) || (tbl[2]==__identifiers)) && (tbl[1]==__comma) && (tbl[0]==__scalar))
 	{
 		parse_unit t;
@@ -287,6 +297,16 @@ bool parse::identifier_check()
 		t.type=__identifier;
 		t.line=parser.top().line;
 		for(int i=0;i<4;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[2]!=__scalar) && (tbl[2]!=__identifier) && (tbl[1]==__sub_operator) && (tbl[0]==__identifier))
+	{
+		parse_unit t;
+		t.type=__identifier;
+		t.line=parser.top().line;
+		for(int i=0;i<2;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
@@ -1119,6 +1139,7 @@ void parse::print_parser(token_list& lexer)
 		bool reduction_complete=false;
 		while(!reduction_complete)
 		{
+			
 			if(scalars_reduction())
 			{
 				std::cout<<"line "<<parser.top().line<<": Scalars"<<std::endl;
