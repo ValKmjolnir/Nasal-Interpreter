@@ -1381,7 +1381,7 @@ void parse::print_error()
 	}
 	if(!temp_stack.empty())
 	{
-		std::cout<<">>[Error]: Parse error."<<std::endl;
+		std::cout<<">>[Error] Parse error."<<std::endl;
 		while(!temp_stack.empty())
 		{
 			int l=temp_stack.top().line;
@@ -1398,7 +1398,7 @@ void parse::print_error()
 		}
 	}
 	else
-		std::cout<<">> Parse analysis complete."<<std::endl;
+		std::cout<<">>[Parser] Parse analysis complete."<<std::endl;
 	return;
 }
 
