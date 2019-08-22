@@ -31,8 +31,165 @@ enum token_type
 	__definition,__assignment,
 	__loop,__continue,__break,__for,__forindex,__foreach,__while,// for()while() continue; break;
 	__choose,__if,__elsif,__else,// if else if else
-	__return,__func_return
+	__return
 };
+
+void print_token_type(int type)
+{
+	std::string context="";
+	switch(type)
+	{
+		case __stack_end:
+			context="__stack_end";
+			break;
+		case __equal:
+			context="=";
+			break;
+		case __cmp_equal:
+			context="==";
+			break;
+		case __cmp_not_equal:
+			context="!=";
+			break;
+		case __cmp_less:
+			context="<";
+			break;
+		case __cmp_less_or_equal:
+			context="<=";
+			break;
+		case __cmp_more:
+			context=">";
+			break;
+		case __cmp_more_or_equal:
+			context=">=";
+			break;
+		case __and_operator:
+			context="and";
+			break;
+		case __or_operator:
+			context="or";
+			break;
+		case __nor_operator:
+			context="!";
+			break;
+		case __add_operator:
+			context="+";
+			break;
+		case __sub_operator:
+			context="-";
+			break;
+		case __mul_operator:
+			context="*";
+			break;
+		case __div_operator:
+			context="/";
+			break;
+		case __link_operator:
+			context="~";
+			break;
+		case __add_equal:
+			context="+=";
+			break;
+		case __sub_equal:
+			context="-=";
+			break;
+		case __mul_equal:
+			context="*=";
+			break;
+		case __div_equal:
+			context="/=";
+			break;
+		case __link_equal:
+			context="~=";
+			break;
+		case __left_brace:
+			context="{";
+			break;
+		case __right_brace:
+			context="}";
+			break;
+		case __left_bracket:
+			context="[";
+			break;
+		case __right_bracket:
+			context="]";
+			break;
+		case __left_curve:
+			context="(";
+			break;
+		case __right_curve:
+			context=")";
+			break;
+		case __semi:
+			context=";";
+			break;
+		case __comma:
+			context=",";
+			break;
+		case __colon:
+			context=":";
+			break;
+		case __dot:
+			context=".";
+			break;
+		case __var:
+			context="var";
+			break;
+		case __func:
+			context="func";
+			break;
+		case __identifier:
+			context="__id";
+			break;
+		case __identifiers:
+			context="__ids";
+			break;
+		case __scalar:
+			context="__scl";
+			break;
+		case __scalars:
+			context="__scls";
+			break;
+		case __hash_member:
+			context="__hmem";
+			break;
+		case __hash_members:
+			context="__hmems";
+			break;
+		case __continue:
+			context="continue";
+			break;
+		case __break:
+			context="break";
+			break;
+		case __for:
+			context="for";
+			break;
+		case __forindex:
+			context="forindex";
+			break;
+		case __foreach:
+			context="foreach";
+			break;
+		case __while:
+			context="while";
+			break;
+		case __if:
+			context="if";
+			break;
+		case __elsif:
+			context="elsif";
+			break;
+		case __else:
+			context="else";
+			break;
+		case __return:
+			context="return";
+			break;
+	}
+	std::cout<<context;
+	return;
+}
 
 struct parse_unit
 {
@@ -58,8 +215,9 @@ class parse
 		bool choose_reduction();
 		bool definition_check();
 		bool assignment_check();
-		void parse_work(token_list&);
-		void print_stack();
+		void print_parser(token_list&);
+		void run_parser(token_list&);
+		void print_error();
 		void stack_set_empty();
 };
 
@@ -564,9 +722,9 @@ bool parse::function_def()
 }
 bool parse::loop_reduction()
 {
-	int tbl[7]={0};
+	int tbl[10]={0};
 	std::stack<parse_unit> temp;
-	for(int i=0;i<7;++i)
+	for(int i=0;i<10;++i)
 	{
 		if(parser.empty())
 			break;
@@ -574,14 +732,24 @@ bool parse::loop_reduction()
 		tbl[i]=temp.top().type;
 		parser.pop();
 	}
-	for(int i=0;i<7;++i)
+	for(int i=0;i<10;++i)
 	{
 		if(temp.empty())
 			break;
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if((tbl[4]==__while) && (tbl[3]==__left_curve) && (tbl[2]==__scalar) && (tbl[1]==__right_curve) && (tbl[0]==__statement))
+	if((tbl[2]==__while) && (tbl[1]==__scalar) && (tbl[0]==__statement))
+	{
+		parse_unit t;
+		t.type=__loop;
+		t.line=parser.top().line;
+		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[4]==__while) && (tbl[3]==__scalar) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
 	{
 		parse_unit t;
 		t.type=__loop;
@@ -591,32 +759,50 @@ bool parse::loop_reduction()
 		parser.push(t);
 		return true;
 	}
-	else if((tbl[6]==__while) && (tbl[5]==__left_curve) && (tbl[4]==__scalar) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	else if(((tbl[5]==__foreach) || (tbl[5]==__forindex)) && (tbl[4]==__left_curve) && (tbl[3]==__statement) && (tbl[2]==__identifier) && (tbl[1]==__right_curve) && (tbl[0]==__statement))
 	{
 		parse_unit t;
 		t.type=__loop;
 		t.line=parser.top().line;
-		for(int i=0;i<7;++i)
+		for(int i=0;i<6;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
 	}
-	else if(((tbl[4]==__for) || (tbl[4]==__foreach) || (tbl[4]==__forindex)) && (tbl[3]==__left_curve) && (tbl[2]==__statements) && (tbl[1]==__right_curve) && (tbl[0]==__statement))
+	else if(((tbl[7]==__foreach) || (tbl[7]==__forindex)) && (tbl[6]==__left_curve) && (tbl[5]==__statement) && (tbl[4]==__identifier) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
 	{
 		parse_unit t;
 		t.type=__loop;
 		t.line=parser.top().line;
-		for(int i=0;i<5;++i)
+		for(int i=0;i<8;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
 	}
-	else if(((tbl[6]==__for) || (tbl[6]==__foreach) || (tbl[6]==__forindex)) && (tbl[5]==__left_curve) && (tbl[4]==__statements) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	else if((tbl[7]==__for) && (tbl[6]==__left_curve) && (tbl[5]==__statements)
+			&& (tbl[4]==__identifier)
+			&& ((tbl[3]==__equal) || (tbl[3]==__add_equal) || (tbl[3]==__sub_equal) || (tbl[3]==__mul_equal) || (tbl[3]==__div_equal) || (tbl[3]==__link_equal) || (tbl[3]==__equal))
+			&& ((tbl[2]==__identifier) || (tbl[2]==__scalar))
+			&& (tbl[1]==__right_curve) && (tbl[0]==__statement))
 	{
 		parse_unit t;
 		t.type=__loop;
 		t.line=parser.top().line;
-		for(int i=0;i<7;++i)
+		for(int i=0;i<8;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if((tbl[9]==__for) && (tbl[8]==__left_curve) && (tbl[7]==__statements)
+	&& (tbl[6]==__identifier)
+	&& ((tbl[5]==__equal) || (tbl[5]==__add_equal) || (tbl[5]==__sub_equal) || (tbl[5]==__mul_equal) || (tbl[5]==__div_equal) || (tbl[5]==__link_equal) || (tbl[5]==__equal))
+	&& ((tbl[4]==__identifier) || (tbl[4]==__scalar))
+	&& (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	{
+		parse_unit t;
+		t.type=__loop;
+		t.line=parser.top().line;
+		for(int i=0;i<10;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
@@ -642,7 +828,17 @@ bool parse::choose_reduction()
 		parser.push(temp.top());
 		temp.pop();
 	}
-	if(((tbl[4]==__if) || (tbl[4]==__elsif)) && (tbl[3]==__left_curve) && (tbl[2]==__scalar) && (tbl[1]==__right_curve) && (tbl[0]==__statement))
+	if(((tbl[2]==__if) || (tbl[2]==__elsif)) && (tbl[1]==__scalar) && (tbl[0]==__statement))
+	{
+		parse_unit t;
+		t.type=__choose;
+		t.line=parser.top().line;
+		for(int i=0;i<3;++i)
+			parser.pop();
+		parser.push(t);
+		return true;
+	}
+	else if(((tbl[4]==__if) || (tbl[4]==__elsif)) && (tbl[3]==__scalar) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
 	{
 		parse_unit t;
 		t.type=__choose;
@@ -652,32 +848,22 @@ bool parse::choose_reduction()
 		parser.push(t);
 		return true;
 	}
-	else if(((tbl[6]==__if) || (tbl[6]==__elsif)) && (tbl[5]==__left_curve) && (tbl[4]==__scalar) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
+	else if((tbl[3]==__else) && (tbl[2]==__if) && (tbl[1]==__scalar) && (tbl[0]==__statement))
 	{
 		parse_unit t;
 		t.type=__choose;
 		t.line=parser.top().line;
-		for(int i=0;i<7;++i)
+		for(int i=0;i<4;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
 	}
-	else if((tbl[5]==__else) && (tbl[4]==__if) && (tbl[3]==__left_curve) && (tbl[2]==__scalar) && (tbl[1]==__right_curve) && (tbl[0]==__statement))
+	else if((tbl[5]==__else) && (tbl[4]==__if) && (tbl[3]==__scalar) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
 	{
 		parse_unit t;
 		t.type=__choose;
 		t.line=parser.top().line;
 		for(int i=0;i<6;++i)
-			parser.pop();
-		parser.push(t);
-		return true;
-	}
-	else if((tbl[7]==__else) && (tbl[6]==__if) && (tbl[5]==__left_curve) && (tbl[4]==__scalar) && (tbl[3]==__right_curve) && (tbl[2]==__left_brace) && ((tbl[1]==__statement) || (tbl[1]==__statements)) && (tbl[0]==__right_brace))
-	{
-		parse_unit t;
-		t.type=__choose;
-		t.line=parser.top().line;
-		for(int i=0;i<8;++i)
 			parser.pop();
 		parser.push(t);
 		return true;
@@ -742,7 +928,7 @@ bool parse::statement_check()
 		parser.push(t);
 		return true;
 	}
-	else if((tbl[2]!=__return) && ((tbl[1]==__identifier) || (tbl[1]==__continue) || (tbl[1]==__break)) && (tbl[0]==__semi))
+	else if((tbl[2]!=__return) && ((tbl[1]==__identifier) || (tbl[1]==__continue) || (tbl[1]==__break) || (tbl[1]==__scalar)) && (tbl[0]==__semi))
 	{
 		parse_unit t;
 		t.type=__statement;
@@ -791,7 +977,7 @@ void parse::stack_set_empty()
 		parser.pop();
 	return;
 }
-void parse::parse_work(token_list& lexer)
+void parse::print_parser(token_list& lexer)
 {
 	parse_unit temp_parse;
 	token_unit *temp=lexer.get_head();
@@ -1004,26 +1190,215 @@ void parse::parse_work(token_list& lexer)
 	}
 	return;
 }
-
-void parse::print_stack()
+void parse::run_parser(token_list& lexer)
 {
-	std::cout<<">> parser stack:"<<std::endl;
+	parse_unit temp_parse;
+	token_unit *temp=lexer.get_head();
+	stack_set_empty();
+	while(temp->next)
+	{
+		temp=temp->next;
+		temp_parse.line=temp->line;
+		if((temp->content=="var") || (temp->content=="func") || (temp->content=="return") || (temp->content=="nil") || (temp->content=="continue") || (temp->content=="break") || (temp->content=="and") || (temp->content=="or"))
+		{
+			if(temp->content=="var")
+				temp_parse.type=__var;
+			else if(temp->content=="func")
+				temp_parse.type=__func;
+			else if(temp->content=="return")
+				temp_parse.type=__return;
+			else if(temp->content=="nil")
+				temp_parse.type=__scalar;
+			else if(temp->content=="continue")
+				temp_parse.type=__continue;
+			else if(temp->content=="break")
+				temp_parse.type=__break;
+			else if(temp->content=="and")
+				temp_parse.type=__and_operator;
+			else if(temp->content=="or")
+				temp_parse.type=__or_operator;
+		}
+		else if(temp->type==IDENTIFIER)
+		{
+			temp_parse.type=__identifier;
+		}
+		else if((temp->content=="for") || (temp->content=="foreach") || (temp->content=="while") || (temp->content=="forindex"))
+		{
+			if(temp->content=="for")
+				temp_parse.type=__for;
+			else if(temp->content=="forindex")
+				temp_parse.type=__forindex;
+			else if(temp->content=="foreach")
+				temp_parse.type=__foreach;
+			else if(temp->content=="while")
+				temp_parse.type=__while;
+		}
+		else if((temp->content=="if") || (temp->content=="else") || (temp->content=="elsif"))
+		{
+			if(temp->content=="if")
+				temp_parse.type=__if;
+			else if(temp->content=="else")
+				temp_parse.type=__else;
+			else if(temp->content=="elsif")
+				temp_parse.type=__elsif;
+		}
+		else if((temp->content=="==") || (temp->content=="!=") || (temp->content==">") || (temp->content==">=") || (temp->content=="<") || (temp->content=="<="))
+		{
+			if(temp->content=="==")
+				temp_parse.type=__cmp_equal;
+			else if(temp->content=="!=")
+				temp_parse.type=__cmp_not_equal;
+			else if(temp->content==">")
+				temp_parse.type=__cmp_more;
+			else if(temp->content==">=")
+				temp_parse.type=__cmp_more_or_equal;
+			else if(temp->content=="<")
+				temp_parse.type=__cmp_less;
+			else if(temp->content=="<=")
+				temp_parse.type=__cmp_less_or_equal;
+		}
+		else if((temp->content==";") || (temp->content==",") || (temp->content=="=") || (temp->content==":") || (temp->content=="."))
+		{
+			if(temp->content==";")
+				temp_parse.type=__semi;
+			else if(temp->content==",")
+				temp_parse.type=__comma;
+			else if(temp->content=="=")
+				temp_parse.type=__equal;
+			else if(temp->content==":")
+				temp_parse.type=__colon;
+			else if(temp->content==".")
+				temp_parse.type=__dot;
+		}
+		else if((temp->type==NUMBER) || (temp->type==STRING))
+		{
+			temp_parse.type=__scalar;
+		}
+		else if((temp->content=="+") || (temp->content=="-") || (temp->content=="*") || (temp->content=="/") || (temp->content=="~") || (temp->content=="!"))
+		{
+			if(temp->content=="+")
+				temp_parse.type=__add_operator;
+			else if(temp->content=="-")
+				temp_parse.type=__sub_operator;
+			else if(temp->content=="*")
+				temp_parse.type=__mul_operator;
+			else if(temp->content=="/")
+				temp_parse.type=__div_operator;
+			else if(temp->content=="~")
+				temp_parse.type=__link_operator;
+			else if(temp->content=="!")
+				temp_parse.type=__nor_operator;
+		}
+		else if((temp->content=="+=") || (temp->content=="-=") || (temp->content=="*=") || (temp->content=="/=") || (temp->content=="~="))
+		{
+			if(temp->content=="+=")
+				temp_parse.type=__add_equal;
+			else if(temp->content=="-=")
+				temp_parse.type=__sub_equal;
+			else if(temp->content=="*=")
+				temp_parse.type=__mul_equal;
+			else if(temp->content=="/=")
+				temp_parse.type=__div_equal;
+			else if(temp->content=="~=")
+				temp_parse.type=__link_equal;
+		}
+		else if((temp->content=="(") || (temp->content==")") || (temp->content=="[") || (temp->content=="]") || (temp->content=="{") || (temp->content=="}"))
+		{
+			char c=temp->content[0];
+			switch(c)
+			{
+				case '(':
+					temp_parse.type=__left_curve;
+					break;
+				case ')':
+					temp_parse.type=__right_curve;
+					break;
+				case '[':
+					temp_parse.type=__left_bracket;
+					break;
+				case ']':
+					temp_parse.type=__right_bracket;
+					break;
+				case '{':
+					temp_parse.type=__left_brace;
+					break;
+				case '}':
+					temp_parse.type=__right_brace;
+					break;
+			}
+		}
+		parser.push(temp_parse);//push this into stack
+		
+		bool reduction_complete=false;
+		while(!reduction_complete)
+		{
+			if(scalars_reduction())
+				continue;
+			if(identifier_check())
+				continue;
+			if(identifiers_reduction())
+				continue;
+			if(hashmember_check())
+				continue;
+			if(hashmembers_reduction())
+				continue;
+			if(calculation_reduction())
+				continue;
+			if(loop_reduction())
+				continue;
+			if(choose_reduction())
+				continue;
+			if(definition_check())
+				continue;
+			//assignment check must be put behind the definition check
+			//because the assignment check has the same method to check
+			//but assignment checks without a "var" so if you put the
+			//assignment before definition,there may be a mistake.
+			if(assignment_check())
+				continue;
+			if(function_def())
+				continue;
+			if(statement_check())
+			{
+				if(statements_reduction())
+					;
+				continue;
+			}
+			reduction_complete=true;
+		}
+	}
+	return;
+}
+
+void parse::print_error()
+{
+	std::stack<parse_unit> temp_stack;
 	while(!parser.empty())
 	{
-		if(parser.top().type==__definition)
-			std::cout<<"line "<<parser.top().line<<": definition"<<std::endl;
-		else if(parser.top().type==__assignment)
-			std::cout<<"line "<<parser.top().line<<": assignment"<<std::endl;
-		else if(parser.top().type==__statement)
-			std::cout<<"line "<<parser.top().line<<": statement"<<std::endl;
-		else if(parser.top().type==__statements)
-			std::cout<<"line "<<parser.top().line<<": statements"<<std::endl;
-		else if(parser.top().type==__function)
-			std::cout<<"line "<<parser.top().line<<": function()"<<std::endl;
-		else
-			std::cout<<"line "<<parser.top().line<<": "<<parser.top().type<<std::endl;
+		if((parser.top().type!=__statement) && (parser.top().type!=__statements) && (parser.top().type!=__function) && (parser.top().type!=__definition) && (parser.top().type!=__assignment) && (parser.top().type!=__loop) && (parser.top().type!=__choose))
+			temp_stack.push(parser.top());
 		parser.pop();
 	}
+	if(!temp_stack.empty())
+	{
+		std::cout<<">>[Error]: Parse error."<<std::endl;
+		while(!temp_stack.empty())
+		{
+			int l=temp_stack.top().line;
+			std::cout<<"line "<<l<<": ";
+			while(l==temp_stack.top().line)
+			{
+				print_token_type(temp_stack.top().type);
+				std::cout<<" ";
+				temp_stack.pop();
+				if(temp_stack.empty())
+					break;
+			}
+			std::cout<<std::endl;
+		}
+	}
+	else
+		std::cout<<">> Parse analysis complete."<<std::endl;
 	return;
 }
 

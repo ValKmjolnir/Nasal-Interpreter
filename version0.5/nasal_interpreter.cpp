@@ -11,7 +11,7 @@ int main()
 		std::getline(std::cin,command);
 		if(command=="help")
 		{
-			std::cout<<">> nasal-- script by ValKmjolnir"<<std::endl;
+			std::cout<<">> nasal script by ValKmjolnir"<<std::endl;
 			std::cout<<">> 1.         |input file name to run the lexer."<<std::endl;
 			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
 			std::cout<<">> 3. \"exit\"  |shut down the program."<<std::endl;
@@ -43,13 +43,18 @@ int main()
 			nasal::nasal_var_stack.delete_all();
 			nasal::nasal_func_stack.delete_all();
 		}
-		else if(command=="parser" || command=="run")
+		else if(command=="parser")
 		{
-			nasal::nasal_parse.parse_work(nasal::nasal_lexer);
-			//nasal::nasal_parse.print_stack();
-		}	
+			nasal::nasal_parse.print_parser(nasal::nasal_lexer);
+			nasal::nasal_parse.print_error();
+		}
+		else if(command=="run")
+		{
+			nasal::nasal_parse.run_parser(nasal::nasal_lexer);
+			nasal::nasal_parse.print_error();
+		}
 		else
-			nasal::RunProcess(command);
+			nasal::RunProcess(command);// in this section the lexer is cleaned
 	}
 	return 0;
 }
