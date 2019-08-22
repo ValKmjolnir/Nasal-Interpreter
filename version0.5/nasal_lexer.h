@@ -243,7 +243,7 @@ void RunProcess(std::string &FileName)
 	std::ifstream fin(FileName);
 	if(fin.fail())
 	{
-		std::cout<<"[Error] Failed to load file: "<<FileName<<std::endl;
+		std::cout<<">>[Error] Failed to load file: "<<FileName<<std::endl;
 		fin.close();
 		return;
 	}
@@ -261,7 +261,7 @@ void RunProcess(std::string &FileName)
 			nasal_lexer.append(line,Syn,token);
 	}
 	//nasal_lexer.print(); //for debug mode
-	std::cout<<">> Complete scanning \""<<FileName<<"\"."<<std::endl;
+	std::cout<<">>[Lexer] Complete scanning \""<<FileName<<"\"."<<std::endl;
 	return;
 }
 

@@ -12,13 +12,13 @@ int main()
 		if(command=="help")
 		{
 			std::cout<<">> nasal script by ValKmjolnir"<<std::endl;
-			std::cout<<">> 1.         |input file name to run the lexer."<<std::endl;
+			std::cout<<">> 1.         |input file name to run the lexer. (-lexer)"<<std::endl;
 			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
 			std::cout<<">> 3. \"exit\"  |shut down the program."<<std::endl;
 			std::cout<<">> 4. \"lexer\" |see tokens in stack."<<std::endl;
-			std::cout<<">> 5. \"parser\"|run parser."<<std::endl;
+			std::cout<<">> 5. \"parser\"|run parser. (-parser)"<<std::endl;
 			std::cout<<">> 6. \"del\"   |delete all elements in stack."<<std::endl;
-			std::cout<<">> 7. \"run\"   |run the programme in stack."<<std::endl;
+			std::cout<<">> 7. \"run\"   |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 8. \"rs\"    |check the source program."<<std::endl;
 		}
 		else if(command=="cls")
@@ -42,6 +42,7 @@ int main()
 			nasal::nasal_parse.stack_set_empty();
 			nasal::nasal_var_stack.delete_all();
 			nasal::nasal_func_stack.delete_all();
+			std::cout<<">>[Delete] Complete."<<std::endl;
 		}
 		else if(command=="parser")
 		{
