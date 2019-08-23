@@ -16,10 +16,10 @@ int main()
 		if(command=="help")
 		{
 			std::cout<<">> nasal script interpreter by ValKmjolnir"<<std::endl;
-			std::cout<<">> 1.         |input file name to run the lexer. (-lexer)"<<std::endl;
+			std::cout<<">> 1.         |input file name to load the file."<<std::endl;
 			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
-			std::cout<<">> 3. \"exit\"  |shut down the program."<<std::endl;
-			std::cout<<">> 4. \"lexer\" |see tokens in stack."<<std::endl;
+			std::cout<<">> 3. \"exit\"  |shut down the interpreter."<<std::endl;
+			std::cout<<">> 4. \"lexer\" |run lexer. (-lexer)"<<std::endl;
 			std::cout<<">> 5. \"parser\"|run parser. (-parser)"<<std::endl;
 			std::cout<<">> 6. \"del\"   |delete all elements in stack."<<std::endl;
 			std::cout<<">> 7. \"run\"   |run the programme in stack. (-lexer -parser)"<<std::endl;
@@ -51,12 +51,13 @@ int main()
 		else if(command=="parser")
 		{
 			par.parse_process(lex.return_list());//nasal::nasal_parse.print_parser(nasal::nasal_lexer);
-			par.print_parser();//nasal::nasal_parse.print_error();
+			par.print_error();//nasal::nasal_parse.print_error();
 		}
 		else if(command=="run")
 		{
 			lex.lexer_process(prog.use_file());
-			par.parse_process(lex.return_list());
+			par.parse_quiet_process(lex.return_list());
+			par.print_error();
 			;//nasal::nasal_parse.print_error();
 		}
 		else
