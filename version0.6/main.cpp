@@ -1,0 +1,66 @@
+#include "nasal.h"
+#include <cstring>
+
+int main()
+{
+	resource_programme_process prog;
+	nasal_lexer lex;
+	nasal_parser par;
+	std::string command;
+	std::cout<<">> nasal-- script by ValKmjolnir"<<std::endl;
+	std::cout<<">> input \"help\" to find help."<<std::endl;
+	while(1)
+	{
+		std::cout<<">> ";
+		std::getline(std::cin,command);
+		if(command=="help")
+		{
+			std::cout<<">> nasal script interpreter by ValKmjolnir"<<std::endl;
+			std::cout<<">> 1.         |input file name to run the lexer. (-lexer)"<<std::endl;
+			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
+			std::cout<<">> 3. \"exit\"  |shut down the program."<<std::endl;
+			std::cout<<">> 4. \"lexer\" |see tokens in stack."<<std::endl;
+			std::cout<<">> 5. \"parser\"|run parser. (-parser)"<<std::endl;
+			std::cout<<">> 6. \"del\"   |delete all elements in stack."<<std::endl;
+			std::cout<<">> 7. \"run\"   |run the programme in stack. (-lexer -parser)"<<std::endl;
+			std::cout<<">> 8. \"rs\"    |check the source program."<<std::endl;
+		}
+		else if(command=="cls")
+		{
+			system("cls");
+			//windows  system("cls);
+			//linux system("clear");
+			//macOS system("clear");
+		}
+		else if(command=="rs")
+			prog.print_file();
+		else if(command=="exit")
+		{
+			break;
+		}
+		else if(command=="lexer")
+		{
+			lex.lexer_process(prog.use_file());
+			lex.print_lexer();
+		}
+		else if(command=="del")
+		{
+			prog.del_file();
+			std::cout<<">>[Delete] Complete."<<std::endl;
+		}
+		else if(command=="parser")
+		{
+			par.parse_process(lex.return_list());//nasal::nasal_parse.print_parser(nasal::nasal_lexer);
+			par.print_parser();//nasal::nasal_parse.print_error();
+		}
+		else if(command=="run")
+		{
+			lex.lexer_process(prog.use_file());
+			par.parse_process(lex.return_list());
+			;//nasal::nasal_parse.print_error();
+		}
+		else
+			prog.input_file(command);
+	}
+	return 0;
+}
