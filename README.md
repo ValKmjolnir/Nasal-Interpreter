@@ -10,6 +10,12 @@ So this is an interpreter for Nasal written by C++.
 
 The interpreter is still in development.Anyone who interested in this could also join us!
 
+# Issue in nasal console in flightgear
+
+When calling a function without a ';' ,the console does not find the error.But in nasal's grammar this seems really wrong.
+
+So in my interpreter,if you call the function only without a ';' behind it,you will get a piece of error information!
+
 # Now complete all types
 
 var: int   float   double   std::string   char   long long int
