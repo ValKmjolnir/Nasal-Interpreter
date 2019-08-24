@@ -45,9 +45,11 @@ data type = <scalar> <identifier> <calculation> <list> <hash> <function>
 		<func> <(> <identifier>|<identifiers> <)> <{> <statement> <}>
 <1><definition> ::=
 		<var> <identifier> <=> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
+		<var> <identifier> <=> <(> <scalar>|<identifier>|<list>|<hash>|<calculation> <)> <;>
 		<var> <identifier> <=> <function>
 <1><assigntment> ::=
 		<!=var> <identifier> <=> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
+		<!=var> <identifier> <=> <(> <scalar>|<identifier>|<list>|<hash>|<calculation> <)> <;>
 <statement> ::=
 		<!=<for> <(>> <definition>|<assignment>
 		<return> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
