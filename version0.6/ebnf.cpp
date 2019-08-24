@@ -2,57 +2,62 @@
 
 data type = <scalar> <identifier> <calculation> <list> <hash> <function>
 
-
-<scalar> ::= NUMBER|STRING
+<1><unknown_type_id> ::=
+		IDENTIFIER
+		<!= <scalar>|<identifier>|<calculation>> <+>|<-> <unknown_type_id>
+		
+<1><scalar> ::= NUMBER|STRING
 		<!= <scalar>|<identifier>|<calculation>> <+>|<-> <scalar>
-<scalars> ::=
-		<scalar>|<scalars>|<list>|<hash>|<calculation> <,> <scalar>|<identifier>|<list>|<hash>|<calculation>
-		<identifier>|<identifiers> <,> <scalar>|<list>|<hash>|<calculation>
-<identifier> ::=
-		<!= <scalar>|<identifier>|<calculation>> <+>|<-> <identifier>
-		<id> <!= <[>|<.>|<(>>
-<identifiers> ::=
+<1><scalars> ::=
+		<scalar>|<scalars>|<list>|<hash>|<calculation>|<function> <,> <scalar>|<identifier>|<list>|<hash>|<calculation>|<function> <!=operator>
+		<identifier>|<identifiers> <,> <scalar>|<list>|<hash>|<calculation>|<function> <!=operator>
+<1><identifier> ::=
+		IDENTIFIER <!= <[>|<.>|<(>>
+		<unknown_type_id>|<identifier> <.> <identifier>
+		<unknown_type_id> <[> <scalar>|<identifier>|<calcualtion> <]> <!= <[>|<.>|<(>>
+		<unknown_type_id> <(> <scalar>|<scalars>|<identifier>|<identifiers>|<calculation>|<list>|<hash> <)> <!= <[>|<.>|<(>>
+		<unknown_type_id> <(><)> <!= <[>|<.>|<(>>
+		<unknown_type_id> <.> <.> <.>
+<1><identifiers> ::=
 		<identifier>|<identifiers> <,> <identifier>
-<calculation> ::=
+<1><calculation> ::=
 		<scalar>|<identifier>|<calculation> <+>|<->|<*>|</>|<~>|<<>|<<=>|<>>|<>=>|<==>|<!=>|<and>|<or> <scalar>|<identifier>|<calculation>
 		<(> <scalar>|<identifier>|<calculation> <)> <+>|<->|<*>|</>|<~>|<<>|<<=>|<>>|<>=>|<==>|<!=>|<and>|<or> <scalar>|<identifier>|<calculation>
 		<scalar>|<identifier>|<calculation> <+>|<->|<*>|</>|<~>|<<>|<<=>|<>>|<>=>|<==>|<!=>|<and>|<or> <(> <scalar>|<identifier>|<calculation> <)>
 		<(> <scalar>|<identifier>|<calculation> <)> <+>|<->|<*>|</>|<~>|<<>|<<=>|<>>|<>=>|<==>|<!=>|<and>|<or> <(> <scalar>|<identifier>|<calculation> <)>
 		<!= <scalar>|<identifier>|<calculation>> <+>|<-> <calculation>
-<unknown_type_id> ::=
-		IDENTIFIER
-		<unknown_type_id> <.> <identifier>
-		<unknown_type_id> <[> <scalar>|<identifier>|<calcualtion> <]>
-		<unknown_type_id> <(> <scalar>|<scalars>|<identifier>|<identifiers>|<calculation> <)>
-<list> ::=
+<1><list> ::=
 		<[><]>
-		<[> <scalar>|<scalars>|<identifier>|<identifiers>|<list>|<hash>|<calculation> <]>
-<hash> ::=
+		<!=<identifier>|<unknown_type_id>><[> <scalar>|<scalars>|<identifier>|<identifiers>|<list>|<hash>|<calculation> <]>
+<1><hash> ::=
 		<{><}>
 		<{> <hashmember>|<hashmembers> <}>
-<hashmember> ::=
+<1><hashmember> ::=
 		<identifier> <:> <scalar>|<identifier>|<list>|<hash>|<function>|<calculation>
-<hashmembers> ::=
+<1><hashmembers> ::=
 		<hashmember>|<hashmembers> <,> <hashmember>
-<function> ::=
+<1><function> ::=
 		<func> <{><}>
 		<func> <{> <statement> <}>
 		<func> <(><)> <{><}>
 		<func> <(><)> <{> <statement> <}>
 		<func> <(> <identifier>|<identifiers> <)> <{><}>
 		<func> <(> <identifier>|<identifiers> <)> <{> <statement> <}>
-<definition> ::=
+<1><definition> ::=
 		<var> <identifier> <=> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
 		<var> <identifier> <=> <function>
-<assigntment> ::=
+<1><assigntment> ::=
 		<!=var> <identifier> <=> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
 <statement> ::=
-		<!=<for>> <definition>|<assignment>
+		<!=<for> <(>> <definition>|<assignment>
 		<return> <scalar>|<identifier>|<list>|<hash>|<calculation> <;>
-		<continue>|<break> <;>
+		<return> <;>
+		<!=return> <continue>|<break>|<identifier> <;>
 		<choose>
 		<loop>
-<choose>
+<statements> ::=
+		<statement>|<statements> <statement>|<;>
+<1><choose>
 		<if> <(> <scalar>|<identifier>|<calculation> <)>
 		<elsif> <(> <scalar>|<identifier>|<calculation> <)>
 		<else> <if> <(> <scalar>|<identifier>|<calculation> <)>

@@ -1,6 +1,1 @@
-var e=func(e){e;}
-var e={e:e/e,e:1};
-lat = e.e(e,1).e()+e*e.e(e.e*e/180); # e*e is recognized and then .e cannot be recognized
-if(!e.e)e;
-var e=e/e;
-var e=e[e/e];
+null
