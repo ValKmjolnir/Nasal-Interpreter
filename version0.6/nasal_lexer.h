@@ -40,6 +40,16 @@ bool isNumber(char t)
 	return (('0'<=t) && (t<='9'));
 }
 
+bool isHex(char t)
+{
+	return ((('0'<=t) && (t<='9')) || (('a'<=t) && (t<='f')));
+}
+
+bool isOct(char t)
+{
+	return (('0'<=t) && (t<='7'));
+}
+
 class resource_programme_process
 {
 	private:
@@ -161,18 +171,47 @@ class nasal_lexer
 			}
 			else if(isNumber(temp))
 			{
-				int PointCnt=0;
-				while(isNumber(temp))
+				if((source[ptr]=='0') && (source[ptr+1]=='x'))
 				{
-					__token+=temp;
-					++ptr;
+					__token+=source[ptr];
+					__token+=source[ptr+1];
+					ptr+=2;
 					temp=source[ptr];
-					if(temp=='.' && !PointCnt)
+					while(isNumber(temp) || isHex(temp))
 					{
-						++PointCnt;
 						__token+=temp;
 						++ptr;
 						temp=source[ptr];
+					}
+				}
+				else if((source[ptr]=='0') && (source[ptr+1]=='o'))
+				{
+					__token+=source[ptr];
+					__token+=source[ptr+1];
+					ptr+=2;
+					temp=source[ptr];
+					while(isNumber(temp) || isOct(temp))
+					{
+						__token+=temp;
+						++ptr;
+						temp=source[ptr];
+					}
+				}
+				else
+				{
+					int PointCnt=0;
+					while(isNumber(temp))
+					{
+						__token+=temp;
+						++ptr;
+						temp=source[ptr];
+						if(temp=='.' && !PointCnt)
+						{
+							++PointCnt;
+							__token+=temp;
+							++ptr;
+							temp=source[ptr];
+						}
 					}
 				}
 				syn=NUMBER;
