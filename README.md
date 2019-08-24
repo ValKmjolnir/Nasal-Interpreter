@@ -310,6 +310,28 @@ recognize all these things...
     e~=e;
     e+=(e-e)*(e+(e/e));
     e=e-e*(!2);
+    var e=e[0]~e[1]~e[2];
+    var e={
+        e:[],
+        e:{}
+    };
+    return {};
+    return [];
+    return {parent:[e]};
+    var e=0o7103;#Oct
+    var e=0x55aa;#Hex
+    var e=e/e;
+    var e=e[e/e];
+    var e=-e;
+    var e=-1;
+    var e=func(e){e;}
+    var e={e:e/e,e:1};
+    e= e.e(e,1).e()+e*e.e(e.e*e/180);
+    if(!e.e)e;
+    var e=e.e("str",1).e()*e.e("str",1).e*0.001;
+    e.e("str",1).e("str",e-e);
+    e.e(e("str",e.e()/2880)~"str");
+    var e=func(){e;};
 
 
 # The structure of basical elements is...
