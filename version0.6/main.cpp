@@ -7,8 +7,10 @@ int main()
 	nasal_lexer lex;
 	nasal_parser par;
 	std::string command;
-	std::cout<<">> nasal-- script by ValKmjolnir"<<std::endl;
+	std::cout<<">> nasal script interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> input \"help\" to find help."<<std::endl;
+	std::cout<<">> Be careful: this interpreter uses strict methods to check if there's an error."<<std::endl;
+	std::cout<<"   Always add \";\" after each statement (except loop and if-else)."<<std::endl;
 	while(1)
 	{
 		std::cout<<">> ";

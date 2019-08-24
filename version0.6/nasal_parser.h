@@ -451,7 +451,7 @@ class nasal_parser
 				temp.pop();
 			}
 			
-			if((tbl[2]!=__scalar) && (tbl[2]!=__identifier) && ((tbl[1]==__sub_operator) || (tbl[1]==__add_operator)) && (tbl[0]==__identifier))
+			if((tbl[2]!=__scalar) && (tbl[2]!=__identifier) && (tbl[2]!=__calculation) && ((tbl[1]==__sub_operator) || (tbl[1]==__add_operator)) && (tbl[0]==__identifier))
 			{
 				parse_unit t;
 				t.type=__identifier;
@@ -759,9 +759,9 @@ class nasal_parser
 		}
 		bool definition_check()
 		{
-			int tbl[5]={0};
+			int tbl[7]={0};
 			std::stack<parse_unit> temp;
-			for(int i=0;i<5;++i)
+			for(int i=0;i<7;++i)
 			{
 				if(parser.empty())
 					break;
@@ -769,7 +769,7 @@ class nasal_parser
 				tbl[i]=temp.top().type;
 				parser.pop();
 			}
-			for(int i=0;i<5;++i)
+			for(int i=0;i<7;++i)
 			{
 				if(temp.empty())
 					break;
@@ -782,6 +782,16 @@ class nasal_parser
 				t.type=__definition;
 				t.line=parser.top().line;
 				for(int i=0;i<5;++i)
+					parser.pop();
+				parser.push(t);
+				return true;
+			}
+			else if((tbl[6]==__var) && (tbl[5]==__identifier) && (tbl[4]==__equal) && (tbl[3]==__left_curve) && ((tbl[2]==__identifier) || (tbl[2]==__scalar) || (tbl[2]==__list) || (tbl[2]==__hash) || (tbl[2]==__calculation)) && (tbl[1]==__right_curve) && (tbl[0]==__semi))
+			{
+				parse_unit t;
+				t.type=__definition;
+				t.line=parser.top().line;
+				for(int i=0;i<7;++i)
 					parser.pop();
 				parser.push(t);
 				return true;
@@ -800,9 +810,9 @@ class nasal_parser
 		}
 		bool assignment_check()
 		{
-			int tbl[4]={0};
+			int tbl[6]={0};
 			std::stack<parse_unit> temp;
-			for(int i=0;i<4;++i)
+			for(int i=0;i<6;++i)
 			{
 				if(parser.empty())
 					break;
@@ -810,7 +820,7 @@ class nasal_parser
 				tbl[i]=temp.top().type;
 				parser.pop();
 			}
-			for(int i=0;i<4;++i)
+			for(int i=0;i<6;++i)
 			{
 				if(temp.empty())
 					break;
@@ -826,6 +836,18 @@ class nasal_parser
 				t.type=__assignment;
 				t.line=parser.top().line;
 				for(int i=0;i<4;++i)
+					parser.pop();
+				parser.push(t);
+				return true;
+			}
+			else if((tbl[5]==__identifier) && ((tbl[4]==__equal) || (tbl[4]==__add_equal) || (tbl[4]==__sub_equal)
+					|| (tbl[4]==__mul_equal) || (tbl[4]==__div_equal) || (tbl[4]==__link_equal))
+					&& (tbl[3]==__left_curve) && ((tbl[2]==__identifier) || (tbl[2]==__scalar) || (tbl[2]==__list) || (tbl[2]==__hash) || (tbl[2]==__calculation)) && (tbl[1]==__right_curve) && (tbl[0]==__semi))
+			{
+				parse_unit t;
+				t.type=__definition;
+				t.line=parser.top().line;
+				for(int i=0;i<6;++i)
 					parser.pop();
 				parser.push(t);
 				return true;
