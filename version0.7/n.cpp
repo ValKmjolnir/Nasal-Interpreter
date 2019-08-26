@@ -4,6 +4,7 @@
 enum token_type
 {
 	__stack_end,
+	__null_end,// $
 	__equal,// =
 	__cmp_equal,// ==
 	__cmp_not_equal,// !=
@@ -21,8 +22,11 @@ enum token_type
 	__dot,// .
 	__var,// var reserve word
 	__func,// func reserve word
-	__unknown_type_id,__identifier,__identifiers,
-	__scalar,__scalars,__list,__hash,
+	__id,__identifier,__identifiers,__identifier_end,
+	__parameter,__parameters,__parameter_end,
+	__number,__string,
+	__scalar,__scalars,__scalar_end,
+	__list,__hash,
 	__hash_member,__hash_members,
 	__statement,__statements,
 	__function,//function(){}
@@ -32,11 +36,12 @@ enum token_type
 	__return
 };
 
-struct token_seq
+const int max_token_len=20;
+struct cmp_seq
 {
-	int tokens[15];
+	int tokens[max_token_len];
 	int res;
-}par[13]=
+}par[]=
 {
 	{{__var,__identifier,__equal,__scalar,__semi},                                __definition},
 	{{__var,__identifier,__equal,__identifier,__semi},                            __definition},
@@ -52,42 +57,7 @@ struct token_seq
 	{{__identifier,__left_curve,__right_curve},                                   __identifier},
 	{{__identifier,__left_curve,__scalar,__right_curve},                          __identifier}
 };
-
-struct par_info
-{
-	int res;
-	int len;
-};
-par_info isPar(int *t)
-{
-	par_info temp;
-	temp.len=0;
-	temp.res=0;
-	for(int i=0;i<13;++i)
-	{
-		int cnt=0;
-		for(int j=0;j<15;++j)
-		{
-			if(par[i].tokens[j])
-				++cnt;
-			else
-				break;
-		}
-		for(int j=0;j<cnt;++j)
-		{
-			if(par[i].tokens[j]!=t[15-cnt+j])
-				break;
-			if((par[i].tokens[j]==t[15-cnt+j]) && (j==cnt-1))
-			{
-				temp.len=cnt;
-				temp.res=par[i].res;
-				return temp;
-			}
-		}
-	}
-	return temp;
-}
-
+int num_of_par=sizeof(par)/sizeof(cmp_seq);
 
 void print_token_type(int type)
 {
@@ -193,7 +163,7 @@ void print_token_type(int type)
 		case __func:
 			context="func";
 			break;
-		case __unknown_type_id:
+		case __id:
 			context="unknown_id";
 			break;
 		case __identifier:
@@ -259,6 +229,12 @@ void print_token_type(int type)
 		case __definition:
 			context="definition";
 			break;
+		case __number:
+			context="number";
+			break;
+		case __string:
+			context="string";
+			break;
 	}
 	std::cout<<context;
 	return;
@@ -270,6 +246,117 @@ struct parse_unit
 	int type;
 };
 
+class PDA
+{
+	private:
+		std::stack<parse_unit> main_stack;
+		std::stack<parse_unit> comp_stack;
+		std::stack<parse_unit> recognized_stack;
+		std::stack<parse_unit> error_stack;
+	public:
+		void stack_input(std::stack<parse_unit>& temp)
+		{
+			while(!temp.empty())
+			{
+				main_stack.push(temp.top());
+				temp.pop();
+			}
+			return;
+		}
+		void turn_back_stack_member(const int num)
+		{
+			for(int i=0;i<num;++i)
+			{
+				main_stack.push(recognized_stack.top());
+				recognized_stack.pop();
+			}
+			return;
+		}
+		void comp_progress()
+		{
+			parse_unit temp;
+			temp.line=0;
+			temp.type=0;
+			
+			while(!main_stack.empty())
+			{
+				bool ispar=false;
+				for(int i=0;i<num_of_par;++i)
+				{
+					while(!comp_stack.empty())
+						comp_stack.pop();
+					for(int j=max_token_len-1;j>=0;--j)
+					{
+						if(par[i].tokens[j])
+						{
+							temp.type=par[i].tokens[j];
+							comp_stack.push(temp);
+						}
+					}
+					int cnt=0;
+					while((!comp_stack.empty()) && (!main_stack.empty()))
+					{
+						if(comp_stack.top().type==__null_end)
+						{
+							++cnt;
+							comp_stack.pop();
+							if(comp_stack.empty())
+								break;
+						}
+						if(comp_stack.top().type==main_stack.top().type)
+						{
+							++cnt;
+							comp_stack.pop();
+							recognized_stack.push(main_stack.top());
+							main_stack.pop();
+						}
+						else
+						{
+							turn_back_stack_member(cnt);
+							break;
+						}
+					}
+					if(comp_stack.empty())
+					{
+						ispar=true;
+						break;
+					}
+				}
+				if(!ispar)
+				{
+					error_stack.push(main_stack.top());
+					main_stack.pop();
+				}
+			}
+			if(!error_stack.empty())
+			{
+				std::stack<parse_unit> temp;
+				while(!error_stack.empty())
+				{
+					temp.push(error_stack.top());
+					error_stack.pop();
+				}
+				std::cout<<">>[Error] Parse error:";
+				int now_line=0;
+				while(!temp.empty())
+				{
+					if(temp.top().line!=now_line)
+					{
+						now_line=temp.top().line;
+						std::cout<<std::endl<<"line "<<now_line<<" ";
+					}
+					print_token_type(temp.top().type);
+					std::cout<<" ";
+					temp.pop();
+				}
+				std::cout<<std::endl;
+			}
+			else
+				std::cout<<">>[Parse] 0 error occurred."<<std::endl;
+			return;
+		}
+};
+
 class nasal_parser
 {
 	private:
@@ -279,13 +366,6 @@ class nasal_parser
 		{
 			while(!parser.empty())
 				parser.pop();
-			for(int i=0;i<15;++i)
-			{
-				parse_unit t;
-				t.line=0;
-				t.type=__stack_end;
-				parser.push(t);
-			}
 			for(std::list<token>::iterator i=lexer.begin();i!=lexer.end();++i)
 			{
 				parse_unit temp_parse;
@@ -420,83 +500,9 @@ class nasal_parser
 				}
 				parser.push(temp_parse);//push this into stack
 			}
-			while(!parser.empty())
-			{
-				int tbl[15]={0};
-				std::stack<parse_unit> temp;
-				for(int i=0;i<15;++i)
-				{
-					if(!parser.empty())
-					{
-						temp.push(parser.top());
-						parser.pop();
-					}
-					else
-						break;
-				}
-				for(int i=0;i<15;++i)
-				{
-					if(!temp.empty())
-					{
-						tbl[i]=temp.top().type;
-						parser.push(temp.top());
-						temp.pop();
-					}
-					else
-						break;
-				}
-				for(int i=0;i<15;++i)
-				{
-					if(tbl[i])
-						break;
-					if(!tbl[i] && i==14)
-						return;
-				}
-				par_info tk=isPar(tbl);
-				if(tk.res)
-				{
-					parse_unit temp;
-					temp.line=parser.top().line;
-					temp.type=tk.res;
-					for(int i=0;i<tk.len;++i)
-						parser.pop();
-					parser.push(temp);
-				}
-				else
-					break;
-			}
-			std::cout<<">>[Parser] Complete scanning."<<std::endl;
-			return;
-		}
-		void print_error()
-		{
-			std::stack<parse_unit> temp_stack;
-			while(!parser.empty())
-			{
-				if((parser.top().type!=__stack_end) && (parser.top().type!=__statement) && (parser.top().type!=__statements) && (parser.top().type!=__function) && (parser.top().type!=__definition) && (parser.top().type!=__assignment) && (parser.top().type!=__loop) && (parser.top().type!=__choose))
-					temp_stack.push(parser.top());
-				parser.pop();
-			}
-			if(!temp_stack.empty())
-			{
-				std::cout<<">>[Error] Parse error."<<std::endl;
-				while(!temp_stack.empty())
-				{
-					int l=temp_stack.top().line;
-					std::cout<<"line "<<l<<": ";
-					while(l==temp_stack.top().line)
-					{
-						print_token_type(temp_stack.top().type);
-						std::cout<<" ";
-						temp_stack.pop();
-						if(temp_stack.empty())
-							break;
-					}
-					std::cout<<std::endl;
-				}
-			}
-			else
-				std::cout<<">>[Parser] No error occurred."<<std::endl;
+			PDA automata;
+			automata.stack_input(parser);
+			automata.comp_progress();
 			return;
 		}
 };
@@ -509,7 +515,7 @@ int main()
 	std::string str="a.txt";
 	prog.input_file(str);
 	lex.lexer_process(prog.use_file());
+	lex.print_lexer();
 	pas.parse_quiet_process(lex.return_list());
-	pas.print_error();
 	return 0;
 }
