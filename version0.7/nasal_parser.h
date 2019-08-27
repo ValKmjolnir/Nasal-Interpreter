@@ -24,14 +24,16 @@ enum token_type
 	__dot,// .
 	__var,// var reserve word
 	__func,// func reserve word
-	__id,__identifier,__identifiers,__identifier_end,__lacked_identifier,
+	__id,
+	__identifier,__identifiers,__identifier_end,__lacked_identifier,
 	__parameter,__parameters,__parameter_end,
 	__number,__string,
 	__scalar,__scalars,__scalar_end,
-	__list,__hash,
-	__hash_member,__hash_members,__hash_member_end,__hash_suffix,
+	__list,__list_end,
+	__hash,__hash_end,
+	__hash_member,__hash_members,__hash_member_end,__hash_search,
 	__statement,__statements,
-	__function,//function(){}
+	__function,__call_function,__call_function_end,//function(){}
 	__definition,
 	__assignment,__pre_assignment,
 	__calculation,
@@ -227,10 +229,78 @@ struct cmp_seq
 	int res;
 }par[]=
 {
-	{{__var,__id,__equal,__string,__semi},__definition},
-	{{__number},                              __scalar},
-	{{__var,__id,__equal,__scalar,__semi},__definition},
-	{{__var,__id,__equal,__id,__semi},    __definition}
+	{{__left_bracket,__list_end},                                    __list},
+	{{__number,__list_end},                                      __list_end},
+	{{__id,__list_end},                                          __list_end},
+	{{__identifier,__list_end},                                  __list_end},
+	{{__string,__list_end},                                      __list_end},
+	{{__list,__list_end},                                        __list_end},
+	{{__hash,__list_end},                                        __list_end},
+	{{__comma,__number,__list_end},                              __list_end},
+	{{__comma,__id,__list_end},                                  __list_end},
+	{{__comma,__identifier,__list_end},                          __list_end},
+	{{__comma,__string,__list_end},                              __list_end},
+	{{__comma,__list,__list_end},                                __list_end},
+	{{__comma,__hash,__list_end},                                __list_end},
+	{{__right_bracket},                                          __list_end},
+	
+	{{__id,__colon,__number},                                __hash_member},
+	{{__id,__colon,__id},                                    __hash_member},
+	{{__id,__colon,__identifier},                            __hash_member},
+	{{__id,__colon,__string},                                __hash_member},
+	{{__id,__colon,__list},                                  __hash_member},
+	{{__id,__colon,__hash},                                  __hash_member},
+	
+	{{__left_brace,__hash_end},                                     __hash},
+	{{__hash_member,__hash_end},                                __hash_end},
+	{{__comma,__hash_member,__hash_end},                        __hash_end},
+	{{__right_brace},                                           __hash_end},
+	
+	{{__id,__dot,__hash_search},                             __hash_search},
+	{{__identifier,__dot,__hash_search},                     __hash_search},
+	{{__identifier},                                         __hash_search},
+	{{__id},                                                 __hash_search},
+	
+	{{__call_function},                                       __identifier},
+	{{__id,__left_bracket,__number,__right_bracket},          __identifier},
+	{{__id,__left_bracket,__id,__right_bracket},              __identifier},
+	{{__id,__left_bracket,__identifier,__right_bracket},      __identifier},
+	
+	
+	{{__id,__left_curve,__call_function_end},                __call_function},
+	{{__number,__call_function_end},                     __call_function_end},
+	{{__id,__call_function_end},                         __call_function_end},
+	{{__identifier,__call_function_end},                 __call_function_end},
+	{{__string,__call_function_end},                     __call_function_end},
+	{{__list,__call_function_end},                       __call_function_end},
+	{{__hash,__call_function_end},                       __call_function_end},
+	{{__function,__call_function_end},                   __call_function_end},
+	{{__comma,__number,__call_function_end},             __call_function_end},
+	{{__comma,__id,__call_function_end},                 __call_function_end},
+	{{__comma,__identifier,__call_function_end},         __call_function_end},
+	{{__comma,__string,__call_function_end},             __call_function_end},
+	{{__comma,__list,__call_function_end},               __call_function_end},
+	{{__comma,__hash,__call_function_end},               __call_function_end},
+	{{__comma,__function,__call_function_end},           __call_function_end},
+	{{__right_curve},                                    __call_function_end},
+	
+	{{__var,__id,__equal,__number,__semi},                    __definition},
+	{{__var,__id,__equal,__id,__semi},                        __definition},
+	{{__var,__id,__equal,__identifier,__semi},                __definition},
+	{{__var,__id,__equal,__string,__semi},                    __definition},
+	{{__var,__id,__equal,__list,__semi},                      __definition},
+	{{__var,__id,__equal,__hash,__semi},                      __definition},
+	{{__var,__id,__equal,__hash_search,__semi},               __definition},
+	
+	{{__var,__id,__equal,__number,__semi},                    __assignment},
+	{{__var,__id,__equal,__id,__semi},                        __assignment},
+	{{__var,__id,__equal,__identifier,__semi},                __assignment},
+	{{__var,__id,__equal,__string,__semi},                    __assignment},
+	{{__var,__id,__equal,__list,__semi},                      __assignment},
+	{{__var,__id,__equal,__hash,__semi},                      __assignment},
+	{{__var,__id,__equal,__hash_search,__semi},               __assignment},
+	{{__definition},                                           __statement},
+	{{__assignment},                                           __statement}
 };
 int num_of_par=sizeof(par)/sizeof(cmp_seq);
 
@@ -245,7 +315,12 @@ class PDA
 	private:
 		std::stack<parse_unit> main_stack;
 		std::stack<parse_unit> error_stack;
+		bool stack_running_problem_check;
 	public:
+		PDA()
+		{
+			stack_running_problem_check=false;
+		}
 		void stack_input(std::stack<parse_unit>& temp)
 		{
 			while(!temp.empty())
@@ -286,6 +361,15 @@ class PDA
 		}
 		bool extend_comp_progress(const int type)
 		{
+			static int depth=0;
+			++depth;
+			if(stack_running_problem_check)
+				return false;
+			if(depth==1024)
+			{
+				stack_running_problem_check=true;
+				return false;
+			}
 			std::stack<parse_unit> recognized_stack;
 			std::stack<parse_unit> comp_stack;
 			parse_unit temp;
@@ -313,8 +397,6 @@ class PDA
 							recognized_stack.push(main_stack.top());
 							main_stack.pop();
 						}
-						else if(comp_stack.top().type==__null_end)
-							comp_stack.pop();
 						else if(comp_stack.top().type!=main_stack.top().type)
 						{
 							if(!extend_comp_progress(comp_stack.top().type))
@@ -332,12 +414,12 @@ class PDA
 					}
 					if(comp_stack.empty())
 					{
-						while(!recognized_stack.empty())
-							recognized_stack.pop();
+						--depth;
 						return true;
 					}
 				}
 			}
+			--depth;
 			return false;
 		}
 		void main_comp_progress()
@@ -371,12 +453,15 @@ class PDA
 							recognized_stack.push(main_stack.top());
 							main_stack.pop();
 						}
-						else if(comp_stack.top().type==__null_end)
-							comp_stack.pop();
 						else if(comp_stack.top().type!=main_stack.top().type)
 						{
 							if(!extend_comp_progress(comp_stack.top().type))
 							{
+								if(stack_running_problem_check)
+								{
+									std::cout<<">>[Parse] Stack out of range in line "<<main_stack.top().line<<std::endl;
+									return;
+								}
 								while(!recognized_stack.empty())
 								{
 									main_stack.push(recognized_stack.top());
@@ -402,6 +487,7 @@ class PDA
 					main_stack.pop();
 				}
 			}
+			std::cout<<"[Parse] Complete checking."<<std::endl;
 			print_error();
 			return;
 		}
@@ -412,7 +498,7 @@ class nasal_parser
 	private:
 		std::stack<parse_unit> parser;
 	public:
-		void parse_quiet_process(std::list<token>& lexer)
+		void parse_process(std::list<token>& lexer)
 		{
 			while(!parser.empty())
 				parser.pop();
