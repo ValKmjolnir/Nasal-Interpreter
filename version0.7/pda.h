@@ -12,6 +12,7 @@ struct parse_unit
 enum token_type
 {
 	__stack_end,
+	__null_end,// $
 	__equal,// =
 	__cmp_equal,// ==
 	__cmp_not_equal,// !=
@@ -29,13 +30,17 @@ enum token_type
 	__dot,// .
 	__var,// var reserve word
 	__func,// func reserve word
-	__unknown_type_id,__identifier,__identifiers,
+	__id,__identifier,__identifiers,__identifier_end,__lacked_identifier,
+	__parameter,__parameters,__parameter_end,
 	__number,__string,
-	__scalar,__scalars,__list,__hash,
-	__hash_member,__hash_members,
+	__scalar,__scalars,__scalar_end,
+	__list,__hash,
+	__hash_member,__hash_members,__hash_member_end,__hash_suffix,
 	__statement,__statements,
 	__function,//function(){}
-	__definition,__assignment,__calculation,
+	__definition,
+	__assignment,__pre_assignment,
+	__calculation,
 	__loop,__continue,__break,__for,__forindex,__foreach,__while,// for()while() continue; break;
 	__choose,__if,__elsif,__else,// if else if else
 	__return
@@ -68,8 +73,6 @@ class PDA
 {
 	private:
 		std::stack<parse_unit> main_stack;
-		std::stack<parse_unit> comp_stack;
-		std::stack<parse_unit> recognized_stack;
 		std::stack<parse_unit> error_stack;
 	public:
 		void stack_input(std::stack<parse_unit>& temp)
@@ -81,71 +84,8 @@ class PDA
 			}
 			return;
 		}
-		void turn_back_stack_member(const int num)
+		void print_error()
 		{
-			for(int i=0;i<num;++i)
-			{
-				main_stack.push(recognized_stack.top());
-				recognized_stack.pop();
-			}
-			return;
-		}
-		void comp_progress()
-		{
-			parse_unit temp;
-			temp.line=0;
-			temp.type=0;
-			
-			while(!main_stack.empty())
-			{
-				bool ispar=false;
-				for(int i=0;i<num_of_par;++i)
-				{
-					while(!comp_stack.empty())
-						comp_stack.pop();
-					for(int j=max_token_len-1;j>=0;--j)
-					{
-						if(par[i].tokens[j])
-						{
-							temp.type=par[i].tokens[j];
-							comp_stack.push(temp);
-						}
-					}
-					int cnt=0;
-					while((!comp_stack.empty()) && (!main_stack.empty()))
-					{
-						if(comp_stack.top().type==__null_end)
-						{
-							++cnt;
-							comp_stack.pop();
-							if(comp_stack.empty())
-								break;
-						}
-						if(comp_stack.top().type==main_stack.top().type)
-						{
-							++cnt;
-							comp_stack.pop();
-							recognized_stack.push(main_stack.top());
-							main_stack.pop();
-						}
-						else
-						{
-							turn_back_stack_member(cnt);
-							break;
-						}
-					}
-					if(comp_stack.empty())
-					{
-						ispar=true;
-						break;
-					}
-				}
-				if(!ispar)
-				{
-					error_stack.push(main_stack.top());
-					main_stack.pop();
-				}
-			}
 			if(!error_stack.empty())
 			{
 				std::stack<parse_unit> temp;
@@ -171,6 +111,127 @@ class PDA
 			}
 			else
 				std::cout<<">>[Parse] 0 error occurred."<<std::endl;
+			return;
+		}
+		bool extend_comp_progress(const int type)
+		{
+			std::stack<parse_unit> recognized_stack;
+			std::stack<parse_unit> comp_stack;
+			parse_unit temp;
+			temp.line=0;
+			temp.type=0;
+			for(int i=0;i<num_of_par;++i)
+			{
+				if(par[i].res==type)
+				{
+					while(!comp_stack.empty())
+						comp_stack.pop();
+					for(int j=max_token_len-1;j>=0;--j)
+					{
+						if(par[i].tokens[j])
+						{
+							temp.type=par[i].tokens[j];
+							comp_stack.push(temp);
+						}
+					}
+					while((!comp_stack.empty()) && (!main_stack.empty()))
+					{
+						if(comp_stack.top().type==main_stack.top().type)
+						{
+							comp_stack.pop();
+							recognized_stack.push(main_stack.top());
+							main_stack.pop();
+						}
+						else if(comp_stack.top().type==__null_end)
+							comp_stack.pop();
+						else if(comp_stack.top().type!=main_stack.top().type)
+						{
+							if(!extend_comp_progress(comp_stack.top().type))
+							{
+								while(!recognized_stack.empty())
+								{
+									main_stack.push(recognized_stack.top());
+									recognized_stack.pop();
+								}
+								break;
+							}
+							else
+								comp_stack.pop();
+						}
+					}
+					if(comp_stack.empty())
+					{
+						while(!recognized_stack.empty())
+							recognized_stack.pop();
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		void main_comp_progress()
+		{
+			std::stack<parse_unit> recognized_stack;
+			std::stack<parse_unit> comp_stack;
+			parse_unit temp;
+			temp.line=0;
+			temp.type=0;
+			
+			while(!main_stack.empty())
+			{
+				bool ispar=false;
+				for(int i=0;i<num_of_par;++i)
+				{
+					while(!comp_stack.empty())
+						comp_stack.pop();
+					for(int j=max_token_len-1;j>=0;--j)
+					{
+						if(par[i].tokens[j])
+						{
+							temp.type=par[i].tokens[j];
+							comp_stack.push(temp);
+						}
+					}
+					while((!comp_stack.empty()) && (!main_stack.empty()))
+					{
+						if(comp_stack.top().type==main_stack.top().type)
+						{
+							comp_stack.pop();
+							recognized_stack.push(main_stack.top());
+							main_stack.pop();
+						}
+						else if(comp_stack.top().type==__null_end)
+							comp_stack.pop();
+						else if(comp_stack.top().type!=main_stack.top().type)
+						{
+							if(!extend_comp_progress(comp_stack.top().type))
+							{
+								while(!recognized_stack.empty())
+								{
+									main_stack.push(recognized_stack.top());
+									recognized_stack.pop();
+								}
+								break;
+							}
+							else
+								comp_stack.pop();
+						}
+					}
+					if(comp_stack.empty())
+					{
+						while(!recognized_stack.empty())
+							recognized_stack.pop();
+						ispar=true;
+						break;
+					}
+				}
+				if(!ispar && !main_stack.empty())
+				{
+					error_stack.push(main_stack.top());
+					main_stack.pop();
+				}
+			}
+			print_error();
 			return;
 		}
 };
