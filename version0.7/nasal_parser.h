@@ -320,6 +320,11 @@ class PDA
 		PDA()
 		{
 			stack_running_problem_check=false;
+			//when the DFS searched too deep (over 1024 levels) the stack_running_problem_check 
+			//will be set to true then return ro the main_progress
+			//when main_progress finds that the stack_running_problem_check is true
+			//then main_progress ends with an error : stack out of range
+			//and return the line where the error occurred
 		}
 		void stack_input(std::stack<parse_unit>& temp)
 		{
@@ -401,6 +406,10 @@ class PDA
 						{
 							if(!extend_comp_progress(comp_stack.top().type))
 							{
+								//if after all search the real type
+								//can not be found,then recognized_stack
+								//returns all the tokens in it
+								//to make sure the next comparation works
 								while(!recognized_stack.empty())
 								{
 									main_stack.push(recognized_stack.top());
@@ -447,6 +456,8 @@ class PDA
 					}
 					while((!comp_stack.empty()) && (!main_stack.empty()))
 					{
+						//because of the check !omp_stack.empty()
+						//every token sequence should not be null
 						if(comp_stack.top().type==main_stack.top().type)
 						{
 							comp_stack.pop();
