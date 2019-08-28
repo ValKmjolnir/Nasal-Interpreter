@@ -1,5 +1,9 @@
 # Nasal-- Interpreter
 
+# 我自闭了！
+
+我还是去补补编译原理吧，这活史PDA难得一比吊糟
+
 # Nasal
 
 Nasal is a script language that used in FlightGear.
