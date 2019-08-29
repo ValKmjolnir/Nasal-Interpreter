@@ -6,14 +6,15 @@
 #include <list>
 #include <cstring>
 
-#define OPERATOR    1 //界符 or 运算符 
-#define IDENTIFIER  2 //自定义标识符 
-#define NUMBER      3 //数字 
-#define RESERVEWORD 4 //关键字 
-#define STRING      5 //字符串类型 
-#define FAIL        -1 //失败 
-#define SCANEND     -2 //扫描完成 
-#define ERRORFOUND  -3 //异常错误 
+#define OPERATOR     1 //operator
+#define IDENTIFIER   2 //id
+#define NUMBER       3 //number
+#define RESERVEWORD  4 //reserve word
+#define STRING       5 //string 
+#define CHAR         6 //char
+#define FAIL        -1 //fail
+#define SCANEND     -2 //complete scanning
+#define ERRORFOUND  -3 //error occurred
 
 std::string reserve_word[15]=
 {
@@ -218,12 +219,26 @@ class nasal_lexer
 			}
 			else if(temp=='(' || temp==')' || temp=='[' || temp==']' || temp=='{' ||
 					temp=='}' || temp==',' || temp==';' || temp=='|' || temp==':' ||
-					temp=='?' || temp=='.' || temp=='`' || temp=='\'' || temp=='&'||
+					temp=='?' || temp=='.' || temp=='`' || temp=='&'||
 					temp=='%' || temp=='$' || temp=='^')
 			{
 				__token+=temp;
 				++ptr;
 				syn=OPERATOR;
+			}
+			else if(temp=='\'')
+			{
+				__token+=temp;
+				++ptr;
+				temp=source[ptr];
+				__token+=temp;
+				++ptr;
+				temp=source[ptr];
+				__token+=temp;
+				++ptr;
+				if(temp!='\'')
+					std::cout<<">>[Lexer] Abnormal char type detected: "<<__token<<" ."<<std::endl;
+				syn=CHAR;
 			}
 			else if(temp=='=' || temp=='+' || temp=='-' || temp=='*' || temp=='!' || temp=='/' || temp=='<' || temp=='>' || temp=='~')
 			{
@@ -346,6 +361,8 @@ class nasal_lexer
 					std::cout<<"( ReserveWord  | ";
 				else if(temp.type==STRING)
 					std::cout<<"( String       | ";
+				else if(temp.type==CHAR)
+					std::cout<<"( Char         | ";
 				std::cout<<temp.content<<" )"<<std::endl;
 			}
 			return;
