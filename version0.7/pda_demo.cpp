@@ -5,10 +5,10 @@
 
 enum token_type
 {
-	e=1,E,_E,T,_T,F,I,__add,__sub,__mul,__div,__left_curve,__right_curve,sharp
+	e=1,E,_E,T,_T,F,I,__add,__sub,__mul,__div,__link,__left_curve,__right_curve,sharp
 };
 
-const int max_len=3;
+const int max_len=5;
 struct cmp_seq
 {
 	int tokens[max_len];
@@ -19,6 +19,7 @@ cmp_seq par[]=
 	{{T,_E},                        E},
 	{{__add,T,_E},                 _E},
 	{{__sub,T,_E},                 _E},
+	{{__link,T,_E},                _E},
 	{{e},                          _E},
 	{{F,_T},                        T},
 	{{__mul,F,_T},                 _T},
@@ -34,14 +35,14 @@ cmp_seq first_set[]=
 	{{__left_curve,I},E},
 	{{__left_curve,I},T},
 	{{__left_curve,I},F},
-	{{__add,__sub,e},_E},
+	{{__add,__sub,__link,e},_E},
 	{{__mul,__div,e},_T},
 };
 int num_of_set=sizeof(first_set)/sizeof(cmp_seq);
 
 bool isEnd(int type)
 {
-	return ((type==__left_curve) || (type==__right_curve) || (type==I) || (type==__add) || (type==__sub) || (type==__mul) || (type==__div) || (type==e) || (type==sharp));
+	return ((type==__left_curve) || (type==__right_curve) || (type==I) || (type==__add) || (type==__sub) || (type==__mul) || (type==__div) || (type==__link) || (type==e) || (type==sharp));
 }
 bool isHead(int head,int type)
 {
@@ -120,6 +121,9 @@ void print_token(int type)
 		case __div:
 			str="/";
 			break;
+		case __link:
+			str="~";
+			break;
 		case __left_curve:
 			str="(";
 			break;
@@ -159,6 +163,8 @@ class PDA
 					main_stack.push(__mul);
 				else if(text[i]=='/')
 					main_stack.push(__div);
+				else if(text[i]=='~')
+					main_stack.push(__link);
 			}
 			comp_stack.push(sharp);
 			comp_stack.push(E);
