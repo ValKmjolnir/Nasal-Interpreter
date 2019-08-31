@@ -39,7 +39,7 @@ enum token_type
 	__call_function,
 	__definition,
 	__assignment,
-	__calculation,__add_calc,__mul_calc,__curve_calc,
+	__calculation,
 	__loop,
 	__choose,
 	__program
@@ -55,6 +55,7 @@ struct cmp_seq
 cmp_seq par[]=
 {
 	{{__program,__statement},                            __program},
+	
 	{{__calculation,__add_operator,__calculation},   __calculation},
 	{{__calculation,__add_operator,__id},            __calculation},
 	{{__id,__add_operator,__calculation},            __calculation},
@@ -83,7 +84,14 @@ cmp_seq par[]=
 	{{__right_curve,__id,__left_curve},              __calculation},
 	{{__right_curve,__calculation,__left_curve},     __calculation},
 	{{__semi,__calculation,__equal,__id,__var},       __definition},
-	{{__definition},                                   __statement}
+	{{__semi,__number,__equal,__id,__var},            __definition},
+	{{__semi,__string,__equal,__id,__var},            __definition},
+	{{__semi,__id,__equal,__id,__var},                __definition},
+	{{__semi,__char,__equal,__id,__var},              __definition},
+	{{__semi,__right_brace,__left_brace,__equal,__id,__var},              __definition},
+	{{__semi,__right_bracket,__left_bracket,__equal,__id,__var},          __definition},
+	{{__definition},                                   __statement},
+	{{__statement,__statement},                        __statement}
 };
 int num_of_par=sizeof(par)/sizeof(cmp_seq);
 
@@ -367,6 +375,20 @@ class PDA
 			}
 			return false;
 		}
+		void print_error()
+		{
+			while(!comp_stack.empty())
+			{
+				if((comp_stack.top()!=__statement) && (comp_stack.top()!=__program) && (comp_stack.top()!=__stack_end))
+				{
+					print_token(comp_stack.top());
+					std::cout<<" ";
+				}
+				comp_stack.pop();
+			}
+			std::cout<<std::endl;
+			return;
+		}
 		void main_comp_progress(bool show)
 		{
 			if(show)
@@ -391,10 +413,16 @@ class PDA
 				if(comp_stack.top()==__stack_end)
 					std::cout<<">>[Parse] 0 error(s)."<<std::endl;
 				else
+				{
 					std::cout<<">>[Parse] Error:"<<std::endl;
+					print_error();
+				}
 			}
 			else
+			{
 				std::cout<<">>[Parse] Error:"<<std::endl;
+				print_error();
+			}
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
 			//print_error();
 			return;
