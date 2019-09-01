@@ -54,44 +54,77 @@ struct cmp_seq
 // must put in a reverse way
 cmp_seq par[]=
 {
-	{{__program,__statement},                            __program},
+	{{__program,__statement},                                                __program},
 	
-	{{__calculation,__add_operator,__calculation},   __calculation},
-	{{__calculation,__add_operator,__id},            __calculation},
-	{{__id,__add_operator,__calculation},            __calculation},
-	{{__id,__add_operator,__id},                     __calculation},
+	{{__calculation,__add_operator,__calculation},                       __calculation},
+	{{__calculation,__add_operator,__id},                                __calculation},
+	{{__id,__add_operator,__calculation},                                __calculation},
+	{{__id,__add_operator,__id},                                         __calculation},
 	
-	{{__calculation,__sub_operator,__calculation},   __calculation},
-	{{__calculation,__sub_operator,__id},            __calculation},
-	{{__id,__sub_operator,__calculation},            __calculation},
-	{{__id,__sub_operator,__id},                     __calculation},
+	{{__calculation,__sub_operator,__calculation},                       __calculation},
+	{{__calculation,__sub_operator,__id},                                __calculation},
+	{{__id,__sub_operator,__calculation},                                __calculation},
+	{{__id,__sub_operator,__id},                                         __calculation},
 	
-	{{__calculation,__mul_operator,__calculation},   __calculation},
-	{{__calculation,__mul_operator,__id},            __calculation},
-	{{__id,__mul_operator,__calculation},            __calculation},
-	{{__id,__mul_operator,__id},                     __calculation},
+	{{__calculation,__mul_operator,__calculation},                       __calculation},
+	{{__calculation,__mul_operator,__id},                                __calculation},
+	{{__id,__mul_operator,__calculation},                                __calculation},
+	{{__id,__mul_operator,__id},                                         __calculation},
 	
-	{{__calculation,__div_operator,__calculation},   __calculation},
-	{{__calculation,__div_operator,__id},            __calculation},
-	{{__id,__div_operator,__calculation},            __calculation},
-	{{__id,__div_operator,__id},                     __calculation},
+	{{__calculation,__div_operator,__calculation},                       __calculation},
+	{{__calculation,__div_operator,__id},                                __calculation},
+	{{__id,__div_operator,__calculation},                                __calculation},
+	{{__id,__div_operator,__id},                                         __calculation},
 	
-	{{__calculation,__link_operator,__calculation},  __calculation},
-	{{__calculation,__link_operator,__id},           __calculation},
-	{{__id,__link_operator,__calculation},           __calculation},
-	{{__id,__link_operator,__id},                    __calculation},
+	{{__calculation,__link_operator,__calculation},                      __calculation},
+	{{__calculation,__link_operator,__id},                               __calculation},
+	{{__id,__link_operator,__calculation},                               __calculation},
+	{{__id,__link_operator,__id},                                        __calculation},
 	
-	{{__right_curve,__id,__left_curve},              __calculation},
-	{{__right_curve,__calculation,__left_curve},     __calculation},
-	{{__semi,__calculation,__equal,__id,__var},       __definition},
-	{{__semi,__number,__equal,__id,__var},            __definition},
-	{{__semi,__string,__equal,__id,__var},            __definition},
-	{{__semi,__id,__equal,__id,__var},                __definition},
-	{{__semi,__char,__equal,__id,__var},              __definition},
+	{{__right_curve,__id,__left_curve},                                  __calculation},
+	{{__right_curve,__calculation,__left_curve},                         __calculation},
+	
+	{{__semi,__calculation,__equal,__id,__var},                           __definition},
+	{{__semi,__number,__equal,__id,__var},                                __definition},
+	{{__semi,__string,__equal,__id,__var},                                __definition},
+	{{__semi,__id,__equal,__id,__var},                                    __definition},
+	{{__semi,__char,__equal,__id,__var},                                  __definition},
 	{{__semi,__right_brace,__left_brace,__equal,__id,__var},              __definition},
 	{{__semi,__right_bracket,__left_bracket,__equal,__id,__var},          __definition},
-	{{__definition},                                   __statement},
-	{{__statement,__statement},                        __statement}
+	
+	{{__semi,__calculation,__add_equal,__id},                             __assignment},
+	{{__semi,__number,__add_equal,__id},                                  __assignment},
+	{{__semi,__string,__add_equal,__id},                                  __assignment},
+	{{__semi,__id,__add_equal,__id},                                      __assignment},
+	{{__semi,__char,__add_equal,__id},                                    __assignment},
+	
+	{{__semi,__calculation,__sub_equal,__id},                             __assignment},
+	{{__semi,__number,__sub_equal,__id},                                  __assignment},
+	{{__semi,__string,__sub_equal,__id},                                  __assignment},
+	{{__semi,__id,__sub_equal,__id},                                      __assignment},
+	{{__semi,__char,__sub_equal,__id},                                    __assignment},
+	
+	{{__semi,__calculation,__mul_equal,__id},                             __assignment},
+	{{__semi,__number,__mul_equal,__id},                                  __assignment},
+	{{__semi,__string,__mul_equal,__id},                                  __assignment},
+	{{__semi,__id,__mul_equal,__id},                                      __assignment},
+	{{__semi,__char,__mul_equal,__id},                                    __assignment},
+	
+	{{__semi,__calculation,__div_equal,__id},                             __assignment},
+	{{__semi,__number,__div_equal,__id},                                  __assignment},
+	{{__semi,__string,__div_equal,__id},                                  __assignment},
+	{{__semi,__id,__div_equal,__id},                                      __assignment},
+	{{__semi,__char,__div_equal,__id},                                    __assignment},
+	
+	{{__semi,__calculation,__link_equal,__id},                            __assignment},
+	{{__semi,__number,__link_equal,__id},                                 __assignment},
+	{{__semi,__string,__link_equal,__id},                                 __assignment},
+	{{__semi,__id,__link_equal,__id},                                     __assignment},
+	{{__semi,__char,__link_equal,__id},                                   __assignment},
+	
+	{{__definition},                                                       __statement},
+	{{__assignment},                                                       __statement},
+	{{__statement,__statement},                                            __statement}
 };
 int num_of_par=sizeof(par)/sizeof(cmp_seq);
 
@@ -424,7 +457,6 @@ class PDA
 				print_error();
 			}
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
-			//print_error();
 			return;
 		}
 };
