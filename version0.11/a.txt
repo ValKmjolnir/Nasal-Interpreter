@@ -1,0 +1,24 @@
+var e=e(e,e,e);
+e+=e();
+e+=e(e);
+e+=e(e,e);
+var e=e[0];
+var e=func()
+{
+    var e=e;
+    var e=[];
+}
+var e=func(e...)
+{
+    e+=1;
+}
+var e=func(e)
+{
+    e-=2;
+}
+var e=func(e,e,e)
+{
+    e~="null_end_of_str";
+    var e=e.e.e.e.ee.e;
+    e();
+}
