@@ -16,6 +16,8 @@
 #define CALL_FUNC    8  // id(
 #define FUNC_HEAD    9  // func(
 #define DYNAMIC_ID   10 // id...
+#define IF_HEAD      11 // if (
+#define ELSIF_HEAD   12 // elsif (
 #define FAIL        -1  //fail
 #define SCANEND     -2  //complete scanning
 #define ERRORFOUND  -3  //error occurred
@@ -188,10 +190,15 @@ class nasal_lexer
 					}
 					++ptr;
 				}
-				else if((syn==RESERVEWORD) && (__token=="func") && (source[ptr]=='('))
+				else if((syn==RESERVEWORD) && ((__token=="func") || (__token=="if") || (__token=="elsif")) && (source[ptr]=='('))
 				{
+					if(__token=="func")
+						syn=FUNC_HEAD;
+					else if(__token=="if")
+						syn=IF_HEAD;
+					else if(__token=="elsif")
+						syn=ELSIF_HEAD;
 					__token+=source[ptr];
-					syn=FUNC_HEAD;
 					++ptr;
 				}
 			}
@@ -396,6 +403,10 @@ class nasal_lexer
 					std::cout<<"( Func head      | ";
 				else if(temp.type==DYNAMIC_ID)
 					std::cout<<"( Identifier     | ";
+				else if(temp.type==IF_HEAD)
+					std::cout<<"( If head        | ";
+				else if(temp.type==ELSIF_HEAD)
+					std::cout<<"( Elsif head     | ";
 				std::cout<<temp.content<<" )"<<std::endl;
 			}
 			return;
