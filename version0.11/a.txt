@@ -17,13 +17,9 @@ var e=func(e...)
 var e=func(e)
 {
     if(e>m)
-    {
         e-=2;
-    }
     else
-    {
         e+=1;
-    }
     return [0,1,2,3];
 }
 var e=func(e,e,e)
@@ -56,5 +52,8 @@ var a=0;
 a*=2;
 var e=func()
 {
+    var e=e.e().e[0];
+    for(var i=1;i<10;i)
+        a=i;
     return a;
 }
