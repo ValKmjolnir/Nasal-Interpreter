@@ -18,6 +18,7 @@
 #define DYNAMIC_ID   10 // id...
 #define IF_HEAD      11 // if (
 #define ELSIF_HEAD   12 // elsif (
+#define WHILE_HEAD   13 // while (
 #define FAIL        -1  //fail
 #define SCANEND     -2  //complete scanning
 #define ERRORFOUND  -3  //error occurred
@@ -190,7 +191,7 @@ class nasal_lexer
 					}
 					++ptr;
 				}
-				else if((syn==RESERVEWORD) && ((__token=="func") || (__token=="if") || (__token=="elsif")) && (source[ptr]=='('))
+				else if((syn==RESERVEWORD) && ((__token=="func") || (__token=="if") || (__token=="elsif") || (__token=="while")) && (source[ptr]=='('))
 				{
 					if(__token=="func")
 						syn=FUNC_HEAD;
@@ -198,6 +199,8 @@ class nasal_lexer
 						syn=IF_HEAD;
 					else if(__token=="elsif")
 						syn=ELSIF_HEAD;
+					else if(__token=="while")
+						syn=WHILE_HEAD;
 					__token+=source[ptr];
 					++ptr;
 				}
@@ -407,6 +410,8 @@ class nasal_lexer
 					std::cout<<"( If head        | ";
 				else if(temp.type==ELSIF_HEAD)
 					std::cout<<"( Elsif head     | ";
+				else if(temp.type==WHILE_HEAD)
+					std::cout<<"( While head     | ";
 				std::cout<<temp.content<<" )"<<std::endl;
 			}
 			return;
