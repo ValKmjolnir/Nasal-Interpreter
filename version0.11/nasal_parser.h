@@ -30,11 +30,11 @@ enum token_type
 	__continue,__break,__for,__forindex,__foreach,__while,
 	__call_list_head,__call_func_head,__func_head,
 	//end of operators & reserve words
-	__scalar,__data_list,
+	__scalar,__data_list,__scalar_list,
 	__number,__string,__char,
 	__list,
 	__hash,
-	__hash_member,
+	__hash_member,__hash_member_list,
 	__identifier,
 	__statement,__statements,
 	__function,
@@ -75,19 +75,19 @@ cmp_seq par[]=
 	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach},  __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach}, __loop},
 
-	{{__statement,__right_curve,__calculation,__if_head},                                        __if_choose},
+	//{{__statement,__right_curve,__calculation,__if_head},                                        __if_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__if_head},             __if_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__if_head},            __if_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__if_head},                         __if_choose},
-	{{__statement,__right_curve,__calculation,__elsif_head},                                  __elsif_choose},
+	//{{__statement,__right_curve,__calculation,__elsif_head},                                  __elsif_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__elsif_head},       __elsif_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__elsif_head},      __elsif_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__elsif_head},                   __elsif_choose},
-	{{__statement,__right_curve,__calculation,__if_head,__else},                              __elsif_choose},
+	//{{__statement,__right_curve,__calculation,__if_head,__else},                              __elsif_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__if_head,__else},   __elsif_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__if_head,__else},  __elsif_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__if_head,__else},               __elsif_choose},
-	{{__statement,__else},                                                                     __else_choose},
+	//{{__statement,__else},                                                                     __else_choose},
 	{{__right_brace,__statement,__left_brace,__else},                                          __else_choose},
 	{{__right_brace,__statements,__left_brace,__else},                                         __else_choose},
 	{{__right_brace,__left_brace,__else},                                                      __else_choose},
@@ -123,6 +123,33 @@ cmp_seq par[]=
 	
 	{{__id,__comma,__id},                                                              __data_list},
 	{{__data_list,__comma,__id},                                                       __data_list},
+	
+	{{__number,__comma,__number},                                                    __scalar_list},
+	{{__number,__comma,__string},                                                    __scalar_list},
+	{{__number,__comma,__char},                                                      __scalar_list},
+	{{__string,__comma,__number},                                                    __scalar_list},
+	{{__string,__comma,__string},                                                    __scalar_list},
+	{{__string,__comma,__char},                                                      __scalar_list},
+	{{__char,__comma,__number},                                                      __scalar_list},
+	{{__char,__comma,__string},                                                      __scalar_list},
+	{{__char,__comma,__char},                                                        __scalar_list},
+	{{__scalar_list,__comma,__number},                                               __scalar_list},
+	{{__scalar_list,__comma,__string},                                               __scalar_list},
+	{{__scalar_list,__comma,__char},                                                 __scalar_list},
+	
+	{{__right_bracket,__scalar_list,__left_bracket},                                        __list},
+	{{__right_bracket,__number,__left_bracket},                                             __list},
+	{{__right_bracket,__string,__left_bracket},                                             __list},
+	{{__right_bracket,__char,__left_bracket},                                               __list},
+	
+	{{__number,__colon,__id},                                                        __hash_member},
+	{{__string,__colon,__id},                                                        __hash_member},
+	{{__char,__colon,__id},                                                          __hash_member},
+	{{__hash_member,__comma,__hash_member},                                     __hash_member_list},
+	{{__hash_member_list,__comma,__hash_member},                                __hash_member_list},
+	
+	{{__right_brace,__hash_member,__left_brace},                                            __hash},
+	{{__right_brace,__hash_member_list,__left_brace},                                       __hash},
 	
 	{{__calculation,__add_operator,__calculation},                                   __calculation},
 	{{__calculation,__add_operator,__id},                                            __calculation},
@@ -205,6 +232,8 @@ cmp_seq par[]=
 	{{__function,__equal,__id,__var},                                                 __definition},
 	{{__semi,__function,__equal,__id,__var},                                          __definition},
 	{{__semi,__call_hash,__equal,__id,__var},                                         __definition},
+	{{__semi,__list,__equal,__id,__var},                                              __definition},
+	{{__semi,__hash,__equal,__id,__var},                                              __definition},
 	
 	{{__semi,__calculation,__add_equal,__id},                                         __assignment},
 	{{__semi,__number,__add_equal,__id},                                              __assignment},
@@ -257,6 +286,8 @@ cmp_seq par[]=
 	{{__semi,__continue},                                                              __statement},
 	{{__semi,__break},                                                                 __statement},
 	{{__semi,__id,__return},                                                           __statement},
+	{{__semi,__list,__return},                                                         __statement},
+	{{__semi,__hash,__return},                                                         __statement},
 	{{__loop},                                                                         __statement},
 	{{__statement,__statement},                                                       __statements},
 	{{__statements,__statement},                                                      __statements}
@@ -490,6 +521,12 @@ void print_token(int type)
 		
 		case __data_list:
 			context="datas";
+			break;
+		case __scalar_list:
+			context="scalars";
+			break;
+		case __hash_member_list:
+			context="hash_members";
 			break;
 		default:
 			context="unknown_type";
