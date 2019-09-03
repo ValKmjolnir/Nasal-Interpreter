@@ -28,6 +28,7 @@ enum token_type
 	__if,__elsif,__else,
 	__if_head,__elsif_head,
 	__continue,__break,__for,__forindex,__foreach,__while,
+	__while_head,
 	__call_list_head,__call_func_head,__func_head,
 	//end of operators & reserve words
 	__scalar,__data_list,__scalar_list,
@@ -67,11 +68,15 @@ cmp_seq par[]=
 	{{__elsif_choose,__if_choose},                                                        __choose},
 	{{__if_choose},                                                                       __choose},// ?
 	
-	{{__statement,__right_curve,__id,__semi,__id,__left_curve,__forindex},                            __loop},
+	//{{__statement,__right_curve,__calculation,__while_head},                                          __loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__while_head},               __loop},
+	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__while_head},              __loop},
+	
+	//{{__statement,__right_curve,__id,__semi,__id,__left_curve,__forindex},                            __loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__forindex}, __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__forindex},__loop},
 	
-	{{__statement,__right_curve,__id,__semi,__id,__left_curve,__foreach},                             __loop},
+	//{{__statement,__right_curve,__id,__semi,__id,__left_curve,__foreach},                             __loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach},  __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach}, __loop},
 
@@ -220,6 +225,87 @@ cmp_seq par[]=
 	{{__right_curve,__calculation,__left_curve},                                     __calculation},
 	{{__id,__nor_operator},                                                          __calculation},
 	
+	{{__calculation,__add_operator,__number},                                        __calculation},
+	{{__number,__add_operator,__calculation},                                        __calculation},
+	{{__number,__add_operator,__number},                                             __calculation},
+	{{__number,__add_operator,__id},                                                 __calculation},
+	{{__id,__add_operator,__number},                                                 __calculation},
+	
+	{{__calculation,__sub_operator,__number},                                        __calculation},
+	{{__number,__sub_operator,__calculation},                                        __calculation},
+	{{__number,__sub_operator,__number},                                             __calculation},
+	{{__number,__sub_operator,__id},                                                 __calculation},
+	{{__id,__sub_operator,__number},                                                 __calculation},
+	
+	{{__calculation,__mul_operator,__number},                                        __calculation},
+	{{__number,__mul_operator,__calculation},                                        __calculation},
+	{{__number,__mul_operator,__number},                                             __calculation},
+	{{__number,__mul_operator,__id},                                                 __calculation},
+	{{__id,__mul_operator,__number},                                                 __calculation},
+	
+	{{__calculation,__div_operator,__number},                                        __calculation},
+	{{__number,__div_operator,__calculation},                                        __calculation},
+	{{__number,__div_operator,__number},                                             __calculation},
+	{{__number,__div_operator,__id},                                                 __calculation},
+	{{__id,__div_operator,__number},                                                 __calculation},
+	
+	{{__calculation,__link_operator,__number},                                       __calculation},
+	{{__number,__link_operator,__calculation},                                       __calculation},
+	{{__number,__link_operator,__number},                                            __calculation},
+	{{__number,__link_operator,__id},                                                __calculation},
+	{{__id,__link_operator,__number},                                                __calculation},
+	
+	{{__calculation,__cmp_equal,__number},                                           __calculation},
+	{{__number,__cmp_equal,__calculation},                                           __calculation},
+	{{__number,__cmp_equal,__number},                                                __calculation},
+	{{__number,__cmp_equal,__id},                                                    __calculation},
+	{{__id,__cmp_equal,__number},                                                    __calculation},
+	
+	{{__calculation,__cmp_not_equal,__number},                                       __calculation},
+	{{__number,__cmp_not_equal,__calculation},                                       __calculation},
+	{{__number,__cmp_not_equal,__number},                                            __calculation},
+	{{__number,__cmp_not_equal,__id},                                                __calculation},
+	{{__id,__cmp_not_equal,__number},                                                __calculation},
+	
+	{{__calculation,__cmp_less,__number},                                            __calculation},
+	{{__number,__cmp_less,__calculation},                                            __calculation},
+	{{__number,__cmp_less,__number},                                                 __calculation},
+	{{__number,__cmp_less,__id},                                                     __calculation},
+	{{__id,__cmp_less,__number},                                                     __calculation},
+	
+	{{__calculation,__cmp_less_or_equal,__number},                                   __calculation},
+	{{__number,__cmp_less_or_equal,__calculation},                                   __calculation},
+	{{__number,__cmp_less_or_equal,__number},                                        __calculation},
+	{{__number,__cmp_less_or_equal,__id},                                            __calculation},
+	{{__id,__cmp_less_or_equal,__number},                                            __calculation},
+	
+	{{__calculation,__cmp_more,__number},                                            __calculation},
+	{{__number,__cmp_more,__calculation},                                            __calculation},
+	{{__number,__cmp_more,__number},                                                 __calculation},
+	{{__number,__cmp_more,__id},                                                     __calculation},
+	{{__id,__cmp_more,__number},                                                     __calculation},
+	
+	{{__calculation,__cmp_more_or_equal,__number},                                   __calculation},
+	{{__number,__cmp_more_or_equal,__calculation},                                   __calculation},
+	{{__number,__cmp_more_or_equal,__number},                                        __calculation},
+	{{__number,__cmp_more_or_equal,__id},                                            __calculation},
+	{{__id,__cmp_more_or_equal,__number},                                            __calculation},
+
+	{{__calculation,__and_operator,__number},                                        __calculation},
+	{{__number,__and_operator,__calculation},                                        __calculation},
+	{{__number,__and_operator,__number},                                             __calculation},
+	{{__number,__and_operator,__id},                                                 __calculation},
+	{{__id,__and_operator,__number},                                                 __calculation},
+	
+	{{__calculation,__or_operator,__number},                                         __calculation},
+	{{__number,__or_operator,__calculation},                                         __calculation},
+	{{__number,__or_operator,__number},                                              __calculation},
+	{{__number,__or_operator,__id},                                                  __calculation},
+	{{__id,__or_operator,__number},                                                  __calculation},
+	
+	{{__right_curve,__number,__left_curve},                                          __calculation},
+	{{__number,__nor_operator},                                                      __calculation},
+	
 	{{__semi,__calculation,__equal,__id,__var},                                       __definition},
 	{{__semi,__number,__equal,__id,__var},                                            __definition},
 	{{__semi,__string,__equal,__id,__var},                                            __definition},
@@ -234,6 +320,21 @@ cmp_seq par[]=
 	{{__semi,__call_hash,__equal,__id,__var},                                         __definition},
 	{{__semi,__list,__equal,__id,__var},                                              __definition},
 	{{__semi,__hash,__equal,__id,__var},                                              __definition},
+	
+	{{__semi,__calculation,__equal,__id},                                             __assignment},
+	{{__semi,__number,__equal,__id},                                                  __assignment},
+	{{__semi,__string,__equal,__id},                                                  __assignment},
+	{{__semi,__id,__equal,__id},                                                      __assignment},
+	{{__semi,__char,__equal,__id},                                                    __assignment},
+	{{__semi,__right_brace,__left_brace,__equal,__id},                                __assignment},
+	{{__semi,__right_bracket,__left_bracket,__equal,__id},                            __assignment},
+	{{__semi,__call_function,__equal,__id},                                           __assignment},
+	{{__semi,__call_list,__equal,__id},                                               __assignment},
+	{{__function,__equal,__id},                                                       __assignment},
+	{{__semi,__function,__equal,__id},                                                __assignment},
+	{{__semi,__call_hash,__equal,__id},                                               __assignment},
+	{{__semi,__list,__equal,__id},                                                    __assignment},
+	{{__semi,__hash,__equal,__id},                                                    __assignment},
 	
 	{{__semi,__calculation,__add_equal,__id},                                         __assignment},
 	{{__semi,__number,__add_equal,__id},                                              __assignment},
@@ -430,6 +531,9 @@ void print_token(int type)
 			break;
 		case __while:
 			context="while";
+			break;
+		case __while_head:
+			context="while (";
 			break;
 		case __if:
 			context="if";
@@ -645,6 +749,11 @@ class PDA
 			{
 				comp_stack.push(main_stack.top());
 				main_stack.pop();
+				if((comp_stack.top()==__id) && (!main_stack.empty()) && (main_stack.top()==__var)) // special LR(1)
+				{
+					comp_stack.push(main_stack.top());
+					main_stack.pop();
+				}
 				if(show)
 					print_main_and_comp();
 				while(1)
@@ -735,6 +844,10 @@ class nasal_parser
 				else if((*i).type==ELSIF_HEAD)
 				{
 					temp_parse.type=__elsif_head;
+				}
+				else if((*i).type==WHILE_HEAD)
+				{
+					temp_parse.type=__while_head;
 				}
 				else if(((*i).content=="for") || ((*i).content=="foreach") || ((*i).content=="while") || ((*i).content=="forindex"))
 				{

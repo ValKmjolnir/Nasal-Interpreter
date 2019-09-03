@@ -44,7 +44,10 @@ forindex(e;m)
         var e=2;
     }
 }
-
+while((a>1) and (a<100))
+{
+    a-=1;
+}
 
 
 
