@@ -68,31 +68,35 @@ cmp_seq par[]=
 	{{__elsif_choose,__if_choose},                                                        __choose},
 	{{__if_choose},                                                                       __choose},// ?
 	
-	//{{__statement,__right_curve,__calculation,__while_head},                                          __loop},
+	{{__statement,__right_curve,__id,__semi,__calculation,__statement,__left_curve,__for},           __loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__calculation,__statement,__left_curve,__for},               __loop},
+	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__calculation,__statement,__left_curve,__for},              __loop},
+	
+	{{__statement,__right_curve,__calculation,__while_head},                                          __loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__while_head},               __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__while_head},              __loop},
 	
-	//{{__statement,__right_curve,__id,__semi,__id,__left_curve,__forindex},                            __loop},
+	{{__statement,__right_curve,__id,__semi,__id,__left_curve,__forindex},                            __loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__forindex}, __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__forindex},__loop},
 	
-	//{{__statement,__right_curve,__id,__semi,__id,__left_curve,__foreach},                             __loop},
+	{{__statement,__right_curve,__id,__semi,__id,__left_curve,__foreach},                             __loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach},  __loop},
 	{{__right_brace,__statements,__left_brace,__right_curve,__id,__semi,__id,__left_curve,__foreach}, __loop},
 
-	//{{__statement,__right_curve,__calculation,__if_head},                                        __if_choose},
+	{{__statement,__right_curve,__calculation,__if_head},                                        __if_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__if_head},             __if_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__if_head},            __if_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__if_head},                         __if_choose},
-	//{{__statement,__right_curve,__calculation,__elsif_head},                                  __elsif_choose},
+	{{__statement,__right_curve,__calculation,__elsif_head},                                  __elsif_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__elsif_head},       __elsif_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__elsif_head},      __elsif_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__elsif_head},                   __elsif_choose},
-	//{{__statement,__right_curve,__calculation,__if_head,__else},                              __elsif_choose},
+	{{__statement,__right_curve,__calculation,__if_head,__else},                              __elsif_choose},
 	{{__right_brace,__statement,__left_brace,__right_curve,__calculation,__if_head,__else},   __elsif_choose},
 	{{__right_brace,__statements,__left_brace,__right_curve,__calculation,__if_head,__else},  __elsif_choose},
 	{{__right_brace,__left_brace,__right_curve,__calculation,__if_head,__else},               __elsif_choose},
-	//{{__statement,__else},                                                                     __else_choose},
+	{{__statement,__else},                                                                     __else_choose},
 	{{__right_brace,__statement,__left_brace,__else},                                          __else_choose},
 	{{__right_brace,__statements,__left_brace,__else},                                         __else_choose},
 	{{__right_brace,__left_brace,__else},                                                      __else_choose},
@@ -100,12 +104,27 @@ cmp_seq par[]=
 	{{__semi,__semi},                                                                       __semi},
 	
 	{{__id,__dot,__id},                                                                __call_hash},
+	{{__id,__dot,__call_hash},                                                         __call_hash},
+	{{__id,__dot,__call_list},                                                         __call_hash},
+	{{__id,__dot,__call_function},                                                     __call_hash},
+	
 	{{__call_hash,__dot,__id},                                                         __call_hash},
+	{{__call_hash,__dot,__call_list},                                                  __call_hash},
+	{{__call_hash,__dot,__call_function},                                              __call_hash},
+	
+	{{__call_function,__dot,__id},                                                     __call_hash},
+	{{__call_function,__dot,__call_list},                                              __call_hash},
+	{{__call_function,__dot,__call_function},                                          __call_hash},
+	
+	{{__call_list,__dot,__id},                                                         __call_hash},
+	{{__call_list,__dot,__call_list},                                                  __call_hash},
+	{{__call_list,__dot,__call_function},                                              __call_hash},
 	
 	{{__right_brace,__call_function,__semi},                                         __right_brace},
 	{{__semi,__call_function,__semi},                                                       __semi},
 	
 	{{__right_curve,__data_list,__call_func_head},                                 __call_function},
+	{{__right_curve,__scalar_list,__call_func_head},                               __call_function},
 	{{__right_curve,__id,__call_func_head},                                        __call_function},
 	{{__right_curve,__call_func_head},                                             __call_function},
 	
@@ -125,6 +144,10 @@ cmp_seq par[]=
 	{{__right_brace,__statements,__left_brace,__right_curve,__func_head},               __function},
 	
 	{{__right_bracket,__number,__call_list_head},                                      __call_list},
+	{{__right_bracket,__call_function,__call_list_head},                               __call_list},
+	{{__right_bracket,__call_list,__call_list_head},                                   __call_list},
+	{{__right_bracket,__call_hash,__call_list_head},                                   __call_list},
+	{{__list,__call_function},                                                         __call_list},
 	
 	{{__id,__comma,__id},                                                              __data_list},
 	{{__data_list,__comma,__id},                                                       __data_list},
@@ -132,15 +155,22 @@ cmp_seq par[]=
 	{{__number,__comma,__number},                                                    __scalar_list},
 	{{__number,__comma,__string},                                                    __scalar_list},
 	{{__number,__comma,__char},                                                      __scalar_list},
+	{{__number,__comma,__id},                                                        __scalar_list},
 	{{__string,__comma,__number},                                                    __scalar_list},
 	{{__string,__comma,__string},                                                    __scalar_list},
 	{{__string,__comma,__char},                                                      __scalar_list},
+	{{__string,__comma,__id},                                                        __scalar_list},
 	{{__char,__comma,__number},                                                      __scalar_list},
 	{{__char,__comma,__string},                                                      __scalar_list},
 	{{__char,__comma,__char},                                                        __scalar_list},
+	{{__char,__comma,__id},                                                          __scalar_list},
 	{{__scalar_list,__comma,__number},                                               __scalar_list},
 	{{__scalar_list,__comma,__string},                                               __scalar_list},
 	{{__scalar_list,__comma,__char},                                                 __scalar_list},
+	{{__scalar_list,__comma,__id},                                                   __scalar_list},
+	{{__data_list,__comma,__number},                                                 __scalar_list},
+	{{__data_list,__comma,__string},                                                 __scalar_list},
+	{{__data_list,__comma,__char},                                                   __scalar_list},
 	
 	{{__right_bracket,__scalar_list,__left_bracket},                                        __list},
 	{{__right_bracket,__number,__left_bracket},                                             __list},
@@ -624,7 +654,7 @@ void print_token(int type)
 			break;
 		
 		case __data_list:
-			context="datas";
+			context="identifiers";
 			break;
 		case __scalar_list:
 			context="scalars";
@@ -735,13 +765,16 @@ class PDA
 				{
 					print_token(comp_stack.top());
 					std::cout<<" ";
+					int t=comp_stack.top();
+					if((t==__right_brace) || (t==__semi))
+						std::cout<<std::endl;
 				}
 				comp_stack.pop();
 			}
 			std::cout<<std::endl;
 			return;
 		}
-		void main_comp_progress(bool show)
+		void main_comp_progress(bool show) // show is used to print parser stack 
 		{
 			if(show)
 				print_main_and_comp();
@@ -749,7 +782,7 @@ class PDA
 			{
 				comp_stack.push(main_stack.top());
 				main_stack.pop();
-				if((comp_stack.top()==__id) && (!main_stack.empty()) && (main_stack.top()==__var)) // special LR(1)
+				if((comp_stack.top()==__id) && (!main_stack.empty()) && (main_stack.top()==__var)) // special LR(1) for definition & assignment
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
@@ -760,6 +793,11 @@ class PDA
 				{
 					if(!reducable())
 						break;
+					if((comp_stack.top()==__statement) && (!main_stack.empty()) && ((main_stack.top()==__right_curve) || (main_stack.top()==__else)))
+					{
+						comp_stack.push(main_stack.top());
+						main_stack.pop();
+					}
 					if(show)
 						print_main_and_comp();
 				}
