@@ -17,20 +17,51 @@ datas
     :id,id
     |id,scalar
     |id,call
+    |id,function
+    |id,list
+    |id,hash
     |scalar,id
     |scalar,scalar
     |scalar,call
+    |scalar,function
+    |scalar,list
+    |scalar,hash
     |call,id
     |call,scalar
     |call,call
+    |call,function
+    |call,list
+    |call,hash
+    |function,id
+    |function,scalar
+    |function,call
+    |function,function
+    |function,list
+    |function,hash
+    |list,id
+    |list,scalar
+    |list,call
+    |list,function
+    |list,list
+    |list,hash
+    |hash,id
+    |hash,scalar
+    |hash,call
+    |hash,function
+    |hash,list
+    |hash,hash
+    |list,datas
+    |hash,datas
     |id,datas
     |scalar,datas
     |call,datas
+    |function,datas
     ;
 hash_member
     :id:id
     |id:scalar
     |id:call
+    |id:function
     ;
 hash_members
     :hash_member,hash_member
@@ -41,6 +72,7 @@ list
     |[id]
     |[scalar]
     |[call]
+    |[function]
     |[datas]
     ;
 hash
@@ -66,6 +98,15 @@ call_hash
     |call.id
     |call.call
     ;
+call_function
+    :id()
+    |id(id)
+    |id(scalar)
+    |id(call)
+    |id(list)
+    |id(hash)
+    |id(function)
+    |id(datas)
 calculation
     :id operator id
     |id operator scalar
@@ -86,6 +127,11 @@ calculation
     |+-scalar
     |+-call
     ;
+
+
+
+
+
 definition
     :var id = id;
     |var id = scalar;
@@ -93,6 +139,7 @@ definition
     |var id = list;
     |var id = hash;
     |var id = function
+    |var id;
 assignment
     :id = id;
     |id = scalar;
