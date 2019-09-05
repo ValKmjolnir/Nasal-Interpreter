@@ -8,30 +8,28 @@ enum token_type
 {
 	__stack_end=1,
 	__equal,// =
-	__cmp_equal,// ==
-	__cmp_not_equal,// !=
+	__cmp_equal,__cmp_not_equal,// == !=
 	__cmp_less,__cmp_less_or_equal,// < <=
 	__cmp_more,__cmp_more_or_equal,// > >=
 	__and_operator,__or_operator,__nor_operator,// and or !
-	__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,// + - * / ~
-	__add_equal,__sub_equal,__mul_equal,__div_equal,__link_equal,// += -= *= /= ~=
+	__add_operator,__sub_operator,// + -
+	__mul_operator,__div_operator,__link_operator,// * / ~
+	__add_equal,__sub_equal,// += -=
+	__mul_equal,__div_equal,__link_equal,// *= /= ~=
 	__left_brace,__right_brace,// {}
 	__left_bracket,__right_bracket,// []
 	__left_curve,__right_curve,// ()
-	__semi,// ;
-	__comma,// ,
-	__colon,// :
-	__dot,// .
-	__var,
-	__func,
-	__id,__dynamic_id,
-	__return,
+	__semi,__comma,__colon,__dot,// ; , : .
+
+	__var,__func,__return,
 	__if,__elsif,__else,
-	__continue,__break,__for,__forindex,__foreach,__while,
+	__id,__dynamic_id,
+	__continue,__break,
+	__for,__forindex,__foreach,__while,
 	//end of operators & reserve words
 	__two_operator,
 	__scalar,__data_list,
-	__number,__string,__char,
+	__number,__string,
 	__list,
 	__hash,
 	__hash_member,__hash_member_list,
@@ -81,7 +79,6 @@ cmp_seq par[]=
 
 	{{__number},__scalar},
 	{{__string},__scalar},
-	{{__char},__scalar},
 	{{__calculation},__scalar},
 
 	{{__call_list},__call},
@@ -441,9 +438,6 @@ void print_token(int type)
 			break;
 		case __string:
 			context="string";
-			break;
-		case __char:
-			context="char";
 			break;
 		case __continue:
 			context="continue";
@@ -818,14 +812,12 @@ class nasal_parser
 					else if((*i).content==".")
 						temp_parse.type=__dot;
 				}
-				else if(((*i).type==NUMBER) || ((*i).type==STRING) || ((*i).type==CHAR))
+				else if(((*i).type==NUMBER) || ((*i).type==STRING))
 				{
 					if((*i).type==NUMBER)
 						temp_parse.type=__number;
 					else if((*i).type==STRING)
 						temp_parse.type=__string;
-					else if((*i).type==CHAR)
-						temp_parse.type=__char;
 				}
 				else if(((*i).content=="+") || ((*i).content=="-") || ((*i).content=="*") || ((*i).content=="/") || ((*i).content=="~") || ((*i).content=="!"))
 				{
