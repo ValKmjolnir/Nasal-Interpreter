@@ -131,11 +131,15 @@ cmp_seq par[]=
 	{{__id,__colon,__id},__hash_member},
 	{{__scalar,__colon,__id},__hash_member},
 	{{__call,__colon,__id},__hash_member},
+	{{__list,__colon,__id},__hash_member},
+	{{__hash,__colon,__id},__hash_member},
+	{{__right_brace,__left_brace,__colon,__id},__hash_member},
 	{{__function,__colon,__id},__hash_member},
 
 	{{__hash_member,__comma,__hash_member},__hash_member_list},
 	{{__hash_member_list,__comma,__hash_member},__hash_member_list},
 
+	{{__right_bracket,__left_bracket},__list},
 	{{__right_bracket,__id,__left_bracket},__list},
 	{{__right_bracket,__scalar,__left_bracket},__list},
 	{{__right_bracket,__call,__left_bracket},__list},
@@ -241,7 +245,6 @@ cmp_seq par[]=
 	{{__right_brace,__statement,__left_brace,__else},__choose},
 	
 	{{__semi,__id,__equal,__id,__var},__definition},
-	{{__semi,__right_bracket,__left_bracket,__equal,__id,__var},__definition},
 	{{__semi,__right_brace,__left_brace,__equal,__id,__var},__definition},
 	{{__semi,__scalar,__equal,__id,__var},__definition},
 	{{__semi,__call,__equal,__id,__var},__definition},
@@ -291,15 +294,12 @@ cmp_seq par[]=
 	{{__right_brace,__left_brace,__right_curve,__pre_assignment,__statement,__left_curve,__for},__loop},
 	{{__right_brace,__statement,__left_brace,__right_curve,__pre_assignment,__statement,__left_curve,__for},__loop},
 	
-	{{__return_scalar},__statement},
-	{{__semi,__continue},__statement},
-	{{__semi,__break},__statement},
-	
 	{{__semi,__id,__semi},__semi},
 	{{__semi,__call,__semi},__semi},
 	{{__semi,__scalar,__semi},__semi},
 	{{__semi,__list,__semi},__semi},
 	{{__semi,__hash,__semi},__semi},
+	{{__semi,__semi},__semi},
 	{{__semi,__id,__right_brace},__right_brace},
 	{{__semi,__call,__right_brace},__right_brace},
 	{{__semi,__scalar,__right_brace},__right_brace},
@@ -316,6 +316,10 @@ cmp_seq par[]=
 	{{__semi,__list,__left_curve},__left_curve},
 	{{__semi,__hash,__left_curve},__left_curve},
 	
+	{{__return_scalar},__statement},
+	{{__semi,__continue},__statement},
+	{{__semi,__break},__statement},
+	{{__statement,__statement},__statement},
 	{{__loop},__statement},
 	{{__choose},__statement},
 	{{__definition},__statement},
@@ -567,8 +571,8 @@ struct parse_unit
 class PDA
 {
 	private:
-		std::stack<int> main_stack;
-		std::stack<int> comp_stack;
+		std::stack<parse_unit> main_stack;
+		std::stack<parse_unit> comp_stack;
 	public:
 		void set_stack_empty()
 		{
@@ -576,30 +580,39 @@ class PDA
 				main_stack.pop();
 			while(!comp_stack.empty())
 				comp_stack.pop();
-			main_stack.push(__stack_end);
-			main_stack.push(__var);
-			main_stack.push(__id);
-			main_stack.push(__semi);
-			comp_stack.push(__stack_end);
-			comp_stack.push(__program);
+			parse_unit temp;
+			temp.line=0;
+			temp.type=__stack_end;
+			main_stack.push(temp);
+			temp.type=__var;
+			main_stack.push(temp);
+			temp.type=__id;
+			main_stack.push(temp);
+			temp.type=__semi;
+			main_stack.push(temp);
+			
+			temp.type=__stack_end;
+			comp_stack.push(temp);
+			temp.type=__program;
+			comp_stack.push(temp);
 		}
 		void stack_input(std::stack<parse_unit>& temp)
 		{
 			set_stack_empty();
 			while(!temp.empty())
 			{
-				main_stack.push(temp.top().type);
+				main_stack.push(temp.top());
 				temp.pop();
 			}
 			return;
 		}
-		void print_stack(std::stack<int>& temp)
+		void print_stack(std::stack<parse_unit>& temp)
 		{
-			std::stack<int> t;
+			std::stack<parse_unit> t;
 			while(!temp.empty())
 			{
 				t.push(temp.top());
-				print_token(t.top());
+				print_token(t.top().type);
 				std::cout<<" ";
 				temp.pop();
 			}
@@ -621,7 +634,7 @@ class PDA
 		}
 		bool reducable()
 		{
-			std::stack<int> temp;
+			std::stack<parse_unit> temp;
 			for(int i=0;i<num_of_par;++i)
 			{
 				for(int j=max_len-1;j>=0;--j)
@@ -631,7 +644,7 @@ class PDA
 					// if par[i].tokens[j] is 0 then continue until the tokens[j] is not 0
 					temp.push(comp_stack.top());
 					comp_stack.pop();
-					if((par[i].tokens[j]!=temp.top()) || (comp_stack.empty() && par[i].tokens[j]))
+					if((par[i].tokens[j]!=temp.top().type) || (comp_stack.empty() && par[i].tokens[j]))
 					{
 						while(!temp.empty())
 						{
@@ -640,9 +653,12 @@ class PDA
 						}
 						break;
 					}
-					if((par[i].tokens[j]==temp.top()) && (j==0))
+					if((par[i].tokens[j]==temp.top().type) && (j==0))
 					{
-						comp_stack.push(par[i].res);
+						parse_unit t;
+						t.line=temp.top().line;
+						t.type=par[i].res;
+						comp_stack.push(t);
 						return true;
 					}
 				}
@@ -651,15 +667,18 @@ class PDA
 		}
 		void print_error()
 		{
+			int cnt_line=0;
 			while(!comp_stack.empty())
 			{
-				if((comp_stack.top()!=__statement) && (comp_stack.top()!=__program) && (comp_stack.top()!=__stack_end))
+				if((comp_stack.top().type!=__program) && (comp_stack.top().type!=__stack_end))
 				{
-					print_token(comp_stack.top());
+					if(cnt_line!=comp_stack.top().line)
+					{
+						cnt_line=comp_stack.top().line;
+						std::cout<<std::endl<<"line "<<cnt_line<<"    ";
+					}
+					print_token(comp_stack.top().type);
 					std::cout<<" ";
-					int t=comp_stack.top();
-					if((t==__right_brace) || (t==__semi))
-						std::cout<<std::endl;
 				}
 				comp_stack.pop();
 			}
@@ -670,25 +689,28 @@ class PDA
 		{
 			if(show)
 				print_main_and_comp();
-			while(main_stack.top()!=__stack_end)
+			while(main_stack.top().type!=__stack_end)
 			{
 				comp_stack.push(main_stack.top());
 				main_stack.pop();
-				if((comp_stack.top()==__left_curve) && ((main_stack.top()==__id) || (main_stack.top()==__if) || (main_stack.top()==__elsif) || (main_stack.top()==__while) || (main_stack.top()==__func)))
+				if((comp_stack.top().type==__left_curve) && ((main_stack.top().type==__id) || (main_stack.top().type==__if) || (main_stack.top().type==__elsif) || (main_stack.top().type==__while) || (main_stack.top().type==__func)))
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
 				}
-				else if((comp_stack.top()==__id) && (main_stack.top()==__var))
+				else if((comp_stack.top().type==__id) && (main_stack.top().type==__var))
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
 				}
-				else if(((comp_stack.top()==__sub_operator) || (comp_stack.top()==__add_operator)) && (main_stack.top()!=__id) && (main_stack.top()!=__right_curve) && (main_stack.top()!=__right_bracket))
+				else if(((comp_stack.top().type==__sub_operator) || (comp_stack.top().type==__add_operator)) && (main_stack.top().type!=__id) && (main_stack.top().type!=__right_curve) && (main_stack.top().type!=__right_bracket))
 				{
-					main_stack.push(__number);
+					parse_unit t;
+					t.line=comp_stack.top().line;
+					t.type=__number;
+					main_stack.push(t);
 				}
-				if((comp_stack.top()==__if) && (main_stack.top()==__else))
+				if((comp_stack.top().type==__if) && (main_stack.top().type==__else))
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
@@ -703,20 +725,20 @@ class PDA
 						print_main_and_comp();
 				}
 			}
-			if(comp_stack.top()==__program)
+			if(comp_stack.top().type==__program)
 			{
 				comp_stack.pop();
-				if(comp_stack.top()==__stack_end)
+				if(comp_stack.top().type==__stack_end)
 					std::cout<<">>[Parse] 0 error(s)."<<std::endl;
 				else
 				{
-					std::cout<<">>[Parse] Error:"<<std::endl;
+					std::cout<<">>[Parse] Error:";
 					print_error();
 				}
 			}
 			else
 			{
-				std::cout<<">>[Parse] Error:"<<std::endl;
+				std::cout<<">>[Parse] Error:";
 				print_error();
 			}
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
