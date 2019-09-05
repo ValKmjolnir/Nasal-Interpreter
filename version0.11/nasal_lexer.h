@@ -11,14 +11,7 @@
 #define NUMBER       3  // number
 #define RESERVEWORD  4  // reserve word
 #define STRING       5  // string 
-#define CHAR         6  // char
-#define CALL_LIST    7  // id[
-#define CALL_FUNC    8  // id(
-#define FUNC_HEAD    9  // func(
-#define DYNAMIC_ID   10 // id...
-#define IF_HEAD      11 // if (
-#define ELSIF_HEAD   12 // elsif (
-#define WHILE_HEAD   13 // while (
+#define DYNAMIC_ID   6 // id...
 #define FAIL        -1  //fail
 #define SCANEND     -2  //complete scanning
 #define ERRORFOUND  -3  //error occurred
@@ -176,33 +169,11 @@ class nasal_lexer
 					syn=IDENTIFIER;
 				else
 					syn=RESERVEWORD;
-				if((syn==IDENTIFIER) && ((source[ptr]=='(') || (source[ptr]=='[') || (source[ptr]=='.' && source[ptr+1]=='.' && source[ptr+2]=='.')))
+				if((syn==IDENTIFIER) && source[ptr]=='.' && source[ptr+1]=='.' && source[ptr+2]=='.')
 				{
-					__token+=source[ptr];
-					if(source[ptr]=='(')
-						syn=CALL_FUNC;
-					else if(source[ptr]=='[')
-						syn=CALL_LIST;
-					else if(source[ptr]=='.' && source[ptr+1]=='.' && source[ptr+2]=='.')
-					{
-						__token+="..";
-						syn=DYNAMIC_ID;
-						ptr+=2;
-					}
-					++ptr;
-				}
-				else if((syn==RESERVEWORD) && ((__token=="func") || (__token=="if") || (__token=="elsif") || (__token=="while")) && (source[ptr]=='('))
-				{
-					if(__token=="func")
-						syn=FUNC_HEAD;
-					else if(__token=="if")
-						syn=IF_HEAD;
-					else if(__token=="elsif")
-						syn=ELSIF_HEAD;
-					else if(__token=="while")
-						syn=WHILE_HEAD;
-					__token+=source[ptr];
-					++ptr;
+					__token+="...";
+					syn=DYNAMIC_ID;
+					ptr+=3;
 				}
 			}
 			else if(isNumber(temp))
@@ -263,17 +234,40 @@ class nasal_lexer
 			}
 			else if(temp=='\'')
 			{
+				syn=STRING;
 				__token+=temp;
 				++ptr;
 				temp=source[ptr];
-				__token+=temp;
-				++ptr;
-				temp=source[ptr];
-				__token+=temp;
-				++ptr;
-				if(temp!='\'')
-					std::cout<<">>[Lexer] Abnormal char type detected: "<<__token<<" ."<<std::endl;
-				syn=CHAR;
+				while(temp!='\'')
+				{
+					if(temp=='\\')
+					{
+						__token+=temp;
+						
+						++ptr;
+						temp=source[ptr];
+						__token+=temp;
+						
+						++ptr;
+						temp=source[ptr];
+					}
+					else
+					{
+						__token+=temp;
+						++ptr;
+						temp=source[ptr];
+					}
+					if(temp==0 || temp=='\n')
+						break;
+				}
+				//add the last char \"
+				if(temp=='\'')
+				{
+					__token+=temp;
+					++ptr;
+				}
+				else
+					__token+=" __missing_end_of_string";
 			}
 			else if(temp=='=' || temp=='+' || temp=='-' || temp=='*' || temp=='!' || temp=='/' || temp=='<' || temp=='>' || temp=='~')
 			{
@@ -396,22 +390,8 @@ class nasal_lexer
 					std::cout<<"( ReserveWord    | ";
 				else if(temp.type==STRING)
 					std::cout<<"( String         | ";
-				else if(temp.type==CHAR)
-					std::cout<<"( Char           | ";
-				else if(temp.type==CALL_LIST)
-					std::cout<<"( Call list head | ";
-				else if(temp.type==CALL_FUNC)
-					std::cout<<"( Call func head | ";
-				else if(temp.type==FUNC_HEAD)
-					std::cout<<"( Func head      | ";
 				else if(temp.type==DYNAMIC_ID)
 					std::cout<<"( Identifier     | ";
-				else if(temp.type==IF_HEAD)
-					std::cout<<"( If head        | ";
-				else if(temp.type==ELSIF_HEAD)
-					std::cout<<"( Elsif head     | ";
-				else if(temp.type==WHILE_HEAD)
-					std::cout<<"( While head     | ";
 				std::cout<<temp.content<<" )"<<std::endl;
 			}
 			return;
