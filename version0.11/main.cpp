@@ -10,24 +10,22 @@ int main()
 	nasal_parser pas;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
-	std::cout<<">> input \"help\" to find help."<<std::endl;
-	std::cout<<">> Be careful: this interpreter uses strict methods to check if there's an error."<<std::endl;
-	std::cout<<"   Always add \";\" after each statement (except loop and if-else)."<<std::endl;
+	std::cout<<">> input [help] to find help."<<std::endl;
 	while(1)
 	{
 		std::cout<<">> ";
 		std::getline(std::cin,command);
 		if(command=="help")
 		{
-			std::cout<<">> nasal script interpreter by ValKmjolnir"<<std::endl;
-			std::cout<<">> 1.         |input file name to load the file."<<std::endl;
-			std::cout<<">> 2. \"cls\"   |clear the screen."<<std::endl;
-			std::cout<<">> 3. \"exit\"  |shut down the interpreter."<<std::endl;
-			std::cout<<">> 4. \"lexer\" |run and show the lexer. (-lexer)"<<std::endl;
-			std::cout<<">> 5. \"parser\"|run parser. (-parser)"<<std::endl;
-			std::cout<<">> 6. \"del\"   |delete all elements in stack."<<std::endl;
-			std::cout<<">> 7. \"run\"   |run the programme in stack. (-lexer -parser)"<<std::endl;
-			std::cout<<">> 8. \"rs\"    |check the source program."<<std::endl;
+			std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
+			std::cout<<">> 1. [      ] |input file name to load the file."<<std::endl;
+			std::cout<<">> 2. [cls   ] |clear the screen."<<std::endl;
+			std::cout<<">> 3. [exit  ] |shut down the interpreter."<<std::endl;
+			std::cout<<">> 4. [lexer ] |run and show the lexer. (-lexer)"<<std::endl;
+			std::cout<<">> 5. [parser] |run parser. (-parser)"<<std::endl;
+			std::cout<<">> 6. [del   ] |delete all elements in stack."<<std::endl;
+			std::cout<<">> 7. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
+			std::cout<<">> 8. [rs    ] |check the source program."<<std::endl;
 		}
 		else if(command=="cls")
 		{
