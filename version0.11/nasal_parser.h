@@ -42,8 +42,8 @@ enum token_type
 	__call_list,
 	__call_hash,
 	__call,
-	__definition,
-	__assignment,__pre_assignment,
+	__definition,__return_scalar,
+	__assignment,__pre_assignment,__assignment_operator,
 	__calculation,
 	__loop,
 	__choose,__if_choose,__elsif_choose,__else_choose,
@@ -60,6 +60,24 @@ struct cmp_seq
 cmp_seq par[]=
 {
 	{{__program,__statement},   __program},
+	{{__add_operator},__two_operator},
+	{{__sub_operator},__two_operator},
+	{{__mul_operator},__two_operator},
+	{{__div_operator},__two_operator},
+	{{__link_operator},__two_operator},
+	{{__and_operator},__two_operator},
+	{{__or_operator},__two_operator},
+	{{__cmp_equal},__two_operator},
+	{{__cmp_not_equal},__two_operator},
+	{{__cmp_less},__two_operator},
+	{{__cmp_less_or_equal},__two_operator},
+	{{__cmp_more},__two_operator},
+	{{__cmp_more_or_equal},__two_operator},
+	{{__add_equal},__assignment_operator},
+	{{__sub_equal},__assignment_operator},
+	{{__mul_equal},__assignment_operator},
+	{{__div_equal},__assignment_operator},
+	{{__link_equal},__assignment_operator},
 
 	{{__number},__scalar},
 	{{__string},__scalar},
@@ -121,14 +139,12 @@ cmp_seq par[]=
 	{{__hash_member,__comma,__hash_member},__hash_member_list},
 	{{__hash_member_list,__comma,__hash_member},__hash_member_list},
 
-	{{__right_bracket,__left_bracket},__list},
 	{{__right_bracket,__id,__left_bracket},__list},
 	{{__right_bracket,__scalar,__left_bracket},__list},
 	{{__right_bracket,__call,__left_bracket},__list},
 	{{__right_bracket,__function,__left_bracket},__list},
 	{{__right_bracket,__data_list,__left_bracket},__list},
 
-	{{__right_brace,__left_brace},__hash},
 	{{__right_brace,__hash_member,__left_brace},__hash},
 	{{__right_brace,__hash_member_list,__left_brace},__hash},
 
@@ -145,6 +161,8 @@ cmp_seq par[]=
 
 	{{__id,__dot,__id},__call_hash},
 	{{__id,__dot,__call},__call_hash},
+	{{__scalar,__dot,__id},__call_hash},
+	{{__scalar,__dot,__call},__call_hash},
 	{{__call,__dot,__id},__call_hash},
 	{{__call,__dot,__call},__call_hash},
 
@@ -156,6 +174,155 @@ cmp_seq par[]=
 	{{__right_curve,__hash,__left_curve,__id},__call_function},
 	{{__right_curve,__function,__left_curve,__id},__call_function},
 	{{__right_curve,__data_list,__left_curve,__id},__call_function},
+
+	{{__id,__two_operator,__id},__calculation},
+	{{__id,__two_operator,__scalar},__calculation},
+	{{__id,__two_operator,__call},__calculation},
+	{{__scalar,__two_operator,__id},__calculation},
+	{{__scalar,__two_operator,__scalar},__calculation},
+	{{__scalar,__two_operator,__call},__calculation},
+	{{__call,__two_operator,__id},__calculation},
+	{{__call,__two_operator,__scalar},__calculation},
+	{{__call,__two_operator,__call},__calculation},
+	{{__id,__nor_operator},__calculation},
+	{{__scalar,__nor_operator},__calculation},
+	{{__call,__nor_operator},__calculation},
+	{{__right_curve,__id,__left_curve},__calculation},
+	{{__right_curve,__scalar,__left_curve},__calculation},
+	{{__right_curve,__call,__left_curve},__calculation},
+	
+	{{__semi,__id,__return},__return_scalar},
+	{{__semi,__scalar,__return},__return_scalar},
+	{{__semi,__call,__return},__return_scalar},
+	{{__semi,__function,__return},__return_scalar},
+	{{__semi,__list,__return},__return_scalar},
+	{{__semi,__hash,__return},__return_scalar},
+	{{__semi,__return},__return_scalar},
+	
+	{{__right_brace,__left_brace,__func},__function},
+	{{__right_brace,__statement,__left_brace,__func},__function},
+	
+	{{__right_brace,__left_brace,__right_curve,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__left_curve,__func},__function},
+	
+	{{__right_brace,__left_brace,__right_curve,__id,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__scalar,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__scalar,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__call,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__list,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__list,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__hash,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__hash,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__function,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__function,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__dynamic_id,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__dynamic_id,__left_curve,__func},__function},
+	{{__right_brace,__left_brace,__right_curve,__data_list,__left_curve,__func},__function},
+	{{__right_brace,__statement,__left_brace,__right_curve,__data_list,__left_curve,__func},__function},
+	
+	{{__right_brace,__left_brace,__right_curve,__id,__left_curve,__if},__choose},
+	{{__right_brace,__left_brace,__right_curve,__scalar,__left_curve,__if},__choose},
+	{{__right_brace,__left_brace,__right_curve,__call,__left_curve,__if},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__left_curve,__if},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__scalar,__left_curve,__if},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__left_curve,__if},__choose},
+	{{__right_brace,__left_brace,__right_curve,__id,__left_curve,__if,__else},__choose},
+	{{__right_brace,__left_brace,__right_curve,__scalar,__left_curve,__if,__else},__choose},
+	{{__right_brace,__left_brace,__right_curve,__call,__left_curve,__if,__else},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__left_curve,__if,__else},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__scalar,__left_curve,__if,__else},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__left_curve,__if,__else},__choose},
+	{{__right_brace,__left_brace,__right_curve,__id,__left_curve,__elsif},__choose},
+	{{__right_brace,__left_brace,__right_curve,__scalar,__left_curve,__elsif},__choose},
+	{{__right_brace,__left_brace,__right_curve,__call,__left_curve,__elsif},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__left_curve,__elsif},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__scalar,__left_curve,__elsif},__choose},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__left_curve,__elsif},__choose},
+	{{__right_brace,__left_brace,__else},__choose},
+	{{__right_brace,__statement,__left_brace,__else},__choose},
+	
+	{{__semi,__id,__equal,__id,__var},__definition},
+	{{__semi,__right_bracket,__left_bracket,__equal,__id,__var},__definition},
+	{{__semi,__right_brace,__left_brace,__equal,__id,__var},__definition},
+	{{__semi,__scalar,__equal,__id,__var},__definition},
+	{{__semi,__call,__equal,__id,__var},__definition},
+	{{__semi,__function,__equal,__id,__var},__definition},
+	{{__semi,__list,__equal,__id,__var},__definition},
+	{{__semi,__hash,__equal,__id,__var},__definition},
+	{{__semi,__id,__var},__definition},
+	
+	{{__id,__equal,__id},__pre_assignment},
+	{{__scalar,__equal,__id},__pre_assignment},
+	{{__call,__equal,__id},__pre_assignment},
+	{{__function,__equal,__id},__pre_assignment},
+	{{__list,__equal,__id},__pre_assignment},
+	{{__hash,__equal,__id},__pre_assignment},
+	{{__id,__equal,__call},__pre_assignment},
+	{{__scalar,__equal,__call},__pre_assignment},
+	{{__call,__equal,__call},__pre_assignment},
+	{{__function,__equal,__call},__pre_assignment},
+	{{__list,__equal,__call},__pre_assignment},
+	{{__hash,__equal,__call},__pre_assignment},
+	{{__id,__assignment_operator,__id},__pre_assignment},
+	{{__scalar,__assignment_operator,__id},__pre_assignment},
+	{{__call,__assignment_operator,__id},__pre_assignment},
+	{{__id,__assignment_operator,__call},__pre_assignment},
+	{{__scalar,__assignment_operator,__call},__pre_assignment},
+	{{__call,__assignment_operator,__call},__pre_assignment},
+	{{__semi,__pre_assignment},__assignment},
+	
+	{{__right_brace,__left_brace,__right_curve,__id,__left_curve,__while},__loop},
+	{{__right_brace,__left_brace,__right_curve,__scalar,__left_curve,__while},__loop},
+	{{__right_brace,__left_brace,__right_curve,__call,__left_curve,__while},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__left_curve,__while},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__scalar,__left_curve,__while},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__left_curve,__while},__loop},
+	{{__right_brace,__left_brace,__right_curve,__id,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__left_brace,__right_curve,__call,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__left_brace,__right_curve,__list,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__list,__statement,__left_curve,__forindex},__loop},
+	{{__right_brace,__left_brace,__right_curve,__id,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__left_brace,__right_curve,__call,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__left_brace,__right_curve,__list,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__id,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__call,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__list,__statement,__left_curve,__foreach},__loop},
+	{{__right_brace,__left_brace,__right_curve,__pre_assignment,__statement,__left_curve,__for},__loop},
+	{{__right_brace,__statement,__left_brace,__right_curve,__pre_assignment,__statement,__left_curve,__for},__loop},
+	
+	{{__return_scalar},__statement},
+	{{__semi,__continue},__statement},
+	{{__semi,__break},__statement},
+	
+	{{__semi,__id,__semi},__semi},
+	{{__semi,__call,__semi},__semi},
+	{{__semi,__scalar,__semi},__semi},
+	{{__semi,__list,__semi},__semi},
+	{{__semi,__hash,__semi},__semi},
+	{{__semi,__id,__right_brace},__right_brace},
+	{{__semi,__call,__right_brace},__right_brace},
+	{{__semi,__scalar,__right_brace},__right_brace},
+	{{__semi,__list,__right_brace},__right_brace},
+	{{__semi,__hash,__right_brace},__right_brace},
+	{{__semi,__id,__left_brace},__left_brace},
+	{{__semi,__call,__left_brace},__left_brace},
+	{{__semi,__scalar,__left_brace},__left_brace},
+	{{__semi,__list,__left_brace},__left_brace},
+	{{__semi,__hash,__left_brace},__left_brace},
+	{{__semi,__id,__left_curve},__left_curve},
+	{{__semi,__call,__left_curve},__left_curve},
+	{{__semi,__scalar,__left_curve},__left_curve},
+	{{__semi,__list,__left_curve},__left_curve},
+	{{__semi,__hash,__left_curve},__left_curve},
+	
+	{{__loop},__statement},
+	{{__choose},__statement},
+	{{__definition},__statement},
+	{{__assignment},__statement},
 };
 int num_of_par=sizeof(par)/sizeof(cmp_seq);
 
@@ -342,10 +509,10 @@ void print_token(int type)
 			context="call_hash";
 			break;
 		case __definition:
-			context="definition";
+			context="definition;";
 			break;
 		case __assignment:
-			context="assignment";
+			context="assignment;";
 			break;
 		case __calculation:
 			context="calc";
@@ -384,6 +551,12 @@ void print_token(int type)
 		case __two_operator:
 			context="operator";
 			break;
+		case __assignment_operator:
+			context="operator";
+			break;
+		case __return_scalar:
+			context="return_scl;";
+			break;
 		default:
 			context="unknown_type";
 			break;
@@ -410,6 +583,9 @@ class PDA
 			while(!comp_stack.empty())
 				comp_stack.pop();
 			main_stack.push(__stack_end);
+			main_stack.push(__var);
+			main_stack.push(__id);
+			main_stack.push(__semi);
 			comp_stack.push(__stack_end);
 			comp_stack.push(__program);
 		}
@@ -504,17 +680,21 @@ class PDA
 			{
 				comp_stack.push(main_stack.top());
 				main_stack.pop();
-				// if((comp_stack.top()==__left_bracket) && (!main_stack.empty()) && (main_stack.top()==__id))
-				// {
-				// 	comp_stack.push(main_stack.top());
-				// 	main_stack.pop();
-				// }
-				if((comp_stack.top()==__left_curve) && (!main_stack.empty()) && ((main_stack.top()==__id) || (main_stack.top()==__if) || (main_stack.top()==__elsif) || (main_stack.top()==__while) || (main_stack.top()==__func)))
+				if((comp_stack.top()==__left_curve) && ((main_stack.top()==__id) || (main_stack.top()==__if) || (main_stack.top()==__elsif) || (main_stack.top()==__while) || (main_stack.top()==__func)))
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
 				}
-				else if((comp_stack.top()==__id) && (!main_stack.top()) && (main_stack.top()==__var))
+				else if((comp_stack.top()==__id) && (main_stack.top()==__var))
+				{
+					comp_stack.push(main_stack.top());
+					main_stack.pop();
+				}
+				else if(((comp_stack.top()==__sub_operator) || (comp_stack.top()==__add_operator)) && (main_stack.top()!=__id) && (main_stack.top()!=__right_curve) && (main_stack.top()!=__right_bracket))
+				{
+					main_stack.push(__number);
+				}
+				if((comp_stack.top()==__if) && (main_stack.top()==__else))
 				{
 					comp_stack.push(main_stack.top());
 					main_stack.pop();
