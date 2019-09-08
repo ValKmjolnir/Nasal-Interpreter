@@ -18,7 +18,6 @@ class nasal_parser
 {
 	private:
 		std::stack<parse_unit> parser;
-		//abstract_syntax_tree ast;
 	public:
 		void print_parser_stack()
 		{
@@ -58,6 +57,10 @@ class nasal_parser
 		void print_ast()
 		{
 			return;
+		}
+		std::stack<parse_unit>& return_stack()
+		{
+			return parser;
 		}
 		void parse_process(std::list<token>& lexer)
 		{
@@ -191,27 +194,24 @@ class nasal_parser
 				parser.push(temp.top());
 				temp.pop();
 			}
-			std::list<int> error_list;
-			error_list.clear();
-			//ast.init_parser_stack(parser);
-			//ast.tree_generator(error_list);
-			if(error_list.empty())
-			{
-				std::cout<<">>[Parse] 0 error(s)."<<std::endl;
-				std::cout<<">>[Parse] Complete checking."<<std::endl;
-				//ast.run();
-			}
-			else
-			{
-				int line=0;
-				for(std::list<int>::iterator i=error_list.begin();i!=error_list.end();++i)
-					if(line!=*i)
-					{
-						line=*i;
-						std::cout<<">>[Parse] parse error in line "<<line<<"."<<std::endl;
-					}
-				std::cout<<">>[Parse] Error occurred, stop."<<std::endl;
-			}
+//			std::list<int> error_list;
+//			error_list.clear();
+//			if(error_list.empty())
+//			{
+//				std::cout<<">>[Parse] 0 error(s)."<<std::endl;
+//				std::cout<<">>[Parse] Complete checking."<<std::endl;
+//			}
+//			else
+//			{
+//				int line=0;
+//				for(std::list<int>::iterator i=error_list.begin();i!=error_list.end();++i)
+//					if(line!=*i)
+//					{
+//						line=*i;
+//						std::cout<<">>[Parse] parse error in line "<<line<<"."<<std::endl;
+//					}
+//				std::cout<<">>[Parse] Error occurred, stop."<<std::endl;
+//			}
 			return;
 		}
 };
