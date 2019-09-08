@@ -233,22 +233,6 @@ NasalHash: Hash in nasal {}
 
 This is what it outputs.
 
-# Now with var_stack and function_stack
-
-By printing the two stacks you can see how vars and functions change!
-
-[long long int]a:1
-
-[double]b:3.14
-
-[string]c:"hello world!"
-
-function:swap
-
-function:__main
-
-function:hello
-
 # Now the parser can...
 
 recognize all these things...
@@ -333,47 +317,6 @@ recognize all these things...
     e.e("str",1).e("str",e-e);
     e.e(e("str",e.e()/2880)~"str");
     var e=func(){e;};
-
-
-# The structure of basical elements is...
-
-class var;
-
-class nasal_hash;//forward declaration
-
-struct nasal_list_unit;
-
-class nasal_list;
-
-struct nasal_hash_unit;
-
-class nasal_hash;
-
-struct token_unit;
-
-struct parameter;
-
-class func;
-
-class var_stack;
-
-var_stack nasal_var_stack;
-
-class func_stack;
-
-func_stack nasal_func_stack;
-
-class token_list;
-
-token_list nasal_lexer;
-
-class parse;
-
-parse nasal_parser;
-
-#include "nasal_lexer.h"
-
-main();
 
 # Push down automata
 
