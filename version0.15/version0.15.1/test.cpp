@@ -4,11 +4,12 @@
 
 class ASTree
 {
-	public:
+	protected:
 		int line;
 		int type;
 		std::string content;
 		std::list<ASTree> children;
+	public:
 		ASTree()
 		{
 			line=0;

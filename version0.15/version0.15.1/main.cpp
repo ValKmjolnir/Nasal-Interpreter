@@ -1,5 +1,7 @@
 #include "nasal_lexer.h"
 #include "nasal_parser.h"
+#include "abstract_syntax_tree.h"
+#include "code_generator.h"
 #include <iostream>
 #include <cstring>
 
@@ -8,6 +10,7 @@ int main()
 	resource_programme_process prog;
 	nasal_lexer lex;
 	nasal_parser pas;
+	code_generator cod;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> input [help] to find help."<<std::endl;
@@ -59,6 +62,8 @@ int main()
 		{
 			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
+			cod.stack_input(pas.return_stack());
+			cod.run();
 		}
 		else
 			prog.input_file(command);
