@@ -18,6 +18,8 @@ class nasal_parser
 	public:
 		void print_parser_stack()
 		{
+			if(parser.empty())
+				return;
 			int line=0;
 			std::stack<parse_unit> temp;
 			while(!parser.empty())

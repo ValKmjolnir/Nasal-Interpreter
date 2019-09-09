@@ -62,6 +62,8 @@ class code_generator
 		}
 		void run()
 		{
+			root.return_list().clear();
+			bool iserror=false;
 			while(!parse.empty())
 			{
 				switch(parse.top().type)
@@ -69,7 +71,7 @@ class code_generator
 					case __number:number_generator();break;
 					case __add_operator:operator_generator();break;
 					case __sub_operator:operator_generator();break;
-					default:std::cout<<">>[Error] line "<<parse.top().line<<" parse error.\n";break;
+					default:std::cout<<">>[Error] line "<<parse.top().line<<" parse error.\n";iserror=true;break;
 				}
 				parse.pop();
 			}
@@ -78,6 +80,8 @@ class code_generator
 				root.return_list().push_back(node_stack.top());
 				node_stack.pop();
 			}
+			if(iserror)
+				return;
 			std::cout<<">>[Parse] 0 error(s)."<<std::endl;
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
 			root.print_all_tree();

@@ -43,20 +43,25 @@ class ast_tree_node
 		{
 			return children;
 		}
-		virtual void print_all_tree()
+		virtual void print_all_tree(int tabnum=0)
 		{
+			for(int i=0;i<tabnum;++i)
+				std::cout<<" ";
 			if(type==__number)
 			{
-				std::cout<<"( num )";
+				std::cout<<"[ number ]"<<std::endl;
 				return;
 			}
-			std::cout<<"( ";
+			std::cout<<"{ ";
 			print_token(type);
+			std::cout<<std::endl;
 			for(std::list<ast_tree_node>::iterator i=children.begin();i!=children.end();++i)
 			{
-				i->print_all_tree();
+				i->print_all_tree(tabnum+1);
 			}
-			std::cout<<" )";
+			for(int i=0;i<tabnum;++i)
+				std::cout<<" ";
+			std::cout<<"}"<<std::endl;
 			return;
 		}
 };
