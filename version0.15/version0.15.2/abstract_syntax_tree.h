@@ -9,6 +9,7 @@ class ast_tree_node
 		int line;
 		int type;
 		std::list<ast_tree_node> children;
+		double num;
 	public:
 		ast_tree_node()
 		{
@@ -43,13 +44,13 @@ class ast_tree_node
 		{
 			return children;
 		}
-		virtual void print_all_tree(int tabnum=0)
+		void print_all_tree(int tabnum=0)
 		{
 			for(int i=0;i<tabnum;++i)
 				std::cout<<" ";
 			if(type==__number)
 			{
-				std::cout<<"[ number ]"<<std::endl;
+				std::cout<<"[ "<<num<<" ]"<<std::endl;
 				return;
 			}
 			std::cout<<"{ ";
@@ -63,6 +64,32 @@ class ast_tree_node
 				std::cout<<" ";
 			std::cout<<"}"<<std::endl;
 			return;
+		}
+		double run()
+		{
+			if(type==__number)
+				return num;
+			if(type==__add_operator)
+			{
+				double sum=0;
+				std::list<ast_tree_node>::iterator i=children.begin();
+				sum=i->run()+(++i)->run();
+				return sum;
+			}
+			else if(type==__sub_operator)
+			{
+				double sum=0;
+				std::list<ast_tree_node>::iterator i=children.begin();
+				sum=i->run()-(++i)->run();
+				return sum;
+			}
+			else
+			{
+				for(std::list<ast_tree_node>::iterator i=children.begin();i!=children.end();++i)
+					std::cout<<i->run()<<std::endl;
+				return 0;
+			}
+			return 0;
 		}
 };
 
@@ -96,21 +123,15 @@ class operator_expr:public ast_node
 
 class number_node:public ast_leaf
 {
-	private:
-		long long int num;
-		double fnum;
-		bool is_float;
 	public:
 		number_node():ast_leaf()
 		{
 			num=0;
-			fnum=0;
-			is_float=false;
 		}
 		void set_number(std::string& str)
 		{
 			type=__number;
-			is_float=false;
+			double is_float=false;
 			int DotPlace=0;
 			for(int i=0;i<(int)str.length();++i)
 				if(str[i]=='.')
@@ -122,26 +143,26 @@ class number_node:public ast_leaf
 			if(!is_float)
 			{
 				num=0;
-				long long int acc=1;
+				double acc=1;
 				for(int i=(int)str.length()-1;i>=0;--i)
 				{
-					num+=acc*((long long int)(str[i]-'0'));
+					num+=acc*((double)(str[i]-'0'));
 					acc*=10;
 				}
 			}
 			else
 			{
-				fnum=0;
+				num=0;
 				double acc=1;
 				double aff=0.1;
 				for(int i=DotPlace+1;i<(int)str.length();++i)
 				{
-					fnum+=aff*((double)(str[i]-'0'));
+					num+=aff*((double)(str[i]-'0'));
 					aff*=0.1;
 				}
 				for(int i=DotPlace-1;i>=0;--i)
 				{
-					fnum+=acc*((double)(str[i]-'0'));
+					num+=acc*((double)(str[i]-'0'));
 					acc*=10;
 				}
 			}
