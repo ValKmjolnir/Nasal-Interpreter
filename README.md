@@ -11,31 +11,11 @@ So this is an interpreter for Nasal written by C++.
 The interpreter is still in development.Anyone who interested in this could also join us!
 
 
-# Now complete all types
+# Now complete add and sub in abstract syntax tree
 
-var: int   float   double   std::string   char   long long int
+And add a command 'ast' to see the AST
 
-NasalList: array in nasal []
-
-  append
-  
-  setsize
-  
-  subvec
-  
-  pop
-  
-  sort
-
-NasalHash: Hash in nasal {}
-
-  append
-  
-  delete
-  
-  contains
-
-  keys
+and command 'run' can give you the result
   
   # Now complete Lexical Analysis!
   
@@ -232,91 +212,6 @@ NasalHash: Hash in nasal {}
 ( Operator    | } )
 
 This is what it outputs.
-
-# Now the parser can...
-
-recognize all these things...
-
-    print("a",e);
-    var e=1;
-    var e="str";
-    var e=[];
-    var e={};
-    var e=e[0];
-    var e=e.e;
-    var e=e(0);
-    var e=e();
-    var e=e[e()];
-    var e=[1,e,1,e,1];
-    var e=[e,e,e,e];
-    var e={e:1,e:2,e:3};
-    var e=e[e.e];
-    e=1;
-    e="str";
-    e=[];
-    e={};
-    e=e[0];
-    e=e.e;
-    e=e(0);
-    e=e();
-    e=e[e()];
-    e=[1,e,1,e,1];
-    e=[e,e,e,e];
-    e={e:1,e:2,e:3};
-    e=e[e.e];
-    e=e.e();
-    var e={
-        e:1,
-        e:func(){},
-        e:func(e,e){},
-        e:func(){
-            e;
-            e;
-        },
-        e:func(e,e){
-            e;
-            e;
-        }
-    };
-    var e=func(){}
-    var e=func(e,e){}
-    var e=func(){e;e;}
-    var e=func(e,e){e;e;}
-    var e=func(e,e,e,e,e){
-        e=1;
-        e=e[0];
-        e=e(e,e,e);
-        return e;
-    }
-    e+=e;
-    e-=e;
-    e*=e;
-    e/=e;
-    e~=e;
-    e+=(e-e)*(e+(e/e));
-    e=e-e*(!2);
-    var e=e[0]~e[1]~e[2];
-    var e={
-        e:[],
-        e:{}
-    };
-    return {};
-    return [];
-    return {parent:[e]};
-    var e=0o7103;#Oct
-    var e=0x55aa;#Hex
-    var e=e/e;
-    var e=e[e/e];
-    var e=-e;
-    var e=-1;
-    var e=func(e){e;}
-    var e={e:e/e,e:1};
-    e= e.e(e,1).e()+e*e.e(e.e*e/180);
-    if(!e.e)e;
-    var e=e.e("str",1).e()*e.e("str",1).e*0.001;
-    e.e("str",1).e("str",e-e);
-    e.e(e("str",e.e()/2880)~"str");
-    var e=func(){e;};
 
 # Push down automata
 
