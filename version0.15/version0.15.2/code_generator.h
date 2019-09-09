@@ -60,7 +60,17 @@ class code_generator
 			parse=temp;
 			return;
 		}
-		void run()
+		void print_gen_tree()
+		{
+			root.print_all_tree();
+			return;
+		}
+		void run_gen_tree()
+		{
+			root.run();
+			return;
+		}
+		void gen_ast()
 		{
 			root.return_list().clear();
 			bool iserror=false;
@@ -75,17 +85,21 @@ class code_generator
 				}
 				parse.pop();
 			}
+			std::stack<ast_tree_node> temp_ast;
 			while(!node_stack.empty())
 			{
-				root.return_list().push_back(node_stack.top());
+				temp_ast.push(node_stack.top());
 				node_stack.pop();
+			}
+			while(!temp_ast.empty())
+			{
+				root.return_list().push_back(temp_ast.top());
+				temp_ast.pop();
 			}
 			if(iserror)
 				return;
 			std::cout<<">>[Parse] 0 error(s)."<<std::endl;
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
-			root.print_all_tree();
-			std::cout<<std::endl;
 			return;
 		}
 };

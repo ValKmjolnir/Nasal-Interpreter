@@ -20,9 +20,10 @@ int main()
 			std::cout<<">> 3. [exit  ] |shut down the interpreter."<<std::endl;
 			std::cout<<">> 4. [lexer ] |run and show the lexer. (-lexer)"<<std::endl;
 			std::cout<<">> 5. [parser] |run parser. (-parser)"<<std::endl;
-			std::cout<<">> 6. [del   ] |delete program in memory."<<std::endl;
-			std::cout<<">> 7. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
-			std::cout<<">> 8. [rs    ] |check the source program."<<std::endl;
+			std::cout<<">> 6. [ast   ] |print the abstract syntax tree."<<std::endl;
+			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
+			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
+			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -49,15 +50,25 @@ int main()
 		}
 		else if(command=="parser")
 		{
+			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
 			pas.print_parser_stack();
+		}
+		else if(command=="ast")
+		{
+			lex.lexer_process(prog.use_file());
+			pas.parse_process(lex.return_list());
+			cod.input_stack(pas.return_stack());
+			cod.gen_ast();
+			cod.print_gen_tree();
 		}
 		else if(command=="run")
 		{
 			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
 			cod.input_stack(pas.return_stack());
-			cod.run();
+			cod.gen_ast();
+			cod.run_gen_tree();
 		}
 		else
 			prog.input_file(command);
