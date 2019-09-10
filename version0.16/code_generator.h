@@ -70,7 +70,7 @@ class code_generator
 			root.run();
 			return;
 		}
-		void gen_ast()
+		bool gen_ast()
 		{
 			root.return_list().clear();
 			bool iserror=false;
@@ -97,10 +97,10 @@ class code_generator
 				temp_ast.pop();
 			}
 			if(iserror)
-				return;
+				return iserror;
 			std::cout<<">>[Parse] 0 error(s)."<<std::endl;
 			std::cout<<">>[Parse] Complete checking."<<std::endl;
-			return;
+			return false;
 		}
 };
 
