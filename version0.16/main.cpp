@@ -28,7 +28,7 @@ int main()
 		else if(command=="cls")
 		{
 			system("cls");
-			//windows  system("cls);
+			//windows  system("cls");
 			//linux system("clear");
 			//macOS system("clear");
 		}
@@ -67,8 +67,8 @@ int main()
 			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
 			cod.input_stack(pas.return_stack());
-			cod.gen_ast();
-			cod.run_gen_tree();
+			if(!cod.gen_ast())
+				cod.run_gen_tree();
 		}
 		else
 			prog.input_file(command);
