@@ -59,7 +59,7 @@ int main()
 			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
 			cod.input_token_stack(pas.return_stack());
-//			cod.gen_ast();
+			cod.gen_main_prog();
 //			cod.print_gen_tree();
 		}
 		else if(command=="run")
@@ -67,8 +67,8 @@ int main()
 			lex.lexer_process(prog.use_file());
 			pas.parse_process(lex.return_list());
 			cod.input_token_stack(pas.return_stack());
-//			if(!cod.gen_ast())
-//				cod.run_gen_tree();
+			cod.gen_main_prog();
+			cod.run();
 		}
 		else
 			prog.input_file(command);
