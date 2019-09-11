@@ -29,6 +29,13 @@ class ast_generator
 				node_cache.top().add_child(t);
 				return true;
 			}
+			else if((type==__add_operator || type==__sub_operator || type==__link_operator)
+					&& (node_cache.top().return_last_child().return_type()==__mul_operator || node_cache.top().return_last_child().return_type()==__div_operator)
+					&& node_cache.top().return_last_child().child_num()<2)
+			{
+				node_cache.top().return_last_child().add_child(t);
+				return true;
+			}
 			else
 			{
 				node_cache.push(t);
@@ -54,6 +61,13 @@ class ast_generator
 			if((type==__add_operator || type==__sub_operator || type==__mul_operator || type==__div_operator || type==__link_operator) && node_cache.top().child_num()<2)
 			{
 				node_cache.top().add_child(t);
+				return true;
+			}
+			else if((type==__add_operator || type==__sub_operator || type==__link_operator)
+					&& (node_cache.top().return_last_child().return_type()==__mul_operator || node_cache.top().return_last_child().return_type()==__div_operator)
+					&& node_cache.top().return_last_child().child_num()<2)
+			{
+				node_cache.top().return_last_child().add_child(t);
 				return true;
 			}
 			else
@@ -94,7 +108,27 @@ class ast_generator
 				node_cache.push(t);
 				return true;
 			}
-			else if(cache_top_type==__add_operator || cache_top_type==__sub_operator || cache_top_type==__mul_operator || cache_top_type==__div_operator || cache_top_type==__link_operator)
+			else if(cache_top_type==__add_operator || cache_top_type==__sub_operator || cache_top_type==__link_operator)
+			{
+				if(parse.top().type==__add_operator || parse.top().type==__sub_operator || parse.top().type==__link_operator)
+				{
+					t.add_child(node_cache.top());
+					node_cache.pop();
+					node_cache.push(t);
+				}
+				else if(parse.top().type==__mul_operator || parse.top().type==__div_operator)
+				{
+					if(node_cache.top().return_last_child().child_num()<2)
+					{
+						std::cout<<">>[Error] parse error:missing number or string at line "<<node_cache.top().return_line()<<"."<<std::endl;
+						return false;
+					}
+					t.add_child(node_cache.top().return_last_child());
+					node_cache.top().return_last_child()=t;
+				}
+				return true;
+			}
+			else if((cache_top_type==__mul_operator || cache_top_type==__div_operator) && node_cache.top().child_num()<2)
 			{
 				t.add_child(node_cache.top());
 				node_cache.pop();
@@ -125,7 +159,7 @@ class ast_generator
 					case __mul_operator:is_correct=operator_expr_gen();break;
 					case __div_operator:is_correct=operator_expr_gen();break;
 					case __link_operator:is_correct=operator_expr_gen();break;
-					case __semi:is_correct=true;break;
+					case __semi:is_correct=true;root.add_child(node_cache.top());node_cache.pop();break;
 					default:
 						is_correct=false;
 						std::cout<<">>[Error] parse error in line "<<parse.top().line<<":";
@@ -148,6 +182,14 @@ class ast_generator
 				root.add_child(temp_cache.top());
 				temp_cache.pop();
 			}
+			return;
+		}
+		void print_ast()
+		{
+			//if(can_run)
+				root.print(0);
+			//else
+			//	std::cout<<">>[Parse] Error(s) occurred,stop."<<std::endl;
 			return;
 		}
 		void run()

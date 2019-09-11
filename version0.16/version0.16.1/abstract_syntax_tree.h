@@ -31,10 +31,22 @@ class ast_tree_node
 		{
 			return type;
 		}
+		int return_line()
+		{
+			return line;
+		}
 		void add_child(ast_tree_node& new_child)
 		{
 			children.push_back(new_child);
 			return;
+		}
+		ast_tree_node& return_last_child()
+		{
+			std::list<ast_tree_node>::iterator i;
+			for(i=children.begin();i!=children.end();++i)
+				;
+			--i;
+			return *i;
 		}
 		void clear_tree()
 		{
@@ -60,24 +72,24 @@ class ast_tree_node
 				std::cout<<" ";
 			if(type==__number)
 			{
-				std::cout<<"[";
+				std::cout<<"[ number:";
 				if(num==0 && fnum!=0)
 					std::cout<<fnum;
 				else if(num!=0 && fnum==0)
 					std::cout<<num;
 				else
 					std::cout<<0;
-				std::cout<<"]"<<std::endl;
+				std::cout<<" ]"<<std::endl;
 				return;
 			}
 			else if(type==__string)
 			{
-				std::cout<<"["<<str<<"]"<<std::endl;
+				std::cout<<"[ string:"<<str<<" ]"<<std::endl;
 				return;
 			}
-			std::cout<<"{[";
+			std::cout<<"{ [ node type:";
 			print_token(type);
-			std::cout<<"]"<<std::endl;
+			std::cout<<" ]"<<std::endl;
 			for(std::list<ast_tree_node>::iterator i=children.begin();i!=children.end();++i)
 				i->print(tab_num+1);
 			for(int i=0;i<tab_num;++i)
