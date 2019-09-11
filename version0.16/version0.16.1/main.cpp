@@ -7,7 +7,7 @@ int main()
 	ast_generator cod;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
-	std::cout<<">> input [help] to find help."<<std::endl;
+	std::cout<<">> Input [help] to find help."<<std::endl;
 	while(1)
 	{
 		std::cout<<">> ";
@@ -60,7 +60,7 @@ int main()
 			pas.parse_process(lex.return_list());
 			cod.input_token_stack(pas.return_stack());
 			cod.gen_main_prog();
-//			cod.print_gen_tree();
+			cod.print_ast();
 		}
 		else if(command=="run")
 		{
