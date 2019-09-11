@@ -19,6 +19,7 @@ enum token_type
 	__left_bracket,__right_bracket,                // []
 	__left_curve,__right_curve,                    // ()
 	__semi,__comma,__colon,__dot,                  // ; , : .
+	__unknown_operator,
 	__var,__func,__return,
 	__if,__elsif,__else,
 	__continue,__break,
@@ -67,6 +68,7 @@ void print_token(int type)
 		case __comma:             context=",";break;
 		case __colon:             context=":";break;
 		case __dot:               context=".";break;
+		case __unknown_operator:  context="un_optr";break;
 		case __var:               context="var";break;
 		case __func:              context="func";break;
 		case __continue:          context="ctn";break;

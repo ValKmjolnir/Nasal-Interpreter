@@ -118,7 +118,7 @@ class nasal_parser
 					else if((*i).content=="<=")
 						temp_parse.type=__cmp_less_or_equal;
 				}
-				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content=="."))
+				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content==".") || ((*i).content=="?") || ((*i).content=="%") || ((*i).content=="$") || ((*i).content=="`") || ((*i).content=="^") || ((*i).content=="@"))
 				{
 					char c=(*i).content[0];
 					switch(c)
@@ -128,6 +128,7 @@ class nasal_parser
 						case '=':temp_parse.type=__equal;break;
 						case ':':temp_parse.type=__colon;break;
 						case '.':temp_parse.type=__dot;break;
+						default:temp_parse.type=__unknown_operator;break;
 					}
 				}
 				else if(((*i).type==NUMBER) || ((*i).type==STRING) || ((*i).type==IDENTIFIER) || ((*i).type==DYNAMIC_ID))

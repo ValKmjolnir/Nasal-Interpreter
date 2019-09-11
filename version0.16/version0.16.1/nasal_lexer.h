@@ -225,7 +225,7 @@ class nasal_lexer
 			}
 			else if(temp=='(' || temp==')' || temp=='[' || temp==']' || temp=='{' ||
 					temp=='}' || temp==',' || temp==';' || temp=='|' || temp==':' ||
-					temp=='?' || temp=='.' || temp=='`' || temp=='&'||
+					temp=='?' || temp=='.' || temp=='`' || temp=='&' || temp=='@' ||
 					temp=='%' || temp=='$' || temp=='^')
 			{
 				__token+=temp;
