@@ -176,6 +176,37 @@ void nasal_parser::definition_expr()
 }
 void nasal_parser::assignment_expr()
 {
+	get_token();
+	if(this_token.type!=__equal && this_token.type!=__add_equal
+		&& this_token.type!=__sub_equal && this_token.type!=__mul_equal
+		&& this_token.type!=__div_equal && this_token.type!=__link_equal)
+	{
+		parse.push(this_token);
+		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __id:identifier_begin_expr();break;
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __left_brace:hash_init_generator();break;
+		case __left_bracket:list_init_generator();break;
+		case __func:function_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": must have a correct data type after operator."<<std::endl;
+			return;
+			break;
+	}
+	get_token();
+	if(this_token.type!=__semi)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this line."<<std::endl;
+		parse.push(this_token);
+		return;
+	}
 	return;
 }
 void nasal_parser::loop_expr()
@@ -363,11 +394,11 @@ void nasal_parser::identifier_begin_expr()
 	get_token();
 	switch(this_token.type)
 	{
-		case __add_equal:
-		case __sub_equal:add_sub_expr();break;
-		case __mul_equal:
-		case __div_equal:mul_div_expr();break;
-		case __link_equal:link_expr();break;
+		case __add_operator:
+		case __sub_operator:add_sub_expr();break;
+		case __mul_operator:
+		case __div_operator:mul_div_expr();break;
+		case __link_operator:link_expr();break;
 		case __equal:assignment_expr();break;
 		case __left_curve:call_function_expr();break;
 		case __left_bracket:list_search_expr();break;
@@ -383,6 +414,27 @@ void nasal_parser::identifier_begin_expr()
 			print_token(this_token.type);
 			std::cout<<"\" at this line."<<std::endl;
 			break;
+	}
+	get_token();
+	if(this_token.type==__semi)
+		parse.push(this_token);
+	else
+	{
+		switch(this_token.type)
+		{
+			case __equal:
+			case __add_equal:
+			case __sub_equal:
+			case __mul_equal:
+			case __div_equal:
+			case __link_equal:
+				parse.push(this_token);
+				assignment_expr();
+				break;
+			default:
+				parse.push(this_token);
+				break;
+		}
 	}
 	return;
 }
