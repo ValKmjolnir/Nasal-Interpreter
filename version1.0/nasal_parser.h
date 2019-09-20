@@ -331,13 +331,14 @@ void nasal_parser::call_function_expr()
 				break;
 		}
 		get_token();
-		if(this_token.type!=__comma)
+		if(this_token.type!=__comma && this_token.type!=__right_curve && this_token.type!=__semi)
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\'."<<std::endl;
 			return;
 		}
-		get_token();
+		else if(this_token.type!=__right_curve)
+			get_token();
 	}
 	if(this_token.type==__semi)
 	{
@@ -361,6 +362,10 @@ void nasal_parser::identifier_begin_expr()
 		case __left_curve:call_function_expr();break;
 		case __left_bracket:list_search_expr();break;
 		case __dot:hash_search_expr();break;
+		case __comma:
+		case __right_curve:
+		case __right_bracket:
+		case __right_brace:
 		case __semi:parse.push(this_token);break;
 		default:
 			++error;
@@ -381,6 +386,10 @@ void nasal_parser::number_begin_expr()
 		case __mul_operator:
 		case __div_operator:mul_div_expr();break;
 		case __link_operator:link_expr();break;
+		case __comma:
+		case __right_curve:
+		case __right_bracket:
+		case __right_brace:
 		case __semi:parse.push(this_token);break;
 		default:
 			++error;
@@ -401,6 +410,10 @@ void nasal_parser::string_begin_expr()
 		case __mul_operator:
 		case __div_operator:mul_div_expr();break;
 		case __link_operator:link_expr();break;
+		case __comma:
+		case __right_curve:
+		case __right_bracket:
+		case __right_brace:
 		case __semi:parse.push(this_token);break;
 		default:
 			++error;
