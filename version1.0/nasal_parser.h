@@ -11,10 +11,12 @@ class nasal_parser
 		std::stack<ast_tree_node> node_cache;
 		token this_token;
 		int error;
+		int warning;
 	public:
 		nasal_parser()
 		{
 			error=0;
+			warning=0;
 			this_token.type=0;
 		}
 		void get_token()
@@ -135,10 +137,16 @@ void nasal_parser::definition_expr()
 		return;
 	}
 	get_token();
-	if(this_token.type!=__equal)
+	if(this_token.type!=__equal && this_token.type!=__semi)
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": must have a \'=\' after identifier."<<std::endl;
+		return;
+	}
+	else if(this_token.type==__semi)
+	{
+		++warning;
+		std::cout<<">>[Warning] line "<<this_token.line<<": variable without initializing."<<std::endl;
 		return;
 	}
 	get_token();
@@ -202,18 +210,19 @@ void nasal_parser::list_init_generator()
 				break;
 		}
 		get_token();
-		if(this_token.type!=__comma)
+		if(this_token.type!=__comma && this_token.type!=__right_bracket && this_token.type!=__semi)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\' at this line."<<std::endl;
 			return;
 		}
-		get_token();
+		else if(this_token.type!=__right_bracket)
+			get_token();
 	}
 	if(this_token.type==__semi)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\'."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\' at this line."<<std::endl;
 		return;
 	}
 	return;
@@ -252,13 +261,14 @@ void nasal_parser::hash_init_generator()
 				break;
 		}
 		get_token();
-		if(this_token.type!=__comma)
+		if(this_token.type!=__comma && this_token.type!=__right_brace && this_token.type!=__semi)
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\'."<<std::endl;
 			return;
 		}
-		get_token();
+		if(this_token.type!=__right_brace)
+			get_token();
 	}
 	if(this_token.type==__semi)
 	{
@@ -482,6 +492,7 @@ void nasal_parser::mul_div_expr()
 void nasal_parser::parse_main_work()
 {
 	error=0;
+	warning=0;
 	while(!parse.empty())
 	{
 		get_token();
@@ -505,7 +516,7 @@ void nasal_parser::parse_main_work()
 				break;
 		}
 	}
-	std::cout<<">>[Parse] complete generation."<<error<<" error(s)."<<std::endl;
+	std::cout<<">>[Parse] complete generation."<<error<<" error(s),"<<warning<<" warning(s)."<<std::endl;
 	return;
 }
 
