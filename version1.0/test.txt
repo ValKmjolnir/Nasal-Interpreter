@@ -6,3 +6,7 @@ id("str",1,1);
 var e=1;
 var x=10*2-20;
 var id;
+var id=[1,2,3,4];
+var id={id:"str"};
+id();
+id.id();
