@@ -325,6 +325,24 @@ void nasal_parser::list_search_expr()
 			std::cout<<"\" in list call."<<std::endl;
 			break;
 	}
+	get_token();
+	if(this_token.type!=__right_bracket)
+	{
+		if(this_token.type==__semi)
+			parse.push(this_token);
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\' when calling a list."<<std::endl;
+		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __left_bracket:list_search_expr();break;
+		case __dot:hash_search_expr();break;
+		default:
+			parse.push(this_token);
+			break;
+	}
 	return;
 }
 void nasal_parser::hash_search_expr()
@@ -339,8 +357,8 @@ void nasal_parser::hash_search_expr()
 	get_token();
 	switch(this_token.type)
 	{
-		case __left_curve:break;
-		case __left_bracket:break;
+		case __left_curve:call_function_expr();break;
+		case __left_bracket:list_search_expr();break;
 		case __dot:hash_search_expr();break;
 		case __semi:parse.push(this_token);break;
 		default:
@@ -386,6 +404,15 @@ void nasal_parser::call_function_expr()
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\'."<<std::endl;
 		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __left_bracket:list_search_expr();break;
+		case __dot:hash_search_expr();break;
+		default:
+			parse.push(this_token);
+			break;
 	}
 	return;
 }
