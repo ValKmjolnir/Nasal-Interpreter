@@ -23,7 +23,6 @@ int main()
 			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
-			std::cout<<">>10. [rule  ] |see rules of the language."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -71,11 +70,6 @@ int main()
 			pas.parse_process(lex.return_list());
 //			pas.gen_main_prog();
 			pas.run();
-		}
-		else if(command=="rule")
-		{
-			std::cout<<">>[Rule] Token types that you can use: number + - * /"<<std::endl;
-			std::cout<<">>[Rule] Each binary operator should have two numbers around it like: 1 + 1"<<std::endl;
 		}
 		else
 			prog.input_file(command);
