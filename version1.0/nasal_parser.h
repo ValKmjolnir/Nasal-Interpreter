@@ -111,6 +111,9 @@ class nasal_parser
 		void parse_main_work();
 		void definition_expr();
 		void assignment_expr();
+		void while_loop_expr();
+		void for_loop_expr();
+		void foreach_index_loop_expr();
 		void loop_expr();
 		void if_else_expr();
 		void function_expr();
@@ -126,6 +129,7 @@ class nasal_parser
 		void link_expr();
 		void add_sub_expr();
 		void mul_div_expr();
+		void compare_operator_expr();
 };
 void nasal_parser::definition_expr()
 {
@@ -209,8 +213,150 @@ void nasal_parser::assignment_expr()
 	}
 	return;
 }
+void nasal_parser::while_loop_expr()
+{
+	get_token();
+	if(this_token.type!=__left_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'while\' ."<<std::endl;
+		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \'";
+			print_token(this_token.type);
+			std::cout<<"\' in this line."<<std::endl;
+			return;
+			break;
+	}
+	get_token();
+	if(this_token.type!=__right_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\' at the end of condition."<<std::endl;
+		return;
+	}
+	get_token();
+	if(this_token.type==__left_brace)
+	{
+		while(this_token.type!=__right_brace)
+		{
+			get_token();
+			switch(this_token.type)
+			{
+				case __var:definition_expr();break;
+				case __id:identifier_begin_expr();break;
+				case __number:number_begin_expr();break;
+				case __string:string_begin_expr();break;
+				case __if:
+					parse.push(this_token);
+					if_else_expr();
+					break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:
+					parse.push(this_token);
+					loop_expr();
+					break;
+				case __continue:
+				case __break:
+					get_token();
+					if(this_token.type!=__semi)
+					{
+						++error;
+						std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
+					}
+					break;
+				case __semi:break;
+				case __right_brace:break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": ";
+					print_token(this_token.type);
+					std::cout<<" in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
+	}
+	else
+	{
+		get_token();
+		switch(this_token.type)
+		{
+			case __var:definition_expr();break;
+			case __id:identifier_begin_expr();break;
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __if:
+				parse.push(this_token);
+				if_else_expr();
+				break;
+			case __while:
+			case __for:
+			case __foreach:
+			case __forindex:
+				parse.push(this_token);
+				loop_expr();
+				break;
+			case __continue:
+			case __break:
+				get_token();
+				if(this_token.type!=__semi)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
+				}
+				break;
+			case __semi:break;
+			default:
+				std::cout<<">>[Error] line "<<this_token.line<<": ";
+				print_token(this_token.type);
+				std::cout<<" in an incorrect place."<<std::endl;
+				++error;
+				break;
+		}
+	}
+	return;
+}
+void nasal_parser::for_loop_expr()
+{
+	get_token();
+	if(this_token.type!=__left_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'for\' ."<<std::endl;
+		return;
+	}
+	return;
+}
+void nasal_parser::foreach_index_loop_expr()
+{
+	get_token();
+	if(this_token.type!=__left_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'foreach\' or \'forindex\' ."<<std::endl;
+		return;
+	}
+	return;
+}
 void nasal_parser::loop_expr()
 {
+	get_token();
+	if(this_token.type==__while)
+		while_loop_expr();
+	else if(this_token.type==__for)
+		for_loop_expr();
+	else if(this_token.type==__foreach || this_token.type==__forindex)
+		foreach_index_loop_expr();
 	return;
 }
 void nasal_parser::if_else_expr()
@@ -317,7 +463,6 @@ void nasal_parser::list_search_expr()
 		case __number:number_begin_expr();break;
 		case __id:identifier_begin_expr();break;
 		case __string:string_begin_expr();break;
-		case __colon:break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
@@ -426,6 +571,17 @@ void nasal_parser::identifier_begin_expr()
 		case __mul_operator:
 		case __div_operator:mul_div_expr();break;
 		case __link_operator:link_expr();break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:
+			parse.push(this_token);
+			compare_operator_expr();
+			break;
 		case __equal:assignment_expr();break;
 		case __left_curve:call_function_expr();break;
 		case __left_bracket:list_search_expr();break;
@@ -480,6 +636,17 @@ void nasal_parser::number_begin_expr()
 		case __right_bracket:
 		case __right_brace:
 		case __semi:parse.push(this_token);break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:
+			parse.push(this_token);
+			compare_operator_expr();
+			break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
@@ -504,6 +671,17 @@ void nasal_parser::string_begin_expr()
 		case __right_bracket:
 		case __right_brace:
 		case __semi:parse.push(this_token);break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:
+			parse.push(this_token);
+			compare_operator_expr();
+			break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
@@ -568,6 +746,31 @@ void nasal_parser::mul_div_expr()
 	}
 	return;
 }
+void nasal_parser::compare_operator_expr()
+{
+	get_token();
+	if(this_token.type!=__cmp_equal && this_token.type!=__cmp_not_equal && this_token.type!=__cmp_less && this_token.type!=__cmp_more
+		&& this_token.type!=__cmp_less_or_equal && this_token.type!=__cmp_more_or_equal
+		&& this_token.type!=__and_operator && this_token.type!=__or_operator)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": incorrect comparation operator."<<std::endl;
+		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __id:identifier_begin_expr();break;
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after comparation operator."<<std::endl;
+			return;
+			break;
+	}
+	return;
+}
 void nasal_parser::parse_main_work()
 {
 	error=0;
@@ -581,11 +784,26 @@ void nasal_parser::parse_main_work()
 			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
-			case __if:if_else_expr();break;
+			case __if:
+				parse.push(this_token);
+				if_else_expr();
+				break;
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:loop_expr();break;
+			case __forindex:
+				parse.push(this_token);
+				loop_expr();
+				break;
+			case __continue:
+			case __break:
+				get_token();
+				if(this_token.type!=__semi)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
+				}
+				break;
 			case __semi:break;
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": ";
