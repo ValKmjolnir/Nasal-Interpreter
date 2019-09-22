@@ -1,0 +1,11 @@
+while(n==1 )
+{
+    print("str");
+}
+
+while(n==1 and "str"==str)
+{
+    print("str");
+}
+
+i+=i1;
