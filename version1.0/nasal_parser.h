@@ -112,10 +112,10 @@ class nasal_parser
 		void definition_expr();
 		void assignment_expr();
 		void while_loop_expr();
-		void for_loop_expr();
-		void foreach_index_loop_expr();
+		void for_loop_expr();//
+		void foreach_index_loop_expr();//
 		void loop_expr();
-		void if_else_expr();
+		void if_else_expr();//
 		void function_expr();
 		
 		void list_init_generator();
@@ -369,7 +369,32 @@ void nasal_parser::if_else_expr()
 		std::cout<<">>[Error] line "<<this_token.line<<": ";
 		return;
 	}
-	
+	get_token();
+	if(this_token.type!=__left_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \'(\' after if."<<std::endl;
+		return;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __id:identifier_begin_expr();break;
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": missing condition when using if-else expression."<<std::endl;
+			return;
+			break;
+	}
+	get_token();
+	if(this_token.type!=__right_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\' at this line."<<std::endl;
+		return;
+	}
 	return;
 }
 void nasal_parser::function_expr()
