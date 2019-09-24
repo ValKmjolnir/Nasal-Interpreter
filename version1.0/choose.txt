@@ -1,0 +1,25 @@
+if(this_token.type==__if)
+{
+    parse.push(this_token);
+    return;
+}
+elsif(this_token.type==__elsif)
+{
+    parse.push(this_token);
+    return;
+}
+elsif(this_token.type==__elsif)
+{
+    parse.push(this_token);
+    return;
+}
+elsif(this_token.type==__elsif)
+{
+    parse.push(this_token);
+    return;
+}
+else
+{
+    parse.push(this_token);
+    return;
+}
