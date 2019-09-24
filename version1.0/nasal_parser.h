@@ -217,6 +217,8 @@ void nasal_parser::function_generate_expr()
 					std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')' when creating a new function."<<std::endl;
 					return;
 				}
+				else if(this_token.type==__right_curve)
+					parse.push(this_token);
 			}
 			else if(this_token.type==__dynamic_id)
 			{
@@ -227,6 +229,7 @@ void nasal_parser::function_generate_expr()
 					std::cout<<">>[Error] line "<<this_token.line<<": only ')' can be put after dynamic identifier."<<std::endl;
 					return;
 				}
+				parse.push(this_token);
 			}
 			else
 			{
@@ -234,6 +237,7 @@ void nasal_parser::function_generate_expr()
 				std::cout<<">>[Error] line "<<this_token.line<<": expect identifiers and dynamic identifier only."<<std::endl;
 				return;
 			}
+			get_token();
 		}
 	}
 	else
