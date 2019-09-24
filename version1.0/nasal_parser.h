@@ -109,255 +109,287 @@ class nasal_parser
 			return;
 		}
 		void parse_main_work();
-		void definition_expr();
-		void assignment_expr();
-		void while_loop_expr();
-		void for_loop_expr();//
-		void foreach_index_loop_expr();//
-		void loop_expr();
-		void if_else_expr();//
-		void function_expr();
-		
-		void list_init_generator();
-		void hash_init_generator();
-		void list_search_expr();
-		void hash_search_expr();
-		void call_function_expr();
-		void identifier_begin_expr();
 		void number_begin_expr();
 		void string_begin_expr();
-		void link_expr();
-		void add_sub_expr();
-		void mul_div_expr();
+		void identifier_begin_expr();
+		void call_list_expr();
+		void call_function_expr();
+		void call_hash_expr();
+		void list_generate_expr();
+		void hash_generate_expr();
+		void definition_expr();
+		void assignment_expr();
+		void loop_expr();
+		void if_else_expr();
+		void add_sub_operator_expr();
+		void mul_div_operator_expr();
+		void link_operator_expr();
 		void compare_operator_expr();
+		void check_semi_at_end();
+		void statements_block();
+		void function_generate_expr();
 		void return_expr();
 };
+void nasal_parser::check_semi_at_end()
+{
+	get_token();
+	if(this_token.type!=__semi)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ';' at the end of this line."<<std::endl;
+	}
+	return;
+}
+void nasal_parser::return_expr()
+{
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		case __func:function_generate_expr();break;
+		case __left_bracket:list_generate_expr();break;
+		case __left_brace:hash_generate_expr();break;
+		case __semi:parse.push(this_token);break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data or ';'."<<std::endl;
+			return;
+			break;
+	}
+	return;
+}
+void nasal_parser::statements_block()
+{
+	get_token();
+	if(this_token.type!=__left_brace)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a '{' at this place."<<std::endl;
+		return;
+	}
+	get_token();
+	while(this_token.type!=__right_brace)
+	{
+		switch(this_token.type)
+		{
+			case __var:definition_expr();check_semi_at_end();break;
+			case __id:identifier_begin_expr();check_semi_at_end();break;
+			case __number:number_begin_expr();check_semi_at_end();break;
+			case __string:string_begin_expr();check_semi_at_end();break;
+			case __if:parse.push(this_token);if_else_expr();break;
+			case __while:
+			case __for:
+			case __foreach:
+			case __forindex:parse.push(this_token);loop_expr();break;
+			case __continue:
+			case __break:check_semi_at_end();break;
+			case __semi:break;
+			case __return:return_expr();check_semi_at_end();break;
+			default:
+				std::cout<<">>[Error] line "<<this_token.line<<": \'";
+				print_token(this_token.type);
+				std::cout<<"\' in an incorrect place."<<std::endl;
+				++error;
+				break;
+		}
+		get_token();
+	}
+	return;
+}
+void nasal_parser::function_generate_expr()
+{
+	get_token();
+	if(this_token.type==__left_brace)
+		parse.push(this_token);
+	else if(this_token.type==__left_curve)
+	{
+		get_token();
+		while(this_token.type!=__right_curve)
+		{
+			if(this_token.type==__id)
+			{
+				get_token();
+				if(this_token.type!=__right_curve && this_token.type!=__comma)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')' when creating a new function."<<std::endl;
+					return;
+				}
+			}
+			else if(this_token.type==__dynamic_id)
+			{
+				get_token();
+				if(this_token.type!=__right_curve)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": only ')' can be put after dynamic identifier."<<std::endl;
+					return;
+				}
+			}
+			else
+			{
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect identifiers and dynamic identifier only."<<std::endl;
+				return;
+			}
+		}
+	}
+	else
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+		print_token(this_token.type);
+		std::cout<<"' when creating a new function."<<std::endl;
+		return;
+	}
+	statements_block();
+	return;
+}
+void nasal_parser::list_generate_expr()
+{
+	get_token();
+	while(this_token.type!=__right_bracket)
+	{
+		switch(this_token.type)
+		{
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			case __left_bracket:list_generate_expr();break;
+			case __left_brace:hash_generate_expr();break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+				print_token(this_token.type);
+				std::cout<<"' when creating a new list."<<std::endl;
+				return;
+				break;
+		}
+		get_token();
+		if(this_token.type!=__comma && this_token.type!=__right_bracket)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ']'."<<std::endl;
+			return;
+		}
+		else if(this_token.type==__comma)
+			get_token();
+	}
+	return;
+}
+void nasal_parser::hash_generate_expr()
+{
+	get_token();
+	while(this_token.type!=__right_brace)
+	{
+		switch(this_token.type)
+		{
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+				print_token(this_token.type);
+				std::cout<<"' when creating a new hash member."<<std::endl;
+				return;
+				break;
+		}
+		get_token();
+		if(this_token.type!=__colon)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ':' when creating a new hash member."<<std::endl;
+			return;
+		}
+		get_token();
+		switch(this_token.type)
+		{
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			case __func:function_generate_expr();break;
+			case __left_bracket:list_generate_expr();break;
+			case __left_brace:hash_generate_expr();break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+				print_token(this_token.type);
+				std::cout<<"' when creating a new hash member."<<std::endl;
+				return;
+				break;
+		}
+		get_token();
+		if(this_token.type!=__comma && this_token.type!=__right_brace)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or '}'."<<std::endl;
+			return;
+		}
+		else if(this_token.type==__comma)
+			get_token();
+	}
+	return;
+}
 void nasal_parser::definition_expr()
 {
 	get_token();
 	if(this_token.type!=__id)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing identifier after declarator."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect an identifier."<<std::endl;
 		return;
 	}
 	get_token();
 	if(this_token.type!=__equal && this_token.type!=__semi)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": must have a \'=\' after identifier."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a '=' after identifier."<<std::endl;
 		return;
 	}
 	else if(this_token.type==__semi)
 	{
+		parse.push(this_token);// for semi check
 		++warning;
-		std::cout<<">>[Warning] line "<<this_token.line<<": variable without initializing."<<std::endl;
+		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
 		return;
 	}
 	get_token();
 	switch(this_token.type)
 	{
-		case __id:identifier_begin_expr();break;
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
-		case __left_brace:hash_init_generator();break;
-		case __left_bracket:list_init_generator();break;
-		case __func:function_expr();break;
+		case __id:identifier_begin_expr();break;
+		case __func:function_generate_expr();break;
+		case __left_bracket:list_generate_expr();break;
+		case __left_brace:hash_generate_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": must have a correct data type after operator = ."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
 			return;
 			break;
-	}
-	get_token();
-	if(this_token.type!=__semi)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this line."<<std::endl;
-		parse.push(this_token);
-		return;
 	}
 	return;
 }
 void nasal_parser::assignment_expr()
 {
 	get_token();
-	if(this_token.type!=__equal && this_token.type!=__add_equal
-		&& this_token.type!=__sub_equal && this_token.type!=__mul_equal
-		&& this_token.type!=__div_equal && this_token.type!=__link_equal)
-	{
-		parse.push(this_token);
-		return;
-	}
-	get_token();
-	switch(this_token.type)
-	{
-		case __id:identifier_begin_expr();break;
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __left_brace:hash_init_generator();break;
-		case __left_bracket:list_init_generator();break;
-		case __func:function_expr();break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": must have a correct data type after operator."<<std::endl;
-			return;
-			break;
-	}
-	get_token();
-	if(this_token.type!=__semi)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this line."<<std::endl;
-		parse.push(this_token);
-		return;
-	}
-	return;
-}
-void nasal_parser::while_loop_expr()
-{
-	get_token();
-	if(this_token.type!=__left_curve)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'while\' ."<<std::endl;
-		return;
-	}
-	get_token();
 	switch(this_token.type)
 	{
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __func:function_generate_expr();break;
+		case __left_bracket:list_generate_expr();break;
+		case __left_brace:hash_generate_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \'";
-			print_token(this_token.type);
-			std::cout<<"\' in this line."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": incorretc data type when doing assignment."<<std::endl;
 			return;
 			break;
 	}
-	get_token();
-	if(this_token.type!=__right_curve)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\' at the end of condition."<<std::endl;
-		return;
-	}
-	get_token();
-	if(this_token.type==__left_brace)
-	{
-		while(this_token.type!=__right_brace)
-		{
-			get_token();
-			switch(this_token.type)
-			{
-				case __var:definition_expr();break;
-				case __id:identifier_begin_expr();break;
-				case __number:number_begin_expr();break;
-				case __string:string_begin_expr();break;
-				case __if:
-					parse.push(this_token);
-					if_else_expr();
-					break;
-				case __while:
-				case __for:
-				case __foreach:
-				case __forindex:
-					parse.push(this_token);
-					loop_expr();
-					break;
-				case __continue:
-				case __break:
-					get_token();
-					if(this_token.type!=__semi)
-					{
-						++error;
-						std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
-					}
-					break;
-				case __semi:break;
-				case __right_brace:break;
-				default:
-					std::cout<<">>[Error] line "<<this_token.line<<": ";
-					print_token(this_token.type);
-					std::cout<<" in an incorrect place."<<std::endl;
-					++error;
-					break;
-			}
-		}
-	}
-	else
-	{
-		get_token();
-		switch(this_token.type)
-		{
-			case __var:definition_expr();break;
-			case __id:identifier_begin_expr();break;
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __if:
-				parse.push(this_token);
-				if_else_expr();
-				break;
-			case __while:
-			case __for:
-			case __foreach:
-			case __forindex:
-				parse.push(this_token);
-				loop_expr();
-				break;
-			case __continue:
-			case __break:
-				get_token();
-				if(this_token.type!=__semi)
-				{
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
-				}
-				break;
-			case __semi:break;
-			default:
-				std::cout<<">>[Error] line "<<this_token.line<<": ";
-				print_token(this_token.type);
-				std::cout<<" in an incorrect place."<<std::endl;
-				++error;
-				break;
-		}
-	}
-	return;
-}
-void nasal_parser::for_loop_expr()
-{
-	get_token();
-	if(this_token.type!=__left_curve)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'for\' ."<<std::endl;
-		return;
-	}
-	return;
-}
-void nasal_parser::foreach_index_loop_expr()
-{
-	get_token();
-	if(this_token.type!=__left_curve)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing condition after \'foreach\' or \'forindex\' ."<<std::endl;
-		return;
-	}
-	return;
-}
-void nasal_parser::loop_expr()
-{
-	get_token();
-	if(this_token.type==__while)
-		while_loop_expr();
-	else if(this_token.type==__for)
-		for_loop_expr();
-	else if(this_token.type==__foreach || this_token.type==__forindex)
-		foreach_index_loop_expr();
 	return;
 }
 void nasal_parser::if_else_expr()
@@ -366,25 +398,25 @@ void nasal_parser::if_else_expr()
 	if(this_token.type!=__if)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": ";
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a 'if' when creating new if-else statement."<<std::endl;
 		return;
 	}
 	get_token();
 	if(this_token.type!=__left_curve)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \'(\' after if."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' when making a condition."<<std::endl;
 		return;
 	}
 	get_token();
 	switch(this_token.type)
 	{
-		case __id:identifier_begin_expr();break;
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": missing condition when using if-else expression."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a correct data."<<std::endl;
 			return;
 			break;
 	}
@@ -392,433 +424,160 @@ void nasal_parser::if_else_expr()
 	if(this_token.type!=__right_curve)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\' at this line."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when making a condition."<<std::endl;
 		return;
 	}
-	return;
-}
-void nasal_parser::function_expr()
-{
+	statements_block();
 	get_token();
-	if(this_token.type==__left_curve)
+	while(this_token.type==__elsif)
 	{
 		get_token();
-		for(;this_token.type!=__right_curve;get_token())
-		{
-			switch(this_token.type)
-			{
-				case __id:
-					get_token();
-					if(this_token.type!=__comma && this_token.type!=__right_curve)
-					{
-						++error;
-						std::cout<<">>[Error] line "<<this_token.line<<" epxect a \',\' between parameters."<<std::endl;
-						return;
-					}
-					else if(this_token.type==__right_curve)
-						parse.push(this_token);
-					break;
-				case __dynamic_id:
-					get_token();
-					if(this_token.type!=__right_curve)
-					{
-						++error;
-						std::cout<<">>[Error] line "<<this_token.line<<"dynamic identifier should have nothing but \')\' after it."<<std::endl;
-						return;
-					}
-					else
-						parse.push(this_token);
-					break;
-				case __right_curve:
-					parse.push(this_token);
-					break;
-				default:
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \'";
-					print_token(this_token.type);
-					std::cout<<"\' when declaring a function."<<std::endl;
-					return;
-					break;
-			}
-		}
-		get_token();
-		if(this_token.type!=__left_brace)
+		if(this_token.type!=__left_curve)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": missing elements after \'func\' ."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' when making a condition."<<std::endl;
 			return;
 		}
 		get_token();
-		for(;this_token.type!=__right_brace;get_token())
+		switch(this_token.type)
 		{
-			switch(this_token.type)
-			{
-				case __var:definition_expr();break;
-				case __id:identifier_begin_expr();break;
-				case __number:number_begin_expr();break;
-				case __string:string_begin_expr();break;
-				case __if:
-					parse.push(this_token);
-					if_else_expr();
-					break;
-				case __while:
-				case __for:
-				case __foreach:
-				case __forindex:
-					parse.push(this_token);
-					loop_expr();
-					break;
-				case __right_brace:
-					parse.push(this_token);
-					break;
-				case __return:
-					return_expr();
-					break;
-				case __semi:break;
-				default:
-					std::cout<<">>[Error] line "<<this_token.line<<": ";
-					print_token(this_token.type);
-					std::cout<<" in an incorrect place."<<std::endl;
-					++error;
-					break;
-			}
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a correct data."<<std::endl;
+				return;
+				break;
 		}
-		return;
+		get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when making a condition."<<std::endl;
+			return;
+		}
+		statements_block();
+		get_token();
 	}
-	else if(this_token.type==__left_brace)
+	if(this_token.type==__else)
+		statements_block();
+	else
+		parse.push(this_token);
+	return;
+}
+void nasal_parser::loop_expr()
+{
+	get_token();
+	if(this_token.type==__while)
 	{
 		get_token();
-		for(;this_token.type!=__right_brace;get_token())
+		if(this_token.type!=__left_curve)
 		{
-			switch(this_token.type)
-			{
-				case __var:definition_expr();break;
-				case __id:identifier_begin_expr();break;
-				case __number:number_begin_expr();break;
-				case __string:string_begin_expr();break;
-				case __if:
-					parse.push(this_token);
-					if_else_expr();
-					break;
-				case __while:
-				case __for:
-				case __foreach:
-				case __forindex:
-					parse.push(this_token);
-					loop_expr();
-					break;
-				case __right_brace:
-					parse.push(this_token);
-					break;
-				case __return:
-					return_expr();
-					break;
-				case __semi:break;
-				default:
-					std::cout<<">>[Error] line "<<this_token.line<<": ";
-					print_token(this_token.type);
-					std::cout<<" in an incorrect place."<<std::endl;
-					++error;
-					break;
-			}
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' after 'while'."<<std::endl;
+			return;
 		}
-		return;
+		get_token();
+		switch(this_token.type)
+		{
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a condition."<<std::endl;
+				return;
+				break;
+		}
+		get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'while'."<<std::endl;
+			return;
+		}
+		
+	}
+	else if(this_token.type==__for)
+	{
+		;
+	}
+	else if(this_token.type==__forindex || this_token.type==__foreach)
+	{
+		;
 	}
 	else
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing elements after \'func\' ."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+		print_token(this_token.type);
+		std::cout<<"' when creating a new loop."<<std::endl;
 		return;
 	}
+	statements_block();
 	return;
 }
-void nasal_parser::list_init_generator()
-{
-	get_token();
-	while(this_token.type!=__right_bracket && this_token.type!=__semi)
-	{
-		switch(this_token.type)
-		{
-			case __id:identifier_begin_expr();break;
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __left_brace:hash_init_generator();break;
-			case __left_bracket:list_init_generator();break;
-			case __func:function_expr();break;
-			default:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token when generating a new list."<<std::endl;
-				return;
-				break;
-		}
-		get_token();
-		if(this_token.type!=__comma && this_token.type!=__right_bracket && this_token.type!=__semi)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\' at this line."<<std::endl;
-			return;
-		}
-		else if(this_token.type!=__right_bracket)
-			get_token();
-	}
-	if(this_token.type==__semi)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\' at this line."<<std::endl;
-		return;
-	}
-	return;
-}
-void nasal_parser::hash_init_generator()
-{
-	get_token();
-	while(this_token.type!=__right_brace && this_token.type!=__semi)
-	{
-		if(this_token.type!=__id)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": hashmember should have this type \'id : scalar\' but there is no identifier."<<std::endl;
-			return;
-		}
-		get_token();
-		if(this_token.type!=__colon)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": hashmember should have this type \'id : scalar\' but lacks a \':\'."<<std::endl;
-			return;
-		}
-		get_token();
-		switch(this_token.type)
-		{
-			case __id:identifier_begin_expr();break;
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __left_brace:hash_init_generator();break;
-			case __left_bracket:list_init_generator();break;
-			case __func:function_expr();break;
-			default:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token when generating a new list."<<std::endl;
-				return;
-				break;
-		}
-		get_token();
-		if(this_token.type!=__comma && this_token.type!=__right_brace && this_token.type!=__semi)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\'."<<std::endl;
-			return;
-		}
-		if(this_token.type!=__right_brace)
-			get_token();
-	}
-	if(this_token.type==__semi)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\'."<<std::endl;
-		return;
-	}
-	return;
-}
-void nasal_parser::list_search_expr()
+void nasal_parser::add_sub_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
 	{
 		case __number:number_begin_expr();break;
-		case __id:identifier_begin_expr();break;
 		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
-			print_token(this_token.type);
-			std::cout<<"\" in list call."<<std::endl;
-			break;
-	}
-	get_token();
-	if(this_token.type!=__right_bracket)
-	{
-		if(this_token.type==__semi)
-			parse.push(this_token);
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \']\' when calling a list."<<std::endl;
-		return;
-	}
-	get_token();
-	switch(this_token.type)
-	{
-		case __left_bracket:list_search_expr();break;
-		case __dot:hash_search_expr();break;
-		case __add_operator:
-		case __sub_operator:add_sub_expr();break;
-		case __mul_operator:
-		case __div_operator:mul_div_expr();break;
-		case __link_operator:link_expr();break;
-		case __and_operator:
-		case __or_operator:
-		case __cmp_equal:
-		case __cmp_not_equal:
-		case __cmp_less:
-		case __cmp_more:
-		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:
-			parse.push(this_token);
-			compare_operator_expr();
-			break;
-		case __equal:
-		case __add_equal:
-		case __sub_equal:
-		case __mul_equal:
-		case __div_equal:
-		case __link_equal:
-			parse.push(this_token);
-			assignment_expr();
-			break;
-		default:
-			parse.push(this_token);
-			break;
-	}
-	return;
-}
-void nasal_parser::hash_search_expr()
-{
-	get_token();
-	if(this_token.type!=__id)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing identifier after \'.\' ."<<std::endl;
-		return;
-	}
-	get_token();
-	switch(this_token.type)
-	{
-		case __left_curve:call_function_expr();break;
-		case __left_bracket:list_search_expr();break;
-		case __dot:hash_search_expr();break;
-		case __add_operator:
-		case __sub_operator:add_sub_expr();break;
-		case __mul_operator:
-		case __div_operator:mul_div_expr();break;
-		case __link_operator:link_expr();break;
-		case __and_operator:
-		case __or_operator:
-		case __cmp_equal:
-		case __cmp_not_equal:
-		case __cmp_less:
-		case __cmp_more:
-		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:
-			parse.push(this_token);
-			compare_operator_expr();
-			break;
-		case __equal:
-		case __add_equal:
-		case __sub_equal:
-		case __mul_equal:
-		case __div_equal:
-		case __link_equal:
-			parse.push(this_token);
-			assignment_expr();
-			break;
-		case __semi:parse.push(this_token);break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
-			print_token(this_token.type);
-			std::cout<<"\" at this line."<<std::endl;
-			break;
-	}
-	return;
-}
-void nasal_parser::call_function_expr()
-{
-	get_token();
-	while(this_token.type!=__right_curve && this_token.type!=__semi)
-	{
-		switch(this_token.type)
-		{
-			case __id:identifier_begin_expr();break;
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __left_brace:hash_init_generator();break;
-			case __left_bracket:list_init_generator();break;
-			case __func:function_expr();break;
-			default:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token when generating a new list."<<std::endl;
-				return;
-				break;
-		}
-		get_token();
-		if(this_token.type!=__comma && this_token.type!=__right_curve && this_token.type!=__semi)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a \',\'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
 			return;
-		}
-		else if(this_token.type!=__right_curve)
-			get_token();
-	}
-	if(this_token.type==__semi)
-	{
-		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a \')\'."<<std::endl;
-		return;
-	}
-	get_token();
-	switch(this_token.type)
-	{
-		case __left_bracket:list_search_expr();break;
-		case __dot:hash_search_expr();break;
-		default:
-			parse.push(this_token);
 			break;
 	}
 	return;
 }
-void nasal_parser::identifier_begin_expr()
+void nasal_parser::mul_div_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
 	{
-		case __add_operator:
-		case __sub_operator:add_sub_expr();break;
-		case __mul_operator:
-		case __div_operator:mul_div_expr();break;
-		case __link_operator:link_expr();break;
-		case __and_operator:
-		case __or_operator:
-		case __cmp_equal:
-		case __cmp_not_equal:
-		case __cmp_less:
-		case __cmp_more:
-		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:
-			parse.push(this_token);
-			compare_operator_expr();
-			break;
-		case __equal:
-		case __add_equal:
-		case __sub_equal:
-		case __mul_equal:
-		case __div_equal:
-		case __link_equal:
-			parse.push(this_token);
-			assignment_expr();
-			break;
-		case __left_curve:call_function_expr();break;
-		case __left_bracket:list_search_expr();break;
-		case __dot:hash_search_expr();break;
-		case __comma:
-		case __right_curve:
-		case __right_bracket:
-		case __right_brace:
-		case __semi:parse.push(this_token);break;
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
-			print_token(this_token.type);
-			std::cout<<"\" at this line."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+			return;
+			break;
+	}
+	return;
+}
+void nasal_parser::link_operator_expr()
+{
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+			return;
+			break;
+	}
+	return;
+}
+void nasal_parser::compare_operator_expr()
+{
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+			return;
 			break;
 	}
 	return;
@@ -829,15 +588,10 @@ void nasal_parser::number_begin_expr()
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:add_sub_expr();break;
+		case __sub_operator:add_sub_operator_expr();break;
 		case __mul_operator:
-		case __div_operator:mul_div_expr();break;
-		case __link_operator:link_expr();break;
-		case __comma:
-		case __right_curve:
-		case __right_bracket:
-		case __right_brace:
-		case __semi:parse.push(this_token);break;
+		case __div_operator:mul_div_operator_expr();break;
+		case __link_operator:link_operator_expr();break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -845,16 +599,8 @@ void nasal_parser::number_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:
-			parse.push(this_token);
-			compare_operator_expr();
-			break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
-			print_token(this_token.type);
-			std::cout<<"\" after number."<<std::endl;
-			break;
+		case __cmp_more_or_equal:compare_operator_expr();break;
+		default:parse.push(this_token);break;
 	}
 	return;
 }
@@ -864,15 +610,10 @@ void nasal_parser::string_begin_expr()
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:add_sub_expr();break;
+		case __sub_operator:add_sub_operator_expr();break;
 		case __mul_operator:
-		case __div_operator:mul_div_expr();break;
-		case __link_operator:link_expr();break;
-		case __comma:
-		case __right_curve:
-		case __right_bracket:
-		case __right_brace:
-		case __semi:parse.push(this_token);break;
+		case __div_operator:mul_div_operator_expr();break;
+		case __link_operator:link_operator_expr();break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -880,116 +621,168 @@ void nasal_parser::string_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:
-			parse.push(this_token);
-			compare_operator_expr();
-			break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token \"";
-			print_token(this_token.type);
-			std::cout<<"\" after string."<<std::endl;
-			break;
+		case __cmp_more_or_equal:compare_operator_expr();break;
+		default:parse.push(this_token);break;
 	}
 	return;
 }
-void nasal_parser::link_expr()
+void nasal_parser::call_list_expr()
 {
 	get_token();
 	switch(this_token.type)
 	{
-		case __id:identifier_begin_expr();break;
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after operator ~ ."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": incorrect data type when calling a list."<<std::endl;
+			return;
 			break;
 	}
-	return;
-}
-void nasal_parser::add_sub_expr()
-{
 	get_token();
-	switch(this_token.type)
+	if(this_token.type==__colon)// to check if there is [number:number] or [number:]
 	{
-		case __id:identifier_begin_expr();break;
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		default:
+		get_token();
+		switch(this_token.type)
+		{
+			case __number:number_begin_expr();break;
+			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
+			case __right_bracket:return;break;// this is [number:]
+		}
+		get_token();
+		if(this_token.type!=__right_bracket)
+		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after operator + or - ."<<std::endl;
-			break;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ']' when calling a list."<<std::endl;
+			return;
+		}
+		get_token();
+		switch(this_token.type)
+		{
+			case __left_bracket:call_list_expr();break;
+			case __left_curve:call_function_expr();break;
+			case __dot:call_hash_expr();break;
+			default:parse.push(this_token);break;
+		}
+	}
+	else if(this_token.type==__right_bracket)
+	{
+		get_token();
+		switch(this_token.type)
+		{
+			case __left_bracket:call_list_expr();break;
+			case __left_curve:call_function_expr();break;
+			case __dot:call_hash_expr();break;
+			default:parse.push(this_token);break;
+		}
+	}
+	else
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ']' when calling a list."<<std::endl;
+		return;
 	}
 	return;
 }
-void nasal_parser::mul_div_expr()
+void nasal_parser::call_function_expr()
 {
 	get_token();
-	while(1)
+	while(this_token.type!=__right_curve)
 	{
 		switch(this_token.type)
 		{
-			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
+			case __id:identifier_begin_expr();break;
 			default:
 				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after operator * or / ."<<std::endl;
+				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+				print_token(this_token.type);
+				std::cout<<"' when calling a function."<<std::endl;
 				return;
 				break;
 		}
 		get_token();
-		if(this_token.type!=__mul_operator && this_token.type!=__div_operator)
+		if(this_token.type!=__comma && this_token.type!=__right_curve)
 		{
-			parse.push(this_token);
-			break;
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' after parameter or ')' to end the call."<<std::endl;
+			return;
 		}
+		else if(this_token.type==__comma)
+			get_token();
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __left_bracket:call_list_expr();break;
+		case __left_curve:call_function_expr();break;
+		case __dot:call_hash_expr();break;
+		default:parse.push(this_token);break;
 	}
 	return;
 }
-void nasal_parser::compare_operator_expr()
+void nasal_parser::call_hash_expr()
 {
 	get_token();
-	if(this_token.type!=__cmp_equal && this_token.type!=__cmp_not_equal && this_token.type!=__cmp_less && this_token.type!=__cmp_more
-		&& this_token.type!=__cmp_less_or_equal && this_token.type!=__cmp_more_or_equal
-		&& this_token.type!=__and_operator && this_token.type!=__or_operator)
+	if(this_token.type!=__id)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": incorrect comparation operator."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": missing identifier when calling hash members."<<std::endl;
 		return;
 	}
-	get_token();
-	switch(this_token.type)
-	{
-		case __id:identifier_begin_expr();break;
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after comparation operator."<<std::endl;
-			return;
-			break;
-	}
+	identifier_begin_expr();
 	return;
 }
-void nasal_parser::return_expr()
+void nasal_parser::identifier_begin_expr()
 {
+	// __id has been checked
 	get_token();
 	switch(this_token.type)
 	{
-		case __semi:return;break;
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_brace:hash_init_generator();break;
-		case __left_bracket:list_init_generator();break;
-		case __func:function_expr();break;
-		default:
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token when return."<<std::endl;
-			return;
-			break;
+		case __left_bracket:call_list_expr();break;
+		case __left_curve:call_function_expr();break;
+		case __dot:call_hash_expr();break;
+		case __add_operator:
+		case __sub_operator:add_sub_operator_expr();break;
+		case __mul_operator:
+		case __div_operator:mul_div_operator_expr();break;
+		case __link_operator:link_operator_expr();break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:compare_operator_expr();break;
+		default:parse.push(this_token);break;
+	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __add_operator:
+		case __sub_operator:add_sub_operator_expr();break;
+		case __mul_operator:
+		case __div_operator:mul_div_operator_expr();break;
+		case __link_operator:link_operator_expr();break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:compare_operator_expr();break;
+		case __equal:
+		case __add_equal:
+		case __sub_equal:
+		case __mul_equal:
+		case __div_equal:
+		case __link_equal:assignment_expr();break;
+		default:parse.push(this_token);break;
 	}
 	return;
 }
@@ -1002,30 +795,15 @@ void nasal_parser::parse_main_work()
 		get_token();
 		switch(this_token.type)
 		{
-			case __var:definition_expr();break;
-			case __id:identifier_begin_expr();break;
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __if:
-				parse.push(this_token);
-				if_else_expr();
-				break;
+			case __var:definition_expr();check_semi_at_end();break;
+			case __id:identifier_begin_expr();check_semi_at_end();break;
+			case __number:number_begin_expr();check_semi_at_end();break;
+			case __string:string_begin_expr();check_semi_at_end();break;
+			case __if:parse.push(this_token);if_else_expr();break;
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:
-				parse.push(this_token);
-				loop_expr();
-				break;
-			case __continue:
-			case __break:
-				get_token();
-				if(this_token.type!=__semi)
-				{
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": expect a \';\' at the end of this statement."<<std::endl;
-				}
-				break;
+			case __forindex:parse.push(this_token);loop_expr();break;
 			case __semi:break;
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
