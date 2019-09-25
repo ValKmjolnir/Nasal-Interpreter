@@ -19,7 +19,7 @@ and command 'run' can give you the result
   
   # Now complete Lexical Analysis!
   
-  What it looks like?
+  What do it's outputs look like?
   
 ( Identifier  | engineTimer )
 
@@ -48,3 +48,11 @@ This is what it outputs.
 # Push down automata
 
 After many times of failure,i finally try to use PDA to do the parse work.
+
+But something occurred,so i finally didn't make it.However you can still see this LL(1) and LR(0) parser in version 0.7 & 0.9
+
+# Now complete Parser
+
+The parser can recognize some basic elements in resource program.
+
+And in future i will make it to support more flexible grammar.
