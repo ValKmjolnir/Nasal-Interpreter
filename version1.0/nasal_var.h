@@ -10,7 +10,8 @@ enum var_type
 	var_number,
 	var_string,
 	var_list,
-	var_hash
+	var_hash,
+	var_function
 };
 
 class nasal_list;
@@ -44,6 +45,15 @@ class nasal_hash
 	public:
 		nasal_hash();
 		nasal_hash(const nasal_hash&);
+};
+
+class nasal_function
+{
+	private:
+		std::list<ast_tree_node> root;
+	public:
+		nasal_function();
+		nasal_function(const nasal_function&);
 };
 
 #endif

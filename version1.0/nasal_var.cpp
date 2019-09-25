@@ -50,4 +50,12 @@ nasal_hash::nasal_hash(const nasal_hash& temp)
 	elem_name=temp.elem_name;
 }
 
+nasal_function::nasal_function()
+{
+	root.clear();
+}
+nasal_function::nasal_function(const nasal_function& temp)
+{
+	root=temp.root;
+}
 #endif
