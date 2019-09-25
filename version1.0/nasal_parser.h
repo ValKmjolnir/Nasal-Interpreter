@@ -356,8 +356,8 @@ void nasal_parser::definition_expr()
 	else if(this_token.type==__semi)
 	{
 		parse.push(this_token);// for semi check
-		++warning;
-		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
+//		++warning;
+//		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
 		return;
 	}
 	get_token();
@@ -799,6 +799,8 @@ void nasal_parser::call_function_expr()
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
+			case __left_bracket:list_generate_expr();break;
+			case __left_brace:hash_generate_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";

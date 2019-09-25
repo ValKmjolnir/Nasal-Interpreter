@@ -10,8 +10,11 @@
 
 #include "nasal_token_type.h"
 #include "abstract_syntax_tree.h"
+#include "nasal_var.h"
 
 #include "nasal_lexer.h"
 #include "nasal_parser.h"
+
+#include "nasal_var.cpp"
 
 #endif

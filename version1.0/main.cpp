@@ -60,7 +60,7 @@ int main()
 			lex.lexer_process(prog.use_file());
 			lex.token_list_type_detail_edit();
 			pas.parse_process(lex.return_list());
-//			pas.gen_main_prog();
+			pas.parse_main_work();
 			pas.print_ast();
 		}
 		else if(command=="run")
@@ -68,7 +68,7 @@ int main()
 			lex.lexer_process(prog.use_file());
 			lex.token_list_type_detail_edit();
 			pas.parse_process(lex.return_list());
-//			pas.gen_main_prog();
+			pas.parse_main_work();
 			pas.run();
 		}
 		else
