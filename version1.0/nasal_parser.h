@@ -105,7 +105,7 @@ class nasal_parser
 			if(!error)
 				root.run();
 			else
-				std::cout<<">>[Parse] "<<error<<"error(s) occurred,stop."<<std::endl;
+				std::cout<<">>[Parse] "<<error<<" error(s) occurred,stop."<<std::endl;
 			return;
 		}
 		void parse_main_work();
@@ -120,6 +120,7 @@ class nasal_parser
 		void definition_expr();
 		void assignment_expr();
 		void loop_expr();
+		bool else_if_check();
 		void if_else_expr();
 		void add_sub_operator_expr();
 		void mul_div_operator_expr();
@@ -396,6 +397,24 @@ void nasal_parser::assignment_expr()
 	}
 	return;
 }
+bool nasal_parser::else_if_check()
+{
+	token temp=this_token;
+	if(this_token.type!=__else)
+		return false;
+	else
+	{
+		get_token();
+		if(this_token.type!=__if)
+		{
+			parse.push(this_token);
+			this_token=temp;// to avoid when recognizing 'else' without 'if' 
+			
+			return false;
+		}
+	}
+	return true;
+}
 void nasal_parser::if_else_expr()
 {
 	get_token();
@@ -433,7 +452,7 @@ void nasal_parser::if_else_expr()
 	}
 	statements_block();
 	get_token();
-	while(this_token.type==__elsif)
+	while(this_token.type==__elsif || else_if_check())
 	{
 		get_token();
 		if(this_token.type!=__left_curve)

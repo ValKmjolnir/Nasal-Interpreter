@@ -18,7 +18,7 @@ int main()
 			std::cout<<">> 2. [cls   ] |clear the screen."<<std::endl;
 			std::cout<<">> 3. [exit  ] |shut down the interpreter."<<std::endl;
 			std::cout<<">> 4. [lexer ] |run and show the lexer. (-lexer)"<<std::endl;
-			std::cout<<">> 5. [parser] |run parser. (-parser)"<<std::endl;
+			std::cout<<">> 5. [parser] |run parser and see parse stack & parse result(s). (-parser)"<<std::endl;
 			std::cout<<">> 6. [ast   ] |print the abstract syntax tree."<<std::endl;
 			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
