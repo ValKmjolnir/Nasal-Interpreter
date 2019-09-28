@@ -8,6 +8,10 @@ elsif(this_token.type==__elsif)
     parse.push(this_token);
     return;
 }
+else if(this_token.type!=__else)
+{
+    exit(0);
+}
 elsif(this_token.type==__elsif)
 {
     parse.push(this_token);

@@ -7,3 +7,4 @@ var f=func(n,m,dynamic...)
     return dynamic;
 };
 print(f(1,1,0,0,0,0,0)[3]);
+function([0,1,2,3],{str:"str"});
