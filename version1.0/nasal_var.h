@@ -26,6 +26,7 @@ class var
 		var();
 		var(const var&);
 		~var();
+		var& operator=(const var& temp);
 };
 
 class nasal_list

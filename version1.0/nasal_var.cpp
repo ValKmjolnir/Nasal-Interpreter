@@ -15,6 +15,7 @@ var::var(const var& temp)
 		case var_string:ptr=new std::string;*((std::string*)ptr)=*((std::string*)temp.ptr);break;
 		case var_list:ptr=new nasal_list;*((nasal_list*)ptr)=*((nasal_list*)temp.ptr);break;
 		case var_hash:ptr=new nasal_hash;*((nasal_hash*)ptr)=*((nasal_hash*)temp.ptr);break;
+		case var_function:ptr=new nasal_function;*((nasal_function*)ptr)=*((nasal_function*)temp.ptr);break;
 	}
 	type=temp.type;
 }
@@ -27,7 +28,34 @@ var::~var()
 		case var_string:delete (std::string*)ptr;break;
 		case var_list:delete (nasal_list*)ptr;break;
 		case var_hash:delete (nasal_hash*)ptr;break;
+		case var_function:delete (nasal_function*)ptr;break;
 	}
+}
+var& var::operator=(const var& temp)
+{
+	if(ptr)
+	{
+		switch(type)
+		{
+			case var_null:break;
+			case var_number:delete (double*)ptr;break;
+			case var_string:delete (std::string*)ptr;break;
+			case var_list:delete (nasal_list*)ptr;break;
+			case var_hash:delete (nasal_hash*)ptr;break;
+			case var_function:delete (nasal_function*)ptr;break;
+		}
+	}
+	switch(temp.type)
+	{
+		case var_null:ptr=NULL;break;
+		case var_number:ptr=new double;*((double*)ptr)=*((double*)temp.ptr);break;
+		case var_string:ptr=new std::string;*((std::string*)ptr)=*((std::string*)temp.ptr);break;
+		case var_list:ptr=new nasal_list;*((nasal_list*)ptr)=*((nasal_list*)temp.ptr);break;
+		case var_hash:ptr=new nasal_hash;*((nasal_hash*)ptr)=*((nasal_hash*)temp.ptr);break;
+		case var_function:ptr=new nasal_function;*((nasal_function*)ptr)=*((nasal_function*)temp.ptr);break;
+	}
+	type=temp.type;
+	return *this;
 }
 
 nasal_list::nasal_list()
