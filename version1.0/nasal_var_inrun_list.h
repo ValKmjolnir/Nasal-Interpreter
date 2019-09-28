@@ -1,5 +1,5 @@
-#ifndef __NASAL_VAR_INRUN_STACK_H__
-#define __NASAL_VAR_INRUN_STACK_H__
+#ifndef __NASAL_VAR_INRUN_LIST_H__
+#define __NASAL_VAR_INRUN_LIST_H__
 
 struct var_list_unit
 {
