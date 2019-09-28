@@ -46,30 +46,63 @@ class nasal_var_map
 		}
 };
 
-struct in_run_list_unit
+struct block_list_unit
 {
 	var variable;
 	int num_place;
-	bool global;
 };
 
-class in_run_list
+class block_list
 {
 	private:
-		std::list<in_run_list_unit> var_list;
+		std::list<block_list_unit> var_list;
+		bool global;
 	public:
-		void in_run_add_var(var& varia,int number,bool is_global)
+		block_list(const bool is_global)
 		{
-			in_run_list_unit t;
+			var_list.clear();
+			global=is_global;
+		}
+		block_list(const block_list& temp)
+		{
+			var_list=temp.var_list;
+			global=temp.global;
+		}
+		~block_list()
+		{
+			var_list.clear();
+		}
+		void block_add_var(var& varia,int number)
+		{
+			block_list_unit t;
 			t.variable=varia;
 			t.num_place=number;
-			t.global=is_global;
 			var_list.push_back(t);
 			return;
 		}
-		void delete_last_var()
+};
+
+class general_in_run_list
+{
+	private:
+		std::list<block_list> var_block_list;
+	public:
+		general_in_run_list()
 		{
-			var_list.pop_back();
+			var_block_list.clear();
+		}
+		~general_in_run_list()
+		{
+			var_block_list.clear();
+		}
+		void add_block(block_list temp)
+		{
+			var_block_list.push_back(temp);
+			return;
+		}
+		void delete_last_block()
+		{
+			var_block_list.pop_back();
 			return;
 		}
 };
