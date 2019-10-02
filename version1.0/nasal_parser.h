@@ -265,6 +265,7 @@ void nasal_parser::list_generate_expr()
 			case __id:identifier_begin_expr();break;
 			case __left_bracket:list_generate_expr();break;
 			case __left_brace:hash_generate_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
@@ -319,6 +320,7 @@ void nasal_parser::hash_generate_expr()
 			case __func:function_generate_expr();break;
 			case __left_bracket:list_generate_expr();break;
 			case __left_brace:hash_generate_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
@@ -440,6 +442,7 @@ void nasal_parser::if_else_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a correct data."<<std::endl;
@@ -732,6 +735,24 @@ void nasal_parser::in_curve_calc_expr()
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' at this line."<<std::endl;
 	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __add_operator:
+		case __sub_operator:add_sub_operator_expr();break;
+		case __mul_operator:
+		case __div_operator:mul_div_operator_expr();break;
+		case __link_operator:link_operator_expr();break;
+		case __and_operator:
+		case __or_operator:
+		case __cmp_equal:
+		case __cmp_not_equal:
+		case __cmp_less:
+		case __cmp_more:
+		case __cmp_less_or_equal:
+		case __cmp_more_or_equal:compare_operator_expr();break;
+		default:parse.push(this_token);break;
+	}
 	return;
 }
 void nasal_parser::number_begin_expr()
@@ -752,7 +773,6 @@ void nasal_parser::number_begin_expr()
 		case __cmp_more:
 		case __cmp_less_or_equal:
 		case __cmp_more_or_equal:compare_operator_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
 		default:parse.push(this_token);break;
 	}
 	return;
@@ -775,7 +795,6 @@ void nasal_parser::string_begin_expr()
 		case __cmp_more:
 		case __cmp_less_or_equal:
 		case __cmp_more_or_equal:compare_operator_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
 		default:parse.push(this_token);break;
 	}
 	return;
