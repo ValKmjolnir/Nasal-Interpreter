@@ -20,7 +20,11 @@ for(var i=0;i<1024;i+=1)
 {
     print(i);
 }
-foreach(var i;[1,2,3,4])
+for(var i=0;(2*512)>=i;i+=1)
+{
+    print(i);
+}
+foreach(var i;[1+(1+1),2,3,4])
 {
     print(i);
 }

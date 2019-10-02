@@ -22,6 +22,10 @@ elsif(this_token.type==__elsif)
     parse.push(this_token);
     return;
 }
+else if(this==(1+2+3*1))
+{
+    return nil;
+}
 else
 {
     parse.push(this_token);
