@@ -45,16 +45,16 @@ class nasal_parser
 					{
 						line=temp.top().line;
 						if(line==1)
-							std::cout<<"line "<<line<<"    ";
+							std::cout<<"line "<<line<<"   ";
 						else
-							std::cout<<std::endl<<"line "<<line<<"    ";
+							std::cout<<std::endl<<"line "<<line<<"   ";
 					}
 					else
 					{
 						while(line!=temp.top().line)
 						{
 							++line;
-							std::cout<<std::endl<<"line "<<line<<"    ";
+							std::cout<<std::endl<<"line "<<line<<"   ";
 						}
 					}
 				}
@@ -109,6 +109,7 @@ class nasal_parser
 			return;
 		}
 		void parse_main_work();
+		void in_curve_calc_expr();
 		void number_begin_expr();
 		void string_begin_expr();
 		void identifier_begin_expr();
@@ -370,6 +371,7 @@ void nasal_parser::definition_expr()
 		case __func:function_generate_expr();break;
 		case __left_bracket:list_generate_expr();break;
 		case __left_brace:hash_generate_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
@@ -389,6 +391,7 @@ void nasal_parser::assignment_expr()
 		case __func:function_generate_expr();break;
 		case __left_bracket:list_generate_expr();break;
 		case __left_brace:hash_generate_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorretc data type when doing assignment."<<std::endl;
@@ -507,6 +510,7 @@ void nasal_parser::loop_expr()
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": expect a condition."<<std::endl;
@@ -551,6 +555,7 @@ void nasal_parser::loop_expr()
 			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			case __semi:parse.push(this_token);break;
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
@@ -566,6 +571,7 @@ void nasal_parser::loop_expr()
 			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			case __right_curve:parse.push(this_token);break;
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
@@ -612,6 +618,7 @@ void nasal_parser::loop_expr()
 			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			case __left_bracket:list_generate_expr();break;
 			case __right_curve:parse.push(this_token);break;
 			default:
@@ -648,6 +655,7 @@ void nasal_parser::add_sub_operator_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
@@ -664,6 +672,7 @@ void nasal_parser::mul_div_operator_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
@@ -680,6 +689,7 @@ void nasal_parser::link_operator_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
@@ -696,11 +706,31 @@ void nasal_parser::compare_operator_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
 			return;
 			break;
+	}
+	return;
+}
+void nasal_parser::in_curve_calc_expr()
+{
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
+		default:parse.push(this_token);break;
+	}
+	get_token();
+	if(this_token.type!=__right_curve)
+	{
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' at this line."<<std::endl;
 	}
 	return;
 }
@@ -722,6 +752,7 @@ void nasal_parser::number_begin_expr()
 		case __cmp_more:
 		case __cmp_less_or_equal:
 		case __cmp_more_or_equal:compare_operator_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:parse.push(this_token);break;
 	}
 	return;
@@ -744,6 +775,7 @@ void nasal_parser::string_begin_expr()
 		case __cmp_more:
 		case __cmp_less_or_equal:
 		case __cmp_more_or_equal:compare_operator_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:parse.push(this_token);break;
 	}
 	return;
@@ -756,6 +788,7 @@ void nasal_parser::call_list_expr()
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect data type when calling a list."<<std::endl;
@@ -771,6 +804,7 @@ void nasal_parser::call_list_expr()
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
 			case __right_bracket:return;break;// this is [number:]
 		}
 		get_token();
@@ -820,6 +854,8 @@ void nasal_parser::call_function_expr()
 			case __id:identifier_begin_expr();break;
 			case __left_bracket:list_generate_expr();break;
 			case __left_brace:hash_generate_expr();break;
+			case __left_curve:in_curve_calc_expr();break;
+			case __func:function_generate_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
@@ -923,6 +959,7 @@ void nasal_parser::parse_main_work()
 			case __id:identifier_begin_expr();check_semi_at_end();break;
 			case __number:number_begin_expr();check_semi_at_end();break;
 			case __string:string_begin_expr();check_semi_at_end();break;
+			case __left_curve:in_curve_calc_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
 			case __while:
 			case __for:
