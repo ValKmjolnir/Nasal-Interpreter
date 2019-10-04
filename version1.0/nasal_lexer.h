@@ -190,6 +190,11 @@ class nasal_lexer
 						++ptr;
 						temp=source[ptr];
 					}
+					if((int)__token.length()==2)
+					{
+						std::cout<<">>[Lexer-warning] lexer: expect a hex-number string after '0x' ."<<std::endl;
+						__token+="0";
+					}
 				}
 				else if((source[ptr]=='0') && (source[ptr+1]=='o'))
 				{
@@ -202,6 +207,11 @@ class nasal_lexer
 						__token+=temp;
 						++ptr;
 						temp=source[ptr];
+					}
+					if((int)__token.length()==2)
+					{
+						std::cout<<">>[Lexer-warning] lexer: expect a oct-number string after '0o' ."<<std::endl;
+						__token+="0";
 					}
 				}
 				else
