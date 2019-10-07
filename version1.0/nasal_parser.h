@@ -127,6 +127,7 @@ class nasal_parser
 		void mul_div_operator_expr();
 		void link_operator_expr();
 		void compare_operator_expr();
+		void one_operator_expr();
 		void check_semi_at_end();
 		void statements_block();
 		void function_generate_expr();
@@ -181,6 +182,9 @@ void nasal_parser::statements_block()
 			case __number:number_begin_expr();check_semi_at_end();break;
 			case __string:string_begin_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
 			case __while:
 			case __for:
 			case __foreach:
@@ -371,6 +375,9 @@ void nasal_parser::definition_expr()
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
 		case __func:function_generate_expr();break;
+		case __add_operator:
+		case __sub_operator:
+		case __nor_operator:one_operator_expr();break;
 		case __left_bracket:list_generate_expr();break;
 		case __left_brace:hash_generate_expr();break;
 		case __left_curve:in_curve_calc_expr();break;
@@ -391,6 +398,9 @@ void nasal_parser::assignment_expr()
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
 		case __func:function_generate_expr();break;
+		case __add_operator:
+		case __sub_operator:
+		case __nor_operator:one_operator_expr();break;
 		case __left_bracket:list_generate_expr();break;
 		case __left_brace:hash_generate_expr();break;
 		case __left_curve:in_curve_calc_expr();break;
@@ -439,6 +449,9 @@ void nasal_parser::if_else_expr()
 	get_token();
 	switch(this_token.type)
 	{
+		case __add_operator:
+		case __sub_operator:
+		case __nor_operator:one_operator_expr();break;
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
@@ -457,6 +470,8 @@ void nasal_parser::if_else_expr()
 		return;
 	}
 	statements_block();
+	if(parse.empty())
+		return;
 	get_token();
 	while(this_token.type==__elsif || else_if_check())
 	{
@@ -470,6 +485,9 @@ void nasal_parser::if_else_expr()
 		get_token();
 		switch(this_token.type)
 		{
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
@@ -487,6 +505,8 @@ void nasal_parser::if_else_expr()
 			return;
 		}
 		statements_block();
+		if(parse.empty())
+			return;
 		get_token();
 	}
 	if(this_token.type==__else)
@@ -510,6 +530,9 @@ void nasal_parser::loop_expr()
 		get_token();
 		switch(this_token.type)
 		{
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
@@ -555,6 +578,9 @@ void nasal_parser::loop_expr()
 		get_token();
 		switch(this_token.type)
 		{
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
 			case __id:identifier_begin_expr();break;
 			case __number:number_begin_expr();break;
 			case __string:string_begin_expr();break;
@@ -718,11 +744,31 @@ void nasal_parser::compare_operator_expr()
 	}
 	return;
 }
+void nasal_parser::one_operator_expr()
+{
+	get_token();
+	switch(this_token.type)
+	{
+		case __number:number_begin_expr();break;
+		case __string:string_begin_expr();break;
+		case __id:identifier_begin_expr();break;
+		case __left_curve:in_curve_calc_expr();break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+			return;
+			break;
+	}
+	return;
+}
 void nasal_parser::in_curve_calc_expr()
 {
 	get_token();
 	switch(this_token.type)
 	{
+		case __add_operator:
+		case __sub_operator:
+		case __nor_operator:one_operator_expr();break;
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
@@ -980,6 +1026,9 @@ void nasal_parser::parse_main_work()
 			case __string:string_begin_expr();check_semi_at_end();break;
 			case __left_curve:in_curve_calc_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
 			case __while:
 			case __for:
 			case __foreach:

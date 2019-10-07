@@ -137,7 +137,7 @@ class operator_expr:public ast_tree_node
 	public:
 		operator_expr():ast_tree_node()
 		{
-			type=__operator;
+			type=__add_operator;
 		}
 		void set_operator_type(int oprt_type)
 		{
