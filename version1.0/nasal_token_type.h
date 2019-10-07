@@ -29,7 +29,8 @@ enum token_type
 	__number,__string,__id,__dynamic_id,
 	//basic elements
 	
-	__root,__operator,
+	__root,
+	__block,
 	__definition,__assignment,
 	__function,__loop,__ifelse
 };
@@ -73,16 +74,16 @@ void print_token(int type)
 		case __unknown_operator:  context="unknown_operator";break;
 		case __var:               context="var"; break;
 		case __func:              context="func";break;
-		case __continue:          context="ctn"; break;
-		case __break:             context="brk"; break;
+		case __continue:          context="continye"; break;
+		case __break:             context="break"; break;
 		case __for:               context="for"; break;
-		case __forindex:          context="foridx";break;
-		case __foreach:           context="foreh";break;
+		case __forindex:          context="forindex";break;
+		case __foreach:           context="foreach";break;
 		case __while:             context="while";break;
 		case __if:                context="if";break;
 		case __elsif:             context="elsif";break;
 		case __else:              context="else";break;
-		case __return:            context="rtrn";break;
+		case __return:            context="return";break;
 		
 		case __id:                context="id";break;
 		case __dynamic_id:        context="id...";break;
@@ -90,7 +91,7 @@ void print_token(int type)
 		case __string:            context="str";break;
 		
 		case __root:              context="root";break;
-		case __operator:          context="operator";break;
+		case __block:             context="block";break;
 		case __definition:        context="definition";break;
 		case __assignment:        context="assignment";break;
 		case __function:          context="function";break;
