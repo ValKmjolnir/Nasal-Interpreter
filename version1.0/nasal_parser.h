@@ -175,6 +175,7 @@ void nasal_parser::statements_block()
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
+		token t;
 		switch(this_token.type)
 		{
 			case __var:definition_expr();check_semi_at_end();break;
@@ -182,6 +183,20 @@ void nasal_parser::statements_block()
 			case __number:number_begin_expr();check_semi_at_end();break;
 			case __string:string_begin_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
+			case __left_curve:
+				t=this_token;
+				get_token();
+				if(this_token.type==__var)
+				{
+					parse.push(t);
+					definition_expr();
+				}
+				else
+				{
+					in_curve_calc_expr();
+				}
+				check_semi_at_end();
+				break;
 			case __add_operator:
 			case __sub_operator:
 			case __nor_operator:one_operator_expr();break;
@@ -348,11 +363,33 @@ void nasal_parser::hash_generate_expr()
 void nasal_parser::definition_expr()
 {
 	get_token();
-	if(this_token.type!=__id)
+	if(this_token.type!=__id && this_token.type!=__left_curve)
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect an identifier."<<std::endl;
 		return;
+	}
+	if(this_token.type==__left_curve)
+	{
+		while(this_token.type!=__right_curve)
+		{
+			get_token();
+			if(this_token.type!=__id)
+			{
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": the expect type is identifier."<<std::endl;
+				return;
+			}
+			get_token();
+			if(this_token.type!=__comma && this_token.type!=__right_curve)
+			{
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')'."<<std::endl;
+				return;
+			}
+			if(this_token.type==__right_curve)
+				break;
+		}
 	}
 	get_token();
 	if(this_token.type!=__equal && this_token.type!=__semi)
@@ -1018,13 +1055,27 @@ void nasal_parser::parse_main_work()
 	while(!parse.empty())
 	{
 		get_token();
+		token t;
 		switch(this_token.type)
 		{
 			case __var:definition_expr();check_semi_at_end();break;
 			case __id:identifier_begin_expr();check_semi_at_end();break;
 			case __number:number_begin_expr();check_semi_at_end();break;
 			case __string:string_begin_expr();check_semi_at_end();break;
-			case __left_curve:in_curve_calc_expr();check_semi_at_end();break;
+			case __left_curve:
+				t=this_token;
+				get_token();
+				if(this_token.type==__var)
+				{
+					parse.push(t);
+					definition_expr();
+				}
+				else
+				{
+					in_curve_calc_expr();
+				}
+				check_semi_at_end();
+				break;
 			case __if:parse.push(this_token);if_else_expr();break;
 			case __add_operator:
 			case __sub_operator:
