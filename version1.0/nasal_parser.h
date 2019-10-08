@@ -406,12 +406,15 @@ void nasal_parser::definition_expr()
 		return;
 	}
 	get_token();
+	token t;
+	t.line=this_token.line;
+	t.type=__semi;
 	switch(this_token.type)
 	{
 		case __number:number_begin_expr();break;
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
-		case __func:function_generate_expr();break;
+		case __func:function_generate_expr();parse.push(t);break;
 		case __add_operator:
 		case __sub_operator:
 		case __nor_operator:one_operator_expr();break;
@@ -506,7 +509,56 @@ void nasal_parser::if_else_expr()
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when making a condition."<<std::endl;
 		return;
 	}
-	statements_block();
+	get_token();
+	if(this_token.type==__left_brace)
+	{
+		// if without { then only one statement is behind it
+		parse.push(this_token);
+		statements_block();
+	}
+	else
+	{
+		token t;
+		switch(this_token.type)
+		{
+			case __var:definition_expr();check_semi_at_end();break;
+			case __id:identifier_begin_expr();check_semi_at_end();break;
+			case __number:number_begin_expr();check_semi_at_end();break;
+			case __string:string_begin_expr();check_semi_at_end();break;
+			case __if:parse.push(this_token);if_else_expr();break;
+			case __left_curve:
+				t=this_token;
+				get_token();
+				if(this_token.type==__var)
+				{
+					parse.push(t);
+					definition_expr();
+				}
+				else
+				{
+					in_curve_calc_expr();
+				}
+				check_semi_at_end();
+				break;
+			case __add_operator:
+			case __sub_operator:
+			case __nor_operator:one_operator_expr();break;
+			case __while:
+			case __for:
+			case __foreach:
+			case __forindex:parse.push(this_token);loop_expr();break;
+			case __continue:
+			case __break:check_semi_at_end();break;
+			case __semi:break;
+			case __return:return_expr();check_semi_at_end();break;
+			default:
+				std::cout<<">>[Error] line "<<this_token.line<<": \'";
+				print_token(this_token.type);
+				std::cout<<"\' in an incorrect place."<<std::endl;
+				++error;
+				break;
+		}
+	}
 	if(parse.empty())
 		return;
 	get_token();
@@ -541,13 +593,113 @@ void nasal_parser::if_else_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when making a condition."<<std::endl;
 			return;
 		}
-		statements_block();
+		get_token();
+		if(this_token.type==__left_brace)
+		{
+			// if without { then only one statement is behind it
+			parse.push(this_token);
+			statements_block();
+		}
+		else
+		{
+			token t;
+			switch(this_token.type)
+			{
+				case __var:definition_expr();check_semi_at_end();break;
+				case __id:identifier_begin_expr();check_semi_at_end();break;
+				case __number:number_begin_expr();check_semi_at_end();break;
+				case __string:string_begin_expr();check_semi_at_end();break;
+				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					t=this_token;
+					get_token();
+					if(this_token.type==__var)
+					{
+						parse.push(t);
+						definition_expr();
+					}
+					else
+					{
+						in_curve_calc_expr();
+					}
+					check_semi_at_end();
+					break;
+				case __add_operator:
+				case __sub_operator:
+				case __nor_operator:one_operator_expr();break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:parse.push(this_token);loop_expr();break;
+				case __continue:
+				case __break:check_semi_at_end();break;
+				case __semi:break;
+				case __return:return_expr();check_semi_at_end();break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": \'";
+					print_token(this_token.type);
+					std::cout<<"\' in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
 		if(parse.empty())
 			return;
 		get_token();
 	}
 	if(this_token.type==__else)
-		statements_block();
+	{
+		get_token();
+		if(this_token.type==__left_brace)
+		{
+			// if without { then only one statement is behind it
+			parse.push(this_token);
+			statements_block();
+		}
+		else
+		{
+			token t;
+			switch(this_token.type)
+			{
+				case __var:definition_expr();check_semi_at_end();break;
+				case __id:identifier_begin_expr();check_semi_at_end();break;
+				case __number:number_begin_expr();check_semi_at_end();break;
+				case __string:string_begin_expr();check_semi_at_end();break;
+				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					t=this_token;
+					get_token();
+					if(this_token.type==__var)
+					{
+						parse.push(t);
+						definition_expr();
+					}
+					else
+					{
+						in_curve_calc_expr();
+					}
+					check_semi_at_end();
+					break;
+				case __add_operator:
+				case __sub_operator:
+				case __nor_operator:one_operator_expr();break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:parse.push(this_token);loop_expr();break;
+				case __continue:
+				case __break:check_semi_at_end();break;
+				case __semi:break;
+				case __return:return_expr();check_semi_at_end();break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": \'";
+					print_token(this_token.type);
+					std::cout<<"\' in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
+	}
 	else
 		parse.push(this_token);
 	return;
@@ -587,7 +739,56 @@ void nasal_parser::loop_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'while'."<<std::endl;
 			return;
 		}
-		statements_block();
+		get_token();
+		if(this_token.type==__left_brace)
+		{
+			// if without { then only one statement is behind it
+			parse.push(this_token);
+			statements_block();
+		}
+		else
+		{
+			token t;
+			switch(this_token.type)
+			{
+				case __var:definition_expr();check_semi_at_end();break;
+				case __id:identifier_begin_expr();check_semi_at_end();break;
+				case __number:number_begin_expr();check_semi_at_end();break;
+				case __string:string_begin_expr();check_semi_at_end();break;
+				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					t=this_token;
+					get_token();
+					if(this_token.type==__var)
+					{
+						parse.push(t);
+						definition_expr();
+					}
+					else
+					{
+						in_curve_calc_expr();
+					}
+					check_semi_at_end();
+					break;
+				case __add_operator:
+				case __sub_operator:
+				case __nor_operator:one_operator_expr();break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:parse.push(this_token);loop_expr();break;
+				case __continue:
+				case __break:check_semi_at_end();break;
+				case __semi:break;
+				case __return:return_expr();check_semi_at_end();break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": \'";
+					print_token(this_token.type);
+					std::cout<<"\' in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
 	}
 	else if(this_token.type==__for)
 	{
@@ -653,7 +854,56 @@ void nasal_parser::loop_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'for('."<<std::endl;
 			return;
 		}
-		statements_block();
+		get_token();
+		if(this_token.type==__left_brace)
+		{
+			// if without { then only one statement is behind it
+			parse.push(this_token);
+			statements_block();
+		}
+		else
+		{
+			token t;
+			switch(this_token.type)
+			{
+				case __var:definition_expr();check_semi_at_end();break;
+				case __id:identifier_begin_expr();check_semi_at_end();break;
+				case __number:number_begin_expr();check_semi_at_end();break;
+				case __string:string_begin_expr();check_semi_at_end();break;
+				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					t=this_token;
+					get_token();
+					if(this_token.type==__var)
+					{
+						parse.push(t);
+						definition_expr();
+					}
+					else
+					{
+						in_curve_calc_expr();
+					}
+					check_semi_at_end();
+					break;
+				case __add_operator:
+				case __sub_operator:
+				case __nor_operator:one_operator_expr();break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:parse.push(this_token);loop_expr();break;
+				case __continue:
+				case __break:check_semi_at_end();break;
+				case __semi:break;
+				case __return:return_expr();check_semi_at_end();break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": \'";
+					print_token(this_token.type);
+					std::cout<<"\' in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
 	}
 	else if(this_token.type==__forindex || this_token.type==__foreach)
 	{
@@ -701,7 +951,56 @@ void nasal_parser::loop_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'for('."<<std::endl;
 			return;
 		}
-		statements_block();
+		get_token();
+		if(this_token.type==__left_brace)
+		{
+			// if without { then only one statement is behind it
+			parse.push(this_token);
+			statements_block();
+		}
+		else
+		{
+			token t;
+			switch(this_token.type)
+			{
+				case __var:definition_expr();check_semi_at_end();break;
+				case __id:identifier_begin_expr();check_semi_at_end();break;
+				case __number:number_begin_expr();check_semi_at_end();break;
+				case __string:string_begin_expr();check_semi_at_end();break;
+				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					t=this_token;
+					get_token();
+					if(this_token.type==__var)
+					{
+						parse.push(t);
+						definition_expr();
+					}
+					else
+					{
+						in_curve_calc_expr();
+					}
+					check_semi_at_end();
+					break;
+				case __add_operator:
+				case __sub_operator:
+				case __nor_operator:one_operator_expr();break;
+				case __while:
+				case __for:
+				case __foreach:
+				case __forindex:parse.push(this_token);loop_expr();break;
+				case __continue:
+				case __break:check_semi_at_end();break;
+				case __semi:break;
+				case __return:return_expr();check_semi_at_end();break;
+				default:
+					std::cout<<">>[Error] line "<<this_token.line<<": \'";
+					print_token(this_token.type);
+					std::cout<<"\' in an incorrect place."<<std::endl;
+					++error;
+					break;
+			}
+		}
 	}
 	else
 	{
@@ -773,6 +1072,9 @@ void nasal_parser::compare_operator_expr()
 		case __string:string_begin_expr();break;
 		case __id:identifier_begin_expr();break;
 		case __left_curve:in_curve_calc_expr();break;
+		case __add_operator:
+		case __sub_operator:
+		case __nor_operator:one_operator_expr();break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
