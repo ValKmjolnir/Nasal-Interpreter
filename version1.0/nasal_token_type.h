@@ -30,6 +30,8 @@ enum token_type
 	//basic elements
 	
 	__root,
+	__list,__hash,
+	__call_function,__list_search,__hash_search,
 	__block,
 	__definition,__assignment,
 	__function,__loop,__ifelse
@@ -91,6 +93,11 @@ void print_token(int type)
 		case __string:            context="str";break;
 		
 		case __root:              context="root";break;
+		case __list:              context="list";break;
+		case __hash:              context="hash";break;
+		case __call_function:     context="call_func";break;
+		case __list_search:       context="call_list";break;
+		case __hash_search:       context="call_hash";break;
 		case __block:             context="block";break;
 		case __definition:        context="definition";break;
 		case __assignment:        context="assignment";break;

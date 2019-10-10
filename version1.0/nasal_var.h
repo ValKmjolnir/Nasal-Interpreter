@@ -51,7 +51,7 @@ class nasal_hash
 class nasal_function
 {
 	private:
-		std::list<ast_tree_node> root;
+		std::list<abstract_syntax_tree> root;
 	public:
 		nasal_function();
 		nasal_function(const nasal_function&);

@@ -1,14 +1,10 @@
 #ifndef __NASAL_PARSER_H__
 #define __NASAL_PARSER_H__
 
-#include "nasal_token_type.h"
-
 class nasal_parser
 {
 	private:
-		ast_tree_node root;
 		std::stack<token> parse;
-		std::stack<ast_tree_node> node_cache;
 		token this_token;
 		int error;
 		int warning;
@@ -29,6 +25,10 @@ class nasal_parser
 			this_token=parse.top();
 			parse.pop();
 			return;
+		}
+		int get_error_num()
+		{
+			return error;
 		}
 		void print_parser_stack()
 		{
@@ -84,7 +84,7 @@ class nasal_parser
 			}
 			if(temp.empty())
 			{
-				std::cout<<">>[Parse] [-Warning] Empty lexer list."<<std::endl;
+				std::cout<<">>[Parse] warning: empty lexer list."<<std::endl;
 				return;
 			}
 			while(!temp.empty())
@@ -92,20 +92,6 @@ class nasal_parser
 				parse.push(temp.top());
 				temp.pop();
 			}
-			return;
-		}
-		void print_ast()
-		{
-			std::cout<<">>[Abstract-syntax-tree]"<<std::endl;
-			root.print(0);
-			return;
-		}
-		void run()
-		{
-			if(!error)
-				root.run();
-			else
-				std::cout<<">>[Parse] "<<error<<" error(s) occurred,stop."<<std::endl;
 			return;
 		}
 		void parse_main_work();
