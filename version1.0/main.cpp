@@ -4,6 +4,7 @@ int main()
 	resource_programme_process prog;
 	nasal_lexer lex;
 	nasal_parser pas;
+	generator gen;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> Input [help] to find help."<<std::endl;
@@ -61,7 +62,12 @@ int main()
 			lex.token_list_type_detail_edit();
 			pas.parse_process(lex.return_list());
 			pas.parse_main_work();
-			pas.print_ast();
+			if(!pas.get_error_num())
+			{
+				gen.gen_process(lex.return_list());
+				gen.gen_main_work();
+				gen.print_ast();
+			}
 		}
 		else if(command=="run")
 		{
@@ -69,7 +75,10 @@ int main()
 			lex.token_list_type_detail_edit();
 			pas.parse_process(lex.return_list());
 			pas.parse_main_work();
-			pas.run();
+			if(!pas.get_error_num())
+			{
+				;
+			}
 		}
 		else
 			prog.input_file(command);
