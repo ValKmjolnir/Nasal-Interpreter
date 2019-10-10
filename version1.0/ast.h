@@ -9,6 +9,7 @@ class abstract_syntax_tree
 		std::list<abstract_syntax_tree> children;
 		double var_number;
 		std::string var_string;
+		std::string id_name;
 	public:
 		abstract_syntax_tree()
 		{
@@ -17,6 +18,7 @@ class abstract_syntax_tree
 			children.clear();
 			var_number=0;
 			var_string="";
+			id_name="ukn";
 		}
 		abstract_syntax_tree(const abstract_syntax_tree& temp)
 		{
@@ -31,6 +33,55 @@ class abstract_syntax_tree
 				children=temp.children;
 			var_number=temp.var_number;
 			var_string=temp.var_string;
+		}
+		void print_ast_node(int tab_num)
+		{
+			for(int i=0;i<tab_num;++i)
+				std::cout<<" ";
+			if(ast_node_type==__number)
+			{
+				std::cout<<"[ Number:";
+				std::cout<<var_number;
+				std::cout<<" ]"<<std::endl;
+				return;
+			}
+			else if(ast_node_type==__string)
+			{
+				std::cout<<"[ String:"<<var_string<<" ]"<<std::endl;
+				return;
+			}
+			std::cout<<"{ [ Type:";
+			print_token(ast_node_type);
+			std::cout<<" ]"<<std::endl;
+			for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+				i->print_ast_node(tab_num+1);
+			for(int i=0;i<tab_num;++i)
+				std::cout<<" ";
+			std::cout<<"}"<<std::endl;
+			return;
+		}
+		// for if
+		void set_if_expr(abstract_syntax_tree condition,abstract_syntax_tree statements)
+		{
+			ast_node_type=__if;
+			children.push_back(condition);
+			children.push_back(statements);
+			return;
+		}
+		// for elsif
+		void set_elsif_expr(abstract_syntax_tree condition,abstract_syntax_tree statements)
+		{
+			ast_node_type=__elsif;
+			children.push_back(condition);
+			children.push_back(statements);
+			return;
+		}
+		// for else
+		void set_else_expr(abstract_syntax_tree statements)
+		{
+			ast_node_type=__else;
+			children.push_back(statements);
+			return;
 		}
 		// for statement block
 		void set_block()
@@ -57,12 +108,51 @@ class abstract_syntax_tree
 			children.push_back(f_child);
 			return;
 		}
+		// for leaf node identifier
+		void set_node_to_identifier(std::string& str)
+		{
+			ast_node_type=__id;
+			id_name=str;
+			return;
+		}
+		// for leaf node call
+		void set_node_to_call_function()
+		{
+			ast_node_type=__call_function;
+			return;
+		}
+		void set_node_to_list_search()
+		{
+			ast_node_type=__list_search;
+			return;
+		}
+		void set_node_to_hash_search()
+		{
+			ast_node_type=__hash_search;
+			return;
+		}
+		// for leaf node list
+		void set_node_to_list()
+		{
+			ast_node_type=__list;
+			return;
+		}
+		// for leaf node hash
+		void set_node_to_hash()
+		{
+			ast_node_type=__hash;
+			return;
+		}
 		// for leaf node string
 		void set_node_to_string(std::string& str)
 		{
 			ast_node_type=__string;
 			var_string=str;
 			return;
+		}
+		std::string get_string()
+		{
+			return var_string;
 		}
 		// for leaf node number
 		void set_node_to_number(std::string& str)
@@ -138,6 +228,10 @@ class abstract_syntax_tree
 				}
 			}
 			return;
+		}
+		double get_number()
+		{
+			return var_number;
 		}
 };
 
