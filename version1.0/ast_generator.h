@@ -24,6 +24,11 @@ class generator
 			parse.pop();
 			return;
 		}
+		void set_ast_empty()
+		{
+			root.tree_set_clear();
+			return;
+		}
 		void gen_process(std::list<token>& lexer)
 		{
 			while(!parse.empty())
