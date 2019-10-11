@@ -71,6 +71,7 @@ class generator
 		abstract_syntax_tree definition_expr();
 		abstract_syntax_tree assignment_expr();
 		abstract_syntax_tree loop_expr();
+		abstract_syntax_tree continue_break_expr();
 		bool else_if_check();
 		abstract_syntax_tree if_else_expr();
 		abstract_syntax_tree add_sub_operator_expr();
@@ -90,22 +91,26 @@ void generator::check_semi_at_end()
 }
 abstract_syntax_tree generator::return_expr()
 {
+	abstract_syntax_tree node;
+	
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __func:function_generate_expr();break;
-		case __left_bracket:list_generate_expr();break;
-		case __left_brace:hash_generate_expr();break;
-		case __semi:parse.push(this_token);break;
+		case __number:node.set_node_to_ret(number_begin_expr());;break;
+		case __string:node.set_node_to_ret(string_begin_expr());;break;
+		case __id:node.set_node_to_ret(identifier_begin_expr());;break;
+		case __func:node.set_node_to_ret(function_generate_expr());;break;
+		case __left_bracket:node.set_node_to_ret(list_generate_expr());;break;
+		case __left_brace:node.set_node_to_ret(hash_generate_expr());;break;
+		case __semi:parse.push(this_token);node.set_node_to_ret(node);break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::statements_block()
 {
+	abstract_syntax_tree node;
+	node.set_block();
 	get_token();
 	get_token();
 	while(this_token.type!=__right_brace)
@@ -113,41 +118,41 @@ abstract_syntax_tree generator::statements_block()
 		token t;
 		switch(this_token.type)
 		{
-			case __var:definition_expr();check_semi_at_end();break;
-			case __id:identifier_begin_expr();check_semi_at_end();break;
-			case __number:number_begin_expr();check_semi_at_end();break;
-			case __string:string_begin_expr();check_semi_at_end();break;
-			case __if:parse.push(this_token);if_else_expr();break;
+			case __var:node.add_statement(definition_expr());check_semi_at_end();break;
+			case __id:node.add_statement(identifier_begin_expr());check_semi_at_end();break;
+			case __number:node.add_statement(number_begin_expr());check_semi_at_end();break;
+			case __string:node.add_statement(string_begin_expr());check_semi_at_end();break;
+			case __if:parse.push(this_token);node.add_statement(if_else_expr());break;
 			case __left_curve:
 				t=this_token;
 				get_token();
 				if(this_token.type==__var)
 				{
 					parse.push(t);
-					definition_expr();
+					node.add_statement(definition_expr());
 				}
 				else
 				{
-					in_curve_calc_expr();
+					node.add_statement(in_curve_calc_expr());
 				}
 				check_semi_at_end();
 				break;
 			case __add_operator:
 			case __sub_operator:
-			case __nor_operator:one_operator_expr();break;
+			case __nor_operator:node.add_statement(one_operator_expr());break;
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:parse.push(this_token);loop_expr();break;
+			case __forindex:parse.push(this_token);node.add_statement(loop_expr());break;
 			case __continue:
-			case __break:check_semi_at_end();break;
+			case __break:node.add_statement(continue_break_expr());check_semi_at_end();break;
 			case __semi:break;
-			case __return:return_expr();check_semi_at_end();break;
+			case __return:node.add_statement(return_expr());check_semi_at_end();break;
 			default:break;
 		}
 		get_token();
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::function_generate_expr()
 {
@@ -704,6 +709,12 @@ abstract_syntax_tree generator::loop_expr()
 		}
 	}
 	return;
+}
+abstract_syntax_tree generator::continue_break_expr()
+{
+	abstract_syntax_tree node;
+	node.set_node_to_continue_break(this_token.type);
+	return node;
 }
 abstract_syntax_tree generator::add_sub_operator_expr()
 {

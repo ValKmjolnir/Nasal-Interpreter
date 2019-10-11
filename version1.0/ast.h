@@ -121,6 +121,24 @@ class abstract_syntax_tree
 			statement_list.push_back(statement_head);
 			return;
 		}
+		// for return expr
+		void set_node_to_ret(abstract_syntax_tree child)
+		{
+			ast_node_type=__return;
+			children.push_back(child);
+			return;
+		}
+		// for loop
+		void set_node_to_loop()
+		{
+			ast_node_type=__loop;
+			return;
+		}
+		void set_node_to_continue_break(const int type)
+		{
+			ast_node_type=type;
+			return;
+		}
 		// for sub-tree node operator
 		void set_two_operator(const int operator_type,abstract_syntax_tree f_child,abstract_syntax_tree s_child)
 		{
