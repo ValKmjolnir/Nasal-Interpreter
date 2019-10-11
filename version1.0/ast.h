@@ -13,7 +13,7 @@ class abstract_syntax_tree
 	public:
 		abstract_syntax_tree()
 		{
-			ast_node_type=__root;
+			ast_node_type=0;
 			statement_list.clear();
 			children.clear();
 			var_number=0;
@@ -33,6 +33,12 @@ class abstract_syntax_tree
 				children=temp.children;
 			var_number=temp.var_number;
 			var_string=temp.var_string;
+		}
+		void tree_set_clear()
+		{
+			statement_list.clear();
+			children.clear();
+			return;
 		}
 		void print_ast_node(int tab_num)
 		{
@@ -58,6 +64,12 @@ class abstract_syntax_tree
 			for(int i=0;i<tab_num;++i)
 				std::cout<<" ";
 			std::cout<<"}"<<std::endl;
+			return;
+		}
+		// for root node
+		void set_root()
+		{
+			ast_node_type=__root;
 			return;
 		}
 		// for if
