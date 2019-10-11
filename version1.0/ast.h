@@ -34,6 +34,21 @@ class abstract_syntax_tree
 			var_number=temp.var_number;
 			var_string=temp.var_string;
 		}
+		abstract_syntax_tree& operator=(const abstract_syntax_tree temp)
+		{
+			ast_node_type=temp.ast_node_type;
+			if(temp.statement_list.empty())
+				statement_list.clear();
+			else
+				statement_list=temp.statement_list;
+			if(temp.children.empty())
+				children.clear();
+			else
+				children=temp.children;
+			var_number=temp.var_number;
+			var_string=temp.var_string;
+			return *this;
+		}
 		void tree_set_clear()
 		{
 			statement_list.clear();
@@ -153,6 +168,22 @@ class abstract_syntax_tree
 		void set_node_to_hash()
 		{
 			ast_node_type=__hash;
+			return;
+		}
+		// for identifier node
+		void set_node_to_id(std::string& name)
+		{
+			ast_node_type=__id;
+			id_name=name;
+			return;
+		}
+		// for dynamic identifier
+		void set_node_to_dynid(std::string& name)
+		{
+			ast_node_type=__dynamic_id;
+			id_name="";
+			for(int i=0;i<(int)name.length()-3;++i)
+				id_name+=name[i];
 			return;
 		}
 		// for leaf node string
