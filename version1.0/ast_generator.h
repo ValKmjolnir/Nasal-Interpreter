@@ -6,12 +6,12 @@ class generator
 	private:
 		abstract_syntax_tree root;
 		std::stack<token> parse;
-		std::stack<abstract_syntax_tree> node_cache;
 		token this_token;
 	public:
 		generator()
 		{
 			this_token.type=0;
+			root.set_root();
 		}
 		void get_token()
 		{
@@ -59,36 +59,36 @@ class generator
 			return;
 		}
 		void gen_main_work();
-		void in_curve_calc_expr();
-		void number_begin_expr();
-		void string_begin_expr();
-		void identifier_begin_expr();
-		void call_list_expr();
-		void call_function_expr();
-		void call_hash_expr();
-		void list_generate_expr();
-		void hash_generate_expr();
-		void definition_expr();
-		void assignment_expr();
-		void loop_expr();
+		abstract_syntax_tree in_curve_calc_expr();
+		abstract_syntax_tree number_begin_expr();
+		abstract_syntax_tree string_begin_expr();
+		abstract_syntax_tree identifier_begin_expr();
+		abstract_syntax_tree call_list_expr();
+		abstract_syntax_tree call_function_expr();
+		abstract_syntax_tree call_hash_expr();
+		abstract_syntax_tree list_generate_expr();
+		abstract_syntax_tree hash_generate_expr();
+		abstract_syntax_tree definition_expr();
+		abstract_syntax_tree assignment_expr();
+		abstract_syntax_tree loop_expr();
 		bool else_if_check();
-		void if_else_expr();
-		void add_sub_operator_expr();
-		void mul_div_operator_expr();
-		void link_operator_expr();
-		void compare_operator_expr();
-		void one_operator_expr();
+		abstract_syntax_tree if_else_expr();
+		abstract_syntax_tree add_sub_operator_expr();
+		abstract_syntax_tree mul_div_operator_expr();
+		abstract_syntax_tree link_operator_expr();
+		abstract_syntax_tree compare_operator_expr();
+		abstract_syntax_tree one_operator_expr();
 		void check_semi_at_end();
-		void statements_block();
-		void function_generate_expr();
-		void return_expr();
+		abstract_syntax_tree statements_block();
+		abstract_syntax_tree function_generate_expr();
+		abstract_syntax_tree return_expr();
 };
 void generator::check_semi_at_end()
 {
 	get_token();
 	return;
 }
-void generator::return_expr()
+abstract_syntax_tree generator::return_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -104,7 +104,7 @@ void generator::return_expr()
 	}
 	return;
 }
-void generator::statements_block()
+abstract_syntax_tree generator::statements_block()
 {
 	get_token();
 	get_token();
@@ -149,7 +149,7 @@ void generator::statements_block()
 	}
 	return;
 }
-void generator::function_generate_expr()
+abstract_syntax_tree generator::function_generate_expr()
 {
 	get_token();
 	if(this_token.type==__left_brace)
@@ -176,7 +176,7 @@ void generator::function_generate_expr()
 	statements_block();
 	return;
 }
-void generator::list_generate_expr()
+abstract_syntax_tree generator::list_generate_expr()
 {
 	get_token();
 	while(this_token.type!=__right_bracket)
@@ -197,7 +197,7 @@ void generator::list_generate_expr()
 	}
 	return;
 }
-void generator::hash_generate_expr()
+abstract_syntax_tree generator::hash_generate_expr()
 {
 	get_token();
 	while(this_token.type!=__right_brace)
@@ -228,7 +228,7 @@ void generator::hash_generate_expr()
 	}
 	return;
 }
-void generator::definition_expr()
+abstract_syntax_tree generator::definition_expr()
 {
 	get_token();
 	if(this_token.type==__left_curve)
@@ -267,7 +267,7 @@ void generator::definition_expr()
 	}
 	return;
 }
-void generator::assignment_expr()
+abstract_syntax_tree generator::assignment_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -304,7 +304,7 @@ bool generator::else_if_check()
 	}
 	return true;
 }
-void generator::if_else_expr()
+abstract_syntax_tree generator::if_else_expr()
 {
 	get_token();
 	get_token();
@@ -485,7 +485,7 @@ void generator::if_else_expr()
 		parse.push(this_token);
 	return;
 }
-void generator::loop_expr()
+abstract_syntax_tree generator::loop_expr()
 {
 	get_token();
 	if(this_token.type==__while)
@@ -705,7 +705,7 @@ void generator::loop_expr()
 	}
 	return;
 }
-void generator::add_sub_operator_expr()
+abstract_syntax_tree generator::add_sub_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -718,7 +718,7 @@ void generator::add_sub_operator_expr()
 	}
 	return;
 }
-void generator::mul_div_operator_expr()
+abstract_syntax_tree generator::mul_div_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -731,7 +731,7 @@ void generator::mul_div_operator_expr()
 	}
 	return;
 }
-void generator::link_operator_expr()
+abstract_syntax_tree generator::link_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -744,7 +744,7 @@ void generator::link_operator_expr()
 	}
 	return;
 }
-void generator::compare_operator_expr()
+abstract_syntax_tree generator::compare_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -760,7 +760,7 @@ void generator::compare_operator_expr()
 	}
 	return;
 }
-void generator::one_operator_expr()
+abstract_syntax_tree generator::one_operator_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -773,7 +773,7 @@ void generator::one_operator_expr()
 	}
 	return;
 }
-void generator::in_curve_calc_expr()
+abstract_syntax_tree generator::in_curve_calc_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -808,7 +808,7 @@ void generator::in_curve_calc_expr()
 	}
 	return;
 }
-void generator::number_begin_expr()
+abstract_syntax_tree generator::number_begin_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -830,7 +830,7 @@ void generator::number_begin_expr()
 	}
 	return;
 }
-void generator::string_begin_expr()
+abstract_syntax_tree generator::string_begin_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -852,7 +852,7 @@ void generator::string_begin_expr()
 	}
 	return;
 }
-void generator::call_list_expr()
+abstract_syntax_tree generator::call_list_expr()
 {
 	get_token();
 	switch(this_token.type)
@@ -898,7 +898,7 @@ void generator::call_list_expr()
 	}
 	return;
 }
-void generator::call_function_expr()
+abstract_syntax_tree generator::call_function_expr()
 {
 	get_token();
 	while(this_token.type!=__right_curve)
@@ -928,13 +928,13 @@ void generator::call_function_expr()
 	}
 	return;
 }
-void generator::call_hash_expr()
+abstract_syntax_tree generator::call_hash_expr()
 {
 	get_token();
 	identifier_begin_expr();
 	return;
 }
-void generator::identifier_begin_expr()
+abstract_syntax_tree generator::identifier_begin_expr()
 {
 	// __id has been checked
 	get_token();
@@ -986,38 +986,40 @@ void generator::identifier_begin_expr()
 }
 void generator::gen_main_work()
 {
+	root.tree_set_clear();
+	
 	while(!parse.empty())
 	{
 		get_token();
 		token t;
 		switch(this_token.type)
 		{
-			case __var:definition_expr();check_semi_at_end();break;
-			case __id:identifier_begin_expr();check_semi_at_end();break;
-			case __number:number_begin_expr();check_semi_at_end();break;
-			case __string:string_begin_expr();check_semi_at_end();break;
+			case __var:root.add_statement(definition_expr());check_semi_at_end();break;
+			case __id:root.add_statement(identifier_begin_expr());check_semi_at_end();break;
+			case __number:root.add_statement(number_begin_expr());check_semi_at_end();break;
+			case __string:root.add_statement(string_begin_expr());check_semi_at_end();break;
 			case __left_curve:
 				t=this_token;
 				get_token();
 				if(this_token.type==__var)
 				{
 					parse.push(t);
-					definition_expr();
+					root.add_statement(definition_expr());
 				}
 				else
 				{
-					in_curve_calc_expr();
+					root.add_statement(in_curve_calc_expr());
 				}
 				check_semi_at_end();
 				break;
-			case __if:parse.push(this_token);if_else_expr();break;
+			case __if:parse.push(this_token);root.add_statement(if_else_expr());break;
 			case __add_operator:
 			case __sub_operator:
-			case __nor_operator:one_operator_expr();break;
+			case __nor_operator:root.add_statement(one_operator_expr());break;
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:parse.push(this_token);loop_expr();break;
+			case __forindex:parse.push(this_token);root.add_statement(loop_expr());break;
 			case __semi:break;
 			default:break;
 		}
