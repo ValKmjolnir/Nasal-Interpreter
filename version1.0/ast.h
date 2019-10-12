@@ -58,42 +58,40 @@ class abstract_syntax_tree
 		void print_ast_node(int tab_num)
 		{
 			for(int i=0;i<tab_num;++i)
-				std::cout<<" ";
+				std::cout<<"   ";
 			if(ast_node_type==__number)
 			{
-				std::cout<<"[ Number:";
+				std::cout<<"[Number:";
 				std::cout<<var_number;
-				std::cout<<" ]"<<std::endl;
+				std::cout<<"]"<<std::endl;
 				return;
 			}
 			else if(ast_node_type==__string)
 			{
-				std::cout<<"[ String:"<<var_string<<" ]"<<std::endl;
+				std::cout<<"[String:"<<var_string<<"]"<<std::endl;
 				return;
 			}
-			std::cout<<"{ [ Type:";
+			std::cout<<"{  [Type:";
 			print_token(ast_node_type);
-			std::cout<<" ]"<<std::endl;
+			std::cout<<"]"<<std::endl;
 			if(!children.empty())
 			{
 				for(int i=0;i<tab_num;++i)
-					std::cout<<" ";
-				std::cout<<"[ Children ]"<<std::endl;
+					std::cout<<"   ";
+				std::cout<<"   [Children]"<<std::endl;
 				for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 					i->print_ast_node(tab_num+1);
-				std::cout<<std::endl;
 			}
 			if(!statement_list.empty())
 			{
 				for(int i=0;i<tab_num;++i)
-					std::cout<<" ";
-				std::cout<<"[ Statement(s) ]"<<std::endl;
+					std::cout<<"   ";
+				std::cout<<"   [Statement(s)]"<<std::endl;
 				for(std::list<abstract_syntax_tree>::iterator i=statement_list.begin();i!=statement_list.end();++i)
 					i->print_ast_node(tab_num+1);
-				std::cout<<std::endl;
 			}
 			for(int i=0;i<tab_num;++i)
-				std::cout<<" ";
+				std::cout<<"   ";
 			std::cout<<"}"<<std::endl;
 			return;
 		}
@@ -106,9 +104,15 @@ class abstract_syntax_tree
 		// for definition
 		void set_definition_expr(std::string& name,abstract_syntax_tree var_content)
 		{
-			ast_node_type=__var;
+			ast_node_type=__definition;
 			id_name=name;
 			children.push_back(var_content);
+			return;
+		}
+		// for assignment
+		void set_assignment_expr()
+		{
+			ast_node_type=__assignment;
 			return;
 		}
 		// for if
