@@ -161,6 +161,8 @@ abstract_syntax_tree generator::statements_block()
 }
 abstract_syntax_tree generator::function_generate_expr()
 {
+	abstract_syntax_tree node;
+	std::list<abstract_syntax_tree> parameters;
 	get_token();
 	if(this_token.type==__left_brace)
 		parse.push(this_token);
@@ -171,75 +173,92 @@ abstract_syntax_tree generator::function_generate_expr()
 		{
 			if(this_token.type==__id)
 			{
+				abstract_syntax_tree param;
+				param.set_node_to_id(this_token.content);
+				parameters.push_back(param);
 				get_token();
 				if(this_token.type==__right_curve)
 					parse.push(this_token);
 			}
 			else if(this_token.type==__dynamic_id)
 			{
+				abstract_syntax_tree param;
+				param.set_node_to_dynid(this_token.content);
+				parameters.push_back(param);
 				get_token();
 				parse.push(this_token);
 			}
 			get_token();
 		}
 	}
-	statements_block();
-	return;
+	node.set_node_to_function(parameters,statements_block());
+	return node;
 }
 abstract_syntax_tree generator::list_generate_expr()
 {
+	abstract_syntax_tree node;
+	std::list<abstract_syntax_tree> list_members;
 	get_token();
 	while(this_token.type!=__right_bracket)
 	{
 		switch(this_token.type)
 		{
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __id:identifier_begin_expr();break;
-			case __left_bracket:list_generate_expr();break;
-			case __left_brace:hash_generate_expr();break;
-			case __left_curve:in_curve_calc_expr();break;
+			case __number:list_members.push_back(number_begin_expr());break;
+			case __string:list_members.push_back(string_begin_expr());break;
+			case __id:list_members.push_back(identifier_begin_expr());break;
+			case __left_bracket:list_members.push_back(list_generate_expr());break;
+			case __left_brace:list_members.push_back(hash_generate_expr());break;
+			case __left_curve:list_members.push_back(in_curve_calc_expr());break;
 			default:break;
 		}
 		get_token();
 		if(this_token.type==__comma)
 			get_token();
 	}
-	return;
+	node.set_node_to_list(list_members);
+	return node;
 }
 abstract_syntax_tree generator::hash_generate_expr()
 {
+	abstract_syntax_tree node;
+	std::list<abstract_syntax_tree> hashmember;
+	abstract_syntax_tree elem;
+	std::string id_name;
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
 		switch(this_token.type)
 		{
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __id:identifier_begin_expr();break;
+			// case __number:number_begin_expr();break;
+			// case __string:string_begin_expr();break;
+			case __id:id_name=this_token.content;break;
 			default:break;
 		}
 		get_token();
 		get_token();
 		switch(this_token.type)
 		{
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
-			case __id:identifier_begin_expr();break;
-			case __func:function_generate_expr();break;
-			case __left_bracket:list_generate_expr();break;
-			case __left_brace:hash_generate_expr();break;
-			case __left_curve:in_curve_calc_expr();break;
+			case __number:elem.set_node_to_hashmember(id_name,number_begin_expr());break;
+			case __string:elem.set_node_to_hashmember(id_name,string_begin_expr());break;
+			case __id:elem.set_node_to_hashmember(id_name,identifier_begin_expr());break;
+			case __func:elem.set_node_to_hashmember(id_name,function_generate_expr());break;
+			case __left_bracket:elem.set_node_to_hashmember(id_name,list_generate_expr());break;
+			case __left_brace:elem.set_node_to_hashmember(id_name,hash_generate_expr());break;
+			case __left_curve:elem.set_node_to_hashmember(id_name,in_curve_calc_expr());break;
 			default:break;
 		}
+		hashmember.push_back(elem);
 		get_token();
 		if(this_token.type==__comma)
 			get_token();
 	}
-	return;
+	node.set_node_to_hash(hashmember);
+	return node;
 }
 abstract_syntax_tree generator::definition_expr()
 {
+	abstract_syntax_tree node;
+	std::string id_name;
 	get_token();
 	if(this_token.type==__left_curve)
 	{
@@ -251,11 +270,15 @@ abstract_syntax_tree generator::definition_expr()
 				break;
 		}
 	}
+	else if(this_token.type==__id)
+	{
+		;
+	}
 	get_token();
 	if(this_token.type==__semi)
 	{
 		parse.push(this_token);
-		return;
+		return node;
 	}
 	get_token();
 	token t;
@@ -275,10 +298,11 @@ abstract_syntax_tree generator::definition_expr()
 		case __left_curve:in_curve_calc_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::assignment_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
@@ -294,7 +318,7 @@ abstract_syntax_tree generator::assignment_expr()
 		case __left_curve:in_curve_calc_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 bool generator::else_if_check()
 {
@@ -316,6 +340,7 @@ bool generator::else_if_check()
 }
 abstract_syntax_tree generator::if_else_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	get_token();
 	get_token();
@@ -377,7 +402,7 @@ abstract_syntax_tree generator::if_else_expr()
 		}
 	}
 	if(parse.empty())
-		return;
+		return node;
 	get_token();
 	while(this_token.type==__elsif || else_if_check())
 	{
@@ -440,7 +465,7 @@ abstract_syntax_tree generator::if_else_expr()
 			}
 		}
 		if(parse.empty())
-			return;
+			return node;
 		get_token();
 	}
 	if(this_token.type==__else)
@@ -493,10 +518,11 @@ abstract_syntax_tree generator::if_else_expr()
 	}
 	else
 		parse.push(this_token);
-	return;
+	return node;
 }
 abstract_syntax_tree generator::loop_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	if(this_token.type==__while)
 	{
@@ -713,7 +739,7 @@ abstract_syntax_tree generator::loop_expr()
 			}
 		}
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::continue_break_expr()
 {
@@ -723,88 +749,100 @@ abstract_syntax_tree generator::continue_break_expr()
 }
 abstract_syntax_tree generator::add_sub_operator_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __number:node=number_begin_expr();break;
+		case __string:node=string_begin_expr();break;
+		case __id:node=identifier_begin_expr();break;
+		case __left_curve:node=in_curve_calc_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::mul_div_operator_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __number:node=number_begin_expr();break;
+		case __string:node=string_begin_expr();break;
+		case __id:node=identifier_begin_expr();break;
+		case __left_curve:node=in_curve_calc_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::link_operator_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __number:node=number_begin_expr();break;
+		case __string:node=string_begin_expr();break;
+		case __id:node=identifier_begin_expr();break;
+		case __left_curve:node=in_curve_calc_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::compare_operator_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __number:node=number_begin_expr();break;
+		case __string:node=string_begin_expr();break;
+		case __id:node=identifier_begin_expr();break;
+		case __left_curve:node=in_curve_calc_expr();break;
 		case __add_operator:
 		case __sub_operator:
-		case __nor_operator:one_operator_expr();break;
+		case __nor_operator:node=one_operator_expr();break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::one_operator_expr()
 {
+	abstract_syntax_tree node;
+	int type=this_token.type;
 	get_token();
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __number:node.set_one_operator(type,number_begin_expr());;break;
+		case __string:node.set_one_operator(type,string_begin_expr());break;
+		case __id:node.set_one_operator(type,identifier_begin_expr());break;
+		case __left_curve:node.set_one_operator(type,in_curve_calc_expr());break;
 		default:break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::in_curve_calc_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
 		case __add_operator:
 		case __sub_operator:
-		case __nor_operator:one_operator_expr();break;
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __nor_operator:node=one_operator_expr();break;
+		case __number:node=number_begin_expr();break;
+		case __string:node=string_begin_expr();break;
+		case __id:node=identifier_begin_expr();break;
+		case __left_curve:node=in_curve_calc_expr();break;
 		default:parse.push(this_token);break;
 	}
 	get_token();
 	get_token();
+	// unfinished
+
+
+
+
 	switch(this_token.type)
 	{
 		case __add_operator:
@@ -822,7 +860,7 @@ abstract_syntax_tree generator::in_curve_calc_expr()
 		case __cmp_more_or_equal:compare_operator_expr();break;
 		default:parse.push(this_token);break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::number_begin_expr()
 {
@@ -874,6 +912,7 @@ abstract_syntax_tree generator::string_begin_expr()
 }
 abstract_syntax_tree generator::call_list_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
@@ -893,7 +932,7 @@ abstract_syntax_tree generator::call_list_expr()
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
 			case __left_curve:in_curve_calc_expr();break;
-			case __right_bracket:return;break;// this is [number:]
+			case __right_bracket:break;// this is [number:]
 		}
 		get_token();
 		get_token();
@@ -916,10 +955,11 @@ abstract_syntax_tree generator::call_list_expr()
 			default:parse.push(this_token);break;
 		}
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::call_function_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	while(this_token.type!=__right_curve)
 	{
@@ -946,7 +986,7 @@ abstract_syntax_tree generator::call_function_expr()
 		case __dot:call_hash_expr();break;
 		default:parse.push(this_token);break;
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree generator::call_hash_expr()
 {

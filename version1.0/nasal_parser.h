@@ -298,8 +298,8 @@ void nasal_parser::hash_generate_expr()
 	{
 		switch(this_token.type)
 		{
-			case __number:number_begin_expr();break;
-			case __string:string_begin_expr();break;
+			//case __number:number_begin_expr();break;
+			//case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
 			default:
 				++error;
@@ -1195,7 +1195,7 @@ void nasal_parser::call_list_expr()
 			case __string:string_begin_expr();break;
 			case __id:identifier_begin_expr();break;
 			case __left_curve:in_curve_calc_expr();break;
-			case __right_bracket:return;break;// this is [number:]
+			case __right_bracket:parse.push(this_token);break;// this is [number:]
 		}
 		get_token();
 		if(this_token.type!=__right_bracket)
