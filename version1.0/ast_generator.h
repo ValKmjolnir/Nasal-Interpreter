@@ -272,7 +272,7 @@ abstract_syntax_tree generator::definition_expr()
 	}
 	else if(this_token.type==__id)
 	{
-		;
+		id_name=this_token.content;
 	}
 	get_token();
 	if(this_token.type==__semi)
@@ -286,16 +286,16 @@ abstract_syntax_tree generator::definition_expr()
 	t.type=__semi;
 	switch(this_token.type)
 	{
-		case __number:number_begin_expr();break;
-		case __string:string_begin_expr();break;
-		case __id:identifier_begin_expr();break;
-		case __func:function_generate_expr();parse.push(t);break;
+		case __number:node.set_definition_expr(id_name,number_begin_expr());break;
+		case __string:node.set_definition_expr(id_name,string_begin_expr());break;
+		case __id:node.set_definition_expr(id_name,identifier_begin_expr());break;
+		case __func:node.set_definition_expr(id_name,function_generate_expr());parse.push(t);break;
 		case __add_operator:
 		case __sub_operator:
-		case __nor_operator:one_operator_expr();break;
-		case __left_bracket:list_generate_expr();break;
-		case __left_brace:hash_generate_expr();break;
-		case __left_curve:in_curve_calc_expr();break;
+		case __nor_operator:node.set_definition_expr(id_name,one_operator_expr());break;
+		case __left_bracket:node.set_definition_expr(id_name,list_generate_expr());break;
+		case __left_brace:node.set_definition_expr(id_name,hash_generate_expr());break;
+		case __left_curve:node.set_definition_expr(id_name,in_curve_calc_expr());break;
 		default:break;
 	}
 	return node;
@@ -318,6 +318,7 @@ abstract_syntax_tree generator::assignment_expr()
 		case __left_curve:in_curve_calc_expr();break;
 		default:break;
 	}
+	node.set_assignment_expr();
 	return node;
 }
 bool generator::else_if_check()
@@ -739,6 +740,7 @@ abstract_syntax_tree generator::loop_expr()
 			}
 		}
 	}
+	node.set_node_to_loop();
 	return node;
 }
 abstract_syntax_tree generator::continue_break_expr()
@@ -955,6 +957,7 @@ abstract_syntax_tree generator::call_list_expr()
 			default:parse.push(this_token);break;
 		}
 	}
+	node.set_node_to_list_search();
 	return node;
 }
 abstract_syntax_tree generator::call_function_expr()
@@ -986,6 +989,8 @@ abstract_syntax_tree generator::call_function_expr()
 		case __dot:call_hash_expr();break;
 		default:parse.push(this_token);break;
 	}
+	
+	node.set_node_to_call_function();
 	return node;
 }
 abstract_syntax_tree generator::call_hash_expr()
