@@ -74,8 +74,24 @@ class abstract_syntax_tree
 			std::cout<<"{ [ Type:";
 			print_token(ast_node_type);
 			std::cout<<" ]"<<std::endl;
-			for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-				i->print_ast_node(tab_num+1);
+			if(!children.empty())
+			{
+				for(int i=0;i<tab_num;++i)
+					std::cout<<" ";
+				std::cout<<"[ Children ]"<<std::endl;
+				for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+					i->print_ast_node(tab_num+1);
+				std::cout<<std::endl;
+			}
+			if(!statement_list.empty())
+			{
+				for(int i=0;i<tab_num;++i)
+					std::cout<<" ";
+				std::cout<<"[ Statement(s) ]"<<std::endl;
+				for(std::list<abstract_syntax_tree>::iterator i=statement_list.begin();i!=statement_list.end();++i)
+					i->print_ast_node(tab_num+1);
+				std::cout<<std::endl;
+			}
 			for(int i=0;i<tab_num;++i)
 				std::cout<<" ";
 			std::cout<<"}"<<std::endl;
@@ -85,6 +101,14 @@ class abstract_syntax_tree
 		void set_root()
 		{
 			ast_node_type=__root;
+			return;
+		}
+		// for definition
+		void set_definition_expr(std::string& name,abstract_syntax_tree var_content)
+		{
+			ast_node_type=__var;
+			id_name=name;
+			children.push_back(var_content);
 			return;
 		}
 		// for if
@@ -139,6 +163,14 @@ class abstract_syntax_tree
 			ast_node_type=type;
 			return;
 		}
+		// for function expr
+		void set_node_to_function(std::list<abstract_syntax_tree> parameters,abstract_syntax_tree block)
+		{
+			ast_node_type=__func;
+			children=parameters;
+			statement_list=block.statement_list;
+			return;
+		}
 		// for sub-tree node operator
 		void set_two_operator(const int operator_type,abstract_syntax_tree f_child,abstract_syntax_tree s_child)
 		{
@@ -151,13 +183,6 @@ class abstract_syntax_tree
 		{
 			ast_node_type=operator_type;
 			children.push_back(f_child);
-			return;
-		}
-		// for leaf node identifier
-		void set_node_to_identifier(std::string& str)
-		{
-			ast_node_type=__id;
-			id_name=str;
 			return;
 		}
 		// for leaf node call
@@ -177,9 +202,26 @@ class abstract_syntax_tree
 			return;
 		}
 		// for leaf node list
-		void set_node_to_list()
+		void set_node_to_list(std::list<abstract_syntax_tree> list_members)
 		{
 			ast_node_type=__list;
+			children=list_members;
+			return;
+		}
+		// for leaf node hash
+		void set_node_to_hash(std::list<abstract_syntax_tree> hash_members)
+		{
+			ast_node_type=__hash;
+			children=hash_members;
+			return;
+		}
+		// for hash member
+		void set_node_to_hashmember(std::string& name,abstract_syntax_tree mem_var)
+		{
+			ast_node_type=__hash_member;
+			id_name=name;
+			children.clear();
+			children.push_back(mem_var);
 			return;
 		}
 		// for leaf node hash

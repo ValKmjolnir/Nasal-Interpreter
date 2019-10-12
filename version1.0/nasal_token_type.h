@@ -31,6 +31,7 @@ enum token_type
 	
 	__root,
 	__list,__hash,
+	__hash_member,
 	__call_function,__list_search,__hash_search,
 	__block,
 	__definition,__assignment,
@@ -95,6 +96,7 @@ void print_token(int type)
 		case __root:              context="root";break;
 		case __list:              context="list";break;
 		case __hash:              context="hash";break;
+		case __hash_member:       context="hash_member";break;
 		case __call_function:     context="call_func";break;
 		case __list_search:       context="call_list";break;
 		case __hash_search:       context="call_hash";break;
