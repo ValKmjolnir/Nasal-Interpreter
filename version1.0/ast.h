@@ -47,7 +47,6 @@ class abstract_syntax_tree
 				var_list.clear();
 			else
 				var_list=temp.var_list;
-			
 			if(temp.var_changed_list.empty())
 				var_changed_list.clear();
 			else
@@ -71,8 +70,21 @@ class abstract_syntax_tree
 				children.clear();
 			else
 				children=temp.children;
+			if(temp.var_list.empty())
+				var_list.clear();
+			else
+				var_list=temp.var_list;
+			if(temp.var_changed_list.empty())
+				var_changed_list.clear();
+			else
+				var_changed_list=temp.var_changed_list;
+			if(temp.var_content_list.empty())
+				var_content_list.clear();
+			else
+				var_content_list=temp.var_content_list;
 			var_number=temp.var_number;
 			var_string=temp.var_string;
+			id_name=temp.id_name;
 			return *this;
 		}
 		void tree_set_clear()
@@ -92,22 +104,24 @@ class abstract_syntax_tree
 			std::cout<<indent;
 			if(ast_node_type==__number)
 			{
-				std::cout<<"[Number:"<<var_number<<"]"<<std::endl;
+				std::cout<<"{Number:"<<var_number<<"}"<<std::endl;
 				return;
 			}
 			else if(ast_node_type==__string)
 			{
-				std::cout<<"[String:"<<var_string<<"]"<<std::endl;
+				std::cout<<"{String:"<<var_string<<"}"<<std::endl;
 				return;
 			}
 			else if(ast_node_type==__id)
 			{
-				std::cout<<"[Identifier:"<<id_name<<"]"<<std::endl;
+				std::cout<<"{Identifier:"<<id_name<<"}"<<std::endl;
 				return;
 			}
 			else if(ast_node_type==__definition)
 			{
-				std::cout<<"{  Definition"<<std::endl<<indent<<"   [Var]"<<std::endl;
+				std::cout<<"{  Type:";
+				print_token(ast_node_type);
+				std::cout<<std::endl<<indent<<"   [Var]"<<std::endl;
 				for(std::list<abstract_syntax_tree>::iterator i=var_list.begin();i!=var_list.end();++i)
 					i->print_ast_node(tab_num+1);
 				std::cout<<indent<<"   [Content]"<<std::endl;
