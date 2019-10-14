@@ -179,6 +179,7 @@ void nasal_parser::statements_block()
 				}
 				else
 				{
+					parse.push(this_token);
 					in_curve_calc_expr();
 				}
 				check_semi_at_end();
@@ -1360,6 +1361,7 @@ void nasal_parser::parse_main_work()
 				}
 				else
 				{
+					parse.push(this_token);
 					in_curve_calc_expr();
 				}
 				check_semi_at_end();
