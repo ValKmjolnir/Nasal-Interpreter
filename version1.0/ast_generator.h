@@ -851,15 +851,14 @@ abstract_syntax_tree generator::in_curve_calc_expr()
 	}
 	get_token();
 	get_token();
-	// unfinished
-
+	int temp_type=this_token.type;
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
+		case __sub_operator:node.set_two_operator(temp_type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
-		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
+		case __div_operator:node.set_two_operator(temp_type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(temp_type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -867,7 +866,7 @@ abstract_syntax_tree generator::in_curve_calc_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
+		case __cmp_more_or_equal:node.set_two_operator(temp_type,node,compare_operator_expr());break;
 		default:parse.push(this_token);break;
 	}
 	return node;
@@ -877,13 +876,14 @@ abstract_syntax_tree generator::number_begin_expr()
 	abstract_syntax_tree node;
 	node.set_node_to_number(this_token.content);
 	get_token();
+	int temp_type=this_token.type;
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
+		case __sub_operator:node.set_two_operator(temp_type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
-		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
+		case __div_operator:node.set_two_operator(temp_type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(temp_type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -891,7 +891,7 @@ abstract_syntax_tree generator::number_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
+		case __cmp_more_or_equal:node.set_two_operator(temp_type,node,compare_operator_expr());break;
 		default:parse.push(this_token);break;
 	}
 	return node;
@@ -901,13 +901,14 @@ abstract_syntax_tree generator::string_begin_expr()
 	abstract_syntax_tree node;
 	node.set_node_to_string(this_token.content);
 	get_token();
+	int temp_type=this_token.type;
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
+		case __sub_operator:node.set_two_operator(temp_type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
-		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
+		case __div_operator:node.set_two_operator(temp_type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(temp_type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -915,7 +916,7 @@ abstract_syntax_tree generator::string_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
+		case __cmp_more_or_equal:node.set_two_operator(temp_type,node,compare_operator_expr());break;
 		default:parse.push(this_token);break;
 	}
 	return node;
@@ -1014,16 +1015,17 @@ abstract_syntax_tree generator::identifier_begin_expr()
 	node.set_node_to_id(this_token.content);
 	
 	get_token();
+	int temp_type=this_token.type;
 	switch(this_token.type)
 	{
 		case __left_bracket:node=call_list_expr();break;
 		case __left_curve:node=call_function_expr();break;
 		case __dot:node=call_hash_expr();break;
 		case __add_operator:
-		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
+		case __sub_operator:node.set_two_operator(temp_type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
-		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
+		case __div_operator:node.set_two_operator(temp_type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(temp_type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -1031,17 +1033,18 @@ abstract_syntax_tree generator::identifier_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
+		case __cmp_more_or_equal:node.set_two_operator(temp_type,node,compare_operator_expr());break;
 		default:parse.push(this_token);break;
 	}
 	get_token();
+	temp_type=this_token.type;
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
+		case __sub_operator:node.set_two_operator(temp_type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
-		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
+		case __div_operator:node.set_two_operator(temp_type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(temp_type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -1049,7 +1052,7 @@ abstract_syntax_tree generator::identifier_begin_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
+		case __cmp_more_or_equal:node.set_two_operator(temp_type,node,compare_operator_expr());break;
 		case __equal:
 		case __add_equal:
 		case __sub_equal:
