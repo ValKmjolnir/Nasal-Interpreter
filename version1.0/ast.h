@@ -7,6 +7,13 @@ class abstract_syntax_tree
 		int ast_node_type;
 		std::list<abstract_syntax_tree> statement_list;
 		std::list<abstract_syntax_tree> children;
+		
+		// for definition and assignment
+		std::list<abstract_syntax_tree> var_list;
+		std::list<abstract_syntax_tree> var_changed_list;
+		std::list<abstract_syntax_tree> var_content_list;
+		
+		// for number and string leaf
 		double var_number;
 		std::string var_string;
 		std::string id_name;
@@ -16,6 +23,11 @@ class abstract_syntax_tree
 			ast_node_type=0;
 			statement_list.clear();
 			children.clear();
+			
+			var_list.clear();
+			var_changed_list.clear();
+			var_content_list.clear();
+			
 			var_number=0;
 			var_string="";
 			id_name="ukn";
@@ -31,8 +43,22 @@ class abstract_syntax_tree
 				children.clear();
 			else
 				children=temp.children;
+			if(temp.var_list.empty())
+				var_list.clear();
+			else
+				var_list=temp.var_list;
+			
+			if(temp.var_changed_list.empty())
+				var_changed_list.clear();
+			else
+				var_changed_list=temp.var_changed_list;
+			if(temp.var_content_list.empty())
+				var_content_list.clear();
+			else
+				var_content_list=temp.var_content_list;
 			var_number=temp.var_number;
 			var_string=temp.var_string;
+			id_name=temp.id_name;
 		}
 		abstract_syntax_tree& operator=(const abstract_syntax_tree temp)
 		{
@@ -53,17 +79,20 @@ class abstract_syntax_tree
 		{
 			statement_list.clear();
 			children.clear();
+			var_list.clear();
+			var_changed_list.clear();
+			var_content_list.clear();
 			return;
 		}
 		void print_ast_node(int tab_num)
 		{
+			std::string indent="";
 			for(int i=0;i<tab_num;++i)
-				std::cout<<"   ";
+				indent+="   ";
+			std::cout<<indent;
 			if(ast_node_type==__number)
 			{
-				std::cout<<"[Number:";
-				std::cout<<var_number;
-				std::cout<<"]"<<std::endl;
+				std::cout<<"[Number:"<<var_number<<"]"<<std::endl;
 				return;
 			}
 			else if(ast_node_type==__string)
@@ -71,28 +100,37 @@ class abstract_syntax_tree
 				std::cout<<"[String:"<<var_string<<"]"<<std::endl;
 				return;
 			}
-			std::cout<<"{  [Type:";
+			else if(ast_node_type==__id)
+			{
+				std::cout<<"[Identifier:"<<id_name<<"]"<<std::endl;
+				return;
+			}
+			else if(ast_node_type==__definition)
+			{
+				std::cout<<"{  Definition"<<std::endl<<indent<<"   [Var]"<<std::endl;
+				for(std::list<abstract_syntax_tree>::iterator i=var_list.begin();i!=var_list.end();++i)
+					i->print_ast_node(tab_num+1);
+				std::cout<<indent<<"   [Content]"<<std::endl;
+				for(std::list<abstract_syntax_tree>::iterator i=var_content_list.begin();i!=var_content_list.end();++i)
+					i->print_ast_node(tab_num+1);
+				return;
+			}
+			std::cout<<"{  Type:";
 			print_token(ast_node_type);
-			std::cout<<"]"<<std::endl;
+			std::cout<<std::endl;
 			if(!children.empty())
 			{
-				for(int i=0;i<tab_num;++i)
-					std::cout<<"   ";
-				std::cout<<"   [Children]"<<std::endl;
+				std::cout<<indent<<"   [Children]"<<std::endl;
 				for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 					i->print_ast_node(tab_num+1);
 			}
 			if(!statement_list.empty())
 			{
-				for(int i=0;i<tab_num;++i)
-					std::cout<<"   ";
-				std::cout<<"   [Statement(s)]"<<std::endl;
+				std::cout<<indent<<"   [Statement]"<<std::endl;
 				for(std::list<abstract_syntax_tree>::iterator i=statement_list.begin();i!=statement_list.end();++i)
 					i->print_ast_node(tab_num+1);
 			}
-			for(int i=0;i<tab_num;++i)
-				std::cout<<"   ";
-			std::cout<<"}"<<std::endl;
+			std::cout<<indent<<"}"<<std::endl;
 			return;
 		}
 		// for root node
@@ -102,17 +140,26 @@ class abstract_syntax_tree
 			return;
 		}
 		// for definition
-		void set_definition_expr(std::string& name,abstract_syntax_tree var_content)
+		void set_definition_expr(std::list<abstract_syntax_tree> name_list,std::list<abstract_syntax_tree> var_content)
 		{
 			ast_node_type=__definition;
-			id_name=name;
-			children.push_back(var_content);
+			var_list=name_list;
+			var_content_list=var_content;
 			return;
 		}
 		// for assignment
-		void set_assignment_expr()
+		void set_assignment_expr(std::list<abstract_syntax_tree> to_be_changed,std::list<abstract_syntax_tree> var_content)
 		{
 			ast_node_type=__assignment;
+			var_changed_list=to_be_changed;
+			var_content_list=var_content;
+			return;
+		}
+		// for choose block
+		void set_choose_block(std::list<abstract_syntax_tree> if_else_statements)
+		{
+			ast_node_type=__ifelse;
+			statement_list=if_else_statements;
 			return;
 		}
 		// for if

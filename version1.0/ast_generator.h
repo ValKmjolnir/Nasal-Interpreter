@@ -258,13 +258,18 @@ abstract_syntax_tree generator::hash_generate_expr()
 abstract_syntax_tree generator::definition_expr()
 {
 	abstract_syntax_tree node;
-	std::string id_name;
+	abstract_syntax_tree id;
+	std::list<abstract_syntax_tree> name_list;
+	std::list<abstract_syntax_tree> var_content;
+
 	get_token();
 	if(this_token.type==__left_curve)
 	{
 		while(this_token.type!=__right_curve)
 		{
 			get_token();
+			id.set_node_to_id(this_token.content);
+			name_list.push_back(id);
 			get_token();
 			if(this_token.type==__right_curve)
 				break;
@@ -272,37 +277,43 @@ abstract_syntax_tree generator::definition_expr()
 	}
 	else if(this_token.type==__id)
 	{
-		id_name=this_token.content;
+		id.set_node_to_id(this_token.content);
+		name_list.push_back(id);
 	}
 	get_token();
 	if(this_token.type==__semi)
 	{
 		parse.push(this_token);
+		node.set_definition_expr(name_list,var_content);
 		return node;
 	}
 	get_token();
 	token t;
 	t.line=this_token.line;
 	t.type=__semi;
+	
 	switch(this_token.type)
 	{
-		case __number:node.set_definition_expr(id_name,number_begin_expr());break;
-		case __string:node.set_definition_expr(id_name,string_begin_expr());break;
-		case __id:node.set_definition_expr(id_name,identifier_begin_expr());break;
-		case __func:node.set_definition_expr(id_name,function_generate_expr());parse.push(t);break;
+		case __number:var_content.push_back(number_begin_expr());break;
+		case __string:var_content.push_back(string_begin_expr());break;
+		case __id:var_content.push_back(identifier_begin_expr());break;
+		case __func:var_content.push_back(function_generate_expr());parse.push(t);break;
 		case __add_operator:
 		case __sub_operator:
-		case __nor_operator:node.set_definition_expr(id_name,one_operator_expr());break;
-		case __left_bracket:node.set_definition_expr(id_name,list_generate_expr());break;
-		case __left_brace:node.set_definition_expr(id_name,hash_generate_expr());break;
-		case __left_curve:node.set_definition_expr(id_name,in_curve_calc_expr());break;
+		case __nor_operator:var_content.push_back(one_operator_expr());break;
+		case __left_bracket:var_content.push_back(list_generate_expr());break;
+		case __left_brace:var_content.push_back(hash_generate_expr());break;
+		case __left_curve:var_content.push_back(in_curve_calc_expr());break;
 		default:break;
 	}
+	node.set_definition_expr(name_list,var_content);
 	return node;
 }
 abstract_syntax_tree generator::assignment_expr()
 {
 	abstract_syntax_tree node;
+	std::list<abstract_syntax_tree> to_be_changed;
+	std::list<abstract_syntax_tree> var_content;
 	get_token();
 	switch(this_token.type)
 	{
@@ -318,7 +329,7 @@ abstract_syntax_tree generator::assignment_expr()
 		case __left_curve:in_curve_calc_expr();break;
 		default:break;
 	}
-	node.set_assignment_expr();
+	node.set_assignment_expr(to_be_changed,var_content);
 	return node;
 }
 bool generator::else_if_check()
@@ -842,16 +853,13 @@ abstract_syntax_tree generator::in_curve_calc_expr()
 	get_token();
 	// unfinished
 
-
-
-
 	switch(this_token.type)
 	{
 		case __add_operator:
-		case __sub_operator:add_sub_operator_expr();break;
+		case __sub_operator:node.set_two_operator(this_token.type,node,add_sub_operator_expr());break;
 		case __mul_operator:
-		case __div_operator:mul_div_operator_expr();break;
-		case __link_operator:link_operator_expr();break;
+		case __div_operator:node.set_two_operator(this_token.type,node,mul_div_operator_expr());break;
+		case __link_operator:node.set_two_operator(this_token.type,node,link_operator_expr());break;
 		case __and_operator:
 		case __or_operator:
 		case __cmp_equal:
@@ -859,7 +867,7 @@ abstract_syntax_tree generator::in_curve_calc_expr()
 		case __cmp_less:
 		case __cmp_more:
 		case __cmp_less_or_equal:
-		case __cmp_more_or_equal:compare_operator_expr();break;
+		case __cmp_more_or_equal:node.set_two_operator(this_token.type,node,compare_operator_expr());break;
 		default:parse.push(this_token);break;
 	}
 	return node;
