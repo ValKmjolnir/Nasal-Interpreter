@@ -138,6 +138,7 @@ abstract_syntax_tree generator::statements_block()
 				}
 				else
 				{
+					parse.push(this_token);
 					node.add_statement(in_curve_calc_expr());
 				}
 				check_semi_at_end();
@@ -1087,6 +1088,7 @@ void generator::gen_main_work()
 				}
 				else
 				{
+					parse.push(this_token);
 					root.add_statement(in_curve_calc_expr());
 				}
 				check_semi_at_end();
