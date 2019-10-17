@@ -78,7 +78,9 @@ int main()
 			pas.parse_main_work();
 			if(!pas.get_error_num())
 			{
-				;
+				gen.set_ast_empty();
+				gen.gen_process(lex.return_list());
+				gen.gen_main_work();
 			}
 		}
 		else
