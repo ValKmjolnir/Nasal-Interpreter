@@ -121,7 +121,7 @@ void nasal_parser::check_semi_at_end()
 	if(this_token.type!=__semi)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a ';' at the end of this line."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ';'."<<std::endl;
 	}
 	return;
 }
@@ -140,7 +140,7 @@ void nasal_parser::return_expr()
 		case __semi:parse.push(this_token);break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a data or ';'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data or ';' after __return_expr."<<std::endl;
 			return;
 			break;
 	}
@@ -152,7 +152,7 @@ void nasal_parser::statements_block()
 	if(this_token.type!=__left_brace)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a '{' at this place."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a '{' when generating a __block."<<std::endl;
 		return;
 	}
 	get_token();
@@ -195,9 +195,9 @@ void nasal_parser::statements_block()
 			case __semi:break;
 			case __return:return_expr();check_semi_at_end();break;
 			default:
-				std::cout<<">>[Error] line "<<this_token.line<<": \'";
+				std::cout<<">>[Error] line "<<this_token.line<<": '";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"' incorrect token as the beginning of statement."<<std::endl;
 				++error;
 				break;
 		}
@@ -221,7 +221,7 @@ void nasal_parser::function_generate_expr()
 				if(this_token.type!=__right_curve && this_token.type!=__comma)
 				{
 					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')' when creating a new function."<<std::endl;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')' when creating a __function."<<std::endl;
 					return;
 				}
 				else if(this_token.type==__right_curve)
@@ -233,7 +233,7 @@ void nasal_parser::function_generate_expr()
 				if(this_token.type!=__right_curve)
 				{
 					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": only ')' can be put after dynamic identifier."<<std::endl;
+					std::cout<<">>[Error] line "<<this_token.line<<": must put ')' after __dynamic_id."<<std::endl;
 					return;
 				}
 				parse.push(this_token);
@@ -241,7 +241,7 @@ void nasal_parser::function_generate_expr()
 			else
 			{
 				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect identifiers and dynamic identifier only."<<std::endl;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect __id and __dynamic_id only."<<std::endl;
 				return;
 			}
 			get_token();
@@ -252,7 +252,7 @@ void nasal_parser::function_generate_expr()
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 		print_token(this_token.type);
-		std::cout<<"' when creating a new function."<<std::endl;
+		std::cout<<"' when creating a __function."<<std::endl;
 		return;
 	}
 	statements_block();
@@ -275,7 +275,7 @@ void nasal_parser::list_generate_expr()
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 				print_token(this_token.type);
-				std::cout<<"' when creating a new list."<<std::endl;
+				std::cout<<"' when creating a __list."<<std::endl;
 				return;
 				break;
 		}
@@ -283,7 +283,9 @@ void nasal_parser::list_generate_expr()
 		if(this_token.type!=__comma && this_token.type!=__right_bracket)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ']'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ']' but get '";
+			print_token(this_token.type);
+			std::cout<<"' when creating a __list."<<std::endl;
 			return;
 		}
 		else if(this_token.type==__comma)
@@ -301,14 +303,14 @@ void nasal_parser::hash_generate_expr()
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 			print_token(this_token.type);
-			std::cout<<"' when creating a new hash member."<<std::endl;
+			std::cout<<"' when creating a __hash_member."<<std::endl;
 			return;
 		}
 		get_token();
 		if(this_token.type!=__colon)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ':' when creating a new hash member."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ':' when creating a __hash_member."<<std::endl;
 			return;
 		}
 		get_token();
@@ -325,7 +327,7 @@ void nasal_parser::hash_generate_expr()
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 				print_token(this_token.type);
-				std::cout<<"' when creating a new hash member."<<std::endl;
+				std::cout<<"' when creating a __hash_member."<<std::endl;
 				return;
 				break;
 		}
@@ -333,7 +335,9 @@ void nasal_parser::hash_generate_expr()
 		if(this_token.type!=__comma && this_token.type!=__right_brace)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or '}'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or '}' but get '";
+			print_token(this_token.type);
+			std::cout<<"' when creating a __hash."<<std::endl;
 			return;
 		}
 		else if(this_token.type==__comma)
@@ -348,7 +352,7 @@ void nasal_parser::definition_expr()
 	if(this_token.type!=__id)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect an identifier."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect an __id."<<std::endl;
 		return;
 	}
 //	if(this_token.type==__left_curve)
@@ -377,7 +381,7 @@ void nasal_parser::definition_expr()
 	if(this_token.type!=__equal && this_token.type!=__semi)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a '=' after identifier."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a '=' after __id."<<std::endl;
 		return;
 	}
 	else if(this_token.type==__semi)
@@ -426,7 +430,7 @@ void nasal_parser::assignment_expr()
 		case __left_brace:hash_generate_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": incorretc data type when doing assignment."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": incorrect data type when doing assignment."<<std::endl;
 			return;
 			break;
 	}
@@ -476,7 +480,7 @@ void nasal_parser::if_else_expr()
 		case __id:parse.push(this_token);calculation_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a correct data."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a correct condition."<<std::endl;
 			return;
 			break;
 	}
@@ -535,7 +539,7 @@ void nasal_parser::if_else_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when generating a statement."<<std::endl;
 				++error;
 				break;
 		}
@@ -563,7 +567,7 @@ void nasal_parser::if_else_expr()
 			case __id:parse.push(this_token);calculation_expr();break;
 			default:
 				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect a correct data."<<std::endl;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a correct condition."<<std::endl;
 				return;
 				break;
 		}
@@ -622,7 +626,7 @@ void nasal_parser::if_else_expr()
 				default:
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
 					print_token(this_token.type);
-					std::cout<<"\' in an incorrect place."<<std::endl;
+					std::cout<<"\' when generating a statement."<<std::endl;
 					++error;
 					break;
 			}
@@ -681,7 +685,7 @@ void nasal_parser::if_else_expr()
 				default:
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
 					print_token(this_token.type);
-					std::cout<<"\' in an incorrect place."<<std::endl;
+					std::cout<<"\' when generating a statement."<<std::endl;
 					++error;
 					break;
 			}
@@ -722,7 +726,7 @@ void nasal_parser::loop_expr()
 		if(this_token.type!=__right_curve)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'while'."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'while('."<<std::endl;
 			return;
 		}
 		get_token();
@@ -773,7 +777,7 @@ void nasal_parser::loop_expr()
 				default:
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
 					print_token(this_token.type);
-					std::cout<<"\' in an incorrect place."<<std::endl;
+					std::cout<<"\' when creating a new loop."<<std::endl;
 					++error;
 					break;
 			}
@@ -797,7 +801,7 @@ void nasal_parser::loop_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when creating a new loop."<<std::endl;
 				++error;
 				break;
 		}
@@ -815,7 +819,7 @@ void nasal_parser::loop_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when creating a new loop."<<std::endl;
 				++error;
 				break;
 		}
@@ -831,7 +835,7 @@ void nasal_parser::loop_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when creating a new loop."<<std::endl;
 				++error;
 				break;
 		}
@@ -890,7 +894,7 @@ void nasal_parser::loop_expr()
 				default:
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
 					print_token(this_token.type);
-					std::cout<<"\' in an incorrect place."<<std::endl;
+					std::cout<<"\' when creating a new loop."<<std::endl;
 					++error;
 					break;
 			}
@@ -914,7 +918,7 @@ void nasal_parser::loop_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when creating a new loop."<<std::endl;
 				++error;
 				break;
 		}
@@ -931,7 +935,7 @@ void nasal_parser::loop_expr()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when creating a new loop."<<std::endl;
 				++error;
 				break;
 		}
@@ -939,7 +943,7 @@ void nasal_parser::loop_expr()
 		if(this_token.type!=__right_curve)
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'for('."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'forindex(' or 'foreach('."<<std::endl;
 			return;
 		}
 		get_token();
@@ -990,7 +994,7 @@ void nasal_parser::loop_expr()
 				default:
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
 					print_token(this_token.type);
-					std::cout<<"\' in an incorrect place."<<std::endl;
+					std::cout<<"\' when creating a new loop."<<std::endl;
 					++error;
 					break;
 			}
@@ -1056,7 +1060,7 @@ void nasal_parser::in_curve_calc_expr()
 	if(this_token.type!=__right_curve)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' at this line."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when generating __in_curve_calculation."<<std::endl;
 	}
 	return;
 }
@@ -1231,7 +1235,7 @@ void nasal_parser::call_hash_expr()
 	if(this_token.type!=__id)
 	{
 		++error;
-		std::cout<<">>[Error] line "<<this_token.line<<": missing identifier when calling hash members."<<std::endl;
+		std::cout<<">>[Error] line "<<this_token.line<<": missing identifier when calling __hash_member."<<std::endl;
 		return;
 	}
 	identifier_call_expr();
@@ -1304,7 +1308,7 @@ void nasal_parser::parse_main_work()
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
 				print_token(this_token.type);
-				std::cout<<"\' in an incorrect place."<<std::endl;
+				std::cout<<"\' when generating __main_statement_block."<<std::endl;
 				++error;
 				break;
 		}
