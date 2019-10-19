@@ -458,7 +458,7 @@ class nasal_lexer
 					else if((*i).content=="<=")
 						(*i).type=__cmp_less_or_equal;
 				}
-				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content==".") || ((*i).content=="?") || ((*i).content=="%") || ((*i).content=="$") || ((*i).content=="`") || ((*i).content=="^") || ((*i).content=="@"))
+				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content==".") || ((*i).content=="?") || ((*i).content=="|") || ((*i).content=="%") || ((*i).content=="$") || ((*i).content=="`") || ((*i).content=="^") || ((*i).content=="@"))
 				{
 					char c=(*i).content[0];
 					switch(c)
