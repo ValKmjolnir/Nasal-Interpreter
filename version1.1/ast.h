@@ -202,7 +202,7 @@ class abstract_syntax_tree
 		// for statement block
 		void set_block()
 		{
-			ast_node_type=__block;
+			ast_node_type=__normal_statement_block;
 			return;
 		}
 		void add_statement(abstract_syntax_tree statement_head)
