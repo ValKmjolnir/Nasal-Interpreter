@@ -80,7 +80,7 @@ int main()
 			{
 				gen.set_ast_empty();
 				gen.gen_process(lex.return_list());
-				gen.gen_main_work();
+				//gen.gen_main_work();
 			}
 		}
 		else
