@@ -913,7 +913,7 @@ void nasal_parser::loop_expr()
 		switch(this_token.type)
 		{
 			case __var:definition_expr();break;
-			case __id:calculation_expr();break;
+			case __id:parse.push(this_token);calculation_expr();break;
 			case __semi:parse.push(this_token);break;
 			default:
 				std::cout<<">>[Error] line "<<this_token.line<<": \'";
@@ -1023,7 +1023,7 @@ void nasal_parser::mul_div_operator_expr()
 			case __left_curve:parse.push(this_token);calculation_expr();break;
 			default:
 				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a data after operator '*' or '/'."<<std::endl;
 				return;
 				break;
 		}
@@ -1047,7 +1047,7 @@ void nasal_parser::one_operator_expr()
 		case __left_curve:parse.push(this_token);calculation_expr();break;
 		default:
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after operator '!' or '-'."<<std::endl;
 			return;
 			break;
 	}
@@ -1081,7 +1081,7 @@ void nasal_parser::calculation_expr()
 		else
 		{
 			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar at this place."<<std::endl;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar before operator '+' , '-' , '*' , '/' or '~'."<<std::endl;
 			return;
 		}
 		get_token();
@@ -1119,6 +1119,10 @@ void nasal_parser::calculation_expr()
 				}
 				break;
 			case __semi:parse.push(this_token);return;break;
+			case __unknown_operator:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
+				return;break;
 			default:parse.push(this_token);return;break;
 		}
 	}
@@ -1195,6 +1199,8 @@ void nasal_parser::call_function_expr()
 		switch(this_token.type)
 		{
 			case __left_curve:
+			case __nor_operator:
+			case __sub_operator:
 			case __number:
 			case __string:
 			case __id:parse.push(this_token);calculation_expr();break;
