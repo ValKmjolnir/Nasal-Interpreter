@@ -1132,7 +1132,32 @@ void nasal_parser::calculation_expr()
 		else if(this_token.type==__number || this_token.type==__string)
 			;
 		else if(this_token.type==__left_curve)
+		{
+			get_token();
+			if(this_token.type==__func)// lambda
+			{
+				function_generate_expr();
+				get_token();
+				if(this_token.type!=__right_curve)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when creating new lambda."<<std::endl;
+					return;
+				}
+				get_token();
+				if(this_token.type!=__left_curve)
+				{
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' when calling a lambda function."<<std::endl;
+					return;
+				}
+				call_function_expr();
+				return;
+			}
+			else
+				parse.push(this_token);
 			in_curve_calc_expr();
+		}
 		else
 		{
 			++error;
