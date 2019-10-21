@@ -99,6 +99,7 @@ class nasal_parser
 		void calculation_expr();
 		void identifier_call_expr();
 		void call_list_expr();
+		void parameter_function_expr();
 		void call_function_expr();
 		void call_hash_expr();
 		void list_generate_expr();
@@ -113,7 +114,6 @@ class nasal_parser
 		void check_semi_at_end();
 		void statements_block();
 		void function_generate_expr();
-		void parameter_func_expr();
 		void return_expr();
 };
 void nasal_parser::check_semi_at_end()
@@ -159,34 +159,16 @@ void nasal_parser::statements_block()
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
-		//token t;
 		switch(this_token.type)
 		{
 			case __var:definition_expr();check_semi_at_end();break;
+			case __left_curve:
 			case __sub_operator:
 			case __nor_operator:
 			case __id:
 			case __number:
 			case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
-			case __left_curve:
-//				t=this_token;
-//				get_token();
-//				if(this_token.type==__var)
-//				{
-//					parse.push(t);
-//					definition_expr();
-//				}
-//				else
-//				{
-//					parse.push(this_token);
-//					parse.push(t);
-//					calculation_expr();
-//				}
-				parse.push(this_token);
-				calculation_expr();
-				check_semi_at_end();
-				break;
 			case __while:
 			case __for:
 			case __foreach:
@@ -403,35 +385,12 @@ void nasal_parser::hash_generate_expr()
 void nasal_parser::definition_expr()
 {
 	get_token();
-	//if(this_token.type!=__id && this_token.type!=__left_curve)
 	if(this_token.type!=__id)
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect an __id."<<std::endl;
 		return;
 	}
-//	if(this_token.type==__left_curve)
-//	{
-//		while(this_token.type!=__right_curve)
-//		{
-//			get_token();
-//			if(this_token.type!=__id)
-//			{
-//				++error;
-//				std::cout<<">>[Error] line "<<this_token.line<<": the expect type is identifier."<<std::endl;
-//				return;
-//			}
-//			get_token();
-//			if(this_token.type!=__comma && this_token.type!=__right_curve)
-//			{
-//				++error;
-//				std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')'."<<std::endl;
-//				return;
-//			}
-//			if(this_token.type==__right_curve)
-//				break;
-//		}
-//	}
 	get_token();
 	if(this_token.type!=__equal && this_token.type!=__semi)
 	{
@@ -442,8 +401,8 @@ void nasal_parser::definition_expr()
 	else if(this_token.type==__semi)
 	{
 		parse.push(this_token);// for semi check
-//		++warning;
-//		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
+		++warning;
+		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
 		return;
 	}
 	get_token();
@@ -502,7 +461,8 @@ bool nasal_parser::else_if_check()
 		if(this_token.type!=__if)
 		{
 			parse.push(this_token);
-			this_token=temp;// to avoid when recognizing 'else' without 'if' 
+			this_token=temp;
+			// to avoid when recognizing 'else' without 'if' 
 			return false;
 		}
 	}
@@ -555,32 +515,14 @@ void nasal_parser::if_else_expr()
 	}
 	else
 	{
-		//token t;
 		switch(this_token.type)
 		{
 			case __var:definition_expr();check_semi_at_end();break;
 			case __id:
 			case __number:
-			case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+			case __string:
+			case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
-			case __left_curve:
-//				t=this_token;
-//				get_token();
-//				if(this_token.type==__var)
-//				{
-//					parse.push(t);
-//					definition_expr();
-//				}
-//				else
-//				{
-//					parse.push(this_token);
-//					parse.push(t);
-//					calculation_expr();
-//				}
-				parse.push(this_token);
-				calculation_expr();
-				check_semi_at_end();
-				break;
 			case __sub_operator:
 			case __nor_operator:parse.push(this_token);calculation_expr();break;
 			case __while:
@@ -642,7 +584,6 @@ void nasal_parser::if_else_expr()
 		}
 		else
 		{
-			//token t;
 			switch(this_token.type)
 			{
 				case __var:definition_expr();check_semi_at_end();break;
@@ -650,26 +591,9 @@ void nasal_parser::if_else_expr()
 				case __nor_operator:
 				case __id:
 				case __number:
-				case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+				case __string:
+				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 				case __if:parse.push(this_token);if_else_expr();break;
-				case __left_curve:
-//					t=this_token;
-//					get_token();
-//					if(this_token.type==__var)
-//					{
-//						parse.push(t);
-//						definition_expr();
-//					}
-//					else
-//					{
-//						parse.push(this_token);
-//						parse.push(t);
-//						calculation_expr();
-//					}
-					parse.push(this_token);
-					calculation_expr();
-					check_semi_at_end();
-					break;
 				case __while:
 				case __for:
 				case __foreach:
@@ -701,7 +625,6 @@ void nasal_parser::if_else_expr()
 		}
 		else
 		{
-			//token t;
 			switch(this_token.type)
 			{
 				case __var:definition_expr();check_semi_at_end();break;
@@ -709,26 +632,9 @@ void nasal_parser::if_else_expr()
 				case __nor_operator:
 				case __id:
 				case __number:
-				case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+				case __string:
+				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 				case __if:parse.push(this_token);if_else_expr();break;
-				case __left_curve:
-//					t=this_token;
-//					get_token();
-//					if(this_token.type==__var)
-//					{
-//						parse.push(t);
-//						definition_expr();
-//					}
-//					else
-//					{
-//						parse.push(this_token);
-//						parse.push(t);
-//						calculation_expr();
-//					}
-					parse.push(this_token);
-					calculation_expr();
-					check_semi_at_end();
-					break;
 				case __while:
 				case __for:
 				case __foreach:
@@ -793,7 +699,7 @@ void nasal_parser::loop_expr()
 		}
 		else
 		{
-			//token t;
+
 			switch(this_token.type)
 			{
 				case __var:definition_expr();check_semi_at_end();break;
@@ -801,26 +707,9 @@ void nasal_parser::loop_expr()
 				case __nor_operator:
 				case __id:
 				case __number:
-				case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+				case __string:
+				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 				case __if:parse.push(this_token);if_else_expr();break;
-				case __left_curve:
-//					t=this_token;
-//					get_token();
-//					if(this_token.type==__var)
-//					{
-//						parse.push(t);
-//						definition_expr();
-//					}
-//					else
-//					{
-//						parse.push(this_token);
-//						parse.push(t);
-//						calculation_expr();
-//					}
-					parse.push(this_token);
-					calculation_expr();
-					check_semi_at_end();
-					break;
 				case __while:
 				case __for:
 				case __foreach:
@@ -910,7 +799,6 @@ void nasal_parser::loop_expr()
 		}
 		else
 		{
-			//token t;
 			switch(this_token.type)
 			{
 				case __var:definition_expr();check_semi_at_end();break;
@@ -918,26 +806,9 @@ void nasal_parser::loop_expr()
 				case __nor_operator:
 				case __id:
 				case __number:
-				case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+				case __string:
+				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 				case __if:parse.push(this_token);if_else_expr();break;
-				case __left_curve:
-//					t=this_token;
-//					get_token();
-//					if(this_token.type==__var)
-//					{
-//						parse.push(t);
-//						definition_expr();
-//					}
-//					else
-//					{
-//						parse.push(this_token);
-//						parse.push(t);
-//						calculation_expr();
-//					}
-					parse.push(this_token);
-					calculation_expr();
-					check_semi_at_end();
-					break;
 				case __while:
 				case __for:
 				case __foreach:
@@ -1010,7 +881,6 @@ void nasal_parser::loop_expr()
 		}
 		else
 		{
-			//token t;
 			switch(this_token.type)
 			{
 				case __var:definition_expr();check_semi_at_end();break;
@@ -1018,26 +888,9 @@ void nasal_parser::loop_expr()
 				case __nor_operator:
 				case __id:
 				case __number:
-				case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
+				case __string:
+				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 				case __if:parse.push(this_token);if_else_expr();break;
-				case __left_curve:
-//					t=this_token;
-//					get_token();
-//					if(this_token.type==__var)
-//					{
-//						parse.push(t);
-//						definition_expr();
-//					}
-//					else
-//					{
-//						parse.push(this_token);
-//						parse.push(t);
-//						calculation_expr();
-//					}
-					parse.push(this_token);
-					calculation_expr();
-					check_semi_at_end();
-					break;
 				case __while:
 				case __for:
 				case __foreach:
@@ -1117,6 +970,13 @@ void nasal_parser::in_curve_calc_expr()
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when generating __in_curve_calculation."<<std::endl;
 	}
+	get_token();
+	switch(this_token.type)
+	{
+		case __left_bracket:call_list_expr();break;
+		case __left_curve:call_function_expr();break;
+		default:parse.push(this_token);break;
+	}
 	return;
 }
 void nasal_parser::calculation_expr()
@@ -1132,31 +992,11 @@ void nasal_parser::calculation_expr()
 		else if(this_token.type==__number || this_token.type==__string)
 			;
 		else if(this_token.type==__left_curve)
-		{
-			get_token();
-			if(this_token.type==__func)// lambda
-			{
-				function_generate_expr();
-				get_token();
-				if(this_token.type!=__right_curve)
-				{
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' when creating new lambda."<<std::endl;
-					return;
-				}
-				get_token();
-				if(this_token.type!=__left_curve)
-				{
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' when calling a lambda function."<<std::endl;
-					return;
-				}
-				call_function_expr();
-				return;
-			}
-			else
-				parse.push(this_token);
 			in_curve_calc_expr();
+		else if(this_token.type==__func)
+		{
+			function_generate_expr();
+			return;
 		}
 		else
 		{
@@ -1270,60 +1110,29 @@ void nasal_parser::call_list_expr()
 		return;
 	}
 	return;
+
 }
-void nasal_parser::parameter_func_expr()
+void nasal_parser::parameter_function_expr()
 {
 	get_token();
-	if(this_token.type!=__id)
+	if(this_token.type==__id)
 	{
 		parse.push(this_token);
+		calculation_expr();
+		return;
 	}
-	get_token();
-	if(this_token.type==__left_curve)
+	else if(this_token.type==__left_curve || this_token.type==__left_brace)
 	{
-		get_token();
-		while(this_token.type!=__right_curve)
-		{
-			switch(this_token.type)
-			{
-				case __left_curve:
-				case __nor_operator:
-				case __sub_operator:
-				case __number:
-				case __string:
-				case __id:parse.push(this_token);calculation_expr();break;
-				case __left_bracket:list_generate_expr();break;
-				case __left_brace:hash_generate_expr();break;
-				case __func:parameter_func_expr();break;
-				default:
-					++error;
-					std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
-					print_token(this_token.type);
-					std::cout<<"' when calling a function."<<std::endl;
-					return;
-					break;
-			}
-			get_token();
-			if(this_token.type!=__comma && this_token.type!=__right_curve)
-			{
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' after parameter or ')' to end the call."<<std::endl;
-				return;
-			}
-			else if(this_token.type==__comma)
-				get_token();
-		}
+		parse.push(this_token);
+		function_generate_expr();
+		return;
 	}
 	else
-		parse.push(this_token);
-	get_token();
-	if(this_token.type==__left_brace)
 	{
-		parse.push(this_token);
-		statements_block();
+		++error;
+		std::cout<<">>[Error] line "<<this_token.line<<": expect an __id or '(' or '{' when calling or generating a function."<<std::endl;
+		return;
 	}
-	else
-		parse.push(this_token);
 	return;
 }
 void nasal_parser::call_function_expr()
@@ -1341,7 +1150,7 @@ void nasal_parser::call_function_expr()
 			case __id:parse.push(this_token);calculation_expr();break;
 			case __left_bracket:list_generate_expr();break;
 			case __left_brace:hash_generate_expr();break;
-			case __func:parameter_func_expr();break;
+			case __func:parameter_function_expr();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
@@ -1364,7 +1173,7 @@ void nasal_parser::call_function_expr()
 				case __id:parse.push(this_token);calculation_expr();break;
 				case __left_bracket:list_generate_expr();break;
 				case __left_brace:hash_generate_expr();break;
-				case __func:parameter_func_expr();break;
+				case __func:parameter_function_expr();break;
 				default:
 					++error;
 					std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
@@ -1439,7 +1248,6 @@ void nasal_parser::parse_main_work()
 	while(!parse.empty())
 	{
 		get_token();
-		//token t;
 		switch(this_token.type)
 		{
 			case __var:definition_expr();check_semi_at_end();break;
@@ -1447,25 +1255,8 @@ void nasal_parser::parse_main_work()
 			case __nor_operator:
 			case __id:
 			case __number:
-			case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
-			case __left_curve:
-//				t=this_token;
-//				get_token();
-//				if(this_token.type==__var)
-//				{
-//					parse.push(t);
-//					definition_expr();
-//				}
-//				else
-//				{
-//					parse.push(this_token);
-//					parse.push(t);
-//					calculation_expr();
-//				}
-				parse.push(this_token);
-				calculation_expr();
-				check_semi_at_end();
-				break;
+			case __string:
+			case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
 			case __if:parse.push(this_token);if_else_expr();break;
 			case __while:
 			case __for:
