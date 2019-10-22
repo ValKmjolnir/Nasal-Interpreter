@@ -66,6 +66,8 @@ And each statement must have a ';' after it or you will be informed with 'error:
 
 You can try a calculator in version 0.17~0.19 !
 
-# Abstract syntax tree
+# Now complete Abstract Syntax Tree
 
-In version 1.2 the ast will be completed.
+In version 1.2 the ast has been completed.
+
+But there are still some bugs inside.
