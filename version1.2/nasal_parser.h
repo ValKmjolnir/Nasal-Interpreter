@@ -1204,44 +1204,90 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 {
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
-	node.set_node_type(this_token.type);
+	get_token();
+	switch(this_token.type)
+	{
+		case __nor_operator:
+		case __sub_operator:
+			node=unary_operator_expr();
+			break;
+		case __number:
+			node.set_node_type(__number);
+			node.set_var_number(this_token.content);
+			break;
+		case __string:
+			node.set_node_type(__string);
+			node.set_var_string(this_token.content);
+			break;
+		case __id:
+			node.set_node_type(__id);
+			node.set_var_name(this_token.content);
+			node.add_child(identifier_call_expr());
+			break;
+		case __left_curve:
+			parse.push(this_token);
+			node=calculation_expr();
+			break;
+		default:
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after operator."<<std::endl;
+			return node;
+			break;
+	}
 	while(1)
 	{
-		temp.set_clear();
-		get_token();
-		switch(this_token.type)
-		{
-			case __number:
-				temp.set_node_type(__number);
-				temp.set_var_number(this_token.content);
-				node.add_child(temp);
-				break;
-			case __string:
-				temp.set_node_type(__string);
-				temp.set_var_string(this_token.content);
-				node.add_child(temp);
-				break;
-			case __id:
-				temp.set_node_type(__id);
-				temp.set_var_name(this_token.content);
-				temp.add_child(identifier_call_expr());
-				node.add_child(temp);
-				break;
-			case __left_curve:
-				parse.push(this_token);
-				node.add_child(calculation_expr());
-				break;
-			default:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": expect a data after operator '*' or '/'."<<std::endl;
-				return node;
-				break;
-		}
 		get_token();
 		if(this_token.type!=__mul_operator && this_token.type!=__div_operator)
 		{
 			parse.push(this_token);
 			break;
+		}
+		else
+		{
+			temp.set_clear();
+			temp.set_node_type(this_token.type);
+			temp.add_child(node);
+		}
+		get_token();
+		switch(this_token.type)
+		{
+			case __nor_operator:
+			case __sub_operator:
+				temp.add_child(unary_operator_expr());
+				node=temp;
+				break;
+			case __number:
+				node.set_clear();
+				node.set_node_type(__number);
+				node.set_var_number(this_token.content);
+				temp.add_child(node);
+				node=temp;
+				break;
+			case __string:
+				node.set_clear();
+				node.set_node_type(__string);
+				node.set_var_string(this_token.content);
+				temp.add_child(node);
+				node=temp;
+				break;
+			case __id:
+				node.set_clear();
+				node.set_node_type(__id);
+				node.set_var_name(this_token.content);
+				node.add_child(identifier_call_expr());
+				temp.add_child(node);
+				node=temp;
+				break;
+			case __left_curve:
+				parse.push(this_token);
+				temp.add_child(calculation_expr());
+				node=temp;
+				break;
+			default:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a data after operator."<<std::endl;
+				return node;
+				break;
 		}
 	}
 	return node;
@@ -1311,35 +1357,17 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
 	// number / string / identifier haven't been checked
+	get_token();
+	if(this_token.type==__func)// only lambda (func (){...})() can use this condition
+	{
+		node=(function_generate_expr());
+		return node;
+	}
+	else
+		parse.push(this_token);
+	temp=mul_div_operator_expr();
 	while(1)
 	{
-		get_token(); // check number / string / identifier
-		if(this_token.type==__nor_operator || this_token.type==__sub_operator)
-			node=unary_operator_expr();
-		else if(this_token.type==__id)
-			node=identifier_call_expr();
-		else if(this_token.type==__number || this_token.type==__string)
-		{
-			node.set_node_type(this_token.type);
-			switch(this_token.type)
-			{
-				case __number:node.set_node_type(__number);node.set_var_number(this_token.content);break;
-				case __string:node.set_node_type(__string);node.set_var_string(this_token.content);break;
-			}
-		}
-		else if(this_token.type==__left_curve)
-			node=in_curve_calc_expr();
-		else if(this_token.type==__func)
-		{
-			node=function_generate_expr();
-			return node;
-		}
-		else
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar before operator '+' , '-' , '*' , '/' or '~'."<<std::endl;
-			return node;
-		}
 		get_token();
 		switch(this_token.type)
 		{
@@ -1354,47 +1382,19 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 			case __add_operator:
 			case __sub_operator:
 			case __link_operator:
-				temp.set_clear();
-				temp.set_node_type(this_token.type);
-				temp.add_child(node);
-				node=temp;
+				node.set_clear();
+				node.set_node_type(this_token.type);
+				node.add_child(temp);
 				break;
-			case __mul_operator:
-			case __div_operator:
-				temp.set_clear();
-				temp.set_node_type(this_token.type);
-				temp.add_child(node);
-				temp.add_child(mul_div_operator_expr());
-				node=temp;
-				get_token();
-				switch(this_token.type)
-				{
-					case __cmp_equal:
-					case __cmp_not_equal:
-					case __cmp_less:
-					case __cmp_more:
-					case __cmp_less_or_equal:
-					case __cmp_more_or_equal:
-					case __and_operator:
-					case __or_operator:
-					case __add_operator:
-					case __sub_operator:
-					case __link_operator:
-						temp.set_clear();
-						temp.set_node_type(this_token.type);
-						temp.add_child(node);
-						node=temp;
-						break;
-					default:parse.push(this_token);return node;break;
-				}
-				break;
-			case __semi:parse.push(this_token);return node;break;
+			case __semi:parse.push(this_token);return temp;break;
 			case __unknown_operator:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
 				return node;break;
 			default:parse.push(this_token);return node;break;
 		}
+		node.add_child(mul_div_operator_expr());
+		temp=node;
 	}
 	return node;
 }
