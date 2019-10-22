@@ -9,13 +9,6 @@ There is a Nasal console in FlightGear but sometimes it is not so easy for every
 So this is an interpreter for Nasal written by C++.
 
 The interpreter is still in development.Anyone who interested in this could also join us!
-
-
-# Now complete add and sub in abstract syntax tree
-
-And add a command 'ast' to see the AST
-
-and command 'run' can give you the result
   
   # Now complete Lexical Analysis!
   
@@ -55,7 +48,19 @@ But something occurred,so i finally didn't make it.However you can still see thi
 
 The parser can recognize some basic elements in resource program.
 
-And in future i will make it to support more flexible grammar.
+In version 1.1 you can use the fully-functional parser.
+
+But there are still some differences such as:
+
+(var a,b,c)=(1,2,3);
+
+var (r,g,b)=color;
+
+(a,b)=(b,a);
+
+etc. cannot be recognized.
+
+And each statement must have a ';' after it or you will be informed with 'error: expect a ';''.
 
 # Calculator
 
@@ -63,4 +68,4 @@ You can try a calculator in version 0.17~0.19 !
 
 # Abstract syntax tree
 
-In version 1.0 the ast will be completed.
+In version 1.2 the ast will be completed.
