@@ -50,8 +50,10 @@ class abstract_syntax_tree
 		{
 			std::string str="";
 			for(int i=0;i<n;++i)
-				str+=" ";
+				str+="| ";
 			std::cout<<str;
+			print_token(ast_node_type);
+			std::cout<<std::endl;
 			if(!children.empty())
 			{
 				for(auto i=children.begin();i!=children.end();++i)
