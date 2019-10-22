@@ -1223,8 +1223,7 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 			node=identifier_call_expr();
 			break;
 		case __left_curve:
-			parse.push(this_token);
-			node=calculation_expr();
+			node=in_curve_calc_expr();
 			break;
 		default:
 			++error;
@@ -1277,8 +1276,7 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 				node=temp;
 				break;
 			case __left_curve:
-				parse.push(this_token);
-				temp.add_child(calculation_expr());
+				temp.add_child(in_curve_calc_expr());
 				node=temp;
 				break;
 			default:
@@ -1294,7 +1292,7 @@ abstract_syntax_tree nasal_parser::unary_operator_expr()
 {
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
-	node.set_node_type(__unary_operation);
+	node.set_node_type(this_token.type);
 	get_token();
 	switch(this_token.type)
 	{
@@ -1315,8 +1313,7 @@ abstract_syntax_tree nasal_parser::unary_operator_expr()
 			node.add_child(temp);
 			break;
 		case __left_curve:
-			parse.push(this_token);
-			node.add_child(calculation_expr());
+			node.add_child(in_curve_calc_expr());
 			break;
 		default:
 			++error;
@@ -1539,42 +1536,14 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
 	node.set_node_type(__call_function);
-	while(this_token.type!=__right_curve)
+	get_token();
+	if(this_token.type!=__right_curve)
 	{
-		get_token();
-		temp.set_clear();
-		switch(this_token.type)
-		{
-			case __left_curve:
-			case __nor_operator:
-			case __sub_operator:
-			case __number:
-			case __string:
-			case __id:
-				parse.push(this_token);
-				temp=calculation_expr();
-				break;
-			case __left_bracket:
-				temp=list_generate_expr();
-				break;
-			case __left_brace:
-				temp=hash_generate_expr();
-				break;
-			case __func:
-				temp=parameter_function_expr();
-				break;
-			default:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
-				print_token(this_token.type);
-				std::cout<<"' when calling a function."<<std::endl;
-				return node;
-				break;
-		}
-		get_token();
-		if(this_token.type==__colon)
+		parse.push(this_token);
+		while(this_token.type!=__right_curve)
 		{
 			get_token();
+			temp.set_clear();
 			switch(this_token.type)
 			{
 				case __left_curve:
@@ -1584,16 +1553,16 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 				case __string:
 				case __id:
 					parse.push(this_token);
-					temp.add_child(calculation_expr());
+					temp=calculation_expr();
 					break;
 				case __left_bracket:
-					temp.add_child(list_generate_expr());
+					temp=list_generate_expr();
 					break;
 				case __left_brace:
-					temp.add_child(hash_generate_expr());
+					temp=hash_generate_expr();
 					break;
 				case __func:
-					temp.add_child(parameter_function_expr());
+					temp=parameter_function_expr();
 					break;
 				default:
 					++error;
@@ -1603,22 +1572,55 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 					return node;
 					break;
 			}
-		}
-		else
-			parse.push(this_token);
-		node.add_child(temp);
-		get_token();
-		if(this_token.type!=__comma && this_token.type!=__right_curve)
-		{
-			++error;
-			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' after parameter or ')' to end the call."<<std::endl;
-			return node;
-		}
-		if(this_token.type==__comma)
-		{
 			get_token();
-			if(this_token.type!=__right_curve)
+			if(this_token.type==__colon)
+			{
+				get_token();
+				switch(this_token.type)
+				{
+					case __left_curve:
+					case __nor_operator:
+					case __sub_operator:
+					case __number:
+					case __string:
+					case __id:
+						parse.push(this_token);
+						temp.add_child(calculation_expr());
+						break;
+					case __left_bracket:
+						temp.add_child(list_generate_expr());
+						break;
+					case __left_brace:
+						temp.add_child(hash_generate_expr());
+						break;
+					case __func:
+						temp.add_child(parameter_function_expr());
+						break;
+					default:
+						++error;
+						std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
+						print_token(this_token.type);
+						std::cout<<"' when calling a function."<<std::endl;
+						return node;
+						break;
+				}
+			}
+			else
 				parse.push(this_token);
+			node.add_child(temp);
+			get_token();
+			if(this_token.type!=__comma && this_token.type!=__right_curve)
+			{
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' after parameter or ')' to end the call."<<std::endl;
+				return node;
+			}
+			if(this_token.type==__comma)
+			{
+				get_token();
+				if(this_token.type!=__right_curve)
+					parse.push(this_token);
+			}
 		}
 	}
 	get_token();
@@ -1675,6 +1677,7 @@ abstract_syntax_tree nasal_parser::identifier_call_expr()
 	}
 	node.set_var_name(temp_name);
 	abstract_syntax_tree temp;
+	abstract_syntax_tree assign;
 	get_token();
 	switch(this_token.type)
 	{
@@ -1684,11 +1687,13 @@ abstract_syntax_tree nasal_parser::identifier_call_expr()
 		case __mul_equal:
 		case __div_equal:
 		case __link_equal:
-			temp.set_node_type(__assignment);
+			assign.set_node_type(__assignment);
+			temp.set_node_type(this_token.type);
 			temp.add_child(node);
 			temp.add_child(assignment_expr());
+			assign.add_child(temp);
 			node.set_clear();
-			node=temp;
+			node=assign;
 			break;
 		default:parse.push(this_token);break;
 	}

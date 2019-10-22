@@ -32,7 +32,6 @@ enum token_type
 	__root,
 	__list,__hash,
 	__hash_member,
-	__unary_operation,
 	__call_function,__list_search,__hash_search,
 	__normal_statement_block,
 	__definition,__assignment,
@@ -98,7 +97,6 @@ void print_token(int type)
 		case __list:              context="list";break;
 		case __hash:              context="hash";break;
 		case __hash_member:       context="hash_member";break;
-		case __unary_operation:   context="unary_calc";break;
 		case __call_function:     context="call_func";break;
 		case __list_search:       context="call_list";break;
 		case __hash_search:       context="call_hash";break;
@@ -108,7 +106,7 @@ void print_token(int type)
 		case __function:          context="function";break;
 		case __loop:              context="loop";break;
 		case __ifelse:            context="if-else";break;
-		default:                  context="unknown_token";break;
+		default:                  context="undefined_token";break;
 	}
 	std::cout<<context;
 	return;
