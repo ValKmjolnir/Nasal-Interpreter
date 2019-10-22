@@ -1220,9 +1220,7 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 			node.set_var_string(this_token.content);
 			break;
 		case __id:
-			node.set_node_type(__id);
-			node.set_var_name(this_token.content);
-			node.add_child(identifier_call_expr());
+			node=identifier_call_expr();
 			break;
 		case __left_curve:
 			parse.push(this_token);
@@ -1365,7 +1363,7 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 	}
 	else
 		parse.push(this_token);
-	temp=mul_div_operator_expr();
+	node=mul_div_operator_expr();
 	while(1)
 	{
 		get_token();
@@ -1382,19 +1380,19 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 			case __add_operator:
 			case __sub_operator:
 			case __link_operator:
-				node.set_clear();
-				node.set_node_type(this_token.type);
-				node.add_child(temp);
+				temp.set_clear();
+				temp.set_node_type(this_token.type);
+				temp.add_child(node);
 				break;
-			case __semi:parse.push(this_token);return temp;break;
+			case __semi:parse.push(this_token);return node;break;
 			case __unknown_operator:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
 				return node;break;
 			default:parse.push(this_token);return node;break;
 		}
-		node.add_child(mul_div_operator_expr());
-		temp=node;
+		temp.add_child(mul_div_operator_expr());
+		node=temp;
 	}
 	return node;
 }
@@ -1539,11 +1537,12 @@ abstract_syntax_tree nasal_parser::parameter_function_expr()
 abstract_syntax_tree nasal_parser::call_function_expr()
 {
 	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
 	node.set_node_type(__call_function);
-	get_token();
 	while(this_token.type!=__right_curve)
 	{
-		abstract_syntax_tree temp;
+		get_token();
+		temp.set_clear();
 		switch(this_token.type)
 		{
 			case __left_curve:
@@ -1615,8 +1614,12 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' after parameter or ')' to end the call."<<std::endl;
 			return node;
 		}
-		else if(this_token.type==__comma)
+		if(this_token.type==__comma)
+		{
 			get_token();
+			if(this_token.type!=__right_curve)
+				parse.push(this_token);
+		}
 	}
 	get_token();
 	switch(this_token.type)
@@ -1651,28 +1654,26 @@ abstract_syntax_tree nasal_parser::call_hash_expr()
 abstract_syntax_tree nasal_parser::identifier_call_expr()
 {
 	abstract_syntax_tree node;
-	node.set_var_name(this_token.content);
+	std::string temp_name=this_token.content;
 	// __id has been checked
 	get_token();
 	switch(this_token.type)
 	{
 		case __left_bracket:
-			node.set_node_type(__list_search);
-			node.add_child(call_list_expr());
+			node=call_list_expr();
 			break;
 		case __left_curve:
-			node.set_node_type(__call_function);
-			node.add_child(call_function_expr());
+			node=call_function_expr();
 			break;
 		case __dot:
-			node.set_node_type(__hash_search);
-			node.add_child(call_hash_expr());
+			node=call_hash_expr();
 			break;
 		default:
 			node.set_node_type(__id);
 			parse.push(this_token);
 			break;
 	}
+	node.set_var_name(temp_name);
 	abstract_syntax_tree temp;
 	get_token();
 	switch(this_token.type)
