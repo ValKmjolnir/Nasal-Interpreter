@@ -60,9 +60,7 @@ int main()
 			pas.parse_process(lex.return_list());
 			pas.parse_main_work();
 			if(!pas.get_error_num())
-			{
-				;
-			}
+				pas.print_generated_ast();
 		}
 		else if(command=="run")
 		{

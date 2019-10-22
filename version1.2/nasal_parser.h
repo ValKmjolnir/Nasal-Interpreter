@@ -31,6 +31,12 @@ class nasal_parser
 		{
 			return error;
 		}
+		void print_generated_ast()
+		{
+			std::cout<<">>[Abstract-syntax-tree]"<<std::endl;
+			root.print_tree(1);
+			return;
+		}
 		void print_parser_stack()
 		{
 			if(parse.empty())
@@ -96,26 +102,26 @@ class nasal_parser
 			return;
 		}
 		void parse_main_work();
-		void in_curve_calc_expr();
-		void calculation_expr();
-		void identifier_call_expr();
-		void call_list_expr();
-		void parameter_function_expr();
-		void call_function_expr();
-		void call_hash_expr();
-		void list_generate_expr();
-		void hash_generate_expr();
-		void definition_expr();
-		void assignment_expr();
-		void loop_expr();
+		abstract_syntax_tree in_curve_calc_expr();
+		abstract_syntax_tree calculation_expr();
+		abstract_syntax_tree identifier_call_expr();
+		abstract_syntax_tree call_list_expr();
+		abstract_syntax_tree parameter_function_expr();
+		abstract_syntax_tree call_function_expr();
+		abstract_syntax_tree call_hash_expr();
+		abstract_syntax_tree list_generate_expr();
+		abstract_syntax_tree hash_generate_expr();
+		abstract_syntax_tree definition_expr();
+		abstract_syntax_tree assignment_expr();
+		abstract_syntax_tree loop_expr();
 		bool else_if_check();
-		void if_else_expr();
-		void mul_div_operator_expr();
-		void unary_operator_expr();
+		abstract_syntax_tree if_else_expr();
+		abstract_syntax_tree mul_div_operator_expr();
+		abstract_syntax_tree unary_operator_expr();
 		void check_semi_at_end();
-		void statements_block();
-		void function_generate_expr();
-		void return_expr();
+		abstract_syntax_tree statements_block();
+		abstract_syntax_tree function_generate_expr();
+		abstract_syntax_tree return_expr();
 };
 void nasal_parser::check_semi_at_end()
 {
@@ -127,71 +133,105 @@ void nasal_parser::check_semi_at_end()
 	}
 	return;
 }
-void nasal_parser::return_expr()
+abstract_syntax_tree nasal_parser::return_expr()
 {
+	abstract_syntax_tree node;
+	node.set_node_type(__return);
 	get_token();
 	switch(this_token.type)
 	{
 		case __left_curve:
 		case __number:
 		case __string:
-		case __id:parse.push(this_token);calculation_expr();break;
-		case __func:function_generate_expr();break;
-		case __left_bracket:list_generate_expr();break;
-		case __left_brace:hash_generate_expr();break;
+		case __id:
+			parse.push(this_token);
+			node.add_child(calculation_expr());
+			break;
+		case __func:
+			node.add_child(function_generate_expr());
+			break;
+		case __left_bracket:
+			node.add_child(list_generate_expr());
+			break;
+		case __left_brace:
+			node.add_child(hash_generate_expr());
+			break;
 		case __semi:parse.push(this_token);break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data or ';' after __return_expr."<<std::endl;
-			return;
+			return node;
 			break;
 	}
-	return;
+	return node;
 }
-void nasal_parser::statements_block()
+abstract_syntax_tree nasal_parser::statements_block()
 {
+	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
+	node.set_node_type(__normal_statement_block);
 	get_token();
 	if(this_token.type!=__left_brace)
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a '{' when generating a __block."<<std::endl;
-		return;
+		return node;
 	}
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
+		temp.set_clear();
 		switch(this_token.type)
 		{
-			case __var:definition_expr();check_semi_at_end();break;
+			case __var:
+				node.add_child(definition_expr());
+				check_semi_at_end();break;
 			case __left_curve:
 			case __sub_operator:
 			case __nor_operator:
 			case __id:
 			case __number:
-			case __string:parse.push(this_token);calculation_expr();check_semi_at_end();break;
-			case __if:parse.push(this_token);if_else_expr();break;
+			case __string:
+				parse.push(this_token);
+				node.add_child(calculation_expr());
+				check_semi_at_end();break;
+			case __if:
+				parse.push(this_token);
+				node.add_child(if_else_expr());
+				break;
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:parse.push(this_token);loop_expr();break;
+			case __forindex:
+				parse.push(this_token);
+				node.add_child(loop_expr());
+				break;
 			case __continue:
-			case __break:check_semi_at_end();break;
+			case __break:
+				temp.set_node_type(this_token.type);
+				node.add_child(temp);
+				check_semi_at_end();break;
 			case __semi:break;
-			case __return:return_expr();check_semi_at_end();break;
+			case __return:
+				node.add_child(return_expr());
+				check_semi_at_end();break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": '";
 				print_token(this_token.type);
 				std::cout<<"' incorrect token as the beginning of statement."<<std::endl;
-				return;
+				return node;
 				break;
 		}
 		get_token();
 	}
-	return;
+	return node;
 }
-void nasal_parser::function_generate_expr()
+abstract_syntax_tree nasal_parser::function_generate_expr()
 {
+	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
+	node.set_node_type(__function);
 	get_token();
 	if(this_token.type==__left_brace)
 		parse.push(this_token);
@@ -200,8 +240,11 @@ void nasal_parser::function_generate_expr()
 		get_token();
 		while(this_token.type!=__right_curve)
 		{
+			temp.set_clear();
 			if(this_token.type==__id)
 			{
+				temp.set_node_type(__id);
+				temp.set_var_name(this_token.content);
 				get_token();
 				if(this_token.type!=__equal)
 					parse.push(this_token);
@@ -215,22 +258,33 @@ void nasal_parser::function_generate_expr()
 						case __number:
 						case __string:
 						case __nor_operator:
-						case __sub_operator:parse.push(this_token);calculation_expr();break;
-						case __left_brace:hash_generate_expr();break;
-						case __left_bracket:list_generate_expr();break;
-						case __func:function_generate_expr();break;
+						case __sub_operator:
+							parse.push(this_token);
+							temp.add_child(calculation_expr());
+							break;
+						case __left_brace:
+							temp.add_child(hash_generate_expr());
+							break;
+						case __left_bracket:
+							temp.add_child(list_generate_expr());
+							break;
+						case __func:
+							temp.add_child(function_generate_expr());
+							break;
 						default:
 							++error;
 							std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar after operator '=' ."<<std::endl;
-							return;break;
+							return node;
+							break;
 					}
 				}
+				node.add_child(temp);
 				get_token();
 				if(this_token.type!=__right_curve && this_token.type!=__comma)
 				{
 					++error;
 					std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ')' when creating a __function."<<std::endl;
-					return;
+					return node;
 				}
 				else if(this_token.type==__right_curve)
 					parse.push(this_token);
@@ -242,7 +296,7 @@ void nasal_parser::function_generate_expr()
 				{
 					++error;
 					std::cout<<">>[Error] line "<<this_token.line<<": must put ')' after __dynamic_id."<<std::endl;
-					return;
+					return node;
 				}
 				parse.push(this_token);
 			}
@@ -250,7 +304,7 @@ void nasal_parser::function_generate_expr()
 			{
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": expect __id and __dynamic_id only."<<std::endl;
-				return;
+				return node;
 			}
 			get_token();
 		}
@@ -261,24 +315,26 @@ void nasal_parser::function_generate_expr()
 		std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 		print_token(this_token.type);
 		std::cout<<"' when creating a __function."<<std::endl;
-		return;
+		return node;
 	}
 	get_token();
 	if(this_token.type==__left_brace)
 	{
 		parse.push(this_token);
-		statements_block();
+		node.add_child(statements_block());
 	}
 	else
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": function must have a statement block begin with '{' ."<<std::endl;
-		return;
+		return node;
 	}
-	return;
+	return node;
 }
-void nasal_parser::list_generate_expr()
+abstract_syntax_tree nasal_parser::list_generate_expr()
 {
+	abstract_syntax_tree node;
+	node.set_node_type(__list);
 	get_token();
 	while(this_token.type!=__right_bracket)
 	{
@@ -289,15 +345,22 @@ void nasal_parser::list_generate_expr()
 			case __left_curve:
 			case __number:
 			case __string:
-			case __id:parse.push(this_token);calculation_expr();break;
-			case __left_bracket:list_generate_expr();break;
-			case __left_brace:hash_generate_expr();break;
+			case __id:
+				parse.push(this_token);
+				node.add_child(calculation_expr());
+				break;
+			case __left_bracket:
+				node.add_child(list_generate_expr());
+				break;
+			case __left_brace:
+				node.add_child(hash_generate_expr());
+				break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 				print_token(this_token.type);
 				std::cout<<"' when creating a __list."<<std::endl;
-				return;
+				return node;
 				break;
 		}
 		get_token();
@@ -307,15 +370,18 @@ void nasal_parser::list_generate_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ']' but get '";
 			print_token(this_token.type);
 			std::cout<<"' when creating a __list."<<std::endl;
-			return;
+			return node;
 		}
 		else if(this_token.type==__comma)
 			get_token();
 	}
-	return;
+	return node;
 }
-void nasal_parser::hash_generate_expr()
+abstract_syntax_tree nasal_parser::hash_generate_expr()
 {
+	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
+	node.set_node_type(__hash);
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
@@ -325,19 +391,19 @@ void nasal_parser::hash_generate_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 			print_token(this_token.type);
 			std::cout<<"' when creating a __hash_member."<<std::endl;
-			return;
+			return node;
 		}
-		if(this_token.type==__string || this_token.type==__number)
+		else
 		{
 			parse.push(this_token);
-			calculation_expr();
+			node.add_child(calculation_expr());
 		}
 		get_token();
 		if(this_token.type!=__colon)
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ':' when creating a __hash_member."<<std::endl;
-			return;
+			return node;
 		}
 		get_token();
 		switch(this_token.type)
@@ -345,28 +411,35 @@ void nasal_parser::hash_generate_expr()
 			case __left_curve:
 			case __number:
 			case __string:
-			case __id:parse.push(this_token);calculation_expr();break;
+			case __id:
+				parse.push(this_token);
+				node.add_child(calculation_expr());
+				break;
 			case __func:
 				get_token();
 				if(this_token.type==__id)
 				{
 					parse.push(this_token);
-					calculation_expr();
+					node.add_child(calculation_expr());
 				}
 				else
 				{
 					parse.push(this_token);
-					function_generate_expr();
+					node.add_child(function_generate_expr());
 				}
 				break;
-			case __left_bracket:list_generate_expr();break;
-			case __left_brace:hash_generate_expr();break;
+			case __left_bracket:
+				node.add_child(list_generate_expr());
+				break;
+			case __left_brace:
+				node.add_child(hash_generate_expr());
+				break;
 			default:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": incorrect token '";
 				print_token(this_token.type);
 				std::cout<<"' when creating a __hash_member."<<std::endl;
-				return;
+				return node;
 				break;
 		}
 		get_token();
@@ -376,12 +449,12 @@ void nasal_parser::hash_generate_expr()
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or '}' but get '";
 			print_token(this_token.type);
 			std::cout<<"' when creating a __hash."<<std::endl;
-			return;
+			return node;
 		}
 		else if(this_token.type==__comma)
 			get_token();
 	}
-	return;
+	return node;
 }
 abstract_syntax_tree nasal_parser::definition_expr()
 {
@@ -392,7 +465,7 @@ abstract_syntax_tree nasal_parser::definition_expr()
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect an __id."<<std::endl;
-		return;
+		return node;
 	}
 	else
 	{
@@ -406,14 +479,14 @@ abstract_syntax_tree nasal_parser::definition_expr()
 	{
 		++error;
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a '=' after __id."<<std::endl;
-		return;
+		return node;
 	}
 	else if(this_token.type==__semi)
 	{
 		parse.push(this_token);// for semi check
 		++warning;
 		std::cout<<">>[Warning] line "<<this_token.line<<": better initializing this."<<std::endl;
-		return;
+		return node;
 	}
 	get_token();
 	token semi_token;
@@ -444,13 +517,14 @@ abstract_syntax_tree nasal_parser::definition_expr()
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a data after this operator."<<std::endl;
-			return;
+			return node;
 			break;
 	}
 	return node;
 }
-void nasal_parser::assignment_expr()
+abstract_syntax_tree nasal_parser::assignment_expr()
 {
+	abstract_syntax_tree node;
 	get_token();
 	switch(this_token.type)
 	{
@@ -459,17 +533,26 @@ void nasal_parser::assignment_expr()
 		case __nor_operator:
 		case __number:
 		case __string:
-		case __id:parse.push(this_token);calculation_expr();break;
-		case __func:function_generate_expr();break;
-		case __left_bracket:list_generate_expr();break;
-		case __left_brace:hash_generate_expr();break;
+		case __id:
+			parse.push(this_token);
+			node=calculation_expr();
+			break;
+		case __func:
+			node=function_generate_expr();
+			break;
+		case __left_bracket:
+			node=list_generate_expr();
+			break;
+		case __left_brace:
+			node=hash_generate_expr();
+			break;
 		default:
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": incorrect data type when doing assignment."<<std::endl;
-			return;
+			return node;
 			break;
 	}
-	return;
+	return node;
 }
 bool nasal_parser::else_if_check()
 {
@@ -503,7 +586,7 @@ abstract_syntax_tree nasal_parser::if_else_expr()
 		std::cout<<">>[Error] line "<<this_token.line<<": expect a 'if' when creating new if-else statement."<<std::endl;
 		return node;
 	}
-	temp.set_clear(__if);
+	temp.set_node_type(__if);
 	get_token();
 	if(this_token.type!=__left_curve)
 	{
@@ -697,33 +780,54 @@ abstract_syntax_tree nasal_parser::if_else_expr()
 	temp.set_clear();
 	if(this_token.type==__else)
 	{
+		temp.set_node_type(__else);
 		get_token();
 		if(this_token.type==__left_brace)
 		{
 			// if without { then only one statement is behind it
 			parse.push(this_token);
-			statements_block();
+			temp.add_child(statements_block());
 		}
 		else
 		{
 			switch(this_token.type)
 			{
-				case __var:definition_expr();check_semi_at_end();break;
+				case __var:
+					temp.add_child(definition_expr());
+					check_semi_at_end();
+					break;
 				case __sub_operator:
 				case __nor_operator:
 				case __id:
 				case __number:
 				case __string:
-				case __left_curve:parse.push(this_token);calculation_expr();check_semi_at_end();break;
-				case __if:parse.push(this_token);if_else_expr();break;
+				case __left_curve:
+					parse.push(this_token);
+					temp.add_child(calculation_expr());
+					check_semi_at_end();
+					break;
+				case __if:
+					parse.push(this_token);
+					temp.add_child(if_else_expr());
+					break;
 				case __while:
 				case __for:
 				case __foreach:
-				case __forindex:parse.push(this_token);loop_expr();break;
+				case __forindex:
+					parse.push(this_token);
+					temp.add_child(loop_expr());
+					break;
 				case __continue:
-				case __break:check_semi_at_end();break;
+				case __break:
+					temp2.set_node_type(this_token.type);
+					temp.add_child(temp2);
+					check_semi_at_end();
+					break;
 				case __semi:break;
-				case __return:return_expr();check_semi_at_end();break;
+				case __return:
+					temp.add_child(return_expr());
+					check_semi_at_end();
+					break;
 				default:
 					++error;
 					std::cout<<">>[Error] line "<<this_token.line<<": \'";
@@ -776,7 +880,7 @@ abstract_syntax_tree nasal_parser::loop_expr()
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'while('."<<std::endl;
-			return;
+			return node;
 		}
 		get_token();
 		if(this_token.type==__left_brace)
@@ -844,7 +948,7 @@ abstract_syntax_tree nasal_parser::loop_expr()
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a '(' after 'for'."<<std::endl;
-			return;
+			return node;
 		}
 		get_token();
 		switch(this_token.type)
@@ -911,7 +1015,7 @@ abstract_syntax_tree nasal_parser::loop_expr()
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a ')' after 'for('."<<std::endl;
-			return;
+			return node;
 		}
 		get_token();
 		if(this_token.type==__left_brace)
@@ -1219,8 +1323,8 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 			node.set_node_type(this_token.type);
 			switch(this_token.type)
 			{
-				case __number:node.set_var_number(this_token.content);break;
-				case __string:node.set_var_string(this_token.content);break;
+				case __number:node.set_node_type(__number);node.set_var_number(this_token.content);break;
+				case __string:node.set_node_type(__string);node.set_var_string(this_token.content);break;
 			}
 		}
 		else if(this_token.type==__left_curve)
@@ -1234,7 +1338,7 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 		{
 			++error;
 			std::cout<<">>[Error] line "<<this_token.line<<": expect a scalar before operator '+' , '-' , '*' , '/' or '~'."<<std::endl;
-			return;
+			return node;
 		}
 		get_token();
 		switch(this_token.type)
@@ -1284,7 +1388,7 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 					default:parse.push(this_token);return node;break;
 				}
 				break;
-			case __semi:parse.push(this_token);return;break;
+			case __semi:parse.push(this_token);return node;break;
 			case __unknown_operator:
 				++error;
 				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
@@ -1297,7 +1401,7 @@ abstract_syntax_tree nasal_parser::calculation_expr()
 abstract_syntax_tree nasal_parser::call_list_expr()
 {
 	abstract_syntax_tree node;
-	node.set_node_type(__call_list);
+	node.set_node_type(__list_search);
 	get_token();
 	switch(this_token.type)
 	{
@@ -1350,6 +1454,36 @@ abstract_syntax_tree nasal_parser::call_list_expr()
 				node.add_child(call_hash_expr());
 				break;
 			default:parse.push(this_token);break;
+		}
+	}
+	else if(this_token.type==__comma)
+	{
+		while(this_token.type!=__right_bracket)
+		{
+			get_token();
+			switch(this_token.type)
+			{
+				case __left_curve:
+				case __number:
+				case __string:
+				case __id:
+					parse.push(this_token);
+					node.add_child(calculation_expr());
+					break;
+				case __right_bracket:parse.push(this_token);break;
+				default:
+					++error;
+					std::cout<<">>[Error] line "<<this_token.line<<": incorrect data type when calling a list."<<std::endl;
+					return node;
+					break;
+			}
+			get_token();
+			if(this_token.type!=__comma && this_token.type!=__right_bracket)
+			{
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": expect a ',' or ']' when calling a list."<<std::endl;
+				return node;
+			}
 		}
 	}
 	else if(this_token.type==__right_bracket)
@@ -1503,7 +1637,7 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 abstract_syntax_tree nasal_parser::call_hash_expr()
 {
 	abstract_syntax_tree node;
-	node.set_node_type(__call_hash);
+	node.set_node_type(__hash_search);
 	get_token();
 	if(this_token.type!=__id)
 	{
@@ -1523,7 +1657,7 @@ abstract_syntax_tree nasal_parser::identifier_call_expr()
 	switch(this_token.type)
 	{
 		case __left_bracket:
-			node.set_node_type(__call_list);
+			node.set_node_type(__list_search);
 			node.add_child(call_list_expr());
 			break;
 		case __left_curve:
@@ -1531,10 +1665,13 @@ abstract_syntax_tree nasal_parser::identifier_call_expr()
 			node.add_child(call_function_expr());
 			break;
 		case __dot:
-			node.set_node_type(__call_hash);
+			node.set_node_type(__hash_search);
 			node.add_child(call_hash_expr());
 			break;
-		default:parse.push(this_token);break;
+		default:
+			node.set_node_type(__id);
+			parse.push(this_token);
+			break;
 	}
 	abstract_syntax_tree temp;
 	get_token();
