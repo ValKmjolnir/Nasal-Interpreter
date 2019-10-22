@@ -34,6 +34,7 @@ class abstract_syntax_tree
 			var_number=p.var_number;
 			var_string=p.var_string;
 			var_name=p.var_name;
+			children.clear();
 			children=p.children;
 			return *this;
 		}
@@ -53,6 +54,15 @@ class abstract_syntax_tree
 				str+="| ";
 			std::cout<<str;
 			print_token(ast_node_type);
+			switch(ast_node_type)
+			{
+				case __number:std::cout<<": "<<var_number;break;
+				case __string:std::cout<<": "<<var_string;break;
+				case __id:
+				case __list_search:
+				case __hash_search:
+				case __call_function:std::cout<<": "<<var_name;break;
+			}
 			std::cout<<std::endl;
 			if(!children.empty())
 			{
