@@ -677,12 +677,12 @@ abstract_syntax_tree nasal_parser::if_else_expr()
 		}
 	}
 	node.add_child(temp);
-	temp.set_clear();
 	if(parse.empty())
 		return node;
 	get_token();
 	while(this_token.type==__elsif || else_if_check())
 	{
+		temp.set_clear(); 
 		temp.set_node_type(__elsif);
 		get_token();
 		if(this_token.type!=__left_curve)
@@ -772,11 +772,11 @@ abstract_syntax_tree nasal_parser::if_else_expr()
 					break;
 			}
 		}
+		node.add_child(temp);
 		if(parse.empty())
 			return node;
 		get_token();
 	}
-	node.add_child(temp);
 	temp.set_clear();
 	if(this_token.type==__else)
 	{
@@ -837,6 +837,7 @@ abstract_syntax_tree nasal_parser::if_else_expr()
 					break;
 			}
 		}
+		node.add_child(temp);
 	}
 	else
 		parse.push(this_token);
@@ -1268,10 +1269,7 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 				node=temp;
 				break;
 			case __id:
-				node.set_clear();
-				node.set_node_type(__id);
-				node.set_var_name(this_token.content);
-				node.add_child(identifier_call_expr());
+				node=identifier_call_expr();
 				temp.add_child(node);
 				node=temp;
 				break;
@@ -1307,9 +1305,7 @@ abstract_syntax_tree nasal_parser::unary_operator_expr()
 			node.add_child(temp);
 			break;
 		case __id:
-			temp.set_node_type(__id);
-			temp.set_var_name(this_token.content);
-			temp.add_child(identifier_call_expr());
+			temp=identifier_call_expr();
 			node.add_child(temp);
 			break;
 		case __left_curve:
