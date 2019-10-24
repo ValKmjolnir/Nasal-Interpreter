@@ -958,6 +958,7 @@ abstract_syntax_tree nasal_parser::loop_expr()
 				node.add_child(definition_expr());
 				break;
 			case __id:
+				parse.push(this_token);
 				node.add_child(calculation_expr());
 				break;
 			case __semi:parse.push(this_token);break;
@@ -1235,6 +1236,12 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 	while(1)
 	{
 		get_token();
+		if(this_token.type==__unknown_operator)
+		{
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator."<<std::endl;
+			return node;
+		}
 		if(this_token.type!=__mul_operator && this_token.type!=__div_operator)
 		{
 			parse.push(this_token);
@@ -1665,6 +1672,12 @@ abstract_syntax_tree nasal_parser::identifier_call_expr()
 			break;
 		case __dot:
 			node=call_hash_expr();
+			break;
+		case __unknown_operator:
+			node.set_node_type(__id);
+			++error;
+			std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator."<<std::endl;
+			return node;
 			break;
 		default:
 			node.set_node_type(__id);

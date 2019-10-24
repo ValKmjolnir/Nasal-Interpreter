@@ -81,17 +81,25 @@ class resource_programme_process
 			}
 			memset(resource,0,sizeof(char));
 			int i=0;
+			int instring=0;
 			bool findnote=false;// to find the note with # at the head of line.
 			while(!fin.eof())
 			{
 				resource[i]=fin.get();
+				if(resource[i]=='\'' || resource[i]=='\"')
+					++instring;
 				if(resource[i]=='\n')
 					findnote=false;
 				//when meeting '\n' the findnote is set to false then the next statement can be executed.
 				if(resource[i]!='#' && !findnote)
 					++i;
 				else if(resource[i]=='#')
-					findnote=true;
+				{
+					if(instring & 1)
+						++i;
+					else
+						findnote=true;
+				}
 				if(fin.eof())
 					break;
 			}
@@ -458,7 +466,7 @@ class nasal_lexer
 					else if((*i).content=="<=")
 						(*i).type=__cmp_less_or_equal;
 				}
-				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content==".") || ((*i).content=="?") || ((*i).content=="|") || ((*i).content=="%") || ((*i).content=="$") || ((*i).content=="`") || ((*i).content=="^") || ((*i).content=="@"))
+				else if(((*i).content==";") || ((*i).content==",") || ((*i).content=="=") || ((*i).content==":") || ((*i).content==".") || ((*i).content=="?") || ((*i).content=="|") || ((*i).content=="&") || ((*i).content=="%") || ((*i).content=="$") || ((*i).content=="`") || ((*i).content=="^") || ((*i).content=="@"))
 				{
 					char c=(*i).content[0];
 					switch(c)
