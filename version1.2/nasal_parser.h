@@ -31,6 +31,10 @@ class nasal_parser
 		{
 			return error;
 		}
+		abstract_syntax_tree& get_tree()
+		{
+			return root;
+		}
 		void print_generated_ast()
 		{
 			std::cout<<">>[Abstract-syntax-tree]"<<std::endl;

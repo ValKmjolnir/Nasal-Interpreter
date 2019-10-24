@@ -71,6 +71,23 @@ class abstract_syntax_tree
 			}
 			return;
 		}
+		void run_tree()
+		{
+			if(!children.empty())
+			{
+				for(auto i=children.begin();i!=children.end();++i)
+				{
+					switch(i->ast_node_type)
+					{
+						case __number:std::cout<<i->var_number<<std::endl;break;
+						case __string:std::cout<<i->var_string<<std::endl;break;
+						case __id:std::cout<<i->var_name<<std::endl;break;
+						default:i->run_tree();break;
+					}
+				}
+			}
+			return;
+		}
 		void set_node_type(const int type)
 		{
 			ast_node_type=type;
@@ -164,15 +181,15 @@ class abstract_syntax_tree
 			children.push_back(p);
 			return;
 		}
-		double return_var_number()
+		double get_var_number()
 		{
 			return var_number;
 		}
-		std::string return_var_string()
+		std::string get_var_string()
 		{
 			return var_string;
 		}
-		std::string return_var_name()
+		std::string get_var_name()
 		{
 			return var_name;
 		}

@@ -10,7 +10,7 @@
 
 #include "nasal_token_type.h"
 #include "ast.h"
-
+#include "nasal_runtime.h"
 #include "nasal_lexer.h"
 #include "nasal_parser.h"
 
