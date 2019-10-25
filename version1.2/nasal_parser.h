@@ -120,6 +120,8 @@ class nasal_parser
 		abstract_syntax_tree loop_expr();
 		bool else_if_check();
 		abstract_syntax_tree if_else_expr();
+		abstract_syntax_tree and_operator_expr();
+		abstract_syntax_tree add_sub_cmp_operator_expr();
 		abstract_syntax_tree mul_div_operator_expr();
 		abstract_syntax_tree unary_operator_expr();
 		void check_semi_at_end();
@@ -1297,6 +1299,50 @@ abstract_syntax_tree nasal_parser::mul_div_operator_expr()
 	}
 	return node;
 }
+abstract_syntax_tree nasal_parser::add_sub_cmp_operator_expr()
+{
+	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
+	// number / string / identifier haven't been checked
+	get_token();
+	if(this_token.type==__func)// only lambda (func (){...})() can use this condition
+	{
+		node=(function_generate_expr());
+		return node;
+	}
+	else
+		parse.push(this_token);
+	node=mul_div_operator_expr();
+	while(1)
+	{
+		get_token();
+		switch(this_token.type)
+		{
+			case __cmp_equal:
+			case __cmp_not_equal:
+			case __cmp_less:
+			case __cmp_more:
+			case __cmp_less_or_equal:
+			case __cmp_more_or_equal:
+			case __add_operator:
+			case __sub_operator:
+			case __link_operator:
+				temp.set_clear();
+				temp.set_node_type(this_token.type);
+				temp.add_child(node);
+				break;
+			case __semi:parse.push(this_token);return node;break;
+			case __unknown_operator:
+				++error;
+				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
+				return node;break;
+			default:parse.push(this_token);return node;break;
+		}
+		temp.add_child(mul_div_operator_expr());
+		node=temp;
+	}
+	return node; 
+}
 abstract_syntax_tree nasal_parser::unary_operator_expr()
 {
 	abstract_syntax_tree node;
@@ -1354,50 +1400,41 @@ abstract_syntax_tree nasal_parser::in_curve_calc_expr()
 	}
 	return node;
 }
+abstract_syntax_tree nasal_parser::and_operator_expr()
+{
+	abstract_syntax_tree node;
+	abstract_syntax_tree temp;
+	node=add_sub_cmp_operator_expr();
+	get_token();
+
+	while(this_token.type==__and_operator)
+	{
+		temp.set_clear();
+		temp.set_node_type(__and_operator);
+		temp.add_child(node);
+		temp.add_child(add_sub_cmp_operator_expr());
+		node=temp;
+		get_token();
+	}
+	parse.push(this_token);
+	return node;
+}
 abstract_syntax_tree nasal_parser::calculation_expr()
 {
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
-	// number / string / identifier haven't been checked
+	node=and_operator_expr();
 	get_token();
-	if(this_token.type==__func)// only lambda (func (){...})() can use this condition
+	while(this_token.type==__or_operator)
 	{
-		node=(function_generate_expr());
-		return node;
-	}
-	else
-		parse.push(this_token);
-	node=mul_div_operator_expr();
-	while(1)
-	{
-		get_token();
-		switch(this_token.type)
-		{
-			case __cmp_equal:
-			case __cmp_not_equal:
-			case __cmp_less:
-			case __cmp_more:
-			case __cmp_less_or_equal:
-			case __cmp_more_or_equal:
-			case __and_operator:
-			case __or_operator:
-			case __add_operator:
-			case __sub_operator:
-			case __link_operator:
-				temp.set_clear();
-				temp.set_node_type(this_token.type);
-				temp.add_child(node);
-				break;
-			case __semi:parse.push(this_token);return node;break;
-			case __unknown_operator:
-				++error;
-				std::cout<<">>[Error] line "<<this_token.line<<": __unknown_operator '"<<this_token.content<<"'."<<std::endl;
-				return node;break;
-			default:parse.push(this_token);return node;break;
-		}
-		temp.add_child(mul_div_operator_expr());
+		temp.set_clear();
+		temp.set_node_type(__or_operator);
+		temp.add_child(node);
+		temp.add_child(and_operator_expr());
 		node=temp;
+		get_token();
 	}
+	parse.push(this_token);
 	return node;
 }
 abstract_syntax_tree nasal_parser::call_list_expr()
