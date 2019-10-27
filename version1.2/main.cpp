@@ -4,7 +4,7 @@ int main()
 	resource_programme_process prog;
 	nasal_lexer lex;
 	nasal_parser pas;
-	runtime rt;
+	nasal_runtime vm;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> Input [help] to find help."<<std::endl;
@@ -72,7 +72,10 @@ int main()
 			pas.parse_process(lex.return_list());
 			pas.parse_main_work();
 			if(!pas.get_error_num())
-				rt.run_abstract_syntax_tree(pas.get_tree());
+			{
+				vm.set_root(pas.get_tree());
+				vm.run();
+			}
 			else
 				std::cout<<">>[Runtime] error(s) occurred,stop."<<std::endl;
 		}
