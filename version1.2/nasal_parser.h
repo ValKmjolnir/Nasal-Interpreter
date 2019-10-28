@@ -387,10 +387,14 @@ abstract_syntax_tree nasal_parser::hash_generate_expr()
 {
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
+	abstract_syntax_tree hashmember;
+
 	node.set_node_type(__hash);
 	get_token();
 	while(this_token.type!=__right_brace)
 	{
+		hashmember.set_clear();
+		hashmember.set_node_type(__hash_member);
 		if(this_token.type!=__id && this_token.type!=__string)
 		{
 			++error;
@@ -402,7 +406,7 @@ abstract_syntax_tree nasal_parser::hash_generate_expr()
 		else
 		{
 			parse.push(this_token);
-			node.add_child(calculation_expr());
+			hashmember.add_child(calculation_expr());
 		}
 		get_token();
 		if(this_token.type!=__colon)
@@ -419,26 +423,26 @@ abstract_syntax_tree nasal_parser::hash_generate_expr()
 			case __string:
 			case __id:
 				parse.push(this_token);
-				node.add_child(calculation_expr());
+				hashmember.add_child(calculation_expr());
 				break;
 			case __func:
 				get_token();
 				if(this_token.type==__id)
 				{
 					parse.push(this_token);
-					node.add_child(calculation_expr());
+					hashmember.add_child(calculation_expr());
 				}
 				else
 				{
 					parse.push(this_token);
-					node.add_child(function_generate_expr());
+					hashmember.add_child(function_generate_expr());
 				}
 				break;
 			case __left_bracket:
-				node.add_child(list_generate_expr());
+				hashmember.add_child(list_generate_expr());
 				break;
 			case __left_brace:
-				node.add_child(hash_generate_expr());
+				hashmember.add_child(hash_generate_expr());
 				break;
 			default:
 				++error;
@@ -448,6 +452,7 @@ abstract_syntax_tree nasal_parser::hash_generate_expr()
 				return node;
 				break;
 		}
+		node.add_child(hashmember);
 		get_token();
 		if(this_token.type!=__comma && this_token.type!=__right_brace)
 		{
@@ -1579,6 +1584,7 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 {
 	abstract_syntax_tree node;
 	abstract_syntax_tree temp;
+	abstract_syntax_tree hashmember;
 	node.set_node_type(__call_function);
 	get_token();
 	if(this_token.type!=__right_curve)
@@ -1588,6 +1594,8 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 		{
 			get_token();
 			temp.set_clear();
+			hashmember.set_clear();
+			hashmember.set_node_type(__hash_member);
 			switch(this_token.type)
 			{
 				case __left_curve:
@@ -1598,15 +1606,19 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 				case __id:
 					parse.push(this_token);
 					temp=calculation_expr();
+					hashmember.add_child(temp);
 					break;
 				case __left_bracket:
 					temp=list_generate_expr();
+					hashmember.add_child(temp);
 					break;
 				case __left_brace:
 					temp=hash_generate_expr();
+					hashmember.add_child(temp);
 					break;
 				case __func:
 					temp=parameter_function_expr();
+					hashmember.add_child(temp);
 					break;
 				default:
 					++error;
@@ -1629,16 +1641,16 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 					case __string:
 					case __id:
 						parse.push(this_token);
-						temp.add_child(calculation_expr());
+						hashmember.add_child(calculation_expr());
 						break;
 					case __left_bracket:
-						temp.add_child(list_generate_expr());
+						hashmember.add_child(list_generate_expr());
 						break;
 					case __left_brace:
-						temp.add_child(hash_generate_expr());
+						hashmember.add_child(hash_generate_expr());
 						break;
 					case __func:
-						temp.add_child(parameter_function_expr());
+						hashmember.add_child(parameter_function_expr());
 						break;
 					default:
 						++error;
@@ -1648,10 +1660,13 @@ abstract_syntax_tree nasal_parser::call_function_expr()
 						return node;
 						break;
 				}
+				node.add_child(hashmember);
 			}
 			else
+			{
 				parse.push(this_token);
-			node.add_child(temp);
+				node.add_child(temp);
+			}
 			get_token();
 			if(this_token.type!=__comma && this_token.type!=__right_curve)
 			{

@@ -7,6 +7,7 @@
 #include <thread>
 #include <stack>
 #include <list>
+#include <ctime>
 
 #include "nasal_token_type.h"
 #include "ast.h"
