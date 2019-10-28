@@ -121,17 +121,20 @@ class var_list_manager
 {
 	private:
 		std::list<var> var_list;
+		std::list<int> var_scope;
 	public:
 		var_list_manager()
 		{
 			var_list.clear();
+			var_scope.clear();
 			var null_var;
 			std::string null_name_str="$";
 			null_var.set_name(null_name_str);
 			var_list.push_back(null_var);
+			var_scope.push_back(0);
 			return;
 		}
-		void add_var(var& tmp)
+		void add_var(var& tmp,int scope_depth)
 		{
 			for(auto i=var_list.begin();i!=var_list.end();++i)
 				if(i->get_name()==tmp.get_name())
@@ -140,6 +143,7 @@ class var_list_manager
 					return;
 				}
 			var_list.push_back(tmp);
+			var_scope.push_back(scope_depth);
 			return;
 		}
 		void del_latest_var()
@@ -155,6 +159,12 @@ class var_list_manager
 			std::cout<<">>[Runtime-error] '"<<str<<"' is not delclared in this scope."<<std::endl;
 			return *var_list.begin();
 		}
+		int get_top_scope_depth()
+		{
+			std::list<int>::iterator i=var_scope.end();
+			--i;
+			return *i;
+		}
 };
 
 class nasal_runtime
@@ -167,37 +177,14 @@ class nasal_runtime
 			root.set_clear();
 			return;
 		}
-		var run_code(abstract_syntax_tree& tree)
-		{
-			var temp_var;
-			temp_var.set_type(0);
-			switch(tree.get_type())
-			{
-				case __number:
-					temp_var.set_type(__number);
-					temp_var.set_number(tree.get_var_number());break;
-				case __string:
-					temp_var.set_type(__string);
-					temp_var.set_string(tree.get_var_string());break;
-				case __id:
-					temp_var.set_type(__id);
-					temp_var.set_name(tree.get_var_name());break;
-				default:break;
-			}
-			temp_var.print_information();
-			if(!tree.get_children().empty())
-			{
-				for(std::list<abstract_syntax_tree>::iterator i=tree.get_children().begin();i!=tree.get_children().end();++i)
-					run_code(*i);
-			}
-			return temp_var;
-		}
 		void run()
 		{
 			std::cout<<">>[Runtime] process begins."<<std::endl;
-			if(!root.get_children().empty())
-				for(std::list<abstract_syntax_tree>::iterator i=root.get_children().begin();i!=root.get_children().end();++i)
-					run_code(*i);
+			int time_beg,time_end;
+			time_beg=time(NULL);
+			run_root(root);
+			time_end=time(NULL);
+			std::cout<<">>[Runtime] process exited after "<<time_beg-time_end<<" sec(s)."<<std::endl;
 			return;
 		}
 		void set_root(abstract_syntax_tree& tree)
@@ -207,5 +194,127 @@ class nasal_runtime
 			std::cout<<">>[Runtime] runtime got the ast-root: "<<((void *)&tree)<<"->"<<((void *)&root)<<"."<<std::endl;
 			return;
 		}
+		void run_definition(abstract_syntax_tree& tree);
+		void run_assignment(abstract_syntax_tree& tree);
+		void run_loop(abstract_syntax_tree& tree);
+		void run_if_else(abstract_syntax_tree& tree);
+		void run_block(abstract_syntax_tree& tree);
+		void run_root(abstract_syntax_tree& tree);
+		var run_calculation(abstract_syntax_tree& tree);
+		var run_function(abstract_syntax_tree& tree);
+		var identifier_call(abstract_syntax_tree& tree);
+		var scalar_call(abstract_syntax_tree& tree);
 };
+
+void nasal_runtime::run_root(abstract_syntax_tree& tree)
+{
+	if(!tree.get_children().empty())
+	{
+		for(std::list<abstract_syntax_tree>::iterator i=tree.get_children().begin();i!=tree.get_children().end();++i)
+		{
+			switch(i->get_type())
+			{
+				case __add_operator:
+				case __sub_operator:
+				case __mul_operator:
+				case __div_operator:
+				case __link_operator:
+				case __and_operator:
+				case __or_operator:
+				case __nor_operator:
+				case __cmp_equal:
+				case __cmp_not_equal:
+				case __cmp_less:
+				case __cmp_less_or_equal:
+				case __cmp_more:
+				case __cmp_more_or_equal:
+					run_calculation(*i);
+					break;
+				case __definition:
+					run_definition(*i);
+					break;
+				case __assignment:
+					run_assignment(*i);
+					break;
+				case __while:
+				case __for:
+				case __forindex:
+				case __foreach:
+					run_loop(*i);
+					break;
+				case __ifelse:
+					run_if_else(*i);
+					break;
+				case __call_function:
+					run_function(*i);
+					break;
+				case __id:
+				case __hash_search:
+				case __list_search:
+					identifier_call(*i);
+					break;
+				case __number:
+				case __string:
+					scalar_call(*i);
+					return;
+				default:
+					std::cout<<">>[Debug] error occurred."<<std::endl;
+					break;
+			}
+		}
+	}
+	return;
+}
+
+void nasal_runtime::run_definition(abstract_syntax_tree& tree)
+{
+	var new_var;
+	std::list<abstract_syntax_tree>::iterator iter=tree.get_children().begin();
+	new_var.set_name(iter->get_var_name());
+	++iter;
+	if(iter==tree.get_children().end())
+	{
+		new_var.set_type(__null_type);
+		
+		return;
+	}
+	return;
+}
+void nasal_runtime::run_assignment(abstract_syntax_tree& tree)
+{
+	return;
+}
+void nasal_runtime::run_loop(abstract_syntax_tree& tree)
+{
+	return;
+}
+void nasal_runtime::run_if_else(abstract_syntax_tree& tree)
+{
+	return;
+}
+void nasal_runtime::run_block(abstract_syntax_tree& tree)
+{
+	return;
+}
+
+var nasal_runtime::run_calculation(abstract_syntax_tree& tree)
+{
+	var null_var;
+	return null_var;
+}
+var nasal_runtime::run_function(abstract_syntax_tree& tree)
+{
+	var null_var;
+	return null_var;
+}
+var nasal_runtime::identifier_call(abstract_syntax_tree& tree)
+{
+	var null_var;
+	return null_var;
+}
+var nasal_runtime::scalar_call(abstract_syntax_tree& tree)
+{
+	var null_var;
+	return null_var;
+}
 #endif
