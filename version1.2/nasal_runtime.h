@@ -117,24 +117,26 @@ class var
 		}
 };
 
-class var_list_manager
+class var_scope
 {
 	private:
 		std::list<var> var_list;
-		std::list<int> var_scope;
 	public:
-		var_list_manager()
+		var_scope()
 		{
 			var_list.clear();
-			var_scope.clear();
 			var null_var;
 			std::string null_name_str="$";
 			null_var.set_name(null_name_str);
 			var_list.push_back(null_var);
-			var_scope.push_back(0);
 			return;
 		}
-		void add_var(var& tmp,int scope_depth)
+		var_scope(const var_scope& p)
+		{
+			var_list=p.var_list;
+			return;
+		}
+		void add_var(var& tmp)
 		{
 			for(auto i=var_list.begin();i!=var_list.end();++i)
 				if(i->get_name()==tmp.get_name())
@@ -143,13 +145,16 @@ class var_list_manager
 					return;
 				}
 			var_list.push_back(tmp);
-			var_scope.push_back(scope_depth);
 			return;
 		}
 		void del_latest_var()
 		{
 			var_list.pop_back();
 			return;
+		}
+		std::list<var>& get_list()
+		{
+			return var_list;
 		}
 		var& search_var(std::string& str)
 		{
@@ -159,11 +164,66 @@ class var_list_manager
 			std::cout<<">>[Runtime-error] '"<<str<<"' is not delclared in this scope."<<std::endl;
 			return *var_list.begin();
 		}
-		int get_top_scope_depth()
+};
+class var_scope_manager
+{
+	private:
+		std::list<var_scope> scope_list;
+		var error_var;
+	public:
+		var_scope_manager()
 		{
-			std::list<int>::iterator i=var_scope.end();
-			--i;
-			return *i;
+			scope_list.clear();
+			std::string str="err_ret";
+			error_var.set_name(str);
+			return;
+		}
+		void set_clear()
+		{
+			scope_list.clear();
+			return;
+		}
+		var& search_var(std::string str)
+		{
+			for(std::list<var_scope>::iterator i=scope_list.begin();i!=scope_list.end();++i)
+				for(std::list<var>::iterator j=i->get_list().begin();j!=i->get_list().end();++j)
+					if(j->get_name()==str)
+						return *j;
+			std::cout<<">>[Runtime] could not find the var named '"<<str<<"' ."<<std::endl;
+			return error_var;
+		}
+		void add_var(var new_var)
+		{
+			for(std::list<var_scope>::iterator i=scope_list.begin();i!=scope_list.end();++i)
+				for(std::list<var>::iterator j=i->get_list().begin();j!=i->get_list().end();++j)
+					if(j->get_name()==new_var.get_name())
+					{
+						std::cout<<">>[Runtime] redefinition of var '"<<new_var.get_name()<<"' ."<<std::endl;
+						return;
+					}
+			if(!scope_list.empty())
+			{
+				std::list<var_scope>::iterator i=scope_list.end();
+				--i;
+				i->get_list().push_back(new_var);
+			}
+			else
+				std::cout<<">>[Runtime] empty scope list."<<std::endl;
+			return;
+		}
+		void add_new_scope()
+		{
+			var_scope new_scope;
+			scope_list.push_back(new_scope);
+			return;
+		}
+		void pop_last_scope()
+		{
+			if(!scope_list.empty())
+				scope_list.pop_back();
+			else
+				std::cout<<">>[Runtime] scope poped empty thing."<<std::endl;
+			return;
 		}
 };
 
@@ -194,7 +254,7 @@ class nasal_runtime
 			std::cout<<">>[Runtime] runtime got the ast-root: "<<((void *)&tree)<<"->"<<((void *)&root)<<"."<<std::endl;
 			return;
 		}
-		void run_definition(abstract_syntax_tree& tree);
+		var run_definition(abstract_syntax_tree& tree);
 		void run_assignment(abstract_syntax_tree& tree);
 		void run_loop(abstract_syntax_tree& tree);
 		void run_if_else(abstract_syntax_tree& tree);
@@ -266,7 +326,7 @@ void nasal_runtime::run_root(abstract_syntax_tree& tree)
 	return;
 }
 
-void nasal_runtime::run_definition(abstract_syntax_tree& tree)
+var nasal_runtime::run_definition(abstract_syntax_tree& tree)
 {
 	var new_var;
 	std::list<abstract_syntax_tree>::iterator iter=tree.get_children().begin();
@@ -276,9 +336,9 @@ void nasal_runtime::run_definition(abstract_syntax_tree& tree)
 	{
 		new_var.set_type(__null_type);
 		
-		return;
+		return new_var;
 	}
-	return;
+	return new_var;
 }
 void nasal_runtime::run_assignment(abstract_syntax_tree& tree)
 {
