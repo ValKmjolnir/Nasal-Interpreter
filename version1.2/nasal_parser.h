@@ -247,7 +247,7 @@ abstract_syntax_tree nasal_parser::function_generate_expr()
 		while(this_token.type!=__right_curve)
 		{
 			temp.set_clear();
-			if(this_token.type==__id)
+			if(this_token.type==__id || this_token.type==__dynamic_id)
 			{
 				temp.set_node_type(__id);
 				temp.set_var_name(this_token.content);
