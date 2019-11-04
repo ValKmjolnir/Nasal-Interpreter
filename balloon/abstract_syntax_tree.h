@@ -5,35 +5,40 @@ class abstract_syntax_tree
 {
 	private:
 		int type;
-		double var_number;
-		std::string var_string;
-		std::string var_name;
+		double number;
+		std::string str;
+		std::string name;
 		std::list<abstract_syntax_tree> children;
 	public:
 		abstract_syntax_tree()
 		{
 			type=0;
-			var_number=0;
-			var_string="";
-			var_name="";
+			number=0;
+			str="";
+			name="";
 			children.clear();
 			return;
 		}
 		abstract_syntax_tree(const abstract_syntax_tree& p)
 		{
 			type=p.type;
-			var_number=p.var_number;
-			var_string=p.var_string;
-			var_name=p.var_name;
+			number=p.number;
+			str=p.str;
+			name=p.name;
 			children=p.children;
+			return;
+		}
+		~abstract_syntax_tree()
+		{
+			children.clear();
 			return;
 		}
 		abstract_syntax_tree& operator=(const abstract_syntax_tree& p)
 		{
 			type=p.type;
-			var_number=p.var_number;
-			var_string=p.var_string;
-			var_name=p.var_name;
+			number=p.number;
+			str=p.str;
+			name=p.name;
 			children.clear();
 			children=p.children;
 			return *this;
@@ -41,27 +46,27 @@ class abstract_syntax_tree
 		void set_clear()
 		{
 			type=0;
-			var_number=0;
-			var_string="";
-			var_name="";
+			number=0;
+			str="";
+			name="";
 			children.clear();
 			return;
 		}
 		void print_tree(const int n)
 		{
-			std::string str="";
+			std::string _str="";
 			for(int i=0;i<n;++i)
-				str+="| ";
-			std::cout<<str;
+				_str+="| ";
+			std::cout<<_str;
 			print_detail_token(type);
 			switch(type)
 			{
-				case __number:std::cout<<": "<<var_number;break;
-				case __string:std::cout<<": "<<var_string;break;
+				case __number:std::cout<<": "<<number;break;
+				case __string:std::cout<<": "<<str;break;
 				case __id:
 				case __call_array:
 				case __call_hash:
-				case __call_function:std::cout<<": "<<var_name;break;
+				case __call_function:std::cout<<": "<<name;break;
 			}
 			std::cout<<std::endl;
 			if(!children.empty())
@@ -76,87 +81,87 @@ class abstract_syntax_tree
 			type=_type;
 			return;
 		}
-		void set_string(std::string str)
+		void set_string(std::string _str)
 		{
-			var_string=str;
+			str=_str;
 			return;
 		}
-		void set_number(std::string str)
+		void set_number(std::string _str)
 		{
-			if(str=="nil")
+			if(_str=="nil")
 			{
-				var_number=0;
+				number=0;
 				return;
 			}
-			if((int)str.length()>2 && (str[1]=='x' || str[1]=='o'))
+			if((int)_str.length()>2 && (_str[1]=='x' || _str[1]=='o'))
 			{
-				if(str[1]=='x')
+				if(_str[1]=='x')
 				{
-					int num=0;
-					int pw=1;
-					for(int i=(int)str.length()-1;i>1;--i)
+					double num=0;
+					double pw=1;
+					for(int i=(int)_str.length()-1;i>1;--i)
 					{
-						if('0'<=str[i] && str[i]<='9')
-							num+=(str[i]-'0')*pw;
-						else if('a'<=str[i] && str[i]<='f')
-							num+=(10+str[i]-'a')*pw;
-						else if('A'<=str[i] && str[i]<='F')
-							num+=(10+str[i]-'A')*pw;
-						pw<<=4;
+						if('0'<=_str[i] && _str[i]<='9')
+							num+=(_str[i]-'0')*pw;
+						else if('a'<=_str[i] && _str[i]<='f')
+							num+=(10+_str[i]-'a')*pw;
+						else if('A'<=_str[i] && _str[i]<='F')
+							num+=(10+_str[i]-'A')*pw;
+						pw*=16;
 					}
-					var_number=(double)num;
+					number=num;
 				}
 				else
 				{
-					int num=0;
-					int pw=1;
-					for(int i=(int)str.length()-1;i>1;--i)
+					double num=0;
+					double pw=1;
+					for(int i=(int)_str.length()-1;i>1;--i)
 					{
-						num+=(str[i]-'0')*pw;
-						pw<<=3;
+						num+=(_str[i]-'0')*pw;
+						pw*=8;
 					}
-					var_number=(double)num;
+					number=num;
 				}
 				return;
 			}
 			int dot_place=-1;
-			for(int i=0;i<(int)str.length();++i)
-				if(str[i]=='.')
+			for(int i=0;i<(int)_str.length();++i)
+				if(_str[i]=='.')
 				{
 					dot_place=i;
 					break;
 				}
 			if(dot_place==-1)
 			{
-				var_number=0;
+				number=0;
 				double pw=1;
-				for(int i=(int)str.length()-1;i>=0;--i)
+				for(int i=(int)_str.length()-1;i>=0;--i)
 				{
-					var_number+=(str[i]-'0')*pw;
+					number+=(_str[i]-'0')*pw;
 					pw*=10;
 				}
 			}
 			else
 			{
-				var_number=0;
+				number=0;
 				double pw=0.1;
-				for(int i=dot_place+1;i<(int)str.length();++i)
+				for(int i=dot_place+1;i<(int)_str.length();++i)
 				{
-					var_number+=(str[i]-'0')*pw;
+					number+=(_str[i]-'0')*pw;
 					pw/=10;
 				}
 				pw=1;
 				for(int i=dot_place-1;i>=0;--i)
 				{
-					var_number+=(str[i]-'0')*pw;
+					number+=(_str[i]-'0')*pw;
 					pw*=10;
 				}
 			}
 			return;
 		}
-		void set_name(std::string& str)
+		void set_name(std::string _str)
 		{
-			var_name=str;
+			name=_str;
 			return;
 		}
 		void add_child(abstract_syntax_tree p)
@@ -170,15 +175,15 @@ class abstract_syntax_tree
 		}
 		double get_number()
 		{
-			return var_number;
+			return number;
 		}
 		std::string get_string()
 		{
-			return var_string;
+			return str;
 		}
 		std::string get_name()
 		{
-			return var_name;
+			return name;
 		}
 		std::list<abstract_syntax_tree>& get_children()
 		{
