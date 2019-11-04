@@ -39,7 +39,7 @@ class var
 			balloon_hash=p.balloon_hash;
 			return;
 		}
-		var& operator=(const var p)
+		var& operator=(const var& p)
 		{
 			type=p.type;
 			number=p.number;

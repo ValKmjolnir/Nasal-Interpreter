@@ -14,7 +14,54 @@ int is_reserve_word(std::string str)
 			return __reserve_word;
 	return __token_identifier;
 }
-
+bool check_number(std::string str)
+{
+	if(str.length()==1)
+		return true;
+	else if(str.length()==2 && '0'<str[0] && str[0]<='9' && '0'<=str[1] && str[1]<='9')
+		return true;
+	else if(str.length()>=3 && str[0]=='0' && str[1]=='x')
+	{
+		for(int i=2;i<str.length();++i)
+		{
+			if('0'<=str[i] && str[i]<='9' || 'a'<=str[i] && str[i]<='f' || 'A'<=str[i] && str[i]<='F')
+				;
+			else
+				return false;
+		}
+		return true;
+	}
+	else if(str.length()>=3 && str[0]=='0' && str[1]=='o')
+	{
+		for(int i=2;i<str.length();++i)
+		{
+			if('0'<=str[i] && str[i]<='7')
+				;
+			else
+				return false;
+		}
+		return true;
+	}
+	else
+	{
+		int dotcnt=0;
+		for(int i=0;i<str.length();++i)
+		{
+			if(str[i]=='.')
+				++dotcnt;
+			else if(!('0'<=str[i] && str[i]<='9'))
+				return false;
+		}
+		if(dotcnt>1)
+			return false;
+		if(str[0]=='.')
+			return false;
+		if(!dotcnt && str[0]=='0')
+			return false;
+		return true;
+	}
+	return false;
+}
 
 
 class resource_file
@@ -30,6 +77,11 @@ class resource_file
 		void input_file(std::string filename)
 		{
 			std::ifstream fin(filename,std::ios::binary);
+			if(fin.fail())
+			{
+				std::cout<<">>[Resource] cannot find a file named \'"<<filename<<"\' ."<<std::endl;
+				return;
+			}
 			char c;
 			while(!fin.eof())
 			{
@@ -164,12 +216,18 @@ class balloon_lexer
 				else if('0'<=*ptr && *ptr<='9')
 				{
 					token_str="";
-					while(('0'<=*ptr && *ptr<='9') || *ptr=='.' || *ptr=='x' || *ptr=='o')
+					while(('0'<=*ptr && *ptr<='9') || ('a'<=*ptr && *ptr<='f') || ('A'<=*ptr && *ptr<='F') || *ptr=='.' || *ptr=='x' || *ptr=='o')
 					{
 						token_str+=*ptr;
 						++ptr;
 						if(ptr==res.end())
 							break;
+					}
+					if(!check_number(token_str))
+					{
+						++error;
+						std::cout<<">>[Lexer-error] line "<<line<<": error number "<<token_str<<"."<<std::endl;
+						token_str="0";
 					}
 					token new_token;
 					new_token.line=line;
@@ -261,6 +319,7 @@ class balloon_lexer
 						break;
 				}
 			}
+			std::cout<<">>[Lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		void generate_detail_token()
@@ -404,11 +463,16 @@ class balloon_lexer
 					detail_token.push_back(detail);
 				}
 			}
+			std::cout<<">>[Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		std::list<token>& get_detail_token()
 		{
 			return detail_token;
+		}
+		int get_error()
+		{
+			return error;
 		}
 };
 #endif

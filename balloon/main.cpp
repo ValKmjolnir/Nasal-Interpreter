@@ -3,6 +3,7 @@ int main()
 {
 	resource_file prog;
 	balloon_lexer lex;
+	balloon_parse pas;
 	std::string command;
 	std::cout<<">> Balloon interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> Input [help] to find help."<<std::endl;
@@ -49,10 +50,25 @@ int main()
 		{
 			lex.scanner(prog.get_resource());
 			lex.generate_detail_token();
+			if(!lex.get_error())
+			{
+				pas.get_detail_token_stream(lex.get_detail_token());
+				pas.print_parse_stack();
+			}
+			else
+				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
 		}
 		else if(command=="ast")
 		{
-			;
+			lex.scanner(prog.get_resource());
+			lex.generate_detail_token();
+			if(!lex.get_error())
+			{
+				pas.get_detail_token_stream(lex.get_detail_token());
+				
+			}
+			else
+				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
 		}
 		else if(command=="run")
 		{
