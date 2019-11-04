@@ -19,6 +19,7 @@ class var
 		std::string name;
 		std::list<var> balloon_array;
 		std::list<var> balloon_hash;
+		abstract_syntax_tree function;
 	public:
 		var()
 		{

@@ -8,8 +8,8 @@
 #include <stack>
 
 #include "balloon_type.h"
-#include "balloon_var.h"
 #include "abstract_syntax_tree.h"
+#include "balloon_var.h"
 #include "balloon_lexer.h"
 #include "balloon_parse.h"
 
