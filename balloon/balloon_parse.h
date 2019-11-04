@@ -8,6 +8,7 @@ class balloon_parse
 		token this_token;
 		int error;
 		int warning;
+		abstract_syntax_tree root;
 	public:
 		void get_token()
 		{
@@ -22,6 +23,7 @@ class balloon_parse
 		}
 		void get_detail_token_stream(std::list<token>& tk_list)
 		{
+			root.set_clear();
 			while(!parse.empty())
 				parse.pop();
 			if(tk_list.empty())
@@ -63,7 +65,39 @@ class balloon_parse
 			std::cout<<std::endl;
 			return;
 		}
-		
+		int get_error()
+		{
+			return error;
+		}
+		void parse_main();
 };
 
+void balloon_parse::parse_main()
+{
+	root.set_type(__root);
+	error=0;
+	warning=0;
+	
+	while(!parse.empty())
+	{
+		get_token();
+		switch(this_token.type)
+		{
+			case __var:parse.push(this_token);break;
+			case __number:
+			case __string:parse.push(this_token);break;
+			case __id:parse.push(this_token);break;
+			case __if:parse.push(this_token);break;
+			case __while:parse.push(this_token);break;
+			default:
+				++error;
+				std::cout<<">>[Parse-error] line "<<this_token.line<<": ";
+				print_detail_token(this_token.type);
+				std::cout<<" should not appear in this scope."<<std::endl;
+				break;
+		}
+	}
+	std::cout<<">>[Parse] complete generating."<<error<<" error(s),"<<warning<<" warning(s)."<<std::endl;
+	return;
+}
 #endif

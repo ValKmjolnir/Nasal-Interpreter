@@ -88,7 +88,10 @@ class resource_file
 				c=fin.get(); 
 				if(fin.eof())
 					break;
-				resource.push_back(c);
+				if(0<=c && c<128)
+					resource.push_back(c);
+				else
+					resource.push_back(' ');
 			}
 			resource.push_back('\n');
 			return;
@@ -103,7 +106,8 @@ class resource_file
 			std::cout<<line<<"	";
 			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
 			{
-				std::cout<<*i;
+				if(32<=*i && *i<128 || *i=='\n')
+					std::cout<<*i;
 				if(*i=='\n')
 				{
 					++line;
@@ -163,7 +167,7 @@ class balloon_lexer
 			int line=1;
 			std::string token_str;
 			std::list<char>::iterator ptr=res.begin();
-			while(1)
+			while(ptr!=res.end())
 			{
 				while(*ptr==' ' || *ptr=='\n' || *ptr=='\t' || *ptr=='\r' || *ptr<0 || *ptr>127)
 				{
@@ -318,8 +322,14 @@ class balloon_lexer
 					if(ptr==res.end())
 						break;
 				}
+				else
+				{
+					++error;
+					std::cout<<">>[Lexer-error] line "<<line<<": unknown char."<<std::endl;
+					++ptr;
+				}
 			}
-			std::cout<<">>[Lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">>[Lexer] complete scanning."<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		void generate_detail_token()
@@ -463,7 +473,7 @@ class balloon_lexer
 					detail_token.push_back(detail);
 				}
 			}
-			std::cout<<">>[Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">>[Lexer] complete generating."<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		std::list<token>& get_detail_token()
