@@ -54,6 +54,7 @@ int main()
 			{
 				pas.get_detail_token_stream(lex.get_detail_token());
 				pas.print_parse_stack();
+				pas.parse_main();
 			}
 			else
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
@@ -65,14 +66,22 @@ int main()
 			if(!lex.get_error())
 			{
 				pas.get_detail_token_stream(lex.get_detail_token());
-				
+				pas.parse_main();
 			}
 			else
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
 		}
 		else if(command=="run")
 		{
-			;
+			lex.scanner(prog.get_resource());
+			lex.generate_detail_token();
+			if(!lex.get_error())
+			{
+				pas.get_detail_token_stream(lex.get_detail_token());
+				pas.parse_main();
+			}
+			else
+				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
 		}
 		else
 			prog.input_file(command);
