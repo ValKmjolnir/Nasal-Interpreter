@@ -51,10 +51,14 @@ enum parse_type
 	//basic elements
 	
 	__null_node,
+	__block,
+	__array,
+	__hash,
 	__root,
 	__loop,
 	__ifelse,
 	__function,
+	__parameter,
 	__definition,
 	__assignment,
 	__call_array,
@@ -115,10 +119,14 @@ void print_detail_token(int type)
 		case __string:            context="str";break;
 		
 		case __null_node:         context="null node";break;
+		case __block:             context="block";break;
+		case __array:             context="array";break;
+		case __hash:              context="hash";break;
 		case __root:              context="root";break;
 		case __loop:              context="loop";break;
 		case __ifelse:            context="if-else";break;
 		case __function:          context="function";break;
+		case __parameter:         context="parameter";break;
 		case __definition:        context="definition";break;
 		case __assignment:        context="assignment";break;
 		case __call_array:        context="call array";break;
