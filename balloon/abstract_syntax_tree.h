@@ -1,9 +1,11 @@
 #ifndef __ABSTRACT_SYNTAX_TREE_H__
 #define __ABSTRACT_SYNTAX_TREE_H__
 
+class var;
+
 class abstract_syntax_tree
 {
-	private:
+	protected:
 		int type;
 		double number;
 		std::string str;
@@ -189,6 +191,8 @@ class abstract_syntax_tree
 		{
 			return children;
 		}
+		var get_value();
+		void run_root();
 };
 
 #endif

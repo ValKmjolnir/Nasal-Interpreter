@@ -138,5 +138,23 @@ void print_detail_token(int type)
 	return;
 }
 
+enum runtime_error_type
+{
+	__process_exited_successfully,
+	__redeclaration
+};
+
+void print_exit_type(int type)
+{
+	std::string context;
+	switch(type)
+	{
+		case __process_exited_successfully: context="success";break;
+		case __redeclaration:               context="redeclare";break;
+		default:                            context="unknown";break;
+	}
+	std::cout<<context;
+	return;
+}
 
 #endif
