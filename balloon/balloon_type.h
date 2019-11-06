@@ -141,7 +141,9 @@ void print_detail_token(int type)
 enum runtime_error_type
 {
 	__process_exited_successfully,
-	__redeclaration
+	__redeclaration,
+	__get_value_failure,
+	__find_var_failure
 };
 
 void print_exit_type(int type)
@@ -149,8 +151,10 @@ void print_exit_type(int type)
 	std::string context;
 	switch(type)
 	{
-		case __process_exited_successfully: context="success";break;
-		case __redeclaration:               context="redeclare";break;
+		case __process_exited_successfully: context="process_success";break;
+		case __redeclaration:               context="redeclaration";break;
+		case __get_value_failure:           context="get_value_failure";break;
+		case __find_var_failure:            context="find_var_failure";break;
 		default:                            context="unknown";break;
 	}
 	std::cout<<context;
