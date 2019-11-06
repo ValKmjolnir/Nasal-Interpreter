@@ -56,6 +56,7 @@ class var
 		void set_name(std::string);
 		void set_number(double);
 		void set_string(std::string);
+		void set_function(abstract_syntax_tree&);
 		void append_array(var);
 		void append_hash(var);
 		std::string get_name();
@@ -63,6 +64,7 @@ class var
 		std::string get_string();
 		var& get_array_member(int);
 		var& get_hash_member(std::string);
+		abstract_syntax_tree& get_function();
 };
 
 var error_var;
@@ -84,6 +86,11 @@ void var::set_number(double _num)
 void var::set_string(std::string _str)
 {
 	str=_str;
+	return;
+}
+void var::set_function(abstract_syntax_tree& p)
+{
+	function=p;
 	return;
 }
 void var::append_array(var _new_var)
@@ -129,5 +136,9 @@ var& var::get_hash_member(std::string _name)
 			return *i;
 	std::cout<<">>[Runtime-error] hash \'"<<name<<"\' does not have a member named \'"<<_name<<"\'"<<std::endl;
 	return error_var;
+}
+abstract_syntax_tree& var::get_function()
+{
+	return function;
 }
 #endif

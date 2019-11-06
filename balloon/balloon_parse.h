@@ -75,6 +75,12 @@ class balloon_parse
 			root.print_tree(1);
 			return;
 		}
+		void run_tree()
+		{
+			std::cout<<">>[Runtime] process begins at addr:"<<(void*)(&root)<<"."<<std::endl;
+			root.run_root();
+			return;
+		}
 		abstract_syntax_tree ret();
 		abstract_syntax_tree choose();
 		abstract_syntax_tree loop();
