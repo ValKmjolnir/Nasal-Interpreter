@@ -159,14 +159,13 @@ class var
 class var_scope_manager
 {
 	private:
-		std::list<std::list<var>> scope_list;
-		std::list<int> scope_type;
+		std::list<std::list<var> > scope_list;
 		var error_var;
 	public:
 		var_scope_manager()
 		{
 			scope_list.clear();
-			std::string str="__nas_strc_error_ret";
+			std::string str="__nas_strc_lang_error_ret";
 			error_var.set_name(str);
 			error_var.set_type(__null_type);
 			return;
@@ -174,105 +173,66 @@ class var_scope_manager
 		void set_clear()
 		{
 			scope_list.clear();
-			scope_type.clear();
 			return;
 		}
 		var& search_var(std::string str)
 		{
-			for(std::list<std::list<var>>::iterator i=scope_list.begin();i!=scope_list.end();++i)
+			std::list<std::list<var>>::iterator i=scope_list.end();
+			--i;
+			for(;;--i)
+			{
 				for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 					if(j->get_name()==str)
 						return *j;
+				if(i==scope_list.begin())
+					break;
+			}
 			std::cout<<std::endl<<">>[Runtime-error] could not find the var '"<<str<<"' ."<<std::endl;
 			return error_var;
 		}
 		void add_var(var new_var)
 		{
-			std::list<std::list<var>>::iterator i=scope_list.begin();
-			std::list<int>::iterator t=scope_type.begin();
-			// get global scopes
-			for(;i!=scope_list.end();++i,++t)
+			if(scope_list.empty())
 			{
-				if(*t!=__function)
+				std::cout<<std::endl<<">>[Runtime-error] empty scope list."<<std::endl;
+				return;
+			}
+			std::list<std::list<var>>::iterator i=scope_list.end();
+			--i;
+			for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+			{
+				if(j->get_name()==new_var.get_name())
 				{
-					for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
-						if(j->get_name()==new_var.get_name())
-						{
-							std::cout<<std::endl<<">>[Runtime-error] redeclaration of var '"<<new_var.get_name()<<"' ."<<std::endl;
-							return;
-						}
+					std::cout<<std::endl<<">>[Runtime-error] redeclaration of var '"<<new_var.get_name()<<"' ."<<std::endl;
+					return;
 				}
 			}
-			// get parameters_list scope
-			i=scope_list.end();
-			--i;
-			t=scope_type.end();
-			--t;
-			if(*t==__function)
-			{
-				for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
-					if(j->get_name()==new_var.get_name())
-					{
-						std::cout<<std::endl<<">>[Runtime-error] redeclaration of var '"<<new_var.get_name()<<"' ."<<std::endl;
-						return;
-					}
-			}
-			if(!scope_list.empty())
-			{
-				i=scope_list.end();
-				--i;
-				i->push_back(new_var);
-			}
-			else
-				std::cout<<std::endl<<">>[Runtime-error] empty scope list."<<std::endl;
+			i->push_back(new_var);
 			return;
 		}
-		void add_new_scope(int type)
+		void add_new_scope()
 		{
 			std::list<var> new_list;
 			scope_list.push_back(new_list);
-			scope_type.push_back(type);
 			return;
 		}
 		void pop_last_scope()
 		{
 			if(!scope_list.empty())
-			{
 				scope_list.pop_back();
-				scope_type.pop_back();
-			}
 			else
 				std::cout<<std::endl<<">>[Runtime-error] scope poped empty thing."<<std::endl;
 			return;
 		}
 };
 
-class nasal_code_gen
-{
-	private:
-		abstract_syntax_tree root;
-	public:
-		nasal_code_gen()
-		{
-			root.set_clear();
-			return;
-		}
-		void set_root(abstract_syntax_tree& tree)
-		{
-			root.set_clear();
-			root=tree;
-			std::cout<<">>[Code] runtime got the ast-root: "<<((void *)&tree)<<"->"<<((void *)&root)<<"."<<std::endl;
-			return;
-		}
-};
-
-class nasal_runtime
+class nasal_vm
 {
 	private:
 		abstract_syntax_tree root;
 		var_scope_manager scope;
 	public:
-		nasal_runtime()
+		nasal_vm()
 		{
 			root.set_clear();
 			return;
@@ -283,7 +243,7 @@ class nasal_runtime
 			int time_beg,time_end;
 			time_beg=time(NULL);
 			scope.set_clear();
-			run_root(root);
+
 			time_end=time(NULL);
 			std::cout<<std::endl<<">>[Runtime] process exited after "<<time_beg-time_end<<" sec(s)."<<std::endl;
 			return;
@@ -295,19 +255,6 @@ class nasal_runtime
 			std::cout<<">>[Runtime] runtime got the ast-root: "<<((void *)&tree)<<"->"<<((void *)&root)<<"."<<std::endl;
 			return;
 		}
-		void run_definition(abstract_syntax_tree& tree);
-		void run_assignment(abstract_syntax_tree& tree);
-		void run_loop(abstract_syntax_tree& tree);
-		void run_if_else(abstract_syntax_tree& tree);
-		void run_block(abstract_syntax_tree& tree,int run_type);
-		void run_root(abstract_syntax_tree& tree);
-		var run_calculation(abstract_syntax_tree& tree);
-		var run_function(abstract_syntax_tree& tree);
-		var list_generation(abstract_syntax_tree& tree);
-		var hash_generation(abstract_syntax_tree& tree);
-		var list_search(abstract_syntax_tree& tree);
-		var hash_search(abstract_syntax_tree& tree);
-		var identifier_call(abstract_syntax_tree& tree);
-		var scalar_call(abstract_syntax_tree& tree);
+		
 };
 #endif
