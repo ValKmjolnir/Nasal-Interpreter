@@ -68,6 +68,7 @@ class var
 };
 
 var error_var;
+
 void var::set_type(int _type)
 {
 	type=_type;

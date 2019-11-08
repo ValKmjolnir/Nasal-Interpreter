@@ -194,6 +194,8 @@ class abstract_syntax_tree
 		var call_id();
 		var get_value();
 		void run_root();
+		void run_func();
+		void run_block(int);
 };
 
 #endif
