@@ -1,9 +1,11 @@
 #include "balloon.h"
+
+resource_file prog;
+balloon_lexer lex;
+balloon_parse pas;
+
 int main()
 {
-	resource_file prog;
-	balloon_lexer lex;
-	balloon_parse pas;
 	std::string command;
 	std::cout<<">> Balloon interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> Input [help] to find help."<<std::endl;

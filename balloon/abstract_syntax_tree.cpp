@@ -1,15 +1,14 @@
 #ifndef __ABSTRACT_SYNTAX_TREE_CPP__
 #define __ABSTRACT_SYNTAX_TREE_CPP__
 
-balloon_scope global;
 int exit_type=0;
 var abstract_syntax_tree::call_id()
 {
 	var temp;
 	if(children.empty())
 	{
-		if(global.search_var(name))
-			temp=global.get_var(name);
+		if(scope.search_var(name))
+			temp=scope.get_var(name);
 		else
 		{
 			std::cout<<">>[Runtime-error] cannot find a var named \'"<<name<<"\'."<<std::endl;
@@ -59,7 +58,7 @@ var abstract_syntax_tree::get_value()
 }
 void abstract_syntax_tree::run_root()
 {
-	global.set_clear();
+	scope.set_clear();
 	int beg_time,end_time;
 	exit_type=__process_exited_successfully;
 	beg_time=time(NULL);
@@ -70,10 +69,10 @@ void abstract_syntax_tree::run_root()
 			var new_var;
 			std::list<abstract_syntax_tree>::iterator j=i->children.begin();
 			std::string _name=j->name;
-			if(!global.search_var(_name))
+			if(!scope.search_var(_name))
 			{
 				new_var.set_name(_name);
-				global.add_var(new_var);
+				scope.add_new_var(new_var);
 			}
 			else
 			{
@@ -87,7 +86,7 @@ void abstract_syntax_tree::run_root()
 		else if(i->type==__string)
 			std::cout<<i->str<<std::endl;
 		else if(i->type==__id)
-			i->call_id();
+			std::cout<<i->call_id().get_name()<<std::endl;
 		else if(i->type==__while)
 		{
 			;
@@ -96,17 +95,34 @@ void abstract_syntax_tree::run_root()
 		{
 			;
 		}
-		
 		if(exit_type!=__process_exited_successfully)
 			break;
 	}
 	end_time=time(NULL);
+	std::cout<<"-------------------------------------------------------------------------------------------"<<std::endl;
 	std::cout<<">>[Runtime] process exited after "<<end_time-beg_time<<" sec(s) with returned state \'";
 	print_exit_type(exit_type);
 	std::cout<<"\'."<<std::endl;
+	scope.set_clear();
 	return;
 }
 
+void abstract_syntax_tree::run_func()
+{
+	scope.add_new_block_scope();
+	scope.add_new_local_scope();
+	
+	scope.pop_last_block_scope();
+	return;
+}
+
+void abstract_syntax_tree::run_block(int block_type)
+{
+	scope.add_new_local_scope();
+	
+	scope.pop_last_local_scope();
+	return;
+}
 
 		
 
