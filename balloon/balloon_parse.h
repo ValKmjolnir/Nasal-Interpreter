@@ -275,8 +275,9 @@ abstract_syntax_tree balloon_parse::definition()
 	get_token();
 	if(this_token.type!=__equal)
 	{
-		++error;
-		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'=\' here."<<std::endl;
+		++warning;
+		std::cout<<">>[Parse-warning] line "<<this_token.line<<": every new var should be initialized."<<std::endl;
+		parse.push(this_token);
 		return new_node;
 	}
 	new_node.add_child(scalar());

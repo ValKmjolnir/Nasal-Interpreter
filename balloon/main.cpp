@@ -86,9 +86,7 @@ int main()
 				pas.get_detail_token_stream(lex.get_detail_token());
 				pas.parse_main();
 				if(!pas.get_error())
-				{
 					pas.run_tree();
-				}
 				else
 					std::cout<<">>[Parse] error(s) found,stop."<<std::endl;
 			}
