@@ -2,6 +2,13 @@
 #define __ABSTRACT_SYNTAX_TREE_CPP__
 
 int exit_type=0;
+
+bool abstract_syntax_tree::check()
+{
+	
+	return true;
+}
+
 var abstract_syntax_tree::call_id()
 {
 	var temp;
@@ -71,6 +78,9 @@ void abstract_syntax_tree::run_root()
 			std::string _name=j->name;
 			if(!scope.search_var(_name))
 			{
+				++j;
+				if(j!=i->children.end())
+					new_var=j->get_value();
 				new_var.set_name(_name);
 				scope.add_new_var(new_var);
 			}
@@ -89,11 +99,15 @@ void abstract_syntax_tree::run_root()
 			std::cout<<i->call_id().get_name()<<std::endl;
 		else if(i->type==__while)
 		{
-			;
+			scope.add_new_block_scope();
+			i->run_loop();
+			scope.pop_last_block_scope();
 		}
 		else if(i->type==__ifelse)
 		{
-			;
+			scope.add_new_block_scope();
+			i->run_ifelse();
+			scope.pop_last_block_scope();
 		}
 		if(exit_type!=__process_exited_successfully)
 			break;
@@ -104,6 +118,26 @@ void abstract_syntax_tree::run_root()
 	print_exit_type(exit_type);
 	std::cout<<"\'."<<std::endl;
 	scope.set_clear();
+	return;
+}
+
+void abstract_syntax_tree::run_loop()
+{
+	scope.add_new_local_scope();
+	
+	abstract_syntax_tree condition=children.front();
+	abstract_syntax_tree blk=children.back();
+	while(condition.check())
+		blk.run_block(__loop);
+	scope.pop_last_local_scope();
+	return;
+}
+
+void abstract_syntax_tree::run_ifelse()
+{
+	scope.add_new_local_scope();
+	
+	scope.pop_last_local_scope();
 	return;
 }
 
@@ -119,13 +153,10 @@ void abstract_syntax_tree::run_func()
 void abstract_syntax_tree::run_block(int block_type)
 {
 	scope.add_new_local_scope();
-	
+
 	scope.pop_last_local_scope();
 	return;
 }
 
-		
-
-		
 
 #endif

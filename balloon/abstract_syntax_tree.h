@@ -191,9 +191,12 @@ class abstract_syntax_tree
 		{
 			return children;
 		}
+		bool check();
 		var call_id();
 		var get_value();
 		void run_root();
+		void run_loop();
+		void run_ifelse();
 		void run_func();
 		void run_block(int);
 };
