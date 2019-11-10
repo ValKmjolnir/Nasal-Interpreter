@@ -78,7 +78,9 @@ class abstract_syntax_tree
 		}
 		void set_var_string(std::string str)
 		{
-			var_string=str;
+			var_string="";
+			for(int i=1;i<(int)str.length()-1;++i)
+				var_string+=str[i];
 			return;
 		}
 		void set_var_number(std::string str)
@@ -92,8 +94,8 @@ class abstract_syntax_tree
 			{
 				if(str[1]=='x')
 				{
-					int num=0;
-					int pw=1;
+					double num=0;
+					double pw=1;
 					for(int i=(int)str.length()-1;i>1;--i)
 					{
 						if('0'<=str[i] && str[i]<='9')
@@ -102,20 +104,20 @@ class abstract_syntax_tree
 							num+=(10+str[i]-'a')*pw;
 						else if('A'<=str[i] && str[i]<='F')
 							num+=(10+str[i]-'A')*pw;
-						pw<<=4;
+						pw*=16;
 					}
-					var_number=(double)num;
+					var_number=num;
 				}
 				else
 				{
-					int num=0;
-					int pw=1;
+					double num=0;
+					double pw=1;
 					for(int i=(int)str.length()-1;i>1;--i)
 					{
 						num+=(str[i]-'0')*pw;
-						pw<<=3;
+						pw*=8;
 					}
-					var_number=(double)num;
+					var_number=num;
 				}
 				return;
 			}

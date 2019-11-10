@@ -4,7 +4,7 @@ int main()
 	resource_programme_process prog;
 	nasal_lexer lex;
 	nasal_parser pas;
-	nasal_runtime vm;
+	nasal_vm vm;
 	std::string command;
 	std::cout<<">> Nasal interpreter by ValKmjolnir"<<std::endl;
 	std::cout<<">> Input [help] to find help."<<std::endl;
