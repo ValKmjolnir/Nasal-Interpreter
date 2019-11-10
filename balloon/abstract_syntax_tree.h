@@ -97,10 +97,9 @@ class abstract_syntax_tree
 			}
 			if((int)_str.length()>2 && (_str[1]=='x' || _str[1]=='o'))
 			{
+				double num=0;
+				double pw=1;
 				if(_str[1]=='x')
-				{
-					double num=0;
-					double pw=1;
 					for(int i=(int)_str.length()-1;i>1;--i)
 					{
 						if('0'<=_str[i] && _str[i]<='9')
@@ -111,19 +110,13 @@ class abstract_syntax_tree
 							num+=(10+_str[i]-'A')*pw;
 						pw*=16;
 					}
-					number=num;
-				}
 				else
-				{
-					double num=0;
-					double pw=1;
 					for(int i=(int)_str.length()-1;i>1;--i)
 					{
 						num+=(_str[i]-'0')*pw;
 						pw*=8;
 					}
-					number=num;
-				}
+				number=num;
 				return;
 			}
 			int dot_place=-1;
@@ -198,7 +191,7 @@ class abstract_syntax_tree
 		void run_loop();
 		void run_ifelse();
 		void run_func();
-		void run_block(int);
+		int run_block();
 };
 
 #endif

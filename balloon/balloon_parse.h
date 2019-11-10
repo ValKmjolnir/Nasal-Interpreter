@@ -162,7 +162,10 @@ abstract_syntax_tree balloon_parse::choose()
 		temp.set_clear();
 		get_token();
 		if(this_token.type!=__elsif && this_token.type!=__else)
+		{
+			parse.push(this_token);
 			break;
+		}
 		if(this_token.type==__else)
 		{
 			get_token();
@@ -478,7 +481,7 @@ abstract_syntax_tree balloon_parse::block()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'{\' ."<<std::endl;
 		return new_node;
 	}
-	while(this_token.type!=__right_brace)
+	while(1)
 	{
 		get_token();
 		switch(this_token.type)
@@ -501,12 +504,14 @@ abstract_syntax_tree balloon_parse::block()
 			case __continue:
 			case __break:temp.set_clear();temp.set_type(this_token.type);new_node.add_child(temp);check_semi();break;
 			case __return:parse.push(this_token);new_node.add_child(ret());check_semi();break;
-			case __right_brace:break;
+			case __right_brace:return new_node;break;
+			// must ret at this place when meeting a lot of right braces here like }}} or some of the } will be missed
 			default:
 				++error;
 				std::cout<<">>[Parse-error] line "<<this_token.line<<": \'";
 				print_detail_token(this_token.type);
 				std::cout<<"\' should not appear in this scope."<<std::endl;
+				return new_node;
 				break;
 		}
 	}
