@@ -143,7 +143,9 @@ enum runtime_error_type
 	__process_exited_successfully,
 	__redeclaration,
 	__get_value_failure,
-	__find_var_failure
+	__find_var_failure,
+	__error_value_type,
+	__error_command_use
 };
 
 void print_exit_type(int type)
@@ -155,6 +157,8 @@ void print_exit_type(int type)
 		case __redeclaration:               context="redeclaration";break;
 		case __get_value_failure:           context="get_value_failure";break;
 		case __find_var_failure:            context="find_var_failure";break;
+		case __error_value_type:            context="value_type_error";break;
+		case __error_command_use:           context="command_use_error(continue/break/return)";break;
 		default:                            context="unknown";break;
 	}
 	std::cout<<context;

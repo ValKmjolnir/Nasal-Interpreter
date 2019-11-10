@@ -1,6 +1,6 @@
 #ifndef __ABSTRACT_SYNTAX_TREE_CPP__
 #define __ABSTRACT_SYNTAX_TREE_CPP__
-
+#include "abstract_syntax_tree.h"
 int exit_type=0;
 
 bool abstract_syntax_tree::check()
@@ -12,15 +12,17 @@ bool abstract_syntax_tree::check()
 var abstract_syntax_tree::call_id()
 {
 	var temp;
-	if(children.empty())
+	if(scope.search_var(name))
+		temp=scope.get_var(name);
+	else
 	{
-		if(scope.search_var(name))
-			temp=scope.get_var(name);
-		else
-		{
-			std::cout<<">>[Runtime-error] cannot find a var named \'"<<name<<"\'."<<std::endl;
-			exit_type=__find_var_failure;
-		}
+		std::cout<<">>[Runtime-error] cannot find a var named \'"<<name<<"\'."<<std::endl;
+		exit_type=__find_var_failure;
+		return temp;
+	}
+	if(!children.empty())
+	{
+		;
 	}
 	return temp;
 }
@@ -113,7 +115,7 @@ void abstract_syntax_tree::run_root()
 			break;
 	}
 	end_time=time(NULL);
-	std::cout<<"-------------------------------------------------------------------------------------------"<<std::endl;
+	std::cout<<"--------------------------------------------------------------------------------------"<<std::endl;
 	std::cout<<">>[Runtime] process exited after "<<end_time-beg_time<<" sec(s) with returned state \'";
 	print_exit_type(exit_type);
 	std::cout<<"\'."<<std::endl;
@@ -128,7 +130,7 @@ void abstract_syntax_tree::run_loop()
 	abstract_syntax_tree condition=children.front();
 	abstract_syntax_tree blk=children.back();
 	while(condition.check())
-		blk.run_block(__loop);
+		blk.run_block();
 	scope.pop_last_local_scope();
 	return;
 }
@@ -150,12 +152,68 @@ void abstract_syntax_tree::run_func()
 	return;
 }
 
-void abstract_syntax_tree::run_block(int block_type)
+int abstract_syntax_tree::run_block()
 {
 	scope.add_new_local_scope();
-
+	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+	{
+		if(i->type==__definition)
+		{
+			var new_var;
+			std::list<abstract_syntax_tree>::iterator j=i->children.begin();
+			std::string _name=j->name;
+			if(!scope.search_var(_name))
+			{
+				++j;
+				if(j!=i->children.end())
+					new_var=j->get_value();
+				new_var.set_name(_name);
+				scope.add_new_var(new_var);
+			}
+			else
+			{
+				std::cout<<">>[Runtime-error] redeclaration of \'"<<_name<<"\'."<<std::endl;
+				exit_type=__redeclaration;
+				break;
+			}
+		}
+		else if(i->type==__number)
+			std::cout<<i->number<<std::endl;
+		else if(i->type==__string)
+			std::cout<<i->str<<std::endl;
+		else if(i->type==__id)
+			std::cout<<i->call_id().get_name()<<std::endl;
+		else if(i->type==__while)
+			i->run_loop();
+		else if(i->type==__ifelse)
+			i->run_ifelse();
+		else if(i->type==__continue)
+		{
+			return __continue;
+//			else
+//			{
+//				std::cout<<">>[Runtime-error] must use \'continue\' in a loop."<<std::endl;
+//				exit_type=__error_command_use;
+//			}
+		}
+		else if(i->type==__break)
+		{
+			return __loop;
+//			else
+//			{
+//				std::cout<<">>[Runtime-error] must use \'continue\' in a loop."<<std::endl;
+//				exit_type=__error_command_use;
+//			}
+		}
+		else if(i->type==__return)
+		{
+			break;
+		}
+		if(exit_type!=__process_exited_successfully)
+			break;
+	}
 	scope.pop_last_local_scope();
-	return;
+	return 0;
 }
 
 
