@@ -5,7 +5,39 @@ int exit_type=0;
 
 bool abstract_syntax_tree::check()
 {
-	
+	bool ret=false;
+	if(this->type==__cmp_equal)
+	{
+		
+	}
+	else if(this->type==__cmp_not_equal)
+	{
+		
+	}
+	else if(this->type==__cmp_less)
+	{
+		
+	}
+	else if(this->type==__cmp_less_or_equal)
+	{
+		
+	}
+	else if(this->type==__cmp_more)
+	{
+		
+	}
+	else if(this->type==__cmp_more_or_equal)
+	{
+		
+	}
+	else if(this->type==__or_operator)
+	{
+		
+	}
+	else if(this->type==__and_operator)
+	{
+		
+	}
 	return true;
 }
 
@@ -123,24 +155,42 @@ void abstract_syntax_tree::run_root()
 	return;
 }
 
-void abstract_syntax_tree::run_loop()
+int abstract_syntax_tree::run_loop()
 {
+	int ret=0;
 	scope.add_new_local_scope();
 	
 	abstract_syntax_tree condition=children.front();
 	abstract_syntax_tree blk=children.back();
 	while(condition.check())
-		blk.run_block();
+	{
+		int type=blk.run_block();
+		if(type==__break)
+			break;
+		else if(type==__return)
+		{
+			ret=__return;
+			break;
+		}
+	}
 	scope.pop_last_local_scope();
-	return;
+	return ret;
 }
 
-void abstract_syntax_tree::run_ifelse()
+int abstract_syntax_tree::run_ifelse()
 {
+	int ret=0;
 	scope.add_new_local_scope();
-	
+	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+	{
+		if(i->children.front().check())
+		{
+			ret=i->children.back().run_block();
+			break;
+		}
+	}
 	scope.pop_last_local_scope();
-	return;
+	return ret;
 }
 
 void abstract_syntax_tree::run_func()
@@ -184,31 +234,31 @@ int abstract_syntax_tree::run_block()
 		else if(i->type==__id)
 			std::cout<<i->call_id().get_name()<<std::endl;
 		else if(i->type==__while)
-			i->run_loop();
+		{
+			int type=i->run_loop();
+			if(type)
+			{
+				if(type==__return)
+					return type;
+				else
+				{
+					std::cout<<"[Runtime-error] incorrect use of break/continue."<<std::endl;
+					exit_type=__error_command_use;
+				}
+			}
+		}
 		else if(i->type==__ifelse)
-			i->run_ifelse();
+		{
+			int type=i->run_ifelse();
+			if(type)
+				return type;
+		}
 		else if(i->type==__continue)
-		{
 			return __continue;
-//			else
-//			{
-//				std::cout<<">>[Runtime-error] must use \'continue\' in a loop."<<std::endl;
-//				exit_type=__error_command_use;
-//			}
-		}
 		else if(i->type==__break)
-		{
-			return __loop;
-//			else
-//			{
-//				std::cout<<">>[Runtime-error] must use \'continue\' in a loop."<<std::endl;
-//				exit_type=__error_command_use;
-//			}
-		}
+			return __break;
 		else if(i->type==__return)
-		{
-			break;
-		}
+			return __return;
 		if(exit_type!=__process_exited_successfully)
 			break;
 	}
