@@ -315,10 +315,7 @@ abstract_syntax_tree balloon_parse::array_generate()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'[\' here."<<std::endl;
 		return new_node;
 	}
-	get_token();
-	if(this_token.type!=__right_bracket)
-		parse.push(this_token);
-	while(this_token.type!=__right_bracket)
+	while(1)
 	{
 		get_token();
 		switch(this_token.type)
@@ -346,6 +343,8 @@ abstract_syntax_tree balloon_parse::array_generate()
 			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \',\' or \']\' here."<<std::endl;
 			return new_node;
 		}
+		else if(this_token.type==__right_bracket)
+			break;
 	}
 	return new_node;
 }
@@ -504,8 +503,7 @@ abstract_syntax_tree balloon_parse::block()
 			case __continue:
 			case __break:temp.set_clear();temp.set_type(this_token.type);new_node.add_child(temp);check_semi();break;
 			case __return:parse.push(this_token);new_node.add_child(ret());check_semi();break;
-			case __right_brace:return new_node;break;
-			// must ret at this place when meeting a lot of right braces here like }}} or some of the } will be missed
+			case __right_brace:parse.push(this_token);break;
 			default:
 				++error;
 				std::cout<<">>[Parse-error] line "<<this_token.line<<": \'";
@@ -514,6 +512,11 @@ abstract_syntax_tree balloon_parse::block()
 				return new_node;
 				break;
 		}
+		get_token();
+		if(this_token.type==__right_brace)
+			break;
+		else
+			parse.push(this_token);
 	}
 	return new_node;
 }

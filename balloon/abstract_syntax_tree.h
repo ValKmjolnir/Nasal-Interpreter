@@ -188,8 +188,8 @@ class abstract_syntax_tree
 		var call_id();
 		var get_value();
 		void run_root();
-		void run_loop();
-		void run_ifelse();
+		int run_loop();
+		int run_ifelse();
 		void run_func();
 		int run_block();
 };
