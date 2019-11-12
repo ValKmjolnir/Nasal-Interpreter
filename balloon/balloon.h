@@ -2,8 +2,10 @@
 #define __BALLOON_H__
 
 #include <iostream>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <cmath>
 #include <list>
 #include <stack>
 #include <ctime>
