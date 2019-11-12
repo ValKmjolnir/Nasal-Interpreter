@@ -184,6 +184,7 @@ class abstract_syntax_tree
 		{
 			return children;
 		}
+		var condition();
 		bool check();
 		var call_id();
 		var get_value();
