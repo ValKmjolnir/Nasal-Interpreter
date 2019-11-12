@@ -3,9 +3,10 @@
 #include "abstract_syntax_tree.h"
 int exit_type=0;
 
-bool abstract_syntax_tree::check()
+var abstract_syntax_tree::condition()
 {
-	bool ret=false;
+	var cond;
+	cond.set_number(0);
 	if(this->type==__cmp_equal)
 	{
 		
@@ -18,11 +19,11 @@ bool abstract_syntax_tree::check()
 	{
 		
 	}
-	else if(this->type==__cmp_less_or_equal)
+	else if(this->type==__cmp_more)
 	{
 		
 	}
-	else if(this->type==__cmp_more)
+	else if(this->type==__cmp_less_or_equal)
 	{
 		
 	}
@@ -38,7 +39,22 @@ bool abstract_syntax_tree::check()
 	{
 		
 	}
-	return true;
+	else
+	{
+		
+	}
+	return cond;
+}
+
+bool abstract_syntax_tree::check()
+{
+	bool ret=false;
+	var cond=condition();
+	if(cond.get_number()==0)
+		ret=false;
+	else
+		ret=true;
+	return ret;
 }
 
 var abstract_syntax_tree::call_id()
