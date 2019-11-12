@@ -184,14 +184,14 @@ class abstract_syntax_tree
 		{
 			return children;
 		}
-		var condition();
-		bool check();
-		var call_id();
+		var calculation();
+		bool condition_check();
+		var call_identifier();
 		var get_value();
 		void run_root();
 		int run_loop();
 		int run_ifelse();
-		void run_func();
+		var run_func();
 		int run_block();
 };
 

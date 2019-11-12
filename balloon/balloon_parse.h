@@ -654,7 +654,7 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		parse.push(this_token);
 		temp=new_node;
 		new_node=assignment();
-		new_node.add_child(temp);
+		new_node.get_children().push_front(temp);
 	}
 	else
 		parse.push(this_token);
