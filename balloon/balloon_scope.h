@@ -48,7 +48,7 @@ class balloon_scope
 			global.push_back(t);
 			return;
 		}
-		var& get_var(std::string name)
+		var get_var(std::string name)
 		{
 			if(!scope_list.empty())
 			{

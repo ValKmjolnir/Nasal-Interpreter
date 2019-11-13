@@ -7,6 +7,7 @@ class abstract_syntax_tree
 {
 	protected:
 		int type;
+		int line;
 		double number;
 		std::string str;
 		std::string name;
@@ -15,6 +16,7 @@ class abstract_syntax_tree
 		abstract_syntax_tree()
 		{
 			type=0;
+			line=0;
 			number=0;
 			str="";
 			name="";
@@ -24,6 +26,7 @@ class abstract_syntax_tree
 		abstract_syntax_tree(const abstract_syntax_tree& p)
 		{
 			type=p.type;
+			line=p.line;
 			number=p.number;
 			str=p.str;
 			name=p.name;
@@ -38,6 +41,7 @@ class abstract_syntax_tree
 		abstract_syntax_tree& operator=(const abstract_syntax_tree& p)
 		{
 			type=p.type;
+			line=p.line;
 			number=p.number;
 			str=p.str;
 			name=p.name;
@@ -48,6 +52,7 @@ class abstract_syntax_tree
 		void set_clear()
 		{
 			type=0;
+			line=0;
 			number=0;
 			str="";
 			name="";
@@ -81,6 +86,11 @@ class abstract_syntax_tree
 		void set_type(const int _type)
 		{
 			type=_type;
+			return;
+		}
+		void set_line(const int _line)
+		{
+			line=_line;
 			return;
 		}
 		void set_string(std::string _str)
@@ -168,6 +178,10 @@ class abstract_syntax_tree
 		{
 			return type;
 		}
+		int get_line()
+		{
+			return line;
+		}
 		double get_number()
 		{
 			return number;
@@ -187,6 +201,8 @@ class abstract_syntax_tree
 		var calculation();
 		bool condition_check();
 		var call_identifier();
+		var array_generation();
+		var hash_generation();
 		var get_value();
 		void run_root();
 		int run_loop();

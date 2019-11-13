@@ -27,6 +27,22 @@ var abstract_syntax_tree::calculation()
 		temp=this->call_identifier();
 		return temp;
 	}
+	else if(this->type==__array)
+	{
+		temp=this->array_generation();
+		return temp;
+	}
+	else if(this->type==__hash)
+	{
+		temp=this->hash_generation();
+		return temp;
+	}
+	else if(this->type==__function)
+	{
+		temp.set_type(__function);
+		temp.set_function(*this);
+		return temp;
+	}
 	if(this->type==__nor_operator)
 	{
 		temp.set_type(__var_number);
@@ -34,7 +50,7 @@ var abstract_syntax_tree::calculation()
 		if(temp.get_type()!=__var_number)
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use a number to use \'!\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'!\' but use \'";
 			print_scalar(temp.get_type());
 			std::cout<<"\'."<<std::endl;
 		}
@@ -57,7 +73,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use a number to use \'+\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'+\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -77,7 +93,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use a number to use \'-\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'-\' but use \'";
 				print_scalar(temp.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -91,7 +107,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use a number to use \'-\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'-\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\' and \'";
 				print_scalar(right_child.get_type());
@@ -109,7 +125,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use a number to use \'*\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'*\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -127,13 +143,13 @@ var abstract_syntax_tree::calculation()
 			if(std::isnan(temp.get_number()) || std::isinf(temp.get_number()))
 			{
 				exit_type=__sigfpe_arithmetic_exception;
-				std::cout<<">>[Runtime-error] get number \'NaN\' or \'Inf\'."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<line<<": get number \'NaN\' or \'Inf\'."<<std::endl;
 			}
 		}
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use a number to use \'/\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use a number to use \'/\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -150,7 +166,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use a string to use \'~\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use a string to use \'~\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -171,7 +187,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'==\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'==\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -179,7 +195,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'==\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'==\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -200,7 +216,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'!=\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'!=\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -208,7 +224,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'!=\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'!=\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -229,7 +245,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'<\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'<\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -237,7 +253,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'<\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'<\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -258,7 +274,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'>\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'>\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -266,7 +282,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'>\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'>\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -287,7 +303,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'<=\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'<=\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -295,7 +311,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'<=\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'<=\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -316,7 +332,7 @@ var abstract_syntax_tree::calculation()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] must use number or string to use \'>=\' but use \'";
+				std::cout<<">>[Runtime-error] line "<<line<<": must use number or string to use \'>=\' but use \'";
 				print_scalar(left_child.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
@@ -324,7 +340,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'>=\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'>=\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -341,7 +357,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'or\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'or\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -358,7 +374,7 @@ var abstract_syntax_tree::calculation()
 		else
 		{
 			exit_type=__error_value_type;
-			std::cout<<">>[Runtime-error] must use same type to use \'and\' but use \'";
+			std::cout<<">>[Runtime-error] line "<<line<<": must use same type to use \'and\' but use \'";
 			print_scalar(left_child.get_type());
 			std::cout<<"\' and \'";
 			print_scalar(right_child.get_type());
@@ -368,7 +384,7 @@ var abstract_syntax_tree::calculation()
 	else
 	{
 		exit_type=__error_value_type;
-		std::cout<<">>[Runtime-error] error type occurred when doing calculation."<<std::endl;
+		std::cout<<">>[Runtime-error] line "<<line<<": error type occurred when doing calculation."<<std::endl;
 	}
 	return temp;
 }
@@ -385,7 +401,7 @@ bool abstract_syntax_tree::condition_check()
 	else
 	{
 		exit_type=__error_value_type;
-		std::cout<<">>[Runtime-error] must use a number to make a choice but use \'";
+		std::cout<<">>[Runtime-error] line "<<line<<": must use a number to make a choice but use \'";
 		print_scalar(temp.get_type());
 		std::cout<<"\'."<<std::endl;
 	}
@@ -400,7 +416,7 @@ var abstract_syntax_tree::call_identifier()
 		temp=scope.get_var(name);
 	else
 	{
-		std::cout<<">>[Runtime-error] cannot find a var named \'"<<name<<"\'."<<std::endl;
+		std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<name<<"\'."<<std::endl;
 		exit_type=__find_var_failure;
 		return temp;
 	}
@@ -416,9 +432,9 @@ var abstract_syntax_tree::call_identifier()
 				else
 				{
 					exit_type=__error_value_type;
-					std::cout<<">>[Runtime-error] ";
+					std::cout<<">>[Runtime-error] line "<<line<<": ";
 					print_detail_token(i->type);
-					std::cout<<":incorrect type \'";
+					std::cout<<": incorrect type \'";
 					print_scalar(temp.get_type());
 					std::cout<<"\'."<<std::endl;
 					break;
@@ -426,24 +442,53 @@ var abstract_syntax_tree::call_identifier()
 			}
 			else if(i->type==__call_hash && temp.get_type()==__var_hash)
 			{
-				
+				temp=temp.get_hash_member(i->name);
+				if(temp.get_type()==__null_type)
+				{
+					exit_type=__get_value_failure;
+					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\'."<<std::endl;
+					break;
+				}
 			}
 			else if(i->type==__call_function && temp.get_type()==__var_function)
-			{
-				
-			}
+				temp=temp.get_function().run_func();
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] ";
+				std::cout<<">>[Runtime-error] line "<<line<<": ";
 				print_detail_token(i->type);
-				std::cout<<":incorrect type \'";
+				std::cout<<": incorrect type \'";
 				print_scalar(temp.get_type());
 				std::cout<<"\'."<<std::endl;
 			}
 		}
 	}
 	return temp;
+}
+
+var abstract_syntax_tree::array_generation()
+{
+	var new_var;
+	new_var.set_type(__var_array);
+	if(!children.empty())
+		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+			new_var.append_array(i->calculation());
+	return new_var;
+}
+
+var abstract_syntax_tree::hash_generation()
+{
+	var new_var;
+	new_var.set_type(__var_hash);
+	if(!children.empty())
+		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+		{
+			var temp;
+			temp=i->children.front().calculation();
+			temp.set_name(i->name);
+			new_var.append_hash(temp);
+		}
+	return new_var;
 }
 
 var abstract_syntax_tree::get_value()
@@ -479,7 +524,7 @@ var abstract_syntax_tree::get_value()
 		temp.set_function(*this);
 	else
 	{
-		std::cout<<">>[Runtime-error] incorrect value."<<std::endl;
+		std::cout<<">>[Runtime-error] line "<<line<<": incorrect value."<<std::endl;
 		exit_type=__get_value_failure;
 	}
 	return temp;
@@ -490,6 +535,7 @@ void abstract_syntax_tree::run_root()
 	scope.set_clear();
 	int beg_time,end_time;
 	exit_type=__process_exited_successfully;
+	
 	beg_time=time(NULL);
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
@@ -508,7 +554,7 @@ void abstract_syntax_tree::run_root()
 			}
 			else
 			{
-				std::cout<<">>[Runtime-error] redeclaration of \'"<<_name<<"\'."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
 				exit_type=__redeclaration;
 				break;
 			}
@@ -578,6 +624,8 @@ int abstract_syntax_tree::run_loop()
 			ret=__return;
 			break;
 		}
+		if(exit_type!=__process_exited_successfully)
+			break;
 	}
 	scope.pop_last_local_scope();
 	return ret;
@@ -637,7 +685,7 @@ int abstract_syntax_tree::run_block()
 			}
 			else
 			{
-				std::cout<<">>[Runtime-error] redeclaration of \'"<<_name<<"\'."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
 				exit_type=__redeclaration;
 			}
 		}
@@ -674,7 +722,7 @@ int abstract_syntax_tree::run_block()
 					return type;
 				else
 				{
-					std::cout<<"[Runtime-error] incorrect use of break/continue."<<std::endl;
+					std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
 					exit_type=__error_command_use;
 				}
 			}

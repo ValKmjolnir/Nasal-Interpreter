@@ -147,7 +147,8 @@ enum runtime_error_type
 	__error_value_type,
 	__error_command_use,
 	__sigfpe_arithmetic_exception,
-	__sigsegv_segmentation_error
+	__sigsegv_segmentation_error,
+	__terminal_interrupt
 };
 
 void print_exit_type(int type)
@@ -163,6 +164,7 @@ void print_exit_type(int type)
 		case __error_command_use:           context="command_use_error(continue/break/return)";break;
 		case __sigfpe_arithmetic_exception: context="SIGFPE";break;
 		case __sigsegv_segmentation_error:  context="SIGSEGV";break;
+		case __terminal_interrupt:          context="interrupt";break;
 		default:                            context="unknown";break;
 	}
 	std::cout<<context;
