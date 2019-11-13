@@ -395,6 +395,7 @@ bool abstract_syntax_tree::condition_check()
 var abstract_syntax_tree::call_identifier()
 {
 	var temp;
+	temp.set_type(__null_type);
 	if(scope.search_var(name))
 		temp=scope.get_var(name);
 	else
@@ -407,7 +408,39 @@ var abstract_syntax_tree::call_identifier()
 	{
 		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 		{
-			
+			if(i->type==__call_array && temp.get_type()==__var_array)
+			{
+				var place=i->children.front().calculation();
+				if(place.get_type()==__var_number)
+					temp=temp.get_array_member((int)place.get_number());
+				else
+				{
+					exit_type=__error_value_type;
+					std::cout<<">>[Runtime-error] ";
+					print_detail_token(i->type);
+					std::cout<<":incorrect type \'";
+					print_scalar(temp.get_type());
+					std::cout<<"\'."<<std::endl;
+					break;
+				}
+			}
+			else if(i->type==__call_hash && temp.get_type()==__var_hash)
+			{
+				
+			}
+			else if(i->type==__call_function && temp.get_type()==__var_function)
+			{
+				
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] ";
+				print_detail_token(i->type);
+				std::cout<<":incorrect type \'";
+				print_scalar(temp.get_type());
+				std::cout<<"\'."<<std::endl;
+			}
 		}
 	}
 	return temp;
@@ -469,7 +502,7 @@ void abstract_syntax_tree::run_root()
 			{
 				++j;
 				if(j!=i->children.end())
-					new_var=j->get_value();
+					new_var=j->calculation();
 				new_var.set_name(_name);
 				scope.add_new_var(new_var);
 			}
@@ -497,7 +530,13 @@ void abstract_syntax_tree::run_root()
 		else if(i->type==__string)
 			std::cout<<i->str<<std::endl;
 		else if(i->type==__id)
-			std::cout<<i->call_identifier().get_name()<<std::endl;
+		{
+			var t=i->call_identifier();
+			if(t.get_type()==__var_number)
+				std::cout<<t.get_number()<<std::endl;
+			else if(t.get_type()==__var_string)
+				std::cout<<t.get_string()<<std::endl;
+		}
 		else if(i->type==__while)
 		{
 			scope.add_new_block_scope();
@@ -592,7 +631,7 @@ int abstract_syntax_tree::run_block()
 			{
 				++j;
 				if(j!=i->children.end())
-					new_var=j->get_value();
+					new_var=j->calculation();
 				new_var.set_name(_name);
 				scope.add_new_var(new_var);
 			}
@@ -600,7 +639,6 @@ int abstract_syntax_tree::run_block()
 			{
 				std::cout<<">>[Runtime-error] redeclaration of \'"<<_name<<"\'."<<std::endl;
 				exit_type=__redeclaration;
-				break;
 			}
 		}
 		else if(i->type==__number)
@@ -608,7 +646,13 @@ int abstract_syntax_tree::run_block()
 		else if(i->type==__string)
 			std::cout<<i->str<<std::endl;
 		else if(i->type==__id)
-			std::cout<<i->call_identifier().get_name()<<std::endl;
+		{
+			var t=i->call_identifier();
+			if(t.get_type()==__var_number)
+				std::cout<<t.get_number()<<std::endl;
+			else if(t.get_type()==__var_string)
+				std::cout<<t.get_string()<<std::endl;
+		}
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
 		{
 			;
@@ -650,9 +694,7 @@ int abstract_syntax_tree::run_block()
 			var temp;
 			temp.set_type(__null_type);
 			if(!(i->children.empty()))
-			{
-				
-			}
+				temp=i->calculation();
 			ret_stack.push(temp);
 			return __return;
 		}
