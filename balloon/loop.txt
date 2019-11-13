@@ -2,6 +2,7 @@ var a=1;
 var sum=0;
 while(a!=100)
 {
+    a;
     sum+=a;
     a+=1;
 }
