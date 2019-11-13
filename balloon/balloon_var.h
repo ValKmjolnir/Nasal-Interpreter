@@ -41,6 +41,7 @@ class var
 	public:
 		var()
 		{
+			type=__null_type;
 			number=0;
 			str="";
 			name="";

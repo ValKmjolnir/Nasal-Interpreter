@@ -116,6 +116,7 @@ abstract_syntax_tree balloon_parse::ret()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": must use \'return\' here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	get_token();
 	if(this_token.type==__semi)
 		parse.push(this_token);
@@ -140,6 +141,8 @@ abstract_syntax_tree balloon_parse::choose()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": must use \'if\' when generating an if-else statement."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
+	temp.set_line(this_token.line);
 	get_token();
 	if(this_token.type!=__left_curve)
 	{
@@ -172,6 +175,7 @@ abstract_syntax_tree balloon_parse::choose()
 			if(this_token.type==__if)// else if
 			{
 				temp.set_type(__elsif);
+				temp.set_line(this_token.line);
 				get_token();
 				if(this_token.type!=__left_curve)
 				{
@@ -192,6 +196,7 @@ abstract_syntax_tree balloon_parse::choose()
 			else// real else
 			{
 				temp.set_type(__else);
+				temp.set_line(this_token.line);
 				parse.push(this_token);
 				temp.add_child(block());
 				break;
@@ -201,6 +206,7 @@ abstract_syntax_tree balloon_parse::choose()
 		else if(this_token.type==__elsif)
 		{
 			temp.set_type(__elsif);
+			temp.set_line(this_token.line);
 			get_token();
 			if(this_token.type!=__left_curve)
 			{
@@ -234,6 +240,7 @@ abstract_syntax_tree balloon_parse::loop()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": must use \'while\' when generating a loop."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	get_token();
 	if(this_token.type!=__left_curve)
 	{
@@ -266,6 +273,8 @@ abstract_syntax_tree balloon_parse::definition()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'var\' here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
+	temp.set_line(this_token.line);
 	get_token();
 	if(this_token.type!=__id)
 	{
@@ -299,6 +308,7 @@ abstract_syntax_tree balloon_parse::assignment()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect an operator for assignment here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	new_node.set_type(this_token.type);
 	new_node.add_child(scalar());
 	return new_node;
@@ -315,6 +325,7 @@ abstract_syntax_tree balloon_parse::array_generate()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'[\' here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	while(1)
 	{
 		get_token();
@@ -361,6 +372,7 @@ abstract_syntax_tree balloon_parse::hash_generate()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'{\' here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	get_token();
 	if(this_token.type!=__right_brace)
 		parse.push(this_token);
@@ -375,6 +387,7 @@ abstract_syntax_tree balloon_parse::hash_generate()
 			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect an identifier here."<<std::endl;
 			return new_node;
 		}
+		temp.set_line(this_token.line);
 		temp.set_name(this_token.str);
 		get_token();
 		if(this_token.type!=__colon)
@@ -425,6 +438,7 @@ abstract_syntax_tree balloon_parse::check_number()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a number here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	new_node.set_number(this_token.str);
 	return new_node;
 }
@@ -440,6 +454,7 @@ abstract_syntax_tree balloon_parse::check_string()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a string here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	new_node.set_string(this_token.str);
 	return new_node;
 }
@@ -454,6 +469,7 @@ abstract_syntax_tree balloon_parse::check_unary()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a unary operator here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	new_node.set_type(this_token.type);
 	get_token();
 	switch(this_token.type)
@@ -480,6 +496,7 @@ abstract_syntax_tree balloon_parse::block()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'{\' ."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	while(1)
 	{
 		get_token();
@@ -535,6 +552,8 @@ abstract_syntax_tree balloon_parse::func_generate()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'func\' here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
+	para.set_line(this_token.line);
 	get_token();
 	if(this_token.type==__left_curve)
 	{
@@ -551,6 +570,7 @@ abstract_syntax_tree balloon_parse::func_generate()
 				return new_node;
 			}
 			temp.set_clear();
+			temp.set_line(this_token.line);
 			temp.set_type(this_token.type);
 			temp.set_name(this_token.str);
 			para.add_child(temp);
@@ -594,6 +614,7 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		std::cout<<">>[Parse-error] line "<<this_token.line<<": must have an identifier here."<<std::endl;
 		return new_node;
 	}
+	new_node.set_line(this_token.line);
 	new_node.set_type(__id);
 	new_node.set_name(this_token.str);
 	while(1)
@@ -602,6 +623,7 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		if(this_token.type==__left_curve)
 		{
 			temp.set_clear();
+			temp.set_line(this_token.line);
 			temp.set_type(__call_function);
 			get_token();
 			if(this_token.type!=__right_curve)
@@ -622,6 +644,7 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		else if(this_token.type==__left_bracket)
 		{
 			temp.set_clear();
+			temp.set_line(this_token.line);
 			temp.set_type(__call_array);
 			temp.add_child(scalar());
 			get_token();
@@ -635,9 +658,17 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		}
 		else if(this_token.type==__dot)
 		{
+			get_token();
+			if(this_token.type!=__id)
+			{
+				++error;
+				std::cout<<">>[Parse-error] line "<<this_token.line<<": expect an identifier when calling hash."<<std::endl;
+				return new_node;
+			}
 			temp.set_clear();
-			temp=call_identifier();
+			temp.set_line(this_token.line);
 			temp.set_type(__call_hash);
+			temp.set_name(this_token.str);
 			new_node.add_child(temp);
 		}
 		else
@@ -654,6 +685,7 @@ abstract_syntax_tree balloon_parse::call_identifier()
 		parse.push(this_token);
 		temp=new_node;
 		new_node=assignment();
+		new_node.set_line(this_token.line);
 		new_node.get_children().push_front(temp);
 	}
 	else
@@ -679,6 +711,7 @@ abstract_syntax_tree balloon_parse::calculation_or()
 		parse.push(this_token);
 		return new_node;
 	}
+	temp.set_line(this_token.line);
 	temp.set_type(__or_operator);
 	temp.add_child(new_node);
 	while(1)
@@ -692,6 +725,7 @@ abstract_syntax_tree balloon_parse::calculation_or()
 			parse.push(this_token);
 			break;
 		}
+		temp.set_line(this_token.line);
 		temp.set_type(__or_operator);
 		temp.add_child(new_node);
 	}
@@ -709,6 +743,7 @@ abstract_syntax_tree balloon_parse::calculation_and()
 		parse.push(this_token);
 		return new_node;
 	}
+	temp.set_line(this_token.line);
 	temp.set_type(__and_operator);
 	temp.add_child(new_node);
 	while(1)
@@ -722,6 +757,7 @@ abstract_syntax_tree balloon_parse::calculation_and()
 			parse.push(this_token);
 			break;
 		}
+		temp.set_line(this_token.line);
 		temp.set_type(__and_operator);
 		temp.add_child(new_node);
 	}
@@ -741,6 +777,7 @@ abstract_syntax_tree balloon_parse::calculation_cmp()
 		parse.push(this_token);
 		return new_node;
 	}
+	temp.set_line(this_token.line);
 	temp.set_type(this_token.type);
 	temp.add_child(new_node);
 	while(1)
@@ -756,6 +793,7 @@ abstract_syntax_tree balloon_parse::calculation_cmp()
 			parse.push(this_token);
 			break;
 		}
+		temp.set_line(this_token.line);
 		temp.set_type(this_token.type);
 		temp.add_child(new_node);
 	}
@@ -773,6 +811,7 @@ abstract_syntax_tree balloon_parse::calculation_additive()
 		parse.push(this_token);
 		return new_node;
 	}
+	temp.set_line(this_token.line);
 	temp.set_type(this_token.type);
 	temp.add_child(new_node);
 	while(1)
@@ -786,6 +825,7 @@ abstract_syntax_tree balloon_parse::calculation_additive()
 			parse.push(this_token);
 			break;
 		}
+		temp.set_line(this_token.line);
 		temp.set_type(this_token.type);
 		temp.add_child(new_node);
 	}
@@ -797,6 +837,7 @@ abstract_syntax_tree balloon_parse::calculation_multive()
 	abstract_syntax_tree new_node;
 	abstract_syntax_tree temp;
 	get_token();
+	new_node.set_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __left_curve:
@@ -819,12 +860,14 @@ abstract_syntax_tree balloon_parse::calculation_multive()
 			return new_node;
 			break;
 	}
+	
 	get_token();
 	if(this_token.type!=__mul_operator && this_token.type!=__div_operator)
 	{
 		parse.push(this_token);
 		return new_node;
 	}
+	temp.set_line(this_token.line);
 	temp.set_type(this_token.type);
 	temp.add_child(new_node);
 	while(1)
@@ -860,6 +903,7 @@ abstract_syntax_tree balloon_parse::calculation_multive()
 			parse.push(this_token);
 			break;
 		}
+		temp.set_line(this_token.line);
 		temp.set_type(this_token.type);
 		temp.add_child(new_node);
 	}
@@ -870,6 +914,7 @@ abstract_syntax_tree balloon_parse::scalar()
 {
 	abstract_syntax_tree new_node;
 	get_token();
+	new_node.set_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __func:parse.push(this_token);new_node=func_generate();break;
@@ -905,6 +950,7 @@ void balloon_parse::parse_main()
 {
 	root.set_clear();
 	root.set_type(__root);
+	root.set_line(1);
 	error=0;
 	warning=0;
 	
