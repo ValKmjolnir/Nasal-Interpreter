@@ -55,7 +55,7 @@ var cosh=func(__x)
 var tanh=func(__x)
 {
     __x=exp(__x);
-    return 1-2/(x*x+1);
+    return 1-2/(__x*__x+1);
 };
 
 var relu=func(__x)

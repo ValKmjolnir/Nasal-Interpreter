@@ -59,7 +59,7 @@ class var
 		void set_name(std::string);
 		void set_number(double);
 		void set_string(std::string);
-		void set_function(abstract_syntax_tree&);
+		void set_function(abstract_syntax_tree);
 		void append_array(var);
 		void append_hash(var);
 		int get_type();
@@ -70,7 +70,7 @@ class var
 		var* get_array_member_addr(int);
 		var get_hash_member(std::string);
 		var* get_hash_member_addr(std::string);
-		abstract_syntax_tree& get_function();
+		abstract_syntax_tree get_function();
 };
 
 var error_var;
@@ -99,7 +99,7 @@ void var::set_string(std::string _str)
 	return;
 }
 
-void var::set_function(abstract_syntax_tree& p)
+void var::set_function(abstract_syntax_tree p)
 {
 	function=p;
 	return;
@@ -193,7 +193,7 @@ var* var::get_hash_member_addr(std::string _name)
 	return &error_var;
 }
 
-abstract_syntax_tree& var::get_function()
+abstract_syntax_tree var::get_function()
 {
 	return function;
 }

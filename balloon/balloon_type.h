@@ -175,6 +175,7 @@ enum runtime_error_type
 	__find_var_failure,
 	__error_value_type,
 	__error_command_use,
+	__bad_definition,
 	__sigfpe_arithmetic_exception,
 	__sigsegv_segmentation_error,
 	__terminal_interrupt,
@@ -192,6 +193,7 @@ void print_exit_type(int type)
 		case __find_var_failure:            context="find_var_failure";break;
 		case __error_value_type:            context="value_type_error";break;
 		case __error_command_use:           context="command_use_error(continue/break/return)";break;
+		case __bad_definition:              context="bad_definition(func in block)";break;
 		case __sigfpe_arithmetic_exception: context="SIGFPE_arithmetic_exception";break;
 		case __sigsegv_segmentation_error:  context="SIGSEGV_segmentation_error";break;
 		case __terminal_interrupt:          context="interrupt";break;
