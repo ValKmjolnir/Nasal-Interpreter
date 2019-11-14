@@ -5,7 +5,6 @@
 
 int exit_type=0;
 std::stack<var> ret_stack; // for function ret use
-std::list<var> parameter;  // for function call use
 
 
 var abstract_syntax_tree::calculation()
@@ -469,10 +468,10 @@ var abstract_syntax_tree::call_identifier()
 			}
 			else if(i->type==__call_function && temp.get_type()==__var_function)
 			{
-				parameter.clear();
+				std::list<var> parameter;
 				for(std::list<abstract_syntax_tree>::iterator j=i->children.begin();j!=i->children.end();++j)
 					parameter.push_back(j->calculation());
-				temp=temp.get_function().run_func();
+				temp=temp.get_function().run_func(parameter);
 			}
 			else
 			{
@@ -738,7 +737,7 @@ int abstract_syntax_tree::run_ifelse()
 	return ret;
 }
 
-var abstract_syntax_tree::run_func()
+var abstract_syntax_tree::run_func(std::list<var> parameter)
 {
 	var ret;
 	scope.add_new_block_scope();

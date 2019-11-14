@@ -88,6 +88,13 @@ class resource_file
 			resource.clear();
 			return;
 		}
+		void add_lib()
+		{
+			std::string lib_name;
+			lib_name="lib/math.nas";
+			input_file(lib_name);
+			return;
+		}
 		void input_file(std::string filename)
 		{
 			std::ifstream fin(filename,std::ios::binary);
