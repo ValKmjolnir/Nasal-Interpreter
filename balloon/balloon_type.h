@@ -51,7 +51,7 @@ enum parse_type
 	//basic elements
 	
 	__null_node,
-	__block,
+	__normal_block,
 	__array,
 	__hash,
 	__root,
@@ -65,6 +65,7 @@ enum parse_type
 	__call_hash,
 	__call_function
 };
+
 void print_detail_token(int type)
 {
 	std::string context="";
@@ -119,7 +120,7 @@ void print_detail_token(int type)
 		case __string:            context="str";break;
 		
 		case __null_node:         context="null node";break;
-		case __block:             context="block";break;
+		case __normal_block:      context="block";break;
 		case __array:             context="array";break;
 		case __hash:              context="hash";break;
 		case __root:              context="root";break;
@@ -137,6 +138,34 @@ void print_detail_token(int type)
 	std::cout<<context;
 	return;
 }
+
+enum var_type
+{
+	__null_type,
+	__var_number,
+	__var_string,
+	__var_array,
+	__var_hash,
+	__var_function
+};
+
+void print_scalar(int type)
+{
+	std::string str="";
+	switch(type)
+	{
+		case __null_type:   str="null";break;
+		case __var_number:  str="number";break;
+		case __var_string:  str="string";break;
+		case __var_array:   str="array";break;
+		case __var_hash:    str="hash";break;
+		case __var_function:str="function";break;
+		default:            str="unknown";break;
+	}
+	std::cout<<str;
+	return;
+}
+
 
 enum runtime_error_type
 {

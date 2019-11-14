@@ -1,33 +1,6 @@
 #ifndef __BALLOON_VAR_H__
 #define __BALLOON_VAR_H__
 
-enum var_type
-{
-	__null_type,
-	__var_number,
-	__var_string,
-	__var_array,
-	__var_hash,
-	__var_function
-};
-
-void print_scalar(int type)
-{
-	std::string str="";
-	switch(type)
-	{
-		case __null_type:   str="null";break;
-		case __var_number:  str="number";break;
-		case __var_string:  str="string";break;
-		case __var_array:   str="array";break;
-		case __var_hash:    str="hash";break;
-		case __var_function:str="function";break;
-		default:            str="unknown";break;
-	}
-	std::cout<<str;
-	return;
-}
-
 class var
 {
 	private:
