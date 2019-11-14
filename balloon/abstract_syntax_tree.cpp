@@ -5,6 +5,7 @@
 
 int exit_type=0;
 std::stack<var> ret_stack;// for function ret use
+std::list<var> parameter;// for function call use
 
 var abstract_syntax_tree::calculation()
 {
@@ -39,7 +40,7 @@ var abstract_syntax_tree::calculation()
 	}
 	else if(this->type==__function)
 	{
-		temp.set_type(__function);
+		temp.set_type(__var_function);
 		temp.set_function(*this);
 		return temp;
 	}
@@ -384,7 +385,9 @@ var abstract_syntax_tree::calculation()
 	else
 	{
 		exit_type=__error_value_type;
-		std::cout<<">>[Runtime-error] line "<<line<<": error type occurred when doing calculation."<<std::endl;
+		std::cout<<">>[Runtime-error] line "<<line<<": error type \'";
+		print_detail_token(this->type);
+		std::cout<<"\' occurred when doing calculation."<<std::endl;
 	}
 	return temp;
 }
@@ -451,7 +454,12 @@ var abstract_syntax_tree::call_identifier()
 				}
 			}
 			else if(i->type==__call_function && temp.get_type()==__var_function)
+			{
+				parameter.clear();
+				for(std::list<abstract_syntax_tree>::iterator j=i->children.begin();j!=i->children.end();++j)
+					parameter.push_back(j->calculation());
 				temp=temp.get_function().run_func();
+			}
 			else
 			{
 				exit_type=__error_value_type;
@@ -460,6 +468,7 @@ var abstract_syntax_tree::call_identifier()
 				std::cout<<": incorrect type \'";
 				print_scalar(temp.get_type());
 				std::cout<<"\'."<<std::endl;
+				break;
 			}
 		}
 	}
@@ -491,44 +500,132 @@ var abstract_syntax_tree::hash_generation()
 	return new_var;
 }
 
-var abstract_syntax_tree::get_value()
+var* abstract_syntax_tree::get_var_addr()
 {
-	var temp;
-	temp.set_type(type);
-	if(type==__id)
-		temp=call_identifier();
-	else if(type==__number)
-		temp.set_number(number);
-	else if(type==__string)
-		temp.set_string(str);
-	else if(type==__array)
-	{
-		var new_var;
-		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-		{
-			new_var=i->get_value();
-			temp.append_array(new_var);
-		}
-	}
-	else if(type==__hash)
-	{
-		var new_var;
-		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-		{
-			new_var=i->children.begin()->get_value();
-			new_var.set_name(i->name);
-			temp.append_array(new_var);
-		}
-	}
-	else if(type==__function)
-		temp.set_function(*this);
+	var* addr=&error_var;
+	if(scope.search_var(name))
+		addr=scope.get_addr(name);
 	else
 	{
-		std::cout<<">>[Runtime-error] line "<<line<<": incorrect value."<<std::endl;
-		exit_type=__get_value_failure;
+		std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<name<<"\'."<<std::endl;
+		exit_type=__find_var_failure;
+		return addr;
 	}
-	return temp;
+	if(!children.empty())
+	{
+		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+		{
+			if(i->type==__call_array && addr->get_type()==__var_array)
+			{
+				var place=i->children.front().calculation();
+				if(place.get_type()==__var_number)
+					addr=addr->get_array_member_addr((int)place.get_number());
+				else
+				{
+					exit_type=__error_value_type;
+					std::cout<<">>[Runtime-error] line "<<line<<": ";
+					print_detail_token(i->type);
+					std::cout<<": incorrect type \'";
+					print_scalar(addr->get_type());
+					std::cout<<"\'."<<std::endl;
+					break;
+				}
+			}
+			else if(i->type==__call_hash && addr->get_type()==__var_hash)
+			{
+				addr=addr->get_hash_member_addr(i->name);
+				if(addr->get_type()==__null_type)
+				{
+					exit_type=__get_value_failure;
+					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\'."<<std::endl;
+					break;
+				}
+			}
+			else if(i->type==__call_function && addr->get_type()==__var_function)
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<line<<": function-returned value cannot be assigned."<<std::endl;
+				break;
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<line<<": ";
+				print_detail_token(i->type);
+				std::cout<<": incorrect type \'";
+				print_scalar(addr->get_type());
+				std::cout<<"\'."<<std::endl;
+				break;
+			}
+		}
+	}
+	return addr;
 }
+
+var abstract_syntax_tree::assignment()
+{
+	var ret,temp;
+	abstract_syntax_tree id=children.front();
+	abstract_syntax_tree value=children.back();
+	var* addr=id.get_var_addr();
+	if(value.type==__equal || value.type==__add_equal || value.type==__sub_equal || value.type==__mul_equal || value.type==__div_equal || value.type==__link_equal)
+		temp=value.assignment();
+	else
+		temp=value.calculation();
+	if(type==__equal)
+	{
+		std::string tname=addr->get_name();
+		*addr=temp;
+		addr->set_name(tname);
+	}
+	else if(type==__add_equal || type==__sub_equal || type==__mul_equal || type==__div_equal)
+	{
+		if(addr->get_type()==__var_number && temp.get_type()==__var_number)
+		{
+			switch(type)
+			{
+				case __add_equal:addr->set_number(addr->get_number()+temp.get_number());break;
+				case __sub_equal:addr->set_number(addr->get_number()-temp.get_number());break;
+				case __mul_equal:addr->set_number(addr->get_number()*temp.get_number());break;
+				case __div_equal:addr->set_number(addr->get_number()/temp.get_number());break;
+			}
+			if(std::isnan(addr->get_number()) || std::isinf(addr->get_number()))
+			{
+				exit_type=__sigfpe_arithmetic_exception;
+				std::cout<<">>[Runtime-error] line "<<line<<": get number \'NaN\' or \'Inf\'."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__error_value_type;
+			std::cout<<">>[Runtime-error] line "<<line<<": incorrect type \'";
+			print_scalar(addr->get_type());
+			std::cout<<"\' and \'";
+			print_scalar(temp.get_type());
+			std::cout<<"\' but this operator ";
+			print_detail_token(type);
+			std::cout<<" must use \'number\' and \'number\'."<<std::endl;
+		}
+	}
+	else if(type==__link_equal)
+	{
+		if(addr->get_type()==__var_string && temp.get_type()==__string)
+			addr->set_string(addr->get_string()+temp.get_string());
+		else
+		{
+			exit_type=__error_value_type;
+			std::cout<<">>[Runtime-error] line "<<line<<": incorrect type \'";
+			print_scalar(addr->get_type());
+			std::cout<<"\' and \'";
+			print_scalar(temp.get_type());
+			std::cout<<"\' but this operator ~ must use \'string\' and \'string\'."<<std::endl;
+		}
+	}
+	
+	ret=*addr;
+	return ret;
+}
+
 void abstract_syntax_tree::run_root()
 {
 	while(!ret_stack.empty())ret_stack.pop();
@@ -560,9 +657,7 @@ void abstract_syntax_tree::run_root()
 			}
 		}
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
-		{
-			;
-		}
+			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)
 		{
 			var t=i->calculation();
@@ -599,7 +694,7 @@ void abstract_syntax_tree::run_root()
 			break;
 	}
 	end_time=time(NULL);
-	std::cout<<"--------------------------------------------------------------------------------------"<<std::endl;
+	std::cout<<"------------------------------------------------------------------------------"<<std::endl;
 	std::cout<<">>[Runtime] process exited after "<<end_time-beg_time<<" sec(s) with returned state \'";
 	print_exit_type(exit_type);
 	std::cout<<"\'."<<std::endl;
@@ -657,11 +752,39 @@ var abstract_syntax_tree::run_func()
 	var ret;
 	scope.add_new_block_scope();
 	scope.add_new_local_scope();
+	abstract_syntax_tree para=children.front();
+	abstract_syntax_tree blk=children.back();
+	std::list<abstract_syntax_tree>::iterator para_name=para.children.begin();
+	std::list<var>::iterator para_value=parameter.begin();
+	
+	for(;para_name!=para.children.end();++para_name,++para_value)
+	{
+		if(para_value==parameter.end() && para_name!=para.children.end())
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<line<<": lack parameter(s)."<<std::endl;
+			break;
+		}
+		var new_var;
+		new_var=*para_value;
+		new_var.set_name(para_name->name);
+		scope.add_new_var(new_var);
+	}
+	if(exit_type==__process_exited_successfully)
+	{
+		int _t=blk.run_block();
+		if(_t!=__return)
+			ret_stack.push(error_var);
+	}
+		
+	else
+		ret_stack.push(error_var);
 	
 	//get return
 	scope.pop_last_block_scope();
 	ret=ret_stack.top();
 	ret_stack.pop();
+	
 	return ret;
 }
 
@@ -702,9 +825,7 @@ int abstract_syntax_tree::run_block()
 				std::cout<<t.get_string()<<std::endl;
 		}
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
-		{
-			;
-		}
+			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)
 		{
 			var t=i->calculation();
@@ -742,7 +863,7 @@ int abstract_syntax_tree::run_block()
 			var temp;
 			temp.set_type(__null_type);
 			if(!(i->children.empty()))
-				temp=i->calculation();
+				temp=i->children.front().calculation();
 			ret_stack.push(temp);
 			return __return;
 		}
