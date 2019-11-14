@@ -60,6 +60,6 @@ var tanh=func(__x)
 
 var relu=func(__x)
 {
-    if(x>=0){return x;}
+    if(x>=0){return __x;}
     else{return 0;}
 };
