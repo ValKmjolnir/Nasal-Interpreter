@@ -72,6 +72,37 @@ class balloon_scope
 			}
 			return error_var;
 		}
+		var* get_addr(std::string name)
+		{
+			var* addr=NULL;
+			if(!scope_list.empty())
+			{
+				std::list<std::list<var> >::iterator i=scope_list.back().end();
+				--i;
+				// get the last scope block(std::list<std::list<var> >)
+				for(;;--i)
+				{
+					for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+						if(j->get_name()==name)
+						{
+							addr=&(*j);
+							return addr;
+						}
+					if(i==scope_list.back().begin())
+						break;
+				}
+			}
+			if(!global.empty())
+			{
+				for(std::list<var>::iterator i=global.begin();i!=global.end();++i)
+					if(i->get_name()==name)
+					{
+						addr=&(*i);
+						return addr;
+					}
+			}
+			return &error_var;
+		}
 		void add_new_block_scope()
 		{
 			std::list<std::list<var> > new_list;

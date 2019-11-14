@@ -87,7 +87,9 @@ class var
 		double get_number();
 		std::string get_string();
 		var& get_array_member(int);
+		var* get_array_member_addr(int);
 		var& get_hash_member(std::string);
+		var* get_hash_member_addr(std::string);
 		abstract_syntax_tree& get_function();
 };
 
@@ -170,6 +172,25 @@ var& var::get_array_member(int _place)
 	return error_var;
 }
 
+var* var::get_array_member_addr(int _place)
+{
+	var* addr=NULL;
+	if(balloon_array.empty())
+	{
+		std::cout<<">>[Runtime-error] overflow when searching member "<<_place<<" but the max size of array \'"<<name<<"\' is 0."<<std::endl;
+		return &error_var;
+	}
+	int cnt=0;
+	for(std::list<var>::iterator i=balloon_array.begin();i!=balloon_array.end();++i,++cnt)
+		if(cnt==_place)
+		{
+			addr=&(*i);
+			return addr;
+		}
+	std::cout<<">>[Runtime-error] overflow when searching member "<<_place<<" but the max size of array \'"<<name<<"\' is "<<cnt<<"(this means 0-"<<cnt-1<<")."<<std::endl;
+	return &error_var;
+}
+
 var& var::get_hash_member(std::string _name)
 {
 	for(std::list<var>::iterator i=balloon_hash.begin();i!=balloon_hash.end();++i)
@@ -177,6 +198,19 @@ var& var::get_hash_member(std::string _name)
 			return *i;
 	std::cout<<">>[Runtime-error] hash \'"<<name<<"\' does not have a member named \'"<<_name<<"\'"<<std::endl;
 	return error_var;
+}
+
+var* var::get_hash_member_addr(std::string _name)
+{
+	var* addr=NULL;
+	for(std::list<var>::iterator i=balloon_hash.begin();i!=balloon_hash.end();++i)
+		if(i->name==_name)
+		{
+			addr=&(*i);
+			return addr;
+		}
+	std::cout<<">>[Runtime-error] hash \'"<<name<<"\' does not have a member named \'"<<_name<<"\'"<<std::endl;
+	return &error_var;
 }
 
 abstract_syntax_tree& var::get_function()
