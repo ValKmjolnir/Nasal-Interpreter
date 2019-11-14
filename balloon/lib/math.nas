@@ -1,12 +1,18 @@
-var fabs=func(__x)
+var abs=func(__x)
 {
-    if(x>0){return __x;}
+    if(__x>0){return __x;}
     else{return -__x;}
 };
 
-var ln=func(__x)
+var asr=func(__x,__y)
 {
-    return (1+8/(1+__x)+1/__x)*(__x-1)/6;
+    if(abs(__y-__x)<=0.1){return (1/__x+8/(__x+__y)+1/__y)*(__y-__x)/6;}
+    var __mid=(__x+__y)/2;
+    return asr(__x,__mid)+asr(__mid,__y);
+};
+var ln=func(_x)
+{
+    return asr(1,_x);
 };
 
 var log=func(__a,__x)
@@ -26,7 +32,7 @@ var pow=func(__x,__num)
 {
     if(__num==0){return 1;}
     else if(__num<0){return 1/pow(__x,-__num);}
-    else{return exp(__x*ln(__num));}
+    else{return exp(__num*ln(__x));}
 };
 
 var sigmoid=func(__x)

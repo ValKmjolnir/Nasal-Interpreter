@@ -25,6 +25,7 @@ int main()
 			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
+			std::cout<<">>10. [lib   ] |add lib into resource codes."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -42,6 +43,8 @@ int main()
 			lex.scanner(prog.get_resource());
 			lex.print_token_list();
 		}
+		else if(command=="lib")
+			prog.add_lib();
 		else if(command=="del")
 		{
 			prog.set_clear();

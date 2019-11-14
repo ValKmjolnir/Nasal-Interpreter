@@ -48,6 +48,5 @@ void alert_sound()
 /* global varia in abstract_syntax_tree.cpp :
 	int exit_type;                        // record the state of runtime
 	std::stack<var> ret_stack;            // for function ret use
-	std::list<var> parameter;             // for function call use
 */
 #endif
