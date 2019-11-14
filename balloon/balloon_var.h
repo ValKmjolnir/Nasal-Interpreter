@@ -75,6 +75,13 @@ class var
 			function=p.function;
 			return *this;
 		}
+		void print_var()
+		{
+			std::cout<<"[type: ";
+			print_scalar(type);
+			std::cout<<",name: "<<name<<",number: "<<number<<",string: "<<str<<" ]";
+			return;
+		}
 		void set_type(int);
 		void set_name(std::string);
 		void set_number(double);
@@ -86,9 +93,9 @@ class var
 		std::string get_name();
 		double get_number();
 		std::string get_string();
-		var& get_array_member(int);
+		var get_array_member(int);
 		var* get_array_member_addr(int);
-		var& get_hash_member(std::string);
+		var get_hash_member(std::string);
 		var* get_hash_member_addr(std::string);
 		abstract_syntax_tree& get_function();
 };
@@ -157,7 +164,7 @@ std::string var::get_string()
 	return str;
 }
 
-var& var::get_array_member(int _place)
+var var::get_array_member(int _place)
 {
 	if(balloon_array.empty())
 	{
@@ -191,7 +198,7 @@ var* var::get_array_member_addr(int _place)
 	return &error_var;
 }
 
-var& var::get_hash_member(std::string _name)
+var var::get_hash_member(std::string _name)
 {
 	for(std::list<var>::iterator i=balloon_hash.begin();i!=balloon_hash.end();++i)
 		if(i->name==_name)

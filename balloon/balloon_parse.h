@@ -192,6 +192,7 @@ abstract_syntax_tree balloon_parse::choose()
 					return new_node;
 				}
 				temp.add_child(block());
+				new_node.add_child(temp);
 			}
 			else// real else
 			{
@@ -199,9 +200,9 @@ abstract_syntax_tree balloon_parse::choose()
 				temp.set_line(this_token.line);
 				parse.push(this_token);
 				temp.add_child(block());
+				new_node.add_child(temp);
 				break;
 			}
-			new_node.add_child(temp);
 		}
 		else if(this_token.type==__elsif)
 		{

@@ -449,7 +449,9 @@ var abstract_syntax_tree::call_identifier()
 				if(temp.get_type()==__null_type)
 				{
 					exit_type=__get_value_failure;
-					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\'."<<std::endl;
+					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\' or this value is set to __null_type. detail: ";
+					temp.print_var();
+					std::cout<<"."<<std::endl;
 					break;
 				}
 			}
@@ -732,12 +734,12 @@ int abstract_syntax_tree::run_ifelse()
 	scope.add_new_local_scope();
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
-		if(i->type!=__else && i->children.front().condition_check())
+		if((i->type==__if || i->type==__elsif) && i->children.front().condition_check())
 		{
 			ret=i->children.back().run_block();
 			break;
 		}
-		else
+		else if(i->type==__else)
 		{
 			ret=i->children.back().run_block();
 			break;
