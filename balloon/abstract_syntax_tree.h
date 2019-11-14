@@ -201,8 +201,6 @@ class abstract_syntax_tree
 		var calculation();
 		bool condition_check();
 		var call_identifier();
-		var array_generation();
-		var hash_generation();
 		var* get_var_addr();
 		var assignment();
 		void run_root();

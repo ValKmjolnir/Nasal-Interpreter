@@ -4,8 +4,9 @@
 
 
 int exit_type=0;
-std::stack<var> ret_stack;// for function ret use
-std::list<var> parameter;// for function call use
+std::stack<var> ret_stack; // for function ret use
+std::list<var> parameter;  // for function call use
+
 
 var abstract_syntax_tree::calculation()
 {
@@ -30,12 +31,23 @@ var abstract_syntax_tree::calculation()
 	}
 	else if(this->type==__array)
 	{
-		temp=this->array_generation();
+		temp.set_type(__var_array);
+		if(!children.empty())
+			for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+				temp.append_array(i->calculation());
 		return temp;
 	}
 	else if(this->type==__hash)
 	{
-		temp=this->hash_generation();
+		temp.set_type(__var_hash);
+		if(!children.empty())
+			for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
+			{
+				var t;
+				t=i->children.front().calculation();
+				t.set_name(i->name);
+				temp.append_hash(t);
+			}
 		return temp;
 	}
 	else if(this->type==__function)
@@ -477,31 +489,6 @@ var abstract_syntax_tree::call_identifier()
 	return temp;
 }
 
-var abstract_syntax_tree::array_generation()
-{
-	var new_var;
-	new_var.set_type(__var_array);
-	if(!children.empty())
-		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-			new_var.append_array(i->calculation());
-	return new_var;
-}
-
-var abstract_syntax_tree::hash_generation()
-{
-	var new_var;
-	new_var.set_type(__var_hash);
-	if(!children.empty())
-		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-		{
-			var temp;
-			temp=i->children.front().calculation();
-			temp.set_name(i->name);
-			new_var.append_hash(temp);
-		}
-	return new_var;
-}
-
 var* abstract_syntax_tree::get_var_addr()
 {
 	var* addr=&error_var;
@@ -697,6 +684,8 @@ void abstract_syntax_tree::run_root()
 	}
 	end_time=time(NULL);
 	std::cout<<"------------------------------------------------------------------------------"<<std::endl;
+	if(exit_type!=__process_exited_successfully)
+		alert_sound();
 	std::cout<<">>[Runtime] process exited after "<<end_time-beg_time<<" sec(s) with returned state \'";
 	print_exit_type(exit_type);
 	std::cout<<"\'."<<std::endl;

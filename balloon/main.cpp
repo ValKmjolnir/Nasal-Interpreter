@@ -29,9 +29,9 @@ int main()
 		else if(command=="cls")
 		{
 			system("cls");
-			//windows system("cls");
-			//linux   system("clear");
-			//macOS   system("clear");
+			// Windows system("cls");
+			// Linux   system("clear");
+			// MacOS   system("clear");
 		}
 		else if(command=="rs")
 			prog.print_file();
@@ -59,7 +59,10 @@ int main()
 				pas.parse_main();
 			}
 			else
+			{
+				alert_sound();
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
+			}	
 		}
 		else if(command=="ast")
 		{
@@ -72,10 +75,16 @@ int main()
 				if(!pas.get_error())
 					pas.print_generated_tree();
 				else
+				{
+					alert_sound();
 					std::cout<<">>[Parse] error(s) found,stop."<<std::endl;
+				}
 			}
 			else
+			{
+				alert_sound();
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
+			}
 		}
 		else if(command=="run")
 		{
@@ -88,10 +97,16 @@ int main()
 				if(!pas.get_error())
 					pas.run_tree();
 				else
+				{
+					alert_sound();
 					std::cout<<">>[Parse] error(s) found,stop."<<std::endl;
+				}
 			}
 			else
+			{
+				alert_sound();
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
+			}
 		}
 		else
 			prog.input_file(command);

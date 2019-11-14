@@ -81,26 +81,58 @@ class balloon_parse
 			root.run_root();
 			return;
 		}
+		/*
+			ret: return expression
+			choose: if-else expression
+			loop: while/for/forindex/foreach expression
+			definition
+			assignment
+			block: set of expressions
+			generate:
+				array
+				hash
+				number
+				string
+				function
+			block
+			scalar:
+				calculation:
+				calculation_or:
+				calculation_and:
+				calculation_cmp:
+				calculation_additive:
+				calculation_multive:
+					call_identifier
+					unary expression
+					->generate
+			semi: check if the statements is ended with semi
+			parse_main: main process
+		*/
 		abstract_syntax_tree ret();
 		abstract_syntax_tree choose();
 		abstract_syntax_tree loop();
 		abstract_syntax_tree definition();
 		abstract_syntax_tree assignment();
+		abstract_syntax_tree block();
+		
 		abstract_syntax_tree array_generate();
 		abstract_syntax_tree hash_generate();
+		abstract_syntax_tree func_generate();
 		abstract_syntax_tree check_number();
 		abstract_syntax_tree check_string();
-		abstract_syntax_tree check_unary();
-		abstract_syntax_tree block();
-		abstract_syntax_tree func_generate();
+		
+		abstract_syntax_tree scalar();
+		
 		abstract_syntax_tree call_identifier();
+		abstract_syntax_tree check_unary();
+		
 		abstract_syntax_tree calculation();
 		abstract_syntax_tree calculation_or();
 		abstract_syntax_tree calculation_and();
 		abstract_syntax_tree calculation_cmp();
 		abstract_syntax_tree calculation_additive();
 		abstract_syntax_tree calculation_multive();
-		abstract_syntax_tree scalar();
+		
 		void check_semi();
 		void parse_main();
 };
@@ -489,7 +521,7 @@ abstract_syntax_tree balloon_parse::block()
 {
 	abstract_syntax_tree new_node;
 	abstract_syntax_tree temp;
-	new_node.set_type(__block);
+	new_node.set_type(__normal_block);
 	get_token();
 	if(this_token.type!=__left_brace)
 	{

@@ -1,12 +1,17 @@
 #ifndef __BALLOON_LEXER_H__
 #define __BALLOON_LEXER_H__
 
+/*
+	reserve words are those below
+	and they are also the reserve words of nasal
+*/
 std::string reserve_word[15]=
 {
 	"for","foreach","forindex","while",
 	"var","func","break","continue","return",
 	"if","else","elsif","nil","and","or"
 };
+
 int is_reserve_word(std::string str)
 {
 	for(int i=0;i<15;++i)
@@ -14,6 +19,10 @@ int is_reserve_word(std::string str)
 			return __reserve_word;
 	return __token_identifier;
 }
+
+/*
+	check if the generated string can be put to number
+*/
 bool check_number(std::string str)
 {
 	if(str.length()==1)
@@ -63,7 +72,12 @@ bool check_number(std::string str)
 	return false;
 }
 
-
+/*
+	use std::list<char> to store resource codes
+	and if you continue adding files
+	the codes will be added behind files that have
+	been added in before
+*/
 class resource_file
 {
 	private:
@@ -108,6 +122,8 @@ class resource_file
 			{
 				if(32<=*i && *i<128 || *i=='\n')
 					std::cout<<*i;
+				else if(*i=='\t')
+					std::cout<<"    ";
 				if(*i=='\n')
 				{
 					++line;
@@ -125,7 +141,15 @@ struct token
 	int type;
 	std::string str;
 };
-
+/*
+	lexer can recognize:
+		number: 100(int) 0.001(double) 0xdeadbeef(hex) 0o1701(oct)
+		string: "str" 'str'
+		identifier
+			reserve word
+			normal identifier: ID and id is different
+		operator
+*/
 class balloon_lexer
 {
 	private:

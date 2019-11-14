@@ -6,6 +6,14 @@ class balloon_scope
 	private:
 		std::list<var> global;
 		std::list<std::list<std::list<var> > > scope_list;
+		/*
+			example:
+				std::list<var> global                  // global scope
+				std::list<std::list<std::list<var> > > // total scope
+					-> std::list<std::list<var> >      // block scope
+						->std::list<var>               // local scope
+							-> var -> var -> var -> var
+		*/
 	public:
 		void set_clear()
 		{
