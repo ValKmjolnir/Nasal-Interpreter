@@ -468,10 +468,14 @@ var abstract_syntax_tree::call_identifier()
 			}
 			else if(i->type==__call_function && temp.get_type()==__var_function)
 			{
+				var self;
+				self.set_type(__var_function);
+				self.set_name(temp.get_name());
+				self.set_function(temp.get_function());
 				std::list<var> parameter;
 				for(std::list<abstract_syntax_tree>::iterator j=i->children.begin();j!=i->children.end();++j)
 					parameter.push_back(j->calculation());
-				temp=temp.get_function().run_func(parameter);
+				temp=temp.get_function().run_func(parameter,self);
 			}
 			else
 			{
@@ -737,11 +741,23 @@ int abstract_syntax_tree::run_ifelse()
 	return ret;
 }
 
-var abstract_syntax_tree::run_func(std::list<var> parameter)
+var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 {
+	static int recursion_depth=0;
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion."<<std::endl;
+		return error_var;
+	}
+	
 	var ret;
 	scope.add_new_block_scope();
 	scope.add_new_local_scope();
+	
+	scope.add_new_var(self_func);
+	
 	abstract_syntax_tree para=children.front();
 	abstract_syntax_tree blk=children.back();
 	std::list<abstract_syntax_tree>::iterator para_name=para.children.begin();
@@ -763,10 +779,11 @@ var abstract_syntax_tree::run_func(std::list<var> parameter)
 	if(exit_type==__process_exited_successfully)
 	{
 		int _t=blk.run_block();
+		// in case the exit_type is not __process_exited_successfully in run_block
+		// or the function does not have return value;
 		if(_t!=__return)
 			ret_stack.push(error_var);
 	}
-		
 	else
 		ret_stack.push(error_var);
 	
@@ -774,7 +791,7 @@ var abstract_syntax_tree::run_func(std::list<var> parameter)
 	scope.pop_last_block_scope();
 	ret=ret_stack.top();
 	ret_stack.pop();
-	
+	--recursion_depth;
 	return ret;
 }
 
@@ -793,6 +810,11 @@ int abstract_syntax_tree::run_block()
 				++j;
 				if(j!=i->children.end())
 					new_var=j->calculation();
+				if(new_var.get_type()==__var_function)
+				{
+					exit_type=__bad_definition;
+					std::cout<<">>[Runtime-error] line "<<line<<": cannot declare a function in any blocks."<<std::endl;
+				}
 				new_var.set_name(_name);
 				scope.add_new_var(new_var);
 			}

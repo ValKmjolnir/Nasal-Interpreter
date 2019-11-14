@@ -206,7 +206,7 @@ class abstract_syntax_tree
 		void run_root();
 		int run_loop();
 		int run_ifelse();
-		var run_func(std::list<var>);
+		var run_func(std::list<var>,var);
 		int run_block();
 };
 

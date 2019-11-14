@@ -26,6 +26,7 @@ int main()
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
 			std::cout<<">>10. [lib   ] |add lib into resource codes."<<std::endl;
+			std::cout<<">>11. [sound ] |make noise(?)."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -111,6 +112,8 @@ int main()
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
 			}
 		}
+		else if(command=="sound")
+			alert_sound();
 		else
 			prog.input_file(command);
 	}
