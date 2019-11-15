@@ -115,6 +115,8 @@ class resource_file
 					resource.push_back(' ');
 			}
 			resource.push_back('\n');
+			resource.push_back(';');
+			resource.pudh_back('\n');
 			return;
 		}
 		std::list<char>& get_resource()
