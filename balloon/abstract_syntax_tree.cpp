@@ -5,27 +5,37 @@
 
 int exit_type=0;
 std::stack<var> ret_stack; // for function ret use
-
+int recursion_depth=0;     // avoid deep recursion to sigsegv 
 
 var abstract_syntax_tree::calculation()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(calc)."<<std::endl;
+		return error_var;
+	}
 	var temp;
 	temp.set_type(__null_type);
 	if(this->type==__number)
 	{
 		temp.set_type(__var_number);
 		temp.set_number(number);
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__string)
 	{
 		temp.set_type(__var_string);
 		temp.set_string(str);
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__id)
 	{
 		temp=this->call_identifier();
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__array)
@@ -34,6 +44,7 @@ var abstract_syntax_tree::calculation()
 		if(!children.empty())
 			for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 				temp.append_array(i->calculation());
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__hash)
@@ -47,12 +58,14 @@ var abstract_syntax_tree::calculation()
 				t.set_name(i->name);
 				temp.append_hash(t);
 			}
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__function)
 	{
 		temp.set_type(__var_function);
 		temp.set_function(*this);
+		--recursion_depth;
 		return temp;
 	}
 	if(this->type==__nor_operator)
@@ -73,6 +86,7 @@ var abstract_syntax_tree::calculation()
 			else
 				temp.set_number(1);
 		}
+		--recursion_depth;
 		return temp;
 	}
 	else if(this->type==__add_operator)
@@ -400,11 +414,19 @@ var abstract_syntax_tree::calculation()
 		print_detail_token(this->type);
 		std::cout<<"\' occurred when doing calculation."<<std::endl;
 	}
+	--recursion_depth;
 	return temp;
 }
 
 bool abstract_syntax_tree::condition_check()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(check)."<<std::endl;
+		return false;
+	}
 	bool ret=false;
 	var temp=calculation();
 	if(temp.get_type()==__var_number)
@@ -419,11 +441,19 @@ bool abstract_syntax_tree::condition_check()
 		print_scalar(temp.get_type());
 		std::cout<<"\'."<<std::endl;
 	}
+	--recursion_depth;
 	return ret;
 }
 
 var abstract_syntax_tree::call_identifier()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(call)."<<std::endl;
+		return error_var;
+	}
 	var temp;
 	temp.set_type(__null_type);
 	if(scope.search_var(name))
@@ -489,11 +519,19 @@ var abstract_syntax_tree::call_identifier()
 			}
 		}
 	}
+	--recursion_depth;
 	return temp;
 }
 
 var* abstract_syntax_tree::get_var_addr()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(addr)."<<std::endl;
+		return &error_var;
+	}
 	var* addr=&error_var;
 	if(scope.search_var(name))
 		addr=scope.get_addr(name);
@@ -551,11 +589,19 @@ var* abstract_syntax_tree::get_var_addr()
 			}
 		}
 	}
+	--recursion_depth;
 	return addr;
 }
 
 var abstract_syntax_tree::assignment()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(assignment)."<<std::endl;
+		return error_var;
+	}
 	var ret,temp;
 	abstract_syntax_tree id=children.front();
 	abstract_syntax_tree value=children.back();
@@ -615,11 +661,14 @@ var abstract_syntax_tree::assignment()
 	}
 	
 	ret=*addr;
+	--recursion_depth;
 	return ret;
 }
 
 void abstract_syntax_tree::run_root()
 {
+	recursion_depth=0;
+	++recursion_depth;
 	while(!ret_stack.empty())ret_stack.pop();
 	scope.set_clear();
 	int beg_time,end_time;
@@ -708,6 +757,13 @@ void abstract_syntax_tree::run_root()
 
 int abstract_syntax_tree::run_loop()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(loop)."<<std::endl;
+		return 0;
+	}
 	int ret=0;
 	scope.add_new_local_scope();
 	
@@ -727,13 +783,22 @@ int abstract_syntax_tree::run_loop()
 			break;
 	}
 	scope.pop_last_local_scope();
+	--recursion_depth;
 	return ret;
 }
 
 int abstract_syntax_tree::run_ifelse()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(choose)."<<std::endl;
+		return 0;
+	}
 	int ret=0;
 	scope.add_new_local_scope();
+	
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
 		if((i->type==__if || i->type==__elsif) && i->children.front().condition_check())
@@ -748,17 +813,17 @@ int abstract_syntax_tree::run_ifelse()
 		}
 	}
 	scope.pop_last_local_scope();
+	--recursion_depth;
 	return ret;
 }
 
 var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 {
-	static int recursion_depth=0;
 	++recursion_depth;
 	if(recursion_depth>512)
 	{
 		exit_type=__sigsegv_segmentation_error;
-		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion."<<std::endl;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(function)."<<std::endl;
 		return error_var;
 	}
 	
@@ -807,6 +872,13 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 
 int abstract_syntax_tree::run_block()
 {
+	++recursion_depth;
+	if(recursion_depth>512)
+	{
+		exit_type=__sigsegv_segmentation_error;
+		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(block)."<<std::endl;
+		return 0;
+	}
 	scope.add_new_local_scope();
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
@@ -862,7 +934,10 @@ int abstract_syntax_tree::run_block()
 			if(type)
 			{
 				if(type==__return)
+				{
+					--recursion_depth;
 					return type;
+				}
 				else
 				{
 					std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
@@ -874,12 +949,21 @@ int abstract_syntax_tree::run_block()
 		{
 			int type=i->run_ifelse();
 			if(type)
+			{
+				--recursion_depth;
 				return type;
+			}
 		}
 		else if(i->type==__continue)
+		{
+			--recursion_depth;
 			return __continue;
+		}
 		else if(i->type==__break)
+		{
+			--recursion_depth;
 			return __break;
+		}
 		else if(i->type==__return)
 		{
 			var temp;
@@ -887,12 +971,14 @@ int abstract_syntax_tree::run_block()
 			if(!(i->children.empty()))
 				temp=i->children.front().calculation();
 			ret_stack.push(temp);
+			--recursion_depth;
 			return __return;
 		}
 		if(exit_type!=__process_exited_successfully)
 			break;
 	}
 	scope.pop_last_local_scope();
+	--recursion_depth;
 	return 0;
 }
 

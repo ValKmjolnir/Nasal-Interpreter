@@ -20,6 +20,8 @@
 #include <stack>
 #include <ctime>
 
+#include <unistd.h>
+
 void alert_sound()
 {
 	printf("\a");
@@ -48,5 +50,6 @@ void alert_sound()
 /* global varia in abstract_syntax_tree.cpp :
 	int exit_type;                        // record the state of runtime
 	std::stack<var> ret_stack;            // for function ret use
+	int recursion_depth;                  // avoid too deep recursion
 */
 #endif

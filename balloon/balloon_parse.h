@@ -1007,6 +1007,7 @@ void balloon_parse::parse_main()
 			case __foreach:
 			case __while:parse.push(this_token);root.add_child(loop());break;
 			case __semi:break;
+			case 0:break;// avoid some cases in which the parse has been empty but because of push() the zero token is pushed in.
 			default:
 				++error;
 				std::cout<<">>[Parse-error] line "<<this_token.line<<": \'";
