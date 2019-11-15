@@ -673,13 +673,23 @@ void abstract_syntax_tree::run_root()
 		else if(i->type==__while)
 		{
 			scope.add_new_block_scope();
-			i->run_loop();
+			int ret_type=i->run_loop();
+			if(ret_type==__return)
+			{
+				std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
+				exit_type=__error_command_use;
+			}
 			scope.pop_last_block_scope();
 		}
 		else if(i->type==__ifelse)
 		{
 			scope.add_new_block_scope();
-			i->run_ifelse();
+			int ret_type=i->run_ifelse();
+			if(ret_type==__continue || ret_type==__break || ret_type==__return)
+			{
+				std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
+				exit_type=__error_command_use;
+			}
 			scope.pop_last_block_scope();
 		}
 		if(exit_type!=__process_exited_successfully)
