@@ -92,7 +92,10 @@ class resource_file
 		{
 			std::string lib_name;
 			lib_name="lib/math.nas";
-			input_file(lib_name);
+			if(access("lib/math.nas",0))
+				std::cout<<">>[Resource] lack lib file: lib/math.nas ."<<std::endl;
+			else
+				input_file(lib_name);
 			return;
 		}
 		void input_file(std::string filename)
@@ -115,8 +118,6 @@ class resource_file
 					resource.push_back(' ');
 			}
 			resource.push_back('\n');
-			resource.push_back(';');
-			resource.pudh_back('\n');
 			return;
 		}
 		std::list<char>& get_resource()

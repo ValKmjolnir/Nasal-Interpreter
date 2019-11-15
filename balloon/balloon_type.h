@@ -28,7 +28,7 @@ void print_token(int type)
 
 enum parse_type
 {
-	__equal,                                       // =
+	__equal=1,                                       // =
 	__cmp_equal,__cmp_not_equal,                   // == !=
 	__cmp_less,__cmp_less_or_equal,                // < <=
 	__cmp_more,__cmp_more_or_equal,                // > >=
@@ -169,7 +169,7 @@ void print_scalar(int type)
 
 enum runtime_error_type
 {
-	__process_exited_successfully,
+	__process_exited_successfully=1,
 	__redeclaration,
 	__get_value_failure,
 	__find_var_failure,
