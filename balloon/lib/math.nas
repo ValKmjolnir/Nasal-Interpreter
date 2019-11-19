@@ -8,15 +8,14 @@ var abs=func(__x)
     else{return -__x;}
 };
 
-var __balloon_lib_ln_asr=func(__x,__y)
-{
-    if(abs(__y-__x)<=0.1){return (1/__x+8/(__x+__y)+1/__y)*(__y-__x)/6;}
-    var __mid=(__x+__y)/2;
-    return __balloon_lib_ln_asr(__x,__mid)+__balloon_lib_ln_asr(__mid,__y);
-};
-
 var ln=func(_x)
 {
+    var __balloon_lib_ln_asr=func(__x,__y)
+    {
+        if(abs(__y-__x)<=0.1){return (1/__x+8/(__x+__y)+1/__y)*(__y-__x)/6;}
+        var __mid=(__x+__y)/2;
+        return __balloon_lib_ln_asr(__x,__mid)+__balloon_lib_ln_asr(__mid,__y);
+    };
     return __balloon_lib_ln_asr(1,_x);
 };
 
@@ -113,20 +112,19 @@ var sqrt=func(__x)
     return t;
 };
 
-var __balloon_lib_asin_asr=func(__x,__y)
+var asin=func(_x)
 {
-    var __mid=(__x+__y)/2;
-    if(abs(__y-__x)<=0.01){return (1/sqrt(1-__x*__x)+4/sqrt(1-__mid*__mid)+1/sqrt(1-__y*__y))*(__y-__x)/6;}
-    return __balloon_lib_asin_asr(__x,__mid)+__balloon_lib_asin_asr(__mid,__y);
-};
-
-var asin=func(__x)
-{
-    if(abs(__x)>1){return -1;}
+    var __balloon_lib_asin_asr=func(__x,__y)
+    {
+        var __mid=(__x+__y)/2;
+        if(abs(__y-__x)<=0.01){return (1/sqrt(1-__x*__x)+4/sqrt(1-__mid*__mid)+1/sqrt(1-__y*__y))*(__y-__x)/6;}
+        return __balloon_lib_asin_asr(__x,__mid)+__balloon_lib_asin_asr(__mid,__y);
+    };
+    if(abs(_x)>1){return -1;}
     var fl=1;
-    if(__x<0){fl=-fl;__x=-__x;}
-    if(abs(__x-1)<0.001){return pi/2;}
-    return fl*__balloon_lib_asin_asr(0,__x);
+    if(_x<0){fl=-fl;_x=-_x;}
+    if(abs(_x-1)<0.001){return pi/2;}
+    return fl*__balloon_lib_asin_asr(0,_x);
 };
 
 var acos=func(__x)
