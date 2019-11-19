@@ -707,18 +707,10 @@ void abstract_syntax_tree::run_root()
 			else if(t.get_type()==__var_string)
 				std::cout<<t.get_string()<<std::endl;
 		}
-		else if(i->type==__number)
-			std::cout<<i->number<<std::endl;
-		else if(i->type==__string)
-			std::cout<<i->str<<std::endl;
+		else if(i->type==__number || i->type==__string)
+			;
 		else if(i->type==__id)
-		{
-			var t=i->call_identifier();
-			if(t.get_type()==__var_number)
-				std::cout<<t.get_number()<<std::endl;
-			else if(t.get_type()==__var_string)
-				std::cout<<t.get_string()<<std::endl;
-		}
+			i->call_identifier();
 		else if(i->type==__while)
 		{
 			scope.add_new_block_scope();
@@ -745,7 +737,7 @@ void abstract_syntax_tree::run_root()
 			break;
 	}
 	end_time=time(NULL);
-	std::cout<<"------------------------------------------------------------------------------"<<std::endl;
+	std::cout<<std::endl<<"------------------------------------------------------------------------------"<<std::endl;
 	if(exit_type!=__process_exited_successfully)
 		alert_sound();
 	std::cout<<">>[Runtime] process exited after "<<end_time-beg_time<<" sec(s) with returned state \'";
@@ -838,29 +830,79 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 	std::list<abstract_syntax_tree>::iterator para_name=para.children.begin();
 	std::list<var>::iterator para_value=parameter.begin();
 	
-	for(;para_name!=para.children.end();++para_name,++para_value)
+	
+	if(self_func.get_name()=="print")
 	{
-		if(para_value==parameter.end() && para_name!=para.children.end())
+		std::string temp_str;
+		for(std::list<var>::iterator i=parameter.begin();i!=parameter.end();++i)
 		{
-			exit_type=__lack_parameter;
-			std::cout<<">>[Runtime-error] line "<<line<<": lack parameter(s)."<<std::endl;
-			break;
+			switch(i->get_type())
+			{
+				case __null_type:std::cout<<">>[Runtime-error] cannot print null value."<<std::endl;exit_type=__error_value_type;break;
+				case __var_number:std::cout<<i->get_number();break;
+				case __var_string:
+					temp_str=i->get_string();
+					for(int j=0;j<temp_str.length();++j)
+					{
+						if(temp_str[j]!='\\')
+							std::cout<<temp_str[j];
+						else
+						{
+							++j;
+							switch(temp_str[j])
+							{
+								case 'n':std::cout<<'\n';break;
+								case 't':std::cout<<'\t';break;
+								case 'r':std::cout<<'\r';break;
+								case '\\':std::cout<<'\\';break;
+								case '\'':std::cout<<'\'';break;
+								case '\"':std::cout<<'\"';break;
+								default:--j;break;
+							}
+						}
+					}
+					break;
+				case __var_array:std::cout<<">>[Runtime-error] cannot print array value."<<std::endl;exit_type=__error_value_type;break;
+				case __var_hash:std::cout<<">>[Runtime-error] cannot print hash value."<<std::endl;exit_type=__error_value_type;break;
+				case __var_function:std::cout<<">>[Runtime-error] cannot print function."<<std::endl;exit_type=__error_value_type;break;
+				default:std::cout<<">>[Runtime-error] cannot print unknown value."<<std::endl;exit_type=__error_value_type;break;
+			}
+			if(exit_type==__error_value_type)
+				break;
 		}
-		var new_var;
-		new_var=*para_value;
-		new_var.set_name(para_name->name);
-		scope.add_new_var(new_var);
-	}
-	if(exit_type==__process_exited_successfully)
-	{
-		int _t=blk.run_block();
-		// in case the exit_type is not __process_exited_successfully in run_block
-		// or the function does not have return value;
-		if(_t!=__return)
-			ret_stack.push(error_var);
+		ret.set_type(__var_number);
+		if(exit_type!=__error_value_type)
+			ret.set_number(1);
+		else
+			ret.set_number(0);
+		ret_stack.push(ret);
 	}
 	else
-		ret_stack.push(error_var);
+	{
+		for(;para_name!=para.children.end();++para_name,++para_value)
+		{
+			if(para_value==parameter.end() && para_name!=para.children.end())
+			{
+				exit_type=__lack_parameter;
+				std::cout<<">>[Runtime-error] line "<<line<<": lack parameter(s)."<<std::endl;
+				break;
+			}
+			var new_var;
+			new_var=*para_value;
+			new_var.set_name(para_name->name);
+			scope.add_new_var(new_var);
+		}
+		if(exit_type==__process_exited_successfully)
+		{
+			int _t=blk.run_block();
+			// in case the exit_type is not __process_exited_successfully in run_block
+			// or the function does not have return value;
+			if(_t!=__return)
+				ret_stack.push(error_var);
+		}
+		else
+			ret_stack.push(error_var);
+	}
 	
 	//get return
 	scope.pop_last_block_scope();
@@ -901,18 +943,10 @@ int abstract_syntax_tree::run_block()
 				exit_type=__redeclaration;
 			}
 		}
-		else if(i->type==__number)
-			std::cout<<i->number<<std::endl;
-		else if(i->type==__string)
-			std::cout<<i->str<<std::endl;
+		else if(i->type==__number || i->type==__string)
+			;
 		else if(i->type==__id)
-		{
-			var t=i->call_identifier();
-			if(t.get_type()==__var_number)
-				std::cout<<t.get_number()<<std::endl;
-			else if(t.get_type()==__var_string)
-				std::cout<<t.get_string()<<std::endl;
-		}
+			i->call_identifier();
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
 			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)

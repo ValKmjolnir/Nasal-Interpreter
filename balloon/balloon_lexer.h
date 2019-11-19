@@ -96,6 +96,11 @@ class resource_file
 				std::cout<<">>[Resource] lack lib file: lib/math.nas ."<<std::endl;
 			else
 				input_file(lib_name);
+			lib_name="lib/io.nas";
+			if(access("lib/io.nas",0))
+				std::cout<<">>[Resource] lack lib file: lib/io.nas ."<<std::endl;
+			else
+				input_file(lib_name);
 			return;
 		}
 		void input_file(std::string filename)
