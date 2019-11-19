@@ -892,11 +892,6 @@ int abstract_syntax_tree::run_block()
 				++j;
 				if(j!=i->children.end())
 					new_var=j->calculation();
-				if(new_var.get_type()==__var_function)
-				{
-					exit_type=__bad_definition;
-					std::cout<<">>[Runtime-error] line "<<line<<": cannot declare a function in any blocks."<<std::endl;
-				}
 				new_var.set_name(_name);
 				scope.add_new_var(new_var);
 			}
