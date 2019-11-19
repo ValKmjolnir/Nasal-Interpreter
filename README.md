@@ -71,3 +71,11 @@ You can try a calculator in version 0.17~0.19 !
 In version 1.2 the ast has been completed.
 
 But there are still some bugs inside.
+
+# Balloon script
+
+Balloon is created for experiment.
+
+It is a subset of Nasal and the parse is stricter than Nasal parse.
+
+Explore the usage of balloon and enjoy yourself! XD
