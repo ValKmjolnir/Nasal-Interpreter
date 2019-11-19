@@ -10,13 +10,15 @@ var abs=func(__x)
 
 var ln=func(_x)
 {
-    var __balloon_lib_ln_asr=func(__x,__y)
+    var __balloon_lib_ln_asr=func(__left,__right,__total,eps)
     {
-        if(abs(__y-__x)<=0.1){return (1/__x+8/(__x+__y)+1/__y)*(__y-__x)/6;}
-        var __mid=(__x+__y)/2;
-        return __balloon_lib_ln_asr(__x,__mid)+__balloon_lib_ln_asr(__mid,__y);
+        var __mid=(__left+__right)/2;
+        var L=(1/__left+8/(__left+__mid)+1/__mid)*(__mid-__left)/6;
+        var R=(1/__mid+8/(__mid+__right)+1/__right)*(__right-__mid)/6;
+        if(abs(L+R-__total)<=15*eps){return L+R+(L+R-__total)/15.0;}
+        return __balloon_lib_ln_asr(__left,__mid,L,eps/2)+__balloon_lib_ln_asr(__mid,__right,R,eps/2);
     };
-    return __balloon_lib_ln_asr(1,_x);
+    return __balloon_lib_ln_asr(1,_x,(1+8/(1+_x)+1/_x)*(_x-1)/6,0.000001);
 };
 
 var log=func(__a,__x)
@@ -114,17 +116,19 @@ var sqrt=func(__x)
 
 var asin=func(_x)
 {
-    var __balloon_lib_asin_asr=func(__x,__y)
+    var __balloon_lib_asin_asr=func(__left,__right,__total,eps)
     {
-        var __mid=(__x+__y)/2;
-        if(abs(__y-__x)<=0.01){return (1/sqrt(1-__x*__x)+4/sqrt(1-__mid*__mid)+1/sqrt(1-__y*__y))*(__y-__x)/6;}
-        return __balloon_lib_asin_asr(__x,__mid)+__balloon_lib_asin_asr(__mid,__y);
+        var __mid=(__left+__right)/2;
+        var L=(1/sqrt(1-__left*__left)+4/sqrt(1-(__left+__mid)*(__left+__mid)/4)+1/sqrt(1-__mid*__mid))*(__mid-__left)/6;
+        var R=(1/sqrt(1-__mid*__mid)+4/sqrt(1-(__right+__mid)*(__right+__mid)/4)+1/sqrt(1-__right*__right))*(__right-__mid)/6;
+        if(abs(L+R-__total)<=15*eps){return L+R+(L+R-__total)/15;}
+        return __balloon_lib_asin_asr(__left,__mid,L,eps/2)+__balloon_lib_asin_asr(__mid,__right,R,eps/2);
     };
     if(abs(_x)>1){return -1;}
     var fl=1;
     if(_x<0){fl=-fl;_x=-_x;}
     if(abs(_x-1)<0.001){return pi/2;}
-    return fl*__balloon_lib_asin_asr(0,_x);
+    return fl*__balloon_lib_asin_asr(0,_x,(1+4/sqrt(1-_x*_x/4)+1/sqrt(1-_x*_x))*_x/6,0.000001);
 };
 
 var acos=func(__x)
