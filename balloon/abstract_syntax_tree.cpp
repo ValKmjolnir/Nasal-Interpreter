@@ -428,7 +428,10 @@ bool abstract_syntax_tree::condition_check()
 		return false;
 	}
 	if(type==__null_node) // this is set for "for(;;)"
+	{
+		--recursion_depth;
 		return true;
+	}
 	bool ret=false;
 	var temp=calculation();
 	if(temp.get_type()==__var_number)
@@ -464,6 +467,7 @@ var abstract_syntax_tree::call_identifier()
 	{
 		std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<name<<"\'."<<std::endl;
 		exit_type=__find_var_failure;
+		--recursion_depth;
 		return temp;
 	}
 	if(!children.empty())
