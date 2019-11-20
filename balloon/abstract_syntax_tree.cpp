@@ -427,6 +427,8 @@ bool abstract_syntax_tree::condition_check()
 		std::cout<<">>[Runtime-error] line "<<line<<":[SIGSEGV] too deep recursion(check)."<<std::endl;
 		return false;
 	}
+	if(type==__null_node) // this is set for "for(;;)"
+		return true;
 	bool ret=false;
 	var temp=calculation();
 	if(temp.get_type()==__var_number)
@@ -682,7 +684,7 @@ void abstract_syntax_tree::run_root()
 			var new_var;
 			std::list<abstract_syntax_tree>::iterator j=i->children.begin();
 			std::string _name=j->name;
-			if(!scope.search_var(_name))
+			if(!scope.check_redefine(_name))
 			{
 				++j;
 				if(j!=i->children.end())
@@ -705,7 +707,7 @@ void abstract_syntax_tree::run_root()
 			;
 		else if(i->type==__id)
 			i->call_identifier();
-		else if(i->type==__while)
+		else if(i->type==__while || i->type==__for)
 		{
 			scope.add_new_block_scope();
 			int ret_type=i->run_loop();
@@ -751,21 +753,77 @@ int abstract_syntax_tree::run_loop()
 		return 0;
 	}
 	int ret=0;
-	
-	abstract_syntax_tree condition=children.front();
-	abstract_syntax_tree blk=children.back();
-	while(condition.condition_check())
+	if(type==__while)
 	{
-		int type=blk.run_block();
-		if(type==__break)
-			break;
-		else if(type==__return)
+		abstract_syntax_tree condition=children.front();
+		abstract_syntax_tree blk=children.back();
+		while(condition.condition_check())
 		{
-			ret=__return;
-			break;
+			int type=blk.run_block();
+			if(type==__break)
+				break;
+			else if(type==__return)
+			{
+				ret=__return;
+				break;
+			}
+			if(exit_type!=__process_exited_successfully)
+				break;
 		}
-		if(exit_type!=__process_exited_successfully)
-			break;
+	}
+	else if(type==__for)
+	{
+		std::list<abstract_syntax_tree>::iterator iter=children.begin();
+		abstract_syntax_tree def=*iter;
+		++iter;
+		abstract_syntax_tree condition=*iter;
+		++iter;
+		abstract_syntax_tree var_changement=*iter;
+		abstract_syntax_tree blk=children.back();
+		
+		scope.add_new_local_scope();
+		if(def.type==__definition)
+		{
+			var new_var;
+			std::list<abstract_syntax_tree>::iterator j=def.children.begin();
+			std::string _name=j->name;
+			if(!scope.check_redefine(_name))
+			{
+				++j;
+				if(j!=def.children.end())
+					new_var=j->calculation();
+				new_var.set_name(_name);
+				scope.add_new_var(new_var);
+			}
+			else
+			{
+				std::cout<<">>[Runtime-error] line "<<line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
+				exit_type=__redeclaration;
+			}
+		}
+		else if(def.type==__equal || def.type==__add_equal || def.type==__sub_equal || def.type==__mul_equal || def.type==__div_equal || def.type==__link_equal)
+			def.assignment();
+		else if(def.type==__id)
+			def.call_identifier();
+		
+		while(condition.condition_check())
+		{
+			int type=blk.run_block();
+			if(type==__break)
+				break;
+			else if(type==__return)
+			{
+				ret=__return;
+				break;
+			}
+			if(exit_type!=__process_exited_successfully)
+				break;
+			if(var_changement.type==__equal || var_changement.type==__add_equal || var_changement.type==__sub_equal || var_changement.type==__mul_equal || var_changement.type==__div_equal || var_changement.type==__link_equal)
+				var_changement.assignment();
+			else if(var_changement.type==__id)
+				var_changement.call_identifier();
+		}
+		scope.pop_last_local_scope();
 	}
 	--recursion_depth;
 	return ret;
@@ -919,7 +977,7 @@ int abstract_syntax_tree::run_block()
 			var new_var;
 			std::list<abstract_syntax_tree>::iterator j=i->children.begin();
 			std::string _name=j->name;
-			if(!scope.search_var(_name))
+			if(!scope.check_redefine(_name))
 			{
 				++j;
 				if(j!=i->children.end())
@@ -941,7 +999,7 @@ int abstract_syntax_tree::run_block()
 			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)
 			i->calculation();
-		else if(i->type==__while)
+		else if(i->type==__while || i->type==__for)
 		{
 			int type=i->run_loop();
 			if(type)

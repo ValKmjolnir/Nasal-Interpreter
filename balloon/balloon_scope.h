@@ -21,6 +21,26 @@ class balloon_scope
 			scope_list.clear();
 			return;
 		}
+		bool check_redefine(std::string name)
+		{
+			if(!scope_list.empty() && !scope_list.back().empty())
+			{
+				std::list<std::list<var> >::iterator i=scope_list.back().end();
+				--i;
+				for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+					if(j->get_name()==name)
+						return true;
+				return false;
+			}
+			if(!global.empty())
+			{
+				for(std::list<var>::iterator i=global.begin();i!=global.end();++i)
+					if(i->get_name()==name)
+						return true;
+				return false;
+			}
+			return false;
+		}
 		bool search_var(std::string name)
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())

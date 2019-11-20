@@ -265,29 +265,102 @@ abstract_syntax_tree balloon_parse::choose()
 abstract_syntax_tree balloon_parse::loop()
 {
 	abstract_syntax_tree new_node;
-	new_node.set_type(__while);
+	
 	get_token();
-	if(this_token.type!=__while)
+	if(this_token.type!=__while && this_token.type!=__for)
 	{
 		++error;
-		std::cout<<">>[Parse-error] line "<<this_token.line<<": must use \'while\' when generating a loop."<<std::endl;
+		std::cout<<">>[Parse-error] line "<<this_token.line<<": must use \'while\' or \'for\' when generating a loop."<<std::endl;
 		return new_node;
 	}
+	new_node.set_type(this_token.type);
 	new_node.set_line(this_token.line);
-	get_token();
-	if(this_token.type!=__left_curve)
+	if(this_token.type==__while)
 	{
-		++error;
-		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'(\'."<<std::endl;
-		return new_node;
+		get_token();
+		if(this_token.type!=__left_curve)
+		{
+			++error;
+			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'(\'."<<std::endl;
+			return new_node;
+		}
+		new_node.add_child(scalar());
+		get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \')\'."<<std::endl;
+			return new_node;
+		}
 	}
-	new_node.add_child(scalar());
-	get_token();
-	if(this_token.type!=__right_curve)
+	else if(this_token.type==__for)
 	{
-		++error;
-		std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \')\'."<<std::endl;
-		return new_node;
+		get_token();
+		if(this_token.type!=__left_curve)
+		{
+			++error;
+			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \'(\'."<<std::endl;
+			return new_node;
+		}
+		abstract_syntax_tree nullnode;
+		nullnode.set_type(__null_node);
+		nullnode.set_line(this_token.line);
+		get_token();
+		if(this_token.type!=__semi)
+		{
+			if(this_token.type==__var)
+			{
+				parse.push(this_token);
+				new_node.add_child(definition());
+			}
+			else if(this_token.type==__id)
+			{
+				parse.push(this_token);
+				new_node.add_child(call_identifier());
+			}
+			else
+			{
+				++error;
+				std::cout<<">>[Parse-error] line "<<this_token.line<<": must use definition or assignment or nothing here."<<std::endl;
+				return new_node;
+			}
+		}
+		else
+		{
+			parse.push(this_token);
+			new_node.add_child(nullnode);
+		}
+		check_semi();
+		get_token();
+		if(this_token.type!=__semi)
+		{
+			parse.push(this_token);
+			new_node.add_child(scalar());
+		}
+		else
+		{
+			parse.push(this_token);
+			new_node.add_child(nullnode);
+		}
+		check_semi();
+		get_token();
+		if(this_token.type!=__semi)
+		{
+			parse.push(this_token);
+			new_node.add_child(scalar());
+		}
+		else
+		{
+			parse.push(this_token);
+			new_node.add_child(nullnode);
+		}
+		get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			std::cout<<">>[Parse-error] line "<<this_token.line<<": expect a \')\'."<<std::endl;
+			return new_node;
+		}
 	}
 	new_node.add_child(block());
 	return new_node;
