@@ -23,8 +23,9 @@ class balloon_scope
 		}
 		bool search_var(std::string name)
 		{
-			if(!scope_list.empty())
+			if(!scope_list.empty() && !scope_list.back().empty())
 			{
+				
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(;;--i)
@@ -46,7 +47,7 @@ class balloon_scope
 		}
 		void add_new_var(var t)
 		{
-			if(!scope_list.empty())
+			if(!scope_list.empty() && !scope_list.back().empty())
 			{
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
@@ -58,7 +59,7 @@ class balloon_scope
 		}
 		var get_var(std::string name)
 		{
-			if(!scope_list.empty())
+			if(!scope_list.empty() && !scope_list.back().empty())
 			{
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
@@ -83,7 +84,7 @@ class balloon_scope
 		var* get_addr(std::string name)
 		{
 			var* addr=NULL;
-			if(!scope_list.empty())
+			if(!scope_list.empty() && !scope_list.back().empty())
 			{
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
@@ -136,11 +137,8 @@ class balloon_scope
 		}
 		void pop_last_local_scope()
 		{
-			if(!scope_list.empty())
-			{
-				std::list<std::list<var> > temp=scope_list.back();
-				temp.pop_back();
-			}
+			if(!scope_list.empty() && !scope_list.back().empty())
+				scope_list.back().pop_back();
 			return;
 		}
 };

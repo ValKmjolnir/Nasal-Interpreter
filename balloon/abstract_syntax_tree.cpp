@@ -700,13 +700,7 @@ void abstract_syntax_tree::run_root()
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
 			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)
-		{
 			var t=i->calculation();
-			if(t.get_type()==__var_number)
-				std::cout<<t.get_number()<<std::endl;
-			else if(t.get_type()==__var_string)
-				std::cout<<t.get_string()<<std::endl;
-		}
 		else if(i->type==__number || i->type==__string)
 			;
 		else if(i->type==__id)
@@ -757,7 +751,6 @@ int abstract_syntax_tree::run_loop()
 		return 0;
 	}
 	int ret=0;
-	scope.add_new_local_scope();
 	
 	abstract_syntax_tree condition=children.front();
 	abstract_syntax_tree blk=children.back();
@@ -774,7 +767,6 @@ int abstract_syntax_tree::run_loop()
 		if(exit_type!=__process_exited_successfully)
 			break;
 	}
-	scope.pop_last_local_scope();
 	--recursion_depth;
 	return ret;
 }
@@ -789,8 +781,6 @@ int abstract_syntax_tree::run_ifelse()
 		return 0;
 	}
 	int ret=0;
-	scope.add_new_local_scope();
-	
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
 		if((i->type==__if || i->type==__elsif) && i->children.front().condition_check())
@@ -804,7 +794,6 @@ int abstract_syntax_tree::run_ifelse()
 			break;
 		}
 	}
-	scope.pop_last_local_scope();
 	--recursion_depth;
 	return ret;
 }
@@ -922,6 +911,7 @@ int abstract_syntax_tree::run_block()
 		return 0;
 	}
 	scope.add_new_local_scope();
+	int ret=0;
 	for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 	{
 		if(i->type==__definition)
@@ -950,13 +940,7 @@ int abstract_syntax_tree::run_block()
 		else if(i->type==__equal || i->type==__add_equal || i->type==__sub_equal || i->type==__mul_equal || i->type==__div_equal || i->type==__link_equal)
 			i->assignment();
 		else if(i->type==__add_operator || i->type==__sub_operator || i->type==__mul_operator || i->type==__div_operator || i->type==__link_operator || i->type==__or_operator || i->type==__and_operator || i->type==__nor_operator)
-		{
-			var t=i->calculation();
-			if(t.get_type()==__var_number)
-				std::cout<<t.get_number()<<std::endl;
-			else if(t.get_type()==__var_string)
-				std::cout<<t.get_string()<<std::endl;
-		}
+			i->calculation();
 		else if(i->type==__while)
 		{
 			int type=i->run_loop();
@@ -964,8 +948,8 @@ int abstract_syntax_tree::run_block()
 			{
 				if(type==__return)
 				{
-					--recursion_depth;
-					return type;
+					ret=type;
+					break;
 				}
 				else
 				{
@@ -979,19 +963,14 @@ int abstract_syntax_tree::run_block()
 			int type=i->run_ifelse();
 			if(type)
 			{
-				--recursion_depth;
-				return type;
+				ret=type;
+				break;
 			}
 		}
-		else if(i->type==__continue)
+		else if(i->type==__continue || i->type==__break)
 		{
-			--recursion_depth;
-			return __continue;
-		}
-		else if(i->type==__break)
-		{
-			--recursion_depth;
-			return __break;
+			ret=i->type;
+			break;
 		}
 		else if(i->type==__return)
 		{
@@ -1000,15 +979,15 @@ int abstract_syntax_tree::run_block()
 			if(!(i->children.empty()))
 				temp=i->children.front().calculation();
 			ret_stack.push(temp);
-			--recursion_depth;
-			return __return;
+			ret=__return;
+			break;
 		}
 		if(exit_type!=__process_exited_successfully)
 			break;
 	}
 	scope.pop_last_local_scope();
 	--recursion_depth;
-	return 0;
+	return ret;
 }
 
 
