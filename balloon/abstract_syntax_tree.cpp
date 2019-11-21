@@ -698,7 +698,7 @@ void abstract_syntax_tree::run_root()
 			}
 			else
 			{
-				std::cout<<">>[Runtime-error] line "<<line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<i->line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
 				exit_type=__redeclaration;
 				break;
 			}
@@ -717,7 +717,7 @@ void abstract_syntax_tree::run_root()
 			int ret_type=i->run_loop();
 			if(ret_type==__return)
 			{
-				std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
+				std::cout<<"[Runtime-error] line "<<i->line<<": incorrect use of break/continue."<<std::endl;
 				exit_type=__error_command_use;
 			}
 			scope.pop_last_block_scope();
@@ -728,7 +728,7 @@ void abstract_syntax_tree::run_root()
 			int ret_type=i->run_ifelse();
 			if(ret_type==__continue || ret_type==__break || ret_type==__return)
 			{
-				std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
+				std::cout<<"[Runtime-error] line "<<i->line<<": incorrect use of break/continue."<<std::endl;
 				exit_type=__error_command_use;
 			}
 			scope.pop_last_block_scope();
@@ -991,7 +991,7 @@ int abstract_syntax_tree::run_block()
 			}
 			else
 			{
-				std::cout<<">>[Runtime-error] line "<<line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<i->line<<": redeclaration of \'"<<_name<<"\'."<<std::endl;
 				exit_type=__redeclaration;
 			}
 		}
@@ -1015,7 +1015,7 @@ int abstract_syntax_tree::run_block()
 				}
 				else
 				{
-					std::cout<<"[Runtime-error] line "<<line<<": incorrect use of break/continue."<<std::endl;
+					std::cout<<"[Runtime-error] line "<<i->line<<": incorrect use of break/continue."<<std::endl;
 					exit_type=__error_command_use;
 				}
 			}

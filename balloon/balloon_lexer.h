@@ -166,10 +166,25 @@ class resource_file
 				totalsource.push_back(*i);
 			return totalsource;
 		}
-		void print_file()
+		void print_file(bool withlib)
 		{
 			int line=1;
 			std::cout<<line<<"	";
+			if(withlib)
+			{
+				for(std::list<char>::iterator i=libsource.begin();i!=libsource.end();++i)
+				{
+					if(32<=*i && *i<128 || *i=='\n')
+						std::cout<<*i;
+					else if(*i=='\t')
+						std::cout<<"    ";
+					if(*i=='\n')
+					{
+						++line;
+						std::cout<<line<<"	";
+					}
+				}
+			}
 			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
 			{
 				if(32<=*i && *i<128 || *i=='\n')
