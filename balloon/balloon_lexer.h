@@ -81,11 +81,15 @@ bool check_number(std::string str)
 class resource_file
 {
 	private:
-		std::list<char> resource;
+		std::list<char> libsource;   // place for lib code
+		std::list<char> resource;    // place for user code
+		std::list<char> totalsource; // link lib and user code
 	public:
 		void set_clear()
 		{
 			resource.clear();
+			libsource.clear();
+			totalsource.clear();
 			return;
 		}
 		void add_lib()
@@ -95,12 +99,34 @@ class resource_file
 			if(access("lib/math.nas",0))
 				std::cout<<">>[Resource] lack lib file: lib/math.nas ."<<std::endl;
 			else
-				input_file(lib_name);
+				input_lib_file(lib_name);
 			lib_name="lib/io.nas";
 			if(access("lib/io.nas",0))
 				std::cout<<">>[Resource] lack lib file: lib/io.nas ."<<std::endl;
 			else
-				input_file(lib_name);
+				input_lib_file(lib_name);
+			return;
+		}
+		void input_lib_file(std::string filename)
+		{
+			std::ifstream fin(filename,std::ios::binary);
+			if(fin.fail())
+			{
+				std::cout<<">>[Resource] cannot find a file named \'"<<filename<<"\' ."<<std::endl;
+				return;
+			}
+			char c;
+			while(!fin.eof())
+			{
+				c=fin.get(); 
+				if(fin.eof())
+					break;
+				if(0<=c && c<128)
+					libsource.push_back(c);
+				else
+					libsource.push_back(' ');
+			}
+			libsource.push_back('\n');
 			return;
 		}
 		void input_file(std::string filename)
@@ -127,7 +153,12 @@ class resource_file
 		}
 		std::list<char>& get_resource()
 		{
-			return resource;
+			totalsource.clear();
+			for(std::list<char>::iterator i=libsource.begin();i!=libsource.end();++i)
+				totalsource.push_back(*i);
+			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
+				totalsource.push_back(*i);
+			return totalsource;
 		}
 		void print_file()
 		{
