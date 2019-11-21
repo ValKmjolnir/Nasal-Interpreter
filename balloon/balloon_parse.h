@@ -344,7 +344,7 @@ abstract_syntax_tree balloon_parse::loop()
 		}
 		check_semi();
 		get_token();
-		if(this_token.type!=__semi)
+		if(this_token.type!=__semi && this_token.type!=__right_curve)
 		{
 			parse.push(this_token);
 			new_node.add_child(scalar());
