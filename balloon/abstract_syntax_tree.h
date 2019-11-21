@@ -71,6 +71,7 @@ class abstract_syntax_tree
 				case __number:std::cout<<": "<<number;break;
 				case __string:std::cout<<": "<<str;break;
 				case __id:
+				case __dynamic_id:
 				case __call_array:
 				case __call_hash:
 				case __call_function:std::cout<<": "<<name;break;

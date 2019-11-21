@@ -678,7 +678,15 @@ abstract_syntax_tree balloon_parse::func_generate()
 			temp.set_clear();
 			temp.set_line(this_token.line);
 			temp.set_type(this_token.type);
-			temp.set_name(this_token.str);
+			if(this_token.type==__dynamic_id)
+			{
+				std::string tempstr="";
+				for(int i=0;i<this_token.str.length()-3;++i)
+					tempstr+=this_token.str[i];
+				temp.set_name(tempstr);
+			}
+			else
+				temp.set_name(this_token.str);
 			para.add_child(temp);
 			if(this_token.type==__dynamic_id)
 			{

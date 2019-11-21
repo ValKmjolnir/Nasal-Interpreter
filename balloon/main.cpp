@@ -40,6 +40,7 @@ int main()
 			break;
 		else if(command=="lexer")
 		{
+			prog.clear_lib_code(); // avoid print lib code
 			lex.scanner(prog.get_resource());
 			lex.print_token_list();
 		}
@@ -51,6 +52,7 @@ int main()
 		}
 		else if(command=="parser")
 		{
+			prog.clear_lib_code(); // avoid print lib code
 			lex.scanner(prog.get_resource());
 			lex.generate_detail_token();
 			if(!lex.get_error())
@@ -67,6 +69,7 @@ int main()
 		}
 		else if(command=="ast")
 		{
+			prog.clear_lib_code(); // avoid print lib code
 			lex.scanner(prog.get_resource());
 			lex.generate_detail_token();
 			if(!lex.get_error())

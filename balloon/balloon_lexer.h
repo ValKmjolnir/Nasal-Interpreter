@@ -92,8 +92,14 @@ class resource_file
 			totalsource.clear();
 			return;
 		}
+		void clear_lib_code()
+		{
+			libsource.clear();
+			return;
+		}
 		void add_lib()
 		{
+			libsource.clear();
 			std::string lib_name;
 			lib_name="lib/math.nas";
 			if(access("lib/math.nas",0))
