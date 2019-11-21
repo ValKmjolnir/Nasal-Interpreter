@@ -25,8 +25,7 @@ int main()
 			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
-			std::cout<<">>10. [lib   ] |add lib into resource codes."<<std::endl;
-			std::cout<<">>11. [sound ] |make noise(?)."<<std::endl;
+			std::cout<<">>10. [sound ] |make noise(?)."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -44,8 +43,6 @@ int main()
 			lex.scanner(prog.get_resource());
 			lex.print_token_list();
 		}
-		else if(command=="lib")
-			prog.add_lib();
 		else if(command=="del")
 		{
 			prog.set_clear();
@@ -66,7 +63,7 @@ int main()
 			{
 				alert_sound();
 				std::cout<<">>[Lexer] error(s) found,stop."<<std::endl;
-			}	
+			}
 		}
 		else if(command=="ast")
 		{
@@ -92,6 +89,7 @@ int main()
 		}
 		else if(command=="run")
 		{
+			prog.add_lib();
 			lex.scanner(prog.get_resource());
 			lex.generate_detail_token();
 			if(!lex.get_error())
