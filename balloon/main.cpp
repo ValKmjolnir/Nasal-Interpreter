@@ -25,7 +25,8 @@ int main()
 			std::cout<<">> 7. [del   ] |delete program in memory."<<std::endl;
 			std::cout<<">> 8. [run   ] |run the programme in stack. (-lexer -parser)"<<std::endl;
 			std::cout<<">> 9. [rs    ] |check the source program."<<std::endl;
-			std::cout<<">>10. [sound ] |make noise(?)."<<std::endl;
+			std::cout<<">>10. [total ] |check code with lib."<<std::endl;
+			std::cout<<">>11. [sound ] |make noise(?)."<<std::endl;
 		}
 		else if(command=="cls")
 		{
@@ -35,9 +36,15 @@ int main()
 			// MacOS   system("clear");
 		}
 		else if(command=="rs")
-			prog.print_file();
+			prog.print_file(false);// false means print resource code without lib
 		else if(command=="exit")
 			break;
+		else if(command=="total")
+		{
+			prog.clear_lib_code();// clear lib code
+			prog.add_lib();       // reload lib code to avoid redefinition
+			prog.print_file(true);// true means print resource code with lib
+		}
 		else if(command=="lexer")
 		{
 			prog.clear_lib_code(); // avoid print lib code
@@ -92,7 +99,7 @@ int main()
 		}
 		else if(command=="run")
 		{
-			prog.add_lib();
+			prog.add_lib(); // load lib code
 			lex.scanner(prog.get_resource());
 			lex.generate_detail_token();
 			if(!lex.get_error())
@@ -114,7 +121,7 @@ int main()
 			}
 		}
 		else if(command=="sound")
-			alert_sound();
+			alert_sound();// check if the sound works
 		else
 			prog.input_file(command);
 	}
