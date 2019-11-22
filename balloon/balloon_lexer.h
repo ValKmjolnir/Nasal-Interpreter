@@ -5,16 +5,16 @@
 	reserve words are those below
 	and they are also the reserve words of nasal
 */
-std::string reserve_word[15]=
+std::string reserve_word[14]=
 {
 	"for","foreach","forindex","while",
 	"var","func","break","continue","return",
-	"if","else","elsif","nil","and","or"
+	"if","else","elsif","and","or"
 };
 
 int is_reserve_word(std::string str)
 {
-	for(int i=0;i<15;++i)
+	for(int i=0;i<14;++i)
 		if(reserve_word[i]==str)
 			return __reserve_word;
 	return __token_identifier;
@@ -109,6 +109,11 @@ class resource_file
 			lib_name="lib/io.nas";
 			if(access("lib/io.nas",0))
 				std::cout<<">>[Resource] lack lib file: lib/io.nas ."<<std::endl;
+			else
+				input_lib_file(lib_name);
+			lib_name="lib/basics.nas";
+			if(access("lib/basics.nas",0))
+				std::cout<<">>[Resource] lack lib file: lib/basics.nas ."<<std::endl;
 			else
 				input_lib_file(lib_name);
 			return;

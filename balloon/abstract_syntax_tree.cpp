@@ -478,11 +478,20 @@ var abstract_syntax_tree::call_identifier()
 			{
 				var place=i->children.front().calculation();
 				if(place.get_type()==__var_number)
-					temp=temp.get_array_member((int)place.get_number());
+				{
+					if(place.get_number()>=0)
+						temp=temp.get_array_member((int)place.get_number());
+					else
+					{
+						exit_type=__get_value_failure;
+						std::cout<<">>[Runtime-error] line"<<i->line<<": number shouldn't be less than 0 when calling an array."<<std::endl;
+						break;
+					}
+				}
 				else
 				{
 					exit_type=__error_value_type;
-					std::cout<<">>[Runtime-error] line "<<line<<": ";
+					std::cout<<">>[Runtime-error] line "<<i->line<<": ";
 					print_detail_token(i->type);
 					std::cout<<": incorrect type \'";
 					print_scalar(temp.get_type());
@@ -496,7 +505,7 @@ var abstract_syntax_tree::call_identifier()
 				if(temp.get_type()==__null_type)
 				{
 					exit_type=__get_value_failure;
-					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\' or this value is set to __null_type. detail: ";
+					std::cout<<">>[Runtime-error] line "<<i->line<<": cannot find a hash-member named \'"<<i->name<<"\' or this value is set to __null_type. detail: ";
 					temp.print_var();
 					std::cout<<"."<<std::endl;
 					break;
@@ -516,7 +525,7 @@ var abstract_syntax_tree::call_identifier()
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] line "<<line<<": ";
+				std::cout<<">>[Runtime-error] line "<<i->line<<": ";
 				print_detail_token(i->type);
 				std::cout<<": incorrect type \'";
 				print_scalar(temp.get_type());
@@ -555,11 +564,20 @@ var* abstract_syntax_tree::get_var_addr()
 			{
 				var place=i->children.front().calculation();
 				if(place.get_type()==__var_number)
-					addr=addr->get_array_member_addr((int)place.get_number());
+				{
+					if(place.get_number()>=0)
+						addr=addr->get_array_member_addr((int)place.get_number());
+					else
+					{
+						exit_type=__get_value_failure;
+						std::cout<<">>[Runtime-error] line"<<i->line<<": number shouldn't be less than 0 when calling an array."<<std::endl;
+						break;
+					}
+				}
 				else
 				{
 					exit_type=__error_value_type;
-					std::cout<<">>[Runtime-error] line "<<line<<": ";
+					std::cout<<">>[Runtime-error] line "<<i->line<<": ";
 					print_detail_token(i->type);
 					std::cout<<": incorrect type \'";
 					print_scalar(addr->get_type());
@@ -573,20 +591,20 @@ var* abstract_syntax_tree::get_var_addr()
 				if(addr->get_type()==__null_type)
 				{
 					exit_type=__get_value_failure;
-					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a hash-member named \'"<<i->name<<"\'."<<std::endl;
+					std::cout<<">>[Runtime-error] line "<<i->line<<": cannot find a hash-member named \'"<<i->name<<"\'."<<std::endl;
 					break;
 				}
 			}
 			else if(i->type==__call_function && addr->get_type()==__var_function)
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] line "<<line<<": function-returned value cannot be assigned."<<std::endl;
+				std::cout<<">>[Runtime-error] line "<<i->line<<": function-returned value cannot be assigned."<<std::endl;
 				break;
 			}
 			else
 			{
 				exit_type=__error_value_type;
-				std::cout<<">>[Runtime-error] line "<<line<<": ";
+				std::cout<<">>[Runtime-error] line "<<i->line<<": ";
 				print_detail_token(i->type);
 				std::cout<<": incorrect type \'";
 				print_scalar(addr->get_type());
