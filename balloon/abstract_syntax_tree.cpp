@@ -894,8 +894,8 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 	
 	scope.add_new_var(self_func);
 	
-	abstract_syntax_tree para=children.front();
-	abstract_syntax_tree blk=children.back();
+	abstract_syntax_tree para=children.front();// get parameter name(declared in function)
+	abstract_syntax_tree blk=children.back();  // get block
 	std::list<abstract_syntax_tree>::iterator para_name=para.children.begin();
 	std::list<var>::iterator para_value=parameter.begin();
 	
@@ -939,8 +939,40 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 			if(exit_type==__error_value_type)
 				break;
 		}
+		// this must be added when running a function
 		ret.set_type(__var_number);
 		if(exit_type!=__error_value_type)
+			ret.set_number(1);
+		else
+			ret.set_number(0);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="append")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			var* array_addr=scope.append_get_addr(i->get_name());
+			if(array_addr!=&error_var)
+			{
+				++i;
+				for(;i!=parameter.end();++i)
+					array_addr->append_array(*i);
+			}
+			else
+			{
+				std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<parameter.begin()->get_name()<<"\'."<<std::endl;
+				exit_type=__find_var_failure;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		ret.set_type(__var_number);
+		if(exit_type!=__find_var_failure)
 			ret.set_number(1);
 		else
 			ret.set_number(0);
@@ -961,6 +993,7 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 			new_var.set_name(para_name->name);
 			scope.add_new_var(new_var);
 		}
+		// this must be added when running a function
 		if(exit_type==__process_exited_successfully)
 		{
 			int _t=blk.run_block();
