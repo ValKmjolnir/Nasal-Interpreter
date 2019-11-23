@@ -45,14 +45,16 @@ class balloon_scope
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
 			{
-				
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(;;--i)
 				{
-					for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
-						if(j->get_name()==name)
-							return true;
+					if(!i->empty())
+					{
+						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+							if(j->get_name()==name)
+								return true;
+					}
 					if(i==scope_list.back().begin())
 						break;
 				}
@@ -77,6 +79,27 @@ class balloon_scope
 			global.push_back(t);
 			return;
 		}
+		void print_last_block()
+		{
+			if(!scope_list.empty() && !scope_list.back().empty())
+			{
+				std::list<std::list<var> >::iterator i=scope_list.back().end();
+				--i;
+				// get the last scope block(std::list<std::list<var> >)
+				for(;;--i)
+				{
+					if(!i->empty())
+					{
+						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+							std::cout<<j->get_name()<<std::endl;
+					
+					}
+					if(i==scope_list.back().begin())
+						break;
+				}
+			}
+			return;
+		}
 		var get_var(std::string name)
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
@@ -86,9 +109,12 @@ class balloon_scope
 				// get the last scope block(std::list<std::list<var> >)
 				for(;;--i)
 				{
-					for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
-						if(j->get_name()==name)
-							return *j;
+					if(!i->empty())
+					{
+						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+							if(j->get_name()==name)
+								return *j;
+					}
 					if(i==scope_list.back().begin())
 						break;
 				}
@@ -101,24 +127,70 @@ class balloon_scope
 			}
 			return error_var;
 		}
+		var* append_get_addr(std::string name)
+		{
+			var* addr=NULL;
+			if(!scope_list.empty())
+			{
+				int cnt=1;
+				std::list<std::list<std::list<var> > >::iterator blk=scope_list.end();
+				--blk;
+				for(;;--blk,++cnt)
+				{
+					if(!blk->empty())
+					{
+						std::list<std::list<var> >::iterator i=blk->end();
+						--i;
+						for(;;--i)
+						{
+							if(!i->empty())
+							{
+								for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+									if(j->get_name()==name)
+									{
+										addr=&(*j);
+										return addr;
+									}
+							}
+							if(i==blk->begin())
+								break;
+						}	
+					}
+					if(cnt==2 || blk==scope_list.begin())
+						break;
+				}
+			}
+			if(!global.empty())
+			{
+				for(std::list<var>::iterator i=global.begin();i!=global.end();++i)
+					if(i->get_name()==name)
+					{
+						addr=&(*i);
+						return addr;
+					}
+			}
+			return &error_var;
+		}
 		var* get_addr(std::string name)
 		{
 			var* addr=NULL;
-			if(!scope_list.empty() && !scope_list.back().empty())
+			if(!scope_list.empty())
 			{
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
-				// get the last scope block(std::list<std::list<var> >)
 				for(;;--i)
 				{
-					for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
-						if(j->get_name()==name)
-						{
-							addr=&(*j);
-							return addr;
-						}
-					if(i==scope_list.back().begin())
-						break;
+					if(!i->empty())
+					{
+						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
+							if(j->get_name()==name)
+							{
+								addr=&(*j);
+								return addr;
+							}
+						if(i==scope_list.back().begin())
+							break;
+					}
 				}
 			}
 			if(!global.empty())

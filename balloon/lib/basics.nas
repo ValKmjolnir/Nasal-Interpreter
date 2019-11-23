@@ -1,12 +1,12 @@
 # this file includes functions:
 #   append
 #   subvec
-var append(vector,elements...)
+var append=func(vector,elements...)
 {
     return __call_special_inline_function(vector,elements);
 };
 
-var subvec(vector,begin,length)
+var subvec=func(vector,begin,length)
 {
     var new_vector=[];
     for(var i=begin;i<begin+length;i+=1)
@@ -16,7 +16,7 @@ var subvec(vector,begin,length)
     return new_vector;
 };
 
-var int(value)
+var int=func(value)
 {
     return __call_Cpp_int(value);
 };
