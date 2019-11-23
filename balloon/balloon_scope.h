@@ -25,6 +25,7 @@ class balloon_scope
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
 			{
+				// check the last scope
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
@@ -49,7 +50,7 @@ class balloon_scope
 				--i;
 				for(;;--i)
 				{
-					if(!i->empty())
+					if(!i->empty())// avoid sigsegv
 					{
 						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 							if(j->get_name()==name)
@@ -88,7 +89,7 @@ class balloon_scope
 				// get the last scope block(std::list<std::list<var> >)
 				for(;;--i)
 				{
-					if(!i->empty())
+					if(!i->empty())// avoid sigsegv
 					{
 						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 							std::cout<<j->get_name()<<std::endl;
@@ -109,7 +110,7 @@ class balloon_scope
 				// get the last scope block(std::list<std::list<var> >)
 				for(;;--i)
 				{
-					if(!i->empty())
+					if(!i->empty())// avoid sigsegv
 					{
 						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 							if(j->get_name()==name)
@@ -133,17 +134,21 @@ class balloon_scope
 			if(!scope_list.empty())
 			{
 				int cnt=1;
+				// append function will get array's address from parameters' scope so the last two blocks will be checked
+				// because when calling a function,a new block scope will be created.
+				// but the array does not exist in this block,
+				// so you must find the block before this block.
 				std::list<std::list<std::list<var> > >::iterator blk=scope_list.end();
 				--blk;
 				for(;;--blk,++cnt)
 				{
-					if(!blk->empty())
+					if(!blk->empty())// avoid sigsegv
 					{
 						std::list<std::list<var> >::iterator i=blk->end();
 						--i;
 						for(;;--i)
 						{
-							if(!i->empty())
+							if(!i->empty())// avoid sigsegv
 							{
 								for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 									if(j->get_name()==name)
@@ -160,7 +165,7 @@ class balloon_scope
 						break;
 				}
 			}
-			if(!global.empty())
+			if(!global.empty())// if can't find array's address,find the global scope
 			{
 				for(std::list<var>::iterator i=global.begin();i!=global.end();++i)
 					if(i->get_name()==name)
@@ -180,7 +185,7 @@ class balloon_scope
 				--i;
 				for(;;--i)
 				{
-					if(!i->empty())
+					if(!i->empty())// avoid sigsegv
 					{
 						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 							if(j->get_name()==name)
