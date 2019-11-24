@@ -953,17 +953,25 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 		{
 			std::list<var>::iterator i=parameter.begin();
 			var* array_addr=scope.append_get_addr(i->get_name());
-			if(array_addr!=&error_var)
+			if(array_addr->get_type()==__var_array)
 			{
-				++i;
-				for(;i!=parameter.end();++i)
-					array_addr->append_array(*i);
+				if(array_addr!=&error_var)
+				{
+					++i;
+					for(;i!=parameter.end();++i)
+						array_addr->append_array(*i);
+				}
+				else
+				{
+					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<parameter.begin()->get_name()<<"\'."<<std::endl;
+					exit_type=__find_var_failure;
+				}
 			}
 			else
 			{
-				std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<parameter.begin()->get_name()<<"\'."<<std::endl;
-				exit_type=__find_var_failure;
-			}
+				std::cout<<">>[Runtime-error] line "<<line<<": called var's type is not an array."<<std::endl;
+				exit_type=__error_value_type;
+			}	
 		}
 		else
 		{

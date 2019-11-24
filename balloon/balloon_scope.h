@@ -1,6 +1,20 @@
 #ifndef __BALLOON_SCOPE_H__
 #define __BALLOON_SCOPE_H__
 
+
+/*
+	when running a balloon process
+	there will be two types of blocks:
+		root block
+			if-else block
+			loop block
+		function block
+	and many types of local scopes:
+		if-else local scope
+		loop local scope
+	local scopes must be put in a block
+	values in different blocks cannot call each other
+*/
 class balloon_scope
 {
 	private:
@@ -25,7 +39,9 @@ class balloon_scope
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
 			{
-				// check the last scope
+				// check the last block scope
+				// redefinition only occurs in last block scope
+				// if scope list is empty ,then check the global scope
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
@@ -46,6 +62,7 @@ class balloon_scope
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
 			{
+				// get the last block
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(;;--i)
@@ -72,6 +89,7 @@ class balloon_scope
 		{
 			if(!scope_list.empty() && !scope_list.back().empty())
 			{
+				// get the last block and the get the last local scope in this blcok
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				i->push_back(t);
@@ -179,34 +197,31 @@ class balloon_scope
 		var* get_addr(std::string name)
 		{
 			var* addr=NULL;
-			if(!scope_list.empty())
+			if(!scope_list.empty() && !scope_list.back().empty())
 			{
+				// get the last block
 				std::list<std::list<var> >::iterator i=scope_list.back().end();
 				--i;
 				for(;;--i)
 				{
 					if(!i->empty())// avoid sigsegv
-					{
 						for(std::list<var>::iterator j=i->begin();j!=i->end();++j)
 							if(j->get_name()==name)
 							{
 								addr=&(*j);
 								return addr;
 							}
-						if(i==scope_list.back().begin())
-							break;
-					}
+					if(i==scope_list.back().begin())
+						break;
 				}
 			}
 			if(!global.empty())
-			{
 				for(std::list<var>::iterator i=global.begin();i!=global.end();++i)
 					if(i->get_name()==name)
 					{
 						addr=&(*i);
 						return addr;
 					}
-			}
 			return &error_var;
 		}
 		void add_new_block_scope()
