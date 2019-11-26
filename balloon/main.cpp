@@ -12,7 +12,7 @@ int main()
 	while(1)
 	{
 		std::cout<<">> ";
-		std::getline(std::cin,command);
+		std::cin>>command;
 		if(command=="help")
 		{
 			std::cout<<">> Balloon interpreter by ValKmjolnir"<<std::endl;

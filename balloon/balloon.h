@@ -51,5 +51,6 @@ void alert_sound()
 	int exit_type;                        // record the state of runtime
 	std::stack<var> ret_stack;            // for function ret use
 	int recursion_depth;                  // avoid too deep recursion
+	std::string str_for_input             // global value str to avoid stack overflow
 */
 #endif

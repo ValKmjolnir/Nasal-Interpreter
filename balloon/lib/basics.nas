@@ -1,11 +1,17 @@
-# this file includes functions:
-#   append
-#   subvec
+# this file includes basic operation functions:
+# append
+# subvec
+# int
+# num
+# made by github user: ValKmjolnir
+
+# append is used to add a new var into an array/vector
 var append=func(vector,elements...)
 {
     return __call_special_inline_function(vector,elements);
 };
 
+# subvec is used to get a new array from an exist array
 var subvec=func(vector,begin,length)
 {
     var new_vector=[];
@@ -16,7 +22,15 @@ var subvec=func(vector,begin,length)
     return new_vector;
 };
 
+# int function is used to transfer double var into int var
+# the normal type of number in balloon script is double
 var int=func(value)
 {
-    return __call_Cpp_int(value);
+    return __Cpp_inline_var_to_int(value);
+};
+
+# num function is used to translate a string into a number
+var num=func(value)
+{
+    return __call_Cpp_type_trans_num(value);
 };

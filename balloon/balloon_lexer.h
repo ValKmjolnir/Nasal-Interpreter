@@ -25,6 +25,15 @@ int is_reserve_word(std::string str)
 */
 bool check_number(std::string str)
 {
+	if(str.length()>1 && str[0]=='-')
+	{
+		// this statements only used in input
+		// but in lexer this statements are useless
+		std::string temp="";
+		for(int i=1;i<str.length();++i)
+			temp+=str[i];
+		str=temp;
+	}
 	if(str.length()==1)
 		return true;
 	else if(str.length()==2 && '0'<str[0] && str[0]<='9' && '0'<=str[1] && str[1]<='9')
