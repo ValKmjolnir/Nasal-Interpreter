@@ -434,7 +434,7 @@ class balloon_lexer
 					++ptr;
 				}
 			}
-			std::cout<<">>[Lexer] complete scanning."<<error<<" error(s)."<<std::endl;
+			std::cout<<">>[Pre-lexer] complete scanning."<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		void generate_detail_token()
