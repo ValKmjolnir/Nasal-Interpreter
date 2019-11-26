@@ -1,3 +1,5 @@
+# made by github user: ValKmjolnir
+
 var pi=3.14159265358979;
 var ln_2=0.69314718055994530942;
 var ln_10=2.30258509299404568402;
@@ -41,6 +43,7 @@ var pow=func(__x,__num)
     else{return exp(__num*ln(__x));}
 };
 
+# sigmoid function is a normal function used in neural networks
 var sigmoid=func(__x)
 {
     return 1.0/(1+exp(-__x));

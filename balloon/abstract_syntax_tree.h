@@ -101,10 +101,16 @@ class abstract_syntax_tree
 		}
 		void set_number(std::string _str)
 		{
-			if(_str=="nil")
+			bool is_negative=false;
+			if(_str.length()>1 && _str[0]=='-')
 			{
-				number=0;
-				return;
+				// this statements only used in input
+				// but in parse this statements are useless
+				std::string temp="";
+				for(int i=1;i<_str.length();++i)
+					temp+=_str[i];
+				_str=temp;
+				is_negative=true;
 			}
 			if((int)_str.length()>2 && (_str[1]=='x' || _str[1]=='o'))
 			{
@@ -128,6 +134,8 @@ class abstract_syntax_tree
 						pw*=8;
 					}
 				number=num;
+				if(is_negative)
+					number*=-1;
 				return;
 			}
 			int dot_place=-1;
@@ -146,6 +154,8 @@ class abstract_syntax_tree
 					number+=(_str[i]-'0')*pw;
 					pw*=10;
 				}
+				if(is_negative)
+					number*=-1;
 			}
 			else
 			{
@@ -162,6 +172,8 @@ class abstract_syntax_tree
 					number+=(_str[i]-'0')*pw;
 					pw*=10;
 				}
+				if(is_negative)
+					number*=-1;
 			}
 			return;
 		}

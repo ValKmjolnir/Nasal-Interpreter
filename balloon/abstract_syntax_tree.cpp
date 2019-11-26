@@ -4,8 +4,9 @@
 
 
 int exit_type=0;
-std::stack<var> ret_stack; // for function ret use
+std::stack<var> ret_stack; // for function ret use(especially the recursion)
 int recursion_depth=0;     // avoid deep recursion to sigsegv 
+std::string str_for_input; // avoid stack overflow
 
 var abstract_syntax_tree::calculation()
 {
@@ -889,6 +890,11 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 	}
 	
 	var ret;
+	// ret is used to return function's value
+	// ret must be pushed into stack:ret_stack
+	// ret_stack is used for recursion
+	// before each function ends,a var will be poped from stack
+	// and the ret will be set as this poped var.
 	scope.add_new_block_scope();
 	scope.add_new_local_scope();
 	
@@ -984,6 +990,71 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 			ret.set_number(1);
 		else
 			ret.set_number(0);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="int")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_number)
+			{
+				int temp;
+				temp=(int)(i->get_number());
+				ret.set_type(__var_number);
+				ret.set_number((double)temp);
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.must use a number."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		if(exit_type!=__process_exited_successfully)
+			ret.set_type(__null_type);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="num")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_string && check_number(i->get_string()))
+			{
+				std::string str=i->get_string();
+				ret.set_type(__var_number);
+				// use this->set_number to help trans the str to number
+				this->set_number(str);
+				ret.set_number(this->number);
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.must use a string that can be put into a number."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		if(exit_type!=__process_exited_successfully)
+			ret.set_type(__null_type);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="input")
+	{
+		ret.set_type(__var_string);
+		str_for_input="";
+		std::cin>>str_for_input;
+		ret.set_string(str_for_input);
 		ret_stack.push(ret);
 	}
 	else
