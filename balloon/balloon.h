@@ -52,5 +52,6 @@ void alert_sound()
 	std::stack<var> ret_stack;            // for function ret use
 	int recursion_depth;                  // avoid too deep recursion
 	std::string str_for_input             // global value str to avoid stack overflow
+	var* append_addr                      // used in append function , to get a correct addr of all kinds of arrays
 */
 #endif

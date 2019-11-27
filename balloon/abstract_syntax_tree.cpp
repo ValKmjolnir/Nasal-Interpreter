@@ -7,6 +7,7 @@ int exit_type=0;
 std::stack<var> ret_stack; // for function ret use(especially the recursion)
 int recursion_depth=0;     // avoid deep recursion to sigsegv 
 std::string str_for_input; // avoid stack overflow
+var* append_addr;          // used in append function
 
 var abstract_syntax_tree::calculation()
 {
@@ -518,9 +519,16 @@ var abstract_syntax_tree::call_identifier()
 				self.set_type(__var_function);
 				self.set_name(temp.get_name());
 				self.set_function(temp.get_function());
+				if(temp.get_name()=="append")
+				{
+					append_addr=NULL;
+					if(!i->children.empty())
+						append_addr=i->children.begin()->get_var_addr();
+				}
 				std::list<var> parameter;
-				for(std::list<abstract_syntax_tree>::iterator j=i->children.begin();j!=i->children.end();++j)
-					parameter.push_back(j->calculation());
+				if(!i->children.empty())
+					for(std::list<abstract_syntax_tree>::iterator j=i->children.begin();j!=i->children.end();++j)
+						parameter.push_back(j->calculation());
 				temp=temp.get_function().run_func(parameter,self);
 			}
 			else
@@ -958,29 +966,25 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 	}
 	else if(self_func.get_name()=="append")
 	{
-		if(!parameter.empty())
+		if(append_addr)
 		{
 			std::list<var>::iterator i=parameter.begin();
-			var* array_addr=scope.append_get_addr(i->get_name());
-			if(array_addr->get_type()==__var_array)
+			if(append_addr->get_type()==__var_array)
 			{
-				if(array_addr!=&error_var)
-				{
-					++i;
-					for(;i!=parameter.end();++i)
-						array_addr->append_array(*i);
-				}
-				else
-				{
-					std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<parameter.begin()->get_name()<<"\'."<<std::endl;
-					exit_type=__find_var_failure;
-				}
+				++i;
+				for(;i!=parameter.end();++i)
+					append_addr->append_array(*i);
+			}
+			else if(append_addr->get_type()==__null_type)
+			{
+				std::cout<<">>[Runtime-error] line "<<line<<": cannot find a var named \'"<<parameter.begin()->get_name()<<"\'."<<std::endl;
+				exit_type=__find_var_failure;
 			}
 			else
 			{
 				std::cout<<">>[Runtime-error] line "<<line<<": called var's type is not an array."<<std::endl;
 				exit_type=__error_value_type;
-			}	
+			}
 		}
 		else
 		{
