@@ -67,6 +67,7 @@ var tanh=func(__x)
     return 1-2/(__x*__x+1);
 };
 
+# relu function is a normal function used in deep neural networks
 var relu=func(__x)
 {
     if(x>=0){return __x;}
