@@ -1137,6 +1137,113 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 			ret.set_type(__null_type);
 		ret_stack.push(ret);
 	}
+	else if(self_func.get_name()=="read")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_string)
+			{
+				std::string str=i->get_string();
+				ret.set_type(__var_array);
+				std::ifstream fin(str);
+				if(fin.fail())
+				{
+					exit_type=__open_file_failed;
+					std::cout<<">>[Runtime-error] line "<<this->line<<": cannot open file named \'"<<str<<"\' ."<<std::endl;
+				}
+				if(exit_type==__process_exited_successfully)
+				{
+					while(!fin.eof())
+					{
+						fin>>str;
+						var new_str;
+						new_str.set_type(__var_string);
+						new_str.set_string(str);
+						ret.append_array(new_str);
+					}
+				}
+				fin.close();
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.filename is a string."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		if(exit_type!=__process_exited_successfully)
+			ret.set_type(__null_type);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="write")
+	{
+		ret.set_type(__null_type);
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_string)
+			{
+				std::string str=i->get_string();
+				std::ofstream fout(str);
+				if(fout.fail())
+				{
+					exit_type=__open_file_failed;
+					std::cout<<">>[Runtime-error] line "<<this->line<<": cannot open file named \'"<<str<<"\' ."<<std::endl;
+					fout.close();
+				}
+				if(exit_type==__process_exited_successfully)
+				{
+					++i;
+					if(i!=parameter.end())
+					{
+						if(i->get_type()==__var_array)
+						{
+							int size=i->get_array_size();
+							for(int j=0;j<size;++j)
+							{
+								var temp=i->get_array_member(j);
+								if(temp.get_type()==__var_number)
+									fout<<temp.get_number()<<(j<size-1? ' ':'\n');
+								else if(temp.get_type()==__var_string)
+									fout<<temp.get_string()<<(j<size-1? ' ':'\n');
+								else
+									std::cout<<">>[Runtime] warning: line "<<this->line<<": cannot put array/hash/function into a file."<<std::endl;
+							}
+						}
+						else
+						{
+							exit_type=__error_value_type;
+							std::cout<<">>[Runtime-error] line "<<this->line<<": output must use an array."<<std::endl;
+						}
+					}
+					else
+					{
+						exit_type=__lack_parameter;
+						std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+					}	
+					fout.close();
+				}
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.filename is a string."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		ret_stack.push(ret);
+	}
 	else
 	{
 		for(;para_name!=para.children.end();++para_name,++para_value)
