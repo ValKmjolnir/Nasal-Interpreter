@@ -694,8 +694,11 @@ void abstract_syntax_tree::run_root()
 {
 	recursion_depth=0;
 	++recursion_depth;
+	
+	// before running initializing
 	while(!ret_stack.empty())ret_stack.pop();
 	scope.set_clear();
+	srand(unsigned(time(NULL)));
 	int beg_time,end_time;
 	exit_type=__process_exited_successfully;
 	
@@ -1055,6 +1058,43 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 		str_for_input="";
 		std::cin>>str_for_input;
 		ret.set_string(str_for_input);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="size")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_array)
+			{
+				int cnt=0;
+				cnt=i->get_array_size();
+				ret.set_type(__var_number);
+				ret.set_number((double)cnt);
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.must use an array."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		if(exit_type!=__process_exited_successfully)
+			ret.set_type(__null_type);
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="rand")
+	{
+		ret.set_type(__var_number);
+		double content=rand();
+		while(content>=1)content/=10;
+		ret.set_number(content);
+		// this must be added when running a function
 		ret_stack.push(ret);
 	}
 	else

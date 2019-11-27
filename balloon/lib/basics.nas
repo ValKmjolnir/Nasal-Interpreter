@@ -34,3 +34,16 @@ var num=func(value)
 {
     return __call_Cpp_type_trans_num(value);
 };
+
+# size function is used to count the number of members in an array
+var size=func(value)
+{
+    return __call_Cpp_value_count(value);
+};
+
+# rand function is used to make random float numbers between 0 and 1 ([0,1))
+# written by C: srand(unsigned(time(NULL))) rand()
+var rand=func()
+{
+    return __call_Cpp_rand();
+};

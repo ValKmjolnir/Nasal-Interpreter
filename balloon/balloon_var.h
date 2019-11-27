@@ -71,6 +71,7 @@ class var
 		var get_hash_member(std::string);
 		var* get_hash_member_addr(std::string);
 		abstract_syntax_tree get_function();
+		int get_array_size();
 };
 
 var error_var;
@@ -196,5 +197,12 @@ var* var::get_hash_member_addr(std::string _name)
 abstract_syntax_tree var::get_function()
 {
 	return function;
+}
+
+int var::get_array_size()
+{
+	int cnt=0;
+	for(std::list<var>::iterator i=balloon_array.begin();i!=balloon_array.end();++i)++cnt;
+	return cnt;
 }
 #endif
