@@ -15,3 +15,15 @@ var input=func()
 {
     return __call_cpp_istream_std_cin();
 };
+
+# read from file and return a vector of strings
+var read=func(filename)
+{
+    return __call_Cpp_ifstream(filename);
+};
+
+# write a vector of strings into a file
+var write=func(filename,vector)
+{
+    return __call_Cpp_ofstream(filename,vector);
+};
