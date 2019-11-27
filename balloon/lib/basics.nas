@@ -47,3 +47,20 @@ var rand=func()
 {
     return __call_Cpp_rand();
 };
+
+# chars is used to split string into char vector
+# each member of this vector is a string which has only one char
+var chars=func(str)
+{
+    var char_vector=__call_Cpp_split_str_to_chars(str);
+    return char_vector;
+};
+
+# get the substring from the given string
+var substr=func(str,start,length)
+{
+    var temp='';
+    var char_split_str=chars(str);
+    for(var i=start;i<start+length;i+=1){temp~=char_split_str[i];}
+    return temp;
+};
