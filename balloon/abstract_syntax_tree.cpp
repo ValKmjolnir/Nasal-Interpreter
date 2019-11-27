@@ -672,7 +672,7 @@ var abstract_syntax_tree::assignment()
 	}
 	else if(type==__link_equal)
 	{
-		if(addr->get_type()==__var_string && temp.get_type()==__string)
+		if(addr->get_type()==__var_string && temp.get_type()==__var_string)
 			addr->set_string(addr->get_string()+temp.get_string());
 		else
 		{
@@ -1095,6 +1095,42 @@ var abstract_syntax_tree::run_func(std::list<var> parameter,var self_func)
 		while(content>=1)content/=10;
 		ret.set_number(content);
 		// this must be added when running a function
+		ret_stack.push(ret);
+	}
+	else if(self_func.get_name()=="chars")
+	{
+		if(!parameter.empty())
+		{
+			std::list<var>::iterator i=parameter.begin();
+			if(i->get_type()==__var_string)
+			{
+				std::string str=i->get_string();
+				ret.set_type(__var_array);
+				std::string temp="";
+				for(int j=0;j<str.length();++j)
+				{
+					temp="";
+					temp+=str[j];
+					var new_var;
+					new_var.set_type(__var_string);
+					new_var.set_string(temp);
+					ret.append_array(new_var);
+				}
+			}
+			else
+			{
+				exit_type=__error_value_type;
+				std::cout<<">>[Runtime-error] line "<<this->line<<": incorrect value type.must use a string."<<std::endl;
+			}
+		}
+		else
+		{
+			exit_type=__lack_parameter;
+			std::cout<<">>[Runtime-error] line "<<this->line<<": lack parameter(s)."<<std::endl;
+		}
+		// this must be added when running a function
+		if(exit_type!=__process_exited_successfully)
+			ret.set_type(__null_type);
 		ret_stack.push(ret);
 	}
 	else
