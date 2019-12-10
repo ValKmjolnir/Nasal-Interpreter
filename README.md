@@ -38,7 +38,7 @@ This is what it outputs.
 
 After many times of failure,i finally try to use PDA to do the parse work.
 
-But something occurred,so i finally didn't make it.However you can still see this LL(1) and LR(0) parser in version 0.7 & 0.9
+But something occurred,so i finally didn't make it.However you can still see this LL(1) and LR(0) parser in __version 0.7 & 0.9__ .
 
 # Parser
 
