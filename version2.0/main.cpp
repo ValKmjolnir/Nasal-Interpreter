@@ -9,7 +9,7 @@ std::string command;
 int main()
 {
 	std::cout<<">> Nasal interpreter by github:ValKmjolnir"<<std::endl;
-	std::cout<<">> Input \"help\" to get help."<<std::endl;
+	std::cout<<">> Input \"help\" to get help ."<<std::endl;
 	while(1)
 	{
 		std::cout<<">> ";
@@ -76,7 +76,19 @@ int main()
 		}
 		else if(command=="ast")
 		{
-			;
+			lexer.scanner(res.get_source());
+			lexer.generate_detail_token();
+			if(!lexer.get_error())
+			{
+				parser.get_token_list(lexer.get_detail_token());
+				parser.main_generate();
+				if(!parser.get_error())
+					parser.get_root().print_tree(1);
+				else
+					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+			}
+			else
+				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="exit")
 			break;
