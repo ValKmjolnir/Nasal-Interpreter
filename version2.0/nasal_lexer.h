@@ -22,7 +22,7 @@
 		example:
 			2147483647 (integer)
 			2.71828    (float)
-			0xdeadbeef (hex)
+			0xdeadbeef (hex) or 0xDEADBEEF (hex)
 			0o170001   (oct)
 	__token_operator:
 		! + - * / ~
@@ -45,65 +45,6 @@ int is_reserve_word(std::string str)
 		if(reserve_word[i]==str)
 			return __token_reserve_word;
 	return __token_identifier;
-}
-
-bool check_number(std::string str)
-{
-	if(str.length()>1 && str[0]=='-')
-	{
-		// this statements only used in "input" function
-		// but in lexer this statements are useless
-		// because lexer judge a number that begins with 0~9 (or 0x for hex & 0o for oct)
-		std::string temp="";
-		for(int i=1;i<str.length();++i)
-			temp+=str[i];
-		str=temp;
-	}
-	if(str.length()==1)
-		return true;
-	else if(str.length()==2 && '0'<str[0] && str[0]<='9' && '0'<=str[1] && str[1]<='9')
-		return true;
-	else if(str.length()>=3 && str[0]=='0' && str[1]=='x')
-	{
-		for(int i=2;i<str.length();++i)
-		{
-			if('0'<=str[i] && str[i]<='9' || 'a'<=str[i] && str[i]<='f' || 'A'<=str[i] && str[i]<='F')
-				;
-			else
-				return false;
-		}
-		return true;
-	}
-	else if(str.length()>=3 && str[0]=='0' && str[1]=='o')
-	{
-		for(int i=2;i<str.length();++i)
-		{
-			if('0'<=str[i] && str[i]<='7')
-				;
-			else
-				return false;
-		}
-		return true;
-	}
-	else
-	{
-		int dotcnt=0;
-		for(int i=0;i<str.length();++i)
-		{
-			if(str[i]=='.')
-				++dotcnt;
-			else if(!('0'<=str[i] && str[i]<='9'))
-				return false;
-		}
-		if(dotcnt>1)
-			return false;
-		if(str[0]=='.')
-			return false;
-		if(!dotcnt && str[0]=='0')
-			return false;
-		return true;
-	}
-	return false;
 }
 
 class resource_file
@@ -322,10 +263,10 @@ class nasal_lexer
 						if(ptr==res.end())
 							break;
 					}
-					if(!check_number(token_str))
+					if(!check_numerable_string(token_str))
 					{
 						++error;
-						std::cout<<">>[Lexer-error] line "<<line<<": error number "<<token_str<<"."<<std::endl;
+						std::cout<<">>[Lexer-error] line "<<line<<": "<<token_str<<" is not a numerable string."<<std::endl;
 						token_str="0";
 					}
 					token new_token;
