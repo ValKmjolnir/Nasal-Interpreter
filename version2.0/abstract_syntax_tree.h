@@ -129,85 +129,9 @@ void abstract_syntax_tree::set_string(std::string __str)
 	return;
 }
 
-void abstract_syntax_tree::set_number(std::string _str)
+void abstract_syntax_tree::set_number(std::string __str)
 {
-	bool is_negative=false;
-	if(_str.length()>1 && _str[0]=='-')
-	{
-		// this statements only used in "input" function
-		// but in parse this statements are useless
-		// because lexer recognizes a number that begins with a '0'~'9' char
-		std::string temp="";
-		for(int i=1;i<_str.length();++i)
-			temp+=_str[i];
-		_str=temp;
-		is_negative=true;
-	}
-	if((int)_str.length()>2 && (_str[1]=='x' || _str[1]=='o'))
-	{
-		double num=0;
-		double pw=1;
-		if(_str[1]=='x') // hex
-			for(int i=(int)_str.length()-1;i>1;--i)
-			{
-				if('0'<=_str[i] && _str[i]<='9')
-					num+=(_str[i]-'0')*pw;
-				else if('a'<=_str[i] && _str[i]<='f')
-					num+=(10+_str[i]-'a')*pw;
-				else if('A'<=_str[i] && _str[i]<='F')
-					num+=(10+_str[i]-'A')*pw;
-				pw*=16;
-			}
-		else // oct
-			for(int i=(int)_str.length()-1;i>1;--i)
-			{
-				num+=(_str[i]-'0')*pw;
-				pw*=8;
-			}
-		number=num;
-		if(is_negative)
-			number*=-1;
-		return;
-	}
-	int dot_place=-1;
-	for(int i=0;i<(int)_str.length();++i)
-		if(_str[i]=='.')
-		{
-			dot_place=i;
-			break;
-		}
-	if(dot_place==-1)
-	{
-		// integer
-		number=0;
-		double pw=1;
-		for(int i=(int)_str.length()-1;i>=0;--i)
-		{
-			number+=(_str[i]-'0')*pw;
-			pw*=10;
-		}
-		if(is_negative)
-			number*=-1;
-	}
-	else
-	{
-		// float
-		number=0;
-		double pw=0.1;
-		for(int i=dot_place+1;i<(int)_str.length();++i)
-		{
-			number+=(_str[i]-'0')*pw;
-			pw/=10;
-		}
-		pw=1;
-		for(int i=dot_place-1;i>=0;--i)
-		{
-			number+=(_str[i]-'0')*pw;
-			pw*=10;
-		}
-		if(is_negative)
-			number*=-1;
-	}
+	number=trans_string_to_number(__str);
 	return;
 }
 
