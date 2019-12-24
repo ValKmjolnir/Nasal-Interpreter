@@ -203,16 +203,15 @@ class nasal_lexer
 			std::list<char>::iterator ptr=res.begin();
 			while(ptr!=res.end())
 			{
-				while(*ptr==' ' || *ptr=='\n' || *ptr=='\t' || *ptr=='\r' || *ptr<0 || *ptr>127)
+				while(ptr!=res.end() && (*ptr==' ' || *ptr=='\n' || *ptr=='\t' || *ptr=='\r' || *ptr<0 || *ptr>127))
 				{
 					if(*ptr=='\n')
 						++line;
 					++ptr;
-					if(ptr==res.end())
-						break;
 				}
 				if(ptr==res.end())
 					break;
+				
 				if(*ptr=='_' || ('a'<=*ptr && *ptr<='z') || ('A'<=*ptr && *ptr<='Z'))
 				{
 					// get identifier or reserve word
@@ -304,17 +303,7 @@ class nasal_lexer
 					while(*ptr!=str_begin && *ptr!='\n')
 					{
 						token_str+=*ptr;
-						if(*ptr=='\\')
-						{
-							++ptr;
-							if(ptr!=res.end())
-							{
-								token_str+=*ptr;
-								++ptr;
-							}
-						}
-						else
-							++ptr;
+						++ptr;
 						if(ptr==res.end())
 							break;
 					}
@@ -323,8 +312,7 @@ class nasal_lexer
 					{
 						++error;
 						std::cout<<">>[Lexer-error] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
-						if(ptr==res.end())
-							break;
+						--ptr;
 					}
 					else
 					{
@@ -398,43 +386,28 @@ class nasal_lexer
 				else if(i->type==__token_reserve_word)
 				{
 					detail.line=i->line;
-					detail.str=i->str;
-					if(i->str=="for")
-						detail.type=__for;
-					else if(i->str=="foreach")
-						detail.type=__foreach;
-					else if(i->str=="forindex")
-						detail.type=__forindex;
-					else if(i->str=="while")
-						detail.type=__while;
-					else if(i->str=="var")
-						detail.type=__var;
-					else if(i->str=="func")
-						detail.type=__func;
-					else if(i->str=="break")
-						detail.type=__break;
-					else if(i->str=="continue")
-						detail.type=__continue;
-					else if(i->str=="return")
-						detail.type=__return;
-					else if(i->str=="if")
-						detail.type=__if;
-					else if(i->str=="else")
-						detail.type=__else;
-					else if(i->str=="elsif")
-						detail.type=__elsif;
-					else if(i->str=="nil")
-						detail.type=__nil;
-					else if(i->str=="and")
-						detail.type=__and_operator;
-					else if(i->str=="or")
-						detail.type=__or_operator;
+					detail.str ="";
+					if(i->str=="for")           detail.type=__for;
+					else if(i->str=="foreach")  detail.type=__foreach;
+					else if(i->str=="forindex") detail.type=__forindex;
+					else if(i->str=="while")    detail.type=__while;
+					else if(i->str=="var")      detail.type=__var;
+					else if(i->str=="func")     detail.type=__func;
+					else if(i->str=="break")    detail.type=__break;
+					else if(i->str=="continue") detail.type=__continue;
+					else if(i->str=="return")   detail.type=__return;
+					else if(i->str=="if")       detail.type=__if;
+					else if(i->str=="else")     detail.type=__else;
+					else if(i->str=="elsif")    detail.type=__elsif;
+					else if(i->str=="nil")      detail.type=__nil;
+					else if(i->str=="and")      detail.type=__and_operator;
+					else if(i->str=="or")       detail.type=__or_operator;
 					detail_token.push_back(detail);
 				}
 				else if(i->type==__token_identifier)
 				{
 					detail.line=i->line;
-					detail.str=i->str;
+					detail.str =i->str;
 					if(i->str.length()<=3)
 						detail.type=__id;
 					else
@@ -442,7 +415,12 @@ class nasal_lexer
 						std::string tempstr=i->str;
 						int strback=tempstr.length()-1;
 						if(tempstr.length()>3 &&tempstr[strback]=='.' && tempstr[strback-1]=='.' && tempstr[strback-2]=='.')
+						{
+							detail.str="";
+							for(int j=0;j<tempstr.length()-3;++j)
+								detail.str+=tempstr[j];
 							detail.type=__dynamic_id;
+						}
 						else
 							detail.type=__id;
 					}
@@ -451,74 +429,46 @@ class nasal_lexer
 				else if(i->type==__token_operator)
 				{
 					detail.line=i->line;
-					detail.str=i->str;
-					if(i->str=="+")
-						detail.type=__add_operator;
-					else if(i->str=="-")
-						detail.type=__sub_operator;
-					else if(i->str=="*")
-						detail.type=__mul_operator;
-					else if(i->str=="/")
-						detail.type=__div_operator;
-					else if(i->str=="~")
-						detail.type=__link_operator;
-					else if(i->str=="+=")
-						detail.type=__add_equal;
-					else if(i->str=="-=")
-						detail.type=__sub_equal;
-					else if(i->str=="*=")
-						detail.type=__mul_equal;
-					else if(i->str=="/=")
-						detail.type=__div_equal;
-					else if(i->str=="~=")
-						detail.type=__link_equal;
-					else if(i->str=="=")
-						detail.type=__equal;
-					else if(i->str=="==")
-						detail.type=__cmp_equal;
-					else if(i->str=="!=")
-						detail.type=__cmp_not_equal;
-					else if(i->str=="<")
-						detail.type=__cmp_less;
-					else if(i->str=="<=")
-						detail.type=__cmp_less_or_equal;
-					else if(i->str==">")
-						detail.type=__cmp_more;
-					else if(i->str==">=")
-						detail.type=__cmp_more_or_equal;
-					else if(i->str==";")
-						detail.type=__semi;
-					else if(i->str==".")
-						detail.type=__dot;
-					else if(i->str==":")
-						detail.type=__colon;
-					else if(i->str==",")
-						detail.type=__comma;
-					else if(i->str=="?")
-						detail.type=__ques_mark;
-					else if(i->str=="!")
-						detail.type=__nor_operator;
-					else if(i->str=="[")
-						detail.type=__left_bracket;
-					else if(i->str=="]")
-						detail.type=__right_bracket;
-					else if(i->str=="(")
-						detail.type=__left_curve;
-					else if(i->str==")")
-						detail.type=__right_curve;
-					else if(i->str=="{")
-						detail.type=__left_brace;
-					else if(i->str=="}")
-						detail.type=__right_brace;
+					detail.str ="";
+					if(i->str=="+")       detail.type=__add_operator;
+					else if(i->str=="-")  detail.type=__sub_operator;
+					else if(i->str=="*")  detail.type=__mul_operator;
+					else if(i->str=="/")  detail.type=__div_operator;
+					else if(i->str=="~")  detail.type=__link_operator;
+					else if(i->str=="+=") detail.type=__add_equal;
+					else if(i->str=="-=") detail.type=__sub_equal;
+					else if(i->str=="*=") detail.type=__mul_equal;
+					else if(i->str=="/=") detail.type=__div_equal;
+					else if(i->str=="~=") detail.type=__link_equal;
+					else if(i->str=="=")  detail.type=__equal;
+					else if(i->str=="==") detail.type=__cmp_equal;
+					else if(i->str=="!=") detail.type=__cmp_not_equal;
+					else if(i->str=="<")  detail.type=__cmp_less;
+					else if(i->str=="<=") detail.type=__cmp_less_or_equal;
+					else if(i->str==">")  detail.type=__cmp_more;
+					else if(i->str==">=") detail.type=__cmp_more_or_equal;
+					else if(i->str==";")  detail.type=__semi;
+					else if(i->str==".")  detail.type=__dot;
+					else if(i->str==":")  detail.type=__colon;
+					else if(i->str==",")  detail.type=__comma;
+					else if(i->str=="?")  detail.type=__ques_mark;
+					else if(i->str=="!")  detail.type=__nor_operator;
+					else if(i->str=="[")  detail.type=__left_bracket;
+					else if(i->str=="]")  detail.type=__right_bracket;
+					else if(i->str=="(")  detail.type=__left_curve;
+					else if(i->str==")")  detail.type=__right_curve;
+					else if(i->str=="{")  detail.type=__left_brace;
+					else if(i->str=="}")  detail.type=__right_brace;
 					else
 					{
 						++error;
 						std::cout<<">>[Lexer-error] line "<<detail.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
+						detail.type=__unknown_operator;
 					}
 					detail_token.push_back(detail);
 				}
 			}
-			std::cout<<">>[Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">>[Detail-Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		int get_error()
