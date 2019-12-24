@@ -34,6 +34,10 @@ What do it's outputs look like?
 
 This is what it outputs.
 
+And the flow chart of lexer is here:
+
+![nasal_lexer.png](https://github.com/ValKmjolnir/Nasal-Interpreter/tree/master/pic/nasal_lexer.png)
+
 # Push down automata
 
 After many times of failure,i finally try to use PDA to do the parse work.
