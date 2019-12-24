@@ -30,19 +30,19 @@ int main()
 		else if(command=="cls")
 		{
 			system("cls");
-			// win system("cls");
-			// linux system("clear");
-			// macOS system("clear");
+			// windows system("cls");
+			// linux   system("clear");
+			// macOS   system("clear");
 		}
 		else if(command=="del")
 		{
 			res.delete_all_source();
-			std::cout<<">> [Delete] complete."<<std::endl;
+			std::cout<<">>[Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
 		{
 			res.load_lib_file();
-			std::cout<<">> [Lib] loaded."<<std::endl;
+			std::cout<<">>[Lib] loaded."<<std::endl;
 		}
 		else if(command=="rs")
 		{
