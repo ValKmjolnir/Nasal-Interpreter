@@ -52,7 +52,7 @@ class resource_file
 	private:
 		std::list<char> libsource;
 		std::list<char> resource;
-		std::list<char> total;
+		std::list<char> totalcode;
 	public:
 		/*
 		resource_file();
@@ -67,21 +67,21 @@ class resource_file
 		{
 			libsource.clear();
 			resource.clear();
-			total.clear();
+			totalcode.clear();
 			return;
 		}
 		~resource_file()
 		{
 			libsource.clear();
 			resource.clear();
-			total.clear();
+			totalcode.clear();
 			return;
 		}
 		void delete_all_source()
 		{
 			libsource.clear();
 			resource.clear();
-			total.clear();
+			totalcode.clear();
 			return;
 		}
 		void input_file(std::string filename)
@@ -107,16 +107,19 @@ class resource_file
 		void load_lib_file()
 		{
 			libsource.clear();
+			/*
+			ifstream lib files here
+			*/
 			return;
 		}
 		std::list<char>& get_source()
 		{
-			total.clear();
+			totalcode.clear();
 			for(std::list<char>::iterator i=libsource.begin();i!=libsource.end();++i)
-				total.push_back(*i);
+				totalcode.push_back(*i);
 			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
-				total.push_back(*i);
-			return total;
+				totalcode.push_back(*i);
+			return totalcode;
 		}
 		void print_resource(bool withlib)
 		{
@@ -157,7 +160,7 @@ class nasal_lexer
 {
 	private:
 		std::list<token> token_list;
-		std::list<token> detail_token;
+		std::list<token> detail_token_list;
 		int error;
 	public:
 		/*
@@ -172,14 +175,14 @@ class nasal_lexer
 		nasal_lexer()
 		{
 			token_list.clear();
-			detail_token.clear();
+			detail_token_list.clear();
 			error=0;
 			return;
 		}
 		~nasal_lexer()
 		{
 			token_list.clear();
-			detail_token.clear();
+			detail_token_list.clear();
 			return;
 		}
 		void print_token_list()
@@ -195,7 +198,7 @@ class nasal_lexer
 		void scanner(std::list<char>& res)
 		{
 			token_list.clear();
-			detail_token.clear();
+			detail_token_list.clear();
 			error=0;
 			
 			int line=1;
@@ -365,107 +368,107 @@ class nasal_lexer
 		}
 		void generate_detail_token()
 		{
-			token detail;
-			detail_token.clear();
+			token detail_token;
+			detail_token_list.clear();
 			for(std::list<token>::iterator i=token_list.begin();i!=token_list.end();++i)
 			{
 				if(i->type==__token_number)
 				{
-					detail.line=i->line;
-					detail.str =i->str;
-					detail.type=__number;
-					detail_token.push_back(detail);
+					detail_token.line=i->line;
+					detail_token.str =i->str;
+					detail_token.type=__number;
+					detail_token_list.push_back(detail_token);
 				}
 				else if(i->type==__token_string)
 				{
-					detail.line=i->line;
-					detail.str =i->str;
-					detail.type=__string;
-					detail_token.push_back(detail);
+					detail_token.line=i->line;
+					detail_token.str =i->str;
+					detail_token.type=__string;
+					detail_token_list.push_back(detail_token);
 				}
 				else if(i->type==__token_reserve_word)
 				{
-					detail.line=i->line;
-					detail.str ="";
-					if(i->str=="for")           detail.type=__for;
-					else if(i->str=="foreach")  detail.type=__foreach;
-					else if(i->str=="forindex") detail.type=__forindex;
-					else if(i->str=="while")    detail.type=__while;
-					else if(i->str=="var")      detail.type=__var;
-					else if(i->str=="func")     detail.type=__func;
-					else if(i->str=="break")    detail.type=__break;
-					else if(i->str=="continue") detail.type=__continue;
-					else if(i->str=="return")   detail.type=__return;
-					else if(i->str=="if")       detail.type=__if;
-					else if(i->str=="else")     detail.type=__else;
-					else if(i->str=="elsif")    detail.type=__elsif;
-					else if(i->str=="nil")      detail.type=__nil;
-					else if(i->str=="and")      detail.type=__and_operator;
-					else if(i->str=="or")       detail.type=__or_operator;
-					detail_token.push_back(detail);
+					detail_token.line=i->line;
+					detail_token.str ="";
+					if(i->str=="for")           detail_token.type=__for;
+					else if(i->str=="foreach")  detail_token.type=__foreach;
+					else if(i->str=="forindex") detail_token.type=__forindex;
+					else if(i->str=="while")    detail_token.type=__while;
+					else if(i->str=="var")      detail_token.type=__var;
+					else if(i->str=="func")     detail_token.type=__func;
+					else if(i->str=="break")    detail_token.type=__break;
+					else if(i->str=="continue") detail_token.type=__continue;
+					else if(i->str=="return")   detail_token.type=__return;
+					else if(i->str=="if")       detail_token.type=__if;
+					else if(i->str=="else")     detail_token.type=__else;
+					else if(i->str=="elsif")    detail_token.type=__elsif;
+					else if(i->str=="nil")      detail_token.type=__nil;
+					else if(i->str=="and")      detail_token.type=__and_operator;
+					else if(i->str=="or")       detail_token.type=__or_operator;
+					detail_token_list.push_back(detail_token);
 				}
 				else if(i->type==__token_identifier)
 				{
-					detail.line=i->line;
-					detail.str =i->str;
+					detail_token.line=i->line;
+					detail_token.str =i->str;
 					if(i->str.length()<=3)
-						detail.type=__id;
+						detail_token.type=__id;
 					else
 					{
 						std::string tempstr=i->str;
 						int strback=tempstr.length()-1;
 						if(tempstr.length()>3 &&tempstr[strback]=='.' && tempstr[strback-1]=='.' && tempstr[strback-2]=='.')
 						{
-							detail.str="";
+							detail_token.str="";
 							for(int j=0;j<tempstr.length()-3;++j)
-								detail.str+=tempstr[j];
-							detail.type=__dynamic_id;
+								detail_token.str+=tempstr[j];
+							detail_token.type=__dynamic_id;
 						}
 						else
-							detail.type=__id;
+							detail_token.type=__id;
 					}
-					detail_token.push_back(detail);
+					detail_token_list.push_back(detail_token);
 				}
 				else if(i->type==__token_operator)
 				{
-					detail.line=i->line;
-					detail.str ="";
-					if(i->str=="+")       detail.type=__add_operator;
-					else if(i->str=="-")  detail.type=__sub_operator;
-					else if(i->str=="*")  detail.type=__mul_operator;
-					else if(i->str=="/")  detail.type=__div_operator;
-					else if(i->str=="~")  detail.type=__link_operator;
-					else if(i->str=="+=") detail.type=__add_equal;
-					else if(i->str=="-=") detail.type=__sub_equal;
-					else if(i->str=="*=") detail.type=__mul_equal;
-					else if(i->str=="/=") detail.type=__div_equal;
-					else if(i->str=="~=") detail.type=__link_equal;
-					else if(i->str=="=")  detail.type=__equal;
-					else if(i->str=="==") detail.type=__cmp_equal;
-					else if(i->str=="!=") detail.type=__cmp_not_equal;
-					else if(i->str=="<")  detail.type=__cmp_less;
-					else if(i->str=="<=") detail.type=__cmp_less_or_equal;
-					else if(i->str==">")  detail.type=__cmp_more;
-					else if(i->str==">=") detail.type=__cmp_more_or_equal;
-					else if(i->str==";")  detail.type=__semi;
-					else if(i->str==".")  detail.type=__dot;
-					else if(i->str==":")  detail.type=__colon;
-					else if(i->str==",")  detail.type=__comma;
-					else if(i->str=="?")  detail.type=__ques_mark;
-					else if(i->str=="!")  detail.type=__nor_operator;
-					else if(i->str=="[")  detail.type=__left_bracket;
-					else if(i->str=="]")  detail.type=__right_bracket;
-					else if(i->str=="(")  detail.type=__left_curve;
-					else if(i->str==")")  detail.type=__right_curve;
-					else if(i->str=="{")  detail.type=__left_brace;
-					else if(i->str=="}")  detail.type=__right_brace;
+					detail_token.line=i->line;
+					detail_token.str ="";
+					if(i->str=="+")       detail_token.type=__add_operator;
+					else if(i->str=="-")  detail_token.type=__sub_operator;
+					else if(i->str=="*")  detail_token.type=__mul_operator;
+					else if(i->str=="/")  detail_token.type=__div_operator;
+					else if(i->str=="~")  detail_token.type=__link_operator;
+					else if(i->str=="+=") detail_token.type=__add_equal;
+					else if(i->str=="-=") detail_token.type=__sub_equal;
+					else if(i->str=="*=") detail_token.type=__mul_equal;
+					else if(i->str=="/=") detail_token.type=__div_equal;
+					else if(i->str=="~=") detail_token.type=__link_equal;
+					else if(i->str=="=")  detail_token.type=__equal;
+					else if(i->str=="==") detail_token.type=__cmp_equal;
+					else if(i->str=="!=") detail_token.type=__cmp_not_equal;
+					else if(i->str=="<")  detail_token.type=__cmp_less;
+					else if(i->str=="<=") detail_token.type=__cmp_less_or_equal;
+					else if(i->str==">")  detail_token.type=__cmp_more;
+					else if(i->str==">=") detail_token.type=__cmp_more_or_equal;
+					else if(i->str==";")  detail_token.type=__semi;
+					else if(i->str==".")  detail_token.type=__dot;
+					else if(i->str==":")  detail_token.type=__colon;
+					else if(i->str==",")  detail_token.type=__comma;
+					else if(i->str=="?")  detail_token.type=__ques_mark;
+					else if(i->str=="!")  detail_token.type=__nor_operator;
+					else if(i->str=="[")  detail_token.type=__left_bracket;
+					else if(i->str=="]")  detail_token.type=__right_bracket;
+					else if(i->str=="(")  detail_token.type=__left_curve;
+					else if(i->str==")")  detail_token.type=__right_curve;
+					else if(i->str=="{")  detail_token.type=__left_brace;
+					else if(i->str=="}")  detail_token.type=__right_brace;
 					else
 					{
 						++error;
-						std::cout<<">>[Lexer-error] line "<<detail.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
-						detail.type=__unknown_operator;
+						std::cout<<">>[Lexer-error] line "<<detail_token.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
+						detail_token.type=__unknown_operator;
 					}
-					detail_token.push_back(detail);
+					detail_token_list.push_back(detail_token);
 				}
 			}
 			std::cout<<">>[Detail-Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
@@ -475,9 +478,9 @@ class nasal_lexer
 		{
 			return error;
 		}
-		std::list<token>& get_detail_token()
+		std::list<token>& get_detail_token_list()
 		{
-			return detail_token;
+			return detail_token_list;
 		}
 };
 

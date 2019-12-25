@@ -4,8 +4,8 @@
 class nasal_parse
 {
 	private:
-		std::stack<token> parse;
-		std::stack<token> checked;
+		std::stack<token> parse_token_stream;
+		std::stack<token> checked_tokens;
 		token this_token;
 		int error;
 		int warning;
@@ -28,7 +28,7 @@ class nasal_parse
 
 void nasal_parse::print_detail_token()
 {
-	std::stack<token> tmp=parse;
+	std::stack<token> tmp=parse_token_stream;
 	std::string space="";
 	int line=1;
 	std::cout<<line<<"\t";
@@ -58,31 +58,31 @@ void nasal_parse::print_detail_token()
 	return;
 }
 
-void nasal_parse::get_token_list(std::list<token>& detail_token)
+void nasal_parse::get_token_list(std::list<token>& detail_token_stream)
 {
-	while(!parse.empty())
-		parse.pop();
-	while(!checked.empty())
-		checked.pop();
+	while(!parse_token_stream.empty())
+		parse_token_stream.pop();
+	while(!checked_tokens.empty())
+		checked_tokens.pop();
 	// clear stack
-	std::stack<token> tmp;
-	for(std::list<token>::iterator i=detail_token.begin();i!=detail_token.end();++i)
-		tmp.push(*i);
-	while(!tmp.empty())
+	std::stack<token> backward_tmp;
+	for(std::list<token>::iterator i=detail_token_stream.begin();i!=detail_token_stream.end();++i)
+		backward_tmp.push(*i);
+	while(!backward_tmp.empty())
 	{
-		parse.push(tmp.top());
-		tmp.pop();
+		parse_token_stream.push(backward_tmp.top());
+		backward_tmp.pop();
 	}
 	return;
 }
 
 void nasal_parse::get_token()
 {
-	if(!parse.empty())
+	if(!parse_token_stream.empty())
 	{
-		this_token=parse.top();
-		parse.pop();
-		checked.push(this_token);
+		this_token=parse_token_stream.top();
+		parse_token_stream.pop();
+		checked_tokens.push(this_token);
 	}
 	else
 	{
@@ -95,10 +95,10 @@ void nasal_parse::get_token()
 
 void nasal_parse::push_token()
 {
-	if(!checked.empty())
+	if(!checked_tokens.empty())
 	{
-		parse.push(checked.top());
-		checked.pop();
+		parse_token_stream.push(checked_tokens.top());
+		checked_tokens.pop();
 	}
 	else
 		std::cout<<">>[Parse-error] empty checked token stack."<<std::endl;
@@ -123,7 +123,7 @@ void nasal_parse::main_generate()
 	root.set_line(1);
 	root.set_type(__root);
 	
-	while(!parse.empty())
+	while(!parse_token_stream.empty())
 	{
 		get_token();
 		switch(this_token.type)
