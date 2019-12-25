@@ -1,6 +1,6 @@
 #include "nasal.h"
 
-resource_file res;
+resource_file resource;
 nasal_lexer lexer;
 nasal_parse parser;
 
@@ -36,25 +36,25 @@ int main()
 		}
 		else if(command=="del")
 		{
-			res.delete_all_source();
+			resource.delete_all_source();
 			std::cout<<">>[Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
 		{
-			res.load_lib_file();
+			resource.load_lib_file();
 			std::cout<<">>[Lib] loaded."<<std::endl;
 		}
 		else if(command=="rs")
 		{
-			res.print_resource(false);
+			resource.print_resource(false);
 		}
 		else if(command=="total")
 		{
-			res.print_resource(true);
+			resource.print_resource(true);
 		}
 		else if(command=="lexer")
 		{
-			lexer.scanner(res.get_source());
+			lexer.scanner(resource.get_source());
 			lexer.generate_detail_token();
 			if(!lexer.get_error())
 				lexer.print_token_list();
@@ -63,11 +63,11 @@ int main()
 		}
 		else if(command=="parser")
 		{
-			lexer.scanner(res.get_source());
+			lexer.scanner(resource.get_source());
 			lexer.generate_detail_token();
 			if(!lexer.get_error())
 			{
-				parser.get_token_list(lexer.get_detail_token());
+				parser.get_token_list(lexer.get_detail_token_list());
 				parser.print_detail_token();
 				parser.main_generate();
 			}
@@ -76,11 +76,11 @@ int main()
 		}
 		else if(command=="ast")
 		{
-			lexer.scanner(res.get_source());
+			lexer.scanner(resource.get_source());
 			lexer.generate_detail_token();
 			if(!lexer.get_error())
 			{
-				parser.get_token_list(lexer.get_detail_token());
+				parser.get_token_list(lexer.get_detail_token_list());
 				parser.main_generate();
 				if(!parser.get_error())
 					parser.get_root().print_tree(1);
@@ -93,7 +93,7 @@ int main()
 		else if(command=="exit")
 			break;
 		else
-			res.input_file(command);
+			resource.input_file(command);
 	}
 	return 0;
 }
