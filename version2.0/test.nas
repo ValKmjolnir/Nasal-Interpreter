@@ -23,7 +23,7 @@ var hash_3={
 };
 var hash_4={
  mem_1:hash_1,
- mem_2:hash_2.num1,# also this can be written as hash_2["num1"]
+ mem_2:hash_2.num1, # also this can be written as hash_2["num1"]
  mem_3:hash_3["member_1"]
 };
 
@@ -36,24 +36,25 @@ var func_with_func_para=func(a,f){return f(a);}
 
 func_with_lack_para(a:1, b:2, c:3, d:4);
 func_with_lack_para(b:1, c:3, a:4, d:1);
+func_with_func_para(f:func prt,a:1);
 func_with_func_para(func func_1(),func(x){return x;});
 func_with_func_para(func_1(),func_1);
 prt(func func_1());
-var test_func_ret_number_1=func func_1();# 1
-var test_func_ret_number_2=func_1();        # 1
+var test_func_ret_number_1=func func_1(); # 1
+var test_func_ret_number_2=func_1();      # 1
 
 var source={
- member_1: func func_1(),              # this will get a number
+ member_1: func func_1(),         # this will get a number
  member_2: func {return 2.71828;} # this will get a function
 };
 print(source['member_2']());
 print(source.member_2());
 
 var test_func=func{return 1;}
-print(func test_func());# 1
-print(test_func());        # 1
-print(func test_func);  # nothing
-print(test_func);          # nothing
+print(func test_func()); # 1
+print(test_func());      # 1
+print(func test_func);   # nothing
+print(test_func);        # nothing
 
 # lambda
 (func(x){return x>0? x:0;})(12);
