@@ -1,0 +1,39 @@
+# <>  must choose
+# []  can choose
+# {}  can repeat 0 to infinite time(s)
+# |   or
+# ::= is defined as
+
+<number> ::= <token_type_number>
+<string> ::= <token_type_string>
+<id> ::= <token_type_identifier>
+<dynamic_id> ::= <token_type_dynamic_id>
+<vector> ::= <[> { <scalar> <,> } <]>
+<hash> ::= <{> { ( <id> ) | ( <string> ) <:> <scalar> <,> } <}>
+
+<function> ::=<func> [ <(> { ( <id> [ <=> <scalar> ] ) | ( <dynamic_id> ) <,> } <)> ] ( <statement> ) | ( <{> { <statement> <;> } <}> )
+<calculation> ::=
+
+<definition> ::=
+	<var> <id> <=> <scalar>
+|	<var> <(> <id> { <,> <id> } <)> <=> <scalar>
+|	<(> <var> <id> { <,> <id> } <) <=> <scalar>
+
+<assignment> ::=
+
+<if-else> ::=
+	<if> <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+	{ ( <elsif> ) | ( <else> <if> ) } <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+	[<else> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+<loop> ::=
+	<for> <(> <;> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+|	<foreach> <(> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+|	<forindex> <(> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+|	<while> <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
+
+<statement> ::=
+	<definition>
+|	<assignment>
+|	<if-else>
+|	<loop>
+|	<scalar>

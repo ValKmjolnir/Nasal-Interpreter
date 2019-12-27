@@ -24,6 +24,7 @@ class nasal_parse
 		abstract_syntax_tree number_expr();
 		abstract_syntax_tree string_expr();
 		abstract_syntax_tree nil_expr();
+		abstract_syntax_tree var_outside_definition();
 };
 
 void nasal_parse::print_detail_token()
@@ -98,6 +99,7 @@ void nasal_parse::push_token()
 	if(!checked_tokens.empty())
 	{
 		parse_token_stream.push(checked_tokens.top());
+		this_token=checked_token.top();
 		checked_tokens.pop();
 	}
 	else
@@ -125,26 +127,27 @@ void nasal_parse::main_generate()
 	
 	while(!parse_token_stream.empty())
 	{
-		get_token();
+		this->get_token();
 		switch(this_token.type)
 		{
-			case __var:break;
+			case __var:this->push_token();root.get_children().push_back(var_outside_definition());break;
+			case __nor_operator:
+			case __sub_operator:
 			case __number:
 			case __string:
+			case __nil:
 			case __id:break;
 			case __left_curve:break;
 			case __left_bracket:break;
+			case __left_brace:break;
+			case __func:break;
 			case __if:break;
 			case __while:
 			case __for:
 			case __foreach:
 			case __forindex:break;
 			case __semi:break;
-			default:
-				++error;
-				std::cout<<">>[Parse-error] line "<<this_token.line<<": error token \'";
-				print_parse_token(this_token.type);
-				std::cout<<"\' in main scope."<<std::endl;
+			default:++error;print_parse_error(error_token_in_main,this_token.line,this_token.type);
 		}
 	}
 	std::cout<<">>[Parse] complete generation. "<<error<<" error(s), "<<warning<<" warning(s)."<<std::endl;
@@ -154,6 +157,7 @@ void nasal_parse::main_generate()
 abstract_syntax_tree nasal_parse::number_expr()
 {
 	abstract_syntax_tree node;
+	this->get_token();
 	node.set_line(this_token.line);
 	node.set_type(__number);
 	node.set_number(this_token.str);
@@ -163,6 +167,7 @@ abstract_syntax_tree nasal_parse::number_expr()
 abstract_syntax_tree nasal_parse::string_expr()
 {
 	abstract_syntax_tree node;
+	this->get_token();
 	node.set_line(this_token.line);
 	node.set_type(__string);
 	node.set_string(this_token.str);
@@ -172,9 +177,34 @@ abstract_syntax_tree nasal_parse::string_expr()
 abstract_syntax_tree nasal_parse::nil_expr()
 {
 	abstract_syntax_tree node;
+	this->get_token();
 	node.set_line(this_token.line);
 	node.set_type(__nil);
 	return node;
 }
 
+abstract_syntax_tree nasal_parse::var_outside_definition()
+{
+	abstract_syntax_tree definition_node;
+	this->get_token();
+	if(this_token.type!=__var)
+	{
+		++error;
+		print_parse_error(definition_lack_var,this_token.line);
+	}
+	this->get_token();
+	if(this_token.type==__id)
+	{
+	}
+	else if(this_token.type==__left_curve)
+	{
+	}
+	else
+	{
+		++error;
+		print_parse_error(definition_lack_id,this_token.line);
+	}
+
+	return definition_node;
+}
 #endif
