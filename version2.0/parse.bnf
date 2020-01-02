@@ -4,36 +4,69 @@
 # |   or
 # ::= is defined as
 
-<number> ::= <token_type_number>
-<string> ::= <token_type_string>
-<id> ::= <token_type_identifier>
-<dynamic_id> ::= <token_type_dynamic_id>
-<vector> ::= <[> { <scalar> <,> } <]>
-<hash> ::= <{> { ( <id> ) | ( <string> ) <:> <scalar> <,> } <}>
+<number> ::= <token_number>
+<string> ::= <token_string>
+<id> ::= <token_identifier>
+<dynamic_id> ::= <token_dynamic_id>
+<scalar> ::=
 
-<function> ::=<func> [ <(> { ( <id> [ <=> <scalar> ] ) | ( <dynamic_id> ) <,> } <)> ] ( <statement> ) | ( <{> { <statement> <;> } <}> )
-<calculation> ::=
+<calculation_expr> ::=
+    <or_expr> {<and> <or_expr>}
+<or_expr> ::=
+    <unary_expr> {<or> <unary_expr>}
+|   <unary_expr> {<or> <additive_expr>}
+|   <additive_expr> {<or> <unary_expr>}
+|   <additive_expr> {<or> <additive_expr>}
+<unary_expr> ::=
+    <-> <additive_expr>
+|   <!> <additive_expr>
+<additive_expr> ::=
+    <multive_expr> {<+> <multive_expr>}
+|   <multive_expr> {<-> <multive_expr>}
+|   <multive_expr> {<~> <multive_expr>} 
+<multive_expr> ::=
+    <scalar> {<*> <scalar>}
+|   <scalar> {</> <scalar>}
 
-<definition> ::=
-	<var> <id> <=> <scalar>
-|	<var> <(> <id> { <,> <id> } <)> <=> <scalar>
-|	<(> <var> <id> { <,> <id> } <) <=> <scalar>
+<loop_expr> ::=
+    <for_loop>
+|   <while_loop>
+|   <forindex_loop>
+|   <foreach_loop>
+<for_loop> ::=
+    <for> <(> [<statement>] <;> [<scalar>] <;> <statement> <)> <statement> [<;>]
+|   <for> <(> [<statement>] <;> [<scalar>] <;> <statement> <)> <{> {<statement> <;>} <}>
+<while_loop> ::=
+    <while> <(> <scalar> <)> <statement> [<;>]
+|   <while> <(> <scalar> <) <{> {<statement> <;>} <}>
+<forindex_loop> ::=
+    <forindex> <(> [<statement] <;> [<scalar>] <)> <statement> [<;>]
+|   <forindex> <(> [<statement] <;> [<scalar>] <) <{> {<statement> <;>} <}>
+<foreach_loop> ::=
+    <foreach> <(> [<statement] <;> [<scalar>] <)> <statement> [<;>]
+|   <foreach> <(> [<statement] <;> [<scalar>] <) <{> {<statement> <;>} <}>
 
-<assignment> ::=
+<choose_expr> ::= <choose_expr_if> {<choose_expr_elsif>} [<choose_expr_else>]
+<choose_expr_if> ::=
+    <if> <(> <scalar> <)> <statement> [<;>]
+|   <if> <(> <scalar> <)> <{> {<statement> <;>} <}>
+<choose_expr_elsif> ::=
+    <elsif> <(> <scalar> <)> <statement> [<;>]
+|   <elsif> <(> <scalar> <)> <{> {<statement> <;>} <}>
+|   <else> <if> <(> <scalar> <)> <statement> [<;>]
+|   <else> <if> <(> <scalar> <)> <{> {<statement> <;>} <}>
+<choose_expr_else> ::=
+    <else> <statement> [<;>]
+|   <else> {<statement> <;>} <}>
 
-<if-else> ::=
-	<if> <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-	{ ( <elsif> ) | ( <else> <if> ) } <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-	[<else> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-<loop> ::=
-	<for> <(> <;> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-|	<foreach> <(> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-|	<forindex> <(> <;> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-|	<while> <(> <scalar> <)> ( <statement> ) | ( <{> { <statement> <;> } <}> )
-
+<continue_expr> ::= <continue>
+<break_expr> ::= <break>
+<return_expr> ::= <return> [<scalar>]
 <statement> ::=
-	<definition>
-|	<assignment>
-|	<if-else>
-|	<loop>
-|	<scalar>
+    <definition>
+|   <assignment>
+|   <choose_expr>
+|   <loop_expr>
+|   <continue_expr>
+|   <break_expr>
+|   <return_expr>
