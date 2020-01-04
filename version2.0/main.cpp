@@ -25,6 +25,7 @@ int main()
 			std::cout<<">> [lexer ] turn code into tokens."<<std::endl;
 			std::cout<<">> [parser] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
+			std::cout<<">> [run   ] run code."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 		}
 		else if(command=="cls")

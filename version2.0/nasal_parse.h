@@ -25,6 +25,8 @@ class nasal_parse
 		abstract_syntax_tree string_expr();
 		abstract_syntax_tree nil_expr();
 		abstract_syntax_tree var_outside_definition();
+		abstract_syntax_tree loop_expr();
+		abstract_syntax_tree choose_expr();
 };
 
 void nasal_parse::print_detail_token()
@@ -99,7 +101,7 @@ void nasal_parse::push_token()
 	if(!checked_tokens.empty())
 	{
 		parse_token_stream.push(checked_tokens.top());
-		this_token=checked_token.top();
+		this_token=checked_tokens.top();
 		checked_tokens.pop();
 	}
 	else
@@ -145,7 +147,7 @@ void nasal_parse::main_generate()
 			case __while:
 			case __for:
 			case __foreach:
-			case __forindex:break;
+			case __forindex:this->push_token();root.get_children().push_back(loop_expr());break;
 			case __semi:break;
 			default:++error;print_parse_error(error_token_in_main,this_token.line,this_token.type);
 		}
@@ -186,6 +188,7 @@ abstract_syntax_tree nasal_parse::nil_expr()
 abstract_syntax_tree nasal_parse::var_outside_definition()
 {
 	abstract_syntax_tree definition_node;
+	definition_node.set_type(__definition);
 	this->get_token();
 	if(this_token.type!=__var)
 	{
@@ -204,7 +207,28 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		++error;
 		print_parse_error(definition_lack_id,this_token.line);
 	}
-
 	return definition_node;
+}
+
+abstract_syntax_tree nasal_parse::loop_expr()
+{
+	abstract_syntax_tree loop_main_node;
+	loop_main_node.set_type(__loop);
+	this->get_token();
+	switch(this_token.type)
+	{
+		case __for:
+		case __while:
+		case __foreach:
+		case __forindex:break;
+	}
+	return loop_main_node;
+}
+
+abstract_syntax_tree nasal_parse::choose_expr()
+{
+	abstract_syntax_tree choose_main_node;
+	choose_main_node.set_type(__ifelse);
+	return choose_main_node;
 }
 #endif
