@@ -30,10 +30,18 @@ int main()
 		}
 		else if(command=="cls")
 		{
+#ifdef _WIN32
+#pragma message("windows system detected.")
 			system("cls");
-			// windows system("cls");
-			// linux   system("clear");
-			// macOS   system("clear");
+#endif
+#ifdef _linux_
+#pragma message("linux system detected.")
+			system("clear");
+#endif
+#ifdef TARGET_OS_MAC
+#pragma message("macOS detected.")
+			system("clear");
+#endif
 		}
 		else if(command=="del")
 		{
