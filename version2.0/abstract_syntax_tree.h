@@ -119,7 +119,10 @@ void abstract_syntax_tree::set_type(const int __type)
 
 void abstract_syntax_tree::set_line(const int __line)
 {
-	line=__line;
+	if(__line>=0)
+		line=__line;
+	else
+		line=0;
 	return;
 }
 
@@ -143,6 +146,9 @@ void abstract_syntax_tree::set_name(std::string __str)
 
 void abstract_syntax_tree::add_child(abstract_syntax_tree p)
 {
+	// use abstract_syntax_tree instead of abstract_syntax_tree&
+	// because when this function get a 'p' from returned value of
+	// another function,this may result in s SIGSEGV.
 	children.push_back(p);
 	return;
 }

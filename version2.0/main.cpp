@@ -22,8 +22,8 @@ int main()
 			std::cout<<">> [lib   ] add lib file."<<std::endl;
 			std::cout<<">> [rs    ] print resource code."<<std::endl;
 			std::cout<<">> [total ] print resource code with lib code."<<std::endl;
-			std::cout<<">> [lexer ] turn code into tokens."<<std::endl;
-			std::cout<<">> [parser] turn tokens into abstract syntax tree."<<std::endl;
+			std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
+			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
 			std::cout<<">> [run   ] run code."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
@@ -61,7 +61,7 @@ int main()
 		{
 			resource.print_resource(true);
 		}
-		else if(command=="lexer")
+		else if(command=="lex")
 		{
 			lexer.scanner(resource.get_source());
 			lexer.generate_detail_token();
@@ -70,7 +70,7 @@ int main()
 			else
 				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
 		}
-		else if(command=="parser")
+		else if(command=="par")
 		{
 			lexer.scanner(resource.get_source());
 			lexer.generate_detail_token();
@@ -93,6 +93,24 @@ int main()
 				parser.main_generate();
 				if(!parser.get_error())
 					parser.get_root().print_tree(1);
+				else
+					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+			}
+			else
+				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+		}
+		else if(command=="run")
+		{
+			lexer.scanner(resource.get_source());
+			lexer.generate_detail_token();
+			if(!lexer.get_error())
+			{
+				parser.get_token_list(lexer.get_detail_token_list());
+				parser.main_generate();
+				if(!parser.get_error())
+				{
+					// run code
+				}
 				else
 					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
 			}
