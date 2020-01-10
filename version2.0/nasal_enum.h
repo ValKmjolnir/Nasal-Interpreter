@@ -25,6 +25,7 @@ void print_lexer_token(int type)
 enum parse_token_type
 {
 	__stack_end=1,
+	__stack_top,
 	__cmp_equal,__cmp_not_equal,__cmp_less,__cmp_less_or_equal,__cmp_more,__cmp_more_or_equal,
 	// == != < <= > >= 
 	__and_operator,__or_operator,__nor_operator,__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,
@@ -62,6 +63,7 @@ void print_parse_token(int type)
 	switch(type)
 	{
 		case __stack_end:         context="#";  break;
+		case __stack_top:         context="#";  break;
 		
 		case __cmp_equal:         context="=="; break;
 		case __cmp_not_equal:     context="!="; break;
@@ -138,6 +140,32 @@ void print_parse_token(int type)
 		default:                  context="undefined_token";break;
 	}
 	std::cout<<context;
+	return;
+}
+
+enum parse_error_type
+{
+	parse_unknown_error, // unknown error
+	error_token_in_main, // when a token should not be the begin of a statement in main
+	definition_lack_var, // lack 'var' reserve word
+	definition_lack_id,  // lack identifier
+};
+
+void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
+{
+	std::string error_info_head=">>[Parse-error] line ";
+	switch(error_type)
+	{
+		case parse_unknown_error: std::cout<<error_info_head<<line<<": unknown parse error. error id: parse_unknown_error."<<std::endl;break;
+		case error_token_in_main:
+			std::cout<<error_info_head<<line<<": statements should not begin with \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' in main scope."<<std::endl;
+			break;
+		case definition_lack_var: std::cout<<error_info_head<<line<<": expect a \'var\' here."<<std::endl;break;
+		case definition_lack_id:  std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
+		default:                  std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
+	}
 	return;
 }
 

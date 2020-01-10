@@ -91,6 +91,7 @@ void nasal_parse::get_token()
 	{
 		this_token.type=__stack_end;
 		this_token.str="__stack_end";
+		std::cout<<">>[Parse-error] fatal error occurred."<<std::endl;
 		std::cout<<">>[Parse-error] empty token stack."<<std::endl;
 	}
 	return;
@@ -105,7 +106,10 @@ void nasal_parse::push_token()
 		checked_tokens.pop();
 	}
 	else
-		std::cout<<">>[Parse-error] empty checked token stack."<<std::endl;
+	{
+		std::cout<<">>[Parse-error] fatal error occurred."<<std::endl;
+		std::cout<<">>[Parse-error] empty checked-token stack."<<std::endl;
+	}
 	return;
 }
 
@@ -116,6 +120,7 @@ int nasal_parse::get_error()
 
 abstract_syntax_tree& nasal_parse::get_root()
 {
+	std::cout<<">>[Abstract-syntax-tree] get root address: "<<(&root)<<" ."<<std::endl;
 	return root;
 }
 
@@ -190,6 +195,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 	abstract_syntax_tree definition_node;
 	definition_node.set_type(__definition);
 	this->get_token();
+	definition_node.set_line(this_token.line);
 	if(this_token.type!=__var)
 	{
 		++error;
@@ -215,6 +221,7 @@ abstract_syntax_tree nasal_parse::loop_expr()
 	abstract_syntax_tree loop_main_node;
 	loop_main_node.set_type(__loop);
 	this->get_token();
+	loop_main_node.set_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __for:
@@ -229,6 +236,8 @@ abstract_syntax_tree nasal_parse::choose_expr()
 {
 	abstract_syntax_tree choose_main_node;
 	choose_main_node.set_type(__ifelse);
+	this->get_token();
+	choose_main_node.set_line(this_token.line);
 	return choose_main_node;
 }
 #endif
