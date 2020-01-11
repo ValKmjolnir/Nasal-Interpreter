@@ -16,12 +16,14 @@
     <number>
 |   <nil>
 |   <string>
-|   <call_identifier>
+|   <id>
+|   <hash>
+|   <vector>
+|   <func> <id>
 |   <calculation>
 |   <function>
 |   <(> <scalar> <)>
-|   <hash>
-|   <vector>
+|   <scalar> { (<[> {<scalar> <,>} <]>) | (<[> <scalar> <:> [<scalar>] <]>) | (<.> <id>) | (<(> {<scalar> <,>} <)>) | (<(> {<id> <:> <scalar> <,>} <)>) }
 
 <function> ::=
     <func> [<(> <)>] <statement>
@@ -29,18 +31,12 @@
 |   <func> <(> {<id> <,>} {<id> <=> <scalar> <,>} {<dynamic_id>} <)> <statement>
 |   <func> <(> {<id> <,>} {<id> <=> <scalar> <,>} {<dynamic_id>} <)> <{> {<statement> <;>} <}>
 
-<call_identifier> ::=
-    <scalar> { (<[> {<scalar> <,>} <]>) | (<[> <scalar> <:> [<scalar>] <]>) | (<.> <id>) | (<(> {<scalar> <,>} <)>) | (<(> {<id> <:> <scalar> <,>} <)>) }
-|   <id> { (<[> {<scalar> <,>} <]>) | (<[> <scalar> <:> [<scalar>] <]>) | (<.> <id>) | (<(> {<scalar> <,>} <)>) | (<(> {<id> <:> <scalar> <,>} <)>) }
-|   <func> <id>
-|   <func> <id> <(>  <)> { (<[> {<scalar> <,>} <]>) | (<[> <scalar> <:> [<scalar>] <]>) | (<.> <id>) | (<(> {<scalar> <,>} <)>) | (<(> {<id> <:> <scalar> <,>} <)>) }
-
 <calculation> ::=
     <and_calc>
 |   <or_calc>
 |   <additive_calc>
 |   <multive_calc>
-|   <scalar>
+|   [<->|<!>] <scalar>
 <and_calc> ::=
     <or_calc> {<and> <or_calc>}
 <or_calc> ::=
@@ -48,7 +44,7 @@
 <additive_calc> ::=
     <multive_calc> {<+>|<->|<~> <multive_calc>}
 <multive_calc> ::=
-    <scalar> {<*>|</> <scalar>}
+    <->|<!> <scalar> {<*>|</> <scalar>}
 
 <definition> ::=
     <var> <id>
