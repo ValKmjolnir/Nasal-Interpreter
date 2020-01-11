@@ -25,7 +25,6 @@ void print_lexer_token(int type)
 enum parse_token_type
 {
 	__stack_end=1,
-	__stack_top,
 	__cmp_equal,__cmp_not_equal,__cmp_less,__cmp_less_or_equal,__cmp_more,__cmp_more_or_equal,
 	// == != < <= > >= 
 	__and_operator,__or_operator,__nor_operator,__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,
@@ -49,6 +48,7 @@ enum parse_token_type
 	// absttract_syntax_tree type below
 	__root,
 	__null_type,
+	__multi_id,
 	__list,__hash,
 	__hash_member,
 	__call_function,__call_array,__call_hash,
@@ -63,7 +63,6 @@ void print_parse_token(int type)
 	switch(type)
 	{
 		case __stack_end:         context="#";  break;
-		case __stack_top:         context="#";  break;
 		
 		case __cmp_equal:         context="=="; break;
 		case __cmp_not_equal:     context="!="; break;
@@ -122,20 +121,21 @@ void print_parse_token(int type)
 		case __number:            context="number";       break;
 		case __string:            context="string";       break;
 		
-		case __root:              context="root";       break;
-		case __null_type:         context="null_type";  break;
-		case __list:              context="list";       break;
-		case __hash:              context="hash";       break;
-		case __hash_member:       context="hash_member";break;
-		case __call_function:     context="call_func";  break;
-		case __call_array:        context="call_array"; break;
-		case __call_hash:         context="call_hash";  break;
-		case __normal_statement_block:context="block";  break;
-		case __definition:        context="definition"; break;
-		case __assignment:        context="assignment"; break;
-		case __function:          context="function";   break;
-		case __loop:              context="loop";       break;
-		case __ifelse:            context="if-else";    break;
+		case __root:              context="root";              break;
+		case __null_type:         context="null_type";         break;
+		case __multi_id:          context="multi_identifiers"; break;
+		case __list:              context="list";              break;
+		case __hash:              context="hash";              break;
+		case __hash_member:       context="hash_member";       break;
+		case __call_function:     context="call_func";         break;
+		case __call_array:        context="call_array";        break;
+		case __call_hash:         context="call_hash";         break;
+		case __normal_statement_block:context="block";         break;
+		case __definition:        context="definition";        break;
+		case __assignment:        context="assignment";        break;
+		case __function:          context="function";          break;
+		case __loop:              context="loop";              break;
+		case __ifelse:            context="if-else";           break;
 		
 		default:                  context="undefined_token";break;
 	}
@@ -145,26 +145,37 @@ void print_parse_token(int type)
 
 enum parse_error_type
 {
-	parse_unknown_error, // unknown error
-	error_token_in_main, // when a token should not be the begin of a statement in main
-	definition_lack_var, // lack 'var' reserve word
-	definition_lack_id,  // lack identifier
+	parse_unknown_error,         // unknown error
+	error_token_in_main,         // when a token should not be the begin of a statement in main
+	definition_lack_id,          // lack identifier
+	definition_lack_equal,       // lack '=' when not getting ';'
+	definition_wrong_type,       // need identifier but get number or string
+	multi_definition_need_curve, // lack right curve when generating 'var (id,id,id)'
 };
 
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 {
 	std::string error_info_head=">>[Parse-error] line ";
+	std::string warning_info_head=">> [Parse-warning] line ";
 	switch(error_type)
 	{
-		case parse_unknown_error: std::cout<<error_info_head<<line<<": unknown parse error. error id: parse_unknown_error."<<std::endl;break;
+		case parse_unknown_error:
+			std::cout<<error_info_head<<line<<": unknown parse error. error id: parse_unknown_error."<<std::endl;break;
 		case error_token_in_main:
 			std::cout<<error_info_head<<line<<": statements should not begin with \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' in main scope."<<std::endl;
 			break;
-		case definition_lack_var: std::cout<<error_info_head<<line<<": expect a \'var\' here."<<std::endl;break;
-		case definition_lack_id:  std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
-		default:                  std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
+		case definition_lack_id:
+			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
+		case definition_lack_equal:
+			std::cout<<error_info_head<<line<<": expect a \'=\' here."<<std::endl;break;
+		case definition_wrong_type:
+			std::cout<<error_info_head<<line<<": expect an identifier here but get other types."<<std::endl;
+		case multi_definition_need_curve:
+			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;
+		default:
+			std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
 	}
 	return;
 }

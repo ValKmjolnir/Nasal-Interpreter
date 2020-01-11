@@ -18,14 +18,19 @@ class abstract_syntax_tree
 		abstract_syntax_tree& operator=(const abstract_syntax_tree&);
 		
 		// main functions
-		void set_clear();
+		// print
 		void print_tree(const int);
+
+		// set
+		void set_clear();
 		void set_type(const int);
 		void set_line(const int);
 		void set_string(std::string);
 		void set_number(std::string);
 		void set_name(std::string);
 		void add_child(abstract_syntax_tree);
+
+		// get
 		int get_type();
 		int get_line();
 		double get_number();
@@ -74,17 +79,6 @@ abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree
 	return *this;
 }
 
-void abstract_syntax_tree::set_clear()
-{
-	type=0;
-	line=0;
-	number=0;
-	str="";
-	name="";
-	children.clear();
-	return;
-}
-
 void abstract_syntax_tree::print_tree(const int n)
 {
 	std::string __str="";
@@ -111,6 +105,17 @@ void abstract_syntax_tree::print_tree(const int n)
 	return;
 }
 
+void abstract_syntax_tree::set_clear()
+{
+	type=0;
+	line=0;
+	number=0;
+	str="";
+	name="";
+	children.clear();
+	return;
+}
+
 void abstract_syntax_tree::set_type(const int __type)
 {
 	type=__type;
@@ -122,7 +127,10 @@ void abstract_syntax_tree::set_line(const int __line)
 	if(__line>=0)
 		line=__line;
 	else
+	{
+		std::cout<<">> [Abstract-syntax-tree-warning] incorrect line under 0: "<<__line<<"."<<std::endl;
 		line=0;
+	}
 	return;
 }
 
