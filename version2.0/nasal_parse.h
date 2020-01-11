@@ -33,7 +33,7 @@ void nasal_parse::print_detail_token()
 	std::string space="";
 	int line=1;
 	std::cout<<line<<"\t";
-	while(!tmp.empty())
+	while(tmp.top().type!=__stack_end)
 	{
 		if(tmp.top().line!=line)
 		{
@@ -135,7 +135,7 @@ void nasal_parse::main_generate()
 	root.set_line(1);
 	root.set_type(__root);
 	// initialize root node
-	while(!parse_token_stream.empty())
+	while(parse_token_stream.top().type!=__stack_end)
 	{
 		this->get_token();
 		switch(this_token.type)
@@ -160,6 +160,7 @@ void nasal_parse::main_generate()
 				root.add_child(loop_expr());
 				break;
 			case __semi:break;
+			case __stack_end:break;
 			default:
 				++error;
 				print_parse_error(error_token_in_main,this_token.line,this_token.type);
