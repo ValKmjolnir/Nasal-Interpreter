@@ -22,7 +22,9 @@ class nasal_parse
 		// abstract_syntax_tree generation
 		void main_generate();
 		abstract_syntax_tree scalar_generate();
+		abstract_syntax_tree function_generate();
 		abstract_syntax_tree var_outside_definition();
+		abstract_syntax_tree var_inside_definition();
 		abstract_syntax_tree loop_expr();
 		abstract_syntax_tree choose_expr();
 };
@@ -175,6 +177,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 {
 	this->get_token();
 	abstract_syntax_tree scalar_node;
+	scalar_node.set_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __nor_operator:
@@ -189,16 +192,32 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 		case __left_brace:break;
 		case __left_bracket:break;
 		case __func:break;
+		default:
+			++error;
+			print_parse_error(error_begin_token_of_scalar,this_token.line,this_token.type);
+			break;
 	}
 	return scalar_node;
 }
 
+abstract_syntax_tree nasal_parse::function_generate()
+{
+	abstract_syntax_tree function_node;
+	abstract_syntax_tree parameter_list;
+	this->get_token(); // get 'func'
+	function_node.set_type(__function);
+	function_node.set_line(this_token.line);
+	parameter_list.set_type(__parameters);
+	parameter_list.set_line(this_token.line);
+	return function_node;
+}
+
 abstract_syntax_tree nasal_parse::var_outside_definition()
 {
-	abstract_syntax_tree definition_node;
-	definition_node.set_type(__definition);
+	abstract_syntax_tree var_outsied_definition_node;
+	var_outsied_definition_node.set_type(__definition);
 	this->get_token();// get 'var'
-	definition_node.set_line(this_token.line);
+	var_outsied_definition_node.set_line(this_token.line);
 	this->get_token();
 	if(this_token.type==__id)
 	{
@@ -206,12 +225,12 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		new_var_identifier.set_type(__id);
 		new_var_identifier.set_line(this_token.line);
 		new_var_identifier.set_name(this_token.str);
-		definition_node.add_child(new_var_identifier);
+		var_outsied_definition_node.add_child(new_var_identifier);
 		this->get_token();
 		if(this_token.type==__semi)
 			this->push_token();// var id
 		else if(this_token.type==__equal)
-			definition_node.add_child(scalar_generate());// var id = scalar
+			var_outsied_definition_node.add_child(scalar_generate());// var id = scalar
 		else
 		{
 			this->push_token();
@@ -248,7 +267,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 				break;
 			}
 		}
-		definition_node.add_child(multi_identifier);
+		var_outsied_definition_node.add_child(multi_identifier);
 		this->get_token();
 		if(this_token.type==__semi)
 			this->push_token();// var (id,id,id)
@@ -269,14 +288,24 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		++error;
 		print_parse_error(definition_lack_id,this_token.line);
 	}
-	return definition_node;
+	return var_outsied_definition_node;
+}
+
+abstract_syntax_tree nasal_parse::var_inside_definition()
+{
+	abstract_syntax_tree var_inside_definition_node;
+	var_inside_definition_node.set_type(__definition);
+	this->get_token(); // get '('
+	this->get_token(); // get 'var'
+	var_inside_definition_node.set_line(this_token.line);
+	return var_inside_definition_node;
 }
 
 abstract_syntax_tree nasal_parse::loop_expr()
 {
 	abstract_syntax_tree loop_main_node;
 	loop_main_node.set_type(__loop);
-	this->get_token();
+	this->get_token(); // get the first token of loop
 	loop_main_node.set_line(this_token.line);
 	switch(this_token.type)
 	{
@@ -291,9 +320,31 @@ abstract_syntax_tree nasal_parse::loop_expr()
 abstract_syntax_tree nasal_parse::choose_expr()
 {
 	abstract_syntax_tree choose_main_node;
+	abstract_syntax_tree if_node;
+	abstract_syntax_tree elsif_node;
+	abstract_syntax_tree else_node;
 	choose_main_node.set_type(__ifelse);
-	this->get_token();// get 'if'
+	// get 'if'
+	this->get_token();
 	choose_main_node.set_line(this_token.line);
+	if_node.set_type(__if);
+	if_node.set_line(this_token.line);
+	this->get_token();
+	if(this_token.type!=__left_curve)
+	{
+		++error;
+		print_parse_error(lack_left_curve,this_token.line);
+	}
+	if_node.add_child(scalar_generate());
+	this->get_token();
+	if(this_token.type!=__right_curve)
+	{
+		++error;
+		print_parse_error(lack_right_curve,this_token.line);
+	}
+	// add statements
+
+	// get elsif or else if
 	return choose_main_node;
 }
 #endif

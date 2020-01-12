@@ -49,6 +49,7 @@ enum parse_token_type
 	__root,
 	__null_type,
 	__multi_id,
+	__parameters,
 	__list,__hash,
 	__hash_member,
 	__call_function,__call_array,__call_hash,
@@ -121,21 +122,22 @@ void print_parse_token(int type)
 		case __number:            context="number";       break;
 		case __string:            context="string";       break;
 		
-		case __root:              context="root";              break;
-		case __null_type:         context="null_type";         break;
-		case __multi_id:          context="multi_identifiers"; break;
-		case __list:              context="list";              break;
-		case __hash:              context="hash";              break;
-		case __hash_member:       context="hash_member";       break;
-		case __call_function:     context="call_func";         break;
-		case __call_array:        context="call_array";        break;
-		case __call_hash:         context="call_hash";         break;
-		case __normal_statement_block:context="block";         break;
-		case __definition:        context="definition";        break;
-		case __assignment:        context="assignment";        break;
-		case __function:          context="function";          break;
-		case __loop:              context="loop";              break;
-		case __ifelse:            context="if-else";           break;
+		case __root:              context="root";        break;
+		case __null_type:         context="null_type";   break;
+		case __multi_id:          context="identifiers"; break;
+		case __parameters:        context="parameters";  break;
+		case __list:              context="list";        break;
+		case __hash:              context="hash";        break;
+		case __hash_member:       context="hash_member"; break;
+		case __call_function:     context="call_func";   break;
+		case __call_array:        context="call_array";  break;
+		case __call_hash:         context="call_hash";   break;
+		case __normal_statement_block:context="block";   break;
+		case __definition:        context="definition";  break;
+		case __assignment:        context="assignment";  break;
+		case __function:          context="function";    break;
+		case __loop:              context="loop";        break;
+		case __ifelse:            context="if-else";     break;
 		
 		default:                  context="undefined_token";break;
 	}
@@ -151,6 +153,9 @@ enum parse_error_type
 	definition_lack_equal,       // lack '=' when not getting ';'
 	definition_wrong_type,       // need identifier but get number or string
 	multi_definition_need_curve, // lack right curve when generating 'var (id,id,id)'
+	error_begin_token_of_scalar, // in scalar_generate() 
+	lack_left_curve,             // lack left curve
+	lack_right_curve,            // lack right curve
 };
 
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
@@ -171,9 +176,18 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 		case definition_lack_equal:
 			std::cout<<error_info_head<<line<<": expect a \'=\' here."<<std::endl;break;
 		case definition_wrong_type:
-			std::cout<<error_info_head<<line<<": expect an identifier here but get other types."<<std::endl;
+			std::cout<<error_info_head<<line<<": expect an identifier here but get other types."<<std::endl;break;
 		case multi_definition_need_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;
+			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+		case error_begin_token_of_scalar:
+			std::cout<<error_info_head<<line<<": expect a scalar here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case lack_left_curve:
+			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
+		case lack_right_curve:
+			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
 		default:
 			std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
 	}
