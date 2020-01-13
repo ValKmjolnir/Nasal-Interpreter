@@ -62,6 +62,8 @@ etc. cannot be recognized.
 
 And each statement must have a ';' after it or you will be informed with __'error: expect a ';''__ .
 
+In __version 2.0__ these problems will be solved.
+
 # Calculator
 
 You can try a calculator in __version 0.17~0.19__ !
