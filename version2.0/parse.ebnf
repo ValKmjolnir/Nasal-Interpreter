@@ -15,7 +15,7 @@
 <id> = <token_identifier> ;
 <dynamic_id> = <token_dynamic_id> ;
 
-<vector> = '[' { <scalar> ',' } ']' ;
+<vector> = '[' { <calculation> ',' } ']' ;
 <hash> = '{' {(<id> | <string>) ':' <scalar> ','} '}' ;
 <scalar> =
     <number>
@@ -25,17 +25,16 @@
 |   <hash>
 |   <vector>
 |   <func> <id>
-|   <calculation>
 |   <function>
-|   '(' <scalar> ')'
-|   <scalar> { ('[' {<scalar> ','} ']') | ('[' <scalar> ':' [<scalar>] ']') | ('.' <id>) | ('(' {<scalar> ','} ')') | ('(' {<id> ':' <scalar> ','} ')') }
+|   '(' <calculation> ')'
+|   <scalar> { ('[' {<calculation> ','} ']') | ('[' <calculation> ':' [<calculation>] ']') | ('.' <id>) | ('(' {<calculation> ','} ')') | ('(' {<id> ':' <calculation> ','} ')') }
 ;
 0
 <function> =
     <func> ['(' ')'] <statement>
 |   <func> ['(' ')'] '{' {<statement> ';'} '}'
-|   <func> '(' {<id> ','} {<id> '=' <scalar> ','} {<dynamic_id>} ')' <statement>
-|   <func> '(' {<id> ','} {<id> '=' <scalar> ','} {<dynamic_id>} ')' '{' {<statement> ';'} '}'
+|   <func> '(' {<id> ','} {<id> '=' <calculation> ','} {<dynamic_id>} ')' <statement>
+|   <func> '(' {<id> ','} {<id> '=' <calculation> ','} {<dynamic_id>} ')' '{' {<statement> ';'} '}'
 ;
 
 <calculation> =

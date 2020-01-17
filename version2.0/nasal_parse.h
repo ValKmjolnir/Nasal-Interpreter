@@ -21,7 +21,14 @@ class nasal_parse
 		
 		// abstract_syntax_tree generation
 		void main_generate();
+		abstract_syntax_tree calculation();
+		abstract_syntax_tree and_calculation();
+		abstract_syntax_tree or_calculation();
+		abstract_syntax_tree additive_calculation();
+		abstract_syntax_tree multive_calculation();
 		abstract_syntax_tree scalar_generate();
+		abstract_syntax_tree hash_generate();
+		abstract_syntax_tree vector_generate();
 		abstract_syntax_tree function_generate();
 		abstract_syntax_tree var_outside_definition();
 		abstract_syntax_tree var_inside_definition();
@@ -151,7 +158,7 @@ void nasal_parse::main_generate()
 			case __left_curve:   case __left_bracket: case __left_brace:
 			case __func:
 				this->push_token();
-				root.add_children(scalar_generate());
+				root.add_children(calculation());
 				break;
 			case __if:
 				this->push_token();
@@ -173,31 +180,224 @@ void nasal_parse::main_generate()
 	return;
 }
 
+abstract_syntax_tree nasal_parse::calculation()
+{
+	abstract_syntax_tree calc_node;
+	abstract_syntax_tree tmp_node;
+	calc_node=and_calculation();
+	this->get_token();
+	while(this_token.type==__or_operator)
+	{
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(this_token.type);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(and_calculation());
+		calc_node=tmp_node;
+		this->get_token();
+	}
+	this->push_token();
+	return calc_node;
+}
+
+abstract_syntax_tree nasal_parse::and_calculation()
+{
+	abstract_syntax_tree calc_node;
+	abstract_syntax_tree tmp_node;
+	calc_node=or_calculation();
+	this->get_token();
+	while(this_token.type==__and_operator)
+	{
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(this_token.type);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(or_calculation());
+		calc_node=tmp_node;
+		this->get_token();
+	}
+	this->push_token();
+	return calc_node;
+}
+
+abstract_syntax_tree nasal_parse::or_calculation()
+{
+	abstract_syntax_tree calc_node;
+	abstract_syntax_tree tmp_node;
+	calc_node=additive_calculation();
+	this->get_token();
+	while(this_token.type==__or_operator)
+	{
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(this_token.type);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(additive_calculation());
+		calc_node=tmp_node;
+		this->get_token();
+	}
+	this->push_token();
+	return calc_node;
+}
+
+abstract_syntax_tree nasal_parse::additive_calculation()
+{
+	abstract_syntax_tree calc_node;
+	abstract_syntax_tree tmp_node;
+	calc_node=multive_calculation();
+	this->get_token();
+	while((this_token.type==__add_operator) || (this_token.type==__sub_operator))
+	{
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(this_token.type);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(multive_calculation());
+		calc_node=tmp_node;
+		this->get_token();
+	}
+	this->push_token();
+	return calc_node;
+}
+
+abstract_syntax_tree nasal_parse::multive_calculation()
+{
+	abstract_syntax_tree calc_node;
+	abstract_syntax_tree tmp_node;
+	this->get_token();
+	if((this_token.type==__sub_operator) || (this_token.type==__nor_operator))
+	{
+		calc_node.set_node_line(this_token.line);
+		calc_node.set_node_type(this_token.type);
+		abstract_syntax_tree null_node;
+		null_node.set_node_line(this_token.line);
+		null_node.set_node_type(__number);
+		null_node.set_var_number("0");
+		calc_node.add_children(null_node);
+		calc_node.add_children(scalar_generate());
+	}
+	else
+	{
+		this->push_token();
+		calc_node=scalar_generate();
+	}
+	this->get_token();
+	while((this_token.type==__mul_operator) || (this_token.type==__div_operator))
+	{
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(this_token.type);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(scalar_generate());
+		calc_node=tmp_node;
+		this->get_token();
+	}
+	this->push_token();
+	return calc_node;
+}
+
 abstract_syntax_tree nasal_parse::scalar_generate()
 {
 	this->get_token();
 	abstract_syntax_tree scalar_node;
 	scalar_node.set_node_line(this_token.line);
+
 	switch(this_token.type)
 	{
-		case __nor_operator:
-		case __sub_operator:
-			break;
 		case __number:
-		case __string:
-		case __nil:
-		case __id:
+			scalar_node.set_node_type(__number);
+			scalar_node.set_var_number(this_token.str);
 			break;
-		case __left_curve:break;
-		case __left_brace:break;
-		case __left_bracket:break;
-		case __func:break;
+		case __string:
+			scalar_node.set_node_type(__string);
+			scalar_node.set_var_string(this_token.str);
+			break;
+		case __nil:
+			scalar_node.set_node_type(__nil);
+			break;
+		case __id:
+			scalar_node.set_node_type(__id);
+			scalar_node.set_var_name(this_token.str);
+			break;
+		case __left_curve:
+			scalar_node=calculation();
+			this->get_token();
+			if(this_token.type!=__right_curve)
+			{
+				++error;
+				print_parse_error(lack_right_curve,this_token.line);
+			}
+			break;
+		case __left_brace:// hash
+			this->push_token();
+			scalar_node=hash_generate();
+			break;
+		case __left_bracket:// vector
+			this->push_token();
+			scalar_node=vector_generate();
+			break;
+		case __func:
+			this->get_token();
+			if(this_token.type!=__id)
+			{
+				this->push_token();
+				this->push_token();
+				scalar_node=function_generate();
+			}
+			else
+			{
+				scalar_node.set_node_type(__id);
+				scalar_node.set_var_name(this_token.str);
+			}
+			break;
 		default:
 			++error;
 			print_parse_error(error_begin_token_of_scalar,this_token.line,this_token.type);
 			break;
 	}
+	this->get_token(); // check if there is a '(' or '[' or '{' after id
+	while((this_token.type==__left_curve) || (this_token.type==__left_bracket) || (this_token.type==__dot))
+	{
+		if(this_token.type==__left_curve)
+		{
+
+		}
+		else if(this_token.type==__left_bracket)
+		{
+
+		}
+		else if(this_token.type==__dot)
+		{
+			this->get_token();
+			if(this_token.type!=__id)
+			{
+				++error;
+				print_parse_error(call_hash_lack_id,this_token.line);
+				break;
+			}
+			abstract_syntax_tree identifier_node;
+			identifier_node.set_node_line(this_token.line);
+			identifier_node.set_node_type(__call_hash);
+			identifier_node.set_var_name(this_token.str);
+			scalar_node.add_children(identifier_node);
+		}
+		this->get_token();
+	}
+	this->push_token();
 	return scalar_node;
+}
+
+abstract_syntax_tree nasal_parse::hash_generate()
+{
+	this->get_token(); // get '{'
+	abstract_syntax_tree hash_node;
+	hash_node.set_node_line(this_token.line);
+	hash_node.set_node_type(__hash);
+	return hash_node;
+}
+
+abstract_syntax_tree nasal_parse::vector_generate()
+{
+	this->get_token(); // get '['
+	abstract_syntax_tree vector_node;
+	vector_node.set_node_line(this_token.line);
+	vector_node.set_node_type(__vector);
+	return vector_node;
 }
 
 abstract_syntax_tree nasal_parse::function_generate()
@@ -209,6 +409,63 @@ abstract_syntax_tree nasal_parse::function_generate()
 	function_node.set_node_line(this_token.line);
 	parameter_list.set_node_type(__parameters);
 	parameter_list.set_node_line(this_token.line);
+	this->get_token();
+	if(this_token.type==__left_curve)
+	{
+		while(this_token.type!=__right_curve)
+		{
+			// check identifier
+			this->get_token();
+			if(this_token.type==__id)
+			{
+				abstract_syntax_tree parameter;
+				parameter.set_node_line(this_token.line);
+				parameter.set_node_type(__id);
+				parameter.set_var_name(this_token.str);
+			}
+			else if(this_token.type==__dynamic_id)
+			{
+				abstract_syntax_tree parameter;
+				parameter.set_node_line(this_token.line);
+				parameter.set_node_type(__dynamic_id);
+				parameter.set_var_name(this_token.str);
+			}
+			else if(this_token.type==__right_curve)
+				this->push_token();
+			else
+			{
+				++error;
+				print_parse_error(parameter_lack_part,this_token.line);
+				break;
+			}
+
+			// check equal operator
+			this->get_token();
+			if(this_token.type==__equal)
+			{
+
+			}
+			else if((this_token.type==__right_curve) || (this_token.type==__comma))
+				this->push_token();
+			else
+			{
+				++error;
+				print_parse_error(parameter_lack_part,this_token.line);
+				break;
+			}
+
+			// check comma or right_curve
+			this->get_token();
+			if((this_token.type!=__right_curve) && (this_token.type!=__comma))
+			{
+				++error;
+				print_parse_error(parameter_lack_curve,this_token.line);
+				break;
+			}
+		}
+	}
+	else
+		this->push_token();
 	return function_node;
 }
 
@@ -335,7 +592,7 @@ abstract_syntax_tree nasal_parse::choose_expr()
 		++error;
 		print_parse_error(lack_left_curve,this_token.line);
 	}
-	if_node.add_children(scalar_generate());
+	if_node.add_children(calculation());
 	this->get_token();
 	if(this_token.type!=__right_curve)
 	{

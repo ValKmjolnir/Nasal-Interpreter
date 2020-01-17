@@ -14,7 +14,7 @@ class abstract_syntax_tree
 		double var_number;
 		std::string var_string;
 		std::string var_name;
-		
+		// var_name is set for __id
 	public:
 		// basic
 		abstract_syntax_tree();
@@ -97,7 +97,7 @@ void abstract_syntax_tree::print_tree(const int n)
 		case __string:std::cout<<": "<<var_string;break;
 		case __id:
 		case __dynamic_id:
-		case __call_array:
+		case __call_vector:
 		case __call_hash:
 		case __call_function:std::cout<<": "<<var_name;break;
 	}
