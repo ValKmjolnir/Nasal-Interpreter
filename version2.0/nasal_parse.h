@@ -134,8 +134,8 @@ void nasal_parse::main_generate()
 	warning=0;
 	// initialize error and warning
 	root.set_clear();
-	root.set_line(1);
-	root.set_type(__root);
+	root.set_node_line(1);
+	root.set_node_type(__root);
 	// initialize root node
 	while(parse_token_stream.top().type!=__stack_end)
 	{
@@ -151,15 +151,15 @@ void nasal_parse::main_generate()
 			case __left_curve:   case __left_bracket: case __left_brace:
 			case __func:
 				this->push_token();
-				root.add_child(scalar_generate());
+				root.add_children(scalar_generate());
 				break;
 			case __if:
 				this->push_token();
-				root.add_child(choose_expr());
+				root.add_children(choose_expr());
 				break;
 			case __while: case __for: case __foreach: case __forindex:
 				this->push_token();
-				root.add_child(loop_expr());
+				root.add_children(loop_expr());
 				break;
 			case __semi:break;
 			case __stack_end:break;
@@ -177,7 +177,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 {
 	this->get_token();
 	abstract_syntax_tree scalar_node;
-	scalar_node.set_line(this_token.line);
+	scalar_node.set_node_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __nor_operator:
@@ -205,32 +205,32 @@ abstract_syntax_tree nasal_parse::function_generate()
 	abstract_syntax_tree function_node;
 	abstract_syntax_tree parameter_list;
 	this->get_token(); // get 'func'
-	function_node.set_type(__function);
-	function_node.set_line(this_token.line);
-	parameter_list.set_type(__parameters);
-	parameter_list.set_line(this_token.line);
+	function_node.set_node_type(__function);
+	function_node.set_node_line(this_token.line);
+	parameter_list.set_node_type(__parameters);
+	parameter_list.set_node_line(this_token.line);
 	return function_node;
 }
 
 abstract_syntax_tree nasal_parse::var_outside_definition()
 {
 	abstract_syntax_tree var_outsied_definition_node;
-	var_outsied_definition_node.set_type(__definition);
+	var_outsied_definition_node.set_node_type(__definition);
 	this->get_token();// get 'var'
-	var_outsied_definition_node.set_line(this_token.line);
+	var_outsied_definition_node.set_node_line(this_token.line);
 	this->get_token();
 	if(this_token.type==__id)
 	{
 		abstract_syntax_tree new_var_identifier;
-		new_var_identifier.set_type(__id);
-		new_var_identifier.set_line(this_token.line);
-		new_var_identifier.set_name(this_token.str);
-		var_outsied_definition_node.add_child(new_var_identifier);
+		new_var_identifier.set_node_type(__id);
+		new_var_identifier.set_node_line(this_token.line);
+		new_var_identifier.set_var_name(this_token.str);
+		var_outsied_definition_node.add_children(new_var_identifier);
 		this->get_token();
 		if(this_token.type==__semi)
 			this->push_token();// var id
 		else if(this_token.type==__equal)
-			var_outsied_definition_node.add_child(scalar_generate());// var id = scalar
+			var_outsied_definition_node.add_children(scalar_generate());// var id = scalar
 		else
 		{
 			this->push_token();
@@ -241,8 +241,8 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 	else if(this_token.type==__left_curve)
 	{
 		abstract_syntax_tree multi_identifier;
-		multi_identifier.set_type(__multi_id);
-		multi_identifier.set_line(this_token.line);
+		multi_identifier.set_node_type(__multi_id);
+		multi_identifier.set_node_line(this_token.line);
 		while(this_token.type!=__right_curve)
 		{
 			this->get_token();
@@ -256,7 +256,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 			else
 			{
 				this->push_token();
-				multi_identifier.add_child(scalar_generate());
+				multi_identifier.add_children(scalar_generate());
 			}
 			this->get_token();
 			if(this_token.type!=__semi && this_token.type!=__right_curve)
@@ -267,7 +267,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 				break;
 			}
 		}
-		var_outsied_definition_node.add_child(multi_identifier);
+		var_outsied_definition_node.add_children(multi_identifier);
 		this->get_token();
 		if(this_token.type==__semi)
 			this->push_token();// var (id,id,id)
@@ -294,19 +294,19 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 abstract_syntax_tree nasal_parse::var_inside_definition()
 {
 	abstract_syntax_tree var_inside_definition_node;
-	var_inside_definition_node.set_type(__definition);
+	var_inside_definition_node.set_node_type(__definition);
 	this->get_token(); // get '('
 	this->get_token(); // get 'var'
-	var_inside_definition_node.set_line(this_token.line);
+	var_inside_definition_node.set_node_line(this_token.line);
 	return var_inside_definition_node;
 }
 
 abstract_syntax_tree nasal_parse::loop_expr()
 {
 	abstract_syntax_tree loop_main_node;
-	loop_main_node.set_type(__loop);
+	loop_main_node.set_node_type(__loop);
 	this->get_token(); // get the first token of loop
-	loop_main_node.set_line(this_token.line);
+	loop_main_node.set_node_line(this_token.line);
 	switch(this_token.type)
 	{
 		case __for:
@@ -323,19 +323,19 @@ abstract_syntax_tree nasal_parse::choose_expr()
 	abstract_syntax_tree if_node;
 	abstract_syntax_tree elsif_node;
 	abstract_syntax_tree else_node;
-	choose_main_node.set_type(__ifelse);
+	choose_main_node.set_node_type(__ifelse);
 	// get 'if'
 	this->get_token();
-	choose_main_node.set_line(this_token.line);
-	if_node.set_type(__if);
-	if_node.set_line(this_token.line);
+	choose_main_node.set_node_line(this_token.line);
+	if_node.set_node_type(__if);
+	if_node.set_node_line(this_token.line);
 	this->get_token();
 	if(this_token.type!=__left_curve)
 	{
 		++error;
 		print_parse_error(lack_left_curve,this_token.line);
 	}
-	if_node.add_child(scalar_generate());
+	if_node.add_children(scalar_generate());
 	this->get_token();
 	if(this_token.type!=__right_curve)
 	{
