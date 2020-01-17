@@ -1,0 +1,121 @@
+(*
+ <>  must choose
+ []  can choose
+ {}  can repeat 0 to infinite time(s)
+ |   or
+ ::= is defined as
+*)
+<var> = <token_var_reserve_word> ;
+<func> = <token_func_reserve_word> ;
+<and> = <token_and_operator> ;
+<or> = <token_or_operator> ;
+<number> = <token_number> ;
+<string> = <token_string> ;
+<nil> = <token_reserve_word_nil> ;
+<id> = <token_identifier> ;
+<dynamic_id> = <token_dynamic_id> ;
+
+<vector> = '[' { <scalar> ',' } ']' ;
+<hash> = '{' {(<id> | <string>) ':' <scalar> ','} '}' ;
+<scalar> =
+    <number>
+|   <nil>
+|   <string>
+|   <id>
+|   <hash>
+|   <vector>
+|   <func> <id>
+|   <calculation>
+|   <function>
+|   '(' <scalar> ')'
+|   <scalar> { ('[' {<scalar> ','} ']') | ('[' <scalar> ':' [<scalar>] ']') | ('.' <id>) | ('(' {<scalar> ','} ')') | ('(' {<id> ':' <scalar> ','} ')') }
+;
+0
+<function> =
+    <func> ['(' ')'] <statement>
+|   <func> ['(' ')'] '{' {<statement> ';'} '}'
+|   <func> '(' {<id> ','} {<id> '=' <scalar> ','} {<dynamic_id>} ')' <statement>
+|   <func> '(' {<id> ','} {<id> '=' <scalar> ','} {<dynamic_id>} ')' '{' {<statement> ';'} '}'
+;
+
+<calculation> =
+    <and_calc>
+|   <or_calc>
+|   <additive_calc>
+|   <multive_calc>
+|   [('-' | '!')] <scalar>
+;
+<and_calc> =<or_calc> {<and> <or_calc>} ;
+<or_calc> =<additive_calc> {<or> <additive_calc>} ;
+<additive_calc> =<multive_calc> {('+' | '-' | '~') <multive_calc>} ;
+<multive_calc> =[('-' | '!')] <scalar> {[('-' | '!')] <scalar>} ;
+
+(* this definition is also used in for loop*)
+<definition> =
+    <var> <id> '=' <scalar>
+|   <var> '(' {(<id>) | (<call_identifier>) ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+|   '(' <var> {(<id>) | (<call_identifier>) ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+;
+<forindex_loop_definition> =
+
+;
+<foreach_loop_definition> =
+    <var> <id> 
+;
+<assignment> =
+    <call_identifier> '=' <scalar>
+|   '(' {<call_identifier> ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+;
+<loop_expr> =
+    <for_loop>
+|   <while_loop>
+|   <forindex_loop>
+|   <foreach_loop>
+;
+<for_loop> =
+    <for> '(' [<statement>] ';' [<scalar>] ';' <statement> ')' <statement> [';']
+|   <for> '(' [<statement>] ';' [<scalar>] ';' <statement> ')' '{' {<statement> ';'} '}'
+;
+<while_loop> =
+    <while> '(' <scalar> ')' <statement> [';']
+|   <while> '(' <scalar> ')' '{' {<statement> ';'} '}'
+;
+(* in forindex and foreach the scalar and definition cannot be lacked*)
+<forindex_loop> =
+    <forindex> '(' <forindex_loop_definition> ';' <scalar> ')' <statement> [';']
+|   <forindex> '(' <forindex_loop_definition> ';' <scalar> ')' '{' {<statement> ';'} '}'
+;
+<foreach_loop> =
+    <foreach> '(' <foreach_loop_definition> ';' <scalar> ')' <statement> [';']
+|   <foreach> '(' <foreach_loop_definition> ';' <scalar> ')' '{' {<statement> ';'} '}'
+;
+
+<choose_expr> = <choose_expr_if> {<choose_expr_elsif>} [<choose_expr_else>]
+;
+<choose_expr_if> =
+    <if> '(' <scalar> ')' <statement> [';']
+|   <if> '(' <scalar> ')' '{' {<statement> ';'} '}'
+;
+<choose_expr_elsif> =
+    <elsif> '(' <scalar> ')' <statement> [';']
+|   <elsif> '(' <scalar> ')' '{' {<statement> ';'} '}'
+|   <else> <if> '(' <scalar> ')' <statement> [';']
+|   <else> <if> '(' <scalar> ')' '{' {<statement> ';'} '}'
+;
+<choose_expr_else> =
+    <else> <statement> [';']
+|   <else> '{' {<statement> ';'} '}'
+;
+
+<continue_expr> = <continue> ;
+<break_expr> = <break> ;
+<return_expr> = <return> [<scalar>] ;
+<statement> =
+    <definition>
+|   <assignment>
+|   <choose_expr>
+|   <loop_expr>
+|   <continue_expr>
+|   <break_expr>
+|   <return_expr>
+;
