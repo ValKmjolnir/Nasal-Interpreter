@@ -4,12 +4,17 @@
 class abstract_syntax_tree
 {
 	private:
+		// basic elements
 		int line;
-		int type;
-		double number;
-		std::string str;
-		std::string name;
+		int node_type;
 		std::list<abstract_syntax_tree> children;
+
+		// is this node is a number|string|identifier node
+		// then the three elements below is of great use
+		double var_number;
+		std::string var_string;
+		std::string var_name;
+		
 	public:
 		// basic
 		abstract_syntax_tree();
@@ -23,41 +28,41 @@ class abstract_syntax_tree
 
 		// set
 		void set_clear();
-		void set_type(const int);
-		void set_line(const int);
-		void set_string(std::string);
-		void set_number(std::string);
-		void set_name(std::string);
-		void add_child(abstract_syntax_tree);
+		void set_node_type(const int);
+		void set_node_line(const int);
+		void set_var_string(std::string);
+		void set_var_number(std::string);
+		void set_var_name(std::string);
+		void add_children(abstract_syntax_tree);
 
 		// get
-		int get_type();
-		int get_line();
-		double get_number();
-		std::string get_string();
-		std::string get_name();
+		int get_node_type();
+		int get_node_line();
+		double get_var_number();
+		std::string get_var_string();
+		std::string get_var_name();
 		std::list<abstract_syntax_tree>& get_children();
 };
 
 abstract_syntax_tree::abstract_syntax_tree()
 {
-	type=0;
+	node_type=__null_type;
 	line=0;
-	number=0;
-	str="";
-	name="";
+	var_number=0;
+	var_string="";
+	var_name="";
 	children.clear();
 	return;
 }
 
-abstract_syntax_tree::abstract_syntax_tree(const abstract_syntax_tree& p)
+abstract_syntax_tree::abstract_syntax_tree(const abstract_syntax_tree& tmp)
 {
-	type=p.type;
-	line=p.line;
-	number=p.number;
-	str=p.str;
-	name=p.name;
-	children=p.children;
+	node_type=tmp.node_type;
+	line=tmp.line;
+	var_number=tmp.var_number;
+	var_string=tmp.var_string;
+	var_name=tmp.var_name;
+	children=tmp.children;
 	return;
 }
 
@@ -67,15 +72,15 @@ abstract_syntax_tree::~abstract_syntax_tree()
 	return;
 }
 
-abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree& p)
+abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree& tmp)
 {
-	type=p.type;
-	line=p.line;
-	number=p.number;
-	str=p.str;
-	name=p.name;
+	node_type=tmp.node_type;
+	line=tmp.line;
+	var_number=tmp.var_number;
+	var_string=tmp.var_string;
+	var_name=tmp.var_name;
 	children.clear();
-	children=p.children;
+	children=tmp.children;
 	return *this;
 }
 
@@ -85,16 +90,16 @@ void abstract_syntax_tree::print_tree(const int n)
 	for(int i=0;i<n;++i)
 		__str+="| ";
 	std::cout<<__str;
-	print_parse_token(type);
-	switch(type)
+	print_parse_token(node_type);
+	switch(node_type)
 	{
-		case __number:std::cout<<": "<<number;break;
-		case __string:std::cout<<": "<<str;break;
+		case __number:std::cout<<": "<<var_number;break;
+		case __string:std::cout<<": "<<var_string;break;
 		case __id:
 		case __dynamic_id:
 		case __call_array:
 		case __call_hash:
-		case __call_function:std::cout<<": "<<name;break;
+		case __call_function:std::cout<<": "<<var_name;break;
 	}
 	std::cout<<std::endl;
 	if(!children.empty())
@@ -107,22 +112,22 @@ void abstract_syntax_tree::print_tree(const int n)
 
 void abstract_syntax_tree::set_clear()
 {
-	type=0;
+	node_type=__null_type;
 	line=0;
-	number=0;
-	str="";
-	name="";
+	var_number=0;
+	var_string="";
+	var_name="";
 	children.clear();
 	return;
 }
 
-void abstract_syntax_tree::set_type(const int __type)
+void abstract_syntax_tree::set_node_type(const int __node_type)
 {
-	type=__type;
+	node_type=__node_type;
 	return;
 }
 
-void abstract_syntax_tree::set_line(const int __line)
+void abstract_syntax_tree::set_node_line(const int __line)
 {
 	if(__line>=0)
 		line=__line;
@@ -134,25 +139,25 @@ void abstract_syntax_tree::set_line(const int __line)
 	return;
 }
 
-void abstract_syntax_tree::set_string(std::string __str)
+void abstract_syntax_tree::set_var_string(std::string __str)
 {
-	str=__str;
+	var_string=__str;
 	return;
 }
 
-void abstract_syntax_tree::set_number(std::string __str)
+void abstract_syntax_tree::set_var_number(std::string __str)
 {
-	number=trans_string_to_number(__str);
+	var_number=trans_string_to_number(__str);
 	return;
 }
 
-void abstract_syntax_tree::set_name(std::string __str)
+void abstract_syntax_tree::set_var_name(std::string __str)
 {
-	name=__str;
+	var_name=__str;
 	return;
 }
 
-void abstract_syntax_tree::add_child(abstract_syntax_tree p)
+void abstract_syntax_tree::add_children(abstract_syntax_tree p)
 {
 	// use abstract_syntax_tree instead of abstract_syntax_tree&
 	// because when this function get a 'p' from returned value of
@@ -161,29 +166,29 @@ void abstract_syntax_tree::add_child(abstract_syntax_tree p)
 	return;
 }
 
-int abstract_syntax_tree::get_type()
+int abstract_syntax_tree::get_node_type()
 {
-	return type;
+	return node_type;
 }
 
-int abstract_syntax_tree::get_line()
+int abstract_syntax_tree::get_node_line()
 {
 	return line;
 }
 
-double abstract_syntax_tree::get_number()
+double abstract_syntax_tree::get_var_number()
 {
-	return number;
+	return var_number;
 }
 
-std::string abstract_syntax_tree::get_string()
+std::string abstract_syntax_tree::get_var_string()
 {
-	return str;
+	return var_string;
 }
 
-std::string abstract_syntax_tree::get_name()
+std::string abstract_syntax_tree::get_var_name()
 {
-	return name;
+	return var_name;
 }
 
 std::list<abstract_syntax_tree>& abstract_syntax_tree::get_children()
