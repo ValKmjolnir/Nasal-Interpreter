@@ -45,14 +45,15 @@ enum parse_token_type
 	__number,__string,__id,__dynamic_id,
 	// basic scalar type: number string identifier dynamic_identifier
 	
-	// absttract_syntax_tree type below
+	// abstract_syntax_tree type below
+	// abstract_syntax_tree also uses the types above, such as operators
 	__root,
 	__null_type,
 	__multi_id,
 	__parameters,
-	__list,__hash,
+	__vector,__hash,
 	__hash_member,
-	__call_function,__call_array,__call_hash,
+	__call_function,__call_vector,__call_hash,
 	__normal_statement_block,
 	__definition,__assignment,
 	__function,__loop,__ifelse
@@ -126,11 +127,11 @@ void print_parse_token(int type)
 		case __null_type:         context="null_type";   break;
 		case __multi_id:          context="identifiers"; break;
 		case __parameters:        context="parameters";  break;
-		case __list:              context="list";        break;
+		case __vector:            context="vector";      break;
 		case __hash:              context="hash";        break;
 		case __hash_member:       context="hash_member"; break;
 		case __call_function:     context="call_func";   break;
-		case __call_array:        context="call_array";  break;
+		case __call_vector:       context="call_vector"; break;
 		case __call_hash:         context="call_hash";   break;
 		case __normal_statement_block:context="block";   break;
 		case __definition:        context="definition";  break;
@@ -156,6 +157,9 @@ enum parse_error_type
 	error_begin_token_of_scalar, // in scalar_generate() 
 	lack_left_curve,             // lack left curve
 	lack_right_curve,            // lack right curve
+	parameter_lack_part,         // parameter lack a ')' or identifier
+	parameter_lack_curve,        // parameter lack a ',' or ')'
+	call_hash_lack_id,           // lack identifier when calling an identifier
 };
 
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
@@ -188,6 +192,12 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
 		case lack_right_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+		case parameter_lack_part:
+			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here."<<std::endl;break;
+		case parameter_lack_curve:
+			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here."<<std::endl;break;
+		case call_hash_lack_id:
+			std::cout<<error_info_head<<line<<": expect an identifier after \'.\' ."<<std::endl;break;
 		default:
 			std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
 	}
