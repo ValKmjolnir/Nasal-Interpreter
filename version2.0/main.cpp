@@ -8,7 +8,16 @@ std::string command;
 
 int main()
 {
-	std::cout<<">> Nasal interpreter by github:ValKmjolnir"<<std::endl;
+#ifdef _WIN32
+			std::cout<<">>[system] Windows system."<<std::endl;
+#endif
+#ifdef _linux_
+			std::cout<<">>[system] Linux system."<<std::endl;
+#endif
+#ifdef TARGET_OS_MAC
+			std::cout<<">>[system] MacOS system."<<std::endl;
+#endif
+	std::cout<<">> Nasal interpreter ver 2.0: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
 	std::cout<<">> Input \"help\" to get help ."<<std::endl;
 	while(1)
 	{
@@ -32,15 +41,12 @@ int main()
 		else if(command=="cls")
 		{
 #ifdef _WIN32
-#pragma message("windows system detected.")
 			system("cls");
 #endif
 #ifdef _linux_
-#pragma message("linux system detected.")
 			system("clear");
 #endif
 #ifdef TARGET_OS_MAC
-#pragma message("macOS detected.")
 			system("clear");
 #endif
 		}

@@ -53,6 +53,7 @@ enum parse_token_type
 	__parameters,
 	__vector,__hash,
 	__hash_member,
+	__sub_vector,
 	__call_function,__call_vector,__call_hash,
 	__normal_statement_block,
 	__definition,__assignment,
@@ -130,6 +131,7 @@ void print_parse_token(int type)
 		case __vector:            context="vector";      break;
 		case __hash:              context="hash";        break;
 		case __hash_member:       context="hash_member"; break;
+		case __sub_vector:        context="num:num";     break;
 		case __call_function:     context="call_func";   break;
 		case __call_vector:       context="call_vector"; break;
 		case __call_hash:         context="call_hash";   break;
@@ -167,6 +169,8 @@ enum parse_error_type
 	hash_gen_lack_id,            // lack identifier or string when generating a hash
 	hash_gen_lack_colon,         // lack ':' when generating a hash
 	hash_gen_lack_end,           // lack ',' or '}' when generating a hash
+
+	ternary_operator_lack_colon, // lack ':'
 };
 
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
@@ -227,6 +231,11 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			break;
 		case hash_gen_lack_end:
 			std::cout<<error_info_head<<line<<": expect a \',\' or \'}\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case ternary_operator_lack_colon:
+			std::cout<<error_info_head<<line<<": expect a \':\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;

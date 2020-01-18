@@ -43,6 +43,7 @@
 |   <additive_calc>
 |   <multive_calc>
 |   [('-' | '!')] <scalar>
+|   <calculation> '?' <calculation> ':' <calculation>
 ;
 <and_calc> =<or_calc> {<and> <or_calc>} ;
 <or_calc> =<additive_calc> {<or> <additive_calc>} ;

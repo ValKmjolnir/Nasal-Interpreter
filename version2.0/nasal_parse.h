@@ -60,12 +60,7 @@ void nasal_parse::print_detail_token()
 		std::cout<<" ";
 		tmp.pop();
 		if(!tmp.empty() && tmp.top().type==__right_brace)
-		{
-			std::string str="";
-			for(int i=0;i<space.length()-1;++i)
-				str+=space[i];
-			space=str;
-		}
+			space.pop_back();
 	}
 	std::cout<<std::endl;
 	return;
@@ -244,7 +239,24 @@ abstract_syntax_tree nasal_parse::calculation()
 		calc_node=tmp_node;
 		this->get_token();
 	}
-	this->push_token();
+	if(this_token.type==__ques_mark)
+	{
+		// <expr> '?' <expr> ';' <expr>
+		tmp_node.set_node_line(this_token.line);
+		tmp_node.set_node_type(__ques_mark);
+		tmp_node.add_children(calc_node);
+		tmp_node.add_children(calculation());
+		this->get_token();
+		if(this_token.type!=__colon)
+		{
+			++error;
+			print_parse_error(ternary_operator_lack_colon,this_token.line,this_token.type);
+		}
+		tmp_node.add_children(calculation());
+		calc_node=tmp_node;
+	}
+	else
+		this->push_token();
 	return calc_node;
 }
 
@@ -376,11 +388,13 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 				this->push_token();
 				this->push_token();
 				scalar_node=function_generate();
+				// function
 			}
 			else
 			{
 				scalar_node.set_node_type(__id);
 				scalar_node.set_var_name(this_token.str);
+				// func id
 			}
 			break;
 		default:
@@ -393,25 +407,66 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 	{
 		if(this_token.type==__left_curve)
 		{
-
+			// call function
+			abstract_syntax_tree call_func_node;
+			call_func_node.set_node_line(this_token.line);
+			call_func_node.set_node_type(__call_function);
 		}
 		else if(this_token.type==__left_bracket)
 		{
 			abstract_syntax_tree call_vector_node;
 			call_vector_node.set_node_line(this_token.line);
 			call_vector_node.set_node_type(__call_vector);
-			// call_vector_node.add_children(calculation());
-			// this->get_token();
-			// if(this_token.type==__colon)
-			// 	calculation();
-			// else
-			// 	this->push_token();
+			// there are many kinds of ways to call a vector
+			// such as: id[0] id[0:12] id[-2:0] id[2:] id[4,3,1,5,2]
+			abstract_syntax_tree tmp=calculation();
+			this->get_token();
+			if(this_token.type==__colon)
+			{
+				abstract_syntax_tree subvec_node;
+				
+				this->get_token();
+				subvec_node.set_node_line(this_token.line);
+				subvec_node.set_node_type(__sub_vector);
+				subvec_node.add_children(tmp);
+				if(this_token.type!=__right_bracket)
+				{
+					this->push_token();
+					subvec_node.add_children(calculation());
+				}
+				else
+					this->push_token();
+				call_vector_node.add_children(subvec_node);
+			}
+			else if(this_token.type==__comma)
+			{
+				call_vector_node.add_children(tmp);
+				while(this_token.type!=__right_bracket)
+				{
+					call_vector_node.add_children(calculation());
+					this->get_token();
+					if(this_token.type!=__comma && this_token.type!=__right_bracket)
+					{
+						++error;
+						print_parse_error(call_vector_lack_bracket,this_token.line,this_token.type);
+						break;
+					}
+				}
+				this->push_token();
+			}
+			else if(this_token.type==__right_bracket)
+			{
+				this->push_token();
+				call_vector_node.add_children(tmp);
+			}
 			this->get_token();
 			if(this_token.type!=__right_bracket)
 			{
 				++error;
 				print_parse_error(call_vector_lack_bracket,this_token.line,this_token.type);
+				break;
 			}
+			scalar_node.add_children(call_vector_node);
 		}
 		else if(this_token.type==__dot)
 		{
@@ -479,6 +534,13 @@ abstract_syntax_tree nasal_parse::hash_generate()
 				print_parse_error(hash_gen_lack_end,this_token.line,this_token.type);
 				break;
 			}
+			if(this_token.type==__comma)
+			{
+				this->get_token();
+				if(this_token.type!=__right_brace)
+					this->push_token();
+				// {name:scalar,} 
+			}
 			hash_node.add_children(hash_member_node);
 		}
 	}
@@ -504,6 +566,13 @@ abstract_syntax_tree nasal_parse::vector_generate()
 				++error;
 				print_parse_error(vector_gen_lack_end,this_token.line,this_token.type);
 				break;
+			}
+			if(this_token.type==__comma)
+			{
+				this->get_token();
+				if(this_token.type!=__right_bracket)
+					this->push_token();
+				// [0,1,2,]
 			}
 		}
 	}

@@ -12,9 +12,11 @@ nil;
 [];
 {};
 [0,1,2,3,4,5][2];       # 2
+[0,1,2,3,4,5][5,4,3,2+1][0:2][0]; # 5
 {str:"hello"}.str;      # "hello"
 {str:"hello"}["str"];   # "hello"
 {"str":"hello\"\"\n"}["str"]; # "hello"
+20? 1:0;
 
 # normal scalar
 var number_1=1;
