@@ -159,7 +159,14 @@ enum parse_error_type
 	lack_right_curve,            // lack right curve
 	parameter_lack_part,         // parameter lack a ')' or identifier
 	parameter_lack_curve,        // parameter lack a ',' or ')'
-	call_hash_lack_id,           // lack identifier when calling an identifier
+
+	call_hash_lack_id,           // lack identifier when calling a hash
+	call_vector_lack_bracket,    // lack ']' when calling a vector
+
+	vector_gen_lack_end,         // lack ',' or ')' when generating a vector
+	hash_gen_lack_id,            // lack identifier or string when generating a hash
+	hash_gen_lack_colon,         // lack ':' when generating a hash
+	hash_gen_lack_end,           // lack ',' or '}' when generating a hash
 };
 
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
@@ -198,6 +205,31 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here."<<std::endl;break;
 		case call_hash_lack_id:
 			std::cout<<error_info_head<<line<<": expect an identifier after \'.\' ."<<std::endl;break;
+		case call_vector_lack_bracket:
+			std::cout<<error_info_head<<line<<": expect a \']\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case vector_gen_lack_end:
+			std::cout<<error_info_head<<line<<": expect a \',\' or \')\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case hash_gen_lack_id:
+			std::cout<<error_info_head<<line<<": expect an identifier or string here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case hash_gen_lack_colon:
+			std::cout<<error_info_head<<line<<": expect a \':\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case hash_gen_lack_end:
+			std::cout<<error_info_head<<line<<": expect a \',\' or \'}\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
 		default:
 			std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
 	}

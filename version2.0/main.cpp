@@ -26,6 +26,7 @@ int main()
 			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
 			std::cout<<">> [run   ] run code."<<std::endl;
+			std::cout<<">> [info  ] print lexer,parser and ast on screen."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 		}
 		else if(command=="cls")
@@ -116,6 +117,16 @@ int main()
 			}
 			else
 				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+		}
+		else if(command=="info")
+		{
+			lexer.scanner(resource.get_source());
+			lexer.print_token_list();
+			lexer.generate_detail_token();
+			parser.get_token_list(lexer.get_detail_token_list());
+			parser.print_detail_token();
+			parser.main_generate();
+			parser.get_root().print_tree(1);
 		}
 		else if(command=="exit")
 			break;
