@@ -29,7 +29,7 @@
 |   '(' <calculation> ')'
 |   <scalar> { ('[' {<calculation> ','} ']') | ('[' <calculation> ':' [<calculation>] ']') | ('.' <id>) | ('(' {<calculation> ','} ')') | ('(' {<id> ':' <calculation> ','} ')') }
 ;
-0
+
 <function> =
     <func> ['(' ')'] <statement>
 |   <func> ['(' ')'] '{' {<statement> ';'} '}'
@@ -56,14 +56,14 @@
 |   '(' <var> {(<id>) | (<call_identifier>) ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
 ;
 <forindex_loop_definition> =
-
+    <var> <id>
 ;
 <foreach_loop_definition> =
     <var> <id> 
 ;
 <assignment> =
-    <call_identifier> '=' <scalar>
-|   '(' {<call_identifier> ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+    <scalar> '=' <calculation>
+|   '(' {<scalar> ','} ')' '=' (<calculation> | '(' {<calculation> ','} ')')
 ;
 <loop_expr> =
     <for_loop>
@@ -72,12 +72,12 @@
 |   <foreach_loop>
 ;
 <for_loop> =
-    <for> '(' [<statement>] ';' [<scalar>] ';' <statement> ')' <statement> [';']
-|   <for> '(' [<statement>] ';' [<scalar>] ';' <statement> ')' '{' {<statement> ';'} '}'
+    <for> '(' [<statement>] ';' [<calculation>] ';' [<statement>] ')' <statement> [';']
+|   <for> '(' [<statement>] ';' [<calculation>] ';' [<statement>] ')' '{' {<statement> ';'} '}'
 ;
 <while_loop> =
-    <while> '(' <scalar> ')' <statement> [';']
-|   <while> '(' <scalar> ')' '{' {<statement> ';'} '}'
+    <while> '(' <calculation> ')' <statement> [';']
+|   <while> '(' <calculation> ')' '{' {<statement> ';'} '}'
 ;
 (* in forindex and foreach the scalar and definition cannot be lacked*)
 <forindex_loop> =
@@ -92,14 +92,14 @@
 <choose_expr> = <choose_expr_if> {<choose_expr_elsif>} [<choose_expr_else>]
 ;
 <choose_expr_if> =
-    <if> '(' <scalar> ')' <statement> [';']
-|   <if> '(' <scalar> ')' '{' {<statement> ';'} '}'
+    <if> '(' <calculation> ')' <statement> [';']
+|   <if> '(' <calculation> ')' '{' {<statement> ';'} '}'
 ;
 <choose_expr_elsif> =
-    <elsif> '(' <scalar> ')' <statement> [';']
-|   <elsif> '(' <scalar> ')' '{' {<statement> ';'} '}'
-|   <else> <if> '(' <scalar> ')' <statement> [';']
-|   <else> <if> '(' <scalar> ')' '{' {<statement> ';'} '}'
+    <elsif> '(' <calculation> ')' <statement> [';']
+|   <elsif> '(' <calculation> ')' '{' {<statement> ';'} '}'
+|   <else> <if> '(' <calculation> ')' <statement> [';']
+|   <else> <if> '(' <calculation> ')' '{' {<statement> ';'} '}'
 ;
 <choose_expr_else> =
     <else> <statement> [';']
