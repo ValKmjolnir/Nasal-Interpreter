@@ -52,6 +52,7 @@ enum parse_token_type
 	__multi_id,
 	__multi_scalar,
 	__parameters,
+	__special_para,
 	__defult_parameter,
 	__vector,__hash,
 	__hash_member,
@@ -131,6 +132,7 @@ void print_parse_token(int type)
 		case __multi_id:          context="identifiers"; break;
 		case __multi_scalar:      context="scalars";     break;
 		case __parameters:        context="parameters";  break;
+		case __special_para:      context="id:scalar";   break;
 		case __defult_parameter:  context="para=scalar"; break;
 		case __vector:            context="vector";      break;
 		case __hash:              context="hash";        break;
@@ -169,6 +171,9 @@ enum parse_error_type
 	parameter_lack_part,         // parameter lack a ')' or identifier
 	parameter_lack_curve,        // parameter lack a ',' or ')'
 
+	special_call_lack_id,
+	special_call_lack_colon,
+	call_func_lack_comma,
 	call_hash_lack_id,           // lack identifier when calling a hash
 	call_vector_lack_bracket,    // lack ']' when calling a vector
 
@@ -232,6 +237,21 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here."<<std::endl;break;
 		case parameter_lack_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here."<<std::endl;break;
+		case special_call_lack_id:
+			std::cout<<error_info_head<<line<<": expect an identifier here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case special_call_lack_colon:
+			std::cout<<error_info_head<<line<<": expect an \':\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case call_func_lack_comma:
+			std::cout<<error_info_head<<line<<": expect a \',\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
 		case call_hash_lack_id:
 			std::cout<<error_info_head<<line<<": expect an identifier after \'.\' ."<<std::endl;break;
 		case call_vector_lack_bracket:
