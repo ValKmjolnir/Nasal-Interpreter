@@ -17,7 +17,9 @@ int main()
 #ifdef TARGET_OS_MAC
 			std::cout<<">>[system] MacOS system."<<std::endl;
 #endif
-	std::cout<<">> Nasal interpreter ver 2.0: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
+	std::cout<<">> Nasal interpreter ver 2.0 ."<<std::endl;
+	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
+	std::cout<<">> More info: http://wiki.flightgear.org/Nasal_scripting_language"<<std::endl;
 	std::cout<<">> Input \"help\" to get help ."<<std::endl;
 	while(1)
 	{
