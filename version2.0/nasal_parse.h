@@ -232,6 +232,7 @@ abstract_syntax_tree nasal_parse::calculation()
 	this->get_token();
 	while(this_token.type==__or_operator)
 	{
+		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(this_token.type);
 		tmp_node.add_children(calc_node);
@@ -241,6 +242,7 @@ abstract_syntax_tree nasal_parse::calculation()
 	}
 	if(this_token.type==__ques_mark)
 	{
+		tmp_node.set_clear();
 		// <expr> '?' <expr> ';' <expr>
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(__ques_mark);
@@ -268,6 +270,7 @@ abstract_syntax_tree nasal_parse::and_calculation()
 	this->get_token();
 	while(this_token.type==__and_operator)
 	{
+		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(this_token.type);
 		tmp_node.add_children(calc_node);
@@ -287,6 +290,7 @@ abstract_syntax_tree nasal_parse::or_calculation()
 	this->get_token();
 	while(this_token.type==__or_operator)
 	{
+		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(this_token.type);
 		tmp_node.add_children(calc_node);
@@ -306,6 +310,7 @@ abstract_syntax_tree nasal_parse::additive_calculation()
 	this->get_token();
 	while((this_token.type==__add_operator) || (this_token.type==__sub_operator))
 	{
+		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(this_token.type);
 		tmp_node.add_children(calc_node);
@@ -341,10 +346,29 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	this->get_token();
 	while((this_token.type==__mul_operator) || (this_token.type==__div_operator))
 	{
+		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
 		tmp_node.set_node_type(this_token.type);
 		tmp_node.add_children(calc_node);
-		tmp_node.add_children(scalar_generate());
+		this->get_token();
+		if((this_token.type==__sub_operator) || (this_token.type==__nor_operator))
+		{
+			calc_node.set_clear();
+			calc_node.set_node_line(this_token.line);
+			calc_node.set_node_type(this_token.type);
+			abstract_syntax_tree null_node;
+			null_node.set_node_line(this_token.line);
+			null_node.set_node_type(__number);
+			null_node.set_var_number("0");
+			calc_node.add_children(null_node);
+			calc_node.add_children(scalar_generate());
+		}
+		else
+		{
+			this->push_token();
+			calc_node=scalar_generate();
+		}
+		tmp_node.add_children(calc_node);
 		calc_node=tmp_node;
 		this->get_token();
 	}
