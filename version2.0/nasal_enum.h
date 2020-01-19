@@ -50,14 +50,16 @@ enum parse_token_type
 	__root,
 	__null_type,
 	__multi_id,
+	__multi_scalar,
 	__parameters,
+	__defult_parameter,
 	__vector,__hash,
 	__hash_member,
 	__sub_vector,
 	__call_function,__call_vector,__call_hash,
 	__normal_statement_block,
-	__definition,__assignment,
-	__function,__loop,__ifelse
+	__definition,
+	__function,__ifelse
 };
 
 void print_parse_token(int type)
@@ -127,7 +129,9 @@ void print_parse_token(int type)
 		case __root:              context="root";        break;
 		case __null_type:         context="null_type";   break;
 		case __multi_id:          context="identifiers"; break;
+		case __multi_scalar:      context="scalars";     break;
 		case __parameters:        context="parameters";  break;
+		case __defult_parameter:  context="para=scalar"; break;
 		case __vector:            context="vector";      break;
 		case __hash:              context="hash";        break;
 		case __hash_member:       context="hash_member"; break;
@@ -137,9 +141,7 @@ void print_parse_token(int type)
 		case __call_hash:         context="call_hash";   break;
 		case __normal_statement_block:context="block";   break;
 		case __definition:        context="definition";  break;
-		case __assignment:        context="assignment";  break;
 		case __function:          context="function";    break;
-		case __loop:              context="loop";        break;
 		case __ifelse:            context="if-else";     break;
 		
 		default:                  context="undefined_token";break;
@@ -152,10 +154,15 @@ enum parse_error_type
 {
 	parse_unknown_error,         // unknown error
 	error_token_in_main,         // when a token should not be the begin of a statement in main
+
+	lack_semi,
+
 	definition_lack_id,          // lack identifier
 	definition_lack_equal,       // lack '=' when not getting ';'
 	definition_wrong_type,       // need identifier but get number or string
 	multi_definition_need_curve, // lack right curve when generating 'var (id,id,id)'
+	multi_assignment_need_curve, // lack right curve when generating (scalar,scalar)=(scalar,scalar)
+	multi_assignment_need_equal, // lack '=' when generating (scalar,scalar)=(scalar,scalar)
 	error_begin_token_of_scalar, // in scalar_generate() 
 	lack_left_curve,             // lack left curve
 	lack_right_curve,            // lack right curve
@@ -186,14 +193,32 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			print_parse_token(error_token_type);
 			std::cout<<"\' in main scope."<<std::endl;
 			break;
+		case lack_semi:
+			std::cout<<error_info_head<<line<<": expect a \';\' at the end of the statement."<<std::endl;break;
 		case definition_lack_id:
 			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
 		case definition_lack_equal:
-			std::cout<<error_info_head<<line<<": expect a \'=\' here."<<std::endl;break;
+			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
 		case definition_wrong_type:
 			std::cout<<error_info_head<<line<<": expect an identifier here but get other types."<<std::endl;break;
 		case multi_definition_need_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case multi_assignment_need_curve:
+			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case multi_assignment_need_equal:
+			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
 		case error_begin_token_of_scalar:
 			std::cout<<error_info_head<<line<<": expect a scalar here but get \'";
 			print_parse_token(error_token_type);

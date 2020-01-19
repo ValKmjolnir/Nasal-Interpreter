@@ -22,19 +22,19 @@ class nasal_parse
 		// abstract_syntax_tree generation
 		bool check_comma_in_curve();
 		void main_generate();
+		abstract_syntax_tree multi_scalar_assignment();
 		abstract_syntax_tree calculation();
 		abstract_syntax_tree and_calculation();
 		abstract_syntax_tree or_calculation();
 		abstract_syntax_tree additive_calculation();
 		abstract_syntax_tree multive_calculation();
+		abstract_syntax_tree assign_calculation();
 		abstract_syntax_tree scalar_generate();
 		abstract_syntax_tree hash_generate();
 		abstract_syntax_tree vector_generate();
 		abstract_syntax_tree function_generate();
-		abstract_syntax_tree var_outside_definition();
-		abstract_syntax_tree var_inside_definition();
-		abstract_syntax_tree normal_assignment();
-		abstract_syntax_tree in_curve_assignment();
+		abstract_syntax_tree return_expr();
+		abstract_syntax_tree definition();
 		abstract_syntax_tree loop_expr();
 		abstract_syntax_tree choose_expr();
 };
@@ -96,34 +96,34 @@ void nasal_parse::get_token_list(std::list<token>& detail_token_stream)
 
 void nasal_parse::get_token()
 {
-	this_token=parse_token_stream.top();
-	parse_token_stream.pop();
-	checked_tokens.push(this_token);
-	if(this_token.type==__stack_end)
+	if(!parse_token_stream.empty())
 	{
-		std::cout<<">>[Parse-error] fatal error occurred."<<std::endl;
-		std::cout<<">>[Parse-error] empty token stack."<<std::endl;
+		this_token=parse_token_stream.top();
+		parse_token_stream.pop();
+		checked_tokens.push(this_token);
 	}
+	if(this_token.type==__stack_end)
+		std::cout<<">>[Stack-end] empty token stack."<<std::endl;
 	return;
 }
 
 void nasal_parse::push_token()
 {
-	parse_token_stream.push(checked_tokens.top());
-	this_token=checked_tokens.top();
-	checked_tokens.pop();
-	if(this_token.type==__stack_end)
+	if(!checked_tokens.empty())
 	{
-		std::cout<<">>[Parse-error] fatal error occurred."<<std::endl;
-		std::cout<<">>[Parse-error] empty checked-token stack."<<std::endl;
+		parse_token_stream.push(checked_tokens.top());
+		this_token=checked_tokens.top();
+		checked_tokens.pop();
 	}
+	if(this_token.type==__stack_end)
+		std::cout<<">>[Stack-end] empty token stack."<<std::endl;
 	return;
 }
 
 int nasal_parse::get_error()
 {
 	// if error is larger than 0,
-	// the process will stop.
+	// the process after parser will stop.
 	return error;
 }
 
@@ -135,12 +135,21 @@ abstract_syntax_tree& nasal_parse::get_root()
 
 bool nasal_parse::check_comma_in_curve()
 {
+	// when generating multi_assignment
+	// only one pair of curves are alowed
+	// if there are too many pairs
+	// then a parse error occurs.
 	bool ret=false;
+	int left_curve_cnt=0;
 	int cnt=0;
 	while(this_token.type!=__right_curve)
 	{
 		++cnt;
 		this->get_token();
+		if(this_token.type==__left_curve)
+			++left_curve_cnt;
+		if(left_curve_cnt>1)
+			break;
 		if(this_token.type==__comma)
 		{
 			ret=true;
@@ -161,14 +170,14 @@ void nasal_parse::main_generate()
 	root.set_node_line(1);
 	root.set_node_type(__root);
 	// initialize root node
-	while(parse_token_stream.top().type!=__stack_end)
+	while(!parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
 	{
 		this->get_token();
 		switch(this_token.type)
 		{
 			case __var:
 				this->push_token();
-				root.get_children().push_back(var_outside_definition());
+				root.get_children().push_back(definition());
 				break;
 			case __nor_operator: case __sub_operator:
 			case __number:       case __nil:          case __string:     case __id:
@@ -180,29 +189,13 @@ void nasal_parse::main_generate()
 			case __left_curve:
 				this->push_token();
 				if(check_comma_in_curve())
-				{
-					this->get_token();// get '('
-					this->get_token();// check if there is a 'var'
-					if(this_token.type==__var)
-					{
-						this->push_token();
-						this->push_token();
-						root.add_children(var_inside_definition());
-					}
-					else
-					{
-						this->push_token();
-						this->push_token();
-						root.add_children(in_curve_assignment());
-					}
-				}
+					root.add_children(multi_scalar_assignment());
 				else
 					root.add_children(calculation());
 			// '(' is the beginning of too many statements
 			// '(' var id,id,id ')'
 			// '(' calculation ')'
 			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
-			// but these statements can be distinguished by commas in them
 				break;
 			case __if:
 				this->push_token();
@@ -222,6 +215,76 @@ void nasal_parse::main_generate()
 	}
 	std::cout<<">>[Parse] complete generation. "<<error<<" error(s), "<<warning<<" warning(s)."<<std::endl;
 	return;
+}
+
+abstract_syntax_tree nasal_parse::multi_scalar_assignment()
+{
+	abstract_syntax_tree assignment_node;
+	abstract_syntax_tree front_multi_scalar_node;
+	abstract_syntax_tree back_multi_scalar_node;
+	this->get_token();// get '('
+	front_multi_scalar_node.set_node_line(this_token.line);
+	front_multi_scalar_node.set_node_type(__multi_scalar);
+	while(this_token.type!=__right_curve)
+	{
+		front_multi_scalar_node.add_children(scalar_generate());
+		this->get_token();
+		if(this_token.type!=__comma && this_token.type!=__right_curve)
+		{
+			++error;
+			print_parse_error(multi_assignment_need_curve,this_token.line,this_token.type);
+			break;
+		}
+		if(this_token.type==__comma)
+		{
+			this->get_token();
+			if(this_token.type!=__right_curve)
+				this->push_token();
+		}
+	}
+	this->get_token();
+	assignment_node.set_node_line(this_token.line);
+	assignment_node.set_node_type(this_token.type);
+	if(this_token.type!=__equal)
+	{
+		++error;
+		print_parse_error(multi_assignment_need_equal,this_token.line,this_token.type);
+	}
+	this->get_token();
+	if(this_token.type!=__left_curve)
+		back_multi_scalar_node=scalar_generate();
+	else
+	{
+		this->push_token();
+		if(check_comma_in_curve())
+		{
+			this->get_token();// get '('
+			back_multi_scalar_node.set_node_line(this_token.line);
+			back_multi_scalar_node.set_node_type(__multi_scalar);
+			while(this_token.type!=__right_curve)
+			{
+				back_multi_scalar_node.add_children(scalar_generate());
+				this->get_token();
+				if(this_token.type!=__comma && this_token.type!=__right_curve)
+				{
+					++error;
+					print_parse_error(multi_assignment_need_curve,this_token.line,this_token.type);
+					break;
+				}
+				if(this_token.type==__comma)
+				{
+					this->get_token();
+					if(this_token.type!=__right_curve)
+						this->push_token();
+				}
+			}
+		}
+		else
+			back_multi_scalar_node=calculation();
+	}
+	assignment_node.add_children(front_multi_scalar_node);
+	assignment_node.add_children(back_multi_scalar_node);
+	return assignment_node;
 }
 
 abstract_syntax_tree nasal_parse::calculation()
@@ -308,7 +371,7 @@ abstract_syntax_tree nasal_parse::additive_calculation()
 	abstract_syntax_tree tmp_node;
 	calc_node=multive_calculation();
 	this->get_token();
-	while((this_token.type==__add_operator) || (this_token.type==__sub_operator))
+	while((this_token.type==__add_operator) || (this_token.type==__sub_operator) || (this_token.type==__link_operator))
 	{
 		tmp_node.set_clear();
 		tmp_node.set_node_line(this_token.line);
@@ -336,12 +399,12 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 		null_node.set_node_type(__number);
 		null_node.set_var_number("0");
 		calc_node.add_children(null_node);
-		calc_node.add_children(scalar_generate());
+		calc_node.add_children(assign_calculation());
 	}
 	else
 	{
 		this->push_token();
-		calc_node=scalar_generate();
+		calc_node=assign_calculation();
 	}
 	this->get_token();
 	while((this_token.type==__mul_operator) || (this_token.type==__div_operator))
@@ -361,12 +424,12 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 			null_node.set_node_type(__number);
 			null_node.set_var_number("0");
 			calc_node.add_children(null_node);
-			calc_node.add_children(scalar_generate());
+			calc_node.add_children(assign_calculation());
 		}
 		else
 		{
 			this->push_token();
-			calc_node=scalar_generate();
+			calc_node=assign_calculation();
 		}
 		tmp_node.add_children(calc_node);
 		calc_node=tmp_node;
@@ -374,6 +437,27 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	}
 	this->push_token();
 	return calc_node;
+}
+
+abstract_syntax_tree nasal_parse::assign_calculation()
+{
+	abstract_syntax_tree scalar_node=scalar_generate();
+	abstract_syntax_tree assignment_node;
+	this->get_token();// check if this token is '=' or '+=' or '-=' or '*=' or '/=' or '~='
+	if((this_token.type==__equal) || (this_token.type==__add_equal) || (this_token.type==__sub_equal) || (this_token.type==__mul_equal) || (this_token.type==__div_equal) || (this_token.type==__link_equal))
+	{
+		// <scalar> ('=' | '+=' | '-=' | '*=' | '/=' | '~=') <calculation>
+		assignment_node.set_node_line(this_token.line);
+		assignment_node.set_node_type(this_token.type);
+		assignment_node.add_children(scalar_node);
+		assignment_node.add_children(calculation());
+	}
+	else
+	{
+		this->push_token();
+		assignment_node=scalar_node;
+	}
+	return assignment_node;
 }
 
 abstract_syntax_tree nasal_parse::scalar_generate()
@@ -435,6 +519,9 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 			abstract_syntax_tree call_func_node;
 			call_func_node.set_node_line(this_token.line);
 			call_func_node.set_node_type(__call_function);
+
+
+			// unfinished
 		}
 		else if(this_token.type==__left_bracket)
 		{
@@ -509,6 +596,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 		}
 		this->get_token();
 	}
+	// call identifier/vector/hash/function
 	this->push_token();
 	return scalar_node;
 }
@@ -618,17 +706,16 @@ abstract_syntax_tree nasal_parse::function_generate()
 		while(this_token.type!=__right_curve)
 		{
 			// check identifier
+			abstract_syntax_tree parameter;
 			this->get_token();
 			if(this_token.type==__id)
 			{
-				abstract_syntax_tree parameter;
 				parameter.set_node_line(this_token.line);
 				parameter.set_node_type(__id);
 				parameter.set_var_name(this_token.str);
 			}
 			else if(this_token.type==__dynamic_id)
 			{
-				abstract_syntax_tree parameter;
 				parameter.set_node_line(this_token.line);
 				parameter.set_node_type(__dynamic_id);
 				parameter.set_var_name(this_token.str);
@@ -646,17 +733,16 @@ abstract_syntax_tree nasal_parse::function_generate()
 			this->get_token();
 			if(this_token.type==__equal)
 			{
-
+				abstract_syntax_tree default_parameter;
+				default_parameter.set_node_line(this_token.line);
+				default_parameter.set_node_type(__defult_parameter);
+				default_parameter.add_children(parameter);
+				default_parameter.add_children(calculation());
+				parameter=default_parameter;
 			}
-			else if((this_token.type==__right_curve) || (this_token.type==__comma))
-				this->push_token();
 			else
-			{
-				++error;
-				print_parse_error(parameter_lack_part,this_token.line);
-				break;
-			}
-
+				this->push_token();
+			parameter_list.add_children(parameter);
 			// check comma or right_curve
 			this->get_token();
 			if((this_token.type!=__right_curve) && (this_token.type!=__comma))
@@ -665,14 +751,137 @@ abstract_syntax_tree nasal_parse::function_generate()
 				print_parse_error(parameter_lack_curve,this_token.line);
 				break;
 			}
+			if(this_token.type==__comma)
+			{
+				this->get_token();
+				if(this_token.type!=__right_curve)
+					this->push_token();
+			}
 		}
+		function_node.add_children(parameter_list);
 	}
 	else
 		this->push_token();
+	this->get_token();
+	if(this_token.type!=__left_brace)
+	{
+		switch(this_token.type)
+		{
+			case __var:
+				this->push_token();
+				function_node.get_children().push_back(definition());
+				break;
+			case __nor_operator: case __sub_operator:
+			case __number:       case __nil:          case __string:     case __id:
+			case __left_bracket: case __left_brace:
+			case __func:
+				this->push_token();
+				function_node.add_children(calculation());
+				break;
+			case __left_curve:
+				this->push_token();
+				if(check_comma_in_curve())
+					function_node.add_children(multi_scalar_assignment());
+				else
+					function_node.add_children(calculation());
+			// '(' is the beginning of too many statements
+			// '(' var id,id,id ')'
+			// '(' calculation ')'
+			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
+				break;
+			case __if:
+				this->push_token();
+				function_node.add_children(choose_expr());
+				break;
+			case __while: case __for: case __foreach: case __forindex:
+				this->push_token();
+				function_node.add_children(loop_expr());
+				break;
+			case __return:
+				this->push_token();
+				function_node.add_children(return_expr());
+				break;
+			case __semi:this->push_token();break;
+			case __stack_end:break;
+			default:
+				++error;
+				print_parse_error(error_token_in_main,this_token.line,this_token.type);
+				break;
+		}
+	}
+	else
+	{
+		while(this_token.type!=__right_brace && !parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
+		{
+			this->get_token();
+			switch(this_token.type)
+			{
+				case __var:
+					this->push_token();
+					function_node.get_children().push_back(definition());
+					break;
+				case __nor_operator: case __sub_operator:
+				case __number:       case __nil:          case __string:     case __id:
+				case __left_bracket: case __left_brace:
+				case __func:
+					this->push_token();
+					function_node.add_children(calculation());
+					break;
+				case __left_curve:
+					this->push_token();
+					if(check_comma_in_curve())
+						function_node.add_children(multi_scalar_assignment());
+					else
+						function_node.add_children(calculation());
+				// '(' is the beginning of too many statements
+				// '(' var id,id,id ')'
+				// '(' calculation ')'
+				// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
+					break;
+				case __if:
+					this->push_token();
+					function_node.add_children(choose_expr());
+					break;
+				case __while: case __for: case __foreach: case __forindex:
+					this->push_token();
+					function_node.add_children(loop_expr());
+					break;
+				case __return:
+					this->push_token();
+					function_node.add_children(return_expr());
+					break;
+				case __semi:break;
+				case __stack_end:break;
+				default:
+					++error;
+					print_parse_error(error_token_in_main,this_token.line,this_token.type);
+					break;
+			}
+		}
+	}
 	return function_node;
 }
 
-abstract_syntax_tree nasal_parse::var_outside_definition()
+abstract_syntax_tree nasal_parse::return_expr()
+{
+	abstract_syntax_tree ret_node;
+	this->get_token();
+	ret_node.set_node_line(this_token.line);
+	ret_node.set_node_type(__return);
+	this->get_token();
+	if((this_token.type==__sub_operator) || (this_token.type==__nor_operator) ||
+		(this_token.type==__number) || (this_token.type==__string) || (this_token.type==__func) ||
+		(this_token.type==__id) || (this_token.type==__nil) ||
+		(this_token.type==__left_curve) || (this_token.type==__left_brace) || (this_token.type==__left_bracket)
+		)
+	{
+		this->push_token();
+		ret_node.add_children(calculation());
+	}
+	return ret_node;
+}
+
+abstract_syntax_tree nasal_parse::definition()
 {
 	abstract_syntax_tree var_outsied_definition_node;
 	var_outsied_definition_node.set_node_type(__definition);
@@ -690,12 +899,12 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		if(this_token.type==__semi)
 			this->push_token();// var id
 		else if(this_token.type==__equal)
-			var_outsied_definition_node.add_children(scalar_generate());// var id = scalar
+			var_outsied_definition_node.add_children(calculation());// var id = scalar
 		else
 		{
 			this->push_token();
 			++error;
-			print_parse_error(definition_lack_equal,this_token.line);
+			print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 		}
 	}
 	else if(this_token.type==__left_curve)
@@ -715,8 +924,11 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 			}
 			else
 			{
-				this->push_token();
-				multi_identifier.add_children(scalar_generate());
+				abstract_syntax_tree id_node;
+				id_node.set_node_line(this_token.line);
+				id_node.set_node_type(__id);
+				id_node.set_var_name(this_token.str);
+				multi_identifier.add_children(id_node);
 			}
 			this->get_token();
 			if(this_token.type!=__semi && this_token.type!=__right_curve)
@@ -729,9 +941,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		}
 		var_outsied_definition_node.add_children(multi_identifier);
 		this->get_token();
-		if(this_token.type==__semi)
-			this->push_token();// var (id,id,id)
-		else if(this_token.type==__equal)
+		if(this_token.type==__equal)// var (id,id,id)=
 		{
 			;
 		}
@@ -739,7 +949,7 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 		{
 			this->push_token();
 			++error;
-			print_parse_error(definition_lack_equal,this_token.line);
+			print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 		}
 	}
 	else
@@ -751,44 +961,23 @@ abstract_syntax_tree nasal_parse::var_outside_definition()
 	return var_outsied_definition_node;
 }
 
-abstract_syntax_tree nasal_parse::var_inside_definition()
-{
-	abstract_syntax_tree var_inside_definition_node;
-	var_inside_definition_node.set_node_type(__definition);
-	this->get_token(); // get '('
-	this->get_token(); // get 'var'
-	var_inside_definition_node.set_node_line(this_token.line);
-	return var_inside_definition_node;
-}
-
-abstract_syntax_tree nasal_parse::normal_assignment()
-{
-	abstract_syntax_tree assign_node;
-	assign_node.set_node_type(__assignment);
-	return assign_node;
-}
-
-abstract_syntax_tree nasal_parse::in_curve_assignment()
-{
-	abstract_syntax_tree assign_node;
-	this->get_token(); // get '('
-	assign_node.set_node_line(this_token.line);
-	assign_node.set_node_type(__assignment);
-	return assign_node;
-}
-
 abstract_syntax_tree nasal_parse::loop_expr()
 {
 	abstract_syntax_tree loop_main_node;
-	loop_main_node.set_node_type(__loop);
 	this->get_token(); // get the first token of loop
 	loop_main_node.set_node_line(this_token.line);
-	switch(this_token.type)
+	loop_main_node.set_node_type(this_token.type);
+	if(this_token.type==__for)
 	{
-		case __for:
-		case __while:
-		case __foreach:
-		case __forindex:break;
+		;
+	}
+	else if(this_token.type==__while)
+	{
+		;
+	}
+	else
+	{
+		;
 	}
 	return loop_main_node;
 }

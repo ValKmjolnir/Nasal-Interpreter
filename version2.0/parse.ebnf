@@ -26,6 +26,7 @@
 |   <vector>
 |   <func> <id>
 |   <function>
+|   <assignment>
 |   '(' <calculation> ')'
 |   <scalar> { ('[' {<calculation> ','} ']') | ('[' <calculation> ':' [<calculation>] ']') | ('.' <id>) | ('(' {<calculation> ','} ')') | ('(' {<id> ':' <calculation> ','} ')') }
 ;
@@ -45,16 +46,15 @@
 |   [('-' | '!')] <scalar>
 |   <calculation> '?' <calculation> ':' <calculation>
 ;
-<and_calc> =<or_calc> {<and> <or_calc>} ;
-<or_calc> =<additive_calc> {<or> <additive_calc>} ;
-<additive_calc> =<multive_calc> {('+' | '-' | '~') <multive_calc>} ;
-<multive_calc> =[('-' | '!')] <scalar> {[('-' | '!')] <scalar>} ;
+<and_calc> = <or_calc> {<and> <or_calc>} ;
+<or_calc> = <additive_calc> {<or> <additive_calc>} ;
+<additive_calc> = <multive_calc> {('+' | '-' | '~') <multive_calc>} ;
+<multive_calc> = [('-' | '!')] <scalar> {('*' | '/') [('-' | '!')] <scalar>};
 
 (* this definition is also used in for loop*)
 <definition> =
     <var> <id> '=' <scalar>
-|   <var> '(' {(<id>) | (<call_identifier>) ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
-|   '(' <var> {(<id>) | (<call_identifier>) ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+|   <var> '(' {<id> ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
 ;
 <forindex_loop_definition> =
     <var> <id>
@@ -63,8 +63,8 @@
     <var> <id> 
 ;
 <assignment> =
-    <scalar> '=' <calculation>
-|   '(' {<scalar> ','} ')' '=' (<calculation> | '(' {<calculation> ','} ')')
+    <scalar> ('=' | '+=' | '-=' | '*=' | '/=' | '~=') <calculation>
+|   '(' {<scalar> ','} ')' ('=' | '+=' | '-=' | '*=' | '/=' | '~=') (<calculation> | '(' {<calculation> ','} ')')
 ;
 <loop_expr> =
     <for_loop>
