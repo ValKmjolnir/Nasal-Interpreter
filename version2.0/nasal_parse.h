@@ -4,6 +4,7 @@
 class nasal_parse
 {
 	private:
+		int statement_generate_state;
 		std::stack<token> parse_token_stream;
 		std::stack<token> checked_tokens;
 		token this_token;
@@ -22,6 +23,7 @@ class nasal_parse
 		// abstract_syntax_tree generation
 		bool check_comma_in_curve();
 		void main_generate();
+		void statements_block_generate(abstract_syntax_tree&);
 		abstract_syntax_tree multi_scalar_assignment();
 		abstract_syntax_tree calculation();
 		abstract_syntax_tree and_calculation();
@@ -164,6 +166,8 @@ bool nasal_parse::check_comma_in_curve()
 
 void nasal_parse::main_generate()
 {
+	statement_generate_state=stat_null;
+	// initialize state
 	error=0;
 	warning=0;
 	// initialize error and warning
@@ -213,8 +217,127 @@ void nasal_parse::main_generate()
 				print_parse_error(error_token_in_main,this_token.line,this_token.type);
 				break;
 		}
+
 	}
 	std::cout<<">>[Parse] complete generation. "<<error<<" error(s), "<<warning<<" warning(s)."<<std::endl;
+	return;
+}
+
+void nasal_parse::statements_block_generate(abstract_syntax_tree& tmp_node)
+{
+	abstract_syntax_tree continue_break_node;
+	this->get_token();
+	if(this_token.type!=__left_brace)
+	{
+		switch(this_token.type)
+		{
+			case __var:
+				this->push_token();
+				tmp_node.get_children().push_back(definition());
+				break;
+			case __nor_operator: case __sub_operator:
+			case __number:       case __nil:          case __string:     case __id:
+			case __left_bracket: case __left_brace:
+			case __func:
+				this->push_token();
+				tmp_node.add_children(calculation());
+				break;
+			case __left_curve:
+				this->push_token();
+				if(check_comma_in_curve())
+					tmp_node.add_children(multi_scalar_assignment());
+				else
+					tmp_node.add_children(calculation());
+			// '(' is the beginning of too many statements
+			// '(' var id,id,id ')'
+			// '(' calculation ')'
+			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
+				break;
+			case __if:
+				this->push_token();
+				tmp_node.add_children(choose_expr());
+				break;
+			case __while: case __for: case __foreach: case __forindex:
+				this->push_token();
+				tmp_node.add_children(loop_expr());
+				break;
+			case __return:
+				this->push_token();
+				tmp_node.add_children(return_expr());
+				break;
+			case __continue:
+			case __break:
+				continue_break_node.set_node_line(this_token.line);
+				continue_break_node.set_node_type(this_token.type);
+				tmp_node.add_children(continue_break_node);
+				break;
+			case __semi:this->push_token();break;
+			case __stack_end:break;
+			default:
+				++error;
+				print_parse_error(error_token_in_block,this_token.line,this_token.type);
+				break;
+		}
+	}
+	else
+	{
+		while(this_token.type!=__right_brace && !parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
+		{
+			this->get_token();
+			switch(this_token.type)
+			{
+				case __var:
+					this->push_token();
+					tmp_node.get_children().push_back(definition());
+					break;
+				case __nor_operator: case __sub_operator:
+				case __number:       case __nil:          case __string:     case __id:
+				case __left_bracket: case __left_brace:
+				case __func:
+					this->push_token();
+					tmp_node.add_children(calculation());
+					break;
+				case __left_curve:
+					this->push_token();
+					if(check_comma_in_curve())
+						tmp_node.add_children(multi_scalar_assignment());
+					else
+						tmp_node.add_children(calculation());
+				// '(' is the beginning of too many statements
+				// '(' var id,id,id ')'
+				// '(' calculation ')'
+				// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
+					break;
+				case __if:
+					this->push_token();
+					tmp_node.add_children(choose_expr());
+					break;
+				case __while: case __for: case __foreach: case __forindex:
+					this->push_token();
+					tmp_node.add_children(loop_expr());
+					break;
+				case __return:
+					this->push_token();
+					tmp_node.add_children(return_expr());
+					break;
+				case __continue:
+				case __break:
+					continue_break_node.set_node_line(this_token.line);
+					continue_break_node.set_node_type(this_token.type);
+					tmp_node.add_children(continue_break_node);
+					break;
+				case __semi:break;
+				case __stack_end:break;
+				default:
+					++error;
+					print_parse_error(error_token_in_block,this_token.line,this_token.type);
+					break;
+			}
+			this->get_token();
+			if(this_token.type!=__right_brace)
+				this->push_token();
+		}
+	}
 	return;
 }
 
@@ -862,103 +985,7 @@ abstract_syntax_tree nasal_parse::function_generate()
 	}
 	else
 		this->push_token();
-	this->get_token();
-	if(this_token.type!=__left_brace)
-	{
-		switch(this_token.type)
-		{
-			case __var:
-				this->push_token();
-				function_node.get_children().push_back(definition());
-				break;
-			case __nor_operator: case __sub_operator:
-			case __number:       case __nil:          case __string:     case __id:
-			case __left_bracket: case __left_brace:
-			case __func:
-				this->push_token();
-				function_node.add_children(calculation());
-				break;
-			case __left_curve:
-				this->push_token();
-				if(check_comma_in_curve())
-					function_node.add_children(multi_scalar_assignment());
-				else
-					function_node.add_children(calculation());
-			// '(' is the beginning of too many statements
-			// '(' var id,id,id ')'
-			// '(' calculation ')'
-			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
-				break;
-			case __if:
-				this->push_token();
-				function_node.add_children(choose_expr());
-				break;
-			case __while: case __for: case __foreach: case __forindex:
-				this->push_token();
-				function_node.add_children(loop_expr());
-				break;
-			case __return:
-				this->push_token();
-				function_node.add_children(return_expr());
-				break;
-			case __semi:this->push_token();break;
-			case __stack_end:break;
-			default:
-				++error;
-				print_parse_error(error_token_in_main,this_token.line,this_token.type);
-				break;
-		}
-	}
-	else
-	{
-		while(this_token.type!=__right_brace && !parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
-		{
-			this->get_token();
-			switch(this_token.type)
-			{
-				case __var:
-					this->push_token();
-					function_node.get_children().push_back(definition());
-					break;
-				case __nor_operator: case __sub_operator:
-				case __number:       case __nil:          case __string:     case __id:
-				case __left_bracket: case __left_brace:
-				case __func:
-					this->push_token();
-					function_node.add_children(calculation());
-					break;
-				case __left_curve:
-					this->push_token();
-					if(check_comma_in_curve())
-						function_node.add_children(multi_scalar_assignment());
-					else
-						function_node.add_children(calculation());
-				// '(' is the beginning of too many statements
-				// '(' var id,id,id ')'
-				// '(' calculation ')'
-				// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
-					break;
-				case __if:
-					this->push_token();
-					function_node.add_children(choose_expr());
-					break;
-				case __while: case __for: case __foreach: case __forindex:
-					this->push_token();
-					function_node.add_children(loop_expr());
-					break;
-				case __return:
-					this->push_token();
-					function_node.add_children(return_expr());
-					break;
-				case __semi:break;
-				case __stack_end:break;
-				default:
-					++error;
-					print_parse_error(error_token_in_main,this_token.line,this_token.type);
-					break;
-			}
-		}
-	}
+	statements_block_generate(function_node);
 	return function_node;
 }
 
@@ -1073,12 +1100,25 @@ abstract_syntax_tree nasal_parse::loop_expr()
 	}
 	else if(this_token.type==__while)
 	{
-		;
+		this->get_token();
+		if(this_token.type!=__left_curve)
+		{
+			++error;
+			print_parse_error(lack_left_curve,this_token.line,this_token.type);
+		}
+		loop_main_node.add_children(calculation());
+		this->get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			print_parse_error(lack_right_curve,this_token.line,this_token.type);
+		}
 	}
 	else
 	{
 		;
 	}
+	statements_block_generate(loop_main_node);
 	return loop_main_node;
 }
 
@@ -1107,9 +1147,48 @@ abstract_syntax_tree nasal_parse::choose_expr()
 		++error;
 		print_parse_error(lack_right_curve,this_token.line);
 	}
+	statements_block_generate(if_node);
 	// add statements
+	this->get_token();
+	if(this_token.type==__elsif)
+	{
+		while(this_token.type==__elsif)
+		{
+			elsif_node.set_clear();
+			elsif_node.set_node_line(this_token.line);
+			elsif_node.set_node_type(__elsif);
 
-	// get elsif or else if
+			this->get_token();
+			if(this_token.type!=__left_curve)
+			{
+				++error;
+				print_parse_error(lack_left_curve,this_token.line,this_token.type);
+			}
+			elsif_node.add_children(calculation());
+			this->get_token();
+			if(this_token.type!=__right_curve)
+			{
+				++error;
+				print_parse_error(lack_right_curve,this_token.line,this_token.type);
+			}
+			statements_block_generate(elsif_node);
+			choose_main_node.add_children(elsif_node);
+		}
+		this->push_token();
+	}
+	else
+		this->push_token();
+	this->get_token();
+	if(this_token.type==__else)
+	{
+		else_node.set_node_line(this_token.type);
+		else_node.set_node_type(__else);
+		statements_block_generate(else_node);
+		choose_main_node.add_children(else_node);
+	}
+	else
+		this->push_token();
+	// get elsif or else
 	return choose_main_node;
 }
 #endif
