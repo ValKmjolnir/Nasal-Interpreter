@@ -156,6 +156,7 @@ enum parse_error_type
 {
 	parse_unknown_error,         // unknown error
 	error_token_in_main,         // when a token should not be the begin of a statement in main
+	error_token_in_block,        // when a token should not be the begin of a statement in block
 
 	lack_semi,
 
@@ -197,6 +198,11 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": statements should not begin with \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' in main scope."<<std::endl;
+			break;
+		case error_token_in_block:
+			std::cout<<error_info_head<<line<<": statements should not begin with \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' in block scope."<<std::endl;
 			break;
 		case lack_semi:
 			std::cout<<error_info_head<<line<<": expect a \';\' at the end of the statement."<<std::endl;break;
@@ -289,5 +295,21 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 	}
 	return;
 }
+
+// statement_type is used to mark a statement that parser has generated
+// with this parser will check if this statement has ';' at its end
+enum statement_type
+{
+	stat_null,
+	stat_normal_definition=1,
+	stat_assignment,
+	stat_calculation,
+	stat_function_definition,
+	stat_loop,
+	stat_choose,
+	stat_return,
+	stat_continue,
+	stat_break,
+};
 
 #endif
