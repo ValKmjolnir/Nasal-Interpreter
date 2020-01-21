@@ -13,6 +13,7 @@ nil;
 {};
 [0,1,2,3,4,5][2];       # 2
 ([0,1,2,3,4])[2];       # 2
+(([0,1,2,3]))[2];       # 2
 [0,1,2,3,4,5][5,4,3,2+1][0:2][0]; # 5
 {str:"hello"}.str;      # "hello"
 {str:"hello"}["str"];   # "hello"
@@ -94,6 +95,13 @@ var (r,g,b)=color;
 (var r,g,b)=color;
 (r,g,b)=(b,g,r);
 (number_1,number_2)=(number_2,number_1);
+var (swap_a,swap_b)=(0x1,0x80);
+(swap_a,swap_b)=(swap_b,swap_a);
+# ((swap_a),(swap_b))=(swap_b,swap_a) is wrong
+# anything that use multi_assignment must not have curve around them
+var multi_assign_1=[0,1,2,3,4];
+var multi_assign_2=[10,9,8,7];
+(multi_assign_1[1],multi_assign_2[0])=(multi_assign_1[2],multi_assign_2[1]);
 
 # calculation
 1+1;
