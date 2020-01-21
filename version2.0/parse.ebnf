@@ -26,7 +26,6 @@
 |   <vector>
 |   <func> <id>
 |   <function>
-|   <assignment>
 |   '(' <calculation> ')'
 |   <scalar> { ('[' {<calculation> ','} ']') | ('[' <calculation> ':' [<calculation>] ']') | ('.' <id>) | ('(' {<calculation> ','} ')') | ('(' {<id> ':' <calculation> ','} ')') }
 ;
@@ -55,13 +54,9 @@
 <definition> =
     <var> <id> '=' <scalar>
 |   <var> '(' {<id> ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
+|   '(' <var> {<id> ','} ')' '=' (<scalar> | '(' {<scalar> ','} ')')
 ;
-<forindex_loop_definition> =
-    <var> <id>
-;
-<foreach_loop_definition> =
-    <var> <id> 
-;
+
 <assignment> =
     <scalar> ('=' | '+=' | '-=' | '*=' | '/=' | '~=') <calculation>
 |   '(' {<scalar> ','} ')' ('=' | '+=' | '-=' | '*=' | '/=' | '~=') (<calculation> | '(' {<calculation> ','} ')')
@@ -82,12 +77,12 @@
 ;
 (* in forindex and foreach the scalar and definition cannot be lacked*)
 <forindex_loop> =
-    <forindex> '(' <forindex_loop_definition> ';' <scalar> ')' <statement> [';']
-|   <forindex> '(' <forindex_loop_definition> ';' <scalar> ')' '{' {<statement> ';'} '}'
+    <forindex> '(' (<var> <id>)|(<id>) ';' <scalar> ')' <statement> [';']
+|   <forindex> '(' (<var> <id>)|(<id>) ';' <scalar> ')' '{' {<statement> ';'} '}'
 ;
 <foreach_loop> =
-    <foreach> '(' <foreach_loop_definition> ';' <scalar> ')' <statement> [';']
-|   <foreach> '(' <foreach_loop_definition> ';' <scalar> ')' '{' {<statement> ';'} '}'
+    <foreach> '(' (<var> <id>)|(<id>) ';' <scalar> ')' <statement> [';']
+|   <foreach> '(' (<var> <id>)|(<id>) ';' <scalar> ')' '{' {<statement> ';'} '}'
 ;
 
 <choose_expr> = <choose_expr_if> {<choose_expr_elsif>} [<choose_expr_else>]
