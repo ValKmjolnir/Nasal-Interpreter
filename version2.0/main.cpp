@@ -55,6 +55,8 @@ int main()
 		else if(command=="del")
 		{
 			resource.delete_all_source();
+			lexer.delete_all_tokens();
+			parser.delete_all_elements();
 			std::cout<<">>[Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")

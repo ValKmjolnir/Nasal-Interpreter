@@ -185,6 +185,13 @@ class nasal_lexer
 			detail_token_list.clear();
 			return;
 		}
+		void delete_all_tokens()
+		{
+			token_list.clear();
+			detail_token_list.clear();
+			error=0;
+			return;
+		}
 		void print_token_list()
 		{
 			for(std::list<token>::iterator i=token_list.begin();i!=token_list.end();++i)
