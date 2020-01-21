@@ -159,6 +159,7 @@ enum parse_error_type
 	error_token_in_block,        // when a token should not be the begin of a statement in block
 
 	lack_semi,
+	lack_id,
 
 	definition_lack_id,          // lack identifier
 	definition_lack_equal,       // lack '=' when not getting ';'
@@ -206,6 +207,8 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			break;
 		case lack_semi:
 			std::cout<<error_info_head<<line<<": expect a \';\' at the end of the statement."<<std::endl;break;
+		case lack_id:
+			std::cout<<error_info_head<<line<<": expect an identifier here."<<std::endl;break;
 		case definition_lack_id:
 			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
 		case definition_lack_equal:
@@ -254,7 +257,7 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case call_func_lack_comma:
-			std::cout<<error_info_head<<line<<": expect a \',\' here but get \'";
+			std::cout<<error_info_head<<line<<": expect a \',\' when calling a function but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;

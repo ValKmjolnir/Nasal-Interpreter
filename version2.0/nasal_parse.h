@@ -21,6 +21,7 @@ class nasal_parse
 		abstract_syntax_tree& get_root();
 		
 		// abstract_syntax_tree generation
+		bool check_multi_assignment();
 		bool check_comma_in_curve();
 		void main_generate();
 		void statements_block_generate(abstract_syntax_tree&);
@@ -134,6 +135,25 @@ abstract_syntax_tree& nasal_parse::get_root()
 {
 	std::cout<<">>[Abstract-syntax-tree] get root address: "<<(&root)<<" ."<<std::endl;
 	return root;
+}
+
+bool nasal_parse::check_multi_assignment()
+{
+	bool ret=false;
+	int cnt=0;
+
+	this->get_token();
+	++cnt;// get '('
+
+	this->get_token();
+	++cnt;
+	if(this_token.type==__id)
+	{
+
+	}
+	
+
+	return ret;
 }
 
 bool nasal_parse::check_comma_in_curve()
@@ -537,6 +557,8 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	abstract_syntax_tree calc_node;
 	abstract_syntax_tree tmp_node;
 	this->get_token();
+	// be careful that unary calculation and assignment cannot be used together
+	// such as: -a=1; this is incorrect use.
 	if((this_token.type==__sub_operator) || (this_token.type==__nor_operator))
 	{
 		calc_node.set_node_line(this_token.line);
@@ -546,7 +568,7 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 		null_node.set_node_type(__number);
 		null_node.set_var_number("0");
 		calc_node.add_children(null_node);
-		calc_node.add_children(assign_calculation());
+		calc_node.add_children(scalar_generate());
 	}
 	else
 	{
@@ -571,7 +593,7 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 			null_node.set_node_type(__number);
 			null_node.set_var_number("0");
 			calc_node.add_children(null_node);
-			calc_node.add_children(assign_calculation());
+			calc_node.add_children(scalar_generate());
 		}
 		else
 		{
@@ -676,8 +698,8 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 					if(this_token.type==__colon)
 					{
 						scalar_para=false;
-						this->push_token();
-						this->push_token();
+						this->push_token();// colon
+						this->push_token();// identifier
 						while(this_token.type!=__right_curve)
 						{
 							abstract_syntax_tree special_para_node;
@@ -721,10 +743,12 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 					}
 					else
 					{
-						this->push_token();
-						this->push_token();
+						this->push_token();// not colon
+						this->push_token();// identifier
 					}
 				}
+				else
+					this->push_token();// if not identifier then push in
 				if(scalar_para)
 					while(this_token.type!=__right_curve)
 					{
@@ -863,7 +887,7 @@ abstract_syntax_tree nasal_parse::hash_generate()
 			}
 			hash_member_node.add_children(calculation());
 			this->get_token();
-			if(this_token.type!=__comma && this_token.type!=__right_brace)
+			if((this_token.type!=__comma) && (this_token.type!=__right_brace))
 			{
 				++error;
 				print_parse_error(hash_gen_lack_end,this_token.line,this_token.type);
@@ -896,7 +920,7 @@ abstract_syntax_tree nasal_parse::vector_generate()
 		{
 			vector_node.add_children(calculation());
 			this->get_token();
-			if(this_token.type!=__comma && this_token.type!=__right_bracket)
+			if((this_token.type!=__comma) && (this_token.type!=__right_bracket))
 			{
 				++error;
 				print_parse_error(vector_gen_lack_end,this_token.line,this_token.type);
@@ -1096,7 +1120,9 @@ abstract_syntax_tree nasal_parse::loop_expr()
 	loop_main_node.set_node_type(this_token.type);
 	if(this_token.type==__for)
 	{
-		;
+		this->get_token();
+		if(this_token.type==__semi)
+			this->push_token();
 	}
 	else if(this_token.type==__while)
 	{
@@ -1116,7 +1142,44 @@ abstract_syntax_tree nasal_parse::loop_expr()
 	}
 	else
 	{
-		;
+		// forindex
+		// foreach
+		this->get_token();// '('
+		if(this_token.type!=__left_curve)
+		{
+			++error;
+			print_parse_error(lack_left_curve,this_token.line,this_token.type);
+		}
+		this->get_token();// 'var'
+		if(this_token.type!=__var)
+			this->push_token();
+		this->get_token();// id
+		if(this_token.type!=__id)
+		{
+			++error;
+			print_parse_error(lack_id,this_token.line);
+		}
+		else
+		{
+			abstract_syntax_tree id_node;
+			id_node.set_node_line(this_token.line);
+			id_node.set_node_type(__id);
+			id_node.set_var_name(this_token.str);
+			loop_main_node.add_children(id_node);
+		}
+		this->get_token();// ';'
+		if(this_token.type!=__semi)
+		{
+			++error;
+			print_parse_error(lack_semi,this_token.line);
+		}
+		loop_main_node.add_children(scalar_generate());// get hash/vector or keys(hash/vector)
+		this->get_token();
+		if(this_token.type!=__right_curve)
+		{
+			++error;
+			print_parse_error(lack_right_curve,this_token.line,this_token.type);
+		}
 	}
 	statements_block_generate(loop_main_node);
 	return loop_main_node;
