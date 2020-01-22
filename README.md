@@ -62,7 +62,24 @@ etc. cannot be recognized.
 
 And each statement must have a ';' after it or you will be informed with __'error: expect a ';''__ .
 
-In __version 2.0__ these problems will be solved.
+In __version 2.0__ these problems have been solved.
+
+In __version 2.0__
+```javascript
+(var a,b,c)=(1,2,3);
+var (r,g,b)=color;
+```
+These two types of statements are both definition_expr.
+
+```javascript
+(a,b,c)=(1,2,3);
+(a,b)=(b,a);
+```
+This type of statement is multi_assignment.
+
+__And to check if an expr in '(' ')' is multi_scalar or multi_id__
+
+__i used bool nasal_parse::check_multi_scalar() and bool nasal_parse::check_multi_assignment()__
 
 # Calculator
 
