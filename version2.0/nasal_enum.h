@@ -153,27 +153,29 @@ void print_parse_token(int type)
 
 enum parse_error_type
 {
-	parse_unknown_error,         // unknown error
+	parse_unknown_error=0,       // unknown error
 	error_token_in_main,         // when a token should not be the begin of a statement in main
 	error_token_in_block,        // when a token should not be the begin of a statement in block
 
 	lack_semi,
 	lack_id,
+	lack_left_curve,             // lack left curve
+	lack_right_curve,            // lack right curve
 
 	definition_lack_id,          // lack identifier
 	definition_lack_equal,       // lack '=' when not getting ';'
-	definition_wrong_type,       // need identifier but get number or string
 	multi_definition_need_curve, // lack right curve when generating 'var (id,id,id)'
+
 	multi_assignment_need_curve, // lack right curve when generating (scalar,scalar)=(scalar,scalar)
 	multi_assignment_need_equal, // lack '=' when generating (scalar,scalar)=(scalar,scalar)
+
 	error_begin_token_of_scalar, // in scalar_generate() 
-	lack_left_curve,             // lack left curve
-	lack_right_curve,            // lack right curve
+	
 	parameter_lack_part,         // parameter lack a ')' or identifier
 	parameter_lack_curve,        // parameter lack a ',' or ')'
 
-	special_call_lack_id,
-	special_call_lack_colon,
+	special_call_func_lack_id,
+	special_call_func_lack_colon,
 	call_func_lack_comma,
 	call_hash_lack_id,           // lack identifier when calling a hash
 	call_vector_lack_bracket,    // lack ']' when calling a vector
@@ -193,7 +195,7 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 	switch(error_type)
 	{
 		case parse_unknown_error:
-			std::cout<<error_info_head<<line<<": unknown parse error. error id: parse_unknown_error."<<std::endl;break;
+			std::cout<<error_info_head<<line<<": unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
 		case error_token_in_main:
 			std::cout<<error_info_head<<line<<": statements should not begin with \'";
 			print_parse_token(error_token_type);
@@ -204,24 +206,29 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			print_parse_token(error_token_type);
 			std::cout<<"\' in block scope."<<std::endl;
 			break;
+		
 		case lack_semi:
 			std::cout<<error_info_head<<line<<": expect a \';\' at the end of the statement."<<std::endl;break;
 		case lack_id:
 			std::cout<<error_info_head<<line<<": expect an identifier here."<<std::endl;break;
+		case lack_left_curve:
+			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
+		case lack_right_curve:
+			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+		
 		case definition_lack_id:
 			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
 		case definition_lack_equal:
 			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
 			print_parse_token(error_token_type);
-			std::cout<<"\' ."<<std::endl;
+			std::cout<<"\' when generating definition."<<std::endl;
 			break;
-		case definition_wrong_type:
-			std::cout<<error_info_head<<line<<": expect an identifier here but get other types."<<std::endl;break;
 		case multi_definition_need_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
+		
 		case multi_assignment_need_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
 			print_parse_token(error_token_type);
@@ -232,28 +239,27 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
+		
 		case error_begin_token_of_scalar:
 			std::cout<<error_info_head<<line<<": expect a scalar here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
-		case lack_left_curve:
-			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
-		case lack_right_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+		
 		case parameter_lack_part:
-			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here."<<std::endl;break;
+			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here when generating parameter_list."<<std::endl;break;
 		case parameter_lack_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here."<<std::endl;break;
-		case special_call_lack_id:
+			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here when generating parameter_list."<<std::endl;break;
+		
+		case special_call_func_lack_id:
 			std::cout<<error_info_head<<line<<": expect an identifier here but get \'";
 			print_parse_token(error_token_type);
-			std::cout<<"\' ."<<std::endl;
+			std::cout<<"\' when calling functions."<<std::endl;
 			break;
-		case special_call_lack_colon:
+		case special_call_func_lack_colon:
 			std::cout<<error_info_head<<line<<": expect an \':\' here but get \'";
 			print_parse_token(error_token_type);
-			std::cout<<"\' ."<<std::endl;
+			std::cout<<"\' when calling functions."<<std::endl;
 			break;
 		case call_func_lack_comma:
 			std::cout<<error_info_head<<line<<": expect a \',\' when calling a function but get \'";
@@ -267,6 +273,7 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
+		
 		case vector_gen_lack_end:
 			std::cout<<error_info_head<<line<<": expect a \',\' or \')\' here but get \'";
 			print_parse_token(error_token_type);
@@ -287,31 +294,16 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
+		
 		case ternary_operator_lack_colon:
 			std::cout<<error_info_head<<line<<": expect a \':\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		default:
-			std::cout<<error_info_head<<line<<": unknown parse error. error id: other_type."<<std::endl;break;
+			std::cout<<error_info_head<<line<<": unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
 	}
 	return;
 }
-
-// statement_type is used to mark a statement that parser has generated
-// with this parser will check if this statement has ';' at its end
-enum statement_type
-{
-	stat_null,
-	stat_normal_definition=1,
-	stat_assignment,
-	stat_calculation,
-	stat_function_definition,
-	stat_loop,
-	stat_choose,
-	stat_return,
-	stat_continue,
-	stat_break,
-};
 
 #endif
