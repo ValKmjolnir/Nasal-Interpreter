@@ -4,7 +4,6 @@
 class nasal_parse
 {
 	private:
-		int statement_generate_state;
 		std::stack<token> parse_token_stream;
 		std::stack<token> checked_tokens;
 		token this_token;
@@ -278,8 +277,6 @@ bool nasal_parse::check_var_in_curve()
 
 void nasal_parse::main_generate()
 {
-	statement_generate_state=stat_null;
-	// initialize state
 	error=0;
 	// initialize error
 	root.set_clear();
@@ -814,7 +811,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 							if(this_token.type!=__id)
 							{
 								++error;
-								print_parse_error(special_call_lack_id,this_token.line,this_token.type);
+								print_parse_error(special_call_func_lack_id,this_token.line,this_token.type);
 								break;
 							}
 							id_node.set_node_line(this_token.line);
@@ -825,7 +822,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 							if(this_token.type!=__colon)
 							{
 								++error;
-								print_parse_error(special_call_lack_colon,this_token.line,this_token.type);
+								print_parse_error(special_call_func_lack_colon,this_token.line,this_token.type);
 								break;
 							}
 							special_para_node.add_children(calculation());
@@ -1247,7 +1244,7 @@ abstract_syntax_tree nasal_parse::definition()
 				{
 					this->push_token();
 					++error;
-					print_parse_error(definition_wrong_type,this_token.line,this_token.type);
+					print_parse_error(definition_lack_id,this_token.line,this_token.type);
 					break;
 				}
 				else
