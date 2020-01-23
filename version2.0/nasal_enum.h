@@ -68,30 +68,29 @@ void print_parse_token(int type)
 	std::string context="";
 	switch(type)
 	{
-		case __stack_end:         context="#";  break;
+		case __stack_end:         context=" # ";  break;
+		case __cmp_equal:         context=" == "; break;
+		case __cmp_not_equal:     context=" != "; break;
+		case __cmp_less:          context=" < ";  break;
+		case __cmp_less_or_equal: context=" <= "; break;
+		case __cmp_more:          context=" > ";  break;
+		case __cmp_more_or_equal: context=" >= "; break;
 		
-		case __cmp_equal:         context="=="; break;
-		case __cmp_not_equal:     context="!="; break;
-		case __cmp_less:          context="<";  break;
-		case __cmp_less_or_equal: context="<="; break;
-		case __cmp_more:          context=">";  break;
-		case __cmp_more_or_equal: context=">="; break;
+		case __and_operator:      context=" and ";break;
+		case __or_operator:       context=" or "; break;
+		case __nor_operator:      context=" ! ";  break;
+		case __add_operator:      context=" + ";  break;
+		case __sub_operator:      context=" - ";  break;
+		case __mul_operator:      context=" * ";  break;
+		case __div_operator:      context=" / ";  break;
+		case __link_operator:     context=" ~ ";  break;
 		
-		case __and_operator:      context="and";break;
-		case __or_operator:       context="or"; break;
-		case __nor_operator:      context="!";  break;
-		case __add_operator:      context="+";  break;
-		case __sub_operator:      context="-";  break;
-		case __mul_operator:      context="*";  break;
-		case __div_operator:      context="/";  break;
-		case __link_operator:     context="~";  break;
-		
-		case __equal:             context="=";  break;
-		case __add_equal:         context="+="; break;
-		case __sub_equal:         context="-="; break;
-		case __mul_equal:         context="*="; break;
-		case __div_equal:         context="/="; break;
-		case __link_equal:        context="~="; break;
+		case __equal:             context=" = ";  break;
+		case __add_equal:         context=" += "; break;
+		case __sub_equal:         context=" -= "; break;
+		case __mul_equal:         context=" *= "; break;
+		case __div_equal:         context=" /= "; break;
+		case __link_equal:        context=" ~= "; break;
 		
 		case __left_brace:        context="{";  break;
 		case __right_brace:       context="}";  break;
@@ -108,18 +107,18 @@ void print_parse_token(int type)
 		
 		case __unknown_operator:  context="unknown_operator";break;
 		
-		case __var:               context="var";      break;
-		case __func:              context="func";     break;
-		case __continue:          context="continye"; break;
+		case __var:               context="var ";      break;
+		case __func:              context="func ";     break;
+		case __continue:          context="continue"; break;
 		case __break:             context="break";    break;
 		case __for:               context="for";      break;
 		case __forindex:          context="forindex"; break;
-		case __foreach:           context="foreach";  break;
+		case __foreach:           context="foreach ";  break;
 		case __while:             context="while";    break;
-		case __if:                context="if";       break;
-		case __elsif:             context="elsif";    break;
-		case __else:              context="else";     break;
-		case __return:            context="return";   break;
+		case __if:                context="if ";       break;
+		case __elsif:             context="elsif ";    break;
+		case __else:              context="else ";     break;
+		case __return:            context="return ";   break;
 		case __nil:               context="nil";      break;
 		
 		case __id:                context="identifier";   break;

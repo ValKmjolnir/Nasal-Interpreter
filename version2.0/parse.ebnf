@@ -104,7 +104,7 @@
 
 <continue_expr> = <continue> ;
 <break_expr> = <break> ;
-<return_expr> = <return> [<scalar>] ;
+<return_expr> = <return> [<calculation>] ;
 <statement> =
     <definition>
 |   <assignment>
