@@ -321,7 +321,10 @@ void nasal_parse::main_generate()
 			case __func:
 				this->push_token();
 				root.add_children(calculation());
-				need_semi_check=true;
+				if((root.get_children().back().get_node_type()==__equal) && root.get_children().back().get_children().back().get_node_type()==__function)
+					need_semi_check=false;
+				else
+					need_semi_check=true;
 				break;
 			case __left_curve:
 				this->push_token();
@@ -390,6 +393,10 @@ abstract_syntax_tree nasal_parse::block_generate()
 			case __func:
 				this->push_token();
 				block_node.add_children(calculation());
+				if((block_node.get_children().back().get_node_type()==__equal) && block_node.get_children().back().get_children().back().get_node_type()==__function)
+					need_semi_check=false;
+				else
+					need_semi_check=true;
 				break;
 			case __left_curve:
 				this->push_token();
