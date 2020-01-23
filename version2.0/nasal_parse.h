@@ -1507,14 +1507,14 @@ abstract_syntax_tree nasal_parse::loop_expr()
 
 abstract_syntax_tree nasal_parse::conditional_expr()
 {
-	abstract_syntax_tree choose_main_node;
+	abstract_syntax_tree conditional_main_node;
 	abstract_syntax_tree if_node;
 	abstract_syntax_tree elsif_node;
 	abstract_syntax_tree else_node;
-	choose_main_node.set_node_type(__ifelse);
+	conditional_main_node.set_node_type(__conditional);
 	// get 'if'
 	this->get_token();
-	choose_main_node.set_node_line(this_token.line);
+	conditional_main_node.set_node_line(this_token.line);
 	if_node.set_node_type(__if);
 	if_node.set_node_line(this_token.line);
 	this->get_token();
@@ -1531,6 +1531,7 @@ abstract_syntax_tree nasal_parse::conditional_expr()
 		print_parse_error(lack_right_curve,this_token.line);
 	}
 	if_node.add_children(block_generate());
+	conditional_main_node.add_children(if_node);
 	// add statements
 	this->get_token();
 	if(this_token.type==__elsif)
@@ -1555,7 +1556,7 @@ abstract_syntax_tree nasal_parse::conditional_expr()
 				print_parse_error(lack_right_curve,this_token.line,this_token.type);
 			}
 			elsif_node.add_children(block_generate());
-			choose_main_node.add_children(elsif_node);
+			conditional_main_node.add_children(elsif_node);
 			this->get_token();// get next 'elsif' if it exists
 		}
 		this->push_token();
@@ -1568,11 +1569,11 @@ abstract_syntax_tree nasal_parse::conditional_expr()
 		else_node.set_node_line(this_token.type);
 		else_node.set_node_type(__else);
 		else_node.add_children(block_generate());
-		choose_main_node.add_children(else_node);
+		conditional_main_node.add_children(else_node);
 	}
 	else
 		this->push_token();
 	// get elsif or else
-	return choose_main_node;
+	return conditional_main_node;
 }
 #endif
