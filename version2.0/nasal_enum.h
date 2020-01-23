@@ -60,7 +60,7 @@ enum parse_token_type
 	__call_function,__call_vector,__call_hash,
 	__normal_statement_block,
 	__definition,
-	__function,__ifelse
+	__function,__conditional
 };
 
 void print_parse_token(int type)
@@ -143,7 +143,7 @@ void print_parse_token(int type)
 		case __normal_statement_block:context="block";   break;
 		case __definition:        context="definition";  break;
 		case __function:          context="function";    break;
-		case __ifelse:            context="if-else";     break;
+		case __conditional:       context="conditional"; break;
 		
 		default:                  context="undefined_token";break;
 	}
