@@ -154,6 +154,13 @@ struct token
 	int line;
 	int type;
 	std::string str;
+	token& operator=(const token& tmp)
+	{
+		line=tmp.line;
+		type=tmp.type;
+		str=tmp.str;
+		return *this;
+	}
 };
 
 class nasal_lexer

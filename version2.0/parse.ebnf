@@ -85,19 +85,19 @@
 |   <foreach> '(' (<var> <id>)|(<id>) ';' <scalar> ')' '{' {<statement> ';'} '}'
 ;
 
-<choose_expr> = <choose_expr_if> {<choose_expr_elsif>} [<choose_expr_else>]
+<conditional_expr> = <conditional_expr_if> {<conditional_expr_elsif>} [<conditional_expr_else>]
 ;
-<choose_expr_if> =
+<conditional_expr_if> =
     <if> '(' <calculation> ')' <statement> [';']
 |   <if> '(' <calculation> ')' '{' {<statement> ';'} '}'
 ;
-<choose_expr_elsif> =
+<conditional_expr_elsif> =
     <elsif> '(' <calculation> ')' <statement> [';']
 |   <elsif> '(' <calculation> ')' '{' {<statement> ';'} '}'
 |   <else> <if> '(' <calculation> ')' <statement> [';']
 |   <else> <if> '(' <calculation> ')' '{' {<statement> ';'} '}'
 ;
-<choose_expr_else> =
+<conditional_expr_else> =
     <else> <statement> [';']
 |   <else> '{' {<statement> ';'} '}'
 ;
@@ -108,7 +108,7 @@
 <statement> =
     <definition>
 |   <assignment>
-|   <choose_expr>
+|   <conditional_expr>
 |   <loop_expr>
 |   <continue_expr>
 |   <break_expr>

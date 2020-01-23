@@ -16,6 +16,7 @@ elsif(!condition_true and condition_false)
 else
 {
     var c=1;
+    var d=1;
 }
 
 if(condition_true)

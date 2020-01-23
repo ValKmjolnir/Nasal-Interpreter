@@ -159,8 +159,9 @@ enum parse_error_type
 
 	lack_semi,
 	lack_id,
-	lack_left_curve,             // lack left curve
-	lack_right_curve,            // lack right curve
+	lack_left_curve,
+	lack_right_curve,
+	lack_right_brace,
 
 	definition_lack_id,          // lack identifier
 	definition_lack_equal,       // lack '=' when not getting ';'
@@ -215,6 +216,8 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
 		case lack_right_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+		case lack_right_brace:
+			std::cout<<error_info_head<<line<<": expect a \'}\' here."<<std::endl;break;
 		
 		case definition_lack_id:
 			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;

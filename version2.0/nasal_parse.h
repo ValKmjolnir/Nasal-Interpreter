@@ -4,6 +4,7 @@
 class nasal_parse
 {
 	private:
+		bool need_semi_check;// if this is true,this means needs check_semi()
 		std::stack<token> parse_token_stream;
 		std::stack<token> checked_tokens;
 		token this_token;
@@ -27,6 +28,7 @@ class nasal_parse
 		void push_token();
 		int get_error();
 		abstract_syntax_tree& get_root();
+		void check_semi();
 
 		// check '(' confliction
 		bool check_multi_assignment();// check multi_call_id '=' multi_scalar
@@ -68,7 +70,7 @@ class nasal_parse
 		abstract_syntax_tree multi_scalar_assignment();
 		abstract_syntax_tree definition();
 		abstract_syntax_tree loop_expr();
-		abstract_syntax_tree choose_expr();
+		abstract_syntax_tree conditional_expr();
 };
 
 void nasal_parse::print_detail_token()
@@ -110,7 +112,7 @@ void nasal_parse::get_token_list(std::list<token>& detail_token_stream)
 		checked_tokens.pop();
 	// add stack_end token
 	token end_token;
-	end_token.line=0;
+	end_token.line=detail_token_stream.back().line;
 	end_token.str="stack_end";
 	end_token.type=__stack_end;
 
@@ -140,11 +142,6 @@ void nasal_parse::get_token()
 		parse_token_stream.pop();
 		checked_tokens.push(this_token);
 	}
-	if(this_token.type==__stack_end)
-	{
-		std::cout<<">>[Parse-error] fatal error."<<std::endl;
-		std::cout<<">>[Stack-end] empty token stack."<<std::endl;
-	}
 	return;
 }
 
@@ -153,13 +150,9 @@ void nasal_parse::push_token()
 	if(!checked_tokens.empty())
 	{
 		parse_token_stream.push(checked_tokens.top());
-		this_token=checked_tokens.top();
 		checked_tokens.pop();
-	}
-	if(this_token.type==__stack_end)
-	{
-		std::cout<<">>[Parse-error] fatal error."<<std::endl;
-		std::cout<<">>[Stack-end] empty token stack."<<std::endl;
+		if(!checked_tokens.empty())
+			this_token=checked_tokens.top();
 	}
 	return;
 }
@@ -175,6 +168,35 @@ abstract_syntax_tree& nasal_parse::get_root()
 {
 	std::cout<<">>[Abstract-syntax-tree] get root address: "<<(&root)<<" ."<<std::endl;
 	return root;
+}
+
+void nasal_parse::check_semi()
+{
+	// check if this statement has ';' as its end.
+	if(this_token.type==__stack_end)
+	{
+		++error;
+		print_parse_error(lack_semi,this_token.line,this_token.type);
+		return;
+	}
+	this->get_token();
+	if(this_token.type==__semi)
+		return;
+	else if(this_token.type==__right_brace)
+	{
+		this->push_token();
+		return;
+	}
+	else
+	{
+		++error;
+		this->push_token();
+		print_parse_error(lack_semi,this_token.line,this_token.type);
+		this->get_token();
+		if(this_token.type!=__stack_end)
+			this->push_token();
+	}
+	return;
 }
 
 bool nasal_parse::check_multi_assignment()
@@ -285,12 +307,13 @@ void nasal_parse::main_generate()
 	// initialize root node
 	while(!parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
 	{
+		need_semi_check=false;
 		this->get_token();
 		switch(this_token.type)
 		{
 			case __var:
 				this->push_token();
-				root.get_children().push_back(definition());
+				root.add_children(definition());
 				break;
 			case __nor_operator: case __sub_operator:
 			case __number:       case __nil:          case __string:     case __id:
@@ -298,23 +321,33 @@ void nasal_parse::main_generate()
 			case __func:
 				this->push_token();
 				root.add_children(calculation());
+				need_semi_check=true;
 				break;
 			case __left_curve:
 				this->push_token();
 				if(check_var_in_curve())
+				{
 					root.add_children(definition());
+					// in definition,only function doesn't need check_semi()
+				}
 				else if(check_multi_assignment())
+				{
+					need_semi_check=true;
 					root.add_children(multi_scalar_assignment());
+				}
 				else
+				{
+					need_semi_check=true;
 					root.add_children(calculation());
+				}
+				break;
 			// '(' is the beginning of too many statements
 			// '(' var id,id,id ')'
 			// '(' calculation ')'
 			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
-				break;
 			case __if:
 				this->push_token();
-				root.add_children(choose_expr());
+				root.add_children(conditional_expr());
 				break;
 			case __while: case __for: case __foreach: case __forindex:
 				this->push_token();
@@ -327,7 +360,8 @@ void nasal_parse::main_generate()
 				print_parse_error(error_token_in_main,this_token.line,this_token.type);
 				break;
 		}
-
+		if(need_semi_check)
+			check_semi();
 	}
 	std::cout<<">>[Parse] complete generation. "<<error<<" error(s)."<<std::endl;
 	return;
@@ -342,11 +376,13 @@ abstract_syntax_tree nasal_parse::block_generate()
 	block_node.set_node_type(__normal_statement_block);
 	if(this_token.type!=__left_brace)
 	{
+		// only one statement 
+		// so this doesn't need check_semi()
 		switch(this_token.type)
 		{
 			case __var:
 				this->push_token();
-				block_node.get_children().push_back(definition());
+				block_node.add_children(definition());
 				break;
 			case __nor_operator: case __sub_operator:
 			case __number:       case __nil:          case __string:     case __id:
@@ -370,7 +406,7 @@ abstract_syntax_tree nasal_parse::block_generate()
 				break;
 			case __if:
 				this->push_token();
-				block_node.add_children(choose_expr());
+				block_node.add_children(conditional_expr());
 				break;
 			case __while: case __for: case __foreach: case __forindex:
 				this->push_token();
@@ -396,12 +432,14 @@ abstract_syntax_tree nasal_parse::block_generate()
 		this->get_token();
 		if(this_token.type!=__semi)
 			this->push_token();
+		need_semi_check=false;
 	}
 	else
 	{
+		this->get_token();
 		while(this_token.type!=__right_brace && !parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
 		{
-			this->get_token();
+			need_semi_check=false;
 			switch(this_token.type)
 			{
 				case __var:
@@ -414,23 +452,33 @@ abstract_syntax_tree nasal_parse::block_generate()
 				case __func:
 					this->push_token();
 					block_node.add_children(calculation());
+					need_semi_check=true;
 					break;
 				case __left_curve:
 					this->push_token();
 					if(check_var_in_curve())
+					{
 						block_node.add_children(definition());
+						// in definition,only function doesn't need check_semi()
+					}
 					else if(check_multi_assignment())
+					{
+						need_semi_check=true;
 						block_node.add_children(multi_scalar_assignment());
+					}
 					else
+					{
+						need_semi_check=true;
 						block_node.add_children(calculation());
-				// '(' is the beginning of too many statements
-				// '(' var id,id,id ')'
-				// '(' calculation ')'
-				// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
+					}
 					break;
+					// '(' is the beginning of too many statements
+					// '(' var id,id,id ')'
+					// '(' calculation ')'
+					// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
 				case __if:
 					this->push_token();
-					block_node.add_children(choose_expr());
+					block_node.add_children(conditional_expr());
 					break;
 				case __while: case __for: case __foreach: case __forindex:
 					this->push_token();
@@ -439,12 +487,14 @@ abstract_syntax_tree nasal_parse::block_generate()
 				case __return:
 					this->push_token();
 					block_node.add_children(return_expr());
+					need_semi_check=true;
 					break;
 				case __continue:
 				case __break:
 					continue_break_node.set_node_line(this_token.line);
 					continue_break_node.set_node_type(this_token.type);
 					block_node.add_children(continue_break_node);
+					need_semi_check=true;
 					break;
 				case __semi:break;
 				case __stack_end:break;
@@ -453,10 +503,16 @@ abstract_syntax_tree nasal_parse::block_generate()
 					print_parse_error(error_token_in_block,this_token.line,this_token.type);
 					break;
 			}
+			if(need_semi_check)
+				check_semi();
 			this->get_token();
-			if(this_token.type!=__right_brace)
-				this->push_token();
 		}
+		if(this_token.type!=__right_brace)
+		{
+			++error;
+			print_parse_error(lack_right_brace,this_token.line,this_token.type);
+		}
+		need_semi_check=false;
 	}
 	return block_node;
 }
@@ -1211,6 +1267,7 @@ abstract_syntax_tree nasal_parse::definition()
 			++error;
 			print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 		}
+		need_semi_check=true;
 	}
 	else
 	{
@@ -1224,7 +1281,11 @@ abstract_syntax_tree nasal_parse::definition()
 			definition_node.add_children(new_var_identifier);
 			this->get_token();
 			if(this_token.type==__equal)
-				definition_node.add_children(calculation());// var id = scalar
+			{
+				abstract_syntax_tree calc_scalar=calculation();
+				need_semi_check=(calc_scalar.get_node_type()!=__function);
+				definition_node.add_children(calc_scalar);// var id = scalar
+			}
 			else
 			{
 				this->push_token();
@@ -1304,6 +1365,7 @@ abstract_syntax_tree nasal_parse::definition()
 				++error;
 				print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 			}
+			need_semi_check=true;
 		}
 		else
 		{
@@ -1443,7 +1505,7 @@ abstract_syntax_tree nasal_parse::loop_expr()
 	return loop_main_node;
 }
 
-abstract_syntax_tree nasal_parse::choose_expr()
+abstract_syntax_tree nasal_parse::conditional_expr()
 {
 	abstract_syntax_tree choose_main_node;
 	abstract_syntax_tree if_node;
