@@ -4,7 +4,6 @@
 class nasal_parse
 {
 	private:
-		bool need_semi_check;// if this is true,this means needs check_semi()
 		std::stack<token> parse_token_stream;
 		std::stack<token> checked_tokens;
 		token this_token;
@@ -307,13 +306,21 @@ void nasal_parse::main_generate()
 	// initialize root node
 	while(!parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
 	{
-		need_semi_check=false;
+		bool need_semi_check=false;
+		// if need_semi_check is true,this means needs check_semi()
 		this->get_token();
 		switch(this_token.type)
 		{
 			case __var:
 				this->push_token();
 				root.add_children(definition());
+				if((!root.get_children().empty()) &&
+					(!root.get_children().back().get_children().empty()) &&
+					(root.get_children().back().get_children().back().get_node_type()==__function)
+					)
+					need_semi_check=false;
+				else
+					need_semi_check=true;
 				break;
 			case __nor_operator: case __sub_operator:
 			case __number:       case __nil:          case __string:     case __id:
@@ -321,7 +328,12 @@ void nasal_parse::main_generate()
 			case __func:
 				this->push_token();
 				root.add_children(calculation());
-				if((root.get_children().back().get_node_type()==__equal) && root.get_children().back().get_children().back().get_node_type()==__function)
+				// check assignment function
+				if((!root.get_children().empty()) &&
+					(root.get_children().back().get_node_type()==__equal) &&
+					(!root.get_children().back().get_children().empty()) &&
+					(root.get_children().back().get_children().back().get_node_type()==__function)
+					)
 					need_semi_check=false;
 				else
 					need_semi_check=true;
@@ -329,20 +341,13 @@ void nasal_parse::main_generate()
 			case __left_curve:
 				this->push_token();
 				if(check_var_in_curve())
-				{
 					root.add_children(definition());
-					// in definition,only function doesn't need check_semi()
-				}
+					// multi-definition must need semi_check
 				else if(check_multi_assignment())
-				{
-					need_semi_check=true;
 					root.add_children(multi_scalar_assignment());
-				}
 				else
-				{
-					need_semi_check=true;
 					root.add_children(calculation());
-				}
+				need_semi_check=true;
 				break;
 			// '(' is the beginning of too many statements
 			// '(' var id,id,id ')'
@@ -393,24 +398,21 @@ abstract_syntax_tree nasal_parse::block_generate()
 			case __func:
 				this->push_token();
 				block_node.add_children(calculation());
-				if((block_node.get_children().back().get_node_type()==__equal) && block_node.get_children().back().get_children().back().get_node_type()==__function)
-					need_semi_check=false;
-				else
-					need_semi_check=true;
 				break;
 			case __left_curve:
 				this->push_token();
 				if(check_var_in_curve())
 					block_node.add_children(definition());
+					// multi-definition must need semi_check
 				else if(check_multi_assignment())
 					block_node.add_children(multi_scalar_assignment());
 				else
 					block_node.add_children(calculation());
+				break;
 			// '(' is the beginning of too many statements
 			// '(' var id,id,id ')'
 			// '(' calculation ')'
 			// '(' scalar,scalar,scalar ')' '=' '(' scalar,scalar,scalar ')'
-				break;
 			case __if:
 				this->push_token();
 				block_node.add_children(conditional_expr());
@@ -439,19 +441,26 @@ abstract_syntax_tree nasal_parse::block_generate()
 		this->get_token();
 		if(this_token.type!=__semi)
 			this->push_token();
-		need_semi_check=false;
 	}
 	else
 	{
 		this->get_token();
 		while(this_token.type!=__right_brace && !parse_token_stream.empty() && parse_token_stream.top().type!=__stack_end)
 		{
-			need_semi_check=false;
+			bool need_semi_check=false;
+			// if need_semi_check is true,this means needs check_semi()
 			switch(this_token.type)
 			{
 				case __var:
 					this->push_token();
 					block_node.get_children().push_back(definition());
+					if((!block_node.get_children().empty()) &&
+						(!block_node.get_children().back().get_children().empty()) &&
+						(block_node.get_children().back().get_children().back().get_node_type()==__function)
+						)
+						need_semi_check=false;
+					else
+						need_semi_check=true;
 					break;
 				case __nor_operator: case __sub_operator:
 				case __number:       case __nil:          case __string:     case __id:
@@ -459,25 +468,24 @@ abstract_syntax_tree nasal_parse::block_generate()
 				case __func:
 					this->push_token();
 					block_node.add_children(calculation());
-					need_semi_check=true;
+					if((!block_node.get_children().empty()) &&
+						(block_node.get_children().back().get_node_type()==__equal) &&
+						(!block_node.get_children().back().get_children().empty()) &&
+						(block_node.get_children().back().get_children().back().get_node_type()==__function)
+						)
+						need_semi_check=false;
+					else
+						need_semi_check=true;
 					break;
 				case __left_curve:
 					this->push_token();
 					if(check_var_in_curve())
-					{
 						block_node.add_children(definition());
-						// in definition,only function doesn't need check_semi()
-					}
 					else if(check_multi_assignment())
-					{
-						need_semi_check=true;
 						block_node.add_children(multi_scalar_assignment());
-					}
 					else
-					{
-						need_semi_check=true;
 						block_node.add_children(calculation());
-					}
+					need_semi_check=true;
 					break;
 					// '(' is the beginning of too many statements
 					// '(' var id,id,id ')'
@@ -519,7 +527,6 @@ abstract_syntax_tree nasal_parse::block_generate()
 			++error;
 			print_parse_error(lack_right_brace,this_token.line,this_token.type);
 		}
-		need_semi_check=false;
 	}
 	return block_node;
 }
@@ -1274,7 +1281,6 @@ abstract_syntax_tree nasal_parse::definition()
 			++error;
 			print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 		}
-		need_semi_check=true;
 	}
 	else
 	{
@@ -1288,11 +1294,7 @@ abstract_syntax_tree nasal_parse::definition()
 			definition_node.add_children(new_var_identifier);
 			this->get_token();
 			if(this_token.type==__equal)
-			{
-				abstract_syntax_tree calc_scalar=calculation();
-				need_semi_check=(calc_scalar.get_node_type()!=__function);
-				definition_node.add_children(calc_scalar);// var id = scalar
-			}
+				definition_node.add_children(calculation());// var id = scalar
 			else
 			{
 				this->push_token();
@@ -1372,7 +1374,6 @@ abstract_syntax_tree nasal_parse::definition()
 				++error;
 				print_parse_error(definition_lack_equal,this_token.line,this_token.type);
 			}
-			need_semi_check=true;
 		}
 		else
 		{
