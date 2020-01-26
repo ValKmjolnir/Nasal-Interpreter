@@ -33,6 +33,7 @@ class nasal_parse
 		bool check_multi_assignment();// check multi_call_id '=' multi_scalar
 		bool check_multi_scalar();    // check multi_scalar
 		bool check_var_in_curve();    // check multi_definition: (var id,id,id)
+		bool check_function_end(abstract_syntax_tree&);    // check end of definition or '=' is a function
 
 		// abstract_syntax_tree generation
 		// block statements generation
@@ -296,6 +297,22 @@ bool nasal_parse::check_var_in_curve()
 	return ret;
 }
 
+bool nasal_parse::check_function_end(abstract_syntax_tree& tmp)
+{
+	if(tmp.get_node_type()==__definition || tmp.get_node_type()==__equal)
+	{
+		if(!tmp.get_children().empty())
+		{
+			if(tmp.get_children().back().get_node_type()==__function)
+				return true;
+			else
+				return check_function_end(tmp.get_children().back());
+		}
+		return false;
+	}
+	return false;
+}
+
 void nasal_parse::main_generate()
 {
 	error=0;
@@ -314,10 +331,7 @@ void nasal_parse::main_generate()
 			case __var:
 				this->push_token();
 				root.add_children(definition());
-				if((!root.get_children().empty()) &&
-					(!root.get_children().back().get_children().empty()) &&
-					(root.get_children().back().get_children().back().get_node_type()==__function)
-					)
+				if((!root.get_children().empty()) && check_function_end(root.get_children().back()))
 					need_semi_check=false;
 				else
 					need_semi_check=true;
@@ -329,11 +343,7 @@ void nasal_parse::main_generate()
 				this->push_token();
 				root.add_children(calculation());
 				// check assignment function
-				if((!root.get_children().empty()) &&
-					(root.get_children().back().get_node_type()==__equal) &&
-					(!root.get_children().back().get_children().empty()) &&
-					(root.get_children().back().get_children().back().get_node_type()==__function)
-					)
+				if((!root.get_children().empty()) && check_function_end(root.get_children().back()))
 					need_semi_check=false;
 				else
 					need_semi_check=true;
@@ -454,10 +464,7 @@ abstract_syntax_tree nasal_parse::block_generate()
 				case __var:
 					this->push_token();
 					block_node.get_children().push_back(definition());
-					if((!block_node.get_children().empty()) &&
-						(!block_node.get_children().back().get_children().empty()) &&
-						(block_node.get_children().back().get_children().back().get_node_type()==__function)
-						)
+					if((!block_node.get_children().empty()) && check_function_end(block_node.get_children().back()))
 						need_semi_check=false;
 					else
 						need_semi_check=true;
@@ -468,11 +475,7 @@ abstract_syntax_tree nasal_parse::block_generate()
 				case __func:
 					this->push_token();
 					block_node.add_children(calculation());
-					if((!block_node.get_children().empty()) &&
-						(block_node.get_children().back().get_node_type()==__equal) &&
-						(!block_node.get_children().back().get_children().empty()) &&
-						(block_node.get_children().back().get_children().back().get_node_type()==__function)
-						)
+					if((!block_node.get_children().empty()) && check_function_end(block_node.get_children().back()))
 						need_semi_check=false;
 					else
 						need_semi_check=true;
