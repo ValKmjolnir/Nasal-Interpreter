@@ -134,7 +134,7 @@ class resource_file
 			std::cout<<line<<"\t";
 			for(std::list<char>::iterator i=tmp.begin();i!=tmp.end();++i)
 			{
-				if(32<=*i && *i<128)
+				if(32<=*i)
 					std::cout<<*i;
 				else
 					std::cout<<" ";
