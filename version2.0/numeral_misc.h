@@ -19,7 +19,7 @@ bool check_numerable_string(std::string str)
 	{
 		int str_len=str.length();
 		for(int i=2;i<str_len;++i)
-			if(!('0'<=str[i] && str[i]<='9' || 'a'<=str[i] && str[i]<='f' || 'A'<=str[i] && str[i]<='F'))
+			if(!(('0'<=str[i] && str[i]<='9') || ('a'<=str[i] && str[i]<='f') || ('A'<=str[i] && str[i]<='F')))
 				return false;
 		return true;
 	}

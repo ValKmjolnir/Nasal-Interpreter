@@ -104,7 +104,7 @@ void abstract_syntax_tree::print_tree(const int n)
 	std::cout<<std::endl;
 	if(!children.empty())
 	{
-		for(auto i=children.begin();i!=children.end();++i)
+		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
 			i->print_tree(n+1);
 	}
 	return;
