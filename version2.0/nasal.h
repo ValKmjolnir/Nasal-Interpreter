@@ -11,6 +11,7 @@
 #include <stack>
 
 #include "numeral_misc.h"
+#include "nasal_scope.h"
 #include "nasal_enum.h"
 #include "abstract_syntax_tree.h"
 #include "nasal_lexer.h"
