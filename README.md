@@ -1,5 +1,7 @@
 # Nasal Interpreter
 
+[![nasal_logo](pic/icon.png?raw=true)](http://wiki.flightgear.org/File:Nasallogo3.png)
+
 # Nasal script language
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
