@@ -36,7 +36,7 @@ This is what it outputs.
 
 And the flow chart of lexer is here:
 
-![nasal_lexer.png](https://github.com/ValKmjolnir/Nasal-Interpreter/tree/master/pic/nasal_lexer.png)
+[![nasal_lexer.png](pic/nasal_lexer.png?raw=true)](https://github.com/ValKmjolnir/Nasal-Interpreter/blob/master/pic/nasal_lexer.png)
 
 # Push down automata
 
