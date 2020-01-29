@@ -166,7 +166,7 @@ int nasal_parse::get_error()
 
 abstract_syntax_tree& nasal_parse::get_root()
 {
-	std::cout<<">>[Abstract-syntax-tree] get root address: "<<(&root)<<" ."<<std::endl;
+	std::cout<<">>[Parse] output root address: "<<(&root)<<" ."<<std::endl;
 	return root;
 }
 

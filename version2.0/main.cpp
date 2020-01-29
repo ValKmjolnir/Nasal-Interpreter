@@ -3,6 +3,7 @@
 resource_file resource;
 nasal_lexer lexer;
 nasal_parse parser;
+nasal_symbol_table symtable;
 
 std::string command;
 
@@ -36,6 +37,7 @@ int main()
 			std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
 			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
+			std::cout<<">> [sym   ] generate symbol table and print the information of it."<<std::endl;
 			std::cout<<">> [run   ] run code."<<std::endl;
 			std::cout<<">> [info  ] print lexer,parser and ast on screen."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
@@ -110,6 +112,29 @@ int main()
 			else
 				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
 		}
+		else if(command=="sym")
+		{
+			lexer.scanner(resource.get_source());
+			lexer.generate_detail_token();
+			if(!lexer.get_error())
+			{
+				parser.get_token_list(lexer.get_detail_token_list());
+				parser.main_generate();
+				if(!parser.get_error())
+				{
+					symtable.set_scope_clear();
+					symtable.symbol_table_main_generate(parser.get_root());
+					if(!symtable.get_error())
+						symtable.print_symbol_table();
+					else
+						std::cout<<">>[Symbol] error occurred,stop."<<std::endl;
+				}
+				else
+					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+			}
+			else
+				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+		}
 		else if(command=="run")
 		{
 			lexer.scanner(resource.get_source());
@@ -120,7 +145,12 @@ int main()
 				parser.main_generate();
 				if(!parser.get_error())
 				{
-					// run code
+					symtable.set_scope_clear();
+					symtable.symbol_table_main_generate(parser.get_root());
+					if(!symtable.get_error())
+						;// run code
+					else
+						std::cout<<">>[Symbol] error occurred,stop."<<std::endl;
 				}
 				else
 					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
