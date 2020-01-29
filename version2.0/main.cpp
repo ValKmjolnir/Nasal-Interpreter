@@ -59,6 +59,7 @@ int main()
 			resource.delete_all_source();
 			lexer.delete_all_tokens();
 			parser.delete_all_elements();
+			symtable.set_scope_clear();
 			std::cout<<">>[Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
