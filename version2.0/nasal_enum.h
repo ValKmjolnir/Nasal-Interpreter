@@ -92,45 +92,45 @@ void print_parse_token(int type)
 		case __div_equal:         context=" /= "; break;
 		case __link_equal:        context=" ~= "; break;
 		
-		case __left_brace:        context="{";  break;
-		case __right_brace:       context="}";  break;
-		case __left_bracket:      context="[";  break;
-		case __right_bracket:     context="]";  break;
-		case __left_curve:        context="(";  break;
-		case __right_curve:       context=")";  break;
+		case __left_brace:        context="{";    break;
+		case __right_brace:       context="}";    break;
+		case __left_bracket:      context="[";    break;
+		case __right_bracket:     context="]";    break;
+		case __left_curve:        context="(";    break;
+		case __right_curve:       context=")";    break;
 		
-		case __semi:              context=";";  break;
-		case __comma:             context=",";  break;
-		case __colon:             context=":";  break;
-		case __dot:               context=".";  break;
-		case __ques_mark:         context="?";  break;
+		case __semi:              context=";";    break;
+		case __comma:             context=",";    break;
+		case __colon:             context=":";    break;
+		case __dot:               context=".";    break;
+		case __ques_mark:         context="?";    break;
 		
 		case __unknown_operator:  context="unknown_operator";break;
 		
 		case __var:               context="var ";      break;
 		case __func:              context="func ";     break;
-		case __continue:          context="continue"; break;
-		case __break:             context="break";    break;
-		case __for:               context="for";      break;
-		case __forindex:          context="forindex"; break;
+		case __continue:          context="continue";  break;
+		case __break:             context="break";     break;
+		case __for:               context="for";       break;
+		case __forindex:          context="forindex";  break;
 		case __foreach:           context="foreach ";  break;
-		case __while:             context="while";    break;
+		case __while:             context="while";     break;
 		case __if:                context="if ";       break;
 		case __elsif:             context="elsif ";    break;
 		case __else:              context="else ";     break;
 		case __return:            context="return ";   break;
-		case __nil:               context="nil";      break;
+		case __nil:               context="nil";       break;
 		
-		case __id:                context="identifier";   break;
-		case __dynamic_id:        context="identifier...";break;
-		case __number:            context="number";       break;
-		case __string:            context="string";       break;
+		case __id:                context="id";        break;
+		case __dynamic_id:        context="id...";     break;
+		case __number:            context="num";       break;
+		case __string:            context="str";       break;
 		
 		case __root:              context="root";        break;
 		case __null_type:         context="null_type";   break;
-		case __multi_id:          context="identifiers"; break;
+		case __multi_id:          context="ids";         break;
 		case __multi_scalar:      context="scalars";     break;
-		case __parameters:        context="parameters";  break;
+		case __parameters:        context="paras";       break;
 		case __special_para:      context="id:scalar";   break;
 		case __defult_parameter:  context="para=scalar"; break;
 		case __vector:            context="vector";      break;
@@ -141,11 +141,11 @@ void print_parse_token(int type)
 		case __call_vector:       context="call_vector"; break;
 		case __call_hash:         context="call_hash";   break;
 		case __normal_statement_block:context="block";   break;
-		case __definition:        context="definition";  break;
+		case __definition:        context="def";         break;
 		case __function:          context="function";    break;
 		case __conditional:       context="conditional"; break;
 		
-		default:                  context="undefined_token";break;
+		default:                  context="undefined";   break;
 	}
 	std::cout<<context;
 	return;
