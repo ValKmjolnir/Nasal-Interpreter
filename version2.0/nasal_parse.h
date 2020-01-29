@@ -1142,7 +1142,10 @@ abstract_syntax_tree nasal_parse::function_generate()
 				parameter.set_var_name(this_token.str);
 			}
 			else if(this_token.type==__right_curve)
+			{
+				parameter.set_node_type(__null_type);
 				this->push_token();
+			}
 			else
 			{
 				++error;
@@ -1163,7 +1166,8 @@ abstract_syntax_tree nasal_parse::function_generate()
 			}
 			else
 				this->push_token();
-			parameter_list.add_children(parameter);
+			if(parameter.get_node_type()!=__null_type)
+				parameter_list.add_children(parameter);
 			// check comma or right_curve
 			this->get_token();
 			if((this_token.type!=__right_curve) && (this_token.type!=__comma))
@@ -1179,10 +1183,10 @@ abstract_syntax_tree nasal_parse::function_generate()
 					this->push_token();
 			}
 		}
-		function_node.add_children(parameter_list);
 	}
 	else
 		this->push_token();
+	function_node.add_children(parameter_list);
 	function_node.add_children(block_generate());
 	return function_node;
 }
