@@ -490,7 +490,7 @@ class nasal_lexer
 					detail_token_list.push_back(detail_token);
 				}
 			}
-			std::cout<<">>[Detail-Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">>[Detail-lexer] complete generating. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		int get_error()
