@@ -33,21 +33,21 @@ class nasal_symbol_table
 {
     private:
         int error;
-        std::list<symbol_table_unit> global_symbol_dictionary;
-        std::list<symbol_table_unit> global_scope;
-        std::list<symbol_table_unit> local_symbol_dictionary;
-        std::list<std::list<symbol_table_unit> > block_list;
+        std::list<symbol_table_unit> global_symbol_dictionary;// used to save symbols appeared in global scope
+        std::list<symbol_table_unit> local_symbol_dictionary; // used to save symbols appeared in local scopes
+        std::list<symbol_table_unit> global_scope;            // global scope
+        std::list<std::list<symbol_table_unit> > local_list;  // local scopes
         void symbol_table_block_generate(abstract_syntax_tree&);
+        void global_scope_add_symbol(symbol_table_unit);
+        void local_list_add_scope();
+        void local_list_del_scope();
+        void local_scope_add_symbol(symbol_table_unit);
+        int search_symbol_id(symbol_table_unit);
     public:
         nasal_symbol_table();
         ~nasal_symbol_table();
         void set_scope_clear();
         void print_symbol_table();
-        void global_scope_add_symbol(symbol_table_unit);
-        void block_list_add_scope();
-        void block_list_del_scope();
-        void block_scope_add_symbol(symbol_table_unit);
-        int search_symbol_id(symbol_table_unit);
         int get_error();
         void symbol_table_main_generate(abstract_syntax_tree&);
 };
@@ -58,7 +58,7 @@ nasal_symbol_table::nasal_symbol_table()
     global_symbol_dictionary.clear();
     global_scope.clear();
     local_symbol_dictionary.clear();
-    block_list.clear();
+    local_list.clear();
     return;
 }
 
@@ -68,7 +68,7 @@ nasal_symbol_table::~nasal_symbol_table()
     global_symbol_dictionary.clear();
     global_scope.clear();
     local_symbol_dictionary.clear();
-    block_list.clear();
+    local_list.clear();
     return;
 }
 
@@ -78,7 +78,7 @@ void nasal_symbol_table::set_scope_clear()
     global_symbol_dictionary.clear();
     global_scope.clear();
     local_symbol_dictionary.clear();
-    block_list.clear();
+    local_list.clear();
     return;
 }
 
@@ -109,6 +109,7 @@ void nasal_symbol_table::global_scope_add_symbol(symbol_table_unit tmp)
     for(std::list<symbol_table_unit>::iterator i=global_scope.begin();i!=global_scope.end();++i)
     {
         // this conditional expression is used to avoid wrong use of this function
+        // repeat symbol will get the same number
         if(i->symbol_name==tmp.symbol_name)
             return;
         symbol_number_gen=i->symbol_number;
@@ -119,39 +120,50 @@ void nasal_symbol_table::global_scope_add_symbol(symbol_table_unit tmp)
     return;
 }
 
-void nasal_symbol_table::block_list_add_scope()
+void nasal_symbol_table::local_list_add_scope()
 {
     std::list<symbol_table_unit> new_scope;
-    block_list.push_back(new_scope);
+    local_list.push_back(new_scope);
     return;
 }
 
-void nasal_symbol_table::block_list_del_scope()
+void nasal_symbol_table::local_list_del_scope()
 {
-    if(block_list.empty())
+    if(local_list.empty())
     {
         ++error;
         std::cout<<">>[Symbol-error] fatal error: empty block_scope_list."<<std::endl;
     }
     else
-        block_list.pop_back();
+        local_list.pop_back();
     return;
 }
 
-void nasal_symbol_table::block_scope_add_symbol(symbol_table_unit tmp)
+void nasal_symbol_table::local_scope_add_symbol(symbol_table_unit tmp)
 {
-    if(!block_list.empty())
+    if(!local_list.empty())
     {
         int symbol_number_gen=0;
-        for(std::list<symbol_table_unit>::iterator i=block_list.back().begin();i!=block_list.back().end();++i)
-        {
-            // this conditional expression is used to avoid wrong use of this function
-            if(i->symbol_name==tmp.symbol_name)
-                return;
-            symbol_number_gen=i->symbol_number;
-        }
+        // get last symbol number
+        for(std::list<std::list<symbol_table_unit> >::iterator i= local_list.begin();i!=local_list.end();++i)
+            if(!i->empty())
+                for(std::list<symbol_table_unit>::iterator j=i->begin();j!=i->end();++j)
+                {
+                    // this conditional expression is used to avoid wrong use of this function
+                    // repeat symbol will get the same number
+                    ++i;
+                    if(i==local_list.end())
+                    {
+                        --i;
+                        if(j->symbol_name==tmp.symbol_name)
+                            return;
+                    }
+                    else
+                        --i;
+                    symbol_number_gen=j->symbol_number;
+                }
         tmp.symbol_number=symbol_number_gen+1;
-        block_list.back().push_back(tmp);
+        local_list.back().push_back(tmp);
         local_symbol_dictionary.push_back(tmp);
     }
     else
@@ -167,8 +179,8 @@ int nasal_symbol_table::search_symbol_id(symbol_table_unit tmp)
     // in both global and local scope
     // symbol_number begins with 1
     int ret_number=-1;
-    if(!block_list.empty())
-        for(std::list<std::list<symbol_table_unit> >::iterator i=block_list.begin();i!=block_list.end();++i)
+    if(!local_list.empty())
+        for(std::list<std::list<symbol_table_unit> >::iterator i=local_list.begin();i!=local_list.end();++i)
             for(std::list<symbol_table_unit>::iterator j=i->begin();j!=i->end();++j)
                 if(j->symbol_name==tmp.symbol_name)
                     ret_number=j->symbol_number;
@@ -200,6 +212,7 @@ void nasal_symbol_table::symbol_table_main_generate(abstract_syntax_tree& root)
             tmp.symbol_line=i->get_children().front().get_node_line();
             tmp.symbol_name=i->get_children().front().get_var_name();
             this->global_scope_add_symbol(tmp);
+            i->get_children().front().set_symbol_number(this->search_symbol_id(tmp));
             this->symbol_table_block_generate(i->get_children().back());
         }
         else
@@ -211,6 +224,34 @@ void nasal_symbol_table::symbol_table_main_generate(abstract_syntax_tree& root)
 
 void nasal_symbol_table::symbol_table_block_generate(abstract_syntax_tree& node)
 {
+    if(node.get_node_type()==__function)
+    {
+        this->local_list_add_scope();
+
+        this->local_list_del_scope();
+    }
+    else if(node.get_node_type()==__conditional)
+    {
+
+    }
+    else if(node.get_node_type()==__normal_statement_block)
+    {
+
+    }
+    else if(node.get_node_type()==__id)
+    {
+        symbol_table_unit tmp;
+        tmp.symbol_line=node.get_node_line();
+        tmp.symbol_name=node.get_var_name();
+        int id_symbol_number=this->search_symbol_id(tmp);
+        node.set_symbol_number(id_symbol_number);
+    }
+    else
+    {
+        if(!node.get_children().empty())
+            for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
+                this->symbol_table_block_generate(*i);
+    }
     return;
 }
 
