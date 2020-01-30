@@ -6,6 +6,7 @@ class abstract_syntax_tree
 	private:
 		// basic elements
 		int line;
+		int symbol_number;
 		int node_type;
 		std::list<abstract_syntax_tree> children;
 
@@ -30,6 +31,7 @@ class abstract_syntax_tree
 		void set_clear();
 		void set_node_type(const int);
 		void set_node_line(const int);
+		void set_symbol_number(const int);
 		void set_var_string(std::string);
 		void set_var_number(std::string);
 		void set_var_name(std::string);
@@ -38,6 +40,7 @@ class abstract_syntax_tree
 		// get
 		int get_node_type();
 		int get_node_line();
+		int get_symbol_number();
 		double get_var_number();
 		std::string get_var_string();
 		std::string get_var_name();
@@ -48,6 +51,7 @@ abstract_syntax_tree::abstract_syntax_tree()
 {
 	node_type=__null_type;
 	line=0;
+	symbol_number=-1;
 	var_number=0;
 	var_string="";
 	var_name="";
@@ -59,6 +63,7 @@ abstract_syntax_tree::abstract_syntax_tree(const abstract_syntax_tree& tmp)
 {
 	node_type=tmp.node_type;
 	line=tmp.line;
+	symbol_number=tmp.symbol_number;
 	var_number=tmp.var_number;
 	var_string=tmp.var_string;
 	var_name=tmp.var_name;
@@ -76,6 +81,7 @@ abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree
 {
 	node_type=tmp.node_type;
 	line=tmp.line;
+	symbol_number=tmp.symbol_number;
 	var_number=tmp.var_number;
 	var_string=tmp.var_string;
 	var_name=tmp.var_name;
@@ -114,6 +120,7 @@ void abstract_syntax_tree::set_clear()
 {
 	node_type=__null_type;
 	line=0;
+	symbol_number=-1;
 	var_number=0;
 	var_string="";
 	var_name="";
@@ -136,6 +143,12 @@ void abstract_syntax_tree::set_node_line(const int __line)
 		std::cout<<">> [Abstract-syntax-tree-warning] incorrect line under 0: "<<__line<<"."<<std::endl;
 		line=0;
 	}
+	return;
+}
+
+void abstract_syntax_tree::set_symbol_number(const int __sym_num)
+{
+	symbol_number=__sym_num;
 	return;
 }
 
@@ -174,6 +187,11 @@ int abstract_syntax_tree::get_node_type()
 int abstract_syntax_tree::get_node_line()
 {
 	return line;
+}
+
+int abstract_syntax_tree::get_symbol_number()
+{
+	return symbol_number;
 }
 
 double abstract_syntax_tree::get_var_number()
