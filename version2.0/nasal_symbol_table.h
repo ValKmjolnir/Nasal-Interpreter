@@ -213,6 +213,7 @@ void nasal_symbol_table::symbol_table_main_generate(abstract_syntax_tree& root)
             tmp.symbol_name=i->get_children().front().get_var_name();
             this->global_scope_add_symbol(tmp);
             i->get_children().front().set_symbol_number(this->search_symbol_id(tmp));
+            i->get_children().front().set_var_scope(true);
             this->symbol_table_block_generate(i->get_children().back());
         }
         else
@@ -227,16 +228,60 @@ void nasal_symbol_table::symbol_table_block_generate(abstract_syntax_tree& node)
     if(node.get_node_type()==__function)
     {
         this->local_list_add_scope();
-
+        if(node.get_children().front().get_node_type()==__parameters)
+            for(std::list<abstract_syntax_tree>::iterator i=node.get_children().front().get_children().begin();i!=node.get_children().front().get_children().end();++i)
+            {
+                if(i->get_node_type()==__id || i->get_node_type()==__dynamic_id)
+                {
+                    symbol_table_unit tmp;
+                    tmp.symbol_line=i->get_node_line();
+                    tmp.symbol_name=i->get_var_name();
+                    this->local_scope_add_symbol(tmp);
+                    i->set_symbol_number(this->search_symbol_id(tmp));
+                    i->set_var_scope(false);
+                }
+                else
+                {
+                    symbol_table_unit tmp;
+                    tmp.symbol_line=i->get_children().front().get_node_line();
+                    tmp.symbol_name=i->get_children().front().get_var_name();
+                    this->local_scope_add_symbol(tmp);
+                    i->get_children().front().set_symbol_number(this->search_symbol_id(tmp));
+                    i->get_children().front().set_var_scope(false);
+                    this->symbol_table_block_generate(i->get_children().back());
+                }
+            }
+        this->symbol_table_block_generate(node.get_children().back());
         this->local_list_del_scope();
     }
     else if(node.get_node_type()==__conditional)
     {
-
+        for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
+        {
+            this->local_list_add_scope();
+            if(i->get_node_type()==__if || i->get_node_type()==__elsif)
+                this->symbol_table_block_generate(i->get_children().front());
+            this->symbol_table_block_generate(i->get_children().back());
+            this->local_list_del_scope();
+        }
     }
     else if(node.get_node_type()==__normal_statement_block)
     {
-
+        for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
+        {
+            if(i->get_node_type()==__definition)
+            {
+                symbol_table_unit tmp;
+                tmp.symbol_line=i->get_children().front().get_node_line();
+                tmp.symbol_name=i->get_children().front().get_var_name();
+                this->local_scope_add_symbol(tmp);
+                i->get_children().front().set_symbol_number(this->search_symbol_id(tmp));
+                i->get_children().front().set_var_scope(false);
+                this->symbol_table_block_generate(i->get_children().back());
+            }
+            else
+                this->symbol_table_block_generate(*i);
+        }
     }
     else if(node.get_node_type()==__id)
     {
@@ -245,6 +290,33 @@ void nasal_symbol_table::symbol_table_block_generate(abstract_syntax_tree& node)
         tmp.symbol_name=node.get_var_name();
         int id_symbol_number=this->search_symbol_id(tmp);
         node.set_symbol_number(id_symbol_number);
+    }
+    else if(node.get_node_type()==__hash)
+    {
+        this->local_list_add_scope();
+        symbol_table_unit me;
+        me.symbol_line=node.get_node_line();
+        me.symbol_name="me";
+        this->local_scope_add_symbol(me);
+        for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
+        {
+        	if(i->get_node_type()==__hash_member)
+        	{
+        		symbol_table_unit tmp;
+	            tmp.symbol_line=i->get_children().front().get_node_line();
+	            if(i->get_children().front().get_node_type()==__id)
+	                tmp.symbol_name=i->get_children().front().get_var_name();
+	            else if(i->get_children().front().get_node_type()==__string)
+	                tmp.symbol_name=i->get_children().front().get_var_string();
+	            this->local_scope_add_symbol(tmp);
+	            i->get_children().front().set_symbol_number(this->search_symbol_id(tmp));
+	            i->get_children().front().set_var_scope(false);
+	            this->symbol_table_block_generate(i->get_children().back());
+			}
+			else
+				this->symbol_table_block_generate(*i);
+        }
+        this->local_list_del_scope();
     }
     else
     {

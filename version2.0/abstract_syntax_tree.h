@@ -7,6 +7,7 @@ class abstract_syntax_tree
 		// basic elements
 		int line;
 		int symbol_number;
+		bool symbol_is_global;
 		int node_type;
 		std::list<abstract_syntax_tree> children;
 
@@ -35,6 +36,7 @@ class abstract_syntax_tree
 		void set_var_string(std::string);
 		void set_var_number(std::string);
 		void set_var_name(std::string);
+		void set_var_scope(bool);// true means it exists in global scope
 		void add_children(abstract_syntax_tree);
 
 		// get
@@ -44,6 +46,7 @@ class abstract_syntax_tree
 		double get_var_number();
 		std::string get_var_string();
 		std::string get_var_name();
+		bool get_var_scope();
 		std::list<abstract_syntax_tree>& get_children();
 };
 
@@ -52,6 +55,7 @@ abstract_syntax_tree::abstract_syntax_tree()
 	node_type=__null_type;
 	line=0;
 	symbol_number=-1;
+	symbol_is_global=false;
 	var_number=0;
 	var_string="";
 	var_name="";
@@ -64,6 +68,7 @@ abstract_syntax_tree::abstract_syntax_tree(const abstract_syntax_tree& tmp)
 	node_type=tmp.node_type;
 	line=tmp.line;
 	symbol_number=tmp.symbol_number;
+	symbol_is_global=tmp.symbol_is_global;
 	var_number=tmp.var_number;
 	var_string=tmp.var_string;
 	var_name=tmp.var_name;
@@ -82,6 +87,7 @@ abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree
 	node_type=tmp.node_type;
 	line=tmp.line;
 	symbol_number=tmp.symbol_number;
+	symbol_is_global=tmp.symbol_is_global;
 	var_number=tmp.var_number;
 	var_string=tmp.var_string;
 	var_name=tmp.var_name;
@@ -105,7 +111,7 @@ void abstract_syntax_tree::print_tree(const int n)
 		case __dynamic_id:
 		case __call_vector:
 		case __call_hash:
-		case __call_function:std::cout<<": "<<var_name;break;
+		case __call_function:std::cout<<": "<<var_name<<" (sym_num: "<<symbol_number<<"("<<(symbol_is_global? "global":"local")<<"))";break;
 	}
 	std::cout<<std::endl;
 	if(!children.empty())
@@ -170,6 +176,12 @@ void abstract_syntax_tree::set_var_name(std::string __str)
 	return;
 }
 
+void abstract_syntax_tree::set_var_scope(bool is_global)
+{
+	symbol_is_global=is_global;
+	return;
+}
+
 void abstract_syntax_tree::add_children(abstract_syntax_tree p)
 {
 	// use abstract_syntax_tree instead of abstract_syntax_tree&
@@ -207,6 +219,11 @@ std::string abstract_syntax_tree::get_var_string()
 std::string abstract_syntax_tree::get_var_name()
 {
 	return var_name;
+}
+
+bool abstract_syntax_tree::get_var_scope()
+{
+	return symbol_is_global;
 }
 
 std::list<abstract_syntax_tree>& abstract_syntax_tree::get_children()
