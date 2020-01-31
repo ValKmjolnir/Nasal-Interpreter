@@ -106,7 +106,11 @@ int main()
 				parser.get_token_list(lexer.get_detail_token_list());
 				parser.main_generate();
 				if(!parser.get_error())
+				{
+					symtable.set_scope_clear();
+					symtable.symbol_table_main_generate(parser.get_root());
 					parser.get_root().print_tree(1);
+				}
 				else
 					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
 			}
@@ -125,9 +129,8 @@ int main()
 				{
 					symtable.set_scope_clear();
 					symtable.symbol_table_main_generate(parser.get_root());
-					if(!symtable.get_error())
-						symtable.print_symbol_table();
-					else
+					symtable.print_symbol_table();
+					if(symtable.get_error())
 						std::cout<<">>[Symbol] error occurred,stop."<<std::endl;
 				}
 				else
