@@ -165,6 +165,7 @@ enum parse_error_type
 
 	definition_lack_id,          // lack identifier
 	definition_lack_equal,       // lack '=' when not getting ';'
+	assignment_begin_error,      // assignment begins with more than one identifier_call
 	multi_definition_need_curve, // lack right curve when generating 'var (id,id,id)'
 
 	multi_assignment_need_curve, // lack right curve when generating (scalar,scalar)=(scalar,scalar)
@@ -225,6 +226,9 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' when generating definition."<<std::endl;
+			break;
+		case assignment_begin_error:
+			std::cout<<error_info_head<<line<<": assignment should not begin with more than one identifier_call(such as a*b=c)."<<std::endl;
 			break;
 		case multi_definition_need_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";

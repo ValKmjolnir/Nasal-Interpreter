@@ -26,7 +26,7 @@ var func2=func()
             print(temp_value,"< 10");
         elsif(10<=temp_value and temp_value<50)
             print(temp_value,"< 50");
-        10=temp_value;
+        temp_value=10;
     }
     return;
 }

@@ -47,7 +47,6 @@ class nasal_parse
 		abstract_syntax_tree cmp_calculation();
 		abstract_syntax_tree additive_calculation();
 		abstract_syntax_tree multive_calculation();
-		abstract_syntax_tree assign_calculation();
 		abstract_syntax_tree scalar_generate();
 
 		// normal data type generation
@@ -631,6 +630,40 @@ abstract_syntax_tree nasal_parse::calculation()
 		calc_node=tmp_node;
 		this->get_token();
 	}
+	
+	// assignment must has only one identifier_call as its beginning
+	// if not it is a parse-error
+	// this block is only used for assignment check(not multi-assignment)
+	this->push_token();
+	if(calc_node.get_node_type()==__id)
+	{
+		abstract_syntax_tree assignment_node;
+		this->get_token();// check if this token is '=' or '+=' or '-=' or '*=' or '/=' or '~='
+		if((this_token.type==__equal) || (this_token.type==__add_equal) || (this_token.type==__sub_equal) || (this_token.type==__mul_equal) || (this_token.type==__div_equal) || (this_token.type==__link_equal))
+		{
+			// <scalar> ('=' | '+=' | '-=' | '*=' | '/=' | '~=') <calculation>
+			assignment_node.set_node_line(this_token.line);
+			assignment_node.set_node_type(this_token.type);
+			assignment_node.add_children(calc_node);
+			assignment_node.add_children(calculation());
+			calc_node=assignment_node;
+		}
+		else
+			this->push_token();
+	}
+	else
+	{
+		this->get_token();
+		if((this_token.type==__equal) || (this_token.type==__add_equal) || (this_token.type==__sub_equal) || (this_token.type==__mul_equal) || (this_token.type==__div_equal) || (this_token.type==__link_equal))
+		{
+			++error;
+			print_parse_error(assignment_begin_error,this_token.line);
+		}
+		this->push_token();
+	}
+	
+	// check ternary_operator
+	this->get_token();
 	if(this_token.type==__ques_mark)
 	{
 		tmp_node.set_clear();
@@ -757,7 +790,7 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	else
 	{
 		this->push_token();
-		calc_node=assign_calculation();
+		calc_node=scalar_generate();
 	}
 	this->get_token();
 	while((this_token.type==__mul_operator) || (this_token.type==__div_operator))
@@ -782,7 +815,7 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 		else
 		{
 			this->push_token();
-			calc_node=assign_calculation();
+			calc_node=scalar_generate();
 		}
 		tmp_node.add_children(calc_node);
 		calc_node=tmp_node;
@@ -790,27 +823,6 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	}
 	this->push_token();
 	return calc_node;
-}
-
-abstract_syntax_tree nasal_parse::assign_calculation()
-{
-	abstract_syntax_tree scalar_node=scalar_generate();
-	abstract_syntax_tree assignment_node;
-	this->get_token();// check if this token is '=' or '+=' or '-=' or '*=' or '/=' or '~='
-	if((this_token.type==__equal) || (this_token.type==__add_equal) || (this_token.type==__sub_equal) || (this_token.type==__mul_equal) || (this_token.type==__div_equal) || (this_token.type==__link_equal))
-	{
-		// <scalar> ('=' | '+=' | '-=' | '*=' | '/=' | '~=') <calculation>
-		assignment_node.set_node_line(this_token.line);
-		assignment_node.set_node_type(this_token.type);
-		assignment_node.add_children(scalar_node);
-		assignment_node.add_children(calculation());
-	}
-	else
-	{
-		this->push_token();
-		assignment_node=scalar_node;
-	}
-	return assignment_node;
 }
 
 abstract_syntax_tree nasal_parse::scalar_generate()
