@@ -48,6 +48,7 @@ bool check_numerable_string(std::string str)
 	}
 	return false;
 }
+
 double trans_string_to_number(std::string str)
 {
 	bool is_negative=false;
@@ -118,6 +119,7 @@ double trans_string_to_number(std::string str)
 		trans_str_number*=-1;
 	return trans_str_number;
 }
+
 std::string trans_number_to_string(double number)
 {
 	std::string trans_num_string="";
