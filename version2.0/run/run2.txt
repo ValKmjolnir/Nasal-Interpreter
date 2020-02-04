@@ -1,0 +1,4 @@
+var hash={
+	str:1,
+	f:func{print(me.str);}
+};

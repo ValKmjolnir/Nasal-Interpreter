@@ -44,3 +44,13 @@ b=cl_fun(1);
 c=cl_fun(10);
 print(b());
 # output 1
+
+a=3;
+b=0;
+if(a==3)
+{
+var c=10;
+b=func{return c;};
+}
+print(b());
+# output 10
