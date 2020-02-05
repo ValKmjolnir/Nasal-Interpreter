@@ -26,7 +26,8 @@ class abstract_syntax_tree
 		
 		// main functions
 		// print
-		void print_tree(const int);
+		void print_tree();
+		void print_tree_block(const int);
 
 		// set
 		void set_clear();
@@ -96,7 +97,14 @@ abstract_syntax_tree& abstract_syntax_tree::operator=(const abstract_syntax_tree
 	return *this;
 }
 
-void abstract_syntax_tree::print_tree(const int n)
+void abstract_syntax_tree::print_tree()
+{
+	std::cout<<">> [Abstract-syntax-tree] get tree root: "<<(this)<<""<<std::endl;
+	print_tree_block(1);
+	return;
+}
+
+void abstract_syntax_tree::print_tree_block(const int n)
 {
 	std::string __str="";
 	for(int i=0;i<n;++i)
@@ -105,19 +113,22 @@ void abstract_syntax_tree::print_tree(const int n)
 	print_parse_token(node_type);
 	switch(node_type)
 	{
-		case __number:std::cout<<": "<<var_number;break;
-		case __string:std::cout<<": "<<var_string;break;
+		case __number: std::cout<<": "<<var_number;break;
+		case __string: std::cout<<": "<<var_string;break;
 		case __id:
 		case __dynamic_id:
+			std::cout<<": "<<var_name<<" (sym_num:"<<symbol_number<<"["<<(symbol_is_global? "global":"local")<<"])";
+			break;
 		case __call_vector:
 		case __call_hash:
-		case __call_function:std::cout<<": "<<var_name<<" (sym_num: "<<symbol_number<<"("<<(symbol_is_global? "global":"local")<<"))";break;
+		case __call_function:break;
+		default:break;
 	}
 	std::cout<<std::endl;
 	if(!children.empty())
 	{
 		for(std::list<abstract_syntax_tree>::iterator i=children.begin();i!=children.end();++i)
-			i->print_tree(n+1);
+			i->print_tree_block(n+1);
 	}
 	return;
 }
