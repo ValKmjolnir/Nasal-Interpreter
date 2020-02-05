@@ -175,7 +175,6 @@ int nasal_parse::get_error()
 
 abstract_syntax_tree& nasal_parse::get_root()
 {
-	std::cout<<">>[Parse] output root address: "<<(&root)<<" ."<<std::endl;
 	return root;
 }
 
@@ -390,7 +389,7 @@ void nasal_parse::main_generate()
 		if(need_semi_check)
 			check_semi();
 	}
-	std::cout<<">>[Parse] complete generation. "<<error<<" error(s)."<<std::endl;
+	std::cout<<">> [Parse] complete generation. "<<error<<" error(s)."<<std::endl;
 	return;
 }
 
@@ -1430,7 +1429,12 @@ abstract_syntax_tree nasal_parse::loop_expr()
 		}
 		this->get_token();
 		if(this_token.type==__semi)
+		{
+			abstract_syntax_tree null_node;
+			null_node.set_node_type(__null_type);
+			loop_main_node.add_children(null_node);
 			this->push_token();
+		}
 		else
 		{
 			if(this_token.type==__var)
@@ -1443,7 +1447,7 @@ abstract_syntax_tree nasal_parse::loop_expr()
 				this->push_token();
 				// cannot use calculation() here
 				// because for-loop's first statement must be definition or call_identifier
-				loop_main_node.add_children(scalar_generate());
+				loop_main_node.add_children(calculation());
 			}
 		}
 		this->get_token();
@@ -1454,7 +1458,12 @@ abstract_syntax_tree nasal_parse::loop_expr()
 		}
 		this->get_token();
 		if(this_token.type==__semi)
+		{
+			abstract_syntax_tree null_node;
+			null_node.set_node_type(__null_type);
+			loop_main_node.add_children(null_node);
 			this->push_token();
+		}
 		else
 		{
 			this->push_token();
@@ -1468,7 +1477,12 @@ abstract_syntax_tree nasal_parse::loop_expr()
 		}
 		this->get_token();
 		if(this_token.type==__right_curve)
+		{
+			abstract_syntax_tree null_node;
+			null_node.set_node_type(__null_type);
+			loop_main_node.add_children(null_node);
 			this->push_token();
+		}
 		else
 		{
 			this->push_token();

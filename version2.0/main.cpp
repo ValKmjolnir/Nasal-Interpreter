@@ -3,6 +3,9 @@
 resource_file resource;
 nasal_lexer lexer;
 nasal_parse parser;
+abstract_syntax_tree libroot;
+abstract_syntax_tree root;
+
 nasal_symbol_table symtable;
 
 std::string command;
@@ -10,13 +13,13 @@ std::string command;
 int main()
 {
 #ifdef _WIN32
-			std::cout<<">>[system] Windows system."<<std::endl;
+			std::cout<<">> [system] Windows system."<<std::endl;
 #endif
 #ifdef _linux_
-			std::cout<<">>[system] Linux system."<<std::endl;
+			std::cout<<">> [system] Linux system."<<std::endl;
 #endif
 #ifdef TARGET_OS_MAC
-			std::cout<<">>[system] MacOS system."<<std::endl;
+			std::cout<<">> [system] MacOS system."<<std::endl;
 #endif
 	std::cout<<">> Nasal interpreter ver 2.0 ."<<std::endl;
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
@@ -33,7 +36,6 @@ int main()
 			std::cout<<">> [del   ] clear the resource code."<<std::endl;
 			std::cout<<">> [lib   ] add lib file."<<std::endl;
 			std::cout<<">> [rs    ] print resource code."<<std::endl;
-			std::cout<<">> [total ] print resource code with lib code."<<std::endl;
 			std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
 			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
@@ -60,20 +62,37 @@ int main()
 			lexer.delete_all_tokens();
 			parser.delete_all_elements();
 			symtable.set_scope_clear();
-			std::cout<<">>[Delete] complete."<<std::endl;
+			root.set_clear();
+			std::cout<<">> [Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
 		{
+			libroot.set_clear();
 			resource.load_lib_file();
-			std::cout<<">>[Lib] loaded."<<std::endl;
+			lexer.scanner(resource.get_source());
+			lexer.generate_detail_token();
+			if(!lexer.get_error())
+			{
+				parser.get_token_list(lexer.get_detail_token_list());
+				parser.main_generate();
+				if(!parser.get_error())
+				{
+					libroot=parser.get_root();
+					std::cout<<">> [Lib] loaded."<<std::endl;
+				}
+				else
+					std::cout<<">> [Lib-error] lib files have parse error(s),stop."<<std::endl;
+			}
+			else
+				std::cout<<">> [Lib-error] lib files have lexer error(s),stop."<<std::endl;
+			resource.delete_all_source();
+			lexer.delete_all_tokens();
+			parser.delete_all_elements();
+			symtable.set_scope_clear();
 		}
 		else if(command=="rs")
 		{
-			resource.print_resource(false);
-		}
-		else if(command=="total")
-		{
-			resource.print_resource(true);
+			resource.print_resource();
 		}
 		else if(command=="lex")
 		{
@@ -82,7 +101,7 @@ int main()
 			if(!lexer.get_error())
 				lexer.print_token_list();
 			else
-				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="par")
 		{
@@ -95,7 +114,7 @@ int main()
 				parser.main_generate();
 			}
 			else
-				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="ast")
 		{
@@ -109,13 +128,13 @@ int main()
 				{
 					symtable.set_scope_clear();
 					symtable.symbol_table_main_generate(parser.get_root());
-					parser.get_root().print_tree(1);
+					parser.get_root().print_tree();
 				}
 				else
-					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+					std::cout<<">> [Parse] error occurred,stop."<<std::endl;
 			}
 			else
-				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="sym")
 		{
@@ -131,13 +150,13 @@ int main()
 					symtable.symbol_table_main_generate(parser.get_root());
 					symtable.print_symbol_table();
 					if(symtable.get_error())
-						std::cout<<">>[Symbol] error occurred,stop."<<std::endl;
+						std::cout<<">> [Symbol] error occurred,stop."<<std::endl;
 				}
 				else
-					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+					std::cout<<">> [Parse] error occurred,stop."<<std::endl;
 			}
 			else
-				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="run")
 		{
@@ -152,15 +171,15 @@ int main()
 					symtable.set_scope_clear();
 					symtable.symbol_table_main_generate(parser.get_root());
 					if(!symtable.get_error())
-						;// run code
+						root=parser.get_root();// run code
 					else
-						std::cout<<">>[Symbol] error occurred,stop."<<std::endl;
+						std::cout<<">> [Symbol] error occurred,stop."<<std::endl;
 				}
 				else
-					std::cout<<">>[Parse] error occurred,stop."<<std::endl;
+					std::cout<<">> [Parse] error occurred,stop."<<std::endl;
 			}
 			else
-				std::cout<<">>[Lexer] error occurred,stop."<<std::endl;
+				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
 		else if(command=="info")
 		{
@@ -170,7 +189,7 @@ int main()
 			parser.get_token_list(lexer.get_detail_token_list());
 			parser.print_detail_token();
 			parser.main_generate();
-			parser.get_root().print_tree(1);
+			parser.get_root().print_tree();
 		}
 		else if(command=="exit")
 			break;

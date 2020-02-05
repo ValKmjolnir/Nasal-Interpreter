@@ -32,6 +32,19 @@
 		others: __unknown_operator
 */
 
+const std::string lib_filename[9]=
+{
+	"lib/base.nas",
+	"lib/bits.nas",
+	"lib/io.nas",
+	"lib/math.nas",
+	"lib/readline.nas",
+	"lib/sqlite.nas",
+	"lib/thread.nas",
+	"lib/unix.nas",
+	"lib/utf8.nas"
+};
+
 std::string reserve_word[15]=
 {
 	"for","foreach","forindex","while",
@@ -50,9 +63,7 @@ int is_reserve_word(std::string str)
 class resource_file
 {
 	private:
-		std::list<char> libsource;
 		std::list<char> resource;
-		std::list<char> totalcode;
 	public:
 		/*
 		resource_file();
@@ -61,27 +72,21 @@ class resource_file
 		void input_file(std::string);
 		void load_lib_file();
 		std::list<char>& get_source();
-		void print_resource(bool);
+		void print_resource();
 		*/
 		resource_file()
 		{
-			libsource.clear();
 			resource.clear();
-			totalcode.clear();
 			return;
 		}
 		~resource_file()
 		{
-			libsource.clear();
 			resource.clear();
-			totalcode.clear();
 			return;
 		}
 		void delete_all_source()
 		{
-			libsource.clear();
 			resource.clear();
-			totalcode.clear();
 			return;
 		}
 		void input_file(std::string filename)
@@ -90,7 +95,7 @@ class resource_file
 			std::ifstream fin(filename,std::ios::binary);
 			if(fin.fail())
 			{
-				std::cout<<">>[Resource] cannot open file \'"<<filename<<"\' ."<<std::endl;
+				std::cout<<">> [Resource] cannot open file \'"<<filename<<"\' ."<<std::endl;
 				fin.close();
 				return;
 			}
@@ -106,33 +111,36 @@ class resource_file
 		}
 		void load_lib_file()
 		{
-			libsource.clear();
-			/*
-			ifstream lib files here
-			*/
+			resource.clear();
+			for(int i=0;i<9;++i)
+			{
+				std::ifstream fin(lib_filename[i],std::ios::binary);
+				if(fin.fail())
+					std::cout<<">> [Resource] fatal error: lack \'"<<lib_filename[i]<<"\'"<<std::endl;
+				else
+				{
+					char c=0;
+					while(!fin.eof())
+					{
+						c=fin.get();
+						if(fin.eof())
+							break;
+						resource.push_back(c);
+					}
+				}
+				fin.close();
+			}
 			return;
 		}
 		std::list<char>& get_source()
 		{
-			totalcode.clear();
-			for(std::list<char>::iterator i=libsource.begin();i!=libsource.end();++i)
-				totalcode.push_back(*i);
-			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
-				totalcode.push_back(*i);
-			return totalcode;
+			return resource;
 		}
-		void print_resource(bool withlib)
+		void print_resource()
 		{
-			std::list<char> tmp;
-			if(withlib)
-				for(std::list<char>::iterator i=libsource.begin();i!=libsource.end();++i)
-					tmp.push_back(*i);
-			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
-				tmp.push_back(*i);
-			
 			int line=1;
 			std::cout<<line<<"\t";
-			for(std::list<char>::iterator i=tmp.begin();i!=tmp.end();++i)
+			for(std::list<char>::iterator i=resource.begin();i!=resource.end();++i)
 			{
 				if(32<=*i)
 					std::cout<<*i;
@@ -282,7 +290,7 @@ class nasal_lexer
 					if(!check_numerable_string(token_str))
 					{
 						++error;
-						std::cout<<">>[Lexer-error] line "<<line<<": "<<token_str<<" is not a numerable string."<<std::endl;
+						std::cout<<">> [Lexer-error] line "<<line<<": "<<token_str<<" is not a numerable string."<<std::endl;
 						token_str="0";
 					}
 					token new_token;
@@ -333,7 +341,7 @@ class nasal_lexer
 					if(ptr==res.end() || *ptr!=str_begin)
 					{
 						++error;
-						std::cout<<">>[Lexer-error] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
+						std::cout<<">> [Lexer-error] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
 						--ptr;
 					}
 					else
@@ -378,11 +386,11 @@ class nasal_lexer
 				else
 				{
 					++error;
-					std::cout<<">>[Lexer-error] line "<<line<<": unknown char."<<std::endl;
+					std::cout<<">> [Lexer-error] line "<<line<<": unknown char."<<std::endl;
 					++ptr;
 				}
 			}
-			std::cout<<">>[Pre-lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">> [Pre-lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		void generate_detail_token()
@@ -484,13 +492,13 @@ class nasal_lexer
 					else
 					{
 						++error;
-						std::cout<<">>[Lexer-error] line "<<detail_token.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
+						std::cout<<">> [Lexer-error] line "<<detail_token.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
 						detail_token.type=__unknown_operator;
 					}
 					detail_token_list.push_back(detail_token);
 				}
 			}
-			std::cout<<">>[Detail-lexer] complete generating. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">> [Detail-lexer] complete generating. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		int get_error()

@@ -62,7 +62,6 @@ enum parse_token_type
 	__definition,
 	__function,__conditional
 };
-
 void print_parse_token(int type)
 {
 	std::string context="";
@@ -189,10 +188,9 @@ enum parse_error_type
 
 	ternary_operator_lack_colon, // lack ':'
 };
-
 void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 {
-	std::string error_info_head=">>[Parse-error] line ";
+	std::string error_info_head=">> [Parse-error] line ";
 	std::string warning_info_head=">> [Parse-warning] line ";
 	switch(error_type)
 	{
@@ -312,5 +310,30 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 	}
 	return;
 }
+
+enum scalar_type
+{
+	scalar_nil,
+	scalar_number=1,
+	scalar_string,
+	scalar_vector,
+	scalar_hash,
+	scalar_function
+};
+void print_scalar_type(const int type)
+{
+	switch(type)
+	{
+		case scalar_nil:      std::cout<<"nil";break;
+		case scalar_number:
+		case scalar_string:   std::cout<<"scalar";break;
+		case scalar_vector:   std::cout<<"vector";break;
+		case scalar_hash:     std::cout<<"hash";break;
+		case scalar_function: std::cout<<"function";break;
+		default:              std::cout<<"nil";break;
+	}
+	return;
+}
+
 
 #endif
