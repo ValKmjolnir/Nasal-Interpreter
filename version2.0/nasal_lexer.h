@@ -32,13 +32,14 @@
 		others: __unknown_operator
 */
 
-const std::string lib_filename[9]=
+const std::string lib_filename[10]=
 {
 	"lib/base.nas",
 	"lib/bits.nas",
 	"lib/io.nas",
 	"lib/math.nas",
 	"lib/readline.nas",
+	"lib/regex.nas",
 	"lib/sqlite.nas",
 	"lib/thread.nas",
 	"lib/unix.nas",
@@ -112,7 +113,7 @@ class resource_file
 		void load_lib_file()
 		{
 			resource.clear();
-			for(int i=0;i<9;++i)
+			for(int i=0;i<10;++i)
 			{
 				std::ifstream fin(lib_filename[i],std::ios::binary);
 				if(fin.fail())
