@@ -326,7 +326,7 @@ class nasal_lexer
 					++ptr;
 					if(ptr==res.end())
 						break;
-					while(*ptr!=str_begin && *ptr!='\n')
+					while(*ptr!=str_begin && ptr!=res.end())
 					{
 						token_str+=*ptr;
 						if(*ptr=='\\')

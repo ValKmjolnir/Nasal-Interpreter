@@ -179,7 +179,9 @@ enum parse_error_type
 	special_call_func_lack_colon,
 	call_func_lack_comma,
 	call_hash_lack_id,           // lack identifier when calling a hash
+	call_vector_wrong_comma,     // wrong use of comma like this: id[0,4:6,7,] (the last comma is incorrect here)
 	call_vector_lack_bracket,    // lack ']' when calling a vector
+	call_vector_wrong_token,     // get wrong token when calling a vector
 
 	vector_gen_lack_end,         // lack ',' or ')' when generating a vector
 	hash_gen_lack_id,            // lack identifier or string when generating a hash
@@ -273,8 +275,16 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			break;
 		case call_hash_lack_id:
 			std::cout<<error_info_head<<line<<": expect an identifier after \'.\' ."<<std::endl;break;
+		case call_vector_wrong_comma:
+			std::cout<<error_info_head<<line<<": expect a scalar after \',\' but get \']\' ."<<std::endl;
+			break;
 		case call_vector_lack_bracket:
 			std::cout<<error_info_head<<line<<": expect a \']\' here but get \'";
+			print_parse_token(error_token_type);
+			std::cout<<"\' ."<<std::endl;
+			break;
+		case call_vector_wrong_token:
+			std::cout<<error_info_head<<line<<": expect \':\' or ',' or ']' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;

@@ -872,6 +872,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 		default:
 			++error;
 			print_parse_error(error_begin_token_of_scalar,this_token.line,this_token.type);
+			this->push_token();
 			break;
 	}
 	this->get_token(); // check if there is a '(' or '[' or '{' after id
@@ -971,53 +972,59 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 			call_vector_node.set_node_line(this_token.line);
 			call_vector_node.set_node_type(__call_vector);
 			// there are many kinds of ways to call a vector
-			// such as: id[0] id[0:12] id[-2:0] id[2:] id[4,3,1,5,2]
-			abstract_syntax_tree tmp=calculation();
-			this->get_token();
-			if(this_token.type==__colon)
+			// such as: id[0] id[0:12] id[-2:0] id[2:] id[4,3,1,5,2] id[0,2,4:6]
+			while(this_token.type!=__right_bracket)
 			{
-				abstract_syntax_tree subvec_node;
-				
+				abstract_syntax_tree tmp=calculation();
 				this->get_token();
-				subvec_node.set_node_line(this_token.line);
-				subvec_node.set_node_type(__sub_vector);
-				subvec_node.add_children(tmp);
-				if(this_token.type!=__right_bracket)
+				if(this_token.type==__colon)
 				{
-					this->push_token();
-					subvec_node.add_children(calculation());
-				}
-				else
-					this->push_token();
-				call_vector_node.add_children(subvec_node);
-			}
-			else if(this_token.type==__comma)
-			{
-				call_vector_node.add_children(tmp);
-				while(this_token.type!=__right_bracket)
-				{
-					call_vector_node.add_children(calculation());
+					abstract_syntax_tree subvec_node;
+					subvec_node.set_node_line(this_token.line);
+					subvec_node.set_node_type(__sub_vector);
+					subvec_node.add_children(tmp);
 					this->get_token();
 					if((this_token.type!=__comma) && (this_token.type!=__right_bracket))
 					{
+						this->push_token();
+						subvec_node.add_children(calculation());
+					}
+					else
+						this->push_token();
+					call_vector_node.add_children(subvec_node);
+				}
+				else if(this_token.type==__comma)
+				{
+					call_vector_node.add_children(tmp);
+					this->get_token();
+					if(this_token.type==__right_bracket)
+					{
 						++error;
-						print_parse_error(call_vector_lack_bracket,this_token.line,this_token.type);
+						print_parse_error(call_vector_wrong_comma,this_token.line,this_token.type);
 						break;
 					}
+					else
+						this->push_token();
+					this->push_token();// push comma
 				}
-				this->push_token();
-			}
-			else if(this_token.type==__right_bracket)
-			{
-				this->push_token();
-				call_vector_node.add_children(tmp);
-			}
-			this->get_token();
-			if(this_token.type!=__right_bracket)
-			{
-				++error;
-				print_parse_error(call_vector_lack_bracket,this_token.line,this_token.type);
-				break;
+				else if(this_token.type==__right_bracket)
+				{
+					call_vector_node.add_children(tmp);
+					this->push_token();// push ']'
+				}
+				else
+				{
+					++error;
+					print_parse_error(call_vector_wrong_token,this_token.line,this_token.type);
+					break;
+				}
+				this->get_token();
+				if((this_token.type!=__comma) && (this_token.type!=__right_bracket))
+				{
+					++error;
+					print_parse_error(call_vector_lack_bracket,this_token.line,this_token.type);
+					break;
+				}
 			}
 			scalar_node.add_children(call_vector_node);
 		}
