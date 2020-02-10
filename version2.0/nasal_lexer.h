@@ -178,6 +178,48 @@ class nasal_lexer
 		std::list<token> token_list;
 		std::list<token> detail_token_list;
 		int error;
+		std::string utf8_clear(std::string tmp)
+		{
+			/*
+			0xxx xxxx 0x0  1 byte
+			110x xxxx 0xc0 2 byte
+			1110 xxxx 0xe0 3 byte
+			1111 0xxx 0xf0 4 byte
+			1111 10xx 0xf8 5 byte
+			1111 110x 0xfc 6 byte
+			bytes after it is:
+			10xx xxxx 0x80
+			
+			so utf-8 format is:
+			0xxxxxxx
+			110xxxxx 10xxxxxx
+			1110xxxx 10xxxxxx 10xxxxxx
+			11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+			1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+			*/
+			unsigned char utf8head[6]={0x0,0xc0,0xe0,0xf0,0xf8,0xfc};
+			std::string ret="";
+			for(int i=0;i<tmp.length();++i)
+			{
+				if(tmp[i]>=0)
+					ret+=tmp[i];
+				else
+				{
+					int utf8byte=0;
+					for(int j=5;j>=0;--j)
+						if((tmp[i] & utf8head[j])==utf8head[j])
+						{
+							utf8byte=j;
+							break;
+						}
+					for(int j=0;j<utf8byte;++j)
+						++i;
+					ret+='?';
+				}
+			}
+			return ret;
+		}
 	public:
 		/*
 		nasal_lexer();
@@ -350,7 +392,7 @@ class nasal_lexer
 						token new_token;
 						new_token.line=line;
 						new_token.type=__token_string;
-						new_token.str=token_str;
+						new_token.str=utf8_clear(token_str);
 						token_list.push_back(new_token);
 					}
 					++ptr;
