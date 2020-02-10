@@ -31,6 +31,7 @@ int main()
 		std::cin>>command;
 		if(command=="help")
 		{
+			std::cout<<">> be careful that this program does not support unicode(unicode will be set to \'?\')"<<std::endl;
 			std::cout<<">> [\'file\'] input a file."<<std::endl;
 			std::cout<<">> [cls   ] clear the screen."<<std::endl;
 			std::cout<<">> [del   ] clear the resource code."<<std::endl;

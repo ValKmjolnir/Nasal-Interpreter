@@ -321,7 +321,7 @@ void nasal_symbol_table::symbol_table_block_generate(abstract_syntax_tree& node)
                 this->symbol_table_block_generate(*i);
         }
     }
-    else if(node_type==__id)
+    else if((node_type==__id) || (node_type==__call_hash))
     {
         symbol_table_unit tmp;
         tmp.symbol_line=node.get_node_line();

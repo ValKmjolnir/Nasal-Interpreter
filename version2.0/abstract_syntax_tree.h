@@ -79,6 +79,13 @@ abstract_syntax_tree::abstract_syntax_tree(const abstract_syntax_tree& tmp)
 
 abstract_syntax_tree::~abstract_syntax_tree()
 {
+	node_type=__null_type;
+	line=0;
+	symbol_number=-1;
+	symbol_is_global=false;
+	var_number=0;
+	var_string.clear();
+	var_name.clear();
 	children.clear();
 	return;
 }
@@ -117,10 +124,10 @@ void abstract_syntax_tree::print_tree_block(const int n)
 		case __string: std::cout<<": "<<var_string;break;
 		case __id:
 		case __dynamic_id:
+		case __call_hash:
 			std::cout<<": "<<var_name<<" (sym_num:"<<symbol_number<<"["<<(symbol_is_global? "global":"local")<<"])";
 			break;
 		case __call_vector:
-		case __call_hash:
 		case __call_function:break;
 		default:break;
 	}
