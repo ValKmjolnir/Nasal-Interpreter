@@ -6,21 +6,28 @@ struct gc_unit
 	// collected: If gc collected this item,it'll be set to true.Otherwise it is false.
 	// elem:      Item that this unit stores
 	// refcnt:    Reference counter
-	bool collected;
+	bool         collected;
 	nasal_scalar elem;
-	int refcnt;
+	int          refcnt;
 	gc_unit()
 	{
 		collected=true;
-		//elem=0;
+		elem.set_clear();
 		refcnt=0;
 		return;
 	}
 	gc_unit(const gc_unit& tmp)
 	{
 		collected=tmp.collected;
-		//elem=tmp.elem;
-		refcnt=tmp.refcnt;
+		elem     =tmp.elem;
+		refcnt   =tmp.refcnt;
+		return;
+	}
+	void set_clear()
+	{
+		collected=true;
+		elem.set_clear();
+		refcnt=0;
 		return;
 	}
 };
@@ -61,7 +68,7 @@ class gc_manager
 			for(int i=0;i<memory_size;++i)
 				if((memory[i].refcnt<=0) && (!memory[i].collected))
 				{
-					memory[i].collected=true;
+					memory[i].set_clear();
 					free_space.push_back(i);
 					std::cout<<">> [Gc] collected ";
 					prt_hex(i);

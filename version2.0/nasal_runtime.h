@@ -5,6 +5,7 @@ class nasal_runtime
 {
     private:
         sym_hash_map global;
+        // local hash_map will be used when running
     public:
         nasal_runtime()
         {
@@ -18,14 +19,16 @@ class nasal_runtime
             nasal_gc.gc_init();
             return;
         }
-        void before_running_init()
+        void func_proc()
         {
-            global.set_clear();
-            nasal_gc.gc_init();
             return;
         }
         void main_proc(abstract_syntax_tree& root)
         {
+            // init
+            global.set_clear();
+            nasal_gc.gc_init();
+
             return;
         }
 };
