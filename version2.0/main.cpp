@@ -1,8 +1,8 @@
 #include "nasal.h"
 
-resource_file resource;
-nasal_lexer lexer;
-nasal_parse parser;
+resource_file        resource;
+nasal_lexer          lexer;
+nasal_parse          parser;
 abstract_syntax_tree libroot;
 abstract_syntax_tree root;
 abstract_syntax_tree linker;

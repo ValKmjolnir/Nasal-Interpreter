@@ -19,17 +19,33 @@ class nasal_function
 			function_root.set_clear();
 			return;
 		}
+		void set_clear()
+		{
+			local_scope.clear();
+			function_root.set_clear();
+			return;
+		}
+		nasal_function& operator=(const nasal_function& tmp)
+		{
+			local_scope=tmp.local_scope;
+			function_root=tmp.function_root;
+			return *this;
+		}
+		std::map<std::string,int>& get_local_scope()
+		{
+			return local_scope;
+		}
 };
 
 class nasal_scalar
 {
 	private:
 		int type;
-		std::string var_string;
-		double var_number;
-		std::vector<int> var_array;
+		std::string               var_string;
+		double                    var_number;
+		std::vector<int>          var_array;
 		std::map<std::string,int> var_hash;
-		nasal_function var_func;
+		nasal_function            var_func;
 	public:
 		nasal_scalar()
 		{
@@ -45,8 +61,9 @@ class nasal_scalar
 			type=tmp.type;
 			var_string=tmp.var_string;
 			var_number=tmp.var_number;
-			var_array=tmp.var_array;
-			var_hash=tmp.var_hash;
+			var_array =tmp.var_array;
+			var_hash  =tmp.var_hash;
+			var_func  =tmp.var_func;
 			return;
 		}
 		nasal_scalar& operator=(const nasal_scalar& tmp)
@@ -54,8 +71,9 @@ class nasal_scalar
 			type=tmp.type;
 			var_string=tmp.var_string;
 			var_number=tmp.var_number;
-			var_array=tmp.var_array;
-			var_hash=tmp.var_hash;
+			var_array =tmp.var_array;
+			var_hash  =tmp.var_hash;
+			var_func  =tmp.var_func;
 			return *this;
 		}
 		void set_clear()
@@ -65,6 +83,7 @@ class nasal_scalar
 			var_number=0;
 			var_array.clear();
 			var_hash.clear();
+			var_func.set_clear();
 			return;
 		}
 		void set_type(const int tmp_type)
@@ -96,8 +115,8 @@ class nasal_scalar
 				var_hash[member_name]=addr;
 			return;
 		}
-		int get_type()          {return type;}
-		double get_number()     {return var_number;}
+		int         get_type()  {return type;}
+		double      get_number(){return var_number;}
 		std::string get_string(){return var_string;}
 };
 
