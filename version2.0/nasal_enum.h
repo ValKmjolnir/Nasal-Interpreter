@@ -22,7 +22,8 @@ void print_lexer_token(int type)
 	return;
 }
 
-enum parse_token_type
+// parse_gen_type include enums for parser and ast
+enum parse_gen_type
 {
 	__stack_end=1,
 	__cmp_equal,__cmp_not_equal,__cmp_less,__cmp_less_or_equal,__cmp_more,__cmp_more_or_equal,
@@ -106,6 +107,60 @@ void print_parse_token(int type)
 		
 		case __unknown_operator:  context="unknown_operator";break;
 		
+		case __var:               context="var ";      break;
+		case __func:              context="func ";     break;
+		case __continue:          context="continue";  break;
+		case __break:             context="break";     break;
+		case __for:               context="for";       break;
+		case __forindex:          context="forindex";  break;
+		case __foreach:           context="foreach ";  break;
+		case __while:             context="while";     break;
+		case __if:                context="if ";       break;
+		case __elsif:             context="elsif ";    break;
+		case __else:              context="else ";     break;
+		case __return:            context="return ";   break;
+		case __nil:               context="nil";       break;
+		
+		case __id:                context="id";        break;
+		case __dynamic_id:        context="id...";     break;
+		case __number:            context="num";       break;
+		case __string:            context="str";       break;
+		
+		default:                  context="undefined";   break;
+	}
+	std::cout<<context;
+	return;
+}
+void print_ast_type(int type)
+{
+	std::string context="";
+	switch(type)
+	{
+		case __cmp_equal:         context=" == "; break;
+		case __cmp_not_equal:     context=" != "; break;
+		case __cmp_less:          context=" < ";  break;
+		case __cmp_less_or_equal: context=" <= "; break;
+		case __cmp_more:          context=" > ";  break;
+		case __cmp_more_or_equal: context=" >= "; break;
+		
+		case __and_operator:      context=" and ";break;
+		case __or_operator:       context=" or "; break;
+		case __nor_operator:      context=" ! ";  break;
+		case __add_operator:      context=" + ";  break;
+		case __sub_operator:      context=" - ";  break;
+		case __mul_operator:      context=" * ";  break;
+		case __div_operator:      context=" / ";  break;
+		case __link_operator:     context=" ~ ";  break;
+		
+		case __equal:             context=" = ";  break;
+		case __add_equal:         context=" += "; break;
+		case __sub_equal:         context=" -= "; break;
+		case __mul_equal:         context=" *= "; break;
+		case __div_equal:         context=" /= "; break;
+		case __link_equal:        context=" ~= "; break;
+		
+		case __ques_mark:         context="?";    break;
+
 		case __var:               context="var ";      break;
 		case __func:              context="func ";     break;
 		case __continue:          context="continue";  break;
@@ -323,8 +378,8 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 
 enum scalar_type
 {
-	scalar_nil,
-	scalar_number=1,
+	scalar_nil=0,
+	scalar_number,
 	scalar_string,
 	scalar_vector,
 	scalar_hash,
@@ -344,6 +399,5 @@ void print_scalar_type(const int type)
 	}
 	return;
 }
-
 
 #endif

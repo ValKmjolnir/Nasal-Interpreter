@@ -102,7 +102,6 @@ void nasal_parse::print_detail_token()
 			std::cout<<std::endl<<line<<"\t"<<indent;
 		}
 		print_parse_token(tmp.top().type);
-
 		if(tmp.top().type==__left_brace)
 			indent+=' ';
 		tmp.pop();

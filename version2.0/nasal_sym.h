@@ -25,6 +25,7 @@ class sym_hash_map
 			for(std::map<std::string,int>::iterator i=sym_map.begin();i!=sym_map.end();++i)
 				nasal_gc.reference_delete(i->second);
 			sym_map.clear();
+			nasal_gc.gc_scanner();
 			return;
 		}
         void set_clear()

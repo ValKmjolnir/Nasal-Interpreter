@@ -106,7 +106,7 @@ void abstract_syntax_tree::print_tree_block(const int n)
 	for(int i=0;i<n;++i)
 		__str+="| ";
 	std::cout<<__str;
-	print_parse_token(node_type);
+	print_ast_type(node_type);
 	switch(node_type)
 	{
 		case __number:  std::cout<<": "<<var_number;break;
