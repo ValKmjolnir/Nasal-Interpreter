@@ -1,14 +1,35 @@
 #ifndef __NASAL_SCALAR_H__
 #define __NASAL_SCALAR_H__
 
+class nasal_function
+{
+	private:
+		std::map<std::string,int> local_scope;
+		abstract_syntax_tree function_root;
+	public:
+		nasal_function()
+		{
+			local_scope.clear();
+			function_root.set_clear();
+			return;
+		}
+		~nasal_function()
+		{
+			local_scope.clear();
+			function_root.set_clear();
+			return;
+		}
+};
+
 class nasal_scalar
 {
 	private:
 		int type;
 		std::string var_string;
 		double var_number;
-		std::vector<nasal_scalar> var_array;
-		std::map<std::string,nasal_scalar> var_hash;
+		std::vector<int> var_array;
+		std::map<std::string,int> var_hash;
+		nasal_function var_func;
 	public:
 		nasal_scalar()
 		{
@@ -60,6 +81,19 @@ class nasal_scalar
 		void set_string(const std::string& tmp_str)
 		{
 			var_string=tmp_str;
+			return;
+		}
+		void vector_add_new_member(const int addr)
+		{
+			var_array.push_back(addr);
+			return;
+		}
+		void hash_add_new_member(const std::string member_name,const int addr)
+		{
+			if(var_hash.find(member_name)!=var_hash.end())
+				std::cout<<">> [Runtime] "<<member_name<<" exists."<<std::endl;
+			else
+				var_hash[member_name]=addr;
 			return;
 		}
 		int get_type()          {return type;}
