@@ -9,12 +9,17 @@
 //#include <thread>
 #include <list>
 #include <stack>
+#include <vector>
+#include <map>
 
-#include "numeral_misc.h"
+#include "nasal_misc.h"
 #include "nasal_enum.h"
-#include "abstract_syntax_tree.h"
+#include "nasal_ast.h"
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
-#include "nasal_symbol_table.h"
+#include "nasal_scalar.h"
+#include "nasal_gc.h"
+#include "nasal_sym.h"
+#include "nasal_runtime.h"
 
 #endif
