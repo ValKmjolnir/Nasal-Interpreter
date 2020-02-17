@@ -221,3 +221,343 @@ void abstract_syntax_tree::merge_children(abstract_syntax_tree& tmp)
 }
 
 #endif
+/*
+examples of each type of sub-tree
+
+ast begins in root node:
+	root
+		statement_1
+		statement_2
+...
+
+source code:
+0xdeadbeef;
+'str';
+"str";
+ast:
+	root
+		num: 3.73593e+009
+		str: str
+		str: str
+
+source code:
+1+2*(1-3)/4~'str';
+ast:
+	root
+		~
+			+
+			num: 1
+			/
+				*
+				num: 2
+				-
+					num: 1
+					num: 3
+				num:4
+			str: str
+
+source code:
+var id=1;
+ast:
+	root
+		definition
+			id: id
+			num: 1
+
+source code:
+var (id1,id2,id3)=(1,2,3);
+(var id1,id2,id3)=(1,2,3);
+ast:
+	root
+		definition
+			identifiers
+				id: id1
+				id: id2
+				id: id3
+			scalars
+				num: 1
+				num: 2
+				num: 3
+
+source code:
+var (id1,id2,id3)=[1,2,3];
+(var id1,id2,id3)=[1,2,3];
+ast:
+	root
+		definition
+			identifiers
+				id: id1
+				id: id2
+				id: id3
+			vector
+				num: 1
+				num: 2
+				num: 3
+
+source code:
+(id1,id2,id3)=(1,2,3);
+ast:
+	root
+		=
+			scalars
+				id: id1
+				id: id2
+				id: id3
+			scalars
+				num: 1
+				num: 2
+				num: 3
+
+source code:
+(id1[0],id2,id3)=[1,2,3];
+ast:
+	root
+		=
+			scalars
+				id: id1
+					call_vector
+						num: 0
+				id: id2
+				id: id3
+			vector
+				num: 1
+				num: 2
+				num: 3
+
+source code:
+id.call_hs(call_f)[call_vec][subvec1:subvec2,subvec3];
+ast:
+	root
+		id: id
+			call_hash: call_hs
+			call_function
+				id: call_f
+			call_vector
+				id: call_vec
+			call_vector
+				sub_vector
+					id: subvec1
+					id: subvec2
+				id: subvec3
+
+source code:
+id.id.id.id.id.id.id.id;
+ast:
+	root
+		id: id
+		call_hash: id
+		call_hash: id
+		call_hash: id
+		call_hash: id
+		call_hash: id
+		call_hash: id
+		call_hash: id
+
+source code:
+function(a,b,c,d,e);
+function(func a);
+function(func a());
+ast:
+	root
+		id: function
+			call_function
+				id: a
+				id: b
+				id: c
+				id: d
+				id: e
+		id: function
+			call_function
+				id: a
+		id: function
+			call_function
+				id: a
+					call_function
+
+source code:
+function(
+	a,
+	b,
+	func{print("hello");}
+);
+ast:
+	id: function
+		call_function
+			id: a
+			id: b
+			function
+				parameters
+				block
+					id: print
+						call_function
+							str: hello
+
+source code:
+function(a:1,b:2,c:3,);
+ast:
+	root
+		id: function
+			call_function
+				special_parameter
+					id: a
+					num: 1
+				special_parameter
+					id: b
+					num: 2
+				special_parameter
+					id: c
+					num: 3
+
+source code:
+while(id)
+{
+	fun();
+	var a=1;
+	var b=2;
+}
+ast:
+	root
+		while
+			id: id
+			block
+				id: func
+					call_function
+				definition
+					id: 1
+					num: 1
+				definition
+					id: b
+					num: 2
+
+source code:
+for(;;){}
+ast:
+	root
+		for
+			null_type
+			null_type
+			null_type
+			block
+
+source code:
+for(var i=1;i<100;i+=1){}
+ast:
+	root
+		for
+			definition
+				id: i
+				num: 1
+			<
+				id: i
+				num: 100
+			+=
+				id: i
+				num: 1
+			block
+
+source code:
+foreach(var i;[0,1,2]){}
+forindex(var i;[0,1,2]){}
+ast:
+	root
+		foreach
+			id: i
+			vector
+				num: 0
+				num: 1
+				num: 2
+			block
+		forindex
+			id: i
+			vector
+				num: 0
+				num: 1
+				num: 2
+			block
+
+source code:
+if(condition_1)
+{
+}
+else if(condition_2)
+{
+}
+else
+{
+}
+ast:
+	root
+		conditional
+			if
+				id: condition_1
+				block
+			else
+				block
+					if
+						id: condition_2
+						block
+					else
+						block
+
+source code:
+if(condition_1)
+{
+}
+elsif(condition_2)
+{
+}
+elsif(condition_3)
+{
+}
+ast:
+	root
+		conditional
+			if
+				id: condition_1
+				block
+			elsif
+				id: condition_2
+				block
+			elsif
+				id: condition_3
+				block
+
+source code:
+var function=func{};
+ast:
+	root
+		definition
+			id: function
+			function
+				parameters
+				block
+
+source code:
+var function=func(x,y,dyn...){};
+ast:
+	root
+		definition
+			id: function
+			function
+				parameters
+					id: x
+					id: y
+					id...: dyn
+				block
+
+source code:
+var function=func(x=2,y=1){};
+ast:
+	root
+		definition
+			id: function
+			function
+				parameters
+					default_parameter
+						id: x
+						num: 2
+					default_parameter
+						id: y
+						num: 1
+					block
+*/
