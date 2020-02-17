@@ -257,6 +257,34 @@ ast:
 			str: str
 
 source code:
+var a=cd? 1:0;
+ast:
+	root
+		definition
+			id: a
+			?
+				id: cd
+				num: 1
+				num: 0
+
+source code:
+var h={a:1,b:2,c:'3',};
+ast:
+	root
+		definition
+			id: h
+			hash
+				hash_member
+					id: a
+					num: 1
+				hash_member
+					id: b
+					num: 2
+				hash_member
+					id: c
+					str: 3
+
+source code:
 var id=1;
 ast:
 	root
@@ -560,4 +588,132 @@ ast:
 						id: y
 						num: 1
 					block
+
+source code:
+var function=func(args...)
+{
+	if(size(args)<3)
+	{
+		print("error");
+		return 0;
+	}
+	if(args[0]==args[1] or args[1]==args[2])
+	{
+		return args[0]*args[1]*args[2];
+	}
+	elsif(args[2]>args[1])
+	{
+		return -1;
+	}
+	for(var i=0;i<size(args);i+=1)
+	{
+		if(args[i]>100)
+			break;
+		else if(args[i]<0)
+			return args[i];
+	}
+	return 0;
+}
+ast:
+	root
+		definition
+			id: function
+			function
+				parameters
+					id...: args
+				block
+					conditional
+						if
+							<
+								id: size
+									call_function
+										id: args
+								num: 3
+							block
+								id: print
+									call_function
+										str: error
+								return
+									num: 0
+					conditional
+						if
+							or
+								==
+									id: args
+										call_vector
+											num: 0
+									id: args
+										call_vector
+											num: 1
+								==
+									id: args
+										call_vector
+											num: 1
+									id: args
+										call_vector
+											num: 2
+							block
+								return
+									*
+										*
+											id: args
+												call_vector
+													num: 0
+											id: args
+												call_vector
+													num: 1
+										id: args
+											call_vector
+												num: 2
+						elsif
+							>
+								id: args
+									call_vector
+										num: 2
+								id: args
+									call_vector
+										num: 1
+							block
+								return
+									-
+										num: 0
+										num: 1
+					for
+						definition
+							id: i
+							num: 0
+						<
+							id: i
+							id: size
+								call_function
+									id: args
+						+=
+							id: i
+							num: 1
+						block
+							conditional
+								if
+									>
+										id: args
+											call_vector
+												id: i
+										num: 100
+									block
+										break
+								else
+									block
+										conditional
+											if
+												<
+													id: args
+														call_vector
+															id: i
+													num: 0
+												block
+													return
+														id: args
+															call_vector
+																id: i
+					return
+						num: 0
 */
