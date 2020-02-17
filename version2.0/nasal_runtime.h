@@ -28,7 +28,6 @@ class nasal_runtime
             // init
             global.set_clear();
             nasal_gc.gc_init();
-
             return;
         }
 };

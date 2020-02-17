@@ -26,6 +26,8 @@ void print_lexer_token(int type)
 enum parse_gen_type
 {
 	__stack_end=1,
+
+	// operators
 	__cmp_equal,__cmp_not_equal,__cmp_less,__cmp_less_or_equal,__cmp_more,__cmp_more_or_equal,
 	// == != < <= > >= 
 	__and_operator,__or_operator,__nor_operator,__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,
@@ -35,33 +37,30 @@ enum parse_gen_type
 	__left_brace,__right_brace,                    // {}
 	__left_bracket,__right_bracket,                // []
 	__left_curve,__right_curve,                    // ()
-	__semi,__comma,__colon,__dot,__ques_mark,       // ; , : . ?
+	__semi,__comma,__colon,__dot,__ques_mark,      // ; , : . ?
 	__unknown_operator,
-	// operators
+	
+	// reserve words
 	__var,__func,__return,__nil,
 	__if,__elsif,__else,
 	__continue,__break,
 	__for,__forindex,__foreach,__while,
-	// reserve words
-	__number,__string,__id,__dynamic_id,
+	
 	// basic scalar type: number string identifier dynamic_identifier
+	__number,__string,__id,__dynamic_id,
 	
 	// abstract_syntax_tree type below
 	// abstract_syntax_tree also uses the types above, such as operators
 	__root,
 	__null_type,
-	__multi_id,
-	__multi_scalar,
-	__parameters,
-	__special_para,
-	__defult_parameter,
-	__vector,__hash,
-	__hash_member,
-	__sub_vector,
-	__call_function,__call_vector,__call_hash,
+	__multi_id,__multi_scalar,
+	__parameters,__special_parameter,__default_parameter,
+	__vector,__sub_vector,__call_vector,
+	__hash,__hash_member,__call_hash,
+	__function,__call_function,
 	__normal_statement_block,
 	__definition,
-	__function,__conditional
+	__conditional
 };
 void print_parse_token(int type)
 {
@@ -180,26 +179,26 @@ void print_ast_type(int type)
 		case __number:            context="num";       break;
 		case __string:            context="str";       break;
 		
-		case __root:              context="root";        break;
-		case __null_type:         context="null_type";   break;
-		case __multi_id:          context="ids";         break;
-		case __multi_scalar:      context="scalars";     break;
-		case __parameters:        context="paras";       break;
-		case __special_para:      context="id:scalar";   break;
-		case __defult_parameter:  context="para=scalar"; break;
-		case __vector:            context="vector";      break;
-		case __hash:              context="hash";        break;
-		case __hash_member:       context="hash_member"; break;
-		case __sub_vector:        context="num:num";     break;
-		case __call_function:     context="call_func";   break;
-		case __call_vector:       context="call_vector"; break;
-		case __call_hash:         context="call_hash";   break;
-		case __normal_statement_block:context="block";   break;
-		case __definition:        context="def";         break;
-		case __function:          context="function";    break;
-		case __conditional:       context="conditional"; break;
+		case __root:              context="root";              break; // root of the ast that parser generates
+		case __null_type:         context="null_type";         break; // type of the node of the tree is unknown
+		case __multi_id:          context="identifiers";       break; // id,id,id,id                |often used in multi-definition or multi-assignment
+		case __multi_scalar:      context="scalars";           break; // scalar,scalar,scalar,scalar|often used in multi-definition or multi-assignment
+		case __parameters:        context="parameters";        break; // parameter list
+		case __special_parameter: context="special_parameter"; break; // identifier:scalar          |special way of calling a function
+		case __default_parameter: context="default_parameter"; break; // identifier=scalar          |default parameter when generating a new function
+		case __vector:            context="vector";            break; // vector
+		case __sub_vector:        context="sub_vector";        break; // the same as subvec() but more flexible to use
+		case __call_vector:       context="call_vector";       break; // call vector member
+		case __hash:              context="hash";              break; // hash
+		case __hash_member:       context="hash_member";       break; // hash member
+		case __call_hash:         context="call_hash";         break; // call hash member
+		case __function:          context="function";          break; // function
+		case __call_function:     context="call_function";     break; // call function
+		case __normal_statement_block:context="block";         break; // block
+		case __definition:        context="definition";        break; // definition
+		case __conditional:       context="conditional";       break; // if-else
 		
-		default:                  context="undefined";   break;
+		default:                  context="undefined";         break;
 	}
 	std::cout<<context;
 	return;
@@ -227,12 +226,13 @@ enum parse_error_type
 
 	error_begin_token_of_scalar, // in scalar_generate() 
 	
+	default_dynamic_parameter,   // default parameter should not be dynamic 
 	parameter_lack_part,         // parameter lack a ')' or identifier
 	parameter_lack_curve,        // parameter lack a ',' or ')'
 
 	special_call_func_lack_id,
 	special_call_func_lack_colon,
-	call_func_lack_comma,
+	call_func_lack_comma,        // lack comma when giving parameters to a function
 	call_hash_lack_id,           // lack identifier when calling a hash
 	call_vector_wrong_comma,     // wrong use of comma like this: id[0,4:6,7,] (the last comma is incorrect here)
 	call_vector_lack_bracket,    // lack ']' when calling a vector
@@ -308,6 +308,8 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<"\' ."<<std::endl;
 			break;
 		
+		case default_dynamic_parameter:
+			std::cout<<error_info_head<<line<<": dynamic parameter should not have a default value."<<std::endl;break;
 		case parameter_lack_part:
 			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here when generating parameter_list."<<std::endl;break;
 		case parameter_lack_curve:

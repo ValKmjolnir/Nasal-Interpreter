@@ -577,7 +577,10 @@ abstract_syntax_tree nasal_parse::multi_scalar_assignment()
 	}
 	this->get_token();
 	if(this_token.type!=__left_curve)
+	{
+		this->push_token();
 		back_multi_scalar_node=scalar_generate();
+	}
 	else
 	{
 		this->push_token();
@@ -901,7 +904,7 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 							abstract_syntax_tree id_node;
 							this->get_token();
 							special_para_node.set_node_line(this_token.line);
-							special_para_node.set_node_type(__special_para);
+							special_para_node.set_node_type(__special_parameter);
 							if(this_token.type!=__id)
 							{
 								++error;
@@ -1156,6 +1159,7 @@ abstract_syntax_tree nasal_parse::function_generate()
 			// check identifier
 			abstract_syntax_tree parameter;
 			this->get_token();
+			int parameter_type=this_token.type;
 			if(this_token.type==__id)
 			{
 				parameter.set_node_line(this_token.line);
@@ -1184,12 +1188,21 @@ abstract_syntax_tree nasal_parse::function_generate()
 			this->get_token();
 			if(this_token.type==__equal)
 			{
-				abstract_syntax_tree default_parameter;
-				default_parameter.set_node_line(this_token.line);
-				default_parameter.set_node_type(__defult_parameter);
-				default_parameter.add_children(parameter);
-				default_parameter.add_children(calculation());
-				parameter=default_parameter;
+				if(parameter_type==__id)
+				{
+					abstract_syntax_tree default_parameter;
+					default_parameter.set_node_line(this_token.line);
+					default_parameter.set_node_type(__default_parameter);
+					default_parameter.add_children(parameter);
+					default_parameter.add_children(calculation());
+					parameter=default_parameter;
+				}
+				else
+				{
+					++error;
+					print_parse_error(default_dynamic_parameter,this_token.line,this_token.type);
+					break;
+				}
 			}
 			else
 				this->push_token();
