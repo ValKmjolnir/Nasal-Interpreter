@@ -779,13 +779,9 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 	// such as: -a=1; this is incorrect use.
 	if((this_token.type==__sub_operator) || (this_token.type==__nor_operator))
 	{
+		// unary calculation
 		calc_node.set_node_line(this_token.line);
 		calc_node.set_node_type(this_token.type);
-		abstract_syntax_tree null_node;
-		null_node.set_node_line(this_token.line);
-		null_node.set_node_type(__number);
-		null_node.set_var_number("0");
-		calc_node.add_children(null_node);
 		calc_node.add_children(scalar_generate());
 	}
 	else
@@ -806,11 +802,6 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 			calc_node.set_clear();
 			calc_node.set_node_line(this_token.line);
 			calc_node.set_node_type(this_token.type);
-			abstract_syntax_tree null_node;
-			null_node.set_node_line(this_token.line);
-			null_node.set_node_type(__number);
-			null_node.set_var_number("0");
-			calc_node.add_children(null_node);
 			calc_node.add_children(scalar_generate());
 		}
 		else
