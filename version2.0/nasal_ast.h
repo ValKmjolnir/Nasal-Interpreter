@@ -241,6 +241,30 @@ ast:
 		str: str
 
 source code:
+[0,1,2,3][0:2];
+ast:
+	root
+		vector:
+			num: 0
+			num: 1
+			num: 2
+			num: 3
+			call_vector
+				sub_vector
+					num: 0
+					num: 2
+
+source code:
+{hello:"world"}.hello;
+ast:
+	root
+		hash
+			hash_member
+				id: hello
+				str: world
+			call_hash: hello
+
+source code:
 1+2*(1-3)/4~'str';
 ast:
 	root
@@ -373,13 +397,13 @@ id.id.id.id.id.id.id.id;
 ast:
 	root
 		id: id
-		call_hash: id
-		call_hash: id
-		call_hash: id
-		call_hash: id
-		call_hash: id
-		call_hash: id
-		call_hash: id
+			call_hash: id
+			call_hash: id
+			call_hash: id
+			call_hash: id
+			call_hash: id
+			call_hash: id
+			call_hash: id
 
 source code:
 function(a,b,c,d,e);
@@ -435,6 +459,18 @@ ast:
 				special_parameter
 					id: c
 					num: 3
+
+source code:
+(func{print(1);})();
+ast:
+	root
+		function
+			parameters
+			block
+				id: print
+					call_function
+						num: 1
+			call_function
 
 source code:
 while(id)
