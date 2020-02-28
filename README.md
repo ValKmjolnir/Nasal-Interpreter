@@ -15,10 +15,6 @@ The interpreter is still in development.Anyone who interested in this could also
 # Lexical Analysis
   
 What do it's outputs look like?
-  
-> ( identifier   | engineTimer )
-
-> ( operator     | . )
 
 > ( identifier   | start )
 
@@ -31,8 +27,6 @@ What do it's outputs look like?
 > ( string       | Engine started )
 
 > ( operator     | ) )
-
-> ( operator     | ; )
 
 This is what it outputs.
 
@@ -90,8 +84,6 @@ You can try a calculator in __version 0.17~0.19__ !
 # Abstract Syntax Tree
 
 In __version 1.2__ the ast has been completed.
-
-But there are still some bugs inside.
 
 # Balloon script
 
