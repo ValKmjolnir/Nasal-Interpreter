@@ -17,9 +17,7 @@
 #include "nasal_ast.h"
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
-#include "nasal_scalar.h"
 #include "nasal_gc.h"
-#include "nasal_sym.h"
 #include "nasal_runtime.h"
 
 #endif

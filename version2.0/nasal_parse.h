@@ -799,6 +799,7 @@ abstract_syntax_tree nasal_parse::multive_calculation()
 		this->get_token();
 		if((this_token.type==__sub_operator) || (this_token.type==__nor_operator))
 		{
+			// unary calculation
 			calc_node.set_clear();
 			calc_node.set_node_line(this_token.line);
 			calc_node.set_node_type(this_token.type);
