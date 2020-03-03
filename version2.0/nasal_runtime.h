@@ -5,7 +5,7 @@ class nasal_runtime
 {
     private:
         // local hash_map will be used when running
-        sym_hash_map global_scope;
+        std::list<std::map<std::string,int> > global_scope;
         
         // see detail of each enum type in function error_interrupt(const int)
         enum runtime_error_type
@@ -14,26 +14,26 @@ class nasal_runtime
             __incorrect_head_of_func,
             __stack_overflow,
         };
-        void error_interrupt (const int);
-        void delete_total_scope(std::list<std::map<std::string,int> >&);
-        void delete_last_scope (std::list<std::map<std::string,int> >&);
-        void func_proc       (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
-        void call_identifier (abstract_syntax_tree&);
-        void calculation     (abstract_syntax_tree&);
-        void assignment      (abstract_syntax_tree&);
-        void definition      (abstract_syntax_tree&);
-        void loop            (abstract_syntax_tree&);
-        void conditional     (abstract_syntax_tree&);
+        void error_interrupt   (const int);
+        void vector_generation (abstract_syntax_tree&);
+        void hash_generation   (abstract_syntax_tree&);
+        void call_identifier   (abstract_syntax_tree&);
+        void calculation       (abstract_syntax_tree&);
+        void assignment        (abstract_syntax_tree&);
+        void definition        (abstract_syntax_tree&);
+        void loop_expr         (abstract_syntax_tree&);
+        void conditional       (abstract_syntax_tree&);
+        void func_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
     public:
         nasal_runtime()
         {
-            global_scope.set_clear();
+            global_scope.clear();
             nasal_gc.gc_init();
             return;
         }
         ~nasal_runtime()
         {
-            global_scope.set_clear();
+            global_scope.clear();
             nasal_gc.gc_init();
             return;
         }
@@ -56,24 +56,36 @@ void nasal_runtime::error_interrupt(const int type)
     return;
 }
 
-void nasal_runtime::delete_total_scope(std::list<std::map<std::string,int> >& scope)
+void nasal_runtime::vector_generation(abstract_syntax_tree& node)
 {
-    for(std::list<std::map<std::string,int> >::iterator i=scope.begin();i!=scope.end();++i)
-        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
-            nasal_gc.reference_delete(j->second);
-    scope.clear();
     return;
 }
-
-void nasal_runtime::delete_last_scope(std::list<std::map<std::string,int> >& scope)
+void nasal_runtime::hash_generation(abstract_syntax_tree& node)
 {
-    if(scope.empty())
-        return;
-    std::list<std::map<std::string,int> >::iterator iter=scope.end();
-    --iter;
-    for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-        nasal_gc.reference_delete(i->second);
-    scope.pop_back();
+    return;
+}
+void nasal_runtime::call_identifier(abstract_syntax_tree& node)
+{
+    return;
+}
+void nasal_runtime::calculation(abstract_syntax_tree& node)
+{
+    return;
+}
+void nasal_runtime::assignment(abstract_syntax_tree& node)
+{
+    return;
+}
+void nasal_runtime::definition(abstract_syntax_tree& node)
+{
+    return;
+}
+void nasal_runtime::loop_expr(abstract_syntax_tree& node)
+{
+    return;
+}
+void nasal_runtime::conditional(abstract_syntax_tree& node)
+{
     return;
 }
 
@@ -92,11 +104,11 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
             ;
         // only number or string
         else if(node_type==__id)
-            ;
+            this->call_identifier(*iter);
         else if(node_type==__vector)
-            ;
+            this->vector_generation(*iter);
         else if(node_type==__hash)
-            ;
+            this->hash_generation(*iter);
         else if(node_type==__function)
             ;
         else if(node_type==__add_operator  || node_type==__sub_operator ||
@@ -114,15 +126,7 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
             ;
         else if(node_type==__conditional)
             ;
-        else if(node_type==__while)
-            ;
-        else if(node_type==__for)
-            ;
-        else if(node_type==__foreach)
-            ;
-        else if(node_type==__forindex)
-            ;
-        else if(node_type==__return)
+        else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
             ;
     }
     return;
@@ -132,7 +136,7 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
 {
     time_t begin_time,end_time;
     begin_time=std::time(NULL);
-    global_scope.set_clear();
+    global_scope.clear();
     nasal_gc.gc_init();
     if(root.get_node_type()!=__root)
     {
@@ -146,16 +150,16 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
         if(node_type==__number || node_type==__string)
             ;
         else if(node_type==__id)
-        {
-            for(std::list<abstract_syntax_tree>::iterator i=iter->get_children().begin();i!=iter->get_children().end();++i)
-                ;
-        }
+            this->call_identifier(*iter);
         else if(node_type==__vector)
-            ;
+            this->vector_generation(*iter);
         else if(node_type==__hash)
-            ;
+            this->hash_generation(*iter);
         else if(node_type==__function)
-            ;
+        {
+            nasal_scalar temp_function;
+            temp_function.set_type(scalar_function);
+        }
         else if(node_type==__add_operator  || node_type==__sub_operator ||
                 node_type==__mul_operator  || node_type==__div_operator ||
                 node_type==__link_operator ||
@@ -171,13 +175,7 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
             ;
         else if(node_type==__conditional)
             ;
-        else if(node_type==__while)
-            ;
-        else if(node_type==__for)
-            ;
-        else if(node_type==__foreach)
-            ;
-        else if(node_type==__forindex)
+        else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
             ;
     }
 

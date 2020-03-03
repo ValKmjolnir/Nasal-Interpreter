@@ -333,7 +333,7 @@ class nasal_lexer
 					if(!check_numerable_string(token_str))
 					{
 						++error;
-						std::cout<<">> [Lexer-error] line "<<line<<": "<<token_str<<" is not a numerable string."<<std::endl;
+						std::cout<<">> [Lexer] line "<<line<<": "<<token_str<<" is not a numerable string."<<std::endl;
 						token_str="0";
 					}
 					token new_token;
@@ -384,7 +384,7 @@ class nasal_lexer
 					if(ptr==res.end() || *ptr!=str_begin)
 					{
 						++error;
-						std::cout<<">> [Lexer-error] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
+						std::cout<<">> [Lexer] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
 						--ptr;
 					}
 					else
@@ -429,7 +429,7 @@ class nasal_lexer
 				else
 				{
 					++error;
-					std::cout<<">> [Lexer-error] line "<<line<<": unknown char."<<std::endl;
+					std::cout<<">> [Lexer] line "<<line<<": unknown char."<<std::endl;
 					++ptr;
 				}
 			}
@@ -535,7 +535,7 @@ class nasal_lexer
 					else
 					{
 						++error;
-						std::cout<<">> [Lexer-error] line "<<detail_token.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
+						std::cout<<">> [Lexer] line "<<detail_token.line<<": unknown operator \'"<<i->str<<"\'."<<std::endl;
 						detail_token.type=__unknown_operator;
 					}
 					detail_token_list.push_back(detail_token);
