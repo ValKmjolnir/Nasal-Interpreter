@@ -6,45 +6,66 @@ class nasal_function
 	private:
 		std::list<std::map<std::string,int> > local_scope;
 		abstract_syntax_tree function_root;
+		int  parent_hash_addr;
 	public:
 		nasal_function();
-		~nasal_function();
 		void set_clear();
 		void set_statement_block(abstract_syntax_tree&);
-		nasal_function& operator=(const nasal_function&);
+		void set_parent_hash_addr(int);
 		std::list<std::map<std::string,int> >& get_local_scope();
 		abstract_syntax_tree& get_statement_block();
+		void deep_copy(nasal_function&);
+};
+
+class nasal_vector
+{
+	private:
+		std::vector<int> nas_array;
+	public:
+		void set_clear();
+		void vec_push(int);
+		int  vec_pop();
+		int  get_size();
+		void deep_copy(nasal_vector&);
+};
+
+class nasal_hash
+{
+	private:
+		std::map<std::string,int> nas_hash;
+		int self_addr;
+	public:
+		void set_self_addr(int);
+		void set_clear();
+		int  get_self_addr();
+		void hash_push(std::string,int);
+		void hash_pop(std::string);
+		void deep_copy(nasal_hash&);
 };
 
 class nasal_scalar
 {
 	private:
 		int type;
-		std::string               var_string;
-		double                    var_number;
-		std::vector<int>          var_array;
-		std::map<std::string,int> var_hash;
-		nasal_function            var_func;
+		std::string    var_string;
+		double         var_number;
+		nasal_vector   var_vector;
+		nasal_hash     var_hash;
+		nasal_function var_func;
 	public:
 		nasal_scalar();
 		nasal_scalar(const nasal_scalar&);
 		nasal_scalar& operator=(const nasal_scalar&);
-		void   set_clear();
-		void   set_type(int);
-		void   set_number(double);
-		void   set_string(std::string&);
-		void   vector_push(int);
-		int    vector_pop();
-		int    vector_get_member(int);
-		void   hash_add_new_member(std::string,int);
-		void   hash_delete_member(std::string);
-		int    hash_get_member(std::string);
-		int                        get_type();
-		double                     get_number();
-		std::string                get_string();
-		std::vector<int>&          get_vector();
-		std::map<std::string,int>& get_hash();
-		nasal_function&            get_function();
+		void set_clear();
+		void set_type(int);
+		void set_number(double);
+		void set_string(std::string&);
+		int             get_type();
+		double          get_number();
+		std::string     get_string();
+		nasal_vector&   get_vector();
+		nasal_hash&     get_hash();
+		nasal_function& get_function();
 };
 
 struct gc_unit
@@ -58,8 +79,7 @@ struct gc_unit
 	gc_unit()
 	{
 		collected=true;
-		elem.set_clear();
-		refcnt=0;
+		refcnt   =0;
 		return;
 	}
 	gc_unit(const gc_unit& tmp)
@@ -85,18 +105,6 @@ class gc_manager
 		std::list<int> free_space;
 		std::vector<gc_unit> memory;
 	public:
-		gc_manager()
-		{
-			memory.clear();
-			free_space.clear();
-			return;
-		}
-		~gc_manager()
-		{
-			memory.clear();
-			free_space.clear();
-			return;
-		}
 		void gc_init()
 		{
 			// this function must be called in class nasal_runtime
@@ -122,6 +130,10 @@ class gc_manager
 			memory[alloc_plc].refcnt=1;
 			return alloc_plc;
 		}
+		nasal_scalar& get_scalar(int addr)
+		{
+			return memory[addr].elem;
+		}
 		bool place_check(const int place)
 		{
 			// check if this place is in memory
@@ -140,42 +152,27 @@ class gc_manager
 			}
 			return;
 		}
-		void reference_delete(const int place)
+		void reference_delete(const int addr)
 		{
-			if(place<memory.size())
+			if(addr<memory.size())
 			{
-				--memory[place].refcnt;
-				if(!memory[place].refcnt)
+				--memory[addr].refcnt;
+				if(!memory[addr].refcnt)
 				{
-					memory[place].collected=true;
-					if(memory[place].elem.get_type()==scalar_vector)
-					{
-						int vec_size=memory[place].elem.get_vector().size();
-						for(int i=0;i<vec_size;++i)
-							reference_delete(memory[place].elem.get_vector()[i]);
-					}
-					else if(memory[place].elem.get_type()==scalar_hash)
-					{
-						std::map<std::string,int>::iterator begin_node=memory[place].elem.get_hash().begin();
-						std::map<std::string,int>::iterator end_node=memory[place].elem.get_hash().end();
-						for(std::map<std::string,int>::iterator iter=begin_node;iter!=end_node;++iter)
-							reference_delete(iter->second);
-					}
-					else if(memory[place].elem.get_type()==scalar_function)
-					{
-						std::list<std::map<std::string,int> >::iterator begin_scope=memory[place].elem.get_function().get_local_scope().begin();
-						std::list<std::map<std::string,int> >::iterator end_scope=memory[place].elem.get_function().get_local_scope().end();
-						for(std::list<std::map<std::string,int> >::iterator scope_iter=begin_scope;scope_iter!=end_scope;++scope_iter)
-							for(std::map<std::string,int>::iterator i=scope_iter->begin();i!=scope_iter->end();++i)
-								reference_delete(i->second);
-					}
-					memory[place].elem.set_clear();
+					memory[addr].collected=true;
+					if(memory[addr].elem.get_type()==scalar_vector)
+						memory[addr].elem.get_vector().set_clear();
+					else if(memory[addr].elem.get_type()==scalar_hash)
+						memory[addr].elem.get_hash().set_clear();
+					else if(memory[addr].elem.get_type()==scalar_function)
+						memory[addr].elem.get_function().set_clear();
+					memory[addr].elem.set_clear();
 				}
 			}
 			else
 			{
-				std::cout<<">> [Gc] fatal error: unexpected memory place ";
-				prt_hex(place);
+				std::cout<<">> [Gc] fatal error: unexpected memory address: ";
+				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
 			}
 			return;
@@ -209,20 +206,17 @@ gc_manager nasal_gc;
 
 nasal_function::nasal_function()
 {
-	local_scope.clear();
-	function_root.set_clear();
-	return;
-}
-nasal_function::~nasal_function()
-{
-	local_scope.clear();
-	function_root.set_clear();
+	parent_hash_addr=-1;
 	return;
 }
 void nasal_function::set_clear()
 {
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+			nasal_gc.reference_delete(i->second);
 	local_scope.clear();
 	function_root.set_clear();
+	parent_hash_addr=-1;
 	return;
 }
 void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
@@ -230,11 +224,10 @@ void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 	function_root=func_block;
 	return;
 }
-nasal_function& nasal_function::operator=(const nasal_function& tmp)
+void nasal_function::set_parent_hash_addr(int addr)
 {
-	local_scope=tmp.local_scope;
-	function_root=tmp.function_root;
-	return *this;
+	parent_hash_addr=addr;
+	return;
 }
 std::list<std::map<std::string,int> >& nasal_function::get_local_scope()
 {
@@ -244,14 +237,119 @@ abstract_syntax_tree& nasal_function::get_statement_block()
 {
 	return function_root;
 }
+void nasal_function::deep_copy(nasal_function& tmp)
+{
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+			nasal_gc.reference_delete(i->second);
+	local_scope=tmp.local_scope;
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+			if(i->first!="me")
+				nasal_gc.reference_add(i->second);
+	if(!local_scope.empty())
+	{
+		std::list<std::map<std::string,int> >::iterator begin_iter=local_scope.begin();
+		if(begin_iter->find("me")!=begin_iter->end())
+		{
+			if(parent_hash_addr>=0)
+			{
+				(*begin_iter)["me"]=parent_hash_addr;
+				nasal_gc.reference_add(parent_hash_addr);
+			}
+			else
+				begin_iter->erase("me");
+		}
+	}
+	function_root=tmp.function_root;
+	return;
+}
+
+void nasal_vector::set_clear()
+{
+	for(int i=0;i<nas_array.size();++i)
+		nasal_gc.reference_delete(nas_array[i]);
+	std::vector<int> vec_for_swap;
+	nas_array.swap(vec_for_swap);
+	return;
+}
+void nasal_vector::vec_push(int addr)
+{
+	nasal_gc.reference_add(addr);
+	nas_array.push_back(addr);
+	return;
+}
+int nasal_vector::vec_pop()
+{
+	int ret=nas_array.back();
+	nas_array.pop_back();
+	return ret;
+}
+int nasal_vector::get_size()
+{
+	return nas_array.size();
+}
+void nasal_vector::deep_copy(nasal_vector& tmp)
+{
+	for(int i=0;i<tmp.nas_array.size();++i)
+	{
+		int tmp_type=nasal_gc.get_scalar(nas_array[i]).get_type();
+		// unfinished
+	}
+	return;
+}
+
+void nasal_hash::set_self_addr(int addr)
+{
+	// when creating a new hash,gc must give an address to this hash
+	self_addr=addr;
+	return;
+}
+void nasal_hash::set_clear()
+{
+	self_addr=-1;
+	for(std::map<std::string,int>::iterator i=nas_hash.begin();i!=nas_hash.end();++i)
+		nasal_gc.reference_delete(i->second);
+	return;
+}
+int nasal_hash::get_self_addr()
+{
+	return self_addr;
+}
+void nasal_hash::hash_push(std::string member_name,int addr)
+{
+	if(nas_hash.find(member_name)==nas_hash.end())
+	{
+		nas_hash[member_name]=addr;
+		if(nasal_gc.place_check(addr) && nasal_gc.get_scalar(addr).get_type()==scalar_function)
+			nasal_gc.get_scalar(addr).get_function().set_parent_hash_addr(this->get_self_addr());
+	}
+	return;
+}
+void nasal_hash::hash_pop(std::string member_name)
+{
+	if(nas_hash.find(member_name)!=nas_hash.end())
+	{
+		nasal_gc.reference_delete(nas_hash[member_name]);
+		nas_hash.erase(member_name);
+	}
+	return;
+}
+void nasal_hash::deep_copy(nasal_hash& tmp)
+{
+	for(std::map<std::string,int>::iterator i=tmp.nas_hash.begin();i!=tmp.nas_hash.end();++i)
+	{
+		int tmp_type=nasal_gc.get_scalar(i->second).get_type();
+		// unfinished
+	}
+	return;
+}
 
 nasal_scalar::nasal_scalar()
 {
 	type=scalar_nil;
 	var_string="";
 	var_number=0;
-	var_array.clear();
-	var_hash.clear();
 	return;
 }
 nasal_scalar::nasal_scalar(const nasal_scalar& tmp)
@@ -259,7 +357,7 @@ nasal_scalar::nasal_scalar(const nasal_scalar& tmp)
 	type=tmp.type;
 	var_string=tmp.var_string;
 	var_number=tmp.var_number;
-	var_array =tmp.var_array;
+	var_vector=tmp.var_vector;
 	var_hash  =tmp.var_hash;
 	var_func  =tmp.var_func;
 	return;
@@ -269,7 +367,7 @@ nasal_scalar& nasal_scalar::operator=(const nasal_scalar& tmp)
 	type=tmp.type;
 	var_string=tmp.var_string;
 	var_number=tmp.var_number;
-	var_array =tmp.var_array;
+	var_vector=tmp.var_vector;
 	var_hash  =tmp.var_hash;
 	var_func  =tmp.var_func;
 	return *this;
@@ -279,10 +377,6 @@ void nasal_scalar::set_clear()
 	type=scalar_nil;
 	var_string.clear();
 	var_number=0;
-	std::vector<int> tmp_vec;
-	var_array.swap(tmp_vec);
-	var_hash.clear();
-	var_func.set_clear();
 	return;
 }
 void nasal_scalar::set_type(int tmp_type)
@@ -301,49 +395,6 @@ void nasal_scalar::set_string(std::string& tmp_str)
 	var_string=tmp_str;
 	return;
 }
-void nasal_scalar::vector_push(int addr)
-{
-	var_array.push_back(addr);
-	return;
-}
-int nasal_scalar::vector_pop()
-{
-	int ret=var_array.back();
-	var_array.pop_back();
-	return ret;
-}
-int nasal_scalar::vector_get_member(int place)
-{
-	if(place<0 || place>=var_array.size())
-		return -1;
-	return var_array[place];
-}
-void nasal_scalar::hash_add_new_member(std::string member_name,int addr)
-{
-	// if hash has a new function member
-	// this function will get a value named 'me' in its own scope
-	// and the 'me' points to the hash that has the function
-	if(var_hash.find(member_name)!=var_hash.end())
-		std::cout<<">> [Runtime] "<<member_name<<" exists."<<std::endl;
-	else
-		var_hash[member_name]=addr;
-	return;
-}
-void nasal_scalar::hash_delete_member(std::string member_name)
-{
-	if(var_hash.find(member_name)!=var_hash.end())
-	{
-		nasal_gc.reference_delete(var_hash[member_name]);
-		var_hash.erase(member_name);
-	}
-	return;
-}
-int nasal_scalar::hash_get_member(std::string member_name)
-{
-	if(var_hash.find(member_name)!=var_hash.end())
-		return var_hash[member_name];
-	return -1;
-}
 int nasal_scalar::get_type()
 {
 	return type;
@@ -356,11 +407,11 @@ std::string nasal_scalar::get_string()
 {
 	return var_string;
 }
-std::vector<int>& nasal_scalar::get_vector()
+nasal_vector& nasal_scalar::get_vector()
 {
-	return var_array;
+	return var_vector;
 }
-std::map<std::string,int>& nasal_scalar::get_hash()
+nasal_hash& nasal_scalar::get_hash()
 {
 	return var_hash;
 }
