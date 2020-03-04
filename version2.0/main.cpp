@@ -7,10 +7,17 @@ abstract_syntax_tree libroot;
 abstract_syntax_tree root;
 abstract_syntax_tree linker;
 
+nasal_runtime runtime;
+
 std::string command;
 
 int main()
 {
+	std::cout<<"       __                _ "<<std::endl;
+	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |"<<std::endl;
+	std::cout<<"   /  \\/ / _` / __|/ _` | |"<<std::endl;
+	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |"<<std::endl;
+	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 #ifdef _WIN32
 			std::cout<<">> [system] Windows system."<<std::endl;
 #endif
@@ -30,7 +37,7 @@ int main()
 		std::cin>>command;
 		if(command=="help")
 		{
-			std::cout<<">> be careful that this program does not support unicode(unicode will be set to \'?\')"<<std::endl;
+			std::cout<<">> Be careful that this program does not support unicode(unicode will be set to \'?\')"<<std::endl;
 			std::cout<<">> [\'file\'] input a file."<<std::endl;
 			std::cout<<">> [cls   ] clear the screen."<<std::endl;
 			std::cout<<">> [del   ] clear the resource code."<<std::endl;
@@ -144,7 +151,8 @@ int main()
 					linker=libroot;
 					linker.merge_children(parser.get_root());
 					root=linker;
-					root.print_tree();
+					runtime.main_proc(root);
+					//root.print_tree();
 				}
 				else
 					std::cout<<">> [Parse] error occurred,stop."<<std::endl;

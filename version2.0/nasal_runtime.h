@@ -24,8 +24,8 @@ class nasal_runtime
         void call_identifier   (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void assignment        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void definition        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
-        void loop_expr         (abstract_syntax_tree&);
-        void conditional       (abstract_syntax_tree&);
+        void loop_expr         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void conditional       (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void func_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
     public:
         nasal_runtime()
@@ -89,17 +89,15 @@ void nasal_runtime::definition(std::list<std::map<std::string,int> >& local_scop
         ;
     return;
 }
-void nasal_runtime::loop_expr(abstract_syntax_tree& node)
+void nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
-    std::list<std::map<std::string,int> > local_scope;
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
 
     return;
 }
-void nasal_runtime::conditional(abstract_syntax_tree& node)
+void nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
-    std::list<std::map<std::string,int> > local_scope;
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
     
