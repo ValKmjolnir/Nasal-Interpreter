@@ -35,13 +35,16 @@ class nasal_scalar
 		void   set_string(std::string&);
 		void   vector_push(int);
 		int    vector_pop();
+		int    vector_get_member(int);
 		void   hash_add_new_member(std::string,int);
 		void   hash_delete_member(std::string);
 		int    hash_get_member(std::string);
-		int    get_type();
-		double get_number();
-		std::string     get_string();
-		nasal_function& get_function();
+		int                        get_type();
+		double                     get_number();
+		std::string                get_string();
+		std::vector<int>&          get_vector();
+		std::map<std::string,int>& get_hash();
+		nasal_function&            get_function();
 };
 
 struct gc_unit
@@ -105,22 +108,6 @@ class gc_manager
 			free_space.clear();
 			return;
 		}
-		void gc_scanner()
-		{
-			int memory_size=memory.size();
-			for(int i=0;i<memory_size;++i)
-				if((memory[i].refcnt<=0) && (!memory[i].collected))
-				{
-					// need more details here
-					// especially vector and hash
-					memory[i].set_clear();
-					free_space.push_back(i);
-					std::cout<<">> [Gc] collected ";
-					prt_hex(i);
-					std::cout<<"."<<std::endl;
-				}
-			return;
-		}
 		int gc_alloc()
 		{
 			if(free_space.empty())
@@ -156,7 +143,35 @@ class gc_manager
 		void reference_delete(const int place)
 		{
 			if(place<memory.size())
+			{
 				--memory[place].refcnt;
+				if(!memory[place].refcnt)
+				{
+					memory[place].collected=true;
+					if(memory[place].elem.get_type()==scalar_vector)
+					{
+						int vec_size=memory[place].elem.get_vector().size();
+						for(int i=0;i<vec_size;++i)
+							reference_delete(memory[place].elem.get_vector()[i]);
+					}
+					else if(memory[place].elem.get_type()==scalar_hash)
+					{
+						std::map<std::string,int>::iterator begin_node=memory[place].elem.get_hash().begin();
+						std::map<std::string,int>::iterator end_node=memory[place].elem.get_hash().end();
+						for(std::map<std::string,int>::iterator iter=begin_node;iter!=end_node;++iter)
+							reference_delete(iter->second);
+					}
+					else if(memory[place].elem.get_type()==scalar_function)
+					{
+						std::list<std::map<std::string,int> >::iterator begin_scope=memory[place].elem.get_function().get_local_scope().begin();
+						std::list<std::map<std::string,int> >::iterator end_scope=memory[place].elem.get_function().get_local_scope().end();
+						for(std::list<std::map<std::string,int> >::iterator scope_iter=begin_scope;scope_iter!=end_scope;++scope_iter)
+							for(std::map<std::string,int>::iterator i=scope_iter->begin();i!=scope_iter->end();++i)
+								reference_delete(i->second);
+					}
+					memory[place].elem.set_clear();
+				}
+			}
 			else
 			{
 				std::cout<<">> [Gc] fatal error: unexpected memory place ";
@@ -264,7 +279,8 @@ void nasal_scalar::set_clear()
 	type=scalar_nil;
 	var_string.clear();
 	var_number=0;
-	var_array.clear();
+	std::vector<int> tmp_vec;
+	var_array.swap(tmp_vec);
 	var_hash.clear();
 	var_func.set_clear();
 	return;
@@ -295,6 +311,12 @@ int nasal_scalar::vector_pop()
 	int ret=var_array.back();
 	var_array.pop_back();
 	return ret;
+}
+int nasal_scalar::vector_get_member(int place)
+{
+	if(place<0 || place>=var_array.size())
+		return -1;
+	return var_array[place];
 }
 void nasal_scalar::hash_add_new_member(std::string member_name,int addr)
 {
@@ -333,6 +355,14 @@ double nasal_scalar::get_number()
 std::string nasal_scalar::get_string()
 {
 	return var_string;
+}
+std::vector<int>& nasal_scalar::get_vector()
+{
+	return var_array;
+}
+std::map<std::string,int>& nasal_scalar::get_hash()
+{
+	return var_hash;
 }
 nasal_function& nasal_scalar::get_function()
 {
