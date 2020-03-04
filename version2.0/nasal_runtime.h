@@ -4,8 +4,11 @@
 class nasal_runtime
 {
     private:
-        // local hash_map will be used when running
-        std::list<std::map<std::string,int> > global_scope;
+        // global scope is a hash_map
+        // null_local_scope is used when function need reference of local scope
+        // but this function is called from global scope
+        std::map<std::string,int> global_scope;
+        std::list<std::map<std::string,int> > null_local_scope;
         
         // see detail of each enum type in function error_interrupt(const int)
         enum runtime_error_type
@@ -17,10 +20,10 @@ class nasal_runtime
         void error_interrupt   (const int);
         void vector_generation (abstract_syntax_tree&);
         void hash_generation   (abstract_syntax_tree&);
-        void call_identifier   (abstract_syntax_tree&);
         void calculation       (abstract_syntax_tree&);
-        void assignment        (abstract_syntax_tree&);
-        void definition        (abstract_syntax_tree&);
+        void call_identifier   (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void assignment        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void definition        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void loop_expr         (abstract_syntax_tree&);
         void conditional       (abstract_syntax_tree&);
         void func_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
@@ -64,28 +67,42 @@ void nasal_runtime::hash_generation(abstract_syntax_tree& node)
 {
     return;
 }
-void nasal_runtime::call_identifier(abstract_syntax_tree& node)
-{
-    return;
-}
 void nasal_runtime::calculation(abstract_syntax_tree& node)
 {
     return;
 }
-void nasal_runtime::assignment(abstract_syntax_tree& node)
+void nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
+    if(local_scope.empty())
+        ;
     return;
 }
-void nasal_runtime::definition(abstract_syntax_tree& node)
+void nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
+    if(local_scope.empty())
+        ;
+    return;
+}
+void nasal_runtime::definition(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+{
+    if(local_scope.empty())
+        ;
     return;
 }
 void nasal_runtime::loop_expr(abstract_syntax_tree& node)
 {
+    std::list<std::map<std::string,int> > local_scope;
+    std::map<std::string,int> new_scope;
+    local_scope.push_back(new_scope);
+
     return;
 }
 void nasal_runtime::conditional(abstract_syntax_tree& node)
 {
+    std::list<std::map<std::string,int> > local_scope;
+    std::map<std::string,int> new_scope;
+    local_scope.push_back(new_scope);
+    
     return;
 }
 
@@ -104,7 +121,7 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
             ;
         // only number or string
         else if(node_type==__id)
-            this->call_identifier(*iter);
+            this->call_identifier(local_scope,*iter);
         else if(node_type==__vector)
             this->vector_generation(*iter);
         else if(node_type==__hash)
@@ -150,7 +167,7 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
         if(node_type==__number || node_type==__string)
             ;
         else if(node_type==__id)
-            this->call_identifier(*iter);
+            this->call_identifier(null_local_scope,*iter);
         else if(node_type==__vector)
             this->vector_generation(*iter);
         else if(node_type==__hash)
