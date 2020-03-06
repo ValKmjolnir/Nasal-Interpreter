@@ -5,10 +5,10 @@ class nasal_runtime
 {
     private:
         // global scope is a hash_map
-        // null_local_scope is used when function need reference of local scope
-        // but this function is called from global scope
+        // main_local_scope is used in main block 
+        // when calling a loop or conditional expression
         std::map<std::string,int> global_scope;
-        std::list<std::map<std::string,int> > null_local_scope;
+        std::list<std::map<std::string,int> > main_local_scope;
         
         // see detail of each enum type in function error_interrupt(const int)
         enum runtime_error_type
@@ -18,9 +18,9 @@ class nasal_runtime
             __stack_overflow,
         };
         void error_interrupt   (const int);
-        void vector_generation (abstract_syntax_tree&);
-        void hash_generation   (abstract_syntax_tree&);
-        void calculation       (abstract_syntax_tree&);
+        void vector_generation (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void hash_generation   (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void calculation       (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void call_identifier   (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void assignment        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void definition        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
@@ -59,15 +59,15 @@ void nasal_runtime::error_interrupt(const int type)
     return;
 }
 
-void nasal_runtime::vector_generation(abstract_syntax_tree& node)
+void nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     return;
 }
-void nasal_runtime::hash_generation(abstract_syntax_tree& node)
+void nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     return;
 }
-void nasal_runtime::calculation(abstract_syntax_tree& node)
+void nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     return;
 }
@@ -111,6 +111,12 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
         error_interrupt(__incorrect_head_of_func);
         return;
     }
+    std::map<std::string,int> new_scope;
+    local_scope.push_back(new_scope);
+    for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().front().get_children().begin();iter!=func_root.get_children().front().get_children().end();++iter)
+    {
+
+    }
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().back().get_children().begin();iter!=func_root.get_children().back().get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
@@ -121,28 +127,25 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
         else if(node_type==__id)
             this->call_identifier(local_scope,*iter);
         else if(node_type==__vector)
-            this->vector_generation(*iter);
+            this->vector_generation(local_scope,*iter);
         else if(node_type==__hash)
-            this->hash_generation(*iter);
+            this->hash_generation(local_scope,*iter);
         else if(node_type==__function)
+        {
             ;
-        else if(node_type==__add_operator  || node_type==__sub_operator ||
-                node_type==__mul_operator  || node_type==__div_operator ||
-                node_type==__link_operator ||
-                node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more ||
-                node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
+        }
+        else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
+                node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
                 node_type==__and_operator || node_type==__or_operator || node_type==__ques_mark)
-            ;
-        else if(node_type==__equal)
-            ;
-        else if(node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
-            ;
+            this->calculation(local_scope,*iter);
+        else if(node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
+            this->assignment(local_scope,*iter);
         else if(node_type==__definition)
-            ;
+            this->definition(local_scope,*iter);
         else if(node_type==__conditional)
-            ;
+            this->conditional(local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
-            ;
+            this->loop_expr(local_scope,*iter);
     }
     return;
 }
@@ -165,33 +168,27 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
         if(node_type==__number || node_type==__string)
             ;
         else if(node_type==__id)
-            this->call_identifier(null_local_scope,*iter);
+            this->call_identifier(main_local_scope,*iter);
         else if(node_type==__vector)
-            this->vector_generation(*iter);
+            this->vector_generation(main_local_scope,*iter);
         else if(node_type==__hash)
-            this->hash_generation(*iter);
+            this->hash_generation(main_local_scope,*iter);
         else if(node_type==__function)
         {
-            nasal_scalar temp_function;
-            temp_function.set_type(scalar_function);
+            ;
         }
-        else if(node_type==__add_operator  || node_type==__sub_operator ||
-                node_type==__mul_operator  || node_type==__div_operator ||
-                node_type==__link_operator ||
-                node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more ||
-                node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
+        else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
+                node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
                 node_type==__and_operator || node_type==__or_operator || node_type==__ques_mark)
-            ;
-        else if(node_type==__equal)
-            ;
-        else if(node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
-            ;
+            this->calculation(main_local_scope,*iter);
+        else if(node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
+            this->assignment(main_local_scope,*iter);
         else if(node_type==__definition)
-            ;
+            this->definition(main_local_scope,*iter);
         else if(node_type==__conditional)
-            ;
+            this->conditional(main_local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
-            ;
+            this->loop_expr(main_local_scope,*iter);
     }
 
     end_time=std::time(NULL);

@@ -1,11 +1,21 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
+// all identifiers in nasal points to a memory space in nasal_gc.
+// memory space uses std::vector<gc_unit>.
+// gc_unit is a struct which has nasal_scalar and refcnt in it.(more details please see the definition of gc_unit bellow)
+// when an identifier needs to be assigned,but the type of value is not the same as the identifier's value
+// the identifier will get a new memory space in nasal_gc and do deep_copy()
+// and the memory space that is not used ,its ref_cnt-=1.
+
 class nasal_function
 {
 	private:
 		std::list<std::map<std::string,int> > local_scope;
 		abstract_syntax_tree function_root;
+		// parent_hash_addr is used to store the address of the hash which has this nasal_function
+		// because nasal_function needs this address to adjust the identifier called 'me' in local_scope
+		// 'me' is the identifier which points to the hash which has this nasal_function
 		int  parent_hash_addr;
 	public:
 		nasal_function();
@@ -15,6 +25,28 @@ class nasal_function
 		std::list<std::map<std::string,int> >& get_local_scope();
 		abstract_syntax_tree& get_statement_block();
 		void deep_copy(nasal_function&);
+};
+
+class nasal_number
+{
+	private:
+		double nas_number;
+	public:
+		void   set_clear();
+		void   set_number(double);
+		double get_number();
+		void   deep_copy(nasal_number&);
+};
+
+class nasal_string
+{
+	private:
+		std::string nas_string;
+	public:
+		void set_clear();
+		void set_string(std::string);
+		std::string get_string();
+		void deep_copy(nasal_string&);
 };
 
 class nasal_vector
@@ -33,6 +65,8 @@ class nasal_hash
 {
 	private:
 		std::map<std::string,int> nas_hash;
+		// self_addr is used to store the address of the hash itself and give it to the functions this hash has.
+		// because nasal_scalar has no right to get its own address,but hash needs this,so this gives hash a special right to have its address.
 		int self_addr;
 	public:
 		void set_self_addr(int);
@@ -47,22 +81,17 @@ class nasal_scalar
 {
 	private:
 		int type;
-		std::string    var_string;
-		double         var_number;
+		nasal_string   var_string;
+		nasal_number   var_number;
 		nasal_vector   var_vector;
 		nasal_hash     var_hash;
 		nasal_function var_func;
 	public:
 		nasal_scalar();
-		nasal_scalar(const nasal_scalar&);
-		nasal_scalar& operator=(const nasal_scalar&);
-		void set_clear();
-		void set_type(int);
-		void set_number(double);
-		void set_string(std::string&);
+		void            set_type(int);
 		int             get_type();
-		double          get_number();
-		std::string     get_string();
+		nasal_number&   get_number();
+		nasal_string&   get_string();
 		nasal_vector&   get_vector();
 		nasal_hash&     get_hash();
 		nasal_function& get_function();
@@ -79,20 +108,6 @@ struct gc_unit
 	gc_unit()
 	{
 		collected=true;
-		refcnt   =0;
-		return;
-	}
-	gc_unit(const gc_unit& tmp)
-	{
-		collected=tmp.collected;
-		elem     =tmp.elem;
-		refcnt   =tmp.refcnt;
-		return;
-	}
-	void set_clear()
-	{
-		collected=true;
-		elem.set_clear();
 		refcnt=0;
 		return;
 	}
@@ -107,8 +122,7 @@ class gc_manager
 	public:
 		void gc_init()
 		{
-			// this function must be called in class nasal_runtime
-			// before running any codes
+			// this function must be called in class nasal_runtime before running any codes
 			std::vector<gc_unit> tmp_vec;
 			memory.clear();
 			memory.swap(tmp_vec);
@@ -118,6 +132,10 @@ class gc_manager
 		}
 		int gc_alloc()
 		{
+			// add a new space for a new value
+			// if list free_space is not empty,it will get the address at the front and give it to the new value
+			// if list free_space is empty,it will add new space in memory vector and give it to the new value
+			// by this way it can manage memory efficiently.
 			if(free_space.empty())
 			{
 				gc_unit new_unit;
@@ -159,14 +177,18 @@ class gc_manager
 				--memory[addr].refcnt;
 				if(!memory[addr].refcnt)
 				{
+					// if refcnt is 0,then starting the destructor
 					memory[addr].collected=true;
-					if(memory[addr].elem.get_type()==scalar_vector)
-						memory[addr].elem.get_vector().set_clear();
-					else if(memory[addr].elem.get_type()==scalar_hash)
-						memory[addr].elem.get_hash().set_clear();
-					else if(memory[addr].elem.get_type()==scalar_function)
-						memory[addr].elem.get_function().set_clear();
-					memory[addr].elem.set_clear();
+					switch(memory[addr].elem.get_type())
+					{
+						case scalar_number:  memory[addr].elem.get_number().set_clear();  break;
+						case scalar_string:  memory[addr].elem.get_string().set_clear();  break;
+						case scalar_vector:  memory[addr].elem.get_vector().set_clear();  break;
+						case scalar_hash:    memory[addr].elem.get_hash().set_clear();    break;
+						case scalar_function:memory[addr].elem.get_function().set_clear();break;
+						default:break;
+					}
+					memory[addr].elem.set_type(scalar_nil);
 				}
 			}
 			else
@@ -202,7 +224,7 @@ class gc_manager
 };
 gc_manager nasal_gc;
 // this object is used in "nasal_runtime.h"
-// because there must be only one gc when running a program
+// because there must be only one gc when running a program(one process)
 
 nasal_function::nasal_function()
 {
@@ -239,14 +261,17 @@ abstract_syntax_tree& nasal_function::get_statement_block()
 }
 void nasal_function::deep_copy(nasal_function& tmp)
 {
+	// before deep copy nasal_functions needs to delete all values in its scope
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 			nasal_gc.reference_delete(i->second);
+	// copy all the values in tmp's scope
 	local_scope=tmp.local_scope;
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 			if(i->first!="me")
 				nasal_gc.reference_add(i->second);
+	// change the 'me' address to this function's parent_hash_addr
 	if(!local_scope.empty())
 	{
 		std::list<std::map<std::string,int> >::iterator begin_iter=local_scope.begin();
@@ -261,7 +286,48 @@ void nasal_function::deep_copy(nasal_function& tmp)
 				begin_iter->erase("me");
 		}
 	}
+	// copy abstract_syntax_tree
 	function_root=tmp.function_root;
+	return;
+}
+
+void nasal_number::set_clear()
+{
+	nas_number=0;
+	return;
+}
+void nasal_number::set_number(double num)
+{
+	nas_number=num;
+	return;
+}
+double nasal_number::get_number()
+{
+	return nas_number;
+}
+void nasal_number::deep_copy(nasal_number& tmp)
+{
+	nas_number=tmp.nas_number;
+	return;
+}
+
+void nasal_string::set_clear()
+{
+	nas_string="";
+	return;
+}
+void nasal_string::set_string(std::string str)
+{
+	nas_string=str;
+	return;
+}
+std::string nasal_string::get_string()
+{
+	return nas_string;
+}
+void nasal_string::deep_copy(nasal_string& tmp)
+{
+	nas_string=tmp.nas_string;
 	return;
 }
 
@@ -291,17 +357,36 @@ int nasal_vector::get_size()
 }
 void nasal_vector::deep_copy(nasal_vector& tmp)
 {
+	// before deep copy,nasal_vector needs to delete all values in it.
+	for(int i=0;i<nas_array.size();++i)
+		nasal_gc.reference_delete(nas_array[i]);
+	// copy process
 	for(int i=0;i<tmp.nas_array.size();++i)
 	{
-		int tmp_type=nasal_gc.get_scalar(nas_array[i]).get_type();
-		// unfinished
+		int tmp_type=nasal_gc.get_scalar(tmp.nas_array[i]).get_type();
+		int new_addr=nasal_gc.gc_alloc();
+		nasal_gc.get_scalar(new_addr).set_type(tmp_type);
+		if(tmp_type==scalar_nil)
+			;
+		else if(tmp_type==scalar_number)
+			nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(tmp.nas_array[i]).get_number());
+		else if(tmp_type==scalar_string)
+			nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(tmp.nas_array[i]).get_string());
+		else if(tmp_type==scalar_vector)
+			nasal_gc.get_scalar(new_addr).get_vector().deep_copy(nasal_gc.get_scalar(tmp.nas_array[i]).get_vector());
+		else if(tmp_type==scalar_hash)
+			nasal_gc.get_scalar(new_addr).get_hash().deep_copy(nasal_gc.get_scalar(tmp.nas_array[i]).get_hash());
+		else if(tmp_type==scalar_function)
+			nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(tmp.nas_array[i]).get_function());
+		nas_array.push_back(new_addr);
 	}
 	return;
 }
 
 void nasal_hash::set_self_addr(int addr)
 {
-	// when creating a new hash,gc must give an address to this hash
+	// when creating a new hash,must use gc to give an address to this hash
+	// it is extremely necessary to do this! 
 	self_addr=addr;
 	return;
 }
@@ -337,10 +422,34 @@ void nasal_hash::hash_pop(std::string member_name)
 }
 void nasal_hash::deep_copy(nasal_hash& tmp)
 {
+	// defore deep copy,nasal_hash needs to delete all members in it
+	for(std::map<std::string,int>::iterator i=nas_hash.begin();i!=nas_hash.end();++i)
+		nasal_gc.reference_delete(i->second);
+	// copy process
 	for(std::map<std::string,int>::iterator i=tmp.nas_hash.begin();i!=tmp.nas_hash.end();++i)
 	{
 		int tmp_type=nasal_gc.get_scalar(i->second).get_type();
-		// unfinished
+		int new_addr=nasal_gc.gc_alloc();
+		nasal_gc.get_scalar(new_addr).set_type(tmp_type);
+		if(tmp_type==scalar_nil)
+			;
+		else if(tmp_type==scalar_number)
+			nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(i->second).get_number());
+		else if(tmp_type==scalar_string)
+			nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(i->second).get_string());
+		else if(tmp_type==scalar_vector)
+			nasal_gc.get_scalar(new_addr).get_vector().deep_copy(nasal_gc.get_scalar(i->second).get_vector());
+		else if(tmp_type==scalar_hash)
+		{
+			nasal_gc.get_scalar(new_addr).get_hash().set_self_addr(new_addr);
+			nasal_gc.get_scalar(new_addr).get_hash().deep_copy(nasal_gc.get_scalar(i->second).get_hash());
+		}
+		else if(tmp_type==scalar_function)
+		{
+			nasal_gc.get_scalar(new_addr).get_function().set_parent_hash_addr(this->self_addr);
+			nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(i->second).get_function());
+		}
+		nas_hash[i->first]=new_addr;
 	}
 	return;
 }
@@ -348,35 +457,6 @@ void nasal_hash::deep_copy(nasal_hash& tmp)
 nasal_scalar::nasal_scalar()
 {
 	type=scalar_nil;
-	var_string="";
-	var_number=0;
-	return;
-}
-nasal_scalar::nasal_scalar(const nasal_scalar& tmp)
-{
-	type=tmp.type;
-	var_string=tmp.var_string;
-	var_number=tmp.var_number;
-	var_vector=tmp.var_vector;
-	var_hash  =tmp.var_hash;
-	var_func  =tmp.var_func;
-	return;
-}
-nasal_scalar& nasal_scalar::operator=(const nasal_scalar& tmp)
-{
-	type=tmp.type;
-	var_string=tmp.var_string;
-	var_number=tmp.var_number;
-	var_vector=tmp.var_vector;
-	var_hash  =tmp.var_hash;
-	var_func  =tmp.var_func;
-	return *this;
-}
-void nasal_scalar::set_clear()
-{
-	type=scalar_nil;
-	var_string.clear();
-	var_number=0;
 	return;
 }
 void nasal_scalar::set_type(int tmp_type)
@@ -385,25 +465,15 @@ void nasal_scalar::set_type(int tmp_type)
 	type=tmp_type>scalar_function? scalar_nil:tmp_type;
 	return;
 }
-void nasal_scalar::set_number(double tmp_number)
-{
-	var_number=tmp_number;
-	return;
-}
-void nasal_scalar::set_string(std::string& tmp_str)
-{
-	var_string=tmp_str;
-	return;
-}
 int nasal_scalar::get_type()
 {
 	return type;
 }
-double nasal_scalar::get_number()
+nasal_number& nasal_scalar::get_number()
 {
 	return var_number;
 }
-std::string nasal_scalar::get_string()
+nasal_string& nasal_scalar::get_string()
 {
 	return var_string;
 }
