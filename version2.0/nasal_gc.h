@@ -20,6 +20,7 @@ class nasal_function
 	public:
 		nasal_function();
 		void set_clear();
+		void set_local_scope(std::list<std::map<std::string,int> >&);
 		void set_statement_block(abstract_syntax_tree&);
 		void set_parent_hash_addr(int);
 		std::list<std::map<std::string,int> >& get_local_scope();
@@ -72,6 +73,7 @@ class nasal_hash
 		void set_self_addr(int);
 		void set_clear();
 		int  get_self_addr();
+		int  get_hash_member(std::string);
 		void hash_push(std::string,int);
 		void hash_pop(std::string);
 		void deep_copy(nasal_hash&);
@@ -99,10 +101,11 @@ class nasal_scalar
 
 struct gc_unit
 {
-	// collected: If gc collected this item,it'll be set to true.Otherwise it is false.
+	// collected: If gc collected this item,it'll be set to true.Otherwise it is false. 
 	// elem:      Item that this unit stores
 	// refcnt:    Reference counter
 	bool         collected;
+	bool         is_const;
 	nasal_scalar elem;
 	int          refcnt;
 	gc_unit()
@@ -150,12 +153,14 @@ class gc_manager
 		}
 		nasal_scalar& get_scalar(int addr)
 		{
+			// get the reference of the scalar
 			return memory[addr].elem;
 		}
 		bool place_check(const int place)
 		{
 			// check if this place is in memory
 			// and this place is uncollected
+			// this function is often used when an identifier is calling a space in memory
 			return (place<memory.size()) && (!memory[place].collected);
 		}
 		void reference_add(const int place)
@@ -241,6 +246,14 @@ void nasal_function::set_clear()
 	parent_hash_addr=-1;
 	return;
 }
+void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_scope)
+{
+	local_scope=tmp_scope;
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+				nasal_gc.reference_add(i->second);
+	return;
+}
 void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 {
 	function_root=func_block;
@@ -248,7 +261,31 @@ void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 }
 void nasal_function::set_parent_hash_addr(int addr)
 {
+	// in normal cases this function is often called after this->set_local_scope(...)
+	// because creating a new nasal function needs local_scope(closure) and abstract syntax tree.
+	// then the nasal function will be given to an identifier.
+	// after checking the identifier and making sure it is a hash,
+	// call this function and set 'me' to this addr if exists.
+	// if 'me' does not exist,then add a new identifeir named 'me' and give it the addr.
+	// also 'me' can be changed in hash function by ways like "var me=1;"
 	parent_hash_addr=addr;
+	bool has_identifier_me=false;
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+			if(i->first=="me")
+			{
+				has_identifier_me=true;
+				i->second=parent_hash_addr;
+			}
+	if(!has_identifier_me)
+	{
+		if(local_scope.empty())
+		{
+			std::map<std::string,int> new_scope;
+			local_scope.push_back(new_scope);
+		}
+		local_scope.back()["me"]=parent_hash_addr;
+	}
 	return;
 }
 std::list<std::map<std::string,int> >& nasal_function::get_local_scope()
@@ -265,27 +302,13 @@ void nasal_function::deep_copy(nasal_function& tmp)
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 			nasal_gc.reference_delete(i->second);
+	// when copying a local scope,one thing that must be noticed is that
+	// each identifier in local_scope shares the same address with tmp.local_scope
 	// copy all the values in tmp's scope
 	local_scope=tmp.local_scope;
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-			if(i->first!="me")
 				nasal_gc.reference_add(i->second);
-	// change the 'me' address to this function's parent_hash_addr
-	if(!local_scope.empty())
-	{
-		std::list<std::map<std::string,int> >::iterator begin_iter=local_scope.begin();
-		if(begin_iter->find("me")!=begin_iter->end())
-		{
-			if(parent_hash_addr>=0)
-			{
-				(*begin_iter)["me"]=parent_hash_addr;
-				nasal_gc.reference_add(parent_hash_addr);
-			}
-			else
-				begin_iter->erase("me");
-		}
-	}
 	// copy abstract_syntax_tree
 	function_root=tmp.function_root;
 	return;
@@ -401,6 +424,12 @@ int nasal_hash::get_self_addr()
 {
 	return self_addr;
 }
+int nasal_hash::get_hash_member(std::string member_name)
+{
+	if(nas_hash.find(member_name)!=nas_hash.end())
+		return nas_hash[member_name];
+	return -1;
+}
 void nasal_hash::hash_push(std::string member_name,int addr)
 {
 	if(nas_hash.find(member_name)==nas_hash.end())
@@ -467,27 +496,58 @@ void nasal_scalar::set_type(int tmp_type)
 }
 int nasal_scalar::get_type()
 {
+	// get scalar type
 	return type;
 }
 nasal_number& nasal_scalar::get_number()
 {
+	// get nasal_number
 	return var_number;
 }
 nasal_string& nasal_scalar::get_string()
 {
+	// get nasal_string
 	return var_string;
 }
 nasal_vector& nasal_scalar::get_vector()
 {
+	// get nasal_vector
 	return var_vector;
 }
 nasal_hash& nasal_scalar::get_hash()
 {
+	// get nasal_hash
 	return var_hash;
 }
 nasal_function& nasal_scalar::get_function()
 {
+	// get nasal_function
 	return var_func;
 }
 
 #endif
+
+/*
+code: var i=1;
+int addr=nasal_gc.gc_alloc();
+nasal_gc.get_scalar(addr).set_type(scalar_number);
+nasal_gc.get_scalar(addr).set_number(1);
+
+code: var i='hello';
+int addr=nasal_gc.gc_alloc();
+nasal_gc.get_scalar(addr).set_type(scalar_string);
+nasal_gc.get_scalar(addr).set_string("hello");
+
+code: var i=[];
+int addr=vector_generation();
+nasal_gc.get_scalar(addr).set_type(scalar_vector);
+
+code: var i={};
+int addr=hash_generation();
+nasal_gc.get_scalar(addr).set_type(scalar_hash);
+nasal_gc.get_scalar(addr).get_hash().set_self_addr(addr);
+
+code: var i=func{return 0;}
+// copy local_scope if needed
+// copy abstract_syntax_tree
+*/
