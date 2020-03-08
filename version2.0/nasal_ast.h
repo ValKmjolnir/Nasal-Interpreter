@@ -104,7 +104,7 @@ void abstract_syntax_tree::print_tree_block(const int n)
 {
 	std::string __str="";
 	for(int i=0;i<n;++i)
-		__str+="| ";
+		__str+="|  ";
 	std::cout<<__str;
 	print_ast_type(node_type);
 	switch(node_type)
