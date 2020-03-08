@@ -433,7 +433,7 @@ class nasal_lexer
 					++ptr;
 				}
 			}
-			std::cout<<">> [Pre-lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">> [Lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		void generate_detail_token()
@@ -541,7 +541,7 @@ class nasal_lexer
 					detail_token_list.push_back(detail_token);
 				}
 			}
-			std::cout<<">> [Detail-lexer] complete generating. "<<error<<" error(s)."<<std::endl;
+			std::cout<<">> [Lexer] complete generating. "<<error<<" error(s)."<<std::endl;
 			return;
 		}
 		int get_error()
