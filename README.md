@@ -1,6 +1,6 @@
 # Nasal Interpreter
 
-[![nasal_logo](pic/icon.png?raw=true)](http://wiki.flightgear.org/File:Nasallogo3.png)
+[![nasal_new_logo](pic/nasal.png?raw=true)](http://wiki.flightgear.org/File:Nasallogo3.png)
 
 # Nasal script language
 
