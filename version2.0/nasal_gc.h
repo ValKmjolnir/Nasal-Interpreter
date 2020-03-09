@@ -122,6 +122,7 @@ class gc_manager
 		// free_space list is used to store space that is not in use.
 		std::list<int> free_space;
 		std::vector<gc_unit> memory;
+		bool error_occurred;
 	public:
 		void gc_init()
 		{
@@ -131,6 +132,7 @@ class gc_manager
 			memory.swap(tmp_vec);
 			// clear the memory capacity by using tmp_vec.~vector<gc_unit>()
 			free_space.clear();
+			error_occurred=false;
 			return;
 		}
 		int gc_alloc()
@@ -156,28 +158,29 @@ class gc_manager
 			// get the reference of the scalar
 			return memory[addr].elem;
 		}
-		bool place_check(const int place)
+		bool place_check(const int addr)
 		{
 			// check if this place is in memory
 			// and this place is uncollected
 			// this function is often used when an identifier is calling a space in memory
-			return (place<memory.size()) && (!memory[place].collected);
+			return (0<=addr) && (addr<memory.size()) && (!memory[addr].collected);
 		}
-		void reference_add(const int place)
+		void reference_add(const int addr)
 		{
-			if(place<memory.size())
-				++memory[place].refcnt;
+			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
+				++memory[addr].refcnt;
 			else
 			{
 				std::cout<<">> [Gc] fatal error: unexpected memory place ";
-				prt_hex(place);
+				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
+				error_occurred=true;
 			}
 			return;
 		}
 		void reference_delete(const int addr)
 		{
-			if(addr<memory.size())
+			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
 			{
 				--memory[addr].refcnt;
 				if(!memory[addr].refcnt)
@@ -201,6 +204,7 @@ class gc_manager
 				std::cout<<">> [Gc] fatal error: unexpected memory address: ";
 				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
+				error_occurred=true;
 			}
 			return;
 		}
@@ -225,6 +229,10 @@ class gc_manager
 			if(cnt%8)
 				std::cout<<std::endl;
 			return;
+		}
+		bool check_error()
+		{
+			return error_occurred;
 		}
 };
 gc_manager nasal_gc;

@@ -230,6 +230,10 @@ ast begins in root node:
 		statement_2
 ...
 
+note: interpreter in flightgear can recognize 1*(2+(var a=2))
+but this type of expression is meaningless
+so this interpreter does not recognize this.
+
 source code:
 0xdeadbeef;
 'str';

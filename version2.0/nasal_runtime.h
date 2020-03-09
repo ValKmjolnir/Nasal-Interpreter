@@ -54,7 +54,7 @@ void nasal_runtime::error_interrupt(const int type)
     switch (type)
     {
         case __incorrect_head_of_tree:
-            std::cout<<error_head<<"the abstract syntax tree's root type is not \'__root\'.please make sure that lib is loaded."<<std::endl;break;
+            std::cout<<error_head<<"lib hasn\'t been loaded."<<std::endl;break;
         case __incorrect_head_of_func:
             std::cout<<error_head<<"called identifier is not a function."<<std::endl;break;
         case __stack_overflow:
@@ -84,6 +84,7 @@ int nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& loca
 {
     int addr=nasal_gc.gc_alloc();
     nasal_gc.get_scalar(addr).set_type(scalar_vector);
+    std::list<abstract_syntax_tree>::iterator call_node=node.get_children().end();
     for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
     {
         int var_type=i->get_node_type();
@@ -99,10 +100,20 @@ int nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& loca
             nasal_gc.get_scalar(addr).get_vector().vec_push(function_generation(local_scope,*i));
         else if(var_type==__id)
             nasal_gc.get_scalar(addr).get_vector().vec_push(call_identifier(local_scope,*i));
+        else if(var_type==__add_operator  || var_type==__sub_operator || var_type==__mul_operator  || var_type==__div_operator || var_type==__link_operator ||
+                var_type==__cmp_equal || var_type==__cmp_less || var_type==__cmp_more || var_type==__cmp_not_equal || var_type==__cmp_less_or_equal || var_type==__cmp_more_or_equal ||
+                var_type==__and_operator || var_type==__or_operator || var_type==__ques_mark ||
+                var_type==__equal || var_type==__add_equal || var_type==__sub_equal || var_type==__div_equal || var_type==__mul_equal || var_type==__link_equal)
+            nasal_gc.get_scalar(addr).get_vector().vec_push(calculation(local_scope,*i));
         else
         {
-            ;
+            call_node=i;
+            break;
         }
+    }
+    for(;call_node!=node.get_children().end();++call_node)
+    {
+        ;
     }
     return addr;
 }
@@ -111,22 +122,26 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
     int addr=nasal_gc.gc_alloc();
     nasal_gc.get_scalar(addr).set_type(scalar_hash);
     nasal_gc.get_scalar(addr).get_hash().set_self_addr(addr);
+    std::list<abstract_syntax_tree>::iterator call_node=node.get_children().end();
     for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
     {
         if(i->get_node_type()!=__hash_member)
+        {
+            call_node=i;
             break;
+        }
         else
         {
             std::string member_name=i->get_children().front().get_var_string();
             int var_type=i->get_children().back().get_node_type();
             if(var_type==__number)
-                ;
+                nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,number_generation(*i));
             else if(var_type==__string)
-                ;
+                nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,string_generation(*i));
             else if(var_type==__vector)
-                ;
+                nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,vector_generation(local_scope,*i));
             else if(var_type==__hash)
-                ;
+                nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,hash_generation(local_scope,*i));
             else if(var_type==__function)
             {
                 // hash's function must get a parent_hash_addr 
@@ -134,11 +149,16 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
                 nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,function_generation(local_scope,i->get_children().back()));
                 nasal_gc.get_scalar(nasal_gc.get_scalar(addr).get_hash().get_hash_member(member_name)).get_function().set_parent_hash_addr(addr);
             }
-            else
-            {
-                ;
-            }
+            else if(var_type==__add_operator  || var_type==__sub_operator || var_type==__mul_operator  || var_type==__div_operator || var_type==__link_operator ||
+                    var_type==__cmp_equal || var_type==__cmp_less || var_type==__cmp_more || var_type==__cmp_not_equal || var_type==__cmp_less_or_equal || var_type==__cmp_more_or_equal ||
+                    var_type==__and_operator || var_type==__or_operator || var_type==__ques_mark ||
+                    var_type==__equal || var_type==__add_equal || var_type==__sub_equal || var_type==__div_equal || var_type==__mul_equal || var_type==__link_equal)
+                nasal_gc.get_scalar(addr).get_hash().hash_push(member_name,calculation(local_scope,*i));
         }
+    }
+    for(;call_node!=node.get_children().end();++call_node)
+    {
+        ;
     }
     return addr;
 }
@@ -152,8 +172,21 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
 }
 int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
-    int operator_type=node.get_node_type();
-    if(operator_type==__add_operator)
+    // calculation will return a value that points to a new area in memory
+    int node_type=node.get_node_type();
+    if(node_type==__number)
+        return number_generation(node);
+    else if(node_type==__string)
+        return string_generation(node);
+    else if(node_type==__vector)
+        return vector_generation(local_scope,node);
+    else if(node_type==__hash)
+        return hash_generation(local_scope,node);
+    else if(node_type==__function)
+        return function_generation(local_scope,node);
+    else if(node_type==__id)
+        return call_identifier(local_scope,node);
+    else if(node_type==__add_operator)
     {
         node.get_children().front();
         node.get_children().back();
@@ -202,10 +235,12 @@ void nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope
     }
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
+    // loading parameters
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().front().get_children().begin();iter!=func_root.get_children().front().get_children().end();++iter)
     {
 
     }
+    // process
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().back().get_children().begin();iter!=func_root.get_children().back().get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
