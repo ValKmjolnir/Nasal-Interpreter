@@ -47,6 +47,7 @@ int main()
 			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
 			std::cout<<">> [run   ] run code."<<std::endl;
+			std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
 			std::cout<<">> [info  ] print lexer,parser and ast on screen."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 		}
@@ -159,6 +160,14 @@ int main()
 			}
 			else
 				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
+		}
+		else if(command=="logo")
+		{
+			std::cout<<"       __                _ "<<std::endl;
+			std::cout<<"    /\\ \\ \\__ _ ___  __ _| |"<<std::endl;
+			std::cout<<"   /  \\/ / _` / __|/ _` | |"<<std::endl;
+			std::cout<<"  / /\\  / (_| \\__ \\ (_| | |"<<std::endl;
+			std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 		}
 		else if(command=="info")
 		{
