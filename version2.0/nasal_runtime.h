@@ -16,6 +16,9 @@ class nasal_runtime
         {
             __incorrect_head_of_tree,
             __incorrect_head_of_func,
+            __undefined_identifier,
+            __not_callable_vector,
+            __not_callable_hash,
             __not_numerable_str,
             __error_value_type,
             __stack_overflow,
@@ -58,6 +61,12 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"lib hasn\'t been loaded."<<std::endl;break;
         case __incorrect_head_of_func:
             std::cout<<"called identifier is not a function."<<std::endl;break;
+        case __undefined_identifier:
+            std::cout<<"undefined identifier."<<std::endl;break;
+        case __not_callable_vector:
+            std::cout<<"called a value that is not a vector."<<std::endl;break;
+        case __not_callable_hash:
+            std::cout<<"called a value that is not a hash."<<std::endl;break;
         case __not_numerable_str:
             std::cout<<"this string is not a numerable one."<<std::endl;break;
         case __stack_overflow:
@@ -193,7 +202,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         return call_identifier(local_scope,node);
     else if(node_type==__add_operator || node_type==__sub_operator || node_type==__mul_operator || node_type==__div_operator)
     {
-        // scalar_nil canot be used here
+        // scalar_nil cannot be used here
         int ret_addr=-1;
         int addr_1=-1;
         int addr_2=-1;
@@ -324,7 +333,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         nasal_gc.reference_delete(addr_2);
         return ret_addr;
     }
-    else if(node_type==__cmp_equal || node_type==__cmp_not_equal || node_type==__cmp_less || node_type==__cmp_less_or_equal || node_type==__cmp_more || node_type==__cmp_more_or_equal)
+    else if(node_type==__cmp_equal || node_type==__cmp_not_equal)
     {
         int ret_addr=-1;
         int addr_1=calculation(local_scope,node.get_children().front());
@@ -335,30 +344,148 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         int type_1=nasal_gc.get_scalar(addr_1).get_type();
         int type_2=nasal_gc.get_scalar(addr_2).get_type();
         // note: cmp operator change strings into numbers then making comparation
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
         if(type_1==scalar_number && type_2==scalar_number)
         {
-            ;
+            double num_1=nasal_gc.get_scalar(addr_1).get_number().get_number();
+            double num_2=nasal_gc.get_scalar(addr_2).get_number().get_number();
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?num_1==num_2:num_1!=num_2)));
         }
         else if(type_1==scalar_number && type_2==scalar_string)
         {
-            ;
+            double num_1=nasal_gc.get_scalar(addr_1).get_number().get_number();
+            double num_2=0;
+            std::string tmp_str=nasal_gc.get_scalar(addr_2).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_2=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().back().get_node_line());
+                return -1;
+            }
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?num_1==num_2:num_1!=num_2)));
         }
         else if(type_1==scalar_string && type_2==scalar_number)
         {
-            ;
+            double num_1=0;
+            double num_2=nasal_gc.get_scalar(addr_2).get_number().get_number();
+            std::string tmp_str=nasal_gc.get_scalar(addr_1).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_1=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().front().get_node_line());
+                return -1;
+            }
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?num_1==num_2:num_1!=num_2)));
         }
         else if(type_1==scalar_string && type_2==scalar_string)
         {
-            ;
+            std::string str_1=nasal_gc.get_scalar(addr_1).get_string().get_string();
+            std::string str_2=nasal_gc.get_scalar(addr_2).get_string().get_string();
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?str_1==str_2:str_1!=str_2)));
+        }
+        else if(type_1==scalar_vector && type_2==scalar_vector)
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?addr_1==addr_2:addr_1!=addr_2)));
+        else if(type_1==scalar_hash && type_2==scalar_hash)
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?addr_1==addr_2:addr_1!=addr_2)));
+        else if(type_1==scalar_function && type_2==scalar_function)
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type==__cmp_equal?addr_1==addr_2:addr_1!=addr_2)));
+        else if(type_1!=type_2)
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(node_type!=__cmp_equal)));
+        else
+        {
+            error_interrupt(__error_value_type,node.get_node_line());
+            return -1;
+        }
+        nasal_gc.reference_delete(addr_1);
+        nasal_gc.reference_delete(addr_2);
+        return ret_addr;
+    }
+    else if(node_type==__cmp_less || node_type==__cmp_less_or_equal || node_type==__cmp_more || node_type==__cmp_more_or_equal)
+    {
+        int ret_addr=-1;
+        int addr_1=calculation(local_scope,node.get_children().front());
+        int addr_2=calculation(local_scope,node.get_children().back());
+        // check if the address is available
+        if(addr_1<0 || addr_2<0)
+            return -1;
+        int type_1=nasal_gc.get_scalar(addr_1).get_type();
+        int type_2=nasal_gc.get_scalar(addr_2).get_type();
+        // note: cmp operator change strings into numbers then making comparation
+        // only numbers and strings can take these calculations
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+        if(type_1==scalar_number && type_2==scalar_number)
+        {
+            double num_1=nasal_gc.get_scalar(addr_1).get_number().get_number();
+            double num_2=nasal_gc.get_scalar(addr_2).get_number().get_number();
+            switch(node_type)
+            {
+                case __cmp_less:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<num_2)));break;
+                case __cmp_less_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<=num_2)));break;
+                case __cmp_more:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>num_2)));break;
+                case __cmp_more_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>=num_2)));break;
+            }
+        }
+        else if(type_1==scalar_number && type_2==scalar_string)
+        {
+            double num_1=nasal_gc.get_scalar(addr_1).get_number().get_number();
+            double num_2=0;
+            std::string tmp_str=nasal_gc.get_scalar(addr_2).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_2=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().back().get_node_line());
+                return -1;
+            }
+            switch(node_type)
+            {
+                case __cmp_less:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<num_2)));break;
+                case __cmp_less_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<=num_2)));break;
+                case __cmp_more:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>num_2)));break;
+                case __cmp_more_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>=num_2)));break;
+            }
+        }
+        else if(type_1==scalar_string && type_2==scalar_number)
+        {
+            double num_1=0;
+            double num_2=nasal_gc.get_scalar(addr_2).get_number().get_number();
+            std::string tmp_str=nasal_gc.get_scalar(addr_1).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_1=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().front().get_node_line());
+                return -1;
+            }
+            switch(node_type)
+            {
+                case __cmp_less:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<num_2)));break;
+                case __cmp_less_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1<=num_2)));break;
+                case __cmp_more:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>num_2)));break;
+                case __cmp_more_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num_1>=num_2)));break;
+            }
+        }
+        else if(type_1==scalar_string && type_2==scalar_string)
+        {
+            std::string str_1=nasal_gc.get_scalar(addr_1).get_string().get_string();
+            std::string str_2=nasal_gc.get_scalar(addr_2).get_string().get_string();
+            switch(node_type)
+            {
+                case __cmp_less:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(str_1<str_2)));break;
+                case __cmp_less_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(str_1<=str_2)));break;
+                case __cmp_more:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(str_1>str_2)));break;
+                case __cmp_more_or_equal:nasal_gc.get_scalar(ret_addr).get_number().set_number((double(str_1>=str_2)));break;
+            }
         }
         else
         {
             error_interrupt(__error_value_type,node.get_node_line());
             return -1;
         }
-        ret_addr=nasal_gc.gc_alloc();
-        nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
-        //
         nasal_gc.reference_delete(addr_1);
         nasal_gc.reference_delete(addr_2);
         return ret_addr;
@@ -370,7 +497,10 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     else if(node_type==__add_equal || node_type==__sub_equal || node_type==__mul_equal || node_type==__div_equal || node_type==__link_equal)
     {
         // scalar_nil also cannot be used here
-        ;
+        int id_addr=call_identifier(local_scope,node.get_children().front());
+        int value_addr=calculation(local_scope,node.get_children().back());
+        if(id_addr<0 || value_addr<0)
+            return -1;
     }
     else if(node_type==__and_operator || node_type==__or_operator || node_type==__nor_operator)
     {
@@ -393,7 +523,24 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
     for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
         if(iter->find(tmp_id_name)!=iter->end())
             addr=(*iter)[tmp_id_name];
-    return -1;
+    if(addr<0)
+    {
+        error_interrupt(__undefined_identifier,node.get_node_line());
+        return -1;
+    }
+    for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
+    {
+        int node_type=iter->get_node_type();
+        if(node_type==__call_vector)
+            ;
+        else if(node_type==__call_hash)
+            ;
+        else if(node_type==__call_function)
+            ;
+        else
+            ;
+    }
+    return addr;
 }
 void nasal_runtime::definition(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
