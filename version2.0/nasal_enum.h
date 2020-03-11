@@ -283,7 +283,7 @@ void print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 			std::cout<<"\' when generating definition."<<std::endl;
 			break;
 		case assignment_begin_error:
-			std::cout<<error_info_head<<line<<": assignment should not begin with more than one identifier_call(such as a*b=c)."<<std::endl;
+			std::cout<<error_info_head<<line<<": assignment should begin with one identifier_call."<<std::endl;
 			break;
 		case multi_definition_need_curve:
 			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
