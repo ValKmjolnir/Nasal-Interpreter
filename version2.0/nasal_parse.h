@@ -191,6 +191,7 @@ void nasal_parse::check_semi()
 		return;
 	else if(this_token.type==__right_brace)
 	{
+		// this make func{return 0} as correct
 		this->push_token();
 		return;
 	}
@@ -310,10 +311,16 @@ bool nasal_parse::check_function_end(abstract_syntax_tree& tmp)
 	{
 		if(!tmp.get_children().empty())
 		{
-			if(tmp.get_children().back().get_node_type()==__function)
-				return true;
+			// func{}()
+			// function
+			//     parameters
+			//     block <- if the last child is __normal_statement_block,then don't need semi check
+			//     call_function
+			if(tmp.get_children().back().get_node_type()==__function &&
+				tmp.get_children().back().get_children().back().get_node_type()==__normal_statement_block)
+				return true;// func{}() should have a ';'
 			else
-				return check_function_end(tmp.get_children().back());
+				return check_function_end(tmp.get_children().back());// var a=b=c=d=e=f=g=func{}
 		}
 		return false;
 	}
@@ -528,6 +535,8 @@ abstract_syntax_tree nasal_parse::block_generate()
 					print_parse_error(error_token_in_block,this_token.line,this_token.type);
 					break;
 			}
+			// why the last statement can avoid semi check()?
+			// see more details in function: check_semi()
 			if(need_semi_check)
 				check_semi();
 			this->get_token();
