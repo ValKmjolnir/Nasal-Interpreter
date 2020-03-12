@@ -181,7 +181,8 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
     int addr=nasal_gc.gc_alloc();
     nasal_gc.get_scalar(addr).set_type(scalar_function);
     nasal_gc.get_scalar(addr).get_function().set_local_scope(local_scope);
-    nasal_gc.get_scalar(addr).get_function().set_statement_block(node);
+    // set
+
     return addr;
 }
 int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
@@ -199,7 +200,14 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     else if(node_type==__function)
         return function_generation(local_scope,node);
     else if(node_type==__id)
-        return call_identifier(local_scope,node);
+    {
+        int ret=call_identifier(local_scope,node);
+        nasal_gc.reference_add(ret);
+        return ret;
+        // returned address is not a temporary one
+        // but after each calculation,the refcnt will -1
+        // so refcnt++ here
+    }
     else if(node_type==__add_operator || node_type==__sub_operator || node_type==__mul_operator || node_type==__div_operator)
     {
         // scalar_nil cannot be used here
@@ -239,7 +247,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 num_2=trans_string_to_number(tmp_str);
             else
             {
-                error_interrupt(__not_numerable_str,node.get_node_line());
+                error_interrupt(__not_numerable_str,node.get_children().back().get_node_line());
                 return -1;
             }
         }
@@ -251,7 +259,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 num_1=trans_string_to_number(tmp_str);
             else
             {
-                error_interrupt(__not_numerable_str,node.get_node_line());
+                error_interrupt(__not_numerable_str,node.get_children().front().get_node_line());
                 return -1;
             }
         }
@@ -494,23 +502,340 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     {
         ;
     }
-    else if(node_type==__add_equal || node_type==__sub_equal || node_type==__mul_equal || node_type==__div_equal || node_type==__link_equal)
+    else if(node_type==__add_equal || node_type==__sub_equal || node_type==__mul_equal || node_type==__div_equal)
     {
         // scalar_nil also cannot be used here
-        int id_addr=call_identifier(local_scope,node.get_children().front());
+        // += -= *= /= ~= only works on scalar_number and scalar_string
+        int id_addr=calculation(local_scope,node.get_children().front());
         int value_addr=calculation(local_scope,node.get_children().back());
         if(id_addr<0 || value_addr<0)
             return -1;
+        int type_1=nasal_gc.get_scalar(id_addr).get_type();
+        int type_2=nasal_gc.get_scalar(value_addr).get_type();
+        if(type_1==scalar_number && type_2==scalar_number)
+        {
+            double num_1=nasal_gc.get_scalar(id_addr).get_number().get_number();
+            double num_2=nasal_gc.get_scalar(value_addr).get_number().get_number();
+            switch(node_type)
+            {
+                case __add_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1+num_2);break;
+                case __sub_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1-num_2);break;
+                case __mul_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1*num_2);break;
+                case __div_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1/num_2);break;
+            }
+        }
+        else if(type_1==scalar_number && type_2==scalar_string)
+        {
+            double num_1=nasal_gc.get_scalar(id_addr).get_number().get_number();
+            double num_2=0;
+            std::string tmp_str=nasal_gc.get_scalar(value_addr).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_2=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().back().get_node_line());
+                return -1;
+            }
+            switch(node_type)
+            {
+                case __add_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1+num_2);break;
+                case __sub_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1-num_2);break;
+                case __mul_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1*num_2);break;
+                case __div_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1/num_2);break;
+            }
+        }
+        else if(type_1==scalar_string && type_2==scalar_number)
+        {
+            double num_1=0;
+            double num_2=nasal_gc.get_scalar(value_addr).get_number().get_number();
+            std::string tmp_str=nasal_gc.get_scalar(id_addr).get_string().get_string();
+            if(check_numerable_string(tmp_str))
+                num_1=trans_string_to_number(tmp_str);
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_children().front().get_node_line());
+                return -1;
+            }
+            nasal_gc.get_scalar(id_addr).get_string().set_clear();
+            nasal_gc.get_scalar(id_addr).set_type(scalar_number);
+            switch(node_type)
+            {
+                case __add_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1+num_2);break;
+                case __sub_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1-num_2);break;
+                case __mul_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1*num_2);break;
+                case __div_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1/num_2);break;
+            }
+        }
+        else if(type_1==scalar_string && type_2==scalar_string)
+        {
+            double num_1=0;
+            double num_2=0;
+            std::string tmp_str_1=nasal_gc.get_scalar(id_addr).get_string().get_string();
+            std::string tmp_str_2=nasal_gc.get_scalar(value_addr).get_string().get_string();
+            if(check_numerable_string(tmp_str_1) && check_numerable_string(tmp_str_2))
+            {
+                num_1=trans_string_to_number(tmp_str_1);
+                num_2=trans_string_to_number(tmp_str_2);
+            }
+            else
+            {
+                error_interrupt(__not_numerable_str,node.get_node_line());
+                return -1;
+            }
+            nasal_gc.get_scalar(id_addr).get_string().set_clear();
+            nasal_gc.get_scalar(id_addr).set_type(scalar_number);
+            switch(node_type)
+            {
+                case __add_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1+num_2);break;
+                case __sub_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1-num_2);break;
+                case __mul_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1*num_2);break;
+                case __div_equal:nasal_gc.get_scalar(id_addr).get_number().set_number(num_1/num_2);break;
+            }
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_node_line());
+            return -1;
+        }
+        nasal_gc.reference_delete(value_addr);
+        return id_addr;
     }
-    else if(node_type==__and_operator || node_type==__or_operator || node_type==__nor_operator)
+    else if(node_type==__link_equal)
+    {
+        // scalar_nil also cannot be used here
+        // += -= *= /= ~= only works on scalar_number and scalar_string
+        int id_addr=calculation(local_scope,node.get_children().front());
+        int value_addr=calculation(local_scope,node.get_children().back());
+        if(id_addr<0 || value_addr<0)
+            return -1;
+        int type_1=nasal_gc.get_scalar(id_addr).get_type();
+        int type_2=nasal_gc.get_scalar(value_addr).get_type();
+        double num_1,num_2;
+        std::string str_1,str_2;
+        if(type_1==scalar_number && type_2==scalar_number)
+        {
+            num_1=nasal_gc.get_scalar(id_addr).get_number().get_number();
+            num_2=nasal_gc.get_scalar(value_addr).get_number().get_number();
+            str_1=trans_number_to_string(num_1);
+            str_2=trans_number_to_string(num_2);
+            nasal_gc.get_scalar(id_addr).get_number().set_clear();
+            nasal_gc.get_scalar(id_addr).set_type(scalar_string);
+            nasal_gc.get_scalar(id_addr).get_string().set_string(str_1+str_2);
+        }
+        else if(type_1==scalar_number && type_2==scalar_string)
+        {
+            num_1=nasal_gc.get_scalar(id_addr).get_number().get_number();
+            str_1=trans_number_to_string(num_1);
+            str_2=nasal_gc.get_scalar(value_addr).get_string().get_string();
+            nasal_gc.get_scalar(id_addr).get_number().set_clear();
+            nasal_gc.get_scalar(id_addr).set_type(scalar_string);
+            nasal_gc.get_scalar(id_addr).get_string().set_string(str_1+str_2);
+        }
+        else if(type_1==scalar_string && type_2==scalar_number)
+        {
+            num_2=nasal_gc.get_scalar(value_addr).get_number().get_number();
+            str_1=nasal_gc.get_scalar(id_addr).get_string().get_string();
+            str_2=trans_number_to_string(num_2);
+            nasal_gc.get_scalar(id_addr).get_string().set_string(str_1+str_2);
+        }
+        else if(type_1==scalar_string && type_2==scalar_string)
+        {
+            str_1=nasal_gc.get_scalar(id_addr).get_string().get_string();
+            str_2=nasal_gc.get_scalar(value_addr).get_string().get_string();
+            nasal_gc.get_scalar(id_addr).get_string().set_string(str_1+str_2);
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_node_line());
+            return -1;
+        }
+        nasal_gc.reference_delete(value_addr);
+        return id_addr;
+    }
+    else if(node_type==__and_operator)
+    {
+        // and will return the last value that is not null
+        // if and gets a null,and returns 0
+        // vector,hash,function is not allowed here
+        int ret_addr=-1;
+        int addr=calculation(local_scope,node.get_children().front());
+        if(addr<0)
+            return -1;
+        int type=nasal_gc.get_scalar(addr).get_type();
+        if(type==scalar_number)
+        {
+            double num=nasal_gc.get_scalar(addr).get_number().get_number();
+            if(num==0)
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                nasal_gc.reference_delete(addr);
+        }
+        else if(type==scalar_string)
+        {
+            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
+            if(str.length()==0 || (check_numerable_string(str) && trans_string_to_number(str)==0))
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                nasal_gc.reference_delete(addr);
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
+            return -1;
+        }
+        addr=calculation(local_scope,node.get_children().back());
+        if(addr<0)
+            return -1;
+        type=nasal_gc.get_scalar(addr).get_type();
+        if(type==scalar_number)
+        {
+            double num=nasal_gc.get_scalar(addr).get_number().get_number();
+            if(num==0)
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                ret_addr=addr;
+        }
+        else if(type==scalar_string)
+        {
+            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
+            if(str.length()==0 || (check_numerable_string(str) && trans_string_to_number(str)==0))
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                ret_addr=addr;
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
+            return -1;
+        }
+        return ret_addr;
+    }
+    else if(node_type==__or_operator)
     {
         // or will return the first value that is not null
-        // and will return the last value that is not null
+        // if or gets all null(0,'0',nil,"0",'',""),or returns 0
+        // vector,hash,function is not allowed here
+        int ret_addr=-1;
+        int addr=calculation(local_scope,node.get_children().front());
+        if(addr<0)
+            return -1;
+        int type=nasal_gc.get_scalar(addr).get_type();
+        if(type==scalar_number)
+        {
+            double num=nasal_gc.get_scalar(addr).get_number().get_number();
+            if(num!=0)
+                return addr;
+            else
+                nasal_gc.reference_delete(addr);
+        }
+        else if(type==scalar_string)
+        {
+            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
+            if(str.length()!=0 && (!check_numerable_string(str) || !trans_string_to_number(str)==0))
+                return addr;
+            else
+                nasal_gc.reference_delete(addr);
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
+            return -1;
+        }
+        addr=calculation(local_scope,node.get_children().back());
+        if(addr<0)
+            return -1;
+        type=nasal_gc.get_scalar(addr).get_type();
+        if(type==scalar_number)
+        {
+            double num=nasal_gc.get_scalar(addr).get_number().get_number();
+            if(num==0)
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                return addr;
+        }
+        else if(type==scalar_string)
+        {
+            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
+            if(str.length()==0 || (check_numerable_string(str) && trans_string_to_number(str)==0))
+            {
+                ret_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+                nasal_gc.reference_delete(addr);
+                return ret_addr;
+            }
+            else
+                return addr;
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
+            return -1;
+        }
+        return -1;
+    }
+    else if(node_type==__nor_operator)
+    {
         // nor will return 0 if the value is not null
-        // nor will return 1 if the value is null(0,nil,'0',"0")
-        // if or gets all 0,or returns 0
-        // if and gets a 0,and returns 0
-        ;
+        // nor will return 1 if the value is null(0,nil,'0',"0",'',"")
+        // vector,hash,function is not allowed here
+        int ret_addr=-1;
+        int addr=calculation(local_scope,node.get_children().front());
+        int type=nasal_gc.get_scalar(addr).get_type();
+        if(type==scalar_number)
+        {
+            double num=nasal_gc.get_scalar(addr).get_number().get_number();
+            ret_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num==0)));
+        }
+        else if(type==scalar_string)
+        {
+            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
+            ret_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+            if(str.length()==0 || (check_numerable_string(str) && trans_string_to_number(str)==0))
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(1);
+            else
+                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
+        }
+        else
+        {
+            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
+            return -1;
+        }
+        nasal_gc.reference_delete(addr);
+        return ret_addr;
     }
     return -1;
 }
