@@ -31,6 +31,7 @@ class nasal_runtime
         int  hash_generation    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  function_generation(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  calculation        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        int* get_identifier_addr(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  call_identifier    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void definition         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
@@ -500,7 +501,10 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     }
     else if(node_type==__equal)
     {
-        ;
+        int child_node_type_1=node.get_children().front().get_node_type();
+        int child_node_type_2=node.get_children().back().get_node_type();
+        if(child_node_type_1==__multi_scalar)
+            ;
     }
     else if(node_type==__add_equal || node_type==__sub_equal || node_type==__mul_equal || node_type==__div_equal)
     {
@@ -837,7 +841,16 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         nasal_gc.reference_delete(addr);
         return ret_addr;
     }
+    else if(node_type==__ques_mark)
+    {
+        ;
+    }
     return -1;
+}
+int* nasal_runtime::get_identifier_addr(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+{
+    int* ret_addr=NULL;
+    return ret_addr;
 }
 int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
@@ -871,20 +884,53 @@ void nasal_runtime::definition(std::list<std::map<std::string,int> >& local_scop
 {
     if(local_scope.empty())
         ;
+    if(node.get_children().front().get_node_type()==__multi_id)
+    {
+        ;
+    }
+    else
+    {
+        ;
+    }
     return;
 }
 void nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
-
+    int loop_type=node.get_node_type();
+    if(loop_type==__while)
+    {
+        ;
+    }
+    else if(loop_type==__foreach)
+    {
+        ;
+    }
+    else if(loop_type==__forindex)
+    {
+        ;
+    }
+    else if(loop_type==__for)
+    {
+        ;
+    }
     return;
 }
 void nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
-    
+    for(std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();i!=node.get_children().end();++i)
+    {
+        int condition_node_type=i->get_node_type();
+        if(condition_node_type==__if)
+            ;
+        else if(condition_node_type==__elsif)
+            ;
+        else
+            ;
+    }
     return;
 }
 
