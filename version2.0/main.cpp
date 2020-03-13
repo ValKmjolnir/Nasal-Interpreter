@@ -13,10 +13,10 @@ std::string command;
 
 int main()
 {
-	std::cout<<"       __                _ "<<std::endl;
-	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |"<<std::endl;
-	std::cout<<"   /  \\/ / _` / __|/ _` | |"<<std::endl;
-	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |"<<std::endl;
+	std::cout<<"       __                _      "<<std::endl;
+	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  "<<std::endl;
+	std::cout<<"   /  \\/ / _` / __|/ _` | |    "<<std::endl;
+	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  "<<std::endl;
 	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 #ifdef _WIN32
 			std::cout<<">> [system] Windows system."<<std::endl;
@@ -163,10 +163,10 @@ int main()
 		}
 		else if(command=="logo")
 		{
-			std::cout<<"       __                _ "<<std::endl;
-			std::cout<<"    /\\ \\ \\__ _ ___  __ _| |"<<std::endl;
-			std::cout<<"   /  \\/ / _` / __|/ _` | |"<<std::endl;
-			std::cout<<"  / /\\  / (_| \\__ \\ (_| | |"<<std::endl;
+			std::cout<<"       __                _      "<<std::endl;
+			std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  "<<std::endl;
+			std::cout<<"   /  \\/ / _` / __|/ _` | |    "<<std::endl;
+			std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  "<<std::endl;
 			std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 		}
 		else if(command=="info")

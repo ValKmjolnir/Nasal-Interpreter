@@ -33,7 +33,7 @@ class nasal_runtime
         int  calculation        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int* get_identifier_addr(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  call_identifier    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
-        void definition         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        void definition         (std::map<std::string,int>&,abstract_syntax_tree&);
         void loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
@@ -504,7 +504,32 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         int child_node_type_1=node.get_children().front().get_node_type();
         int child_node_type_2=node.get_children().back().get_node_type();
         if(child_node_type_1==__multi_scalar)
-            ;
+        {
+        	std::vector<int*> assigned_addrs;
+        	for(std::list<abstract_syntax_tree>::iterator i=node.get_children().front().get_children().begin();i!=node.get_children().front().get_children().end();++i)
+			{
+				assigned_addrs.push_back(get_identifier_addr(local_scope,*i));
+				if(!assigned_addrs.back())
+				{
+					assigned_addrs.clear();
+					break;
+				}
+			}
+			if(assigned_addrs.empty())
+				return -1;
+		}
+        else
+        {
+        	int* assigned_addr=get_identifier_addr(local_scope,node.get_children().front());
+        	if(!assigned_addr)
+        		return -1;
+        	int data_addr=calculation(local_scope,node.get_children().back());
+        	nasal_gc.reference_delete(*assigned_addr);
+        	*assigned_addr=data_addr;
+        	nasal_gc.reference_add(data_addr);
+        	return data_addr;
+		}
+		return -1;
     }
     else if(node_type==__add_equal || node_type==__sub_equal || node_type==__mul_equal || node_type==__div_equal)
     {
@@ -843,6 +868,9 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     }
     else if(node_type==__ques_mark)
     {
+    	// ?:
+    	// this will return the first element if the condition is true
+    	// this will return the second element if the condition is null(0,nil,"0",'0',"",'',"0x0","0o0")
         ;
     }
     return -1;
@@ -880,10 +908,8 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
     }
     return addr;
 }
-void nasal_runtime::definition(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+void nasal_runtime::definition(std::map<std::string,int>& local_scope,abstract_syntax_tree& node)
 {
-    if(local_scope.empty())
-        ;
     if(node.get_children().front().get_node_type()==__multi_id)
     {
         ;
@@ -970,7 +996,7 @@ int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,
                 node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
             this->calculation(local_scope,*iter);
         else if(node_type==__definition)
-            this->definition(local_scope,*iter);
+            this->definition(local_scope.back(),*iter);
         else if(node_type==__conditional)
             this->conditional(local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
@@ -1017,7 +1043,7 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
                 node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
             this->calculation(main_local_scope,*iter);
         else if(node_type==__definition)
-            this->definition(main_local_scope,*iter);
+            this->definition(global_scope,*iter);
         else if(node_type==__conditional)
             this->conditional(main_local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
