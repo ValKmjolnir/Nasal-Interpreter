@@ -17,6 +17,7 @@ class nasal_runtime
             __incorrect_head_of_tree,
             __incorrect_head_of_func,
             __undefined_identifier,
+            __multi_assign_incorrect_value_number,
             __not_callable_vector,
             __not_callable_hash,
             __not_numerable_str,
@@ -64,6 +65,8 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"called identifier is not a function."<<std::endl;break;
         case __undefined_identifier:
             std::cout<<"undefined identifier."<<std::endl;break;
+        case __multi_assign_incorrect_value_number:
+        	std::cout<<"numbers of assigned identifiers and values are not the same."<<std::endl;break;
         case __not_callable_vector:
             std::cout<<"called a value that is not a vector."<<std::endl;break;
         case __not_callable_hash:
@@ -517,17 +520,90 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
 			}
 			if(assigned_addrs.empty())
 				return -1;
+			if(child_node_type_2==__multi_scalar)
+			{
+				std::vector<int> data_addrs;
+				for(std::list<abstract_syntax_tree>::iterator i=node.get_children().back().get_children().begin();i!=node.get_children().back().get_children().end();++i)
+					data_addrs.push_back(calculation(local_scope,*i));
+				if(data_addrs.size()!=assigned_addrs.size())
+				{
+					error_interrupt(__multi_assign_incorrect_value_number,node.get_children().back().get_node_line());
+					return -1;
+				}
+				for(int i=0;i<assigned_addrs.size();++i)
+					;
+			}
+			else
+			{
+				int data_addr=calculation(local_scope,node.get_children().back());
+				if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_vector)
+				{
+					error_interrupt(__error_value_type,node.get_children().back().get_node_line());
+					return -1;
+				}
+				else if(nasal_gc.get_scalar(data_addr).get_vector().size()!=assigned_addrs.size())
+				{
+					error_interrupt(__multi_assign_incorrect_value_number,node.get_children().back().get_node_line());
+					return -1;
+				}
+				for(int i=0;i<assigned_addrs.size();++i)
+					;
+			}
 		}
         else
         {
+        	int ret_addr=-1;
         	int* assigned_addr=get_identifier_addr(local_scope,node.get_children().front());
         	if(!assigned_addr)
         		return -1;
         	int data_addr=calculation(local_scope,node.get_children().back());
+        	int new_data_addr=-1;
         	nasal_gc.reference_delete(*assigned_addr);
-        	*assigned_addr=data_addr;
-        	nasal_gc.reference_add(data_addr);
-        	return data_addr;
+        	switch(nasal_gc.get_scalar(data_addr).get_type())
+        	{
+        		case scalar_nil:
+        			new_data_addr=nasal_gc.gc_alloc();
+        			nasal_gc.get_scalar(new_data_addr).set_type(scalar_nil);
+        			nasal_gc.reference_delete(data_addr);
+        			*assigned_addr=new_data_addr;
+        			nasal_gc.reference_add(new_data_addr);
+        			ret_addr=new_data_addr;
+        			break;
+        		case scalar_number:
+        			new_data_addr=nasal_gc.gc_alloc();
+        			nasal_gc.get_scalar(new_data_addr).set_type(scalar_number);
+        			nasal_gc.get_scalar(new_data_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addr).get_number());
+        			nasal_gc.reference_delete(data_addr);
+        			*assigned_addr=new_data_addr;
+        			nasal_gc.reference_add(new_data_addr);
+        			ret_addr=new_data_addr;
+        			break;
+        		case scalar_string:
+        			new_data_addr=nasal_gc.gc_alloc();
+        			nasal_gc.get_scalar(new_data_addr).set_type(scalar_string);
+        			nasal_gc.get_scalar(new_data_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addr).get_string());
+        			nasal_gc.reference_delete(data_addr);
+        			*assigned_addr=new_data_addr;
+        			nasal_gc.reference_add(new_data_addr);
+        			ret_addr=new_data_addr;
+        			break;
+        		case scalar_function:
+        			new_data_addr=nasal_gc.gc_alloc();
+        			nasal_gc.get_scalar(new_data_addr).set_type(scalar_function);
+        			nasal_gc.get_scalar(new_data_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addr).get_function());
+        			nasal_gc.reference_delete(data_addr);
+        			*assigned_addr=new_data_addr;
+        			nasal_gc.reference_add(new_data_addr);
+        			ret_addr=new_data_addr;
+        			break;
+        		case scalar_vector:
+        		case scalar_hash:
+        			*assigned_addr=data_addr;
+        			nasal_gc.reference_add(data_addr);
+        			ret_addr=data_addr;
+        			break;
+			}
+        	return ret_addr;
 		}
 		return -1;
     }
@@ -871,7 +947,30 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     	// ?:
     	// this will return the first element if the condition is true
     	// this will return the second element if the condition is null(0,nil,"0",'0',"",'',"0x0","0o0")
-        ;
+        int condition_addr=calculation(local_scope,node.get_children().front());
+        int condition_type=nasal_gc.get_scalar(condition_addr).get_type();
+        std::list<abstract_syntax_tree>::iterator ptr=node.get_children().begin();
+        ++ptr;
+        if(condition_type==scalar_number && nasal_gc.get_scalar(condition_addr).get_number().get_number()==0)
+        {
+        	++ptr;
+        	nasal_gc.reference_delete(condition_addr);
+        	return calculation(local_scope,*ptr);
+		}
+		else if(condition_type==scalar_string
+				&& check_numerable_string(nasal_gc.get_scalar(condition_addr).get_string().get_string())
+				&& trans_string_to_number(nasal_gc.get_scalar(condition_addr).get_string().get_string())==0)
+		{
+			++ptr;
+        	nasal_gc.reference_delete(condition_addr);
+        	return calculation(local_scope,*ptr);
+		}
+		else
+		{
+			nasal_gc.reference_delete(condition_addr);
+        	return calculation(local_scope,*ptr);
+		}
+		return -1;
     }
     return -1;
 }
@@ -981,7 +1080,6 @@ int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,
         int node_type=iter->get_node_type();
         if(node_type==__number || node_type==__string)
             ;
-        // only number or string
         else if(node_type==__id)
             this->call_identifier(local_scope,*iter);
         else if(node_type==__vector)
