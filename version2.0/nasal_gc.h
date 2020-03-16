@@ -57,6 +57,7 @@ class nasal_vector
 	public:
 		void set_clear();
 		void vec_push(int);
+		int  get_elem(int);
 		int  vec_pop();
 		int  get_size();
 		void deep_copy(nasal_vector&);
@@ -375,6 +376,12 @@ void nasal_vector::vec_push(int addr)
 	nasal_gc.reference_add(addr);
 	nas_array.push_back(addr);
 	return;
+}
+int nasal_vector::get_elem(int addr)
+{
+	if(0<=addr && addr<nas_array.size())
+		return nas_array[addr];
+	return -1;
 }
 int nasal_vector::vec_pop()
 {
