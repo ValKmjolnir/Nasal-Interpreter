@@ -16,13 +16,10 @@ class nasal_function
 		// parent_hash_addr is used to store the address of the hash which has this nasal_function
 		// because nasal_function needs this address to adjust the identifier called 'me' in local_scope
 		// 'me' is the identifier which points to the hash which has this nasal_function
-		int  parent_hash_addr;
 	public:
-		nasal_function();
 		void set_clear();
 		void set_local_scope(std::list<std::map<std::string,int> >&);
 		void set_statement_block(abstract_syntax_tree&);
-		void set_parent_hash_addr(int);
 		std::list<std::map<std::string,int> >& get_local_scope();
 		abstract_syntax_tree& get_statement_block();
 		void deep_copy(nasal_function&);
@@ -240,11 +237,7 @@ gc_manager nasal_gc;
 // this object is used in "nasal_runtime.h"
 // because there must be only one gc when running a program(one process)
 
-nasal_function::nasal_function()
-{
-	parent_hash_addr=-1;
-	return;
-}
+
 void nasal_function::set_clear()
 {
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
@@ -252,7 +245,6 @@ void nasal_function::set_clear()
 			nasal_gc.reference_delete(i->second);
 	local_scope.clear();
 	function_root.set_clear();
-	parent_hash_addr=-1;
 	return;
 }
 void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_scope)
@@ -266,35 +258,6 @@ void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_
 void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 {
 	function_root=func_block;
-	return;
-}
-void nasal_function::set_parent_hash_addr(int addr)
-{
-	// in normal cases this function is often called after this->set_local_scope(...)
-	// because creating a new nasal function needs local_scope(closure) and abstract syntax tree.
-	// then the nasal function will be given to an identifier.
-	// after checking the identifier and making sure it is a hash,
-	// call this function and set 'me' to this addr if exists.
-	// if 'me' does not exist,then add a new identifeir named 'me' and give it the addr.
-	// also 'me' can be changed in hash function by ways like "var me=1;"
-	parent_hash_addr=addr;
-	bool has_identifier_me=false;
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
-		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-			if(i->first=="me")
-			{
-				has_identifier_me=true;
-				i->second=parent_hash_addr;
-			}
-	if(!has_identifier_me)
-	{
-		if(local_scope.empty())
-		{
-			std::map<std::string,int> new_scope;
-			local_scope.push_back(new_scope);
-		}
-		local_scope.back()["me"]=parent_hash_addr;
-	}
 	return;
 }
 std::list<std::map<std::string,int> >& nasal_function::get_local_scope()
@@ -448,11 +411,7 @@ int nasal_hash::get_hash_member(std::string member_name)
 void nasal_hash::hash_push(std::string member_name,int addr)
 {
 	if(nas_hash.find(member_name)==nas_hash.end())
-	{
 		nas_hash[member_name]=addr;
-		if(nasal_gc.place_check(addr) && nasal_gc.get_scalar(addr).get_type()==scalar_function)
-			nasal_gc.get_scalar(addr).get_function().set_parent_hash_addr(this->get_self_addr());
-	}
 	return;
 }
 void nasal_hash::hash_pop(std::string member_name)
@@ -489,10 +448,7 @@ void nasal_hash::deep_copy(nasal_hash& tmp)
 			nasal_gc.get_scalar(new_addr).get_hash().deep_copy(nasal_gc.get_scalar(i->second).get_hash());
 		}
 		else if(tmp_type==scalar_function)
-		{
-			nasal_gc.get_scalar(new_addr).get_function().set_parent_hash_addr(this->self_addr);
 			nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(i->second).get_function());
-		}
 		nas_hash[i->first]=new_addr;
 	}
 	return;
