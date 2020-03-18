@@ -18,6 +18,7 @@ class nasal_runtime
             __incorrect_head_of_func,
             __undefined_identifier,
             __multi_assign_incorrect_value_number,
+            __multi_define_incorrect_value_number,
             __invalid_vector_member,
             __invalid_hash_member,
             __memory_overflow,
@@ -70,6 +71,8 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"undefined identifier."<<std::endl;break;
         case __multi_assign_incorrect_value_number:
         	std::cout<<"numbers of assigned identifiers and values are not the same."<<std::endl;break;
+        case __multi_define_incorrect_value_number:
+            std::cout<<"numbers of defined identifiers and values are not the same.";break;
         case __invalid_vector_member:
             std::cout<<"this member of vector does not exist."<<std::endl;break;
         case __invalid_hash_member:
@@ -85,7 +88,7 @@ void nasal_runtime::error_interrupt(const int type,const int line)
         case __stack_overflow:
             std::cout<<"stack overflow."<<std::endl;break;
         case __error_value_type:
-            std::cout<<"operator gets error value type."<<std::endl;break;
+            std::cout<<"incorrect value type."<<std::endl;break;
         default:
             std::cout<<"unknown error."<<std::endl;break;
     }
@@ -140,7 +143,12 @@ int nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& loca
     }
     for(;call_node!=node.get_children().end();++call_node)
     {
-        ;
+        switch(call_node->get_node_type())
+        {
+            case __call_vector:break;
+            case __call_hash:break;
+            case __call_function:break;
+        }
     }
     return addr;
 }
@@ -217,14 +225,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     else if(node_type==__function)
         return function_generation(local_scope,node);
     else if(node_type==__id)
-    {
-        int ret=call_identifier(local_scope,node);
-        nasal_gc.reference_add(ret);
-        return ret;
-        // returned address is not a temporary one
-        // but after each calculation,the refcnt will -1
-        // so refcnt++ here
-    }
+        return call_identifier(local_scope,node);
     else if(node_type==__add_operator || node_type==__sub_operator || node_type==__mul_operator || node_type==__div_operator)
     {
         // scalar_nil cannot be used here
@@ -572,11 +573,13 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                             new_data_addr=nasal_gc.gc_alloc();
                             nasal_gc.get_scalar(new_data_addr).set_type(scalar_string);
                             nasal_gc.get_scalar(new_data_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addrs[i]).get_string());
+                            *assigned_addrs[i]=new_data_addr;
                             break;
                         case scalar_function:
                             new_data_addr=nasal_gc.gc_alloc();
                             nasal_gc.get_scalar(new_data_addr).set_type(scalar_function);
                             nasal_gc.get_scalar(new_data_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addrs[i]).get_function());
+                            *assigned_addrs[i]=new_data_addr;
                             break;
                         case scalar_vector:
                         case scalar_hash:
@@ -629,11 +632,13 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                             new_data_addr=nasal_gc.gc_alloc();
                             nasal_gc.get_scalar(new_data_addr).set_type(scalar_string);
                             nasal_gc.get_scalar(new_data_addr).get_string().deep_copy(nasal_gc.get_scalar(vector_member_addr).get_string());
+                            *assigned_addrs[i]=new_data_addr;
                             break;
                         case scalar_function:
                             new_data_addr=nasal_gc.gc_alloc();
                             nasal_gc.get_scalar(new_data_addr).set_type(scalar_function);
                             nasal_gc.get_scalar(new_data_addr).get_function().deep_copy(nasal_gc.get_scalar(vector_member_addr).get_function());
+                            *assigned_addrs[i]=new_data_addr;
                             break;
                         case scalar_vector:
                         case scalar_hash:
@@ -1088,25 +1093,176 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
         error_interrupt(__undefined_identifier,node.get_node_line());
         return -1;
     }
+    int last_hash_addr=-1;
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
+        if(nasal_gc.get_scalar(addr).get_type()==scalar_hash)
+            last_hash_addr=addr;
         int node_type=iter->get_node_type();
         if(node_type==__call_vector)
-            ;
+        {
+            int called_type=nasal_gc.get_scalar(addr).get_type();
+            if(called_type!=scalar_vector && called_type!=scalar_hash)
+            {
+                error_interrupt(__error_value_type,iter->get_node_line());
+                return -1;
+            }
+            int data_addr=calculation(local_scope,iter->get_children().front());
+            if(called_type==scalar_vector)
+            {
+                ;
+            }
+            else if(called_type==scalar_hash)
+            {
+                if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
+                {
+                    error_interrupt(__error_value_type,iter->get_node_line());
+                    return -1;
+                }
+                std::string key_str=nasal_gc.get_scalar(data_addr).get_string().get_string();
+                addr=nasal_gc.get_scalar(addr).get_hash().get_hash_member(key_str);
+                if(addr<0)
+                {
+                    error_interrupt(__invalid_hash_member,iter->get_node_line());
+                    return -1;
+                }   
+            }
+        }
         else if(node_type==__call_hash)
-            ;
+        {
+            if(nasal_gc.get_scalar(addr).get_type()!=scalar_hash)
+            {
+                error_interrupt(__error_value_type,iter->get_node_line());
+                return -1;
+            }
+            addr=nasal_gc.get_scalar(addr).get_hash().get_hash_member(iter->get_var_name());
+            if(addr<0)
+            {
+                error_interrupt(__invalid_hash_member,iter->get_node_line());
+                return -1;
+            }
+        }
         else if(node_type==__call_function)
             ;
-        else
-            ;
     }
+    // after calculation or assignment/definition,reference counter of this address will -1
+    // to avoid nasal_gc collecting this address,reference counter+1 here
+    nasal_gc.reference_add(addr);
     return addr;
 }
 void nasal_runtime::definition(std::list<std::map<std::string,int> >&local_scope,std::map<std::string,int>& now_scope,abstract_syntax_tree& node)
 {
     if(node.get_children().front().get_node_type()==__multi_id)
     {
-        ;
+        std::vector<std::string> id_names;
+        for(std::list<abstract_syntax_tree>::iterator i=node.get_children().front().get_children().begin();i!=node.get_children().front().get_children().end();++i)
+            id_names.push_back(i->get_var_name());
+        int child_node_type=node.get_children().back().get_node_type();
+        if(child_node_type==__multi_scalar)
+        {
+            std::vector<int> data_addrs;
+            for(std::list<abstract_syntax_tree>::iterator i=node.get_children().back().get_children().begin();i!=node.get_children().back().get_children().end();++i)
+            {
+                int new_addr=calculation(local_scope,*i);
+                if(new_addr<0)
+                    return;
+                data_addrs.push_back(new_addr);
+            }
+            if(data_addrs.size()!=id_names.size())
+            {
+                error_interrupt(__multi_define_incorrect_value_number,node.get_children().back().get_node_line());
+                return;
+            }
+            for(int i=0;i<id_names.size();++i)
+            {
+                int new_data_addr=-1;
+                switch(nasal_gc.get_scalar(data_addrs[i]).get_type())
+                {
+                    case scalar_nil:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_nil);
+                        break;
+                    case scalar_number:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_number);
+                        nasal_gc.get_scalar(new_data_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addrs[i]).get_number());
+                        break;
+                    case scalar_string:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_string);
+                        nasal_gc.get_scalar(new_data_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addrs[i]).get_string());
+                        break;
+                    case scalar_function:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_function);
+                        nasal_gc.get_scalar(new_data_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addrs[i]).get_function());
+                        break;
+                    case scalar_vector:
+                    case scalar_hash:
+                        new_data_addr=data_addrs[i];
+                        nasal_gc.reference_add(data_addrs[i]);
+                        break;
+                }
+                now_scope[id_names[i]]=new_data_addr;
+            }
+            for(int i=0;i<data_addrs.size();++i)
+                nasal_gc.reference_delete(data_addrs[i]);
+        }
+        else
+        {
+            int data_addr=calculation(local_scope,node.get_children().back());
+            if(data_addr<0)
+                return;
+            if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_vector)
+            {
+                error_interrupt(__error_value_type,node.get_children().back().get_node_line());
+                return;
+            }
+            else if(nasal_gc.get_scalar(data_addr).get_vector().get_size()!=id_names.size())
+            {
+                error_interrupt(__multi_define_incorrect_value_number,node.get_children().back().get_node_line());
+                return;
+            }
+            for(int i=0;i<id_names.size();++i)
+            {
+                int new_data_addr=-1;
+                int vector_member_addr=nasal_gc.get_scalar(data_addr).get_vector().get_elem(i);
+                if(vector_member_addr<0)
+                {
+                    error_interrupt(__invalid_vector_member,node.get_children().back().get_node_line());
+                    return;
+                }
+                switch(nasal_gc.get_scalar(vector_member_addr).get_type())
+                {
+                    case scalar_nil:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_nil);
+                        break;
+                    case scalar_number:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_number);
+                        nasal_gc.get_scalar(new_data_addr).get_number().deep_copy(nasal_gc.get_scalar(vector_member_addr).get_number());
+                        break;
+                    case scalar_string:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_string);
+                        nasal_gc.get_scalar(new_data_addr).get_string().deep_copy(nasal_gc.get_scalar(vector_member_addr).get_string());
+                        break;
+                    case scalar_function:
+                        new_data_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(new_data_addr).set_type(scalar_function);
+                        nasal_gc.get_scalar(new_data_addr).get_function().deep_copy(nasal_gc.get_scalar(vector_member_addr).get_function());
+                        break;
+                    case scalar_vector:
+                    case scalar_hash:
+                        new_data_addr=vector_member_addr;
+                        nasal_gc.reference_add(vector_member_addr);
+                        break;
+                }
+                now_scope[id_names[i]]=new_data_addr;
+            }
+            nasal_gc.reference_delete(data_addr);
+        }
     }
     else
     {
