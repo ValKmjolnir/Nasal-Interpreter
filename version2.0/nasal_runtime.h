@@ -24,6 +24,7 @@ class nasal_runtime
             __memory_overflow,
             __not_callable_vector,
             __not_callable_hash,
+            __not_callable_function,
             __not_numerable_str,
             __error_value_type,
             __stack_overflow,
@@ -83,6 +84,8 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"called a value that is not a vector."<<std::endl;break;
         case __not_callable_hash:
             std::cout<<"called a value that is not a hash."<<std::endl;break;
+        case __not_callable_function:
+            std::cout<<"called a value that is not a function."<<std::endl;break;
         case __not_numerable_str:
             std::cout<<"this string is not a numerable one."<<std::endl;break;
         case __stack_overflow:
@@ -1105,38 +1108,30 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
     {
         if(nasal_gc.get_scalar(addr).get_type()==scalar_hash)
             last_hash_addr=addr;
-        int node_type=iter->get_node_type();
-        if(node_type==__call_vector)
+        // call vector/special call hash/subvec
+        // the special type of calling hash like a["name"] is also generated as calling vector
+        if(iter->get_node_type()==__call_vector)
         {
+            // check the scalar type of called identifier here
             int called_type=nasal_gc.get_scalar(addr).get_type();
             if(called_type!=scalar_vector && called_type!=scalar_hash)
             {
                 error_interrupt(__error_value_type,iter->get_node_line());
                 return -1;
             }
-            int data_addr=calculation(local_scope,iter->get_children().front());
-            if(called_type==scalar_vector)
+            if(iter->get_children().front().get_node_type()!=__sub_vector)
             {
                 ;
             }
-            else if(called_type==scalar_hash)
+            else
             {
-                
-                if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
-                {
-                    error_interrupt(__error_value_type,iter->get_node_line());
-                    return -1;
-                }
-                std::string key_str=nasal_gc.get_scalar(data_addr).get_string().get_string();
-                addr=nasal_gc.get_scalar(addr).get_hash().get_hash_member(key_str);
-                if(addr<0)
-                {
-                    error_interrupt(__invalid_hash_member,iter->get_node_line());
-                    return -1;
-                }   
+                int data_addr=calculation(local_scope,iter->get_children().front());
+
             }
         }
-        else if(node_type==__call_hash)
+        // call hash
+        // identifier.identifier
+        else if(iter->get_node_type()==__call_hash)
         {
             if(nasal_gc.get_scalar(addr).get_type()!=scalar_hash)
             {
@@ -1150,7 +1145,9 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
                 return -1;
             }
         }
-        else if(node_type==__call_function)
+        // call function
+        // identifier(...)
+        else if(iter->get_node_type()==__call_function)
             ;
     }
     // after calculation or assignment/definition,reference counter of this address will -1
