@@ -12,6 +12,7 @@ class nasal_function
 {
 	private:
 		std::list<std::map<std::string,int> > local_scope;
+		abstract_syntax_tree parameter_list;
 		abstract_syntax_tree function_root;
 		// parent_hash_addr is used to store the address of the hash which has this nasal_function
 		// because nasal_function needs this address to adjust the identifier called 'me' in local_scope
@@ -19,8 +20,10 @@ class nasal_function
 	public:
 		void set_clear();
 		void set_local_scope(std::list<std::map<std::string,int> >&);
+		void set_paramemter_list(abstract_syntax_tree&);
 		void set_statement_block(abstract_syntax_tree&);
 		std::list<std::map<std::string,int> >& get_local_scope();
+		abstract_syntax_tree& get_parameter_list();
 		abstract_syntax_tree& get_statement_block();
 		void deep_copy(nasal_function&);
 };
@@ -255,6 +258,11 @@ void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_
 				nasal_gc.reference_add(i->second);
 	return;
 }
+void nasal_function::set_paramemter_list(abstract_syntax_tree& para_list)
+{
+	parameter_list=para_list;
+	return;
+}
 void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 {
 	function_root=func_block;
@@ -263,6 +271,10 @@ void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 std::list<std::map<std::string,int> >& nasal_function::get_local_scope()
 {
 	return local_scope;
+}
+abstract_syntax_tree& nasal_function::get_parameter_list()
+{
+	return parameter_list;
 }
 abstract_syntax_tree& nasal_function::get_statement_block()
 {
@@ -282,6 +294,7 @@ void nasal_function::deep_copy(nasal_function& tmp)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 				nasal_gc.reference_add(i->second);
 	// copy abstract_syntax_tree
+	parameter_list=tmp.parameter_list;
 	function_root=tmp.function_root;
 	return;
 }
@@ -342,7 +355,11 @@ void nasal_vector::vec_push(int addr)
 }
 int nasal_vector::get_elem(int addr)
 {
-	if(0<=addr && addr<nas_array.size())
+	// 0 ~ size-1 -size ~ -1
+	int bound=nas_array.size();
+	if(-bound<=addr && addr<0)
+		return nas_array[bound+addr];
+	else if(0<=addr && addr<bound)
 		return nas_array[addr];
 	return -1;
 }
