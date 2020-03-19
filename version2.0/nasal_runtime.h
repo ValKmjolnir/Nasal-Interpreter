@@ -41,7 +41,7 @@ class nasal_runtime
         void definition         (std::list<std::map<std::string,int> >&,std::map<std::string,int>&,abstract_syntax_tree&);
         void loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
-        int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&);
     public:
         nasal_runtime()
         {
@@ -203,11 +203,18 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
     nasal_gc.get_scalar(addr).set_type(scalar_function);
     nasal_gc.get_scalar(addr).get_function().set_local_scope(local_scope);
     // function
-    //  parameters
-    //  block
-    //  calls...
+    //     parameters
+    //     block
+    //     calls...
     std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();
-
+    nasal_gc.get_scalar(addr).get_function().set_paramemter_list(*i);
+    ++i;
+    nasal_gc.get_scalar(addr).get_function().set_statement_block(*i);
+    ++i;
+    for(;i!=node.get_children().end();++i)
+    {
+        ;
+    }
     return addr;
 }
 int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
@@ -1114,6 +1121,7 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
             }
             else if(called_type==scalar_hash)
             {
+                
                 if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
                 {
                     error_interrupt(__error_value_type,iter->get_node_line());
@@ -1351,7 +1359,7 @@ void nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_sco
     return;
 }
 
-int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& func_root)
+int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& parameter_list,abstract_syntax_tree& func_root)
 {
     if(func_root.get_node_type()!=__function)
     {
@@ -1361,12 +1369,12 @@ int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
     // loading parameters
-    for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().front().get_children().begin();iter!=func_root.get_children().front().get_children().end();++iter)
+    for(std::list<abstract_syntax_tree>::iterator iter=parameter_list.get_children().begin();iter!=parameter_list.get_children().end();++iter)
     {
 
     }
     // process
-    for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().back().get_children().begin();iter!=func_root.get_children().back().get_children().end();++iter)
+    for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().begin();iter!=func_root.get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
         int node_type=iter->get_node_type();

@@ -1,11 +1,17 @@
 #include "nasal.h"
 
+// source code will be put in resource
 resource_file        resource;
+// source code will be generated to tokens in lexer
 nasal_lexer          lexer;
+// token list will be checked in parser and output the abstract syntax tree
 nasal_parse          parser;
+// libroot stores the ast of lib file
 abstract_syntax_tree libroot;
+// root stores the ast of source code
 abstract_syntax_tree root;
-abstract_syntax_tree linker;
+// executable_ast generates libroot and root together
+abstract_syntax_tree executable_ast;
 
 nasal_runtime runtime;
 
@@ -69,7 +75,7 @@ int main()
 			lexer.delete_all_tokens();
 			parser.delete_all_elements();
 			root.set_clear();
-			linker.set_clear();
+			executable_ast.set_clear();
 			std::cout<<">> [Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
@@ -148,11 +154,10 @@ int main()
 				parser.main_generate();
 				if(!parser.get_error())
 				{
-					linker.set_clear();
-					linker=libroot;
-					linker.merge_children(parser.get_root());
-					root=linker;
-					runtime.main_proc(root);
+					executable_ast.set_clear();
+					executable_ast=libroot;
+					executable_ast.merge_children(parser.get_root());
+					runtime.main_proc(executable_ast);
 					//root.print_tree();
 				}
 				else
