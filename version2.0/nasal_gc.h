@@ -358,9 +358,15 @@ int nasal_vector::get_elem(int addr)
 	// 0 ~ size-1 -size ~ -1
 	int bound=nas_array.size();
 	if(-bound<=addr && addr<0)
+	{
+		nasal_gc.reference_add(nas_array[bound+addr]);
 		return nas_array[bound+addr];
+	}
 	else if(0<=addr && addr<bound)
+	{
+		nasal_gc.reference_add(nas_array[addr]);
 		return nas_array[addr];
+	}
 	return -1;
 }
 int nasal_vector::vec_pop()
