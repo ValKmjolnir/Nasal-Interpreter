@@ -57,6 +57,7 @@ class nasal_vector
 	public:
 		void set_clear();
 		void vec_push(int);
+		int* get_elem_addr(int);
 		int  get_elem(int);
 		int  vec_pop();
 		int  get_size();
@@ -74,6 +75,7 @@ class nasal_hash
 		void set_self_addr(int);
 		void set_clear();
 		int  get_self_addr();
+		int* get_hash_member_addr(std::string);
 		int  get_hash_member(std::string);
 		void hash_push(std::string,int);
 		void hash_pop(std::string);
@@ -353,6 +355,16 @@ void nasal_vector::vec_push(int addr)
 	nas_array.push_back(addr);
 	return;
 }
+int* nasal_vector::get_elem_addr(int addr)
+{
+	// 0 ~ size-1 -size ~ -1
+	int bound=nas_array.size();
+	if(-bound<=addr && addr<0)
+		return &nas_array[bound+addr];
+	else if(0<=addr && addr<bound)
+		return &nas_array[addr];
+	return NULL;
+}
 int nasal_vector::get_elem(int addr)
 {
 	// 0 ~ size-1 -size ~ -1
@@ -425,10 +437,19 @@ int nasal_hash::get_self_addr()
 {
 	return self_addr;
 }
+int* nasal_hash::get_hash_member_addr(std::string member_name)
+{
+	if(nas_hash.find(member_name)!=nas_hash.end())
+		return &nas_hash[member_name];
+	return NULL;
+}
 int nasal_hash::get_hash_member(std::string member_name)
 {
 	if(nas_hash.find(member_name)!=nas_hash.end())
+	{
+		nasal_gc.reference_add(nas_hash[member_name]);
 		return nas_hash[member_name];
+	}
 	return -1;
 }
 void nasal_hash::hash_push(std::string member_name,int addr)
