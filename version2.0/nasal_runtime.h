@@ -11,16 +11,15 @@ class nasal_runtime
         std::map<std::string,int> global_scope;
         std::list<std::map<std::string,int> > main_local_scope;
 
-        // enum of state type
+        // enum of state type used by loop/conditional
         enum state_stack_member_type
         {
             __state_error,
+            __state_no_operation,
             __state_continue=1,
             __state_break,
             __state_return,
         };
-        // state stack is used when loop/conditional expr running
-        std::stack<int> state_stack;
         
         // see detail of each enum type in function error_interrupt(const int)
         enum runtime_error_type
@@ -44,6 +43,9 @@ class nasal_runtime
             __normal_call_vector_too_large_value,
             __error_call_type_when_getting_address,
             __forindex_foreach_not_vector,
+            __break_not_used_in_loop,
+            __continue_not_used_in_loop,
+            __return_not_used_in_function,
             __stack_overflow,
         };
         int  runtime_error_exit_mark;
@@ -53,12 +55,14 @@ class nasal_runtime
         int  vector_generation  (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  hash_generation    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  function_generation(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        bool check_condition    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  calculation        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int* get_identifier_addr(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  call_identifier    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         void definition         (std::list<std::map<std::string,int> >&,std::map<std::string,int>&,abstract_syntax_tree&);
-        void loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
-        void conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        int  loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        int  conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
+        int  block_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,int);
     public:
         nasal_runtime()
@@ -119,6 +123,12 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"this type of calling identifier is not allowed here."<<std::endl;break;
         case __forindex_foreach_not_vector:
             std::cout<<"forindex and foreach need vector here."<<std::endl;break;
+        case __break_not_used_in_loop:
+            std::cout<<"break must be used in a loop."<<std::endl;break;
+        case __continue_not_used_in_loop:
+            std::cout<<"continue must be used in a loop."<<std::endl;break;
+        case __return_not_used_in_function:
+            std::cout<<"return expr must be used in a function."<<std::endl;break;
         case __stack_overflow:
             std::cout<<"stack overflow."<<std::endl;break;
         default:
@@ -248,6 +258,33 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
         ;
     }
     return addr;
+}
+bool nasal_runtime::check_condition(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+{
+    bool ret=false;
+    int checked_addr=calculation(local_scope,node);
+    if(checked_addr<0)
+        return false;
+    int checked_type=nasal_gc.get_scalar(checked_addr).get_type();
+    if(checked_type==scalar_number)
+        ret=(nasal_gc.get_scalar(checked_addr).get_number().get_number()!=0);
+    else if(checked_type==scalar_string)
+    {
+        std::string tmp_str=nasal_gc.get_scalar(checked_addr).get_string().get_string();
+        if(!tmp_str.length())
+            ret=false;
+        else if(check_numerable_string(tmp_str))
+            ret=(trans_string_to_number(tmp_str)!=0);
+        else
+            ret=true;
+    }
+    else
+    {
+        error_interrupt(__error_value_type,node.get_node_line());
+        return false;
+    }
+    nasal_gc.reference_delete(checked_addr);
+    return ret;
 }
 int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
@@ -1054,31 +1091,10 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         // nor will return 1 if the value is null(0,nil,'0',"0",'',"")
         // vector,hash,function is not allowed here
         int ret_addr=-1;
-        int addr=calculation(local_scope,node.get_children().front());
-        int type=nasal_gc.get_scalar(addr).get_type();
-        if(type==scalar_number)
-        {
-            double num=nasal_gc.get_scalar(addr).get_number().get_number();
-            ret_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
-            nasal_gc.get_scalar(ret_addr).get_number().set_number((double(num==0)));
-        }
-        else if(type==scalar_string)
-        {
-            std::string str=nasal_gc.get_scalar(addr).get_string().get_string();
-            ret_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
-            if(str.length()==0 || (check_numerable_string(str) && trans_string_to_number(str)==0))
-                nasal_gc.get_scalar(ret_addr).get_number().set_number(1);
-            else
-                nasal_gc.get_scalar(ret_addr).get_number().set_number(0);
-        }
-        else
-        {
-            error_interrupt(__error_value_type,node.get_children().front().get_node_line());
-            return -1;
-        }
-        nasal_gc.reference_delete(addr);
+        bool checked_result=check_condition(local_scope,node.get_children().front());
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_number);
+        nasal_gc.get_scalar(ret_addr).get_number().set_number((double)checked_result);
         return ret_addr;
     }
     else if(node_type==__ques_mark)
@@ -1086,29 +1102,17 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
     	// ?:
     	// this will return the first element if the condition is true
     	// this will return the second element if the condition is null(0,nil,"0",'0',"",'',"0x0","0o0")
-        int condition_addr=calculation(local_scope,node.get_children().front());
-        int condition_type=nasal_gc.get_scalar(condition_addr).get_type();
         std::list<abstract_syntax_tree>::iterator ptr=node.get_children().begin();
-        ++ptr;
-        if(condition_type==scalar_number && nasal_gc.get_scalar(condition_addr).get_number().get_number()==0)
+        if(check_condition(local_scope,*ptr))
         {
-        	++ptr;
-        	nasal_gc.reference_delete(condition_addr);
-        	return calculation(local_scope,*ptr);
-		}
-		else if(condition_type==scalar_string
-				&& check_numerable_string(nasal_gc.get_scalar(condition_addr).get_string().get_string())
-				&& trans_string_to_number(nasal_gc.get_scalar(condition_addr).get_string().get_string())==0)
-		{
-			++ptr;
-        	nasal_gc.reference_delete(condition_addr);
-        	return calculation(local_scope,*ptr);
-		}
-		else
-		{
-			nasal_gc.reference_delete(condition_addr);
-        	return calculation(local_scope,*ptr);
-		}
+            ++ptr;
+            return calculation(local_scope,*ptr);
+        }
+        else
+        {
+            ++ptr;++ptr;
+            return calculation(local_scope,*ptr);
+        }
 		return -1;
     }
     return -1;
@@ -1652,73 +1656,126 @@ void nasal_runtime::definition(std::list<std::map<std::string,int> >&local_scope
     }
     return;
 }
-void nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
     int loop_type=node.get_node_type();
     if(loop_type==__while)
     {
-        int condition_data=calculation(local_scope,node.get_children().front());
-        // run block
+        while(check_condition(local_scope,node.get_children().front()))
+        {
+            int state=block_proc(local_scope,node.get_children().back());
+            if(state==__state_break)
+                break;
+            else if(state==__state_continue)
+                ;
+            else if(state==__state_return)
+                return __state_return;
+            else if(state==__state_error)
+                return __state_error;
+            else if(state==__state_no_operation)
+                ;
+        }
     }
     else if(loop_type==__foreach)
     {
-        std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();
+        std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();
         int* addr=NULL;// definition
-        ++i;
-        int vec_addr=calculation(local_scope,*i);
+        ++iter;
+        int vec_addr=calculation(local_scope,*iter);
         if(vec_addr<0)
-        {
-            state_stack.push(__state_error);
-            return;
-        }
+            return __state_error;
         if(nasal_gc.get_scalar(vec_addr).get_type()!=scalar_vector)
         {
-            error_interrupt(__forindex_foreach_not_vector,i->get_node_line());
-            state_stack.push(__state_error);
-            return;
+            error_interrupt(__forindex_foreach_not_vector,iter->get_node_line());
+            return __state_error;
         }
-        ++i;
+        ++iter;
+        for(int i=0;i<nasal_gc.get_scalar(vec_addr).get_vector().get_size();++i)
+        {
+            ;
+            int state=block_proc(local_scope,*iter);
+            if(state==__state_break)
+                break;
+            else if(state==__state_continue)
+                ;
+            else if(state==__state_return)
+                return __state_return;
+            else if(state==__state_error)
+                return __state_error;
+            else if(state==__state_no_operation)
+                ;
+        }
         // run block
     }
     else if(loop_type==__forindex)
     {
-        std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();
+        std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();
         int* addr=NULL;// definition
-        ++i;
-        int vec_addr=calculation(local_scope,*i);
+        ++iter;
+        int vec_addr=calculation(local_scope,*iter);
         if(vec_addr<0)
-        {
-            state_stack.push(__state_error);
-            return;
-        }
+            return __state_error;
         if(nasal_gc.get_scalar(vec_addr).get_type()!=scalar_vector)
         {
-            error_interrupt(__forindex_foreach_not_vector,i->get_node_line());
-            state_stack.push(__state_error);
-            return;
+            error_interrupt(__forindex_foreach_not_vector,iter->get_node_line());
+            return __state_error;
         }
-        ++i;
+        ++iter;
+        for(int i=0;i<nasal_gc.get_scalar(vec_addr).get_vector().get_size();++i)
+        {
+            ;
+            int state=block_proc(local_scope,*iter);
+            if(state==__state_break)
+                break;
+            else if(state==__state_continue)
+                ;
+            else if(state==__state_return)
+                return __state_return;
+            else if(state==__state_error)
+                return __state_error;
+            else if(state==__state_no_operation)
+                ;
+        }
         // run block
     }
     else if(loop_type==__for)
     {
-        std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();
-        // definition
-        ++i;
+        std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();
+        // definition before loop
+        ++iter;
+        std::list<abstract_syntax_tree>::iterator condition_iterator=iter;
         // conditional
-        ++i;
-        // step
-        ++i;
+        ++iter;
+        std::list<abstract_syntax_tree>::iterator step_iterator=iter;
+        // step length
+        ++iter;
+        std::list<abstract_syntax_tree>::iterator block_proc_iterator=iter;
         // run block
+        while(check_condition(local_scope,*condition_iterator))
+        {
+            ;
+            int state=block_proc(local_scope,*block_proc_iterator);
+            if(state==__state_break)
+                break;
+            else if(state==__state_continue)
+                ;
+            else if(state==__state_return)
+                return __state_return;
+            else if(state==__state_error)
+                return __state_error;
+            else if(state==__state_no_operation)
+                ;
+            // step update here
+        }
     }
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
     local_scope.pop_back();
-    return;
+    return __state_no_operation;
 }
-void nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+int nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
@@ -1727,49 +1784,100 @@ void nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_sco
         int condition_node_type=i->get_node_type();
         if(condition_node_type==__if || condition_node_type==__elsif)
         {
-            int condition_data=calculation(local_scope,i->get_children().front());
-            if(condition_data<0)
+            if(check_condition(local_scope,i->get_children().front()))
             {
-                state_stack.push(__state_error);
-                return;
-            }
-            if((nasal_gc.get_scalar(condition_data).get_type()==scalar_number
-                && nasal_gc.get_scalar(condition_data).get_number().get_number()!=0))
-            {
-                ;
-            }
-            else if(nasal_gc.get_scalar(condition_data).get_type()==scalar_string)
-            {
-                if(!check_numerable_string(nasal_gc.get_scalar(condition_data).get_string().get_string()))
-                {
-                    error_interrupt(__not_numerable_str,i->get_children().front().get_node_line());
-                    state_stack.push(__state_error);
-                    return;
-                }
-                if(trans_string_to_number(nasal_gc.get_scalar(condition_data).get_string().get_string()))
-                {
+                int state=block_proc(local_scope,i->get_children().back());
+                if(state==__state_break)
+                    return __state_break;
+                else if(state==__state_continue)
+                    return __state_continue;
+                else if(state==__state_return)
+                    return __state_return;
+                else if(state==__state_error)
+                    return __state_error;
+                else if(state==__state_no_operation)
                     ;
-                }
-            }
-            else
-            {
-                error_interrupt(__error_value_type,i->get_children().front().get_node_line());
-                state_stack.push(__state_error);
-                return;
+                break;
             }
         }
         else
         {
-            ;
+            int state=block_proc(local_scope,i->get_children().front());
+            if(state==__state_break)
+                return __state_break;
+            else if(state==__state_continue)
+                return __state_continue;
+            else if(state==__state_return)
+                return __state_return;
+            else if(state==__state_error)
+                return __state_error;
+            else if(state==__state_no_operation)
+                ;
             break;
         }
     }
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
     local_scope.pop_back();
-    return;
+    return __state_no_operation;
 }
-
+int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
+{
+    int state=__state_no_operation;
+    for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
+    {
+        // use local value node_type to avoid calling function too many times.
+        int node_type=iter->get_node_type();
+        
+        if(node_type==__number || node_type==__string)
+            ;
+        else if(node_type==__id)
+        {
+            int addr=this->call_identifier(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
+        else if(node_type==__vector)
+        {
+            int addr=this->vector_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
+        else if(node_type==__hash)
+        {
+            int addr=this->hash_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
+        else if(node_type==__function)
+        {
+            int addr=this->function_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
+        else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
+                node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
+                node_type==__and_operator || node_type==__or_operator || node_type==__ques_mark ||
+                node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
+        {
+            int addr=this->calculation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
+        else if(node_type==__definition)
+            this->definition(local_scope,local_scope.back(),*iter);
+        else if(node_type==__conditional)
+            state=this->conditional(local_scope,*iter);
+        else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
+            state=this->loop_expr(local_scope,*iter);
+        if(runtime_error_exit_mark>=0)
+        {
+            state=__state_error;
+            break;
+        }
+    }
+    return state;
+}
 int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& parameter_list,abstract_syntax_tree& func_root,int called_hash_addr)
 {
     std::map<std::string,int> new_scope;
@@ -1782,6 +1890,7 @@ int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,
 
     }
     // process
+    int state=__state_no_operation;
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().begin();iter!=func_root.get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
@@ -1789,26 +1898,62 @@ int nasal_runtime::func_proc(std::list<std::map<std::string,int> >& local_scope,
         if(node_type==__number || node_type==__string)
             ;
         else if(node_type==__id)
-            this->call_identifier(local_scope,*iter);
+        {
+            int addr=this->call_identifier(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__vector)
-            this->vector_generation(local_scope,*iter);
+        {
+            int addr=this->vector_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        } 
         else if(node_type==__hash)
-            this->hash_generation(local_scope,*iter);
+        {
+            int addr=this->hash_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__function)
-            this->function_generation(local_scope,*iter);
+        {
+            int addr=this->function_generation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
                 node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
                 node_type==__and_operator || node_type==__or_operator || node_type==__ques_mark ||
                 node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
-            this->calculation(local_scope,*iter);
+        {
+            int addr=this->calculation(local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__definition)
             this->definition(local_scope,local_scope.back(),*iter);
         else if(node_type==__conditional)
-            this->conditional(local_scope,*iter);
+            state=this->conditional(local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
-            this->loop_expr(local_scope,*iter);
+            state=this->loop_expr(local_scope,*iter);
         if(runtime_error_exit_mark>=0)
             break;
+        if(state==__state_return)
+            ;
+        else if(state==__state_break)
+        {
+            error_interrupt(__break_not_used_in_loop,iter->get_node_line());
+            return -1;
+        }
+        else if(state==__state_continue)
+        {
+            error_interrupt(__continue_not_used_in_loop,iter->get_node_line());
+            return -1;
+        }
+        else if(state==__state_error)
+            return -1;
+        else if(state==__state_no_operation)
+            ;
     }
     return -1;
 }
@@ -1823,8 +1968,6 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
     global_scope.clear();
     nasal_gc.gc_init();
     runtime_error_exit_mark=-1;
-    while(!state_stack.empty())
-        state_stack.pop();
 
     if(root.get_node_type()!=__root)
     {
@@ -1835,28 +1978,68 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
     {
         // use local value node_type to avoid calling function too many times.
         int node_type=iter->get_node_type();
+        int state=__state_no_operation;
         if(node_type==__number || node_type==__string)
             ;
         else if(node_type==__id)
-            this->call_identifier(main_local_scope,*iter);
+        {
+            int addr=this->call_identifier(main_local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__vector)
-            this->vector_generation(main_local_scope,*iter);
+        {
+            int addr=this->vector_generation(main_local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__hash)
-            this->hash_generation(main_local_scope,*iter);
+        {
+            int addr=this->hash_generation(main_local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__function)
-            this->function_generation(main_local_scope,*iter);
+        {
+            int addr=this->function_generation(main_local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
                 node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
                 node_type==__and_operator || node_type==__or_operator || node_type==__ques_mark ||
                 node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
-            this->calculation(main_local_scope,*iter);
+        {
+            int addr=this->calculation(main_local_scope,*iter);
+            if(addr>=0)
+                nasal_gc.reference_delete(addr);
+        }
         else if(node_type==__definition)
             this->definition(main_local_scope,global_scope,*iter);
         else if(node_type==__conditional)
-            this->conditional(main_local_scope,*iter);
+            state=this->conditional(main_local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))
-            this->loop_expr(main_local_scope,*iter);
+            state=this->loop_expr(main_local_scope,*iter);
         if(runtime_error_exit_mark>=0)
+            break;
+        if(state==__state_no_operation)
+            ;
+        else if(state==__state_break)
+        {
+            error_interrupt(__break_not_used_in_loop,iter->get_node_line());
+            break;
+        }
+        else if(state==__state_continue)
+        {
+            error_interrupt(__continue_not_used_in_loop,iter->get_node_line());
+            break;
+        }
+        else if(state==__state_return)
+        {
+            error_interrupt(__return_not_used_in_function,iter->get_node_line());
+            break;
+        }
+        else if(state==__state_error)
             break;
     }
 
