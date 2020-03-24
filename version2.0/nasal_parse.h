@@ -31,12 +31,14 @@ class nasal_parse
 
 			error_begin_token_of_scalar, // in scalar_generate() 
 			
+			need_default_parameter,      // parameters must have a default value if detected there is a default parameter before.
 			default_dynamic_parameter,   // default parameter should not be dynamic 
 			parameter_lack_part,         // parameter lack a ')' or identifier
 			parameter_lack_curve,        // parameter lack a ',' or ')'
 
 			special_call_func_lack_id,
 			special_call_func_lack_colon,
+			normal_call_func_has_colon,  // when calling a function,normal way and special way cannot be used together
 			call_func_lack_comma,        // lack comma when giving parameters to a function
 			call_hash_lack_id,           // lack identifier when calling a hash
 			call_vector_wrong_comma,     // wrong use of comma like this: id[0,4:6,7,] (the last comma is incorrect here)
@@ -181,124 +183,128 @@ void nasal_parse::get_token_list(std::list<token>& detail_token_stream)
 
 void nasal_parse::print_parse_error(int error_type,int line,int error_token_type=__stack_end)
 {
-	std::string error_info_head=">> [Parse] line ";
+	std::cout<<">> [Parse] line "<<line<<": ";
 	switch(error_type)
 	{
 		case parse_unknown_error:
-			std::cout<<error_info_head<<line<<": unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
+			std::cout<<"unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
 		case error_token_in_main:
-			std::cout<<error_info_head<<line<<": statements should not begin with \'";
+			std::cout<<"statements should not begin with \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' in main scope."<<std::endl;
 			break;
 		case error_token_in_block:
-			std::cout<<error_info_head<<line<<": statements should not begin with \'";
+			std::cout<<"statements should not begin with \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' in block scope."<<std::endl;
 			break;
 		case lack_semi:
-			std::cout<<error_info_head<<line<<": expect a \';\' at the end of the statement."<<std::endl;break;
+			std::cout<<"expect a \';\' at the end of the statement."<<std::endl;break;
 		case lack_id:
-			std::cout<<error_info_head<<line<<": expect an identifier here."<<std::endl;break;
+			std::cout<<"expect an identifier here."<<std::endl;break;
 		case lack_left_curve:
-			std::cout<<error_info_head<<line<<": expect a \'(\' here."<<std::endl;break;
+			std::cout<<"expect a \'(\' here."<<std::endl;break;
 		case lack_right_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here."<<std::endl;break;
+			std::cout<<"expect a \')\' here."<<std::endl;break;
 		case lack_right_brace:
-			std::cout<<error_info_head<<line<<": expect a \'}\' here."<<std::endl;break;
+			std::cout<<"expect a \'}\' here."<<std::endl;break;
 		case definition_lack_id:
-			std::cout<<error_info_head<<line<<": expect identifier(s) after \'var\'."<<std::endl;break;
+			std::cout<<"expect identifier(s) after \'var\'."<<std::endl;break;
 		case definition_lack_equal:
-			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
+			std::cout<<"expect a \'=\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' when generating definition."<<std::endl;
 			break;
 		case assignment_begin_error:
-			std::cout<<error_info_head<<line<<": assignment should begin with one identifier_call."<<std::endl;
+			std::cout<<"assignment should begin with one identifier_call."<<std::endl;
 			break;
 		case multi_definition_need_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
+			std::cout<<"expect a \')\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case multi_assignment_need_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' here but get \'";
+			std::cout<<"expect a \')\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case multi_assignment_need_equal:
-			std::cout<<error_info_head<<line<<": expect a \'=\' here but get \'";
+			std::cout<<"expect a \'=\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case error_begin_token_of_scalar:
-			std::cout<<error_info_head<<line<<": expect a scalar here but get \'";
+			std::cout<<"expect a scalar here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
+		case need_default_parameter:
+			std::cout<<"parameters after a default parameter must have their own default values."<<std::endl;break;
 		case default_dynamic_parameter:
-			std::cout<<error_info_head<<line<<": dynamic parameter should not have a default value."<<std::endl;break;
+			std::cout<<"dynamic parameter should not have a default value."<<std::endl;break;
 		case parameter_lack_part:
-			std::cout<<error_info_head<<line<<": expect a \')\' or identifier here when generating parameter_list."<<std::endl;break;
+			std::cout<<"expect a \')\' or identifier here when generating parameter_list."<<std::endl;break;
 		case parameter_lack_curve:
-			std::cout<<error_info_head<<line<<": expect a \')\' or \',\' here when generating parameter_list."<<std::endl;break;
+			std::cout<<"expect a \')\' or \',\' here when generating parameter_list."<<std::endl;break;
 		case special_call_func_lack_id:
-			std::cout<<error_info_head<<line<<": expect an identifier here but get \'";
+			std::cout<<"expect an identifier here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' when calling functions."<<std::endl;
 			break;
 		case special_call_func_lack_colon:
-			std::cout<<error_info_head<<line<<": expect an \':\' here but get \'";
+			std::cout<<"expect an \':\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' when calling functions."<<std::endl;
 			break;
+		case normal_call_func_has_colon:
+			std::cout<<"normal and special ways of calling a function are not allowed to be used together."<<std::endl;break;
 		case call_func_lack_comma:
-			std::cout<<error_info_head<<line<<": expect a \',\' when calling a function but get \'";
+			std::cout<<"expect a \',\' when calling a function but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case call_hash_lack_id:
-			std::cout<<error_info_head<<line<<": expect an identifier after \'.\' ."<<std::endl;break;
+			std::cout<<"expect an identifier after \'.\' ."<<std::endl;break;
 		case call_vector_wrong_comma:
-			std::cout<<error_info_head<<line<<": expect a scalar after \',\' but get \']\' ."<<std::endl;
+			std::cout<<"expect a scalar after \',\' but get \']\' ."<<std::endl;
 			break;
 		case call_vector_lack_bracket:
-			std::cout<<error_info_head<<line<<": expect a \']\' here but get \'";
+			std::cout<<"expect a \']\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case call_vector_wrong_token:
-			std::cout<<error_info_head<<line<<": expect \':\' or ',' or ']' here but get \'";
+			std::cout<<"expect \':\' or ',' or ']' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case vector_gen_lack_end:
-			std::cout<<error_info_head<<line<<": expect a \',\' or \')\' here but get \'";
+			std::cout<<"expect a \',\' or \')\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case hash_gen_lack_id:
-			std::cout<<error_info_head<<line<<": expect an identifier or string here but get \'";
+			std::cout<<"expect an identifier or string here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case hash_gen_lack_colon:
-			std::cout<<error_info_head<<line<<": expect a \':\' here but get \'";
+			std::cout<<"expect a \':\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case hash_gen_lack_end:
-			std::cout<<error_info_head<<line<<": expect a \',\' or \'}\' here but get \'";
+			std::cout<<"expect a \',\' or \'}\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		case ternary_operator_lack_colon:
-			std::cout<<error_info_head<<line<<": expect a \':\' here but get \'";
+			std::cout<<"expect a \':\' here but get \'";
 			print_parse_token(error_token_type);
 			std::cout<<"\' ."<<std::endl;
 			break;
 		default:
-			std::cout<<error_info_head<<line<<": unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
+			std::cout<<"unknown parse error.(token id: "<<error_token_type<<")."<<std::endl;break;
 	}
 	return;
 }
@@ -1052,6 +1058,8 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 			if(this_token.type!=__right_curve)
 			{
 				bool scalar_para=true;
+				// scalar_para is used to record that parameters is in normal format like f(1,2,3,4)
+				// if scalar_para is false ,this means parameters is in special format like f(a:1,b:2)
 				if(this_token.type==__id)
 				{
 					this->get_token();
@@ -1117,7 +1125,10 @@ abstract_syntax_tree nasal_parse::scalar_generate()
 						if((this_token.type!=__comma) && (this_token.type!=__right_curve))
 						{
 							++error;
-							print_parse_error(call_func_lack_comma,this_token.line,this_token.type);
+							if(this_token.type==__colon)
+								print_parse_error(normal_call_func_has_colon,this_token.line,this_token.type);
+							else
+								print_parse_error(call_func_lack_comma,this_token.line,this_token.type);
 							break;
 						}
 						if(this_token.type==__comma)
@@ -1316,6 +1327,7 @@ abstract_syntax_tree nasal_parse::function_generate()
 	this->get_token();
 	if(this_token.type==__left_curve)
 	{
+		bool has_default_para=false;
 		while(this_token.type!=__right_curve)
 		{
 			// check identifier
@@ -1348,8 +1360,15 @@ abstract_syntax_tree nasal_parse::function_generate()
 
 			// check equal operator
 			this->get_token();
+			if(has_default_para && this_token.type!=__equal)
+			{
+				++error;
+				print_parse_error(need_default_parameter,this_token.line,this_token.type);
+				break;
+			}
 			if(this_token.type==__equal)
 			{
+				has_default_para=true;
 				if(parameter_type==__id)
 				{
 					abstract_syntax_tree default_parameter;
@@ -1692,10 +1711,8 @@ abstract_syntax_tree nasal_parse::loop_expr()
 			print_parse_error(lack_right_curve,this_token.line,this_token.type);
 		}
 	}
-	else
+	else if(this_token.type==__forindex || this_token.type==__foreach)
 	{
-		// forindex
-		// foreach
 		this->get_token();// '('
 		if(this_token.type!=__left_curve)
 		{
@@ -1704,20 +1721,39 @@ abstract_syntax_tree nasal_parse::loop_expr()
 		}
 		this->get_token();// 'var'
 		if(this_token.type!=__var)
-			this->push_token();
-		this->get_token();// id
-		if(this_token.type!=__id)
 		{
-			++error;
-			print_parse_error(lack_id,this_token.line);
+			// if checked not the 'var' then checking if this token is an identifier
+			if(this_token.type!=__id)
+			{
+				++error;
+				print_parse_error(lack_id,this_token.line);
+			}
+			else
+			{
+				this->push_token();
+				loop_main_node.add_children(scalar_generate());
+			}
 		}
 		else
 		{
-			abstract_syntax_tree id_node;
-			id_node.set_node_line(this_token.line);
-			id_node.set_node_type(__id);
-			id_node.set_var_name(this_token.str);
-			loop_main_node.add_children(id_node);
+			abstract_syntax_tree new_definition_node;
+			new_definition_node.set_node_line(this_token.line);
+			new_definition_node.set_node_type(__definition);
+			this->get_token();
+			if(this_token.type!=__id)
+			{
+				++error;
+				print_parse_error(lack_id,this_token.line);
+			}
+			else
+			{
+				abstract_syntax_tree new_id_node;
+				new_id_node.set_node_line(this_token.line);
+				new_id_node.set_node_type(__id);
+				new_id_node.set_var_name(this_token.str);
+				new_definition_node.add_children(new_id_node);
+			}
+			loop_main_node.add_children(new_definition_node);
 		}
 		this->get_token();// ';'
 		if(this_token.type!=__semi)
