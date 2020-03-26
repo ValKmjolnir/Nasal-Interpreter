@@ -155,13 +155,20 @@ void prt_hex(const int ptr)
 	char hex[9];
 	hex[8]=0;
 	int tmp_plc=ptr;
+	if(tmp_plc<0)
+	{
+		tmp_plc=-tmp_plc;
+		std::cout<<"-0x";
+	}
+	else
+		std::cout<<"0x";
 	for(int j=7;j>=0;--j)
 	{
 		int tmp=(tmp_plc & 0x0000000f);
 		hex[j]=tmp<10? (char)('0'+tmp):(char)('a'+tmp-10);
 		tmp_plc>>=4;
 	}
-	std::cout<<"0x"<<hex;
+	std::cout<<hex;
 	return;
 }
 
