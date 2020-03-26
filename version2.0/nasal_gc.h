@@ -61,6 +61,9 @@ class nasal_vector
 		int  get_elem(int);
 		int  vec_pop();
 		int  get_size();
+		int* get_parent_hash_member_addr(std::string);
+		int  get_parent_hash_member(std::string);
+		void generate_new_hash();
 		void deep_copy(nasal_vector&);
 };
 
@@ -68,13 +71,8 @@ class nasal_hash
 {
 	private:
 		std::map<std::string,int> nas_hash;
-		// self_addr is used to store the address of the hash itself and give it to the functions this hash has.
-		// because nasal_scalar has no right to get its own address,but hash needs this,so this gives hash a special right to have its address.
-		int self_addr;
 	public:
-		void set_self_addr(int);
 		void set_clear();
-		int  get_self_addr();
 		int* get_hash_member_addr(std::string);
 		int  get_hash_member(std::string);
 		void hash_push(std::string,int);
@@ -352,7 +350,6 @@ void nasal_vector::set_clear()
 void nasal_vector::vec_push(int addr)
 {
 	nasal_gc.reference_add(addr);
-	nas_array.push_back(addr);
 	return;
 }
 int* nasal_vector::get_elem_addr(int addr)
@@ -385,6 +382,43 @@ int nasal_vector::get_size()
 {
 	return nas_array.size();
 }
+int* nasal_vector::get_parent_hash_member_addr(std::string member_name)
+{
+	int* ret_addr=NULL;
+	for(int i=0;i<nas_array.size();++i)
+		if(nasal_gc.get_scalar(nas_array[i]).get_type()==scalar_hash)
+		{
+			ret_addr=nasal_gc.get_scalar(nas_array[i]).get_hash().get_hash_member_addr(member_name);
+			if(ret_addr)
+				break;
+		}
+	return ret_addr;
+}
+int nasal_vector::get_parent_hash_member(std::string member_name)
+{
+	int ret_addr=-1;
+	for(int i=0;i<nas_array.size();++i)
+		if(nasal_gc.get_scalar(nas_array[i]).get_type()==scalar_hash)
+		{
+			ret_addr=nasal_gc.get_scalar(nas_array[i]).get_hash().get_hash_member(member_name);
+			if(ret_addr>=0)
+				break;
+		}
+	return ret_addr;
+}
+void nasal_vector::generate_new_hash()
+{
+	for(int i=0;i<nas_array.size();++i)
+		if(nas_array[i]>=0 && nasal_gc.get_scalar(nas_array[i]).get_type()==scalar_hash)
+		{
+			int tmp_addr=nas_array[i];
+			nas_array[i]=nasal_gc.gc_alloc();
+			nasal_gc.get_scalar(nas_array[i]).set_type(scalar_hash);
+			nasal_gc.get_scalar(nas_array[i]).get_hash().deep_copy(nasal_gc.get_scalar(tmp_addr).get_hash());
+			nasal_gc.reference_delete(tmp_addr);;
+		}
+	return;
+}
 void nasal_vector::deep_copy(nasal_vector& tmp)
 {
 	// before deep copy,nasal_vector needs to delete all values in it.
@@ -413,34 +447,26 @@ void nasal_vector::deep_copy(nasal_vector& tmp)
 	return;
 }
 
-void nasal_hash::set_self_addr(int addr)
-{
-	// when creating a new hash,must use gc to give an address to this hash
-	// it is extremely necessary to do this! 
-	self_addr=addr;
-	return;
-}
 void nasal_hash::set_clear()
 {
-	self_addr=-1;
 	for(std::map<std::string,int>::iterator i=nas_hash.begin();i!=nas_hash.end();++i)
 		nasal_gc.reference_delete(i->second);
 	return;
-}
-int nasal_hash::get_self_addr()
-{
-	return self_addr;
 }
 int* nasal_hash::get_hash_member_addr(std::string member_name)
 {
 	if(nas_hash.find(member_name)!=nas_hash.end())
 		return &nas_hash[member_name];
+	else if(nas_hash.find("parents")!=nas_hash.end())
+		return nasal_gc.get_scalar(nas_hash["parents"]).get_vector().get_parent_hash_member_addr(member_name);
 	return NULL;
 }
 int nasal_hash::get_hash_member(std::string member_name)
 {
 	if(nas_hash.find(member_name)!=nas_hash.end())
 		return nas_hash[member_name];
+	else if(nas_hash.find("parents")!=nas_hash.end())
+			return nasal_gc.get_scalar(nas_hash["parents"]).get_vector().get_parent_hash_member(member_name);
 	return -1;
 }
 void nasal_hash::hash_push(std::string member_name,int addr)
@@ -469,21 +495,15 @@ void nasal_hash::deep_copy(nasal_hash& tmp)
 		int tmp_type=nasal_gc.get_scalar(i->second).get_type();
 		int new_addr=nasal_gc.gc_alloc();
 		nasal_gc.get_scalar(new_addr).set_type(tmp_type);
-		if(tmp_type==scalar_nil)
-			;
-		else if(tmp_type==scalar_number)
-			nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(i->second).get_number());
-		else if(tmp_type==scalar_string)
-			nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(i->second).get_string());
-		else if(tmp_type==scalar_vector)
-			nasal_gc.get_scalar(new_addr).get_vector().deep_copy(nasal_gc.get_scalar(i->second).get_vector());
-		else if(tmp_type==scalar_hash)
+		switch(tmp_type)
 		{
-			nasal_gc.get_scalar(new_addr).get_hash().set_self_addr(new_addr);
-			nasal_gc.get_scalar(new_addr).get_hash().deep_copy(nasal_gc.get_scalar(i->second).get_hash());
+			case scalar_nil     :break;
+			case scalar_number  :nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(i->second).get_number());break;
+			case scalar_string  :nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(i->second).get_string());break;
+			case scalar_vector  :nasal_gc.get_scalar(new_addr).get_vector().deep_copy(nasal_gc.get_scalar(i->second).get_vector());break;
+			case scalar_hash    :nasal_gc.get_scalar(new_addr).get_hash().deep_copy(nasal_gc.get_scalar(i->second).get_hash());break;
+			case scalar_function:nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(i->second).get_function());break;
 		}
-		else if(tmp_type==scalar_function)
-			nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(i->second).get_function());
 		nas_hash[i->first]=new_addr;
 	}
 	return;
