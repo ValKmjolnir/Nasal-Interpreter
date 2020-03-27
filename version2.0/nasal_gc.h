@@ -154,6 +154,11 @@ class gc_manager
 			memory[alloc_plc].refcnt=1;
 			return alloc_plc;
 		}
+		int get_reference(int addr)
+		{
+			// get the reference counts of the scalar
+			return memory[addr].refcnt;
+		}
 		nasal_scalar& get_scalar(int addr)
 		{
 			// get the reference of the scalar
