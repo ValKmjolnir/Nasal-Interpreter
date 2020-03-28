@@ -1,5 +1,41 @@
 #ifndef __NASAL_RUNTIME_H__
 #define __NASAL_RUNTIME_H__
+#define nas_lib_func_num 29
+std::string inline_func_name[nas_lib_func_num]=
+{
+    //base.nas
+    "nasal_call_inline_push_null",
+    "nasal_call_inline_subvec",
+    "nasal_call_inline_contains",
+    "nasal_call_inline_delete",
+    "nasal_call_inline_trans_int",
+    "nasal_call_inline_trans_num",
+    "nasal_call_inline_get_keys",
+    "nasal_call_inline_pop_back",
+    "nasal_call_inline_sizeof",
+    "nasal_call_inline_str_cmp_equal",
+    "nasal_call_inline_cmp",
+    "nasal_call_inline_cpp_sort",
+    "nasal_call_inline_substr",
+    "nasal_call_inline_sprintf",
+    "nasal_call_inline_find_first_occur",
+    "nasal_call_inline_split",
+    "nasal_call_inline_rand",
+    "nasal_call_inline_get_id",
+    //bits.nas
+    "nasal_call_built_in_bitcalc",
+    "nasal_call_built_in_sbitcalc",
+    "nasal_call_built_in_setbit",
+    "nasal_call_built_in_null_string_gen",
+    //math.nas
+    "nasal_call_inline_sin",
+    "nasal_call_inline_cos",
+    "nasal_call_inline_tan",
+    "nasal_call_inline_pow",
+    "nasal_call_inline_cpp_math_ln",
+    "nasal_call_inline_cpp_math_sqrt",
+    "nasal_call_inline_cpp_atan2"
+};
 
 class nasal_runtime
 {
@@ -42,7 +78,7 @@ class nasal_runtime
             __special_call_vector_negative_value,
             __special_call_vector_too_large_value,
             __normal_call_vector_too_large_value,
-            __error_call_type_when_getting_address,
+            __function_returned_value_be_assigned,
             __call_function_lack_para,
             __forindex_foreach_not_vector,
             __break_not_used_in_loop,
@@ -67,6 +103,7 @@ class nasal_runtime
         int  conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  block_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
+        int  inline_function    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,int);
     public:
         nasal_runtime()
         {
@@ -124,8 +161,8 @@ void nasal_runtime::error_interrupt(const int type,const int line)
             std::cout<<"the number used to call the sub-vector is too large(over 0x7fffffff)."<<std::endl;break;
         case __normal_call_vector_too_large_value:
             std::cout<<"the number used to call the vector is too large(over 0x7fffffff)."<<std::endl;break;
-        case __error_call_type_when_getting_address:
-            std::cout<<"this type of calling identifier is not allowed here."<<std::endl;break;
+        case __function_returned_value_be_assigned:
+            std::cout<<"cannot assigned a value that function returns."<<std::endl;break;
         case __call_function_lack_para:
             std::cout<<"lack parameter(s) when calling a function."<<std::endl;break;
         case __forindex_foreach_not_vector:
@@ -1799,10 +1836,296 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
 }
 int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node,int data_addr)
 {
-    int ret_addr=-1;
-    
-    
-    return ret_addr;
+    int* assigned_addr=NULL;
+    std::string tmp_id_name=node.get_var_name();
+    if(global_scope.find(tmp_id_name)!=global_scope.end())
+        assigned_addr=&(global_scope[tmp_id_name]);
+    for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+        if(iter->find(tmp_id_name)!=iter->end())
+            assigned_addr=&((*iter)[tmp_id_name]);
+    if(!assigned_addr)
+        return -1;
+    int assigned_value_addr=*assigned_addr;
+    for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
+    {
+        // call vector/special call hash/subvec
+        // the special type of calling hash like a["name"] is also generated as calling vector
+        if(iter->get_node_type()==__call_vector)
+        {
+            // check the scalar type of called identifier here
+            int called_type=nasal_gc.get_scalar(assigned_value_addr).get_type();
+            if(called_type!=scalar_vector && called_type!=scalar_hash)
+            {
+                error_interrupt(__error_value_type,iter->get_node_line());
+                return -1;
+            }
+            if(iter->get_children().front().get_node_type()==__sub_vector)
+            {
+                if(called_type==scalar_hash)
+                {
+                    error_interrupt(__not_callable_vector,iter->get_node_line());
+                    return -1;
+                }
+                int num1_addr=-1;
+                int num2_addr=-1;
+                // identifier[num1:];
+                if(iter->get_children().front().get_children().size()==1)
+                {
+                    num1_addr=calculation(local_scope,iter->get_children().front().get_children().front());
+                    if(num1_addr<0)
+                        return -1;
+                }
+                // identifier[num1:num2];
+                else
+                {
+                    num1_addr=calculation(local_scope,iter->get_children().front().get_children().front());
+                    num2_addr=calculation(local_scope,iter->get_children().front().get_children().back());
+                    if(num1_addr<0 || num2_addr<0)
+                        return -1;
+                }
+                if(nasal_gc.get_scalar(num1_addr).get_type()!=scalar_number
+                    && nasal_gc.get_scalar(num1_addr).get_type()!=scalar_string)
+                {
+                    error_interrupt(__error_value_type_when_calling_vector,iter->get_children().front().get_children().front().get_node_line());
+                    return -1;
+                }
+                if(num2_addr>=0
+                    && (nasal_gc.get_scalar(num2_addr).get_type()!=scalar_number
+                    && nasal_gc.get_scalar(num2_addr).get_type()!=scalar_string
+                    && nasal_gc.get_scalar(num2_addr).get_type()!=scalar_nil))
+                {
+                    error_interrupt(__error_value_type_when_calling_vector,iter->get_children().front().get_children().back().get_node_line());
+                    return -1;
+                }
+                if(nasal_gc.get_scalar(num1_addr).get_type()==scalar_string)
+                {
+                    if(check_numerable_string(nasal_gc.get_scalar(num1_addr).get_string().get_string()))
+                    {
+                        double tmp_num=trans_string_to_number(nasal_gc.get_scalar(num1_addr).get_string().get_string());
+                        if(tmp_num<0)
+                        {
+                            error_interrupt(__special_call_vector_negative_value,iter->get_children().front().get_children().front().get_node_line());
+                            return -1;
+                        }
+                        nasal_gc.reference_delete(num1_addr);
+                        num1_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(num1_addr).set_type(scalar_number);
+                        nasal_gc.get_scalar(num1_addr).get_number().set_number(tmp_num);
+                    }
+                    else
+                    {
+                        error_interrupt(__not_numerable_str,iter->get_children().front().get_children().front().get_node_line());
+                        return -1;
+                    }
+                }
+                if(num2_addr>=0 && nasal_gc.get_scalar(num2_addr).get_type()==scalar_string)
+                {
+                    if(check_numerable_string(nasal_gc.get_scalar(num2_addr).get_string().get_string()))
+                    {
+                        double tmp_num=trans_string_to_number(nasal_gc.get_scalar(num2_addr).get_string().get_string());
+                        if(tmp_num<0)
+                        {
+                            error_interrupt(__special_call_vector_negative_value,iter->get_children().front().get_children().back().get_node_line());
+                            return -1;
+                        }
+                        nasal_gc.reference_delete(num2_addr);
+                        num2_addr=nasal_gc.gc_alloc();
+                        nasal_gc.get_scalar(num2_addr).set_type(scalar_number);
+                        nasal_gc.get_scalar(num2_addr).get_number().set_number(tmp_num);
+                    }
+                    else
+                    {
+                        error_interrupt(__not_numerable_str,iter->get_children().front().get_children().back().get_node_line());
+                        return -1;
+                    }
+                }
+                if(nasal_gc.get_scalar(num1_addr).get_number().get_number()>2147483647)
+                {
+                    error_interrupt(__special_call_vector_too_large_value,iter->get_children().front().get_children().front().get_node_line());
+                    return -1;
+                }
+                if(num2_addr>=0 && nasal_gc.get_scalar(num2_addr).get_number().get_number()>2147483647)
+                {
+                    error_interrupt(__special_call_vector_too_large_value,iter->get_children().front().get_children().back().get_node_line());
+                    return -1;
+                }
+                int begin_num=(int)nasal_gc.get_scalar(num1_addr).get_number().get_number();
+                int end_num=0;
+                if(num2_addr<0 || nasal_gc.get_scalar(num2_addr).get_type()==scalar_nil)
+                    end_num=nasal_gc.get_scalar(assigned_value_addr).get_vector().get_size();
+                else
+                    end_num=(int)nasal_gc.get_scalar(num2_addr).get_number().get_number();
+                if(num1_addr>=0)
+                    nasal_gc.reference_delete(num1_addr);
+                if(num2_addr>=0)
+                    nasal_gc.reference_delete(num2_addr);
+                std::vector<int> subvec_result;
+                for(int i=begin_num;i<end_num;++i)
+                {
+                    // addr used here
+                    int tmp_data_addr=nasal_gc.get_scalar(assigned_value_addr).get_vector().get_elem(i);
+                    int new_addr=-1;
+                    if(tmp_data_addr<0)
+                    {
+                        error_interrupt(__invalid_vector_member,iter->get_children().front().get_children().front().get_node_line());
+                        return -1;
+                    }
+                    switch(nasal_gc.get_scalar(tmp_data_addr).get_type())
+                    {
+                        case scalar_nil:
+                            new_addr=nasal_gc.gc_alloc();
+                            nasal_gc.get_scalar(new_addr).set_type(scalar_nil);
+                            break;
+                        case scalar_number:
+                            new_addr=nasal_gc.gc_alloc();
+                            nasal_gc.get_scalar(new_addr).set_type(scalar_number);
+                            nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(tmp_data_addr).get_number());
+                            break;
+                        case scalar_string:
+                            new_addr=nasal_gc.gc_alloc();
+                            nasal_gc.get_scalar(new_addr).set_type(scalar_string);
+                            nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(tmp_data_addr).get_string());
+                            break;
+                        case scalar_function:
+                            new_addr=nasal_gc.gc_alloc();
+                            nasal_gc.get_scalar(new_addr).set_type(scalar_function);
+                            nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(tmp_data_addr).get_function());
+                            break;
+                        case scalar_vector:
+                        case scalar_hash:
+                            new_addr=tmp_data_addr;
+                            nasal_gc.reference_add(new_addr);
+                            break;
+                    }
+                    nasal_gc.reference_delete(tmp_data_addr);
+                    subvec_result.push_back(new_addr);
+                }
+                int tmp_addr=assigned_value_addr;
+                assigned_value_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(assigned_value_addr).set_type(scalar_vector);
+                for(int i=0;i<subvec_result.size();++i)
+                    nasal_gc.get_scalar(assigned_value_addr).get_vector().vec_push(subvec_result[i]);
+                nasal_gc.reference_delete(tmp_addr);
+                assigned_addr=NULL;
+            }// end sub-vector
+            else
+            {
+                // normal vector/hash calling
+                int data_addr=calculation(local_scope,iter->get_children().front());
+                if(data_addr<0)
+                    return -1;
+                if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_number && nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
+                {
+                    error_interrupt(__error_value_type_when_calling_vector,iter->get_children().front().get_node_line());
+                    return -1;
+                }
+                if(called_type==scalar_vector)
+                {
+                    double place_num=0;
+                    if(nasal_gc.get_scalar(data_addr).get_type()==scalar_string)
+                    {
+                        if(check_numerable_string(nasal_gc.get_scalar(data_addr).get_string().get_string()))
+                            place_num=(int)trans_string_to_number(nasal_gc.get_scalar(data_addr).get_string().get_string());
+                        else
+                        {
+                            error_interrupt(__not_numerable_str,iter->get_children().front().get_node_line());
+                            return -1;
+                        }
+                    }
+                    if(place_num>2147483647 || place_num<-2147483648)
+                    {
+                        error_interrupt(__normal_call_vector_too_large_value,iter->get_children().front().get_node_line());
+                        return -1;
+                    }
+                    int tmp_addr=assigned_value_addr;
+                    assigned_addr=nasal_gc.get_scalar(tmp_addr).get_vector().get_elem_addr((int)place_num);
+                    if(!assigned_addr)
+                    {
+                        error_interrupt(__invalid_vector_member,iter->get_children().front().get_children().front().get_node_line());
+                        return -1;
+                    }
+                    assigned_value_addr=*assigned_addr;
+                    nasal_gc.reference_add(assigned_value_addr);
+                    nasal_gc.reference_delete(tmp_addr);
+                }
+                else if(called_type==scalar_hash)
+                {
+                    if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
+                    {
+                        error_interrupt(__error_value_type_when_calling_hash,iter->get_children().front().get_node_line());
+                        return -1;
+                    }
+                    int tmp_addr=assigned_value_addr;
+                    assigned_addr=nasal_gc.get_scalar(tmp_addr).get_hash().get_hash_member_addr(nasal_gc.get_scalar(data_addr).get_string().get_string());
+                    if(!assigned_addr)
+                    {
+                        error_interrupt(__invalid_hash_member,iter->get_children().front().get_node_line());
+                        return -1;
+                    }
+                    assigned_value_addr=*assigned_addr;
+                    nasal_gc.reference_add(assigned_value_addr);
+                    nasal_gc.reference_delete(tmp_addr);
+                }
+                nasal_gc.reference_delete(data_addr);
+            }
+        }// end call vector
+        // call hash identifier.identifier
+        else if(iter->get_node_type()==__call_hash)
+        {
+            if(nasal_gc.get_scalar(assigned_value_addr).get_type()!=scalar_hash)
+            {
+                error_interrupt(__not_callable_hash,iter->get_node_line());
+                return -1;
+            }
+            int tmp_addr=assigned_value_addr;
+            assigned_addr=nasal_gc.get_scalar(assigned_value_addr).get_hash().get_hash_member_addr(iter->get_var_name());
+            if(!assigned_addr)
+            {
+                error_interrupt(__invalid_hash_member,iter->get_node_line());
+                return -1;
+            }
+            assigned_value_addr=*assigned_addr;
+            nasal_gc.reference_add(assigned_value_addr);
+            nasal_gc.reference_delete(tmp_addr);
+        }// end call hash
+        // call function identifier(...)
+        else if(iter->get_node_type()==__call_function)
+        {
+            error_interrupt(__function_returned_value_be_assigned,iter->get_node_line());
+            return -1;
+        }
+    }
+    switch(nasal_gc.get_scalar(data_addr).get_type())
+    {
+        case scalar_nil:
+            *assigned_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_nil);
+            break;
+        case scalar_number:
+            *assigned_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_number);
+            nasal_gc.get_scalar(*assigned_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addr).get_number());
+            break;
+        case scalar_string:
+            *assigned_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_string);
+            nasal_gc.get_scalar(*assigned_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addr).get_string());
+            break;
+        case scalar_function:
+            *assigned_addr=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_function);
+            nasal_gc.get_scalar(*assigned_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addr).get_function());
+            break;
+        case scalar_vector:
+        case scalar_hash:
+            *assigned_addr=data_addr;
+            nasal_gc.reference_add(data_addr);
+            break;
+    }
+    nasal_gc.reference_delete(assigned_value_addr);
+    // data_addr is only a parameter here,and it's refcnt has not been changed when using it here
+    nasal_gc.reference_add(*assigned_addr);
+    return *assigned_addr;
 }
 int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
@@ -1815,11 +2138,15 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
             addr=(*iter)[tmp_id_name];
     if(addr<0)
     {
+        for(int i=0;i<nas_lib_func_num;++i)
+            if(inline_func_name[i]==tmp_id_name)
+                addr=inline_function(local_scope,node,-1);
+    }
+    if(addr<0)
+    {
         error_interrupt(__undefined_identifier,node.get_node_line());
         return -1;
     }
-    //addr refcnt+1
-    nasal_gc.reference_add(addr);
     int last_hash_addr=-1;
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
@@ -2288,7 +2615,9 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
         for(int i=0;i<nasal_gc.get_scalar(vec_addr).get_vector().get_size();++i)
         {
             int now_step_elem_addr=nasal_gc.get_scalar(vec_addr).get_vector().get_elem(i);
-            assignment(local_scope,assignment_ast,now_step_elem_addr);
+            int tmp_val=assignment(local_scope,assignment_ast,now_step_elem_addr);
+            if(tmp_val>=0)
+                nasal_gc.reference_delete(tmp_val);
             int state=block_proc(local_scope,*iter);
             if(state==__state_break)
                 break;
@@ -2301,6 +2630,7 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
             else if(state==__state_no_operation)
                 ;
         }
+        nasal_gc.reference_delete(vec_addr);
     }
     else if(loop_type==__forindex)
     {
@@ -2335,7 +2665,9 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
             int tmp_addr=nasal_gc.gc_alloc();
             nasal_gc.get_scalar(tmp_addr).set_type(scalar_number);
             nasal_gc.get_scalar(tmp_addr).get_number().set_number((double)i);
-            assignment(local_scope,assignment_ast,tmp_addr);
+            int tmp_val=assignment(local_scope,assignment_ast,tmp_addr);
+            if(tmp_val>=0)
+                nasal_gc.reference_delete(tmp_val);
             nasal_gc.reference_delete(tmp_addr);
             int state=block_proc(local_scope,*iter);
             if(state==__state_break)
@@ -2349,6 +2681,7 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
             else if(state==__state_no_operation)
                 ;
         }
+        nasal_gc.reference_delete(vec_addr);
     }
     else if(loop_type==__for)
     {
@@ -2365,6 +2698,7 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
         while(check_condition(local_scope,*condition_iterator))
         {
             int state=block_proc(local_scope,*block_proc_iterator);
+            
             if(state==__state_break)
                 break;
             else if(state==__state_continue)
@@ -2692,13 +3026,12 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
 {
     time_t begin_time,end_time;
     begin_time=std::time(NULL);
-
     // initializing global scope and nasal_gc
     // runtime_error_exit_mark is set to -1,if runtime_error_exit_mark >=0,this means an error occurred
     global_scope.clear();
+    main_local_scope.clear();
     nasal_gc.gc_init();
     runtime_error_exit_mark=-1;
-
     if(root.get_node_type()!=__root)
     {
         error_interrupt(__incorrect_head_of_tree,root.get_node_line());
@@ -2772,9 +3105,11 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
         else if(state==__state_error)
             break;
     }
-
     end_time=std::time(NULL);
     std::cout<<">> [Runtime] process exited after "<<end_time-begin_time<<" s ."<<std::endl;
+    global_scope.clear();
+    main_local_scope.clear();
+    nasal_gc.gc_init();
     return;
 }
 

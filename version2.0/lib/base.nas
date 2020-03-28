@@ -10,9 +10,8 @@
 # Appends the remaining arguments to the end of the vector. 
 var append=func(vector,elements...)
 {
-    var call_inline_push_back=func(vector,elements){};
-    call_inline_push_back(vector,elements);
-    return;
+    nasal_call_inline_push_back(vector,elements);
+    return nil;
 }
 
 # setsize
@@ -22,9 +21,8 @@ var append=func(vector,elements...)
 # If it is smaller, it is padded with nil entries.Returns the vector operated upon. 
 var setsize=func(vector,__size)
 {
-    var call_inline_push_null=func(vector,__size){};
-    call_inline_push_null(vector,__size);
-    return;
+    nasal_call_inline_push_null(vector,__size);
+    return nil;
 }
 
 # subvec
@@ -33,8 +31,7 @@ var setsize=func(vector,__size)
 # and the optional third argument indicates a length (the default is to the end of the vector).
 var subvec=func(vector,start,length=nil)
 {
-    var call_inline_subvec=func(vector,start,length=nil){};
-    return call_inline_subvec(vector,start,length);
+    return nasal_call_inline_subvec(vector,start,length);
 }
 
 # contains
@@ -42,8 +39,7 @@ var subvec=func(vector,start,length=nil)
 # Returns 1 if the hash contains the scalar as a key, 0 if not.
 var contains=func(hash,key)
 {
-    var call_inline_contains=func(hash,key){};
-    return call_inline_contains(hash,key);
+    return nasal_call_inline_contains(hash,key);
 }
 
 # delete
@@ -53,8 +49,7 @@ var contains=func(hash,key)
 # but this variant potentially frees storage by deleting the reference to the key and by shrinking the hash.
 var delete=func(hash,key)
 {
-    var call_inline_delete=func(hash,key){};
-    call_inline_delete(hash,key);
+    nasal_call_inline_delete(hash,key);
     return;
 }
 
@@ -63,35 +58,28 @@ var delete=func(hash,key)
 # Truncates towards zero, not negative infinity (i.e. it's implemented in C as a double tointeger typecast).
 var int=func(value)
 {
-    var inline_trans_int=func(value){};
-    return inline_trans_int(value);
+    return nasal_call_inline_trans_int(value);
 }
 
 # num
 # Returns the numeric value of the single argument, or nil if none exists.
 var num=func(value)
 {
-    var inline_trans_num=func(value){};
-    return inline_trans_num(value);
+    return nasal_call_inline_trans_num(value);
 }
 
 # keys
 # Returns a vector containing the list of keys found in the single hash argument.
 var keys=func(hash)
 {
-    var inline_get_keys=func(hash){};
-    return inline_get_keys(hash);
+    return nasal_call_inline_get_keys(hash);
 }
 
 # pop
 # Removes and returns the last element of the single vector argument.
 var pop=func(vector)
 {
-    var inline_get_back=func(vector){};
-    var inline_pop_back=func(vector){};
-    var ret=inline_get_back(vector);
-    inline_pop_back(vector);
-    return ret;
+    return nasal_call_inline_pop_back(vector);
 }
 
 # size
@@ -102,8 +90,7 @@ var pop=func(vector)
 # Returns nil for number and nil arguments.
 var size=func(object)
 {
-    var call_inline_sizeof=func(object){};
-    return call_inline_sizeof(object);
+    return nasal_call_inline_sizeof(object);
 }
 
 # streq
@@ -113,16 +100,14 @@ var size=func(object)
 # This is rarely required in typical code. 
 var streq=func(__a,__b)
 {
-    var inline_str_cmp_equal=func(str1,str2){};
-    return inline_str_cmp_equal(__a,__b);
+    return nasal_call_inline_str_cmp_equal(__a,__b);
 }
 
 # cmp
 # Compares two strings, returning -1 if a is less than b, 0 if theyare identical, and 1 if a is greater than b. 
 var cmp=func(__a,__b)
 {
-    var inline_cmp=func(var1,var2){};
-    return inline_cmp(__a,__b);
+    return nasal_call_inline_cmp(__a,__b);
 }
 
 # sort
@@ -132,8 +117,7 @@ var cmp=func(__a,__b)
 # the sort is stable; "equal" elements in the output vector will appear in the same relative order as they do in the input. 
 var sort=func(vector,function)
 {
-    var call_cpp_sort=func(vector,function){};
-    call_cpp_sort(vector,function);
+    nasal_call_inline_cpp_sort(vector,function);
     return;
 }
 
@@ -144,32 +128,28 @@ var sort=func(vector,function)
 # Example: substr("abcde", 1, 3) returns "bcd". 
 var substr=func(__string,start,length=nil)
 {
-    var call_inline_substr=func(__string,start,length){};
-    return call_inline_substr(__string,start,length);
+    return nasal_call_inline_substr(__string,start,length);
 }
 
 # sprintf
 # Creates and returns a string formatted as per ANSI C sprintf(). 
 var sprintf=func(__format,var_args...)
 {
-    var call_inline_sprintf=func(__format,var_args){};
-    return call_inline_sprintf(__format,var_args);
+    return nasal_call_inline_sprintf(__format,var_args);
 }
 
 # find
 # Finds and returns the index of the first occurence of the string needle in the string haystack, or -1 if no such occurence was found.
 var find=func(needle,haystack)
 {
-    var inline_find_first_occur=func(needle,haystack){};
-    return inline_find_first_occur(needle,haystack);
+    return nasal_call_inline_find_first_occur(needle,haystack);
 }
 
 # split
 # Splits the input string into a vector of substrings bounded by occurences of the delimeter substring. 
 var split=func(delimeter,__string)
 {
-    var inline_split=func(delimeter,__string){};
-    return inline_split(delimeter,__string);
+    return nasal_call_inline_split(delimeter,__string);
 }
 
 # rand
@@ -179,8 +159,7 @@ var split=func(delimeter,__string)
 # the result should have a full double-precision number's worth of randomness even on systems with a 15 bit rand(). 
 var rand=func(seed=nil)
 {
-    var inline_rand=func(seed){};
-    return inline_rand(seed);
+    return nasal_call_inline_rand(seed);
 }
 
 # id
@@ -189,6 +168,5 @@ var rand=func(seed=nil)
 # Numbers don't have id's and will cause a runtime error if passed to id(). 
 var id=func(thing)
 {
-    var inline_getid=func(thing){};
-    return inline_getid(thing);
+    return nasal_call_inline_get_id(thing);
 }

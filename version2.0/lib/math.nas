@@ -13,40 +13,37 @@ var math=
     # Returns the sine of the single argument 
     sin:func(x)
     {
-        var call_inline_sin=func(__x){};
-        return call_inline_sin(x);
+        return nasal_call_inline_sin(x);
     },
     # Returns the cosine of the single argument
     cos:func(x)
     {
-        var call_inline_cos=func(__x){};
-        return call_inline_cos(x);
+        return nasal_call_inline_cos(x);
     },
     # you know what the f*ck this is
-    tan:func(x){return me.sin(x)/me.cos(x);},
+    tan:func(x)
+    {
+        return nasal_call_inline_tan(x);
+    },
     # Returns e (Euler's constant) raised to the power specified by the single argument 
     exp:func(x)
     {
-        var call_inline_pow=func(__num,__x){};
-        return call_inline_pow(me.e,x);
+        return nasal_call_inline_pow(me.e,x);
     },
     # Returns the natural logarithm of the single argument. 
     ln:func(x)
     {
-        var call_inline_cpp_math_ln=func(__x){};
-        return call_inline_cpp_math_ln(x);
+        return nasal_call_inline_cpp_math_ln(x);
     },
     # Returns the square root of the single argument. 
     sqrt:func(x)
     {
-        var call_inline_cpp_math_sqrt=func(__x){};
-        return call_inline_cpp_math_sqrt(x);
+        return nasal_call_inline_cpp_math_sqrt(x);
     },
     # Returns the arctangent of y/x, with the correct sign for the quadrant.
     # Wraps the ANSI C function of the same name. 
     atan2:func(x,y)
     {
-        var call_inline_cpp_atan2=func(__num1,__num2){};
-        return call_inline_cpp_atan2(x,y);
+        return nasal_call_inline_cpp_atan2(x,y);
     },
 };
