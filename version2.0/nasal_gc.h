@@ -192,6 +192,7 @@ class gc_manager
 				if(!memory[addr].refcnt)
 				{
 					// if refcnt is 0,then starting the destructor
+					// std::cout<<">> [Gc] collected ";prt_hex(addr);std::cout<<std::endl;
 					memory[addr].collected=true;
 					switch(memory[addr].elem.get_type())
 					{
@@ -203,6 +204,7 @@ class gc_manager
 						default:break;
 					}
 					memory[addr].elem.set_type(scalar_nil);
+					free_space.push_back(addr);
 				}
 			}
 			else
