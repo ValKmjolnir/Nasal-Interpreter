@@ -356,7 +356,7 @@ void nasal_vector::set_clear()
 }
 void nasal_vector::vec_push(int addr)
 {
-	nasal_gc.reference_add(addr);
+	nas_array.push_back(addr);
 	return;
 }
 int* nasal_vector::get_elem_addr(int addr)

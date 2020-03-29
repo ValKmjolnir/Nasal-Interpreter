@@ -69,7 +69,6 @@ var io=
 
 var print=func(dyn...)
 {
-    forindex(var i;dyn)
-        nasal_call_inline_c_std_puts(dyn[i]);
+    nasal_call_inline_c_std_puts(dyn);
     return nil;
 };

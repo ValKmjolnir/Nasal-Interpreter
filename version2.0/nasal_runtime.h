@@ -1,6 +1,6 @@
 #ifndef __NASAL_RUNTIME_H__
 #define __NASAL_RUNTIME_H__
-#define nas_lib_func_num 29
+#define nas_lib_func_num 30
 std::string inline_func_name[nas_lib_func_num]=
 {
     //base.nas
@@ -27,6 +27,8 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_built_in_sbitcalc",
     "nasal_call_built_in_setbit",
     "nasal_call_built_in_null_string_gen",
+    //io.nas
+    "nasal_call_inline_c_std_puts",
     //math.nas
     "nasal_call_inline_sin",
     "nasal_call_inline_cos",
@@ -34,7 +36,8 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_inline_pow",
     "nasal_call_inline_cpp_math_ln",
     "nasal_call_inline_cpp_math_sqrt",
-    "nasal_call_inline_cpp_atan2"
+    "nasal_call_inline_cpp_atan2",
+    //
 };
 
 class nasal_runtime
@@ -50,9 +53,9 @@ class nasal_runtime
         // enum of state type used by loop/conditional
         enum state_stack_member_type
         {
-            __state_error,
+            __state_error = 0,
             __state_no_operation,
-            __state_continue=1,
+            __state_continue,
             __state_break,
             __state_return,
         };
@@ -102,8 +105,8 @@ class nasal_runtime
         int  loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  block_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
-        int  func_proc          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
-        int  inline_function    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,int);
+        int  func_proc          (std::list<std::map<std::string,int> >&,std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
+        int  inline_function    (std::list<std::map<std::string,int> >&,std::string);
     public:
         nasal_runtime()
         {
@@ -419,6 +422,8 @@ int nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& loca
                             return -1;
                         }
                     }
+                    else if(nasal_gc.get_scalar(data_addr).get_type()==scalar_number)
+                        place_num=nasal_gc.get_scalar(data_addr).get_number().get_number();
                     if(place_num>2147483647 || place_num<-2147483648)
                     {
                         error_interrupt(__normal_call_vector_too_large_value,call_node->get_children().front().get_node_line());
@@ -481,6 +486,7 @@ int nasal_runtime::vector_generation(std::list<std::map<std::string,int> >& loca
             }
             int tmp_addr=addr;
             addr=func_proc(
+                local_scope,
                 nasal_gc.get_scalar(addr).get_function().get_local_scope(),
                 nasal_gc.get_scalar(addr).get_function().get_parameter_list(),
                 nasal_gc.get_scalar(addr).get_function().get_statement_block(),
@@ -748,6 +754,8 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
                             return -1;
                         }
                     }
+                    else if(nasal_gc.get_scalar(data_addr).get_type()==scalar_number)
+                        place_num=nasal_gc.get_scalar(data_addr).get_number().get_number();
                     if(place_num>2147483647 || place_num<-2147483648)
                     {
                         error_interrupt(__normal_call_vector_too_large_value,call_node->get_children().front().get_node_line());
@@ -810,6 +818,7 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
             }
             int tmp_addr=addr;
             addr=func_proc(
+                local_scope,
                 nasal_gc.get_scalar(addr).get_function().get_local_scope(),
                 nasal_gc.get_scalar(addr).get_function().get_parameter_list(),
                 nasal_gc.get_scalar(addr).get_function().get_statement_block(),
@@ -1036,6 +1045,8 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
                             return -1;
                         }
                     }
+                    else if(nasal_gc.get_scalar(data_addr).get_type()==scalar_number)
+                        place_num=nasal_gc.get_scalar(data_addr).get_number().get_number();
                     if(place_num>2147483647 || place_num<-2147483648)
                     {
                         error_interrupt(__normal_call_vector_too_large_value,call_node->get_children().front().get_node_line());
@@ -1098,6 +1109,7 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
             }
             int tmp_addr=addr;
             addr=func_proc(
+                local_scope,
                 nasal_gc.get_scalar(addr).get_function().get_local_scope(),
                 nasal_gc.get_scalar(addr).get_function().get_parameter_list(),
                 nasal_gc.get_scalar(addr).get_function().get_statement_block(),
@@ -1141,7 +1153,13 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
 {
     // calculation will return a value that points to a new area in memory
     int node_type=node.get_node_type();
-    if(node_type==__number)
+    if(node_type==__nil)
+    {
+        int ret=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret).set_type(scalar_nil);
+        return ret;
+    }
+    else if(node_type==__number)
         return number_generation(node);
     else if(node_type==__string)
         return string_generation(node);
@@ -1846,6 +1864,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
     if(!assigned_addr)
         return -1;
     int assigned_value_addr=*assigned_addr;
+    nasal_gc.reference_add(*assigned_addr);
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
         // call vector/special call hash/subvec
@@ -2011,10 +2030,10 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
             else
             {
                 // normal vector/hash calling
-                int data_addr=calculation(local_scope,iter->get_children().front());
-                if(data_addr<0)
+                int tmp_data_addr=calculation(local_scope,iter->get_children().front());
+                if(tmp_data_addr<0)
                     return -1;
-                if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_number && nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
+                if(nasal_gc.get_scalar(tmp_data_addr).get_type()!=scalar_number && nasal_gc.get_scalar(tmp_data_addr).get_type()!=scalar_string)
                 {
                     error_interrupt(__error_value_type_when_calling_vector,iter->get_children().front().get_node_line());
                     return -1;
@@ -2022,16 +2041,18 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                 if(called_type==scalar_vector)
                 {
                     double place_num=0;
-                    if(nasal_gc.get_scalar(data_addr).get_type()==scalar_string)
+                    if(nasal_gc.get_scalar(tmp_data_addr).get_type()==scalar_string)
                     {
-                        if(check_numerable_string(nasal_gc.get_scalar(data_addr).get_string().get_string()))
-                            place_num=(int)trans_string_to_number(nasal_gc.get_scalar(data_addr).get_string().get_string());
+                        if(check_numerable_string(nasal_gc.get_scalar(tmp_data_addr).get_string().get_string()))
+                            place_num=(int)trans_string_to_number(nasal_gc.get_scalar(tmp_data_addr).get_string().get_string());
                         else
                         {
                             error_interrupt(__not_numerable_str,iter->get_children().front().get_node_line());
                             return -1;
                         }
                     }
+                    else if(nasal_gc.get_scalar(tmp_data_addr).get_type()==scalar_number)
+                        place_num=nasal_gc.get_scalar(tmp_data_addr).get_number().get_number();
                     if(place_num>2147483647 || place_num<-2147483648)
                     {
                         error_interrupt(__normal_call_vector_too_large_value,iter->get_children().front().get_node_line());
@@ -2050,7 +2071,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                 }
                 else if(called_type==scalar_hash)
                 {
-                    if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
+                    if(nasal_gc.get_scalar(tmp_data_addr).get_type()!=scalar_string)
                     {
                         error_interrupt(__error_value_type_when_calling_hash,iter->get_children().front().get_node_line());
                         return -1;
@@ -2066,7 +2087,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                     nasal_gc.reference_add(assigned_value_addr);
                     nasal_gc.reference_delete(tmp_addr);
                 }
-                nasal_gc.reference_delete(data_addr);
+                nasal_gc.reference_delete(tmp_data_addr);
             }
         }// end call vector
         // call hash identifier.identifier
@@ -2122,9 +2143,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
             nasal_gc.reference_add(data_addr);
             break;
     }
-    nasal_gc.reference_delete(assigned_value_addr);
     // data_addr is only a parameter here,and it's refcnt has not been changed when using it here
-    nasal_gc.reference_add(*assigned_addr);
     return *assigned_addr;
 }
 int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
@@ -2138,9 +2157,16 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
             addr=(*iter)[tmp_id_name];
     if(addr<0)
     {
+        // inline function call only needs local_scope and function name
+        // because all the inline functions are wraped in functions that can be searched in global scope
         for(int i=0;i<nas_lib_func_num;++i)
             if(inline_func_name[i]==tmp_id_name)
-                addr=inline_function(local_scope,node,-1);
+            {
+                addr=inline_function(local_scope,tmp_id_name);
+                break;
+            }
+        if(addr>=0)
+            return addr;
     }
     if(addr<0)
     {
@@ -2148,6 +2174,9 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
         return -1;
     }
     int last_hash_addr=-1;
+    // after calculation or assignment/definition,reference counter of this address will -1
+    // to avoid nasal_gc collecting this address,reference counter+1 here
+    nasal_gc.reference_add(addr);
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
         if(nasal_gc.get_scalar(addr).get_type()==scalar_hash)
@@ -2335,6 +2364,8 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
                             return -1;
                         }
                     }
+                    else if(nasal_gc.get_scalar(data_addr).get_type()==scalar_number)
+                        place_num=nasal_gc.get_scalar(data_addr).get_number().get_number();
                     if(place_num>2147483647 || place_num<-2147483648)
                     {
                         error_interrupt(__normal_call_vector_too_large_value,iter->get_children().front().get_node_line());
@@ -2395,6 +2426,7 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
             }
             int tmp_addr=addr;
             addr=func_proc(
+                local_scope,
                 nasal_gc.get_scalar(addr).get_function().get_local_scope(),
                 nasal_gc.get_scalar(addr).get_function().get_parameter_list(),
                 nasal_gc.get_scalar(addr).get_function().get_statement_block(),
@@ -2404,9 +2436,6 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
                 return -1;
         }
     }
-    // after calculation or assignment/definition,reference counter of this address will -1
-    // to avoid nasal_gc collecting this address,reference counter+1 here
-    nasal_gc.reference_add(addr);
     return addr;
 }
 void nasal_runtime::definition(std::list<std::map<std::string,int> >&local_scope,std::map<std::string,int>& now_scope,abstract_syntax_tree& node)
@@ -2841,7 +2870,8 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
     return state;
 }
 int nasal_runtime::func_proc(
-    std::list<std::map<std::string,int> >& local_scope,// running scope,often gets the scope that has been recorded in nasal function
+    std::list<std::map<std::string,int> >& local_scope,// running scope,often gets the scope that calls it
+    std::list<std::map<std::string,int> >& function_scope,// running scope,often gets the scope that has been recorded in nasal function
     abstract_syntax_tree& parameter_list,              // parameter list format of nasal function
     abstract_syntax_tree& func_root,                   // main runnning block of nasal function
     abstract_syntax_tree& input_parameters,            // input parameters when calling this nasal function
@@ -2851,6 +2881,12 @@ int nasal_runtime::func_proc(
     function_returned_addr=-1;
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
+    for(std::list<std::map<std::string,int> >::iterator i=function_scope.begin();i!=function_scope.end();++i)
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+        {
+            local_scope.back()[j->first]=j->second;
+            nasal_gc.reference_delete(j->second);
+        }
     if(called_hash_addr>=0)
         local_scope.back()["me"]=called_hash_addr;
     // loading parameters
@@ -3016,10 +3052,47 @@ int nasal_runtime::func_proc(
         else if(state==__state_no_operation)
             ;
     }
+    if(state!=__state_return)
+    {
+        function_returned_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(function_returned_addr).set_type(scalar_nil);
+    }
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
     local_scope.pop_back();
     return function_returned_addr;
+}
+int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_scope,std::string func_name)
+{
+    int ret_addr=-1;
+    if(func_name=="nasal_call_inline_c_std_puts")
+    {
+        int vector_addr=-1;
+        for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
+            if(i->find("dyn")!=i->end())
+                vector_addr=(*i)["dyn"];
+        if(vector_addr<0)
+            return -1;
+        for(int i=0;i<nasal_gc.get_scalar(vector_addr).get_vector().get_size();++i)
+        {
+            int data_addr=nasal_gc.get_scalar(vector_addr).get_vector().get_elem(i);
+            if(data_addr<0)
+                return -1;
+            switch(nasal_gc.get_scalar(data_addr).get_type())
+            {
+                case scalar_nil:break;
+                case scalar_number:std::cout<<nasal_gc.get_scalar(data_addr).get_number().get_number();break;
+                case scalar_string:std::cout<<nasal_gc.get_scalar(data_addr).get_string().get_string();break;
+                case scalar_vector:std::cout<<"[...]";break;
+                case scalar_hash:  std::cout<<"{...}";break;
+                case scalar_function:std::cout<<"func(...){...}";break;
+            }
+        }
+        std::cout<<std::endl;
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_nil);
+    }
+    return ret_addr;
 }
 
 void nasal_runtime::main_proc(abstract_syntax_tree& root)

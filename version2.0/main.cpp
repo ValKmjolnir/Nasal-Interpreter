@@ -1,24 +1,26 @@
 #include "nasal.h"
 
 // source code will be put in resource
-resource_file        resource;
+resource_file resource;
 // source code will be generated to tokens in lexer
-nasal_lexer          lexer;
+nasal_lexer lexer;
 // token list will be checked in parser and output the abstract syntax tree
-nasal_parse          parser;
+nasal_parse parser;
 // libroot stores the ast of lib file
 abstract_syntax_tree libroot;
 // root stores the ast of source code
 abstract_syntax_tree root;
 // executable_ast generates libroot and root together
+// this ast will be sent into nasal runtime
 abstract_syntax_tree executable_ast;
-
+// main process is running here
 nasal_runtime runtime;
 
+// command is used in main()
 std::string command;
-
 int main()
 {
+	// this curve looks really cool
 	std::cout<<"       __                _      "<<std::endl;
 	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  "<<std::endl;
 	std::cout<<"   /  \\/ / _` / __|/ _` | |    "<<std::endl;
@@ -54,9 +56,9 @@ int main()
 			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
 			std::cout<<">> [run   ] run code."<<std::endl;
 			std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
-			std::cout<<">> [info  ] print lexer,parser and ast on screen."<<std::endl;
 			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 		}
+		// clear the window
 		else if(command=="cls")
 		{
 #ifdef _WIN32
@@ -69,6 +71,7 @@ int main()
 			system("clear");
 #endif
 		}
+		// del all the source codes and asts
 		else if(command=="del")
 		{
 			resource.delete_all_source();
@@ -78,6 +81,7 @@ int main()
 			executable_ast.set_clear();
 			std::cout<<">> [Delete] complete."<<std::endl;
 		}
+		// add lib
 		else if(command=="lib")
 		{
 			libroot.set_clear();
@@ -102,10 +106,10 @@ int main()
 			lexer.delete_all_tokens();
 			parser.delete_all_elements();
 		}
+		// print source codes
 		else if(command=="rs")
-		{
 			resource.print_resource();
-		}
+		// print detail token after scanning source codes
 		else if(command=="lex")
 		{
 			lexer.scanner(resource.get_source());
@@ -115,6 +119,7 @@ int main()
 			else
 				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
+		// print the parse result of source codes
 		else if(command=="par")
 		{
 			lexer.scanner(resource.get_source());
@@ -128,6 +133,7 @@ int main()
 			else
 				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
+		// print the ast of source codes
 		else if(command=="ast")
 		{
 			lexer.scanner(resource.get_source());
@@ -144,6 +150,7 @@ int main()
 			else
 				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
+		// running process begins here
 		else if(command=="run")
 		{
 			lexer.scanner(resource.get_source());
@@ -166,6 +173,7 @@ int main()
 			else
 				std::cout<<">> [Lexer] error occurred,stop."<<std::endl;
 		}
+		// do you wanna see it again?
 		else if(command=="logo")
 		{
 			std::cout<<"       __                _      "<<std::endl;
@@ -174,16 +182,7 @@ int main()
 			std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  "<<std::endl;
 			std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 		}
-		else if(command=="info")
-		{
-			lexer.scanner(resource.get_source());
-			lexer.print_token_list();
-			lexer.generate_detail_token();
-			parser.get_token_list(lexer.get_detail_token_list());
-			parser.print_detail_token();
-			parser.main_generate();
-			parser.get_root().print_tree();
-		}
+		// exit interpreter
 		else if(command=="exit")
 			break;
 		else
