@@ -374,7 +374,16 @@ class nasal_lexer
 						if(*ptr=='\\')
 						{
 							++ptr;
-							token_str+=*ptr;
+							switch(*ptr)
+							{
+								case '\\':token_str.pop_back();token_str.push_back('\\');break;
+								case 'r': token_str.pop_back();token_str.push_back('\r');break;
+								case 't': token_str.pop_back();token_str.push_back('\t');break;
+								case 'n': token_str.pop_back();token_str.push_back('\n');break;
+								case '\'':token_str.pop_back();token_str.push_back('\'');break;
+								case '\"':token_str.pop_back();token_str.push_back('\"');break;
+								default:  token_str.push_back(*ptr);break;
+							}
 						}
 						++ptr;
 						if(ptr==res.end())
