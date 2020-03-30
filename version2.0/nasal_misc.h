@@ -1,6 +1,18 @@
 #ifndef __NASAL_MISC_H__
 #define __NASAL_MISC_H__
 
+/*
+	check_numerable_string:
+	check if a string can be converted to a number
+	
+	strings like these below is correct:
+	'0.00012'
+	'12314.234'
+	'1234'
+	'0xdeadbeef'
+	'0xDEADBEEF'
+	'0o71230'
+*/
 bool check_numerable_string(std::string str)
 {
 	if(str.length()>1 && str[0]=='-')
@@ -49,6 +61,10 @@ bool check_numerable_string(std::string str)
 	return false;
 }
 
+/*
+	trans_string_to_number:
+	convert string to number
+*/
 double trans_string_to_number(std::string str)
 {
 	bool is_negative=false;
@@ -120,6 +136,10 @@ double trans_string_to_number(std::string str)
 	return trans_str_number;
 }
 
+/*
+	trans_number_to_string:
+	convert number to string
+*/
 std::string trans_number_to_string(double number)
 {
 	std::string trans_num_string="";
@@ -149,9 +169,12 @@ std::string trans_number_to_string(double number)
 	return trans_num_string;
 }
 
+/*
+	prt_hex:
+	transform int to hex format and print it out (std::cout)
+*/
 void prt_hex(const int ptr)
 {
-	// transform int to hex and print it (std::cout)
 	char hex[9];
 	hex[8]=0;
 	int tmp_plc=ptr;
@@ -162,6 +185,26 @@ void prt_hex(const int ptr)
 	}
 	else
 		std::cout<<"0x";
+	/*
+		int: 00000000 00000000 00000000 00000000
+		int: 0x00 00 00 00
+		example:
+			a=0x13 57 9b df
+			a=00010011 01010111 10011011 11011111
+			a & 0x00 00 00 0f:
+				00010011 01010111 10011011 11011111
+			and	00000000 00000000 00000000 00001111
+			---------------------------------------
+				00000000 00000000 00000000 00001111
+			a>>=4:
+				00000001 00110101 01111001 10111101
+			a & 0x00 00 00 0f
+				00000001 00110101 01111001 10111101
+			and 00000000 00000000 00000000 00001111
+			---------------------------------------
+				00000000 00000000 00000000 00001101
+			then convert 0~15 to 0~9 a~f
+	*/
 	for(int j=7;j>=0;--j)
 	{
 		int tmp=(tmp_plc & 0x0000000f);

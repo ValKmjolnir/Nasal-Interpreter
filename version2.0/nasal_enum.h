@@ -1,6 +1,8 @@
 #ifndef __NASAL_ENUM_H__
 #define __NASAL_ENUM_H__
 
+// lexer token type is only used in nasal_lexer
+// each scanned token will be recognized as one of these below
 enum lexer_token_type
 {
 	__token_reserve_word=1,
@@ -25,29 +27,42 @@ void print_lexer_token(int type)
 // parse_gen_type include enums for parser and ast
 enum parse_gen_type
 {
+	/*
+		stack end is an important flag for parse token stack to
+		check if it's stack is at end
+		if stack is empty,the parser will get a wrong memory space and cause SIGSEGV
+	*/
 	__stack_end=1,
-
-	// operators
-	__cmp_equal,__cmp_not_equal,__cmp_less,__cmp_less_or_equal,__cmp_more,__cmp_more_or_equal,
-	// == != < <= > >= 
-	__and_operator,__or_operator,__nor_operator,__add_operator,__sub_operator,__mul_operator,__div_operator,__link_operator,
-	// and or ! + - * / ~
-	__equal,__add_equal,__sub_equal,__mul_equal,__div_equal,__link_equal,
-	// = += -= *= /= ~=
+	// operators == != < <= > >= 
+	__cmp_equal,
+	__cmp_not_equal,
+	__cmp_less,__cmp_less_or_equal,
+	__cmp_more,__cmp_more_or_equal,
+	// operators and or ! + - * / ~
+	__and_operator,	__or_operator,__nor_operator,
+	__add_operator,__sub_operator,
+	__mul_operator,__div_operator,__link_operator,
+	// operators = += -= *= /= ~=
+	__equal,
+	__add_equal,__sub_equal,
+	__mul_equal,__div_equal,__link_equal,
+	// operators {} [] () ; , : . ?
 	__left_brace,__right_brace,                    // {}
 	__left_bracket,__right_bracket,                // []
 	__left_curve,__right_curve,                    // ()
 	__semi,__comma,__colon,__dot,__ques_mark,      // ; , : . ?
 	__unknown_operator,
-	
 	// reserve words
-	__var,__func,__return,__nil,
+	__var,
+	__func,__return,__nil,
 	__if,__elsif,__else,
 	__continue,__break,
 	__for,__forindex,__foreach,__while,
 	
-	// basic scalar type: number string identifier dynamic_identifier
-	__number,__string,__id,__dynamic_id,
+	// basic scalar type: number string
+	__number,__string,
+	// basic identifier type: identifier dynamic_identifier
+	__id,__dynamic_id,
 	
 	// abstract_syntax_tree type below
 	// abstract_syntax_tree also uses the types above, such as operators
@@ -62,6 +77,7 @@ enum parse_gen_type
 	__definition,
 	__conditional
 };
+// print tokens that used in nasal_parse 
 void print_parse_token(int type)
 {
 	std::string context="";
@@ -130,6 +146,7 @@ void print_parse_token(int type)
 	std::cout<<context;
 	return;
 }
+// print node types that used in abstract_syntax_tree
 void print_ast_type(int type)
 {
 	std::string context="";
@@ -204,6 +221,7 @@ void print_ast_type(int type)
 	return;
 }
 
+// basic scalar type used in nasal_runtime and nasal_gc
 enum scalar_type
 {
 	scalar_nil=0,
@@ -213,6 +231,7 @@ enum scalar_type
 	scalar_hash,
 	scalar_function
 };
+// print types that used in nasal_runtime and nasal_gc
 void print_scalar_type(const int type)
 {
 	switch(type)

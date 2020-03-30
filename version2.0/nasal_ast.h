@@ -4,14 +4,21 @@
 class abstract_syntax_tree
 {
 	private:
-		// basic elements
+		/*
+			basic elements of ast node:
+			line: this marks the generated node's line in source code
+			node_type: this marks the node type
+			children: store the children of this node
+		*/
 		int line;
 		int node_type;
 		std::list<abstract_syntax_tree> children;
 
-		// is this node is a number|string|identifier node
-		// then the three elements below is of great use
-		// var_name is set for __id
+		/*
+			var_number is used when the node_type is __number
+			var_string is used when the node_type is __string
+			var_name is used when the node_type is __id, __dynamic_id, call_hash
+		*/
 		double      var_number;
 		std::string var_string;
 		std::string var_name;
@@ -23,11 +30,22 @@ class abstract_syntax_tree
 		abstract_syntax_tree& operator=(const abstract_syntax_tree&);
 		
 		/* main functions */
-		// print
+		/*
+			print_tree is the entrance of print function
+			print_tree will print the root address and call print_tree_block(1)
+			print_tree_block will print the information of each node by using DFS
+		*/
 		void print_tree();
 		void print_tree_block(const int);
 
-		// set
+		/*
+			set_clear     : clear all the elements in ast node
+			set_node_line : set the private:line
+			set_node_type : set the private:node_type
+			set_var_number: set the private:var_number
+			set_var_string: set the private:var_string
+			set_var_name  : set the private:var_name
+		*/
 		void set_clear();
 		void set_node_line(const int);
 		void set_node_type(const int);
@@ -36,7 +54,13 @@ class abstract_syntax_tree
 		void set_var_name(std::string);
 		void add_children(abstract_syntax_tree);
 
-		// get
+		/*
+			get_node_line : get the private:line
+			get_node_type : get the private:node_type
+			get_var_number: get private:var_number
+			get_var_string: get private:var_string
+			get_var_name  : get private:var_name
+		*/
 		int         get_node_line();
 		int         get_node_type();
 		double      get_var_number();
@@ -44,7 +68,10 @@ class abstract_syntax_tree
 		std::string get_var_name();
 		std::list<abstract_syntax_tree>& get_children();
 
-		// merge
+		/*
+			merge children of another ast into this one
+			used to link lib ast and source codes' ast together
+		*/
 		void merge_children(abstract_syntax_tree&);
 };
 

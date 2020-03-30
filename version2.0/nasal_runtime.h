@@ -82,6 +82,7 @@ class nasal_runtime
             __special_call_vector_too_large_value,
             __normal_call_vector_too_large_value,
             __function_returned_value_be_assigned,
+            __subvec_value_be_assigned,
             __call_function_lack_para,
             __forindex_foreach_not_vector,
             __break_not_used_in_loop,
@@ -165,7 +166,9 @@ void nasal_runtime::error_interrupt(const int type,const int line)
         case __normal_call_vector_too_large_value:
             std::cout<<"the number used to call the vector is too large(over 0x7fffffff)."<<std::endl;break;
         case __function_returned_value_be_assigned:
-            std::cout<<"cannot assigned a value that function returns."<<std::endl;break;
+            std::cout<<"cannot assign a value that function returns."<<std::endl;break;
+        case __subvec_value_be_assigned:
+            std::cout<<"cannot assign a subvec value."<<std::endl;break;
         case __call_function_lack_para:
             std::cout<<"lack parameter(s) when calling a function."<<std::endl;break;
         case __forindex_foreach_not_vector:
@@ -1863,8 +1866,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
             assigned_addr=&((*iter)[tmp_id_name]);
     if(!assigned_addr)
         return -1;
-    int assigned_value_addr=*assigned_addr;
-    nasal_gc.reference_add(*assigned_addr);
+    std::vector<int> tmp_subvec_addr;
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
         // call vector/special call hash/subvec
@@ -1872,7 +1874,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
         if(iter->get_node_type()==__call_vector)
         {
             // check the scalar type of called identifier here
-            int called_type=nasal_gc.get_scalar(assigned_value_addr).get_type();
+            int called_type=nasal_gc.get_scalar(*assigned_addr).get_type();
             if(called_type!=scalar_vector && called_type!=scalar_hash)
             {
                 error_interrupt(__error_value_type,iter->get_node_line());
@@ -1971,7 +1973,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                 int begin_num=(int)nasal_gc.get_scalar(num1_addr).get_number().get_number();
                 int end_num=0;
                 if(num2_addr<0 || nasal_gc.get_scalar(num2_addr).get_type()==scalar_nil)
-                    end_num=nasal_gc.get_scalar(assigned_value_addr).get_vector().get_size();
+                    end_num=nasal_gc.get_scalar(*assigned_addr).get_vector().get_size();
                 else
                     end_num=(int)nasal_gc.get_scalar(num2_addr).get_number().get_number();
                 if(num1_addr>=0)
@@ -1982,7 +1984,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                 for(int i=begin_num;i<end_num;++i)
                 {
                     // addr used here
-                    int tmp_data_addr=nasal_gc.get_scalar(assigned_value_addr).get_vector().get_elem(i);
+                    int tmp_data_addr=nasal_gc.get_scalar(*assigned_addr).get_vector().get_elem(i);
                     int new_addr=-1;
                     if(tmp_data_addr<0)
                     {
@@ -2019,12 +2021,11 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                     nasal_gc.reference_delete(tmp_data_addr);
                     subvec_result.push_back(new_addr);
                 }
-                int tmp_addr=assigned_value_addr;
-                assigned_value_addr=nasal_gc.gc_alloc();
-                nasal_gc.get_scalar(assigned_value_addr).set_type(scalar_vector);
+                int tmp_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(tmp_addr).set_type(scalar_vector);
                 for(int i=0;i<subvec_result.size();++i)
-                    nasal_gc.get_scalar(assigned_value_addr).get_vector().vec_push(subvec_result[i]);
-                nasal_gc.reference_delete(tmp_addr);
+                    nasal_gc.get_scalar(tmp_addr).get_vector().vec_push(subvec_result[i]);
+                tmp_subvec_addr.push_back(tmp_addr);
                 assigned_addr=NULL;
             }// end sub-vector
             else
@@ -2058,16 +2059,12 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                         error_interrupt(__normal_call_vector_too_large_value,iter->get_children().front().get_node_line());
                         return -1;
                     }
-                    int tmp_addr=assigned_value_addr;
-                    assigned_addr=nasal_gc.get_scalar(tmp_addr).get_vector().get_elem_addr((int)place_num);
+                    assigned_addr=nasal_gc.get_scalar(*assigned_addr).get_vector().get_elem_addr((int)place_num);
                     if(!assigned_addr)
                     {
                         error_interrupt(__invalid_vector_member,iter->get_children().front().get_children().front().get_node_line());
                         return -1;
                     }
-                    assigned_value_addr=*assigned_addr;
-                    nasal_gc.reference_add(assigned_value_addr);
-                    nasal_gc.reference_delete(tmp_addr);
                 }
                 else if(called_type==scalar_hash)
                 {
@@ -2076,16 +2073,12 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                         error_interrupt(__error_value_type_when_calling_hash,iter->get_children().front().get_node_line());
                         return -1;
                     }
-                    int tmp_addr=assigned_value_addr;
-                    assigned_addr=nasal_gc.get_scalar(tmp_addr).get_hash().get_hash_member_addr(nasal_gc.get_scalar(data_addr).get_string().get_string());
+                    assigned_addr=nasal_gc.get_scalar(*assigned_addr).get_hash().get_hash_member_addr(nasal_gc.get_scalar(data_addr).get_string().get_string());
                     if(!assigned_addr)
                     {
                         error_interrupt(__invalid_hash_member,iter->get_children().front().get_node_line());
                         return -1;
                     }
-                    assigned_value_addr=*assigned_addr;
-                    nasal_gc.reference_add(assigned_value_addr);
-                    nasal_gc.reference_delete(tmp_addr);
                 }
                 nasal_gc.reference_delete(tmp_data_addr);
             }
@@ -2093,21 +2086,17 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
         // call hash identifier.identifier
         else if(iter->get_node_type()==__call_hash)
         {
-            if(nasal_gc.get_scalar(assigned_value_addr).get_type()!=scalar_hash)
+            if(nasal_gc.get_scalar(*assigned_addr).get_type()!=scalar_hash)
             {
                 error_interrupt(__not_callable_hash,iter->get_node_line());
                 return -1;
             }
-            int tmp_addr=assigned_value_addr;
-            assigned_addr=nasal_gc.get_scalar(assigned_value_addr).get_hash().get_hash_member_addr(iter->get_var_name());
+            assigned_addr=nasal_gc.get_scalar(*assigned_addr).get_hash().get_hash_member_addr(iter->get_var_name());
             if(!assigned_addr)
             {
                 error_interrupt(__invalid_hash_member,iter->get_node_line());
                 return -1;
             }
-            assigned_value_addr=*assigned_addr;
-            nasal_gc.reference_add(assigned_value_addr);
-            nasal_gc.reference_delete(tmp_addr);
         }// end call hash
         // call function identifier(...)
         else if(iter->get_node_type()==__call_function)
@@ -2116,34 +2105,56 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
             return -1;
         }
     }
-    switch(nasal_gc.get_scalar(data_addr).get_type())
+    nasal_gc.reference_delete(*assigned_addr);
+    if(assigned_addr)
     {
-        case scalar_nil:
-            *assigned_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_nil);
-            break;
-        case scalar_number:
-            *assigned_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_number);
-            nasal_gc.get_scalar(*assigned_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addr).get_number());
-            break;
-        case scalar_string:
-            *assigned_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_string);
-            nasal_gc.get_scalar(*assigned_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addr).get_string());
-            break;
-        case scalar_function:
-            *assigned_addr=nasal_gc.gc_alloc();
-            nasal_gc.get_scalar(*assigned_addr).set_type(scalar_function);
-            nasal_gc.get_scalar(*assigned_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addr).get_function());
-            break;
-        case scalar_vector:
-        case scalar_hash:
-            *assigned_addr=data_addr;
-            nasal_gc.reference_add(data_addr);
-            break;
+        switch(nasal_gc.get_scalar(data_addr).get_type())
+        {
+            case scalar_nil:
+                *assigned_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(*assigned_addr).set_type(scalar_nil);
+                break;
+            case scalar_number:
+                *assigned_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(*assigned_addr).set_type(scalar_number);
+                nasal_gc.get_scalar(*assigned_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addr).get_number());
+                break;
+            case scalar_string:
+                *assigned_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(*assigned_addr).set_type(scalar_string);
+                nasal_gc.get_scalar(*assigned_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addr).get_string());
+                break;
+            case scalar_function:
+                *assigned_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(*assigned_addr).set_type(scalar_function);
+                nasal_gc.get_scalar(*assigned_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addr).get_function());
+                break;
+            case scalar_vector:
+            case scalar_hash:
+                *assigned_addr=data_addr;
+                nasal_gc.reference_add(data_addr);
+                break;
+        }
     }
+    else
+    {
+        error_interrupt(__subvec_value_be_assigned,node.get_children().back().get_node_line());
+        return -1;
+    }
+
+    /*
+        assigned_addr=find_address()
+        while(children.size())
+        {
+            assigned_addr=new_addr()
+        }
+        *assigned_addr->refcnt--
+        *assigned_addr=new_value_addr
+    */
     // data_addr is only a parameter here,and it's refcnt has not been changed when using it here
+    nasal_gc.reference_add(*assigned_addr);
+    for(int i=0;i<tmp_subvec_addr.size();++i)
+        nasal_gc.reference_delete(tmp_subvec_addr[i]);
     return *assigned_addr;
 }
 int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
@@ -2870,8 +2881,8 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
     return state;
 }
 int nasal_runtime::func_proc(
+    std::list<std::map<std::string,int> >& parameters_assist_scope,// scope that used to generate parameters
     std::list<std::map<std::string,int> >& local_scope,// running scope,often gets the scope that calls it
-    std::list<std::map<std::string,int> >& function_scope,// running scope,often gets the scope that has been recorded in nasal function
     abstract_syntax_tree& parameter_list,              // parameter list format of nasal function
     abstract_syntax_tree& func_root,                   // main runnning block of nasal function
     abstract_syntax_tree& input_parameters,            // input parameters when calling this nasal function
@@ -2881,12 +2892,7 @@ int nasal_runtime::func_proc(
     function_returned_addr=-1;
     std::map<std::string,int> new_scope;
     local_scope.push_back(new_scope);
-    for(std::list<std::map<std::string,int> >::iterator i=function_scope.begin();i!=function_scope.end();++i)
-        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
-        {
-            local_scope.back()[j->first]=j->second;
-            nasal_gc.reference_delete(j->second);
-        }
+
     if(called_hash_addr>=0)
         local_scope.back()["me"]=called_hash_addr;
     // loading parameters
@@ -2904,7 +2910,7 @@ int nasal_runtime::func_proc(
         else if(iter->get_node_type()==__default_parameter)
         {
             para_name_list.push_back(iter->get_children().front().get_var_name());
-            int default_val_addr=calculation(local_scope,iter->get_children().back());
+            int default_val_addr=calculation(parameters_assist_scope,iter->get_children().back());
             if(default_val_addr<0)
                 return -1;
             local_scope.back()[para_name_list.back()]=default_val_addr;
@@ -2925,7 +2931,7 @@ int nasal_runtime::func_proc(
             {
                 if(has_dynamic_id)
                 {
-                    int val_addr=calculation(local_scope,*iter);
+                    int val_addr=calculation(parameters_assist_scope,*iter);
                     if(val_addr<0)
                         return -1;
                     nasal_gc.get_scalar(dynamic_args).get_vector().vec_push(val_addr);
@@ -2935,7 +2941,7 @@ int nasal_runtime::func_proc(
             }
             else
             {
-                int val_addr=calculation(local_scope,*iter);
+                int val_addr=calculation(parameters_assist_scope,*iter);
                 if(val_addr<0)
                     return -1;
                 if(local_scope.back()[para_name_list[tmp_ptr]]<0)
@@ -2956,7 +2962,7 @@ int nasal_runtime::func_proc(
             std::string tmp_para_name=iter->get_children().front().get_var_name();
             if(local_scope.back().find(tmp_para_name)!=local_scope.back().end())
             {
-                int val_addr=calculation(local_scope,iter->get_children().back());
+                int val_addr=calculation(parameters_assist_scope,iter->get_children().back());
                 if(val_addr<0)
                     return -1;
                 if(local_scope.back()[tmp_para_name]<0)
