@@ -41,7 +41,7 @@
     including a class named nasal_lexer
     including a string[] named lib_filename, by this way resource_file can load lib files
     including a string[] named reserve_word, it is used in lexer,when generating an identifier,nasal_lexer will check if it is a reserve word
-    including a struct named token, this struct is often used in nasal_lexer
+    including a struct named token, this struct is often used in nasal_lexer and nasal_parse
     including a function named is_reserve_word, checking if an identifier is a reserve word
 */
 #include "nasal_lexer.h"

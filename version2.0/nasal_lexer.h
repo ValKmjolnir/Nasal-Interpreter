@@ -4,12 +4,12 @@
 /*
 	__token_reserve_word:
 		for,foreach,forindex,while : loop
-		var,func : definition
-		break,continue : in loop
-		return : in function
-		if,else,elsif : if-else statement
-		and,or : calculation
-		nil : special type
+		var,func                   : definition
+		break,continue             : in loop
+		return                     : in function
+		if,else,elsif              : conditional expr
+		and,or                     : calculation
+		nil                        : special type
 	__token_identifier:
 		must begin with '_' or 'a'~'z' or 'A'~'Z'
 		can include '_' or 'a'~'z' or 'A'~'Z' or '0'~'9'
@@ -27,11 +27,13 @@
 	__token_operator:
 		! + - * / ~
 		= += -= *= /= ~=
-		== != > >= < <= ('and'  'or' are operators too but they are recognized as operator in generate_detail_token())
+		== != > >= < <=
+		('and'  'or' are operators too but they are recognized as operator in generate_detail_token())
 		() [] {} ; , . : ?
 		others: __unknown_operator
 */
 
+/* filenames of lib files */
 const std::string lib_filename[10]=
 {
 	"lib/base.nas",
@@ -45,14 +47,14 @@ const std::string lib_filename[10]=
 	"lib/unix.nas",
 	"lib/utf8.nas"
 };
-
+/* reserve words */
 std::string reserve_word[15]=
 {
 	"for","foreach","forindex","while",
 	"var","func","break","continue","return",
 	"if","else","elsif","and","or","nil"
 };
-
+/* check if an identifier is a reserve word */
 int is_reserve_word(std::string str)
 {
 	for(int i=0;i<15;++i)
@@ -67,13 +69,11 @@ class resource_file
 		std::list<char> resource;
 	public:
 		/*
-		resource_file();
-		~resource_file();
-		void delete_all_source();
-		void input_file(std::string);
-		void load_lib_file();
-		std::list<char>& get_source();
-		void print_resource();
+			delete_all_source: clear all the source codes in std::list<char> resource
+			input_file       : input source codes by filenames
+			load_lib_file    : input lib source codes
+			get_source       : get the std::list<char> resource
+			print_resource   : print source codes
 		*/
 		resource_file()
 		{
@@ -157,7 +157,7 @@ class resource_file
 			return;
 		}
 };
-
+/* struct token: mainly used in nasal_lexer and nasal_parse*/
 struct token
 {
 	int line;
@@ -178,25 +178,27 @@ class nasal_lexer
 		std::list<token> token_list;
 		std::list<token> detail_token_list;
 		int error;
+		// change utf8 codes into '?'
+		// this function will be deleted if there is a way to print utf8 codes out correctly
 		std::string utf8_clear(std::string tmp)
 		{
 			/*
-			0xxx xxxx 0x0  1 byte
-			110x xxxx 0xc0 2 byte
-			1110 xxxx 0xe0 3 byte
-			1111 0xxx 0xf0 4 byte
-			1111 10xx 0xf8 5 byte
-			1111 110x 0xfc 6 byte
-			bytes after it is:
-			10xx xxxx 0x80
-			
-			so utf-8 format is:
-			0xxxxxxx
-			110xxxxx 10xxxxxx
-			1110xxxx 10xxxxxx 10xxxxxx
-			11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-			111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-			1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+				0xxx xxxx 0x0  1 byte
+				110x xxxx 0xc0 2 byte
+				1110 xxxx 0xe0 3 byte
+				1111 0xxx 0xf0 4 byte
+				1111 10xx 0xf8 5 byte
+				1111 110x 0xfc 6 byte
+				bytes after it is:
+				10xx xxxx 0x80
+				
+				so utf-8 format is:
+				0xxxxxxx
+				110xxxxx 10xxxxxx
+				1110xxxx 10xxxxxx 10xxxxxx
+				11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+				111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+				1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
 			*/
 			unsigned char utf8head[6]={0x0,0xc0,0xe0,0xf0,0xf8,0xfc};
 			std::string ret="";
@@ -222,13 +224,11 @@ class nasal_lexer
 		}
 	public:
 		/*
-		nasal_lexer();
-		~nasal_lexer();
-		void print_token_list();
-		void scanner(std::list<char>&);
-		void generate_detail_token();
-		int get_error();
-		std::list<token>& get_detail_token();
+			print_token_list     : print generated token list
+			scanner              : scan the source codes and generate tokens
+			generate_detail_token: recognize and change token types to detailed types that can be processed by nasal_parse
+			get_error            : get the number of errors that occurred when generating tokens
+			get_detail_token     : output the detailed tokens,must be used after generate_detail_token()
 		*/
 		nasal_lexer()
 		{
