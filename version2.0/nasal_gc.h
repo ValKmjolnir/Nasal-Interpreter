@@ -478,8 +478,7 @@ int nasal_hash::get_hash_member(std::string member_name)
 }
 void nasal_hash::hash_push(std::string member_name,int addr)
 {
-	if(nas_hash.find(member_name)==nas_hash.end())
-		nas_hash[member_name]=addr;
+	nas_hash[member_name]=addr;
 	return;
 }
 void nasal_hash::hash_pop(std::string member_name)
