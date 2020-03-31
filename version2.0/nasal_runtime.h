@@ -106,7 +106,7 @@ class nasal_runtime
         int  loop_expr          (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  block_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
-        int  func_proc          (std::list<std::map<std::string,int> >&,std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
+        int  func_proc          (std::list<std::map<std::string,int> >&,std::list<std::map<std::string,int> >,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
         int  inline_function    (std::list<std::map<std::string,int> >&,std::string);
     public:
         nasal_runtime()
@@ -519,7 +519,7 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
             // note:how does nasal_function change the address of me when a hash calls it?
             // because before calling this function,hash gives the address if itself as a parameter to the function,
             // and this parameter's name is 'me'
-            std::string member_name=i->get_children().front().get_var_string();
+            std::string member_name=i->get_children().front().get_var_name();
             int var_type=i->get_children().back().get_node_type();
             if(member_name=="parents")
             {
@@ -2141,7 +2141,6 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
         error_interrupt(__subvec_value_be_assigned,node.get_children().back().get_node_line());
         return -1;
     }
-
     /*
         assigned_addr=find_address()
         while(children.size())
@@ -2168,6 +2167,19 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
             addr=(*iter)[tmp_id_name];
     if(addr<0)
     {
+        /*
+            left for test:
+            for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
+            {
+                for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+                {
+                    std::cout<<j->first<<": ";
+                    prt_hex(j->second);
+                    std::cout<<std::endl;
+                }
+                std::cout<<"---------------"<<std::endl;
+            }
+        */
         // inline function call only needs local_scope and function name
         // because all the inline functions are wraped in functions that can be searched in global scope
         for(int i=0;i<nas_lib_func_num;++i)
@@ -2809,7 +2821,7 @@ int nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scop
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
     local_scope.pop_back();
-    return __state_no_operation;
+    return ret_state;
 }
 int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
@@ -2882,30 +2894,33 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
 }
 int nasal_runtime::func_proc(
     std::list<std::map<std::string,int> >& parameters_assist_scope,// scope that used to generate parameters
-    std::list<std::map<std::string,int> >& local_scope,// running scope,often gets the scope that calls it
+    std::list<std::map<std::string,int> > local_scope,// running scope,often gets the scope that calls it
     abstract_syntax_tree& parameter_list,              // parameter list format of nasal function
     abstract_syntax_tree& func_root,                   // main runnning block of nasal function
     abstract_syntax_tree& input_parameters,            // input parameters when calling this nasal function
     int called_hash_addr                               // if called a hash before calling this nasal function,this address will be given to 'me'
 )
 {
+    // local scope should not used as reference
+    // because this will change the elements in scalar_function value itself
+    // if you call the same function in the function,the scope will be in a mess
     function_returned_addr=-1;
     std::map<std::string,int> new_scope;
-    local_scope.push_back(new_scope);
+    // new_scope will be used in parameters initialling process
+    // if push back this scope to local_scope
+    // there may be an error if an identifier has the same name as one identifier in the local_scope before
 
     if(called_hash_addr>=0)
-        local_scope.back()["me"]=called_hash_addr;
+        new_scope["me"]=called_hash_addr;
     // loading parameters
     std::vector<std::string> para_name_list;
-    bool has_dynamic_id=false;
-    int dynamic_args=nasal_gc.gc_alloc();
-    nasal_gc.get_scalar(dynamic_args).set_type(scalar_vector);
+    int dynamic_args=-1;
     for(std::list<abstract_syntax_tree>::iterator iter=parameter_list.get_children().begin();iter!=parameter_list.get_children().end();++iter)
     {
         if(iter->get_node_type()==__id)
         {
             para_name_list.push_back(iter->get_var_name());
-            local_scope.back()[para_name_list.back()]=-1;
+            new_scope[para_name_list.back()]=-1;
         }
         else if(iter->get_node_type()==__default_parameter)
         {
@@ -2913,23 +2928,24 @@ int nasal_runtime::func_proc(
             int default_val_addr=calculation(parameters_assist_scope,iter->get_children().back());
             if(default_val_addr<0)
                 return -1;
-            local_scope.back()[para_name_list.back()]=default_val_addr;
+            new_scope[para_name_list.back()]=default_val_addr;
         }
         else if(iter->get_node_type()==__dynamic_id)
         {
-            has_dynamic_id=true;
-            local_scope.back()[iter->get_var_name()]=dynamic_args;
+            dynamic_args=nasal_gc.gc_alloc();
+            nasal_gc.get_scalar(dynamic_args).set_type(scalar_vector);
+            new_scope[iter->get_var_name()]=dynamic_args;
             break;
         }
     }
-    if(input_parameters.get_children().front().get_node_type()!=__special_parameter)
+    if(!input_parameters.get_children().empty() && input_parameters.get_children().front().get_node_type()!=__special_parameter)
     {
         int tmp_ptr=0;
         for(std::list<abstract_syntax_tree>::iterator iter=input_parameters.get_children().begin();iter!=input_parameters.get_children().end();++iter)
         {
             if(tmp_ptr>=para_name_list.size())
             {
-                if(has_dynamic_id)
+                if(dynamic_args>=0)
                 {
                     int val_addr=calculation(parameters_assist_scope,*iter);
                     if(val_addr<0)
@@ -2944,12 +2960,12 @@ int nasal_runtime::func_proc(
                 int val_addr=calculation(parameters_assist_scope,*iter);
                 if(val_addr<0)
                     return -1;
-                if(local_scope.back()[para_name_list[tmp_ptr]]<0)
-                    local_scope.back()[para_name_list[tmp_ptr]]=val_addr;
+                if(new_scope[para_name_list[tmp_ptr]]<0)
+                    new_scope[para_name_list[tmp_ptr]]=val_addr;
                 else
                 {
-                    nasal_gc.reference_delete(local_scope.back()[para_name_list[tmp_ptr]]);
-                    local_scope.back()[para_name_list[tmp_ptr]]=val_addr;
+                    nasal_gc.reference_delete(new_scope[para_name_list[tmp_ptr]]);
+                    new_scope[para_name_list[tmp_ptr]]=val_addr;
                 }
             }
             ++tmp_ptr;
@@ -2960,27 +2976,28 @@ int nasal_runtime::func_proc(
         for(std::list<abstract_syntax_tree>::iterator iter=input_parameters.get_children().begin();iter!=input_parameters.get_children().end();++iter)
         {
             std::string tmp_para_name=iter->get_children().front().get_var_name();
-            if(local_scope.back().find(tmp_para_name)!=local_scope.back().end())
+            if(new_scope.find(tmp_para_name)!=new_scope.end())
             {
                 int val_addr=calculation(parameters_assist_scope,iter->get_children().back());
                 if(val_addr<0)
                     return -1;
-                if(local_scope.back()[tmp_para_name]<0)
-                    local_scope.back()[tmp_para_name]=val_addr;
+                if(new_scope[tmp_para_name]<0)
+                    new_scope[tmp_para_name]=val_addr;
                 else
                 {
-                    nasal_gc.reference_delete(local_scope.back()[tmp_para_name]);
-                    local_scope.back()[tmp_para_name]=val_addr;
+                    nasal_gc.reference_delete(new_scope[tmp_para_name]);
+                    new_scope[tmp_para_name]=val_addr;
                 }
             }
         }
     }
     for(int i=0;i<para_name_list.size();++i)
-        if(local_scope.back()[para_name_list[i]]<0)
+        if(new_scope[para_name_list[i]]<0)
         {
             error_interrupt(__call_function_lack_para,input_parameters.get_node_line());
             return -1;
         }
+    local_scope.push_back(new_scope);
     // process
     int state=__state_no_operation;
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().begin();iter!=func_root.get_children().end();++iter)
