@@ -177,7 +177,7 @@ class gc_manager
 				++memory[addr].refcnt;
 			else
 			{
-				std::cout<<">> [Gc] fatal error: unexpected memory place ";
+				std::cout<<">> [Gc] fatal error: reference unexpected memory place ";
 				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
 				error_occurred=true;
@@ -209,7 +209,7 @@ class gc_manager
 			}
 			else
 			{
-				std::cout<<">> [Gc] fatal error: unexpected memory address: ";
+				std::cout<<">> [Gc] fatal error: delete unexpected memory address: ";
 				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
 				error_occurred=true;
