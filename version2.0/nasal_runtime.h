@@ -1,9 +1,10 @@
 #ifndef __NASAL_RUNTIME_H__
 #define __NASAL_RUNTIME_H__
-#define nas_lib_func_num 30
+#define nas_lib_func_num 31
 std::string inline_func_name[nas_lib_func_num]=
 {
     //base.nas
+    "nasal_call_inline_push_back",
     "nasal_call_inline_push_null",
     "nasal_call_inline_subvec",
     "nasal_call_inline_contains",
@@ -4588,7 +4589,63 @@ int nasal_runtime::func_proc(
 int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_scope,std::string func_name)
 {
     int ret_addr=-1;
-    if(func_name=="nasal_call_inline_c_std_puts")
+    if(func_name=="nasal_call_inline_push_back")
+    {
+        int vector_addr=-1;
+        int elements_addr=-1;
+        for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
+        {
+            if(i->find("vector")!=i->end())
+                vector_addr=(*i)["vector"];
+            if(i->find("elements")!=i->end())
+                elements_addr=(*i)["elements"];
+        }
+        if(vector_addr<0 || elements_addr<0)
+            return -1;
+        if(nasal_gc.get_scalar(vector_addr).get_type()!=scalar_vector)
+        {
+            std::cout<<">> [Runtime] append gets a value that is not a vector."<<std::endl;
+            return -1;
+        }
+        for(int i=0;i<nasal_gc.get_scalar(elements_addr).get_vector().get_size();++i)
+        {
+            int data_addr=nasal_gc.get_scalar(elements_addr).get_vector().get_elem(i);
+            if(data_addr<0)
+                return -1;
+            int new_addr=-1;
+            switch(nasal_gc.get_scalar(data_addr).get_type())
+            {
+                case scalar_nil:
+                    new_addr=nasal_gc.gc_alloc();
+                    nasal_gc.get_scalar(new_addr).set_type(scalar_nil);
+                    break;
+                case scalar_number:
+                    new_addr=nasal_gc.gc_alloc();
+                    nasal_gc.get_scalar(new_addr).set_type(scalar_number);
+                    nasal_gc.get_scalar(new_addr).get_number().deep_copy(nasal_gc.get_scalar(data_addr).get_number());
+                    break;
+                case scalar_string:
+                    new_addr=nasal_gc.gc_alloc();
+                    nasal_gc.get_scalar(new_addr).set_type(scalar_string);
+                    nasal_gc.get_scalar(new_addr).get_string().deep_copy(nasal_gc.get_scalar(data_addr).get_string());
+                    break;
+                case scalar_function:
+                    new_addr=nasal_gc.gc_alloc();
+                    nasal_gc.get_scalar(new_addr).set_type(scalar_function);
+                    nasal_gc.get_scalar(new_addr).get_function().deep_copy(nasal_gc.get_scalar(data_addr).get_function());
+                    break;
+                case scalar_vector:
+                case scalar_hash:
+                    new_addr=data_addr;
+                    nasal_gc.reference_add(new_addr);
+                    break;
+            }
+            nasal_gc.get_scalar(vector_addr).get_vector().vec_push(new_addr);
+        }
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_nil);
+    }
+    else if(func_name=="nasal_call_inline_c_std_puts")
     {
         int vector_addr=-1;
         for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
