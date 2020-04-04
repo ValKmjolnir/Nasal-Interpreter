@@ -116,22 +116,109 @@ struct gc_unit
 		return;
 	}
 };
+#ifndef NAS_POOL_SIZE
+#define NAS_POOL_SIZE 128
+struct memory_block
+{
+	gc_unit space[NAS_POOL_SIZE];
+	memory_block* next;
+};
+
+class memory_block_list
+{
+	private:
+		memory_block* head;
+		int mem_size;
+		int blk_size;
+	public:
+		memory_block_list()
+		{
+			mem_size=0;
+			blk_size=1;
+			head=new memory_block;
+			head->next=NULL;
+			return;
+		}
+		~memory_block_list()
+		{
+			mem_size=0;
+			blk_size=0;
+			memory_block* ptr=head;
+			while(ptr)
+			{
+				memory_block* tmp_ptr=ptr;
+				ptr=ptr->next;
+				delete tmp_ptr;
+			}
+			return;
+		}
+		void clear()
+		{
+			memory_block* ptr=head;
+			while(ptr)
+			{
+				memory_block* tmp_ptr=ptr;
+				ptr=ptr->next;
+				delete tmp_ptr;
+			}
+			mem_size=0;
+			blk_size=1;
+			head=new memory_block;
+			head->next=NULL;
+			return;
+		}
+		gc_unit& operator[](int address)
+		{
+			int block_num=address/NAS_POOL_SIZE;
+			int block_plc=address%NAS_POOL_SIZE;
+			memory_block* ptr=head;
+			for(int i=0;i<block_num;++i)
+				ptr=ptr->next;
+			return ptr->space[block_plc];
+		}
+		void push_back()
+		{
+			++mem_size;
+			if(mem_size>blk_size*NAS_POOL_SIZE)
+			{
+				memory_block* ptr=head;
+				while(ptr->next)
+					ptr=ptr->next;
+				ptr->next=new memory_block;
+				ptr->next->next=NULL;
+				++blk_size;
+			}
+			return;
+		}
+		int size()
+		{
+			return mem_size;
+		}
+		int capacity()
+		{
+			return NAS_POOL_SIZE*blk_size;
+		}
+};
+#endif
 
 class gc_manager
 {
 	private:
 		// free_space list is used to store space that is not in use.
 		std::list<int> free_space;
-		std::vector<gc_unit> memory;
+		/*
+		cannot use std::vector to simulate memory
+		because if vector memory is not enough,vector will use another larger memory as it's main memory
+		then all the things will be moved to a new space,
+		at this time if you reference a member in it,this will cause segmentation error.
+		*/
+		memory_block_list memory;
 		bool error_occurred;
 	public:
 		void gc_init()
 		{
 			// this function must be called in class nasal_runtime before running any codes
-			std::vector<gc_unit> tmp_vec;
 			memory.clear();
-			memory.swap(tmp_vec);
-			// clear the memory capacity by using tmp_vec.~vector<gc_unit>()
 			free_space.clear();
 			error_occurred=false;
 			return;
@@ -144,8 +231,7 @@ class gc_manager
 			// by this way it can manage memory efficiently.
 			if(free_space.empty())
 			{
-				gc_unit new_unit;
-				memory.push_back(new_unit);
+				memory.push_back();
 				free_space.push_back(memory.size()-1);
 			}
 			int alloc_plc=free_space.front();
@@ -171,7 +257,7 @@ class gc_manager
 			// this function is often used when an identifier is calling a space in memory
 			return (0<=addr) && (addr<memory.size()) && (!memory[addr].collected);
 		}
-		void reference_add(const int addr)
+		bool reference_add(const int addr)
 		{
 			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
 				++memory[addr].refcnt;
@@ -180,11 +266,11 @@ class gc_manager
 				std::cout<<">> [Gc] fatal error: reference unexpected memory place ";
 				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
-				error_occurred=true;
+				return false;
 			}
-			return;
+			return true;
 		}
-		void reference_delete(const int addr)
+		bool reference_delete(const int addr)
 		{
 			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
 			{
@@ -212,9 +298,9 @@ class gc_manager
 				std::cout<<">> [Gc] fatal error: delete unexpected memory address: ";
 				prt_hex(addr);
 				std::cout<<" ."<<std::endl;
-				error_occurred=true;
+				return false;
 			}
-			return;
+			return true;
 		}
 		void info_print()
 		{
