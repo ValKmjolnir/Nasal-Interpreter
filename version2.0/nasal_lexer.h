@@ -242,17 +242,37 @@ std::string nasal_lexer::identifier_gen(std::vector<char>& res,int& ptr,int& lin
 }
 std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 {
+	bool scientific_notation=false;
 	std::string token_str="";
 	while(('0'<=res[ptr] && res[ptr]<='9') ||
 		('a'<=res[ptr] && res[ptr]<='f') ||
 		('A'<=res[ptr] && res[ptr]<='F') ||
 		res[ptr]=='.' || res[ptr]=='x' || res[ptr]=='o' ||
-		res[ptr]=='e' || res[ptr]=='E' || res[ptr]=='-')
+		res[ptr]=='e' || res[ptr]=='E')
 	{
 		token_str+=res[ptr];
+		if(res[ptr]=='e' || res[ptr]=='E')
+		{
+			scientific_notation=true;
+			++ptr;
+			break;
+		}
 		++ptr;
 		if(ptr>=res.size())
 			break;
+	}
+	if(scientific_notation && ptr<res.size())
+	{
+		if(res[ptr]=='-')
+		{
+			token_str+='-';
+			++ptr;
+		}
+		while(ptr<res.size() && '0'<=res[ptr] && res[ptr]<='9')
+		{
+			token_str+=res[ptr];
+			++ptr;
+		}
 	}
 	if(!check_numerable_string(token_str))
 	{
