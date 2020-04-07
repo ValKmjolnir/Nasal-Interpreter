@@ -3,7 +3,6 @@
 #define nas_lib_func_num 32
 std::string inline_func_name[nas_lib_func_num]=
 {
-    "nasal_call_inline_scalar_type",
     //base.nas
     "nasal_call_inline_push_back",
     "nasal_call_inline_push_null",
@@ -39,7 +38,8 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_inline_cpp_math_ln",
     "nasal_call_inline_cpp_math_sqrt",
     "nasal_call_inline_cpp_atan2",
-    //
+    //system.nas
+    "nasal_call_inline_scalar_type"
 };
 
 class nasal_runtime
