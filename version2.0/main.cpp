@@ -20,6 +20,10 @@ nasal_runtime runtime;
 std::string command;
 int main()
 {
+#ifdef _WIN32
+	// use chcp 65001 to use unicode io
+	system("chcp 65001");
+#endif
 	// this curve looks really cool
 	std::cout<<"       __                _      "<<std::endl;
 	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  "<<std::endl;
@@ -27,13 +31,13 @@ int main()
 	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  "<<std::endl;
 	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
 #ifdef _WIN32
-			std::cout<<">> [system] Windows system."<<std::endl;
+	std::cout<<">> [system] Windows system."<<std::endl;
 #endif
 #ifdef _linux_
-			std::cout<<">> [system] Linux system."<<std::endl;
+	std::cout<<">> [system] Linux system."<<std::endl;
 #endif
 #ifdef TARGET_OS_MAC
-			std::cout<<">> [system] MacOS system."<<std::endl;
+	std::cout<<">> [system] MacOS system."<<std::endl;
 #endif
 	std::cout<<">> Nasal interpreter ver 2.0 ."<<std::endl;
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;

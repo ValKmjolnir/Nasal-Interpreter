@@ -158,7 +158,8 @@ void resource_file::input_file(std::string filename)
 		c=fin.get();
 		if(fin.eof())
 			break;
-		source_code.push_back(c<0? '?':c);
+		//source_code.push_back(c<0? '?':c);
+		source_code.push_back(c);
 	}
 	fin.close();
 	return;
@@ -198,6 +199,17 @@ void resource_file::print_resource()
 	{
 		if(32<=source_code[i])
 			std::cout<<source_code[i];
+		else if(source_code[i]<0)
+		{
+			std::string tmp="";
+			for(;i<source_code.size();++i)
+			{
+				if(source_code[i]>=0)
+					break;
+				tmp.push_back(source_code[i]);
+			}
+			std::cout<<tmp;--i;
+		}
 		else
 			std::cout<<" ";
 		if(source_code[i]=='\n')
