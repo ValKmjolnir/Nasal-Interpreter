@@ -4786,7 +4786,7 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
             break;
     }
     end_time=std::time(NULL);
-    std::cout<<">> [Runtime] process exited after "<<end_time-begin_time<<" s ."<<std::endl;
+    std::cout<<std::endl<<">> [Runtime] process exited after "<<end_time-begin_time<<" s ."<<std::endl;
     global_scope.clear();
     main_local_scope.clear();
     nasal_gc.gc_init();
