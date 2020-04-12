@@ -10,94 +10,96 @@
 
 class nasal_function
 {
-	private:
-		std::list<std::map<std::string,int> > local_scope;
-		abstract_syntax_tree parameter_list;
-		abstract_syntax_tree function_root;
-		// parent_hash_addr is used to store the address of the hash which has this nasal_function
-		// because nasal_function needs this address to adjust the identifier called 'me' in local_scope
-		// 'me' is the identifier which points to the hash which has this nasal_function
-	public:
-		void set_clear();
-		void set_local_scope(std::list<std::map<std::string,int> >&);
-		void set_paramemter_list(abstract_syntax_tree&);
-		void set_statement_block(abstract_syntax_tree&);
-		std::list<std::map<std::string,int> >& get_local_scope();
-		abstract_syntax_tree& get_parameter_list();
-		abstract_syntax_tree& get_statement_block();
-		void deep_copy(nasal_function&);
+private:
+	// closure_updated flag is used to mark if this function's closure is updated.
+	// to avoid some unexpected errors,closure of each function must be updated before blocks popping back the last scope
+	bool closure_updated;
+	std::list<std::map<std::string,int> > local_scope;
+	abstract_syntax_tree parameter_list;
+	abstract_syntax_tree function_root;
+public:
+	void set_clear();
+	void set_local_scope(std::list<std::map<std::string,int> >&);
+	bool get_closure_update_state();
+	void set_closure_update_state(bool);
+	void set_paramemter_list(abstract_syntax_tree&);
+	void set_statement_block(abstract_syntax_tree&);
+	std::list<std::map<std::string,int> >& get_local_scope();
+	abstract_syntax_tree& get_parameter_list();
+	abstract_syntax_tree& get_statement_block();
+	void deep_copy(nasal_function&);
 };
 
 class nasal_number
 {
-	private:
-		double nas_number;
-	public:
-		void   set_clear();
-		void   set_number(double);
-		double get_number();
-		void   deep_copy(nasal_number&);
+private:
+	double nas_number;
+public:
+	void   set_clear();
+	void   set_number(double);
+	double get_number();
+	void   deep_copy(nasal_number&);
 };
 
 class nasal_string
 {
-	private:
-		std::string nas_string;
-	public:
-		void set_clear();
-		void set_string(std::string);
-		std::string get_string();
-		void deep_copy(nasal_string&);
+private:
+	std::string nas_string;
+public:
+	void set_clear();
+	void set_string(std::string);
+	std::string get_string();
+	void deep_copy(nasal_string&);
 };
 
 class nasal_vector
 {
-	private:
-		std::vector<int> nas_array;
-	public:
-		void set_clear();
-		void vec_push(int);
-		int* get_elem_addr(int);
-		int  get_elem(int);
-		int  vec_pop();
-		int  get_size();
-		int* get_parent_hash_member_addr(std::string);
-		int  get_parent_hash_member(std::string);
-		void generate_new_hash();
-		void deep_copy(nasal_vector&);
+private:
+	std::vector<int> nas_array;
+public:
+	void set_clear();
+	void vec_push(int);
+	int* get_elem_addr(int);
+	int  get_elem(int);
+	int  vec_pop();
+	int  get_size();
+	int* get_parent_hash_member_addr(std::string);
+	int  get_parent_hash_member(std::string);
+	void generate_new_hash();
+	void deep_copy(nasal_vector&);
 };
 
 class nasal_hash
 {
-	private:
-		std::map<std::string,int> nas_hash;
-	public:
-		void set_clear();
-		int* get_hash_member_addr(std::string);
-		int  get_hash_member(std::string);
-		void hash_push(std::string,int);
-		void hash_pop(std::string);
-		void deep_copy(nasal_hash&);
+private:
+	std::map<std::string,int> nas_hash;
+public:
+	void set_clear();
+	int* get_hash_member_addr(std::string);
+	int  get_hash_member(std::string);
+	void hash_push(std::string,int);
+	void hash_pop(std::string);
+	void deep_copy(nasal_hash&);
 };
 
 class nasal_scalar
 {
-	private:
-		int type;
-		nasal_string   var_string;
-		nasal_number   var_number;
-		nasal_vector   var_vector;
-		nasal_hash     var_hash;
-		nasal_function var_func;
-	public:
-		nasal_scalar();
-		void            set_type(int);
-		int             get_type();
-		nasal_number&   get_number();
-		nasal_string&   get_string();
-		nasal_vector&   get_vector();
-		nasal_hash&     get_hash();
-		nasal_function& get_function();
+private:
+	int type;
+	nasal_string   var_string;
+	nasal_number   var_number;
+	nasal_vector   var_vector;
+	nasal_hash     var_hash;
+	nasal_function var_func;
+public:
+	nasal_scalar();
+	void            set_type(int);
+	int             get_type();
+	nasal_number&   get_number();
+	nasal_string&   get_string();
+	nasal_vector&   get_vector();
+	nasal_hash&     get_hash();
+	nasal_function& get_function();
 };
 
 struct gc_unit
@@ -126,208 +128,208 @@ struct memory_block
 
 class memory_block_list
 {
-	private:
-		memory_block* head;
-		int mem_size;
-		int blk_size;
-	public:
-		memory_block_list()
+private:
+	memory_block* head;
+	int mem_size;
+	int blk_size;
+public:
+	memory_block_list()
+	{
+		mem_size=0;
+		blk_size=1;
+		head=new memory_block;
+		head->next=NULL;
+		return;
+	}
+	~memory_block_list()
+	{
+		mem_size=0;
+		blk_size=0;
+		memory_block* ptr=head;
+		while(ptr)
 		{
-			mem_size=0;
-			blk_size=1;
-			head=new memory_block;
-			head->next=NULL;
-			return;
+			memory_block* tmp_ptr=ptr;
+			ptr=ptr->next;
+			delete tmp_ptr;
 		}
-		~memory_block_list()
+		return;
+	}
+	void clear()
+	{
+		memory_block* ptr=head;
+		while(ptr)
 		{
-			mem_size=0;
-			blk_size=0;
+			memory_block* tmp_ptr=ptr;
+			ptr=ptr->next;
+			delete tmp_ptr;
+		}
+		mem_size=0;
+		blk_size=1;
+		head=new memory_block;
+		head->next=NULL;
+		return;
+	}
+	gc_unit& operator[](int address)
+	{
+		int block_num=address/NAS_POOL_SIZE;
+		int block_plc=address%NAS_POOL_SIZE;
+		memory_block* ptr=head;
+		for(int i=0;i<block_num;++i)
+			ptr=ptr->next;
+		return ptr->space[block_plc];
+	}
+	void push_back()
+	{
+		++mem_size;
+		if(mem_size>blk_size*NAS_POOL_SIZE)
+		{
 			memory_block* ptr=head;
-			while(ptr)
-			{
-				memory_block* tmp_ptr=ptr;
+			while(ptr->next)
 				ptr=ptr->next;
-				delete tmp_ptr;
-			}
-			return;
+			ptr->next=new memory_block;
+			ptr->next->next=NULL;
+			++blk_size;
 		}
-		void clear()
-		{
-			memory_block* ptr=head;
-			while(ptr)
-			{
-				memory_block* tmp_ptr=ptr;
-				ptr=ptr->next;
-				delete tmp_ptr;
-			}
-			mem_size=0;
-			blk_size=1;
-			head=new memory_block;
-			head->next=NULL;
-			return;
-		}
-		gc_unit& operator[](int address)
-		{
-			int block_num=address/NAS_POOL_SIZE;
-			int block_plc=address%NAS_POOL_SIZE;
-			memory_block* ptr=head;
-			for(int i=0;i<block_num;++i)
-				ptr=ptr->next;
-			return ptr->space[block_plc];
-		}
-		void push_back()
-		{
-			++mem_size;
-			if(mem_size>blk_size*NAS_POOL_SIZE)
-			{
-				memory_block* ptr=head;
-				while(ptr->next)
-					ptr=ptr->next;
-				ptr->next=new memory_block;
-				ptr->next->next=NULL;
-				++blk_size;
-			}
-			return;
-		}
-		int size()
-		{
-			return mem_size;
-		}
-		int capacity()
-		{
-			return NAS_POOL_SIZE*blk_size;
-		}
+		return;
+	}
+	int size()
+	{
+		return mem_size;
+	}
+	int capacity()
+	{
+		return NAS_POOL_SIZE*blk_size;
+	}
 };
 #endif
 
 class gc_manager
 {
-	private:
-		// free_space list is used to store space that is not in use.
-		std::list<int> free_space;
-		/*
-		cannot use std::vector to simulate memory
-		because if vector memory is not enough,vector will use another larger memory as it's main memory
-		then all the things will be moved to a new space,
-		at this time if you reference a member in it,this will cause segmentation error.
-		*/
-		memory_block_list memory;
-		bool error_occurred;
-	public:
-		void gc_init()
+private:
+	// free_space list is used to store space that is not in use.
+	std::list<int> free_space;
+	/*
+	cannot use std::vector to simulate memory
+	because if vector memory is not enough,vector will use another larger memory as it's main memory
+	then all the things will be moved to a new space,
+	at this time if you reference a member in it,this will cause segmentation error.
+	*/
+	memory_block_list memory;
+	bool error_occurred;
+public:
+	void gc_init()
+	{
+		// this function must be called in class nasal_runtime before running any codes
+		memory.clear();
+		free_space.clear();
+		error_occurred=false;
+		return;
+	}
+	int gc_alloc()
+	{
+		// add a new space for a new value
+		// if list free_space is not empty,it will get the address at the front and give it to the new value
+		// if list free_space is empty,it will add new space in memory vector and give it to the new value
+		// by this way it can manage memory efficiently.
+		if(free_space.empty())
 		{
-			// this function must be called in class nasal_runtime before running any codes
-			memory.clear();
-			free_space.clear();
-			error_occurred=false;
-			return;
+			memory.push_back();
+			free_space.push_back(memory.size()-1);
 		}
-		int gc_alloc()
+		int alloc_plc=free_space.front();
+		free_space.pop_front();
+		memory[alloc_plc].collected=false;
+		memory[alloc_plc].refcnt=1;
+		return alloc_plc;
+	}
+	int get_reference(int addr)
+	{
+		// get the reference counts of the scalar
+		return memory[addr].refcnt;
+	}
+	nasal_scalar& get_scalar(int addr)
+	{
+		// get the reference of the scalar
+		return memory[addr].elem;
+	}
+	bool place_check(const int addr)
+	{
+		// check if this place is in memory
+		// and this place is uncollected
+		// this function is often used when an identifier is calling a space in memory
+		return (0<=addr) && (addr<memory.size()) && (!memory[addr].collected);
+	}
+	bool reference_add(const int addr)
+	{
+		if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
+			++memory[addr].refcnt;
+		else
 		{
-			// add a new space for a new value
-			// if list free_space is not empty,it will get the address at the front and give it to the new value
-			// if list free_space is empty,it will add new space in memory vector and give it to the new value
-			// by this way it can manage memory efficiently.
-			if(free_space.empty())
+			std::cout<<">> [Gc] fatal error: reference unexpected memory place ";
+			prt_hex(addr);
+			std::cout<<" ."<<std::endl;
+			return false;
+		}
+		return true;
+	}
+	bool reference_delete(const int addr)
+	{
+		if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
+		{
+			--memory[addr].refcnt;
+			if(!memory[addr].refcnt)
 			{
-				memory.push_back();
-				free_space.push_back(memory.size()-1);
-			}
-			int alloc_plc=free_space.front();
-			free_space.pop_front();
-			memory[alloc_plc].collected=false;
-			memory[alloc_plc].refcnt=1;
-			return alloc_plc;
-		}
-		int get_reference(int addr)
-		{
-			// get the reference counts of the scalar
-			return memory[addr].refcnt;
-		}
-		nasal_scalar& get_scalar(int addr)
-		{
-			// get the reference of the scalar
-			return memory[addr].elem;
-		}
-		bool place_check(const int addr)
-		{
-			// check if this place is in memory
-			// and this place is uncollected
-			// this function is often used when an identifier is calling a space in memory
-			return (0<=addr) && (addr<memory.size()) && (!memory[addr].collected);
-		}
-		bool reference_add(const int addr)
-		{
-			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
-				++memory[addr].refcnt;
-			else
-			{
-				std::cout<<">> [Gc] fatal error: reference unexpected memory place ";
-				prt_hex(addr);
-				std::cout<<" ."<<std::endl;
-				return false;
-			}
-			return true;
-		}
-		bool reference_delete(const int addr)
-		{
-			if((0<=addr) && (addr<memory.size()) && (!memory[addr].collected))
-			{
-				--memory[addr].refcnt;
-				if(!memory[addr].refcnt)
+				// if refcnt is 0,then starting the destructor
+				// std::cout<<">> [Gc] collected ";prt_hex(addr);std::cout<<std::endl;
+				memory[addr].collected=true;
+				switch(memory[addr].elem.get_type())
 				{
-					// if refcnt is 0,then starting the destructor
-					// std::cout<<">> [Gc] collected ";prt_hex(addr);std::cout<<std::endl;
-					memory[addr].collected=true;
-					switch(memory[addr].elem.get_type())
-					{
-						case scalar_number:  memory[addr].elem.get_number().set_clear();  break;
-						case scalar_string:  memory[addr].elem.get_string().set_clear();  break;
-						case scalar_vector:  memory[addr].elem.get_vector().set_clear();  break;
-						case scalar_hash:    memory[addr].elem.get_hash().set_clear();    break;
-						case scalar_function:memory[addr].elem.get_function().set_clear();break;
-						default:break;
-					}
-					memory[addr].elem.set_type(scalar_nil);
-					free_space.push_back(addr);
+					case scalar_number:  memory[addr].elem.get_number().set_clear();  break;
+					case scalar_string:  memory[addr].elem.get_string().set_clear();  break;
+					case scalar_vector:  memory[addr].elem.get_vector().set_clear();  break;
+					case scalar_hash:    memory[addr].elem.get_hash().set_clear();    break;
+					case scalar_function:memory[addr].elem.get_function().set_clear();break;
+					default:break;
 				}
+				memory[addr].elem.set_type(scalar_nil);
+				free_space.push_back(addr);
 			}
-			else
+		}
+		else
+		{
+			std::cout<<">> [Gc] fatal error: delete unexpected memory address: ";
+			prt_hex(addr);
+			std::cout<<" ."<<std::endl;
+			return false;
+		}
+		return true;
+	}
+	void info_print()
+	{
+		std::cout<<">> [Gc] memory size:"<<memory.size()*sizeof(gc_unit)<<" byte."<<std::endl;
+		std::cout<<">> [Gc] memory capacity:"<<memory.capacity()*sizeof(gc_unit)<<" byte."<<std::endl;
+		std::cout<<">> [Gc] memory usage: "<<std::endl;
+		int cnt=0;
+		for(int i=0;i<memory.size();++i)
+			if(!memory[i].collected)
 			{
-				std::cout<<">> [Gc] fatal error: delete unexpected memory address: ";
-				prt_hex(addr);
-				std::cout<<" ."<<std::endl;
-				return false;
+				prt_hex(i);
+				std::cout<<"["<<memory[i].refcnt<<"]";
+				// cnt is used to check if it is the right time to output in the next line
+				++cnt;
+				if(!(cnt%8))
+					std::cout<<std::endl;
+				else
+					std::cout<<" ";
 			}
-			return true;
-		}
-		void info_print()
-		{
-			std::cout<<">> [Gc] memory size:"<<memory.size()*sizeof(gc_unit)<<" byte."<<std::endl;
-			std::cout<<">> [Gc] memory capacity:"<<memory.capacity()*sizeof(gc_unit)<<" byte."<<std::endl;
-			std::cout<<">> [Gc] memory usage: "<<std::endl;
-			int cnt=0;
-			for(int i=0;i<memory.size();++i)
-				if(!memory[i].collected)
-				{
-					prt_hex(i);
-					std::cout<<"["<<memory[i].refcnt<<"]";
-					// cnt is used to check if it is the right time to output in the next line
-					++cnt;
-					if(!(cnt%8))
-						std::cout<<std::endl;
-					else
-						std::cout<<" ";
-				}
-			if(cnt%8)
-				std::cout<<std::endl;
-			return;
-		}
-		bool check_error()
-		{
-			return error_occurred;
-		}
+		if(cnt%8)
+			std::cout<<std::endl;
+		return;
+	}
+	bool check_error()
+	{
+		return error_occurred;
+	}
 };
 gc_manager nasal_gc;
 // this object is used in "nasal_runtime.h"
@@ -339,16 +341,29 @@ void nasal_function::set_clear()
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 			nasal_gc.reference_delete(i->second);
+	closure_updated=false;
 	local_scope.clear();
 	function_root.set_clear();
 	return;
 }
 void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_scope)
 {
+	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+			nasal_gc.reference_delete(i->second);
 	local_scope=tmp_scope;
 	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 				nasal_gc.reference_add(i->second);
+	return;
+}
+bool nasal_function::get_closure_update_state()
+{
+	return closure_updated;
+}
+void nasal_function::set_closure_update_state(bool _state)
+{
+	closure_updated=_state;
 	return;
 }
 void nasal_function::set_paramemter_list(abstract_syntax_tree& para_list)
