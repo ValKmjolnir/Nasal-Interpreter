@@ -100,6 +100,7 @@ class nasal_runtime
         int  vector_generation  (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);//checked
         int  hash_generation    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  function_generation(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
+        void update_closure     (std::list<std::map<std::string,int> >&);
         bool check_condition    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  calculation        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);// checked
         int  assignment         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,int);
@@ -1463,6 +1464,7 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
     int addr=nasal_gc.gc_alloc();
     nasal_gc.get_scalar(addr).set_type(scalar_function);
     nasal_gc.get_scalar(addr).get_function().set_local_scope(local_scope);
+    nasal_gc.get_scalar(addr).get_function().set_closure_update_state(false);
     
     std::list<abstract_syntax_tree>::iterator i=node.get_children().begin();
     nasal_gc.get_scalar(addr).get_function().set_paramemter_list(*i);
@@ -2053,6 +2055,20 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
         }
     }
     return addr;
+}
+void nasal_runtime::update_closure(std::list<std::map<std::string,int> >& local_scope)
+{
+    // update_closure
+    if(!local_scope.size())
+        return;
+    for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
+        if(nasal_gc.get_scalar(i->second).get_type()==scalar_function && 
+            !nasal_gc.get_scalar(i->second).get_function().get_closure_update_state())
+        {
+            nasal_gc.get_scalar(i->second).get_function().set_local_scope(local_scope);
+            nasal_gc.get_scalar(i->second).get_function().set_closure_update_state(true);
+        }
+    return;
 }
 bool nasal_runtime::check_condition(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
@@ -4403,11 +4419,13 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
         if(state==__state_break || state==__state_continue || state==__state_return || state==__state_error)
             break;
     }
+    // update_closure
+    update_closure(local_scope);
     return state;
 }
 int nasal_runtime::func_proc(
     std::list<std::map<std::string,int> >& parameters_assist_scope,// scope that used to generate parameters
-    std::list<std::map<std::string,int> > local_scope,// running scope,often gets the scope that calls it
+    std::list<std::map<std::string,int> > local_scope, // running scope,often gets the scope that calls it
     abstract_syntax_tree& parameter_list,              // parameter list format of nasal function
     abstract_syntax_tree& func_root,                   // main runnning block of nasal function
     abstract_syntax_tree& input_parameters,            // input parameters when calling this nasal function
@@ -4596,6 +4614,8 @@ int nasal_runtime::func_proc(
         function_returned_addr=nasal_gc.gc_alloc();
         nasal_gc.get_scalar(function_returned_addr).set_type(scalar_nil);
     }
+    // update closure
+    update_closure(local_scope);
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
     local_scope.pop_back();
