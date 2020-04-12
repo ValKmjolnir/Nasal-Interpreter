@@ -8,23 +8,35 @@
 // the identifier will get a new memory space in nasal_gc and do deep_copy()
 // and the memory space that is not used ,its ref_cnt-=1.
 
+class nasal_closure
+{
+private:
+	std::list<std::map<std::string,int> > closure;
+public:
+	void set_clear();
+	void set_local_scope(std::list<std::map<std::string,int> >&);
+	std::list<std::map<std::string,int> >& get_local_scope();
+	void print_closure_ids();
+};
+
 class nasal_function
 {
 private:
 	// closure_updated flag is used to mark if this function's closure is updated.
 	// to avoid some unexpected errors,closure of each function must be updated before blocks popping back the last scope
 	bool closure_updated;
-	std::list<std::map<std::string,int> > local_scope;
+	int closure_addr;
 	abstract_syntax_tree parameter_list;
 	abstract_syntax_tree function_root;
 public:
+	nasal_function();
 	void set_clear();
-	void set_local_scope(std::list<std::map<std::string,int> >&);
+	void set_local_scope(int);
 	bool get_closure_update_state();
 	void set_closure_update_state(bool);
 	void set_paramemter_list(abstract_syntax_tree&);
 	void set_statement_block(abstract_syntax_tree&);
-	std::list<std::map<std::string,int> >& get_local_scope();
+	int  get_local_scope();
 	abstract_syntax_tree& get_parameter_list();
 	abstract_syntax_tree& get_statement_block();
 	void deep_copy(nasal_function&);
@@ -91,6 +103,7 @@ private:
 	nasal_vector   var_vector;
 	nasal_hash     var_hash;
 	nasal_function var_func;
+	nasal_closure  var_cls;
 public:
 	nasal_scalar();
 	void            set_type(int);
@@ -100,6 +113,7 @@ public:
 	nasal_vector&   get_vector();
 	nasal_hash&     get_hash();
 	nasal_function& get_function();
+	nasal_closure&  get_closure();
 };
 
 struct gc_unit
@@ -245,6 +259,8 @@ public:
 	int get_reference(int addr)
 	{
 		// get the reference counts of the scalar
+		if(addr>=memory.size())
+			return -1;
 		return memory[addr].refcnt;
 	}
 	nasal_scalar& get_scalar(int addr)
@@ -289,6 +305,7 @@ public:
 					case scalar_vector:  memory[addr].elem.get_vector().set_clear();  break;
 					case scalar_hash:    memory[addr].elem.get_hash().set_clear();    break;
 					case scalar_function:memory[addr].elem.get_function().set_clear();break;
+					case scalar_closure: memory[addr].elem.get_closure().set_clear(); break;
 					default:break;
 				}
 				memory[addr].elem.set_type(scalar_nil);
@@ -335,26 +352,65 @@ gc_manager nasal_gc;
 // this object is used in "nasal_runtime.h"
 // because there must be only one gc when running a program(one process)
 
-
-void nasal_function::set_clear()
+void nasal_closure::set_clear()
 {
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
+	if(!closure.size())
+		return;
+	for(std::list<std::map<std::string,int> >::iterator iter=closure.begin();iter!=closure.end();++iter)
 		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
 			nasal_gc.reference_delete(i->second);
+	closure.clear();
+	return;
+}
+void nasal_closure::set_local_scope(std::list<std::map<std::string,int> >& tmp_scope)
+{
+	if(closure.size())
+		for(std::list<std::map<std::string,int> >::iterator iter=closure.begin();iter!=closure.end();++iter)
+			for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+				nasal_gc.reference_delete(i->second);
+	closure.clear();
+	closure=tmp_scope;
+	for(std::list<std::map<std::string,int> >::iterator iter=closure.begin();iter!=closure.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+				nasal_gc.reference_add(i->second);
+	return;
+}
+std::list<std::map<std::string,int> >& nasal_closure::get_local_scope()
+{
+	return closure;
+}
+void nasal_closure::print_closure_ids()
+{
+	for(std::list<std::map<std::string,int> >::iterator iter=closure.begin();iter!=closure.end();++iter)
+		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
+		{
+			std::cout<<i->first<<": ";
+			prt_hex(i->second);
+			std::cout<<std::endl;
+		}
+	return;
+}
+
+nasal_function::nasal_function()
+{
 	closure_updated=false;
-	local_scope.clear();
+	closure_addr=-1;
+	return;
+}
+void nasal_function::set_clear()
+{
+	closure_updated=false;
+	if(closure_addr>=0)
+		nasal_gc.reference_delete(closure_addr);
+	closure_addr=-1;
 	function_root.set_clear();
 	return;
 }
-void nasal_function::set_local_scope(std::list<std::map<std::string,int> >& tmp_scope)
+void nasal_function::set_local_scope(int tmp_addr)
 {
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
-		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-			nasal_gc.reference_delete(i->second);
-	local_scope=tmp_scope;
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
-		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-				nasal_gc.reference_add(i->second);
+	if(closure_addr>=0)
+		nasal_gc.reference_delete(closure_addr);
+	closure_addr=tmp_addr;
 	return;
 }
 bool nasal_function::get_closure_update_state()
@@ -376,9 +432,9 @@ void nasal_function::set_statement_block(abstract_syntax_tree& func_block)
 	function_root=func_block;
 	return;
 }
-std::list<std::map<std::string,int> >& nasal_function::get_local_scope()
+int nasal_function::get_local_scope()
 {
-	return local_scope;
+	return closure_addr;
 }
 abstract_syntax_tree& nasal_function::get_parameter_list()
 {
@@ -390,17 +446,10 @@ abstract_syntax_tree& nasal_function::get_statement_block()
 }
 void nasal_function::deep_copy(nasal_function& tmp)
 {
-	// before deep copy nasal_functions needs to delete all values in its scope
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
-		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-			nasal_gc.reference_delete(i->second);
-	// when copying a local scope,one thing that must be noticed is that
-	// each identifier in local_scope shares the same address with tmp.local_scope
-	// copy all the values in tmp's scope
-	local_scope=tmp.local_scope;
-	for(std::list<std::map<std::string,int> >::iterator iter=local_scope.begin();iter!=local_scope.end();++iter)
-		for(std::map<std::string,int>::iterator i=iter->begin();i!=iter->end();++i)
-				nasal_gc.reference_add(i->second);
+	if(closure_addr>=0)
+		nasal_gc.reference_delete(closure_addr);
+	closure_addr=tmp.closure_addr;
+	nasal_gc.reference_add(closure_addr);
 	// copy abstract_syntax_tree
 	parameter_list=tmp.parameter_list;
 	function_root=tmp.function_root;
@@ -624,7 +673,7 @@ nasal_scalar::nasal_scalar()
 void nasal_scalar::set_type(int tmp_type)
 {
 	// scalar_function is the last enum in enum::scalar_type
-	type=tmp_type>scalar_function? scalar_nil:tmp_type;
+	type=tmp_type>scalar_closure? scalar_nil:tmp_type;
 	return;
 }
 int nasal_scalar::get_type()
@@ -656,6 +705,11 @@ nasal_function& nasal_scalar::get_function()
 {
 	// get nasal_function
 	return var_func;
+}
+nasal_closure& nasal_scalar::get_closure()
+{
+	// get nasal_closure
+	return var_cls;
 }
 
 #endif

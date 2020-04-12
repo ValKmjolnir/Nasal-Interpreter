@@ -229,7 +229,8 @@ enum scalar_type
 	scalar_string,
 	scalar_vector,
 	scalar_hash,
-	scalar_function
+	scalar_function,
+	scalar_closure
 };
 // print types that used in nasal_runtime and nasal_gc
 void print_scalar_type(const int type)
@@ -242,6 +243,7 @@ void print_scalar_type(const int type)
 		case scalar_vector:   std::cout<<"vector";break;
 		case scalar_hash:     std::cout<<"hash";break;
 		case scalar_function: std::cout<<"function";break;
+		case scalar_closure:  std::cout<<"closure";break;
 		default:              std::cout<<"nil";break;
 	}
 	return;
