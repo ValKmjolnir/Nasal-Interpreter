@@ -21,7 +21,7 @@ var append=func(vector,elements...)
 # If it is smaller, it is padded with nil entries.Returns the vector operated upon. 
 var setsize=func(vector,__size)
 {
-    nasal_call_inline_push_null(vector,__size);
+    nasal_call_inline_set_size(vector,__size);
     return nil;
 }
 

@@ -5,7 +5,7 @@ std::string inline_func_name[nas_lib_func_num]=
 {
     //base.nas
     "nasal_call_inline_push_back",
-    "nasal_call_inline_push_null",
+    "nasal_call_inline_set_size",
     "nasal_call_inline_subvec",
     "nasal_call_inline_contains",
     "nasal_call_inline_delete",
@@ -4697,6 +4697,67 @@ int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_
             }
             nasal_gc.get_scalar(vector_addr).get_vector().vec_push(new_addr);
         }
+        ret_addr=nasal_gc.gc_alloc();
+        nasal_gc.get_scalar(ret_addr).set_type(scalar_nil);
+    }
+    else if(func_name=="nasal_call_inline_set_size")
+    {
+        int vector_addr=-1;
+        int size_addr=-1;
+        for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
+        {
+            if(i->find("vector")!=i->end())
+                vector_addr=(*i)["vector"];
+            if(i->find("__size")!=i->end())
+                size_addr=(*i)["__size"];
+        }   
+        if(vector_addr<0 || size_addr<0)
+            return -1;
+        int vector_size=-1;
+        int aim_size=-1;
+        if(nasal_gc.get_scalar(vector_addr).get_type()!=scalar_vector)
+        {
+            std::cout<<">> [Runtime] setsize gets a variable that is not a vector."<<std::endl;
+            return -1;
+        }
+        vector_size=nasal_gc.get_scalar(vector_addr).get_vector().get_size();
+        if(nasal_gc.get_scalar(size_addr).get_type()==scalar_string && 
+            !check_numerable_string(nasal_gc.get_scalar(size_addr).get_string().get_string()))
+        {
+            std::cout<<">> [Runtime] __size is not a numerable string."<<std::endl;
+            return -1;
+        }
+        if(nasal_gc.get_scalar(size_addr).get_type()!=scalar_string &&
+            nasal_gc.get_scalar(size_addr).get_type()!=scalar_number)
+        {
+            std::cout<<">> [Runtime] __size must be a number or numerable string."<<std::endl;
+            return -1;
+        }
+        if(nasal_gc.get_scalar(size_addr).get_type()==scalar_string && 
+            check_numerable_string(nasal_gc.get_scalar(size_addr).get_string().get_string()))
+                aim_size=(int)trans_string_to_number(nasal_gc.get_scalar(size_addr).get_string().get_string());
+        else if(nasal_gc.get_scalar(size_addr).get_type()==scalar_number)
+            aim_size=(int)nasal_gc.get_scalar(size_addr).get_number().get_number();
+        if(aim_size<0)
+        {
+            std::cout<<">> [Runtime] __size must be greater than 0."<<std::endl;
+            return -1;
+        }
+        if(vector_size<aim_size)
+        {
+            for(int i=vector_size;i<aim_size;++i)
+            {
+                int new_addr=nasal_gc.gc_alloc();
+                nasal_gc.get_scalar(new_addr).set_type(scalar_nil);
+                nasal_gc.get_scalar(vector_addr).get_vector().vec_push(new_addr);
+            }
+        }
+        else if(vector_size>aim_size)
+            for(int i=aim_size;i<vector_size;++i)
+            {
+                int pop_addr=nasal_gc.get_scalar(vector_addr).get_vector().vec_pop();
+                nasal_gc.reference_delete(pop_addr);
+            }
         ret_addr=nasal_gc.gc_alloc();
         nasal_gc.get_scalar(ret_addr).set_type(scalar_nil);
     }
