@@ -25,7 +25,7 @@ private:
 	// closure_updated flag is used to mark if this function's closure is updated.
 	// to avoid some unexpected errors,closure of each function must be updated before blocks popping back the last scope
 	bool closure_updated;
-	int closure_addr;
+	int  closure_addr;
 	abstract_syntax_tree parameter_list;
 	abstract_syntax_tree function_root;
 public:
@@ -137,72 +137,53 @@ struct gc_unit
 struct memory_block
 {
 	gc_unit space[NAS_POOL_SIZE];
-	memory_block* next;
 };
 
 class memory_block_list
 {
 private:
-	memory_block* head;
+	std::vector<memory_block*> mem_page;
 	int mem_size;
-	int blk_size;
 public:
 	memory_block_list()
 	{
 		mem_size=0;
-		blk_size=1;
-		head=new memory_block;
-		head->next=NULL;
+		memory_block* tmp=new memory_block;
+		mem_page.push_back(tmp);
 		return;
 	}
 	~memory_block_list()
 	{
 		mem_size=0;
-		blk_size=0;
-		memory_block* ptr=head;
-		while(ptr)
-		{
-			memory_block* tmp_ptr=ptr;
-			ptr=ptr->next;
-			delete tmp_ptr;
-		}
+		int page_size=mem_page.size();
+		for(int i=0;i<page_size;++i)
+			delete mem_page[i];
 		return;
 	}
 	void clear()
 	{
-		memory_block* ptr=head;
-		while(ptr)
-		{
-			memory_block* tmp_ptr=ptr;
-			ptr=ptr->next;
-			delete tmp_ptr;
-		}
+		int page_size=mem_page.size();
+		for(int i=0;i<page_size;++i)
+			delete mem_page[i];
+		mem_page.clear();
 		mem_size=0;
-		blk_size=1;
-		head=new memory_block;
-		head->next=NULL;
+		memory_block* tmp=new memory_block;
+		mem_page.push_back(tmp);
 		return;
 	}
 	gc_unit& operator[](int address)
 	{
-		int block_num=address/NAS_POOL_SIZE;
+		int page_num=address/NAS_POOL_SIZE;
 		int block_plc=address%NAS_POOL_SIZE;
-		memory_block* ptr=head;
-		for(int i=0;i<block_num;++i)
-			ptr=ptr->next;
-		return ptr->space[block_plc];
+		return mem_page[page_num]->space[block_plc];
 	}
 	void push_back()
 	{
 		++mem_size;
-		if(mem_size>blk_size*NAS_POOL_SIZE)
+		if(mem_size>mem_page.size()*NAS_POOL_SIZE)
 		{
-			memory_block* ptr=head;
-			while(ptr->next)
-				ptr=ptr->next;
-			ptr->next=new memory_block;
-			ptr->next->next=NULL;
-			++blk_size;
+			memory_block* tmp=new memory_block;
+			mem_page.push_back(tmp);
 		}
 		return;
 	}
@@ -212,7 +193,7 @@ public:
 	}
 	int capacity()
 	{
-		return NAS_POOL_SIZE*blk_size;
+		return NAS_POOL_SIZE*mem_page.size();
 	}
 };
 #endif
