@@ -4,8 +4,8 @@
 std::string inline_func_name[nas_lib_func_num]=
 {
     //base.nas
-    "nasal_call_inline_push_back",
-    "nasal_call_inline_set_size",
+    "nasal_call_inline_push_back",// append
+    "nasal_call_inline_set_size", // setsize
     "nasal_call_inline_subvec",
     "nasal_call_inline_contains",
     "nasal_call_inline_delete",
@@ -29,7 +29,7 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_built_in_setbit",
     "nasal_call_built_in_null_string_gen",
     //io.nas
-    "nasal_call_inline_c_std_puts",
+    "nasal_call_inline_c_std_puts",// print
     //math.nas
     "nasal_call_inline_sin",
     "nasal_call_inline_cos",
@@ -39,7 +39,7 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_inline_cpp_math_sqrt",
     "nasal_call_inline_cpp_atan2",
     //system.nas
-    "nasal_call_inline_scalar_type"
+    "nasal_call_inline_scalar_type"//system.type
 };
 
 class nasal_runtime
@@ -116,7 +116,7 @@ class nasal_runtime
         int  conditional        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  block_proc         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  func_proc          (std::list<std::map<std::string,int> >&,std::list<std::map<std::string,int> >&,abstract_syntax_tree&,abstract_syntax_tree&,abstract_syntax_tree&,int);// checked
-        int  inline_function    (std::list<std::map<std::string,int> >&,std::string);
+        int  builtin_function   (std::list<std::map<std::string,int> >&,std::string);
     public:
         nasal_runtime()
         {
@@ -2314,7 +2314,7 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
         for(int i=0;i<nas_lib_func_num;++i)
             if(inline_func_name[i]==tmp_id_name)
             {
-                addr=inline_function(local_scope,tmp_id_name);
+                addr=builtin_function(local_scope,tmp_id_name);
                 break;
             }
         if(addr>=0)
@@ -2997,11 +2997,12 @@ int nasal_runtime::func_proc(
     local_scope.pop_back();
     return function_returned_addr;
 }
-int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_scope,std::string func_name)
+int nasal_runtime::builtin_function(std::list<std::map<std::string,int> >& local_scope,std::string func_name)
 {
     int ret_addr=-1;
     if(func_name=="nasal_call_inline_push_back")
     {
+        // append
         int vector_addr=-1;
         int elements_addr=-1;
         for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
@@ -3058,6 +3059,7 @@ int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_
     }
     else if(func_name=="nasal_call_inline_set_size")
     {
+        // setsize
         int vector_addr=-1;
         int size_addr=-1;
         for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
@@ -3119,6 +3121,7 @@ int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_
     }
     else if(func_name=="nasal_call_inline_c_std_puts")
     {
+        // print
         int vector_addr=-1;
         for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
             if(i->find("dyn")!=i->end())
@@ -3145,6 +3148,7 @@ int nasal_runtime::inline_function(std::list<std::map<std::string,int> >& local_
     }
     else if(func_name=="nasal_call_inline_scalar_type")
     {
+        // system.type
         int data=-1;
         for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
             if(i->find("thing")!=i->end())
