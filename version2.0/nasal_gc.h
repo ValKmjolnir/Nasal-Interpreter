@@ -139,20 +139,20 @@ struct memory_block
 	gc_unit space[NAS_POOL_SIZE];
 };
 
-class memory_block_list
+class memory_block_base
 {
 private:
 	std::vector<memory_block*> mem_page;
 	int mem_size;
 public:
-	memory_block_list()
+	memory_block_base()
 	{
 		mem_size=0;
 		memory_block* tmp=new memory_block;
 		mem_page.push_back(tmp);
 		return;
 	}
-	~memory_block_list()
+	~memory_block_base()
 	{
 		mem_size=0;
 		int page_size=mem_page.size();
@@ -209,7 +209,7 @@ private:
 	then all the things will be moved to a new space,
 	at this time if you reference a member in it,this will cause segmentation error.
 	*/
-	memory_block_list memory;
+	memory_block_base memory;
 	bool error_occurred;
 public:
 	void gc_init()
