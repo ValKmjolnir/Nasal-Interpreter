@@ -11,12 +11,12 @@ var io=
     # Failures are thrown as runtime errors as per die(). 
     open:func(filename,mode="r")
     {
-        return nasal_call_inline_c_fopen(filename,mode);
+        return nasal_call_builtin_c_fopen(filename,mode);
     },
     # Closes the specified file as per ANSI fclose(). 
     close:func(filehandle)
     {
-        nasal_call_inline_c_fclose(filehandle);
+        nasal_call_builtin_c_fclose(filehandle);
         return;
     },
     # Attempts to read length bytes from the filehandle into the beginning of the mutable string buf.
@@ -24,14 +24,14 @@ var io=
     # Returns the number of bytes successfully read. 
     read:func(filehandle,buf,length)
     {
-        return nasal_call_inline_c_read(filehandle,buf,length);
+        return nasal_call_builtin_c_read(filehandle,buf,length);
     },
     # Attempts to write the entirety of the specified string to the filehandle.
     # Failures are thrown as runtime errors as per die().
     # Returns the number of bytes successfully written. 
     write:func(filehandle,str)
     {
-        return nasal_call_inline_c_write(filehandle,str);
+        return nasal_call_builtin_c_write(filehandle,str);
     },
     # As ANSI fseek().
     # Attempts to seek to the specified position based on the whence value
@@ -41,13 +41,13 @@ var io=
     SEEK_END:3,
     seek:func(filehandle,position,whence)
     {
-        nasal_call_inline_c_seek(filehandle,position,whence);
+        nasal_call_builtin_c_seek(filehandle,position,whence);
         return;
     },
     # Returns the current seek position of the filehandle. 
     tell:func(filehandle)
     {
-        return nasal_call_inline_c_tell(filehandle);
+        return nasal_call_builtin_c_tell(filehandle);
     },
     # Reads and returns a single text line from the filehandle.
     # Interprets both "\n" and "\r\n" as end of line markers,
@@ -55,7 +55,7 @@ var io=
     # End offile or error is signaled by returning nil. 
     readln:func(filehandle)
     {
-        return nasal_call_inline_builtin_c_getline(filehandle);
+        return nasal_call_builtin_builtin_c_getline(filehandle);
     },
     # Calls unix or win32 stat() on the specified file name and
     # returns a seven element array whose contents are,
@@ -63,12 +63,12 @@ var io=
     # Errors are signaled as exceptions as per die().
     stat:func(filename)
     {
-        return nasal_call_inline_builtin_stat(filename);
+        return nasal_call_builtin_builtin_stat(filename);
     },
 };
 
 var print=func(dyn...)
 {
-    nasal_call_inline_c_std_puts(dyn);
+    nasal_call_builtin_c_std_puts(dyn);
     return nil;
 };
