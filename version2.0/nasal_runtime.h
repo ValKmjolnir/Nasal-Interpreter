@@ -34,7 +34,7 @@ std::string inline_func_name[nas_lib_func_num]=
     "nasal_call_builtin_sin",
     "nasal_call_builtin_cos",
     "nasal_call_builtin_tan",
-    "nasal_call_builtin_pow",
+    "nasal_call_builtin_exp",
     "nasal_call_builtin_cpp_math_ln",
     "nasal_call_builtin_cpp_math_sqrt",
     "nasal_call_builtin_cpp_atan2",
@@ -3004,10 +3004,45 @@ int nasal_runtime::builtin_function(std::list<std::map<std::string,int> >& local
         ret_addr=append(local_scope);
     else if(func_name=="nasal_call_builtin_set_size")
         ret_addr=setsize(local_scope);
+    else if(func_name=="nasal_call_builtin_subvec")
+        ret_addr=subvec(local_scope);
     else if(func_name=="nasal_call_builtin_c_std_puts")
         ret_addr=print(local_scope);
     else if(func_name=="nasal_call_builtin_scalar_type")
         ret_addr=system_type(local_scope);
+    else if(func_name=="nasal_call_builtin_sin")
+        ret_addr=nas_trigfunc(local_scope,0);
+    else if(func_name=="nasal_call_builtin_cos")
+        ret_addr=nas_trigfunc(local_scope,1);
+    else if(func_name=="nasal_call_builtin_tan")
+        ret_addr=nas_trigfunc(local_scope,2);
+    else if(func_name=="nasal_call_builtin_exp")
+        ret_addr=nas_exp(local_scope);
+    // "nasal_call_builtin_contains",
+    // "nasal_call_builtin_delete",
+    // "nasal_call_builtin_trans_int",
+    // "nasal_call_builtin_trans_num",
+    // "nasal_call_builtin_get_keys",
+    // "nasal_call_builtin_pop_back",
+    // "nasal_call_builtin_sizeof",
+    // "nasal_call_builtin_str_cmp_equal",
+    // "nasal_call_builtin_cmp",
+    // "nasal_call_builtin_cpp_sort",
+    // "nasal_call_builtin_substr",
+    // "nasal_call_builtin_sprintf",
+    // "nasal_call_builtin_find_first_occur",
+    // "nasal_call_builtin_split",
+    // "nasal_call_builtin_rand",
+    // "nasal_call_builtin_get_id",
+
+    // "nasal_call_builtin_bitcalc",
+    // "nasal_call_builtin_sbitcalc",
+    // "nasal_call_builtin_setbit",
+    // "nasal_call_builtin_null_string_gen",
+
+    // "nasal_call_builtin_cpp_math_ln",
+    // "nasal_call_builtin_cpp_math_sqrt",
+    // "nasal_call_builtin_cpp_atan2",
     return ret_addr;
 }
 
