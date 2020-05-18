@@ -28,7 +28,7 @@ var math=
     # Returns e (Euler's constant) raised to the power specified by the single argument 
     exp:func(x)
     {
-        return nasal_call_builtin_pow(me.e,x);
+        return nasal_call_builtin_exp(x);
     },
     # Returns the natural logarithm of the single argument. 
     ln:func(x)
