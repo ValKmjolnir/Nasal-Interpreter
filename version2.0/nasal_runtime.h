@@ -106,7 +106,7 @@ class nasal_runtime
         int  hash_generation    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  function_generation(std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
 
-        void update_closure     (std::list<std::map<std::string,int> >&,int);
+        void update_closure     (std::vector<int>&,int);
         bool check_condition    (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  calculation        (std::list<std::map<std::string,int> >&,abstract_syntax_tree&);
         int  assignment         (std::list<std::map<std::string,int> >&,abstract_syntax_tree&,int);
@@ -966,28 +966,17 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
     }
     return addr;
 }
-void nasal_runtime::update_closure(std::list<std::map<std::string,int> >& local_scope,int local_scope_addr)
+void nasal_runtime::update_closure(std::vector<int>& update_list,int closure_addr)
 {
     // update_closure
     // each new function will be updated only once, after updating closure,functions' closure_updated flag will be set true
-    // but this has a bug, if this new function is a member of vector or hash, it will not be updated
-    if(!local_scope.size())
-        return;
-    for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
-        if(nasal_gc.get_scalar(i->second).get_type()==scalar_function && 
-            !nasal_gc.get_scalar(i->second).get_function().get_closure_update_state())
+    int size=update_list.size();
+    for(int i=0;i<size;++i)
+        if(!nasal_gc.get_scalar(update_list[i]).get_function().get_closure_update_state())
         {
-            nasal_gc.get_scalar(i->second).get_function().set_local_scope(local_scope_addr);
-            nasal_gc.reference_add(local_scope_addr);
-            nasal_gc.get_scalar(i->second).get_function().set_closure_update_state(true);
-        }
-    for(std::map<std::string,int>::iterator i=global_scope.begin();i!=global_scope.end();++i)
-        if(nasal_gc.get_scalar(i->second).get_type()==scalar_function && 
-            !nasal_gc.get_scalar(i->second).get_function().get_closure_update_state())
-        {
-            nasal_gc.get_scalar(i->second).get_function().set_local_scope(local_scope_addr);
-            nasal_gc.reference_add(local_scope_addr);
-            nasal_gc.get_scalar(i->second).get_function().set_closure_update_state(true);
+            nasal_gc.get_scalar(update_list[i]).get_function().set_local_scope(closure_addr);
+            nasal_gc.reference_add(closure_addr);
+            nasal_gc.get_scalar(update_list[i]).get_function().set_closure_update_state(true);
         }
     return;
 }
@@ -2267,13 +2256,13 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
         return -1;
     }
     /*
-        assigned_addr=find_address()
+        assigned_addr=find_address();
         while(children.size())
         {
-            assigned_addr=new_addr()
+            assigned_addr=new_addr();
         }
-        *assigned_addr->refcnt--
-        *assigned_addr=new_value_addr
+        *assigned_addr->refcnt--;
+        *assigned_addr=new_value_addr;
     */
     // data_addr is only a parameter here,and it's refcnt has not been changed when using it here
     nasal_gc.reference_add(*assigned_addr);
@@ -2352,7 +2341,6 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
         // call function identifier(...)
         else if(iter->get_node_type()==__call_function)
             addr=call_function(local_scope,iter,addr,last_hash_addr);
-        
         if(addr<0)
             break;
     }
@@ -2726,6 +2714,9 @@ int nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scop
 int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope,abstract_syntax_tree& node)
 {
     int state=__state_no_operation;
+    int closure_addr=nasal_gc.gc_alloc();
+    nasal_gc.get_scalar(closure_addr).set_type(scalar_closure);
+    std::vector<int> assignedfunc_addrs;
     for(std::list<abstract_syntax_tree>::iterator iter=node.get_children().begin();iter!=node.get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
@@ -2763,7 +2754,10 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
         {
             int addr=this->calculation(local_scope,*iter);
             if(addr>=0)
+            {
+                if(nasal_gc.get_scalar(addr).get_type()==scalar_function) assignedfunc_addrs.push_back(addr);
                 nasal_gc.reference_delete(addr);
+            }
         }
         else if(node_type==__definition)
             this->definition(local_scope,local_scope.back(),*iter);
@@ -2791,10 +2785,8 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
             break;
     }
     // update_closure
-    int closure_addr=nasal_gc.gc_alloc();
-    nasal_gc.get_scalar(closure_addr).set_type(scalar_closure);
     nasal_gc.get_scalar(closure_addr).get_closure().set_local_scope(local_scope);
-    update_closure(local_scope,closure_addr);
+    update_closure(assignedfunc_addrs,closure_addr);
     nasal_gc.reference_delete(closure_addr);
     return state;
 }
@@ -2909,6 +2901,9 @@ int nasal_runtime::func_proc(
     local_scope.push_back(new_scope);
     // process
     int state=__state_no_operation;
+    int closure_addr=nasal_gc.gc_alloc();
+    nasal_gc.get_scalar(closure_addr).set_type(scalar_closure);
+    std::vector<int> assignedfunc_addrs;
     for(std::list<abstract_syntax_tree>::iterator iter=func_root.get_children().begin();iter!=func_root.get_children().end();++iter)
     {
         // use local value node_type to avoid calling function too many times.
@@ -2946,7 +2941,10 @@ int nasal_runtime::func_proc(
         {
             int addr=this->calculation(local_scope,*iter);
             if(addr>=0)
+            {
+                if(nasal_gc.get_scalar(addr).get_type()==scalar_function) assignedfunc_addrs.push_back(addr);
                 nasal_gc.reference_delete(addr);
+            }
         }
         else if(node_type==__definition)
             this->definition(local_scope,local_scope.back(),*iter);
@@ -2990,10 +2988,8 @@ int nasal_runtime::func_proc(
         nasal_gc.get_scalar(function_returned_addr).set_type(scalar_nil);
     }
     // update closure
-    int closure_addr=nasal_gc.gc_alloc();
-    nasal_gc.get_scalar(closure_addr).set_type(scalar_closure);
     nasal_gc.get_scalar(closure_addr).get_closure().set_local_scope(local_scope);
-    update_closure(local_scope,closure_addr);
+    update_closure(assignedfunc_addrs,closure_addr);
     nasal_gc.reference_delete(closure_addr);
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)
         nasal_gc.reference_delete(i->second);
