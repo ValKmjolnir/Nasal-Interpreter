@@ -89,6 +89,7 @@ public:
 	void set_clear();
 	int* get_hash_member_addr(std::string);
 	int  get_hash_member(std::string);
+	std::vector<int> get_elem();
 	void hash_push(std::string,int);
 	void hash_pop(std::string);
 	void deep_copy(nasal_hash&);
@@ -606,6 +607,13 @@ int nasal_hash::get_hash_member(std::string member_name)
 	else if(nas_hash.find("parents")!=nas_hash.end())
 			return nasal_gc.get_scalar(nas_hash["parents"]).get_vector().get_parent_hash_member(member_name);
 	return -1;
+}
+std::vector<int> nasal_hash::get_elem()
+{
+	std::vector<int> vec;
+	for(std::map<std::string,int>::iterator i=nas_hash.begin();i!=nas_hash.end();++i)
+		vec.push_back(i->second);
+	return vec;
 }
 void nasal_hash::hash_push(std::string member_name,int addr)
 {
