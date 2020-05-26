@@ -773,7 +773,8 @@ int  nasal_runtime::call_function(std::list<std::map<std::string,int> >& local_s
         nasal_gc.get_scalar(addr).get_function().get_parameter_list(),
         nasal_gc.get_scalar(addr).get_function().get_statement_block(),
         *call_node,
-        last_hash_addr);
+        last_hash_addr
+    );
     if(addr<0)
         return -1;
     nasal_gc.reference_delete(tmp_addr);
@@ -968,6 +969,8 @@ int nasal_runtime::function_generation(std::list<std::map<std::string,int> >& lo
 void nasal_runtime::update_closure(std::list<std::map<std::string,int> >& local_scope,int local_scope_addr)
 {
     // update_closure
+    // each new function will be updated only once, after updating closure,functions' closure_updated flag will be set true
+    // but this has a bug, if this new function is a member of vector or hash, it will not be updated
     if(!local_scope.size())
         return;
     for(std::map<std::string,int>::iterator i=local_scope.back().begin();i!=local_scope.back().end();++i)

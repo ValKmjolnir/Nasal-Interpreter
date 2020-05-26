@@ -2,7 +2,38 @@
 #define __NASAL_ENUM_H__
 
 // lexer token type is only used in nasal_lexer
-// each scanned token will be recognized as one of these below
+/*
+__token_reserve_word:
+	for,foreach,forindex,while : loop head
+	var,func                   : definition
+	break,continue             : in loop
+	return                     : in function
+	if,else,elsif              : conditional expr
+	and,or                     : calculation
+	nil                        : special type
+__token_identifier:
+	must begin with '_' or 'a'~'z' or 'A'~'Z'
+	can include '_' or 'a'~'z' or 'A'~'Z' or '0'~'9'
+__token_string:
+	example:
+		"string"
+		'string'
+	if a string does not end with " or ' then lexer will throw an error
+__token_number:
+	example:
+		2147483647 (integer)
+		2.71828    (float)
+		0xdeadbeef (hex) or 0xDEADBEEF (hex)
+		0o170001   (oct)
+		1e-1234    (dec) or 10E2       (dec)
+__token_operator:
+	!  +  -  *  /  ~
+	=  += -= *= /= ~=
+	== != >  >= <  <=
+	('and'  'or' are operators too but they are recognized as operator in generate_detail_token())
+	() [] {} ; , . : ?
+	others: __unknown_operator
+*/
 enum lexer_token_type
 {
 	__token_reserve_word=1,
@@ -28,41 +59,40 @@ void print_lexer_token(int type)
 enum parse_gen_type
 {
 	/*
-		stack end is an important flag for parse token stack to
-		check if it's stack is at end
-		if stack is empty,the parser will get a wrong memory space and cause SIGSEGV
+	stack end is an important flag for parse token stack to
+	check if it's stack is at end/empty
+	if stack is empty,the parser will get a wrong memory space and cause SIGSEGV
 	*/
 	__stack_end=1,
-	// operators == != < <= > >= 
+	
 	__cmp_equal,
 	__cmp_not_equal,
 	__cmp_less,__cmp_less_or_equal,
-	__cmp_more,__cmp_more_or_equal,
-	// operators and or ! + - * / ~
+	__cmp_more,__cmp_more_or_equal,                // operators == != < <= > >= 
+	
 	__and_operator,	__or_operator,__nor_operator,
 	__add_operator,__sub_operator,
-	__mul_operator,__div_operator,__link_operator,
-	// operators = += -= *= /= ~=
+	__mul_operator,__div_operator,__link_operator, // operators and or ! + - * / ~
+	
 	__equal,
 	__add_equal,__sub_equal,
-	__mul_equal,__div_equal,__link_equal,
-	// operators {} [] () ; , : . ?
+	__mul_equal,__div_equal,__link_equal,          // operators = += -= *= /= ~=
+
 	__left_brace,__right_brace,                    // {}
 	__left_bracket,__right_bracket,                // []
 	__left_curve,__right_curve,                    // ()
 	__semi,__comma,__colon,__dot,__ques_mark,      // ; , : . ?
 	__unknown_operator,
-	// reserve words
+	
 	__var,
 	__func,__return,__nil,
 	__if,__elsif,__else,
 	__continue,__break,
-	__for,__forindex,__foreach,__while,
+	__for,__forindex,__foreach,__while,            // reserve words
 	
-	// basic scalar type: number string
-	__number,__string,
-	// basic identifier type: identifier dynamic_identifier
-	__id,__dynamic_id,
+	__number,__string,                             // basic scalar type: number string
+	
+	__id,__dynamic_id,                             // basic identifier type: identifier dynamic_identifier
 	
 	// abstract_syntax_tree type below
 	// abstract_syntax_tree also uses the types above, such as operators
@@ -141,7 +171,7 @@ void print_parse_token(int type)
 		case __number:            context="num";       break;
 		case __string:            context="str";       break;
 		
-		default:                  context="undefined";   break;
+		default:                  context="undefined"; break;
 	}
 	std::cout<<context;
 	return;
