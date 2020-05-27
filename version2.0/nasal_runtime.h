@@ -1,7 +1,7 @@
 #ifndef __NASAL_RUNTIME_H__
 #define __NASAL_RUNTIME_H__
-#define nas_lib_func_num 32
-std::string inline_func_name[nas_lib_func_num]=
+#define NAS_LIB_FUNC_NUM 32
+std::string inline_func_name[NAS_LIB_FUNC_NUM]=
 {
     //base.nas
     "nasal_call_builtin_push_back",// append
@@ -913,8 +913,7 @@ int nasal_runtime::hash_generation(std::list<std::map<std::string,int> >& local_
         else if(call_node->get_node_type()==__call_function)
             addr=call_function(local_scope,call_node,addr,last_hash_addr);
         
-        if(addr<0)
-            break;
+        if(addr<0) break;
     }
     return addr;
 }
@@ -1533,8 +1532,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         // vector,hash,function is not allowed here
         int ret_addr=-1;
         int val_addr=calculation(local_scope,node.get_children().front());
-        if(val_addr<0)
-            return -1;
+        if(val_addr<0) return -1;
         int val_type=nasal_gc.get_scalar(val_addr).get_type();
         if(val_type==scalar_number)
         {
@@ -1570,8 +1568,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
             return -1;
         }
         val_addr=calculation(local_scope,node.get_children().back());
-        if(val_addr<0)
-            return -1;
+        if(val_addr<0) return -1;
         val_type=nasal_gc.get_scalar(val_addr).get_type();
         if(val_type==scalar_number)
         {
@@ -1584,8 +1581,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 nasal_gc.reference_delete(val_addr);
                 return ret_addr;
             }
-            else
-                ret_addr=val_addr;
+            else ret_addr=val_addr;
         }
         else if(val_type==scalar_string)
         {
@@ -1598,8 +1594,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 nasal_gc.reference_delete(val_addr);
                 return ret_addr;
             }
-            else
-                ret_addr=val_addr;
+            else ret_addr=val_addr;
         }
         else
         {
@@ -1615,24 +1610,20 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
         // vector,hash,function is not allowed here
         int ret_addr=-1;
         int val_addr=calculation(local_scope,node.get_children().front());
-        if(val_addr<0)
-            return -1;
+        if(val_addr<0) return -1;
         int val_type=nasal_gc.get_scalar(val_addr).get_type();
         if(val_type==scalar_number)
         {
             double num=nasal_gc.get_scalar(val_addr).get_number().get_number();
-            if(num!=0)
-                return val_addr;
-            else
-                nasal_gc.reference_delete(val_addr);
+            if(num!=0) return val_addr;
+            else nasal_gc.reference_delete(val_addr);
         }
         else if(val_type==scalar_string)
         {
             std::string str=nasal_gc.get_scalar(val_addr).get_string().get_string();
             if(str.length()!=0 && (!check_numerable_string(str) || !trans_string_to_number(str)==0))
                 return val_addr;
-            else
-                nasal_gc.reference_delete(val_addr);
+            else nasal_gc.reference_delete(val_addr);
         }
         else
         {
@@ -1640,8 +1631,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
             return -1;
         }
         val_addr=calculation(local_scope,node.get_children().back());
-        if(val_addr<0)
-            return -1;
+        if(val_addr<0) return -1;
         val_type=nasal_gc.get_scalar(val_addr).get_type();
         if(val_type==scalar_number)
         {
@@ -1654,8 +1644,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 nasal_gc.reference_delete(val_addr);
                 return ret_addr;
             }
-            else
-                return val_addr;
+            else return val_addr;
         }
         else if(val_type==scalar_string)
         {
@@ -1668,8 +1657,7 @@ int nasal_runtime::calculation(std::list<std::map<std::string,int> >& local_scop
                 nasal_gc.reference_delete(val_addr);
                 return ret_addr;
             }
-            else
-                return val_addr;
+            else return val_addr;
         }
         else
         {
@@ -2125,8 +2113,7 @@ int nasal_runtime::assignment(std::list<std::map<std::string,int> >& local_scope
                     {
                         // normal vector calling
                         int data_addr=calculation(local_scope,*i);
-                        if(data_addr<0)
-                            return -1;
+                        if(data_addr<0) return -1;
                         if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_number && nasal_gc.get_scalar(data_addr).get_type()!=scalar_string)
                         {
                             error_interrupt(__error_value_type_when_calling_vector,i->get_node_line());
@@ -2288,29 +2275,11 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
     }
     if(addr<0)
     {
-        /*
-            left for test:
-            for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
-            {
-                for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
-                {
-                    std::cout<<j->first<<": ";
-                    prt_hex(j->second);
-                    std::cout<<std::endl;
-                }
-                std::cout<<"---------------"<<std::endl;
-            }
-        */
-        // inline function call only needs local_scope and function name
-        // because all the inline functions are wraped in functions that can be searched in global scope
-        for(int i=0;i<nas_lib_func_num;++i)
-            if(inline_func_name[i]==tmp_id_name)
-            {
-                addr=builtin_function(local_scope,tmp_id_name);
-                break;
-            }
-        if(addr>=0)
-            return addr;
+        // built in function call only needs local_scope and function name
+        // because all the built in functions are wraped in lib functions that can be found in global scope
+        // you cannot use built in functions without wraping it in a function that written by yourself
+        addr=builtin_function(local_scope,tmp_id_name);
+        if(addr>=0) return addr;
     }
     if(addr<0)
     {
@@ -2341,8 +2310,7 @@ int nasal_runtime::call_identifier(std::list<std::map<std::string,int> >& local_
         // call function identifier(...)
         else if(iter->get_node_type()==__call_function)
             addr=call_function(local_scope,iter,addr,last_hash_addr);
-        if(addr<0)
-            break;
+        if(addr<0) break;
     }
     return addr;
 }
@@ -2360,8 +2328,7 @@ void nasal_runtime::definition(std::list<std::map<std::string,int> >&local_scope
             for(std::list<abstract_syntax_tree>::iterator i=node.get_children().back().get_children().begin();i!=node.get_children().back().get_children().end();++i)
             {
                 int new_addr=calculation(local_scope,*i);
-                if(new_addr<0)
-                    return;
+                if(new_addr<0) return;
                 data_addrs.push_back(new_addr);
             }
             if(data_addrs.size()!=id_names.size())
@@ -2407,8 +2374,7 @@ void nasal_runtime::definition(std::list<std::map<std::string,int> >&local_scope
         else
         {
             int data_addr=calculation(local_scope,node.get_children().back());
-            if(data_addr<0)
-                return;
+            if(data_addr<0) return;
             if(nasal_gc.get_scalar(data_addr).get_type()!=scalar_vector)
             {
                 error_interrupt(__error_value_type,node.get_children().back().get_node_line());
@@ -2512,16 +2478,8 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
         while(check_condition(local_scope,node.get_children().front()))
         {
             state=block_proc(local_scope,node.get_children().back());
-            if(state==__state_break)
+            if(state==__state_break || state==__state_return || state==__state_error)
                 break;
-            else if(state==__state_continue)
-                ;
-            else if(state==__state_return)
-                break;
-            else if(state==__state_error)
-                break;
-            else if(state==__state_no_operation)
-                ;
         }
     }
     else if(loop_type==__foreach)
@@ -2557,16 +2515,8 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
             if(tmp_val>=0)
                 nasal_gc.reference_delete(tmp_val);
             state=block_proc(local_scope,*iter);
-            if(state==__state_break)
+            if(state==__state_break || state==__state_return || state==__state_error)
                 break;
-            else if(state==__state_continue)
-                ;
-            else if(state==__state_return)
-                break;
-            else if(state==__state_error)
-                break;
-            else if(state==__state_no_operation)
-                ;
         }
         nasal_gc.reference_delete(vec_addr);
     }
@@ -2608,16 +2558,8 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
                 nasal_gc.reference_delete(tmp_val);
             nasal_gc.reference_delete(tmp_addr);
             state=block_proc(local_scope,*iter);
-            if(state==__state_break)
+            if(state==__state_break || state==__state_return || state==__state_error)
                 break;
-            else if(state==__state_continue)
-                ;
-            else if(state==__state_return)
-                break;
-            else if(state==__state_error)
-                break;
-            else if(state==__state_no_operation)
-                ;
         }
         nasal_gc.reference_delete(vec_addr);
     }
@@ -2636,16 +2578,8 @@ int nasal_runtime::loop_expr(std::list<std::map<std::string,int> >& local_scope,
         while(check_condition(local_scope,*condition_iterator))
         {
             state=block_proc(local_scope,*block_proc_iterator);
-            if(state==__state_break)
+            if(state==__state_break || state==__state_return || state==__state_error)
                 break;
-            else if(state==__state_continue)
-                ;
-            else if(state==__state_return)
-                break;
-            else if(state==__state_error)
-                break;
-            else if(state==__state_no_operation)
-                ;
             // step update here
             if(step_iterator->get_node_type()!=__null_type)
             {
@@ -2677,32 +2611,14 @@ int nasal_runtime::conditional(std::list<std::map<std::string,int> >& local_scop
             if(check_condition(local_scope,i->get_children().front()))
             {
                 int state=block_proc(local_scope,i->get_children().back());
-                if(state==__state_break)
-                    ret_state=__state_break;
-                else if(state==__state_continue)
-                    ret_state=__state_continue;
-                else if(state==__state_return)
-                    ret_state=__state_return;
-                else if(state==__state_error)
-                    ret_state=__state_error;
-                else if(state==__state_no_operation)
-                    ret_state=__state_no_operation;
+                ret_state=state;
                 break;
             }
         }
         else
         {
             int state=block_proc(local_scope,i->get_children().front());
-            if(state==__state_break)
-                ret_state=__state_break;
-            else if(state==__state_continue)
-                ret_state=__state_continue;
-            else if(state==__state_return)
-                ret_state=__state_return;
-            else if(state==__state_error)
-                ret_state=__state_error;
-            else if(state==__state_no_operation)
-                ret_state=__state_no_operation;
+            ret_state=state;
             break;
         }
     }
@@ -2726,26 +2642,22 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
         else if(node_type==__id)
         {
             int addr=this->call_identifier(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__vector)
         {
             int addr=this->vector_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__hash)
         {
             int addr=this->hash_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__function)
         {
             int addr=this->function_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
                 node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
@@ -2772,8 +2684,7 @@ int nasal_runtime::block_proc(std::list<std::map<std::string,int> >& local_scope
                 function_returned_addr=nasal_gc.gc_alloc();
                 nasal_gc.get_scalar(function_returned_addr).set_type(scalar_nil);
             }
-            else
-                function_returned_addr=calculation(local_scope,iter->get_children().front());
+            else function_returned_addr=calculation(local_scope,iter->get_children().front());
             state=__state_return;
         }
         if(runtime_error_exit_mark>=0)
@@ -2913,26 +2824,22 @@ int nasal_runtime::func_proc(
         else if(node_type==__id)
         {
             int addr=this->call_identifier(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__vector)
         {
             int addr=this->vector_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         } 
         else if(node_type==__hash)
         {
             int addr=this->hash_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__function)
         {
             int addr=this->function_generation(local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
                 node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
@@ -2959,8 +2866,7 @@ int nasal_runtime::func_proc(
                 function_returned_addr=nasal_gc.gc_alloc();
                 nasal_gc.get_scalar(function_returned_addr).set_type(scalar_nil);
             }
-            else
-                function_returned_addr=calculation(local_scope,iter->get_children().front());
+            else function_returned_addr=calculation(local_scope,iter->get_children().front());
             state=__state_return;
         }
         if(runtime_error_exit_mark>=0)
@@ -3070,26 +2976,22 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
         else if(node_type==__id)
         {
             int addr=this->call_identifier(main_local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__vector)
         {
             int addr=this->vector_generation(main_local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__hash)
         {
             int addr=this->hash_generation(main_local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__function)
         {
             int addr=this->function_generation(main_local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
         }
         else if(node_type==__add_operator  || node_type==__sub_operator || node_type==__mul_operator  || node_type==__div_operator || node_type==__link_operator ||
                 node_type==__cmp_equal || node_type==__cmp_less || node_type==__cmp_more || node_type==__cmp_not_equal || node_type==__cmp_less_or_equal || node_type==__cmp_more_or_equal ||
@@ -3097,25 +2999,14 @@ void nasal_runtime::main_proc(abstract_syntax_tree& root)
                 node_type==__equal || node_type==__add_equal || node_type==__sub_equal || node_type==__div_equal || node_type==__mul_equal || node_type==__link_equal)
         {
             int addr=this->calculation(main_local_scope,*iter);
-            if(addr>=0)
-                nasal_gc.reference_delete(addr);
+            if(addr>=0) nasal_gc.reference_delete(addr);
             // new functions in global scope must set its closure_update_state to true
             // or its local scope maybe changed after running other expressions
-            for(std::map<std::string,int>::iterator i=global_scope.begin();i!=global_scope.end();++i)
-                if(nasal_gc.get_scalar(i->second).get_type()==scalar_function &&
-                    !nasal_gc.get_scalar(i->second).get_function().get_closure_update_state())
-                nasal_gc.get_scalar(i->second).get_function().set_closure_update_state(true);
+            if(nasal_gc.get_scalar(addr).get_type()==scalar_function && !nasal_gc.get_scalar(addr).get_function().get_closure_update_state())
+                nasal_gc.get_scalar(addr).get_function().set_closure_update_state(true);
         }
         else if(node_type==__definition)
-        {
             this->definition(main_local_scope,global_scope,*iter);
-            // new functions in global scope must set its closure_update_state to true
-            // or its local scope maybe changed after running other expressions
-            for(std::map<std::string,int>::iterator i=global_scope.begin();i!=global_scope.end();++i)
-                if(nasal_gc.get_scalar(i->second).get_type()==scalar_function &&
-                    !nasal_gc.get_scalar(i->second).get_function().get_closure_update_state())
-                nasal_gc.get_scalar(i->second).get_function().set_closure_update_state(true);
-        }
         else if(node_type==__conditional)
             state=this->conditional(main_local_scope,*iter);
         else if((node_type==__while) || (node_type==__for) || (node_type==__foreach) || (node_type==__forindex))

@@ -16,33 +16,29 @@
 	'1E-123'
 	'1.34E10'
 */
-inline bool check_hex_string(std::string str)
+inline bool check_hex_string(std::string str,int len)
 {
-	int len=str.length();
 	for(int i=2;i<len;++i)
 		if(!(('0'<=str[i] && str[i]<='9') || ('a'<=str[i] && str[i]<='f') || ('A'<=str[i] && str[i]<='F')))
 			return false;
 	return true;
 }
-inline bool check_oct_string(std::string str)
+inline bool check_oct_string(std::string str,int len)
 {
-	int len=str.length();
 	for(int i=2;i<len;++i)
 		if(str[i]<'0' || str[i]>'7')
 			return false;
 	return true;
 }
-inline bool check_dec_string(std::string str)
+inline bool check_dec_string(std::string str,int len)
 {
-	int len=str.length();
 	int dot_cnt=0;
 	int i=0;
 	for(;i<len;++i)
 	{
 		if(str[i]=='.')
 		{
-			if(i==len-1)
-				return false;
+			if(i==len-1) return false;
 			++dot_cnt;
 		}
 		else if(str[i]=='e' || str[i]=='E')
@@ -53,16 +49,14 @@ inline bool check_dec_string(std::string str)
 	if(str[i]=='e' || str[i]=='E')
 	{
 		++i;
-		if(i==len)
-			return false;
+		if(i==len) return false;
 		if(str[i]=='-')
 		{
 			++i;
-			if(i==len)
-				return false;
+			if(i==len) return false;
 		}
 		for(;i<len;++i)
-			if(str[i]<'0' || str[i]>='9')
+			if(str[i]<'0' || str[i]>'9')
 				return false;
 	}
 	if(dot_cnt>1 || str[0]=='.' || (!dot_cnt && str[0]=='0'))
@@ -72,25 +66,25 @@ inline bool check_dec_string(std::string str)
 
 bool check_numerable_string(std::string str)
 {
-	if(!str.length())
-		return false;
-	if(str[0]=='-' && str.length()>1)
+	int len=str.length();
+	if(!len) return false;
+	if(str[0]=='-' && len>1)
 	{
 		std::string tmp="";
-		for(int i=1;i<str.length();++i)
+		for(int i=1;i<len;++i)
 			tmp.push_back(str[i]);
 		str=tmp;
 	}
-	else if(str[0]=='-' && str.length()==1)
+	else if(str[0]=='-' && len==1)
 		return false;
-	if(str.length()==1 && '0'<=str[0] && str[0]<='9')
+	if(len==1 && '0'<=str[0] && str[0]<='9')
 		return true;
-	else if(str.length()>2 && str[0]=='0' && str[1]=='x')
-		return check_hex_string(str);
-	else if(str.length()>2 && str[0]=='0' && str[1]=='o')
-		return check_oct_string(str);
+	else if(len>2 && str[0]=='0' && str[1]=='x')
+		return check_hex_string(str,len);
+	else if(len>2 && str[0]=='0' && str[1]=='o')
+		return check_oct_string(str,len);
 	else if('0'<=str[0] && str[0]<='9')
-		return check_dec_string(str);
+		return check_dec_string(str,len);
 	return false;
 }
 
