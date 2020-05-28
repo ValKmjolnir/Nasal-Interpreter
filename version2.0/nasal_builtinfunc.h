@@ -261,13 +261,11 @@ int print(std::list<std::map<std::string,int> >& local_scope)
     for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
         if(i->find("dyn")!=i->end())
             vector_addr=(*i)["dyn"];
-    if(vector_addr<0)
-        return -1;
+    if(vector_addr<0) return -1;
     for(int i=0;i<nasal_gc.get_scalar(vector_addr).get_vector().get_size();++i)
     {
         int data_addr=nasal_gc.get_scalar(vector_addr).get_vector().get_elem(i);
-        if(data_addr<0)
-            return -1;
+        if(data_addr<0) return -1;
         switch(nasal_gc.get_scalar(data_addr).get_type())
         {
             case scalar_nil:break;
@@ -289,8 +287,7 @@ int system_type(std::list<std::map<std::string,int> >& local_scope)
     for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
         if(i->find("thing")!=i->end())
             data=(*i)["thing"];
-    if(data<0)
-        return -1;
+    if(data<0) return -1;
     print_scalar_type(nasal_gc.get_scalar(data).get_type());
     std::cout<<std::endl;
     int ret_addr=nasal_gc.gc_alloc();
@@ -306,8 +303,7 @@ int nas_trigfunc(std::list<std::map<std::string,int> >& local_scope,int func_typ
     for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
         if(i->find("x")!=i->end())
             data=(*i)["x"];
-    if(data<0)
-        return -1;
+    if(data<0) return -1;
     type=nasal_gc.get_scalar(data).get_type();
     if(type!=scalar_number && type!=scalar_string)
     {
@@ -336,9 +332,8 @@ int nas_trigfunc(std::list<std::map<std::string,int> >& local_scope,int func_typ
 
 int nas_exp(std::list<std::map<std::string,int> >& local_scope)
 {
-    int data=-1;
+    int data=-1,type=-1;
     double num=0;
-    int type=-1;
     for(std::list<std::map<std::string,int> >::iterator i=local_scope.begin();i!=local_scope.end();++i)
         if(i->find("x")!=i->end())
             data=(*i)["x"];
