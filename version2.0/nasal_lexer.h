@@ -174,42 +174,40 @@ void resource_file::print_resource()
 	int size=source_code.size();
 	int line=1;
 	std::cout<<line<<"\t";
+	std::string unicode_str="";
 	for(int i=0;i<size;++i)
 	{
-		if(32<=source_code[i]) std::cout<<source_code[i];
-		else if(source_code[i]<0)
+		if(source_code[i]>=0 && unicode_str.length())
 		{
-			// print unicode
-			std::string tmp="";
-			for(;i<size;++i)
-			{
-				if(source_code[i]>=0) break;
-				tmp.push_back(source_code[i]);
-			}
-			std::cout<<tmp;--i;
+			std::cout<<unicode_str;
+			unicode_str="";
 		}
-		else std::cout<<" ";
-		if(i<size && source_code[i]=='\n')
+		if(32<=source_code[i])    std::cout<<source_code[i];
+		else if(source_code[i]<0) unicode_str+=source_code[i];
+		else                      std::cout<<" ";
+		if(source_code[i]=='\n')
 		{
 			++line;
 			std::cout<<std::endl<<line<<"\t";
 		}
 	}
+	if(unicode_str.length())
+		std::cout<<unicode_str;
 	std::cout<<std::endl;
 	return;
 }
 
 std::string nasal_lexer::identifier_gen(std::vector<char>& res,int& ptr,int& line)
 {
+	int res_size=res.size();
 	std::string token_str="";
-	while(IS_IDENTIFIER_BODY(res[ptr]))
+	while(ptr<res_size && IS_IDENTIFIER_BODY(res[ptr]))
 	{
 		token_str+=res[ptr];
 		++ptr;
-		if(ptr>=res.size()) break;
 	}
 	// check dynamic identifier "..."
-	if(ptr+2<res.size() && res[ptr]=='.' && res[ptr+1]=='.' && res[ptr+2]=='.')
+	if(ptr+2<res_size && res[ptr]=='.' && res[ptr+1]=='.' && res[ptr+2]=='.')
 	{
 		token_str+="...";
 		ptr+=3;
@@ -220,9 +218,10 @@ std::string nasal_lexer::identifier_gen(std::vector<char>& res,int& ptr,int& lin
 
 std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 {
+	int res_size=res.size();
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
 	std::string token_str="";
-	while(IS_NUMBER_BODY(res[ptr]))
+	while(ptr<res_size && IS_NUMBER_BODY(res[ptr]))
 	{
 		token_str+=res[ptr];
 		if(res[ptr]=='e' || res[ptr]=='E')
@@ -232,17 +231,15 @@ std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 			break;
 		}
 		++ptr;
-		if(ptr>=res.size())
-			break;
 	}
-	if(scientific_notation && ptr<res.size())
+	if(scientific_notation && ptr<res_size)
 	{
 		if(res[ptr]=='-')
 		{
 			token_str+='-';
 			++ptr;
 		}
-		while(ptr<res.size() && '0'<=res[ptr] && res[ptr]<='9')
+		while(ptr<res_size && '0'<=res[ptr] && res[ptr]<='9')
 		{
 			token_str+=res[ptr];
 			++ptr;
@@ -258,11 +255,12 @@ std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 }
 std::string nasal_lexer::string_gen(std::vector<char>& res,int& ptr,int& line)
 {
+	int res_size=res.size();
 	std::string token_str="";
 	char str_begin=res[ptr];
 	++ptr;
-	if(ptr>=res.size()) return token_str;
-	while(ptr<res.size() && res[ptr]!=str_begin)
+	if(ptr>=res_size) return token_str;
+	while(ptr<res_size && res[ptr]!=str_begin)
 	{
 		token_str+=res[ptr];
 		if(res[ptr]=='\n') ++line;
@@ -281,14 +279,12 @@ std::string nasal_lexer::string_gen(std::vector<char>& res,int& ptr,int& line)
 			}
 		}
 		++ptr;
-		if(ptr>=res.size()) break;
 	}
 	// check if this string ends with a " or '
-	if(ptr>=res.size())
+	if(ptr>=res_size)
 	{
 		++error;
 		std::cout<<">> [Lexer] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
-		--ptr;
 	}
 	++ptr;
 	return token_str;
@@ -329,18 +325,17 @@ void nasal_lexer::scanner(std::vector<char>& res)
 	detail_token_list.clear();
 	error=0;
 	
-	int line=1;
+	int line=1,ptr=0,res_size=res.size();
 	std::string token_str;
-	int ptr=0;
-	while(ptr<res.size())
+	while(ptr<res_size)
 	{
-		while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]<0))
+		while(ptr<res_size && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]<0))
 		{
 			// these characters will be ignored, and '\n' will cause ++line
 			if(res[ptr]=='\n') ++line;
 			++ptr;
 		}
-		if(ptr>=res.size()) break;
+		if(ptr>=res_size) break;
 		if(IS_IDENTIFIER_HEAD(res[ptr]))
 		{
 			token_str=identifier_gen(res,ptr,line);
@@ -399,7 +394,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		else if(IS_NOTE_HEAD(res[ptr]))
 		{
 			// avoid note
-			while(ptr<res.size() && res[ptr]!='\n')
+			while(ptr<res_size && res[ptr]!='\n')
 				++ptr;
 			// after this process ptr will point to a '\n'
 			// don't ++ptr then the counter for line can work correctly
@@ -464,11 +459,11 @@ void nasal_lexer::generate_detail_token()
 			else
 			{
 				std::string tempstr=i->str;
-				int strback=tempstr.length()-1;
-				if(tempstr.length()>3 &&tempstr[strback]=='.' && tempstr[strback-1]=='.' && tempstr[strback-2]=='.')
+				int len=tempstr.length(),strback=tempstr.length()-1;
+				if(tempstr[strback]=='.' && tempstr[strback-1]=='.' && tempstr[strback-2]=='.')
 				{
 					detail_token.str="";
-					for(int j=0;j<tempstr.length()-3;++j)
+					for(int j=0;j<len-3;++j)
 						detail_token.str+=tempstr[j];
 					detail_token.type=__dynamic_id;
 				}
