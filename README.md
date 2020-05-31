@@ -84,11 +84,3 @@ You can try a calculator in __version 0.17~0.19__ !
 # Abstract Syntax Tree
 
 In __version 1.2__ the ast has been completed.
-
-# Balloon script
-
-[Balloon](https://github.com/ValKmjolnir/Balloon-script) is created for experiment.
-
-It is a subset of Nasal and the parser is __stricter__ than Nasal parser.
-
-Explore the usage of balloon and enjoy yourself! XD
