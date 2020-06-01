@@ -77,10 +77,6 @@ __And to check if an expr in '(' ')' is multi_scalar or multi_id__
 
 __i used bool nasal_parse::check_multi_scalar() and bool nasal_parse::check_multi_assignment()__
 
-# Calculator
-
-You can try a calculator in __version 0.17~0.19__ !
-
 # Abstract Syntax Tree
 
 In __version 1.2__ the ast has been completed.
