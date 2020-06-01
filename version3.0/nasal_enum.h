@@ -5,7 +5,7 @@
 enum token_type
 {
     tok_null=0,
-    tok_number,tok_string,
+    tok_number,tok_string,tok_identifier,
     tok_for,tok_forindex,tok_foreach,tok_while,
     tok_var,tok_func,tok_break,tok_continue,
     tok_return,tok_if,tok_elsif,tok_else,tok_nil,

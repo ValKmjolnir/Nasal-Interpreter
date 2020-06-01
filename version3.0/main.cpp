@@ -11,6 +11,7 @@ void logo()
 }
 
 nasal_resource resource;
+nasal_lexer    lexer;
 std::string    command;
 int main()
 {
@@ -74,7 +75,11 @@ int main()
 			resource.print_file();
 		else if(command=="lex")
 		{
-			;
+			lexer.scanner(resource.get_file());
+			if(!lexer.get_error())
+				lexer.print_token();
+			else
+				std::cout<<">> [lexer] error occurred,stop.\n";
 		}
 		else if(command=="par")
 		{

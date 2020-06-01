@@ -16,7 +16,9 @@
 #include <map>
 
 #include "nasal_enum.h"
+#include "nasal_misc.h"
 #include "nasal_resource.h"
 #include "nasal_lexer.h"
+#include "nasal_parse.h"
 
 #endif
