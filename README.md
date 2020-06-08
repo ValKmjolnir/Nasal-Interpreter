@@ -34,12 +34,6 @@ And the flow chart of lexer is here:
 
 [![nasal_lexer.png](pic/nasal_lexer.png?raw=true)](https://github.com/ValKmjolnir/Nasal-Interpreter/blob/master/pic/nasal_lexer.png)
 
-# Push down automata
-
-After many times of failure,i finally try to use PDA to do the parse work.
-
-But something occurred,so i finally didn't make it.However you can still see this LL(1) and LR(0) parser in __version 0.7 & 0.9__ .
-
 # Parser
 
 The parser can recognize some basic elements in resource program.
