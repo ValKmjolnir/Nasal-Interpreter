@@ -1,0 +1,118 @@
+(*
+ <>  must choose
+ []  can choose
+ {}  can repeat 0 to infinite time(s)
+ |   or
+ ::= is defined as
+*)
+
+nil   ::= nil;
+id    ::= identifier;
+number::= number;
+string::= string;
+vector::= 
+    '[' {calculation ','} ']'
+;
+hash  ::=
+    '{' {hashmember ','} '}'
+;
+hashmember::=
+    id ':' calculation
+;
+function::= 
+    func argument_list expressions
+;
+argument_list::=
+    '(' [{id ','} ([id '...']|{id '=' calculation ','})] ')'
+;
+expressions::=
+    '{' {definition|assignment|calculation|loop|conditional} '}'
+    |definition ';'
+    |multi_assignment ';'
+    |calculation ';'
+    |loop
+    |conditional
+;
+calculation::=
+    '(' calculation ')'
+    |scalar_gen
+    |trinocular
+    |and_expr
+    |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
+;
+trinocular::=
+    calculation '?' calculation ':' calculation
+;
+and_expr::=
+    or_expr and or_expr
+;
+or_expr::=
+    cmp_expr or cmp_expr
+;
+cmp_expr::=
+    additive_expr ('==' | '!=' | '>' | '<' | '>=' | '<=') additive_expr
+;
+additive_expr::=
+    multive_expr ('+' | '-' | '~') multive_expr
+;
+multive_expr::=
+    unary ('*' | '/') unary
+;
+unary::=
+    ('-'|'!') calculation
+;
+scalar_gen::=
+    function_call
+    |identifier_call
+    |vector_call
+    |hash_call
+    |number
+    |string
+;
+function_call::=
+    function {call_scalar}
+;
+identifier_call::=
+    id {call_scalar}
+;
+vector_call::=
+    vector {call_scalar}
+;
+hash_call::=
+    hash {call_scalar}
+;
+call_scalar::=
+    '.' id
+    |'[' {(calculation | subvec) ','} ']'
+    |'(' {calculation ','} ')'
+    |'(' {hashmember ','} ')'
+;
+subvec::=
+    calculation ':' calculation
+    |calculation ':'
+    |':' calculation
+;
+definition::=
+    var id '=' calculation
+    |var '(' multi_id ')' '=' (calculation | multi_scalar)
+    |'(' var multi_id ')' '=' (calculation | multi_scalar)
+;
+multi_id::=
+    {id ','} <id>
+;
+multi_scalar::=
+    '(' {calculation ','} <calculation> ')'
+;
+multi_assignment::=
+    multi_scalar '=' multi_scalar
+;
+loop::=
+    while '(' calculation ')' expressions
+    |for '(' [definition] ';' [calculation] ';' [calculation] ')' expressions
+    |(forindex | foreach) '(' (definition | assignment) ';' calculation ')' expressions
+;
+conditional::=
+    if '(' calculation ')' expressions
+    {elsif '(' calculation ')' expressions}
+    [else expressions]
+;

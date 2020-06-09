@@ -18,4 +18,12 @@ enum token_type
     tok_cmp_equal,tok_cmp_not_equal,tok_less_than,tok_greater_than,tok_less_equal,tok_greater_equal
 };
 
+enum ast_node
+{
+    ast_null=0,
+    ast_nil,ast_number,ast_string,ast_identifier,
+    ast_for,ast_forindex,ast_foreach,ast_while,
+    ast_definition,ast_assignment
+};
+
 #endif
