@@ -16,7 +16,7 @@ public:
     void set_line(int);
     void set_type(int);
     void set_str(std::string&);
-    void add_child(nasal_ast&);
+    void add_child(nasal_ast);
     int  get_line();
     int  get_type();
     std::string get_str();
@@ -74,7 +74,7 @@ void nasal_ast::set_str(std::string& s)
     return;
 }
 
-void nasal_ast::add_child(nasal_ast& ast)
+void nasal_ast::add_child(nasal_ast ast)
 {
     children.push_back(ast);
     return;
