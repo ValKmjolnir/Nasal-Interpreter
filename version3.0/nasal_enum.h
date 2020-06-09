@@ -21,9 +21,43 @@ enum token_type
 enum ast_node
 {
     ast_null=0,
-    ast_nil,ast_number,ast_string,ast_identifier,
+    ast_nil,ast_number,ast_string,ast_identifier,ast_function,ast_hash,ast_vector,
+    ast_hashmember,
+    ast_args,
     ast_for,ast_forindex,ast_foreach,ast_while,
-    ast_definition,ast_assignment
+    ast_definition,ast_assignment,ast_calculation
 };
+
+enum parse_error
+{
+    unknown,
+    lack_id,
+    lack_left_curve,
+    lack_left_bracket,
+    lack_left_brace,
+    lack_comma,
+    lack_colon,
+    lack_scalar,
+};
+
+void error_info(int line,int error_type)
+{
+    std::string info=">> [parse] error: line ";
+    std::string detail;
+    std::cout<<info<<line<<": ";
+    switch(error_type)
+    {
+        case unknown:           detail="unknown error.";     break;
+        case lack_id:           detail="lack identifier.";   break;
+        case lack_left_curve:   detail="lack left curve.";   break;
+        case lack_left_bracket: detail="lack left bracket."; break;
+        case lack_left_brace:   detail="lack left brace.";   break;
+        case lack_comma:        detail="lack comma.";        break;
+        case lack_colon:        detail="lack colon.";        break;
+        case lack_scalar:       detail="lack scalar";        break;
+    }
+    std::cout<<detail<<std::endl;
+    return;
+}
 
 #endif
