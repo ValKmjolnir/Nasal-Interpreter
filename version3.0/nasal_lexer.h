@@ -81,14 +81,15 @@ class nasal_lexer
 private:
     int error;
     std::vector<token> token_list;
-public:
-    std::string identifier_gen(std::vector<char>&,int&,int&);
+	std::string identifier_gen(std::vector<char>&,int&,int&);
     std::string number_gen(std::vector<char>&,int&,int&);
     std::string string_gen(std::vector<char>&,int&,int&);
+public:
     void delete_tokens();
     void scanner(std::vector<char>&);
     void print_token();
     int  get_error();
+	std::vector<token>& get_token_list();
 };
 
 void nasal_lexer::delete_tokens()
@@ -322,5 +323,10 @@ void nasal_lexer::print_token()
 int nasal_lexer::get_error()
 {
     return error;
+}
+
+std::vector<token>& nasal_lexer::get_token_list()
+{
+	return token_list;
 }
 #endif

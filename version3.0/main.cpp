@@ -1,5 +1,26 @@
 #include "nasal.h"
 
+nasal_resource resource;
+nasal_lexer    lexer;
+nasal_parse    parse;
+std::string    command;
+
+void help()
+{
+	std::cout<<">> [\'file\'] input a file."<<std::endl;
+	std::cout<<">> [cls   ] clear the screen."<<std::endl;
+	std::cout<<">> [del   ] clear the resource code."<<std::endl;
+	std::cout<<">> [lib   ] add lib file."<<std::endl;
+	std::cout<<">> [rs    ] print resource code."<<std::endl;
+	std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
+	std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
+	std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
+	std::cout<<">> [run   ] run code."<<std::endl;
+	std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
+	std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
+	return;
+}
+
 void logo()
 {
     std::cout<<"       __                _      "<<std::endl;
@@ -10,9 +31,26 @@ void logo()
     return;
 }
 
-nasal_resource resource;
-nasal_lexer    lexer;
-std::string    command;
+void lex_func()
+{
+	lexer.scanner(resource.get_file());
+	if(!lexer.get_error()) lexer.print_token();
+	else std::cout<<">> [lexer] error occurred,stop.\n";
+	return;
+}
+
+void par_func()
+{
+	lexer.scanner(resource.get_file());
+	if(!lexer.get_error())
+	{
+		parse.set_toklist(lexer.get_token_list());
+		if(parse.get_error()) std::cout<<">> [parse] error occurred,stop.\n";
+	}
+	else std::cout<<">> [lexer] error occurred,stop.\n";
+	return;
+}
+
 int main()
 {
 #ifdef _WIN32
@@ -39,19 +77,7 @@ int main()
 		std::cout<<">> ";
 		std::cin>>command;
 		if(command=="help")
-		{
-			std::cout<<">> [\'file\'] input a file."<<std::endl;
-			std::cout<<">> [cls   ] clear the screen."<<std::endl;
-			std::cout<<">> [del   ] clear the resource code."<<std::endl;
-			std::cout<<">> [lib   ] add lib file."<<std::endl;
-			std::cout<<">> [rs    ] print resource code."<<std::endl;
-			std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
-			std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
-			std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
-			std::cout<<">> [run   ] run code."<<std::endl;
-			std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
-			std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
-		}
+			help();
 		else if(command=="cls")
 		{
 #ifdef _WIN32
@@ -67,6 +93,8 @@ int main()
 		else if(command=="del")
 		{
 			resource.delete_file();
+			lexer.delete_tokens();
+			parse.clear();
 			std::cout<<">> [Delete] complete."<<std::endl;
 		}
 		else if(command=="lib")
@@ -74,17 +102,9 @@ int main()
 		else if(command=="rs")
 			resource.print_file();
 		else if(command=="lex")
-		{
-			lexer.scanner(resource.get_file());
-			if(!lexer.get_error())
-				lexer.print_token();
-			else
-				std::cout<<">> [lexer] error occurred,stop.\n";
-		}
+			lex_func();
 		else if(command=="par")
-		{
-			;
-		}
+			par_func();
 		else if(command=="ast")
 		{
 			;

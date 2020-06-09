@@ -19,6 +19,7 @@
 #include "nasal_misc.h"
 #include "nasal_resource.h"
 #include "nasal_lexer.h"
+#include "nasal_ast.h"
 #include "nasal_parse.h"
 
 #endif
