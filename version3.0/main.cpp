@@ -45,6 +45,7 @@ void par_func()
 	if(!lexer.get_error())
 	{
 		parse.set_toklist(lexer.get_token_list());
+		parse.main_process();
 		if(parse.get_error()) std::cout<<">> [parse] error occurred,stop.\n";
 	}
 	else std::cout<<">> [lexer] error occurred,stop.\n";

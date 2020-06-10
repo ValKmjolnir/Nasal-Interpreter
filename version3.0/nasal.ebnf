@@ -26,16 +26,19 @@ argument_list::=
     '(' [{id ','} ([id '...']|{id '=' calculation ','})] ')'
 ;
 expressions::=
-    '{' {definition|assignment|calculation|loop|conditional} '}'
+    '{' {definition|assignment|calculation|loop|conditional|return_expr|continue_expr|break_expr} '}'
     |definition ';'
     |multi_assignment ';'
     |calculation ';'
     |loop
     |conditional
+    |return_expr
+    |continue_expr
+    |break_expr
 ;
 calculation::=
     '(' calculation ')'
-    |scalar_gen
+    |scalar
     |trinocular
     |and_expr
     |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
@@ -61,7 +64,7 @@ multive_expr::=
 unary::=
     ('-'|'!') calculation
 ;
-scalar_gen::=
+scalar::=
     function_call
     |identifier_call
     |vector_call
@@ -115,4 +118,13 @@ conditional::=
     if '(' calculation ')' expressions
     {elsif '(' calculation ')' expressions}
     [else expressions]
+;
+continue_expr::=
+    continue
+;
+break_expr::=
+    break
+;
+return_expr::=
+    return [calculation]
 ;
