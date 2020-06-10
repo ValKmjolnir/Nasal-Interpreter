@@ -37,6 +37,7 @@ enum parse_error
     lack_left_curve,
     lack_left_bracket,
     lack_left_brace,
+    lack_right_brace,
     lack_semi,
     lack_comma,
     lack_colon,
@@ -56,6 +57,7 @@ void error_info(int line,int error_type)
         case lack_left_curve:   detail="lack left curve.";                  break;
         case lack_left_bracket: detail="lack left bracket.";                break;
         case lack_left_brace:   detail="lack left brace.";                  break;
+        case lack_right_brace:  detail="lack right brace.";                 break;
         case lack_semi:         detail="lack \';\' here.";                  break;
         case lack_comma:        detail="lack comma.";                       break;
         case lack_colon:        detail="lack colon.";                       break;

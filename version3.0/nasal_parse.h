@@ -19,6 +19,7 @@ private:
     nasal_ast hash_member_gen();
     nasal_ast func_gen();
     nasal_ast args_list_gen();
+    nasal_ast expr();
     nasal_ast exprs_gen();
     nasal_ast calculation();
     nasal_ast trinocular();
@@ -80,29 +81,8 @@ void nasal_parse::main_process()
     root.set_type(ast_root);
     while(ptr<tok_list_size)
     {
-        switch(tok_list[ptr].type)
-        {   
-            case tok_nil:case tok_number:case tok_string:case tok_identifier:
-            case tok_func:
-            case tok_left_bracket:case tok_left_brace:
-            case tok_sub:
-            case tok_not:   root.add_child(calculation()); break;
-            case tok_var:   root.add_child(definition());  break;
-            case tok_for:case tok_forindex:case tok_foreach:
-            case tok_while: root.add_child(loop());        break;
-            case tok_if:    root.add_child(conditional()); break;
-            defaut: error_info(tok_list[ptr].line,error_token);++error;break;
-        }
+        root.add_child(expr());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_semi)
-            ++ptr;
-        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_semi
-            && !root.get_children().empty() && !root.get_children().back().get_children().empty()
-            && root.get_children().back().get_children().back().get_type()!=ast_function)
-        {
-            error_info(root.get_children().back().get_children().back().get_line(),lack_semi);
-            ++error;
-        }
     }
     std::cout<<">> [parse] complete generation. "<<error<<" error(s)."<<std::endl;
     return;
@@ -259,40 +239,60 @@ nasal_ast nasal_parse::args_list_gen()
     }
     return node;
 }
+nasal_ast nasal_parse::expr()
+{
+    nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    switch(tok_list[ptr].type)
+    {   
+        case tok_nil:case tok_number:case tok_string:case tok_identifier:
+        case tok_func:
+        case tok_left_bracket:case tok_left_brace:
+        case tok_sub:
+        case tok_not:   node=calculation(); break;
+        case tok_var:   node=definition();  break;
+        case tok_for:case tok_forindex:case tok_foreach:
+        case tok_while: node=loop();        break;
+        case tok_if:    node=conditional(); break;
+        case tok_continue:break;
+        case tok_break:break;
+        case tok_return:break;
+        case tok_semi:--ptr;break;
+        defaut: error_info(tok_list[ptr].line,error_token);++error;break;
+    }
+    ++ptr;
+    if(ptr>=tok_list_size || (ptr<tok_list_size && tok_list[ptr].type!=tok_semi))
+    {
+        bool tmp=node.get_children().empty();
+        if(tmp || (!tmp && node.get_children().back().get_type()!=ast_function))
+        {
+            error_info(node.get_children().back().get_line(),lack_semi);
+            ++error;
+        }
+        if(ptr<tok_list_size) --ptr;
+    }
+    return node;
+}
 nasal_ast nasal_parse::exprs_gen()
 {
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_block);
-    while(ptr<tok_list_size)
+    if(tok_list[ptr].type==tok_left_brace)
     {
-        switch(tok_list[ptr].type)
-        {   
-            case tok_nil:case tok_number:case tok_string:case tok_identifier:
-            case tok_func:
-            case tok_left_bracket:case tok_left_brace:
-            case tok_sub:
-            case tok_not:   node.add_child(calculation()); break;
-            case tok_var:   node.add_child(definition());  break;
-            case tok_for:case tok_forindex:case tok_foreach:
-            case tok_while: node.add_child(loop());        break;
-            case tok_if:    node.add_child(conditional()); break;
-            case tok_continue:break;
-            case tok_break:break;
-            case tok_return:break;
-            defaut: error_info(tok_list[ptr].line,error_token);++error;break;
-        }
-        ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_semi)
-            ++ptr;
-        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_semi
-            && !node.get_children().empty() && !node.get_children().back().get_children().empty()
-            && node.get_children().back().get_children().back().get_type()!=ast_function)
+        while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_brace)
         {
-            error_info(node.get_children().back().get_children().back().get_line(),lack_semi);
+            node.add_child(expr());
+            ++ptr;
+        }
+        if(ptr>=tok_list_size)
+        {
+            error_info(node.get_line(),lack_right_brace);
             ++error;
         }
     }
+    else
+        node.add_child(expr());
     return node;
 }
 nasal_ast nasal_parse::calculation()
