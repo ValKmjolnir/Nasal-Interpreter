@@ -12,6 +12,7 @@ public:
     nasal_ast();
     nasal_ast(const nasal_ast&);
     ~nasal_ast();
+    nasal_ast& operator=(const nasal_ast&);
     void clear();
     void set_line(int);
     void set_type(int);
@@ -45,6 +46,15 @@ nasal_ast::~nasal_ast()
     this->str.clear();
     this->children.clear();
     return;
+}
+
+nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
+{
+    this->line=tmp.line;
+    this->type=tmp.type;
+    this->str=tmp.str;
+    this->children=tmp.children;
+    return *this;
 }
 
 void nasal_ast::clear()
