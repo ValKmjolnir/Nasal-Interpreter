@@ -85,14 +85,14 @@ private:
     std::string number_gen(std::vector<char>&,int&,int&);
     std::string string_gen(std::vector<char>&,int&,int&);
 public:
-    void delete_tokens();
+    void clear();
     void scanner(std::vector<char>&);
     void print_token();
     int  get_error();
 	std::vector<token>& get_token_list();
 };
 
-void nasal_lexer::delete_tokens()
+void nasal_lexer::clear()
 {
     token_list.clear();
     return;

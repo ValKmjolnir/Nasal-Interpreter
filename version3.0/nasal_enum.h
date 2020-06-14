@@ -24,8 +24,13 @@ enum ast_node
     ast_nil,ast_number,ast_string,ast_identifier,ast_function,ast_hash,ast_vector,
     ast_hashmember,
     ast_args,
+    ast_and,ast_or,
+    ast_equal,ast_add_equal,ast_sub_equal,ast_mult_equal,ast_div_equal,ast_link_equal,
+    ast_cmp_equal,ast_cmp_not_equal,ast_less_than,ast_less_equal,ast_greater_than,ast_greater_equal,
+    ast_add,ast_sub,ast_mult,ast_div,ast_link,
+    ast_unary_sub,ast_unary_not,
     ast_for,ast_forindex,ast_foreach,ast_while,
-    ast_definition,ast_assignment,ast_calculation,
+    ast_definition,ast_multi_assign,ast_calculation,
     ast_continue,ast_break,ast_return,
 };
 
@@ -35,6 +40,7 @@ enum parse_error
     error_token,
     lack_id,
     lack_left_curve,
+    lack_right_curve,
     lack_left_bracket,
     lack_left_brace,
     lack_right_brace,
@@ -54,7 +60,8 @@ void error_info(int line,int error_type)
         case unknown:           detail="unknown error.";                    break;
         case error_token:       detail="this token should not exist here."; break;
         case lack_id:           detail="lack identifier.";                  break;
-        case lack_left_curve:   detail="lack left curve.";                  break;
+        case lack_left_curve:   detail="lack \'(\'.";                       break;
+        case lack_right_curve:  detail="lack \')\'.";                       break;
         case lack_left_bracket: detail="lack left bracket.";                break;
         case lack_left_brace:   detail="lack left brace.";                  break;
         case lack_right_brace:  detail="lack right brace.";                 break;

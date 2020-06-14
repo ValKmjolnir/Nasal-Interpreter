@@ -27,7 +27,7 @@ private:
 public:
     void               input_file(std::string);
     void               load_lib();
-    void               delete_file();
+    void               clear();
     void               print_file();
     std::vector<char>& get_file();
 };
@@ -58,7 +58,7 @@ void nasal_resource::load_lib()
     return;
 }
 
-void nasal_resource::delete_file()
+void nasal_resource::clear()
 {
     res.clear();
     return;

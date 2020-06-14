@@ -39,20 +39,19 @@ expressions::=
     '{' {expr} '}'
 ;
 calculation::=
-    '(' calculation ')'
     |scalar
     |trinocular
-    |and_expr
+    |or_expr
     |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
 ;
 trinocular::=
     calculation '?' calculation ':' calculation
 ;
-and_expr::=
-    or_expr and or_expr
-;
 or_expr::=
-    cmp_expr or cmp_expr
+    and_expr or and_expr
+;
+and_expr::=
+    cmp_expr and cmp_expr
 ;
 cmp_expr::=
     additive_expr ('==' | '!=' | '>' | '<' | '>=' | '<=') additive_expr
@@ -61,10 +60,10 @@ additive_expr::=
     multive_expr ('+' | '-' | '~') multive_expr
 ;
 multive_expr::=
-    unary ('*' | '/') unary
+    (unary|scalar) ('*' | '/') (unary|scalar)
 ;
 unary::=
-    ('-'|'!') calculation
+    ('-'|'!') scalar
 ;
 scalar::=
     function_call
@@ -73,6 +72,7 @@ scalar::=
     |hash_call
     |number
     |string
+    |'(' calculation ')'
 ;
 function_call::=
     function {call_scalar}
@@ -112,9 +112,18 @@ multi_assignment::=
     multi_scalar '=' multi_scalar
 ;
 loop::=
+    while_loop
+    |for_loop
+    |forei_loop
+;
+while_loop::=
     while '(' calculation ')' expressions
-    |for '(' [definition] ';' [calculation] ';' [calculation] ')' expressions
-    |(forindex | foreach) '(' (definition | assignment) ';' calculation ')' expressions
+;
+for_loop::=
+    for '(' [definition] ';' [calculation] ';' [calculation] ')' expressions
+;
+forei_loop::=
+    (forindex | foreach) '(' (definition | assignment) ';' calculation ')' expressions
 ;
 conditional::=
     if '(' calculation ')' expressions
