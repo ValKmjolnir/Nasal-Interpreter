@@ -31,6 +31,15 @@ void logo()
     return;
 }
 
+void del_func()
+{
+	resource.clear();
+	lexer.clear();
+	parse.clear();
+	std::cout<<">> [Delete] complete."<<std::endl;
+	return;
+}
+
 void lex_func()
 {
 	lexer.scanner(resource.get_file());
@@ -92,12 +101,7 @@ int main()
 #endif
 		}
 		else if(command=="del")
-		{
-			resource.delete_file();
-			lexer.delete_tokens();
-			parse.clear();
-			std::cout<<">> [Delete] complete."<<std::endl;
-		}
+			del_func();
 		else if(command=="lib")
 			resource.load_lib();
 		else if(command=="rs")

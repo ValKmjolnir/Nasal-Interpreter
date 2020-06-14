@@ -10,6 +10,7 @@ private:
     nasal_ast root;
     std::vector<token> tok_list;
     void reset();
+    bool check_function_end(nasal_ast&);
     nasal_ast nil_gen();
     nasal_ast number_gen();
     nasal_ast string_gen();
@@ -23,8 +24,8 @@ private:
     nasal_ast exprs_gen();
     nasal_ast calculation();
     nasal_ast trinocular();
-    nasal_ast and_expr();
     nasal_ast or_expr();
+    nasal_ast and_expr();
     nasal_ast cmp_expr();
     nasal_ast additive_expr();
     nasal_ast multive_expr();
@@ -94,6 +95,17 @@ void nasal_parse::reset()
     this->error=0;
     this->root.clear();
     return;
+}
+
+bool nasal_parse::check_function_end(nasal_ast& node)
+{
+    if(node.get_type()==ast_function)
+        return true;
+    if(node.get_children().empty() || (node.get_type()!=ast_definition && node.get_type()!=ast_equal))
+        return false;
+    else
+        return check_function_end(node.get_children().back());
+    return false;
 }
 
 nasal_ast nasal_parse::nil_gen()
@@ -245,31 +257,26 @@ nasal_ast nasal_parse::expr()
     node.set_line(tok_list[ptr].line);
     switch(tok_list[ptr].type)
     {   
-        case tok_nil:case tok_number:case tok_string:case tok_identifier:
+        case tok_nil:
+        case tok_number:
+        case tok_string:
+        case tok_identifier:
         case tok_func:
-        case tok_left_bracket:case tok_left_brace:
+        case tok_left_bracket:
+        case tok_left_brace:
         case tok_sub:
-        case tok_not:   node=calculation(); break;
-        case tok_var:   node=definition();  break;
-        case tok_for:case tok_forindex:case tok_foreach:
-        case tok_while: node=loop();        break;
-        case tok_if:    node=conditional(); break;
-        case tok_continue:break;
-        case tok_break:break;
-        case tok_return:break;
-        case tok_semi:--ptr;break;
-        defaut: error_info(tok_list[ptr].line,error_token);++error;break;
-    }
-    ++ptr;
-    if(ptr>=tok_list_size || (ptr<tok_list_size && tok_list[ptr].type!=tok_semi))
-    {
-        bool tmp=node.get_children().empty();
-        if(tmp || (!tmp && node.get_children().back().get_type()!=ast_function))
-        {
-            error_info(node.get_children().back().get_line(),lack_semi);
-            ++error;
-        }
-        if(ptr<tok_list_size) --ptr;
+        case tok_not:      node=calculation();   break;
+        case tok_var:      node=definition();    break;
+        case tok_for:
+        case tok_forindex:
+        case tok_foreach:
+        case tok_while:    node=loop();          break;
+        case tok_if:       node=conditional();   break;
+        case tok_continue: node=continue_expr(); break;
+        case tok_break:    node=break_expr();    break;
+        case tok_return:   node=return_expr();   break;
+        case tok_semi:     --ptr;                break;
+        default: error_info(tok_list[ptr].line,error_token);++error;break;
     }
     return node;
 }
@@ -284,6 +291,12 @@ nasal_ast nasal_parse::exprs_gen()
         {
             node.add_child(expr());
             ++ptr;
+            if(ptr<tok_list_size && tok_list[ptr].type==tok_semi) ++ptr;
+            else if(ptr<tok_list_size && (node.get_children().empty() || !check_function_end(node.get_children().back())))
+            {
+                ++error;
+                error_info(tok_list[ptr].line,lack_semi);
+            }
         }
         if(ptr>=tok_list_size)
         {
@@ -292,13 +305,19 @@ nasal_ast nasal_parse::exprs_gen()
         }
     }
     else
+    {
         node.add_child(expr());
+        ++ptr;
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
+            --ptr;
+    }
     return node;
 }
 nasal_ast nasal_parse::calculation()
 {
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
+    int tok_type=tok_list[ptr].type;
     return node;
 }
 nasal_ast nasal_parse::trinocular()
@@ -306,39 +325,171 @@ nasal_ast nasal_parse::trinocular()
     nasal_ast node;
     return node;
 }
-nasal_ast nasal_parse::and_expr()
-{
-    nasal_ast node;
-    return node;
-}
 nasal_ast nasal_parse::or_expr()
 {
     nasal_ast node;
+    node=and_expr();
+    ++ptr;
+    while(ptr<tok_list_size && tok_list[ptr].type==tok_or)
+    {
+        nasal_ast tmp;
+        tmp.set_line(tok_list[ptr].line);
+        tmp.set_type(ast_or);
+        tmp.add_child(node);
+        ++ptr;
+        tmp.add_child(and_expr());
+        node=tmp;
+        ++ptr;
+    }
+    --ptr;
+    return node;
+}
+nasal_ast nasal_parse::and_expr()
+{
+    nasal_ast node;
+    node=cmp_expr();
+    ++ptr;
+    while(ptr<tok_list_size && tok_list[ptr].type==tok_and)
+    {
+        nasal_ast tmp;
+        tmp.set_line(tok_list[ptr].line);
+        tmp.set_type(ast_and);
+        tmp.add_child(node);
+        ++ptr;
+        tmp.add_child(cmp_expr());
+        node=tmp;
+        ++ptr;
+    }
+    --ptr;
     return node;
 }
 nasal_ast nasal_parse::cmp_expr()
 {
     nasal_ast node;
+    node=additive_expr();
+    ++ptr;
+    while(
+        ptr<tok_list_size &&
+        (
+            tok_list[ptr].type==tok_cmp_equal     ||
+            tok_list[ptr].type==tok_cmp_not_equal ||
+            tok_list[ptr].type==tok_less_than     ||
+            tok_list[ptr].type==tok_less_equal    ||
+            tok_list[ptr].type==tok_greater_than  ||
+            tok_list[ptr].type==tok_greater_equal
+        )
+    )
+    {
+        nasal_ast tmp;
+        tmp.set_line(tok_list[ptr].line);
+        switch(tok_list[ptr].type)
+        {
+            case tok_cmp_equal:     tmp.set_type(ast_cmp_equal);     break;
+            case tok_cmp_not_equal: tmp.set_type(ast_cmp_not_equal); break;
+            case tok_less_than:     tmp.set_type(ast_less_than);     break;
+            case tok_less_equal:    tmp.set_type(ast_less_equal);    break;
+            case tok_greater_than:  tmp.set_type(ast_greater_than);  break;
+            case tok_greater_equal: tmp.set_type(ast_greater_equal); break;
+        }
+        tmp.add_child(node);
+        ++ptr;
+        tmp.add_child(additive_expr());
+        node=tmp;
+        ++ptr;
+    }
+    --ptr;
     return node;
 }
 nasal_ast nasal_parse::additive_expr()
 {
     nasal_ast node;
+    node=multive_expr();
+    ++ptr;
+    while(ptr<tok_list_size && (tok_list[ptr].type==tok_add || tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_link))
+    {
+        nasal_ast tmp;
+        tmp.set_line(tok_list[ptr].line);
+        switch(tok_list[ptr].type)
+        {
+            case tok_add:  tmp.set_type(ast_add);  break;
+            case tok_sub:  tmp.set_type(ast_sub);  break;
+            case tok_link: tmp.set_type(ast_link); break;
+        }
+        tmp.add_child(node);
+        ++ptr;
+        tmp.add_child(multive_expr());
+        node=tmp;
+        ++ptr;
+    }
+    --ptr;
     return node;
 }
 nasal_ast nasal_parse::multive_expr()
 {
     nasal_ast node;
+    if(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)
+        node=unary();
+    ++ptr;
+    while(ptr<tok_list_size && (tok_list[ptr].type==tok_mult || tok_list[ptr].type==tok_div))
+    {
+        nasal_ast tmp;
+        tmp.set_line(tok_list[ptr].line);
+        switch(tok_list[ptr].type)
+        {
+            case tok_mult:tmp.set_type(ast_mult);break;
+            case tok_div: tmp.set_type(ast_div); break;
+        }
+        tmp.add_child(node);
+        ++ptr;
+        if(ptr<tok_list_size && (tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not))
+            tmp.add_child(unary());
+        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_sub && tok_list[ptr].type!=tok_not)
+            tmp.add_child(scalar());
+        node=tmp;
+        ++ptr;
+    }
+    --ptr;
     return node;
 }
 nasal_ast nasal_parse::unary()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    switch(tok_list[ptr].type)
+    {
+        case tok_sub:node.set_type(ast_unary_sub);break;
+        case tok_not:node.set_type(ast_unary_not);break;
+    }
+    node.add_child(scalar());
     return node;
 }
 nasal_ast nasal_parse::scalar()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    if(tok_list[ptr].type==tok_number)
+        node=number_gen();
+    else if(tok_list[ptr].type==tok_string)
+        node=string_gen();
+    else if(
+        tok_list[ptr].type==tok_func         ||
+        tok_list[ptr].type==tok_identifier   ||
+        tok_list[ptr].type==tok_left_bracket ||
+        tok_list[ptr].type==tok_left_brace
+    )
+        node=call_scalar();
+    else if(tok_list[ptr].type==tok_left_curve)
+    {
+        int curve_line=tok_list[ptr].line;
+        ++ptr;
+        node=calculation();
+        ++ptr;
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+        {
+            ++error;
+            error_info(curve_line,lack_right_curve);
+        }
+    }
     return node;
 }
 nasal_ast nasal_parse::func_call()
