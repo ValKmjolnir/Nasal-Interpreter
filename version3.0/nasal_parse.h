@@ -227,7 +227,6 @@ nasal_ast nasal_parse::func_gen()
     if(tok_list[ptr].type==tok_left_curve)
     {
         node.add_child(args_list_gen());
-        ++error;
         ++ptr;
     }
     if(ptr>=tok_list_size)
@@ -241,13 +240,52 @@ nasal_ast nasal_parse::func_gen()
 }
 nasal_ast nasal_parse::args_list_gen()
 {
+    int last_id_line;
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_args);
-    ++ptr;
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
     {
-        ;
+        nasal_ast tmp;
+        ++ptr;
+        if(tok_list[ptr].type!=tok_identifier)
+        {
+            ++error;
+            error_info(tok_list[ptr].line,lack_identifier);
+            return node;
+        }
+        tmp=id_gen();
+        last_id_line=tmp.get_line();
+        ++ptr;
+        if(ptr<tok_list_size && (tok_list[ptr].type==tok_equal || tok_list[ptr].type==tok_ellipsis))
+        {
+            nasal_ast special_arg;
+            special_arg.set_line(tok_list[ptr].line);
+            if(tok_list[ptr].type==tok_equal)
+            {
+                special_arg.add_child(tmp);
+                ++ptr;
+                special_arg.add_child(scalar());
+            }
+            else
+            {
+                special_arg=tmp;
+                special_arg.set_type(ast_dynamic_id);
+            }
+            node.add_child(special_arg);
+        }
+        else
+        {
+            --ptr;
+            node.add_child(tmp);
+        }
+        ++ptr;
+        if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve))
+        {
+            ++error;
+            error_info(last_id_line,lack_comma);
+            --ptr;
+        }
     }
     return node;
 }
@@ -276,7 +314,7 @@ nasal_ast nasal_parse::expr()
         case tok_break:    node=break_expr();    break;
         case tok_return:   node=return_expr();   break;
         case tok_semi:     --ptr;                break;
-        default: error_info(tok_list[ptr].line,error_token);++error;break;
+        default: error_info(tok_list[ptr].line,error_token,tok_list[ptr].str);++error;break;
     }
     return node;
 }
@@ -427,8 +465,7 @@ nasal_ast nasal_parse::additive_expr()
 nasal_ast nasal_parse::multive_expr()
 {
     nasal_ast node;
-    if(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)
-        node=unary();
+    node=(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar();
     ++ptr;
     while(ptr<tok_list_size && (tok_list[ptr].type==tok_mult || tok_list[ptr].type==tok_div))
     {
@@ -441,10 +478,8 @@ nasal_ast nasal_parse::multive_expr()
         }
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size && (tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not))
-            tmp.add_child(unary());
-        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_sub && tok_list[ptr].type!=tok_not)
-            tmp.add_child(scalar());
+        if(ptr<tok_list_size)
+            tmp.add_child((tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar());
         node=tmp;
         ++ptr;
     }

@@ -15,7 +15,7 @@
 #define IS_NOTE_HEAD(c)       (c=='#')
 
 #ifndef TOKEN_TABLE_SIZE
-#define TOKEN_TABLE_SIZE 44
+#define TOKEN_TABLE_SIZE 45
 struct token_table
 {
     std::string str;
@@ -55,6 +55,7 @@ struct token_table
     {"/"       ,tok_div          },
     {"~"       ,tok_link         },
     {"!"       ,tok_not          },
+	{"="       ,tok_equal        },
     {"+="      ,tok_add_equal    },
     {"-="      ,tok_sub_equal    },
     {"*="      ,tok_mult_equal   },
