@@ -23,7 +23,7 @@ function::=
     func argument_list expressions
 ;
 argument_list::=
-    '(' [{id ','} ([id '...']|{id '=' calculation ','})] ')'
+    '(' [{id ','} ([id '...']|{id '=' scalar ','})] ')'
 ;
 expr::=
     definition

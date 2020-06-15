@@ -14,6 +14,7 @@ enum token_type
     tok_left_brace,tok_right_brace,
     tok_semi,tok_and,tok_or,tok_comma,tok_dot,tok_ellipsis,tok_quesmark,
     tok_colon,tok_add,tok_sub,tok_mult,tok_div,tok_link,tok_not,
+    tok_equal,
     tok_add_equal,tok_sub_equal,tok_mult_equal,tok_div_equal,tok_link_equal,
     tok_cmp_equal,tok_cmp_not_equal,tok_less_than,tok_greater_than,tok_less_equal,tok_greater_equal
 };
@@ -23,7 +24,7 @@ enum ast_node
     ast_null=0,ast_root,ast_block,
     ast_nil,ast_number,ast_string,ast_identifier,ast_function,ast_hash,ast_vector,
     ast_hashmember,
-    ast_args,
+    ast_args,ast_default_arg,ast_dynamic_id,
     ast_and,ast_or,
     ast_equal,ast_add_equal,ast_sub_equal,ast_mult_equal,ast_div_equal,ast_link_equal,
     ast_cmp_equal,ast_cmp_not_equal,ast_less_than,ast_less_equal,ast_greater_than,ast_greater_equal,
@@ -48,9 +49,10 @@ enum parse_error
     lack_comma,
     lack_colon,
     lack_scalar,
+    lack_identifier,
 };
 
-void error_info(int line,int error_type)
+void error_info(int line,int error_type,std::string error_str="")
 {
     std::string info=">> [parse] error: line ";
     std::string detail;
@@ -58,17 +60,18 @@ void error_info(int line,int error_type)
     switch(error_type)
     {
         case unknown:           detail="unknown error.";                    break;
-        case error_token:       detail="this token should not exist here."; break;
+        case error_token:       detail="error token \'"+error_str+"\'";     break;
         case lack_id:           detail="lack identifier.";                  break;
         case lack_left_curve:   detail="lack \'(\'.";                       break;
         case lack_right_curve:  detail="lack \')\'.";                       break;
-        case lack_left_bracket: detail="lack left bracket.";                break;
-        case lack_left_brace:   detail="lack left brace.";                  break;
-        case lack_right_brace:  detail="lack right brace.";                 break;
-        case lack_semi:         detail="lack \';\' here.";                  break;
-        case lack_comma:        detail="lack comma.";                       break;
-        case lack_colon:        detail="lack colon.";                       break;
-        case lack_scalar:       detail="lack scalar";                       break;
+        case lack_left_bracket: detail="lack \'[\'.";                       break;
+        case lack_left_brace:   detail="lack \'{\'.";                       break;
+        case lack_right_brace:  detail="lack \'}\'.";                       break;
+        case lack_semi:         detail="lack \';\'.";                       break;
+        case lack_comma:        detail="lack \',\'.";                       break;
+        case lack_colon:        detail="lack \':\'.";                       break;
+        case lack_scalar:       detail="lack scalar.";                      break;
+        case lack_identifier:   detail="lack identifier.";                  break;
     }
     std::cout<<detail<<std::endl;
     return;
