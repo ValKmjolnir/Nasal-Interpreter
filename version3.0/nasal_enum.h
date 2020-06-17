@@ -23,7 +23,7 @@ enum ast_node
 {
     ast_null=0,ast_root,ast_block,
     ast_nil,ast_number,ast_string,ast_identifier,ast_function,ast_hash,ast_vector,
-    ast_hashmember,ast_call,ast_call_hash,ast_call_vec,ast_call_func,
+    ast_hashmember,ast_call,ast_call_hash,ast_call_vec,ast_call_func,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
     ast_and,ast_or,
     ast_equal,ast_add_equal,ast_sub_equal,ast_mult_equal,ast_div_equal,ast_link_equal,
@@ -32,6 +32,7 @@ enum ast_node
     ast_unary_sub,ast_unary_not,
     ast_trinocular,
     ast_for,ast_forindex,ast_foreach,ast_while,
+    ast_if,ast_elsif,ast_else,
     ast_definition,ast_multi_assign,ast_calculation,
     ast_continue,ast_break,ast_return,
 };

@@ -11,6 +11,7 @@ private:
     std::vector<token> tok_list;
     void reset();
     bool check_function_end(nasal_ast&);
+    bool check_special_call();
     nasal_ast nil_gen();
     nasal_ast number_gen();
     nasal_ast string_gen();
@@ -40,6 +41,9 @@ private:
     nasal_ast multi_scalar();
     nasal_ast multi_assgin();
     nasal_ast loop();
+    nasal_ast while_loop();
+    nasal_ast for_loop();
+    nasal_ast forei_loop();
     nasal_ast conditional();
     nasal_ast continue_expr();
     nasal_ast break_expr();
@@ -104,6 +108,23 @@ bool nasal_parse::check_function_end(nasal_ast& node)
     else
         return check_function_end(node.get_children().back());
     return false;
+}
+
+bool nasal_parse::check_special_call()
+{
+    int tmp=ptr+1;
+    int curve_cnt=1;
+    bool ret=false;
+    while(tmp<tok_list_size && curve_cnt && !ret)
+    {
+        switch(tok_list[ptr].type)
+        {
+            case tok_left_curve:++curve_cnt;break;
+            case tok_right_curve:--curve_cnt;break;
+        }
+        ret=(curve_cnt==1 && tok_list[ptr].type==tok_colon);
+    }
+    return ret;
 }
 
 nasal_ast nasal_parse::nil_gen()
@@ -577,6 +598,12 @@ nasal_ast nasal_parse::scalar()
             error_info(curve_line,lack_right_curve);
         }
     }
+    else
+    {
+        ++error;
+        error_info(tok_list[ptr].line,lack_scalar);
+        return nil_gen();
+    }
     ++ptr;
     if(ptr<tok_list_size && (tok_list[ptr].type==tok_left_curve || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_dot))
     {
@@ -617,6 +644,19 @@ nasal_ast nasal_parse::call_vector()
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_call_vec);
+    ++ptr;
+    while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_bracket)
+    {
+        node.add_child(subvec());
+        ++ptr;
+        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
+        else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_bracket)
+        {
+            ++error;
+            error_info(node.get_line(),lack_comma);
+            break;
+        }
+    }
     return node;
 }
 nasal_ast nasal_parse::call_func()
@@ -624,11 +664,50 @@ nasal_ast nasal_parse::call_func()
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_call_func);
+    bool special_call=check_special_call();
+    ++ptr;
+    while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
+    {
+        node.add_child(special_call?hash_member_gen():calculation());
+        ++ptr;
+        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
+        else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_comma || tok_list[ptr].type!=tok_right_curve)
+        {
+            ++error;
+            error_info(node.get_line(),lack_comma);
+        }
+    }
     return node;
 }
 nasal_ast nasal_parse::subvec()
 {
     nasal_ast node;
+    if(tok_list[ptr].type==tok_colon)
+    {
+        --ptr;
+        node=nil_gen();
+    }
+    else node=calculation();
+    ++ptr;
+    if(ptr<tok_list_size && tok_list[ptr].type==tok_colon)
+    {
+        nasal_ast tmp;
+        ++ptr;
+        if(ptr<tok_list_size)
+        {
+            tmp.set_line(node.get_line());
+            tmp.set_type(ast_subvec);
+            tmp.add_child(node);
+            if(tok_list[ptr].type==tok_comma || tok_list[ptr].type==tok_right_bracket)
+            {
+                --ptr;
+                tmp.add_child(nil_gen());
+            }
+            else tmp.add_child(calculation());
+            node=tmp;
+        }
+    }
+    else --ptr;
     return node;
 }
 nasal_ast nasal_parse::definition()
@@ -652,6 +731,28 @@ nasal_ast nasal_parse::multi_assgin()
     return node;
 }
 nasal_ast nasal_parse::loop()
+{
+    nasal_ast node;
+    switch(tok_list[ptr].type)
+    {
+        case tok_while:   node=while_loop(); break;
+        case tok_for:     node=for_loop();   break;
+        case tok_forindex:
+        case tok_foreach: node=forei_loop(); break;
+    }
+    return node;
+}
+nasal_ast nasal_parse::while_loop()
+{
+    nasal_ast node;
+    return node;
+}
+nasal_ast nasal_parse::for_loop()
+{
+    nasal_ast node;
+    return node;
+}
+nasal_ast nasal_parse::forei_loop()
 {
     nasal_ast node;
     return node;
