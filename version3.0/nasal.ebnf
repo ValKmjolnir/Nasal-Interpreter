@@ -39,13 +39,9 @@ expressions::=
     '{' {expr} '}'
 ;
 calculation::=
-    |scalar
-    |trinocular
+    calculation '?' calculation ':' calculation
     |or_expr
     |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
-;
-trinocular::=
-    calculation '?' calculation ':' calculation
 ;
 or_expr::=
     and_expr or and_expr
@@ -66,30 +62,27 @@ unary::=
     ('-'|'!') scalar
 ;
 scalar::=
-    function_call
-    |identifier_call
-    |vector_call
-    |hash_call
+    function {call_scalar}
+    |identifier {call_scalar}
+    |vector {call_scalar}
+    |hash {call_scalar}
     |number
     |string
-    |'(' calculation ')'
-;
-function_call::=
-    function {call_scalar}
-;
-identifier_call::=
-    id {call_scalar}
-;
-vector_call::=
-    vector {call_scalar}
-;
-hash_call::=
-    hash {call_scalar}
+    |'(' calculation ')' {call_scalar}
 ;
 call_scalar::=
+    call_hash
+    |call_vector
+    |call_func
+;
+call_hash::=
     '.' id
-    |'[' {(calculation | subvec) ','} ']'
-    |'(' {calculation ','} ')'
+;
+call_vector::=
+    '[' {(calculation | subvec) ','} ']'
+;
+call_func::=
+    '(' {calculation ','} ')'
     |'(' {hashmember ','} ')'
 ;
 subvec::=
