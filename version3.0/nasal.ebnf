@@ -79,16 +79,14 @@ call_hash::=
     '.' id
 ;
 call_vector::=
-    '[' {(calculation | subvec) ','} ']'
+    '[' {(subvec) ','} ']'
 ;
 call_func::=
     '(' {calculation ','} ')'
     |'(' {hashmember ','} ')'
 ;
 subvec::=
-    calculation ':' calculation
-    |calculation ':'
-    |':' calculation
+    [calculation] ':' [calculation]
 ;
 definition::=
     var id '=' calculation
