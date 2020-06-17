@@ -86,6 +86,12 @@ void nasal_parse::main_process()
     {
         root.add_child(expr());
         ++ptr;
+        if(ptr<tok_list_size && tok_list[ptr].type==tok_semi) ++ptr;
+        else if(ptr<tok_list_size && (root.get_children().empty() || !check_function_end(root.get_children().back())))
+        {
+            ++error;
+            error_info(tok_list[ptr].line,lack_semi);
+        }
     }
     std::cout<<">> [parse] complete generation. "<<error<<" error(s)."<<std::endl;
     return;
@@ -172,9 +178,8 @@ nasal_ast nasal_parse::vector_gen()
     {
         node.add_child(calculation());
         ++ptr;
-        if(ptr>=tok_list_size) break;
         if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_bracket)
+        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_bracket)
         {
             error_info(tok_list[ptr].line,lack_comma);
             ++error;
