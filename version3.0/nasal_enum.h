@@ -52,6 +52,7 @@ enum parse_error
     lack_scalar,
     lack_identifier,
     lack_calculation,
+    lack_token,
 };
 
 void error_info(int line,int error_type,std::string error_str="")
@@ -74,6 +75,7 @@ void error_info(int line,int error_type,std::string error_str="")
         case lack_scalar:       detail="expected scalar here.";                break;
         case lack_identifier:   detail="expected identifier here.";            break;
         case lack_calculation:  detail="expected arithmetic-expression here."; break;
+        case lack_token:        detail="expected \'"+error_str+"\' here.";     break;
     }
     std::cout<<detail<<std::endl;
     return;

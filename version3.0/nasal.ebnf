@@ -111,7 +111,7 @@ while_loop::=
     while '(' calculation ')' expressions
 ;
 for_loop::=
-    for '(' [definition] ';' [calculation] ';' [calculation] ')' expressions
+    for '(' [definition|calculation] ';' [calculation] ';' [calculation] ')' expressions
 ;
 forei_loop::=
     (forindex | foreach) '(' (definition | assignment) ';' calculation ')' expressions
