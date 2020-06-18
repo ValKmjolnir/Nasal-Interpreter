@@ -738,6 +738,12 @@ nasal_ast nasal_parse::multi_assgin()
 nasal_ast nasal_parse::loop()
 {
     nasal_ast node;
+    if(ptr>tok_list_size)
+    {
+        ++error;
+        error_info(tok_list.back().line,lack_token,"loop");
+        return node;
+    }
     switch(tok_list[ptr].type)
     {
         case tok_while:   node=while_loop(); break;
@@ -750,21 +756,68 @@ nasal_ast nasal_parse::loop()
 nasal_ast nasal_parse::while_loop()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_type(ast_while);
+    ++ptr;
+    if(ptr<tok_list_size && tok_list[ptr].type==tok_left_curve)
+    {
+        ++ptr;
+        node.add_child(calculation());
+    }
+    else
+    {
+        ++error;
+        error_info(node.get_line(),lack_left_curve);
+    }
+    ++ptr;
+    if(ptr>tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    {
+        ++error;
+        error_info(node.get_line(),lack_right_curve);
+    }
+    ++ptr;
+    node.add_child(exprs_gen());
     return node;
 }
 nasal_ast nasal_parse::for_loop()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_type(ast_for);
+    ++ptr;
+    if(ptr>tok_list_size || tok_list[ptr].type!=tok_left_curve)
+    {
+        ++error;
+        error_info(node.get_line(),lack_left_curve);
+    }
+    ++ptr;
+    // unfinished
     return node;
 }
 nasal_ast nasal_parse::forei_loop()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    switch(tok_list[ptr].type)
+    {
+        case tok_forindex: node.set_type(ast_forindex);break;
+        case tok_foreach:  node.set_type(ast_foreach); break;
+    }
+    ++ptr;
+    if(ptr>tok_list_size || tok_list[ptr].type!=tok_left_curve)
+    {
+        ++error;
+        error_info(node.get_line(),lack_left_curve);
+    }
+    ++ptr;
+    // unfinished
     return node;
 }
 nasal_ast nasal_parse::conditional()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_type(ast_if);
     return node;
 }
 nasal_ast nasal_parse::continue_expr()
