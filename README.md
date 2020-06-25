@@ -36,24 +36,6 @@ And the flow chart of lexer is here:
 
 # Parser
 
-The parser can recognize some basic elements in resource program.
-
-In __version 1.1__ you can use the fully-functional parser.
-
-But there are still some differences such as:
-
-```javascript
-(var a,b,c)=(1,2,3);
-var (r,g,b)=color;
-(a,b)=(b,a);
-```
-
-etc. cannot be recognized.
-
-And each statement must have a ';' after it or you will be informed with __'error: expect a ';''__ .
-
-In __version 2.0__ these problems have been solved.
-
 In __version 2.0__
 ```javascript
 (var a,b,c)=(1,2,3);
