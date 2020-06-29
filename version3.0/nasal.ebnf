@@ -94,10 +94,10 @@ definition::=
     |'(' var multi_id ')' '=' (calculation | multi_scalar)
 ;
 multi_id::=
-    {id ','} <id>
+    <id> {',' id}
 ;
 multi_scalar::=
-    '(' {calculation ','} <calculation> ')'
+    '(' <calculation> {',' calculation} ')'
 ;
 multi_assignment::=
     multi_scalar '=' multi_scalar

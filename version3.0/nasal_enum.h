@@ -33,6 +33,7 @@ enum ast_node
     ast_trinocular,
     ast_for,ast_forindex,ast_foreach,ast_while,
     ast_if,ast_elsif,ast_else,
+    ast_multi_id,ast_multi_scalar,
     ast_definition,ast_multi_assign,ast_calculation,
     ast_continue,ast_break,ast_return,
 };
@@ -44,11 +45,14 @@ enum parse_error
     lack_left_curve,
     lack_right_curve,
     lack_left_bracket,
+    lack_right_bracket,
     lack_left_brace,
     lack_right_brace,
+    exprs_lack_rbrace,
     lack_semi,
     lack_comma,
     lack_colon,
+    lack_equal,
     lack_scalar,
     lack_identifier,
     lack_calculation,
@@ -67,11 +71,14 @@ void error_info(int line,int error_type,std::string error_str="")
         case lack_left_curve:   detail="expected \'(\'.";                      break;
         case lack_right_curve:  detail="expected \')\'.";                      break;
         case lack_left_bracket: detail="expected \'[\'.";                      break;
+        case lack_right_bracket:detail="expected \']\'.";                      break;
         case lack_left_brace:   detail="expected \'{\'.";                      break;
         case lack_right_brace:  detail="expected \'}\'.";                      break;
+        case exprs_lack_rbrace:  detail="expected \'}\' with this line\'s \'{\'.";break;
         case lack_semi:         detail="expected \';\'.";                      break;
         case lack_comma:        detail="expected \',\'.";                      break;
         case lack_colon:        detail="expected \':\'.";                      break;
+        case lack_equal:        detail="expected \'=\'.";                      break;
         case lack_scalar:       detail="expected scalar here.";                break;
         case lack_identifier:   detail="expected identifier here.";            break;
         case lack_calculation:  detail="expected arithmetic-expression here."; break;
