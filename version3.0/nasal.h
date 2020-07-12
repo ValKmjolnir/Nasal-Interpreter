@@ -1,6 +1,7 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
 
+#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -21,5 +22,7 @@
 #include "nasal_lexer.h"
 #include "nasal_ast.h"
 #include "nasal_parse.h"
+#include "nasal_vm.h"
+#include "nasal_gc.h"
 
 #endif
