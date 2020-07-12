@@ -77,21 +77,43 @@ int nasal_gc::gc_alloc()
             free_space.push(i);
     }
     int ret=free_space.front();
+    memory[ret/GC_BLK_SIZE][ret%GC_BLK_SIZE].collected=false;
+    memory[ret/GC_BLK_SIZE][ret%GC_BLK_SIZE].ref_cnt=1;
     free_space.pop();
     return ret;
 }
 
 int nasal_gc::add_ref(int mem_space)
 {
-    if(0<=mem_space && mem_space<memory.size()*GC_BLK_SIZE)
-        ++memory[mem_space/GC_BLK_SIZE][mem_space%GC_BLK_SIZE].ref_cnt;
+    int blk_num=mem_space/GC_BLK_SIZE;
+    int blk_plc=mem_space%GC_BLK_SIZE;
+    if(0<=mem_space && mem_space<memory.size()*GC_BLK_SIZE && !memory[blk_num][blk_plc].collected)
+        ++memory[blk_num][blk_plc].ref_cnt;
     else
     {
         std::cout<<">> [gc] add_ref:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
         return 0;
     }
     return 1;
-    
+}
+
+int nasal_gc::del_ref(int mem_space)
+{
+    int blk_num=mem_space/GC_BLK_SIZE;
+    int blk_plc=mem_space%GC_BLK_SIZE;
+    if(0<=mem_space && mem_space<memory.size()*GC_BLK_SIZE && !memory[blk_num][blk_plc].collected)
+        --memory[blk_num][blk_plc].ref_cnt;
+    else
+    {
+        std::cout<<">> [gc] del_ref:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
+        return 0;
+    }
+    if(!memory[blk_num][blk_plc].ref_cnt)
+    {
+        memory[blk_num][blk_plc].collected=true;
+        free_space.push(mem_space);
+    }
+    return 1;
 }
 
 #endif
