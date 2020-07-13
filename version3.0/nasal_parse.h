@@ -78,6 +78,9 @@ private:
     nasal_ast call_func();
     nasal_ast subvec();
     nasal_ast definition();
+    nasal_ast normal_def();
+    nasal_ast var_incurve_def();
+    nasal_ast var_outcurve_def();
     nasal_ast multi_id();
     nasal_ast multi_scalar();
     nasal_ast multi_assgin();
@@ -198,7 +201,7 @@ bool nasal_parse::check_special_call()
     int check_ptr=ptr+1;
     int curve_cnt=1;
     bool ret=false;
-    while(check_ptr<tok_list_size && curve_cnt && !ret)
+    while(check_ptr<tok_list_size && curve_cnt)
     {
         switch(tok_list[check_ptr].type)
         {
@@ -210,6 +213,7 @@ bool nasal_parse::check_special_call()
             ret=true;
             break;
         }
+        ++check_ptr;
     }
     return ret;
 }
@@ -722,7 +726,10 @@ nasal_ast nasal_parse::scalar()
         node.add_child(tmp);
     }
     while(ptr<tok_list_size && (tok_list[ptr].type==tok_left_curve || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_dot))
+    {
         node.add_child(call_scalar());
+        ++ptr;
+    }
     --ptr;
     return node;
 }
@@ -789,10 +796,11 @@ nasal_ast nasal_parse::call_func()
         node.add_child(special_call?hash_member_gen():calculation());
         ++ptr;
         if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_comma || tok_list[ptr].type!=tok_right_curve)
+        else if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve))
         {
             ++error;
             error_info(error_line,lack_comma);
+            break;
         }
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
@@ -841,28 +849,73 @@ nasal_ast nasal_parse::definition()
     if(tok_list[ptr].type==tok_var)
     {
         ++ptr;
-        // unfinished
+        switch(tok_list[ptr].type)
+        {
+            case tok_identifier:node.add_child(normal_def());       break;
+            case tok_left_curve:node.add_child(var_outcurve_def()); break;
+            default:
+                ++error;
+                error_info(error_line,lack_identifier);
+                return node;
+        }
     }
     else if(tok_list[ptr].type==tok_left_curve)
+        node.add_child(var_incurve_def());
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
     {
-        ++ptr;
-        node.add_child(multi_id());
-        ++ptr;
-        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-        {
-            ++error;
-            error_info(error_line,lack_right_curve);
-            return node;
-        }
-        ++ptr;
-        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
-        {
-            ++error;
-            error_info(error_line,lack_equal);
-            return node;
-        }
-        ++ptr;
-        // unfinished
+        ++error;
+        error_info(error_line,lack_equal);
+        return node;
+    }
+    ++ptr;
+    // unfinished
+    return node;
+}
+nasal_ast nasal_parse::normal_def()
+{
+    nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_str(tok_list[ptr].str);
+    node.set_type(ast_identifier);
+    return node;
+}
+nasal_ast nasal_parse::var_incurve_def()
+{
+    nasal_ast node;
+    ++ptr;// check_multi_definition will check the 'var'
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
+    {
+        ++error;
+        error_info(error_line,lack_identifier);
+        return node;
+    }
+    node=multi_id();
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    {
+        ++error;
+        error_info(error_line,lack_right_curve);
+    }
+    return node;
+}
+nasal_ast nasal_parse::var_outcurve_def()
+{
+    nasal_ast node;
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
+    {
+        ++error;
+        error_info(error_line,lack_identifier);
+        return node;
+    }
+    node=multi_id();
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    {
+        ++error;
+        error_info(error_line,lack_right_curve);
     }
     return node;
 }

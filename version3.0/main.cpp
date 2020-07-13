@@ -43,8 +43,10 @@ void del_func()
 void lex_func()
 {
 	lexer.scanner(resource.get_file());
-	if(!lexer.get_error()) lexer.print_token();
-	else std::cout<<">> [lexer] error occurred,stop.\n";
+	if(!lexer.get_error())
+		lexer.print_token();
+	else
+		std::cout<<">> [lexer] error occurred,stop.\n";
 	return;
 }
 
@@ -55,9 +57,11 @@ void par_func()
 	{
 		parse.set_toklist(lexer.get_token_list());
 		parse.main_process();
-		if(parse.get_error()) std::cout<<">> [parse] error occurred,stop.\n";
+		if(parse.get_error())
+			std::cout<<">> [parse] error occurred,stop.\n";
 	}
-	else std::cout<<">> [lexer] error occurred,stop.\n";
+	else
+		std::cout<<">> [lexer] error occurred,stop.\n";
 	return;
 }
 
