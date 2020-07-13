@@ -34,7 +34,7 @@ enum ast_node
     ast_for,ast_forindex,ast_foreach,ast_while,
     ast_if,ast_elsif,ast_else,
     ast_multi_id,ast_multi_scalar,
-    ast_definition,ast_multi_assign,ast_calculation,
+    ast_definition,ast_multi_assign,
     ast_continue,ast_break,ast_return,
 };
 
