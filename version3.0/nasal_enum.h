@@ -32,7 +32,7 @@ enum ast_node
     ast_unary_sub,ast_unary_not,
     ast_trinocular,
     ast_for,ast_forindex,ast_foreach,ast_while,
-    ast_if,ast_elsif,ast_else,
+    ast_conditional,ast_if,ast_elsif,ast_else,
     ast_multi_id,ast_multi_scalar,
     ast_definition,ast_multi_assign,
     ast_continue,ast_break,ast_return,
@@ -56,7 +56,12 @@ enum parse_error
     lack_scalar,
     lack_identifier,
     lack_calculation,
+    lack_exprs,
     lack_token,
+    lack_args,
+    default_arg_not_end,
+    dynamic_id_not_end,
+    multi_assign_lack_val
 };
 
 void error_info(int line,int error_type,std::string error_str="")
@@ -66,23 +71,28 @@ void error_info(int line,int error_type,std::string error_str="")
     std::cout<<info<<line<<": ";
     switch(error_type)
     {
-        case unknown:           detail="unknown error.";                       break;
-        case error_token:       detail="error token \'"+error_str+"\'";        break;
-        case lack_left_curve:   detail="expected \'(\'.";                      break;
-        case lack_right_curve:  detail="expected \')\'.";                      break;
-        case lack_left_bracket: detail="expected \'[\'.";                      break;
-        case lack_right_bracket:detail="expected \']\'.";                      break;
-        case lack_left_brace:   detail="expected \'{\'.";                      break;
-        case lack_right_brace:  detail="expected \'}\'.";                      break;
-        case exprs_lack_rbrace:  detail="expected \'}\' with this line\'s \'{\'.";break;
-        case lack_semi:         detail="expected \';\'.";                      break;
-        case lack_comma:        detail="expected \',\'.";                      break;
-        case lack_colon:        detail="expected \':\'.";                      break;
-        case lack_equal:        detail="expected \'=\'.";                      break;
-        case lack_scalar:       detail="expected scalar here.";                break;
-        case lack_identifier:   detail="expected identifier here.";            break;
-        case lack_calculation:  detail="expected arithmetic-expression here."; break;
-        case lack_token:        detail="expected \'"+error_str+"\' here.";     break;
+        case unknown:             detail="unknown error.";                       break;
+        case error_token:         detail="error token \'"+error_str+"\'";        break;
+        case lack_left_curve:     detail="expected \'(\'.";                      break;
+        case lack_right_curve:    detail="expected \')\'.";                      break;
+        case lack_left_bracket:   detail="expected \'[\'.";                      break;
+        case lack_right_bracket:  detail="expected \']\'.";                      break;
+        case lack_left_brace:     detail="expected \'{\'.";                      break;
+        case lack_right_brace:    detail="expected \'}\'.";                      break;
+        case exprs_lack_rbrace:   detail="expected \'}\' with this line\'s \'{\'.";break;
+        case lack_semi:           detail="expected \';\'.";                      break;
+        case lack_comma:          detail="expected \',\'.";                      break;
+        case lack_colon:          detail="expected \':\'.";                      break;
+        case lack_equal:          detail="expected \'=\'.";                      break;
+        case lack_scalar:         detail="expected scalar here.";                break;
+        case lack_identifier:     detail="expected identifier here.";            break;
+        case lack_calculation:    detail="expected arithmetic-expression here."; break;
+        case lack_exprs:          detail="expected expression block here.";      break;
+        case lack_token:          detail="expected \'"+error_str+"\' here.";     break;
+        case lack_args:           detail="expected arguments here.";             break;
+        case default_arg_not_end: detail="default argument missing for parameter of "+error_str+".";break;
+        case dynamic_id_not_end:  detail="dynamic id must be the end of "+error_str+".";break;
+        case multi_assign_lack_val:detail="multi-assignment lacks value list.";break;
     }
     std::cout<<detail<<std::endl;
     return;
