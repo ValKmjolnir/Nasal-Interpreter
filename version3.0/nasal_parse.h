@@ -157,28 +157,24 @@ bool nasal_parse::check_multi_definition()
 bool nasal_parse::check_multi_scalar()
 {
     bool ret=false;
-    int check_ptr=ptr,curve_cnt=1,bracket_cnt=0,brace_cnt=0;
-    while(curve_cnt)
+    int check_ptr=ptr+1,curve_cnt=1,bracket_cnt=0,brace_cnt=0;
+    while(check_ptr<tok_list_size && curve_cnt)
     {
-        ++check_ptr;
-        if(check_ptr<tok_list_size)
+        switch(tok_list[check_ptr].type)
         {
-            switch(tok_list[check_ptr].type)
-            {
-                case tok_left_curve:++curve_cnt;break;
-                case tok_left_bracket:++bracket_cnt;break;
-                case tok_left_brace:++brace_cnt;break;
-                case tok_right_curve:--curve_cnt;break;
-                case tok_right_bracket:--bracket_cnt;break;
-                case tok_right_brace:--brace_cnt;break;
-            }
+            case tok_left_curve:   ++curve_cnt;  break;
+            case tok_left_bracket: ++bracket_cnt;break;
+            case tok_left_brace:   ++brace_cnt;  break;
+            case tok_right_curve:  --curve_cnt;  break;
+            case tok_right_bracket:--bracket_cnt;break;
+            case tok_right_brace:  --brace_cnt;  break;
         }
-        else break;
         if(curve_cnt==1 && !bracket_cnt && !brace_cnt && tok_list[check_ptr].type==tok_comma)
         {
             ret=true;
             break;
         }
+        ++check_ptr;
     }
     return ret;
 }
@@ -362,14 +358,14 @@ nasal_ast nasal_parse::args_list_gen()
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_args);
+    ++ptr;
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
     {
         nasal_ast tmp;
-        ++ptr;
         if(tok_list[ptr].type!=tok_identifier)
         {
             ++error;
-            error_info(tok_list[ptr].line,lack_identifier);
+            error_info(error_line,lack_args);
             return node;
         }
         tmp=id_gen();
@@ -383,6 +379,7 @@ nasal_ast nasal_parse::args_list_gen()
                 special_arg.add_child(tmp);
                 ++ptr;
                 special_arg.add_child(scalar());
+                special_arg.set_type(ast_default_arg);
             }
             else
             {
@@ -401,7 +398,48 @@ nasal_ast nasal_parse::args_list_gen()
         {
             ++error;
             error_info(error_line,lack_comma);
-            --ptr;
+            return node;
+        }
+        if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+    }
+    if(ptr>=tok_list_size)
+    {
+        ++error;
+        error_info(error_line,lack_right_curve);
+    }
+
+    std::string args_format="func(";
+    int node_child_size=node.get_children().size();
+    for(int i=0;i<node_child_size;++i)
+    {
+        switch(node.get_children()[i].get_type())
+        {
+            case ast_identifier:  args_format+="val";break;
+            case ast_default_arg: args_format+="val=scalar";break;
+            case ast_dynamic_id:  args_format+="val...";break;
+        }
+        if(i!=node_child_size-1)
+            args_format+=",";
+    }
+    args_format+=")";
+    bool checked_default_val=false;
+    bool checked_dynamic_ids=false;
+    for(int i=0;i<node_child_size;++i)
+    {
+        if(node.get_children()[i].get_type()==ast_default_arg)
+            checked_default_val=true;
+        else if(node.get_children()[i].get_type()==ast_dynamic_id)
+            checked_dynamic_ids=true;
+        if(checked_default_val && node.get_children()[i].get_type()!=ast_default_arg)
+        {
+            ++error;
+            error_info(node.get_children()[i].get_line(),default_arg_not_end,args_format);
+        }
+        if(checked_dynamic_ids && i!=node_child_size-1)
+        {
+            ++error;
+            error_info(node.get_children()[i].get_line(),dynamic_id_not_end,args_format);
         }
     }
     return node;
@@ -446,26 +484,35 @@ nasal_ast nasal_parse::expr()
 nasal_ast nasal_parse::exprs_gen()
 {
     nasal_ast node;
+    if(ptr>=tok_list_size)
+    {
+        ++error;
+        error_info(error_line,lack_exprs);
+        return node;
+    }
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_block);
     if(tok_list[ptr].type==tok_left_brace)
     {
         int left_brace_line=tok_list[ptr].line;
+        ++ptr;
         while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_brace)
         {
             node.add_child(expr());
             ++ptr;
-            if(ptr<tok_list_size && tok_list[ptr].type==tok_semi) ++ptr;
-            else if(ptr<tok_list_size && (node.get_children().empty() || !check_function_end(node.get_children().back())))
+            if(ptr>=tok_list_size) break;
+            if(tok_list[ptr].type==tok_semi) ++ptr;
+            else if(node.get_children().empty() || !check_function_end(node.get_children().back()))
             {
                 ++error;
                 error_info(error_line,lack_semi);
+                break;
             }
         }
-        if(ptr>=tok_list_size)
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
         {
-            error_info(left_brace_line,exprs_lack_rbrace);
             ++error;
+            error_info(left_brace_line,exprs_lack_rbrace);
         }
     }
     else
@@ -480,6 +527,12 @@ nasal_ast nasal_parse::exprs_gen()
 nasal_ast nasal_parse::calculation()
 {
     nasal_ast node;
+    if(ptr>=tok_list_size)
+    {
+        ++error;
+        error_info(error_line,lack_calculation);
+        return node;
+    }
     node=or_expr();
     ++ptr;
     if(ptr<tok_list_size && tok_list[ptr].type==tok_quesmark)
@@ -686,7 +739,9 @@ nasal_ast nasal_parse::scalar()
 {
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
-    if(tok_list[ptr].type==tok_number)
+    if(tok_list[ptr].type==tok_nil)
+        node=nil_gen();
+    else if(tok_list[ptr].type==tok_number)
         node=number_gen();
     else if(tok_list[ptr].type==tok_string)
         node=string_gen();
@@ -869,7 +924,16 @@ nasal_ast nasal_parse::definition()
         return node;
     }
     ++ptr;
-    // unfinished
+    if(ptr>=tok_list_size)
+    {
+        ++error;
+        error_info(error_line,lack_scalar);
+        return node;
+    }
+    if(tok_list[ptr].type==tok_left_curve)
+        node.add_child(check_multi_scalar()?multi_scalar():calculation());
+    else
+        node.add_child(calculation());
     return node;
 }
 nasal_ast nasal_parse::normal_def()
@@ -951,11 +1015,53 @@ nasal_ast nasal_parse::multi_id()
 nasal_ast nasal_parse::multi_scalar()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_type(ast_multi_scalar);
+    ++ptr;
+    while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
+    {
+        node.add_child(calculation());
+        ++ptr;
+        if(ptr>=tok_list_size) break;
+        if(tok_list[ptr].type==tok_comma) ++ptr;
+        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve)
+        {
+            ++error;
+            error_info(error_line,lack_comma);
+            break;
+        }
+    }
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    {
+        ++error;
+        error_info(error_line,lack_right_curve);
+    }
     return node;
 }
 nasal_ast nasal_parse::multi_assgin()
 {
     nasal_ast node;
+    node.set_line(tok_list[ptr].line);
+    node.set_type(ast_multi_assign);
+    node.add_child(multi_scalar());
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
+    {
+        ++error;
+        error_info(error_line,lack_equal);
+        return node;
+    }
+    ++ptr;
+    if(ptr>=tok_list_size)
+    {
+        ++error;
+        error_info(error_line,multi_assign_lack_val);
+        return node;
+    }
+    if(tok_list[ptr].type==tok_left_curve)
+        node.add_child(check_multi_scalar()?multi_scalar():calculation());
+    else
+        node.add_child(calculation());
     return node;
 }
 nasal_ast nasal_parse::loop()
@@ -991,12 +1097,14 @@ nasal_ast nasal_parse::while_loop()
     {
         ++error;
         error_info(error_line,lack_left_curve);
+        return node;
     }
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
         ++error;
         error_info(error_line,lack_right_curve);
+        return node;
     }
     ++ptr;
     node.add_child(exprs_gen());
@@ -1012,6 +1120,7 @@ nasal_ast nasal_parse::for_loop()
     {
         ++error;
         error_info(error_line,lack_left_curve);
+        return node;
     }
     ++ptr;
     // unfinished
@@ -1031,6 +1140,7 @@ nasal_ast nasal_parse::forei_loop()
     {
         ++error;
         error_info(error_line,lack_left_curve);
+        return node;
     }
     ++ptr;
     // unfinished
@@ -1039,8 +1149,73 @@ nasal_ast nasal_parse::forei_loop()
 nasal_ast nasal_parse::conditional()
 {
     nasal_ast node;
+    nasal_ast tmp;
     node.set_line(tok_list[ptr].line);
-    node.set_type(ast_if);
+    node.set_type(ast_conditional);
+    tmp.set_line(tok_list[ptr].line);
+    tmp.set_type(ast_if);
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
+    {
+        ++error;
+        error_info(error_line,lack_left_curve);
+        return node;
+    }
+    ++ptr;
+    tmp.add_child(calculation());
+    ++ptr;
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    {
+        ++error;
+        error_info(error_line,lack_right_curve);
+        return node;
+    }
+    ++ptr;
+    tmp.add_child(exprs_gen());
+    node.add_child(tmp);
+    // end of if-expression
+    ++ptr;
+    while(ptr<tok_list_size && (tok_list[ptr].type==tok_elsif || (tok_list[ptr].type==tok_else && ptr+1<tok_list_size && tok_list[ptr+1].type==tok_if)))
+    {
+        if(tok_list[ptr].type==tok_else) ++ptr;
+        ++ptr;
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
+        {
+            ++error;
+            error_info(error_line,lack_left_curve);
+            return node;
+        }
+        tmp.set_line(tok_list[ptr].line);
+        tmp.set_type(ast_elsif);
+        tmp.get_children().clear();
+        ++ptr;
+        tmp.add_child(calculation());
+        ++ptr;
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+        {
+            ++error;
+            error_info(error_line,lack_right_curve);
+            return node;
+        }
+        ++ptr;
+        tmp.add_child(exprs_gen());
+        node.add_child(tmp);
+        ++ptr;
+    }
+    // end of elsif-expression
+    // after this process,ptr will point to the next token of exprs_gen()'s last token
+    // for example
+    // else if(scalar){} else {}
+    //                  ptr^
+    if(ptr<tok_list_size && tok_list[ptr].type==tok_else)
+    {
+        tmp.set_line(tok_list[ptr].line);
+        tmp.set_type(ast_else);
+        tmp.get_children().clear();
+        ++ptr;
+        tmp.add_child(exprs_gen());
+        node.add_child(tmp);
+    }
     return node;
 }
 nasal_ast nasal_parse::continue_expr()
@@ -1069,6 +1244,8 @@ nasal_ast nasal_parse::return_expr()
         if(type==tok_nil || type==tok_number || type==tok_string || type==tok_identifier || type==tok_func ||
         type==tok_sub || type==tok_not || type==tok_left_curve || type==tok_left_bracket || type==tok_left_brace)
             node.add_child(calculation());
+        else
+            --ptr;
     }
     return node;
 }

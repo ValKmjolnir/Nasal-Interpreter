@@ -46,7 +46,7 @@ void lex_func()
 	if(!lexer.get_error())
 		lexer.print_token();
 	else
-		std::cout<<">> [lexer] error occurred,stop.\n";
+		std::cout<<">> [lexer] error(s) occurred,stop.\n";
 	return;
 }
 
@@ -58,10 +58,10 @@ void par_func()
 		parse.set_toklist(lexer.get_token_list());
 		parse.main_process();
 		if(parse.get_error())
-			std::cout<<">> [parse] error occurred,stop.\n";
+			std::cout<<">> [parse] error(s) occurred,stop.\n";
 	}
 	else
-		std::cout<<">> [lexer] error occurred,stop.\n";
+		std::cout<<">> [lexer] error(s) occurred,stop.\n";
 	return;
 }
 
@@ -70,6 +70,7 @@ int main()
 #ifdef _WIN32
 	// use chcp 65001 to use unicode io
 	system("chcp 65001");
+	system("cls");
 #endif
 	// this curve looks really cool
 	logo();

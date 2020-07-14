@@ -100,7 +100,7 @@ multi_scalar::=
     '(' <calculation> {',' calculation} ')'
 ;
 multi_assignment::=
-    multi_scalar '=' multi_scalar
+    multi_scalar '=' (multi_scalar|calculation)
 ;
 loop::=
     while_loop
@@ -114,7 +114,7 @@ for_loop::=
     for '(' [definition|calculation] ';' [calculation] ';' [calculation] ')' expressions
 ;
 forei_loop::=
-    (forindex | foreach) '(' (definition | assignment) ';' calculation ')' expressions
+    (forindex | foreach) '(' (definition | calculation) ';' calculation ')' expressions
 ;
 conditional::=
     if '(' calculation ')' expressions
