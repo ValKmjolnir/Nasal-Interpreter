@@ -65,6 +65,23 @@ void par_func()
 	return;
 }
 
+void ast_func()
+{
+	lexer.scanner(resource.get_file());
+	if(!lexer.get_error())
+	{
+		parse.set_toklist(lexer.get_token_list());
+		parse.main_process();
+		if(parse.get_error())
+			std::cout<<">> [parse] error(s) occurred,stop.\n";
+		else
+			parse.get_root().print_ast(0);
+	}
+	else
+		std::cout<<">> [lexer] error(s) occurred,stop.\n";
+	return;
+}
+
 int main()
 {
 #ifdef _WIN32
@@ -116,9 +133,7 @@ int main()
 		else if(command=="par")
 			par_func();
 		else if(command=="ast")
-		{
-			;
-		}
+			ast_func();
 		else if(command=="run")
 		{
             ;

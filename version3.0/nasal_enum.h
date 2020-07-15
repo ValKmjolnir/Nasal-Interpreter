@@ -31,12 +31,78 @@ enum ast_node
     ast_add,ast_sub,ast_mult,ast_div,ast_link,
     ast_unary_sub,ast_unary_not,
     ast_trinocular,
-    ast_for,ast_forindex,ast_foreach,ast_while,
+    ast_for,ast_forindex,ast_foreach,ast_while,ast_new_iter,
     ast_conditional,ast_if,ast_elsif,ast_else,
     ast_multi_id,ast_multi_scalar,
     ast_definition,ast_multi_assign,
     ast_continue,ast_break,ast_return,
 };
+
+std::string ast_str(int type)
+{
+    std::string str="";
+    switch(type)
+    {
+        case ast_null:         str="null";break;
+        case ast_root:         str="root";break;
+        case ast_block:        str="block";break;
+        case ast_nil:          str="nil";break;
+        case ast_number:       str="number";break;
+        case ast_string:       str="string";break;
+        case ast_identifier:   str="id";break;
+        case ast_function:     str="function";break;
+        case ast_hash:         str="hash";break;
+        case ast_vector:       str="vector";break;
+        case ast_hashmember:   str="hashmember";break;
+        case ast_call:         str="call";break;
+        case ast_call_hash:    str="call_hash";break;
+        case ast_call_vec:     str="call_vector";break;
+        case ast_call_func:    str="call_func";break;
+        case ast_subvec:       str="subvec";break;
+        case ast_args:         str="arguments";break;
+        case ast_default_arg:  str="default_arg";break;
+        case ast_dynamic_id:   str="dynamic_id";break;
+        case ast_and:          str="and";break;
+        case ast_or:           str="or";break;
+        case ast_equal:        str="=";break;
+        case ast_add_equal:    str="+=";break;
+        case ast_sub_equal:    str="-=";break;
+        case ast_mult_equal:   str="*=";break;
+        case ast_div_equal:    str="/=";break;
+        case ast_link_equal:   str="~=";break;
+        case ast_cmp_equal:    str="==";break;
+        case ast_cmp_not_equal:str="!=";break;
+        case ast_less_than:    str="<";break;
+        case ast_less_equal:   str="<=";break;
+        case ast_greater_than: str=">";break;
+        case ast_greater_equal:str=">=";break;
+        case ast_add:          str="+";break;
+        case ast_sub:          str="-";break;
+        case ast_mult:         str="*";break;
+        case ast_div:          str="/";break;
+        case ast_link:         str="~";break;
+        case ast_unary_sub:    str="unary-";break;
+        case ast_unary_not:    str="unary!";break;
+        case ast_trinocular:   str="trinocular";break;
+        case ast_for:          str="for";break;
+        case ast_forindex:     str="forindex";break;
+        case ast_foreach:      str="foreach";break;
+        case ast_while:        str="while";break;
+        case ast_new_iter:     str="new_iterator";break;
+        case ast_conditional:  str="conditional";break;
+        case ast_if:           str="if";break;
+        case ast_elsif:        str="elsif";break;
+        case ast_else:         str="else";break;
+        case ast_multi_id:     str="multi_id";break;
+        case ast_multi_scalar: str="multi_scalar";break;
+        case ast_definition:   str="definition";break;
+        case ast_multi_assign: str="multi_assignment";break;
+        case ast_continue:     str="continue";break;
+        case ast_break:        str="break";break;
+        case ast_return:       str="return";break;
+    }
+    return str;
+}
 
 enum parse_error
 {
@@ -61,7 +127,9 @@ enum parse_error
     lack_args,
     default_arg_not_end,
     dynamic_id_not_end,
-    multi_assign_lack_val
+    multi_assign_lack_val,
+    lack_definition,
+    lack_loop_iter
 };
 
 void error_info(int line,int error_type,std::string error_str="")
@@ -93,6 +161,8 @@ void error_info(int line,int error_type,std::string error_str="")
         case default_arg_not_end: detail="default argument missing for parameter of "+error_str+".";break;
         case dynamic_id_not_end:  detail="dynamic id must be the end of "+error_str+".";break;
         case multi_assign_lack_val:detail="multi-assignment lacks value list.";break;
+        case lack_definition:     detail="expected a definition expression here.";break;
+        case lack_loop_iter:      detail="expected an iterator to loop through.";break;
     }
     std::cout<<detail<<std::endl;
     return;

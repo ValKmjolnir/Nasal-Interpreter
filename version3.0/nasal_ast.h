@@ -22,6 +22,7 @@ public:
     int  get_type();
     std::string get_str();
     std::vector<nasal_ast>& get_children();
+    void print_ast(int);
 };
 
 nasal_ast::nasal_ast()
@@ -108,6 +109,26 @@ std::string nasal_ast::get_str()
 std::vector<nasal_ast>& nasal_ast::get_children()
 {
     return this->children;
+}
+
+void nasal_ast::print_ast(int depth)
+{
+    std::string indentation="";
+    for(int i=0;i<depth;++i) indentation+="|  ";
+    indentation+=ast_str(this->type);
+    std::cout<<indentation;
+    switch(this->type)
+    {
+        case ast_number:    std::cout<<":"<<this->str;break;
+        case ast_string:    std::cout<<":"<<this->str;break;
+        case ast_identifier:std::cout<<":"<<this->str;break;
+        case ast_call_hash: std::cout<<":"<<this->str;break;
+    }
+    std::cout<<std::endl;
+    int child_size=this->children.size();
+    for(int i=0;i<child_size;++i)
+        this->children[i].print_ast(depth+1);
+    return;
 }
 
 #endif
