@@ -205,16 +205,20 @@ bool nasal_parse::check_special_call()
     // special call means like this:
     // function_name(a:1,b:2,c:3);
     int check_ptr=ptr+1;
-    int curve_cnt=1;
+    int curve_cnt=1,bracket_cnt=0,brace_cnt=0;
     bool ret=false;
     while(check_ptr<tok_list_size && curve_cnt)
     {
         switch(tok_list[check_ptr].type)
         {
-            case tok_left_curve:++curve_cnt;break;
-            case tok_right_curve:--curve_cnt;break;
+            case tok_left_curve:   ++curve_cnt;  break;
+            case tok_left_bracket: ++bracket_cnt;break;
+            case tok_left_brace:   ++brace_cnt;  break;
+            case tok_right_curve:  --curve_cnt;  break;
+            case tok_right_bracket:--bracket_cnt;break;
+            case tok_right_brace:  --brace_cnt;  break;
         }
-        if(curve_cnt==1 && tok_list[check_ptr].type==tok_colon)
+        if(curve_cnt==1 && !bracket_cnt && !brace_cnt && tok_list[check_ptr].type==tok_colon)
         {
             ret=true;
             break;
@@ -311,8 +315,9 @@ nasal_ast nasal_parse::hash_gen()
     {
         node.add_child(hash_member_gen());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_brace)
+        if(ptr>=tok_list_size) break;
+        if(tok_list[ptr].type==tok_comma) ++ptr;
+        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_brace)
         {
             error_info(error_line,lack_comma);
             ++error;
@@ -329,14 +334,14 @@ nasal_ast nasal_parse::hash_gen()
 nasal_ast nasal_parse::hash_member_gen()
 {
     nasal_ast node;
-    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
+    if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_identifier && tok_list[ptr].type!=tok_string))
     {
         error_info(error_line,lack_identifier);
         return node;
     }
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_hashmember);
-    node.add_child(id_gen());
+    node.add_child(tok_list[ptr].type==tok_identifier?id_gen():string_gen());
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
     {
