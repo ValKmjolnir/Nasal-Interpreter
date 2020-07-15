@@ -17,7 +17,7 @@ hash  ::=
     '{' {hashmember ','} '}'
 ;
 hashmember::=
-    id ':' calculation
+    id|string ':' calculation
 ;
 function::= 
     func argument_list expressions
