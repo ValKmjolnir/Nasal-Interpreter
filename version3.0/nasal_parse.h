@@ -370,6 +370,12 @@ nasal_ast nasal_parse::func_gen()
         ++error;
         return node;
     }
+    if(tok_list[ptr].type!=tok_left_curve && tok_list[ptr].type!=tok_left_brace)
+    {
+        ++error;
+        error_info(error_line,lack_func_content);
+        return node;
+    }
     if(tok_list[ptr].type==tok_left_curve)
     {
         node.add_child(args_list_gen());
@@ -531,7 +537,7 @@ nasal_ast nasal_parse::exprs_gen()
         {
             node.add_child(expr());
             ++ptr;
-            if(ptr<tok_list_size || tok_list[ptr].type==tok_semi)
+            if(ptr<tok_list_size && tok_list[ptr].type==tok_semi)
                 ++ptr;
             else if(node.get_children().empty() || need_semi_check(node.get_children().back()))
             {
@@ -779,7 +785,15 @@ nasal_ast nasal_parse::scalar()
     else if(tok_list[ptr].type==tok_identifier)
         node=id_gen();
     else if(tok_list[ptr].type==tok_func)
-        node=func_gen();
+    {
+        if(ptr+1<tok_list_size && tok_list[ptr+1].type==tok_identifier)
+        {
+            ++ptr;
+            node=id_gen();
+        }
+        else
+            node=func_gen();
+    }
     else if(tok_list[ptr].type==tok_left_bracket)
         node=vector_gen();
     else if(tok_list[ptr].type==tok_left_brace)
