@@ -129,7 +129,8 @@ enum parse_error
     dynamic_id_not_end,
     multi_assign_lack_val,
     lack_definition,
-    lack_loop_iter
+    lack_loop_iter,
+    lack_func_content
 };
 
 void error_info(int line,int error_type,std::string error_str="")
@@ -163,6 +164,7 @@ void error_info(int line,int error_type,std::string error_str="")
         case multi_assign_lack_val:detail="multi-assignment lacks value list.";break;
         case lack_definition:     detail="expected a definition expression here.";break;
         case lack_loop_iter:      detail="expected an iterator to loop through.";break;
+        case lack_func_content:   detail="expected arguments or expression block here.";break;
     }
     std::cout<<detail<<std::endl;
     return;
