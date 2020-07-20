@@ -138,8 +138,12 @@ void nasal_parse::main_process()
             ++ptr;
         else if(root.get_children().empty() || need_semi_check(root.get_children().back()))
         {
-            ++error;
-            error_info(error_line,lack_semi);
+            // the last expression can be recognized without semi
+            if(ptr>=tok_list_size)
+            {
+                ++error;
+                error_info(error_line,lack_semi);
+            }
         }
     }
     std::cout<<">> [parse] complete generation. "<<error<<" error(s)."<<std::endl;
@@ -205,7 +209,7 @@ bool nasal_parse::check_special_call()
     // special call means like this:
     // function_name(a:1,b:2,c:3);
     int check_ptr=ptr+1;
-    int curve_cnt=1,bracket_cnt=0,brace_cnt=0;
+    int curve_cnt=1,bracket_cnt=0,brace_cnt=0,ques_cnt=0;
     bool ret=false;
     while(check_ptr<tok_list_size && curve_cnt)
     {
@@ -217,6 +221,12 @@ bool nasal_parse::check_special_call()
             case tok_right_curve:  --curve_cnt;  break;
             case tok_right_bracket:--bracket_cnt;break;
             case tok_right_brace:  --brace_cnt;  break;
+        }
+        if(curve_cnt==1 && !bracket_cnt && !brace_cnt && tok_list[check_ptr].type==tok_quesmark)
+        {
+            // m?1:0 will be recognized as normal parameter
+            ret=false;
+            break;
         }
         if(curve_cnt==1 && !bracket_cnt && !brace_cnt && tok_list[check_ptr].type==tok_colon)
         {
@@ -541,9 +551,13 @@ nasal_ast nasal_parse::exprs_gen()
                 ++ptr;
             else if(node.get_children().empty() || need_semi_check(node.get_children().back()))
             {
-                ++error;
-                error_info(error_line,lack_semi);
-                break;
+                // the last expression can be recognized without semi
+                if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
+                {
+                    ++error;
+                    error_info(error_line,lack_semi);
+                    break;
+                }
             }
         }
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
@@ -580,7 +594,12 @@ nasal_ast nasal_parse::calculation()
         tmp.add_child(node);
         ++ptr;
         if(ptr<tok_list_size) tmp.add_child(calculation());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        else
+        {
+            ++error;
+            error_info(error_line,lack_calculation);
+            return node;
+        }
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
         {
