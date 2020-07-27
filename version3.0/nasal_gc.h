@@ -3,12 +3,55 @@
 
 #define GC_BLK_SIZE 128
 
-class nasal_number;
-class nasal_string;
-class nasal_vector;
-class nasal_hash;
-class nasal_function;
-class nasal_closure;
+class nasal_vector
+{
+private:
+    // this int points to the space in nasal_vm_memory_manager
+    std::vector<int> elems;
+public:
+    nasal_vector()
+    {
+        elems.clear();
+        return;
+    }
+};
+class nasal_hash
+{
+private:
+    // this int points to the space in nasal_vm_memory_manager
+    std::map<std::string,int> elems;
+public:
+    nasal_hash()
+    {
+        elems.clear();
+        return;
+    }
+};
+class nasal_function
+{
+private:
+    // this int points to the space in nasal_vm_memory_manager
+    std::list<int> closures;
+    nasal_ast function_tree;
+public:
+    nasal_function()
+    {
+        closures.clear();
+        function_tree.clear();
+        return;
+    }
+};
+class nasal_closure
+{
+private:
+    std::map<std::string,int> elems;
+public:
+    nasal_closure()
+    {
+        elems.clear();
+        return;
+    }
+};
 
 class nasal_scalar
 {
@@ -18,10 +61,49 @@ private:
 public:
     nasal_scalar()
     {
-        type=0;
-        scalar_ptr=(void*)NULL;
+        this->type=vm_nil;
+        this->scalar_ptr=(void*)NULL;
         return;
     }
+    ~nasal_scalar()
+    {
+        switch(this->type)
+        {
+            case vm_nil:break;
+            case vm_number:   delete (double*)(this->scalar_ptr);         break;
+            case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
+            case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
+            case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
+            case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
+            case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
+        }
+        return;
+    }
+    bool set_type(int nasal_scalar_type)
+    {
+        bool ret=true;
+        this->type=nasal_scalar_type;
+        switch(nasal_scalar_type)
+        {
+            case vm_nil:      this->scalar_ptr=(void*)NULL;                 break;
+            case vm_number:   this->scalar_ptr=(void*)(new double);         break;
+            case vm_string:   this->scalar_ptr=(void*)(new std::string);    break;
+            case vm_vector:   this->scalar_ptr=(void*)(new nasal_vector);   break;
+            case vm_hash:     this->scalar_ptr=(void*)(new nasal_hash);     break;
+            case vm_function: this->scalar_ptr=(void*)(new nasal_function); break;
+            case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);  break;
+            default:
+                std::cout<<">> [scalar] error scalar type: "<<nasal_scalar_type<<std::endl;
+                this->type=vm_nil;
+                this->scalar_ptr=(void*)NULL;
+                ret=false;
+                break;
+        }
+        return ret;
+    }
+    // +-*/~
+    // =
+    // unary - !
 };
 
 struct gc_unit
