@@ -170,4 +170,15 @@ void error_info(int line,int error_type,std::string error_str="")
     return;
 }
 
+enum runtime_scalar_type
+{
+    vm_nil=0,
+    vm_number,
+    vm_string,
+    vm_closure,
+    vm_function,
+    vm_vector,
+    vm_hash
+};
+
 #endif

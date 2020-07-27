@@ -3,26 +3,26 @@
 
 #define MEM_BLK_SIZE 128
 
-class nasal_vm
+class nasal_vm_memory_manager
 {
 private:
     std::queue<int> free_space;
     std::vector<int*> memory;
 public:
-    nasal_vm();
-    ~nasal_vm();
+    nasal_vm_memory_manager();
+    ~nasal_vm_memory_manager();
     int nas_alloc();
     int nas_free(int);
     int nas_store(int,int);
 };
 
-nasal_vm::nasal_vm()
+nasal_vm_memory_manager::nasal_vm_memory_manager()
 {
     memory.clear();
     return;
 }
 
-nasal_vm::~nasal_vm()
+nasal_vm_memory_manager::~nasal_vm_memory_manager()
 {
     int size=memory.size();
     for(int i=0;i<size;++i)
@@ -33,7 +33,7 @@ nasal_vm::~nasal_vm()
     return;
 }
 
-int nasal_vm::nas_alloc()
+int nasal_vm_memory_manager::nas_alloc()
 {
     if(free_space.empty())
     {
@@ -48,7 +48,7 @@ int nasal_vm::nas_alloc()
     return ret;
 }
 
-int nasal_vm::nas_free(int space_num)
+int nasal_vm_memory_manager::nas_free(int space_num)
 {
     if(0<=space_num && space_num<memory.size()*MEM_BLK_SIZE)
         free_space.push(space_num);
@@ -60,7 +60,7 @@ int nasal_vm::nas_free(int space_num)
     return 1;
 }
 
-int nasal_vm::nas_store(int mem_space,int value_space)
+int nasal_vm_memory_manager::nas_store(int mem_space,int value_space)
 {
     // be careful! this process doesn't check if this mem_space is in use.
     if(0<=mem_space && mem_space<memory.size()*MEM_BLK_SIZE)
