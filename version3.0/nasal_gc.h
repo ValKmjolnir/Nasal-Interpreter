@@ -1,80 +1,45 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
-#define MEM_BLK_SIZE 128
-#define GC_BLK_SIZE  128
+#define MEM_BLK_SIZE 256 // 0x00 ~ 0xff
+#define GC_BLK_SIZE  256 // 0x00 ~ 0xff
 
 class nasal_vector
 {
 private:
-    // this int points to the space in nasal_vm_memory_manager
+    // this int points to the space in nasal_vm::memory_manager_memory
     std::vector<int> elems;
 public:
-    nasal_vector()
-    {
-        elems.clear();
-        return;
-    }
-    void add_elem(int memory_address)
-    {
-        elems.push_back(memory_address);
-        return;
-    }
-    int del_elem(int index)
-    {
-        if(index>=elems.size())
-            return -1;
-        int ret=elems[index];
-        elems.pop_back();
-        return ret;
-    }
+    nasal_vector();
+    void add_elem(int);
+    int  del_elem(int);
 };
 class nasal_hash
 {
 private:
-    // this int points to the space in nasal_vm_memory_manager
+    // this int points to the space in nasal_vm::memory_manager_memory
     std::map<std::string,int> elems;
 public:
-    nasal_hash()
-    {
-        elems.clear();
-        return;
-    }
-    void add_elem(std::string key,int memory_address)
-    {
-        elems[key]=memory_address;
-        return;
-    }
-    void del_elem(std::string key)
-    {
-        elems.erase(key);
-        return;
-    }
+    nasal_hash();
+    void add_elem(std::string,int);
+    void del_elem(std::string);
 };
 class nasal_function
 {
 private:
-    // this int points to the space in nasal_vm_memory_manager
+    // this int points to the space in nasal_vm::memory_manager_memory
     std::list<int> closures;
     nasal_ast function_tree;
 public:
-    nasal_function()
-    {
-        closures.clear();
-        function_tree.clear();
-        return;
-    }
+    nasal_function();
 };
 class nasal_closure
 {
 private:
+    // this int points to the space in nasal_vm::memory_manager_memory
     std::map<std::string,int> elems;
 public:
-    nasal_closure()
-    {
-        elems.clear();
-        return;
-    }
+    nasal_closure();
 };
 
 class nasal_scalar
@@ -83,227 +48,263 @@ private:
     int type;
     void* scalar_ptr;
 public:
-    nasal_scalar()
-    {
-        this->type=vm_nil;
-        this->scalar_ptr=(void*)NULL;
-        return;
-    }
-    ~nasal_scalar()
-    {
-        switch(this->type)
-        {
-            case vm_nil:break;
-            case vm_number:   delete (double*)(this->scalar_ptr);         break;
-            case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
-            case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
-            case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
-            case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
-            case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
-        }
-        return;
-    }
-    bool set_type(int nasal_scalar_type)
-    {
-        bool ret=true;
-        this->type=nasal_scalar_type;
-        switch(nasal_scalar_type)
-        {
-            case vm_nil:      this->scalar_ptr=(void*)NULL;                 break;
-            case vm_number:   this->scalar_ptr=(void*)(new double);         break;
-            case vm_string:   this->scalar_ptr=(void*)(new std::string);    break;
-            case vm_vector:   this->scalar_ptr=(void*)(new nasal_vector);   break;
-            case vm_hash:     this->scalar_ptr=(void*)(new nasal_hash);     break;
-            case vm_function: this->scalar_ptr=(void*)(new nasal_function); break;
-            case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);  break;
-            default:
-                std::cout<<">> [scalar] error scalar type: "<<nasal_scalar_type<<std::endl;
-                this->type=vm_nil;
-                this->scalar_ptr=(void*)NULL;
-                ret=false;
-                break;
-        }
-        return ret;
-    }
+    nasal_scalar();
+    ~nasal_scalar();
+    void clear();
+    bool set_type(int);
     // +-*/~
     // =
     // unary - !
 };
 
-/* gc_unit is the basic unit of garbage_collector*/
-struct gc_unit
+class nasal_virtual_machine
 {
-    bool collected;
-    char ref_cnt;
-    nasal_scalar elem;
-    gc_unit()
+    struct gc_unit
     {
-        collected=true;
-        ref_cnt=0;
-        return;
-    }
-};
-
-/* garbage_collector uses FIFO to manage value space*/
-class nasal_garbage_collector
-{
+        bool collected;
+        char ref_cnt;
+        nasal_scalar elem;
+        gc_unit()
+        {
+            collected=true;
+            ref_cnt=0;
+            return;
+        }
+    };
 private:
-    std::queue<int> free_space;
-    std::vector<gc_unit*> memory;
+    std::queue<int> garbage_collector_free_space;
+    std::vector<gc_unit*> garbage_collector_memory;
+    std::queue<int> memory_manager_free_space;
+    std::vector<int*> memory_manager_memory;
 public:
-    nasal_garbage_collector();
-    ~nasal_garbage_collector();
+    ~nasal_virtual_machine();
     int gc_alloc();
-    int add_ref(int);
-    int del_ref(int);
+    int add_reference(int);
+    int del_reference(int);
+    int mem_alloc();
+    int mem_free(int);
+    int mem_store(int,int);
 };
-
-nasal_garbage_collector::nasal_garbage_collector()
-{
-    memory.clear();
-    return;
-}
-
-nasal_garbage_collector::~nasal_garbage_collector()
-{
-    int size=memory.size();
-    for(int i=0;i<size;++i)
-        delete []memory[i];
-    while(!free_space.empty())
-        free_space.pop();
-    return;
-}
-
-int nasal_garbage_collector::gc_alloc()
-{
-    if(free_space.empty())
-    {
-        gc_unit* new_block=new gc_unit[GC_BLK_SIZE];
-        memory.push_back(new_block);
-        int mem_size=memory.size();
-        for(int i=(mem_size-1)*GC_BLK_SIZE;i<mem_size*GC_BLK_SIZE;++i)
-            free_space.push(i);
-    }
-    int ret=free_space.front();
-    memory[ret/GC_BLK_SIZE][ret%GC_BLK_SIZE].collected=false;
-    memory[ret/GC_BLK_SIZE][ret%GC_BLK_SIZE].ref_cnt=1;
-    free_space.pop();
-    return ret;
-}
-
-int nasal_garbage_collector::add_ref(int mem_space)
-{
-    int blk_num=mem_space/GC_BLK_SIZE;
-    int blk_plc=mem_space%GC_BLK_SIZE;
-    if(0<=mem_space && mem_space<memory.size()*GC_BLK_SIZE && !memory[blk_num][blk_plc].collected)
-        ++memory[blk_num][blk_plc].ref_cnt;
-    else
-    {
-        std::cout<<">> [gc] add_ref:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
-        return 0;
-    }
-    return 1;
-}
-
-int nasal_garbage_collector::del_ref(int mem_space)
-{
-    int blk_num=mem_space/GC_BLK_SIZE;
-    int blk_plc=mem_space%GC_BLK_SIZE;
-    if(0<=mem_space && mem_space<memory.size()*GC_BLK_SIZE && !memory[blk_num][blk_plc].collected)
-        --memory[blk_num][blk_plc].ref_cnt;
-    else
-    {
-        std::cout<<">> [gc] del_ref:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
-        return 0;
-    }
-    if(!memory[blk_num][blk_plc].ref_cnt)
-    {
-        memory[blk_num][blk_plc].collected=true;
-        free_space.push(mem_space);
-    }
-    return 1;
-}
-
-/* memory_manage simulates a virtual memory space to store values in */
-class nasal_vm_memory_manager
-{
-private:
-    std::queue<int> free_space;
-    std::vector<int*> memory;
-public:
-    nasal_vm_memory_manager();
-    ~nasal_vm_memory_manager();
-    int nas_alloc();
-    int nas_free(int);
-    int nas_store(int,int);
-};
-
-nasal_vm_memory_manager::nasal_vm_memory_manager()
-{
-    memory.clear();
-    return;
-}
-
-nasal_vm_memory_manager::~nasal_vm_memory_manager()
-{
-    int size=memory.size();
-    for(int i=0;i<size;++i)
-        delete []memory[i];
-    memory.clear();
-    while(!free_space.empty())
-        free_space.pop();
-    return;
-}
-
-int nasal_vm_memory_manager::nas_alloc()
-{
-    if(free_space.empty())
-    {
-        int* new_block=new int[MEM_BLK_SIZE];
-        memory.push_back(new_block);
-        int mem_size=memory.size();
-        for(int i=(mem_size-1)*MEM_BLK_SIZE;i<mem_size*MEM_BLK_SIZE;++i)
-            free_space.push(i);
-    }
-    int ret=free_space.front();
-    free_space.pop();
-    return ret;
-}
-
-int nasal_vm_memory_manager::nas_free(int space_num)
-{
-    if(0<=space_num && space_num<memory.size()*MEM_BLK_SIZE)
-        free_space.push(space_num);
-    else
-    {
-        std::cout<<">> [vm] nas_free:unexpected memory \'"<<space_num<<"\'."<<std::endl;
-        return 0;
-    }
-    return 1;
-}
-
-int nasal_vm_memory_manager::nas_store(int mem_space,int value_space)
-{
-    // be careful! this process doesn't check if this mem_space is in use.
-    if(0<=mem_space && mem_space<memory.size()*MEM_BLK_SIZE)
-        memory[mem_space/MEM_BLK_SIZE][mem_space%MEM_BLK_SIZE]=value_space;
-    else
-    {
-        std::cout<<">> [vm] nas_store:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
-        return 0;
-    }
-    return 1;
-}
 
 /*
-    nasal_gc and nasal_mem are used in nasal_scalar
-    because nasal_scalars' memory management needs these two modules
-    when vector/hash/function/closure delete values,they need nasal_gc and nasal_mem to 
-    change the reference counters of these values
+    nasal runtime virtual machine
 */
-nasal_garbage_collector nasal_gc;
-nasal_vm_memory_manager nasal_mem;
+nasal_virtual_machine nasal_vm;
 
+/*functions of nasal_vector*/
+nasal_vector::nasal_vector()
+{
+    elems.clear();
+    return;
+}
+void nasal_vector::add_elem(int memory_address)
+{
+    elems.push_back(memory_address);
+    return;
+}
+int nasal_vector::del_elem(int index)
+{
+    if(index>=elems.size())
+        return -1;
+    int ret=elems[index];
+    nasal_vm.mem_free(ret);
+    elems.pop_back();
+    return ret;
+}
 
-//
+/*functions of nasal_hash*/
+nasal_hash::nasal_hash()
+{
+    elems.clear();
+    return;
+}
+void nasal_hash::add_elem(std::string key,int memory_address)
+{
+    elems[key]=memory_address;
+    return;
+}
+void nasal_hash::del_elem(std::string key)
+{
+    nasal_vm.mem_free(elems[key]);
+    elems.erase(key);
+    return;
+}
+
+/*functions of nasal_function*/
+nasal_function::nasal_function()
+{
+    closures.clear();
+    function_tree.clear();
+    return;
+}
+
+/*functions of nasal_closure*/
+nasal_closure::nasal_closure()
+{
+    elems.clear();
+    return;
+}
+
+/*functions of nasal_scalar*/
+nasal_scalar::nasal_scalar()
+{
+    this->type=vm_nil;
+    this->scalar_ptr=(void*)NULL;
+    return;
+}
+nasal_scalar::~nasal_scalar()
+{
+    switch(this->type)
+    {
+        case vm_nil:break;
+        case vm_number:   delete (double*)(this->scalar_ptr);         break;
+        case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
+        case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
+        case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
+        case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
+        case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
+    }
+    return;
+}
+void nasal_scalar::clear()
+{
+    this->type=vm_nil;
+    switch(this->type)
+    {
+        case vm_nil:break;
+        case vm_number:   delete (double*)(this->scalar_ptr);         break;
+        case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
+        case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
+        case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
+        case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
+        case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
+    }
+    return;
+}
+bool nasal_scalar::set_type(int nasal_scalar_type)
+{
+    bool ret=true;
+    this->type=nasal_scalar_type;
+    switch(nasal_scalar_type)
+    {
+        case vm_nil:      this->scalar_ptr=(void*)NULL;                 break;
+        case vm_number:   this->scalar_ptr=(void*)(new double);         break;
+        case vm_string:   this->scalar_ptr=(void*)(new std::string);    break;
+        case vm_vector:   this->scalar_ptr=(void*)(new nasal_vector);   break;
+        case vm_hash:     this->scalar_ptr=(void*)(new nasal_hash);     break;
+        case vm_function: this->scalar_ptr=(void*)(new nasal_function); break;
+        case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);  break;
+        default:
+            std::cout<<">> [scalar] error scalar type: "<<nasal_scalar_type<<std::endl;
+            this->type=vm_nil;
+            this->scalar_ptr=(void*)NULL;
+            ret=false;
+            break;
+    }
+    return ret;
+}
+
+/*functions of nasal_virtual_machine*/
+nasal_virtual_machine::~nasal_virtual_machine()
+{
+    int gc_mem_size=garbage_collector_memory.size();
+    int mm_mem_size=memory_manager_memory.size();
+    for(int i=0;i<gc_mem_size;++i)
+        delete []garbage_collector_memory[i];
+    for(int i=0;i<mm_mem_size;++i)
+        delete []memory_manager_memory[i];
+    garbage_collector_memory.clear();
+    memory_manager_memory.clear();
+    return;
+}
+int nasal_virtual_machine::gc_alloc()
+{
+    if(garbage_collector_free_space.empty())
+    {
+        gc_unit* new_block=new gc_unit[256];
+        garbage_collector_memory.push_back(new_block);
+        int mem_size=garbage_collector_memory.size();
+        for(int i=((mem_size-1)<<8);i<(mem_size<<8);++i)
+            garbage_collector_free_space.push(i);
+    }
+    int ret=garbage_collector_free_space.front();
+    garbage_collector_memory[ret>>8][ret&0xff].collected=false;
+    garbage_collector_memory[ret>>8][ret&0xff].ref_cnt=1;
+    garbage_collector_free_space.pop();
+    return ret;
+}
+int nasal_virtual_machine::add_reference(int memory_address)
+{
+    int blk_num=(memory_address>>8);
+    int blk_plc=(memory_address&0xff);
+    if(0<=memory_address && memory_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
+        ++garbage_collector_memory[blk_num][blk_plc].ref_cnt;
+    else
+    {
+        std::cout<<">> [vm] gc_add_ref:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
+int nasal_virtual_machine::del_reference(int memory_address)
+{
+    int blk_num=(memory_address>>8);
+    int blk_plc=(memory_address&0xff);
+    if(0<=memory_address && memory_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
+        --garbage_collector_memory[blk_num][blk_plc].ref_cnt;
+    else
+    {
+        std::cout<<">> [vm] gc_del_ref:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return 0;
+    }
+    if(!garbage_collector_memory[blk_num][blk_plc].ref_cnt)
+    {
+        garbage_collector_memory[blk_num][blk_plc].collected=true;
+        garbage_collector_memory[blk_num][blk_plc].elem.clear();
+        garbage_collector_free_space.push(memory_address);
+    }
+    return 1;
+}
+int nasal_virtual_machine::mem_alloc()
+{
+    if(memory_manager_free_space.empty())
+    {
+        int* new_block=new int[256];
+        memory_manager_memory.push_back(new_block);
+        int mem_size=memory_manager_memory.size();
+        for(int i=((mem_size-1)<<8);i<(mem_size<<8);++i)
+            memory_manager_free_space.push(i);
+    }
+    int ret=memory_manager_free_space.front();
+    memory_manager_free_space.pop();
+    return ret;
+}
+int nasal_virtual_machine::mem_free(int memory_address)
+{
+    // mem_free has helped scalar to delete the reference
+    // so don't need to delete reference again
+    if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
+    {
+        this->del_reference(memory_manager_memory[memory_address>>8][memory_address&0xff]);
+        memory_manager_free_space.push(memory_address);
+    }
+    else
+    {
+        std::cout<<">> [vm] mem_free:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
+int nasal_virtual_machine::mem_store(int memory_address,int value_space)
+{
+    // be careful! this process doesn't check if this mem_space is in use.
+    if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
+        memory_manager_memory[memory_address>>8][memory_address&0xff]=value_space;
+    else
+    {
+        std::cout<<">> [vm] mem_store:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
 #endif
