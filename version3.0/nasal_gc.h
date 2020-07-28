@@ -1,7 +1,8 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
-#define GC_BLK_SIZE 128
+#define MEM_BLK_SIZE 128
+#define GC_BLK_SIZE  128
 
 class nasal_vector
 {
@@ -14,6 +15,19 @@ public:
         elems.clear();
         return;
     }
+    void add_elem(int memory_address)
+    {
+        elems.push_back(memory_address);
+        return;
+    }
+    int del_elem(int index)
+    {
+        if(index>=elems.size())
+            return -1;
+        int ret=elems[index];
+        elems.pop_back();
+        return ret;
+    }
 };
 class nasal_hash
 {
@@ -24,6 +38,16 @@ public:
     nasal_hash()
     {
         elems.clear();
+        return;
+    }
+    void add_elem(std::string key,int memory_address)
+    {
+        elems[key]=memory_address;
+        return;
+    }
+    void del_elem(std::string key)
+    {
+        elems.erase(key);
         return;
     }
 };
@@ -106,6 +130,7 @@ public:
     // unary - !
 };
 
+/* gc_unit is the basic unit of garbage_collector*/
 struct gc_unit
 {
     bool collected;
@@ -119,26 +144,27 @@ struct gc_unit
     }
 };
 
-class nasal_gc
+/* garbage_collector uses FIFO to manage value space*/
+class nasal_garbage_collector
 {
 private:
     std::queue<int> free_space;
     std::vector<gc_unit*> memory;
 public:
-    nasal_gc();
-    ~nasal_gc();
+    nasal_garbage_collector();
+    ~nasal_garbage_collector();
     int gc_alloc();
     int add_ref(int);
     int del_ref(int);
 };
 
-nasal_gc::nasal_gc()
+nasal_garbage_collector::nasal_garbage_collector()
 {
     memory.clear();
     return;
 }
 
-nasal_gc::~nasal_gc()
+nasal_garbage_collector::~nasal_garbage_collector()
 {
     int size=memory.size();
     for(int i=0;i<size;++i)
@@ -148,7 +174,7 @@ nasal_gc::~nasal_gc()
     return;
 }
 
-int nasal_gc::gc_alloc()
+int nasal_garbage_collector::gc_alloc()
 {
     if(free_space.empty())
     {
@@ -165,7 +191,7 @@ int nasal_gc::gc_alloc()
     return ret;
 }
 
-int nasal_gc::add_ref(int mem_space)
+int nasal_garbage_collector::add_ref(int mem_space)
 {
     int blk_num=mem_space/GC_BLK_SIZE;
     int blk_plc=mem_space%GC_BLK_SIZE;
@@ -179,7 +205,7 @@ int nasal_gc::add_ref(int mem_space)
     return 1;
 }
 
-int nasal_gc::del_ref(int mem_space)
+int nasal_garbage_collector::del_ref(int mem_space)
 {
     int blk_num=mem_space/GC_BLK_SIZE;
     int blk_plc=mem_space%GC_BLK_SIZE;
@@ -198,4 +224,86 @@ int nasal_gc::del_ref(int mem_space)
     return 1;
 }
 
+/* memory_manage simulates a virtual memory space to store values in */
+class nasal_vm_memory_manager
+{
+private:
+    std::queue<int> free_space;
+    std::vector<int*> memory;
+public:
+    nasal_vm_memory_manager();
+    ~nasal_vm_memory_manager();
+    int nas_alloc();
+    int nas_free(int);
+    int nas_store(int,int);
+};
+
+nasal_vm_memory_manager::nasal_vm_memory_manager()
+{
+    memory.clear();
+    return;
+}
+
+nasal_vm_memory_manager::~nasal_vm_memory_manager()
+{
+    int size=memory.size();
+    for(int i=0;i<size;++i)
+        delete []memory[i];
+    memory.clear();
+    while(!free_space.empty())
+        free_space.pop();
+    return;
+}
+
+int nasal_vm_memory_manager::nas_alloc()
+{
+    if(free_space.empty())
+    {
+        int* new_block=new int[MEM_BLK_SIZE];
+        memory.push_back(new_block);
+        int mem_size=memory.size();
+        for(int i=(mem_size-1)*MEM_BLK_SIZE;i<mem_size*MEM_BLK_SIZE;++i)
+            free_space.push(i);
+    }
+    int ret=free_space.front();
+    free_space.pop();
+    return ret;
+}
+
+int nasal_vm_memory_manager::nas_free(int space_num)
+{
+    if(0<=space_num && space_num<memory.size()*MEM_BLK_SIZE)
+        free_space.push(space_num);
+    else
+    {
+        std::cout<<">> [vm] nas_free:unexpected memory \'"<<space_num<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
+
+int nasal_vm_memory_manager::nas_store(int mem_space,int value_space)
+{
+    // be careful! this process doesn't check if this mem_space is in use.
+    if(0<=mem_space && mem_space<memory.size()*MEM_BLK_SIZE)
+        memory[mem_space/MEM_BLK_SIZE][mem_space%MEM_BLK_SIZE]=value_space;
+    else
+    {
+        std::cout<<">> [vm] nas_store:unexpected memory \'"<<mem_space<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
+
+/*
+    nasal_gc and nasal_mem are used in nasal_scalar
+    because nasal_scalars' memory management needs these two modules
+    when vector/hash/function/closure delete values,they need nasal_gc and nasal_mem to 
+    change the reference counters of these values
+*/
+nasal_garbage_collector nasal_gc;
+nasal_vm_memory_manager nasal_mem;
+
+
+//
 #endif
