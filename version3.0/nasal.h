@@ -23,5 +23,6 @@
 #include "nasal_ast.h"
 #include "nasal_parse.h"
 #include "nasal_gc.h"
+#include "nasal_runtime.h"
 
 #endif
