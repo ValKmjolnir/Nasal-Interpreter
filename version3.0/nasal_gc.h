@@ -56,9 +56,19 @@ public:
     ~nasal_scalar();
     void clear();
     bool set_type(int);
-    // +-*/~
-    // =
-    // unary - !
+    int nasal_scalar_add(int,int);
+    int nasal_scalar_sub(int,int);
+    int nasal_scalar_mult(int,int);
+    int nasal_scalar_div(int,int);
+    int nasal_scalar_link(int,int);
+    int nasal_scalar_unary_sub(int);
+    int nasal_scalar_unary_not(int);
+    int nasal_scalar_cmp_equal(int,int);
+    int nasal_scalar_cmp_not_equal(int,int);
+    int nasal_scalar_cmp_less(int,int);
+    int nasal_scalar_cmp_greater(int,int);
+    int nasal_scalar_cmp_less_or_equal(int,int);
+    int nasal_scalar_cmp_greater_or_equal(int,int);
 };
 
 class nasal_virtual_machine
