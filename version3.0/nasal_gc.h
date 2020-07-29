@@ -11,6 +11,7 @@ private:
     std::vector<int> elems;
 public:
     nasal_vector();
+    ~nasal_vector();
     void add_elem(int);
     int  del_elem(int);
 };
@@ -21,6 +22,7 @@ private:
     std::map<std::string,int> elems;
 public:
     nasal_hash();
+    ~nasal_hash();
     void add_elem(std::string,int);
     void del_elem(std::string);
 };
@@ -32,6 +34,7 @@ private:
     nasal_ast function_tree;
 public:
     nasal_function();
+    ~nasal_function();
 };
 class nasal_closure
 {
@@ -40,6 +43,7 @@ private:
     std::map<std::string,int> elems;
 public:
     nasal_closure();
+    ~nasal_closure();
 };
 
 class nasal_scalar
@@ -97,6 +101,14 @@ nasal_vector::nasal_vector()
     elems.clear();
     return;
 }
+nasal_vector::~nasal_vector()
+{
+    int size=elems.size();
+    for(int i=0;i<size;++i)
+        nasal_vm.mem_free(elems[i]);
+    elems.clear();
+    return;
+}
 void nasal_vector::add_elem(int memory_address)
 {
     elems.push_back(memory_address);
@@ -115,6 +127,13 @@ int nasal_vector::del_elem(int index)
 /*functions of nasal_hash*/
 nasal_hash::nasal_hash()
 {
+    elems.clear();
+    return;
+}
+nasal_hash::~nasal_hash()
+{
+    for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
+        nasal_vm.mem_free(iter->second);
     elems.clear();
     return;
 }
@@ -137,10 +156,25 @@ nasal_function::nasal_function()
     function_tree.clear();
     return;
 }
+nasal_function::~nasal_function()
+{
+    for(std::list<int>::iterator iter=closures.begin();iter!=closures.end();++iter)
+        nasal_vm.mem_free(*iter);
+    closures.clear();
+    function_tree.clear();
+    return;
+}
 
 /*functions of nasal_closure*/
 nasal_closure::nasal_closure()
 {
+    elems.clear();
+    return;
+}
+nasal_closure::~nasal_closure()
+{
+    for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
+        nasal_vm.mem_free(iter->second);
     elems.clear();
     return;
 }
