@@ -56,6 +56,8 @@ public:
     ~nasal_scalar();
     void clear();
     bool set_type(int);
+    void set_number(double);
+    void set_string(std::string);
     int nasal_scalar_add(int,int);
     int nasal_scalar_sub(int,int);
     int nasal_scalar_mult(int,int);
@@ -86,18 +88,22 @@ class nasal_virtual_machine
         }
     };
 private:
+    nasal_scalar error_returned_value;
     std::queue<int> garbage_collector_free_space;
     std::vector<gc_unit*> garbage_collector_memory;
     std::queue<int> memory_manager_free_space;
     std::vector<int*> memory_manager_memory;
 public:
     ~nasal_virtual_machine();
-    int gc_alloc();
+    int gc_alloc();             // garbage collector gives a new space
+    nasal_scalar& gc_get(int);  // get scalar that stored in gc
     int add_reference(int);
     int del_reference(int);
-    int mem_alloc();
-    int mem_free(int);
-    int mem_store(int,int);
+    int mem_alloc();            // memory gives a new space
+    int mem_free(int);          // give space back to memory
+    int mem_change(int,int);    // change value in memory space
+    int mem_store(int,int);     // init value in memory space
+    int mem_get(int);           // get value in memory space
 };
 
 /*
@@ -239,13 +245,117 @@ bool nasal_scalar::set_type(int nasal_scalar_type)
         case vm_function: this->scalar_ptr=(void*)(new nasal_function); break;
         case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);  break;
         default:
-            std::cout<<">> [scalar] error scalar type: "<<nasal_scalar_type<<std::endl;
+            std::cout<<">> [vm] error scalar type: "<<nasal_scalar_type<<std::endl;
             this->type=vm_nil;
             this->scalar_ptr=(void*)NULL;
             ret=false;
             break;
     }
     return ret;
+}
+void nasal_scalar::set_number(double num)
+{
+    *(double*)(this->scalar_ptr)=num;
+    return;
+}
+void nasal_scalar::set_string(std::string str)
+{
+    *(std::string*)(this->scalar_ptr)=str;
+    return;
+}
+int nasal_scalar::nasal_scalar_add(int a,int b)
+{
+    int a_scalar_addr=nasal_vm.mem_get(a);
+    int b_scalar_addr=nasal_vm.mem_get(b);
+    if(a_scalar_addr<0 || b_scalar_addr<0)
+    {
+        std::cout<<">> [vm] scalar_add: memory returned an invalid address"<<std::endl;
+        return -1;
+    }
+    nasal_scalar& a_ref=nasal_vm.gc_get(a);
+    nasal_scalar& b_ref=nasal_vm.gc_get(b);
+    if((a_ref.type!=vm_number && a_ref.type!=vm_string)||(b_ref.type!=vm_number && b_ref.type!=vm_string))
+    {
+        std::cout<<">> [vm] scalar_add: error value type.only number and string can take part in add."<<std::endl;
+        return -1;
+    }
+    double a_num;
+    double b_num;
+    if(a_ref.type==vm_number) a_num=*(double*)a_ref.scalar_ptr;
+    else
+    {
+        if(check_numerable_string(*(std::string*)a_ref.scalar_ptr))
+            a_num=trans_string_to_number(*(std::string*)a_ref.scalar_ptr);
+        else
+        {
+            std::cout<<">> [vm] scalar_add: "<<*(std::string*)a_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+            return -1;
+        }
+    }
+    if(b_ref.type==vm_number) b_num=*(double*)b_ref.scalar_ptr;
+    else
+    {
+        if(check_numerable_string(*(std::string*)b_ref.scalar_ptr))
+            b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
+        else
+        {
+            std::cout<<">> [vm] scalar_add: "<<*(std::string*)b_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+            return -1;
+        }
+    }
+    double result=a_num+b_num;
+    int new_value_address=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    nasal_vm.gc_get(new_value_address).set_number(result);
+    return new_value_address;
+}
+int nasal_scalar::nasal_scalar_sub(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_mult(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_div(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_link(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_unary_sub(int a)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_unary_not(int a)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_equal(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_not_equal(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_less(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_greater(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a,int b)
+{
+    return -1;
+}
+int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a,int b)
+{
+    return -1;
 }
 
 /*functions of nasal_virtual_machine*/
@@ -276,6 +386,18 @@ int nasal_virtual_machine::gc_alloc()
     garbage_collector_memory[ret>>8][ret&0xff].ref_cnt=1;
     garbage_collector_free_space.pop();
     return ret;
+}
+nasal_scalar& nasal_virtual_machine::gc_get(int memory_address)
+{
+    int blk_num=(memory_address>>8);
+    int blk_plc=(memory_address&0xff);
+    if(0<=memory_address && memory_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
+        return garbage_collector_memory[blk_num][blk_plc].elem;
+    else
+    {
+        std::cout<<">> [vm] gc_get:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return error_returned_value;
+    }
 }
 int nasal_virtual_machine::add_reference(int memory_address)
 {
@@ -339,8 +461,25 @@ int nasal_virtual_machine::mem_free(int memory_address)
     }
     return 1;
 }
+int nasal_virtual_machine::mem_change(int memory_address,int value_space)
+{
+    // this progress is used to change a memory space's value address
+    // be careful! this process doesn't check if this mem_space is in use.
+    if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
+    {
+        this->del_reference(memory_manager_memory[memory_address>>8][memory_address&0xff]);
+        memory_manager_memory[memory_address>>8][memory_address&0xff]=value_space;
+    }
+    else
+    {
+        std::cout<<">> [vm] mem_store:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+        return 0;
+    }
+    return 1;
+}
 int nasal_virtual_machine::mem_store(int memory_address,int value_space)
 {
+    // this progress is used to init a memory space
     // be careful! this process doesn't check if this mem_space is in use.
     if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
         memory_manager_memory[memory_address>>8][memory_address&0xff]=value_space;
@@ -350,5 +489,15 @@ int nasal_virtual_machine::mem_store(int memory_address,int value_space)
         return 0;
     }
     return 1;
+}
+int nasal_virtual_machine::mem_get(int memory_address)
+{
+    int ret=-1;
+    // be careful! this process doesn't check if this mem_space is in use.
+    if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
+        ret=memory_manager_memory[memory_address>>8][memory_address&0xff];
+    else
+        std::cout<<">> [vm] mem_get:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+    return ret;
 }
 #endif
