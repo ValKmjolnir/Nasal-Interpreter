@@ -40,10 +40,14 @@ class nasal_closure
 {
 private:
     // this int points to the space in nasal_vm::memory_manager_memory
-    std::map<std::string,int> elems;
+    // and this memory_manager_memory space stores an address to garbage_collector_memory
+    // and this address points to an nasal_hash
+    std::list<int> elems;
 public:
     nasal_closure();
     ~nasal_closure();
+    void add_scope();
+    void del_scope();
 };
 
 class nasal_scalar
@@ -58,6 +62,10 @@ public:
     bool set_type(int);
     void set_number(double);
     void set_string(std::string);
+    nasal_vector& get_vector();
+    nasal_hash& get_hash();
+    nasal_function& get_func();
+    nasal_closure& get_closure();
     // parameter: memory_manager_memory address
     int nasal_scalar_add(int,int);
     int nasal_scalar_sub(int,int);
@@ -109,8 +117,11 @@ public:
 
 /*
     nasal runtime virtual machine
+    nasal_scalar_calculator gives functions that calculate nasal_scalar
+    example: nasal_scalar_calculator.nasal_scalar_add(0x00007c00,0x0000aa55)
 */
 nasal_virtual_machine nasal_vm;
+nasal_scalar nasal_scalar_calculator;
 
 /*functions of nasal_vector*/
 nasal_vector::nasal_vector()
@@ -190,9 +201,27 @@ nasal_closure::nasal_closure()
 }
 nasal_closure::~nasal_closure()
 {
-    for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
-        nasal_vm.mem_free(iter->second);
+    for(std::list<int>::iterator iter=elems.begin();iter!=elems.end();++iter)
+        nasal_vm.mem_free(*iter);
     elems.clear();
+    return;
+}
+void nasal_closure::add_scope()
+{
+    int hash_address=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(hash_address).set_type(vm_hash);
+    int scope_memory_address=nasal_vm.mem_alloc();
+    nasal_vm.mem_store(scope_memory_address,hash_address);
+    this->elems.push_back(scope_memory_address);
+    return;
+}
+void nasal_closure::del_scope()
+{
+    if(this->elems.empty())
+        return;
+    int scope_memory_address=this->elems.back();
+    this->elems.pop_back();
+    nasal_vm.mem_free(scope_memory_address);
     return;
 }
 
@@ -263,6 +292,22 @@ void nasal_scalar::set_string(std::string str)
 {
     *(std::string*)(this->scalar_ptr)=str;
     return;
+}
+nasal_vector& nasal_scalar::get_vector()
+{
+    return *(nasal_vector*)(this->scalar_ptr);
+}
+nasal_hash& nasal_scalar::get_hash()
+{
+    return *(nasal_hash*)(this->scalar_ptr);
+}
+nasal_function& nasal_scalar::get_func()
+{
+    return *(nasal_function*)(this->scalar_ptr);
+}
+nasal_closure& nasal_scalar::get_closure()
+{
+    return *(nasal_closure*)(this->scalar_ptr);
 }
 int nasal_scalar::nasal_scalar_add(int a,int b)
 {
@@ -566,10 +611,51 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a,int b)
     }
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    //unfinished
-
-
-
+    if(a_ref.type==vm_nil && b_ref.type==vm_nil)
+    {
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number(1);
+        return new_value_address;
+    }
+    else if((a_ref.type==vm_number || a_ref.type==vm_string) && (b_ref.type==vm_number || b_ref.type==vm_string))
+    {
+        double a_num;
+        double b_num;
+        if(a_ref.type==vm_number) a_num=*(double*)a_ref.scalar_ptr;
+        else
+        {
+            if(check_numerable_string(*(std::string*)a_ref.scalar_ptr))
+                a_num=trans_string_to_number(*(std::string*)a_ref.scalar_ptr);
+            else
+            {
+                std::cout<<">> [vm] scalar_cmp_equal: "<<*(std::string*)a_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+                return -1;
+            }
+        }
+        if(b_ref.type==vm_number) b_num=*(double*)b_ref.scalar_ptr;
+        else
+        {
+            if(check_numerable_string(*(std::string*)b_ref.scalar_ptr))
+                b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
+            else
+            {
+                std::cout<<">> [vm] scalar_cmp_equal: "<<*(std::string*)b_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+                return -1;
+            }
+        }
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number((double)(a_num==b_num));
+        return new_value_address;
+    }
+    else
+    {
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number(0);
+        return new_value_address;
+    }
     return -1;
 }
 int nasal_scalar::nasal_scalar_cmp_not_equal(int a,int b)
@@ -590,10 +676,51 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a,int b)
     }
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    //unfinished
-
-
-
+    if(a_ref.type==vm_nil && b_ref.type==vm_nil)
+    {
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number(0);
+        return new_value_address;
+    }
+    else if((a_ref.type==vm_number || a_ref.type==vm_string) && (b_ref.type==vm_number || b_ref.type==vm_string))
+    {
+        double a_num;
+        double b_num;
+        if(a_ref.type==vm_number) a_num=*(double*)a_ref.scalar_ptr;
+        else
+        {
+            if(check_numerable_string(*(std::string*)a_ref.scalar_ptr))
+                a_num=trans_string_to_number(*(std::string*)a_ref.scalar_ptr);
+            else
+            {
+                std::cout<<">> [vm] scalar_cmp_equal: "<<*(std::string*)a_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+                return -1;
+            }
+        }
+        if(b_ref.type==vm_number) b_num=*(double*)b_ref.scalar_ptr;
+        else
+        {
+            if(check_numerable_string(*(std::string*)b_ref.scalar_ptr))
+                b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
+            else
+            {
+                std::cout<<">> [vm] scalar_cmp_equal: "<<*(std::string*)b_ref.scalar_ptr<<" is not a numerable string."<<std::endl;
+                return -1;
+            }
+        }
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number((double)(a_num!=b_num));
+        return new_value_address;
+    }
+    else
+    {
+        int new_value_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        nasal_vm.gc_get(new_value_address).set_number(1);
+        return new_value_address;
+    }
     return -1;
 }
 int nasal_scalar::nasal_scalar_cmp_less(int a,int b)
