@@ -4,6 +4,8 @@
 class nasal_runtime
 {
 private:
+    // global_scope_address is address in garbage_collector_memory,NOT memory_manager_memory
+    int global_scope_address;
     nasal_ast root;
     std::stack<int> function_position;
     std::stack<int> running_stack;
@@ -11,6 +13,7 @@ private:
 public:
     nasal_runtime();
     ~nasal_runtime();
+    void run();
 };
 
 nasal_runtime::nasal_runtime()
@@ -33,6 +36,16 @@ nasal_runtime::~nasal_runtime()
         running_stack.pop();
     while(!closure_stack.empty())
         closure_stack.pop();
+    return;
+}
+void nasal_runtime::run()
+{
+    global_scope_address=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(global_scope_address).set_type(vm_closure);
+    nasal_vm.gc_get(global_scope_address).get_closure().add_scope();
+
+    nasal_vm.gc_get(global_scope_address).get_closure().del_scope();
+    nasal_vm.del_reference(global_scope_address);
     return;
 }
 
