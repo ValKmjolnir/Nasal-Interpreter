@@ -29,8 +29,8 @@ public:
 class nasal_function
 {
 private:
-    // this int points to the space in nasal_vm::memory_manager_memory
-    std::list<int> closures;
+    // this int points to the space in nasal_vm::garbage_collector_memory
+    int closure_addr;
     nasal_ast function_tree;
 public:
     nasal_function();
@@ -180,15 +180,13 @@ void nasal_hash::del_elem(std::string key)
 /*functions of nasal_function*/
 nasal_function::nasal_function()
 {
-    closures.clear();
+    closure_addr=-1;
     function_tree.clear();
     return;
 }
 nasal_function::~nasal_function()
 {
-    for(std::list<int>::iterator iter=closures.begin();iter!=closures.end();++iter)
-        nasal_vm.mem_free(*iter);
-    closures.clear();
+    nasal_vm.del_reference(closure_addr);
     function_tree.clear();
     return;
 }
