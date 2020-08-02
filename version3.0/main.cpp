@@ -4,6 +4,7 @@ nasal_resource resource;
 nasal_lexer    lexer;
 nasal_parse    parse;
 std::string    command;
+nasal_runtime  runtime;
 
 void help()
 {
@@ -81,6 +82,25 @@ void ast_func()
 		std::cout<<">> [lexer] error(s) occurred,stop.\n";
 	return;
 }
+void runtime_start()
+{
+	lexer.scanner(resource.get_file());
+	if(!lexer.get_error())
+	{
+		parse.set_toklist(lexer.get_token_list());
+		parse.main_process();
+		if(parse.get_error())
+			std::cout<<">> [parse] error(s) occurred,stop.\n";
+		else
+		{
+			runtime.set_root(parse.get_root());
+			runtime.run();
+		}
+	}
+	else
+		std::cout<<">> [lexer] error(s) occurred,stop.\n";
+	return;
+}
 
 int main()
 {
@@ -135,9 +155,7 @@ int main()
 		else if(command=="ast")
 			ast_func();
 		else if(command=="run")
-		{
-            ;
-		}
+			runtime_start();
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")
