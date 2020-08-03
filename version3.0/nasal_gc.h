@@ -31,10 +31,15 @@ class nasal_function
 private:
     // this int points to the space in nasal_vm::garbage_collector_memory
     int closure_addr;
-    nasal_ast function_tree;
+    nasal_ast argument_list;
+    nasal_ast function_expr;
 public:
     nasal_function();
     ~nasal_function();
+    void set_closure_addr(int);
+    int get_closure_addr();
+    void set_arguments(nasal_ast&);
+    void set_run_block(nasal_ast&);
 };
 class nasal_closure
 {
@@ -111,7 +116,7 @@ public:
     int mem_alloc();            // memory gives a new space
     int mem_free(int);          // give space back to memory
     int mem_change(int,int);    // change value in memory space
-    int mem_store(int,int);     // init value in memory space
+    int mem_init(int,int);      // init value in memory space
     int mem_get(int);           // get value in memory space
 };
 
@@ -167,13 +172,21 @@ nasal_hash::~nasal_hash()
 }
 void nasal_hash::add_elem(std::string key,int memory_address)
 {
-    elems[key]=memory_address;
+    if(elems.find(key)==elems.end())
+        elems[key]=memory_address;
+    else
+        std::cout<<">> [vm] nasal_hash::add_elem: "<<key<<" already exists."<<std::endl;
     return;
 }
 void nasal_hash::del_elem(std::string key)
 {
-    nasal_vm.mem_free(elems[key]);
-    elems.erase(key);
+    if(elems.find(key)!=elems.end())
+    {
+        nasal_vm.mem_free(elems[key]);
+        elems.erase(key);
+    }
+    else
+        std::cout<<">> [vm] nasal_hash::del_elem: "<<key<<" does not exist."<<std::endl;
     return;
 }
 
@@ -181,13 +194,34 @@ void nasal_hash::del_elem(std::string key)
 nasal_function::nasal_function()
 {
     closure_addr=-1;
-    function_tree.clear();
+    argument_list.clear();
+    function_expr.clear();
     return;
 }
 nasal_function::~nasal_function()
 {
     nasal_vm.del_reference(closure_addr);
-    function_tree.clear();
+    argument_list.clear();
+    function_expr.clear();
+    return;
+}
+void nasal_function::set_closure_addr(int address)
+{
+    closure_addr=address;
+    return;
+}
+int nasal_function::get_closure_addr()
+{
+    return this->closure_addr;
+}
+void nasal_function::set_arguments(nasal_ast& node)
+{
+    argument_list=node;
+    return;
+}
+void nasal_function::set_run_block(nasal_ast& node)
+{
+    function_expr=node;
     return;
 }
 
@@ -209,7 +243,7 @@ void nasal_closure::add_scope()
     int hash_address=nasal_vm.gc_alloc();
     nasal_vm.gc_get(hash_address).set_type(vm_hash);
     int scope_memory_address=nasal_vm.mem_alloc();
-    nasal_vm.mem_store(scope_memory_address,hash_address);
+    nasal_vm.mem_init(scope_memory_address,hash_address);
     this->elems.push_back(scope_memory_address);
     return;
 }
@@ -1025,7 +1059,7 @@ int nasal_virtual_machine::mem_change(int memory_address,int value_space)
     }
     return 1;
 }
-int nasal_virtual_machine::mem_store(int memory_address,int value_space)
+int nasal_virtual_machine::mem_init(int memory_address,int value_space)
 {
     // this progress is used to init a memory space
     // be careful! this process doesn't check if this mem_space is in use.

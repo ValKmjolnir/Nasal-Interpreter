@@ -66,7 +66,7 @@ void par_func()
 	return;
 }
 
-void ast_func()
+void ast_print()
 {
 	lexer.scanner(resource.get_file());
 	if(!lexer.get_error())
@@ -153,7 +153,7 @@ int main()
 		else if(command=="par")
 			par_func();
 		else if(command=="ast")
-			ast_func();
+			ast_print();
 		else if(command=="run")
 			runtime_start();
 		else if(command=="logo")
