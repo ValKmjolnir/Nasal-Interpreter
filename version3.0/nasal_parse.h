@@ -391,6 +391,11 @@ nasal_ast nasal_parse::func_gen()
         node.add_child(args_list_gen());
         ++ptr;
     }
+    else
+    {
+        nasal_ast null_argument_list;
+        node.add_child(null_argument_list);
+    }
     if(ptr>=tok_list_size)
     {
         error_info(error_line,lack_left_brace);
