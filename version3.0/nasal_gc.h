@@ -67,6 +67,8 @@ public:
     bool set_type(int);
     void set_number(double);
     void set_string(std::string);
+    double get_number();
+    std::string get_string();
     nasal_vector& get_vector();
     nasal_hash& get_hash();
     nasal_function& get_func();
@@ -325,6 +327,14 @@ void nasal_scalar::set_string(std::string str)
     *(std::string*)(this->scalar_ptr)=str;
     return;
 }
+double nasal_scalar::get_number()
+{
+    return *(double*)(this->scalar_ptr);
+}
+std::string nasal_scalar::get_string()
+{
+    return *(std::string*)(this->scalar_ptr);
+}
 nasal_vector& nasal_scalar::get_vector()
 {
     return *(nasal_vector*)(this->scalar_ptr);
@@ -341,10 +351,8 @@ nasal_closure& nasal_scalar::get_closure()
 {
     return *(nasal_closure*)(this->scalar_ptr);
 }
-int nasal_scalar::nasal_scalar_add(int a,int b)
+int nasal_scalar::nasal_scalar_add(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_add: memory returned an invalid address"<<std::endl;
@@ -387,10 +395,8 @@ int nasal_scalar::nasal_scalar_add(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_sub(int a,int b)
+int nasal_scalar::nasal_scalar_sub(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_sub: memory returned an invalid address"<<std::endl;
@@ -433,10 +439,8 @@ int nasal_scalar::nasal_scalar_sub(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_mult(int a,int b)
+int nasal_scalar::nasal_scalar_mult(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_mult: memory returned an invalid address"<<std::endl;
@@ -479,10 +483,8 @@ int nasal_scalar::nasal_scalar_mult(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_div(int a,int b)
+int nasal_scalar::nasal_scalar_div(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_div: memory returned an invalid address"<<std::endl;
@@ -525,10 +527,8 @@ int nasal_scalar::nasal_scalar_div(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_link(int a,int b)
+int nasal_scalar::nasal_scalar_link(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_link: memory returned an invalid address"<<std::endl;
@@ -551,9 +551,8 @@ int nasal_scalar::nasal_scalar_link(int a,int b)
     nasal_vm.gc_get(new_value_address).set_string(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_unary_sub(int a)
+int nasal_scalar::nasal_scalar_unary_sub(int a_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
     if(a_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_unary_sub: memory returned an invalid address"<<std::endl;
@@ -582,9 +581,8 @@ int nasal_scalar::nasal_scalar_unary_sub(int a)
     nasal_vm.gc_get(new_value_address).set_number(-a_num);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_unary_not(int a)
+int nasal_scalar::nasal_scalar_unary_not(int a_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
     if(a_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_unary_not: memory returned an invalid address"<<std::endl;
@@ -625,10 +623,8 @@ int nasal_scalar::nasal_scalar_unary_not(int a)
         std::cout<<">> [vm] scalar_unary_not: error value type.number,string and nil can take part in unary not."<<std::endl;
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_cmp_equal(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_equal(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_equal: memory returned an invalid address"<<std::endl;
@@ -690,10 +686,8 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a,int b)
     }
     return -1;
 }
-int nasal_scalar::nasal_scalar_cmp_not_equal(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_not_equal(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_not_equal: memory returned an invalid address"<<std::endl;
@@ -755,10 +749,8 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a,int b)
     }
     return -1;
 }
-int nasal_scalar::nasal_scalar_cmp_less(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_less(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_less: memory returned an invalid address"<<std::endl;
@@ -801,10 +793,8 @@ int nasal_scalar::nasal_scalar_cmp_less(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_cmp_greater(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_greater(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_greater: memory returned an invalid address"<<std::endl;
@@ -847,10 +837,8 @@ int nasal_scalar::nasal_scalar_cmp_greater(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_lequal: memory returned an invalid address"<<std::endl;
@@ -893,10 +881,8 @@ int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a,int b)
     nasal_vm.gc_get(new_value_address).set_number(result);
     return new_value_address;
 }
-int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a,int b)
+int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a_scalar_addr,int b_scalar_addr)
 {
-    int a_scalar_addr=nasal_vm.mem_get(a);
-    int b_scalar_addr=nasal_vm.mem_get(b);
     if(a_scalar_addr<0 || b_scalar_addr<0)
     {
         std::cout<<">> [vm] scalar_cmp_gequal: memory returned an invalid address"<<std::endl;

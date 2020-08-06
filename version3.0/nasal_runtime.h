@@ -18,18 +18,34 @@ private:
     int global_scope_address;
     nasal_ast root;
     // process functions are private
+
+    // generate number and return gc place of this number
     int number_generation(nasal_ast&);
+    // generate string and return gc place of this string
     int string_generation(nasal_ast&);
+    // generate vector and return gc place of this vector
     int vector_generation(nasal_ast&);
+    // generate hash and return gc place of this hash
     int hash_generation(nasal_ast&);
+    // generate function and return gc place of this function
     int function_generation(nasal_ast&);
 
+    // main expression block running process
     int main_progress();
+    // function/loop/conditional expression block running process
     int block_progress();
+    // run loop
     int loop_progress();
+    // run conditional
     int conditional_progress();
+    // run function
     int function_progress();
-    int calculation();
+    // get scalars in complex data structure like vector/hash/function/closure(scope)
+    int call_nasal_scalar(nasal_ast&);
+    // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
+    int call_scalar_mem(nasal_ast&);
+    // calculate scalars
+    int calculation(nasal_ast&);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -161,10 +177,129 @@ int nasal_runtime::function_progress()
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::calculation()
+int nasal_runtime::call_nasal_scalar(nasal_ast& node)
 {
-    int ret_state=rt_exit_without_error;
-    return ret_state;
+    // unfinished
+    return -1;
+}
+int nasal_runtime::call_scalar_mem(nasal_ast& node)
+{
+    // unfinished
+    return -1;
+}
+int nasal_runtime::calculation(nasal_ast& node)
+{
+    int ret_address=-1;
+    int calculation_type=node.get_type();
+    if(calculation_type==ast_number)
+        ret_address=number_generation(node);
+    else if(calculation_type==ast_string)
+        ret_address=string_generation(node);
+    else if(calculation_type==ast_vector)
+        ret_address=vector_generation(node);
+    else if(calculation_type==ast_hash)
+        ret_address=hash_generation(node);
+    else if(calculation_type==ast_function)
+        ret_address=function_generation(node);
+    else if(calculation_type==ast_call)
+        ret_address=call_nasal_scalar(node);
+    else if(calculation_type==ast_add)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_add(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_sub)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_sub(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_mult)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_mult(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_div)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_div(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_link)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_link(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_cmp_equal)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_equal(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_cmp_not_equal)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_not_equal(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_less_than)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_less(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_less_equal)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_less_or_equal(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_greater_than)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_greater(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_greater_equal)
+    {
+        int left_gc_addr=calculation(node.get_children()[0]);
+        int right_gc_addr=calculation(node.get_children()[1]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_cmp_greater_or_equal(left_gc_addr,right_gc_addr);
+    }
+    else if(calculation_type==ast_unary_not)
+    {
+        int addr=calculation(node.get_children()[0]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_unary_not(addr);
+    }
+    else if(calculation_type==ast_unary_sub)
+    {
+        int addr=calculation(node.get_children()[0]);
+        ret_address=nasal_scalar_calculator.nasal_scalar_unary_sub(addr);
+    }
+    else if(calculation_type==ast_trinocular)
+    {
+        int condition_addr=calculation(node.get_children()[0]);
+        int ret_1_addr=calculation(node.get_children()[1]);
+        int ret_2_addr=calculation(node.get_children()[2]);
+        int check_null=nasal_scalar_calculator.nasal_scalar_unary_not(condition_addr);
+        if(nasal_vm.gc_get(check_null).get_number()==0)
+        {
+            ret_address=ret_1_addr;
+            nasal_vm.del_reference(ret_2_addr);
+        }
+        else
+        {
+            ret_address=ret_2_addr;
+            nasal_vm.del_reference(ret_1_addr);
+        }
+        nasal_vm.del_reference(condition_addr);
+        nasal_vm.del_reference(check_null);
+    }
+    // unfinished
+    return ret_address;
 }
 
 #endif
