@@ -155,6 +155,7 @@ int nasal_runtime::function_generation(nasal_ast& node)
 int nasal_runtime::main_progress()
 {
     int ret_state=rt_exit_without_error;
+
     return ret_state;
 }
 int nasal_runtime::block_progress()
@@ -299,6 +300,36 @@ int nasal_runtime::calculation(nasal_ast& node)
         nasal_vm.del_reference(check_null);
     }
     // unfinished
+    else if(calculation_type==ast_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
+    else if(calculation_type==ast_add_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
+    else if(calculation_type==ast_sub_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
+    else if(calculation_type==ast_div_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
+    else if(calculation_type==ast_mult_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
+    else if(calculation_type==ast_link_equal)
+    {
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+    }
     return ret_address;
 }
 
