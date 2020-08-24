@@ -17,7 +17,9 @@ private:
     int function_returned_address;
     int global_scope_address;
     nasal_ast root;
-    // process functions are private
+
+    // if error occurred,this value will add 1
+    int error;
 
     // generate number and return gc place of this number
     int number_generation(nasal_ast&);
@@ -55,12 +57,14 @@ public:
 
 nasal_runtime::nasal_runtime()
 {
+    error=0;
     this->root.clear();
     this->global_scope_address=-1;
     return;
 }
 nasal_runtime::~nasal_runtime()
 {
+    error=0;
     this->root.clear();
     this->global_scope_address=-1;
     return;
@@ -190,6 +194,7 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node)
 }
 int nasal_runtime::calculation(nasal_ast& node)
 {
+    // after this process, a new address(in nasal_vm.garbage_collector_memory) will be returned
     int ret_address=-1;
     int calculation_type=node.get_type();
     if(calculation_type==ast_number)
@@ -299,36 +304,68 @@ int nasal_runtime::calculation(nasal_ast& node)
         nasal_vm.del_reference(condition_addr);
         nasal_vm.del_reference(check_null);
     }
-    // unfinished
     else if(calculation_type==ast_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        nasal_vm.mem_change(scalar_mem_space,new_scalar_gc_addr);
+        nasal_vm.add_reference(new_scalar_gc_addr);
+        ret_address=new_scalar_gc_addr;
     }
     else if(calculation_type==ast_add_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int result_val_address=nasal_scalar_calculator.nasal_scalar_add(scalar_val_space,new_scalar_gc_addr);
+        nasal_vm.mem_change(scalar_mem_space,result_val_address);
+        nasal_vm.add_reference(result_val_address);
+        ret_address=result_val_address;
     }
     else if(calculation_type==ast_sub_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int result_val_address=nasal_scalar_calculator.nasal_scalar_sub(scalar_val_space,new_scalar_gc_addr);
+        nasal_vm.mem_change(scalar_mem_space,result_val_address);
+        nasal_vm.add_reference(result_val_address);
+        ret_address=result_val_address;
     }
     else if(calculation_type==ast_div_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int result_val_address=nasal_scalar_calculator.nasal_scalar_div(scalar_val_space,new_scalar_gc_addr);
+        nasal_vm.mem_change(scalar_mem_space,result_val_address);
+        nasal_vm.add_reference(result_val_address);
+        ret_address=result_val_address;
     }
     else if(calculation_type==ast_mult_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int result_val_address=nasal_scalar_calculator.nasal_scalar_mult(scalar_val_space,new_scalar_gc_addr);
+        nasal_vm.mem_change(scalar_mem_space,result_val_address);
+        nasal_vm.add_reference(result_val_address);
+        ret_address=result_val_address;
     }
     else if(calculation_type==ast_link_equal)
     {
         int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
         int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int result_val_address=nasal_scalar_calculator.nasal_scalar_link(scalar_val_space,new_scalar_gc_addr);
+        nasal_vm.mem_change(scalar_mem_space,result_val_address);
+        nasal_vm.add_reference(result_val_address);
+        ret_address=result_val_address;
+    }
+    if(ret_address<0)
+    {
+        std::cout<<">> [runtime] calculation:incorrect values are used in calculation."<<std::endl;
+        ++error;
     }
     return ret_address;
 }
