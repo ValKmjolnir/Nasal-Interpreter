@@ -8,7 +8,7 @@ nasal_number: basic type(double)
 nasal_string: basic type(std::string)
 nasal_vector: elems[i] -> address in memory -> value address in gc
 nasal_hash:   elems[key] -> address in memory -> value address in gc
-nasal_function: closure -> address in memory ->value address in gc(type: nasal_closure)
+nasal_function: closure -> value address in gc(type: nasal_closure)
 nasal_closure: std::list<std::map<std::string,int>> -> std::map<std::string,int> -> (int) -> address in memory -> value address in gc
 */
 
@@ -68,6 +68,7 @@ public:
     ~nasal_closure();
     void add_scope();
     void del_scope();
+    void add_new_value(std::string,int);
     int get_value_address(std::string);
     int get_mem_address(std::string);
 };
@@ -314,6 +315,19 @@ void nasal_closure::del_scope()
     for(std::map<std::string,int>::iterator i=this->elems.back().begin();i!=this->elems.back().end();++i)
         nasal_vm.mem_free(i->second);
     this->elems.pop_back();
+    return;
+}
+void nasal_closure::add_new_value(std::string key,int value_address)
+{
+    int new_mem_address=nasal_vm.mem_alloc();
+    nasal_vm.mem_init(new_mem_address,value_address);
+    if(elems.back().find(key)!=elems.back().end())
+    {
+        // if this value already exists,delete the old value and update a new value
+        int old_mem_address=elems.back()[key];
+        nasal_vm.mem_free(old_mem_address);
+    }
+    elems.back()[key]=new_mem_address;
     return;
 }
 int nasal_closure::get_value_address(std::string key)

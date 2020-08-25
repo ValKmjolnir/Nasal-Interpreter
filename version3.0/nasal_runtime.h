@@ -26,11 +26,11 @@ private:
     // generate string and return gc place of this string
     int string_generation(nasal_ast&);
     // generate vector and return gc place of this vector
-    int vector_generation(nasal_ast&);
+    int vector_generation(nasal_ast&,int);
     // generate hash and return gc place of this hash
-    int hash_generation(nasal_ast&);
+    int hash_generation(nasal_ast&,int);
     // generate function and return gc place of this function
-    int function_generation(nasal_ast&);
+    int function_generation(nasal_ast&,int);
 
     // main expression block running process
     int main_progress();
@@ -43,11 +43,11 @@ private:
     // run function
     int function_progress();
     // get scalars in complex data structure like vector/hash/function/closure(scope)
-    int call_nasal_scalar(nasal_ast&);
+    int call_nasal_scalar(nasal_ast&,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
-    int call_scalar_mem(nasal_ast&);
+    int call_scalar_mem(nasal_ast&,int);
     // calculate scalars
-    int calculation(nasal_ast&);
+    int calculation(nasal_ast&,int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -100,7 +100,7 @@ int nasal_runtime::string_generation(nasal_ast& node)
     nasal_vm.gc_get(new_addr).set_string(node.get_str());
     return new_addr;
 }
-int nasal_runtime::vector_generation(nasal_ast& node)
+int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr=-1)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_vector);
@@ -115,14 +115,14 @@ int nasal_runtime::vector_generation(nasal_ast& node)
         {
             case ast_number:   nasal_vm.mem_init(new_memory_space,number_generation(node.get_children()[i]));break;
             case ast_string:   nasal_vm.mem_init(new_memory_space,string_generation(node.get_children()[i]));break;
-            case ast_vector:   nasal_vm.mem_init(new_memory_space,vector_generation(node.get_children()[i]));break;
-            case ast_hash:     nasal_vm.mem_init(new_memory_space,hash_generation(node.get_children()[i]));break;
-            case ast_function: nasal_vm.mem_init(new_memory_space,function_generation(node.get_children()[i]));break;
+            case ast_vector:   nasal_vm.mem_init(new_memory_space,vector_generation(node.get_children()[i],local_scope_addr));break;
+            case ast_hash:     nasal_vm.mem_init(new_memory_space,hash_generation(node.get_children()[i],local_scope_addr));break;
+            case ast_function: nasal_vm.mem_init(new_memory_space,function_generation(node.get_children()[i],local_scope_addr));break;
         }
     }
     return new_addr;
 }
-int nasal_runtime::hash_generation(nasal_ast& node)
+int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr=-1)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_hash);
@@ -139,14 +139,14 @@ int nasal_runtime::hash_generation(nasal_ast& node)
         {
             case ast_number:   nasal_vm.mem_init(new_memory_space,number_generation(ref_of_hash_member_value));break;
             case ast_string:   nasal_vm.mem_init(new_memory_space,string_generation(ref_of_hash_member_value));break;
-            case ast_vector:   nasal_vm.mem_init(new_memory_space,vector_generation(ref_of_hash_member_value));break;
-            case ast_hash:     nasal_vm.mem_init(new_memory_space,hash_generation(ref_of_hash_member_value));break;
-            case ast_function: nasal_vm.mem_init(new_memory_space,function_generation(ref_of_hash_member_value));break;
+            case ast_vector:   nasal_vm.mem_init(new_memory_space,vector_generation(ref_of_hash_member_value,local_scope_addr));break;
+            case ast_hash:     nasal_vm.mem_init(new_memory_space,hash_generation(ref_of_hash_member_value,local_scope_addr));break;
+            case ast_function: nasal_vm.mem_init(new_memory_space,function_generation(ref_of_hash_member_value,local_scope_addr));break;
         }
     }
     return new_addr;
 }
-int nasal_runtime::function_generation(nasal_ast& node)
+int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr=-1)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_function);
@@ -182,17 +182,37 @@ int nasal_runtime::function_progress()
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::call_nasal_scalar(nasal_ast& node)
+int nasal_runtime::call_nasal_scalar(nasal_ast& node,int local_scope_addr=-1)
 {
+    int value_address=-1;
+    if(local_scope_addr>=0)
+        value_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(node.get_children()[0].get_str());
+    if(value_address<0)
+        value_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(node.get_children()[0].get_str());
+    if(value_address<0)
+    {
+        std::cout<<">> [runtime] call_nasal_scalar:cannot find value named \'"<<node.get_children()[0].get_str()<<"\'."<<std::endl;
+        return -1;
+    }
     // unfinished
     return -1;
 }
-int nasal_runtime::call_scalar_mem(nasal_ast& node)
+int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr=-1)
 {
+    int mem_address=-1;
+    if(local_scope_addr>=0)
+        mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(node.get_children()[0].get_str());
+    if(mem_address<0)
+        mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(node.get_children()[0].get_str());
+    if(mem_address<0)
+    {
+        std::cout<<">> [runtime] call_nasal_mem:cannot find value named \'"<<node.get_children()[0].get_str()<<"\'."<<std::endl;
+        return -1;
+    }
     // unfinished
-    return -1;
+    return mem_address;
 }
-int nasal_runtime::calculation(nasal_ast& node)
+int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr=-1)
 {
     // after this process, a new address(in nasal_vm.garbage_collector_memory) will be returned
     int ret_address=-1;
@@ -202,94 +222,94 @@ int nasal_runtime::calculation(nasal_ast& node)
     else if(calculation_type==ast_string)
         ret_address=string_generation(node);
     else if(calculation_type==ast_vector)
-        ret_address=vector_generation(node);
+        ret_address=vector_generation(node,local_scope_addr);
     else if(calculation_type==ast_hash)
-        ret_address=hash_generation(node);
+        ret_address=hash_generation(node,local_scope_addr);
     else if(calculation_type==ast_function)
-        ret_address=function_generation(node);
+        ret_address=function_generation(node,local_scope_addr);
     else if(calculation_type==ast_call)
-        ret_address=call_nasal_scalar(node);
+        ret_address=call_nasal_scalar(node,local_scope_addr);
     else if(calculation_type==ast_add)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_add(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_sub)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_sub(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_mult)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_mult(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_div)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_div(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_link)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_link(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_cmp_equal)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_equal(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_cmp_not_equal)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_not_equal(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_less_than)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_less(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_less_equal)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_less_or_equal(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_greater_than)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_greater(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_greater_equal)
     {
-        int left_gc_addr=calculation(node.get_children()[0]);
-        int right_gc_addr=calculation(node.get_children()[1]);
+        int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
+        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_cmp_greater_or_equal(left_gc_addr,right_gc_addr);
     }
     else if(calculation_type==ast_unary_not)
     {
-        int addr=calculation(node.get_children()[0]);
+        int addr=calculation(node.get_children()[0],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_unary_not(addr);
     }
     else if(calculation_type==ast_unary_sub)
     {
-        int addr=calculation(node.get_children()[0]);
+        int addr=calculation(node.get_children()[0],local_scope_addr);
         ret_address=nasal_scalar_calculator.nasal_scalar_unary_sub(addr);
     }
     else if(calculation_type==ast_trinocular)
     {
-        int condition_addr=calculation(node.get_children()[0]);
-        int ret_1_addr=calculation(node.get_children()[1]);
-        int ret_2_addr=calculation(node.get_children()[2]);
+        int condition_addr=calculation(node.get_children()[0],local_scope_addr);
+        int ret_1_addr=calculation(node.get_children()[1],local_scope_addr);
+        int ret_2_addr=calculation(node.get_children()[2],local_scope_addr);
         int check_null=nasal_scalar_calculator.nasal_scalar_unary_not(condition_addr);
         if(nasal_vm.gc_get(check_null).get_number()==0)
         {
@@ -306,17 +326,17 @@ int nasal_runtime::calculation(nasal_ast& node)
     }
     else if(calculation_type==ast_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         nasal_vm.mem_change(scalar_mem_space,new_scalar_gc_addr);
         nasal_vm.add_reference(new_scalar_gc_addr);
         ret_address=new_scalar_gc_addr;
     }
     else if(calculation_type==ast_add_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
         int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_calculator.nasal_scalar_add(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.mem_change(scalar_mem_space,result_val_address);
         nasal_vm.add_reference(result_val_address);
@@ -324,9 +344,9 @@ int nasal_runtime::calculation(nasal_ast& node)
     }
     else if(calculation_type==ast_sub_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
         int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_calculator.nasal_scalar_sub(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.mem_change(scalar_mem_space,result_val_address);
         nasal_vm.add_reference(result_val_address);
@@ -334,9 +354,9 @@ int nasal_runtime::calculation(nasal_ast& node)
     }
     else if(calculation_type==ast_div_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
         int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_calculator.nasal_scalar_div(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.mem_change(scalar_mem_space,result_val_address);
         nasal_vm.add_reference(result_val_address);
@@ -344,9 +364,9 @@ int nasal_runtime::calculation(nasal_ast& node)
     }
     else if(calculation_type==ast_mult_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
         int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_calculator.nasal_scalar_mult(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.mem_change(scalar_mem_space,result_val_address);
         nasal_vm.add_reference(result_val_address);
@@ -354,9 +374,9 @@ int nasal_runtime::calculation(nasal_ast& node)
     }
     else if(calculation_type==ast_link_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0]);
+        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
         int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
-        int new_scalar_gc_addr=calculation(node.get_children()[1]);
+        int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_calculator.nasal_scalar_link(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.mem_change(scalar_mem_space,result_val_address);
         nasal_vm.add_reference(result_val_address);
