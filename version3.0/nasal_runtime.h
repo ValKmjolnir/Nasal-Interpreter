@@ -32,20 +32,31 @@ private:
     // generate function and return gc place of this function
     int function_generation(nasal_ast&,int);
 
+    /*
+        functions after this note may have parameter named 'local_scope_addr'
+        if no local scope existing when calling these functions,use -1
+    */
+
     // main expression block running process
     int main_progress();
     // function/loop/conditional expression block running process
-    int block_progress();
+    int block_progress(nasal_ast&,int);
     // run loop
-    int loop_progress();
+    int loop_progress(nasal_ast&,int);
     // run conditional
-    int conditional_progress();
+    int conditional_progress(nasal_ast&,int);
     // run function
-    int function_progress();
+    int function_progress(nasal_ast&,int);
     // get scalars in complex data structure like vector/hash/function/closure(scope)
-    int call_nasal_scalar(nasal_ast&,int);
+    int call_scalar(nasal_ast&,int);
+    int call_vector(nasal_ast&,int,int);
+    int call_hash(nasal_ast&,int,int);
+    int call_function(nasal_ast&,int,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
     int call_scalar_mem(nasal_ast&,int);
+    int call_vector_mem(nasal_ast&,int,int);
+    int call_hash_mem(nasal_ast&,int,int);
+    int call_function_mem(nasal_ast&,int,int);
     // calculate scalars
     int calculation(nasal_ast&,int);
 public:
@@ -76,12 +87,17 @@ void nasal_runtime::set_root(nasal_ast& parse_result)
 }
 void nasal_runtime::run()
 {
+    int returned_statement;
+    time_t begin_time,end_time;
     this->global_scope_address=nasal_vm.gc_alloc();
     nasal_vm.gc_get(global_scope_address).set_type(vm_closure);
     nasal_vm.gc_get(global_scope_address).get_closure().add_scope();
-
+    begin_time=std::time(NULL);
+    returned_statement=main_progress();
+    end_time=std::time(NULL);
     nasal_vm.gc_get(global_scope_address).get_closure().del_scope();
     nasal_vm.del_reference(global_scope_address);
+    std::cout<<">> [runtime] process exited after "<<end_time-begin_time<<"s with returned value "<<returned_statement<<'.'<<std::endl;
     return;
 }
 
@@ -100,7 +116,7 @@ int nasal_runtime::string_generation(nasal_ast& node)
     nasal_vm.gc_get(new_addr).set_string(node.get_str());
     return new_addr;
 }
-int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_vector);
@@ -122,7 +138,7 @@ int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr=-1)
     }
     return new_addr;
 }
-int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_hash);
@@ -146,7 +162,7 @@ int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr=-1)
     }
     return new_addr;
 }
-int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr)
 {
     int new_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(new_addr).set_type(vm_function);
@@ -159,30 +175,53 @@ int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr=-1)
 int nasal_runtime::main_progress()
 {
     int ret_state=rt_exit_without_error;
-
+    int expr_number=root.get_children().size();
+    for(int i=0;i<expr_number;++i)
+    {
+        int node_type=root.get_children()[i].get_type();
+        switch(node_type)
+        {
+            case ast_definition:break;
+            case ast_number:break;
+            case ast_string:break;
+            case ast_add_equal:
+            case ast_sub_equal:
+            case ast_mult_equal:
+            case ast_div_equal:
+            case ast_link_equal:
+            case ast_unary_sub:
+            case ast_unary_not:
+            case ast_add:
+            case ast_sub:
+            case ast_mult:
+            case ast_div:
+            case ast_link:
+            case ast_trinocular:calculation(root.get_children()[i],-1);break;
+        }
+    }
     return ret_state;
 }
-int nasal_runtime::block_progress()
+int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
 {
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::loop_progress()
+int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr)
 {
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::conditional_progress()
+int nasal_runtime::conditional_progress(nasal_ast& node,int local_scope_addr)
 {
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::function_progress()
+int nasal_runtime::function_progress(nasal_ast& node,int local_scope_addr)
 {
     int ret_state=rt_exit_without_error;
     return ret_state;
 }
-int nasal_runtime::call_nasal_scalar(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
 {
     int value_address=-1;
     if(local_scope_addr>=0)
@@ -197,7 +236,19 @@ int nasal_runtime::call_nasal_scalar(nasal_ast& node,int local_scope_addr=-1)
     // unfinished
     return -1;
 }
-int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::call_function(nasal_ast& node,int base_value_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
 {
     int mem_address=-1;
     if(local_scope_addr>=0)
@@ -212,7 +263,19 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr=-1)
     // unfinished
     return mem_address;
 }
-int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr=-1)
+int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::call_function_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
+{
+    return -1;
+}
+int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
 {
     // after this process, a new address(in nasal_vm.garbage_collector_memory) will be returned
     int ret_address=-1;
@@ -228,7 +291,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr=-1)
     else if(calculation_type==ast_function)
         ret_address=function_generation(node,local_scope_addr);
     else if(calculation_type==ast_call)
-        ret_address=call_nasal_scalar(node,local_scope_addr);
+        ret_address=call_scalar(node,local_scope_addr);
     else if(calculation_type==ast_add)
     {
         int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
