@@ -170,18 +170,34 @@ int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr)
 
     ref_of_this_function.set_arguments(node.get_children()[0]);
     ref_of_this_function.set_run_block(node.get_children()[1]);
+    if(local_scope_addr>=0)
+    {
+        nasal_vm.add_reference(local_scope_addr);
+        ref_of_this_function.set_closure_addr(local_scope_addr);
+    }
     return new_addr;
 }
 int nasal_runtime::main_progress()
 {
     int ret_state=rt_exit_without_error;
     int expr_number=root.get_children().size();
+    int process_returned_value_addr=-1;
     for(int i=0;i<expr_number;++i)
     {
         int node_type=root.get_children()[i].get_type();
         switch(node_type)
         {
             case ast_definition:break;
+            case ast_multi_assign:break;
+            case ast_conditional:
+                ret_state=conditional_progress(root.get_children()[i],-1);
+                break;
+            case ast_while:
+            case ast_for:
+            case ast_forindex:
+            case ast_foreach:
+                ret_state=loop_progress(root.get_children()[i],-1);
+                break;
             case ast_number:break;
             case ast_string:break;
             case ast_add_equal:
@@ -196,8 +212,34 @@ int nasal_runtime::main_progress()
             case ast_mult:
             case ast_div:
             case ast_link:
-            case ast_trinocular:calculation(root.get_children()[i],-1);break;
+            case ast_trinocular:
+                process_returned_value_addr=calculation(root.get_children()[i],-1);
+                nasal_vm.del_reference(process_returned_value_addr);
+                break;
+            case ast_break:
+                ret_state=rt_break;
+                break;
+            case ast_continue:
+                ret_state=rt_continue;
+                break;
         }
+        switch(ret_state)
+        {
+            case rt_break:
+                std::cout<<">> [runtime] main_progress:cannot use break in main progress."<<std::endl;
+                ++error;
+                break;
+            case rt_continue:
+                std::cout<<">> [runtime] main_progress:cannot use continue in main progress."<<std::endl;
+                ++error;
+                break;
+            case rt_error:
+                std::cout<<">> [runtime] main_progress:error occurred when executing main progress."<<std::endl;
+                ++error;
+                break;
+        }
+        if(error)
+            break;
     }
     return ret_state;
 }

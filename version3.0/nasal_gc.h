@@ -22,8 +22,8 @@ public:
     ~nasal_vector();
     void add_elem(int);
     int  del_elem(int);
-    int get_value_address(int);
-    int get_mem_address(int);
+    int  get_value_address(int);
+    int  get_mem_address(int);
 };
 
 class nasal_hash
@@ -36,8 +36,8 @@ public:
     ~nasal_hash();
     void add_elem(std::string,int);
     void del_elem(std::string);
-    int get_value_address(std::string);
-    int get_mem_address(std::string);
+    int  get_value_address(std::string);
+    int  get_mem_address(std::string);
 };
 
 class nasal_function
@@ -51,7 +51,7 @@ public:
     nasal_function();
     ~nasal_function();
     void set_closure_addr(int);
-    int get_closure_addr();
+    int  get_closure_addr();
     void set_arguments(nasal_ast&);
     void set_run_block(nasal_ast&);
 };
@@ -69,8 +69,8 @@ public:
     void add_scope();
     void del_scope();
     void add_new_value(std::string,int);
-    int get_value_address(std::string);
-    int get_mem_address(std::string);
+    int  get_value_address(std::string);
+    int  get_mem_address(std::string);
 };
 
 class nasal_scalar
@@ -265,9 +265,9 @@ nasal_function::~nasal_function()
     function_expr.clear();
     return;
 }
-void nasal_function::set_closure_addr(int address)
+void nasal_function::set_closure_addr(int value_address)
 {
-    closure_addr=address;
+    closure_addr=value_address;
     return;
 }
 int nasal_function::get_closure_addr()
