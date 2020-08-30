@@ -246,6 +246,66 @@ int nasal_runtime::main_progress()
 int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
 {
     int ret_state=rt_exit_without_error;
+    if(local_scope_addr<0)
+    {
+        local_scope_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(local_scope_addr).set_type(vm_closure);
+        nasal_vm.gc_get(local_scope_addr).get_closure().add_scope();
+    }
+    else
+        nasal_vm.add_reference(local_scope_addr);
+    int expr_number=node.get_children().size();
+    int process_returned_value_addr=-1;
+    for(int i=0;i<expr_number;++i)
+    {
+        int node_type=node.get_children()[i].get_type();
+        switch(node_type)
+        {
+            case ast_definition:break;
+            case ast_multi_assign:break;
+            case ast_conditional:
+                ret_state=conditional_progress(node.get_children()[i],local_scope_addr);
+                break;
+            case ast_while:
+            case ast_for:
+            case ast_forindex:
+            case ast_foreach:
+                ret_state=loop_progress(node.get_children()[i],local_scope_addr);
+                break;
+            case ast_number:break;
+            case ast_string:break;
+            case ast_add_equal:
+            case ast_sub_equal:
+            case ast_mult_equal:
+            case ast_div_equal:
+            case ast_link_equal:
+            case ast_unary_sub:
+            case ast_unary_not:
+            case ast_add:
+            case ast_sub:
+            case ast_mult:
+            case ast_div:
+            case ast_link:
+            case ast_trinocular:
+                process_returned_value_addr=calculation(root.get_children()[i],local_scope_addr);
+                nasal_vm.del_reference(process_returned_value_addr);
+                break;
+            case ast_break:
+                ret_state=rt_break;
+                break;
+            case ast_continue:
+                ret_state=rt_continue;
+                break;
+        }
+        if(ret_state==rt_error)
+        {
+            std::cout<<">> [runtime] block_progress:error occurred when executing sub-progress."<<std::endl;
+            ++error;
+        }
+        if(error)
+            break;
+    }
+    nasal_vm.del_reference(local_scope_addr);
     return ret_state;
 }
 int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr)
