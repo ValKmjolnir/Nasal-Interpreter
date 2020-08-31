@@ -24,6 +24,7 @@ public:
     int  del_elem(int);
     int  get_value_address(int);
     int  get_mem_address(int);
+    void deepcopy(nasal_vector&);
 };
 
 class nasal_hash
@@ -38,6 +39,7 @@ public:
     void del_elem(std::string);
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
+    void deepcopy(nasal_hash&);
 };
 
 class nasal_function
@@ -54,6 +56,7 @@ public:
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
     void set_run_block(nasal_ast&);
+    void deepcopy(nasal_function&);
 };
 
 class nasal_closure
@@ -71,6 +74,7 @@ public:
     void add_new_value(std::string,int);
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
+    void deepcopy(nasal_closure&);
 };
 
 class nasal_scalar
@@ -91,6 +95,7 @@ public:
     nasal_hash& get_hash();
     nasal_function& get_func();
     nasal_closure& get_closure();
+    void deepcopy(nasal_scalar&);
     // parameter: memory_manager_memory address
     int nasal_scalar_add(int,int);
     int nasal_scalar_sub(int,int);
@@ -200,6 +205,20 @@ int nasal_vector::get_mem_address(int index)
     }
     return elems[(index+vec_size)%vec_size];
 }
+void nasal_vector::deepcopy(nasal_vector& tmp)
+{
+    int tmp_size=tmp.elems.size();
+    for(int i=0;i<tmp_size;++i)
+    {
+        int new_mem_addr=nasal_vm.mem_alloc();
+        int new_value_addr=nasal_vm.gc_alloc();
+        nasal_vm.mem_init(new_mem_addr,new_value_addr);
+        int tmp_elems_value_addr=nasal_vm.mem_get(tmp.elems[i]);
+        nasal_vm.gc_get(new_value_addr).deepcopy(nasal_vm.gc_get(tmp_elems_value_addr));
+        this->elems.push_back(new_mem_addr);
+    }
+    return;
+}
 
 /*functions of nasal_hash*/
 nasal_hash::nasal_hash()
@@ -249,6 +268,19 @@ int nasal_hash::get_mem_address(std::string key)
         std::cout<<">> [vm] nasal_hash:get_mem_address: "<<key<<" does not exist."<<std::endl;
     return -1;
 }
+void nasal_hash::deepcopy(nasal_hash& tmp)
+{
+    for(std::map<std::string,int>::iterator iter=tmp.elems.begin();iter!=tmp.elems.end();++iter)
+    {
+        int new_mem_addr=nasal_vm.mem_alloc();
+        int new_value_addr=nasal_vm.gc_alloc();
+        nasal_vm.mem_init(new_mem_addr,new_value_addr);
+        int tmp_value_addr=nasal_vm.mem_get(iter->second);
+        nasal_vm.gc_get(new_value_addr).deepcopy(nasal_vm.gc_get(tmp_value_addr));
+        this->elems[iter->first]=new_mem_addr;
+    }
+    return;
+}
 
 /*functions of nasal_function*/
 nasal_function::nasal_function()
@@ -282,6 +314,14 @@ void nasal_function::set_arguments(nasal_ast& node)
 void nasal_function::set_run_block(nasal_ast& node)
 {
     function_expr=node;
+    return;
+}
+void nasal_function::deepcopy(nasal_function& tmp)
+{
+    this->closure_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(this->closure_addr).deepcopy(nasal_vm.gc_get(tmp.closure_addr));
+    this->argument_list=tmp.argument_list;
+    this->function_expr=tmp.function_expr;
     return;
 }
 
@@ -350,6 +390,23 @@ int nasal_closure::get_mem_address(std::string key)
     }
     return ret_address;
 }
+void nasal_closure::deepcopy(nasal_closure& tmp)
+{
+    for(std::list<std::map<std::string,int> >::iterator i=tmp.elems.begin();i!=tmp.elems.end();++i)
+    {
+        this->add_scope();
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+        {
+            int new_mem_addr=nasal_vm.mem_alloc();
+            int new_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.mem_init(new_mem_addr,new_value_addr);
+            int tmp_value_addr=nasal_vm.mem_get(j->second);
+            nasal_vm.gc_get(new_value_addr).deepcopy(nasal_vm.gc_get(tmp_value_addr));
+            this->elems.back()[j->first]=new_mem_addr;
+        }
+    }
+    return;
+}
 
 /*functions of nasal_scalar*/
 nasal_scalar::nasal_scalar()
@@ -362,7 +419,7 @@ nasal_scalar::~nasal_scalar()
 {
     switch(this->type)
     {
-        case vm_nil:break;
+        case vm_nil:      break;
         case vm_number:   delete (double*)(this->scalar_ptr);         break;
         case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
         case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
@@ -370,6 +427,7 @@ nasal_scalar::~nasal_scalar()
         case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
         case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
     }
+    this->scalar_ptr=NULL;
     return;
 }
 void nasal_scalar::clear()
@@ -377,7 +435,7 @@ void nasal_scalar::clear()
     this->type=vm_nil;
     switch(this->type)
     {
-        case vm_nil:break;
+        case vm_nil:      break;
         case vm_number:   delete (double*)(this->scalar_ptr);         break;
         case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
         case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
@@ -385,6 +443,7 @@ void nasal_scalar::clear()
         case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
         case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
     }
+    this->scalar_ptr=NULL;
     return;
 }
 bool nasal_scalar::set_type(int nasal_scalar_type)
@@ -442,6 +501,22 @@ nasal_function& nasal_scalar::get_func()
 nasal_closure& nasal_scalar::get_closure()
 {
     return *(nasal_closure*)(this->scalar_ptr);
+}
+void nasal_scalar::deepcopy(nasal_scalar& tmp)
+{
+    this->clear();
+    this->type=tmp.type;
+    switch(tmp.type)
+    {
+        case vm_nil:      break;
+        case vm_number:   this->scalar_ptr=(void*)(new double);*(double*)this->scalar_ptr=tmp.get_number();break;
+        case vm_string:   this->scalar_ptr=(void*)(new std::string);*(std::string*)this->scalar_ptr=tmp.get_string();break;
+        case vm_vector:   this->scalar_ptr=(void*)(new nasal_vector);(*(nasal_vector*)this->scalar_ptr).deepcopy(tmp.get_vector());break;
+        case vm_hash:     this->scalar_ptr=(void*)(new nasal_hash);(*(nasal_hash*)this->scalar_ptr).deepcopy(tmp.get_hash());break;
+        case vm_function: this->scalar_ptr=(void*)(new nasal_function);(*(nasal_function*)this->scalar_ptr).deepcopy(tmp.get_func());break;
+        case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);(*(nasal_closure*)this->scalar_ptr).deepcopy(tmp.get_closure());break;
+    }
+    return;
 }
 int nasal_scalar::nasal_scalar_add(int a_scalar_addr,int b_scalar_addr)
 {
