@@ -89,12 +89,13 @@ public:
     bool set_type(int);
     void set_number(double);
     void set_string(std::string);
-    double get_number();
-    std::string get_string();
-    nasal_vector& get_vector();
-    nasal_hash& get_hash();
+    int             get_type();
+    double          get_number();
+    std::string     get_string();
+    nasal_vector&   get_vector();
+    nasal_hash&     get_hash();
     nasal_function& get_func();
-    nasal_closure& get_closure();
+    nasal_closure&  get_closure();
     void deepcopy(nasal_scalar&);
     // parameter: memory_manager_memory address
     int nasal_scalar_add(int,int);
@@ -477,6 +478,10 @@ void nasal_scalar::set_string(std::string str)
 {
     *(std::string*)(this->scalar_ptr)=str;
     return;
+}
+int nasal_scalar::get_type()
+{
+    return this->type;
 }
 double nasal_scalar::get_number()
 {
