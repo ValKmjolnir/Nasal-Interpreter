@@ -22,6 +22,7 @@ public:
     ~nasal_vector();
     void add_elem(int);
     int  del_elem(int);
+    int  size();
     int  get_value_address(int);
     int  get_mem_address(int);
     void deepcopy(nasal_vector&);
@@ -103,6 +104,8 @@ public:
     int nasal_scalar_mult(int,int);
     int nasal_scalar_div(int,int);
     int nasal_scalar_link(int,int);
+    int nasal_scalar_and(int,int);
+    int nasal_scalar_or(int,int);
     int nasal_scalar_unary_sub(int);
     int nasal_scalar_unary_not(int);
     int nasal_scalar_cmp_equal(int,int);
@@ -181,6 +184,10 @@ int nasal_vector::del_elem(int index)
     nasal_vm.mem_free(ret);
     elems.pop_back();
     return ret;
+}
+int nasal_vector::size()
+{
+    return this->elems.size();
 }
 int nasal_vector::get_value_address(int index)
 {
@@ -722,6 +729,30 @@ int nasal_scalar::nasal_scalar_link(int a_scalar_addr,int b_scalar_addr)
     nasal_vm.gc_get(new_value_address).set_type(vm_string);
     nasal_vm.gc_get(new_value_address).set_string(result);
     return new_value_address;
+}
+int nasal_scalar::nasal_scalar_and(int a_scalar_addr,int b_scalar_addr)
+{
+    nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
+    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || b_ref.type==vm_hash || b_ref.type==vm_vector)
+    {
+        std::cout<<">> [vm] scalar_and: hash and vector cannot take part in and calculation."<<std::endl;
+        return -1;
+    }
+    // unfinished
+    return -1;
+}
+int nasal_scalar::nasal_scalar_or(int a_scalar_addr,int b_scalar_addr)
+{
+    nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
+    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || b_ref.type==vm_hash || b_ref.type==vm_vector)
+    {
+        std::cout<<">> [vm] scalar_or: hash and vector cannot take part in or calculation."<<std::endl;
+        return -1;
+    }
+    // unfinished
+    return -1;
 }
 int nasal_scalar::nasal_scalar_unary_sub(int a_scalar_addr)
 {
