@@ -379,11 +379,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             nasal_ast& subvec_node=node.get_children()[i];
             int begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
             int end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
-            int begin_index,end_index;
-            if(nasal_vm.gc_get(begin_value_addr).get_type()==vm_nil)
-                begin_index=0;
-            if(nasal_vm.gc_get(end_value_addr).get_type()==vm_nil)
-                end_index=reference_value.size()-1;
+            
             ;// unfinished
             nasal_vm.del_reference(begin_value_addr);
             nasal_vm.del_reference(end_value_addr);
