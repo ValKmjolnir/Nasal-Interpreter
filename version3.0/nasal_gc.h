@@ -734,25 +734,167 @@ int nasal_scalar::nasal_scalar_and(int a_scalar_addr,int b_scalar_addr)
 {
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    if(a_ref.type==vm_hash || a_ref.type==vm_vector || b_ref.type==vm_hash || b_ref.type==vm_vector)
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function || b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
     {
         std::cout<<">> [vm] scalar_and: hash and vector cannot take part in and calculation."<<std::endl;
         return -1;
     }
-    // unfinished
-    return -1;
+    if(a_ref.type==vm_number)
+    {
+        double number=a_ref.get_number();
+        if(number==0)
+        {
+            int new_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+            nasal_vm.gc_get(new_value_addr).set_number(0);
+            return new_value_addr;
+        }
+        else
+        {
+            nasal_vm.add_reference(a_scalar_addr);
+            return a_scalar_addr;
+        }
+    }
+    else if(a_ref.type==vm_nil)
+    {
+        int new_value_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+        nasal_vm.gc_get(new_value_addr).set_number(0);
+        return new_value_addr;
+    }
+    else if(a_ref.type==vm_string)
+    {
+        std::string str=a_ref.get_string();
+        if(!str.length() || !check_numerable_string(str))
+        {
+            int new_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+            nasal_vm.gc_get(new_value_addr).set_number(0);
+            return new_value_addr;
+        }
+        else
+        {
+            double number=trans_string_to_number(str);
+            if(number==0)
+            {
+                int new_value_addr=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+                nasal_vm.gc_get(new_value_addr).set_number(0);
+                return new_value_addr;
+            }
+            else
+            {
+                nasal_vm.add_reference(a_scalar_addr);
+                return a_scalar_addr;
+            }
+        }
+    }
+
+    if(b_ref.type==vm_number)
+    {
+        double number=b_ref.get_number();
+        if(number==0)
+        {
+            int new_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+            nasal_vm.gc_get(new_value_addr).set_number(0);
+            return new_value_addr;
+        }
+        else
+        {
+            nasal_vm.add_reference(b_scalar_addr);
+            return b_scalar_addr;
+        }
+    }
+    else if(b_ref.type==vm_nil)
+    {
+        int new_value_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+        nasal_vm.gc_get(new_value_addr).set_number(0);
+        return new_value_addr;
+    }
+    else if(b_ref.type==vm_string)
+    {
+        std::string str=b_ref.get_string();
+        if(!str.length() || !check_numerable_string(str))
+        {
+            int new_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+            nasal_vm.gc_get(new_value_addr).set_number(0);
+            return new_value_addr;
+        }
+        else
+        {
+            double number=trans_string_to_number(str);
+            if(number==0)
+            {
+                int new_value_addr=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(new_value_addr).set_type(vm_number);
+                nasal_vm.gc_get(new_value_addr).set_number(0);
+                return new_value_addr;
+            }
+            else
+            {
+                nasal_vm.add_reference(b_scalar_addr);
+                return b_scalar_addr;
+            }
+        }
+    }
+
+    int false_value_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(false_value_addr).set_type(vm_number);
+    nasal_vm.gc_get(false_value_addr).set_number(0);
+    return false_value_addr;
 }
 int nasal_scalar::nasal_scalar_or(int a_scalar_addr,int b_scalar_addr)
 {
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    if(a_ref.type==vm_hash || a_ref.type==vm_vector || b_ref.type==vm_hash || b_ref.type==vm_vector)
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function || b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
     {
         std::cout<<">> [vm] scalar_or: hash and vector cannot take part in or calculation."<<std::endl;
         return -1;
     }
-    // unfinished
-    return -1;
+    if(a_ref.type==vm_number)
+    {
+        if(a_ref.get_number()!=0)
+        {
+            nasal_vm.add_reference(a_scalar_addr);
+            return a_scalar_addr;
+        }
+    }
+    else if(a_ref.type==vm_string)
+    {
+        std::string str=a_ref.get_string();
+        if(str.length() && (!check_numerable_string(str) || trans_string_to_number(str)!=0))
+        {
+            nasal_vm.add_reference(a_scalar_addr);
+            return a_scalar_addr;
+        }
+    }
+
+    if(b_ref.type==vm_number)
+    {
+        if(b_ref.get_number()!=0)
+        {
+            nasal_vm.add_reference(b_scalar_addr);
+            return b_scalar_addr;
+        }
+    }
+    else if(b_ref.type==vm_string)
+    {
+        std::string str=b_ref.get_string();
+        if(str.length() && (!check_numerable_string(str) || trans_string_to_number(str)!=0))
+        {
+            nasal_vm.add_reference(b_scalar_addr);
+            return b_scalar_addr;
+        }
+    }
+
+    int false_value_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(false_value_addr).set_type(vm_number);
+    nasal_vm.gc_get(false_value_addr).set_number(0);
+    return false_value_addr;
 }
 int nasal_scalar::nasal_scalar_unary_sub(int a_scalar_addr)
 {
