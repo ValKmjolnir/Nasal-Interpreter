@@ -127,6 +127,8 @@ enum parse_error
     lack_args,
     default_arg_not_end,
     dynamic_id_not_end,
+    definition_use_call,
+    multi_id_use_call,
     multi_assign_lack_val,
     lack_definition,
     lack_loop_iter,
@@ -140,31 +142,33 @@ void error_info(int line,int error_type,std::string error_str="")
     std::cout<<info<<line<<": ";
     switch(error_type)
     {
-        case unknown:             detail="unknown error.";                       break;
-        case error_token:         detail="error token \'"+error_str+"\'";        break;
-        case lack_left_curve:     detail="expected \'(\'.";                      break;
-        case lack_right_curve:    detail="expected \')\'.";                      break;
-        case lack_left_bracket:   detail="expected \'[\'.";                      break;
-        case lack_right_bracket:  detail="expected \']\'.";                      break;
-        case lack_left_brace:     detail="expected \'{\'.";                      break;
-        case lack_right_brace:    detail="expected \'}\'.";                      break;
-        case exprs_lack_rbrace:   detail="expected \'}\' with this line\'s \'{\'.";break;
-        case lack_semi:           detail="expected \';\'.";                      break;
-        case lack_comma:          detail="expected \',\'.";                      break;
-        case lack_colon:          detail="expected \':\'.";                      break;
-        case lack_equal:          detail="expected \'=\'.";                      break;
-        case lack_scalar:         detail="expected scalar here.";                break;
-        case lack_identifier:     detail="expected identifier here.";            break;
-        case lack_calculation:    detail="expected arithmetic-expression here."; break;
-        case lack_exprs:          detail="expected expression block here.";      break;
-        case lack_token:          detail="expected \'"+error_str+"\' here.";     break;
-        case lack_args:           detail="expected arguments here.";             break;
-        case default_arg_not_end: detail="default argument missing for parameter of "+error_str+".";break;
-        case dynamic_id_not_end:  detail="dynamic id must be the end of "+error_str+".";break;
+        case unknown:              detail="unknown error.";                       break;
+        case error_token:          detail="error token \'"+error_str+"\'";        break;
+        case lack_left_curve:      detail="expected \'(\'.";                      break;
+        case lack_right_curve:     detail="expected \')\'.";                      break;
+        case lack_left_bracket:    detail="expected \'[\'.";                      break;
+        case lack_right_bracket:   detail="expected \']\'.";                      break;
+        case lack_left_brace:      detail="expected \'{\'.";                      break;
+        case lack_right_brace:     detail="expected \'}\'.";                      break;
+        case exprs_lack_rbrace:    detail="expected \'}\' with this line\'s \'{\'.";break;
+        case lack_semi:            detail="expected \';\'.";                      break;
+        case lack_comma:           detail="expected \',\'.";                      break;
+        case lack_colon:           detail="expected \':\'.";                      break;
+        case lack_equal:           detail="expected \'=\'.";                      break;
+        case lack_scalar:          detail="expected scalar here.";                break;
+        case lack_identifier:      detail="expected identifier here.";            break;
+        case lack_calculation:     detail="expected arithmetic-expression here."; break;
+        case lack_exprs:           detail="expected expression block here.";      break;
+        case lack_token:           detail="expected \'"+error_str+"\' here.";     break;
+        case lack_args:            detail="expected arguments here.";             break;
+        case default_arg_not_end:  detail="default argument missing for parameter of "+error_str+".";break;
+        case dynamic_id_not_end:   detail="dynamic id must be the end of "+error_str+".";break;
+        case definition_use_call:  detail="should not use call_scalar in definition progress";break;
+        case multi_id_use_call:    detail="should not use call_scalar in multi_id progress";break;
         case multi_assign_lack_val:detail="multi-assignment lacks value list.";break;
-        case lack_definition:     detail="expected a definition expression here.";break;
-        case lack_loop_iter:      detail="expected an iterator to loop through.";break;
-        case lack_func_content:   detail="expected arguments or expression block here.";break;
+        case lack_definition:      detail="expected a definition expression here.";break;
+        case lack_loop_iter:       detail="expected an iterator to loop through.";break;
+        case lack_func_content:    detail="expected arguments or expression block here.";break;
     }
     std::cout<<detail<<std::endl;
     return;

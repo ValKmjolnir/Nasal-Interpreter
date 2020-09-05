@@ -56,9 +56,10 @@ private:
     int call_scalar_mem(nasal_ast&,int);
     int call_vector_mem(nasal_ast&,int,int);
     int call_hash_mem(nasal_ast&,int,int);
-    int call_function_mem(nasal_ast&,int,int);
     // calculate scalars
     int calculation(nasal_ast&,int);
+    void definition(nasal_ast&,int);
+    void multi_assignment(nasal_ast&,int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -187,8 +188,12 @@ int nasal_runtime::main_progress()
         int node_type=root.get_children()[i].get_type();
         switch(node_type)
         {
-            case ast_definition:break;
-            case ast_multi_assign:break;
+            case ast_definition:
+                definition(root.get_children()[i],-1);
+                break;
+            case ast_multi_assign:
+                multi_assignment(root.get_children()[i],-1);
+                break;
             case ast_conditional:
                 ret_state=conditional_progress(root.get_children()[i],-1);
                 break;
@@ -266,8 +271,12 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
         int node_type=node.get_children()[i].get_type();
         switch(node_type)
         {
-            case ast_definition:break;
-            case ast_multi_assign:break;
+            case ast_definition:
+                definition(node.get_children()[i],local_scope_addr);
+                break;
+            case ast_multi_assign:
+                multi_assignment(node.get_children()[i],local_scope_addr);
+                break;
             case ast_conditional:
                 ret_state=conditional_progress(node.get_children()[i],local_scope_addr);
                 break;
@@ -340,6 +349,7 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
     if(value_address<0)
     {
         std::cout<<">> [runtime] call_nasal_scalar: cannot find value named \'"<<node.get_children()[0].get_str()<<"\'."<<std::endl;
+        ++error;
         return -1;
     }
     nasal_vm.add_reference(value_address);
@@ -363,35 +373,200 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
 }
 int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_scope_addr)
 {
-    int value_type=nasal_vm.gc_get(base_value_addr).get_type();
-    if(value_type!=vm_vector && value_type!=vm_hash)
+    int return_value_addr=-1;
+    int base_value_type=nasal_vm.gc_get(base_value_addr).get_type();
+    if(base_value_type!=vm_vector && base_value_type!=vm_hash)
     {
         std::cout<<">> [runtime] call_vector: incorrect value type,expected a vector/hash."<<std::endl;
+        ++error;
         return -1;
     }
-    std::vector<int> called_value_addrs;
     int call_size=node.get_children().size();
-    nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
-    for(int i=0;i<call_size;++i)
+
+    if(base_value_type==vm_vector)
     {
-        if(node.get_children()[i].get_type()==ast_subvec)
+        std::vector<int> called_value_addrs;
+        nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
+        for(int i=0;i<call_size;++i)
         {
-            nasal_ast& subvec_node=node.get_children()[i];
-            int begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
-            int end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
-            
-            ;// unfinished
-            nasal_vm.del_reference(begin_value_addr);
-            nasal_vm.del_reference(end_value_addr);
+            if(node.get_children()[i].get_type()==ast_subvec)
+            {
+                nasal_ast& subvec_node=node.get_children()[i];
+                int begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
+                int end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
+                int begin_value_type=nasal_vm.gc_get(begin_value_addr).get_type();
+                int end_value_type=nasal_vm.gc_get(end_value_addr).get_type();
+                bool begin_is_nil=true,end_is_nil=true;
+                int begin_index=0,end_index=0;
+                if(begin_value_type!=vm_nil && begin_value_type!=vm_number && begin_value_type!=vm_string)
+                {
+                    std::cout<<">> [runtime] call_vector: begin index is not a number/numerable string."<<std::endl;
+                    ++error;
+                    return -1;
+                }
+                if(end_value_type!=vm_nil && end_value_type!=vm_number && end_value_type!=vm_string)
+                {
+                    std::cout<<">> [runtime] call_vector: end index is not a number/numerable string."<<std::endl;
+                    ++error;
+                    return -1;
+                }
+                if(begin_value_type==vm_string)
+                {
+                    std::string str=nasal_vm.gc_get(begin_value_addr).get_string();
+                    if(!check_numerable_string(str))
+                    {
+                        std::cout<<">> [runtime] call_vector: begin index is not a numerable string."<<std::endl;
+                        ++error;
+                        return -1;
+                    }
+                    begin_index=(int)trans_string_to_number(str);
+                    begin_is_nil=false;
+                }
+                else if(begin_value_type==vm_number)
+                {
+                    begin_index=(int)nasal_vm.gc_get(begin_value_addr).get_number();
+                    begin_is_nil=false;
+                }
+                
+                if(end_value_type==vm_string)
+                {
+                    std::string str=nasal_vm.gc_get(end_value_addr).get_string();
+                    if(!check_numerable_string(str))
+                    {
+                        std::cout<<">> [runtime] call_vector: end index is not a numerable string."<<std::endl;
+                        ++error;
+                        return -1;
+                    }
+                    end_index=(int)trans_string_to_number(str);
+                    end_is_nil=false;
+                }
+                else if(end_value_type==vm_number)
+                {
+                    end_index=(int)nasal_vm.gc_get(end_value_addr).get_number();
+                    end_is_nil=false;
+                }
+                
+                if(begin_is_nil && end_is_nil)
+                {
+                    begin_index=0;
+                    end_index=reference_value.size()-1;
+                }
+                else if(begin_is_nil && !end_is_nil)
+                {
+                    begin_index=end_index<0? -reference_value.size():0;
+                }
+                else if(!begin_is_nil && end_is_nil)
+                {
+                    end_index=begin_index<0? -1:reference_value.size()-1;
+                }
+                else if(!begin_is_nil && !end_is_nil)
+                {
+                    if(begin_index>=end_index)
+                    {
+                        std::cout<<">> [runtime] call_vector: begin index must be less than end index."<<std::endl;
+                        ++error;
+                        return -1;
+                    }
+                }
+                for(int i=begin_index;i<end_index;++i)
+                    called_value_addrs.push_back(reference_value.get_value_address(i));
+                nasal_vm.del_reference(begin_value_addr);
+                nasal_vm.del_reference(end_value_addr);
+            }
+            else
+            {
+                int index_value_addr=calculation(node.get_children()[i],local_scope_addr);
+                int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
+                if(index_value_type!=vm_number && index_value_type!=vm_string)
+                {
+                    std::cout<<">> [runtime] call_vector: index is not a number/numerable string."<<std::endl;
+                    ++error;
+                    return -1;
+                }
+                int index_num=0;
+                if(index_value_type==vm_string)
+                {
+                    std::string str=nasal_vm.gc_get(index_value_addr).get_string();
+                    if(!check_numerable_string(str))
+                    {
+                        std::cout<<">> [runtime] call_vector: index is not a numerable string."<<std::endl;
+                        ++error;
+                        return -1;
+                    }
+                    index_num=(int)trans_string_to_number(str);
+                }
+                else
+                    index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
+                nasal_vm.del_reference(index_value_addr);
+                called_value_addrs.push_back(reference_value.get_value_address(index_num));
+            }
+        }
+        if(called_value_addrs.size()==1)
+        {
+            int value_addr=called_value_addrs[0];
+            int value_type=nasal_vm.gc_get(value_addr).get_type();
+            if(value_type==vm_vector || value_type==vm_hash)
+            {
+                nasal_vm.add_reference(value_addr);
+                return_value_addr=value_addr;
+            }
+            else
+            {
+                return_value_addr=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(return_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
+            }
         }
         else
         {
-            int index_value_addr=calculation(node.get_children()[i],local_scope_addr);
-            ;// unfinished
-            nasal_vm.del_reference(index_value_addr);
+            return_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(return_value_addr).set_type(vm_vector);
+            nasal_vector& return_vector=nasal_vm.gc_get(return_value_addr).get_vector();
+            int vec_size=called_value_addrs.size();
+            for(int i=0;i<vec_size;++i)
+            {
+                int value_addr=called_value_addrs[i];
+                int value_type=nasal_vm.gc_get(value_addr).get_type();
+                if(value_type==vm_vector || value_type==vm_hash)
+                {
+                    nasal_vm.add_reference(value_addr);
+                    int new_mem_addr=nasal_vm.mem_alloc();
+                    nasal_vm.mem_init(new_mem_addr,value_addr);
+                    return_vector.add_elem(new_mem_addr);
+                }
+                else
+                {
+                    int tmp_value_addr=nasal_vm.gc_alloc();
+                    nasal_vm.gc_get(tmp_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
+                    int new_mem_addr=nasal_vm.mem_alloc();
+                    nasal_vm.mem_init(new_mem_addr,tmp_value_addr);
+                    return_vector.add_elem(new_mem_addr);
+                }
+            }
         }
     }
-    return -1;
+    else
+    {
+        if(call_size>1)
+        {
+            std::cout<<">> [runtime] call_vector: when calling a hash,only one key is alowed."<<std::endl;
+            ++error;
+            return -1;
+        }
+        std::string str=node.get_children()[0].get_str();
+        int value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(str);
+        int value_type=nasal_vm.gc_get(value_addr).get_type();
+        if(value_type==vm_vector || value_type==vm_hash)
+        {
+            nasal_vm.add_reference(value_addr);
+            return_value_addr=value_addr;
+        }
+        else
+        {
+            return_value_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(return_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
+        }
+    }
+    return return_value_addr;
 }
 int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope_addr)
 {
@@ -399,6 +574,7 @@ int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope
     if(value_type!=vm_hash)
     {
         std::cout<<">> [runtime] call_hash: incorrect value type,expected a hash."<<std::endl;
+        ++error;
         return -1;
     }
     int ret_value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(node.get_str());
@@ -425,7 +601,8 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
         mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(node.get_children()[0].get_str());
     if(mem_address<0)
     {
-        std::cout<<">> [runtime] call_nasal_mem: cannot find value named \'"<<node.get_children()[0].get_str()<<"\'."<<std::endl;
+        std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<node.get_children()[0].get_str()<<"\'."<<std::endl;
+        ++error;
         return -1;
     }
     int call_expr_size=node.get_children().size();
@@ -437,7 +614,11 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
         {
             case ast_call_vec:  tmp_mem_addr=call_vector_mem(call_expr,mem_address,local_scope_addr);break;
             case ast_call_hash: tmp_mem_addr=call_hash_mem(call_expr,mem_address,local_scope_addr);break;
-            case ast_call_func: tmp_mem_addr=call_function_mem(call_expr,mem_address,local_scope_addr);break;
+            case ast_call_func:
+                std::cout<<">> [runtime] call_scalar_mem: cannot change the value that function returns."<<std::endl;
+                ++error;
+                return -1;
+                break;
         }
         mem_address=tmp_mem_addr;
         if(mem_address<0)
@@ -447,35 +628,68 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
 }
 int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
 {
+    int return_mem_addr=-1;
     int base_value_addr=nasal_vm.mem_get(base_mem_addr);
-    int value_type=nasal_vm.gc_get(base_value_addr).get_type();
-    if(value_type!=vm_vector && value_type!=vm_hash)
+    int base_value_type=nasal_vm.gc_get(base_value_addr).get_type();
+    if(base_value_type!=vm_vector && base_value_type!=vm_hash)
     {
         std::cout<<">> [runtime] call_vector_mem: incorrect value type,expected a vector/hash."<<std::endl;
+        ++error;
         return -1;
     }
-    std::vector<int> called_mem_addrs;
     int call_size=node.get_children().size();
-    nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
-    for(int i=0;i<call_size;++i)
+    if(call_size>1)
     {
-        if(node.get_children()[i].get_type()==ast_subvec)
+        std::cout<<">> [runtime] call_vector_mem: when searching a memory space in a vector,only one index is alowed."<<std::endl;
+        ++error;
+        return -1;
+    }
+    if(base_value_type==vm_vector)
+    {
+        nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
+        if(node.get_children()[0].get_type()==ast_subvec)
         {
-            nasal_ast& subvec_node=node.get_children()[i];
-            int begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
-            int end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
-            ;// unfinished
-            nasal_vm.del_reference(begin_value_addr);
-            nasal_vm.del_reference(end_value_addr);
+            std::cout<<">> [runtime] call_vector_mem: sub-vector in this progress is a temporary value and cannot be changed."<<std::endl;
+            ++error;
+            return -1;
+        }
+        int index_value_addr=calculation(node.get_children()[0],local_scope_addr);
+        int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
+        if(index_value_type!=vm_number && index_value_type!=vm_string)
+        {
+            std::cout<<">> [runtime] call_vector_mem: index is not a number/numerable string."<<std::endl;
+            ++error;
+            return -1;
+        }
+        int index_num=0;
+        if(index_value_type==vm_string)
+        {
+            std::string str=nasal_vm.gc_get(index_value_addr).get_string();
+            if(!check_numerable_string(str))
+            {
+                std::cout<<">> [runtime] call_vector_mem: index is not a numerable string."<<std::endl;
+                ++error;
+                return -1;
+            }
+            index_num=(int)trans_string_to_number(str);
         }
         else
-        {
-            int index_value_addr=calculation(node.get_children()[i],local_scope_addr);
-            ;// unfinished
-            nasal_vm.del_reference(index_value_addr);
-        }
+            index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
+        nasal_vm.del_reference(index_value_addr);
+        return_mem_addr=reference_value.get_mem_address(index_num);
     }
-    return -1;
+    else
+    {
+        if(call_size>1)
+        {
+            std::cout<<">> [runtime] call_vector_mem: when calling a hash,only one key is alowed."<<std::endl;
+            ++error;
+            return -1;
+        }
+        std::string str=node.get_children()[0].get_str();
+        return_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(str);
+    }
+    return return_mem_addr;
 }
 int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
 {
@@ -484,21 +698,11 @@ int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_sco
     if(value_type!=vm_hash)
     {
         std::cout<<">> [runtime] call_hash_mem: incorrect value type,expected a hash."<<std::endl;
+        ++error;
         return -1;
     }
     int ret_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(node.get_str());
     return ret_mem_addr;
-}
-int nasal_runtime::call_function_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
-{
-    int value_type=nasal_vm.gc_get(nasal_vm.mem_get(base_mem_addr)).get_type();
-    if(value_type!=vm_function)
-    {
-        std::cout<<">> [runtime] call_function_mem: incorrect value type,expected a function."<<std::endl;
-        return -1;
-    }
-    // unfinished
-    return -1;
 }
 int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
 {
@@ -746,6 +950,14 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         ++error;
     }
     return ret_address;
+}
+void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
+{
+    return;
+}
+void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
+{
+    return;
 }
 
 #endif

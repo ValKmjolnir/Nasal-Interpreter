@@ -78,6 +78,11 @@ public:
     void deepcopy(nasal_closure&);
 };
 
+nasal_vector error_vector;
+nasal_hash error_hash;
+nasal_function error_function;
+nasal_closure error_closure;
+
 class nasal_scalar
 {
 private:
@@ -300,7 +305,8 @@ nasal_function::nasal_function()
 }
 nasal_function::~nasal_function()
 {
-    nasal_vm.del_reference(closure_addr);
+    if(closure_addr>=0)
+        nasal_vm.del_reference(closure_addr);
     argument_list.clear();
     function_expr.clear();
     return;
@@ -492,27 +498,45 @@ int nasal_scalar::get_type()
 }
 double nasal_scalar::get_number()
 {
-    return *(double*)(this->scalar_ptr);
+    if(this->type==vm_number)
+        return *(double*)(this->scalar_ptr);
+    else
+        return 0;
 }
 std::string nasal_scalar::get_string()
 {
-    return *(std::string*)(this->scalar_ptr);
+    if(this->type==vm_string)
+        return *(std::string*)(this->scalar_ptr);
+    else
+        return "[vm] error value type";
 }
 nasal_vector& nasal_scalar::get_vector()
 {
-    return *(nasal_vector*)(this->scalar_ptr);
+    if(this->type==vm_vector)
+        return *(nasal_vector*)(this->scalar_ptr);
+    else
+        return error_vector;
 }
 nasal_hash& nasal_scalar::get_hash()
 {
-    return *(nasal_hash*)(this->scalar_ptr);
+    if(this->type==vm_hash)
+        return *(nasal_hash*)(this->scalar_ptr);
+    else
+        return error_hash;
 }
 nasal_function& nasal_scalar::get_func()
 {
-    return *(nasal_function*)(this->scalar_ptr);
+    if(this->type==vm_function)
+        return *(nasal_function*)(this->scalar_ptr);
+    else
+        return error_function;
 }
 nasal_closure& nasal_scalar::get_closure()
 {
-    return *(nasal_closure*)(this->scalar_ptr);
+    if(this->type==vm_closure)
+        return *(nasal_closure*)(this->scalar_ptr);
+    else
+        return error_closure;
 }
 void nasal_scalar::deepcopy(nasal_scalar& tmp)
 {
