@@ -989,7 +989,10 @@ nasal_ast nasal_parse::definition()
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
     {
         ++error;
-        error_info(error_line,lack_equal);
+        if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve) && !node.get_children().back().get_children().size())
+            error_info(error_line,definition_use_call);
+        else
+            error_info(error_line,lack_equal);
         return node;
     }
     ++ptr;
@@ -1026,7 +1029,12 @@ nasal_ast nasal_parse::var_incurve_def()
     }
     node=multi_id();
     ++ptr;
-    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve))
+    {
+        ++error;
+        error_info(error_line,multi_id_use_call);
+    }
+    else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
         ++error;
         error_info(error_line,lack_right_curve);
@@ -1045,7 +1053,12 @@ nasal_ast nasal_parse::var_outcurve_def()
     }
     node=multi_id();
     ++ptr;
-    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
+    if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve))
+    {
+        ++error;
+        error_info(error_line,multi_id_use_call);
+    }
+    else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
         ++error;
         error_info(error_line,lack_right_curve);
