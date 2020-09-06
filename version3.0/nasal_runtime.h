@@ -51,7 +51,7 @@ private:
     int call_scalar(nasal_ast&,int);
     int call_vector(nasal_ast&,int,int);
     int call_hash(nasal_ast&,int,int);
-    int call_function(nasal_ast&,int,int);
+    int call_function(nasal_ast&,int,int,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
     int call_scalar_mem(nasal_ast&,int);
     int call_vector_mem(nasal_ast&,int,int);
@@ -173,8 +173,15 @@ int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr)
     ref_of_this_function.set_run_block(node.get_children()[1]);
     if(local_scope_addr>=0)
     {
+        // codes here make closure
         nasal_vm.add_reference(local_scope_addr);
         ref_of_this_function.set_closure_addr(local_scope_addr);
+    }
+    else
+    {
+        int new_closure_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(new_closure_addr).set_type(vm_closure);
+        ref_of_this_function.set_closure_addr(new_closure_addr);
     }
     return new_addr;
 }
@@ -229,6 +236,9 @@ int nasal_runtime::main_progress()
             case ast_continue:
                 ret_state=rt_continue;
                 break;
+            case ast_return:
+                ret_state=rt_return;
+                break;
         }
         switch(ret_state)
         {
@@ -238,6 +248,10 @@ int nasal_runtime::main_progress()
                 break;
             case rt_continue:
                 std::cout<<">> [runtime] main_progress: cannot use continue in main progress."<<std::endl;
+                ++error;
+                break;
+            case rt_return:
+                std::cout<<">> [runtime] main_progress: cannot use return in main progress."<<std::endl;
                 ++error;
                 break;
             case rt_error:
@@ -312,13 +326,17 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
             case ast_continue:
                 ret_state=rt_continue;
                 break;
+            case ast_return:
+                ret_state=rt_return;
+                function_returned_address=calculation(root.get_children()[i].get_children()[0],local_scope_addr);
+                break;
         }
         if(ret_state==rt_error)
         {
             std::cout<<">> [runtime] block_progress: error occurred when executing sub-progress."<<std::endl;
             ++error;
         }
-        if(error)
+        if(error || ret_state==rt_break || ret_state==rt_continue || ret_state==rt_return)
             break;
     }
     nasal_vm.del_reference(local_scope_addr);
@@ -354,15 +372,25 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
     }
     nasal_vm.add_reference(value_address);
     int call_expr_size=node.get_children().size();
+    int last_call_hash_addr=-1;
     for(int i=1;i<call_expr_size;++i)
     {
         int tmp_value_addr=-1;
         nasal_ast& call_expr=node.get_children()[i];
         switch(call_expr.get_type())
         {
-            case ast_call_vec:tmp_value_addr=call_vector(call_expr,value_address,local_scope_addr);break;
-            case ast_call_hash:tmp_value_addr=call_hash(call_expr,value_address,local_scope_addr);break;
-            case ast_call_func:tmp_value_addr=call_function(call_expr,value_address,local_scope_addr);break;
+            case ast_call_vec:
+                tmp_value_addr=call_vector(call_expr,value_address,local_scope_addr);
+                last_call_hash_addr=-1;
+                break;
+            case ast_call_hash:
+                tmp_value_addr=call_hash(call_expr,value_address,local_scope_addr);
+                last_call_hash_addr=value_address;
+                break;
+            case ast_call_func:
+                tmp_value_addr=call_function(call_expr,value_address,last_call_hash_addr,local_scope_addr);
+                last_call_hash_addr=-1;
+                break;
         }
         nasal_vm.del_reference(value_address);
         value_address=tmp_value_addr;
@@ -636,16 +664,41 @@ int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope
     nasal_vm.add_reference(ret_value_addr);
     return ret_value_addr;
 }
-int nasal_runtime::call_function(nasal_ast& node,int base_value_addr,int local_scope_addr)
+int nasal_runtime::call_function(nasal_ast& node,int base_value_addr,int last_call_hash_addr,int local_scope_addr)
 {
+    int ret_value_addr=-1;
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(value_type!=vm_function)
     {
         std::cout<<">> [runtime] call_function: incorrect value type,expected a function."<<std::endl;
         return -1;
     }
+    nasal_function& reference_of_func=nasal_vm.gc_get(base_value_addr).get_func();
+    int run_closure_addr=reference_of_func.get_closure_addr();
+    nasal_closure& run_closure=nasal_vm.gc_get(run_closure_addr).get_closure();
+    run_closure.add_scope();
+    nasal_vm.add_reference(last_call_hash_addr);
+    run_closure.add_new_value("me",last_call_hash_addr);
     // unfinished
-    return -1;
+    nasal_ast& argument_format=reference_of_func.get_arguments();
+    if(!node.get_children().size())
+    {
+        ;
+    }
+    else if(node.get_children()[0].get_type()==ast_hashmember)
+    {
+        ;
+    }
+    else
+    {
+        ;
+    }
+    int ret_state=block_progress(reference_of_func.get_run_block(),run_closure_addr); //?
+
+    run_closure.del_scope();
+    ret_value_addr=function_returned_address;
+    function_returned_address=-1;
+    return ret_value_addr;
 }
 int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
 {

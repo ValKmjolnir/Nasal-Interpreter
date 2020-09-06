@@ -117,13 +117,8 @@ void nasal_ast::print_ast(int depth)
     for(int i=0;i<depth;++i) indentation+="|  ";
     indentation+=ast_str(this->type);
     std::cout<<indentation;
-    switch(this->type)
-    {
-        case ast_number:    std::cout<<":"<<this->str;break;
-        case ast_string:    std::cout<<":"<<this->str;break;
-        case ast_identifier:std::cout<<":"<<this->str;break;
-        case ast_call_hash: std::cout<<":"<<this->str;break;
-    }
+    if(this->type==ast_number || this->type==ast_string || this->type==ast_identifier || this->type==ast_dynamic_id || this->type==ast_call_hash)
+        std::cout<<":"<<this->str;
     std::cout<<std::endl;
     int child_size=this->children.size();
     for(int i=0;i<child_size;++i)

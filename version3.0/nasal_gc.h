@@ -47,16 +47,21 @@ class nasal_function
 {
 private:
     // this int points to the space in nasal_vm::garbage_collector_memory
+    bool is_builtin;
     int closure_addr;
     nasal_ast argument_list;
     nasal_ast function_expr;
 public:
     nasal_function();
     ~nasal_function();
+    void set_builtin_func();
+    bool check_builtin();
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
+    nasal_ast& get_arguments();
     void set_run_block(nasal_ast&);
+    nasal_ast& get_run_block();
     void deepcopy(nasal_function&);
 };
 
@@ -267,19 +272,53 @@ void nasal_hash::del_elem(std::string key)
 }
 int nasal_hash::get_value_address(std::string key)
 {
+    int ret_value_addr=-1;
     if(elems.find(key)!=elems.end())
         return nasal_vm.mem_get(elems[key]);
-    else
-        std::cout<<">> [vm] nasal_hash:get_value_address: "<<key<<" does not exist."<<std::endl;
-    return -1;
+    else if(elems.find("parents")!=elems.end())
+    {
+        int mem_addr=elems["parents"];
+        int val_addr=nasal_vm.mem_get(mem_addr);
+        if(nasal_vm.gc_get(val_addr).get_type()==vm_vector)
+        {
+            nasal_vector& vec_ref=nasal_vm.gc_get(val_addr).get_vector();
+            int size=vec_ref.size();
+            for(int i=0;i<size;++i)
+            {
+                int tmp_val_addr=vec_ref.get_value_address(i);
+                if(nasal_vm.gc_get(tmp_val_addr).get_type()==vm_hash)
+                    ret_value_addr=nasal_vm.gc_get(tmp_val_addr).get_hash().get_value_address(key);
+                if(ret_value_addr>=0)
+                    break;
+            }
+        }
+    }
+    return ret_value_addr;
 }
 int nasal_hash::get_mem_address(std::string key)
 {
+    int ret_mem_addr=-1;
     if(elems.find(key)!=elems.end())
         return elems[key];
-    else
-        std::cout<<">> [vm] nasal_hash:get_mem_address: "<<key<<" does not exist."<<std::endl;
-    return -1;
+    else if(elems.find("parents")!=elems.end())
+    {
+        int mem_addr=elems["parents"];
+        int val_addr=nasal_vm.mem_get(mem_addr);
+        if(nasal_vm.gc_get(val_addr).get_type()==vm_vector)
+        {
+            nasal_vector& vec_ref=nasal_vm.gc_get(val_addr).get_vector();
+            int size=vec_ref.size();
+            for(int i=0;i<size;++i)
+            {
+                int tmp_val_addr=vec_ref.get_value_address(i);
+                if(nasal_vm.gc_get(tmp_val_addr).get_type()==vm_hash)
+                    ret_mem_addr=nasal_vm.gc_get(tmp_val_addr).get_hash().get_mem_address(key);
+                if(ret_mem_addr>=0)
+                    break;
+            }
+        }
+    }
+    return ret_mem_addr;
 }
 void nasal_hash::deepcopy(nasal_hash& tmp)
 {
@@ -298,6 +337,7 @@ void nasal_hash::deepcopy(nasal_hash& tmp)
 /*functions of nasal_function*/
 nasal_function::nasal_function()
 {
+    is_builtin=false;
     closure_addr=-1;
     argument_list.clear();
     function_expr.clear();
@@ -310,6 +350,15 @@ nasal_function::~nasal_function()
     argument_list.clear();
     function_expr.clear();
     return;
+}
+void nasal_function::set_builtin_func()
+{
+    is_builtin=true;
+    return;
+}
+bool nasal_function::check_builtin()
+{
+    return is_builtin;
 }
 void nasal_function::set_closure_addr(int value_address)
 {
@@ -325,10 +374,18 @@ void nasal_function::set_arguments(nasal_ast& node)
     argument_list=node;
     return;
 }
+nasal_ast& nasal_function::get_arguments()
+{
+    return argument_list;
+}
 void nasal_function::set_run_block(nasal_ast& node)
 {
     function_expr=node;
     return;
+}
+nasal_ast& nasal_function::get_run_block()
+{
+    return function_expr;
 }
 void nasal_function::deepcopy(nasal_function& tmp)
 {
