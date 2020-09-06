@@ -127,6 +127,7 @@ enum parse_error
     lack_args,
     default_arg_not_end,
     dynamic_id_not_end,
+    name_repetition,
     definition_use_call,
     multi_id_use_call,
     multi_assign_lack_val,
@@ -137,9 +138,9 @@ enum parse_error
 
 void error_info(int line,int error_type,std::string error_str="")
 {
-    std::string info=">> [parse] error: line ";
+    std::string info=">> [parse] error_info: [line ";
     std::string detail;
-    std::cout<<info<<line<<": ";
+    std::cout<<info<<line<<"] ";
     switch(error_type)
     {
         case unknown:              detail="unknown error.";                       break;
@@ -163,6 +164,7 @@ void error_info(int line,int error_type,std::string error_str="")
         case lack_args:            detail="expected arguments here.";             break;
         case default_arg_not_end:  detail="default argument missing for parameter of "+error_str+".";break;
         case dynamic_id_not_end:   detail="dynamic id must be the end of "+error_str+".";break;
+        case name_repetition:      detail="this identifier name has existed.";break;
         case definition_use_call:  detail="should not use call_scalar in definition progress";break;
         case multi_id_use_call:    detail="should not use call_scalar in multi_id progress";break;
         case multi_assign_lack_val:detail="multi-assignment lacks value list.";break;

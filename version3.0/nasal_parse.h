@@ -495,6 +495,25 @@ nasal_ast nasal_parse::args_list_gen()
             error_info(node.get_children()[i].get_line(),dynamic_id_not_end,args_format);
         }
     }
+    std::map<std::string,bool> argname_table;
+    for(int i=0;i<node_child_size;++i)
+    {
+        int tmp_type=node.get_children()[i].get_type();
+        std::string new_name;
+        switch(tmp_type)
+        {
+            case ast_dynamic_id:
+            case ast_identifier:new_name=node.get_children()[i].get_str();break;
+            case ast_default_arg:new_name=node.get_children()[i].get_children()[0].get_str();break;
+        }
+        if(argname_table.find(new_name)!=argname_table.end())
+        {
+            error_info(node.get_children()[i].get_line(),name_repetition);
+            ++error;
+        }
+        else
+            argname_table[new_name]=true;
+    }
     return node;
 }
 nasal_ast nasal_parse::expr()
