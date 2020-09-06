@@ -985,6 +985,18 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     int calculation_type=node.get_type();
     if(calculation_type==ast_number)
         ret_address=number_generation(node);
+    else if(calculation_type==ast_identifier)
+    {
+        if(local_scope_addr>=0)
+            ret_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(node.get_str());
+        if(ret_address<0)
+            ret_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(node.get_str());
+        if(ret_address<0)
+        {
+            std::cout<<">> [runtime] calculation: cannot find value named \'"<<node.get_str()<<"\'."<<std::endl;
+            ++error;
+        }
+    }
     else if(calculation_type==ast_string)
         ret_address=string_generation(node);
     else if(calculation_type==ast_vector)
