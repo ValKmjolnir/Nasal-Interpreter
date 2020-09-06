@@ -347,6 +347,7 @@ nasal_ast nasal_parse::hash_member_gen()
     if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_identifier && tok_list[ptr].type!=tok_string))
     {
         error_info(error_line,lack_identifier);
+        ++error;
         return node;
     }
     node.set_line(tok_list[ptr].line);
