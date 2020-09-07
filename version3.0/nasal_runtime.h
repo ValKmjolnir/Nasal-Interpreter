@@ -44,6 +44,7 @@ private:
     // run loop
     int loop_progress(nasal_ast&,int,bool);
     // run conditional
+    bool check_condition(int);
     int conditional_progress(nasal_ast&,int,bool);
     // get scalars in complex data structure like vector/hash/function/closure(scope)
     int call_scalar(nasal_ast&,int);
@@ -268,6 +269,7 @@ int nasal_runtime::main_progress()
 int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allow_return)
 {
     int ret_state=rt_exit_without_error;
+    // if local_scope does not exist,create a new one.
     if(local_scope_addr<0)
     {
         local_scope_addr=nasal_vm.gc_alloc();
@@ -349,13 +351,111 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
 int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow_return)
 {
     int ret_state=rt_exit_without_error;
-    // unfinished
+    int loop_type=node.get_type();
+    if(loop_type==ast_while)
+    {
+        nasal_ast& condition_node=node.get_children()[0];
+        nasal_ast& run_block_node=node.get_children()[1];
+
+        int condition_value_addr=calculation(condition_node,local_scope_addr);
+        if(condition_value_addr<0)
+            return rt_error;
+        while(check_condition(condition_value_addr))
+        {
+            // return expression will be checked in block_progress
+            ret_state=block_progress(run_block_node,local_scope_addr,allow_return);
+            if(ret_state==rt_break || ret_state==rt_error || ret_state==rt_return)
+                break;
+            condition_value_addr=calculation(condition_node,local_scope_addr);
+            if(condition_value_addr<0)
+                return rt_error;
+        }
+        if(ret_state==rt_continue || ret_state==rt_break)
+            ret_state=rt_exit_without_error;
+    }
+    else if(loop_type==ast_forindex || loop_type==ast_foreach)
+    {
+        nasal_ast& iter_node=node.get_children()[0];
+        nasal_ast& vector_node=node.get_children()[1];
+        nasal_ast& run_block_node=node.get_children()[2];
+        int vector_value_addr=calculation(vector_node,local_scope_addr);
+        if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
+        {
+            std::cout<<">> [runtime] loop_progress: "<<(loop_type==ast_forindex? "forindex":"foreach")<<" gets a value that is not a vector."<<std::endl;
+            ++error;
+            return rt_error;
+        }
+        if(iter_node.get_type()==ast_new_iter)
+        {
+            ;
+        }
+        else
+        {
+            ;
+        }
+        // unfinished
+    }
+    else if(loop_type==ast_for)
+    {
+        ;
+    }
     return ret_state;
+}
+bool nasal_runtime::check_condition(int value_addr)
+{
+    if(value_addr<0)
+        return false;
+    int type=nasal_vm.gc_get(value_addr).get_type();
+    if(type==vm_vector || type==vm_hash || type==vm_function || type==vm_closure)
+    {
+        std::cout<<">> [runtime] check_condition: error value type when checking condition."<<std::endl;
+        ++error;
+        return false;
+    }
+    else if(type==vm_string)
+    {
+        std::string str=nasal_vm.gc_get(value_addr).get_string();
+        if(!check_numerable_string(str))
+        {
+            std::cout<<">> [runtime] check_condition: error value type, \'"<<str<<"\' is not a numerable string."<<std::endl;
+            ++error;
+            return -1;
+        }
+        return (trans_string_to_number(str)!=0);
+    }
+    else if(type==vm_nil)
+        return false;
+    else if(type==vm_number)
+        return (nasal_vm.gc_get(value_addr).get_number()!=0);
+    return false;
 }
 int nasal_runtime::conditional_progress(nasal_ast& node,int local_scope_addr,bool allow_return)
 {
     int ret_state=rt_exit_without_error;
-    // unfinished
+    int size=node.get_children().size();
+    for(int i=0;i<size;++i)
+    {
+        nasal_ast& tmp_node=node.get_children()[i];
+        int type=tmp_node.get_type();
+        if(type==ast_if || type==ast_elsif)
+        {
+            int condition_value_addr=calculation(tmp_node.get_children()[0],local_scope_addr);
+            if(condition_value_addr<0)
+                return rt_error;
+            if(check_condition(condition_value_addr))
+            {
+                ret_state=block_progress(tmp_node.get_children()[1],local_scope_addr,allow_return);
+                break;
+            }
+        }
+        else
+        {
+            ret_state=block_progress(tmp_node.get_children()[0],local_scope_addr,allow_return);
+            break;
+        }
+        if(error)
+            break;
+    }
     return ret_state;
 }
 int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)

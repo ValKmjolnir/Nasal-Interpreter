@@ -10,6 +10,7 @@ void help()
 {
 	std::cout<<">> [\'file\'] input a file."<<std::endl;
 	std::cout<<">> [cls   ] clear the screen."<<std::endl;
+	std::cout<<">> [clear ] clear the screen."<<std::endl;
 	std::cout<<">> [del   ] clear the resource code."<<std::endl;
 	std::cout<<">> [lib   ] add lib file."<<std::endl;
 	std::cout<<">> [rs    ] print resource code."<<std::endl;
@@ -130,7 +131,7 @@ int main()
 		std::cin>>command;
 		if(command=="help")
 			help();
-		else if(command=="cls")
+		else if(command=="cls" || command=="clear")
 		{
 #ifdef _WIN32
 			system("cls");
