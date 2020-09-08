@@ -42,6 +42,8 @@ private:
     // function/loop/conditional expression block running process
     int block_progress(nasal_ast&,int,bool);
     // run loop
+    int before_for_loop(nasal_ast&,int);
+    int after_each_for_loop(nasal_ast&,int);
     int loop_progress(nasal_ast&,int,bool);
     // run conditional
     bool check_condition(int);
@@ -320,6 +322,58 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
     nasal_vm.del_reference(local_scope_addr);
     return ret_state;
 }
+int nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
+{
+    int before_loop_node_type=node.get_type();
+    switch(before_loop_node_type)
+    {
+        case ast_definition:
+            definition(node,local_scope_addr);
+            break;
+        case ast_multi_assign:
+            multi_assignment(node,local_scope_addr);
+            break;
+        case ast_number:case ast_string:case ast_identifier:break;
+        case ast_call:
+        case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
+        case ast_unary_sub:case ast_unary_not:
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_trinocular:
+            nasal_vm.del_reference(calculation(node,local_scope_addr));
+            break;
+        default:
+            std::cout<<">> [runtime] before_for_loop: cannot use this expression before for-loop."<<std::endl;
+            ++error;
+            return rt_error;
+    }
+    return rt_exit_without_error;
+}
+int nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
+{
+    int node_type=node.get_type();
+    switch(node_type)
+    {
+        case ast_definition:
+            definition(node,local_scope_addr);
+            break;
+        case ast_multi_assign:
+            multi_assignment(node,local_scope_addr);
+            break;
+        case ast_number:case ast_string:case ast_identifier:break;
+        case ast_call:
+        case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
+        case ast_unary_sub:case ast_unary_not:
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_trinocular:
+            nasal_vm.del_reference(calculation(node,local_scope_addr));
+            break;
+        default:
+            std::cout<<">> [runtime] after_each_for_loop: cannot use this expression after each for-loop."<<std::endl;
+            ++error;
+            return rt_error;
+    }
+    return rt_exit_without_error;
+}
 int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow_return)
 {
     int ret_state=rt_exit_without_error;
@@ -328,28 +382,32 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
     {
         nasal_ast& condition_node=node.get_children()[0];
         nasal_ast& run_block_node=node.get_children()[1];
-
-        int condition_value_addr=calculation(condition_node,local_scope_addr);
-        if(condition_value_addr<0)
-            return rt_error;
-        while(check_condition(condition_value_addr))
+        // create a new local scope to store iterator if local_scope_addr=-1
+        int while_local_scope_addr=local_scope_addr;
+        if(while_local_scope_addr<0)
+        {
+            while_local_scope_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(while_local_scope_addr).set_type(vm_closure);
+            nasal_vm.gc_get(while_local_scope_addr).get_closure().add_scope();
+        }
+        else
+            nasal_vm.add_reference(local_scope_addr);
+        // check condition and begin loop
+        while(check_condition(calculation(condition_node,while_local_scope_addr)))
         {
             // return expression will be checked in block_progress
             ret_state=block_progress(run_block_node,local_scope_addr,allow_return);
             if(ret_state==rt_break || ret_state==rt_error || ret_state==rt_return)
                 break;
-            condition_value_addr=calculation(condition_node,local_scope_addr);
-            if(condition_value_addr<0)
-                return rt_error;
         }
-        if(ret_state==rt_continue || ret_state==rt_break)
-            ret_state=rt_exit_without_error;
+        nasal_vm.del_reference(while_local_scope_addr);
     }
     else if(loop_type==ast_forindex || loop_type==ast_foreach)
     {
         nasal_ast& iter_node=node.get_children()[0];
         nasal_ast& vector_node=node.get_children()[1];
         nasal_ast& run_block_node=node.get_children()[2];
+        // check vector to make sure iterator can be used without problem
         int vector_value_addr=calculation(vector_node,local_scope_addr);
         if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
         {
@@ -385,9 +443,11 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
             ++error;
             return rt_error;
         }
+        // ref_vector's size may change when running,so this loop will check size each time
         nasal_vector& ref_vector=nasal_vm.gc_get(vector_value_addr).get_vector();
         for(int i=0;i<ref_vector.size();++i)
         {
+            // update iterator
             if(loop_type==ast_forindex)
             {
                 int new_iter_val_addr=nasal_vm.gc_alloc();
@@ -413,8 +473,34 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         nasal_ast& condition_node=node.get_children()[1];
         nasal_ast& each_loop_do_node=node.get_children()[2];
         nasal_ast& run_block_node=node.get_children()[3];
-        // unfinished
+
+        // set local scope if local_scope_addr=-1
+        int for_local_scope_addr=local_scope_addr;
+        if(for_local_scope_addr<0)
+        {
+            for_local_scope_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(for_local_scope_addr).set_type(vm_closure);
+            nasal_vm.gc_get(for_local_scope_addr).get_closure().add_scope();
+        }
+        else
+            nasal_vm.add_reference(local_scope_addr);
+        // for progress
+        for(
+            ret_state=before_for_loop(before_loop_node,for_local_scope_addr);
+            check_condition(calculation(condition_node,for_local_scope_addr));
+            ret_state=after_each_for_loop(each_loop_do_node,for_local_scope_addr)
+        )
+        {
+            if(ret_state==rt_error)
+                break;
+            ret_state=block_progress(run_block_node,for_local_scope_addr,allow_return);
+            if(ret_state==rt_error || ret_state==rt_return || ret_state==rt_break)
+                break;
+        }
+        nasal_vm.del_reference(for_local_scope_addr);
     }
+    if(ret_state==rt_break || ret_state==rt_continue)
+        ret_state=rt_exit_without_error;
     return ret_state;
 }
 bool nasal_runtime::check_condition(int value_addr)
@@ -1346,6 +1432,12 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
+    else
+    {
+        std::cout<<">> [runtime] calculation: this expression cannot be calculated."<<std::endl;
+        ++error;
+        return -1;
+    }
     if(ret_address<0)
     {
         std::cout<<">> [runtime] calculation: incorrect values are used in calculation."<<std::endl;
@@ -1360,7 +1452,7 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
 }
 void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
 {
-    //unfinished
+    // unfinished
     return;
 }
 
