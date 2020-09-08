@@ -13,9 +13,11 @@ enum runtime_returned_state
 class nasal_runtime
 {
 private:
-    // global_scope_address and function_return_address are addresses in garbage_collector_memory
+    // function_return_address is an address in garbage_collector_memory
     int function_returned_address;
+    // global_scope_address is an address in garbage_collector_memory
     int global_scope_address;
+
     nasal_ast root;
 
     // if error occurred,this value will add 1
@@ -196,55 +198,27 @@ int nasal_runtime::main_progress()
         int node_type=root.get_children()[i].get_type();
         switch(node_type)
         {
-            case ast_definition:
-                definition(root.get_children()[i],-1);
-                break;
-            case ast_multi_assign:
-                multi_assignment(root.get_children()[i],-1);
-                break;
-            case ast_conditional:
-                ret_state=conditional_progress(root.get_children()[i],-1,false);
-                break;
+            case ast_definition:definition(root.get_children()[i],-1);break;
+            case ast_multi_assign:multi_assignment(root.get_children()[i],-1);break;
+            case ast_conditional:ret_state=conditional_progress(root.get_children()[i],-1,false);break;
             case ast_while:case ast_for:case ast_forindex:case ast_foreach:
-                ret_state=loop_progress(root.get_children()[i],-1,false);
-                break;
-            case ast_number:case ast_string:case ast_identifier:break;
+                ret_state=loop_progress(root.get_children()[i],-1,false);break;
+            case ast_number:case ast_string:break;
             case ast_call:
             case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             case ast_unary_sub:case ast_unary_not:
             case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-            case ast_trinocular:
-                process_returned_value_addr=calculation(root.get_children()[i],-1);
-                nasal_vm.del_reference(process_returned_value_addr);
-                break;
-            case ast_break:
-                ret_state=rt_break;
-                break;
-            case ast_continue:
-                ret_state=rt_continue;
-                break;
-            case ast_return:
-                ret_state=rt_return;
-                break;
+            case ast_trinocular:nasal_vm.del_reference(calculation(root.get_children()[i],-1));break;
+            case ast_break:ret_state=rt_break;break;
+            case ast_continue:ret_state=rt_continue;break;
+            case ast_return:ret_state=rt_return;break;
         }
         switch(ret_state)
         {
-            case rt_break:
-                std::cout<<">> [runtime] main_progress: cannot use break in main progress."<<std::endl;
-                ++error;
-                break;
-            case rt_continue:
-                std::cout<<">> [runtime] main_progress: cannot use continue in main progress."<<std::endl;
-                ++error;
-                break;
-            case rt_return:
-                std::cout<<">> [runtime] main_progress: cannot use return in main progress."<<std::endl;
-                ++error;
-                break;
-            case rt_error:
-                std::cout<<">> [runtime] main_progress: error occurred when executing main progress."<<std::endl;
-                ++error;
-                break;
+            case rt_break:std::cout<<">> [runtime] main_progress: cannot use break in main progress."<<std::endl;++error;break;
+            case rt_continue:std::cout<<">> [runtime] main_progress: cannot use continue in main progress."<<std::endl;++error;break;
+            case rt_return:std::cout<<">> [runtime] main_progress: cannot use return in main progress."<<std::endl;++error;break;
+            case rt_error:std::cout<<">> [runtime] main_progress: error occurred when executing main progress."<<std::endl;++error;break;
         }
         if(error)
         {
@@ -273,33 +247,19 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
         int node_type=node.get_children()[i].get_type();
         switch(node_type)
         {
-            case ast_definition:
-                definition(node.get_children()[i],local_scope_addr);
-                break;
-            case ast_multi_assign:
-                multi_assignment(node.get_children()[i],local_scope_addr);
-                break;
-            case ast_conditional:
-                ret_state=conditional_progress(node.get_children()[i],local_scope_addr,allow_return);
-                break;
+            case ast_definition:definition(node.get_children()[i],local_scope_addr);break;
+            case ast_multi_assign:multi_assignment(node.get_children()[i],local_scope_addr);break;
+            case ast_conditional:ret_state=conditional_progress(node.get_children()[i],local_scope_addr,allow_return);break;
             case ast_while:case ast_for:case ast_forindex:case ast_foreach:
-                ret_state=loop_progress(node.get_children()[i],local_scope_addr,allow_return);
-                break;
-            case ast_number:case ast_string:case ast_identifier:break;
+                ret_state=loop_progress(node.get_children()[i],local_scope_addr,allow_return);break;
+            case ast_number:case ast_string:break;
             case ast_call:
             case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             case ast_unary_sub:case ast_unary_not:
             case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-            case ast_trinocular:
-                process_returned_value_addr=calculation(root.get_children()[i],local_scope_addr);
-                nasal_vm.del_reference(process_returned_value_addr);
-                break;
-            case ast_break:
-                ret_state=rt_break;
-                break;
-            case ast_continue:
-                ret_state=rt_continue;
-                break;
+            case ast_trinocular:nasal_vm.del_reference(calculation(root.get_children()[i],local_scope_addr));break;
+            case ast_break:ret_state=rt_break;break;
+            case ast_continue:ret_state=rt_continue;break;
             case ast_return:
                 ret_state=rt_return;
                 if(allow_return)
@@ -327,25 +287,21 @@ int nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
     int before_loop_node_type=node.get_type();
     switch(before_loop_node_type)
     {
-        case ast_definition:
-            definition(node,local_scope_addr);
-            break;
-        case ast_multi_assign:
-            multi_assignment(node,local_scope_addr);
-            break;
-        case ast_number:case ast_string:case ast_identifier:break;
+        case ast_definition:definition(node,local_scope_addr);break;
+        case ast_multi_assign:multi_assignment(node,local_scope_addr);break;
+        case ast_number:case ast_string:break;
         case ast_call:
         case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_trinocular:
-            nasal_vm.del_reference(calculation(node,local_scope_addr));
-            break;
+        case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
         default:
             std::cout<<">> [runtime] before_for_loop: cannot use this expression before for-loop."<<std::endl;
             ++error;
-            return rt_error;
+            break;
     }
+    if(error)
+        return rt_error;
     return rt_exit_without_error;
 }
 int nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
@@ -353,25 +309,18 @@ int nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
     int node_type=node.get_type();
     switch(node_type)
     {
-        case ast_definition:
-            definition(node,local_scope_addr);
-            break;
-        case ast_multi_assign:
-            multi_assignment(node,local_scope_addr);
-            break;
-        case ast_number:case ast_string:case ast_identifier:break;
+        case ast_definition:definition(node,local_scope_addr);break;
+        case ast_multi_assign:multi_assignment(node,local_scope_addr);break;
+        case ast_number:case ast_string:break;
         case ast_call:
         case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_trinocular:
-            nasal_vm.del_reference(calculation(node,local_scope_addr));
-            break;
-        default:
-            std::cout<<">> [runtime] after_each_for_loop: cannot use this expression after each for-loop."<<std::endl;
-            ++error;
-            return rt_error;
+        case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
+        default:std::cout<<">> [runtime] after_each_for_loop: cannot use this expression after each for-loop."<<std::endl;++error;break;
     }
+    if(error)
+        return rt_error;
     return rt_exit_without_error;
 }
 int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow_return)
@@ -1187,18 +1136,6 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     int calculation_type=node.get_type();
     if(calculation_type==ast_number)
         ret_address=number_generation(node);
-    else if(calculation_type==ast_identifier)
-    {
-        if(local_scope_addr>=0)
-            ret_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(node.get_str());
-        if(ret_address<0)
-            ret_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(node.get_str());
-        if(ret_address<0)
-        {
-            std::cout<<">> [runtime] calculation: cannot find value named \'"<<node.get_str()<<"\'."<<std::endl;
-            ++error;
-        }
-    }
     else if(calculation_type==ast_string)
         ret_address=string_generation(node);
     else if(calculation_type==ast_vector)
@@ -1447,12 +1384,158 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
 }
 void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
 {
-    // unfinished
+    nasal_ast& define_node=node.get_children()[0];
+    nasal_ast& value_node=node.get_children()[1];
+    if(define_node.get_type()==ast_identifier && value_node.get_type()==ast_multi_scalar)
+    {
+        std::cout<<">> [runtime] definition: one identifier cannot accept too many values."<<std::endl;
+        ++error;
+        return;
+    }
+    if(define_node.get_type()==ast_identifier)
+    {
+        std::string new_name=define_node.get_str();
+        int value_addr=calculation(value_node,local_scope_addr);
+        if(value_addr<0)
+            return;
+        nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(new_name,value_addr);
+    }
+    else
+    {
+        std::vector<std::string> identifier_table;
+        int id_size=define_node.get_children().size();
+        for(int i=0;i<id_size;++i)
+            identifier_table.push_back(define_node.get_children()[i].get_str());
+        if(value_node.get_type()==ast_multi_scalar)
+        {
+            int val_size=value_node.get_children().size();
+            if(id_size!=val_size)
+            {
+                std::cout<<">> [runtime] definition: size of identifiers and size of values do not match."<<std::endl;
+                ++error;
+                return;
+            }
+            for(int i=0;i<val_size;++i)
+            {
+                int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
+                int type=nasal_vm.gc_get(tmp_addr).get_type();
+                if(type!=vm_vector && type!=vm_hash)
+                {
+                    int new_addr=nasal_vm.gc_alloc();
+                    nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
+                    nasal_vm.del_reference(tmp_addr);
+                    tmp_addr=new_addr;
+                }
+                nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
+            }
+        }
+        else
+        {
+            int value_addr=calculation(value_node,local_scope_addr);
+            if(value_addr<0)
+                return;
+            if(nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
+            {
+                std::cout<<">> [runtime] definition: must use vector in multi-definition."<<std::endl;
+                ++error;
+                return;
+            }
+            nasal_vector& ref_vector=nasal_vm.gc_get(value_addr).get_vector();
+            if(ref_vector.size()!=id_size)
+            {
+                std::cout<<">> [runtime] definition: size of identifiers and size of values do not match."<<std::endl;
+                ++error;
+                return;
+            }
+            for(int i=0;i<id_size;++i)
+            {
+                int tmp_addr=ref_vector.get_value_address(i);
+                int type=nasal_vm.gc_get(tmp_addr).get_type();
+                if(type!=vm_vector && type!=vm_hash)
+                {
+                    int new_addr=nasal_vm.gc_alloc();
+                    nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
+                    nasal_vm.del_reference(tmp_addr);
+                    tmp_addr=new_addr;
+                }
+                nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
+            }
+        }
+    }
     return;
 }
 void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
 {
-    // unfinished
+    nasal_ast& multi_call_node=node.get_children()[0];
+    nasal_ast& value_node=node.get_children()[1];
+    std::vector<int> mem_table;
+    int id_size=multi_call_node.get_children().size();
+    for(int i=0;i<id_size;++i)
+    {
+        nasal_ast& tmp_node=multi_call_node.get_children()[i];
+        if(tmp_node.get_type()!=ast_call)
+        {
+            std::cout<<">> [runtime] multi_assignment: multi-assignment must use available memory address."<<std::endl;
+            ++error;
+            return;
+        }
+        mem_table.push_back(call_scalar_mem(tmp_node,local_scope_addr));
+    }
+    if(value_node.get_type()==ast_multi_scalar)
+    {
+        int val_size=value_node.get_children().size();
+        if(id_size!=val_size)
+        {
+            std::cout<<">> [runtime] multi_assignment: size of calls and size of values do not match."<<std::endl;
+            ++error;
+            return;
+        }
+        for(int i=0;i<val_size;++i)
+        {
+            int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
+            int type=nasal_vm.gc_get(tmp_addr).get_type();
+            if(type!=vm_vector && type!=vm_hash)
+            {
+                int new_addr=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
+                nasal_vm.del_reference(tmp_addr);
+                tmp_addr=new_addr;
+            }
+            nasal_vm.mem_change(mem_table[i],tmp_addr);
+        }
+    }
+    else
+    {
+        int value_addr=calculation(value_node,local_scope_addr);
+        if(value_addr<0)
+            return;
+        if(nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
+        {
+            std::cout<<">> [runtime] multi_assignment: must use vector in multi-assignment."<<std::endl;
+            ++error;
+            return;
+        }
+        nasal_vector& ref_vector=nasal_vm.gc_get(value_addr).get_vector();
+        if(ref_vector.size()!=id_size)
+        {
+            std::cout<<">> [runtime] multi_assignment: size of calls and size of values do not match."<<std::endl;
+            ++error;
+            return;
+        }
+        for(int i=0;i<id_size;++i)
+        {
+            int tmp_addr=ref_vector.get_value_address(i);
+            int type=nasal_vm.gc_get(tmp_addr).get_type();
+            if(type!=vm_vector && type!=vm_hash)
+            {
+                int new_addr=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
+                nasal_vm.del_reference(tmp_addr);
+                tmp_addr=new_addr;
+            }
+            nasal_vm.mem_change(mem_table[i],tmp_addr);
+        }
+    }
     return;
 }
 
