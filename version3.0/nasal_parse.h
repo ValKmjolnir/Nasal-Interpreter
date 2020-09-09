@@ -827,10 +827,7 @@ nasal_ast nasal_parse::scalar()
     else if(tok_list[ptr].type==tok_string)
         node=string_gen();
     else if(tok_list[ptr].type==tok_identifier)
-    {
-        node.set_type(ast_call);
-        node.add_child(id_gen());
-    }
+        node=id_gen();
     else if(tok_list[ptr].type==tok_func)
     {
         if(ptr+1<tok_list_size && tok_list[ptr+1].type==tok_identifier)
