@@ -69,6 +69,6 @@ var io=
 
 var print=func(dyn...)
 {
-    nasal_call_builtin_c_std_puts(dyn);
+    nasal_call_builtin_std_cout(dyn);
     return nil;
 };
