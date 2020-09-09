@@ -47,15 +47,12 @@ class nasal_function
 {
 private:
     // this int points to the space in nasal_vm::garbage_collector_memory
-    bool is_builtin;
     int closure_addr;
     nasal_ast argument_list;
     nasal_ast function_expr;
 public:
     nasal_function();
     ~nasal_function();
-    void set_builtin_func();
-    bool check_builtin();
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
@@ -82,11 +79,6 @@ public:
     int  get_mem_address(std::string);
     void deepcopy(nasal_closure&);
 };
-
-nasal_vector error_vector;
-nasal_hash error_hash;
-nasal_function error_function;
-nasal_closure error_closure;
 
 class nasal_scalar
 {
@@ -148,6 +140,7 @@ private:
     std::vector<int*> memory_manager_memory;
 public:
     ~nasal_virtual_machine();
+    void clear();
     int gc_alloc();             // garbage collector gives a new space
     nasal_scalar& gc_get(int);  // get scalar that stored in gc
     int add_reference(int);
@@ -166,6 +159,11 @@ public:
 */
 nasal_virtual_machine nasal_vm;
 nasal_scalar nasal_scalar_calculator;
+// error values set here,if defined before nasal_vm,SIGSEGV will occur.
+nasal_vector error_vector;
+nasal_hash error_hash;
+nasal_function error_function;
+nasal_closure error_closure;
 
 /*functions of nasal_vector*/
 nasal_vector::nasal_vector()
@@ -337,7 +335,6 @@ void nasal_hash::deepcopy(nasal_hash& tmp)
 /*functions of nasal_function*/
 nasal_function::nasal_function()
 {
-    is_builtin=false;
     closure_addr=-1;
     argument_list.clear();
     function_expr.clear();
@@ -351,17 +348,10 @@ nasal_function::~nasal_function()
     function_expr.clear();
     return;
 }
-void nasal_function::set_builtin_func()
-{
-    is_builtin=true;
-    return;
-}
-bool nasal_function::check_builtin()
-{
-    return is_builtin;
-}
 void nasal_function::set_closure_addr(int value_address)
 {
+    if(closure_addr>=0)
+        nasal_vm.del_reference(closure_addr);
     closure_addr=value_address;
     return;
 }
@@ -423,8 +413,39 @@ void nasal_closure::del_scope()
 {
     if(this->elems.empty())
         return;
+    // make closure here
+    // functions in different scope but the same closure will get different copies of closures
+    // functions in the same scope will get the same copy of closure,when running these functions,one closure will be changed,make sure you are using it correctly!
+    // please notice this,otherwise your programme may not work correctly
+    int closure=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(closure).set_type(vm_closure);
+    nasal_closure& new_closure=nasal_vm.gc_get(closure).get_closure();
+    new_closure.deepcopy(*this);
+
+    std::vector<std::string> func_name;
+    for(std::map<std::string,int>::iterator i=new_closure.elems.back().begin();i!=new_closure.elems.back().end();++i)
+    {
+        int value_addr=nasal_vm.mem_get(i->second);
+        if(nasal_vm.gc_get(value_addr).get_type()==vm_function)
+        {
+            func_name.push_back(i->first);
+            nasal_vm.mem_free(i->second); // mem_free will delete the reference of mem_get(i->second)
+        }
+    }
+    for(int i=0;i<func_name.size();++i)
+        new_closure.elems.back().erase(func_name[i]);
+
     for(std::map<std::string,int>::iterator i=this->elems.back().begin();i!=this->elems.back().end();++i)
+    {
+        int value_addr=nasal_vm.mem_get(i->second);
+        if(nasal_vm.gc_get(value_addr).get_type()==vm_function)
+        {
+            nasal_vm.gc_get(value_addr).get_func().set_closure_addr(closure);
+            nasal_vm.add_reference(closure);
+        }
         nasal_vm.mem_free(i->second);
+    }
+    nasal_vm.del_reference(closure);
     this->elems.pop_back();
     return;
 }
@@ -1361,6 +1382,22 @@ nasal_virtual_machine::~nasal_virtual_machine()
         delete []garbage_collector_memory[i];
     for(int i=0;i<mm_mem_size;++i)
         delete []memory_manager_memory[i];
+    garbage_collector_memory.clear();
+    memory_manager_memory.clear();
+    return;
+}
+void nasal_virtual_machine::clear()
+{
+    int gc_mem_size=garbage_collector_memory.size();
+    int mm_mem_size=memory_manager_memory.size();
+    for(int i=0;i<gc_mem_size;++i)
+        delete []garbage_collector_memory[i];
+    for(int i=0;i<mm_mem_size;++i)
+        delete []memory_manager_memory[i];
+    while(!garbage_collector_free_space.empty())
+        garbage_collector_free_space.pop();
+    while(!memory_manager_free_space.empty())
+        memory_manager_free_space.pop();
     garbage_collector_memory.clear();
     memory_manager_memory.clear();
     return;
