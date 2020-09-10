@@ -77,7 +77,7 @@ public:
     void add_new_value(std::string,int);
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
-    void deepcopy(nasal_closure&);
+    void set_closure(nasal_closure&);
 };
 
 class nasal_scalar
@@ -123,7 +123,7 @@ class nasal_virtual_machine
     struct gc_unit
     {
         bool collected;
-        char ref_cnt;
+        int ref_cnt;
         nasal_scalar elem;
         gc_unit()
         {
@@ -141,10 +141,12 @@ private:
 public:
     ~nasal_virtual_machine();
     void clear();
+    void debug();
     int gc_alloc();             // garbage collector gives a new space
     nasal_scalar& gc_get(int);  // get scalar that stored in gc
-    int add_reference(int);
-    int del_reference(int);
+    void add_reference(int);
+    void del_reference(int);
+    int get_refcnt(int);
     int mem_alloc();            // memory gives a new space
     int mem_free(int);          // give space back to memory
     int mem_change(int,int);    // change value in memory space
@@ -190,6 +192,8 @@ int nasal_vector::del_elem(int index)
         return -1;
     int ret=elems[index];
     nasal_vm.mem_free(ret);
+    for(int i=index;i<elems.size()-1;++i)
+        elems[i]=elems[i+1];
     elems.pop_back();
     return ret;
 }
@@ -352,7 +356,10 @@ void nasal_function::set_closure_addr(int value_address)
 {
     if(closure_addr>=0)
         nasal_vm.del_reference(closure_addr);
-    closure_addr=value_address;
+    int new_closure=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(new_closure).set_type(vm_closure);
+    nasal_vm.gc_get(new_closure).get_closure().set_closure(nasal_vm.gc_get(value_address).get_closure());
+    closure_addr=new_closure;
     return;
 }
 int nasal_function::get_closure_addr()
@@ -415,39 +422,8 @@ void nasal_closure::del_scope()
 {
     if(this->elems.empty())
         return;
-    // make closure here
-    // functions in different scope but the same closure will get different copies of closures
-    // functions in the same scope will get the same copy of closure,when running these functions,one closure will be changed,make sure you are using it correctly!
-    // please notice this,otherwise your programme may not work correctly
-    int closure=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(closure).set_type(vm_closure);
-    nasal_closure& new_closure=nasal_vm.gc_get(closure).get_closure();
-    new_closure.deepcopy(*this);
-
-    std::vector<std::string> func_name;
-    for(std::map<std::string,int>::iterator i=new_closure.elems.back().begin();i!=new_closure.elems.back().end();++i)
-    {
-        int value_addr=nasal_vm.mem_get(i->second);
-        if(nasal_vm.gc_get(value_addr).get_type()==vm_function)
-        {
-            func_name.push_back(i->first);
-            nasal_vm.mem_free(i->second); // mem_free will delete the reference of mem_get(i->second)
-        }
-    }
-    for(int i=0;i<func_name.size();++i)
-        new_closure.elems.back().erase(func_name[i]);
-
-    for(std::map<std::string,int>::iterator i=this->elems.back().begin();i!=this->elems.back().end();++i)
-    {
-        int value_addr=nasal_vm.mem_get(i->second);
-        if(nasal_vm.gc_get(value_addr).get_type()==vm_function)
-        {
-            nasal_vm.gc_get(value_addr).get_func().set_closure_addr(closure);
-            nasal_vm.add_reference(closure);
-        }
+    for(std::map<std::string,int>::iterator i=elems.back().begin();i!=elems.back().end();++i)
         nasal_vm.mem_free(i->second);
-    }
-    nasal_vm.del_reference(closure);
     this->elems.pop_back();
     return;
 }
@@ -484,19 +460,22 @@ int nasal_closure::get_mem_address(std::string key)
     }
     return ret_address;
 }
-void nasal_closure::deepcopy(nasal_closure& tmp)
+void nasal_closure::set_closure(nasal_closure& tmp)
 {
+    for(std::list<std::map<std::string,int> >::iterator i=elems.begin();i!=elems.end();++i)
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+            nasal_vm.mem_free(j->second);
+    elems.clear();
     for(std::list<std::map<std::string,int> >::iterator i=tmp.elems.begin();i!=tmp.elems.end();++i)
     {
         this->add_scope();
         for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
         {
             int new_mem_addr=nasal_vm.mem_alloc();
-            int new_value_addr=nasal_vm.gc_alloc();
-            nasal_vm.mem_init(new_mem_addr,new_value_addr);
-            int tmp_value_addr=nasal_vm.mem_get(j->second);
-            nasal_vm.gc_get(new_value_addr).deepcopy(nasal_vm.gc_get(tmp_value_addr));
-            this->elems.back()[j->first]=new_mem_addr;
+            int value_addr=nasal_vm.mem_get(j->second);
+            nasal_vm.mem_init(new_mem_addr,value_addr);
+            nasal_vm.add_reference(value_addr);
+            elems.back()[j->first]=new_mem_addr;
         }
     }
     return;
@@ -521,12 +500,12 @@ nasal_scalar::~nasal_scalar()
         case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
         case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
     }
+    this->type=vm_nil;
     this->scalar_ptr=NULL;
     return;
 }
 void nasal_scalar::clear()
 {
-    this->type=vm_nil;
     switch(this->type)
     {
         case vm_nil:      break;
@@ -537,6 +516,7 @@ void nasal_scalar::clear()
         case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
         case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
     }
+    this->type=vm_nil;
     this->scalar_ptr=NULL;
     return;
 }
@@ -630,7 +610,7 @@ void nasal_scalar::deepcopy(nasal_scalar& tmp)
         case vm_vector:   this->scalar_ptr=(void*)(new nasal_vector);(*(nasal_vector*)this->scalar_ptr).deepcopy(tmp.get_vector());break;
         case vm_hash:     this->scalar_ptr=(void*)(new nasal_hash);(*(nasal_hash*)this->scalar_ptr).deepcopy(tmp.get_hash());break;
         case vm_function: this->scalar_ptr=(void*)(new nasal_function);(*(nasal_function*)this->scalar_ptr).deepcopy(tmp.get_func());break;
-        case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);(*(nasal_closure*)this->scalar_ptr).deepcopy(tmp.get_closure());break;
+        case vm_closure:  this->scalar_ptr=(void*)(new nasal_closure);(*(nasal_closure*)this->scalar_ptr).set_closure(tmp.get_closure());break;
     }
     return;
 }
@@ -1381,11 +1361,39 @@ nasal_virtual_machine::~nasal_virtual_machine()
     int gc_mem_size=garbage_collector_memory.size();
     int mm_mem_size=memory_manager_memory.size();
     for(int i=0;i<gc_mem_size;++i)
+    {
+        for(int j=0;j<GC_BLK_SIZE;++j)
+            if(garbage_collector_memory[i][j].ref_cnt)
+                garbage_collector_memory[i][j].elem.clear();
         delete []garbage_collector_memory[i];
+    }
     for(int i=0;i<mm_mem_size;++i)
         delete []memory_manager_memory[i];
     garbage_collector_memory.clear();
     memory_manager_memory.clear();
+    return;
+}
+void nasal_virtual_machine::debug()
+{
+    int gc_mem_size=garbage_collector_memory.size();
+    int mm_mem_size=memory_manager_memory.size();
+    for(int i=0;i<gc_mem_size;++i)
+        for(int j=0;j<GC_BLK_SIZE;++j)
+            if(garbage_collector_memory[i][j].ref_cnt)
+            {
+                std::cout<<">> [debug] "<<((i<<8)+j)<<": "<<garbage_collector_memory[i][j].ref_cnt<<" ";
+                switch(garbage_collector_memory[i][j].elem.get_type())
+                {
+                    case vm_nil:std::cout<<"nil";break;
+                    case vm_number:std::cout<<"number "<<garbage_collector_memory[i][j].elem.get_number();break;
+                    case vm_string:std::cout<<"string "<<garbage_collector_memory[i][j].elem.get_string();break;
+                    case vm_vector:std::cout<<"vector";break;
+                    case vm_hash:std::cout<<"hash";break;
+                    case vm_function:std::cout<<"function";break;
+                    case vm_closure:std::cout<<"closure";break;
+                }
+                std::cout<<"\n";
+            }
     return;
 }
 void nasal_virtual_machine::clear()
@@ -1393,7 +1401,12 @@ void nasal_virtual_machine::clear()
     int gc_mem_size=garbage_collector_memory.size();
     int mm_mem_size=memory_manager_memory.size();
     for(int i=0;i<gc_mem_size;++i)
+    {
+        for(int j=0;j<GC_BLK_SIZE;++j)
+            if(garbage_collector_memory[i][j].ref_cnt)
+                garbage_collector_memory[i][j].elem.clear();
         delete []garbage_collector_memory[i];
+    }
     for(int i=0;i<mm_mem_size;++i)
         delete []memory_manager_memory[i];
     while(!garbage_collector_free_space.empty())
@@ -1432,20 +1445,17 @@ nasal_scalar& nasal_virtual_machine::gc_get(int value_address)
         return error_returned_value;
     }
 }
-int nasal_virtual_machine::add_reference(int value_address)
+void nasal_virtual_machine::add_reference(int value_address)
 {
     int blk_num=(value_address>>8);
     int blk_plc=(value_address&0xff);
     if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
         ++garbage_collector_memory[blk_num][blk_plc].ref_cnt;
     else
-    {
         std::cout<<">> [vm] gc_add_ref:unexpected memory \'"<<value_address<<"\'."<<std::endl;
-        return 0;
-    }
-    return 1;
+    return;
 }
-int nasal_virtual_machine::del_reference(int value_address)
+void nasal_virtual_machine::del_reference(int value_address)
 {
     int blk_num=(value_address>>8);
     int blk_plc=(value_address&0xff);
@@ -1454,7 +1464,7 @@ int nasal_virtual_machine::del_reference(int value_address)
     else
     {
         std::cout<<">> [vm] gc_del_ref:unexpected memory \'"<<value_address<<"\'."<<std::endl;
-        return 0;
+        return;
     }
     if(!garbage_collector_memory[blk_num][blk_plc].ref_cnt)
     {
@@ -1462,7 +1472,17 @@ int nasal_virtual_machine::del_reference(int value_address)
         garbage_collector_memory[blk_num][blk_plc].elem.clear();
         garbage_collector_free_space.push(value_address);
     }
-    return 1;
+    return;
+}
+int nasal_virtual_machine::get_refcnt(int value_address)
+{
+    int blk_num=(value_address>>8);
+    int blk_plc=(value_address&0xff);
+    if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
+        return garbage_collector_memory[blk_num][blk_plc].ref_cnt;
+    else
+        std::cout<<">> [vm] get_refcnt:unexpected memory \'"<<value_address<<"\'."<<std::endl;
+    return -1;
 }
 int nasal_virtual_machine::mem_alloc()
 {
