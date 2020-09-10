@@ -379,8 +379,10 @@ nasal_ast& nasal_function::get_run_block()
 }
 void nasal_function::deepcopy(nasal_function& tmp)
 {
-    this->closure_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(this->closure_addr).deepcopy(nasal_vm.gc_get(tmp.closure_addr));
+    if(this->closure_addr>=0)
+        nasal_vm.del_reference(this->closure_addr);
+    this->closure_addr=tmp.closure_addr;
+    nasal_vm.add_reference(tmp.closure_addr);
     this->argument_list=tmp.argument_list;
     this->function_expr=tmp.function_expr;
     return;
