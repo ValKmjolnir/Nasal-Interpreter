@@ -303,6 +303,7 @@ int nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
     int before_loop_node_type=node.get_type();
     switch(before_loop_node_type)
     {
+        case ast_null:break;
         case ast_definition:definition(node,local_scope_addr);break;
         case ast_multi_assign:multi_assignment(node,local_scope_addr);break;
         case ast_number:case ast_string:case ast_function:break;
@@ -323,6 +324,7 @@ int nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
     int node_type=node.get_type();
     switch(node_type)
     {
+        case ast_null:break;
         case ast_definition:definition(node,local_scope_addr);break;
         case ast_multi_assign:multi_assignment(node,local_scope_addr);break;
         case ast_number:case ast_string:case ast_function:break;
@@ -467,14 +469,11 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
             nasal_vm.gc_get(for_local_scope_addr).get_closure().add_scope();
         }
         // for progress
+        ret_state=before_for_loop(before_loop_node,for_local_scope_addr);
         int condition_value_addr=calculation(condition_node,for_local_scope_addr);
         bool result=check_condition(condition_value_addr);
         nasal_vm.del_reference(condition_value_addr);
-        for(
-            ret_state=before_for_loop(before_loop_node,for_local_scope_addr);
-            result;
-            ret_state=after_each_for_loop(each_loop_do_node,for_local_scope_addr)
-        )
+        for(;result;ret_state=after_each_for_loop(each_loop_do_node,for_local_scope_addr))
         {
             if(ret_state==rt_error)
                 break;
