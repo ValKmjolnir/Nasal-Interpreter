@@ -5,6 +5,13 @@
 # before running this file will be translated to abstract syntax tree
 # and this ast will be linked before main ast as main-ast's beginning
 
+# print
+var print=func(elements...)
+{
+    nasal_call_builtin_std_cout(elements);
+    return nil;
+};
+
 # append
 # The first argument specifies a vector.
 # Appends the remaining arguments to the end of the vector. 
@@ -19,9 +26,9 @@ var append=func(vector,elements...)
 # The first argument specifies a vector, the second a number representing the desired size of that vector.
 # If the vector is currently larger than the specified size,it is truncated.
 # If it is smaller, it is padded with nil entries.Returns the vector operated upon. 
-var setsize=func(vector,__size)
+var setsize=func(vector,size)
 {
-    nasal_call_builtin_set_size(vector,__size);
+    nasal_call_builtin_set_size(vector,size);
     return nil;
 }
 

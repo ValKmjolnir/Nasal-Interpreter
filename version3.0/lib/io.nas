@@ -66,9 +66,3 @@ var io=
         return nasal_call_builtin_builtin_stat(filename);
     },
 };
-
-var print=func(dyn...)
-{
-    nasal_call_builtin_std_cout(dyn);
-    return nil;
-};
