@@ -181,8 +181,10 @@ nasal_vector::~nasal_vector()
     elems.clear();
     return;
 }
-void nasal_vector::add_elem(int memory_address)
+void nasal_vector::add_elem(int value_address)
 {
+    int memory_address=nasal_vm.mem_alloc();
+    nasal_vm.mem_init(memory_address,value_address);
     elems.push_back(memory_address);
     return;
 }
@@ -253,10 +255,14 @@ nasal_hash::~nasal_hash()
     elems.clear();
     return;
 }
-void nasal_hash::add_elem(std::string key,int memory_address)
+void nasal_hash::add_elem(std::string key,int value_address)
 {
     if(elems.find(key)==elems.end())
+    {
+        int memory_address=nasal_vm.mem_alloc();
+        nasal_vm.mem_init(memory_address,value_address);
         elems[key]=memory_address;
+    }
     else
         std::cout<<">> [vm] nasal_hash::add_elem: "<<key<<" already exists."<<std::endl;
     return;
