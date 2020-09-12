@@ -727,20 +727,12 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 called_value_addrs.push_back(reference_value.get_value_address(index_num));
             }
         }
+        // generate sub-vector
         if(called_value_addrs.size()==1)
         {
             int value_addr=called_value_addrs[0];
-            int value_type=nasal_vm.gc_get(value_addr).get_type();
-            if(value_type==vm_vector || value_type==vm_hash)
-            {
-                nasal_vm.add_reference(value_addr);
-                return_value_addr=value_addr;
-            }
-            else
-            {
-                return_value_addr=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(return_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
-            }
+            nasal_vm.add_reference(value_addr);
+            return_value_addr=value_addr;
         }
         else
         {
@@ -751,18 +743,8 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             for(int i=0;i<vec_size;++i)
             {
                 int value_addr=called_value_addrs[i];
-                int value_type=nasal_vm.gc_get(value_addr).get_type();
-                if(value_type==vm_vector || value_type==vm_hash)
-                {
-                    nasal_vm.add_reference(value_addr);
-                    return_vector.add_elem(value_addr);
-                }
-                else
-                {
-                    int tmp_value_addr=nasal_vm.gc_alloc();
-                    nasal_vm.gc_get(tmp_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
-                    return_vector.add_elem(tmp_value_addr);
-                }
+                nasal_vm.add_reference(value_addr);
+                return_vector.add_elem(value_addr);
             }
         }
     }
@@ -782,17 +764,8 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         }
         std::string str=node.get_children()[0].get_str();
         int value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(str);
-        int value_type=nasal_vm.gc_get(value_addr).get_type();
-        if(value_type==vm_vector || value_type==vm_hash)
-        {
-            nasal_vm.add_reference(value_addr);
-            return_value_addr=value_addr;
-        }
-        else
-        {
-            return_value_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(return_value_addr).deepcopy(nasal_vm.gc_get(value_addr));
-        }
+        nasal_vm.add_reference(value_addr);
+        return_value_addr=value_addr;
     }
     else
     {
@@ -1508,14 +1481,6 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             for(int i=0;i<val_size;++i)
             {
                 int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
-                int type=nasal_vm.gc_get(tmp_addr).get_type();
-                if(type!=vm_vector && type!=vm_hash)
-                {
-                    int new_addr=nasal_vm.gc_alloc();
-                    nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
-                    nasal_vm.del_reference(tmp_addr);
-                    tmp_addr=new_addr;
-                }
                 nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
             }
         }
@@ -1538,13 +1503,6 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             for(int i=0;i<id_size;++i)
             {
                 int tmp_addr=ref_vector.get_value_address(i);
-                int type=nasal_vm.gc_get(tmp_addr).get_type();
-                if(type!=vm_vector && type!=vm_hash)
-                {
-                    int new_addr=nasal_vm.gc_alloc();
-                    nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
-                    tmp_addr=new_addr;
-                }
                 nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
             }
             nasal_vm.del_reference(value_addr);
@@ -1581,14 +1539,6 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         for(int i=0;i<val_size;++i)
         {
             int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
-            int type=nasal_vm.gc_get(tmp_addr).get_type();
-            if(type!=vm_vector && type!=vm_hash)
-            {
-                int new_addr=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
-                nasal_vm.del_reference(tmp_addr);
-                tmp_addr=new_addr;
-            }
             nasal_vm.mem_change(mem_table[i],tmp_addr);
         }
     }
@@ -1613,13 +1563,6 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         for(int i=0;i<id_size;++i)
         {
             int tmp_addr=ref_vector.get_value_address(i);
-            int type=nasal_vm.gc_get(tmp_addr).get_type();
-            if(type!=vm_vector && type!=vm_hash)
-            {
-                int new_addr=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(new_addr).deepcopy(nasal_vm.gc_get(tmp_addr));
-                tmp_addr=new_addr;
-            }
             nasal_vm.mem_change(mem_table[i],tmp_addr);
         }
         nasal_vm.del_reference(value_addr);
