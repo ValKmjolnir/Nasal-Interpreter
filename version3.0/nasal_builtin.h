@@ -132,4 +132,70 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
     return ret_addr;
 }
 
+int nasal_runtime::builtin_system(int local_scope_addr)
+{
+    int str_value_addr=-1;
+    if(local_scope_addr>=0)
+        str_value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("str");
+    if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_system: cannot find values or wrong value type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string str=nasal_vm.gc_get(str_value_addr).get_string();
+    int size=str.length();
+    char* command=new char[size+1];
+    for(int i=0;i<size;++i)
+        command[i]=str[i];
+    command[size]='\0';
+    system(command);
+    delete []command;
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    return ret_addr;
+}
+
+int nasal_runtime::builtin_input(int local_scope_addr)
+{
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    std::string str;
+    std::cin>>str;
+    nasal_vm.gc_get(ret_addr).set_string(str);
+    return ret_addr;
+}
+
+int nasal_runtime::builtin_sleep(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("duration");
+    if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_string && nasal_vm.gc_get(value_addr).get_type()!=vm_number))
+    {
+        std::cout<<">> [runtime] builtin_sleep: cannot find values or wrong value type(must be string or numebr)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    unsigned long sleep_time=0;
+    if(nasal_vm.gc_get(value_addr).get_type()==vm_string)
+    {
+        std::string str=nasal_vm.gc_get(value_addr).get_string();
+        if(check_numerable_string(str))
+            sleep_time=(unsigned long)trans_string_to_number(str);
+        else
+        {
+            std::cout<<">> [runtime] builtin_sleep: this is not a numerable string."<<std::endl;
+            ++error;
+            return -1;
+        }
+    }
+    else
+        sleep_time=(unsigned long)nasal_vm.gc_get(value_addr).get_number();
+    _sleep(sleep_time);
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    return ret_addr;
+}
+
 #endif
