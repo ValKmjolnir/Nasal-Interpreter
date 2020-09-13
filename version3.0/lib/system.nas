@@ -1,9 +1,10 @@
-var system=
+var system=func(str)
 {
-    # print the type of thing on the screen
-    type:func(thing)
-    {
-        nasal_call_builtin_scalar_type(thing);
-        return;
-    }
-};
+    nasal_call_builtin_system(str);
+    return;
+}
+var sleep=func(duration)
+{
+    nasal_call_builtin_sleep(duration);
+    return;
+}
