@@ -10,12 +10,15 @@ enum runtime_returned_state
     rt_exit_without_error
 };
 
-#define BUILTIN_FUNC_NUM 3
+#define BUILTIN_FUNC_NUM 6
 std::string builtin_func_name[BUILTIN_FUNC_NUM]=
 {
     "nasal_call_builtin_std_cout",
     "nasal_call_builtin_push_back",
     "nasal_call_builtin_set_size",
+    "nasal_call_builtin_system",
+    "nasal_call_builtin_input",
+    "nasal_call_builtin_sleep"
 };
 
 class nasal_runtime
@@ -77,6 +80,9 @@ private:
     int builtin_print(int);
     int builtin_append(int);
     int builtin_setsize(int);
+    int builtin_system(int);
+    int builtin_input(int);
+    int builtin_sleep(int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -364,7 +370,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         {
             // return expression will be checked in block_progress
             ret_state=block_progress(run_block_node,local_scope_addr,allow_return);
-            if(ret_state==rt_break || ret_state==rt_error || ret_state==rt_return)
+            if(ret_state==rt_break || ret_state==rt_error || ret_state==rt_return || error)
                 break;
             condition_value_addr=calculation(condition_node,while_local_scope_addr);
             result=check_condition(condition_value_addr);
@@ -436,7 +442,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
                 nasal_vm.mem_change(mem_addr,value_addr);
             }
             ret_state=block_progress(run_block_node,forei_local_scope_addr,allow_return);
-            if(ret_state==rt_break || ret_state==rt_return || ret_state==rt_error)
+            if(ret_state==rt_break || ret_state==rt_return || ret_state==rt_error || error)
                 break;
         }
         nasal_vm.del_reference(vector_value_addr);
@@ -473,7 +479,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
             if(ret_state==rt_error)
                 break;
             ret_state=block_progress(run_block_node,for_local_scope_addr,allow_return);
-            if(ret_state==rt_error || ret_state==rt_return || ret_state==rt_break)
+            if(ret_state==rt_error || ret_state==rt_return || ret_state==rt_break || error)
                 break;
             condition_value_addr=calculation(condition_node,for_local_scope_addr);
             result=check_condition(condition_value_addr);
@@ -838,6 +844,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     if(value_type!=vm_function)
     {
         std::cout<<">> [runtime] call_function: incorrect value type,expected a function."<<std::endl;
+        ++error;
         return -1;
     }
     nasal_function& reference_of_func=nasal_vm.gc_get(base_value_addr).get_func();
@@ -1063,6 +1070,9 @@ int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
         case 0:ret_value_addr=builtin_print(local_scope_addr);break;
         case 1:ret_value_addr=builtin_append(local_scope_addr);break;
         case 2:ret_value_addr=builtin_setsize(local_scope_addr);break;
+        case 3:ret_value_addr=builtin_system(local_scope_addr);break;
+        case 4:ret_value_addr=builtin_input(local_scope_addr);break;
+        case 5:ret_value_addr=builtin_sleep(local_scope_addr);break;
     }
     return ret_value_addr;
 }
