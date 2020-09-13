@@ -36,7 +36,7 @@ And the flow chart of lexer is here:
 
 # Parser
 
-In __version 2.0__
+## In __version 2.0__
 ```javascript
 (var a,b,c)=(1,2,3);
 var (r,g,b)=color;
@@ -49,16 +49,28 @@ These two types of statements are both definition_expr.
 ```
 This type of statement is multi_assignment.
 
-__And to check if an expr in '(' ')' is multi_scalar or multi_id__
+And to check if an expr in '(' ')' is multi_scalar or multi_id.
 
-__i used bool nasal_parse::check_multi_scalar() and bool nasal_parse::check_multi_assignment()__
+i used bool nasal_parse::check_multi_scalar() and bool nasal_parse::check_multi_assignment().
+
+## In __version 3.0__
+
+I refactored parser and make it easier to maintain.
+
+the EBNF is also refactored.
 
 # Abstract Syntax Tree
 
 In __version 1.2__ the ast has been completed.
 
+In __version 3.0__ the ast is refactored and is now easier to read and maintain.
+
 # Version 2.0
 
 a completed ast-interpreter with unfinished lib functions.
 
-a new byte code interpreter is in progress(version 3.0).
+# Version 3.0
+
+ast-interpreter uses new techniques so it can run codes more efficiently.
+
+byte-code-interpreter is in progress(i need a lot of time to learn that :( ).
