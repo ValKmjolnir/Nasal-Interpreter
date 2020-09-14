@@ -12,7 +12,7 @@ So this is an interpreter for Nasal written by C++.
 
 The interpreter is still in development.We really need your support!
 
-# Why writing Nasal Interpreter
+# Why Writing Nasal Interpreter
 
 Nasal is a script language first used in Flightgear.
 
