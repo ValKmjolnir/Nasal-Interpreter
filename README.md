@@ -10,7 +10,19 @@ There is a Nasal console in FlightGear but sometimes it is not so easy for every
 
 So this is an interpreter for Nasal written by C++.
 
-The interpreter is still in development.Anyone who interested in this could also join us!
+The interpreter is still in development.We really need your support!
+
+# Why writing Nasal Interpreter
+
+Nasal is a script language first used in Flightgear.
+
+But in last summer holiday, members in FGPRC told me that it is hard to debug with nasal-console in Flightgear, especially when checking syntax error.
+
+So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
+
+I wrote the lexer, parser and runtime(nasal virtual machine/ast-runtime virtual machine) to help checking errors.
+
+They found it easier for them to check errors before copying nasal-codes in nasal-console in Flightgear to test.
   
 # Lexical Analysis
   
