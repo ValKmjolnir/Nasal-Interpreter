@@ -198,4 +198,64 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
     return ret_addr;
 }
 
+int nasal_runtime::builtin_finput(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("filename");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_finput: cannot find values or wrong value type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string filename=nasal_vm.gc_get(value_addr).get_string();
+    std::ifstream fin(filename);
+    std::string file_content="";
+    if(!fin.fail())
+        while(!fin.eof())
+        {
+            file_content.push_back(fin.get());
+            if(fin.eof())
+                break;
+        }
+    else
+        file_content="cannot open file named \'"+filename+"\'.";
+    fin.close();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    nasal_vm.gc_get(ret_addr).set_string(file_content);
+    return ret_addr;
+}
+
+int nasal_runtime::builtin_foutput(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("filename");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_foutput: cannot find values or wrong value type(filename must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int str_value_addr=-1;
+    if(local_scope_addr>=0)
+        str_value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("str");
+    if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_foutput: cannot find values or wrong value type(file's content must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string filename=nasal_vm.gc_get(value_addr).get_string();
+    std::string file_content=nasal_vm.gc_get(str_value_addr).get_string();
+    std::ofstream fout(filename);
+    fout<<file_content;
+    fout.close();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    return ret_addr;
+}
+
 #endif
