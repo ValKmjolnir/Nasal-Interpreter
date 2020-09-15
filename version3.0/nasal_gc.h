@@ -21,7 +21,7 @@ public:
     nasal_vector();
     ~nasal_vector();
     void add_elem(int);
-    int  del_elem(int);
+    int  del_elem();
     int  size();
     int  get_value_address(int);
     int  get_mem_address(int);
@@ -186,14 +186,14 @@ void nasal_vector::add_elem(int value_address)
     elems.push_back(memory_address);
     return;
 }
-int nasal_vector::del_elem(int index)
+int nasal_vector::del_elem()
 {
-    if(index>=elems.size())
+    // pop back
+    if(!elems.size())
         return -1;
-    int ret=elems[index];
-    nasal_vm.mem_free(ret);
-    for(int i=index;i<elems.size()-1;++i)
-        elems[i]=elems[i+1];
+    int ret=nasal_vm.mem_get(elems.back());
+    nasal_vm.add_reference(ret);
+    nasal_vm.mem_free(elems.back());
     elems.pop_back();
     return ret;
 }

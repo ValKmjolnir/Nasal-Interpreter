@@ -119,7 +119,11 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
     int vec_size=ref_vector.size();
     if(number<vec_size)
         for(int i=number;i<vec_size;++i)
-            ref_vector.del_elem(number);
+        {
+            int addr=ref_vector.del_elem();
+            if(addr>=0)
+                nasal_vm.del_reference(addr);
+        }
     else if(number>vec_size)
         for(int i=vec_size;i<number;++i)
         {
@@ -192,7 +196,7 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
     }
     else
         sleep_time=(unsigned long)nasal_vm.gc_get(value_addr).get_number();
-    _sleep(sleep_time);
+    sleep(sleep_time); // sleep in unistd.h will make this progress sleep sleep_time seconds.
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_nil);
     return ret_addr;
@@ -258,4 +262,171 @@ int nasal_runtime::builtin_foutput(int local_scope_addr)
     return ret_addr;
 }
 
+
+int nasal_runtime::builtin_split(int local_scope_addr)
+{
+    int delimeter_value_addr=-1;
+    if(local_scope_addr>=0)
+        delimeter_value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("delimeter");
+    if(delimeter_value_addr<0 || nasal_vm.gc_get(delimeter_value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_split: cannot find values or wrong value type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int string_value_addr=-1;
+    if(local_scope_addr>=0)
+        string_value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("string");
+    if(string_value_addr<0 || nasal_vm.gc_get(string_value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_split: cannot find values or wrong value type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string delimeter=nasal_vm.gc_get(delimeter_value_addr).get_string();
+    std::string source=nasal_vm.gc_get(string_value_addr).get_string();
+    int delimeter_len=delimeter.length();
+    if(delimeter_len<1)
+    {
+        std::cout<<">> [runtime] builtin_split: delimeter's length must be greater than 0."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int source_len=source.length();
+
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_vector);
+    nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
+    std::string tmp="";
+    for(int i=0;i<source_len;++i)
+    {
+        bool check_delimeter=false;
+        if(source[i]==delimeter[0])
+            for(int j=0;j<delimeter_len;++j)
+            {
+                if(i+j>=source_len || source[i+j]!=delimeter[j])
+                    break;
+                if(j==delimeter_len-1)
+                    check_delimeter=true;
+            }
+        if(check_delimeter)
+        {
+            int str_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(str_addr).set_type(vm_string);
+            nasal_vm.gc_get(str_addr).set_string(tmp);
+            ref_vec.add_elem(str_addr);
+            tmp="";
+            i+=delimeter_len-1;
+        }
+        else
+            tmp+=source[i];
+    }
+    if(tmp.length())
+    {
+        int str_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(str_addr).set_type(vm_string);
+        nasal_vm.gc_get(str_addr).set_string(tmp);
+        ref_vec.add_elem(str_addr);
+        tmp="";
+    }
+    return ret_addr;
+}
+int nasal_runtime::builtin_rand(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("seed");
+    if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_number && nasal_vm.gc_get(value_addr).get_type()!=vm_nil))
+    {
+        std::cout<<">> [runtime] builtin_rand: cannot find values or wrong value type(must be nil or number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    if(nasal_vm.gc_get(value_addr).get_type()==vm_number)
+    {
+        unsigned int number=(unsigned int)nasal_vm.gc_get(value_addr).get_number();
+        srand(number);
+        int ret_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+        return ret_addr;
+    }
+    double num=0;
+    for(int i=0;i<5;++i)
+        num=(num+rand())*(1.0/(RAND_MAX+1.0));
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(num);
+    return ret_addr;
+}
+int nasal_runtime::builtin_id(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("id");
+    if(value_addr<0)
+    {
+        std::cout<<">> [runtime] builtin_id: cannot find this value."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)value_addr);
+    return ret_addr;
+}
+int nasal_runtime::builtin_int(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("value");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_int: cannot find this value or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number=(int)nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)number);
+    return ret_addr;
+}
+int nasal_runtime::builtin_num(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("value");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    {
+        std::cout<<">> [runtime] builtin_num: cannot find this value or wrong value type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string str=nasal_vm.gc_get(value_addr).get_string();
+    if(!check_numerable_string(str))
+    {
+        std::cout<<">> [runtime] builtin_num: this is not a numerable string."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=trans_string_to_number(str);
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(number);
+    return ret_addr;
+}
+int nasal_runtime::builtin_pop(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("vector");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
+    {
+        std::cout<<">> [runtime] builtin_pop: cannot find this value or wrong value type(must be vector)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int ret_addr=nasal_vm.gc_get(value_addr).get_vector().del_elem();
+    return -1;
+}
 #endif

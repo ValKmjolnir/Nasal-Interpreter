@@ -10,7 +10,7 @@ enum runtime_returned_state
     rt_exit_without_error
 };
 
-#define BUILTIN_FUNC_NUM 8
+#define BUILTIN_FUNC_NUM 14
 std::string builtin_func_name[BUILTIN_FUNC_NUM]=
 {
     "nasal_call_builtin_std_cout",
@@ -20,7 +20,13 @@ std::string builtin_func_name[BUILTIN_FUNC_NUM]=
     "nasal_call_builtin_input",
     "nasal_call_builtin_sleep",
     "nasal_call_builtin_finput",
-    "nasal_call_builtin_foutput"
+    "nasal_call_builtin_foutput",
+    "nasal_call_builtin_split",
+    "nasal_call_builtin_rand",
+    "nasal_call_builtin_get_id",
+    "nasal_call_builtin_trans_int",
+    "nasal_call_builtin_trans_num",
+    "nasal_call_builtin_pop_back"
 };
 
 class nasal_runtime
@@ -87,6 +93,12 @@ private:
     int builtin_sleep(int);
     int builtin_finput(int);
     int builtin_foutput(int);
+    int builtin_split(int);
+    int builtin_rand(int);
+    int builtin_id(int);
+    int builtin_int(int);
+    int builtin_num(int);
+    int builtin_pop(int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -558,24 +570,30 @@ int nasal_runtime::conditional_progress(nasal_ast& node,int local_scope_addr,boo
 int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
 {
     int value_address=-1;
-    std::string val_name=node.get_children()[0].get_str();
-    if(local_scope_addr>=0)
-        value_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(val_name);
-    if(value_address<0)
-        value_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(val_name);
-    if(value_address<0)
+    std::string val_name="";
+    if(node.get_children()[0].get_type()==ast_identifier)
     {
-        value_address=call_builtin_function(node.get_children()[0],local_scope_addr);
-        if(value_address>=0)
-            return value_address;
+        val_name=node.get_children()[0].get_str();
+        if(local_scope_addr>=0)
+            value_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(val_name);
+        if(value_address<0)
+            value_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(val_name);
+        if(value_address<0)
+        {
+            value_address=call_builtin_function(node.get_children()[0],local_scope_addr);
+            if(value_address>=0)
+                return value_address;
+        }
+        if(value_address<0)
+        {
+            std::cout<<">> [runtime] call_nasal_scalar: cannot find value named \'"<<val_name<<"\'."<<std::endl;
+            ++error;
+            return -1;
+        }
+        nasal_vm.add_reference(value_address);
     }
-    if(value_address<0)
-    {
-        std::cout<<">> [runtime] call_nasal_scalar: cannot find value named \'"<<val_name<<"\'."<<std::endl;
-        ++error;
-        return -1;
-    }
-    nasal_vm.add_reference(value_address);
+    else
+        value_address=calculation(node.get_children()[0],local_scope_addr);
     int call_expr_size=node.get_children().size();
     int last_call_hash_addr=-1;
     for(int i=1;i<call_expr_size;++i)
@@ -1059,17 +1077,17 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
 int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
 {
     int ret_value_addr=-1;
-    int builtin_num=-1;
+    int builtin_func_num=-1;
     std::string builtin_name=node.get_str();
     for(int i=0;i<BUILTIN_FUNC_NUM;++i)
         if(builtin_name==builtin_func_name[i])
         {
-            builtin_num=i;
+            builtin_func_num=i;
             break;
         }
-    if(builtin_num<0)
+    if(builtin_func_num<0)
         return -1;
-    switch(builtin_num)
+    switch(builtin_func_num)
     {
         case 0:ret_value_addr=builtin_print(local_scope_addr);break;
         case 1:ret_value_addr=builtin_append(local_scope_addr);break;
@@ -1079,6 +1097,12 @@ int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
         case 5:ret_value_addr=builtin_sleep(local_scope_addr);break;
         case 6:ret_value_addr=builtin_finput(local_scope_addr);break;
         case 7:ret_value_addr=builtin_foutput(local_scope_addr);break;
+        case 8:ret_value_addr=builtin_split(local_scope_addr);break;
+        case 9:ret_value_addr=builtin_rand(local_scope_addr);break;
+        case 10:ret_value_addr=builtin_id(local_scope_addr);break;
+        case 11:ret_value_addr=builtin_int(local_scope_addr);break;
+        case 12:ret_value_addr=builtin_num(local_scope_addr);break;
+        case 13:ret_value_addr=builtin_pop(local_scope_addr);break;
     }
     return ret_value_addr;
 }

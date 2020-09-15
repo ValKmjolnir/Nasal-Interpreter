@@ -1,8 +1,7 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
 
-
-
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
