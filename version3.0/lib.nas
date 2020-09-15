@@ -27,6 +27,32 @@ var sleep=func(duration)
     nasal_call_builtin_sleep(duration);
     return;
 }
+
+var split=func(delimeter,string)
+{
+    return nasal_call_builtin_split(delimeter,string);
+}
+var rand=func(seed=nil)
+{
+    return nasal_call_builtin_rand(seed);
+}
+var id=func(thing)
+{
+    return nasal_call_builtin_get_id(thing);
+}
+var int=func(value)
+{
+    return nasal_call_builtin_trans_int(value);
+}
+var num=func(value)
+{
+    return nasal_call_builtin_trans_num(value);
+}
+var pop=func(vector)
+{
+    return nasal_call_builtin_pop_back(vector);
+}
+
 var io=
 {
     fin:func(filename)
