@@ -196,6 +196,8 @@ std::string trans_number_to_string(double number)
 		trans_num_string+='-';
 		number=-number;
 	}
+	if(number==0)
+		return "0";
 	double integer_bit=1;
 	while(number>=integer_bit)
 		integer_bit*=10;

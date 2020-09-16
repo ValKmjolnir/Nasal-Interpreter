@@ -490,13 +490,14 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int condition_value_addr=calculation(condition_node,for_local_scope_addr);
         bool result=check_condition(condition_value_addr);
         nasal_vm.del_reference(condition_value_addr);
-        for(;result;ret_state=after_each_for_loop(each_loop_do_node,for_local_scope_addr))
+        while(result)
         {
             if(ret_state==rt_error)
                 break;
             ret_state=block_progress(run_block_node,for_local_scope_addr,allow_return);
             if(ret_state==rt_error || ret_state==rt_return || ret_state==rt_break || error)
                 break;
+            ret_state=after_each_for_loop(each_loop_do_node,for_local_scope_addr);
             condition_value_addr=calculation(condition_node,for_local_scope_addr);
             result=check_condition(condition_value_addr);
             nasal_vm.del_reference(condition_value_addr);
