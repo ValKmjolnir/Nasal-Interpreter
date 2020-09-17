@@ -39,7 +39,7 @@
 class nasal_parse
 {
 #ifndef error_line
-#define error_line tok_list[ptr>=tok_list_size? tok_list_size-1:ptr].line
+#define error_line (tok_list[ptr>=tok_list_size? tok_list_size-1:ptr].line)
 #endif
 
 private:
@@ -139,10 +139,10 @@ void nasal_parse::main_process()
         else if(root.get_children().empty() || need_semi_check(root.get_children().back()))
         {
             // the last expression can be recognized without semi
-            if(ptr>=tok_list_size)
+            if(ptr<tok_list_size)
             {
                 ++error;
-                error_info(error_line,lack_semi);
+                error_info(error_line-1,lack_semi);
             }
         }
     }
@@ -195,9 +195,23 @@ bool nasal_parse::check_multi_scalar()
 
 bool nasal_parse::check_function_end(nasal_ast& node)
 {
-    if(node.get_type()==ast_function)
+    int type=node.get_type();
+    if(type==ast_function)
         return true;
-    if(node.get_children().empty() || (node.get_type()!=ast_definition && node.get_type()!=ast_equal))
+    else if(type==ast_number || type==ast_identifier || type==ast_string || type==ast_nil || type==ast_vector || type==ast_hash)
+        return false;
+    if(
+        node.get_children().empty() || 
+        (
+            type!=ast_definition &&
+            type!=ast_equal &&
+            type!=ast_add_equal &&
+            type!=ast_sub_equal &&
+            type!=ast_mult_equal &&
+            type!=ast_div_equal &&
+            type!=ast_link_equal
+        )
+    )
         return false;
     else
         return check_function_end(node.get_children().back());
