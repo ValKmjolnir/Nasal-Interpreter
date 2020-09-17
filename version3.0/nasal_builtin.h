@@ -427,6 +427,56 @@ int nasal_runtime::builtin_pop(int local_scope_addr)
         return -1;
     }
     int ret_addr=nasal_vm.gc_get(value_addr).get_vector().del_elem();
-    return -1;
+    return ret_addr;
+}
+int nasal_runtime::builtin_str(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("number");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_str: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    nasal_vm.gc_get(ret_addr).set_string(trans_number_to_string(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_size(int local_scope_addr)
+{
+    int value_addr=-1;
+    if(local_scope_addr>=0)
+        value_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("object");
+    if(value_addr<0)
+    {
+        std::cout<<">> [runtime] builtin_size: cannot find values."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int type=nasal_vm.gc_get(value_addr).get_type();
+    int number=-1;
+    switch(type)
+    {
+        case vm_nil:
+        case vm_number:
+        case vm_function:
+        case vm_closure:break;
+        case vm_string:number=nasal_vm.gc_get(value_addr).get_string().length();break;
+        case vm_vector:number=nasal_vm.gc_get(value_addr).get_vector().size();break;
+        case vm_hash:number=nasal_vm.gc_get(value_addr).get_hash().size();break;
+    }
+    int ret_addr=nasal_vm.gc_alloc();
+    if(number<0)
+        nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    else
+    {
+        nasal_vm.gc_get(ret_addr).set_type(vm_number);
+        nasal_vm.gc_get(ret_addr).set_number((double)number);
+    }
+    return ret_addr;
 }
 #endif

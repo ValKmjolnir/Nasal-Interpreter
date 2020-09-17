@@ -37,6 +37,7 @@ public:
     ~nasal_hash();
     void add_elem(std::string,int);
     void del_elem(std::string);
+    int  size();
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
 };
@@ -261,6 +262,10 @@ void nasal_hash::del_elem(std::string key)
     else
         std::cout<<">> [vm] nasal_hash::del_elem: "<<key<<" does not exist."<<std::endl;
     return;
+}
+int nasal_hash::size()
+{
+    return elems.size();
 }
 int nasal_hash::get_value_address(std::string key)
 {

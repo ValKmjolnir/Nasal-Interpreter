@@ -27,7 +27,6 @@ var sleep=func(duration)
     nasal_call_builtin_sleep(duration);
     return;
 }
-
 var split=func(delimeter,string)
 {
     return nasal_call_builtin_split(delimeter,string);
@@ -51,6 +50,14 @@ var num=func(value)
 var pop=func(vector)
 {
     return nasal_call_builtin_pop_back(vector);
+}
+var str=func(number)
+{
+    return nasal_call_builtin_trans_str(number);
+}
+var size=func(object)
+{
+    return nasal_call_builtin_size(object);
 }
 
 var io=
