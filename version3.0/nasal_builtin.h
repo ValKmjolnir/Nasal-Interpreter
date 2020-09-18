@@ -479,4 +479,129 @@ int nasal_runtime::builtin_size(int local_scope_addr)
     }
     return ret_addr;
 }
+int nasal_runtime::builtin_xor(int local_scope_addr)
+{
+    int a_addr=-1;
+    if(local_scope_addr>=0)
+        a_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("a");
+    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_xor: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int b_addr=-1;
+    if(local_scope_addr>=0)
+        b_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("b");
+    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_xor: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
+    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)(number_a^number_b));
+    return ret_addr;
+}
+int nasal_runtime::builtin_and(int local_scope_addr)
+{
+    int a_addr=-1;
+    if(local_scope_addr>=0)
+        a_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("a");
+    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_and: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int b_addr=-1;
+    if(local_scope_addr>=0)
+        b_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("b");
+    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_and: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
+    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)(number_a&number_b));
+    return ret_addr;
+}
+int nasal_runtime::builtin_or(int local_scope_addr)
+{
+    int a_addr=-1;
+    if(local_scope_addr>=0)
+        a_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("a");
+    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_or: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int b_addr=-1;
+    if(local_scope_addr>=0)
+        b_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("b");
+    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_or: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
+    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)(number_a|number_b));
+    return ret_addr;
+}
+int nasal_runtime::builtin_nand(int local_scope_addr)
+{
+    int a_addr=-1;
+    if(local_scope_addr>=0)
+        a_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("a");
+    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_nand: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int b_addr=-1;
+    if(local_scope_addr>=0)
+        b_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("b");
+    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_nand: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
+    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)(~(number_a&number_b)));
+    return ret_addr;
+}
+int nasal_runtime::builtin_not(int local_scope_addr)
+{
+    int a_addr=-1;
+    if(local_scope_addr>=0)
+        a_addr=nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address("a");
+    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_not: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    int number=(int)nasal_vm.gc_get(a_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)(~number));
+    return ret_addr;
+}
 #endif

@@ -72,3 +72,27 @@ var io=
         return;
     }
 };
+
+var bits=
+{
+    bitxor:func(a,b)
+    {
+        return nasal_call_builtin_xor(a,b);
+    },
+    bitand:func(a,b)
+    {
+        return nasal_call_builtin_and(a,b);
+    },
+    bitor:func(a,b)
+    {
+        return nasal_call_builtin_or(a,b);
+    },
+    bitnand:func(a,b)
+    {
+        return nasal_call_builtin_nand(a,b);
+    },
+    bitnot:func(a)
+    {
+        return nasal_call_builtin_not(a);
+    }
+};
