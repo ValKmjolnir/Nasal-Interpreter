@@ -1571,7 +1571,7 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
     for(int i=0;i<id_size;++i)
     {
         nasal_ast& tmp_node=multi_call_node.get_children()[i];
-        if(tmp_node.get_type()!=ast_call)
+        if(tmp_node.get_type()!=ast_call && tmp_node.get_type()!=ast_identifier)
         {
             std::cout<<">> [runtime] multi_assignment: multi-assignment must use available memory address."<<std::endl;
             ++error;
@@ -1588,11 +1588,11 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
             ++error;
             return;
         }
+        std::vector<int> value_table;
         for(int i=0;i<val_size;++i)
-        {
-            int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
-            nasal_vm.mem_change(mem_table[i],tmp_addr);
-        }
+            value_table.push_back(calculation(value_node.get_children()[i],local_scope_addr));
+        for(int i=0;i<val_size;++i)
+            nasal_vm.mem_change(mem_table[i],value_table[i]);
     }
     else
     {
@@ -1612,11 +1612,15 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
             ++error;
             return;
         }
+        std::vector<int> value_table;
         for(int i=0;i<id_size;++i)
         {
             int tmp_addr=ref_vector.get_value_address(i);
-            nasal_vm.mem_change(mem_table[i],tmp_addr);
+            nasal_vm.add_reference(tmp_addr);
+            value_table.push_back(tmp_addr);
         }
+        for(int i=0;i<id_size;++i)
+            nasal_vm.mem_change(mem_table[i],value_table[i]);
         nasal_vm.del_reference(value_addr);
     }
     return;
