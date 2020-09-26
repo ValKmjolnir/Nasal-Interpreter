@@ -553,4 +553,117 @@ int nasal_runtime::builtin_not(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(~number));
     return ret_addr;
 }
+int nasal_runtime::builtin_sin(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_sin: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(sin(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_cos(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_cos: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(cos(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_tan(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_tan: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(tan(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_exp(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_exp: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(exp(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_ln(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_ln: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(log(number)/log(2.7182818284590452354));
+    return ret_addr;
+}
+int nasal_runtime::builtin_sqrt(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("x");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_sqrt: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double number=nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(sqrt(number));
+    return ret_addr;
+}
+int nasal_runtime::builtin_atan2(int local_scope_addr)
+{
+    int x_value_addr=in_builtin_find("x");
+    int y_value_addr=in_builtin_find("y");
+    if(x_value_addr<0 || nasal_vm.gc_get(x_value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_atan2: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    if(y_value_addr<0 || nasal_vm.gc_get(y_value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_atan2: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    double x=nasal_vm.gc_get(x_value_addr).get_number();
+    double y=nasal_vm.gc_get(y_value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number(atan2(y,x));
+    return ret_addr;
+}
 #endif
