@@ -96,3 +96,37 @@ var bits=
         return nasal_call_builtin_not(a);
     }
 };
+
+var math=
+{
+    e:2.7182818284590452354,
+    pi:3.14159265358979323846,
+    sin:func(x)
+    {
+        return nasal_call_builtin_sin(x);
+    },
+    cos:func(x)
+    {
+        return nasal_call_builtin_cos(x);
+    },
+    tan:func(x)
+    {
+        return nasal_call_builtin_tan(x);
+    },
+    exp:func(x)
+    {
+        return nasal_call_builtin_exp(x);
+    }, 
+    ln:func(x)
+    {
+        return nasal_call_builtin_cpp_math_ln(x);
+    },
+    sqrt:func(x)
+    {
+        return nasal_call_builtin_cpp_math_sqrt(x);
+    },
+    atan2:func(x,y)
+    {
+        return nasal_call_builtin_cpp_atan2(x,y);
+    },
+};

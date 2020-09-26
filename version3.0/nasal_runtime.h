@@ -10,7 +10,7 @@ enum runtime_returned_state
     rt_exit_without_error
 };
 
-#define BUILTIN_FUNC_NUM 21
+#define BUILTIN_FUNC_NUM 28
 std::string builtin_func_name[BUILTIN_FUNC_NUM]=
 {
     "nasal_call_builtin_std_cout",
@@ -33,7 +33,14 @@ std::string builtin_func_name[BUILTIN_FUNC_NUM]=
     "nasal_call_builtin_and",
     "nasal_call_builtin_or",
     "nasal_call_builtin_nand",
-    "nasal_call_builtin_not"
+    "nasal_call_builtin_not",
+    "nasal_call_builtin_sin",
+    "nasal_call_builtin_cos",
+    "nasal_call_builtin_tan",
+    "nasal_call_builtin_exp",
+    "nasal_call_builtin_cpp_math_ln",
+    "nasal_call_builtin_cpp_math_sqrt",
+    "nasal_call_builtin_cpp_atan2"
 };
 
 class nasal_runtime
@@ -113,6 +120,13 @@ private:
     int builtin_or(int);
     int builtin_nand(int);
     int builtin_not(int);
+    int builtin_sin(int);
+    int builtin_cos(int);
+    int builtin_tan(int);
+    int builtin_exp(int);
+    int builtin_ln(int);
+    int builtin_sqrt(int);
+    int builtin_atan2(int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -1125,6 +1139,13 @@ int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
         case 18:ret_value_addr=builtin_or(local_scope_addr);break;
         case 19:ret_value_addr=builtin_nand(local_scope_addr);break;
         case 20:ret_value_addr=builtin_not(local_scope_addr);break;
+        case 21:ret_value_addr=builtin_sin(local_scope_addr);break;
+        case 22:ret_value_addr=builtin_cos(local_scope_addr);break;
+        case 23:ret_value_addr=builtin_tan(local_scope_addr);break;
+        case 24:ret_value_addr=builtin_exp(local_scope_addr);break;
+        case 25:ret_value_addr=builtin_ln(local_scope_addr);break;
+        case 26:ret_value_addr=builtin_sqrt(local_scope_addr);break;
+        case 27:ret_value_addr=builtin_atan2(local_scope_addr);break;
     }
     return ret_value_addr;
 }
