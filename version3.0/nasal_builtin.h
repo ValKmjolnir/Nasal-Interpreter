@@ -666,4 +666,19 @@ int nasal_runtime::builtin_atan2(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(atan2(y,x));
     return ret_addr;
 }
+int nasal_runtime::builtin_time(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("begin_time");
+    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    {
+        std::cout<<">> [runtime] builtin_time: cannot find values or wrong value type(must be number)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    time_t begin_time=(time_t)nasal_vm.gc_get(value_addr).get_number();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)time(&begin_time));
+    return ret_addr;
+}
 #endif

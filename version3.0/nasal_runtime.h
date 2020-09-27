@@ -10,7 +10,7 @@ enum runtime_returned_state
     rt_exit_without_error
 };
 
-#define BUILTIN_FUNC_NUM 28
+#define BUILTIN_FUNC_NUM 29
 std::string builtin_func_name[BUILTIN_FUNC_NUM]=
 {
     "nasal_call_builtin_std_cout",
@@ -40,7 +40,8 @@ std::string builtin_func_name[BUILTIN_FUNC_NUM]=
     "nasal_call_builtin_exp",
     "nasal_call_builtin_cpp_math_ln",
     "nasal_call_builtin_cpp_math_sqrt",
-    "nasal_call_builtin_cpp_atan2"
+    "nasal_call_builtin_cpp_atan2",
+    "nasal_call_builtin_time"
 };
 
 class nasal_runtime
@@ -127,6 +128,7 @@ private:
     int builtin_ln(int);
     int builtin_sqrt(int);
     int builtin_atan2(int);
+    int builtin_time(int);
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -1146,6 +1148,7 @@ int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
         case 25:ret_value_addr=builtin_ln(local_scope_addr);break;
         case 26:ret_value_addr=builtin_sqrt(local_scope_addr);break;
         case 27:ret_value_addr=builtin_atan2(local_scope_addr);break;
+        case 28:ret_value_addr=builtin_time(local_scope_addr);break;
     }
     return ret_value_addr;
 }

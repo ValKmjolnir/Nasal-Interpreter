@@ -130,3 +130,8 @@ var math=
         return nasal_call_builtin_cpp_atan2(x,y);
     },
 };
+
+var time=func(begin_time)
+{
+    return nasal_call_builtin_time(begin_time);
+}
