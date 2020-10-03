@@ -10,43 +10,12 @@ enum runtime_returned_state
     rt_exit_without_error
 };
 
-#define BUILTIN_FUNC_NUM 29
-std::string builtin_func_name[BUILTIN_FUNC_NUM]=
-{
-    "nasal_call_builtin_std_cout",
-    "nasal_call_builtin_push_back",
-    "nasal_call_builtin_set_size",
-    "nasal_call_builtin_system",
-    "nasal_call_builtin_input",
-    "nasal_call_builtin_sleep",
-    "nasal_call_builtin_finput",
-    "nasal_call_builtin_foutput",
-    "nasal_call_builtin_split",
-    "nasal_call_builtin_rand",
-    "nasal_call_builtin_get_id",
-    "nasal_call_builtin_trans_int",
-    "nasal_call_builtin_trans_num",
-    "nasal_call_builtin_pop_back",
-    "nasal_call_builtin_trans_str",
-    "nasal_call_builtin_size",
-    "nasal_call_builtin_xor",
-    "nasal_call_builtin_and",
-    "nasal_call_builtin_or",
-    "nasal_call_builtin_nand",
-    "nasal_call_builtin_not",
-    "nasal_call_builtin_sin",
-    "nasal_call_builtin_cos",
-    "nasal_call_builtin_tan",
-    "nasal_call_builtin_exp",
-    "nasal_call_builtin_cpp_math_ln",
-    "nasal_call_builtin_cpp_math_sqrt",
-    "nasal_call_builtin_cpp_atan2",
-    "nasal_call_builtin_time"
-};
-
 class nasal_runtime
 {
+// this is the number of builtin functions
+#define BUILTIN_FUNC_NUM 29
 private:
+    std::map<std::string,int (nasal_runtime::*)(int x)> builtin_func_hashmap;
     // function_return_address is an address in garbage_collector_memory
     int function_returned_address;
     // global_scope_address is an address in garbage_collector_memory
@@ -129,6 +98,7 @@ private:
     int builtin_sqrt(int);
     int builtin_atan2(int);
     int builtin_time(int);
+    void load_builtin_function();
 public:
     nasal_runtime();
     ~nasal_runtime();
@@ -141,6 +111,7 @@ nasal_runtime::nasal_runtime()
     error=0;
     this->root.clear();
     this->global_scope_address=-1;
+    this->load_builtin_function();
     return;
 }
 nasal_runtime::~nasal_runtime()
@@ -148,6 +119,49 @@ nasal_runtime::~nasal_runtime()
     error=0;
     this->root.clear();
     this->global_scope_address=-1;
+    this->builtin_func_hashmap.clear();
+    return;
+}
+void nasal_runtime::load_builtin_function()
+{
+    struct FUNC_TABLE
+    {
+        std::string func_name;
+        int (nasal_runtime::*func_pointer)(int x);
+    } builtin_func_table[BUILTIN_FUNC_NUM]=
+    {
+        {"nasal_call_builtin_std_cout",      nasal_runtime::builtin_print},
+        {"nasal_call_builtin_push_back",     nasal_runtime::builtin_append},
+        {"nasal_call_builtin_set_size",      nasal_runtime::builtin_setsize},
+        {"nasal_call_builtin_system",        nasal_runtime::builtin_system},
+        {"nasal_call_builtin_input",         nasal_runtime::builtin_input},
+        {"nasal_call_builtin_sleep",         nasal_runtime::builtin_sleep},
+        {"nasal_call_builtin_finput",        nasal_runtime::builtin_finput},
+        {"nasal_call_builtin_foutput",       nasal_runtime::builtin_foutput},
+        {"nasal_call_builtin_split",         nasal_runtime::builtin_split},
+        {"nasal_call_builtin_rand",          nasal_runtime::builtin_rand},
+        {"nasal_call_builtin_get_id",        nasal_runtime::builtin_id},
+        {"nasal_call_builtin_trans_int",     nasal_runtime::builtin_int},
+        {"nasal_call_builtin_trans_num",     nasal_runtime::builtin_num},
+        {"nasal_call_builtin_pop_back",      nasal_runtime::builtin_pop},
+        {"nasal_call_builtin_trans_str",     nasal_runtime::builtin_str},
+        {"nasal_call_builtin_size",          nasal_runtime::builtin_size},
+        {"nasal_call_builtin_xor",           nasal_runtime::builtin_xor},
+        {"nasal_call_builtin_and",           nasal_runtime::builtin_and},
+        {"nasal_call_builtin_or",            nasal_runtime::builtin_or},
+        {"nasal_call_builtin_nand",          nasal_runtime::builtin_nand},
+        {"nasal_call_builtin_not",           nasal_runtime::builtin_not},
+        {"nasal_call_builtin_sin",           nasal_runtime::builtin_sin},
+        {"nasal_call_builtin_cos",           nasal_runtime::builtin_cos},
+        {"nasal_call_builtin_tan",           nasal_runtime::builtin_tan},
+        {"nasal_call_builtin_exp",           nasal_runtime::builtin_exp},
+        {"nasal_call_builtin_cpp_math_ln",   nasal_runtime::builtin_ln},
+        {"nasal_call_builtin_cpp_math_sqrt", nasal_runtime::builtin_sqrt},
+        {"nasal_call_builtin_cpp_atan2",     nasal_runtime::builtin_atan2},
+        {"nasal_call_builtin_time",          nasal_runtime::builtin_time}
+    };
+    for(int i=0;i<BUILTIN_FUNC_NUM;++i)
+        builtin_func_hashmap[builtin_func_table[i].func_name]=builtin_func_table[i].func_pointer;
     return;
 }
 void nasal_runtime::set_root(nasal_ast& parse_result)
@@ -1110,46 +1124,8 @@ int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
     int ret_value_addr=-1;
     int builtin_func_num=-1;
     std::string builtin_name=node.get_str();
-    for(int i=0;i<BUILTIN_FUNC_NUM;++i)
-        if(builtin_name==builtin_func_name[i])
-        {
-            builtin_func_num=i;
-            break;
-        }
-    if(builtin_func_num<0)
-        return -1;
-    switch(builtin_func_num)
-    {
-        case 0:ret_value_addr=builtin_print(local_scope_addr);break;
-        case 1:ret_value_addr=builtin_append(local_scope_addr);break;
-        case 2:ret_value_addr=builtin_setsize(local_scope_addr);break;
-        case 3:ret_value_addr=builtin_system(local_scope_addr);break;
-        case 4:ret_value_addr=builtin_input(local_scope_addr);break;
-        case 5:ret_value_addr=builtin_sleep(local_scope_addr);break;
-        case 6:ret_value_addr=builtin_finput(local_scope_addr);break;
-        case 7:ret_value_addr=builtin_foutput(local_scope_addr);break;
-        case 8:ret_value_addr=builtin_split(local_scope_addr);break;
-        case 9:ret_value_addr=builtin_rand(local_scope_addr);break;
-        case 10:ret_value_addr=builtin_id(local_scope_addr);break;
-        case 11:ret_value_addr=builtin_int(local_scope_addr);break;
-        case 12:ret_value_addr=builtin_num(local_scope_addr);break;
-        case 13:ret_value_addr=builtin_pop(local_scope_addr);break;
-        case 14:ret_value_addr=builtin_str(local_scope_addr);break;
-        case 15:ret_value_addr=builtin_size(local_scope_addr);break;
-        case 16:ret_value_addr=builtin_xor(local_scope_addr);break;
-        case 17:ret_value_addr=builtin_and(local_scope_addr);break;
-        case 18:ret_value_addr=builtin_or(local_scope_addr);break;
-        case 19:ret_value_addr=builtin_nand(local_scope_addr);break;
-        case 20:ret_value_addr=builtin_not(local_scope_addr);break;
-        case 21:ret_value_addr=builtin_sin(local_scope_addr);break;
-        case 22:ret_value_addr=builtin_cos(local_scope_addr);break;
-        case 23:ret_value_addr=builtin_tan(local_scope_addr);break;
-        case 24:ret_value_addr=builtin_exp(local_scope_addr);break;
-        case 25:ret_value_addr=builtin_ln(local_scope_addr);break;
-        case 26:ret_value_addr=builtin_sqrt(local_scope_addr);break;
-        case 27:ret_value_addr=builtin_atan2(local_scope_addr);break;
-        case 28:ret_value_addr=builtin_time(local_scope_addr);break;
-    }
+    if(builtin_func_hashmap.find(builtin_name)!=builtin_func_hashmap.end())
+        ret_value_addr=(this->*builtin_func_hashmap[builtin_name])(local_scope_addr);
     return ret_value_addr;
 }
 int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
