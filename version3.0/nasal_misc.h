@@ -202,6 +202,8 @@ std::string trans_number_to_string(double number)
 	while(number>=integer_bit)
 		integer_bit*=10;
 	integer_bit/=10;
+	if(integer_bit==0.1)
+		trans_num_string+='0';
 	while(integer_bit!=0.1)
 	{
 		trans_num_string+=(char)('0'+(int(number/integer_bit)));
