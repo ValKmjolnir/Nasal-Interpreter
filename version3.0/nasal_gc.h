@@ -1535,7 +1535,7 @@ int nasal_virtual_machine::mem_change(int memory_address,int value_address)
     else
     {
         if(error_info_output_switch)
-            std::cout<<">> [vm] mem_store:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+            std::cout<<">> [vm] mem_change:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
         return 0;
     }
     return 1;
@@ -1549,7 +1549,7 @@ int nasal_virtual_machine::mem_init(int memory_address,int value_address)
     else
     {
         if(error_info_output_switch)
-            std::cout<<">> [vm] mem_store:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
+            std::cout<<">> [vm] mem_init:unexpected memory \'"<<memory_address<<"\'."<<std::endl;
         return 0;
     }
     return 1;

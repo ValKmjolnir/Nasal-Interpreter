@@ -1172,7 +1172,11 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
         }
         mem_address=tmp_mem_addr;
         if(mem_address<0)
+        {
+            ++error;
+            std::cout<<">> [runtime] call_scalar_mem: cannot find correct memory space."<<std::endl;
             break;
+        }
     }
     return mem_address;
 }
