@@ -12,8 +12,6 @@ enum runtime_returned_state
 
 class nasal_runtime
 {
-// this is the number of builtin functions
-#define BUILTIN_FUNC_NUM 29
 private:
     std::map<std::string,int (nasal_runtime::*)(int x)> builtin_func_hashmap;
     // function_return_address is an address in garbage_collector_memory
@@ -128,7 +126,7 @@ void nasal_runtime::load_builtin_function()
     {
         std::string func_name;
         int (nasal_runtime::*func_pointer)(int x);
-    } builtin_func_table[BUILTIN_FUNC_NUM]=
+    } builtin_func_table[]=
     {
         {"nasal_call_builtin_std_cout",      nasal_runtime::builtin_print},
         {"nasal_call_builtin_push_back",     nasal_runtime::builtin_append},
@@ -158,9 +156,10 @@ void nasal_runtime::load_builtin_function()
         {"nasal_call_builtin_cpp_math_ln",   nasal_runtime::builtin_ln},
         {"nasal_call_builtin_cpp_math_sqrt", nasal_runtime::builtin_sqrt},
         {"nasal_call_builtin_cpp_atan2",     nasal_runtime::builtin_atan2},
-        {"nasal_call_builtin_time",          nasal_runtime::builtin_time}
+        {"nasal_call_builtin_time",          nasal_runtime::builtin_time},
+        {"",                                 NULL}
     };
-    for(int i=0;i<BUILTIN_FUNC_NUM;++i)
+    for(int i=0;builtin_func_table[i].func_pointer;++i)
         builtin_func_hashmap[builtin_func_table[i].func_name]=builtin_func_table[i].func_pointer;
     return;
 }
