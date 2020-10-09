@@ -2,6 +2,7 @@
 #define __NASAL_BUILTIN_H__
 
 #define in_builtin_find(value_name_string) (local_scope_addr>=0?nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(value_name_string):-1)
+#define in_builtin_check(value_addr,value_type) (nasal_vm.gc_get(value_addr).get_type()==(value_type))
 
 int nasal_runtime::builtin_print(int local_scope_addr)
 {
@@ -679,6 +680,64 @@ int nasal_runtime::builtin_time(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)time(&begin_time));
+    return ret_addr;
+}
+int nasal_runtime::builtin_contains(int local_scope_addr)
+{
+    int hash_addr=in_builtin_find("hash");
+    int key_addr=in_builtin_find("key");
+    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    {
+        std::cout<<">> [runtime] builtin_contains: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
+    {
+        std::cout<<">> [runtime] builtin_contains: cannot find value named \'key\' or wrong type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string key=nasal_vm.gc_get(key_addr).get_string();
+    bool contains=nasal_vm.gc_get(hash_addr).get_hash().check_contain(key);
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    nasal_vm.gc_get(ret_addr).set_number((double)contains);
+    return ret_addr;
+}
+int nasal_runtime::builtin_delete(int local_scope_addr)
+{
+    int hash_addr=in_builtin_find("hash");
+    int key_addr=in_builtin_find("key");
+    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    {
+        std::cout<<">> [runtime] builtin_delete: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
+    {
+        std::cout<<">> [runtime] builtin_delete: cannot find value named \'key\' or wrong type(must be string)."<<std::endl;
+        ++error;
+        return -1;
+    }
+    std::string key=nasal_vm.gc_get(key_addr).get_string();
+    nasal_vm.gc_get(hash_addr).get_hash().del_elem(key);
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    return ret_addr;
+}
+int nasal_runtime::builtin_getkeys(int local_scope_addr)
+{
+    int hash_addr=in_builtin_find("hash");
+    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    {
+        std::cout<<">> [runtime] builtin_delete: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        ++error;
+        return -1;
+    }
+
+    int ret_addr=nasal_vm.gc_get(hash_addr).get_hash().get_keys();
     return ret_addr;
 }
 #endif

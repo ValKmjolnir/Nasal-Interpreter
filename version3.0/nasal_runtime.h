@@ -96,6 +96,9 @@ private:
     int builtin_sqrt(int);
     int builtin_atan2(int);
     int builtin_time(int);
+    int builtin_contains(int);
+    int builtin_delete(int);
+    int builtin_getkeys(int);
     void load_builtin_function();
 public:
     nasal_runtime();
@@ -157,6 +160,9 @@ void nasal_runtime::load_builtin_function()
         {"nasal_call_builtin_cpp_math_sqrt", nasal_runtime::builtin_sqrt},
         {"nasal_call_builtin_cpp_atan2",     nasal_runtime::builtin_atan2},
         {"nasal_call_builtin_time",          nasal_runtime::builtin_time},
+        {"nasal_call_builtin_contains",      nasal_runtime::builtin_contains},
+        {"nasal_call_builtin_delete",        nasal_runtime::builtin_delete},
+        {"nasal_call_builtin_get_keys",      nasal_runtime::builtin_getkeys},
         {"",                                 NULL}
     };
     for(int i=0;builtin_func_table[i].func_pointer;++i)

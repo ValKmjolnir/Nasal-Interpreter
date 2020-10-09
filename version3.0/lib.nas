@@ -59,6 +59,23 @@ var size=func(object)
 {
     return nasal_call_builtin_size(object);
 }
+var contains=func(hash,key)
+{
+    return nasal_call_builtin_contains(hash,key);
+}
+var delete=func(hash,key)
+{
+    nasal_call_builtin_delete(hash,key);
+    return;
+}
+var keys=func(hash)
+{
+    return nasal_call_builtin_get_keys(hash);
+}
+var time=func(begin_time)
+{
+    return nasal_call_builtin_time(begin_time);
+}
 
 var io=
 {
@@ -130,8 +147,3 @@ var math=
         return nasal_call_builtin_cpp_atan2(x,y);
     },
 };
-
-var time=func(begin_time)
-{
-    return nasal_call_builtin_time(begin_time);
-}

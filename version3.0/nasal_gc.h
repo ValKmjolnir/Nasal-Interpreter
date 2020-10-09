@@ -40,6 +40,8 @@ public:
     int  size();
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
+    bool check_contain(std::string);
+    int get_keys();
 };
 
 class nasal_function
@@ -248,8 +250,6 @@ void nasal_hash::add_elem(std::string key,int value_address)
         nasal_vm.mem_init(memory_address,value_address);
         elems[key]=memory_address;
     }
-    else
-        std::cout<<">> [vm] nasal_hash::add_elem: "<<key<<" already exists."<<std::endl;
     return;
 }
 void nasal_hash::del_elem(std::string key)
@@ -259,8 +259,6 @@ void nasal_hash::del_elem(std::string key)
         nasal_vm.mem_free(elems[key]);
         elems.erase(key);
     }
-    else
-        std::cout<<">> [vm] nasal_hash::del_elem: "<<key<<" does not exist."<<std::endl;
     return;
 }
 int nasal_hash::size()
@@ -316,6 +314,46 @@ int nasal_hash::get_mem_address(std::string key)
         }
     }
     return ret_mem_addr;
+}
+bool nasal_hash::check_contain(std::string key)
+{
+    if(elems.find(key)!=elems.end())
+        return true;
+    if(elems.find("parents")!=elems.end())
+    {
+        bool result=false;
+        int mem_addr=elems["parents"];
+        int val_addr=nasal_vm.mem_get(mem_addr);
+        if(nasal_vm.gc_get(val_addr).get_type()==vm_vector)
+        {
+            nasal_vector& vec_ref=nasal_vm.gc_get(val_addr).get_vector();
+            int size=vec_ref.size();
+            for(int i=0;i<size;++i)
+            {
+                int tmp_val_addr=vec_ref.get_value_address(i);
+                if(nasal_vm.gc_get(tmp_val_addr).get_type()==vm_hash)
+                    result=nasal_vm.gc_get(tmp_val_addr).get_hash().check_contain(key);
+                if(result)
+                    break;
+            }
+        }
+        return result;
+    }
+    return false;
+}
+int nasal_hash::get_keys()
+{
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_vector);
+    nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
+    for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
+    {
+        int str_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(str_addr).set_type(vm_string);
+        nasal_vm.gc_get(str_addr).set_string(iter->first);
+        ref_vec.add_elem(str_addr);
+    }
+    return ret_addr;
 }
 
 /*functions of nasal_function*/
