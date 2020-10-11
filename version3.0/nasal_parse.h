@@ -146,7 +146,6 @@ void nasal_parse::main_process()
             }
         }
     }
-    std::cout<<">> [parse] complete generation. "<<error<<" error(s)."<<std::endl;
     return;
 }
 

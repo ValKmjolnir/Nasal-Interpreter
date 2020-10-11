@@ -99,6 +99,7 @@ private:
     int builtin_contains(int);
     int builtin_delete(int);
     int builtin_getkeys(int);
+    int builtin_import(int);
     void load_builtin_function();
 public:
     nasal_runtime();
@@ -163,6 +164,7 @@ void nasal_runtime::load_builtin_function()
         {"nasal_call_builtin_contains",      nasal_runtime::builtin_contains},
         {"nasal_call_builtin_delete",        nasal_runtime::builtin_delete},
         {"nasal_call_builtin_get_keys",      nasal_runtime::builtin_getkeys},
+        {"nasal_call_import",                nasal_runtime::builtin_import},
         {"",                                 NULL}
     };
     for(int i=0;builtin_func_table[i].func_pointer;++i)
@@ -271,6 +273,7 @@ int nasal_runtime::main_progress()
             case ast_while:case ast_for:case ast_forindex:case ast_foreach:
                 ret_state=loop_progress(root.get_children()[i],-1,false);break;
             case ast_nil:case ast_number:case ast_string:case ast_function:break;
+            case ast_identifier:
             case ast_vector:case ast_hash:
             case ast_call:
             case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
@@ -325,6 +328,7 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
             case ast_while:case ast_for:case ast_forindex:case ast_foreach:
                 ret_state=loop_progress(tmp_node,local_scope_addr,allow_return);break;
             case ast_nil:case ast_number:case ast_string:case ast_function:break;
+            case ast_identifier:
             case ast_vector:case ast_hash:
             case ast_call:
             case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:

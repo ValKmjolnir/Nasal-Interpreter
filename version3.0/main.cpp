@@ -3,20 +3,19 @@
 nasal_resource resource;
 nasal_lexer    lexer;
 nasal_parse    parse;
+nasal_import   preprocessor;
 std::string    command;
+std::string    inputfile="null";
 nasal_runtime  runtime;
 
 void help()
 {
-	std::cout<<">> [\'file\'] input a file."<<std::endl;
-	std::cout<<">> [cls   ] clear the screen."<<std::endl;
+	std::cout<<">> [\"file\"] input a file."<<std::endl;
 	std::cout<<">> [clear ] clear the screen."<<std::endl;
-	std::cout<<">> [del   ] clear the resource code."<<std::endl;
-	std::cout<<">> [lib   ] add lib file."<<std::endl;
-	std::cout<<">> [rs    ] print resource code."<<std::endl;
-	std::cout<<">> [lex   ] turn code into tokens."<<std::endl;
-	std::cout<<">> [par   ] turn tokens into abstract syntax tree."<<std::endl;
-	std::cout<<">> [ast   ] check the abstract syntax tree."<<std::endl;
+	std::cout<<">> [del   ] clear the source code."<<std::endl;
+	std::cout<<">> [rs    ] print source code."<<std::endl;
+	std::cout<<">> [lex   ] use lexer to turn code into tokens."<<std::endl;
+	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree."<<std::endl;
 	std::cout<<">> [run   ] run code."<<std::endl;
 	std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
 	std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
@@ -38,68 +37,70 @@ void del_func()
 	resource.clear();
 	lexer.clear();
 	parse.clear();
+	inputfile="null";
 	std::cout<<">> [Delete] complete."<<std::endl;
+	return;
+}
+
+void die(std::string stage,std::string filename)
+{
+	std::cout<<">> ["<<stage<<"] in <\""<<filename<<"\">: error(s) occurred,stop."<<std::endl;
 	return;
 }
 
 void lex_func()
 {
 	lexer.scanner(resource.get_file());
-	if(!lexer.get_error())
-		lexer.print_token();
-	else
-		std::cout<<">> [lexer] error(s) occurred,stop.\n";
-	return;
-}
-
-void par_func()
-{
-	lexer.scanner(resource.get_file());
-	if(!lexer.get_error())
+	if(lexer.get_error())
 	{
-		parse.set_toklist(lexer.get_token_list());
-		parse.main_process();
-		if(parse.get_error())
-			std::cout<<">> [parse] error(s) occurred,stop.\n";
+		die("lexer",inputfile);
+		return;
 	}
-	else
-		std::cout<<">> [lexer] error(s) occurred,stop.\n";
+	lexer.print_token();
 	return;
 }
 
 void ast_print()
 {
 	lexer.scanner(resource.get_file());
-	if(!lexer.get_error())
+	if(lexer.get_error())
 	{
-		parse.set_toklist(lexer.get_token_list());
-		parse.main_process();
-		if(parse.get_error())
-			std::cout<<">> [parse] error(s) occurred,stop.\n";
-		else
-			parse.get_root().print_ast(0);
+		die("lexer",inputfile);
+		return;
 	}
-	else
-		std::cout<<">> [lexer] error(s) occurred,stop.\n";
+	parse.set_toklist(lexer.get_token_list());
+	parse.main_process();
+	if(parse.get_error())
+	{
+		die("parse",inputfile);
+		return;
+	}
+	parse.get_root().print_ast(0);
 	return;
 }
 void runtime_start()
 {
 	lexer.scanner(resource.get_file());
-	if(!lexer.get_error())
+	if(lexer.get_error())
 	{
-		parse.set_toklist(lexer.get_token_list());
-		parse.main_process();
-		if(parse.get_error())
-			std::cout<<">> [parse] error(s) occurred,stop.\n";
-		else
-		{
-			runtime.set_root(parse.get_root());
-			runtime.run();
-		}
+		die("lexer",inputfile);
+		return;
 	}
-	else
-		std::cout<<">> [lexer] error(s) occurred,stop.\n";
+	parse.set_toklist(lexer.get_token_list());
+	parse.main_process();
+	if(parse.get_error())
+	{
+		die("parse",inputfile);
+		return;
+	}
+	preprocessor.preprocessing(parse.get_root());
+	if(preprocessor.get_error())
+	{
+		die("import",inputfile);
+		return;
+	}
+	runtime.set_root(preprocessor.get_root());
+	runtime.run();
 	return;
 }
 
@@ -110,7 +111,6 @@ int main()
 	system("chcp 65001");
 	system("cls");
 #endif
-	// this curve looks really cool
 	logo();
 #ifdef _WIN32
 	std::cout<<">> [system] Windows system."<<std::endl;
@@ -121,9 +121,10 @@ int main()
 #ifdef TARGET_OS_MAC
 	std::cout<<">> [system] MacOS system."<<std::endl;
 #endif
+	
 	std::cout<<">> Nasal interpreter ver 3.0 ."<<std::endl;
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
-	std::cout<<">> More info: http://wiki.flightgear.org/Nasal_scripting_language"<<std::endl;
+	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language"<<std::endl;
 	std::cout<<">> Input \"help\" to get help ."<<std::endl;
     while(1)
 	{
@@ -131,7 +132,7 @@ int main()
 		std::cin>>command;
 		if(command=="help")
 			help();
-		else if(command=="cls" || command=="clear")
+		else if(command=="clear")
 		{
 #ifdef _WIN32
 			system("cls");
@@ -145,14 +146,10 @@ int main()
 		}
 		else if(command=="del")
 			del_func();
-		else if(command=="lib")
-			resource.load_lib();
 		else if(command=="rs")
 			resource.print_file();
 		else if(command=="lex")
 			lex_func();
-		else if(command=="par")
-			par_func();
 		else if(command=="ast")
 			ast_print();
 		else if(command=="run")
@@ -162,7 +159,10 @@ int main()
 		else if(command=="exit")
 			break;
 		else
-			resource.input_file(command);
+		{
+			inputfile=command;
+			resource.input_file(inputfile);
+		}
 	}
     return 0;
 }

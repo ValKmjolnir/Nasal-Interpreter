@@ -1,45 +1,26 @@
 #ifndef __NASAL_RESOURCE_H__
 #define __NASAL_RESOURCE_H__
 
-/* filenames of lib files */
-#ifndef LIB_FILE_NUM
-#define LIB_FILE_NUM 11
-const std::string lib_filename[LIB_FILE_NUM]=
-{
-	"lib/base.nas",
-	"lib/bits.nas",
-	"lib/io.nas",
-	"lib/math.nas",
-	"lib/readline.nas",
-	"lib/regex.nas",
-	"lib/sqlite.nas",
-	"lib/system.nas",
-	"lib/thread.nas",
-	"lib/unix.nas",
-	"lib/utf8.nas"
-};
-#endif
-
 class nasal_resource
 {
 private:
     std::vector<char> res;
 public:
-    void               input_file(std::string);
-    void               load_lib();
-    void               clear();
-    void               print_file();
+    bool input_file(std::string);
+    void clear();
+    void print_file();
     std::vector<char>& get_file();
 };
 
-void nasal_resource::input_file(std::string filename)
+bool nasal_resource::input_file(std::string filename)
 {
+    res.clear();
     std::ifstream fin(filename,std::ios::binary);
     if(fin.fail())
     {
-        std::cout<<">> [resource] cannot open file \'"<<filename<<"\'."<<std::endl;
+        std::cout<<">> [resource] cannot open file \""<<filename<<"\"."<<std::endl;
         fin.close();
-        return;
+        return false;
     }
     while(!fin.eof())
     {
@@ -48,14 +29,7 @@ void nasal_resource::input_file(std::string filename)
         res.push_back(c);
     }
     fin.close();
-    return;
-}
-
-void nasal_resource::load_lib()
-{
-    for(int i=0;i<LIB_FILE_NUM;++i)
-        this->input_file(lib_filename[i]);
-    return;
+    return true;
 }
 
 void nasal_resource::clear()

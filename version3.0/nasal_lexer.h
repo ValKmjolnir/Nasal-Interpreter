@@ -113,11 +113,13 @@ std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 {
 	int res_size=res.size();
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
+	bool is_hex=(ptr<res_size && res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='x');
+	bool is_oct=(ptr<res_size && res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='o');
 	std::string token_str="";
 	while(ptr<res_size && IS_NUMBER_BODY(res[ptr]))
 	{
 		token_str+=res[ptr];
-		if(res[ptr]=='e' || res[ptr]=='E')
+		if((res[ptr]=='e' || res[ptr]=='E') && !is_hex && !is_oct)
 		{
 			scientific_notation=true;
 			++ptr;
@@ -298,7 +300,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		else if(IS_NOTE_HEAD(res[ptr]))
 		{
 			// avoid note
-			while(ptr<res_size && res[ptr++]!='\n');
+			while(ptr<res_size && res[ptr]!='\n') ++ptr;
 			// after this process ptr will point to a '\n'
 			// don't ++ptr then the counter for line can work correctly
 		}
@@ -309,7 +311,6 @@ void nasal_lexer::scanner(std::vector<char>& res)
 			++ptr;
 		}
 	}
-	std::cout<<">> [lexer] complete scanning. "<<error<<" error(s)."<<std::endl;
 	return;
 }
 

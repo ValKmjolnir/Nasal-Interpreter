@@ -8,7 +8,7 @@ int nasal_runtime::builtin_print(int local_scope_addr)
 {
     // get arguments
     int vector_value_addr=in_builtin_find("elements");
-    if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
+    if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
     {
         std::cout<<">> [runtime] builtin_print: cannot find values or wrong value type."<<std::endl;
         ++error;
@@ -42,13 +42,13 @@ int nasal_runtime::builtin_append(int local_scope_addr)
 {
     int vector_value_addr=in_builtin_find("vector");
     int elem_value_addr=in_builtin_find("elements");
-    if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
+    if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
     {
         std::cout<<">> [runtime] builtin_append: cannot find values or wrong value type."<<std::endl;
         ++error;
         return -1;
     }
-    if(elem_value_addr<0 || nasal_vm.gc_get(elem_value_addr).get_type()!=vm_vector)
+    if(elem_value_addr<0 || !in_builtin_check(elem_value_addr,vm_vector))
     {
         std::cout<<">> [runtime] builtin_append: cannot find values or wrong value type."<<std::endl;
         ++error;
@@ -247,7 +247,6 @@ int nasal_runtime::builtin_foutput(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_type(vm_nil);
     return ret_addr;
 }
-
 
 int nasal_runtime::builtin_split(int local_scope_addr)
 {
@@ -736,8 +735,17 @@ int nasal_runtime::builtin_getkeys(int local_scope_addr)
         ++error;
         return -1;
     }
-
     int ret_addr=nasal_vm.gc_get(hash_addr).get_hash().get_keys();
+    return ret_addr;
+}
+int nasal_runtime::builtin_import(int local_scope_addr)
+{
+    // this function is used in preprocessing.
+    // this function will return nothing when running.
+    ++error;
+    std::cout<<">> [runtime] cannot use import when running."<<std::endl;
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
     return ret_addr;
 }
 #endif

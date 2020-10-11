@@ -1,3 +1,8 @@
+var import=func(filename)
+{
+    nasal_call_import(filename);
+    return nil;
+}
 var print=func(elements...)
 {
     nasal_call_builtin_std_cout(elements);
