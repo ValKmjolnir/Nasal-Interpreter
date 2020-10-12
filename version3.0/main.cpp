@@ -4,6 +4,7 @@ nasal_resource resource;
 nasal_lexer    lexer;
 nasal_parse    parse;
 nasal_import   preprocessor;
+nasal_codegen  code_generator;
 std::string    command;
 std::string    inputfile="null";
 nasal_runtime  runtime;
@@ -17,6 +18,7 @@ void help()
 	std::cout<<">> [lex   ] use lexer to turn code into tokens."<<std::endl;
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree."<<std::endl;
 	std::cout<<">> [run   ] run code."<<std::endl;
+	std::cout<<">> [exec  ] generate byte code."<<std::endl;
 	std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
 	std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 	return;
@@ -104,6 +106,32 @@ void runtime_start()
 	return;
 }
 
+void codegen_start()
+{
+	lexer.scanner(resource.get_file());
+	if(lexer.get_error())
+	{
+		die("lexer",inputfile);
+		return;
+	}
+	parse.set_toklist(lexer.get_token_list());
+	parse.main_process();
+	if(parse.get_error())
+	{
+		die("parse",inputfile);
+		return;
+	}
+	preprocessor.preprocessing(parse.get_root());
+	if(preprocessor.get_error())
+	{
+		die("import",inputfile);
+		return;
+	}
+	runtime.set_root(preprocessor.get_root());
+	code_generator.main_progress(inputfile+".naexec",preprocessor.get_root());
+	return;
+}
+
 int main()
 {
 #ifdef _WIN32
@@ -154,6 +182,8 @@ int main()
 			ast_print();
 		else if(command=="run")
 			runtime_start();
+		else if(command=="exec")
+			codegen_start();
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")

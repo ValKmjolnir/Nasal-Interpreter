@@ -107,20 +107,20 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     // start importing...
     if(!import_src.input_file(filename))
     {
-        die(filename,"resource");
+        this->die(filename,"resource");
         return tmp;
     }
     import_lex.scanner(import_src.get_file());
     if(import_lex.get_error())
     {
-        die(filename,"lexer");
+        this->die(filename,"lexer");
         return tmp;
     }
     import_par.set_toklist(import_lex.get_token_list());
     import_par.main_process();
     if(import_par.get_error())
     {
-        die(filename,"parser");
+        this->die(filename,"parser");
         return tmp;
     }
     tmp=import_par.get_root();

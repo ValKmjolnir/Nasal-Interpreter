@@ -25,6 +25,7 @@
 #include "nasal_ast.h"
 #include "nasal_parse.h"
 #include "nasal_import.h"
+#include "nasal_codegen.h"
 #include "nasal_gc.h"
 #include "nasal_runtime.h"
 #include "nasal_builtin.h"
