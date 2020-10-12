@@ -36,6 +36,7 @@ enum ast_node
     ast_multi_id,ast_multi_scalar,
     ast_definition,ast_multi_assign,
     ast_continue,ast_break,ast_return,
+    ast_begin,ast_end // reserved for code generator
 };
 
 std::string ast_str(int type)

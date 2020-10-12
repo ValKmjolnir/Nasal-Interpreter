@@ -13,12 +13,13 @@ void help()
 {
 	std::cout<<">> [\"file\"] input a file."<<std::endl;
 	std::cout<<">> [clear ] clear the screen."<<std::endl;
-	std::cout<<">> [del   ] clear the source code."<<std::endl;
+	std::cout<<">> [del   ] clear the input filename."<<std::endl;
 	std::cout<<">> [rs    ] print source code."<<std::endl;
 	std::cout<<">> [lex   ] use lexer to turn code into tokens."<<std::endl;
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree."<<std::endl;
-	std::cout<<">> [run   ] run code."<<std::endl;
+	std::cout<<">> [run   ] run abstract syntax tree."<<std::endl;
 	std::cout<<">> [exec  ] generate byte code."<<std::endl;
+	std::cout<<">> [erun  ] run byte code."<<std::endl;
 	std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
 	std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
 	return;
@@ -52,6 +53,11 @@ void die(std::string stage,std::string filename)
 
 void lex_func()
 {
+	if(!resource.input_file(inputfile))
+	{
+		die("resource",inputfile);
+		return;
+	}
 	lexer.scanner(resource.get_file());
 	if(lexer.get_error())
 	{
@@ -64,6 +70,11 @@ void lex_func()
 
 void ast_print()
 {
+	if(!resource.input_file(inputfile))
+	{
+		die("resource",inputfile);
+		return;
+	}
 	lexer.scanner(resource.get_file());
 	if(lexer.get_error())
 	{
@@ -82,6 +93,11 @@ void ast_print()
 }
 void runtime_start()
 {
+	if(!resource.input_file(inputfile))
+	{
+		die("resource",inputfile);
+		return;
+	}
 	lexer.scanner(resource.get_file());
 	if(lexer.get_error())
 	{
@@ -108,6 +124,11 @@ void runtime_start()
 
 void codegen_start()
 {
+	if(!resource.input_file(inputfile))
+	{
+		die("resource",inputfile);
+		return;
+	}
 	lexer.scanner(resource.get_file());
 	if(lexer.get_error())
 	{
@@ -128,7 +149,25 @@ void codegen_start()
 		return;
 	}
 	runtime.set_root(preprocessor.get_root());
-	code_generator.main_progress(inputfile+".naexec",preprocessor.get_root());
+	code_generator.output_exec(inputfile+".naexec",preprocessor.get_root());
+	if(code_generator.get_error())
+	{
+		die("code",inputfile);
+		return;
+	}
+	return;
+}
+
+void execution_start()
+{
+	code_generator.load_exec(inputfile,preprocessor.get_root());
+	if(code_generator.get_error())
+	{
+		die("code",inputfile);
+		return;
+	}
+	runtime.set_root(preprocessor.get_root());
+	runtime.run();
 	return;
 }
 
@@ -175,7 +214,10 @@ int main()
 		else if(command=="del")
 			del_func();
 		else if(command=="rs")
-			resource.print_file();
+		{
+			if(resource.input_file(inputfile))
+				resource.print_file();
+		}
 		else if(command=="lex")
 			lex_func();
 		else if(command=="ast")
@@ -184,6 +226,8 @@ int main()
 			runtime_start();
 		else if(command=="exec")
 			codegen_start();
+		else if(command=="erun")
+			execution_start();
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")
@@ -191,7 +235,13 @@ int main()
 		else
 		{
 			inputfile=command;
-			resource.input_file(inputfile);
+			std::ifstream fin(command);
+			if(fin.fail())
+			{
+				std::cout<<">> [file] cannot open file \""<<command<<"\"."<<std::endl;
+				inputfile="null";
+			}
+			fin.close();
 		}
 	}
     return 0;
