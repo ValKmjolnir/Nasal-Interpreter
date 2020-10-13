@@ -7,14 +7,16 @@
 class nasal_codegen
 {
 private:
-    std::vector<std::string> number_list;
-    std::vector<std::string> string_list;
-    std::vector<std::string> symbol_list;
+    std::vector<unsigned char> file_header;
+    std::vector<unsigned char> output_file;
+    std::vector<std::string> string_table;
     int error;
     void init();
-    void output_int(unsigned int,std::ofstream&);
-    void output_root(nasal_ast&,std::ofstream&);
+    void output_int(unsigned int,std::vector<unsigned char>&);
+    void output_short(unsigned short,std::vector<unsigned char>&);
+    void output_root(nasal_ast&);
     unsigned int input_int(std::ifstream&);
+    unsigned short input_short(std::ifstream&);
     void input_root(nasal_ast&,std::ifstream&);
 public:
     nasal_codegen();
@@ -26,9 +28,7 @@ public:
 nasal_codegen::nasal_codegen()
 {
     error=0;
-    number_list.clear();
-    string_list.clear();
-    symbol_list.clear();
+    string_table.clear();
     return;
 }
 
@@ -40,49 +40,86 @@ int nasal_codegen::get_error()
 void nasal_codegen::init()
 {
     error=0;
-    number_list.clear();
-    string_list.clear();
-    symbol_list.clear();
+    string_table.clear();
+    file_header.clear();
+    output_file.clear();
     return;
 }
 
-void nasal_codegen::output_int(unsigned int num,std::ofstream& fout)
+void nasal_codegen::output_int(unsigned int num,std::vector<unsigned char>& vec)
 {
-    unsigned int get_byte=0xff000000;
-    int offset=24;
+    unsigned int tmp=0xff000000;
+    unsigned int offset=24;
     for(int i=0;i<4;++i)
     {
-        fout<<(unsigned char)((get_byte&num)>>offset);
-        get_byte>>=8;
+        vec.push_back((unsigned char)((tmp&num)>>offset));
         offset-=8;
+        tmp>>=8;
     }
     return;
 }
 
-void nasal_codegen::output_root(nasal_ast& root,std::ofstream& fout)
+void nasal_codegen::output_short(unsigned short num,std::vector<unsigned char>& vec)
 {
-    output_int(ast_begin,fout);
-    unsigned int type=root.get_type();
-    output_int(type,fout);
+    vec.push_back((unsigned char)((num&0xff00)>>8));
+    vec.push_back((unsigned char)(num&0x00ff));
+    return;
+}
+
+void nasal_codegen::output_root(nasal_ast& root)
+{
+    unsigned char type=(unsigned char)root.get_type();
+    output_file.push_back(type);
     std::vector<nasal_ast>& ref_vec=root.get_children();
-    int root_children_size=ref_vec.size();
-    output_int(root_children_size,fout);
+    unsigned short root_children_size=ref_vec.size();
+    output_short(root_children_size,output_file);
     if(type==ast_number || type==ast_string || type==ast_identifier || type==ast_dynamic_id || type==ast_call_hash)
     {
         std::string tmp=root.get_str();
-        for(int i=0;i<tmp.length();++i)
-            fout<<(unsigned char)tmp[i];
-        fout<<'\0';
+        if(std::find(string_table.begin(),string_table.end(),tmp)==string_table.end())
+        {
+            string_table.push_back(tmp);
+            output_short(string_table.size()-1,output_file);
+        }
+        else
+        {
+            for(int i=0;i<string_table.size();++i)
+                if(string_table[i]==tmp)
+                {
+                    output_short(i,output_file);
+                    break;
+                }
+        }
     }
-    for(int i=0;i<root_children_size;++i)
-        output_root(ref_vec[i],fout);
-    output_int(ast_end,fout);
+    for(unsigned short i=0;i<root_children_size;++i)
+        output_root(ref_vec[i]);
     return;
 }
 
 void nasal_codegen::output_exec(std::string filename,nasal_ast& root)
 {
+    // initializing
     this->init();
+
+    // put header input file_header
+    unsigned char header[4]={0x40,0x56,0x4b,0x21};
+    for(int i=0;i<4;++i)
+        file_header.push_back(header[i]);
+    
+    // main progress,put codes into output_file
+    output_root(root);
+
+    // put string table into file_header
+    output_short(string_table.size(),file_header);
+    for(int i=0;i<string_table.size();++i)
+    {
+        int len=string_table[i].length();
+        for(int j=0;j<len;++j)
+            file_header.push_back((unsigned char)string_table[i][j]);
+        file_header.push_back(0);
+    }
+
+    // output to file
     std::ofstream fout(filename,std::ios::binary);
     if(fout.fail())
     {
@@ -91,10 +128,12 @@ void nasal_codegen::output_exec(std::string filename,nasal_ast& root)
         fout.close();
         return;
     }
-    unsigned char header[4]={0x40,0x56,0x4b,0x21};
-    for(int i=0;i<4;++i)
-        fout<<header[i];
-    output_root(root,fout);
+    int size=file_header.size();
+    for(int i=0;i<size;++i)
+        fout<<file_header[i];
+    size=output_file.size();
+    for(int i=0;i<size;++i)
+        fout<<output_file[i];
     fout.close();
     return;
 }
@@ -102,39 +141,32 @@ void nasal_codegen::output_exec(std::string filename,nasal_ast& root)
 unsigned int nasal_codegen::input_int(std::ifstream& fin)
 {
     unsigned int number=0;
-    unsigned char c;
     for(int i=0;i<4;++i)
     {
-        c=(unsigned char)fin.get();
-        number=(number<<8)+c;
+        number<<=8;
+        number+=(unsigned char)fin.get();
     }
+    return number;
+}
+
+unsigned short nasal_codegen::input_short(std::ifstream& fin)
+{
+    unsigned short number=(unsigned char)fin.get();
+    number=(number<<8)+(unsigned char)fin.get();
     return number;
 }
 
 void nasal_codegen::input_root(nasal_ast& root,std::ifstream& fin)
 {
-    unsigned int begin=input_int(fin);
-    if(begin!=ast_begin)
-    {
-        ++error;
-        std::cout<<">> [code] file format error: without ast_begin."<<std::endl;
-        return;
-    }
-    unsigned int type=input_int(fin);
-    unsigned int size=input_int(fin);
+    unsigned char type=(unsigned char)fin.get();
+    unsigned short size=input_short(fin);
     root.set_type(type);
     if(type==ast_number || type==ast_string || type==ast_identifier || type==ast_dynamic_id || type==ast_call_hash)
     {
-        std::string tmp="";
-        while(1)
-        {
-            unsigned char c=(unsigned char)fin.get();
-            if(!c || fin.eof()) break;
-            tmp+=c;
-        }
+        std::string tmp=string_table[input_short(fin)];
         root.set_str(tmp);
     }
-    for(int i=0;i<size;++i)
+    for(unsigned short i=0;i<size;++i)
     {
         nasal_ast new_ast;
         root.add_child(new_ast);
@@ -142,19 +174,16 @@ void nasal_codegen::input_root(nasal_ast& root,std::ifstream& fin)
         if(error)
             return;
     }
-    unsigned int end=input_int(fin);
-    if(end!=ast_end)
-    {
-        ++error;
-        std::cout<<">> [code] file format error: without ast_end."<<std::endl;
-        return;
-    }
     return;
 }
 
 void nasal_codegen::load_exec(std::string filename,nasal_ast& root)
 {
+    // initializing
+    string_table.clear();
     root.clear();
+
+    // start input
     std::ifstream fin(filename,std::ios::binary);
     if(fin.fail())
     {
@@ -163,6 +192,8 @@ void nasal_codegen::load_exec(std::string filename,nasal_ast& root)
         fin.close();
         return;
     }
+
+    // check header
     unsigned char header[4]={0x40,0x56,0x4b,0x21};
     for(int i=0;i<4;++i)
         if((unsigned char)fin.get()!=header[i])
@@ -171,6 +202,22 @@ void nasal_codegen::load_exec(std::string filename,nasal_ast& root)
             std::cout<<">> [code] \""<<filename<<"\" is not an executable file."<<std::endl;
             return;
         }
+    
+    // input string table
+    unsigned short string_num=input_short(fin);
+    for(int i=0;i<string_num;++i)
+    {
+        std::string tmp="";
+        while(1)
+        {
+            unsigned char c=(unsigned char)fin.get();
+            if(!c || fin.eof()) break;
+            tmp+=c;
+        }
+        string_table.push_back(tmp);
+    }
+
+    // generate root
     input_root(root,fin);
     return;
 }
