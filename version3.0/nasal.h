@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>
 #include <ctime>

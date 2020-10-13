@@ -52,6 +52,8 @@ void nasal_import::init()
 bool nasal_import::check_import(nasal_ast& node)
 {
 /*
+    only this kind of node can be recognized as 'import':
+
     call
         id:import
         call_func
@@ -73,6 +75,7 @@ bool nasal_import::check_import(nasal_ast& node)
 
 bool nasal_import::check_exist(std::string filename)
 {
+    // avoid importing the same file
     int size=filename_table.size();
     for(int i=0;i<size;++i)
         if(filename==filename_table[i])
@@ -83,6 +86,7 @@ bool nasal_import::check_exist(std::string filename)
 
 void nasal_import::linker(nasal_ast& root,nasal_ast& add_root)
 {
+    // add children of add_root to the back of root
     std::vector<nasal_ast>& ref_vec=add_root.get_children();
     int size=ref_vec.size();
     for(int i=0;i<size;++i)
@@ -97,13 +101,16 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     tmp.set_line(0);
     tmp.set_type(ast_root);
     init();
+
     // get filename and set node to ast_null
     std::string filename=node.get_children()[1].get_children()[0].get_str();
     node.clear();
     node.set_type(ast_null);
+
     // avoid infinite loading loop
     if(check_exist(filename))
         return tmp;
+    
     // start importing...
     if(!import_src.input_file(filename))
     {
@@ -124,6 +131,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return tmp;
     }
     tmp=import_par.get_root();
+
     // check if tmp has 'import'
     return load(tmp);
 }
@@ -147,6 +155,8 @@ nasal_ast nasal_import::load(nasal_ast& root)
     }
     // add root to the back of new_root
     linker(new_root,root);
+
+    // oops,i think it is not efficient if the root is too ... large?
     return new_root;
 }
 
