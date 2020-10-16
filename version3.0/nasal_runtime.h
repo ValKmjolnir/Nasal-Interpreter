@@ -56,7 +56,7 @@ private:
     int call_vector(nasal_ast&,int,int);
     int call_hash(nasal_ast&,int,int);
     int call_function(nasal_ast&,std::string,int,int,int);
-    int call_builtin_function(nasal_ast&,int);
+    int call_builtin_function(std::string,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
     int call_scalar_mem(nasal_ast&,int);
     int call_vector_mem(nasal_ast&,int,int);
@@ -193,7 +193,9 @@ void nasal_runtime::run()
     nasal_vm.del_reference(global_scope_address);
     nasal_vm.clear();
 
-    std::cout<<">> [runtime] process exited after "<<end_time-begin_time<<"s "<<(returned_statement==rt_exit_without_error?"without errors.":"with errors.")<<std::endl;
+    time_t total_run_time=end_time-begin_time;
+    if(total_run_time>=1)
+    std::cout<<">> [runtime] process exited after "<<total_run_time<<"s "<<(returned_statement==rt_exit_without_error?".\n":"with errors.\n");
     return;
 }
 
@@ -634,13 +636,16 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
             value_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(val_name);
         if(value_address<0)
         {
-            value_address=call_builtin_function(node.get_children()[0],local_scope_addr);
+            value_address=call_builtin_function(val_name,local_scope_addr);
             if(value_address>=0)
                 return value_address;
         }
         if(value_address<0)
         {
-            std::cout<<">> [runtime] call_nasal_scalar: cannot find value named \'"<<val_name<<"\'."<<std::endl;
+            if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
+                std::cout<<">> [runtime] call_scalar: call "<<val_name<<" failed.\n";
+            else
+                std::cout<<">> [runtime] call_scalar: cannot find value named \""<<val_name<<"\".\n";
             ++error;
             return -1;
         }
@@ -1128,13 +1133,12 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     }
     return ret_value_addr;
 }
-int nasal_runtime::call_builtin_function(nasal_ast& node,int local_scope_addr)
+int nasal_runtime::call_builtin_function(std::string val_name,int local_scope_addr)
 {
     int ret_value_addr=-1;
     int builtin_func_num=-1;
-    std::string builtin_name=node.get_str();
-    if(builtin_func_hashmap.find(builtin_name)!=builtin_func_hashmap.end())
-        ret_value_addr=(this->*builtin_func_hashmap[builtin_name])(local_scope_addr);
+    if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
+        ret_value_addr=(this->*builtin_func_hashmap[val_name])(local_scope_addr);
     return ret_value_addr;
 }
 int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)

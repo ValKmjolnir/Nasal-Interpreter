@@ -1,15 +1,15 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
-#define IS_IDENTIFIER_HEAD(c) (c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')
-#define IS_IDENTIFIER_BODY(c) (c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||('0'<=c&&c<='9')
-#define IS_NUMBER_HEAD(c)     ('0'<=c&&c<='9')
-#define IS_NUMBER_BODY(c)     ('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c&&c<='F')||(c=='e'||c=='E'||c=='.'||c=='x'||c=='o')
+#define IS_IDENTIFIER_HEAD(c) ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z'))
+#define IS_IDENTIFIER_BODY(c) ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||('0'<=c&&c<='9'))
+#define IS_HEX_NUMBER(c)      (('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F'))
+#define IS_OCT_NUMEBR(c)      ('0'<=c&&c<='7')
+#define IS_DIGIT(c)           ('0'<=c&&c<='9')
 #define IS_STRING_HEAD(c)     (c=='\''||c=='\"')
 // single operators have only one character
 #define IS_SINGLE_OPRATOR(c)  (c=='('||c==')'||c=='['||c==']'||c=='{'||c=='}'||c==','||c==';'||c=='|'||c==':'||\
 							   c=='?'||c=='`'||c=='&'||c=='@'||c=='%'||c=='$'||c=='^'||c=='\\')
-#define IS_DOT(c)             (c=='.')
 // calculation operators may have two chars, for example: += -= *= /= ~= != == >= <=
 #define IS_CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
 #define IS_NOTE_HEAD(c)       (c=='#')
@@ -83,6 +83,7 @@ private:
     int error;
     std::vector<token> token_list;
 	std::string identifier_gen(std::vector<char>&,int&,int&);
+	void generate_number_error(int,std::string);
     std::string number_gen(std::vector<char>&,int&,int&);
     std::string string_gen(std::vector<char>&,int&,int&);
 public:
@@ -109,42 +110,95 @@ std::string nasal_lexer::identifier_gen(std::vector<char>& res,int& ptr,int& lin
 	// after running this process, ptr will point to the next token's beginning character
 }
 
+void nasal_lexer::generate_number_error(int line,std::string token_str)
+{
+	++error;
+	std::cout<<">> [lexer] line "<<line<<": \""<<token_str<<"\" is not a correct number.\n";
+	return;
+}
 std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 {
 	int res_size=res.size();
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
-	bool is_hex=(ptr<res_size && res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='x');
-	bool is_oct=(ptr<res_size && res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='o');
 	std::string token_str="";
-	while(ptr<res_size && IS_NUMBER_BODY(res[ptr]))
+	// generate hex number
+	if(res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='x')
 	{
-		token_str+=res[ptr];
-		if((res[ptr]=='e' || res[ptr]=='E') && !is_hex && !is_oct)
+		token_str="0x";
+		ptr+=2;
+		while(ptr<res_size && IS_HEX_NUMBER(res[ptr]))
+			token_str+=res[ptr++];
+		if(token_str=="0x")
 		{
-			scientific_notation=true;
-			++ptr;
-			break;
+			generate_number_error(line,token_str);
+			return "0";
 		}
-		++ptr;
+		return token_str;
 	}
-	if(scientific_notation && ptr<res_size)
+	// generate oct number
+	else if(res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='o')
 	{
-		if(res[ptr]=='-')
+		token_str="0o";
+		ptr+=2;
+		while(ptr<res_size && IS_OCT_NUMEBR(res[ptr]))
+			token_str+=res[ptr++];
+		if(token_str=="0o")
 		{
-			token_str+='-';
-			++ptr;
+			generate_number_error(line,token_str);
+			return "0";
 		}
-		while(ptr<res_size && '0'<=res[ptr] && res[ptr]<='9')
+		return token_str;
+	}
+	// generate dec number
+	// dec number -> 0|[1~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
+	if(ptr<res_size && res[ptr]=='0')
+		token_str+=res[ptr++];
+	while(ptr<res_size && IS_DIGIT(res[ptr]))
+		token_str+=res[ptr++];
+	if(ptr<res_size && res[ptr]=='.')
+	{
+		token_str+=res[ptr++];
+		// "xxxx." is not a correct number
+		if(ptr>=res_size)
 		{
-			token_str+=res[ptr];
-			++ptr;
+			generate_number_error(line,token_str);
+			return "0";
+		}
+		while(ptr<res_size && IS_DIGIT(res[ptr]))
+			token_str+=res[ptr++];
+		// "xxxx." is not a correct number
+		if(token_str.back()=='.')
+		{
+			generate_number_error(line,token_str);
+			return "0";
 		}
 	}
-	if(!check_numerable_string(token_str))
+	if(ptr<res_size && (res[ptr]=='e' || res[ptr]=='E'))
 	{
-		++error;
-		std::cout<<">> [lexer] line "<<line<<": \'"<<token_str<<"\' is not a numerable string."<<std::endl;
-		token_str="0";
+		token_str+=res[ptr++];
+		// "xxxe" is not a correct number
+		if(ptr>=res_size)
+		{
+			generate_number_error(line,token_str);
+			return "0";
+		}
+		if(ptr<res_size && (res[ptr]=='-' || res[ptr]=='+'))
+			token_str+=res[ptr++];
+		if(ptr>=res_size)
+		{
+			generate_number_error(line,token_str);
+			return "0";
+		}
+		if(ptr<res_size && res[ptr]=='0')
+			token_str+=res[ptr++];
+		while(ptr<res_size && IS_DIGIT(res[ptr]))
+			token_str+=res[ptr++];
+		// "xxxe(-|+)" is not a correct number
+		if(token_str.back()=='e' || token_str.back()=='E' || token_str.back()=='-' || token_str.back()=='+')
+		{
+			generate_number_error(line,token_str);
+			return "0";
+		}
 	}
 	return token_str;
 }
@@ -218,7 +272,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
                 new_token.type=tok_identifier;
 			token_list.push_back(new_token);
 		}
-		else if(IS_NUMBER_HEAD(res[ptr]))
+		else if(IS_DIGIT(res[ptr]))
 		{
 			token_str=number_gen(res,ptr,line);
 			token new_token;
@@ -252,9 +306,9 @@ void nasal_lexer::scanner(std::vector<char>& res)
 			token_list.push_back(new_token);
 			++ptr;
 		}
-        else if(IS_DOT(res[ptr]))
+        else if(res[ptr]=='.')
         {
-            if(ptr+2<res_size && IS_DOT(res[ptr+1]) && IS_DOT(res[ptr+2]))
+            if(ptr+2<res_size && res[ptr+1]=='.' && res[ptr+2]=='.')
             {
                 token_str="...";
                 ptr+=3;

@@ -32,25 +32,26 @@ inline bool check_oct_string(std::string str,int len)
 }
 inline bool check_dec_string(std::string str,int len)
 {
-	int dot_cnt=0;
-	if(str[0]=='.') return false;
-	if(str[0]=='0' && ('0'<=str[1] && str[1]<='9')) return false;
 	int i=0;
-	for(;i<len;++i)
+	// check integer part
+	while('0'<=str[i] && str[i]<='9' && i<len) ++i;
+	if(i==len) return true;
+	if(str[i]!='e' && str[i]!='E' && str[i]!='.') return false;
+	// check decimal part
+	if(str[i]=='.')
 	{
-		if(str[i]=='.')
-		{
-			if(i==len-1 || str[i+1]=='e' || str[i+1]=='E') return false;
-			++dot_cnt;
-		}
-		else if(str[i]=='e' || str[i]=='E') break;
-		else if(str[i]<'0'  || str[i]>'9' ) return false;
+		++i;
+		if(i==len) return false;
+		while('0'<=str[i] && str[i]<='9' && i<len) ++i;
 	}
+	if(i==len) return true;
+	if(str[i]!='e' && str[i]!='E') return false;
+	// check scientific notation
 	if(str[i]=='e' || str[i]=='E')
 	{
 		++i;
 		if(i==len) return false;
-		if(str[i]=='-')
+		if(str[i]=='-' || str[i]=='+')
 		{
 			++i;
 			if(i==len) return false;
@@ -59,7 +60,6 @@ inline bool check_dec_string(std::string str,int len)
 			if(str[i]<'0' || str[i]>'9')
 				return false;
 	}
-	if(dot_cnt>1) return false;
 	return true;
 }
 
@@ -67,18 +67,16 @@ bool check_numerable_string(std::string str)
 {
 	int len=str.length();
 	if(!len) return false;
-	if(str[0]=='-' && len>1)
+	if(str[0]=='-' || str[0]=='+')
 	{
+		if(len==1) return false;
 		std::string tmp="";
 		for(int i=1;i<len;++i)
-			tmp.push_back(str[i]);
+			tmp+=str[i];
 		str=tmp;
+		--len;
 	}
-	else if(str[0]=='-' && len==1)
-		return false;
-	if(len==1 && '0'<=str[0] && str[0]<='9')
-		return true;
-	else if(len>2 && str[0]=='0' && str[1]=='x')
+	if(len>2 && str[0]=='0' && str[1]=='x')
 		return check_hex_string(str,len);
 	else if(len>2 && str[0]=='0' && str[1]=='o')
 		return check_oct_string(str,len);
@@ -93,8 +91,7 @@ bool check_numerable_string(std::string str)
 */
 inline double hex_to_double(std::string str,int len)
 {
-	double ret=0;
-	double num_pow=1;
+	double ret=0,num_pow=1;
 	for(int i=len-1;i>1;--i)
 	{
 		if('0'<=str[i] && str[i]<='9')
@@ -109,8 +106,7 @@ inline double hex_to_double(std::string str,int len)
 }
 inline double oct_to_double(std::string str,int len)
 {
-	double ret=0;
-	double num_pow=1;
+	double ret=0,num_pow=1;
 	for(int i=len-1;i>1;--i)
 	{
 		ret+=num_pow*(str[i]-'0');
@@ -122,34 +118,29 @@ inline double dec_to_double(std::string str,int len)
 {
 	double ret=0;
 	int i=0;
-	for(;i<len;++i)
+	while('0'<=str[i] && str[i]<='9' && i<len)
 	{
-		if('0'<=str[i] && str[i]<='9')
-			ret=ret*10+(str[i]-'0');
-		else if(str[i]=='.' || str[i]=='e' || str[i]=='E')
-			break;
+		ret=ret*10+(str[i]-'0');
+		++i;
 	}
+	if(i==len) return ret;
 	if(str[i]=='.')
 	{
 		++i;
 		double num_pow=0.1;
-		for(;i<len;++i)
+		while('0'<=str[i] && str[i]<='9' && i<len)
 		{
-			if('0'<=str[i] && str[i]<='9')
-			{
-				ret+=num_pow*(str[i]-'0');
-				num_pow*=0.1;
-			}
-			else if(str[i]=='e' || str[i]=='E')
-				break;
+			ret+=num_pow*(str[i]-'0');
+			num_pow*=0.1;
+			++i;
 		}
 	}
+	if(i==len) return ret;
 	if(str[i]=='e' || str[i]=='E')
 	{
-		
 		++i;
 		bool is_negative=(str[i]=='-');
-		if(is_negative) ++i;
+		if(str[i]=='-' || str[i]=='+') ++i;
 		double num_pow=0;
 		for(;i<len;++i) num_pow=num_pow*10+(str[i]-'0');
 		num_pow=std::pow(10,is_negative?-num_pow:num_pow);
@@ -163,19 +154,16 @@ double trans_string_to_number(std::string str)
 	int len=str.length();
 	double ret_num=0;
 	if(!len) return 0;
-	if(str[0]=='-' && len>1)
+	if(str[0]=='-' || str[0]=='+')
 	{
-		is_negative=true;
+		is_negative=(str[0]=='-');
 		std::string tmp="";
 		for(int i=1;i<len;++i)
 			tmp.push_back(str[i]);
 		str=tmp;
+		--len;
 	}
-	else if(str[0]=='-' && len==1)
-		return 0;
-	if(len==1 && '0'<=str[0] && str[0]<='9')
-		ret_num=(double)(str[0]-'0');
-	else if(len>2 && str[0]=='0' && str[1]=='x')
+	if(len>2 && str[0]=='0' && str[1]=='x')
 		ret_num=hex_to_double(str,len);
 	else if(len>2 && str[0]=='0' && str[1]=='o')
 		ret_num=oct_to_double(str,len);
