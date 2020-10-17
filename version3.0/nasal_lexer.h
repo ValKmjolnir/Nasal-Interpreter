@@ -361,7 +361,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		else
 		{
 			++error;
-			std::cout<<">> [lexer] line "<<line<<": unknown char."<<std::endl;
+			std::cout<<">> [lexer] line "<<line<<": unknown char "<<(int)res[ptr]<<'.'<<std::endl;
 			++ptr;
 		}
 	}
