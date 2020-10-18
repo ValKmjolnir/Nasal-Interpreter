@@ -11,17 +11,17 @@ nasal_runtime  runtime;
 
 void help()
 {
-	std::cout<<">> [\"file\"] input a file."<<std::endl;
-	std::cout<<">> [clear ] clear the screen."<<std::endl;
-	std::cout<<">> [del   ] clear the input filename."<<std::endl;
-	std::cout<<">> [rs    ] print source code."<<std::endl;
-	std::cout<<">> [lex   ] use lexer to turn code into tokens."<<std::endl;
-	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree."<<std::endl;
-	std::cout<<">> [run   ] run abstract syntax tree."<<std::endl;
-	std::cout<<">> [exec  ] generate byte code."<<std::endl;
-	std::cout<<">> [erun  ] run byte code."<<std::endl;
-	std::cout<<">> [logo  ] print logo of nasal ."<<std::endl;
-	std::cout<<">> [exit  ] quit nasal interpreter."<<std::endl;
+	std::cout<<">> [\"file\"] input a file name.\n";
+	std::cout<<">> [clear ] clear the screen.\n";
+	std::cout<<">> [del   ] clear the input filename.\n";
+	std::cout<<">> [rs    ] print source code.\n";
+	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
+	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
+	std::cout<<">> [run   ] run abstract syntax tree.\n";
+	std::cout<<">> [exec  ] generate byte code.\n";
+	std::cout<<">> [erun  ] run byte code.\n";
+	std::cout<<">> [logo  ] print logo of nasal .\n";
+	std::cout<<">> [exit  ] quit nasal interpreter.\n";
 	return;
 }
 
