@@ -500,34 +500,46 @@ nasal_scalar::nasal_scalar()
 }
 nasal_scalar::~nasal_scalar()
 {
-    switch(this->type)
-    {
-        case vm_nil:      break;
-        case vm_number:   delete (double*)(this->scalar_ptr);         break;
-        case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
-        case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
-        case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
-        case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
-        case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
-    }
+    // must set type and scalar_ptr to default first
+    // this operation will avoid SIGTRAP caused by circular reference
+    // circular reference will cause using destructor repeatedly
+    int tmp_type=this->type;
+    void* tmp_ptr=this->scalar_ptr;
+
     this->type=vm_nil;
     this->scalar_ptr=NULL;
+    switch(tmp_type)
+    {
+        case vm_nil:      break;
+        case vm_number:   delete (double*)(tmp_ptr);         break;
+        case vm_string:   delete (std::string*)(tmp_ptr);    break;
+        case vm_vector:   delete (nasal_vector*)(tmp_ptr);   break;
+        case vm_hash:     delete (nasal_hash*)(tmp_ptr);     break;
+        case vm_function: delete (nasal_function*)(tmp_ptr); break;
+        case vm_closure:  delete (nasal_closure*)(tmp_ptr);  break;
+    }
     return;
 }
 void nasal_scalar::clear()
 {
-    switch(this->type)
-    {
-        case vm_nil:      break;
-        case vm_number:   delete (double*)(this->scalar_ptr);         break;
-        case vm_string:   delete (std::string*)(this->scalar_ptr);    break;
-        case vm_vector:   delete (nasal_vector*)(this->scalar_ptr);   break;
-        case vm_hash:     delete (nasal_hash*)(this->scalar_ptr);     break;
-        case vm_function: delete (nasal_function*)(this->scalar_ptr); break;
-        case vm_closure:  delete (nasal_closure*)(this->scalar_ptr);  break;
-    }
+    // must set type and scalar_ptr to default first
+    // this operation will avoid SIGTRAP caused by circular reference
+    // circular reference will cause using destructor repeatedly
+    int tmp_type=this->type;
+    void* tmp_ptr=this->scalar_ptr;
+
     this->type=vm_nil;
     this->scalar_ptr=NULL;
+    switch(tmp_type)
+    {
+        case vm_nil:      break;
+        case vm_number:   delete (double*)(tmp_ptr);         break;
+        case vm_string:   delete (std::string*)(tmp_ptr);    break;
+        case vm_vector:   delete (nasal_vector*)(tmp_ptr);   break;
+        case vm_hash:     delete (nasal_hash*)(tmp_ptr);     break;
+        case vm_function: delete (nasal_function*)(tmp_ptr); break;
+        case vm_closure:  delete (nasal_closure*)(tmp_ptr);  break;
+    }
     return;
 }
 bool nasal_scalar::set_type(int nasal_scalar_type)
@@ -1385,12 +1397,13 @@ nasal_virtual_machine::~nasal_virtual_machine()
                 garbage_collector_memory[i][j].collected=true;
             }
     for(int i=0;i<gc_mem_size;++i)
-    {
         for(int j=0;j<GC_BLK_SIZE;++j)
             if(garbage_collector_memory[i][j].elem.get_type()!=vm_nil)
                 garbage_collector_memory[i][j].elem.clear();
+    // must delete gc_memory after destructing all elements
+    // or it may cause SIGTRAP because some elements may have pointers point to space that has been deleted(free)
+    for(int i=0;i<gc_mem_size;++i)
         delete []garbage_collector_memory[i];
-    }
     for(int i=0;i<mm_mem_size;++i)
         delete []memory_manager_memory[i];
     while(!garbage_collector_free_space.empty())
@@ -1438,12 +1451,13 @@ void nasal_virtual_machine::clear()
                 garbage_collector_memory[i][j].collected=true;
             }
     for(int i=0;i<gc_mem_size;++i)
-    {
         for(int j=0;j<GC_BLK_SIZE;++j)
             if(garbage_collector_memory[i][j].elem.get_type()!=vm_nil)
                 garbage_collector_memory[i][j].elem.clear();
+    // must delete gc_memory after destructing all elements
+    // or it may cause SIGTRAP because some elements may have pointers point to space that has been deleted(free)
+    for(int i=0;i<gc_mem_size;++i)
         delete []garbage_collector_memory[i];
-    }
     for(int i=0;i<mm_mem_size;++i)
         delete []memory_manager_memory[i];
     while(!garbage_collector_free_space.empty())
