@@ -145,6 +145,15 @@ void nasal_parse::main_process()
                 error_info(error_line-1,lack_semi);
             }
         }
+        if(root.get_children().size())
+        {
+            int type=root.get_children().back().get_type();
+            if(type==ast_continue || type==ast_break || type==ast_return)
+            {
+                ++error;
+                error_info(root.get_children().back().get_line(),error_expr,ast_str(type));
+            }
+        }
     }
     return;
 }
