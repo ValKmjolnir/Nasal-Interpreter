@@ -207,34 +207,40 @@ std::string nasal_lexer::string_gen(std::vector<char>& res,int& ptr,int& line)
 {
 	int res_size=res.size();
 	std::string token_str="";
-	char str_begin=res[ptr];
-	++ptr;
+	char str_begin=res[ptr++];
 	if(ptr>=res_size) return token_str;
 	while(ptr<res_size && res[ptr]!=str_begin)
 	{
-		token_str+=res[ptr];
 		if(res[ptr]=='\n') ++line;
 		if(res[ptr]=='\\' && ptr+1<res.size())
 		{
 			++ptr;
 			switch(res[ptr])
 			{
-				case '\\':token_str.pop_back();token_str.push_back('\\');break;
-				case 'r': token_str.pop_back();token_str.push_back('\r');break;
-				case 't': token_str.pop_back();token_str.push_back('\t');break;
-				case 'n': token_str.pop_back();token_str.push_back('\n');break;
-				case '\'':token_str.pop_back();token_str.push_back('\'');break;
-				case '\"':token_str.pop_back();token_str.push_back('\"');break;
+				case 'a':token_str.push_back('\a');break;
+				case 'b':token_str.push_back('\b');break;
+				case 'f':token_str.push_back('\f');break;
+				case 'n':token_str.push_back('\n');break;
+				case 'r':token_str.push_back('\r');break;
+				case 't':token_str.push_back('\t');break;
+				case 'v':token_str.push_back('\v');break;
+				case '?':token_str.push_back('\?');break;
+				case '0':token_str.push_back('\0');break;
+				case '\\':token_str.push_back('\\');break;
+				case '\'':token_str.push_back('\'');break;
+				case '\"':token_str.push_back('\"');break;
 				default:  token_str.push_back(res[ptr]);break;
 			}
 		}
+		else
+			token_str+=res[ptr];
 		++ptr;
 	}
 	// check if this string ends with a " or '
 	if(ptr>=res_size)
 	{
 		++error;
-		std::cout<<">> [lexer] line "<<line<<": this string must have a \' "<<str_begin<<" \' as its end."<<std::endl;
+		std::cout<<">> [lexer] line "<<line<<": get EOF when generating string.\n";
 	}
 	++ptr;
 	return token_str;

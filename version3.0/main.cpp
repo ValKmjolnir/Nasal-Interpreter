@@ -27,11 +27,11 @@ void help()
 
 void logo()
 {
-    std::cout<<"       __                _      "<<std::endl;
-	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  "<<std::endl;
-	std::cout<<"   /  \\/ / _` / __|/ _` | |    "<<std::endl;
-	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  "<<std::endl;
-	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|"<<std::endl;
+    std::cout<<"       __                _      \n";
+	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  \n";
+	std::cout<<"   /  \\/ / _` / __|/ _` | |    \n";
+	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  \n";
+	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
     return;
 }
 
@@ -41,13 +41,13 @@ void del_func()
 	lexer.clear();
 	parse.clear();
 	inputfile="null";
-	std::cout<<">> [Delete] complete."<<std::endl;
+	std::cout<<">> [Delete] complete.\n";
 	return;
 }
 
 void die(std::string stage,std::string filename)
 {
-	std::cout<<">> ["<<stage<<"] in <\""<<filename<<"\">: error(s) occurred,stop."<<std::endl;
+	std::cout<<">> ["<<stage<<"] in <\""<<filename<<"\">: error(s) occurred,stop.\n";
 	return;
 }
 
@@ -180,19 +180,19 @@ int main()
 #endif
 	logo();
 #ifdef _WIN32
-	std::cout<<">> [system] Windows system."<<std::endl;
+	std::cout<<">> [system] Windows system.\n";
 #endif
 #ifdef _linux_
-	std::cout<<">> [system] Linux system."<<std::endl;
+	std::cout<<">> [system] Linux system.\n";
 #endif
 #ifdef TARGET_OS_MAC
-	std::cout<<">> [system] MacOS system."<<std::endl;
+	std::cout<<">> [system] MacOS system.\n";
 #endif
 	
-	std::cout<<">> Nasal interpreter ver 3.0 ."<<std::endl;
-	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter"<<std::endl;
-	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language"<<std::endl;
-	std::cout<<">> Input \"help\" to get help ."<<std::endl;
+	std::cout<<">> Nasal interpreter ver 3.0 .\n";
+	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
+	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";
+	std::cout<<">> Input \"help\" to get help .\n";
     while(1)
 	{
 		std::cout<<">> ";
@@ -238,7 +238,7 @@ int main()
 			std::ifstream fin(command);
 			if(fin.fail())
 			{
-				std::cout<<">> [file] cannot open file \""<<command<<"\"."<<std::endl;
+				std::cout<<">> [file] cannot open file \""<<command<<"\".\n";
 				inputfile="null";
 			}
 			fin.close();
