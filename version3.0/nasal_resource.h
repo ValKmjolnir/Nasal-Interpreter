@@ -18,14 +18,15 @@ bool nasal_resource::input_file(std::string filename)
     std::ifstream fin(filename,std::ios::binary);
     if(fin.fail())
     {
-        std::cout<<">> [resource] cannot open file \""<<filename<<"\"."<<std::endl;
+        std::cout<<">> [resource] cannot open file \""<<filename<<"\".\n";
         fin.close();
         return false;
     }
     while(!fin.eof())
     {
         char c=fin.get();
-        if(fin.eof()) break;
+        if(fin.eof())
+            break;
         res.push_back(c);
     }
     fin.close();
@@ -50,16 +51,19 @@ void nasal_resource::print_file()
 			std::cout<<unicode_str;
 			unicode_str="";
 		}
-		if(32<=res[i])    std::cout<<res[i];
-		else if(res[i]<0) unicode_str+=res[i];
-		else              std::cout<<" ";
+		if(32<=res[i])
+            std::cout<<res[i];
+		else if(res[i]<0)
+            unicode_str+=res[i];
+		else
+            std::cout<<" ";
 		if(res[i]=='\n')
 		{
 			++line;
 			std::cout<<std::endl<<line<<"\t";
 		}
 	}
-	std::cout<<(unicode_str.length()?unicode_str:"")<<std::endl;
+	std::cout<<(unicode_str.length()?unicode_str:"")<<'\n';
 	return;
 }
 
