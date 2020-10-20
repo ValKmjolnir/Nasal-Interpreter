@@ -81,6 +81,11 @@ var time=func(begin_time)
 {
     return nasal_call_builtin_time(begin_time);
 }
+var die=func(str)
+{
+    nasal_call_builtin_die(str);
+    return nil;
+}
 
 var io=
 {

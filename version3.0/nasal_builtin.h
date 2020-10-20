@@ -10,7 +10,7 @@ int nasal_runtime::builtin_print(int local_scope_addr)
     int vector_value_addr=in_builtin_find("elements");
     if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_print: cannot find values or wrong value type."<<std::endl;
+        std::cout<<">> [runtime] builtin_print: \"elements\" has wrong value type(must be vector).\n";
         ++error;
         return -1;
     }
@@ -31,7 +31,7 @@ int nasal_runtime::builtin_print(int local_scope_addr)
             case vm_closure:std::cout<<"closure{{...}}";break;
         }
         if(i==size-1)
-            std::cout<<std::endl;
+            std::cout<<'\n';
     }
     // generate return value
     int ret_addr=nasal_vm.gc_alloc();
@@ -44,13 +44,13 @@ int nasal_runtime::builtin_append(int local_scope_addr)
     int elem_value_addr=in_builtin_find("elements");
     if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_append: cannot find values or wrong value type."<<std::endl;
+        std::cout<<">> [runtime] builtin_append: \"vector\" has wrong value type(must be vector).\n";
         ++error;
         return -1;
     }
     if(elem_value_addr<0 || !in_builtin_check(elem_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_append: cannot find values or wrong value type."<<std::endl;
+        std::cout<<">> [runtime] builtin_append: \"elements\" has wrong value type(must be vector).\n";
         ++error;
         return -1;
     }
@@ -73,20 +73,20 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
     int size_value_addr=in_builtin_find("size");
     if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
     {
-        std::cout<<">> [runtime] builtin_setsize: cannot find values or wrong value type."<<std::endl;
+        std::cout<<">> [runtime] builtin_setsize: \"vector\" has wrong value type(must be vector).\n";
         ++error;
         return -1;
     }
     if(size_value_addr<0)
     {
-        std::cout<<">> [runtime] builtin_setsize: cannot find values or wrong value type."<<std::endl;
+        std::cout<<">> [runtime] builtin_setsize: \"size\" has wrong value type(must be string or number).\n";
         ++error;
         return -1;
     }
     int type=nasal_vm.gc_get(size_value_addr).get_type();
     if(type!=vm_number && type!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_setsize: size is not a number."<<std::endl;
+        std::cout<<">> [runtime] builtin_setsize: size is not a number.\n";
         ++error;
         return -1;
     }
@@ -100,14 +100,14 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
             number=(int)trans_string_to_number(str);
         else
         {
-            std::cout<<">> [runtime] builtin_setsize: size is not a numerable string."<<std::endl;
+            std::cout<<">> [runtime] builtin_setsize: size is not a numerable string.\n";
             ++error;
             return -1;
         }
     }
     if(number<0)
     {
-        std::cout<<">> [runtime] builtin_setsize: size must be greater than -1."<<std::endl;
+        std::cout<<">> [runtime] builtin_setsize: size must be greater than -1.\n";
         ++error;
         return -1;
     }
@@ -137,7 +137,7 @@ int nasal_runtime::builtin_system(int local_scope_addr)
     int str_value_addr=in_builtin_find("str");
     if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_system: cannot find values or wrong value type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_system: \"str\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
@@ -169,7 +169,7 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
     int value_addr=in_builtin_find("duration");
     if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_string && nasal_vm.gc_get(value_addr).get_type()!=vm_number))
     {
-        std::cout<<">> [runtime] builtin_sleep: cannot find values or wrong value type(must be string or numebr)."<<std::endl;
+        std::cout<<">> [runtime] builtin_sleep: \"duration\" has wrong value type(must be string or number).\n";
         ++error;
         return -1;
     }
@@ -181,7 +181,7 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
             sleep_time=(unsigned long)trans_string_to_number(str);
         else
         {
-            std::cout<<">> [runtime] builtin_sleep: this is not a numerable string."<<std::endl;
+            std::cout<<">> [runtime] builtin_sleep: this is not a numerable string.\n";
             ++error;
             return -1;
         }
@@ -199,7 +199,7 @@ int nasal_runtime::builtin_finput(int local_scope_addr)
     int value_addr=in_builtin_find("filename");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_finput: cannot find values or wrong value type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_finput: \"filename\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
@@ -228,13 +228,13 @@ int nasal_runtime::builtin_foutput(int local_scope_addr)
     int str_value_addr=in_builtin_find("str");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_foutput: cannot find values or wrong value type(filename must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_foutput: \"filename\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
     if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_foutput: cannot find values or wrong value type(file's content must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_foutput: \"str\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
@@ -254,13 +254,13 @@ int nasal_runtime::builtin_split(int local_scope_addr)
     int string_value_addr=in_builtin_find("string");
     if(delimeter_value_addr<0 || nasal_vm.gc_get(delimeter_value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_split: cannot find values or wrong value type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_split: \"delimeter\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
     if(string_value_addr<0 || nasal_vm.gc_get(string_value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_split: cannot find values or wrong value type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_split: \"string\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
@@ -269,7 +269,7 @@ int nasal_runtime::builtin_split(int local_scope_addr)
     int delimeter_len=delimeter.length();
     if(delimeter_len<1)
     {
-        std::cout<<">> [runtime] builtin_split: delimeter's length must be greater than 0."<<std::endl;
+        std::cout<<">> [runtime] builtin_split: delimeter's length must be greater than 0.\n";
         ++error;
         return -1;
     }
@@ -317,7 +317,7 @@ int nasal_runtime::builtin_rand(int local_scope_addr)
     int value_addr=in_builtin_find("seed");
     if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_number && nasal_vm.gc_get(value_addr).get_type()!=vm_nil))
     {
-        std::cout<<">> [runtime] builtin_rand: cannot find values or wrong value type(must be nil or number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_rand: \"seed\" has wrong value type(must be nil or number).\n";
         ++error;
         return -1;
     }
@@ -342,7 +342,7 @@ int nasal_runtime::builtin_id(int local_scope_addr)
     int value_addr=in_builtin_find("id");
     if(value_addr<0)
     {
-        std::cout<<">> [runtime] builtin_id: cannot find this value."<<std::endl;
+        std::cout<<">> [runtime] builtin_id: cannot find \"id\".\n";
         ++error;
         return -1;
     }
@@ -356,7 +356,7 @@ int nasal_runtime::builtin_int(int local_scope_addr)
     int value_addr=in_builtin_find("value");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_int: cannot find this value or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_int: \"value\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -371,14 +371,14 @@ int nasal_runtime::builtin_num(int local_scope_addr)
     int value_addr=in_builtin_find("value");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_num: cannot find this value or wrong value type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_num: \"value\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
     std::string str=nasal_vm.gc_get(value_addr).get_string();
     if(!check_numerable_string(str))
     {
-        std::cout<<">> [runtime] builtin_num: this is not a numerable string."<<std::endl;
+        std::cout<<">> [runtime] builtin_num: this is not a numerable string.\n";
         ++error;
         return -1;
     }
@@ -393,7 +393,7 @@ int nasal_runtime::builtin_pop(int local_scope_addr)
     int value_addr=in_builtin_find("vector");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
     {
-        std::cout<<">> [runtime] builtin_pop: cannot find this value or wrong value type(must be vector)."<<std::endl;
+        std::cout<<">> [runtime] builtin_pop: \"vector\" has wrong value type(must be vector).\n";
         ++error;
         return -1;
     }
@@ -405,7 +405,7 @@ int nasal_runtime::builtin_str(int local_scope_addr)
     int value_addr=in_builtin_find("number");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_str: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_str: \"number\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -420,7 +420,7 @@ int nasal_runtime::builtin_size(int local_scope_addr)
     int value_addr=in_builtin_find("object");
     if(value_addr<0)
     {
-        std::cout<<">> [runtime] builtin_size: cannot find values."<<std::endl;
+        std::cout<<">> [runtime] builtin_size: cannot find value \"object\".\n";
         ++error;
         return -1;
     }
@@ -452,13 +452,13 @@ int nasal_runtime::builtin_xor(int local_scope_addr)
     int b_addr=in_builtin_find("b");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_xor: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_xor: \"a\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
     if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_xor: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_xor: \"b\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -475,13 +475,13 @@ int nasal_runtime::builtin_and(int local_scope_addr)
     int b_addr=in_builtin_find("b");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_and: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_and: \"a\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
     if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_and: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_and: \"b\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -498,13 +498,13 @@ int nasal_runtime::builtin_or(int local_scope_addr)
     int b_addr=in_builtin_find("b");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_or: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_or: \"a\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
     if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_or: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_or: \"b\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -521,13 +521,13 @@ int nasal_runtime::builtin_nand(int local_scope_addr)
     int b_addr=in_builtin_find("b");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_nand: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_nand: \"a\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
     if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_nand: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_nand: \"b\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -543,7 +543,7 @@ int nasal_runtime::builtin_not(int local_scope_addr)
     int a_addr=in_builtin_find("a");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_not: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_not: \"a\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -558,7 +558,7 @@ int nasal_runtime::builtin_sin(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_sin: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_sin: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -573,7 +573,7 @@ int nasal_runtime::builtin_cos(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_cos: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_cos: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -588,7 +588,7 @@ int nasal_runtime::builtin_tan(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_tan: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_tan: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -603,7 +603,7 @@ int nasal_runtime::builtin_exp(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_exp: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_exp: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -618,7 +618,7 @@ int nasal_runtime::builtin_ln(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_ln: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_ln: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -633,7 +633,7 @@ int nasal_runtime::builtin_sqrt(int local_scope_addr)
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_sqrt: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_sqrt: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -649,13 +649,13 @@ int nasal_runtime::builtin_atan2(int local_scope_addr)
     int y_value_addr=in_builtin_find("y");
     if(x_value_addr<0 || nasal_vm.gc_get(x_value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_atan2: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_atan2: \"x\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
     if(y_value_addr<0 || nasal_vm.gc_get(y_value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_atan2: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_atan2: \"y\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -671,7 +671,7 @@ int nasal_runtime::builtin_time(int local_scope_addr)
     int value_addr=in_builtin_find("begin_time");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_time: cannot find values or wrong value type(must be number)."<<std::endl;
+        std::cout<<">> [runtime] builtin_time: \"begin_time\" has wrong value type(must be number).\n";
         ++error;
         return -1;
     }
@@ -687,13 +687,13 @@ int nasal_runtime::builtin_contains(int local_scope_addr)
     int key_addr=in_builtin_find("key");
     if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_contains: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        std::cout<<">> [runtime] builtin_contains: \"hash\" has wrong type(must be hash).\n";
         ++error;
         return -1;
     }
     if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_contains: cannot find value named \'key\' or wrong type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_contains: \"key\" has wrong type(must be string).\n";
         ++error;
         return -1;
     }
@@ -710,13 +710,13 @@ int nasal_runtime::builtin_delete(int local_scope_addr)
     int key_addr=in_builtin_find("key");
     if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_delete: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        std::cout<<">> [runtime] builtin_delete: \"hash\" has wrong type(must be hash).\n";
         ++error;
         return -1;
     }
     if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_delete: cannot find value named \'key\' or wrong type(must be string)."<<std::endl;
+        std::cout<<">> [runtime] builtin_delete: \"key\" has wrong type(must be string).\n";
         ++error;
         return -1;
     }
@@ -731,7 +731,7 @@ int nasal_runtime::builtin_getkeys(int local_scope_addr)
     int hash_addr=in_builtin_find("hash");
     if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_delete: cannot find value named \'hash\' or wrong type(must be hash)."<<std::endl;
+        std::cout<<">> [runtime] builtin_delete: \"hash\" has wrong type(must be hash).\n";
         ++error;
         return -1;
     }
@@ -743,7 +743,22 @@ int nasal_runtime::builtin_import(int local_scope_addr)
     // this function is used in preprocessing.
     // this function will return nothing when running.
     ++error;
-    std::cout<<">> [runtime] cannot use import when running."<<std::endl;
+    std::cout<<">> [runtime] builtin_import: cannot use import when running.\n";
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    return ret_addr;
+}
+int nasal_runtime::builtin_die(int local_scope_addr)
+{
+    int str_addr=in_builtin_find("str");
+    if(str_addr<0 || !in_builtin_check(str_addr,vm_string))
+    {
+        std::cout<<">> [runtime] builtin_die: \"str\" has wrong type(must be string).\n";
+        ++error;
+        return -1;
+    }
+    ++error;
+    std::cout<<">> [runtime] error: "<<nasal_vm.gc_get(str_addr).get_string()<<'\n';
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_nil);
     return ret_addr;
