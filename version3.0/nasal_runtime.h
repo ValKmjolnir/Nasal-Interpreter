@@ -100,6 +100,7 @@ private:
     int builtin_delete(int);
     int builtin_getkeys(int);
     int builtin_import(int);
+    int builtin_die(int);
     void load_builtin_function();
 public:
     nasal_runtime();
@@ -165,6 +166,7 @@ void nasal_runtime::load_builtin_function()
         {"nasal_call_builtin_delete",        nasal_runtime::builtin_delete},
         {"nasal_call_builtin_get_keys",      nasal_runtime::builtin_getkeys},
         {"nasal_call_import",                nasal_runtime::builtin_import},
+        {"nasal_call_builtin_die",           nasal_runtime::builtin_die},
         {"",                                 NULL}
     };
     for(int i=0;builtin_func_table[i].func_pointer;++i)
