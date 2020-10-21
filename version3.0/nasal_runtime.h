@@ -1586,6 +1586,7 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             for(int i=0;i<id_size;++i)
             {
                 int tmp_addr=ref_vector.get_value_address(i);
+                nasal_vm.add_reference(tmp_addr);
                 nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
             }
             nasal_vm.del_reference(value_addr);
@@ -1628,9 +1629,7 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
     else
     {
         int value_addr=calculation(value_node,local_scope_addr);
-        if(value_addr<0)
-            return;
-        if(nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
+        if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
         {
             std::cout<<">> [runtime] multi_assignment: must use vector in multi-assignment.\n";
             ++error;
