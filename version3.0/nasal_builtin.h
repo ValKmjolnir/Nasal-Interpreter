@@ -763,4 +763,27 @@ int nasal_runtime::builtin_die(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_type(vm_nil);
     return ret_addr;
 }
+int nasal_runtime::builtin_type(int local_scope_addr)
+{
+    int value_addr=in_builtin_find("object");
+    if(value_addr<0)
+    {
+        std::cout<<">> [runtime] builtin_type: cannot find \"object\".\n";
+        ++error;
+        return -1;
+    }
+    int type=nasal_vm.gc_get(value_addr).get_type();
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    switch(type)
+    {
+        case vm_nil:      nasal_vm.gc_get(ret_addr).set_string("nil");break;
+        case vm_number:   nasal_vm.gc_get(ret_addr).set_string("number");break;
+        case vm_string:   nasal_vm.gc_get(ret_addr).set_string("string");break;
+        case vm_vector:   nasal_vm.gc_get(ret_addr).set_string("vector");break;
+        case vm_hash:     nasal_vm.gc_get(ret_addr).set_string("hash");break;
+        case vm_function: nasal_vm.gc_get(ret_addr).set_string("function");break;
+    }
+    return ret_addr;
+}
 #endif
