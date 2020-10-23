@@ -25,24 +25,8 @@ I wrote the lexer, parser and runtime(nasal virtual machine/ast-runtime virtual 
 They found it easier for them to check errors before copying nasal-codes in nasal-console in Flightgear to test.
   
 # Lexical Analysis
-  
-What do it's outputs look like?
 
-> ( identifier   | start )
-
-> ( operator     | ; )
-
-> ( reserve word | print )
-
-> ( operator     | ( )
-
-> ( string       | Engine started )
-
-> ( operator     | ) )
-
-This is what it outputs.
-
-And the flow chart of lexer is here:
+The flow chart of lexer is here:
 
 [![nasal_lexer.png](pic/nasal_lexer.png?raw=true)](https://github.com/ValKmjolnir/Nasal-Interpreter/blob/master/pic/nasal_lexer.png)
 

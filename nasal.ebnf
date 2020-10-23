@@ -1,0 +1,132 @@
+(*
+ <>  must choose
+ []  can choose
+ {}  can repeat 0 to infinite time(s)
+ |   or
+ ::= is defined as
+*)
+
+nil   ::= nil;
+id    ::= identifier;
+number::= number;
+string::= string;
+vector::= 
+    '[' {calculation ','} ']'
+;
+hash  ::=
+    '{' {hashmember ','} '}'
+;
+hashmember::=
+    id|string ':' calculation
+;
+function::= 
+    func argument_list expressions
+;
+argument_list::=
+    '(' [{id ','} ([id '...']|{id '=' scalar ','})] ')'
+;
+expr::=
+    definition
+    |multi_assignment
+    |calculation
+    |loop
+    |conditional
+    |return_expr
+    |continue_expr
+    |break_expr
+;
+expressions::=
+    '{' {expr} '}'
+;
+calculation::=
+    calculation '?' calculation ':' calculation
+    |or_expr
+    |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
+;
+or_expr::=
+    and_expr or and_expr
+;
+and_expr::=
+    cmp_expr and cmp_expr
+;
+cmp_expr::=
+    additive_expr ('==' | '!=' | '>' | '<' | '>=' | '<=') additive_expr
+;
+additive_expr::=
+    multive_expr ('+' | '-' | '~') multive_expr
+;
+multive_expr::=
+    (unary|scalar) ('*' | '/') (unary|scalar)
+;
+unary::=
+    ('-'|'!') scalar
+;
+scalar::=
+    function {call_scalar}
+    |identifier {call_scalar}
+    |vector {call_scalar}
+    |hash {call_scalar}
+    |number
+    |string
+    |'(' calculation ')' {call_scalar}
+;
+call_scalar::=
+    call_hash
+    |call_vector
+    |call_func
+;
+call_hash::=
+    '.' id
+;
+call_vector::=
+    '[' {(subvec) ','} ']'
+;
+call_func::=
+    '(' {calculation ','} ')'
+    |'(' {hashmember ','} ')'
+;
+subvec::=
+    [calculation] ':' [calculation]
+;
+definition::=
+    var id '=' calculation
+    |var '(' multi_id ')' '=' (calculation | multi_scalar)
+    |'(' var multi_id ')' '=' (calculation | multi_scalar)
+;
+multi_id::=
+    <id> {',' id}
+;
+multi_scalar::=
+    '(' <calculation> {',' calculation} ')'
+;
+multi_assignment::=
+    multi_scalar '=' (multi_scalar|calculation)
+;
+loop::=
+    while_loop
+    |for_loop
+    |forei_loop
+;
+while_loop::=
+    while '(' calculation ')' expressions
+;
+for_loop::=
+    for '(' [definition|calculation] ';' [calculation] ';' [calculation] ')' expressions
+;
+forei_loop::=
+    (forindex | foreach) '(' (definition | calculation) ';' calculation ')' expressions
+;
+conditional::=
+    if '(' calculation ')' expressions
+    {elsif '(' calculation ')' expressions}
+    [else expressions]
+;
+continue_expr::=
+    continue
+;
+break_expr::=
+    break
+;
+return_expr::=
+    return [calculation]
+;
