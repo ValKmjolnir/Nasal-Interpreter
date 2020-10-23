@@ -850,7 +850,14 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             ++error;
             return -1;
         }
-        std::string str=node.get_children()[0].get_str();
+        int str_addr=calculation(node.get_children()[0],local_scope_addr);
+        if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
+        {
+            std::cout<<">> [runtime] call_vector: must use a string as the key.\n";
+            ++error;
+            return -1;
+        }
+        std::string str=nasal_vm.gc_get(str_addr).get_string();
         int value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(str);
         nasal_vm.add_reference(value_addr);
         return_value_addr=value_addr;
