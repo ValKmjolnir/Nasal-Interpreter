@@ -1,20 +1,18 @@
 #include "nasal.h"
 
-nasal_resource resource;
 nasal_lexer    lexer;
 nasal_parse    parse;
 nasal_import   preprocessor;
 nasal_codegen  code_generator;
-std::string    command;
 std::string    inputfile="null";
 nasal_runtime  runtime;
 
 void help()
 {
 	std::cout<<">> [\"file\"] input a file name.\n";
+	std::cout<<">> [help  ] show help.\n";
 	std::cout<<">> [clear ] clear the screen.\n";
 	std::cout<<">> [del   ] clear the input filename.\n";
-	std::cout<<">> [rs    ] print source code.\n";
 	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
 	std::cout<<">> [run   ] run abstract syntax tree.\n";
@@ -37,7 +35,6 @@ void logo()
 
 void del_func()
 {
-	resource.clear();
 	lexer.clear();
 	parse.clear();
 	inputfile="null";
@@ -53,12 +50,8 @@ void die(std::string stage,std::string filename)
 
 void lex_func()
 {
-	if(!resource.input_file(inputfile))
-	{
-		die("resource",inputfile);
-		return;
-	}
-	lexer.scanner(resource.get_file());
+	lexer.openfile(inputfile);
+	lexer.scanner();
 	if(lexer.get_error())
 	{
 		die("lexer",inputfile);
@@ -70,12 +63,8 @@ void lex_func()
 
 void ast_print()
 {
-	if(!resource.input_file(inputfile))
-	{
-		die("resource",inputfile);
-		return;
-	}
-	lexer.scanner(resource.get_file());
+	lexer.openfile(inputfile);
+	lexer.scanner();
 	if(lexer.get_error())
 	{
 		die("lexer",inputfile);
@@ -93,12 +82,8 @@ void ast_print()
 }
 void runtime_start()
 {
-	if(!resource.input_file(inputfile))
-	{
-		die("resource",inputfile);
-		return;
-	}
-	lexer.scanner(resource.get_file());
+	lexer.openfile(inputfile);
+	lexer.scanner();
 	if(lexer.get_error())
 	{
 		die("lexer",inputfile);
@@ -124,12 +109,8 @@ void runtime_start()
 
 void codegen_start()
 {
-	if(!resource.input_file(inputfile))
-	{
-		die("resource",inputfile);
-		return;
-	}
-	lexer.scanner(resource.get_file());
+	lexer.openfile(inputfile);
+	lexer.scanner();
 	if(lexer.get_error())
 	{
 		die("lexer",inputfile);
@@ -173,6 +154,7 @@ void execution_start()
 
 int main()
 {
+	std::string command;
 #ifdef _WIN32
 	// use chcp 65001 to use unicode io
 	system("chcp 65001");
@@ -213,11 +195,6 @@ int main()
 		}
 		else if(command=="del")
 			del_func();
-		else if(command=="rs")
-		{
-			if(resource.input_file(inputfile))
-				resource.print_file();
-		}
 		else if(command=="lex")
 			lex_func();
 		else if(command=="ast")
@@ -233,16 +210,7 @@ int main()
 		else if(command=="exit")
 			break;
 		else
-		{
 			inputfile=command;
-			std::ifstream fin(command);
-			if(fin.fail())
-			{
-				std::cout<<">> [file] cannot open file \""<<command<<"\".\n";
-				inputfile="null";
-			}
-			fin.close();
-		}
 	}
     return 0;
 }

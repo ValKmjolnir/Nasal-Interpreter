@@ -4,7 +4,6 @@
 class nasal_import
 {
 private:
-    nasal_resource import_src;
     nasal_lexer    import_lex;
     nasal_parse    import_par;
     nasal_ast      import_ast;
@@ -26,7 +25,6 @@ public:
 
 nasal_import::nasal_import()
 {
-    import_src.clear();
     import_lex.clear();
     import_par.clear();
     import_ast.clear();
@@ -43,7 +41,6 @@ void nasal_import::die(std::string filename,std::string error_stage)
 
 void nasal_import::init()
 {
-    import_src.clear();
     import_lex.clear();
     import_par.clear();
     return;
@@ -112,12 +109,8 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return tmp;
     
     // start importing...
-    if(!import_src.input_file(filename))
-    {
-        this->die(filename,"resource");
-        return tmp;
-    }
-    import_lex.scanner(import_src.get_file());
+    import_lex.openfile(filename);
+    import_lex.scanner();
     if(import_lex.get_error())
     {
         this->die(filename,"lexer");
