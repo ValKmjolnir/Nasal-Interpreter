@@ -1261,7 +1261,14 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
             ++error;
             return -1;
         }
-        std::string str=node.get_children()[0].get_str();
+        int str_addr=calculation(node.get_children()[0],local_scope_addr);
+        if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
+        {
+            std::cout<<">> [runtime] call_vector_mem: must use a string as the key.\n";
+            ++error;
+            return -1;
+        }
+        std::string str=nasal_vm.gc_get(str_addr).get_string();
         return_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(str);
     }
     return return_mem_addr;
