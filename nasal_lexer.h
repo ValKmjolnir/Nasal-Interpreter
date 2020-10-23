@@ -81,14 +81,19 @@ class nasal_lexer
 {
 private:
     int error;
+	int res_size;
+	int line;
+	int ptr;
+	std::vector<char> res;
     std::vector<token> token_list;
-	std::string identifier_gen(std::vector<char>&,int&,int&);
+	std::string identifier_gen();
 	void generate_number_error(int,std::string);
-    std::string number_gen(std::vector<char>&,int&,int&);
-    std::string string_gen(std::vector<char>&,int&,int&);
+    std::string number_gen();
+    std::string string_gen();
 public:
     void clear();
-    void scanner(std::vector<char>&);
+	void openfile(std::string);
+    void scanner();
     void print_token();
     int  get_error();
 	std::vector<token>& get_token_list();
@@ -96,13 +101,41 @@ public:
 
 void nasal_lexer::clear()
 {
+	error=0;
+	res_size=0;
+	line=0;
+	ptr=0;
+	res.clear();
     token_list.clear();
     return;
 }
 
-std::string nasal_lexer::identifier_gen(std::vector<char>& res,int& ptr,int& line)
+void nasal_lexer::openfile(std::string filename)
 {
-	int res_size=res.size();
+	error=0;
+	res.clear();
+    std::ifstream fin(filename,std::ios::binary);
+    if(fin.fail())
+    {
+		++error;
+        std::cout<<">> [lexer] cannot open file \""<<filename<<"\".\n";
+        fin.close();
+        return;
+    }
+    while(!fin.eof())
+    {
+        char c=fin.get();
+        if(fin.eof())
+            break;
+        res.push_back(c);
+    }
+    fin.close();
+	res_size=res.size();
+    return;
+}
+
+std::string nasal_lexer::identifier_gen()
+{
 	std::string token_str="";
 	while(ptr<res_size && IS_IDENTIFIER_BODY(res[ptr]))
 		token_str+=res[ptr++];
@@ -116,9 +149,8 @@ void nasal_lexer::generate_number_error(int line,std::string token_str)
 	std::cout<<">> [lexer] line "<<line<<": \""<<token_str<<"\" is not a correct number.\n";
 	return;
 }
-std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
+std::string nasal_lexer::number_gen()
 {
-	int res_size=res.size();
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
 	std::string token_str="";
 	// generate hex number
@@ -203,9 +235,8 @@ std::string nasal_lexer::number_gen(std::vector<char>& res,int& ptr,int& line)
 	return token_str;
 }
 
-std::string nasal_lexer::string_gen(std::vector<char>& res,int& ptr,int& line)
+std::string nasal_lexer::string_gen()
 {
-	int res_size=res.size();
 	std::string token_str="";
 	char str_begin=res[ptr++];
 	if(ptr>=res_size) return token_str;
@@ -246,11 +277,12 @@ std::string nasal_lexer::string_gen(std::vector<char>& res,int& ptr,int& line)
 	return token_str;
 }
 
-void nasal_lexer::scanner(std::vector<char>& res)
+void nasal_lexer::scanner()
 {
-    error=0;
     token_list.clear();
-    int line=1,ptr=0,res_size=res.size();
+    line=1;
+	ptr=0;
+
 	std::string token_str;
 	while(ptr<res_size)
 	{
@@ -263,7 +295,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		if(ptr>=res_size) break;
 		if(IS_IDENTIFIER_HEAD(res[ptr]))
 		{
-			token_str=identifier_gen(res,ptr,line);
+			token_str=identifier_gen();
 			token new_token;
 			new_token.line=line;
             new_token.str=token_str;
@@ -280,7 +312,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		}
 		else if(IS_DIGIT(res[ptr]))
 		{
-			token_str=number_gen(res,ptr,line);
+			token_str=number_gen();
 			token new_token;
 			new_token.line=line;
             new_token.str=token_str;
@@ -289,7 +321,7 @@ void nasal_lexer::scanner(std::vector<char>& res)
 		}
 		else if(IS_STRING_HEAD(res[ptr]))
 		{
-			token_str=string_gen(res,ptr,line);
+			token_str=string_gen();
 			token new_token;
 			new_token.line=line;
 			new_token.type=tok_string;

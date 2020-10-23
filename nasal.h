@@ -11,8 +11,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-/* if thread is used, don't forget to add -std=c++11 or higher standard before executing */
-// #include <thread>
+#include <thread>
 #include <list>
 #include <stack>
 #include <queue>
@@ -21,7 +20,6 @@
 
 #include "nasal_enum.h"
 #include "nasal_misc.h"
-#include "nasal_resource.h"
 #include "nasal_lexer.h"
 #include "nasal_ast.h"
 #include "nasal_parse.h"
