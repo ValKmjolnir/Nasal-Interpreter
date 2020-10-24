@@ -59,11 +59,11 @@ multive_expr::=
     (unary|scalar) ('*' | '/') (unary|scalar)
 ;
 unary::=
-    ('-'|'!') scalar
+    ('-'|'!') (unary|scalar)
 ;
 scalar::=
     function {call_scalar}
-    |identifier {call_scalar}
+    |[func] identifier {call_scalar}
     |vector {call_scalar}
     |hash {call_scalar}
     |number

@@ -140,7 +140,7 @@ enum parse_error
 void error_info(int line,int error_type,std::string error_str="")
 {
     std::string detail;
-    std::cout<<">> [parse] error_info: [line "<<line<<"] ";
+    std::cout<<">> [parse] error: [line "<<line<<"] ";
     switch(error_type)
     {
         case unknown:              std::cout<<"unknown error.\n";                       break;
