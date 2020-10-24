@@ -834,7 +834,13 @@ nasal_ast nasal_parse::unary()
         case tok_not:node.set_type(ast_unary_not);break;
     }
     ++ptr;
-    if(ptr<tok_list_size) node.add_child(scalar());
+    if(ptr<tok_list_size)
+    {
+        if(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)
+            node.add_child(unary());
+        else
+            node.add_child(scalar());
+    }
     else{ ++error; error_info(error_line,lack_calculation);}
     return node;
 }
