@@ -114,9 +114,9 @@ void nasal_codegen::output_exec(std::string filename,nasal_ast& root)
     for(int i=0;i<string_table.size();++i)
     {
         int len=string_table[i].length();
+        output_int(len,file_header);
         for(int j=0;j<len;++j)
             file_header.push_back((unsigned char)string_table[i][j]);
-        file_header.push_back(0);
     }
 
     // output to file
@@ -208,10 +208,10 @@ void nasal_codegen::load_exec(std::string filename,nasal_ast& root)
     for(int i=0;i<string_num;++i)
     {
         std::string tmp="";
-        while(1)
+        int len=input_int(fin);
+        for(int j=0;j<len;++j)
         {
             unsigned char c=(unsigned char)fin.get();
-            if(!c || fin.eof()) break;
             tmp+=c;
         }
         string_table.push_back(tmp);
