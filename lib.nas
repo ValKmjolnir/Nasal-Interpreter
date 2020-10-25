@@ -90,6 +90,10 @@ var type=func(object)
 {
     return nasal_call_builtin_type(object);
 }
+var substr=func(str,begin,length)
+{
+    return nasal_call_builtin_substr(str,begin,length);
+}
 
 var io=
 {
