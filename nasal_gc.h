@@ -824,8 +824,7 @@ int nasal_scalar::nasal_scalar_link(int a_scalar_addr,int b_scalar_addr)
 int nasal_scalar::nasal_scalar_and(int a_scalar_addr,int b_scalar_addr)
 {
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
-    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function || b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function)
     {
         std::cout<<">> [vm] scalar_and: hash and vector cannot take part in and calculation."<<std::endl;
         return -1;
@@ -871,6 +870,12 @@ int nasal_scalar::nasal_scalar_and(int a_scalar_addr,int b_scalar_addr)
         }
     }
 
+    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
+    if(b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
+    {
+        std::cout<<">> [vm] scalar_and: hash and vector cannot take part in and calculation."<<std::endl;
+        return -1;
+    }
     if(b_ref.type==vm_number)
     {
         double number=b_ref.get_number();
@@ -930,8 +935,7 @@ int nasal_scalar::nasal_scalar_and(int a_scalar_addr,int b_scalar_addr)
 int nasal_scalar::nasal_scalar_or(int a_scalar_addr,int b_scalar_addr)
 {
     nasal_scalar& a_ref=nasal_vm.gc_get(a_scalar_addr);
-    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
-    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function || b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
+    if(a_ref.type==vm_hash || a_ref.type==vm_vector || a_ref.type==vm_function)
     {
         std::cout<<">> [vm] scalar_or: hash and vector cannot take part in or calculation."<<std::endl;
         return -1;
@@ -954,6 +958,12 @@ int nasal_scalar::nasal_scalar_or(int a_scalar_addr,int b_scalar_addr)
         }
     }
 
+    nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
+    if(b_ref.type==vm_hash || b_ref.type==vm_vector || b_ref.type==vm_function)
+    {
+        std::cout<<">> [vm] scalar_or: hash and vector cannot take part in or calculation."<<std::endl;
+        return -1;
+    }
     if(b_ref.type==vm_number)
     {
         if(b_ref.get_number()!=0)

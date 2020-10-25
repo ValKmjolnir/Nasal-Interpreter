@@ -1426,11 +1426,22 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     else if(calculation_type==ast_and)
     {
         int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
-        int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
-        ret_address=nasal_scalar_calculator.nasal_scalar_and(left_gc_addr,right_gc_addr);
-        // delete the reference of temporary values
-        nasal_vm.del_reference(left_gc_addr);
-        nasal_vm.del_reference(right_gc_addr);
+        if(!check_condition(left_gc_addr))
+        {
+            // delete the reference of temporary values
+            nasal_vm.del_reference(left_gc_addr);
+            ret_address=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(ret_address).set_type(vm_number);
+            nasal_vm.gc_get(ret_address).set_number(0);
+        }
+        else
+        {
+            int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
+            ret_address=nasal_scalar_calculator.nasal_scalar_and(left_gc_addr,right_gc_addr);
+            // delete the reference of temporary values
+            nasal_vm.del_reference(left_gc_addr);
+            nasal_vm.del_reference(right_gc_addr);
+        }
     }
     else if(calculation_type==ast_or)
     {
