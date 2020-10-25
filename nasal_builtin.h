@@ -267,18 +267,27 @@ int nasal_runtime::builtin_split(int local_scope_addr)
     std::string delimeter=nasal_vm.gc_get(delimeter_value_addr).get_string();
     std::string source=nasal_vm.gc_get(string_value_addr).get_string();
     int delimeter_len=delimeter.length();
-    if(delimeter_len<1)
-    {
-        std::cout<<">> [runtime] builtin_split: delimeter's length must be greater than 0.\n";
-        ++error;
-        return -1;
-    }
     int source_len=source.length();
 
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_vector);
     nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
     std::string tmp="";
+
+    if(!delimeter_len)
+    {
+        for(int i=0;i<source_len;++i)
+        {
+            tmp+=source[i];
+            int str_addr=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(str_addr).set_type(vm_string);
+            nasal_vm.gc_get(str_addr).set_string(tmp);
+            ref_vec.add_elem(str_addr);
+            tmp="";
+        }
+        return ret_addr;
+    }
+    
     for(int i=0;i<source_len;++i)
     {
         bool check_delimeter=false;
@@ -784,6 +793,46 @@ int nasal_runtime::builtin_type(int local_scope_addr)
         case vm_hash:     nasal_vm.gc_get(ret_addr).set_string("hash");break;
         case vm_function: nasal_vm.gc_get(ret_addr).set_string("function");break;
     }
+    return ret_addr;
+}
+int nasal_runtime::builtin_substr(int local_scope_addr)
+{
+    int str_addr=in_builtin_find("str");
+    int begin_addr=in_builtin_find("begin");
+    int length_addr=in_builtin_find("length");
+    if(str_addr<0 || !in_builtin_check(str_addr,vm_string))
+    {
+        std::cout<<">> [runtime] builtin_substr: cannot find \"str\" or wrong type(must be string).\n";
+        ++error;
+        return -1;
+    }
+    if(begin_addr<0 || !in_builtin_check(begin_addr,vm_number))
+    {
+        std::cout<<">> [runtime] builtin_substr: cannot find \"begin\" or wrong type(must be number).\n";
+        ++error;
+        return -1;
+    }
+    if(length_addr<0 || !in_builtin_check(length_addr,vm_number))
+    {
+        std::cout<<">> [runtime] builtin_substr: cannot find \"length\" or wrong type(must be number).\n";
+        ++error;
+        return -1;
+    }
+    std::string str=nasal_vm.gc_get(str_addr).get_string();
+    int begin=(int)nasal_vm.gc_get(begin_addr).get_number();
+    int len=(int)nasal_vm.gc_get(length_addr).get_number();
+    if(begin>=str.length() || begin+len>=str.length())
+    {
+        std::cout<<">> [runtime] builtin_substr: index out of range.\n";
+        ++error;
+        return -1;
+    }
+    std::string tmp="";
+    for(int i=begin;i<begin+len;++i)
+        tmp+=str[i];
+    int ret_addr=nasal_vm.gc_alloc();
+    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    nasal_vm.gc_get(ret_addr).set_string(tmp);
     return ret_addr;
 }
 #endif
