@@ -291,10 +291,10 @@ int nasal_runtime::main_progress()
         }
         switch(ret_state)
         {
-            case rt_break:std::cout<<">> [runtime] main_progress: cannot use break in main progress.\n";++error;break;
-            case rt_continue:std::cout<<">> [runtime] main_progress: cannot use continue in main progress.\n";++error;break;
-            case rt_return:std::cout<<">> [runtime] main_progress: cannot use return in main progress.\n";++error;break;
-            case rt_error:std::cout<<">> [runtime] main_progress: error occurred when executing main progress.\n";++error;break;
+            case rt_break:std::cout<<">> [runtime] main: cannot use break in main progress.\n";++error;break;
+            case rt_continue:std::cout<<">> [runtime] main: cannot use continue in main progress.\n";++error;break;
+            case rt_return:std::cout<<">> [runtime] main: cannot use return in main progress.\n";++error;break;
+            case rt_error:std::cout<<">> [runtime] main: error occurred when executing main progress.\n";++error;break;
         }
         if(error)
         {
