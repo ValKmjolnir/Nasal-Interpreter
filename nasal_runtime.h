@@ -581,13 +581,10 @@ bool nasal_runtime::check_condition(int value_addr)
     else if(type==vm_string)
     {
         std::string str=nasal_vm.gc_get(value_addr).get_string();
-        if(!check_numerable_string(str))
-        {
-            std::cout<<">> [runtime] check_condition: error value type, \'"<<str<<"\' is not a numerable string.\n";
-            ++error;
-            return -1;
-        }
-        return (trans_string_to_number(str)!=0);
+        double number=trans_string_to_number(str);
+        if(std::isnan(number))
+            return false;
+        return (number!=0);
     }
     else if(type==vm_nil)
         return false;
@@ -729,13 +726,14 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 if(begin_value_type==vm_string)
                 {
                     std::string str=nasal_vm.gc_get(begin_value_addr).get_string();
-                    if(!check_numerable_string(str))
+                    double number=trans_string_to_number(str);
+                    if(std::isnan(number))
                     {
                         std::cout<<">> [runtime] call_vector: begin index is not a numerable string.\n";
                         ++error;
                         return -1;
                     }
-                    begin_index=(int)trans_string_to_number(str);
+                    begin_index=(int)number;
                     begin_is_nil=false;
                 }
                 else if(begin_value_type==vm_number)
@@ -747,13 +745,14 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 if(end_value_type==vm_string)
                 {
                     std::string str=nasal_vm.gc_get(end_value_addr).get_string();
-                    if(!check_numerable_string(str))
+                    double number=trans_string_to_number(str);
+                    if(std::isnan(number))
                     {
-                        std::cout<<">> [runtime] call_vector: end index is not a numerable string.\n";
+                        std::cout<<">> [runtime] call_vector: begin index is not a numerable string.\n";
                         ++error;
                         return -1;
                     }
-                    end_index=(int)trans_string_to_number(str);
+                    begin_index=(int)number;
                     end_is_nil=false;
                 }
                 else if(end_value_type==vm_number)
@@ -803,13 +802,14 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 if(index_value_type==vm_string)
                 {
                     std::string str=nasal_vm.gc_get(index_value_addr).get_string();
-                    if(!check_numerable_string(str))
+                    double number=trans_string_to_number(str);
+                    if(std::isnan(number))
                     {
                         std::cout<<">> [runtime] call_vector: index is not a numerable string.\n";
                         ++error;
                         return -1;
                     }
-                    index_num=(int)trans_string_to_number(str);
+                    index_num=(int)number;
                 }
                 else
                     index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
@@ -890,13 +890,14 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         if(index_value_type==vm_string)
         {
             std::string str=nasal_vm.gc_get(index_value_addr).get_string();
-            if(!check_numerable_string(str))
+            double number=trans_string_to_number(str);
+            if(std::isnan(number))
             {
                 std::cout<<">> [runtime] call_vector: index is not a numerable string.\n";
                 ++error;
                 return -1;
             }
-            index_num=(int)trans_string_to_number(str);
+            index_num=(int)number;
         }
         else
             index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
@@ -1242,13 +1243,14 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
         if(index_value_type==vm_string)
         {
             std::string str=nasal_vm.gc_get(index_value_addr).get_string();
-            if(!check_numerable_string(str))
+            double number=trans_string_to_number(str);
+            if(std::isnan(number))
             {
                 std::cout<<">> [runtime] call_vector_mem: index is not a numerable string.\n";
                 ++error;
                 return -1;
             }
-            index_num=(int)trans_string_to_number(str);
+            index_num=(int)number;
         }
         else
             index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
@@ -1428,7 +1430,6 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         int left_gc_addr=calculation(node.get_children()[0],local_scope_addr);
         if(!check_condition(left_gc_addr))
         {
-            // delete the reference of temporary values
             nasal_vm.del_reference(left_gc_addr);
             ret_address=nasal_vm.gc_alloc();
             nasal_vm.gc_get(ret_address).set_type(vm_number);
@@ -1437,10 +1438,19 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         else
         {
             int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
-            ret_address=nasal_scalar_calculator.nasal_scalar_and(left_gc_addr,right_gc_addr);
-            // delete the reference of temporary values
-            nasal_vm.del_reference(left_gc_addr);
-            nasal_vm.del_reference(right_gc_addr);
+            if(!check_condition(right_gc_addr))
+            {
+                nasal_vm.del_reference(left_gc_addr);
+                nasal_vm.del_reference(right_gc_addr);
+                ret_address=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(ret_address).set_type(vm_number);
+                nasal_vm.gc_get(ret_address).set_number(0);
+            }
+            else
+            {
+                nasal_vm.del_reference(left_gc_addr);
+                ret_address=right_gc_addr;
+            }
         }
     }
     else if(calculation_type==ast_or)
@@ -1451,10 +1461,19 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         else
         {
             int right_gc_addr=calculation(node.get_children()[1],local_scope_addr);
-            ret_address=nasal_scalar_calculator.nasal_scalar_or(left_gc_addr,right_gc_addr);
-            // delete the reference of temporary values
-            nasal_vm.del_reference(left_gc_addr);
-            nasal_vm.del_reference(right_gc_addr);
+            if(check_condition(right_gc_addr))
+            {
+                nasal_vm.del_reference(left_gc_addr);
+                ret_address=right_gc_addr;
+            }
+            else
+            {
+                nasal_vm.del_reference(left_gc_addr);
+                nasal_vm.del_reference(right_gc_addr);
+                ret_address=nasal_vm.gc_alloc();
+                nasal_vm.gc_get(ret_address).set_type(vm_number);
+                nasal_vm.gc_get(ret_address).set_number(0);
+            }
         }
     }
     else if(calculation_type==ast_unary_not)
@@ -1546,13 +1565,13 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     }
     else
     {
-        std::cout<<">> [runtime] calculation: this expression cannot be calculated.expression type:"<<ast_str(node.get_type())<<".\n";
+        std::cout<<">> [runtime] calculation: expression type:"<<ast_str(node.get_type())<<" cannot be calculated.\n";
         ++error;
         return -1;
     }
     if(ret_address<0)
     {
-        std::cout<<">> [runtime] calculation: incorrect values are used in calculation.\n";
+        std::cout<<">> [runtime] calculation: incorrect values.\n";
         ++error;
     }
     return ret_address;

@@ -1,21 +1,9 @@
 import("lib.nas");
 
-var s=io.fin("lexer.nas");
+var s=io.fin("a.nas");
 s=split('',s);
 var len=size(s);
 var ptr=0;
-
-var cmp=func(s1,s2)
-{
-    var size1=size(s1);
-    var size2=size(s2);
-    if(size1!=size2)
-        return size1<size2;
-    for(var i=0;i<size1;i+=1)
-        if(s1[i]>s2[i])
-            return 0;
-    return 1;
-}
 
 var jump_note=func()
 {
@@ -30,10 +18,10 @@ var generate_id=func()
     var tmp="";
     while(ptr<len)
     {
-        if('a'[0]<=s[ptr][0] and s[ptr][0]<='z'[0]
-        or 'A'[0]<=s[ptr][0] and s[ptr][0]<='Z'[0]
+        if('a'<=s[ptr] and s[ptr]<='z'
+        or 'A'<=s[ptr] and s[ptr]<='Z'
         or s[ptr]=='_'
-        or '0'[0]<=s[ptr][0] and s[ptr][0]<='9'[0])
+        or '0'<=s[ptr] and s[ptr]<='9')
             tmp~=s[ptr];
         else
             break;
@@ -86,7 +74,7 @@ var generate_number=func()
     if(s[ptr]=='x')
     {
         ptr+=1;
-        while(ptr<len and ('a'[0]<=s[ptr][0] and s[ptr][0]<='f'[0] or '0'[0]<=s[ptr][0] and s[ptr][0]<='9'[0]))
+        while(ptr<len and ('a'<=s[ptr] and s[ptr]<='f' or '0'<=s[ptr] and s[ptr]<='9'))
         {
             number~=s[ptr];
             ptr+=1;
@@ -96,7 +84,7 @@ var generate_number=func()
     elsif(s[ptr]=='o')
     {
         ptr+=1;
-        while(ptr<len and ('0'[0]<=s[ptr][0] and s[ptr][0]<='7'[0]))
+        while(ptr<len and ('0'<=s[ptr] and s[ptr]<='7'))
         {
             number~=s[ptr];
             ptr+=1;
@@ -104,7 +92,7 @@ var generate_number=func()
         return num(number);
     }
 
-    while(ptr<len and ('0'[0]<=s[ptr][0] and s[ptr][0]<='9'[0]))
+    while(ptr<len and ('0'<=s[ptr] and s[ptr]<='9'))
     {
         number~=s[ptr];
         ptr+=1;
@@ -113,6 +101,27 @@ var generate_number=func()
         number~=s[ptr];
     else
         return num(number);
+    ptr+=1;
+    while(ptr<len and ('0'<=s[ptr] and s[ptr]<='9'))
+    {
+        number~=s[ptr];
+        ptr+=1;
+    }
+    if(s[ptr]=='e' or s[ptr]=='E')
+        number~=s[ptr];
+    else
+        return num(number);
+    ptr+=1;
+    if(s[ptr]=='-' or s[ptr]=='+')
+    {
+        number~=s[ptr];
+        ptr+=1;
+    }
+    while(ptr<len and ('0'<=s[ptr] and s[ptr]<='9'))
+    {
+        number~=s[ptr];
+        ptr+=1;
+    }
     return num(number);
 }
 
@@ -150,22 +159,28 @@ var generate_operator=func()
     return tmp;
 }
 var cnt=0;
+var token=[];
 while(ptr<len)
 {
     if(s[ptr]=='#')
         jump_note();
-    elsif('a'[0]<=s[ptr][0] and s[ptr][0]<='z'[0] or 'A'[0]<=s[ptr][0] and s[ptr][0]<='Z'[0] or s[ptr]=='_')
-        print("(",cnt+=1," | ",generate_id(),")");
+    elsif('a'<=s[ptr] and s[ptr]<='z' or 'A'<=s[ptr] and s[ptr]<='Z' or s[ptr]=='_')
+        append(token,generate_id());
     elsif(s[ptr]=='\'' or s[ptr]=='\"')
-        print("(",cnt+=1," | \"",generate_str(),"\")");
-    elsif('0'[0]<=s[ptr][0] and s[ptr][0]<='9'[0])
-        print("(",cnt+=1," | ",generate_number(),")");
+        append(token,generate_str());
+    elsif('0'<=s[ptr] and s[ptr]<='9')
+        append(token,generate_number());
     else
     {
         var tmp=generate_operator();
         if(size(tmp))
-            print("(",cnt+=1," | ",tmp,")");
+            append(token,tmp);
     }
     if(ptr>=len)
         break;
+}
+foreach(var i;token)
+{
+    print("(",cnt," | ",i,")");
+    cnt+=1;
 }
