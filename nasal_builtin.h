@@ -96,14 +96,14 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
     else
     {
         std::string str=nasal_vm.gc_get(size_value_addr).get_string();
-        if(check_numerable_string(str))
-            number=(int)trans_string_to_number(str);
-        else
+        double tmp=trans_string_to_number(str);
+        if(std::isnan(tmp))
         {
             std::cout<<">> [runtime] builtin_setsize: size is not a numerable string.\n";
             ++error;
             return -1;
         }
+        number=(int)tmp;
     }
     if(number<0)
     {
@@ -177,14 +177,13 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
     if(nasal_vm.gc_get(value_addr).get_type()==vm_string)
     {
         std::string str=nasal_vm.gc_get(value_addr).get_string();
-        if(check_numerable_string(str))
-            sleep_time=(unsigned long)trans_string_to_number(str);
-        else
+        double number=trans_string_to_number(str);
+        if(std::isnan(number))
         {
             std::cout<<">> [runtime] builtin_sleep: this is not a numerable string.\n";
             ++error;
             return -1;
-        }
+        }sleep_time=(unsigned long)number;
     }
     else
         sleep_time=(unsigned long)nasal_vm.gc_get(value_addr).get_number();
@@ -378,23 +377,16 @@ int nasal_runtime::builtin_int(int local_scope_addr)
 int nasal_runtime::builtin_num(int local_scope_addr)
 {
     int value_addr=in_builtin_find("value");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    if(value_addr<0 || !in_builtin_check(value_addr,vm_string))
     {
         std::cout<<">> [runtime] builtin_num: \"value\" has wrong value type(must be string).\n";
         ++error;
         return -1;
     }
     std::string str=nasal_vm.gc_get(value_addr).get_string();
-    if(!check_numerable_string(str))
-    {
-        std::cout<<">> [runtime] builtin_num: this is not a numerable string.\n";
-        ++error;
-        return -1;
-    }
-    double number=trans_string_to_number(str);
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(number);
+    nasal_vm.gc_get(ret_addr).set_number(trans_string_to_number(str));
     return ret_addr;
 }
 int nasal_runtime::builtin_pop(int local_scope_addr)
