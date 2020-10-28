@@ -774,16 +774,13 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 {
                     end_index=begin_index<0? -1:reference_value.size()-1;
                 }
-                else if(!begin_is_nil && !end_is_nil)
+                else if(!begin_is_nil && !end_is_nil && begin_index>=end_index)
                 {
-                    if(begin_index>=end_index)
-                    {
-                        std::cout<<">> [runtime] call_vector: begin index must be less than end index.\n";
-                        ++error;
-                        return -1;
-                    }
+                    std::cout<<">> [runtime] call_vector: begin index must be less than end index.\n";
+                    ++error;
+                    return -1;
                 }
-                for(int i=begin_index;i<end_index;++i)
+                for(int i=begin_index;i<=end_index;++i)
                     called_value_addrs.push_back(reference_value.get_value_address(i));
                 nasal_vm.del_reference(begin_value_addr);
                 nasal_vm.del_reference(end_value_addr);
@@ -818,7 +815,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             }
         }
         // generate sub-vector
-        if(called_value_addrs.size()==1)
+        if(call_size==1 && node.get_children()[0].get_type()!=ast_subvec)
         {
             int value_addr=called_value_addrs[0];
             nasal_vm.add_reference(value_addr);
