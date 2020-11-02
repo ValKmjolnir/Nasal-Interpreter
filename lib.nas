@@ -86,7 +86,7 @@ var die=func(str)
     nasal_call_builtin_die(str);
     return nil;
 }
-var type=func(object)
+var typeof=func(object)
 {
     return nasal_call_builtin_type(object);
 }

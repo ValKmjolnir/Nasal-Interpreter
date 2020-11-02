@@ -1,26 +1,23 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
-#define IS_IDENTIFIER_HEAD(c) ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z'))
-#define IS_IDENTIFIER_BODY(c) ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||('0'<=c&&c<='9'))
+#define IS_IDENTIFIER(c)      ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z'))
 #define IS_HEX_NUMBER(c)      (('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F'))
 #define IS_OCT_NUMEBR(c)      ('0'<=c&&c<='7')
 #define IS_DIGIT(c)           ('0'<=c&&c<='9')
-#define IS_STRING_HEAD(c)     (c=='\''||c=='\"')
+#define IS_STRING(c)          (c=='\''||c=='\"'||c=='`')
 // single operators have only one character
 #define IS_SINGLE_OPRATOR(c)  (c=='('||c==')'||c=='['||c==']'||c=='{'||c=='}'||c==','||c==';'||c=='|'||c==':'||\
 							   c=='?'||c=='`'||c=='&'||c=='@'||c=='%'||c=='$'||c=='^'||c=='\\')
 // calculation operators may have two chars, for example: += -= *= /= ~= != == >= <=
 #define IS_CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
-#define IS_NOTE_HEAD(c)       (c=='#')
+#define IS_NOTE(c)            (c=='#')
 
-#ifndef TOKEN_TABLE_SIZE
-#define TOKEN_TABLE_SIZE 45
-struct token_table
+struct
 {
-    std::string str;
+    const char* str;
     int tok_type;
-}tok_tbl[TOKEN_TABLE_SIZE]=
+}token_table[]=
 {
     {"for"     ,tok_for          },
     {"forindex",tok_forindex     },
@@ -67,8 +64,8 @@ struct token_table
     {">"       ,tok_greater_than },
     {"<="      ,tok_less_equal   },
     {">="      ,tok_greater_equal},
+	{NULL      ,-1               }
 };
-#endif
 
 struct token
 {
@@ -84,15 +81,16 @@ private:
 	int res_size;
 	int line;
 	int ptr;
+	std::string line_code;
 	std::vector<char> res;
     std::vector<token> token_list;
 	std::string identifier_gen();
-	void generate_number_error(int,std::string);
     std::string number_gen();
     std::string string_gen();
 public:
     void clear();
 	void openfile(std::string);
+	void die(std::string,int,int);
     void scanner();
     void print_token();
     int  get_error();
@@ -105,6 +103,7 @@ void nasal_lexer::clear()
 	res_size=0;
 	line=0;
 	ptr=0;
+	line_code="";
 	res.clear();
     token_list.clear();
     return;
@@ -134,21 +133,23 @@ void nasal_lexer::openfile(std::string filename)
     return;
 }
 
+void nasal_lexer::die(std::string error_info,int line=-1,int column=-1)
+{
+	++error;
+	std::cout<<">> [lexer] line "<<line<<" column "<<column<<": "<<error_info<<"\n";
+	return;
+}
+
 std::string nasal_lexer::identifier_gen()
 {
 	std::string token_str="";
-	while(ptr<res_size && IS_IDENTIFIER_BODY(res[ptr]))
+	while(ptr<res_size && (IS_IDENTIFIER(res[ptr])||IS_DIGIT(res[ptr])))
 		token_str+=res[ptr++];
+	line_code+=token_str;
 	return token_str;
 	// after running this process, ptr will point to the next token's beginning character
 }
 
-void nasal_lexer::generate_number_error(int line,std::string token_str)
-{
-	++error;
-	std::cout<<">> [lexer] line "<<line<<": \""<<token_str<<"\" is not a correct number.\n";
-	return;
-}
 std::string nasal_lexer::number_gen()
 {
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
@@ -160,9 +161,10 @@ std::string nasal_lexer::number_gen()
 		ptr+=2;
 		while(ptr<res_size && IS_HEX_NUMBER(res[ptr]))
 			token_str+=res[ptr++];
+		line_code+=token_str;
 		if(token_str=="0x")
 		{
-			generate_number_error(line,token_str);
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 		return token_str;
@@ -174,17 +176,16 @@ std::string nasal_lexer::number_gen()
 		ptr+=2;
 		while(ptr<res_size && IS_OCT_NUMEBR(res[ptr]))
 			token_str+=res[ptr++];
+		line_code+=token_str;
 		if(token_str=="0o")
 		{
-			generate_number_error(line,token_str);
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 		return token_str;
 	}
 	// generate dec number
-	// dec number -> 0|[1~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
-	if(ptr<res_size && res[ptr]=='0')
-		token_str+=res[ptr++];
+	// dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
 	while(ptr<res_size && IS_DIGIT(res[ptr]))
 		token_str+=res[ptr++];
 	if(ptr<res_size && res[ptr]=='.')
@@ -193,7 +194,8 @@ std::string nasal_lexer::number_gen()
 		// "xxxx." is not a correct number
 		if(ptr>=res_size)
 		{
-			generate_number_error(line,token_str);
+			line_code+=token_str;
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 		while(ptr<res_size && IS_DIGIT(res[ptr]))
@@ -201,7 +203,8 @@ std::string nasal_lexer::number_gen()
 		// "xxxx." is not a correct number
 		if(token_str.back()=='.')
 		{
-			generate_number_error(line,token_str);
+			line_code+=token_str;
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 	}
@@ -211,14 +214,16 @@ std::string nasal_lexer::number_gen()
 		// "xxxe" is not a correct number
 		if(ptr>=res_size)
 		{
-			generate_number_error(line,token_str);
+			line_code+=token_str;
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 		if(ptr<res_size && (res[ptr]=='-' || res[ptr]=='+'))
 			token_str+=res[ptr++];
 		if(ptr>=res_size)
 		{
-			generate_number_error(line,token_str);
+			line_code+=token_str;
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 		if(ptr<res_size && res[ptr]=='0')
@@ -228,24 +233,32 @@ std::string nasal_lexer::number_gen()
 		// "xxxe(-|+)" is not a correct number
 		if(token_str.back()=='e' || token_str.back()=='E' || token_str.back()=='-' || token_str.back()=='+')
 		{
-			generate_number_error(line,token_str);
+			line_code+=token_str;
+			die("["+line_code+"_] incorrect number.",line,line_code.length());
 			return "0";
 		}
 	}
+	line_code+=token_str;
 	return token_str;
 }
 
 std::string nasal_lexer::string_gen()
 {
 	std::string token_str="";
+	line_code+=res[ptr];
 	char str_begin=res[ptr++];
-	if(ptr>=res_size) return token_str;
 	while(ptr<res_size && res[ptr]!=str_begin)
 	{
-		if(res[ptr]=='\n') ++line;
-		if(res[ptr]=='\\' && ptr+1<res.size())
+		line_code+=res[ptr];
+		if(res[ptr]=='\n')
+		{
+			line_code="";
+			++line;
+		}
+		if(res[ptr]=='\\' && ptr+1<res_size)
 		{
 			++ptr;
+			line_code+=res[ptr];
 			switch(res[ptr])
 			{
 				case 'a':token_str.push_back('\a');break;
@@ -269,10 +282,7 @@ std::string nasal_lexer::string_gen()
 	}
 	// check if this string ends with a " or '
 	if(ptr>=res_size)
-	{
-		++error;
-		std::cout<<">> [lexer] line "<<line<<": get EOF when generating string.\n";
-	}
+		die("["+line_code+"_] get EOF when generating string.",line,line_code.length());
 	++ptr;
 	return token_str;
 }
@@ -282,6 +292,7 @@ void nasal_lexer::scanner()
     token_list.clear();
     line=1;
 	ptr=0;
+	line_code="";
 
 	std::string token_str;
 	while(ptr<res_size)
@@ -289,21 +300,26 @@ void nasal_lexer::scanner()
 		while(ptr<res_size && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]<0))
 		{
 			// these characters will be ignored, and '\n' will cause ++line
-			if(res[ptr]=='\n') ++line;
+			line_code+=res[ptr];
+			if(res[ptr]=='\n')
+			{
+				++line;
+				line_code="";
+			}
 			++ptr;
 		}
 		if(ptr>=res_size) break;
-		if(IS_IDENTIFIER_HEAD(res[ptr]))
+		if(IS_IDENTIFIER(res[ptr]))
 		{
 			token_str=identifier_gen();
 			token new_token;
 			new_token.line=line;
             new_token.str=token_str;
             new_token.type=0;
-            for(int i=0;i<TOKEN_TABLE_SIZE;++i)
-                if(token_str==tok_tbl[i].str)
+            for(int i=0;token_table[i].str;++i)
+                if(token_str==token_table[i].str)
                 {
-                    new_token.type=tok_tbl[i].tok_type;
+                    new_token.type=token_table[i].tok_type;
                     break;
                 }
             if(!new_token.type)
@@ -319,7 +335,7 @@ void nasal_lexer::scanner()
 			new_token.type=tok_number;
 			token_list.push_back(new_token);
 		}
-		else if(IS_STRING_HEAD(res[ptr]))
+		else if(IS_STRING(res[ptr]))
 		{
 			token_str=string_gen();
 			token new_token;
@@ -332,15 +348,19 @@ void nasal_lexer::scanner()
 		{
 			token_str="";
 			token_str+=res[ptr];
+			line_code+=res[ptr];
 			token new_token;
 			new_token.line=line;
             new_token.str=token_str;
-            for(int i=0;i<TOKEN_TABLE_SIZE;++i)
-                if(token_str==tok_tbl[i].str)
+			new_token.type=-1;
+            for(int i=0;token_table[i].str;++i)
+                if(token_str==token_table[i].str)
                 {
-                    new_token.type=tok_tbl[i].tok_type;
+                    new_token.type=token_table[i].tok_type;
                     break;
                 }
+			if(new_token.type<0)
+				die("["+line_code+"_] incorrect operator.",line,line_code.length());
 			token_list.push_back(new_token);
 			++ptr;
 		}
@@ -356,13 +376,14 @@ void nasal_lexer::scanner()
                 token_str=".";
                 ++ptr;
             }
+			line_code+=token_str;
             token new_token;
             new_token.line=line;
             new_token.str=token_str;
-            for(int i=0;i<TOKEN_TABLE_SIZE;++i)
-                if(token_str==tok_tbl[i].str)
+            for(int i=0;token_table[i].str;++i)
+                if(token_str==token_table[i].str)
                 {
-                    new_token.type=tok_tbl[i].tok_type;
+                    new_token.type=token_table[i].tok_type;
                     break;
                 }
 			token_list.push_back(new_token);
@@ -370,26 +391,26 @@ void nasal_lexer::scanner()
 		else if(IS_CALC_OPERATOR(res[ptr]))
 		{
 			// get calculation operator
-			token_str="";
-			token_str+=res[ptr];
+			token_str=res[ptr];
 			++ptr;
 			if(ptr<res.size() && res[ptr]=='=')
 			{
 				token_str+=res[ptr];
 				++ptr;
 			}
+			line_code+=token_str;
 			token new_token;
 			new_token.line=line;
 			new_token.str=token_str;
-            for(int i=0;i<TOKEN_TABLE_SIZE;++i)
-                if(token_str==tok_tbl[i].str)
+            for(int i=0;token_table[i].str;++i)
+                if(token_str==token_table[i].str)
                 {
-                    new_token.type=tok_tbl[i].tok_type;
+                    new_token.type=token_table[i].tok_type;
                     break;
                 }
 			token_list.push_back(new_token);
 		}
-		else if(IS_NOTE_HEAD(res[ptr]))
+		else if(IS_NOTE(res[ptr]))
 		{
 			// avoid note
 			while(ptr<res_size && res[ptr]!='\n') ++ptr;
@@ -398,8 +419,8 @@ void nasal_lexer::scanner()
 		}
 		else
 		{
-			++error;
-			std::cout<<">> [lexer] line "<<line<<": unknown char "<<(int)res[ptr]<<'.'<<std::endl;
+			line_code+=res[ptr];
+			die("["+line_code+"_] unknown character.",line,line_code.length());
 			++ptr;
 		}
 	}
