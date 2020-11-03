@@ -1,38 +1,30 @@
-while(n==1 )
+for(;;)break;
+for(;;)
 {
-    i=i+1;
-    f(i);
-    print("str");
+    var a=1;
+    break;
+}
+for(var i=1;;)break;
+for(var i=1;;i+=1)break;
+for(var i=1;i<10;i+=1)print(i);
+
+while(1)break;
+var j=0;
+while(j<10)
+{
+    print(j);
+    j+=1;
 }
 
-while(n==1 and "str"==str)
+forindex(var j;[0,1,2,3])print(j);
+forindex(var j;[0,1,2,3])
 {
-    print("str");
+    var a=j;
+    print(a*a);
 }
-
-i+=i1;
-i+=i.i[0];
-i=i.i[0].i(0);
-var hash={
-    f:func {var e=1;return 0;},
-};
-for(var i=0;i<1024;i+=1)
+foreach(var j;[0,1,2,3])print([0,1,2,3][j]);
+foreach(var j;[0,1,2,3])
 {
-    print(i);
-}
-for(var i=0;(2*512)>=i;i+=1)
-{
-    print(i);
-}
-foreach(var i;[1+(1+1),2,3,4])
-{
-    print(i);
-}
-forindex(var i=list;[1,2,3,4])
-{
-    print(i[0]);
-}
-while(!id)
-{
-    print("yes");
+    var a=[0,1,2,3][j];
+    print(a*a-1);
 }

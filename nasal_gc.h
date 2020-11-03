@@ -286,6 +286,8 @@ int nasal_hash::get_value_address(std::string key)
             }
         }
     }
+    else
+        std::cout<<">> [runtime] cannot find hash member \""<<key<<"\".\n";
     return ret_value_addr;
 }
 int nasal_hash::get_mem_address(std::string key)
@@ -310,6 +312,15 @@ int nasal_hash::get_mem_address(std::string key)
                     break;
             }
         }
+    }
+    else
+    {
+        int mem_addr=nasal_vm.mem_alloc();
+        int val_addr=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(val_addr).set_type(vm_nil);
+        nasal_vm.mem_init(mem_addr,val_addr);
+        elems[key]=mem_addr;
+        ret_mem_addr=mem_addr;
     }
     return ret_mem_addr;
 }

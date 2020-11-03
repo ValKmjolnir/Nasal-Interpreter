@@ -940,17 +940,17 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     int run_closure_addr=reference_of_func.get_closure_addr();
     nasal_closure& run_closure=nasal_vm.gc_get(run_closure_addr).get_closure();
     run_closure.add_scope();
-    // set self
-    if(func_name.length())
-    {
-        nasal_vm.add_reference(base_value_addr);
-        run_closure.add_new_value(func_name,base_value_addr);
-    }
     // set hash.me
     if(last_call_hash_addr>=0)
     {
         nasal_vm.add_reference(last_call_hash_addr);
         run_closure.add_new_value("me",last_call_hash_addr);
+    }
+    else if(func_name.length())
+    {
+        // when hash.me does not exist,set self
+        nasal_vm.add_reference(base_value_addr);
+        run_closure.add_new_value(func_name,base_value_addr);
     }
     nasal_ast& argument_format=reference_of_func.get_arguments();
     if(!node.get_children().size())
