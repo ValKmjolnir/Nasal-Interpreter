@@ -208,12 +208,13 @@ int nasal_runtime::builtin_finput(int local_scope_addr)
     if(!fin.fail())
         while(!fin.eof())
         {
-            file_content.push_back(fin.get());
+            char c=fin.get();
             if(fin.eof())
                 break;
+            file_content.push_back(c);
         }
     else
-        file_content="cannot open file named \'"+filename+"\'.";
+        file_content="";
     fin.close();
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_string);
@@ -347,10 +348,10 @@ int nasal_runtime::builtin_rand(int local_scope_addr)
 }
 int nasal_runtime::builtin_id(int local_scope_addr)
 {
-    int value_addr=in_builtin_find("id");
+    int value_addr=in_builtin_find("thing");
     if(value_addr<0)
     {
-        std::cout<<">> [runtime] builtin_id: cannot find \"id\".\n";
+        std::cout<<">> [runtime] builtin_id: cannot find \"thing\".\n";
         ++error;
         return -1;
     }
