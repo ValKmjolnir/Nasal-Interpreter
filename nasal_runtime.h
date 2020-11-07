@@ -1292,7 +1292,13 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     // after this process, a new address(in nasal_vm.garbage_collector_memory) will be returned
     int ret_address=-1;
     int calculation_type=node.get_type();
-    if(calculation_type==ast_nil)
+    if(calculation_type==ast_null)
+    {
+        ret_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(ret_address).set_type(vm_number);
+        nasal_vm.gc_get(ret_address).set_number(1);
+    }
+    else if(calculation_type==ast_nil)
     {
         ret_address=nasal_vm.gc_alloc();
         nasal_vm.gc_get(ret_address).set_type(vm_nil);
@@ -1311,7 +1317,8 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         {
             std::cout<<">> [runtime] calculation: cannot find value named \'"<<node.get_str()<<"\'.\n";
             ++error;
-            return -1;
+            ret_address=nasal_vm.gc_alloc();
+            nasal_vm.gc_get(ret_address).set_type(vm_nil);
         }
         nasal_vm.add_reference(ret_address);
     }
@@ -1564,12 +1571,8 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     {
         std::cout<<">> [runtime] calculation: expression type:"<<ast_str(node.get_type())<<" cannot be calculated.\n";
         ++error;
-        return -1;
-    }
-    if(ret_address<0)
-    {
-        std::cout<<">> [runtime] calculation: incorrect values.\n";
-        ++error;
+        ret_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(ret_address).set_type(vm_nil);
     }
     return ret_address;
 }
