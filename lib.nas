@@ -135,7 +135,7 @@ var bits=
 var math=
 {
     e:2.7182818284590452354,
-    pi:3.14159265358979323846,
+    pi:3.14159265358979323846264338327950288,
     sin:func(x)
     {
         return nasal_call_builtin_sin(x);
