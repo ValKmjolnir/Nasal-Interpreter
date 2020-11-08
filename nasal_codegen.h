@@ -76,6 +76,8 @@ void nasal_codegen::output_root(nasal_ast& root)
     if(type==ast_number || type==ast_string || type==ast_identifier || type==ast_dynamic_id || type==ast_call_hash)
     {
         std::string tmp=root.get_str();
+        if(type==ast_number)
+            tmp=trans_number_to_string(root.get_num());
         if(std::find(string_table.begin(),string_table.end(),tmp)==string_table.end())
         {
             string_table.push_back(tmp);
@@ -164,7 +166,10 @@ void nasal_codegen::input_root(nasal_ast& root,std::ifstream& fin)
     if(type==ast_number || type==ast_string || type==ast_identifier || type==ast_dynamic_id || type==ast_call_hash)
     {
         std::string tmp=string_table[input_short(fin)];
-        root.set_str(tmp);
+        if(type==ast_number)
+            root.set_num(trans_string_to_number(tmp));
+        else
+            root.set_str(tmp);
     }
     for(unsigned short i=0;i<size;++i)
     {

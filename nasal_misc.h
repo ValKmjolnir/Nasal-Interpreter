@@ -2,7 +2,6 @@
 #define __NASAL_MISC_H__
 
 /*
-	check_numerable_string:
 	check if a string can be converted to a number
 	
 	strings like these below is correct:
@@ -15,79 +14,8 @@
 	'1e23'
 	'1E-123'
 	'1.34E10'
-*/
-inline bool check_hex_string(std::string str,int len)
-{
-	for(int i=2;i<len;++i)
-		if(!(('0'<=str[i] && str[i]<='9') || ('a'<=str[i] && str[i]<='f') || ('A'<=str[i] && str[i]<='F')))
-			return false;
-	return true;
-}
-inline bool check_oct_string(std::string str,int len)
-{
-	for(int i=2;i<len;++i)
-		if(str[i]<'0' || str[i]>'7')
-			return false;
-	return true;
-}
-inline bool check_dec_string(std::string str,int len)
-{
-	int i=0;
-	// check integer part
-	while('0'<=str[i] && str[i]<='9' && i<len) ++i;
-	if(i==len) return true;
-	if(str[i]!='e' && str[i]!='E' && str[i]!='.') return false;
-	// check decimal part
-	if(str[i]=='.')
-	{
-		++i;
-		if(i==len) return false;
-		while('0'<=str[i] && str[i]<='9' && i<len) ++i;
-	}
-	if(i==len) return true;
-	if(str[i]!='e' && str[i]!='E') return false;
-	// check scientific notation
-	if(str[i]=='e' || str[i]=='E')
-	{
-		++i;
-		if(i==len) return false;
-		if(str[i]=='-' || str[i]=='+')
-		{
-			++i;
-			if(i==len) return false;
-		}
-		for(;i<len;++i)
-			if(str[i]<'0' || str[i]>'9')
-				return false;
-	}
-	return true;
-}
 
-bool check_numerable_string(std::string str)
-{
-	int len=str.length();
-	if(!len) return false;
-	if(str[0]=='-' || str[0]=='+')
-	{
-		if(len==1) return false;
-		std::string tmp="";
-		for(int i=1;i<len;++i)
-			tmp+=str[i];
-		str=tmp;
-		--len;
-	}
-	if(len>2 && str[0]=='0' && str[1]=='x')
-		return check_hex_string(str,len);
-	else if(len>2 && str[0]=='0' && str[1]=='o')
-		return check_oct_string(str,len);
-	else if('0'<=str[0] && str[0]<='9')
-		return check_dec_string(str,len);
-	return false;
-}
-
-/*
-	trans_string_to_number:
-	convert string to number
+	if this string cannot be converted to a number,it will return nan
 */
 inline double hex_to_double(std::string str,int len)
 {
@@ -100,6 +28,8 @@ inline double hex_to_double(std::string str,int len)
 			ret+=num_pow*(str[i]-'a'+10);
 		else if('A'<=str[i] && str[i]<='F')
 			ret+=num_pow*(str[i]-'A'+10);
+		else
+			return (1/0.0)+(-1/0.0);
 		num_pow*=16;
 	}
 	return ret;
@@ -109,7 +39,10 @@ inline double oct_to_double(std::string str,int len)
 	double ret=0,num_pow=1;
 	for(int i=len-1;i>1;--i)
 	{
-		ret+=num_pow*(str[i]-'0');
+		if('0'<=str[i] && str[i]<='8')
+			ret+=num_pow*(str[i]-'0');
+		else
+			return (1/0.0)+(-1/0.0);
 		num_pow*=8;
 	}
 	return ret;
@@ -124,9 +57,13 @@ inline double dec_to_double(std::string str,int len)
 		++i;
 	}
 	if(i==len) return ret;
+	if(str[i]!='.' && str[i]!='e' && str[i]!='E')
+		return (1/0.0)+(-1/0.0);
 	if(str[i]=='.')
 	{
 		++i;
+		if(i==len)
+			return (1/0.0)+(-1/0.0);
 		double num_pow=0.1;
 		while('0'<=str[i] && str[i]<='9' && i<len)
 		{
@@ -136,14 +73,27 @@ inline double dec_to_double(std::string str,int len)
 		}
 	}
 	if(i==len) return ret;
+	if(str[i]!='e' && str[i]!='E')
+		return (1/0.0)+(-1/0.0);
 	if(str[i]=='e' || str[i]=='E')
 	{
 		++i;
-		bool is_negative=(str[i]=='-');
-		if(str[i]=='-' || str[i]=='+') ++i;
+		if(i==len)
+			return (1/0.0)+(-1/0.0);
+		double negative=(str[i]=='-'? -1:1);
+		if(str[i]=='-' || str[i]=='+')
+			++i;
+		if(i==len)
+			return (1/0.0)+(-1/0.0);
 		double num_pow=0;
-		for(;i<len;++i) num_pow=num_pow*10+(str[i]-'0');
-		num_pow=std::pow(10,is_negative?-num_pow:num_pow);
+		for(;i<len;++i)
+		{
+			if('0'<=str[i] && str[i]<='9')
+				num_pow=num_pow*10+(str[i]-'0');
+			else
+				return (1/0.0)+(-1/0.0);
+		}
+		num_pow=std::pow(10,negative*num_pow);
 		ret*=num_pow;
 	}
 	return ret;
@@ -153,7 +103,8 @@ double trans_string_to_number(std::string str)
 	bool is_negative=false;
 	int len=str.length();
 	double ret_num=0;
-	if(!len) return 0;
+	if(!len)
+		return (1/0.0)+(-1/0.0);
 	if(str[0]=='-' || str[0]=='+')
 	{
 		is_negative=(str[0]=='-');
@@ -162,12 +113,14 @@ double trans_string_to_number(std::string str)
 			tmp.push_back(str[i]);
 		str=tmp;
 		--len;
+		if(!len)
+			return (1/0.0)+(-1/0.0);
 	}
 	if(len>2 && str[0]=='0' && str[1]=='x')
 		ret_num=hex_to_double(str,len);
 	else if(len>2 && str[0]=='0' && str[1]=='o')
 		ret_num=oct_to_double(str,len);
-	else if('0'<=str[0] && str[0]<='9')
+	else
 		ret_num=dec_to_double(str,len);
 	return is_negative?-ret_num:ret_num;
 }
