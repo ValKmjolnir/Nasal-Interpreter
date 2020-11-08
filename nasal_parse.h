@@ -290,7 +290,7 @@ nasal_ast nasal_parse::number_gen()
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_number);
-    node.set_str(tok_list[ptr].str);
+    node.set_num(trans_string_to_number(tok_list[ptr].str));
     return node;
 }
 

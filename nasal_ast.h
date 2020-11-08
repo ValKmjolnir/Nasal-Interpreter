@@ -7,6 +7,7 @@ private:
     int line;
     int type;
     std::string str;
+    double num;
     std::vector<nasal_ast> children;
 public:
     nasal_ast();
@@ -17,10 +18,12 @@ public:
     void set_line(int);
     void set_type(int);
     void set_str(std::string&);
+    void set_num(double);
     void add_child(nasal_ast);
     int  get_line();
     int  get_type();
     std::string get_str();
+    double get_num();
     std::vector<nasal_ast>& get_children();
     void print_ast(int);
 };
@@ -29,7 +32,6 @@ nasal_ast::nasal_ast()
 {
     this->line=0;
     this->type=ast_null;
-    this->str="";
     return;
 }
 
@@ -38,13 +40,13 @@ nasal_ast::nasal_ast(const nasal_ast& tmp)
     this->line=tmp.line;
     this->type=tmp.type;
     this->str=tmp.str;
+    this->num=tmp.num;
     this->children=tmp.children;
     return;
 }
 
 nasal_ast::~nasal_ast()
 {
-    this->str.clear();
     this->children.clear();
     return;
 }
@@ -54,6 +56,7 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
     this->line=tmp.line;
     this->type=tmp.type;
     this->str=tmp.str;
+    this->num=tmp.num;
     this->children=tmp.children;
     return *this;
 }
@@ -61,8 +64,9 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 void nasal_ast::clear()
 {
     this->line=0;
-    this->type=ast_null;
     this->str="";
+    this->num=0;
+    this->type=ast_null;
     this->children.clear();
     return;
 }
@@ -82,6 +86,12 @@ void nasal_ast::set_type(int t)
 void nasal_ast::set_str(std::string& s)
 {
     this->str=s;
+    return;
+}
+
+void nasal_ast::set_num(double n)
+{
+    this->num=n;
     return;
 }
 
@@ -106,6 +116,11 @@ std::string nasal_ast::get_str()
     return this->str;
 }
 
+double nasal_ast::get_num()
+{
+    return this->num;
+}
+
 std::vector<nasal_ast>& nasal_ast::get_children()
 {
     return this->children;
@@ -117,8 +132,10 @@ void nasal_ast::print_ast(int depth)
     for(int i=0;i<depth;++i) indentation+="|  ";
     indentation+=ast_str(this->type);
     std::cout<<indentation;
-    if(this->type==ast_number || this->type==ast_string || this->type==ast_identifier || this->type==ast_dynamic_id || this->type==ast_call_hash)
+    if(this->type==ast_string || this->type==ast_identifier || this->type==ast_dynamic_id || this->type==ast_call_hash)
         std::cout<<":"<<this->str;
+    else if(this->type==ast_number)
+        std::cout<<":"<<this->num;
     std::cout<<std::endl;
     int child_size=this->children.size();
     for(int i=0;i<child_size;++i)

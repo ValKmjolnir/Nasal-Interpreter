@@ -24,10 +24,6 @@ private:
     // if error occurred,this value will add 1
     int error;
 
-    // generate number and return gc place of this number
-    int number_generation(nasal_ast&);
-    // generate string and return gc place of this string
-    int string_generation(nasal_ast&);
     // generate vector and return gc place of this vector
     int vector_generation(nasal_ast&,int);
     // generate hash and return gc place of this hash
@@ -206,20 +202,6 @@ void nasal_runtime::run()
 }
 
 // private functions
-int nasal_runtime::number_generation(nasal_ast& node)
-{
-    int new_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_addr).set_type(vm_number);
-    nasal_vm.gc_get(new_addr).set_number(trans_string_to_number(node.get_str()));
-    return new_addr;
-}
-int nasal_runtime::string_generation(nasal_ast& node)
-{
-    int new_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_addr).set_type(vm_string);
-    nasal_vm.gc_get(new_addr).set_string(node.get_str());
-    return new_addr;
-}
 int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr)
 {
     int new_addr=nasal_vm.gc_alloc();
@@ -1154,25 +1136,27 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
     int mem_address=-1;
     if(node.get_type()==ast_identifier)
     {
+        std::string id_name=node.get_str();
         if(local_scope_addr>=0)
-            mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(node.get_str());
+            mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(id_name);
         if(mem_address<0)
-            mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(node.get_str());
+            mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
         if(mem_address<0)
         {
-            std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<node.get_str()<<"\'.\n";
+            std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<id_name<<"\'.\n";
             ++error;
             return -1;
         }
         return mem_address;
     }
+    std::string id_name=node.get_children()[0].get_str();
     if(local_scope_addr>=0)
-        mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(node.get_children()[0].get_str());
+        mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(id_name);
     if(mem_address<0)
-        mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(node.get_children()[0].get_str());
+        mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
     if(mem_address<0)
     {
-        std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<node.get_children()[0].get_str()<<"\'.\n";
+        std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<id_name<<"\'.\n";
         ++error;
         return -1;
     }
@@ -1304,9 +1288,17 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         nasal_vm.gc_get(ret_address).set_type(vm_nil);
     }
     else if(calculation_type==ast_number)
-        ret_address=number_generation(node);
+    {
+        ret_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(ret_address).set_type(vm_number);
+        nasal_vm.gc_get(ret_address).set_number(node.get_num());
+    }
     else if(calculation_type==ast_string)
-        ret_address=string_generation(node);
+    {
+        ret_address=nasal_vm.gc_alloc();
+        nasal_vm.gc_get(ret_address).set_type(vm_string);
+        nasal_vm.gc_get(ret_address).set_string(node.get_str());
+    }
     else if(calculation_type==ast_identifier)
     {
         if(local_scope_addr>=0)
