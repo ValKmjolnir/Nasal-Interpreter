@@ -151,9 +151,9 @@ std::string trans_number_to_string(double number)
 		number-=(double)(int(number/integer_bit))*integer_bit;
 		integer_bit/=10;
 	}
-	if(number!=0)
+	if(number>0.000000001)
 		trans_num_string+='.';
-	while(number!=0)
+	while(number>0.000000001)
 	{
 		trans_num_string+=(char)('0'+int(number*10));
 		number*=10;

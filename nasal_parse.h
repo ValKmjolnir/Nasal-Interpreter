@@ -788,6 +788,40 @@ nasal_ast nasal_parse::additive_expr()
         ++ptr;
         if(ptr<tok_list_size) tmp.add_child(multive_expr());
         else{ ++error; error_info(error_line,lack_calculation);}
+        if(tmp.get_type()!=ast_link && tmp.get_children()[0].get_type()==ast_number && tmp.get_children()[1].get_type()==ast_number)
+        {
+            double num1=tmp.get_children()[0].get_num();
+            double num2=tmp.get_children()[1].get_num();
+            double num;
+            if(tmp.get_type()==ast_add)
+                num=num1+num2;
+            else if(tmp.get_type()==ast_sub)
+                num=num1-num2;
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(tmp.get_type()==ast_link)
+        {
+            int type1=tmp.get_children()[0].get_type();
+            int type2=tmp.get_children()[1].get_type();
+            if((type1==ast_number || type1==ast_string) && (type2==ast_number || type2==ast_string))
+            {
+                std::string s1,s2;
+                if(type1==ast_number)
+                    s1=trans_number_to_string(tmp.get_children()[0].get_num());
+                else
+                    s1=tmp.get_children()[0].get_str();
+                if(type2==ast_number)
+                    s2=trans_number_to_string(tmp.get_children()[1].get_num());
+                else
+                    s2=tmp.get_children()[1].get_str();
+                s1+=s2;
+                tmp.set_type(ast_string);
+                tmp.set_str(s1);
+                tmp.get_children().clear();
+            }
+        }
         node=tmp;
         ++ptr;
     }
@@ -818,6 +852,15 @@ nasal_ast nasal_parse::multive_expr()
             error_info(error_line,lack_calculation);
             break;
         }
+        if(tmp.get_children()[0].get_type()==ast_number && tmp.get_children()[1].get_type()==ast_number)
+        {
+            double num1=tmp.get_children()[0].get_num();
+            double num2=tmp.get_children()[1].get_num();
+            double num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
         node=tmp;
         ++ptr;
     }
@@ -842,6 +885,17 @@ nasal_ast nasal_parse::unary()
             node.add_child(scalar());
     }
     else{ ++error; error_info(error_line,lack_calculation);}
+    if(node.get_children()[0].get_type()==ast_number)
+    {
+        double num=node.get_children()[0].get_num();
+        if(node.get_type()==ast_unary_not)
+            num=(!num);
+        else
+            num=-num;
+        node.set_type(ast_number);
+        node.set_num(num);
+        node.get_children().clear();
+    }
     return node;
 }
 nasal_ast nasal_parse::scalar()
