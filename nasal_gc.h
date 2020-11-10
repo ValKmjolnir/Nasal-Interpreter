@@ -25,6 +25,7 @@ public:
     int  size();
     int  get_value_address(int);
     int  get_mem_address(int);
+    void print();
 };
 
 class nasal_hash
@@ -41,7 +42,8 @@ public:
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
     bool check_contain(std::string);
-    int get_keys();
+    int  get_keys();
+    void print();
 };
 
 class nasal_function
@@ -226,6 +228,26 @@ int nasal_vector::get_mem_address(int index)
     }
     return elems[(index+vec_size)%vec_size];
 }
+void nasal_vector::print()
+{
+    int size=elems.size();
+    std::cout<<"[";
+    for(int i=0;i<size;++i)
+    {
+        nasal_scalar& tmp=nasal_vm.gc_get(nasal_vm.mem_get(elems[i]));
+        switch(tmp.get_type())
+        {
+            case vm_nil:std::cout<<"nil";break;
+            case vm_number:std::cout<<tmp.get_number();break;
+            case vm_string:std::cout<<tmp.get_string();break;
+            case vm_vector:tmp.get_vector().print();break;
+            case vm_hash:tmp.get_hash().print();break;
+            case vm_function:std::cout<<"func(...){...}";break;
+        }
+        std::cout<<",]"[i==size-1];
+    }
+    return;
+}
 
 /*functions of nasal_hash*/
 nasal_hash::nasal_hash()
@@ -363,6 +385,27 @@ int nasal_hash::get_keys()
         ref_vec.add_elem(str_addr);
     }
     return ret_addr;
+}
+void nasal_hash::print()
+{
+    std::cout<<"{";
+    for(std::map<std::string,int>::iterator i=elems.begin();i!=elems.end();++i)
+    {
+        std::cout<<i->first<<":";
+        nasal_scalar& tmp=nasal_vm.gc_get(nasal_vm.mem_get(i->second));
+        switch(tmp.get_type())
+        {
+            case vm_nil:std::cout<<"nil";break;
+            case vm_number:std::cout<<tmp.get_number();break;
+            case vm_string:std::cout<<tmp.get_string();break;
+            case vm_vector:tmp.get_vector().print();break;
+            case vm_hash:tmp.get_hash().print();break;
+            case vm_function:std::cout<<"func(...){...}";break;
+        }
+        std::cout<<",}"[(++i)==elems.end()];
+        --i;
+    }
+    return;
 }
 
 /*functions of nasal_function*/
