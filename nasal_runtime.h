@@ -23,6 +23,7 @@ private:
 
     // if error occurred,this value will add 1
     int error;
+    void die(int,std::string);
 
     // generate vector and return gc place of this vector
     int vector_generation(nasal_ast&,int);
@@ -123,6 +124,12 @@ nasal_runtime::~nasal_runtime()
     this->builtin_func_hashmap.clear();
     return;
 }
+void nasal_runtime::die(int line,std::string info)
+{
+    ++error;
+    std::cout<<">> [runtime] line "<<line<<": "+info<<".\n";
+    return;
+}
 void nasal_runtime::load_builtin_function()
 {
     struct FUNC_TABLE
@@ -197,7 +204,7 @@ void nasal_runtime::run()
 
     time_t total_run_time=end_time-begin_time;
     if(total_run_time>=1)
-    std::cout<<">> [runtime] process exited after "<<total_run_time<<"s "<<(returned_statement==rt_exit_without_error?".\n":"with errors.\n");
+    std::cout<<">> [runtime] process exited after "<<total_run_time<<"s.\n";
     return;
 }
 
@@ -254,14 +261,15 @@ int nasal_runtime::main_progress()
     int process_returned_value_addr=-1;
     for(int i=0;i<expr_number;++i)
     {
-        int node_type=root.get_children()[i].get_type();
+        nasal_ast& node=root.get_children()[i];
+        int node_type=node.get_type();
         switch(node_type)
         {
-            case ast_definition:definition(root.get_children()[i],-1);break;
-            case ast_multi_assign:multi_assignment(root.get_children()[i],-1);break;
-            case ast_conditional:ret_state=conditional_progress(root.get_children()[i],-1,false);break;
+            case ast_definition:definition(node,-1);break;
+            case ast_multi_assign:multi_assignment(node,-1);break;
+            case ast_conditional:ret_state=conditional_progress(node,-1,false);break;
             case ast_while:case ast_for:case ast_forindex:case ast_foreach:
-                ret_state=loop_progress(root.get_children()[i],-1,false);break;
+                ret_state=loop_progress(node,-1,false);break;
             case ast_nil:case ast_number:case ast_string:case ast_function:break;
             case ast_identifier:
             case ast_vector:case ast_hash:
@@ -269,14 +277,7 @@ int nasal_runtime::main_progress()
             case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             case ast_unary_sub:case ast_unary_not:
             case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-            case ast_trinocular:nasal_vm.del_reference(calculation(root.get_children()[i],-1));break;
-        }
-        switch(ret_state)
-        {
-            case rt_break:std::cout<<">> [runtime] main: cannot use break in main progress.\n";++error;break;
-            case rt_continue:std::cout<<">> [runtime] main: cannot use continue in main progress.\n";++error;break;
-            case rt_return:std::cout<<">> [runtime] main: cannot use return in main progress.\n";++error;break;
-            case rt_error:std::cout<<">> [runtime] main: error occurred when executing main progress.\n";++error;break;
+            case ast_trinocular:nasal_vm.del_reference(calculation(node,-1));break;
         }
         if(error)
         {
@@ -337,16 +338,8 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
                     }
                 } 
                 else
-                {
-                    std::cout<<">> [runtime] block_progress: return expression is not allowed here.\n";
-                    ++error;
-                }
+                    die(tmp_node.get_line(),"cannot use return here");
                 break;
-        }
-        if(ret_state==rt_error)
-        {
-            std::cout<<">> [runtime] block_progress: error occurred when executing sub-progress.\n";
-            ++error;
         }
         if(error || ret_state==rt_break || ret_state==rt_continue || ret_state==rt_return)
             break;
@@ -370,7 +363,7 @@ int nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
         case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
-        default:std::cout<<">> [runtime] before_for_loop: cannot use this expression before for-loop.\n";++error;break;
+        default:die(node.get_line(),"cannot use this expression before for-loop");break;
     }
     if(error)
         return rt_error;
@@ -391,7 +384,7 @@ int nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
         case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
-        default:std::cout<<">> [runtime] after_each_for_loop: cannot use this expression after each for-loop.\n";++error;break;
+        default:die(node.get_line(),"cannot use this expression after each for-loop");break;
     }
     if(error)
         return rt_error;
@@ -444,8 +437,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int vector_value_addr=calculation(vector_node,local_scope_addr);
         if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
         {
-            std::cout<<">> [runtime] loop_progress: "<<(loop_type==ast_forindex? "forindex":"foreach")<<" gets a value that is not a vector.\n";
-            ++error;
+            die(vector_node.get_line(),"must use vector in forindex/foreach");
             return rt_error;
         }
         // create a new local scope to store iterator if local_scope_addr=-1
@@ -475,8 +467,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
             mem_addr=call_scalar_mem(iter_node,local_scope_addr);
         if(mem_addr<0)
         {
-            std::cout<<">> [runtime] loop_progress: get null iterator.\n";
-            ++error;
+            die(iter_node.get_line(),"get null iterator");
             return rt_error;
         }
         // ref_vector's size may change when running,so this loop will check size each time
@@ -554,12 +545,8 @@ bool nasal_runtime::check_condition(int value_addr)
     if(value_addr<0)
         return false;
     int type=nasal_vm.gc_get(value_addr).get_type();
-    if(type==vm_vector || type==vm_hash || type==vm_function || type==vm_closure)
-    {
-        std::cout<<">> [runtime] check_condition: error value type when checking condition.\n";
-        ++error;
+    if(type==vm_vector || type==vm_hash || type==vm_function)
         return false;
-    }
     else if(type==vm_string)
     {
         std::string str=nasal_vm.gc_get(value_addr).get_string();
@@ -625,10 +612,9 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
         if(value_address<0)
         {
             if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
-                std::cout<<">> [runtime] call_scalar: call "<<val_name<<" failed.\n";
+                die(node.get_children()[0].get_line(),"call "+val_name+" failed");
             else
-                std::cout<<">> [runtime] call_scalar: cannot find value named \""<<val_name<<"\".\n";
-            ++error;
+                die(node.get_children()[0].get_line()," cannot find \""+val_name+"\"");
             return -1;
         }
         nasal_vm.add_reference(value_address);
@@ -672,8 +658,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
     int base_value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(base_value_type!=vm_vector && base_value_type!=vm_hash && base_value_type!=vm_string)
     {
-        std::cout<<">> [runtime] call_vector: incorrect value type,expected a vector/hash/string.\n";
-        ++error;
+        die(node.get_line(),"cannot find elements by index in nil/number/function");
         return -1;
     }
     int call_size=node.get_children().size();
@@ -695,14 +680,12 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 int begin_index=0,end_index=0;
                 if(begin_value_type!=vm_nil && begin_value_type!=vm_number && begin_value_type!=vm_string)
                 {
-                    std::cout<<">> [runtime] call_vector: begin index is not a number/numerable string.\n";
-                    ++error;
+                    die(subvec_node.get_children()[0].get_line(),"begin index must be nil/number/string");
                     return -1;
                 }
                 if(end_value_type!=vm_nil && end_value_type!=vm_number && end_value_type!=vm_string)
                 {
-                    std::cout<<">> [runtime] call_vector: end index is not a number/numerable string.\n";
-                    ++error;
+                    die(subvec_node.get_children()[1].get_line(),"end index must be nil/number/string");
                     return -1;
                 }
                 if(begin_value_type==vm_string)

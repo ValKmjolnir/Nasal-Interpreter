@@ -232,6 +232,8 @@ void nasal_vector::print()
 {
     int size=elems.size();
     std::cout<<"[";
+    if(!size)
+        std::cout<<"]";
     for(int i=0;i<size;++i)
     {
         nasal_scalar& tmp=nasal_vm.gc_get(nasal_vm.mem_get(elems[i]));
@@ -389,6 +391,8 @@ int nasal_hash::get_keys()
 void nasal_hash::print()
 {
     std::cout<<"{";
+    if(!elems.size())
+        std::cout<<"}";
     for(std::map<std::string,int>::iterator i=elems.begin();i!=elems.end();++i)
     {
         std::cout<<i->first<<":";
