@@ -25,14 +25,12 @@ int nasal_runtime::builtin_print(int local_scope_addr)
             case vm_nil:std::cout<<"nil";break;
             case vm_number:std::cout<<tmp.get_number();break;
             case vm_string:std::cout<<tmp.get_string();break;
-            case vm_vector:std::cout<<"[...]";break;
-            case vm_hash:std::cout<<"{...}";break;
+            case vm_vector:tmp.get_vector().print();break;
+            case vm_hash:tmp.get_hash().print();break;
             case vm_function:std::cout<<"func(...){...}";break;
-            case vm_closure:std::cout<<"closure{{...}}";break;
         }
-        if(i==size-1)
-            std::cout<<'\n';
     }
+    std::cout<<"\n";
     // generate return value
     int ret_addr=nasal_vm.gc_alloc();
     nasal_vm.gc_get(ret_addr).set_type(vm_nil);
