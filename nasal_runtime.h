@@ -694,8 +694,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                     double number=trans_string_to_number(str);
                     if(std::isnan(number))
                     {
-                        std::cout<<">> [runtime] call_vector: begin index is not a numerable string.\n";
-                        ++error;
+                        die(subvec_node.get_children()[0].get_line(),"begin index is not a numerable string");
                         return -1;
                     }
                     begin_index=(int)number;
@@ -713,8 +712,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                     double number=trans_string_to_number(str);
                     if(std::isnan(number))
                     {
-                        std::cout<<">> [runtime] call_vector: begin index is not a numerable string.\n";
-                        ++error;
+                        die(subvec_node.get_children()[1].get_line(),"end index is not a numerable string");
                         return -1;
                     }
                     begin_index=(int)number;
@@ -741,8 +739,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 }
                 else if(!begin_is_nil && !end_is_nil && begin_index>=end_index)
                 {
-                    std::cout<<">> [runtime] call_vector: begin index must be less than end index.\n";
-                    ++error;
+                    die(subvec_node.get_children()[0].get_line(),"begin index is greater than end index");
                     return -1;
                 }
                 for(int i=begin_index;i<=end_index;++i)
@@ -756,8 +753,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
                 if(index_value_type!=vm_number && index_value_type!=vm_string)
                 {
-                    std::cout<<">> [runtime] call_vector: index is not a number/numerable string.\n";
-                    ++error;
+                    die(node.get_children()[i].get_line(),"index must be number/string");
                     return -1;
                 }
                 int index_num=0;
@@ -767,8 +763,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                     double number=trans_string_to_number(str);
                     if(std::isnan(number))
                     {
-                        std::cout<<">> [runtime] call_vector: index is not a numerable string.\n";
-                        ++error;
+                        die(node.get_children()[i].get_line(),"index is not a numerable string");
                         return -1;
                     }
                     index_num=(int)number;
@@ -804,21 +799,19 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
     {
         if(call_size>1)
         {
-            std::cout<<">> [runtime] call_vector: when calling a hash,only one key is alowed.\n";
-            ++error;
+            die(node.get_line(),"use only one key to call a hash");
             return -1;
         }
-        if(node.get_children()[0].get_type()==ast_subvec)
+        nasal_ast& tmp=node.get_children()[0];
+        if(tmp.get_type()==ast_subvec)
         {
-            std::cout<<">> [runtime] call_vector: cannot slice hash.\n";
-            ++error;
+            die(tmp.get_line(),"cannot slice hash");
             return -1;
         }
-        int str_addr=calculation(node.get_children()[0],local_scope_addr);
+        int str_addr=calculation(tmp,local_scope_addr);
         if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
         {
-            std::cout<<">> [runtime] call_vector: must use a string as the key.\n";
-            ++error;
+            die(tmp.get_line(),"must use string as the key");
             return -1;
         }
         std::string str=nasal_vm.gc_get(str_addr).get_string();
@@ -830,22 +823,20 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
     {
         if(call_size>1)
         {
-            std::cout<<">> [runtime] call_vector: when calling a string,only one index is alowed.\n";
-            ++error;
+            die(node.get_line(),"use only one index to call a string");
             return -1;
         }
-        if(node.get_children()[0].get_type()==ast_subvec)
+        nasal_ast& tmp=node.get_children()[0];
+        if(tmp.get_type()==ast_subvec)
         {
-            std::cout<<">> [runtime] call_vector: cannot slice string.\n";
-            ++error;
+            die(tmp.get_line(),"cannot slice string (use subvec)");
             return -1;
         }
-        int index_value_addr=calculation(node.get_children()[0],local_scope_addr);
+        int index_value_addr=calculation(tmp,local_scope_addr);
         int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
         if(index_value_type!=vm_number && index_value_type!=vm_string)
         {
-            std::cout<<">> [runtime] call_vector: index is not a number/numerable string.\n";
-            ++error;
+            die(tmp.get_line(),"index is not a number/numerable string");
             return -1;
         }
         int index_num=0;
@@ -855,8 +846,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             double number=trans_string_to_number(str);
             if(std::isnan(number))
             {
-                std::cout<<">> [runtime] call_vector: index is not a numerable string.\n";
-                ++error;
+                die(tmp.get_line(),"index is not a numerable string");
                 return -1;
             }
             index_num=(int)number;
@@ -870,8 +860,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         int str_size=str.length();
         if(index_num>=str_size || index_num<-str_size)
         {
-            std::cout<<">> [runtime] call_vector: index out of range.\n";
-            ++error;
+            die(tmp.get_line(),"index out of range");
             return -1;
         }
         nasal_vm.gc_get(return_value_addr).set_number((double)str[(index_num+str_size)%str_size]);
@@ -883,8 +872,7 @@ int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(value_type!=vm_hash)
     {
-        std::cout<<">> [runtime] call_hash: incorrect value type,expected a hash.\n";
-        ++error;
+        die(node.get_line(),"called a value that is not a hash");
         return -1;
     }
     int ret_value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(node.get_str());
@@ -897,8 +885,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(value_type!=vm_function)
     {
-        std::cout<<">> [runtime] call_function: incorrect value type,expected a function.\n";
-        ++error;
+        die(node.get_line(),"called a value that is not a function");
         return -1;
     }
     nasal_function& reference_of_func=nasal_vm.gc_get(base_value_addr).get_func();
@@ -922,12 +909,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     {
         if(argument_format.get_children().size() && argument_format.get_children()[0].get_type()!=ast_default_arg && argument_format.get_children()[0].get_type()!=ast_dynamic_id)
         {
-            int size=argument_format.get_children().size();
-            int sum=0;
-            for(int i=0;i<size;++i)
-                sum+=(argument_format.get_children()[i].get_type()!=ast_default_arg);
-            std::cout<<">> [runtime] call_function: lack at least "<<sum<<" argument(s) but get 0.\n";
-            ++error;
+            die(node.get_line(),"lack argument(s)");
             return -1;
         }
         else if(argument_format.get_children().size() && argument_format.get_children()[0].get_type()==ast_dynamic_id)
@@ -976,8 +958,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
             std::string id_name=tmp_node.get_children()[0].get_str();
             if(args_usage_table.find(id_name)==args_usage_table.end())
             {
-                std::cout<<">> [runtime] call_function: identifier named \'"<<id_name<<"\' does not exist.\n";
-                ++error;
+                die(tmp_node.get_line(),"argument named \""+id_name+"\" does not exist");
                 return -1;
             }
             else
@@ -1017,8 +998,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         for(std::map<std::string,bool>::iterator i=args_usage_table.begin();i!=args_usage_table.end();++i)
             if(!i->second)
             {
-                std::cout<<">> [runtime] call_function: argument named \'"<<i->first<<"\' is not in use.\n";
-                ++error;
+                die(node.get_line(),"argument named \""+i->first+"\" is not in use");
                 return -1;
             }
     }
@@ -1030,18 +1010,13 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         {
             int tmp_val_addr=calculation(node.get_children()[i],local_scope_addr);
             if(tmp_val_addr<0)
-            {
-                std::cout<<">> [runtime] call_function: error value address when generating argument list.\n";
-                ++error;
                 return -1;
-            }
             args.push_back(tmp_val_addr);
         }
         int arg_format_size=argument_format.get_children().size();
         if(size>arg_format_size && argument_format.get_children().back().get_type()!=ast_dynamic_id)
         {
-            std::cout<<">> [runtime] call_function: too much arguments.\n";
-            ++error;
+            die(node.get_line(),"too much arguments");
             return -1;
         }
         for(int i=0;i<arg_format_size;++i)
@@ -1063,8 +1038,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
                     run_closure.add_new_value(tmp_node.get_str(),args[i]);
                 else
                 {
-                    std::cout<<">> [runtime] call_function: lack argument(s).stop.\n";
-                    ++error;
+                    die(node.get_line(),"lack argument(s)");
                     return -1;
                 }
             }
@@ -1087,8 +1061,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
 
     if(ret_state==rt_break || ret_state==rt_continue)
     {
-        std::cout<<">> [runtime] call_function: break and continue are not allowed to be used here.\n";
-        ++error;
+        die(node.get_line(),"cannot use break/continue in function main block");
         return -1;
     }
     else if(ret_state==rt_error)
@@ -1126,8 +1099,7 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
             mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
         if(mem_address<0)
         {
-            std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<id_name<<"\'.\n";
-            ++error;
+            die(node.get_line(),"cannot find \""+id_name+"\"");
             return -1;
         }
         return mem_address;
@@ -1139,8 +1111,7 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
         mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
     if(mem_address<0)
     {
-        std::cout<<">> [runtime] call_scalar_mem: cannot find value named \'"<<id_name<<"\'.\n";
-        ++error;
+        die(node.get_children()[0].get_line(),"cannot find \""+id_name+"\"");
         return -1;
     }
     int call_expr_size=node.get_children().size();
@@ -1153,16 +1124,14 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
             case ast_call_vec:  tmp_mem_addr=call_vector_mem(call_expr,mem_address,local_scope_addr);break;
             case ast_call_hash: tmp_mem_addr=call_hash_mem(call_expr,mem_address,local_scope_addr);break;
             case ast_call_func:
-                std::cout<<">> [runtime] call_scalar_mem: cannot change the value that function returns.\n";
-                ++error;
+                die(call_expr.get_line(),"cannot change function returned value");
                 return -1;
                 break;
         }
         mem_address=tmp_mem_addr;
         if(mem_address<0)
         {
-            ++error;
-            std::cout<<">> [runtime] call_scalar_mem: cannot find correct memory space.\n";
+            die(call_expr.get_line(),"incorrect memory space");
             break;
         }
     }
@@ -1175,32 +1144,29 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
     int base_value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(base_value_type!=vm_vector && base_value_type!=vm_hash)
     {
-        std::cout<<">> [runtime] call_vector_mem: incorrect value type,expected a vector/hash.\n";
-        ++error;
+        die(node.get_line(),"incorrect value type,must be vector/hash");
         return -1;
     }
     int call_size=node.get_children().size();
     if(call_size>1)
     {
-        std::cout<<">> [runtime] call_vector_mem: when searching a memory space in a vector,only one index is alowed.\n";
-        ++error;
+        die(node.get_line(),"only one index/key is allowed to get memory space of vector/hash");
         return -1;
     }
     if(base_value_type==vm_vector)
     {
         nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
-        if(node.get_children()[0].get_type()==ast_subvec)
+        nasal_ast& tmp=node.get_children()[0];
+        if(tmp.get_type()==ast_subvec)
         {
-            std::cout<<">> [runtime] call_vector_mem: sub-vector in this progress is a temporary value and cannot be changed.\n";
-            ++error;
+            die(tmp.get_line(),"temporary sliced vector");
             return -1;
         }
-        int index_value_addr=calculation(node.get_children()[0],local_scope_addr);
+        int index_value_addr=calculation(tmp,local_scope_addr);
         int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
         if(index_value_type!=vm_number && index_value_type!=vm_string)
         {
-            std::cout<<">> [runtime] call_vector_mem: index is not a number/numerable string.\n";
-            ++error;
+            die(tmp.get_line(),"index is not a number/numerable string");
             return -1;
         }
         int index_num=0;
@@ -1210,8 +1176,7 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
             double number=trans_string_to_number(str);
             if(std::isnan(number))
             {
-                std::cout<<">> [runtime] call_vector_mem: index is not a numerable string.\n";
-                ++error;
+                die(tmp.get_line(),"index is not a numerable string");
                 return -1;
             }
             index_num=(int)number;
@@ -1225,15 +1190,19 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
     {
         if(call_size>1)
         {
-            std::cout<<">> [runtime] call_vector_mem: when calling a hash,only one key is alowed.\n";
-            ++error;
+            die(node.get_line(),"use only one key to call a hash");
             return -1;
         }
-        int str_addr=calculation(node.get_children()[0],local_scope_addr);
+        nasal_ast& tmp=node.get_children()[0];
+        if(tmp.get_type()==ast_subvec)
+        {
+            die(tmp.get_line(),"cannot slice hash");
+            return -1;
+        }
+        int str_addr=calculation(tmp,local_scope_addr);
         if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
         {
-            std::cout<<">> [runtime] call_vector_mem: must use a string as the key.\n";
-            ++error;
+            die(tmp.get_line(),"must use string as the key");
             return -1;
         }
         std::string str=nasal_vm.gc_get(str_addr).get_string();
@@ -1247,8 +1216,7 @@ int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_sco
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(value_type!=vm_hash)
     {
-        std::cout<<">> [runtime] call_hash_mem: incorrect value type,expected a hash.\n";
-        ++error;
+        die(node.get_line(),"called a value that is not a hash");
         return -1;
     }
     int ret_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(node.get_str());
@@ -1290,8 +1258,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
             ret_address=nasal_vm.gc_get(global_scope_address).get_closure().get_value_address(node.get_str());
         if(ret_address<0)
         {
-            std::cout<<">> [runtime] calculation: cannot find value named \'"<<node.get_str()<<"\'.\n";
-            ++error;
+            die(node.get_line(),"cannot find \""+node.get_str()+"\"");
             ret_address=nasal_vm.gc_alloc();
             nasal_vm.gc_get(ret_address).set_type(vm_nil);
         }
@@ -1544,8 +1511,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     }
     else
     {
-        std::cout<<">> [runtime] calculation: expression type:"<<ast_str(node.get_type())<<" cannot be calculated.\n";
-        ++error;
+        die(node.get_line(),"cannot calculate expression: "+ast_str(node.get_type()));
         ret_address=nasal_vm.gc_alloc();
         nasal_vm.gc_get(ret_address).set_type(vm_nil);
     }
@@ -1557,8 +1523,7 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
     nasal_ast& value_node=node.get_children()[1];
     if(define_node.get_type()==ast_identifier && value_node.get_type()==ast_multi_scalar)
     {
-        std::cout<<">> [runtime] definition: one identifier cannot accept too many values.\n";
-        ++error;
+        die(value_node.get_line(),"one identifier cannot accept too many values");
         return;
     }
     if(define_node.get_type()==ast_identifier)
@@ -1580,8 +1545,7 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             int val_size=value_node.get_children().size();
             if(id_size!=val_size)
             {
-                std::cout<<">> [runtime] definition: size of identifiers and size of values do not match.\n";
-                ++error;
+                die(value_node.get_line(),"size of identifiers and size of values do not match");
                 return;
             }
             for(int i=0;i<val_size;++i)
@@ -1595,15 +1559,13 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             int value_addr=calculation(value_node,local_scope_addr);
             if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
             {
-                std::cout<<">> [runtime] definition: must use vector in multi-definition.\n";
-                ++error;
+                die(value_node.get_line(),"must use vector in multi-definition");
                 return;
             }
             nasal_vector& ref_vector=nasal_vm.gc_get(value_addr).get_vector();
             if(ref_vector.size()!=id_size)
             {
-                std::cout<<">> [runtime] definition: size of identifiers and size of values do not match.\n";
-                ++error;
+                die(value_node.get_line(),"size of identifiers and size of values do not match");
                 return;
             }
             for(int i=0;i<id_size;++i)
@@ -1628,8 +1590,7 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         nasal_ast& tmp_node=multi_call_node.get_children()[i];
         if(tmp_node.get_type()!=ast_call && tmp_node.get_type()!=ast_identifier)
         {
-            std::cout<<">> [runtime] multi_assignment: multi-assignment must use available memory address.\n";
-            ++error;
+            die(tmp_node.get_line(),"multi-assignment must use available memory address");
             return;
         }
         mem_table.push_back(call_scalar_mem(tmp_node,local_scope_addr));
@@ -1639,8 +1600,7 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         int val_size=value_node.get_children().size();
         if(id_size!=val_size)
         {
-            std::cout<<">> [runtime] multi_assignment: size of calls and size of values do not match.\n";
-            ++error;
+            die(value_node.get_line(),"size of calls and size of values do not match");
             return;
         }
         std::vector<int> value_table;
@@ -1654,15 +1614,13 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         int value_addr=calculation(value_node,local_scope_addr);
         if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
         {
-            std::cout<<">> [runtime] multi_assignment: must use vector in multi-assignment.\n";
-            ++error;
+            die(value_node.get_line(),"must use vector in multi-assignment");
             return;
         }
         nasal_vector& ref_vector=nasal_vm.gc_get(value_addr).get_vector();
         if(ref_vector.size()!=id_size)
         {
-            std::cout<<">> [runtime] multi_assignment: size of calls and size of values do not match.\n";
-            ++error;
+            die(value_node.get_line(),"size of calls and size of values do not match");
             return;
         }
         std::vector<int> value_table;
