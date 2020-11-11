@@ -106,7 +106,6 @@ std::string ast_str(int type)
 
 enum parse_error
 {
-    unknown,
     error_token,
     error_expr,
     lack_left_curve,
@@ -143,7 +142,6 @@ void error_info(int line,int error_type,std::string error_str="")
     std::cout<<">> [parse] line "<<line<<": ";
     switch(error_type)
     {
-        case unknown:              std::cout<<"unknown error.\n";                       break;
         case error_token:          std::cout<<"error token \""+error_str+"\".\n";       break;
         case error_expr:           std::cout<<"error expression \""+error_str+"\".\n";  break;
         case lack_left_curve:      std::cout<<"expected \"(\".\n";                      break;
