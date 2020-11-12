@@ -49,6 +49,7 @@ private:
     nasal_ast root;
     std::vector<token> tok_list;
     void reset();
+    void die(int,std::string);
     bool check_multi_definition();
     bool check_multi_scalar();
     bool check_function_end(nasal_ast&);
@@ -134,16 +135,15 @@ void nasal_parse::main_process()
     {
         root.add_child(expr());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_semi)
+        if(ptr>=tok_list_size)
+            break;
+        if(tok_list[ptr].type==tok_semi)
             ++ptr;
-        else if(root.get_children().empty() || need_semi_check(root.get_children().back()))
+        else if(need_semi_check(root.get_children().back()))
         {
             // the last expression can be recognized without semi
             if(ptr<tok_list_size)
-            {
-                ++error;
-                error_info(error_line-1,lack_semi);
-            }
+                die(error_line,"expected \";\"");
         }
         if(root.get_children().size())
         {
@@ -151,7 +151,7 @@ void nasal_parse::main_process()
             if(type==ast_continue || type==ast_break || type==ast_return)
             {
                 ++error;
-                error_info(root.get_children().back().get_line(),error_expr,ast_str(type));
+                die(root.get_children().back().get_line(),ast_str(type)+" is not allowed in main scope");
             }
         }
     }
@@ -168,6 +168,13 @@ void nasal_parse::reset()
     this->ptr=0;
     this->error=0;
     this->root.clear();
+    return;
+}
+
+void nasal_parse::die(int line,std::string info)
+{
+    ++error;
+    std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
     return;
 }
 
@@ -322,19 +329,15 @@ nasal_ast nasal_parse::vector_gen()
     {
         node.add_child(calculation());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        else if(ptr<tok_list_size && tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_bracket)
-        {
-            error_info(error_line,lack_comma);
-            ++error;
+        if(ptr>=tok_list_size)
             break;
-        }
+        if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_bracket)
+            break;
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_bracket)
-    {
-        ++error;
-        error_info(error_line,lack_right_bracket);
-    }
+        die(error_line,"expected \"]\"");
     return node;
 }
 nasal_ast nasal_parse::hash_gen()
@@ -347,20 +350,15 @@ nasal_ast nasal_parse::hash_gen()
     {
         node.add_child(hash_member_gen());
         ++ptr;
-        if(ptr>=tok_list_size) break;
-        if(tok_list[ptr].type==tok_comma) ++ptr;
-        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_brace)
-        {
-            error_info(error_line,lack_comma);
-            ++error;
+        if(ptr>=tok_list_size)
             break;
-        }
+        if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_brace)
+            break;
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
-    {
-        ++error;
-        error_info(error_line,lack_right_brace);
-    }
+        die(error_line,"expected \"}\"");
     return node;
 }
 nasal_ast nasal_parse::hash_member_gen()
@@ -368,8 +366,7 @@ nasal_ast nasal_parse::hash_member_gen()
     nasal_ast node;
     if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_identifier && tok_list[ptr].type!=tok_string))
     {
-        error_info(error_line,lack_identifier);
-        ++error;
+        die(error_line,"expected identifier/string");
         return node;
     }
     node.set_line(tok_list[ptr].line);
@@ -378,17 +375,14 @@ nasal_ast nasal_parse::hash_member_gen()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
     {
-        error_info(error_line,lack_colon);
-        ++error;
+        die(error_line,"expected \":\"");
         return node;
     }
     ++ptr;
-    if(ptr<tok_list_size) node.add_child(calculation());
+    if(ptr<tok_list_size)
+        node.add_child(calculation());
     else
-    {
-        error_info(error_line,lack_scalar);
-        ++error;
-    }
+        die(error_line,"expected scalar");
     return node;
 }
 nasal_ast nasal_parse::func_gen()
@@ -399,14 +393,12 @@ nasal_ast nasal_parse::func_gen()
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        error_info(error_line,lack_left_curve);
-        ++error;
+        die(error_line,"expected \"(\"");
         return node;
     }
     if(tok_list[ptr].type!=tok_left_curve && tok_list[ptr].type!=tok_left_brace)
     {
-        ++error;
-        error_info(error_line,lack_func_content);
+        die(error_line,"expected argument(s)/expression block");
         return node;
     }
     if(tok_list[ptr].type==tok_left_curve)
@@ -421,8 +413,7 @@ nasal_ast nasal_parse::func_gen()
     }
     if(ptr>=tok_list_size)
     {
-        error_info(error_line,lack_left_brace);
-        ++error;
+        die(error_line,"expected expression block");
         return node;
     }
     node.add_child(exprs_gen());
@@ -439,8 +430,7 @@ nasal_ast nasal_parse::args_list_gen()
         nasal_ast tmp;
         if(tok_list[ptr].type!=tok_identifier)
         {
-            ++error;
-            error_info(error_line,lack_args);
+            die(error_line,"expected identifier");
             return node;
         }
         tmp=id_gen();
@@ -469,19 +459,17 @@ nasal_ast nasal_parse::args_list_gen()
             node.add_child(tmp);
         }
         ++ptr;
-        if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve))
-        {
-            ++error;
-            error_info(error_line,lack_comma);
-            return node;
-        }
+        if(ptr>=tok_list_size)
+            break;
         if(tok_list[ptr].type==tok_comma)
             ++ptr;
+        else if(tok_list[ptr].type!=tok_right_curve)
+            break;
     }
-    if(ptr>=tok_list_size)
+    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
-        ++error;
-        error_info(error_line,lack_right_curve);
+        die(error_line,"expected \")\"");
+        return node;
     }
 
     std::string args_format="func(";
@@ -507,15 +495,9 @@ nasal_ast nasal_parse::args_list_gen()
         else if(node.get_children()[i].get_type()==ast_dynamic_id)
             checked_dynamic_ids=true;
         if(checked_default_val && node.get_children()[i].get_type()!=ast_default_arg)
-        {
-            ++error;
-            error_info(node.get_children()[i].get_line(),default_arg_not_end,args_format);
-        }
+            die(error_line,"default argument must be the end of argument list: "+args_format);
         if(checked_dynamic_ids && i!=node_child_size-1)
-        {
-            ++error;
-            error_info(node.get_children()[i].get_line(),dynamic_id_not_end,args_format);
-        }
+            die(error_line,"dynamic identifier must be the end of argument list: "+args_format);
     }
     std::map<std::string,bool> argname_table;
     for(int i=0;i<node_child_size;++i)
@@ -529,10 +511,7 @@ nasal_ast nasal_parse::args_list_gen()
             case ast_default_arg:new_name=node.get_children()[i].get_children()[0].get_str();break;
         }
         if(argname_table.find(new_name)!=argname_table.end())
-        {
-            error_info(node.get_children()[i].get_line(),name_repetition);
-            ++error;
-        }
+            die(node.get_children()[i].get_line(),"argument name should not repeat");
         else
             argname_table[new_name]=true;
     }
@@ -571,7 +550,7 @@ nasal_ast nasal_parse::expr()
         case tok_break:    node=break_expr();    break;
         case tok_return:   node=return_expr();   break;
         case tok_semi:     --ptr;                break;
-        default: error_info(error_line,error_token,tok_list[ptr].str);++error;break;
+        default: die(error_line,"error token \""+tok_list[ptr].str+"\"");break;
     }
     return node;
 }
@@ -580,8 +559,7 @@ nasal_ast nasal_parse::exprs_gen()
     nasal_ast node;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_exprs);
+        die(error_line,"expected expression block");
         return node;
     }
     node.set_line(tok_list[ptr].line);
@@ -594,23 +572,29 @@ nasal_ast nasal_parse::exprs_gen()
         {
             node.add_child(expr());
             ++ptr;
-            if(ptr<tok_list_size && tok_list[ptr].type==tok_semi)
+            if(ptr>=tok_list_size)
+                break;
+            else if(tok_list[ptr].type==tok_semi)
                 ++ptr;
-            else if(node.get_children().empty() || need_semi_check(node.get_children().back()))
+            else if(need_semi_check(node.get_children().back()))
             {
                 // the last expression can be recognized without semi
                 if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
                 {
-                    ++error;
-                    error_info(error_line,lack_semi);
+                    die(error_line,"expected \";\"");
                     break;
                 }
             }
         }
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
         {
-            ++error;
-            error_info(left_brace_line,exprs_lack_rbrace);
+            std::string lb_line="";
+            while(left_brace_line>1)
+            {
+                lb_line=(char)('0'+(left_brace_line%10))+lb_line;
+                left_brace_line/=10;
+            }
+            die(error_line,"expected \"}\" to match \"{\" in line "+lb_line);
         }
     }
     else
@@ -627,14 +611,14 @@ nasal_ast nasal_parse::calculation()
     nasal_ast node;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_calculation);
+        die(error_line,"expected calculation");
         return node;
     }
     node=or_expr();
     ++ptr;
     if(ptr<tok_list_size && tok_list[ptr].type==tok_quesmark)
     {
+        // trinocular calculation
         nasal_ast tmp;
         tmp.set_line(tok_list[ptr].line);
         tmp.set_type(ast_trinocular);
@@ -643,20 +627,20 @@ nasal_ast nasal_parse::calculation()
         if(ptr<tok_list_size) tmp.add_child(calculation());
         else
         {
-            ++error;
-            error_info(error_line,lack_calculation);
+            die(error_line,"expected calculation");
             return node;
         }
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
         {
-            ++error;
-            error_info(error_line,lack_colon);
+            die(error_line,"expected \":\"");
             return node;
         }
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(calculation());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(calculation());
+        else
+            die(error_line,"expected calculation");
         node=tmp;
     }
     else if(
@@ -671,6 +655,7 @@ nasal_ast nasal_parse::calculation()
         )
     )
     {
+        // assignment
         nasal_ast tmp;
         tmp.set_line(tok_list[ptr].line);
         switch(tok_list[ptr].type)
@@ -684,8 +669,10 @@ nasal_ast nasal_parse::calculation()
         }
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(calculation());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(calculation());
+        else
+            die(error_line,"expected calculation");
         node=tmp;
     }
     else --ptr;
@@ -703,8 +690,10 @@ nasal_ast nasal_parse::or_expr()
         tmp.set_type(ast_or);
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(and_expr());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(and_expr());
+        else
+            die(error_line,"expected calculation");
         node=tmp;
         ++ptr;
     }
@@ -723,8 +712,10 @@ nasal_ast nasal_parse::and_expr()
         tmp.set_type(ast_and);
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(cmp_expr());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(cmp_expr());
+        else
+            die(error_line,"expected calculation");
         node=tmp;
         ++ptr;
     }
@@ -761,8 +752,10 @@ nasal_ast nasal_parse::cmp_expr()
         }
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(additive_expr());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(additive_expr());
+        else
+            die(error_line,"expected calculation");
         node=tmp;
         ++ptr;
     }
@@ -786,8 +779,11 @@ nasal_ast nasal_parse::additive_expr()
         }
         tmp.add_child(node);
         ++ptr;
-        if(ptr<tok_list_size) tmp.add_child(multive_expr());
-        else{ ++error; error_info(error_line,lack_calculation);}
+        if(ptr<tok_list_size)
+            tmp.add_child(multive_expr());
+        else
+            die(error_line,"expected calculation");
+        // pre-calculation
         if(tmp.get_type()!=ast_link && tmp.get_children()[0].get_type()==ast_number && tmp.get_children()[1].get_type()==ast_number)
         {
             double num1=tmp.get_children()[0].get_num();
@@ -848,10 +844,10 @@ nasal_ast nasal_parse::multive_expr()
             tmp.add_child((tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar());
         else
         {
-            ++error;
-            error_info(error_line,lack_calculation);
+            die(error_line,"expected calculation");
             break;
         }
+        // pre-calculation
         if(tmp.get_children()[0].get_type()==ast_number && tmp.get_children()[1].get_type()==ast_number)
         {
             double num1=tmp.get_children()[0].get_num();
@@ -884,7 +880,9 @@ nasal_ast nasal_parse::unary()
         else
             node.add_child(scalar());
     }
-    else{ ++error; error_info(error_line,lack_calculation);}
+    else
+        die(error_line,"expected calculation");
+    // pre-calculation
     if(node.get_children()[0].get_type()==ast_number)
     {
         double num=node.get_children()[0].get_num();
@@ -927,19 +925,17 @@ nasal_ast nasal_parse::scalar()
     else if(tok_list[ptr].type==tok_left_curve)
     {
         ++ptr;
-        if(ptr<tok_list_size) node=calculation();
-        else{ ++error; error_info(node.get_line(),lack_calculation);}
+        if(ptr<tok_list_size)
+            node=calculation();
+        else
+            die(error_line,"expected calculation");
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-        {
-            ++error;
-            error_info(error_line,lack_right_curve);
-        }
+            die(error_line,"expected \")\"");
     }
     else
     {
-        ++error;
-        error_info(error_line,lack_scalar);
+        die(error_line,"expected scalar");
         return node;
     }
     ++ptr;
@@ -979,10 +975,7 @@ nasal_ast nasal_parse::call_hash()
     if(ptr<tok_list_size && tok_list[ptr].type==tok_identifier)
         node.set_str(tok_list[ptr].str);
     else
-    {
-        ++error;
-        error_info(error_line,lack_identifier);
-    }
+        die(error_line,"expected identifier");
     return node;
 }
 nasal_ast nasal_parse::call_vector()
@@ -995,19 +988,15 @@ nasal_ast nasal_parse::call_vector()
     {
         node.add_child(subvec());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_bracket)
-        {
-            ++error;
-            error_info(error_line,lack_comma);
+        if(ptr>=tok_list_size)
             break;
-        }
+        else if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+        else if(tok_list[ptr].type!=tok_right_bracket)
+            break;
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_bracket)
-    {
-        ++error;
-        error_info(error_line,lack_right_bracket);
-    }
+        die(error_line,"expected \"]\"");
     return node;
 }
 nasal_ast nasal_parse::call_func()
@@ -1021,19 +1010,15 @@ nasal_ast nasal_parse::call_func()
     {
         node.add_child(special_call?hash_member_gen():calculation());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_comma) ++ptr;
-        else if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve))
-        {
-            ++error;
-            error_info(error_line,lack_comma);
+        if(ptr>=tok_list_size)
             break;
-        }
+        else if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+        else if(tok_list[ptr].type!=tok_right_curve)
+            break;
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-    {
-        ++error;
-        error_info(error_line,lack_right_curve);
-    }
+        die(error_line,"expected \")\"");
     return node;
 }
 nasal_ast nasal_parse::subvec()
@@ -1060,11 +1045,13 @@ nasal_ast nasal_parse::subvec()
                 --ptr;
                 tmp.add_child(nil_gen());
             }
-            else tmp.add_child(calculation());
+            else
+                tmp.add_child(calculation());
             node=tmp;
         }
     }
-    else --ptr;
+    else
+        --ptr;
     return node;
 }
 nasal_ast nasal_parse::definition()
@@ -1080,8 +1067,7 @@ nasal_ast nasal_parse::definition()
             case tok_identifier:node.add_child(normal_def());       break;
             case tok_left_curve:node.add_child(var_outcurve_def()); break;
             default:
-                ++error;
-                error_info(error_line,lack_identifier);
+                die(error_line,"expected identifier");
                 return node;
         }
     }
@@ -1090,18 +1076,13 @@ nasal_ast nasal_parse::definition()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
     {
-        ++error;
-        if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve) && !node.get_children().back().get_children().size())
-            error_info(error_line,definition_use_call);
-        else
-            error_info(error_line,lack_equal);
+        die(error_line,"expected \"=\" / don\'t call identifier in definition");
         return node;
     }
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_scalar);
+        die(error_line,"expected scalar");
         return node;
     }
     if(tok_list[ptr].type==tok_left_curve)
@@ -1125,22 +1106,15 @@ nasal_ast nasal_parse::var_incurve_def()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
     {
-        ++error;
-        error_info(error_line,lack_identifier);
+        die(error_line,"expected identifier");
         return node;
     }
     node=multi_id();
     ++ptr;
     if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve))
-    {
-        ++error;
-        error_info(error_line,multi_id_use_call);
-    }
+        die(error_line,"don\'t call identifier in multi-definition");
     else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-    {
-        ++error;
-        error_info(error_line,lack_right_curve);
-    }
+        die(error_line,"expected \")\"");
     return node;
 }
 nasal_ast nasal_parse::var_outcurve_def()
@@ -1149,22 +1123,15 @@ nasal_ast nasal_parse::var_outcurve_def()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
     {
-        ++error;
-        error_info(error_line,lack_identifier);
+        die(error_line,"expected identifier");
         return node;
     }
     node=multi_id();
     ++ptr;
     if(ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve))
-    {
-        ++error;
-        error_info(error_line,multi_id_use_call);
-    }
+        die(error_line,"don\'t call identifier in multi-definition");
     else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-    {
-        ++error;
-        error_info(error_line,lack_right_curve);
-    }
+        die(error_line,"expected \")\"");
     return node;
 }
 nasal_ast nasal_parse::multi_id()
@@ -1172,28 +1139,22 @@ nasal_ast nasal_parse::multi_id()
     nasal_ast node;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
     {
-        ++error;
-        error_info(error_line,lack_identifier);
+        die(error_line,"expected identifier");
         return node;
     }
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_multi_id);
-    node.add_child(id_gen());
-    ++ptr;
-    while(ptr<tok_list_size && tok_list[ptr].type==tok_comma)
+    while(ptr<tok_list_size)
     {
+        node.add_child(id_gen());
         ++ptr;
-        if(ptr<tok_list_size && tok_list[ptr].type==tok_identifier)
-            node.add_child(id_gen());
-        else
+        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_comma)
         {
-            ++error;
-            error_info(error_line,lack_identifier);
+            --ptr;
             break;
         }
         ++ptr;
     }
-    --ptr;
     return node;
 }
 nasal_ast nasal_parse::multi_scalar()
@@ -1206,20 +1167,15 @@ nasal_ast nasal_parse::multi_scalar()
     {
         node.add_child(calculation());
         ++ptr;
-        if(ptr>=tok_list_size) break;
-        if(tok_list[ptr].type==tok_comma) ++ptr;
-        else if(tok_list[ptr].type!=tok_comma && tok_list[ptr].type!=tok_right_curve)
-        {
-            ++error;
-            error_info(error_line,lack_comma);
+        if(ptr>=tok_list_size)
             break;
-        }
+        if(tok_list[ptr].type==tok_comma)
+            ++ptr;
+        else if(tok_list[ptr].type!=tok_right_curve)
+            break;
     }
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
-    {
-        ++error;
-        error_info(error_line,lack_right_curve);
-    }
+        die(error_line,"expected \")\"");
     return node;
 }
 nasal_ast nasal_parse::multi_assgin()
@@ -1231,15 +1187,13 @@ nasal_ast nasal_parse::multi_assgin()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
     {
-        ++error;
-        error_info(error_line,lack_equal);
+        die(error_line,"expected \"=\"");
         return node;
     }
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,multi_assign_lack_val);
+        die(error_line,"expected value list");
         return node;
     }
     if(tok_list[ptr].type==tok_left_curve)
@@ -1251,12 +1205,6 @@ nasal_ast nasal_parse::multi_assgin()
 nasal_ast nasal_parse::loop()
 {
     nasal_ast node;
-    if(ptr>=tok_list_size)
-    {
-        ++error;
-        error_info(error_line,lack_token,"loop");
-        return node;
-    }
     switch(tok_list[ptr].type)
     {
         case tok_while:   node=while_loop(); break;
@@ -1279,15 +1227,13 @@ nasal_ast nasal_parse::while_loop()
     }
     else
     {
-        ++error;
-        error_info(error_line,lack_left_curve);
+        die(error_line,"expected \"(\"");
         return node;
     }
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
-        ++error;
-        error_info(error_line,lack_right_curve);
+        die(error_line,"expected \")\"");
         return node;
     }
     ++ptr;
@@ -1302,16 +1248,14 @@ nasal_ast nasal_parse::for_loop()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
     {
-        ++error;
-        error_info(error_line,lack_left_curve);
+        die(error_line,"expected \"(\"");
         return node;
     }
     // first expression
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_definition);
+        die(error_line,"expected definition");
         return node;
     }
     if(tok_list[ptr].type==tok_semi)
@@ -1326,16 +1270,14 @@ nasal_ast nasal_parse::for_loop()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
     {
-        ++error;
-        error_info(error_line,lack_semi);
+        die(error_line,"expected \";\"");
         return node;
     }
     // conditional expression
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_calculation);
+        die(error_line,"expected conditional expression");
         return node;
     }
     if(tok_list[ptr].type==tok_semi)
@@ -1348,16 +1290,14 @@ nasal_ast nasal_parse::for_loop()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
     {
-        ++error;
-        error_info(error_line,lack_semi);
+        die(error_line,"expected \";\"");
         return node;
     }
     //after loop expression
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_calculation);
+        die(error_line,"expected calculation");
         return node;
     }
     if(tok_list[ptr].type==tok_right_curve)
@@ -1370,8 +1310,7 @@ nasal_ast nasal_parse::for_loop()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
-        ++error;
-        error_info(error_line,lack_right_curve);
+        die(error_line,"expected \")\"");
         return node;
     }
     ++ptr;
@@ -1390,8 +1329,7 @@ nasal_ast nasal_parse::forei_loop()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
     {
-        ++error;
-        error_info(error_line,lack_left_curve);
+        die(error_line,"expected \"(\"");
         return node;
     }
     // first expression
@@ -1399,31 +1337,27 @@ nasal_ast nasal_parse::forei_loop()
     ++ptr;
     if(ptr>=tok_list_size || (tok_list[ptr].type!=tok_var && tok_list[ptr].type!=tok_identifier))
     {
-        ++error;
-        error_info(error_line,lack_loop_iter);
+        die(error_line,"expected iterable value");
         return node;
     }
     node.add_child(new_iter_gen());
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
     {
-        ++error;
-        error_info(error_line,lack_semi);
+        die(error_line,"expected \";\"");
         return node;
     }
     ++ptr;
     if(ptr>=tok_list_size)
     {
-        ++error;
-        error_info(error_line,lack_calculation);
+        die(error_line,"expected vector");
         return node;
     }
     node.add_child(calculation());
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
-        ++error;
-        error_info(error_line,lack_right_curve);
+        die(error_line,"expected \")\"");
         return node;
     }
     ++ptr;
@@ -1441,8 +1375,7 @@ nasal_ast nasal_parse::new_iter_gen()
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
         {
-            ++error;
-            error_info(error_line,lack_identifier);
+            die(error_line,"expected identifier");
             return node;
         }
         node.add_child(id_gen());
@@ -1474,8 +1407,7 @@ nasal_ast nasal_parse::conditional()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
     {
-        ++error;
-        error_info(error_line,lack_left_curve);
+        die(error_line,"expected \"(\"");
         return node;
     }
     ++ptr;
@@ -1483,8 +1415,7 @@ nasal_ast nasal_parse::conditional()
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
     {
-        ++error;
-        error_info(error_line,lack_right_curve);
+        die(error_line,"expected \")\"");
         return node;
     }
     ++ptr;
@@ -1494,12 +1425,12 @@ nasal_ast nasal_parse::conditional()
     ++ptr;
     while(ptr<tok_list_size && (tok_list[ptr].type==tok_elsif || (tok_list[ptr].type==tok_else && ptr+1<tok_list_size && tok_list[ptr+1].type==tok_if)))
     {
-        if(tok_list[ptr].type==tok_else) ++ptr;
+        if(tok_list[ptr].type==tok_else)
+            ++ptr;
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_left_curve)
         {
-            ++error;
-            error_info(error_line,lack_left_curve);
+            die(error_line,"expected \"(\"");
             return node;
         }
         tmp.set_line(tok_list[ptr].line);
@@ -1510,8 +1441,7 @@ nasal_ast nasal_parse::conditional()
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
         {
-            ++error;
-            error_info(error_line,lack_right_curve);
+            die(error_line,"expected \")\"");
             return node;
         }
         ++ptr;
