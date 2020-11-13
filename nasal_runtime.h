@@ -190,8 +190,7 @@ void nasal_runtime::run()
     this->error=0;
     this->function_returned_address=-1;
 
-    this->global_scope_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(global_scope_address).set_type(vm_closure);
+    this->global_scope_address=nasal_vm.gc_alloc(vm_closure);
     nasal_vm.gc_get(global_scope_address).get_closure().add_scope();
 
     time_t begin_time=std::time(NULL);
@@ -211,8 +210,7 @@ void nasal_runtime::run()
 // private functions
 int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr)
 {
-    int new_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_addr).set_type(vm_vector);
+    int new_addr=nasal_vm.gc_alloc(vm_vector);
     nasal_vector& ref_of_this_vector=nasal_vm.gc_get(new_addr).get_vector();
 
     int node_children_size=node.get_children().size();
@@ -222,8 +220,7 @@ int nasal_runtime::vector_generation(nasal_ast& node,int local_scope_addr)
 }
 int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr)
 {
-    int new_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_addr).set_type(vm_hash);
+    int new_addr=nasal_vm.gc_alloc(vm_hash);
     nasal_hash& ref_of_this_hash=nasal_vm.gc_get(new_addr).get_hash();
     int node_children_size=node.get_children().size();
     for(int i=0;i<node_children_size;++i)
@@ -236,8 +233,7 @@ int nasal_runtime::hash_generation(nasal_ast& node,int local_scope_addr)
 }
 int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr)
 {
-    int new_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_addr).set_type(vm_function);
+    int new_addr=nasal_vm.gc_alloc(vm_function);
     nasal_function& ref_of_this_function=nasal_vm.gc_get(new_addr).get_func();
 
     ref_of_this_function.set_arguments(node.get_children()[0]);
@@ -247,8 +243,7 @@ int nasal_runtime::function_generation(nasal_ast& node,int local_scope_addr)
         ref_of_this_function.set_closure_addr(local_scope_addr);
     else
     {
-        int new_closure=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_closure).set_type(vm_closure);
+        int new_closure=nasal_vm.gc_alloc(vm_closure);
         ref_of_this_function.set_closure_addr(new_closure);
         nasal_vm.del_reference(new_closure);
     }
@@ -293,8 +288,7 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
     // if local_scope does not exist,create a new one.
     if(local_scope_addr<0)
     {
-        local_scope_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(local_scope_addr).set_type(vm_closure);
+        local_scope_addr=nasal_vm.gc_alloc(vm_closure);
         nasal_vm.gc_get(local_scope_addr).get_closure().add_scope();
     }
     else
@@ -332,10 +326,7 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr,bool allo
                     if(tmp_node.get_children().size())
                         function_returned_address=calculation(tmp_node.get_children()[0],local_scope_addr);
                     else
-                    {
-                        function_returned_address=nasal_vm.gc_alloc();
-                        nasal_vm.gc_get(function_returned_address).set_type(vm_nil);
-                    }
+                        function_returned_address=nasal_vm.gc_alloc(vm_nil);
                 } 
                 else
                     die(tmp_node.get_line(),"cannot use return here");
@@ -402,8 +393,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int while_local_scope_addr=local_scope_addr;
         if(while_local_scope_addr<0)
         {
-            while_local_scope_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(while_local_scope_addr).set_type(vm_closure);
+            while_local_scope_addr=nasal_vm.gc_alloc(vm_closure);
             nasal_vm.gc_get(while_local_scope_addr).get_closure().add_scope();
         }
         else
@@ -444,8 +434,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int forei_local_scope_addr=local_scope_addr;
         if(forei_local_scope_addr<0)
         {
-            forei_local_scope_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(forei_local_scope_addr).set_type(vm_closure);
+            forei_local_scope_addr=nasal_vm.gc_alloc(vm_closure);
             nasal_vm.gc_get(forei_local_scope_addr).get_closure().add_scope();
         }
         else
@@ -457,8 +446,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int mem_addr=-1;
         if(iter_node.get_type()==ast_new_iter)
         {
-            int new_value_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_value_addr).set_type(vm_nil);
+            int new_value_addr=nasal_vm.gc_alloc(vm_nil);
             std::string val_name=iter_node.get_children()[0].get_str();
             nasal_vm.gc_get(forei_local_scope_addr).get_closure().add_new_value(val_name,new_value_addr);
             mem_addr=nasal_vm.gc_get(forei_local_scope_addr).get_closure().get_mem_address(val_name);
@@ -477,8 +465,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
             // update iterator
             if(loop_type==ast_forindex)
             {
-                int new_iter_val_addr=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(new_iter_val_addr).set_type(vm_number);
+                int new_iter_val_addr=nasal_vm.gc_alloc(vm_number);
                 nasal_vm.gc_get(new_iter_val_addr).set_number((double)i);
                 nasal_vm.mem_change(mem_addr,new_iter_val_addr);
             }
@@ -507,8 +494,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr,bool allow
         int for_local_scope_addr=local_scope_addr;
         if(for_local_scope_addr<0)
         {
-            for_local_scope_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(for_local_scope_addr).set_type(vm_closure);
+            for_local_scope_addr=nasal_vm.gc_alloc(vm_closure);
             nasal_vm.gc_get(for_local_scope_addr).get_closure().add_scope();
         }
         else
@@ -783,8 +769,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         }
         else
         {
-            return_value_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(return_value_addr).set_type(vm_vector);
+            return_value_addr=nasal_vm.gc_alloc(vm_vector);
             nasal_vector& return_vector=nasal_vm.gc_get(return_value_addr).get_vector();
             int vec_size=called_value_addrs.size();
             for(int i=0;i<vec_size;++i)
@@ -854,8 +839,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         else
             index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
         nasal_vm.del_reference(index_value_addr);
-        return_value_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(return_value_addr).set_type(vm_number);
+        return_value_addr=nasal_vm.gc_alloc(vm_number);
         std::string str=nasal_vm.gc_get(base_value_addr).get_string();
         int str_size=str.length();
         if(index_num>=str_size || index_num<-str_size)
@@ -915,8 +899,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         else if(argument_format.get_children().size() && argument_format.get_children()[0].get_type()==ast_dynamic_id)
         {
             // load null dynamic-id
-            int vector_value_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(vector_value_addr).set_type(vm_vector);
+            int vector_value_addr=nasal_vm.gc_alloc(vm_vector);
             run_closure.add_new_value(argument_format.get_children()[0].get_str(),vector_value_addr);
         }
         else if(argument_format.get_children().size() && argument_format.get_children()[0].get_type()==ast_default_arg)
@@ -989,8 +972,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
             if(!args_usage_table[dyn_str])
             {
                 args_usage_table[dyn_str]=true;
-                int vector_value_addr=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(vector_value_addr).set_type(vm_vector);
+                int vector_value_addr=nasal_vm.gc_alloc(vm_vector);
                 run_closure.add_new_value(dyn_str,vector_value_addr);
             }
         }
@@ -1026,8 +1008,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
             {
                 if(tmp_node.get_type()==ast_dynamic_id)
                 {
-                    int vector_value_addr=nasal_vm.gc_alloc();
-                    nasal_vm.gc_get(vector_value_addr).set_type(vm_vector);
+                    int vector_value_addr=nasal_vm.gc_alloc(vm_vector);
                     nasal_vector& ref_vec=nasal_vm.gc_get(vector_value_addr).get_vector();
                     for(int j=i;j<size;++j)
                         ref_vec.add_elem(args[j]);
@@ -1073,10 +1054,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         function_returned_address=-1;
     }
     else
-    {
-        ret_value_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_value_addr).set_type(vm_nil);
-    }
+        ret_value_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_value_addr;
 }
 int nasal_runtime::call_builtin_function(std::string val_name,int local_scope_addr)
@@ -1229,25 +1207,19 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     int calculation_type=node.get_type();
     if(calculation_type==ast_null)
     {
-        ret_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_address).set_type(vm_number);
+        ret_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(ret_address).set_number(1);
     }
     else if(calculation_type==ast_nil)
-    {
-        ret_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_address).set_type(vm_nil);
-    }
+        ret_address=nasal_vm.gc_alloc(vm_nil);
     else if(calculation_type==ast_number)
     {
-        ret_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_address).set_type(vm_number);
+        ret_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(ret_address).set_number(node.get_num());
     }
     else if(calculation_type==ast_string)
     {
-        ret_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_address).set_type(vm_string);
+        ret_address=nasal_vm.gc_alloc(vm_string);
         nasal_vm.gc_get(ret_address).set_string(node.get_str());
     }
     else if(calculation_type==ast_identifier)
@@ -1259,8 +1231,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         if(ret_address<0)
         {
             die(node.get_line(),"cannot find \""+node.get_str()+"\"");
-            ret_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(ret_address).set_type(vm_nil);
+            ret_address=nasal_vm.gc_alloc(vm_nil);
         }
         nasal_vm.add_reference(ret_address);
     }
@@ -1377,8 +1348,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
         if(!check_condition(left_gc_addr))
         {
             nasal_vm.del_reference(left_gc_addr);
-            ret_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(ret_address).set_type(vm_number);
+            ret_address=nasal_vm.gc_alloc(vm_number);
             nasal_vm.gc_get(ret_address).set_number(0);
         }
         else
@@ -1388,8 +1358,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
             {
                 nasal_vm.del_reference(left_gc_addr);
                 nasal_vm.del_reference(right_gc_addr);
-                ret_address=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(ret_address).set_type(vm_number);
+                ret_address=nasal_vm.gc_alloc(vm_number);
                 nasal_vm.gc_get(ret_address).set_number(0);
             }
             else
@@ -1416,8 +1385,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
             {
                 nasal_vm.del_reference(left_gc_addr);
                 nasal_vm.del_reference(right_gc_addr);
-                ret_address=nasal_vm.gc_alloc();
-                nasal_vm.gc_get(ret_address).set_type(vm_number);
+                ret_address=nasal_vm.gc_alloc(vm_number);
                 nasal_vm.gc_get(ret_address).set_number(0);
             }
         }
@@ -1512,8 +1480,7 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     else
     {
         die(node.get_line(),"cannot calculate expression: "+ast_str(node.get_type()));
-        ret_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_address).set_type(vm_nil);
+        ret_address=nasal_vm.gc_alloc(vm_nil);
     }
     return ret_address;
 }
