@@ -91,7 +91,7 @@ public:
     nasal_scalar();
     ~nasal_scalar();
     void clear();
-    bool set_type(int);
+    void set_type(int);
     void set_number(double);
     void set_string(std::string);
     int             get_type();
@@ -143,11 +143,10 @@ public:
     ~nasal_virtual_machine();
     void clear();
     void debug();
-    int gc_alloc();             // garbage collector gives a new space
+    int gc_alloc(int);          // garbage collector gives a new space
     nasal_scalar& gc_get(int);  // get scalar that stored in gc
     void add_reference(int);
     void del_reference(int);
-    int get_refcnt(int);
     int mem_alloc();            // memory gives a new space
     int mem_free(int);          // give space back to memory
     int mem_change(int,int);    // change value in memory space
@@ -340,8 +339,7 @@ int nasal_hash::get_mem_address(std::string key)
     else
     {
         int mem_addr=nasal_vm.mem_alloc();
-        int val_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(val_addr).set_type(vm_nil);
+        int val_addr=nasal_vm.gc_alloc(vm_nil);
         nasal_vm.mem_init(mem_addr,val_addr);
         elems[key]=mem_addr;
         ret_mem_addr=mem_addr;
@@ -376,13 +374,11 @@ bool nasal_hash::check_contain(std::string key)
 }
 int nasal_hash::get_keys()
 {
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_vector);
+    int ret_addr=nasal_vm.gc_alloc(vm_vector);
     nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
     for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
     {
-        int str_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(str_addr).set_type(vm_string);
+        int str_addr=nasal_vm.gc_alloc(vm_string);
         nasal_vm.gc_get(str_addr).set_string(iter->first);
         ref_vec.add_elem(str_addr);
     }
@@ -432,8 +428,7 @@ void nasal_function::set_closure_addr(int value_address)
 {
     if(closure_addr>=0)
         nasal_vm.del_reference(closure_addr);
-    int new_closure=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_closure).set_type(vm_closure);
+    int new_closure=nasal_vm.gc_alloc(vm_closure);
     nasal_vm.gc_get(new_closure).get_closure().set_closure(nasal_vm.gc_get(value_address).get_closure());
     closure_addr=new_closure;
     return;
@@ -598,9 +593,13 @@ void nasal_scalar::clear()
     }
     return;
 }
-bool nasal_scalar::set_type(int nasal_scalar_type)
+void nasal_scalar::set_type(int nasal_scalar_type)
 {
-    bool ret=true;
+    if(this->scalar_ptr)
+    {
+        std::cout<<">> [vm] scalar_ptr is in use.\n";
+        return;
+    }
     this->type=nasal_scalar_type;
     switch(nasal_scalar_type)
     {
@@ -615,10 +614,9 @@ bool nasal_scalar::set_type(int nasal_scalar_type)
             std::cout<<">> [vm] error scalar type: "<<nasal_scalar_type<<".\n";
             this->type=vm_nil;
             this->scalar_ptr=(void*)NULL;
-            ret=false;
             break;
     }
-    return ret;
+    return;
 }
 void nasal_scalar::set_number(double num)
 {
@@ -698,8 +696,7 @@ int nasal_scalar::nasal_scalar_add(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
 
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number(a_num+b_num);
     return new_value_address;
 }
@@ -724,8 +721,7 @@ int nasal_scalar::nasal_scalar_sub(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
     
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number(a_num-b_num);
     return new_value_address;
 }
@@ -750,8 +746,7 @@ int nasal_scalar::nasal_scalar_mult(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
 
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number(a_num*b_num);
     return new_value_address;
 }
@@ -776,8 +771,7 @@ int nasal_scalar::nasal_scalar_div(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
 
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number(a_num/b_num);
     return new_value_address;
 }
@@ -799,8 +793,7 @@ int nasal_scalar::nasal_scalar_link(int a_scalar_addr,int b_scalar_addr)
     std::string b_str;
     a_str=(a_ref.type==vm_number)? trans_number_to_string(*(double*)a_ref.scalar_ptr):*(std::string*)a_ref.scalar_ptr;
     b_str=(b_ref.type==vm_number)? trans_number_to_string(*(double*)b_ref.scalar_ptr):*(std::string*)b_ref.scalar_ptr;
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_string);
+    int new_value_address=nasal_vm.gc_alloc(vm_string);
     nasal_vm.gc_get(new_value_address).set_string(a_str+b_str);
     return new_value_address;
 }
@@ -819,8 +812,7 @@ int nasal_scalar::nasal_scalar_unary_sub(int a_scalar_addr)
     else if(a_ref.type==vm_string)
         a_num=trans_string_to_number(*(std::string*)a_ref.scalar_ptr);
 
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number(-a_num);
     return new_value_address;
 }
@@ -835,15 +827,13 @@ int nasal_scalar::nasal_scalar_unary_not(int a_scalar_addr)
     int new_value_address=-1;
     if(a_ref.type==vm_nil)
     {
-        new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(1);
     }
     else if(a_ref.type==vm_number)
     {
         double number=(double)(*(double*)(a_ref.scalar_ptr)==0);
-        new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(number);
     }
     else if(a_ref.type==vm_string)
@@ -851,14 +841,12 @@ int nasal_scalar::nasal_scalar_unary_not(int a_scalar_addr)
         double number=trans_string_to_number(*(std::string*)a_ref.scalar_ptr);
         if(std::isnan(number))
         {
-            new_value_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_value_address).set_type(vm_number);
+            new_value_address=nasal_vm.gc_alloc(vm_number);
             nasal_vm.gc_get(new_value_address).set_number(!(*(std::string*)a_ref.scalar_ptr).length());
         }
         else
         {
-            new_value_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_value_address).set_type(vm_number);
+            new_value_address=nasal_vm.gc_alloc(vm_number);
             nasal_vm.gc_get(new_value_address).set_number((double)(number==0));
         }
     }
@@ -875,8 +863,7 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a_scalar_addr,int b_scalar_addr)
     }
     if(a_scalar_addr==b_scalar_addr)
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(1);
         return new_value_address;
     }
@@ -884,8 +871,7 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a_scalar_addr,int b_scalar_addr)
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
     if(a_ref.type==vm_nil && b_ref.type==vm_nil)
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(1);
         return new_value_address;
     }
@@ -895,8 +881,7 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a_scalar_addr,int b_scalar_addr)
         {
             std::string astr=*(std::string*)a_ref.scalar_ptr;
             std::string bstr=*(std::string*)b_ref.scalar_ptr;
-            int new_value_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_value_address).set_type(vm_number);
+            int new_value_address=nasal_vm.gc_alloc(vm_number);
             nasal_vm.gc_get(new_value_address).set_number((double)(astr==bstr));
             return new_value_address;
         }
@@ -911,15 +896,13 @@ int nasal_scalar::nasal_scalar_cmp_equal(int a_scalar_addr,int b_scalar_addr)
         else
             b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
         
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_num==b_num));
         return new_value_address;
     }
     else
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(0);
         return new_value_address;
     }
@@ -934,8 +917,7 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a_scalar_addr,int b_scalar_addr
     }
     if(a_scalar_addr==b_scalar_addr)
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(0);
         return new_value_address;
     }
@@ -943,8 +925,7 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a_scalar_addr,int b_scalar_addr
     nasal_scalar& b_ref=nasal_vm.gc_get(b_scalar_addr);
     if(a_ref.type==vm_nil && b_ref.type==vm_nil)
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(0);
         return new_value_address;
     }
@@ -954,8 +935,7 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a_scalar_addr,int b_scalar_addr
         {
             std::string astr=*(std::string*)a_ref.scalar_ptr;
             std::string bstr=*(std::string*)b_ref.scalar_ptr;
-            int new_value_address=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_value_address).set_type(vm_number);
+            int new_value_address=nasal_vm.gc_alloc(vm_number);
             nasal_vm.gc_get(new_value_address).set_number((double)(astr!=bstr));
             return new_value_address;
         }
@@ -970,15 +950,13 @@ int nasal_scalar::nasal_scalar_cmp_not_equal(int a_scalar_addr,int b_scalar_addr
         else
             b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
 
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_num!=b_num));
         return new_value_address;
     }
     else
     {
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number(1);
         return new_value_address;
     }
@@ -998,8 +976,7 @@ int nasal_scalar::nasal_scalar_cmp_less(int a_scalar_addr,int b_scalar_addr)
     {
         std::string a_str=*(std::string*)a_ref.scalar_ptr;
         std::string b_str=*(std::string*)b_ref.scalar_ptr;
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_str<b_str));
         return new_value_address;
     }
@@ -1014,8 +991,7 @@ int nasal_scalar::nasal_scalar_cmp_less(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
 
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number((double)(a_num<b_num));
     return new_value_address;
 }
@@ -1033,8 +1009,7 @@ int nasal_scalar::nasal_scalar_cmp_greater(int a_scalar_addr,int b_scalar_addr)
     {
         std::string a_str=*(std::string*)a_ref.scalar_ptr;
         std::string b_str=*(std::string*)b_ref.scalar_ptr;
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_str>b_str));
         return new_value_address;
     }
@@ -1049,8 +1024,7 @@ int nasal_scalar::nasal_scalar_cmp_greater(int a_scalar_addr,int b_scalar_addr)
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
     
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number((double)(a_num>b_num));
     return new_value_address;
 }
@@ -1068,8 +1042,7 @@ int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a_scalar_addr,int b_scalar_
     {
         std::string a_str=*(std::string*)a_ref.scalar_ptr;
         std::string b_str=*(std::string*)b_ref.scalar_ptr;
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_str<=b_str));
         return new_value_address;
     }
@@ -1084,8 +1057,7 @@ int nasal_scalar::nasal_scalar_cmp_less_or_equal(int a_scalar_addr,int b_scalar_
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
     
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number((double)(a_num<=b_num));
     return new_value_address;
 }
@@ -1103,8 +1075,7 @@ int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a_scalar_addr,int b_scal
     {
         std::string a_str=*(std::string*)a_ref.scalar_ptr;
         std::string b_str=*(std::string*)b_ref.scalar_ptr;
-        int new_value_address=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(new_value_address).set_type(vm_number);
+        int new_value_address=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(new_value_address).set_number((double)(a_str>=b_str));
         return new_value_address;
     }
@@ -1119,8 +1090,7 @@ int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a_scalar_addr,int b_scal
     else if(b_ref.type==vm_string)
         b_num=trans_string_to_number(*(std::string*)b_ref.scalar_ptr);
     
-    int new_value_address=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(new_value_address).set_type(vm_number);
+    int new_value_address=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(new_value_address).set_number((double)(a_num>=b_num));
     return new_value_address;
 }
@@ -1216,19 +1186,23 @@ void nasal_virtual_machine::clear()
     error_info_output_switch=true;
     return;
 }
-int nasal_virtual_machine::gc_alloc()
+int nasal_virtual_machine::gc_alloc(int val_type)
 {
     if(garbage_collector_free_space.empty())
     {
         gc_unit* new_block=new gc_unit[256];
         garbage_collector_memory.push_back(new_block);
         int mem_size=garbage_collector_memory.size();
-        for(int i=((mem_size-1)<<8);i<(mem_size<<8);++i)
+        int begin=((mem_size-1)<<8);
+        int end=(mem_size<<8);
+        for(int i=begin;i<end;++i)
             garbage_collector_free_space.push(i);
     }
     int ret=garbage_collector_free_space.front();
-    garbage_collector_memory[ret>>8][ret&0xff].collected=false;
-    garbage_collector_memory[ret>>8][ret&0xff].ref_cnt=1;
+    gc_unit& unit_ref=garbage_collector_memory[ret>>8][ret&0xff];
+    unit_ref.collected=false;
+    unit_ref.ref_cnt=1;
+    unit_ref.elem.set_type(val_type);
     garbage_collector_free_space.pop();
     return ret;
 }
@@ -1277,19 +1251,6 @@ void nasal_virtual_machine::del_reference(int value_address)
         garbage_collector_free_space.push(value_address);
     }
     return;
-}
-int nasal_virtual_machine::get_refcnt(int value_address)
-{
-    int blk_num=(value_address>>8);
-    int blk_plc=(value_address&0xff);
-    if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
-        return garbage_collector_memory[blk_num][blk_plc].ref_cnt;
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] get_refcnt:unexpected memory \'"<<value_address<<"\'.\n";
-    }
-    return -1;
 }
 int nasal_virtual_machine::mem_alloc()
 {

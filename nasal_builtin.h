@@ -32,8 +32,7 @@ int nasal_runtime::builtin_print(int local_scope_addr)
     }
     std::cout<<"\n";
     // generate return value
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 int nasal_runtime::builtin_append(int local_scope_addr)
@@ -61,8 +60,7 @@ int nasal_runtime::builtin_append(int local_scope_addr)
         nasal_vm.add_reference(value_address);
         ref_vector.add_elem(value_address);
     }
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 int nasal_runtime::builtin_setsize(int local_scope_addr)
@@ -121,12 +119,10 @@ int nasal_runtime::builtin_setsize(int local_scope_addr)
     else if(number>vec_size)
         for(int i=vec_size;i<number;++i)
         {
-            int new_val_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(new_val_addr).set_type(vm_nil);
+            int new_val_addr=nasal_vm.gc_alloc(vm_nil);
             ref_vector.add_elem(new_val_addr);
         }
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
@@ -147,15 +143,13 @@ int nasal_runtime::builtin_system(int local_scope_addr)
     command[size]='\0';
     system(command);
     delete []command;
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
 int nasal_runtime::builtin_input(int local_scope_addr)
 {
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    int ret_addr=nasal_vm.gc_alloc(vm_string);
     std::string str;
     std::cin>>str;
     nasal_vm.gc_get(ret_addr).set_string(str);
@@ -186,8 +180,7 @@ int nasal_runtime::builtin_sleep(int local_scope_addr)
     else
         sleep_time=(unsigned long)nasal_vm.gc_get(value_addr).get_number();
     sleep(sleep_time); // sleep in unistd.h will make this progress sleep sleep_time seconds.
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
@@ -214,8 +207,7 @@ int nasal_runtime::builtin_finput(int local_scope_addr)
     else
         file_content="";
     fin.close();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    int ret_addr=nasal_vm.gc_alloc(vm_string);
     nasal_vm.gc_get(ret_addr).set_string(file_content);
     return ret_addr;
 }
@@ -241,8 +233,7 @@ int nasal_runtime::builtin_foutput(int local_scope_addr)
     std::ofstream fout(filename);
     fout<<file_content;
     fout.close();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
@@ -267,8 +258,7 @@ int nasal_runtime::builtin_split(int local_scope_addr)
     int delimeter_len=delimeter.length();
     int source_len=source.length();
 
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_vector);
+    int ret_addr=nasal_vm.gc_alloc(vm_vector);
     nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
     std::string tmp="";
 
@@ -277,8 +267,7 @@ int nasal_runtime::builtin_split(int local_scope_addr)
         for(int i=0;i<source_len;++i)
         {
             tmp+=source[i];
-            int str_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(str_addr).set_type(vm_string);
+            int str_addr=nasal_vm.gc_alloc(vm_string);
             nasal_vm.gc_get(str_addr).set_string(tmp);
             ref_vec.add_elem(str_addr);
             tmp="";
@@ -299,8 +288,7 @@ int nasal_runtime::builtin_split(int local_scope_addr)
             }
         if(check_delimeter)
         {
-            int str_addr=nasal_vm.gc_alloc();
-            nasal_vm.gc_get(str_addr).set_type(vm_string);
+            int str_addr=nasal_vm.gc_alloc(vm_string);
             nasal_vm.gc_get(str_addr).set_string(tmp);
             ref_vec.add_elem(str_addr);
             tmp="";
@@ -311,8 +299,7 @@ int nasal_runtime::builtin_split(int local_scope_addr)
     }
     if(tmp.length())
     {
-        int str_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(str_addr).set_type(vm_string);
+        int str_addr=nasal_vm.gc_alloc(vm_string);
         nasal_vm.gc_get(str_addr).set_string(tmp);
         ref_vec.add_elem(str_addr);
         tmp="";
@@ -332,15 +319,13 @@ int nasal_runtime::builtin_rand(int local_scope_addr)
     {
         unsigned int number=(unsigned int)nasal_vm.gc_get(value_addr).get_number();
         srand(number);
-        int ret_addr=nasal_vm.gc_alloc();
-        nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+        int ret_addr=nasal_vm.gc_alloc(vm_nil);
         return ret_addr;
     }
     double num=0;
     for(int i=0;i<5;++i)
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(num);
     return ret_addr;
 }
@@ -353,8 +338,7 @@ int nasal_runtime::builtin_id(int local_scope_addr)
         ++error;
         return -1;
     }
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)value_addr);
     return ret_addr;
 }
@@ -368,8 +352,7 @@ int nasal_runtime::builtin_int(int local_scope_addr)
         return -1;
     }
     int number=(int)nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)number);
     return ret_addr;
 }
@@ -383,8 +366,7 @@ int nasal_runtime::builtin_num(int local_scope_addr)
         return -1;
     }
     std::string str=nasal_vm.gc_get(value_addr).get_string();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(trans_string_to_number(str));
     return ret_addr;
 }
@@ -410,8 +392,7 @@ int nasal_runtime::builtin_str(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_string(trans_number_to_string(number));
     return ret_addr;
 }
@@ -436,12 +417,12 @@ int nasal_runtime::builtin_size(int local_scope_addr)
         case vm_vector:number=nasal_vm.gc_get(value_addr).get_vector().size();break;
         case vm_hash:number=nasal_vm.gc_get(value_addr).get_hash().size();break;
     }
-    int ret_addr=nasal_vm.gc_alloc();
+    int ret_addr=-1;
     if(number<0)
-        nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+        ret_addr=nasal_vm.gc_alloc(vm_nil);
     else
     {
-        nasal_vm.gc_get(ret_addr).set_type(vm_number);
+        ret_addr=nasal_vm.gc_alloc(vm_number);
         nasal_vm.gc_get(ret_addr).set_number((double)number);
     }
     return ret_addr;
@@ -464,8 +445,7 @@ int nasal_runtime::builtin_xor(int local_scope_addr)
     }
     int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
     int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a^number_b));
     return ret_addr;
 }
@@ -487,8 +467,7 @@ int nasal_runtime::builtin_and(int local_scope_addr)
     }
     int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
     int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a&number_b));
     return ret_addr;
 }
@@ -510,8 +489,7 @@ int nasal_runtime::builtin_or(int local_scope_addr)
     }
     int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
     int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a|number_b));
     return ret_addr;
 }
@@ -533,8 +511,7 @@ int nasal_runtime::builtin_nand(int local_scope_addr)
     }
     int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
     int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)(~(number_a&number_b)));
     return ret_addr;
 }
@@ -548,8 +525,7 @@ int nasal_runtime::builtin_not(int local_scope_addr)
         return -1;
     }
     int number=(int)nasal_vm.gc_get(a_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)(~number));
     return ret_addr;
 }
@@ -563,8 +539,7 @@ int nasal_runtime::builtin_sin(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(sin(number));
     return ret_addr;
 }
@@ -578,8 +553,7 @@ int nasal_runtime::builtin_cos(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(cos(number));
     return ret_addr;
 }
@@ -593,8 +567,7 @@ int nasal_runtime::builtin_tan(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(tan(number));
     return ret_addr;
 }
@@ -608,8 +581,7 @@ int nasal_runtime::builtin_exp(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(exp(number));
     return ret_addr;
 }
@@ -623,8 +595,7 @@ int nasal_runtime::builtin_ln(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(log(number)/log(2.7182818284590452354));
     return ret_addr;
 }
@@ -638,8 +609,7 @@ int nasal_runtime::builtin_sqrt(int local_scope_addr)
         return -1;
     }
     double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(sqrt(number));
     return ret_addr;
 }
@@ -661,8 +631,7 @@ int nasal_runtime::builtin_atan2(int local_scope_addr)
     }
     double x=nasal_vm.gc_get(x_value_addr).get_number();
     double y=nasal_vm.gc_get(y_value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number(atan2(y,x));
     return ret_addr;
 }
@@ -676,8 +645,7 @@ int nasal_runtime::builtin_time(int local_scope_addr)
         return -1;
     }
     time_t begin_time=(time_t)nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)time(&begin_time));
     return ret_addr;
 }
@@ -699,8 +667,7 @@ int nasal_runtime::builtin_contains(int local_scope_addr)
     }
     std::string key=nasal_vm.gc_get(key_addr).get_string();
     bool contains=nasal_vm.gc_get(hash_addr).get_hash().check_contain(key);
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_number);
+    int ret_addr=nasal_vm.gc_alloc(vm_number);
     nasal_vm.gc_get(ret_addr).set_number((double)contains);
     return ret_addr;
 }
@@ -722,8 +689,7 @@ int nasal_runtime::builtin_delete(int local_scope_addr)
     }
     std::string key=nasal_vm.gc_get(key_addr).get_string();
     nasal_vm.gc_get(hash_addr).get_hash().del_elem(key);
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 int nasal_runtime::builtin_getkeys(int local_scope_addr)
@@ -744,8 +710,7 @@ int nasal_runtime::builtin_import(int local_scope_addr)
     // this function will return nothing when running.
     ++error;
     std::cout<<">> [runtime] builtin_import: cannot use import when running.\n";
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 int nasal_runtime::builtin_die(int local_scope_addr)
@@ -759,8 +724,7 @@ int nasal_runtime::builtin_die(int local_scope_addr)
     }
     ++error;
     std::cout<<">> [runtime] error: "<<nasal_vm.gc_get(str_addr).get_string()<<'\n';
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_nil);
+    int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 int nasal_runtime::builtin_type(int local_scope_addr)
@@ -773,8 +737,7 @@ int nasal_runtime::builtin_type(int local_scope_addr)
         return -1;
     }
     int type=nasal_vm.gc_get(value_addr).get_type();
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    int ret_addr=nasal_vm.gc_alloc(vm_string);
     switch(type)
     {
         case vm_nil:      nasal_vm.gc_get(ret_addr).set_string("nil");break;
@@ -821,8 +784,7 @@ int nasal_runtime::builtin_substr(int local_scope_addr)
     std::string tmp="";
     for(int i=begin;i<begin+len;++i)
         tmp+=str[i];
-    int ret_addr=nasal_vm.gc_alloc();
-    nasal_vm.gc_get(ret_addr).set_type(vm_string);
+    int ret_addr=nasal_vm.gc_alloc(vm_string);
     nasal_vm.gc_get(ret_addr).set_string(tmp);
     return ret_addr;
 }
