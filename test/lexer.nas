@@ -59,10 +59,7 @@ var generate_str=func()
         ptr+=1;
     }
     if(ptr>=len)
-    {
         print("read eof when generating string.");
-        break;
-    }
     ptr+=1;
     return tok_str;
 }
