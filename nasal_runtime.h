@@ -531,7 +531,7 @@ bool nasal_runtime::check_condition(int value_addr)
     if(value_addr<0)
         return false;
     int type=nasal_vm.gc_get(value_addr).get_type();
-    if(type==vm_vector || type==vm_hash || type==vm_function)
+    if(type==vm_nil || type==vm_vector || type==vm_hash || type==vm_function)
         return false;
     else if(type==vm_string)
     {
@@ -541,8 +541,6 @@ bool nasal_runtime::check_condition(int value_addr)
             return false;
         return (number!=0);
     }
-    else if(type==vm_nil)
-        return false;
     else if(type==vm_number)
         return (nasal_vm.gc_get(value_addr).get_number()!=0);
     return false;
