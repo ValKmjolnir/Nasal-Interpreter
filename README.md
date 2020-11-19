@@ -23,6 +23,10 @@ So i tried to write a new interpreter to help them checking syntax error and eve
 I wrote the lexer, parser and runtime(nasal virtual machine/ast-runtime virtual machine) to help checking errors.
 
 They found it easier for them to check errors before copying nasal-codes in nasal-console in Flightgear to test.
+
+# How to Compile
+
+> g++ -std=c++11 main.cpp -o main.exe
   
 # Lexical Analysis
 
