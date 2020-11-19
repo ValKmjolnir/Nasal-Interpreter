@@ -1,6 +1,31 @@
 #ifndef __NASAL_CODEGEN_H__
 #define __NASAL_CODEGEN_H__
 
+enum op_code
+{
+    op_nop,
+    op_load,
+    op_pushnum,op_pushone,op_pushzero,
+    op_pushnil,
+    op_pushstr,
+    op_newvec,op_newhash,op_newfunc,
+    op_vecappend,op_hashappend,
+    op_unot,op_usub,
+    op_add,op_sub,op_mul,op_div,op_lnk,
+    op_eq,op_neq,op_less,op_leq,op_grt,op_geq,
+    op_jmp,op_jmptrue,op_jmpfalse,
+    op_gccall,op_gccallvec,op_gccallhash,op_gccallfunc,op_builtincall,op_slice,
+    op_memcall,op_memcallvec,op_memcallhash,
+    op_return,
+    op_end
+};
+
+struct opcode
+{
+    unsigned char op;
+    int index;
+};
+
 // unfinished
 // now it can output ast but it is not byte code yet
 // please wait...
