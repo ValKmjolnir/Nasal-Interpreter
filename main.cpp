@@ -2,7 +2,7 @@
 
 nasal_lexer    lexer;
 nasal_parse    parse;
-nasal_import   preprocessor;
+nasal_import   import;
 nasal_codegen  code_generator;
 std::string    inputfile="null";
 nasal_runtime  runtime;
@@ -96,13 +96,13 @@ void runtime_start()
 		die("parse",inputfile);
 		return;
 	}
-	preprocessor.preprocessing(parse.get_root());
-	if(preprocessor.get_error())
+	import.link(parse.get_root());
+	if(import.get_error())
 	{
 		die("import",inputfile);
 		return;
 	}
-	runtime.set_root(preprocessor.get_root());
+	runtime.set_root(import.get_root());
 	runtime.run();
 	return;
 }
@@ -123,14 +123,14 @@ void codegen_start()
 		die("parse",inputfile);
 		return;
 	}
-	preprocessor.preprocessing(parse.get_root());
-	if(preprocessor.get_error())
+	import.link(parse.get_root());
+	if(import.get_error())
 	{
 		die("import",inputfile);
 		return;
 	}
-	runtime.set_root(preprocessor.get_root());
-	code_generator.output_exec(inputfile+".naexec",preprocessor.get_root());
+	runtime.set_root(import.get_root());
+	code_generator.output_exec(inputfile+".naexec",import.get_root());
 	if(code_generator.get_error())
 	{
 		die("code",inputfile);
@@ -141,13 +141,13 @@ void codegen_start()
 
 void execution_start()
 {
-	code_generator.load_exec(inputfile,preprocessor.get_root());
+	code_generator.load_exec(inputfile,import.get_root());
 	if(code_generator.get_error())
 	{
 		die("code",inputfile);
 		return;
 	}
-	runtime.set_root(preprocessor.get_root());
+	runtime.set_root(import.get_root());
 	runtime.run();
 	return;
 }
