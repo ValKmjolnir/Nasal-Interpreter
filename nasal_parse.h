@@ -48,6 +48,8 @@ private:
     int error;
     nasal_ast root;
     std::vector<token> tok_list;
+    int in_function; // count when generating function block,used to check return-expression
+    int in_loop;     // count when generating loop block,used to check break/continue-expression
     void reset();
     void die(int,std::string);
     bool check_multi_definition();
@@ -114,6 +116,8 @@ void nasal_parse::clear()
     this->tok_list_size=0;
     this->ptr=0;
     this->error=0;
+    this->in_function=0;
+    this->in_loop=0;
     this->tok_list.clear();
     this->root.clear();
     return;
@@ -166,6 +170,8 @@ nasal_ast& nasal_parse::get_root()
 void nasal_parse::reset()
 {
     this->ptr=0;
+    this->in_function=0;
+    this->in_loop=0;
     this->error=0;
     this->root.clear();
     return;
@@ -521,7 +527,18 @@ nasal_ast nasal_parse::expr()
 {
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
-    switch(tok_list[ptr].type)
+    int tok_type=tok_list[ptr].type;
+    if((tok_type==tok_break || tok_type==tok_continue) && !in_loop)
+    {
+        die(error_line,"cannot use break/continue outside loop");
+        return node;
+    }
+    if(tok_type==tok_return && !in_function)
+    {
+        die(error_line,"cannot use return outside function");
+        return node;
+    }
+    switch(tok_type)
     {   
         case tok_nil:
         case tok_number:
@@ -916,7 +933,11 @@ nasal_ast nasal_parse::scalar()
             node=id_gen();
         }
         else
+        {
+            ++in_function;
             node=func_gen();
+            --in_function;
+        }
     }
     else if(tok_list[ptr].type==tok_left_bracket)
         node=vector_gen();
@@ -1204,6 +1225,7 @@ nasal_ast nasal_parse::multi_assgin()
 }
 nasal_ast nasal_parse::loop()
 {
+    ++in_loop;
     nasal_ast node;
     switch(tok_list[ptr].type)
     {
@@ -1212,6 +1234,7 @@ nasal_ast nasal_parse::loop()
         case tok_forindex:
         case tok_foreach: node=forei_loop(); break;
     }
+    --in_loop;
     return node;
 }
 nasal_ast nasal_parse::while_loop()
