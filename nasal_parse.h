@@ -83,11 +83,10 @@ private:
     nasal_ast call_func();
     nasal_ast subvec();
     nasal_ast definition();
-    nasal_ast normal_def();
     nasal_ast var_incurve_def();
     nasal_ast var_outcurve_def();
     nasal_ast multi_id();
-    nasal_ast multi_scalar();
+    nasal_ast multi_scalar(bool);
     nasal_ast multi_assgin();
     nasal_ast loop();
     nasal_ast while_loop();
@@ -672,6 +671,8 @@ nasal_ast nasal_parse::calculation()
         )
     )
     {
+        if(node.get_type()!=ast_call && node.get_type()!=ast_identifier)
+            die(node.get_line(),"cannot use calculation as the memory of scalar");
         // assignment
         nasal_ast tmp;
         tmp.set_line(tok_list[ptr].line);
@@ -1085,7 +1086,7 @@ nasal_ast nasal_parse::definition()
         ++ptr;
         switch(tok_list[ptr].type)
         {
-            case tok_identifier:node.add_child(normal_def());       break;
+            case tok_identifier:node.add_child(id_gen());           break;
             case tok_left_curve:node.add_child(var_outcurve_def()); break;
             default:
                 die(error_line,"expected identifier");
@@ -1107,17 +1108,11 @@ nasal_ast nasal_parse::definition()
         return node;
     }
     if(tok_list[ptr].type==tok_left_curve)
-        node.add_child(check_multi_scalar()?multi_scalar():calculation());
+        node.add_child(check_multi_scalar()?multi_scalar(false):calculation());
     else
         node.add_child(calculation());
-    return node;
-}
-nasal_ast nasal_parse::normal_def()
-{
-    nasal_ast node;
-    node.set_line(tok_list[ptr].line);
-    node.set_str(tok_list[ptr].str);
-    node.set_type(ast_identifier);
+    if(node.get_children()[0].get_type()==ast_identifier && node.get_children()[1].get_type()==ast_multi_scalar)
+        die(node.get_children()[1].get_line(),"one identifier cannot accept too many values");
     return node;
 }
 nasal_ast nasal_parse::var_incurve_def()
@@ -1178,8 +1173,9 @@ nasal_ast nasal_parse::multi_id()
     }
     return node;
 }
-nasal_ast nasal_parse::multi_scalar()
+nasal_ast nasal_parse::multi_scalar(bool check_call_memory)
 {
+    // if check_call_memory is true,we will check if value called here can reach a memory space
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_multi_scalar);
@@ -1187,6 +1183,9 @@ nasal_ast nasal_parse::multi_scalar()
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
     {
         node.add_child(calculation());
+        int type=node.get_children().back().get_type();
+        if(check_call_memory && type!=ast_call && type!=ast_identifier)
+            die(node.get_children().back().get_line(),"cannot use calculation as the memory of scalar");
         ++ptr;
         if(ptr>=tok_list_size)
             break;
@@ -1204,7 +1203,7 @@ nasal_ast nasal_parse::multi_assgin()
     nasal_ast node;
     node.set_line(tok_list[ptr].line);
     node.set_type(ast_multi_assign);
-    node.add_child(multi_scalar());
+    node.add_child(multi_scalar(true));
     ++ptr;
     if(ptr>=tok_list_size || tok_list[ptr].type!=tok_equal)
     {
@@ -1218,7 +1217,7 @@ nasal_ast nasal_parse::multi_assgin()
         return node;
     }
     if(tok_list[ptr].type==tok_left_curve)
-        node.add_child(check_multi_scalar()?multi_scalar():calculation());
+        node.add_child(check_multi_scalar()?multi_scalar(false):calculation());
     else
         node.add_child(calculation());
     return node;

@@ -132,7 +132,6 @@ class nasal_virtual_machine
         }
     };
 private:
-    bool error_info_output_switch;
     nasal_scalar error_returned_value;
     std::queue<int> garbage_collector_free_space;
     std::vector<gc_unit*> garbage_collector_memory;
@@ -143,14 +142,14 @@ public:
     ~nasal_virtual_machine();
     void clear();
     void debug();
-    int gc_alloc(int);          // garbage collector gives a new space
-    nasal_scalar& gc_get(int);  // get scalar that stored in gc
+    int  gc_alloc(int);          // garbage collector gives a new space
+    nasal_scalar& gc_get(int);   // get scalar that stored in gc
     void add_reference(int);
     void del_reference(int);
-    int mem_alloc(int);            // memory gives a new space
-    int mem_free(int);          // give space back to memory
-    int mem_change(int,int);    // change value in memory space
-    int mem_get(int);           // get value in memory space
+    int  mem_alloc(int);         // memory gives a new space
+    void mem_free(int);          // give space back to memory
+    void mem_change(int,int);    // change value in memory space
+    int  mem_get(int);           // get value in memory space
 };
 
 /*
@@ -161,10 +160,10 @@ public:
 nasal_virtual_machine nasal_vm;
 nasal_scalar nasal_scalar_calculator;
 // error values set here,if defined before nasal_vm,SIGSEGV will occur.
-nasal_vector error_vector;
-nasal_hash error_hash;
+nasal_vector   error_vector;
+nasal_hash     error_hash;
 nasal_function error_function;
-nasal_closure error_closure;
+nasal_closure  error_closure;
 
 /*functions of nasal_vector*/
 nasal_vector::nasal_vector()
@@ -1092,12 +1091,10 @@ int nasal_scalar::nasal_scalar_cmp_greater_or_equal(int a_scalar_addr,int b_scal
 /*functions of nasal_virtual_machine*/
 nasal_virtual_machine::nasal_virtual_machine()
 {
-    error_info_output_switch=true;
     return;
 }
 nasal_virtual_machine::~nasal_virtual_machine()
 {
-    error_info_output_switch=false;
     int gc_mem_size=garbage_collector_memory.size();
     int mm_mem_size=memory_manager_memory.size();
     for(int i=0;i<gc_mem_size;++i)
@@ -1123,7 +1120,6 @@ nasal_virtual_machine::~nasal_virtual_machine()
         memory_manager_free_space.pop();
     garbage_collector_memory.clear();
     memory_manager_memory.clear();
-    error_info_output_switch=true;
     return;
 }
 void nasal_virtual_machine::debug()
@@ -1151,7 +1147,6 @@ void nasal_virtual_machine::debug()
 }
 void nasal_virtual_machine::clear()
 {
-    error_info_output_switch=false;
     int gc_mem_size=garbage_collector_memory.size();
     int mm_mem_size=memory_manager_memory.size();
     for(int i=0;i<gc_mem_size;++i)
@@ -1177,7 +1172,6 @@ void nasal_virtual_machine::clear()
         memory_manager_free_space.pop();
     garbage_collector_memory.clear();
     memory_manager_memory.clear();
-    error_info_output_switch=true;
     return;
 }
 int nasal_virtual_machine::gc_alloc(int val_type)
@@ -1206,12 +1200,7 @@ nasal_scalar& nasal_virtual_machine::gc_get(int value_address)
     int blk_plc=(value_address&0xff);
     if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
         return garbage_collector_memory[blk_num][blk_plc].elem;
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] gc_get:unexpected memory \'"<<value_address<<"\'.\n";
-        return error_returned_value;
-    }
+    return error_returned_value;
 }
 void nasal_virtual_machine::add_reference(int value_address)
 {
@@ -1219,11 +1208,6 @@ void nasal_virtual_machine::add_reference(int value_address)
     int blk_plc=(value_address&0xff);
     if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
         ++garbage_collector_memory[blk_num][blk_plc].ref_cnt;
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] gc_add_ref:unexpected memory \'"<<value_address<<"\'.\n";
-    }
     return;
 }
 void nasal_virtual_machine::del_reference(int value_address)
@@ -1233,11 +1217,7 @@ void nasal_virtual_machine::del_reference(int value_address)
     if(0<=value_address && value_address<(garbage_collector_memory.size()<<8) && !garbage_collector_memory[blk_num][blk_plc].collected)
         --garbage_collector_memory[blk_num][blk_plc].ref_cnt;
     else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] gc_del_ref:unexpected memory \'"<<value_address<<"\'.\n";
         return;
-    }
     if(!garbage_collector_memory[blk_num][blk_plc].ref_cnt)
     {
         garbage_collector_memory[blk_num][blk_plc].collected=true;
@@ -1261,7 +1241,7 @@ int nasal_virtual_machine::mem_alloc(int value_address)
     memory_manager_free_space.pop();
     return ret;
 }
-int nasal_virtual_machine::mem_free(int memory_address)
+void nasal_virtual_machine::mem_free(int memory_address)
 {
     // mem_free has helped scalar to delete the reference
     // so don't need to delete reference again
@@ -1270,15 +1250,9 @@ int nasal_virtual_machine::mem_free(int memory_address)
         this->del_reference(memory_manager_memory[memory_address>>8][memory_address&0xff]);
         memory_manager_free_space.push(memory_address);
     }
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] mem_free:unexpected memory \'"<<memory_address<<"\'.\n";
-        return 0;
-    }
-    return 1;
+    return;
 }
-int nasal_virtual_machine::mem_change(int memory_address,int value_address)
+void nasal_virtual_machine::mem_change(int memory_address,int value_address)
 {
     // this progress is used to change a memory space's value address
     // be careful! this process doesn't check if this mem_space is in use.
@@ -1287,13 +1261,7 @@ int nasal_virtual_machine::mem_change(int memory_address,int value_address)
         this->del_reference(memory_manager_memory[memory_address>>8][memory_address&0xff]);
         memory_manager_memory[memory_address>>8][memory_address&0xff]=value_address;
     }
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] mem_change:unexpected memory \'"<<memory_address<<"\'.\n";
-        return 0;
-    }
-    return 1;
+    return;
 }
 int nasal_virtual_machine::mem_get(int memory_address)
 {
@@ -1301,11 +1269,6 @@ int nasal_virtual_machine::mem_get(int memory_address)
     // be careful! this process doesn't check if this mem_space is in use.
     if(0<=memory_address && memory_address<(memory_manager_memory.size()<<8))
         ret=memory_manager_memory[memory_address>>8][memory_address&0xff];
-    else
-    {
-        if(error_info_output_switch)
-            std::cout<<">> [vm] mem_get:unexpected memory \'"<<memory_address<<"\'.\n";
-    }
     return ret;
 }
 #endif
