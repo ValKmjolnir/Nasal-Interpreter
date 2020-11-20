@@ -19,7 +19,7 @@ private:
 public:
     nasal_import();
     int  get_error();
-    void preprocessing(nasal_ast&);
+    void link(nasal_ast&);
     nasal_ast& get_root();
 };
 
@@ -153,7 +153,7 @@ nasal_ast nasal_import::load(nasal_ast& root)
     return new_root;
 }
 
-void nasal_import::preprocessing(nasal_ast& root)
+void nasal_import::link(nasal_ast& root)
 {
     // initializing
     error=0;
