@@ -725,7 +725,7 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         nasal_ast& tmp=node.get_children()[0];
         if(tmp.get_type()==ast_subvec)
         {
-            die(tmp.get_line(),"cannot slice string (use subvec)");
+            die(tmp.get_line(),"cannot slice string (use substr)");
             return -1;
         }
         int index_value_addr=calculation(tmp,local_scope_addr);
@@ -1486,6 +1486,8 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
             die(value_node.get_line(),"size of calls and size of values do not match");
             return;
         }
+        // use value_table to store values temprorarily
+        // so that (a,b)=(b,a) can run correctly
         std::vector<int> value_table;
         for(int i=0;i<id_size;++i)
         {
