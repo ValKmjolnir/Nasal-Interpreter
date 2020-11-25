@@ -712,6 +712,7 @@ nasal_ast nasal_parse::or_expr()
             tmp.add_child(and_expr());
         else
             die(error_line,"expected calculation");
+        // pre-calculation
         node=tmp;
         ++ptr;
     }
@@ -734,6 +735,43 @@ nasal_ast nasal_parse::and_expr()
             tmp.add_child(cmp_expr());
         else
             die(error_line,"expected calculation");
+        // pre-calculation
+        int type1=tmp.get_children()[0].get_type();
+        int type2=tmp.get_children()[1].get_type();
+        if(type1==ast_nil || type2==ast_nil)
+        {
+            tmp.set_type(ast_number);
+            tmp.set_num(0);
+            tmp.get_children().clear();
+        }
+        else if((type1==ast_number && tmp.get_children()[0].get_num()==0)||(type2==ast_number && tmp.get_children()[1].get_num()==0))
+        {
+            tmp.set_type(ast_number);
+            tmp.set_num(0);
+            tmp.get_children().clear();
+        }
+        if(type1==ast_string && tmp.get_type()==ast_and)
+        {
+            std::string str=tmp.get_children()[0].get_str();
+            double num=trans_string_to_number(str);
+            if(num==0 || !str.length())
+            {
+                tmp.set_type(ast_number);
+                tmp.set_num(0);
+                tmp.get_children().clear();
+            }
+        }
+        if(type2==ast_string && tmp.get_type()==ast_and)
+        {
+            std::string str=tmp.get_children()[1].get_str();
+            double num=trans_string_to_number(str);
+            if(num==0 || !str.length())
+            {
+                tmp.set_type(ast_number);
+                tmp.set_num(0);
+                tmp.get_children().clear();
+            }
+        }
         node=tmp;
         ++ptr;
     }
@@ -774,6 +812,113 @@ nasal_ast nasal_parse::cmp_expr()
             tmp.add_child(additive_expr());
         else
             die(error_line,"expected calculation");
+        // pre-calculation
+        int type1=tmp.get_children()[0].get_type();
+        int type2=tmp.get_children()[1].get_type();
+        if(type1==ast_nil && type2==ast_nil)
+        {
+            double num;
+            switch(tmp.get_type())
+            {
+                case ast_cmp_equal:num=1;break;
+                case ast_cmp_not_equal:num=0;break;
+                case ast_less_than:die(tmp.get_line(),"nil cannot take part in \"<\"");break;
+                case ast_less_equal:num=1;break;
+                case ast_greater_than:die(tmp.get_line(),"nil cannot take part in \">\"");break;
+                case ast_greater_equal:num=1;break;
+            }
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(
+            (type1==ast_nil && type2==ast_string) || 
+            (type1==ast_string && type2==ast_nil) ||
+            (type1==ast_nil && type2==ast_number) ||
+            (type1==ast_number && type2==ast_nil)
+        )
+        {
+            double num=(tmp.get_type()==ast_cmp_not_equal);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(type1==ast_number && type2==ast_number)
+        {
+            double num;
+            double num1=tmp.get_children()[0].get_num();
+            double num2=tmp.get_children()[1].get_num();
+            switch(tmp.get_type())
+            {
+                case ast_cmp_equal:num=(num1==num2);break;
+                case ast_cmp_not_equal:num=(num1!=num2);break;
+                case ast_less_than:num=(num1<num2);break;
+                case ast_less_equal:num=(num1<=num2);break;
+                case ast_greater_than:num=(num1>num2);break;
+                case ast_greater_equal:num=(num1>=num2);break;
+            }
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(type1==ast_number && type2==ast_string)
+        {
+            double num;
+            double num1=tmp.get_children()[0].get_num();
+            double num2=trans_string_to_number(tmp.get_children()[1].get_str());
+            if(std::isnan(num2))
+                die(tmp.get_children()[1].get_line(),"cannot compare number and string");
+            switch(tmp.get_type())
+            {
+                case ast_cmp_equal:num=(num1==num2);break;
+                case ast_cmp_not_equal:num=(num1!=num2);break;
+                case ast_less_than:num=(num1<num2);break;
+                case ast_less_equal:num=(num1<=num2);break;
+                case ast_greater_than:num=(num1>num2);break;
+                case ast_greater_equal:num=(num1>=num2);break;
+            }
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(type1==ast_string && type2==ast_number)
+        {
+            double num;
+            double num1=trans_string_to_number(tmp.get_children()[0].get_str());
+            double num2=tmp.get_children()[1].get_num();
+            if(std::isnan(num2))
+                die(tmp.get_children()[0].get_line(),"cannot compare number and string");
+            switch(tmp.get_type())
+            {
+                case ast_cmp_equal:num=(num1==num2);break;
+                case ast_cmp_not_equal:num=(num1!=num2);break;
+                case ast_less_than:num=(num1<num2);break;
+                case ast_less_equal:num=(num1<=num2);break;
+                case ast_greater_than:num=(num1>num2);break;
+                case ast_greater_equal:num=(num1>=num2);break;
+            }
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
+        else if(type1==ast_string && type2==ast_string)
+        {
+            double num;
+            std::string str1=tmp.get_children()[0].get_str();
+            std::string str2=tmp.get_children()[1].get_str();
+            switch(tmp.get_type())
+            {
+                case ast_cmp_equal:num=(str1==str2);break;
+                case ast_cmp_not_equal:num=(str1!=str2);break;
+                case ast_less_than:num=(str1<str2);break;
+                case ast_less_equal:num=(str1<=str2);break;
+                case ast_greater_than:num=(str1>str2);break;
+                case ast_greater_equal:num=(str1>=str2);break;
+            }
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
+        }
         node=tmp;
         ++ptr;
     }
@@ -811,6 +956,10 @@ nasal_ast nasal_parse::additive_expr()
             {
                 num1=tmp.get_children()[0].get_num();
                 num2=tmp.get_children()[1].get_num();
+                num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
+                tmp.set_type(ast_number);
+                tmp.set_num(num);
+                tmp.get_children().clear();
             }
             else if(type1==ast_string && type2==ast_number)
             {
@@ -819,6 +968,10 @@ nasal_ast nasal_parse::additive_expr()
                 num2=tmp.get_children()[1].get_num();
                 if(std::isnan(num1))
                     die(tmp.get_children()[0].get_line(),"plus/minus a string: "+str);
+                num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
+                tmp.set_type(ast_number);
+                tmp.set_num(num);
+                tmp.get_children().clear();
             }
             else if(type1==ast_number && type2==ast_string)
             {
@@ -827,6 +980,10 @@ nasal_ast nasal_parse::additive_expr()
                 num2=trans_string_to_number(str);
                 if(std::isnan(num2))
                     die(tmp.get_children()[1].get_line(),"plus/minus a string: "+str);
+                num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
+                tmp.set_type(ast_number);
+                tmp.set_num(num);
+                tmp.get_children().clear();
             }
             else if(type1==ast_string && type2==ast_string)
             {
@@ -838,11 +995,11 @@ nasal_ast nasal_parse::additive_expr()
                     die(tmp.get_children()[0].get_line(),"plus/minus a string: "+str1);
                 if(std::isnan(num2))
                     die(tmp.get_children()[1].get_line(),"plus/minus a string: "+str2);
+                num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
+                tmp.set_type(ast_number);
+                tmp.set_num(num);
+                tmp.get_children().clear();
             }
-            num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
-            tmp.set_type(ast_number);
-            tmp.set_num(num);
-            tmp.get_children().clear();
         }
         else
         {
@@ -859,17 +1016,20 @@ nasal_ast nasal_parse::additive_expr()
                     s2=trans_number_to_string(tmp.get_children()[1].get_num());
                 else
                     s2=tmp.get_children()[1].get_str();
+                s1+=s2;
+                tmp.set_type(ast_string);
+                tmp.set_str(s1);
+                tmp.get_children().clear();
             }
             else if(type1==ast_string && type2==ast_string)
             {
                 s1=tmp.get_children()[0].get_str();
                 s2=tmp.get_children()[1].get_str();
                 s1+=s2;
+                tmp.set_type(ast_string);
+                tmp.set_str(s1);
+                tmp.get_children().clear();
             }
-            s1+=s2;
-            tmp.set_type(ast_string);
-            tmp.set_str(s1);
-            tmp.get_children().clear();
         }
         node=tmp;
         ++ptr;
@@ -908,6 +1068,10 @@ nasal_ast nasal_parse::multive_expr()
         {
             num1=tmp.get_children()[0].get_num();
             num2=tmp.get_children()[1].get_num();
+            num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
         }
         else if(type1==ast_string && type2==ast_number)
         {
@@ -916,6 +1080,10 @@ nasal_ast nasal_parse::multive_expr()
             num2=tmp.get_children()[1].get_num();
             if(std::isnan(num1))
                 die(tmp.get_children()[0].get_line(),"multiply a string: "+str);
+            num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
         }
         else if(type1==ast_number && type2==ast_string)
         {
@@ -924,6 +1092,10 @@ nasal_ast nasal_parse::multive_expr()
             num2=trans_string_to_number(str);
             if(std::isnan(num2))
                 die(tmp.get_children()[1].get_line(),"multiply a string: "+str);
+            num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
         }
         else if(type1==ast_string && type2==ast_string)
         {
@@ -935,11 +1107,11 @@ nasal_ast nasal_parse::multive_expr()
                 die(tmp.get_children()[0].get_line(),"multiply a string: "+str1);
             if(std::isnan(num2))
                 die(tmp.get_children()[1].get_line(),"multiply a string: "+str2);
+            num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
+            tmp.set_type(ast_number);
+            tmp.set_num(num);
+            tmp.get_children().clear();
         }
-        num=(tmp.get_type()==ast_mult? num1*num2:num1/num2);
-        tmp.set_type(ast_number);
-        tmp.set_num(num);
-        tmp.get_children().clear();
         node=tmp;
         ++ptr;
     }
