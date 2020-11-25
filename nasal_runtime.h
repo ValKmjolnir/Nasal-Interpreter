@@ -448,7 +448,7 @@ bool nasal_runtime::check_condition(int value_addr)
         std::string str=nasal_vm.gc_get(value_addr).get_string();
         double number=trans_string_to_number(str);
         if(std::isnan(number))
-            return false;
+            return str.length()!=0;
         return (number!=0);
     }
     else if(type==vm_number)
