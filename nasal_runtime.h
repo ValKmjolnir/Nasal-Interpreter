@@ -126,7 +126,7 @@ void nasal_runtime::run()
 
     time_t total_run_time=end_time-begin_time;
     if(total_run_time>=1)
-    std::cout<<">> [runtime] process exited after "<<total_run_time<<"s.\n";
+        std::cout<<">> [runtime] process exited after "<<total_run_time<<"s.\n";
     return;
 }
 
