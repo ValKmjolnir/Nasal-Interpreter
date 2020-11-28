@@ -671,8 +671,26 @@ nasal_ast nasal_parse::calculation()
         )
     )
     {
+        // check the left expression to confirm it is available to get memory
         if(node.get_type()!=ast_call && node.get_type()!=ast_identifier)
             die(node.get_line(),"cannot use calculation as the memory of scalar");
+        if(node.get_type()==ast_call)
+        {
+            int size=node.get_children().size();
+            for(int i=0;i<size;++i)
+            {
+                nasal_ast& tmp_node=node.get_children()[i];
+                if(tmp_node.get_type()==ast_call_func)
+                    die(tmp_node.get_line(),"cannot get the memory of function-returned value");
+                if(tmp_node.get_type()==ast_call_vec)
+                {
+                    if(tmp_node.get_children().size()>1)
+                        die(tmp_node.get_line(),"cannot get the memory in temporary sliced vector");
+                    else if(tmp_node.get_children()[0].get_type()==ast_subvec)
+                        die(tmp_node.get_children()[0].get_line(),"cannot get the memory in temporary sliced vector");
+                }
+            } 
+        }
         // assignment
         nasal_ast tmp;
         tmp.set_line(tok_list[ptr].line);

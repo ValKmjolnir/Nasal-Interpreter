@@ -569,12 +569,12 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
             if(node.get_children()[i].get_type()==ast_subvec)
             {
                 nasal_ast& subvec_node=node.get_children()[i];
-                int begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
-                int end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
-                int begin_value_type=nasal_vm.gc_get(begin_value_addr).get_type();
-                int end_value_type=nasal_vm.gc_get(end_value_addr).get_type();
+                int  begin_value_addr=calculation(subvec_node.get_children()[0],local_scope_addr);
+                int  end_value_addr=calculation(subvec_node.get_children()[1],local_scope_addr);
+                int  begin_value_type=nasal_vm.gc_get(begin_value_addr).get_type();
+                int  end_value_type=nasal_vm.gc_get(end_value_addr).get_type();
                 bool begin_is_nil=true,end_is_nil=true;
-                int begin_index=0,end_index=0;
+                int  begin_index=0,end_index=0;
                 if(begin_value_type!=vm_nil && begin_value_type!=vm_number && begin_value_type!=vm_string)
                 {
                     die(subvec_node.get_children()[0].get_line(),"begin index must be nil/number/string");
@@ -589,11 +589,6 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 {
                     std::string str=nasal_vm.gc_get(begin_value_addr).get_string();
                     double number=trans_string_to_number(str);
-                    if(std::isnan(number))
-                    {
-                        die(subvec_node.get_children()[0].get_line(),"begin index is not a numerable string");
-                        return -1;
-                    }
                     begin_index=(int)number;
                     begin_is_nil=false;
                 }
@@ -607,11 +602,6 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 {
                     std::string str=nasal_vm.gc_get(end_value_addr).get_string();
                     double number=trans_string_to_number(str);
-                    if(std::isnan(number))
-                    {
-                        die(subvec_node.get_children()[1].get_line(),"end index is not a numerable string");
-                        return -1;
-                    }
                     begin_index=(int)number;
                     end_is_nil=false;
                 }
@@ -639,6 +629,12 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                     die(subvec_node.get_children()[0].get_line(),"begin index is greater than end index");
                     return -1;
                 }
+                int vsize=reference_value.size();
+                if(begin_index<-vsize || begin_index>vsize-1 || end_index<-vsize || end_index>vsize-1)
+                {
+                    die(node.get_children()[i].get_line(),"begin index or end index is out of range");
+                    return -1;
+                }
                 for(int i=begin_index;i<=end_index;++i)
                     called_value_addrs.push_back(reference_value.get_value_address(i));
                 nasal_vm.del_reference(begin_value_addr);
@@ -658,11 +654,6 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
                 {
                     std::string str=nasal_vm.gc_get(index_value_addr).get_string();
                     double number=trans_string_to_number(str);
-                    if(std::isnan(number))
-                    {
-                        die(node.get_children()[i].get_line(),"index is not a numerable string");
-                        return -1;
-                    }
                     index_num=(int)number;
                 }
                 else
@@ -740,11 +731,6 @@ int nasal_runtime::call_vector(nasal_ast& node,int base_value_addr,int local_sco
         {
             std::string str=nasal_vm.gc_get(index_value_addr).get_string();
             double number=trans_string_to_number(str);
-            if(std::isnan(number))
-            {
-                die(tmp.get_line(),"index is not a numerable string");
-                return -1;
-            }
             index_num=(int)number;
         }
         else
@@ -1007,10 +993,6 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
         {
             case ast_call_vec:  tmp_mem_addr=call_vector_mem(call_expr,mem_address,local_scope_addr);break;
             case ast_call_hash: tmp_mem_addr=call_hash_mem(call_expr,mem_address,local_scope_addr);break;
-            case ast_call_func:
-                die(call_expr.get_line(),"cannot change function returned value");
-                return -1;
-                break;
         }
         mem_address=tmp_mem_addr;
         if(mem_address<0)
@@ -1031,21 +1013,10 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
         die(node.get_line(),"incorrect value type,must be vector/hash");
         return -1;
     }
-    int call_size=node.get_children().size();
-    if(call_size>1)
-    {
-        die(node.get_line(),"only one index/key is allowed to get memory space of vector/hash");
-        return -1;
-    }
     if(base_value_type==vm_vector)
     {
         nasal_vector& reference_value=nasal_vm.gc_get(base_value_addr).get_vector();
         nasal_ast& tmp=node.get_children()[0];
-        if(tmp.get_type()==ast_subvec)
-        {
-            die(tmp.get_line(),"temporary sliced vector");
-            return -1;
-        }
         int index_value_addr=calculation(tmp,local_scope_addr);
         int index_value_type=nasal_vm.gc_get(index_value_addr).get_type();
         if(index_value_type!=vm_number && index_value_type!=vm_string)
@@ -1058,11 +1029,6 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
         {
             std::string str=nasal_vm.gc_get(index_value_addr).get_string();
             double number=trans_string_to_number(str);
-            if(std::isnan(number))
-            {
-                die(tmp.get_line(),"index is not a numerable string");
-                return -1;
-            }
             index_num=(int)number;
         }
         else
@@ -1072,17 +1038,7 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
     }
     else
     {
-        if(call_size>1)
-        {
-            die(node.get_line(),"use only one key to call a hash");
-            return -1;
-        }
         nasal_ast& tmp=node.get_children()[0];
-        if(tmp.get_type()==ast_subvec)
-        {
-            die(tmp.get_line(),"cannot slice hash");
-            return -1;
-        }
         int str_addr=calculation(tmp,local_scope_addr);
         if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
         {
