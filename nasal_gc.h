@@ -207,7 +207,7 @@ int nasal_vector::get_value_address(int index)
     int right_range=vec_size-1;
     if(index<left_range || index>right_range)
     {
-        std::cout<<">> [runtime] nasal_vector::get_value_address: index out of range.\n";
+        std::cout<<">> [runtime] nasal_vector::get_value_address: index out of range: "<<index<<"\n";
         return -1;
     }
     return nasal_vm.mem_get(elems[(index+vec_size)%vec_size]);
@@ -219,7 +219,7 @@ int nasal_vector::get_mem_address(int index)
     int right_range=vec_size-1;
     if(index<left_range || index>right_range)
     {
-        std::cout<<">> [runtime] nasal_vector::get_mem_address: index out of range.\n";
+        std::cout<<">> [runtime] nasal_vector::get_mem_address: index out of range: "<<index<<"\n";
         return -1;
     }
     return elems[(index+vec_size)%vec_size];
