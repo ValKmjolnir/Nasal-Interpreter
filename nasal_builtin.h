@@ -51,7 +51,7 @@ int builtin_contains(int);
 int builtin_delete(int);
 int builtin_getkeys(int);
 int builtin_import(int);
-int builtin_die_state;
+int builtin_die_state;// used in builtin_die
 int builtin_die(int);
 int builtin_type(int);
 int builtin_substr(int);
