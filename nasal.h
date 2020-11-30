@@ -18,7 +18,6 @@
 #include <vector>
 #include <map>
 
-#include "nasal_enum.h"
 #include "nasal_misc.h"
 #include "nasal_lexer.h"
 #include "nasal_ast.h"

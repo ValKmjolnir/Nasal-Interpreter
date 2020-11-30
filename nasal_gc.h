@@ -1,6 +1,17 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
+enum runtime_scalar_type
+{
+    vm_nil=0,
+    vm_number,
+    vm_string,
+    vm_closure,
+    vm_function,
+    vm_vector,
+    vm_hash
+};
+
 #define MEM_BLK_SIZE 256 // 0x00 ~ 0xff
 #define GC_BLK_SIZE  256 // 0x00 ~ 0xff
 /*
