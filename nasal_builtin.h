@@ -18,50 +18,50 @@
 
 // declaration of builtin functions
 // to add new builtin function,declare it here and write the definition below
-int builtin_print(int);
-int builtin_append(int);
-int builtin_setsize(int);
-int builtin_system(int);
-int builtin_input(int);
-int builtin_sleep(int);
-int builtin_finput(int);
-int builtin_foutput(int);
-int builtin_split(int);
-int builtin_rand(int);
-int builtin_id(int);
-int builtin_int(int);
-int builtin_num(int);
-int builtin_pop(int);
-int builtin_str(int);
-int builtin_size(int);
-int builtin_xor(int);
-int builtin_and(int);
-int builtin_or(int);
-int builtin_nand(int);
-int builtin_not(int);
-int builtin_sin(int);
-int builtin_cos(int);
-int builtin_tan(int);
-int builtin_exp(int);
-int builtin_ln(int);
-int builtin_sqrt(int);
-int builtin_atan2(int);
-int builtin_time(int);
-int builtin_contains(int);
-int builtin_delete(int);
-int builtin_getkeys(int);
-int builtin_import(int);
+int builtin_print(int,nasal_virtual_machine&);
+int builtin_append(int,nasal_virtual_machine&);
+int builtin_setsize(int,nasal_virtual_machine&);
+int builtin_system(int,nasal_virtual_machine&);
+int builtin_input(int,nasal_virtual_machine&);
+int builtin_sleep(int,nasal_virtual_machine&);
+int builtin_finput(int,nasal_virtual_machine&);
+int builtin_foutput(int,nasal_virtual_machine&);
+int builtin_split(int,nasal_virtual_machine&);
+int builtin_rand(int,nasal_virtual_machine&);
+int builtin_id(int,nasal_virtual_machine&);
+int builtin_int(int,nasal_virtual_machine&);
+int builtin_num(int,nasal_virtual_machine&);
+int builtin_pop(int,nasal_virtual_machine&);
+int builtin_str(int,nasal_virtual_machine&);
+int builtin_size(int,nasal_virtual_machine&);
+int builtin_xor(int,nasal_virtual_machine&);
+int builtin_and(int,nasal_virtual_machine&);
+int builtin_or(int,nasal_virtual_machine&);
+int builtin_nand(int,nasal_virtual_machine&);
+int builtin_not(int,nasal_virtual_machine&);
+int builtin_sin(int,nasal_virtual_machine&);
+int builtin_cos(int,nasal_virtual_machine&);
+int builtin_tan(int,nasal_virtual_machine&);
+int builtin_exp(int,nasal_virtual_machine&);
+int builtin_ln(int,nasal_virtual_machine&);
+int builtin_sqrt(int,nasal_virtual_machine&);
+int builtin_atan2(int,nasal_virtual_machine&);
+int builtin_time(int,nasal_virtual_machine&);
+int builtin_contains(int,nasal_virtual_machine&);
+int builtin_delete(int,nasal_virtual_machine&);
+int builtin_getkeys(int,nasal_virtual_machine&);
+int builtin_import(int,nasal_virtual_machine&);
 int builtin_die_state;// used in builtin_die
-int builtin_die(int);
-int builtin_type(int);
-int builtin_substr(int);
+int builtin_die(int,nasal_virtual_machine&);
+int builtin_type(int,nasal_virtual_machine&);
+int builtin_substr(int,nasal_virtual_machine&);
 
 // register builtin function's name and it's address here in this table below
 // this table must and with {"",NULL}
 struct FUNC_TABLE
 {
     std::string func_name;
-    int (*func_pointer)(int x);
+    int (*func_pointer)(int x,nasal_virtual_machine& nasal_vm);
 } builtin_func_table[]=
 {
     {"nasal_call_builtin_std_cout",      builtin_print},
@@ -103,7 +103,7 @@ struct FUNC_TABLE
     {"",                                 NULL}
 };
 
-int builtin_print(int local_scope_addr)
+int builtin_print(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     // get arguments
     int vector_value_addr=in_builtin_find("elements");
@@ -133,7 +133,7 @@ int builtin_print(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_append(int local_scope_addr)
+int builtin_append(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int vector_value_addr=in_builtin_find("vector");
     int elem_value_addr=in_builtin_find("elements");
@@ -159,7 +159,7 @@ int builtin_append(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_setsize(int local_scope_addr)
+int builtin_setsize(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int vector_value_addr=in_builtin_find("vector");
     int size_value_addr=in_builtin_find("size");
@@ -217,7 +217,7 @@ int builtin_setsize(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_system(int local_scope_addr)
+int builtin_system(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int str_value_addr=in_builtin_find("str");
     if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
@@ -237,7 +237,7 @@ int builtin_system(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_input(int local_scope_addr)
+int builtin_input(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int ret_addr=nasal_vm.gc_alloc(vm_string);
     std::string str;
@@ -246,7 +246,7 @@ int builtin_input(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_sleep(int local_scope_addr)
+int builtin_sleep(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("duration");
     if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_string && nasal_vm.gc_get(value_addr).get_type()!=vm_number))
@@ -272,7 +272,7 @@ int builtin_sleep(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_finput(int local_scope_addr)
+int builtin_finput(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("filename");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
@@ -299,7 +299,7 @@ int builtin_finput(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_foutput(int local_scope_addr)
+int builtin_foutput(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("filename");
     int str_value_addr=in_builtin_find("str");
@@ -322,7 +322,7 @@ int builtin_foutput(int local_scope_addr)
     return ret_addr;
 }
 
-int builtin_split(int local_scope_addr)
+int builtin_split(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int delimeter_value_addr=in_builtin_find("delimeter");
     int string_value_addr=in_builtin_find("string");
@@ -389,7 +389,7 @@ int builtin_split(int local_scope_addr)
     }
     return ret_addr;
 }
-int builtin_rand(int local_scope_addr)
+int builtin_rand(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("seed");
     if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_number && nasal_vm.gc_get(value_addr).get_type()!=vm_nil))
@@ -411,7 +411,7 @@ int builtin_rand(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(num);
     return ret_addr;
 }
-int builtin_id(int local_scope_addr)
+int builtin_id(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("thing");
     if(value_addr<0)
@@ -423,7 +423,7 @@ int builtin_id(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)value_addr);
     return ret_addr;
 }
-int builtin_int(int local_scope_addr)
+int builtin_int(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("value");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -436,7 +436,7 @@ int builtin_int(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)number);
     return ret_addr;
 }
-int builtin_num(int local_scope_addr)
+int builtin_num(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("value");
     if(value_addr<0 || !in_builtin_check(value_addr,vm_string))
@@ -449,7 +449,7 @@ int builtin_num(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(trans_string_to_number(str));
     return ret_addr;
 }
-int builtin_pop(int local_scope_addr)
+int builtin_pop(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("vector");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
@@ -460,7 +460,7 @@ int builtin_pop(int local_scope_addr)
     int ret_addr=nasal_vm.gc_get(value_addr).get_vector().del_elem();
     return ret_addr;
 }
-int builtin_str(int local_scope_addr)
+int builtin_str(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("number");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -473,7 +473,7 @@ int builtin_str(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_string(trans_number_to_string(number));
     return ret_addr;
 }
-int builtin_size(int local_scope_addr)
+int builtin_size(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("object");
     if(value_addr<0)
@@ -503,7 +503,7 @@ int builtin_size(int local_scope_addr)
     }
     return ret_addr;
 }
-int builtin_xor(int local_scope_addr)
+int builtin_xor(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int a_addr=in_builtin_find("a");
     int b_addr=in_builtin_find("b");
@@ -523,7 +523,7 @@ int builtin_xor(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a^number_b));
     return ret_addr;
 }
-int builtin_and(int local_scope_addr)
+int builtin_and(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int a_addr=in_builtin_find("a");
     int b_addr=in_builtin_find("b");
@@ -543,7 +543,7 @@ int builtin_and(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a&number_b));
     return ret_addr;
 }
-int builtin_or(int local_scope_addr)
+int builtin_or(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int a_addr=in_builtin_find("a");
     int b_addr=in_builtin_find("b");
@@ -563,7 +563,7 @@ int builtin_or(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(number_a|number_b));
     return ret_addr;
 }
-int builtin_nand(int local_scope_addr)
+int builtin_nand(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int a_addr=in_builtin_find("a");
     int b_addr=in_builtin_find("b");
@@ -583,7 +583,7 @@ int builtin_nand(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(~(number_a&number_b)));
     return ret_addr;
 }
-int builtin_not(int local_scope_addr)
+int builtin_not(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int a_addr=in_builtin_find("a");
     if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
@@ -596,7 +596,7 @@ int builtin_not(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)(~number));
     return ret_addr;
 }
-int builtin_sin(int local_scope_addr)
+int builtin_sin(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -609,7 +609,7 @@ int builtin_sin(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(sin(number));
     return ret_addr;
 }
-int builtin_cos(int local_scope_addr)
+int builtin_cos(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -622,7 +622,7 @@ int builtin_cos(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(cos(number));
     return ret_addr;
 }
-int builtin_tan(int local_scope_addr)
+int builtin_tan(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -635,7 +635,7 @@ int builtin_tan(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(tan(number));
     return ret_addr;
 }
-int builtin_exp(int local_scope_addr)
+int builtin_exp(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -648,7 +648,7 @@ int builtin_exp(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(exp(number));
     return ret_addr;
 }
-int builtin_ln(int local_scope_addr)
+int builtin_ln(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -661,7 +661,7 @@ int builtin_ln(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(log(number)/log(2.7182818284590452354));
     return ret_addr;
 }
-int builtin_sqrt(int local_scope_addr)
+int builtin_sqrt(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("x");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -674,7 +674,7 @@ int builtin_sqrt(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(sqrt(number));
     return ret_addr;
 }
-int builtin_atan2(int local_scope_addr)
+int builtin_atan2(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int x_value_addr=in_builtin_find("x");
     int y_value_addr=in_builtin_find("y");
@@ -694,7 +694,7 @@ int builtin_atan2(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number(atan2(y,x));
     return ret_addr;
 }
-int builtin_time(int local_scope_addr)
+int builtin_time(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("begin_time");
     if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
@@ -707,7 +707,7 @@ int builtin_time(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)time(&begin_time));
     return ret_addr;
 }
-int builtin_contains(int local_scope_addr)
+int builtin_contains(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int hash_addr=in_builtin_find("hash");
     int key_addr=in_builtin_find("key");
@@ -727,7 +727,7 @@ int builtin_contains(int local_scope_addr)
     nasal_vm.gc_get(ret_addr).set_number((double)contains);
     return ret_addr;
 }
-int builtin_delete(int local_scope_addr)
+int builtin_delete(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int hash_addr=in_builtin_find("hash");
     int key_addr=in_builtin_find("key");
@@ -746,7 +746,7 @@ int builtin_delete(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_getkeys(int local_scope_addr)
+int builtin_getkeys(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int hash_addr=in_builtin_find("hash");
     if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
@@ -757,7 +757,7 @@ int builtin_getkeys(int local_scope_addr)
     int ret_addr=nasal_vm.gc_get(hash_addr).get_hash().get_keys();
     return ret_addr;
 }
-int builtin_import(int local_scope_addr)
+int builtin_import(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
@@ -765,7 +765,7 @@ int builtin_import(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_die(int local_scope_addr)
+int builtin_die(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int str_addr=in_builtin_find("str");
     if(str_addr<0 || !in_builtin_check(str_addr,vm_string))
@@ -778,7 +778,7 @@ int builtin_die(int local_scope_addr)
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_type(int local_scope_addr)
+int builtin_type(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int value_addr=in_builtin_find("object");
     if(value_addr<0)
@@ -799,7 +799,7 @@ int builtin_type(int local_scope_addr)
     }
     return ret_addr;
 }
-int builtin_substr(int local_scope_addr)
+int builtin_substr(int local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     int str_addr=in_builtin_find("str");
     int begin_addr=in_builtin_find("begin");
