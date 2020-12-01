@@ -307,8 +307,6 @@ int nasal_hash::get_value_address(std::string key)
             }
         }
     }
-    else
-        std::cout<<">> [runtime] cannot find hash member \""<<key<<"\".\n";
     return ret_value_addr;
 }
 int nasal_hash::get_mem_address(std::string key)
@@ -333,13 +331,6 @@ int nasal_hash::get_mem_address(std::string key)
                     break;
             }
         }
-    }
-    else
-    {
-        int val_addr=vm.gc_alloc(vm_nil);
-        int mem_addr=vm.mem_alloc(val_addr);
-        elems[key]=mem_addr;
-        ret_mem_addr=mem_addr;
     }
     return ret_mem_addr;
 }
@@ -656,12 +647,10 @@ nasal_virtual_machine::~nasal_virtual_machine()
         {
             garbage_collector_memory[i]->ref_cnt=0;
             garbage_collector_memory[i]->collected=true;
+            garbage_collector_memory[i]->elem.clear();
         }
     for(int i=0;i<gc_mem_size;++i)
-    {
-        garbage_collector_memory[i]->elem.clear();
         delete garbage_collector_memory[i];
-    }
     while(!garbage_collector_free_space.empty())
         garbage_collector_free_space.pop();
     while(!memory_manager_free_space.empty())
@@ -699,12 +688,10 @@ void nasal_virtual_machine::clear()
         {
             garbage_collector_memory[i]->ref_cnt=0;
             garbage_collector_memory[i]->collected=true;
+            garbage_collector_memory[i]->elem.clear();
         }
     for(int i=0;i<gc_mem_size;++i)
-    {
-        garbage_collector_memory[i]->elem.clear();
         delete garbage_collector_memory[i];
-    }
     while(!garbage_collector_free_space.empty())
         garbage_collector_free_space.pop();
     while(!memory_manager_free_space.empty())
