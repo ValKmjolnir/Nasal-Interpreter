@@ -770,7 +770,13 @@ int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope
         die(node.get_line(),"called a value that is not a hash");
         return -1;
     }
-    int ret_value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(node.get_str());
+    std::string str=node.get_str();
+    int ret_value_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_value_address(str);
+    if(ret_value_addr<0)
+    {
+        die(node.get_line(),"cannot find member named \""+str+"\"");
+        return -1;
+    }
     nasal_vm.add_reference(ret_value_addr);
     return ret_value_addr;
 }
@@ -1073,7 +1079,13 @@ int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_sco
         die(node.get_line(),"called a value that is not a hash");
         return -1;
     }
-    int ret_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(node.get_str());
+    nasal_hash& ref=nasal_vm.gc_get(base_value_addr).get_hash();
+    int ret_mem_addr=ref.get_mem_address(node.get_str());
+    if(ret_mem_addr<0)
+    {
+        ref.add_elem(node.get_str(),nasal_vm.gc_alloc(vm_nil));
+        ret_mem_addr=ref.get_mem_address(node.get_str());
+    }
     return ret_mem_addr;
 }
 int nasal_runtime::nasal_scalar_add(int a_scalar_addr,int b_scalar_addr)
