@@ -13,6 +13,7 @@ enum op_code
     op_pushstr,
     op_newvec,op_newhash,op_newfunc,
     op_vecapp,op_hashapp,
+    op_newscope,op_delscope,
     op_para,op_defpara,op_dynpara,op_entry,
     op_unot,op_usub,
     op_add,op_sub,op_mul,op_div,op_lnk,
@@ -46,6 +47,8 @@ struct
     {op_newfunc,     "newf  "},
     {op_vecapp,      "vapp  "},
     {op_hashapp,     "happ  "},
+    {op_newscope,    "nscp  "},
+    {op_delscope,    "dscp  "},
     {op_para,        "para  "},
     {op_defpara,     "deflt "},
     {op_dynpara,     "dyn   "},
@@ -365,11 +368,27 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
 
 void nasal_codegen::conditional_gen(nasal_ast& ast)
 {
+    opcode op;
+    op.op=op_newscope;
+    op.index=0;
+    exec_code.push_back(op);
+    // unfinished
+    op.op=op_delscope;
+    op.index=0;
+    exec_code.push_back(op);
     return;
 }
 
 void nasal_codegen::loop_gen(nasal_ast& ast)
 {
+    opcode op;
+    op.op=op_newscope;
+    op.index=0;
+    exec_code.push_back(op);
+    // unfinished
+    op.op=op_delscope;
+    op.index=0;
+    exec_code.push_back(op);
     return;
 }
 
@@ -393,6 +412,8 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
         case ast_mult_equal:
         case ast_div_equal:
         case ast_link_equal:break;
+        case ast_or:
+        case ast_and:break;
         case ast_add:
             op.op=op_add;
             calculation_gen(ast.get_children()[0]);
