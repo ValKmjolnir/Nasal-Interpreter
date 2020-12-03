@@ -11,9 +11,6 @@ enum runtime_scalar_type
     vm_vector,
     vm_hash
 };
-
-#define MEM_BLK_SIZE 256 // 0x00 ~ 0xff
-#define GC_BLK_SIZE  256 // 0x00 ~ 0xff
 /*
 nasal_number: basic type(double)
 nasal_string: basic type(std::string)
