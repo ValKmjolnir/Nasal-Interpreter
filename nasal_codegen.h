@@ -4,8 +4,7 @@
 enum op_code
 {
     op_nop,
-    op_load,
-    op_loadv,
+    op_load,// load value in value_stack to identifier
     op_pushnum,
     op_pushone,
     op_pushzero,
@@ -17,15 +16,25 @@ enum op_code
     op_para,op_defpara,op_dynpara,op_entry,
     op_unot,op_usub,
     op_add,op_sub,op_mul,op_div,op_lnk,
+    op_addeq,op_subeq,op_muleq,op_diveq,op_lnkeq,op_meq,
     op_eq,op_neq,op_less,op_leq,op_grt,op_geq,
     op_pop,
     op_jmp,op_jmptrue,op_jmpfalse,
-    op_call,op_callv,op_callh,op_callf,op_builtincall,
-    op_slicebegin,op_sliceend,
-    op_slice,op_slice2,
-    op_mcall,op_mcallv,op_mcallh,
-    op_return,
-    op_end
+    op_jp,op_jtp,op_jfp,
+    op_call,       // call identifier
+    op_callv,      // call vec[index]
+    op_callvi,     // call vec[immediate] (used in multi-assign/multi-define)
+    op_callh,      // call hash.label
+    op_callf,      // call function(parameters)
+    op_builtincall,// call builtin-function
+    op_slicebegin, // begin of slice like: vec[1,2,3:6,0,-1]
+    op_sliceend,   // end of slice
+    op_slice,      // slice like vec[1]
+    op_slice2,     // slice like vec[nil:10]
+    op_mcall,      // get memory of identifier
+    op_mcallv,     // get memory of vec[index]
+    op_mcallh,     // get memory of hash.label
+    op_return      // return
 };
 
 struct
@@ -36,7 +45,6 @@ struct
 {
     {op_nop,         "nop   "},
     {op_load,        "load  "},
-    {op_loadv,       "loadv "},
     {op_pushnum,     "pnum  "},
     {op_pushone,     "pone  "},
     {op_pushzero,    "pzero "},
@@ -60,6 +68,12 @@ struct
     {op_mul,         "mult  "},
     {op_div,         "div   "},
     {op_lnk,         "link  "},
+    {op_addeq,       "addeq "},
+    {op_subeq,       "subeq "},
+    {op_muleq,       "muleq "},
+    {op_diveq,       "diveq "},
+    {op_lnkeq,       "linkeq"},
+    {op_meq,         "memeq "},
     {op_eq,          "eq    "},
     {op_neq,         "neq   "},
     {op_less,        "l     "},
@@ -70,8 +84,12 @@ struct
     {op_jmp,         "jmp   "},
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
+    {op_jp,          "jp    "},
+    {op_jtp,         "jtp   "},
+    {op_jfp,         "jfp   "},
     {op_call,        "call  "},
     {op_callv,       "callv "},
+    {op_callvi,      "callvi"},
     {op_callh,       "callh "},
     {op_callf,       "callf "},
     {op_builtincall, "callb "},
@@ -83,7 +101,6 @@ struct
     {op_mcallv,      "mcallv"},
     {op_mcallh,      "mcallh"},
     {op_return,      "ret   "},
-    {op_end,         "end   "},
     {-1,             NULL},
 };
 
@@ -108,6 +125,7 @@ private:
     int error;
     void regist_number(double);
     void regist_string(std::string);
+    void pop_gen();
     void nil_gen();
     void number_gen(nasal_ast&);
     void string_gen(nasal_ast&);
@@ -116,14 +134,28 @@ private:
     void function_gen(nasal_ast&);
     void call_gen(nasal_ast&);
     void call_id(nasal_ast&);
+    void call_hash(nasal_ast&);
+    void call_vec(nasal_ast&);
+    void call_func(nasal_ast&);
+    void mem_call(nasal_ast&);
+    void mem_call_id(nasal_ast&);
+    void mem_call_vec(nasal_ast&);
+    void mem_call_hash(nasal_ast&);
     void multi_def(nasal_ast&);
     void single_def(nasal_ast&);
     void definition_gen(nasal_ast&);
     void multi_assignment_gen(nasal_ast&);
     void conditional_gen(nasal_ast&);
     void loop_gen(nasal_ast&);
+    void while_gen(nasal_ast&);
+    void for_gen(nasal_ast&);
+    void forindex_gen(nasal_ast&);
+    void foreach_gen(nasal_ast&);
+    void or_gen(nasal_ast&);
+    void and_gen(nasal_ast&);
+    void trino_gen(nasal_ast&);
     void calculation_gen(nasal_ast&);
-    int block_gen(nasal_ast&);
+    void block_gen(nasal_ast&);
     void return_gen(nasal_ast&);
 public:
     nasal_codegen();
@@ -151,6 +183,15 @@ void nasal_codegen::regist_string(std::string str)
     int size=string_table.size();
     if(string_table.find(str)==string_table.end())
         string_table[str]=size;
+    return;
+}
+
+void nasal_codegen::pop_gen()
+{
+    opcode op;
+    op.op=op_pop;
+    op.index=0;
+    exec_code.push_back(op);
     return;
 }
 
@@ -270,7 +311,7 @@ void nasal_codegen::function_gen(nasal_ast& ast)
     }
     
     op.op=op_entry;
-    op.index=0;
+    op.index=exec_code.size()+2;
     exec_code.push_back(op);
     op.op=op_jmp;
     op.index=0;
@@ -295,41 +336,193 @@ void nasal_codegen::function_gen(nasal_ast& ast)
 
 void nasal_codegen::call_gen(nasal_ast& ast)
 {
-    if(ast.get_children()[0].get_type()==ast_identifier)
-    {
-        std::string str=ast.get_children()[0].get_str();
-        regist_string(str);
-        opcode op;
-        op.op=op_call;
-        op.index=string_table[str];
-        exec_code.push_back(op);
-    }
-    else
-        calculation_gen(ast.get_children()[0]);
+    calculation_gen(ast.get_children()[0]);
+    if(exec_code.back().op==op_builtincall)
+        return;
     int child_size=ast.get_children().size();
-    for(int i=0;i<child_size;++i)
+    for(int i=1;i<child_size;++i)
     {
         nasal_ast& tmp=ast.get_children()[i];
         if(tmp.get_type()==ast_call_hash)
-        {
-            opcode op;
-            op.op=op_callh;
-            std::string str=tmp.get_str();
-            regist_string(str);
-            op.index=string_table[str];
-            exec_code.push_back(op);
-        }
-        ;// unfinished
+            call_hash(tmp);
+        else if(tmp.get_type()==ast_call_vec)
+            call_vec(tmp);
+        else if(tmp.get_type()==ast_call_func)
+            call_func(tmp);
     }
     return;
 }
 
 void nasal_codegen::call_id(nasal_ast& ast)
 {
+    opcode op;
+    op.op=op_call;
+    std::string str=ast.get_str();
+    for(int i=0;builtin_func_table[i].func_pointer;++i)
+        if(builtin_func_table[i].func_name==str)
+        {
+            op.op=op_builtincall;
+            break;
+        }
+    regist_string(str);
+    op.index=string_table[str];
+    exec_code.push_back(op);
+    return;
+}
+
+void nasal_codegen::call_hash(nasal_ast& ast)
+{
+    opcode op;
+    op.op=op_callh;
+    std::string str=ast.get_str();
+    regist_string(str);
+    op.index=string_table[str];
+    exec_code.push_back(op);
+    return;
+}
+
+void nasal_codegen::call_vec(nasal_ast& ast)
+{
+    if(ast.get_children().size()==1 && ast.get_children()[0].get_type()!=ast_subvec)
+    {
+        calculation_gen(ast.get_children()[0]);
+        opcode op;
+        op.op=op_callv;
+        op.index=0;
+        exec_code.push_back(op);
+        return;
+    }
+    opcode op;
+    op.op=op_slicebegin;
+    op.index=0;
+    exec_code.push_back(op);
+    int size=ast.get_children().size();
+    for(int i=0;i<size;++i)
+    {
+        nasal_ast& tmp=ast.get_children()[i];
+        if(tmp.get_type()!=ast_subvec)
+        {
+            calculation_gen(tmp);
+            op.op=op_slice;
+            op.index=0;
+            exec_code.push_back(op);
+        }
+        else
+        {
+            calculation_gen(tmp.get_children()[0]);
+            calculation_gen(tmp.get_children()[1]);
+            op.op=op_slice2;
+            op.index=0;
+            exec_code.push_back(op);
+        }
+    }
+    op.op=op_sliceend;
+    op.index=0;
+    exec_code.push_back(op);
+    return;
+}
+
+void nasal_codegen::call_func(nasal_ast& ast)
+{
+    if(!ast.get_children().size())
+    {
+        opcode op;
+        op.op=op_newvec;
+        op.index=0;
+        exec_code.push_back(op);
+
+        op.op=op_callf;
+        op.index=0;
+        exec_code.push_back(op);
+        return;
+    }
+    if(ast.get_children()[0].get_type()==ast_hashmember)
+    {
+        opcode op;
+        op.op=op_newhash;
+        op.index=0;
+        exec_code.push_back(op);
+        int size=ast.get_children().size();
+        for(int i=0;i<size;++i)
+        {
+            nasal_ast& tmp=ast.get_children()[i];
+            string_gen(tmp.get_children()[0]);
+            calculation_gen(tmp.get_children()[1]);
+            op.op=op_hashapp;
+            op.index=0;
+            exec_code.push_back(op);
+        }
+        op.op=op_callf;
+        op.index=0;
+        exec_code.push_back(op);
+    }
+    else
+    {
+        opcode op;
+        op.op=op_newvec;
+        op.index=0;
+        exec_code.push_back(op);
+        int size=ast.get_children().size();
+        for(int i=0;i<size;++i)
+        {
+            nasal_ast& tmp=ast.get_children()[i];
+            calculation_gen(tmp);
+            op.op=op_vecapp;
+            op.index=0;
+            exec_code.push_back(op);
+        }
+        op.op=op_callf;
+        op.index=0;
+        exec_code.push_back(op);
+    }
+    return;
+}
+
+void nasal_codegen::mem_call(nasal_ast& ast)
+{
+    if(ast.get_type()==ast_identifier)
+        mem_call_id(ast);
+    else
+        mem_call_id(ast.get_children()[0]);
+    int child_size=ast.get_children().size();
+    for(int i=1;i<child_size;++i)
+    {
+        nasal_ast& tmp=ast.get_children()[i];
+        if(tmp.get_type()==ast_call_hash)
+            mem_call_hash(tmp);
+        else if(tmp.get_type()==ast_call_vec)
+            mem_call_vec(tmp);
+    }
+    return;
+}
+
+void nasal_codegen::mem_call_id(nasal_ast& ast)
+{
     std::string str=ast.get_str();
     regist_string(str);
     opcode op;
-    op.op=op_call;
+    op.op=op_mcall;
+    op.index=string_table[str];
+    exec_code.push_back(op);
+    return;
+}
+
+void nasal_codegen::mem_call_vec(nasal_ast& ast)
+{
+    calculation_gen(ast.get_children()[0]);
+    opcode op;
+    op.op=op_mcallv;
+    op.index=0;
+    exec_code.push_back(op);
+    return;
+}
+
+void nasal_codegen::mem_call_hash(nasal_ast& ast)
+{
+    std::string str=ast.get_str();
+    regist_string(str);
+    opcode op;
+    op.op=op_mcallh;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -338,17 +531,46 @@ void nasal_codegen::call_id(nasal_ast& ast)
 void nasal_codegen::single_def(nasal_ast& ast)
 {
     calculation_gen(ast.get_children()[1]);
-    std::string str=ast.get_children()[0].get_str();
-    regist_string(str);
     opcode op;
     op.op=op_load;
+    std::string str=ast.get_children()[0].get_str();
+    regist_string(str);
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
 }
 void nasal_codegen::multi_def(nasal_ast& ast)
 {
-    for(int i=0;i<ast.get_children()[0].get_children().size();++i);
+    int size=ast.get_children()[0].get_children().size();
+    if(ast.get_children()[1].get_type()==ast_multi_scalar)
+    {
+        for(int i=0;i<size;++i)
+        {
+            calculation_gen(ast.get_children()[1].get_children()[i]);
+            opcode op;
+            op.op=op_load;
+            std::string str=ast.get_children()[0].get_children()[i].get_str();
+            regist_string(str);
+            op.index=string_table[str];
+            exec_code.push_back(op);
+        }
+    }
+    else
+    {
+        calculation_gen(ast.get_children()[1]);
+        for(int i=0;i<size;++i)
+        {
+            opcode op;
+            op.op=op_callvi;
+            op.index=i;
+            exec_code.push_back(op);
+            op.op=op_load;
+            std::string str=ast.get_children()[0].get_children()[i].get_str();
+            regist_string(str);
+            op.index=string_table[str];
+            exec_code.push_back(op);
+        }
+    }
     return;
 }
 
@@ -363,32 +585,250 @@ void nasal_codegen::definition_gen(nasal_ast& ast)
 
 void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
 {
+    int size=ast.get_children()[0].get_children().size();
+    if(ast.get_children()[1].get_type()==ast_multi_scalar)
+    {
+        for(int i=size-1;i>=0;--i)
+            calculation_gen(ast.get_children()[1].get_children()[i]);
+        for(int i=0;i<size;++i)
+        {
+            mem_call(ast.get_children()[0].get_children()[i]);
+            opcode op;
+            op.op=op_meq;
+            exec_code.push_back(op);
+            pop_gen();
+        }
+    }
+    else
+    {
+        calculation_gen(ast.get_children()[1]);
+        for(int i=0;i<size;++i)
+        {
+            opcode op;
+            op.op=op_callvi;
+            op.index=i;
+            exec_code.push_back(op);
+            mem_call(ast.get_children()[0].get_children()[i]);
+            op.op=op_meq;
+            exec_code.push_back(op);
+            pop_gen();
+        }
+    }
     return;
 }
 
 void nasal_codegen::conditional_gen(nasal_ast& ast)
 {
     opcode op;
-    op.op=op_newscope;
-    op.index=0;
-    exec_code.push_back(op);
-    // unfinished
-    op.op=op_delscope;
-    op.index=0;
-    exec_code.push_back(op);
+    int size=ast.get_children().size();
+    std::vector<int> jmp_label;
+    for(int i=0;i<size;++i)
+    {
+        nasal_ast& tmp=ast.get_children()[i];
+        if(tmp.get_type()==ast_if || tmp.get_type()==ast_elsif)
+        {
+            calculation_gen(tmp.get_children()[0]);
+            op.op=op_jfp;
+            int ptr=exec_code.size();
+            exec_code.push_back(op);
+            pop_gen();
+            block_gen(tmp.get_children()[1]);
+            op.op=op_jmp;
+            jmp_label.push_back(exec_code.size());
+            exec_code.push_back(op);
+            exec_code[ptr].index=exec_code.size();
+        }
+        else
+        {
+            block_gen(tmp.get_children()[0]);
+            break;
+        }
+    }
+    for(std::vector<int>::iterator j=jmp_label.begin();j!=jmp_label.end();++j)
+        exec_code[*j].index=exec_code.size();
     return;
 }
 
 void nasal_codegen::loop_gen(nasal_ast& ast)
 {
+    switch(ast.get_type())
+    {
+        case ast_while:while_gen(ast);break;
+        case ast_for:for_gen(ast);break;
+        case ast_forindex:forindex_gen(ast);break;
+        case ast_foreach:foreach_gen(ast);break;
+    }
+    return;
+}
+
+void nasal_codegen::while_gen(nasal_ast& ast)
+{
+    opcode op;
+    int loop_ptr=exec_code.size();
+    calculation_gen(ast.get_children()[0]);
+    op.op=op_jmpfalse;
+    int condition_ptr=exec_code.size();
+    exec_code.push_back(op);
+    pop_gen();
+    block_gen(ast.get_children()[1]);
+    op.op=op_jmp;
+    op.index=loop_ptr;
+    exec_code.push_back(op);
+    exec_code[condition_ptr].index=exec_code.size();
+    pop_gen();
+    return;
+}
+
+void nasal_codegen::for_gen(nasal_ast& ast)
+{
     opcode op;
     op.op=op_newscope;
     op.index=0;
     exec_code.push_back(op);
-    // unfinished
+
+    switch(ast.get_children()[0].get_type())
+    {
+        case ast_null:break;
+        case ast_definition:definition_gen(ast.get_children()[0]);break;
+        case ast_multi_assign:multi_assignment_gen(ast.get_children()[0]);break;
+        case ast_nil:case ast_number:case ast_string:case ast_function:break;
+        case ast_vector:case ast_hash:
+        case ast_call:
+        case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
+        case ast_unary_sub:case ast_unary_not:
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
+        case ast_trinocular:calculation_gen(ast.get_children()[0]);pop_gen();break;
+    }
+    int jmp_place=exec_code.size();
+    if(ast.get_children()[1].get_type()==ast_null)
+    {
+        op.op=op_pushone;
+        op.index=0;
+        exec_code.push_back(op);
+    }
+    else
+        calculation_gen(ast.get_children()[1]);
+    op.op=op_jfp;
+    int label_exit=exec_code.size();
+    exec_code.push_back(op);
+
+    block_gen(ast.get_children()[3]);
+    switch(ast.get_children()[2].get_type())
+    {
+        case ast_null:break;
+        case ast_definition:definition_gen(ast.get_children()[2]);break;
+        case ast_multi_assign:multi_assignment_gen(ast.get_children()[2]);break;
+        case ast_nil:case ast_number:case ast_string:case ast_function:break;
+        case ast_vector:case ast_hash:
+        case ast_call:
+        case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
+        case ast_unary_sub:case ast_unary_not:
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
+        case ast_trinocular:calculation_gen(ast.get_children()[2]);pop_gen();break;
+    }
+    op.op=op_jmp;
+    op.index=jmp_place;
+    exec_code.push_back(op);
+
+    exec_code[label_exit].index=exec_code.size();
+
     op.op=op_delscope;
     op.index=0;
     exec_code.push_back(op);
+    return;
+}
+void nasal_codegen::forindex_gen(nasal_ast& ast)
+{
+    return;
+}
+void nasal_codegen::foreach_gen(nasal_ast& ast)
+{
+    return;
+}
+
+void nasal_codegen::or_gen(nasal_ast& ast)
+{
+    // a
+    // jt l1
+    // pop
+    // b
+    // jt l1
+    // pop
+    // pushnil
+    opcode op;
+    int l1,l2;
+    calculation_gen(ast.get_children()[0]);
+    op.op=op_jmptrue;
+    op.index=0;
+    l1=exec_code.size();
+    exec_code.push_back(op);
+
+    pop_gen();
+    calculation_gen(ast.get_children()[1]);
+    op.op=op_jmptrue;
+    op.index=0;
+    l2=exec_code.size();
+    exec_code.push_back(op);
+
+    pop_gen();
+    nil_gen();
+
+    exec_code[l1].index=exec_code[l2].index=exec_code.size();
+    return;
+}
+
+void nasal_codegen::and_gen(nasal_ast& ast)
+{
+    // a
+    // jt l1
+    // jmp lfalse
+    // l1:pop
+    // b
+    // jt l2
+    // lfalse:pop
+    // pushnil
+    // l2:
+    opcode op;
+    calculation_gen(ast.get_children()[0]);
+    op.op=op_jmptrue;
+    op.index=exec_code.size()+2;
+    exec_code.push_back(op);
+
+    op.op=op_jmp;
+    int ptr=exec_code.size();
+    exec_code.push_back(op);
+
+    pop_gen();
+    calculation_gen(ast.get_children()[1]);
+    op.op=op_jmptrue;
+    op.index=exec_code.size()+3;
+    exec_code.push_back(op);
+
+    exec_code[ptr].index=exec_code.size();
+    pop_gen();
+    nil_gen();
+
+    return;
+}
+
+void nasal_codegen::trino_gen(nasal_ast& ast)
+{
+    opcode op;
+    calculation_gen(ast.get_children()[0]);
+    op.op=op_jmpfalse;
+    int ptr=exec_code.size();
+    exec_code.push_back(op);
+    pop_gen();
+    calculation_gen(ast.get_children()[1]);
+    op.op=op_jmp;
+    int ptr_exit=exec_code.size();
+    exec_code.push_back(op);
+    exec_code[ptr].index=exec_code.size();
+    pop_gen();
+    calculation_gen(ast.get_children()[2]);
+    exec_code[ptr_exit].index=exec_code.size();
     return;
 }
 
@@ -407,13 +847,43 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
         case ast_function:function_gen(ast);break;
         case ast_call:call_gen(ast);break;
         case ast_equal:
+            op.op=op_meq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
         case ast_add_equal:
+            op.op=op_addeq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
         case ast_sub_equal:
+            op.op=op_subeq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
         case ast_mult_equal:
+            op.op=op_muleq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
         case ast_div_equal:
-        case ast_link_equal:break;
-        case ast_or:
-        case ast_and:break;
+            op.op=op_diveq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
+        case ast_link_equal:
+            op.op=op_lnkeq;
+            calculation_gen(ast.get_children()[1]);
+            mem_call(ast.get_children()[0]);
+            exec_code.push_back(op);
+            break;
+        case ast_or:or_gen(ast);break;
+        case ast_and:and_gen(ast);break;
         case ast_add:
             op.op=op_add;
             calculation_gen(ast.get_children()[0]);
@@ -444,7 +914,43 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
-        case ast_trinocular:break;
+        case ast_cmp_equal:
+            op.op=op_eq;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_cmp_not_equal:
+            op.op=op_neq;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_less_equal:
+            op.op=op_leq;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_less_than:
+            op.op=op_less;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_greater_equal:
+            op.op=op_geq;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_greater_than:
+            op.op=op_grt;
+            calculation_gen(ast.get_children()[0]);
+            calculation_gen(ast.get_children()[1]);
+            exec_code.push_back(op);
+            break;
+        case ast_trinocular:trino_gen(ast);break;
         case ast_unary_sub:
             op.op=op_usub;
             calculation_gen(ast.get_children()[0]);
@@ -459,9 +965,13 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
     return;
 }
 
-int nasal_codegen::block_gen(nasal_ast& ast)
+void nasal_codegen::block_gen(nasal_ast& ast)
 {
-    int begin_size=exec_code.size();
+    opcode op;
+    op.op=op_newscope;
+    op.index=0;
+    exec_code.push_back(op);
+    
     int size=ast.get_children().size();
     for(int i=0;i<size;++i)
     {
@@ -497,15 +1007,25 @@ int nasal_codegen::block_gen(nasal_ast& ast)
             case ast_mult:
             case ast_div:
             case ast_link:
+            case ast_cmp_equal:
+            case ast_cmp_not_equal:
+            case ast_less_equal:
+            case ast_less_than:
+            case ast_greater_equal:
+            case ast_greater_than:
             case ast_or:
             case ast_and:
-            case ast_trinocular:calculation_gen(tmp);break;
+            case ast_trinocular:calculation_gen(tmp);pop_gen();break;
             case ast_break:break;
             case ast_continue:break;
             case ast_return:return_gen(tmp);break;
         }
     }
-    return exec_code.size()-begin_size;
+
+    op.op=op_delscope;
+    op.index=0;
+    exec_code.push_back(op);
+    return;
 }
 
 void nasal_codegen::return_gen(nasal_ast& ast)
@@ -560,9 +1080,15 @@ void nasal_codegen::main_progress(nasal_ast& ast)
             case ast_mult:
             case ast_div:
             case ast_link:
+            case ast_cmp_equal:
+            case ast_cmp_not_equal:
+            case ast_less_equal:
+            case ast_less_than:
+            case ast_greater_equal:
+            case ast_greater_than:
             case ast_or:
             case ast_and:
-            case ast_trinocular:calculation_gen(tmp);break;
+            case ast_trinocular:calculation_gen(tmp);pop_gen();break;
         }
     }
     opcode op;
@@ -609,6 +1135,7 @@ void nasal_codegen::print_op(int index)
     {
         case op_pushnum:std::cout<<'('<<number_result_table[exec_code[index].index]<<')';break;
         case op_call:
+        case op_builtincall:
         case op_mcall:
         case op_pushstr:
         case op_callh:
@@ -616,8 +1143,7 @@ void nasal_codegen::print_op(int index)
         case op_para:
         case op_defpara:
         case op_dynpara:
-        case op_load:
-        case op_loadv:std::cout<<'('<<string_result_table[exec_code[index].index]<<')';break;
+        case op_load:std::cout<<'('<<string_result_table[exec_code[index].index]<<')';break;
     }
     std::cout<<'\n';
     return;
