@@ -555,7 +555,7 @@ nasal_ast nasal_parse::expr()
             else if(check_multi_scalar())
                 node=multi_assgin();
             else
-                node=calculation();    
+                node=calculation();
             break;
         case tok_for:
         case tok_forindex:
@@ -676,6 +676,8 @@ nasal_ast nasal_parse::calculation()
             die(node.get_line(),"cannot use calculation as the memory of scalar");
         if(node.get_type()==ast_call)
         {
+            if(node.get_children()[0].get_type()!=ast_identifier)
+                die(node.get_children()[0].get_line(),"cannot get the memory of temporary value");
             int size=node.get_children().size();
             for(int i=0;i<size;++i)
             {
@@ -1399,6 +1401,11 @@ nasal_ast nasal_parse::definition()
         node.add_child(calculation());
     if(node.get_children()[0].get_type()==ast_identifier && node.get_children()[1].get_type()==ast_multi_scalar)
         die(node.get_children()[1].get_line(),"one identifier cannot accept too many values");
+    else if(node.get_children()[0].get_type()==ast_multi_id && node.get_children()[1].get_type()==ast_multi_scalar)
+    {
+        if(node.get_children()[0].get_children().size()!=node.get_children()[1].get_children().size())
+            die(node.get_children()[0].get_line(),"too much or lack values in multi-definition");
+    }
     return node;
 }
 nasal_ast nasal_parse::var_incurve_def()
@@ -1506,6 +1513,11 @@ nasal_ast nasal_parse::multi_assgin()
         node.add_child(check_multi_scalar()?multi_scalar(false):calculation());
     else
         node.add_child(calculation());
+    if(node.get_children()[1].get_type()==ast_multi_scalar)
+    {
+        if(node.get_children()[0].get_children().size()!=node.get_children()[1].get_children().size())
+            die(node.get_children()[0].get_line(),"too much or lack values in multi-assignment");
+    }
     return node;
 }
 nasal_ast nasal_parse::loop()
@@ -1573,6 +1585,15 @@ nasal_ast nasal_parse::for_loop()
     }
     else if(tok_list[ptr].type==tok_var)
         node.add_child(definition());
+    else if(tok_list[ptr].type==tok_left_curve)
+    {
+        if(check_multi_definition())
+            node.add_child(definition());
+        else if(check_multi_scalar())
+            node.add_child(multi_assgin());
+        else
+            node.add_child(calculation());
+    }
     else
         node.add_child(calculation());
     ++ptr;

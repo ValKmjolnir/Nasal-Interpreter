@@ -208,6 +208,12 @@ void nasal_runtime::main_progress()
             case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             case ast_unary_sub:case ast_unary_not:
             case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+            case ast_cmp_equal:
+            case ast_cmp_not_equal:
+            case ast_less_equal:
+            case ast_less_than:
+            case ast_greater_equal:
+            case ast_greater_than:
             case ast_trinocular:nasal_vm.del_reference(calculation(node,-1));break;
         }
         if(error)
@@ -249,6 +255,12 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
             case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             case ast_unary_sub:case ast_unary_not:
             case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+            case ast_cmp_equal:
+            case ast_cmp_not_equal:
+            case ast_less_equal:
+            case ast_less_than:
+            case ast_greater_equal:
+            case ast_greater_than:
             case ast_trinocular:nasal_vm.del_reference(calculation(tmp_node,local_scope_addr));break;
             case ast_break:ret_state=rt_break;break;
             case ast_continue:ret_state=rt_continue;break;
@@ -269,8 +281,7 @@ int nasal_runtime::block_progress(nasal_ast& node,int local_scope_addr)
 }
 void nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
 {
-    int before_loop_node_type=node.get_type();
-    switch(before_loop_node_type)
+    switch(node.get_type())
     {
         case ast_null:break;
         case ast_definition:definition(node,local_scope_addr);break;
@@ -281,8 +292,8 @@ void nasal_runtime::before_for_loop(nasal_ast& node,int local_scope_addr)
         case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
         case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
-        default:die(node.get_line(),"cannot use this expression before for-loop");break;
     }
     return;
 }
@@ -300,8 +311,8 @@ void nasal_runtime::after_each_for_loop(nasal_ast& node,int local_scope_addr)
         case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
         case ast_trinocular:nasal_vm.del_reference(calculation(node,local_scope_addr));break;
-        default:die(node.get_line(),"cannot use this expression after each for-loop");break;
     }
     return;
 }
@@ -1835,13 +1846,9 @@ void nasal_runtime::definition(nasal_ast& node,int local_scope_addr)
             identifier_table.push_back(define_node.get_children()[i].get_str());
         if(value_node.get_type()==ast_multi_scalar)
         {
-            int val_size=value_node.get_children().size();
-            if(id_size!=val_size)
-            {
-                die(value_node.get_line(),"size of identifiers and size of values do not match");
-                return;
-            }
-            for(int i=0;i<val_size;++i)
+            // there's no need to check value_size==id_size
+            // because this is checked in parser
+            for(int i=0;i<id_size;++i)
             {
                 int tmp_addr=calculation(value_node.get_children()[i],local_scope_addr);
                 nasal_vm.gc_get(local_scope_addr<0?global_scope_address:local_scope_addr).get_closure().add_new_value(identifier_table[i],tmp_addr);
@@ -1885,16 +1892,12 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
     }
     if(value_node.get_type()==ast_multi_scalar)
     {
-        int val_size=value_node.get_children().size();
-        if(id_size!=val_size)
-        {
-            die(value_node.get_line(),"size of calls and size of values do not match");
-            return;
-        }
+        // there's no need to check value_size==id_size
+        // because this is checked in parser
         std::vector<int> value_table;
-        for(int i=0;i<val_size;++i)
+        for(int i=0;i<id_size;++i)
             value_table.push_back(calculation(value_node.get_children()[i],local_scope_addr));
-        for(int i=0;i<val_size;++i)
+        for(int i=0;i<id_size;++i)
             nasal_vm.mem_change(mem_table[i],value_table[i]);
     }
     else
