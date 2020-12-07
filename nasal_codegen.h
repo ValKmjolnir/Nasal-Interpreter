@@ -12,15 +12,24 @@ enum op_code
     op_pushstr,
     op_newvec,op_newhash,op_newfunc,
     op_vecapp,op_hashapp,
-    op_newscope,op_delscope,
     op_para,op_defpara,op_dynpara,op_entry,
     op_unot,op_usub,
     op_add,op_sub,op_mul,op_div,op_lnk,
     op_addeq,op_subeq,op_muleq,op_diveq,op_lnkeq,op_meq,
     op_eq,op_neq,op_less,op_leq,op_grt,op_geq,
     op_pop,
-    op_jmp,op_jmptrue,op_jmpfalse,
-    op_jp,op_jtp,op_jfp,
+    op_newscope,
+    op_delscope,
+    op_jmp,
+    op_jmptrue,
+    op_jmpfalse,
+    op_jp,
+    op_jtp,
+    op_jfp,
+    op_continue,
+    op_break,
+    op_forindex,   // index counter on the top of forindex_stack plus 1
+    op_foreach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,       // call identifier
     op_callv,      // call vec[index]
     op_callvi,     // call vec[immediate] (used in multi-assign/multi-define)
@@ -55,8 +64,6 @@ struct
     {op_newfunc,     "newf  "},
     {op_vecapp,      "vapp  "},
     {op_hashapp,     "happ  "},
-    {op_newscope,    "nscp  "},
-    {op_delscope,    "dscp  "},
     {op_para,        "para  "},
     {op_defpara,     "deflt "},
     {op_dynpara,     "dyn   "},
@@ -81,12 +88,18 @@ struct
     {op_grt,         "g     "},
     {op_geq,         "geq   "},
     {op_pop,         "pop   "},
+    {op_newscope,    "nscp  "},
+    {op_delscope,    "dscp  "},
     {op_jmp,         "jmp   "},
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
     {op_jp,          "jp    "},
     {op_jtp,         "jtp   "},
     {op_jfp,         "jfp   "},
+    {op_continue,    "contn "},
+    {op_break,       "break "},
+    {op_forindex,    "findx "},
+    {op_foreach,     "feach "},
     {op_call,        "call  "},
     {op_callv,       "callv "},
     {op_callvi,      "callvi"},
@@ -122,6 +135,8 @@ private:
     std::vector<double> number_result_table;
     std::vector<std::string> string_result_table;
     std::vector<opcode> exec_code;
+    std::vector<int> continue_ptr;
+    std::vector<int> break_ptr;
     int error;
     void regist_number(double);
     void regist_string(std::string);
@@ -147,6 +162,7 @@ private:
     void multi_assignment_gen(nasal_ast&);
     void conditional_gen(nasal_ast&);
     void loop_gen(nasal_ast&);
+    void load_continue_break();
     void while_gen(nasal_ast&);
     void for_gen(nasal_ast&);
     void forindex_gen(nasal_ast&);
@@ -661,12 +677,23 @@ void nasal_codegen::loop_gen(nasal_ast& ast)
     return;
 }
 
+void nasal_codegen::load_continue_break()
+{
+    for(int i=0;i<continue_ptr.size();++i)
+        exec_code[continue_ptr[i]].index=exec_code.size()-1;
+    continue_ptr.clear();
+    for(int i=0;i<break_ptr.size();++i)
+        exec_code[break_ptr[i]].index=exec_code.size();
+    break_ptr.clear();
+    return;
+}
+
 void nasal_codegen::while_gen(nasal_ast& ast)
 {
     opcode op;
     int loop_ptr=exec_code.size();
     calculation_gen(ast.get_children()[0]);
-    op.op=op_jmpfalse;
+    op.op=op_jfp;
     int condition_ptr=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
@@ -675,17 +702,13 @@ void nasal_codegen::while_gen(nasal_ast& ast)
     op.index=loop_ptr;
     exec_code.push_back(op);
     exec_code[condition_ptr].index=exec_code.size();
-    pop_gen();
+    load_continue_break();
     return;
 }
 
 void nasal_codegen::for_gen(nasal_ast& ast)
 {
     opcode op;
-    op.op=op_newscope;
-    op.index=0;
-    exec_code.push_back(op);
-
     switch(ast.get_children()[0].get_type())
     {
         case ast_null:break;
@@ -712,7 +735,7 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     op.op=op_jfp;
     int label_exit=exec_code.size();
     exec_code.push_back(op);
-
+    pop_gen();
     block_gen(ast.get_children()[3]);
     switch(ast.get_children()[2].get_type())
     {
@@ -731,20 +754,72 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     op.op=op_jmp;
     op.index=jmp_place;
     exec_code.push_back(op);
-
     exec_code[label_exit].index=exec_code.size();
-
-    op.op=op_delscope;
-    op.index=0;
-    exec_code.push_back(op);
+    load_continue_break();
     return;
 }
 void nasal_codegen::forindex_gen(nasal_ast& ast)
 {
+    opcode op;
+    calculation_gen(ast.get_children()[1]);
+
+    op.op=op_forindex;
+    op.index=0;
+    int ptr=exec_code.size();
+    exec_code.push_back(op);
+    if(ast.get_children()[0].get_type()==ast_new_iter)
+    {
+        op.op=op_load;
+        std::string str=ast.get_children()[0].get_children()[0].get_str();
+        regist_string(str);
+        op.index=string_table[str];
+        exec_code.push_back(op);
+    }
+    else
+    {
+        mem_call(ast.get_children()[0]);
+        op.op=op_meq;
+        op.index=0;
+        exec_code.push_back(op);
+    }
+    block_gen(ast.get_children()[2]);
+    op.op=op_jmp;
+    op.index=ptr;
+    exec_code.push_back(op);
+    exec_code[ptr].index=exec_code.size();
+    load_continue_break();
     return;
 }
 void nasal_codegen::foreach_gen(nasal_ast& ast)
 {
+    opcode op;
+    calculation_gen(ast.get_children()[1]);
+
+    op.op=op_foreach;
+    op.index=0;
+    int ptr=exec_code.size();
+    exec_code.push_back(op);
+    if(ast.get_children()[0].get_type()==ast_new_iter)
+    {
+        op.op=op_load;
+        std::string str=ast.get_children()[0].get_children()[0].get_str();
+        regist_string(str);
+        op.index=string_table[str];
+        exec_code.push_back(op);
+    }
+    else
+    {
+        mem_call(ast.get_children()[0]);
+        op.op=op_meq;
+        op.index=0;
+        exec_code.push_back(op);
+    }
+    block_gen(ast.get_children()[2]);
+    op.op=op_jmp;
+    op.index=ptr;
+    exec_code.push_back(op);
+    exec_code[ptr].index=exec_code.size();
+    load_continue_break();
     return;
 }
 
@@ -986,6 +1061,18 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_definition:definition_gen(tmp);break;
             case ast_multi_assign:multi_assignment_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
+            case ast_continue:
+                op.op=op_continue;
+                op.index=0;
+                continue_ptr.push_back(exec_code.size());
+                exec_code.push_back(op);
+                break;
+            case ast_break:
+                op.op=op_break;
+                op.index=0;
+                break_ptr.push_back(exec_code.size());
+                exec_code.push_back(op);
+                break;
             case ast_while:
             case ast_for:
             case ast_forindex:
@@ -1016,8 +1103,6 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_or:
             case ast_and:
             case ast_trinocular:calculation_gen(tmp);pop_gen();break;
-            case ast_break:break;
-            case ast_continue:break;
             case ast_return:return_gen(tmp);break;
         }
     }
