@@ -31,7 +31,6 @@ private:
 public:
     nasal_vector(nasal_virtual_machine&);
     ~nasal_vector();
-    void set_vm(nasal_virtual_machine&);
     void add_elem(int);
     int  del_elem();
     int  size();
@@ -49,7 +48,6 @@ private:
 public:
     nasal_hash(nasal_virtual_machine&);
     ~nasal_hash();
-    void set_vm(nasal_virtual_machine&);
     void add_elem(std::string,int);
     void del_elem(std::string);
     int  size();
@@ -71,7 +69,6 @@ private:
 public:
     nasal_function(nasal_virtual_machine&);
     ~nasal_function();
-    void set_vm(nasal_virtual_machine&);
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
@@ -87,11 +84,12 @@ private:
     // and this memory_manager_memory space stores an address to garbage_collector_memory
     // and this address points to an nasal_hash
     nasal_virtual_machine& vm;
-    std::map<std::string,int> elems;
+    std::list<std::map<std::string,int> > elems;
 public:
     nasal_closure(nasal_virtual_machine&);
     ~nasal_closure();
-    void set_vm(nasal_virtual_machine&);
+    void add_scope();
+    void del_scope();
     void add_new_value(std::string,int);
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
@@ -165,11 +163,6 @@ nasal_vector::~nasal_vector()
     for(int i=0;i<size;++i)
         vm.mem_free(elems[i]);
     elems.clear();
-    return;
-}
-void nasal_vector::set_vm(nasal_virtual_machine& nvm)
-{
-    vm=nvm;
     return;
 }
 void nasal_vector::add_elem(int value_address)
@@ -250,11 +243,6 @@ nasal_hash::~nasal_hash()
     for(std::map<std::string,int>::iterator iter=elems.begin();iter!=elems.end();++iter)
         vm.mem_free(iter->second);
     elems.clear();
-    return;
-}
-void nasal_hash::set_vm(nasal_virtual_machine& nvm)
-{
-    vm=nvm;
     return;
 }
 void nasal_hash::add_elem(std::string key,int value_address)
@@ -442,52 +430,77 @@ nasal_ast& nasal_function::get_run_block()
 /*functions of nasal_closure*/
 nasal_closure::nasal_closure(nasal_virtual_machine& nvm):vm(nvm)
 {
+    std::map<std::string,int> new_scope;
+    elems.push_back(new_scope);
     return;
 }
 nasal_closure::~nasal_closure()
 {
-    for(std::map<std::string,int>::iterator i=elems.begin();i!=elems.end();++i)
-        vm.mem_free(i->second);
+    for(std::list<std::map<std::string,int> >::iterator i=elems.begin();i!=elems.end();++i)
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+            vm.mem_free(j->second);
     elems.clear();
+    return;
+}
+void nasal_closure::add_scope()
+{
+    std::map<std::string,int> new_scope;
+    elems.push_back(new_scope);
+    return;
+}
+void nasal_closure::del_scope()
+{
+    std::map<std::string,int>& last_scope=elems.back();
+    for(std::map<std::string,int>::iterator i=last_scope.begin();i!=last_scope.end();++i)
+        vm.mem_free(i->second);
+    elems.pop_back();
     return;
 }
 void nasal_closure::add_new_value(std::string key,int value_address)
 {
     int new_mem_address=vm.mem_alloc(value_address);
-    if(elems.find(key)!=elems.end())
+    if(elems.back().find(key)!=elems.back().end())
     {
         // if this value already exists,delete the old value and update a new value
-        int old_mem_address=elems[key];
+        int old_mem_address=elems.back()[key];
         vm.mem_free(old_mem_address);
     }
-    elems[key]=new_mem_address;
+    elems.back()[key]=new_mem_address;
     return;
 }
 int nasal_closure::get_value_address(std::string key)
 {
     int ret_address=-1;
-    if(elems.find(key)!=elems.end())
-        ret_address=vm.mem_get(elems[key]);
+    for(std::list<std::map<std::string,int> >::iterator i=elems.begin();i!=elems.end();++i)
+        if(i->find(key)!=i->end())
+            ret_address=vm.mem_get((*i)[key]);
     return ret_address;
 }
 int nasal_closure::get_mem_address(std::string key)
 {
     int ret_address=-1;
-    if(elems.find(key)!=elems.end())
-        ret_address=elems[key];
+    for(std::list<std::map<std::string,int> >::iterator i=elems.begin();i!=elems.end();++i)
+        if(i->find(key)!=i->end())
+            ret_address=(*i)[key];
     return ret_address;
 }
 void nasal_closure::set_closure(nasal_closure& tmp)
 {
-    for(std::map<std::string,int>::iterator i=elems.begin();i!=elems.end();++i)
-        vm.mem_free(i->second);
+    for(std::list<std::map<std::string,int> >::iterator i=elems.begin();i!=elems.end();++i)
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+            vm.mem_free(j->second);
     elems.clear();
-    for(std::map<std::string,int>::iterator i=tmp.elems.begin();i!=tmp.elems.end();++i)
+    for(std::list<std::map<std::string,int> >::iterator i=tmp.elems.begin();i!=tmp.elems.end();++i)
     {
-        int value_addr=vm.mem_get(i->second);
-        int new_mem_addr=vm.mem_alloc(value_addr);
-        vm.add_reference(value_addr);
-        elems[i->first]=new_mem_addr;
+        std::map<std::string,int> new_scope;
+        elems.push_back(new_scope);
+        for(std::map<std::string,int>::iterator j=i->begin();j!=i->end();++j)
+        {
+            int value_addr=vm.mem_get(j->second);
+            int new_mem_addr=vm.mem_alloc(value_addr);
+            vm.add_reference(value_addr);
+            elems.back()[j->first]=new_mem_addr;
+        }
     }
     return;
 }

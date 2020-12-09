@@ -746,6 +746,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
     nasal_function& reference_of_func=nasal_vm.gc_get(base_value_addr).get_func();
     int run_closure_addr=reference_of_func.get_closure_addr();
     nasal_closure& run_closure=nasal_vm.gc_get(run_closure_addr).get_closure();
+    run_closure.add_scope();
     if(last_call_hash_addr>=0)
     {
         // set hash.me
@@ -908,7 +909,7 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         }
     }
     block_progress(reference_of_func.get_run_block(),run_closure_addr);
-
+    run_closure.del_scope();
     if(function_returned_address>=0)
     {
         ret_value_addr=function_returned_address;
