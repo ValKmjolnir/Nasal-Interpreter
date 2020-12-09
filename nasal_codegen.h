@@ -18,16 +18,12 @@ enum op_code
     op_addeq,op_subeq,op_muleq,op_diveq,op_lnkeq,op_meq,
     op_eq,op_neq,op_less,op_leq,op_grt,op_geq,
     op_pop,
-    op_newscope,
-    op_delscope,
     op_jmp,
     op_jmptrue,
     op_jmpfalse,
     op_jp,
     op_jtp,
     op_jfp,
-    op_continue,
-    op_break,
     op_forindex,   // index counter on the top of forindex_stack plus 1
     op_foreach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,       // call identifier
@@ -88,16 +84,12 @@ struct
     {op_grt,         "g     "},
     {op_geq,         "geq   "},
     {op_pop,         "pop   "},
-    {op_newscope,    "nscp  "},
-    {op_delscope,    "dscp  "},
     {op_jmp,         "jmp   "},
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
     {op_jp,          "jp    "},
     {op_jtp,         "jtp   "},
     {op_jfp,         "jfp   "},
-    {op_continue,    "contn "},
-    {op_break,       "break "},
     {op_forindex,    "findx "},
     {op_foreach,     "feach "},
     {op_call,        "call  "},
@@ -120,8 +112,15 @@ struct
 struct opcode
 {
     unsigned char op;
+    unsigned int scope;
     unsigned int index;
-    opcode(){op=op_nop;index=0;}
+    opcode()
+    {
+        op=op_nop;
+        scope=0;
+        index=0;
+        return;
+    }
 };
 
 // unfinished
@@ -137,6 +136,7 @@ private:
     std::vector<opcode> exec_code;
     std::vector<int> continue_ptr;
     std::vector<int> break_ptr;
+    int scope_depth;
     int error;
     void regist_number(double);
     void regist_string(std::string);
@@ -206,6 +206,7 @@ void nasal_codegen::pop_gen()
 {
     opcode op;
     op.op=op_pop;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     return;
@@ -215,6 +216,7 @@ void nasal_codegen::nil_gen()
 {
     opcode op;
     op.op=op_pushnil;
+    op.scope=scope_depth;
     exec_code.push_back(op);
     return;
 }
@@ -233,6 +235,7 @@ void nasal_codegen::number_gen(nasal_ast& ast)
         op.op=op_pushnum;
         op.index=number_table[num];
     }
+    op.scope=scope_depth;
     exec_code.push_back(op);
     return;
 }
@@ -243,6 +246,7 @@ void nasal_codegen::string_gen(nasal_ast& ast)
     regist_string(str);
     opcode op;
     op.op=op_pushstr;
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -253,6 +257,7 @@ void nasal_codegen::vector_gen(nasal_ast& ast)
     int size=ast.get_children().size();
     opcode op;
     op.op=op_newvec;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     for(int i=0;i<size;++i)
@@ -271,6 +276,7 @@ void nasal_codegen::hash_gen(nasal_ast& ast)
     int size=ast.get_children().size();
     opcode op;
     op.op=op_newhash;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     for(int i=0;i<size;++i)
@@ -278,6 +284,7 @@ void nasal_codegen::hash_gen(nasal_ast& ast)
         string_gen(ast.get_children()[i].get_children()[0]);
         calculation_gen(ast.get_children()[i].get_children()[1]);
         op.op=op_hashapp;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
@@ -288,6 +295,7 @@ void nasal_codegen::function_gen(nasal_ast& ast)
 {
     opcode op;
     op.op=op_newfunc;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
 
@@ -327,9 +335,11 @@ void nasal_codegen::function_gen(nasal_ast& ast)
     }
     
     op.op=op_entry;
+    op.scope=scope_depth;
     op.index=exec_code.size()+2;
     exec_code.push_back(op);
     op.op=op_jmp;
+    op.scope=scope_depth;
     op.index=0;
     int ptr=exec_code.size();
     exec_code.push_back(op);
@@ -339,9 +349,11 @@ void nasal_codegen::function_gen(nasal_ast& ast)
     if(!block.get_children().size() || block.get_children().back().get_type()!=ast_return)
     {
         op.op=op_pushnil;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
         op.op=op_return;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
@@ -381,6 +393,7 @@ void nasal_codegen::call_id(nasal_ast& ast)
             break;
         }
     regist_string(str);
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -392,6 +405,7 @@ void nasal_codegen::call_hash(nasal_ast& ast)
     op.op=op_callh;
     std::string str=ast.get_str();
     regist_string(str);
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -404,12 +418,14 @@ void nasal_codegen::call_vec(nasal_ast& ast)
         calculation_gen(ast.get_children()[0]);
         opcode op;
         op.op=op_callv;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
         return;
     }
     opcode op;
     op.op=op_slicebegin;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     int size=ast.get_children().size();
@@ -420,6 +436,7 @@ void nasal_codegen::call_vec(nasal_ast& ast)
         {
             calculation_gen(tmp);
             op.op=op_slice;
+            op.scope=scope_depth;
             op.index=0;
             exec_code.push_back(op);
         }
@@ -428,11 +445,13 @@ void nasal_codegen::call_vec(nasal_ast& ast)
             calculation_gen(tmp.get_children()[0]);
             calculation_gen(tmp.get_children()[1]);
             op.op=op_slice2;
+            op.scope=scope_depth;
             op.index=0;
             exec_code.push_back(op);
         }
     }
     op.op=op_sliceend;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     return;
@@ -444,10 +463,12 @@ void nasal_codegen::call_func(nasal_ast& ast)
     {
         opcode op;
         op.op=op_newvec;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
 
         op.op=op_callf;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
         return;
@@ -456,6 +477,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
     {
         opcode op;
         op.op=op_newhash;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
         int size=ast.get_children().size();
@@ -465,10 +487,12 @@ void nasal_codegen::call_func(nasal_ast& ast)
             string_gen(tmp.get_children()[0]);
             calculation_gen(tmp.get_children()[1]);
             op.op=op_hashapp;
+            op.scope=scope_depth;
             op.index=0;
             exec_code.push_back(op);
         }
         op.op=op_callf;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
@@ -476,6 +500,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
     {
         opcode op;
         op.op=op_newvec;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
         int size=ast.get_children().size();
@@ -484,10 +509,12 @@ void nasal_codegen::call_func(nasal_ast& ast)
             nasal_ast& tmp=ast.get_children()[i];
             calculation_gen(tmp);
             op.op=op_vecapp;
+            op.scope=scope_depth;
             op.index=0;
             exec_code.push_back(op);
         }
         op.op=op_callf;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
@@ -518,6 +545,7 @@ void nasal_codegen::mem_call_id(nasal_ast& ast)
     regist_string(str);
     opcode op;
     op.op=op_mcall;
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -528,6 +556,7 @@ void nasal_codegen::mem_call_vec(nasal_ast& ast)
     calculation_gen(ast.get_children()[0]);
     opcode op;
     op.op=op_mcallv;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
     return;
@@ -539,6 +568,7 @@ void nasal_codegen::mem_call_hash(nasal_ast& ast)
     regist_string(str);
     opcode op;
     op.op=op_mcallh;
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -551,6 +581,7 @@ void nasal_codegen::single_def(nasal_ast& ast)
     op.op=op_load;
     std::string str=ast.get_children()[0].get_str();
     regist_string(str);
+    op.scope=scope_depth;
     op.index=string_table[str];
     exec_code.push_back(op);
     return;
@@ -567,6 +598,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             op.op=op_load;
             std::string str=ast.get_children()[0].get_children()[i].get_str();
             regist_string(str);
+            op.scope=scope_depth;
             op.index=string_table[str];
             exec_code.push_back(op);
         }
@@ -578,11 +610,13 @@ void nasal_codegen::multi_def(nasal_ast& ast)
         {
             opcode op;
             op.op=op_callvi;
+            op.scope=scope_depth;
             op.index=i;
             exec_code.push_back(op);
             op.op=op_load;
             std::string str=ast.get_children()[0].get_children()[i].get_str();
             regist_string(str);
+            op.scope=scope_depth;
             op.index=string_table[str];
             exec_code.push_back(op);
         }
@@ -611,6 +645,7 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
             mem_call(ast.get_children()[0].get_children()[i]);
             opcode op;
             op.op=op_meq;
+            op.scope=scope_depth;
             exec_code.push_back(op);
             pop_gen();
         }
@@ -622,10 +657,12 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
         {
             opcode op;
             op.op=op_callvi;
+            op.scope=scope_depth;
             op.index=i;
             exec_code.push_back(op);
             mem_call(ast.get_children()[0].get_children()[i]);
             op.op=op_meq;
+            op.scope=scope_depth;
             exec_code.push_back(op);
             pop_gen();
         }
@@ -645,11 +682,13 @@ void nasal_codegen::conditional_gen(nasal_ast& ast)
         {
             calculation_gen(tmp.get_children()[0]);
             op.op=op_jfp;
+            op.scope=scope_depth;
             int ptr=exec_code.size();
             exec_code.push_back(op);
             pop_gen();
             block_gen(tmp.get_children()[1]);
             op.op=op_jmp;
+            op.scope=scope_depth;
             jmp_label.push_back(exec_code.size());
             exec_code.push_back(op);
             exec_code[ptr].index=exec_code.size();
@@ -694,11 +733,13 @@ void nasal_codegen::while_gen(nasal_ast& ast)
     int loop_ptr=exec_code.size();
     calculation_gen(ast.get_children()[0]);
     op.op=op_jfp;
+    op.scope=scope_depth;
     int condition_ptr=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
     block_gen(ast.get_children()[1]);
     op.op=op_jmp;
+    op.scope=scope_depth;
     op.index=loop_ptr;
     exec_code.push_back(op);
     exec_code[condition_ptr].index=exec_code.size();
@@ -709,6 +750,7 @@ void nasal_codegen::while_gen(nasal_ast& ast)
 void nasal_codegen::for_gen(nasal_ast& ast)
 {
     opcode op;
+    ++scope_depth;
     switch(ast.get_children()[0].get_type())
     {
         case ast_null:break;
@@ -727,12 +769,14 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     if(ast.get_children()[1].get_type()==ast_null)
     {
         op.op=op_pushone;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
     else
         calculation_gen(ast.get_children()[1]);
     op.op=op_jfp;
+    op.scope=scope_depth;
     int label_exit=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
@@ -752,10 +796,12 @@ void nasal_codegen::for_gen(nasal_ast& ast)
         case ast_trinocular:calculation_gen(ast.get_children()[2]);pop_gen();break;
     }
     op.op=op_jmp;
+    op.scope=scope_depth;
     op.index=jmp_place;
     exec_code.push_back(op);
     exec_code[label_exit].index=exec_code.size();
     load_continue_break();
+    --scope_depth;
     return;
 }
 void nasal_codegen::forindex_gen(nasal_ast& ast)
@@ -764,6 +810,7 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     calculation_gen(ast.get_children()[1]);
 
     op.op=op_forindex;
+    op.scope=scope_depth;
     op.index=0;
     int ptr=exec_code.size();
     exec_code.push_back(op);
@@ -772,6 +819,7 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
         op.op=op_load;
         std::string str=ast.get_children()[0].get_children()[0].get_str();
         regist_string(str);
+        op.scope=scope_depth;
         op.index=string_table[str];
         exec_code.push_back(op);
     }
@@ -779,11 +827,13 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     {
         mem_call(ast.get_children()[0]);
         op.op=op_meq;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
     block_gen(ast.get_children()[2]);
     op.op=op_jmp;
+    op.scope=scope_depth;
     op.index=ptr;
     exec_code.push_back(op);
     exec_code[ptr].index=exec_code.size();
@@ -796,6 +846,7 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
     calculation_gen(ast.get_children()[1]);
 
     op.op=op_foreach;
+    op.scope=scope_depth;
     op.index=0;
     int ptr=exec_code.size();
     exec_code.push_back(op);
@@ -804,6 +855,7 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
         op.op=op_load;
         std::string str=ast.get_children()[0].get_children()[0].get_str();
         regist_string(str);
+        op.scope=scope_depth;
         op.index=string_table[str];
         exec_code.push_back(op);
     }
@@ -811,11 +863,13 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
     {
         mem_call(ast.get_children()[0]);
         op.op=op_meq;
+        op.scope=scope_depth;
         op.index=0;
         exec_code.push_back(op);
     }
     block_gen(ast.get_children()[2]);
     op.op=op_jmp;
+    op.scope=scope_depth;
     op.index=ptr;
     exec_code.push_back(op);
     exec_code[ptr].index=exec_code.size();
@@ -836,6 +890,7 @@ void nasal_codegen::or_gen(nasal_ast& ast)
     int l1,l2;
     calculation_gen(ast.get_children()[0]);
     op.op=op_jmptrue;
+    op.scope=scope_depth;
     op.index=0;
     l1=exec_code.size();
     exec_code.push_back(op);
@@ -843,6 +898,7 @@ void nasal_codegen::or_gen(nasal_ast& ast)
     pop_gen();
     calculation_gen(ast.get_children()[1]);
     op.op=op_jmptrue;
+    op.scope=scope_depth;
     op.index=0;
     l2=exec_code.size();
     exec_code.push_back(op);
@@ -868,16 +924,19 @@ void nasal_codegen::and_gen(nasal_ast& ast)
     opcode op;
     calculation_gen(ast.get_children()[0]);
     op.op=op_jmptrue;
+    op.scope=scope_depth;
     op.index=exec_code.size()+2;
     exec_code.push_back(op);
 
     op.op=op_jmp;
+    op.scope=scope_depth;
     int ptr=exec_code.size();
     exec_code.push_back(op);
 
     pop_gen();
     calculation_gen(ast.get_children()[1]);
     op.op=op_jmptrue;
+    op.scope=scope_depth;
     op.index=exec_code.size()+3;
     exec_code.push_back(op);
 
@@ -893,11 +952,13 @@ void nasal_codegen::trino_gen(nasal_ast& ast)
     opcode op;
     calculation_gen(ast.get_children()[0]);
     op.op=op_jmpfalse;
+    op.scope=scope_depth;
     int ptr=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
     calculation_gen(ast.get_children()[1]);
     op.op=op_jmp;
+    op.scope=scope_depth;
     int ptr_exit=exec_code.size();
     exec_code.push_back(op);
     exec_code[ptr].index=exec_code.size();
@@ -923,36 +984,42 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
         case ast_call:call_gen(ast);break;
         case ast_equal:
             op.op=op_meq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_add_equal:
             op.op=op_addeq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_sub_equal:
             op.op=op_subeq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_mult_equal:
             op.op=op_muleq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_div_equal:
             op.op=op_diveq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_link_equal:
             op.op=op_lnkeq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
             exec_code.push_back(op);
@@ -961,66 +1028,77 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
         case ast_and:and_gen(ast);break;
         case ast_add:
             op.op=op_add;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_sub:
             op.op=op_sub;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_mult:
             op.op=op_mul;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_div:
             op.op=op_div;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_link:
             op.op=op_lnk;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_cmp_equal:
             op.op=op_eq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_cmp_not_equal:
             op.op=op_neq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_less_equal:
             op.op=op_leq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_less_than:
             op.op=op_less;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_greater_equal:
             op.op=op_geq;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
             break;
         case ast_greater_than:
             op.op=op_grt;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             exec_code.push_back(op);
@@ -1028,11 +1106,13 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
         case ast_trinocular:trino_gen(ast);break;
         case ast_unary_sub:
             op.op=op_usub;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
         case ast_unary_not:
             op.op=op_unot;
+            op.scope=scope_depth;
             calculation_gen(ast.get_children()[0]);
             exec_code.push_back(op);
             break;
@@ -1043,9 +1123,7 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
 void nasal_codegen::block_gen(nasal_ast& ast)
 {
     opcode op;
-    op.op=op_newscope;
-    op.index=0;
-    exec_code.push_back(op);
+    ++scope_depth;
     
     int size=ast.get_children().size();
     for(int i=0;i<size;++i)
@@ -1062,13 +1140,15 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_multi_assign:multi_assignment_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
             case ast_continue:
-                op.op=op_continue;
+                op.op=op_jmp;
+                op.scope=scope_depth;
                 op.index=0;
                 continue_ptr.push_back(exec_code.size());
                 exec_code.push_back(op);
                 break;
             case ast_break:
-                op.op=op_break;
+                op.op=op_jmp;
+                op.scope=scope_depth;
                 op.index=0;
                 break_ptr.push_back(exec_code.size());
                 exec_code.push_back(op);
@@ -1107,9 +1187,7 @@ void nasal_codegen::block_gen(nasal_ast& ast)
         }
     }
 
-    op.op=op_delscope;
-    op.index=0;
-    exec_code.push_back(op);
+    --scope_depth;
     return;
 }
 
@@ -1119,6 +1197,7 @@ void nasal_codegen::return_gen(nasal_ast& ast)
         calculation_gen(ast.get_children()[0]);
     opcode op;
     op.op=op_return;
+    op.scope=scope_depth;
     exec_code.push_back(op);
     return;
 }
@@ -1126,6 +1205,7 @@ void nasal_codegen::return_gen(nasal_ast& ast)
 void nasal_codegen::main_progress(nasal_ast& ast)
 {
     error=0;
+    scope_depth=0;
     number_table.clear();
     string_table.clear();
     exec_code.clear();
@@ -1178,6 +1258,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
     }
     opcode op;
     op.op=op_nop;
+    op.scope=scope_depth;
     op.index=0;
     exec_code.push_back(op);
 
@@ -1201,6 +1282,15 @@ void nasal_codegen::print_op(int index)
         num>>=4;
     }
     std::cout<<"0x"<<numinfo<<": ";
+    numinfo="";
+    num=exec_code[index].scope;
+    for(int i=0;i<8;++i)
+    {
+        int tmp=num&0x0f;
+        numinfo=(char)(tmp>9? 'a'+tmp-10:'0'+tmp)+numinfo;
+        num>>=4;
+    }
+    std::cout<<"[0x"<<numinfo<<"]";
     for(int i=0;code_table[i].name;++i)
         if(exec_code[index].op==code_table[i].type)
         {
@@ -1215,7 +1305,7 @@ void nasal_codegen::print_op(int index)
         numinfo=(char)(tmp>9? 'a'+tmp-10:'0'+tmp)+numinfo;
         num>>=4;
     }
-    std::cout<<"0x"<<numinfo;
+    std::cout<<"0x"<<numinfo<<"  ";
     switch(exec_code[index].op)
     {
         case op_pushnum:std::cout<<'('<<number_result_table[exec_code[index].index]<<')';break;
@@ -1236,6 +1326,10 @@ void nasal_codegen::print_op(int index)
 
 void nasal_codegen::print_byte_code()
 {
+    for(int i=0;i<number_result_table.size();++i)
+        std::cout<<".number "<<number_result_table[i]<<'\n';
+    for(int i=0;i<string_result_table.size();++i)
+        std::cout<<".symbol "<<string_result_table[i]<<'\n';
     int size=exec_code.size();
     for(int i=0;i<size;++i)
         print_op(i);
