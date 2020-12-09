@@ -27,5 +27,6 @@
 #include "nasal_builtin.h"
 #include "nasal_runtime.h"
 #include "nasal_codegen.h"
+#include "nasal_bytecode_vm.h"
 
 #endif

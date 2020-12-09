@@ -3,9 +3,10 @@
 nasal_lexer    lexer;
 nasal_parse    parse;
 nasal_import   import;
-nasal_codegen  code_generator;
 std::string    inputfile="null";
 nasal_runtime  runtime;
+nasal_codegen  code_generator;
+nasal_bytecode_vm bytevm;
 
 void help()
 {
@@ -131,6 +132,10 @@ void execute()
 	}
 	code_generator.main_progress(import.get_root());
 	code_generator.print_byte_code();
+	bytevm.set_string_table(code_generator.get_string_table());
+	bytevm.set_number_table(code_generator.get_number_table());
+	bytevm.set_exec_code(code_generator.get_exec_code());
+	//bytevm.run();
 	return;
 }
 

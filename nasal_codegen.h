@@ -21,9 +21,6 @@ enum op_code
     op_jmp,
     op_jmptrue,
     op_jmpfalse,
-    op_jp,
-    op_jtp,
-    op_jfp,
     op_forindex,   // index counter on the top of forindex_stack plus 1
     op_foreach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,       // call identifier
@@ -87,9 +84,6 @@ struct
     {op_jmp,         "jmp   "},
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
-    {op_jp,          "jp    "},
-    {op_jtp,         "jtp   "},
-    {op_jfp,         "jfp   "},
     {op_forindex,    "findx "},
     {op_foreach,     "feach "},
     {op_call,        "call  "},
@@ -118,6 +112,12 @@ struct opcode
         op=op_nop;
         index=0;
         return;
+    }
+    opcode& operator=(opcode& tmp)
+    {
+        op=tmp.op;
+        index=tmp.index;
+        return *this;
     }
 };
 
@@ -175,6 +175,9 @@ public:
     void main_progress(nasal_ast&);
     void print_op(int);
     void print_byte_code();
+    std::vector<std::string>& get_string_table();
+    std::vector<double>& get_number_table();
+    std::vector<opcode>& get_exec_code();
 };
 
 nasal_codegen::nasal_codegen()
@@ -641,15 +644,18 @@ void nasal_codegen::conditional_gen(nasal_ast& ast)
         if(tmp.get_type()==ast_if || tmp.get_type()==ast_elsif)
         {
             calculation_gen(tmp.get_children()[0]);
-            op.op=op_jfp;
+            op.op=op_jmpfalse;
             int ptr=exec_code.size();
             exec_code.push_back(op);
+
             pop_gen();
             block_gen(tmp.get_children()[1]);
+
             op.op=op_jmp;
             jmp_label.push_back(exec_code.size());
             exec_code.push_back(op);
             exec_code[ptr].index=exec_code.size();
+            pop_gen();
         }
         else
         {
@@ -677,7 +683,7 @@ void nasal_codegen::loop_gen(nasal_ast& ast)
 void nasal_codegen::load_continue_break()
 {
     for(int i=0;i<continue_ptr.size();++i)
-        exec_code[continue_ptr[i]].index=exec_code.size()-1;
+        exec_code[continue_ptr[i]].index=exec_code.size()-2;
     continue_ptr.clear();
     for(int i=0;i<break_ptr.size();++i)
         exec_code[break_ptr[i]].index=exec_code.size();
@@ -690,7 +696,7 @@ void nasal_codegen::while_gen(nasal_ast& ast)
     opcode op;
     int loop_ptr=exec_code.size();
     calculation_gen(ast.get_children()[0]);
-    op.op=op_jfp;
+    op.op=op_jmpfalse;
     int condition_ptr=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
@@ -699,6 +705,7 @@ void nasal_codegen::while_gen(nasal_ast& ast)
     op.index=loop_ptr;
     exec_code.push_back(op);
     exec_code[condition_ptr].index=exec_code.size();
+    pop_gen();
     load_continue_break();
     return;
 }
@@ -729,7 +736,7 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     }
     else
         calculation_gen(ast.get_children()[1]);
-    op.op=op_jfp;
+    op.op=op_jmpfalse;
     int label_exit=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
@@ -752,6 +759,7 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     op.index=jmp_place;
     exec_code.push_back(op);
     exec_code[label_exit].index=exec_code.size();
+    pop_gen();
     load_continue_break();
     return;
 }
@@ -1237,6 +1245,21 @@ void nasal_codegen::print_byte_code()
     for(int i=0;i<size;++i)
         print_op(i);
     return;
+}
+
+std::vector<std::string>& nasal_codegen::get_string_table()
+{
+    return string_result_table;
+}
+
+std::vector<double>& nasal_codegen::get_number_table()
+{
+    return number_result_table;
+}
+
+std::vector<opcode>& nasal_codegen::get_exec_code()
+{
+    return exec_code;
 }
 
 #endif
