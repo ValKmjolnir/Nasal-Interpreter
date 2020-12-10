@@ -922,7 +922,6 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
 int nasal_runtime::call_builtin_function(std::string val_name,int local_scope_addr)
 {
     int ret_value_addr=-1;
-    int builtin_func_num=-1;
     if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
     {
         ret_value_addr=(*builtin_func_hashmap[val_name])(local_scope_addr,nasal_vm);
