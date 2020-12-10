@@ -63,12 +63,15 @@ class nasal_function
 private:
     // this int points to the space in nasal_vm::garbage_collector_memory
     nasal_virtual_machine& vm;
+    int entry;
     int closure_addr;
     nasal_ast argument_list;
     nasal_ast function_expr;
 public:
     nasal_function(nasal_virtual_machine&);
     ~nasal_function();
+    void set_entry(int);
+    int  get_entry();
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
@@ -394,6 +397,15 @@ nasal_function::~nasal_function()
     argument_list.clear();
     function_expr.clear();
     return;
+}
+void nasal_function::set_entry(int etr)
+{
+    entry=etr;
+    return;
+}
+int nasal_function::get_entry()
+{
+    return entry;
 }
 void nasal_function::set_closure_addr(int value_address)
 {
