@@ -132,10 +132,11 @@ void execute()
 	}
 	code_generator.main_progress(import.get_root());
 	code_generator.print_byte_code();
-	bytevm.set_string_table(code_generator.get_string_table());
-	bytevm.set_number_table(code_generator.get_number_table());
-	bytevm.set_exec_code(code_generator.get_exec_code());
-	//bytevm.run();
+	bytevm.run(
+		code_generator.get_string_table(),
+		code_generator.get_number_table(),
+		code_generator.get_exec_code()
+	);
 	return;
 }
 

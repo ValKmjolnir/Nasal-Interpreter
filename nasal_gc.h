@@ -51,6 +51,7 @@ public:
     void add_elem(std::string,int);
     void del_elem(std::string);
     int  size();
+    int  get_special_para(std::string);
     int  get_value_address(std::string);
     int  get_mem_address(std::string);
     bool check_contain(std::string);
@@ -67,13 +68,18 @@ private:
     int closure_addr;
     nasal_ast argument_list;
     nasal_ast function_expr;
-    std::map<std::string,int> para;
+    std::vector<std::string> para_name;
+    std::string dynamic_para_name;
+    std::vector<int> default_para_addr;
 public:
     nasal_function(nasal_virtual_machine&);
     ~nasal_function();
     void set_entry(int);
     int  get_entry();
     void add_para(std::string,int,bool);
+    std::vector<std::string>& get_para();
+    std::string get_dynamic_para();
+    std::vector<int>& get_default();
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
@@ -272,6 +278,12 @@ int nasal_hash::size()
 {
     return elems.size();
 }
+int nasal_hash::get_special_para(std::string key)
+{
+    if(elems.find(key)!=elems.end())
+        return vm.mem_get(elems[key]);
+    return -1;
+}
 int nasal_hash::get_value_address(std::string key)
 {
     int ret_value_addr=-1;
@@ -388,6 +400,7 @@ void nasal_hash::print()
 nasal_function::nasal_function(nasal_virtual_machine& nvm):vm(nvm)
 {
     closure_addr=-1;
+    dynamic_para_name="";
     argument_list.clear();
     function_expr.clear();
     return;
@@ -396,10 +409,9 @@ nasal_function::~nasal_function()
 {
     if(closure_addr>=0)
         vm.del_reference(closure_addr);
-    for(std::map<std::string,int>::iterator i=para.begin();i!=para.end();++i)
-        if(i->second>=0)
-            vm.del_reference(i->second);
-    para.clear();
+    for(int i=0;i<default_para_addr.size();++i)
+        if(default_para_addr[i]>=0)
+            vm.del_reference(default_para_addr[i]);
     argument_list.clear();
     function_expr.clear();
     return;
@@ -413,14 +425,28 @@ int nasal_function::get_entry()
 {
     return entry;
 }
-void nasal_function::add_para(std::string key,int init_value_addr,bool is_dynamic=false)
+void nasal_function::add_para(std::string name,int val_addr=-1,bool is_dynamic=false)
 {
-    if(para.find(key)!=para.end())
-        vm.del_reference(para[key]);
-    para[key]=init_value_addr;
     if(is_dynamic)
-        para[key]=vm.gc_alloc(vm_vector);
+    {
+        dynamic_para_name=name;
+        return;
+    }
+    para_name.push_back(name);
+    default_para_addr.push_back(val_addr);
     return;
+}
+std::vector<std::string>& nasal_function::get_para()
+{
+    return para_name;
+}
+std::string nasal_function::get_dynamic_para()
+{
+    return dynamic_para_name;
+}
+std::vector<int>& nasal_function::get_default()
+{
+    return default_para_addr;
 }
 void nasal_function::set_closure_addr(int value_address)
 {
