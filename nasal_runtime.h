@@ -53,7 +53,7 @@ private:
     int call_scalar(nasal_ast&,int);
     int call_vector(nasal_ast&,int,int);
     int call_hash(nasal_ast&,int,int);
-    int call_function(nasal_ast&,std::string,int,int,int);
+    int call_function(nasal_ast&,int,int,int);
     int call_builtin_function(std::string,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
     int call_scalar_mem(nasal_ast&,int);
@@ -505,7 +505,7 @@ int nasal_runtime::call_scalar(nasal_ast& node,int local_scope_addr)
                 val_name=call_expr.get_str();
                 break;
             case ast_call_func:
-                tmp_value_addr=call_function(call_expr,val_name,value_address,last_call_hash_addr,local_scope_addr);
+                tmp_value_addr=call_function(call_expr,value_address,last_call_hash_addr,local_scope_addr);
                 last_call_hash_addr=-1;
                 val_name="";
                 break;
@@ -734,7 +734,7 @@ int nasal_runtime::call_hash(nasal_ast& node,int base_value_addr,int local_scope
     nasal_vm.add_reference(ret_value_addr);
     return ret_value_addr;
 }
-int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_value_addr,int last_call_hash_addr,int local_scope_addr)
+int nasal_runtime::call_function(nasal_ast& node,int base_value_addr,int last_call_hash_addr,int local_scope_addr)
 {
     int ret_value_addr=-1;
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
@@ -752,12 +752,6 @@ int nasal_runtime::call_function(nasal_ast& node,std::string func_name,int base_
         // set hash.me
         nasal_vm.add_reference(last_call_hash_addr);
         run_closure.add_new_value("me",last_call_hash_addr);
-    }
-    else if(func_name.length())
-    {
-        // when hash.me does not exist,set self
-        nasal_vm.add_reference(base_value_addr);
-        run_closure.add_new_value(func_name,base_value_addr);
     }
     nasal_ast& argument_format=reference_of_func.get_arguments();
     if(!node.get_children().size())

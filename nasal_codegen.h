@@ -277,10 +277,11 @@ void nasal_codegen::hash_gen(nasal_ast& ast)
     exec_code.push_back(op);
     for(int i=0;i<size;++i)
     {
-        string_gen(ast.get_children()[i].get_children()[0]);
         calculation_gen(ast.get_children()[i].get_children()[1]);
         op.op=op_hashapp;
-        op.index=0;
+        std::string str=ast.get_children()[i].get_children()[0].get_str();
+        regist_string(str);
+        op.index=string_table[str];
         exec_code.push_back(op);
     }
     return;
@@ -1230,6 +1231,7 @@ void nasal_codegen::print_op(int index)
     switch(exec_code[index].op)
     {
         case op_pushnum:std::cout<<'('<<number_result_table[exec_code[index].index]<<')';break;
+        case op_hashapp:
         case op_call:
         case op_builtincall:
         case op_mcall:
