@@ -67,11 +67,13 @@ private:
     int closure_addr;
     nasal_ast argument_list;
     nasal_ast function_expr;
+    std::map<std::string,int> para;
 public:
     nasal_function(nasal_virtual_machine&);
     ~nasal_function();
     void set_entry(int);
     int  get_entry();
+    void add_para(std::string,int,bool);
     void set_closure_addr(int);
     int  get_closure_addr();
     void set_arguments(nasal_ast&);
@@ -394,6 +396,10 @@ nasal_function::~nasal_function()
 {
     if(closure_addr>=0)
         vm.del_reference(closure_addr);
+    for(std::map<std::string,int>::iterator i=para.begin();i!=para.end();++i)
+        if(i->second>=0)
+            vm.del_reference(i->second);
+    para.clear();
     argument_list.clear();
     function_expr.clear();
     return;
@@ -406,6 +412,15 @@ void nasal_function::set_entry(int etr)
 int nasal_function::get_entry()
 {
     return entry;
+}
+void nasal_function::add_para(std::string key,int init_value_addr,bool is_dynamic=false)
+{
+    if(para.find(key)!=para.end())
+        vm.del_reference(para[key]);
+    para[key]=init_value_addr;
+    if(is_dynamic)
+        para[key]=vm.gc_alloc(vm_vector);
+    return;
 }
 void nasal_function::set_closure_addr(int value_address)
 {
