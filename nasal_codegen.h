@@ -21,6 +21,7 @@ enum op_code
     op_jmp,
     op_jmptrue,
     op_jmpfalse,
+    op_counter,    // add counter for forindex/foreach
     op_forindex,   // index counter on the top of forindex_stack plus 1
     op_foreach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,       // call identifier
@@ -84,6 +85,7 @@ struct
     {op_jmp,         "jmp   "},
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
+    {op_counter,     "cnt   "},
     {op_forindex,    "findx "},
     {op_foreach,     "feach "},
     {op_call,        "call  "},
@@ -768,6 +770,10 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     opcode op;
     calculation_gen(ast.get_children()[1]);
 
+    op.op=op_counter;
+    op.index=0;
+    exec_code.push_back(op);
+
     op.op=op_forindex;
     op.index=0;
     int ptr=exec_code.size();
@@ -799,6 +805,10 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
 {
     opcode op;
     calculation_gen(ast.get_children()[1]);
+
+    op.op=op_counter;
+    op.index=0;
+    exec_code.push_back(op);
 
     op.op=op_foreach;
     op.index=0;

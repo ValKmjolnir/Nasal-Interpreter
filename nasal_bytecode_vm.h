@@ -13,6 +13,7 @@ private:
     std::stack<int> local_scope_stack;
     std::stack<int> slice_stack;
     std::stack<int> call_stack;
+    std::stack<int> counter_stack;
     std::vector<std::string> string_table;
     std::vector<double> number_table;
     std::vector<void (nasal_bytecode_vm::*)()> opr_table;
@@ -58,6 +59,7 @@ private:
     void opr_jmp();
     void opr_jmptrue();
     void opr_jmpfalse();
+    void opr_counter();
     void opr_forindex();
     void opr_foreach();
     void opr_call();
@@ -133,6 +135,7 @@ nasal_bytecode_vm::nasal_bytecode_vm()
         {op_jmp,         nasal_bytecode_vm::opr_jmp},
         {op_jmptrue,     nasal_bytecode_vm::opr_jmptrue},
         {op_jmpfalse,    nasal_bytecode_vm::opr_jmpfalse},
+        {op_counter,     nasal_bytecode_vm::opr_counter},
         {op_forindex,    nasal_bytecode_vm::opr_forindex},
         {op_foreach,     nasal_bytecode_vm::opr_foreach},
         {op_call,        nasal_bytecode_vm::opr_call},
@@ -172,6 +175,7 @@ void nasal_bytecode_vm::clear()
     while(local_scope_stack.top()!=-1)local_scope_stack.pop();
     while(!slice_stack.empty())slice_stack.pop();
     while(!call_stack.empty())call_stack.pop();
+    while(!counter_stack.empty())counter_stack.pop();
     return;
 }
 void nasal_bytecode_vm::die(std::string str)
@@ -267,7 +271,6 @@ void nasal_bytecode_vm::opr_newfunc()
         vm.gc_get(val_addr).get_func().set_closure_addr(tmp_closure);
         vm.del_reference(tmp_closure);
     }
-    // unfinished
     value_stack.push(val_addr);
     return;
 }
@@ -289,9 +292,34 @@ void nasal_bytecode_vm::opr_hashapp()
     vm.del_reference(str_addr);
     return;
 }
-void nasal_bytecode_vm::opr_para(){return;}
-void nasal_bytecode_vm::opr_defpara(){return;}
-void nasal_bytecode_vm::opr_dynpara(){return;}
+void nasal_bytecode_vm::opr_para()
+{
+    int str_addr=value_stack.top();
+    value_stack.pop();
+    std::string str=vm.gc_get(str_addr).get_string();
+    vm.del_reference(str_addr);
+    vm.gc_get(value_stack.top()).get_func().add_para(str,-1);
+    return;
+}
+void nasal_bytecode_vm::opr_defpara()
+{
+    int str_addr=value_stack.top();
+    value_stack.pop();
+    std::string str=vm.gc_get(str_addr).get_string();
+    vm.del_reference(str_addr);
+    vm.gc_get(value_stack.top()).get_func().add_para(str,value_stack.top());
+    value_stack.pop();
+    return;
+}
+void nasal_bytecode_vm::opr_dynpara()
+{
+    int str_addr=value_stack.top();
+    value_stack.pop();
+    std::string str=vm.gc_get(str_addr).get_string();
+    vm.del_reference(str_addr);
+    vm.gc_get(value_stack.top()).get_func().add_para(str,-1,true);
+    return;
+}
 void nasal_bytecode_vm::opr_entry()
 {
     vm.gc_get(value_stack.top()).get_func().set_entry(exec_code[ptr].index);
@@ -492,40 +520,146 @@ void nasal_bytecode_vm::opr_addeq()
 {
     int mem_addr=value_stack.top();
     value_stack.pop();
-    int val_addr=value_stack.top();
-    // unfinished
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=vm.mem_get(mem_addr);
+    nasal_scalar& a_ref=vm.gc_get(val_addr1);
+    nasal_scalar& b_ref=vm.gc_get(val_addr2);
+    int a_ref_type=a_ref.get_type();
+    int b_ref_type=b_ref.get_type();
+    double a_num=(1/0.0)+(-1/0.0);
+    double b_num=(1/0.0)+(-1/0.0);
+    if(a_ref_type==vm_number)
+        a_num=a_ref.get_number();
+    else if(a_ref_type==vm_string)
+        a_num=trans_string_to_number(a_ref.get_string());
+    if(b_ref_type==vm_number)
+        b_num=b_ref.get_number();
+    else if(b_ref_type==vm_string)
+        b_num=trans_string_to_number(b_ref.get_string());
+
+    int new_value_address=vm.gc_alloc(vm_number);
+    vm.gc_get(new_value_address).set_number(a_num+b_num);
+    vm.add_reference(new_value_address);
+    value_stack.push(new_value_address);
+    vm.mem_change(mem_addr,new_value_address);
+    vm.del_reference(val_addr2);
     return;
 }
 void nasal_bytecode_vm::opr_subeq()
 {
     int mem_addr=value_stack.top();
     value_stack.pop();
-    int val_addr=value_stack.top();
-    // unfinished
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=vm.mem_get(mem_addr);
+    nasal_scalar& a_ref=vm.gc_get(val_addr1);
+    nasal_scalar& b_ref=vm.gc_get(val_addr2);
+    int a_ref_type=a_ref.get_type();
+    int b_ref_type=b_ref.get_type();
+    double a_num=(1/0.0)+(-1/0.0);
+    double b_num=(1/0.0)+(-1/0.0);
+    if(a_ref_type==vm_number)
+        a_num=a_ref.get_number();
+    else if(a_ref_type==vm_string)
+        a_num=trans_string_to_number(a_ref.get_string());
+    if(b_ref_type==vm_number)
+        b_num=b_ref.get_number();
+    else if(b_ref_type==vm_string)
+        b_num=trans_string_to_number(b_ref.get_string());
+
+    int new_value_address=vm.gc_alloc(vm_number);
+    vm.gc_get(new_value_address).set_number(a_num-b_num);
+    vm.add_reference(new_value_address);
+    value_stack.push(new_value_address);
+    vm.mem_change(mem_addr,new_value_address);
+    vm.del_reference(val_addr2);
     return;
 }
 void nasal_bytecode_vm::opr_muleq()
 {
     int mem_addr=value_stack.top();
     value_stack.pop();
-    int val_addr=value_stack.top();
-    // unfinished
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=vm.mem_get(mem_addr);
+    nasal_scalar& a_ref=vm.gc_get(val_addr1);
+    nasal_scalar& b_ref=vm.gc_get(val_addr2);
+    int a_ref_type=a_ref.get_type();
+    int b_ref_type=b_ref.get_type();
+    double a_num=(1/0.0)+(-1/0.0);
+    double b_num=(1/0.0)+(-1/0.0);
+    if(a_ref_type==vm_number)
+        a_num=a_ref.get_number();
+    else if(a_ref_type==vm_string)
+        a_num=trans_string_to_number(a_ref.get_string());
+    if(b_ref_type==vm_number)
+        b_num=b_ref.get_number();
+    else if(b_ref_type==vm_string)
+        b_num=trans_string_to_number(b_ref.get_string());
+
+    int new_value_address=vm.gc_alloc(vm_number);
+    vm.gc_get(new_value_address).set_number(a_num*b_num);
+    vm.add_reference(new_value_address);
+    value_stack.push(new_value_address);
+    vm.mem_change(mem_addr,new_value_address);
+    vm.del_reference(val_addr2);
     return;
 }
 void nasal_bytecode_vm::opr_diveq()
 {
     int mem_addr=value_stack.top();
     value_stack.pop();
-    int val_addr=value_stack.top();
-    // unfinished
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=vm.mem_get(mem_addr);
+    nasal_scalar& a_ref=vm.gc_get(val_addr1);
+    nasal_scalar& b_ref=vm.gc_get(val_addr2);
+    int a_ref_type=a_ref.get_type();
+    int b_ref_type=b_ref.get_type();
+    double a_num=(1/0.0)+(-1/0.0);
+    double b_num=(1/0.0)+(-1/0.0);
+    if(a_ref_type==vm_number)
+        a_num=a_ref.get_number();
+    else if(a_ref_type==vm_string)
+        a_num=trans_string_to_number(a_ref.get_string());
+    if(b_ref_type==vm_number)
+        b_num=b_ref.get_number();
+    else if(b_ref_type==vm_string)
+        b_num=trans_string_to_number(b_ref.get_string());
+
+    int new_value_address=vm.gc_alloc(vm_number);
+    vm.gc_get(new_value_address).set_number(a_num/b_num);
+    vm.add_reference(new_value_address);
+    value_stack.push(new_value_address);
+    vm.mem_change(mem_addr,new_value_address);
+    vm.del_reference(val_addr2);
     return;
 }
 void nasal_bytecode_vm::opr_lnkeq()
 {
     int mem_addr=value_stack.top();
     value_stack.pop();
-    int val_addr=value_stack.top();
-    // unfinished
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=vm.mem_get(mem_addr);
+    nasal_scalar& a_ref=vm.gc_get(val_addr1);
+    nasal_scalar& b_ref=vm.gc_get(val_addr2);
+    int a_ref_type=a_ref.get_type();
+    int b_ref_type=b_ref.get_type();
+    if((a_ref_type!=vm_number && a_ref_type!=vm_string)||(b_ref_type!=vm_number && b_ref_type!=vm_string))
+    {
+        die("lnkeq: error value type");
+        return;
+    }
+    std::string a_str=(a_ref_type==vm_number)? trans_number_to_string(a_ref.get_number()):a_ref.get_string();
+    std::string b_str=(b_ref_type==vm_number)? trans_number_to_string(b_ref.get_number()):b_ref.get_string();
+    int new_value_address=vm.gc_alloc(vm_string);
+    vm.gc_get(new_value_address).set_string(a_str+b_str);
+    vm.add_reference(new_value_address);
+    value_stack.push(new_value_address);
+    vm.mem_change(mem_addr,new_value_address);
+    vm.del_reference(val_addr2);
     return;
 }
 void nasal_bytecode_vm::opr_meq()
@@ -859,8 +993,48 @@ void nasal_bytecode_vm::opr_jmpfalse()
         ptr=exec_code[ptr].index-1;
     return;
 }
-void nasal_bytecode_vm::opr_forindex(){return;}
-void nasal_bytecode_vm::opr_foreach(){return;}
+void nasal_bytecode_vm::opr_counter()
+{
+    if(vm.gc_get(value_stack.top()).get_type()!=vm_vector)
+    {
+        die("cnt: must use vector in forindex/foreach");
+        return;
+    }
+    counter_stack.push(-1);
+    return;
+}
+void nasal_bytecode_vm::opr_forindex()
+{
+    nasal_vector& ref=vm.gc_get(value_stack.top()).get_vector();
+    counter_stack.top()++;
+    if(counter_stack.top()>=ref.size())
+    {
+        vm.del_reference(value_stack.top());
+        value_stack.pop();
+        ptr=exec_code[ptr].index-1;
+        return;
+    }
+    int res=vm.gc_alloc(vm_number);
+    vm.gc_get(res).set_number((double)counter_stack.top());
+    value_stack.push(res);
+    return;
+}
+void nasal_bytecode_vm::opr_foreach()
+{
+    nasal_vector& ref=vm.gc_get(value_stack.top()).get_vector();
+    counter_stack.top()++;
+    if(counter_stack.top()>=ref.size())
+    {
+        vm.del_reference(value_stack.top());
+        value_stack.pop();
+        ptr=exec_code[ptr].index-1;
+        return;
+    }
+    int res=ref.get_value_address(counter_stack.top());
+    vm.add_reference(res);
+    value_stack.push(res);
+    return;
+}
 void nasal_bytecode_vm::opr_call()
 {
     int val_addr=-1;
@@ -869,23 +1043,87 @@ void nasal_bytecode_vm::opr_call()
     else
         vm.gc_get(global_scope_addr).get_closure().get_value_address(string_table[exec_code[ptr].index]);
     if(val_addr<0)
-        die("cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
+        die("call: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
     value_stack.push(val_addr);
     return;
 }
-void nasal_bytecode_vm::opr_callv(){return;}
+void nasal_bytecode_vm::opr_callv()
+{
+    int val_addr=value_stack.top();
+    value_stack.pop();
+    int vec_addr=value_stack.top();
+    value_stack.pop();
+    int type=vm.gc_get(vec_addr).get_type();
+    if(type==vm_vector)
+    {
+        int num;
+        switch(vm.gc_get(val_addr).get_type())
+        {
+            case vm_number:num=(int)vm.gc_get(val_addr).get_number();break;
+            case vm_string:num=(int)trans_string_to_number(vm.gc_get(val_addr).get_string());break;
+            default:die("callv: error value type");break;
+        }
+        int res=vm.gc_get(vec_addr).get_vector().get_value_address(num);
+        if(res<0)
+        {
+            die("callv: index out of range");
+            return;
+        }
+        vm.add_reference(res);
+        value_stack.push(res);
+    }
+    else if(type==vm_string)
+    {
+        std::string str=vm.gc_get(vec_addr).get_string();
+        int num;
+        switch(vm.gc_get(val_addr).get_type())
+        {
+            case vm_number:num=(int)vm.gc_get(val_addr).get_number();break;
+            case vm_string:num=(int)trans_string_to_number(vm.gc_get(val_addr).get_string());break;
+            default:die("callv: error value type");break;
+        }
+        int str_size=str.length();
+        if(num<-str_size || num>=str_size)
+        {
+            die("callv: index out of range");
+            return;
+        }
+        int res=vm.gc_alloc(vm_number);
+        vm.gc_get(res).set_number((double)str[(num+str_size)%str_size]);
+        value_stack.push(res);
+    }
+    else if(type==vm_hash)
+    {
+        if(vm.gc_get(val_addr).get_type()!=vm_string)
+        {
+            die("callv: must use string as the key");
+            return;
+        }
+        int res=vm.gc_get(vec_addr).get_hash().get_value_address(vm.gc_get(val_addr).get_string());
+        if(res<0)
+        {
+            die("callv: cannot find member \""+vm.gc_get(val_addr).get_string()+"\" of this hash");
+            return;
+        }
+        vm.add_reference(res);
+        value_stack.push(res);
+    }
+    vm.del_reference(val_addr);
+    vm.del_reference(vec_addr);
+    return;
+}
 void nasal_bytecode_vm::opr_callvi()
 {
     int val_addr=value_stack.top();
     if(vm.gc_get(val_addr).get_type()!=vm_vector)
     {
-        die("multi-definition/multi-assignment must use a vector");
+        die("callvi: multi-definition/multi-assignment must use a vector");
         return;
     }
     int res=vm.gc_get(val_addr).get_vector().get_value_address(exec_code[ptr].index);
     if(res<0)
     {
-        die("index out of range");
+        die("callvi: index out of range");
         return;
     }
     vm.add_reference(res);
@@ -898,7 +1136,7 @@ void nasal_bytecode_vm::opr_callh()
     value_stack.pop();
     if(vm.gc_get(val_addr).get_type()!=vm_hash)
     {
-        die("must call a hash");
+        die("callh: must call a hash");
         return;
     }
     int res=vm.gc_get(val_addr).get_hash().get_value_address(string_table[exec_code[ptr].index]);
@@ -914,12 +1152,17 @@ void nasal_bytecode_vm::opr_callf()
     int func_addr=value_stack.top();
     if(vm.gc_get(func_addr).get_type()!=vm_function)
     {
-        die("called a value that is not a function");
+        die("callf: called a value that is not a function");
         return;
     }
+    nasal_function& ref=vm.gc_get(func_addr).get_func();
+    int closure=ref.get_closure_addr();
+    vm.gc_get(closure).get_closure().add_scope();
+    local_scope_stack.push(closure);
+    vm.add_reference(closure);
     // unfinished
     call_stack.push(ptr);
-    ptr=vm.gc_get(func_addr).get_func().get_entry()-1;
+    ptr=ref.get_entry()-1;
     return;
 }
 void nasal_bytecode_vm::opr_builtincall()
@@ -938,6 +1181,8 @@ void nasal_bytecode_vm::opr_slicebegin()
 {
     int val_addr=vm.gc_alloc(vm_vector);
     slice_stack.push(val_addr);
+    if(vm.gc_get(value_stack.top()).get_type()!=vm_vector)
+        die("must slice a vector");
     return;
 }
 void nasal_bytecode_vm::opr_sliceend()
@@ -952,19 +1197,90 @@ void nasal_bytecode_vm::opr_slice()
     int val_addr=value_stack.top();
     value_stack.pop();
     int type=vm.gc_get(val_addr).get_type();
-    // unfinished
+    double num;
+    switch(type)
+    {
+        case vm_number:num=vm.gc_get(val_addr).get_number();break;
+        case vm_string:num=trans_string_to_number(vm.gc_get(val_addr).get_string());break;
+        default:die("slc: error value type");break;
+    }
+    int res=vm.gc_get(value_stack.top()).get_vector().get_value_address((int)num);
+    if(res<0)
+    {
+        die("slc: index out of range");
+        return;
+    }
+    vm.add_reference(res);
+    vm.gc_get(slice_stack.top()).get_vector().add_elem(res);
+    vm.del_reference(val_addr);
     return;
 }
-void nasal_bytecode_vm::opr_slice2(){return;}
+void nasal_bytecode_vm::opr_slice2()
+{
+    int val_addr2=value_stack.top();
+    value_stack.pop();
+    int val_addr1=value_stack.top();
+    value_stack.pop();
+    nasal_vector& ref=vm.gc_get(value_stack.top()).get_vector();
+    nasal_vector& aim=vm.gc_get(slice_stack.top()).get_vector();
+
+    int type1=vm.gc_get(val_addr1).get_type();
+    int num1;
+    switch(type1)
+    {
+        case vm_nil:break;
+        case vm_number:num1=(int)vm.gc_get(val_addr1).get_number();break;
+        case vm_string:num1=(int)trans_string_to_number(vm.gc_get(val_addr1).get_string());break;
+        default:die("slc2: error value type");break;
+    }
+    int type2=vm.gc_get(val_addr2).get_type();
+    int num2;
+    switch(type2)
+    {
+        case vm_nil:break;
+        case vm_number:num2=(int)vm.gc_get(val_addr2).get_number();break;
+        case vm_string:num2=(int)trans_string_to_number(vm.gc_get(val_addr2).get_string());break;
+        default:die("slc2: error value type");break;
+    }
+    int ref_size=ref.size();
+    if(type1==vm_nil && type2==vm_nil)
+    {
+        num1=0;
+        num2=ref_size-1;
+    }
+    else if(type1==vm_nil && type2!=vm_nil)
+        num1=num2<0? -ref_size:0;
+    else if(type1!=vm_nil && type2==vm_nil)
+        num2=num1<0? -1:ref_size-1;
+    if(num1>=num2)
+    {
+        die("slc2: begin index must be less than end index");
+        return;
+    }
+    if(num1<-ref_size || num1>=ref_size || num2<-ref_size || num2>=ref_size)
+    {
+        die("slc2: begin or end index out of range");
+        return;
+    }
+    for(int i=num1;i<num2;++i)
+    {
+        int tmp=ref.get_value_address(i);
+        vm.add_reference(tmp);
+        aim.add_elem(tmp);
+    }
+    vm.del_reference(val_addr1);
+    vm.del_reference(val_addr2);
+    return;
+}
 void nasal_bytecode_vm::opr_mcall()
 {
     int mem_addr=-1;
     if(local_scope_stack.top()>=0)
-        vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
+        mem_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
     else
-        vm.gc_get(global_scope_addr).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
+        mem_addr=vm.gc_get(global_scope_addr).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
     if(mem_addr<0)
-        die("cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
+        die("mcall: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
     value_stack.push(mem_addr);
     return;
 }
@@ -974,19 +1290,66 @@ void nasal_bytecode_vm::opr_mcallv()
     value_stack.pop();
     int vec_addr=vm.mem_get(value_stack.top());
     value_stack.pop();
-    // unfinished
+    int type=vm.gc_get(vec_addr).get_type();
+    if(type==vm_string)
+    {
+        die("mcallv: cannot get memory space in a string");
+        return;
+    }
+    if(type==vm_vector)
+    {
+        int num;
+        switch(vm.gc_get(val_addr).get_type())
+        {
+            case vm_number:num=(int)vm.gc_get(val_addr).get_number();break;
+            case vm_string:num=(int)trans_string_to_number(vm.gc_get(val_addr).get_string());break;
+            default:die("mcallv: error value type");break;
+        }
+        int res=vm.gc_get(vec_addr).get_vector().get_mem_address(num);
+        if(res<0)
+        {
+            die("mcallv: index out of range");
+            return;
+        }
+        value_stack.push(res);
+    }
+    else if(type==vm_hash)
+    {
+        if(vm.gc_get(val_addr).get_type()!=vm_string)
+        {
+            die("mcallv: must use string as the key");
+            return;
+        }
+        int res=vm.gc_get(vec_addr).get_hash().get_mem_address(vm.gc_get(val_addr).get_string());
+        if(res<0)
+        {
+            die("mcallv: cannot find member \""+vm.gc_get(val_addr).get_string()+"\" of this hash");
+            return;
+        }
+        value_stack.push(res);
+    }
+    vm.del_reference(val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_mcallh()
 {
+    int mem_addr=-1;
     int val_addr=value_stack.top();
     value_stack.pop();
     int hash_addr=vm.mem_get(value_stack.top());
     value_stack.pop();
     if(vm.gc_get(hash_addr).get_type()!=vm_hash)
+    {
         die("must call a hash");
-    else
-        value_stack.push(vm.gc_get(hash_addr).get_hash().get_mem_address(vm.gc_get(val_addr).get_string()));
+        return;
+    }
+    mem_addr=vm.gc_get(hash_addr).get_hash().get_mem_address(vm.gc_get(val_addr).get_string());
+    if(mem_addr<0)
+    {
+        die("cannot get memory space in this hash");
+        return;
+    }
+    value_stack.push(mem_addr);
     return;
 }
 void nasal_bytecode_vm::opr_return()
