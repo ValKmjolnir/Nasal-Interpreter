@@ -34,43 +34,64 @@ The flow chart of lexer is here:
 
 [![nasal_lexer.png](pic/nasal_lexer.png?raw=true)](https://github.com/ValKmjolnir/Nasal-Interpreter/blob/master/pic/nasal_lexer.png)
 
+This picture seems ugly. I will re-draw it later(maybe 1000 years later).
+
 # Parser
 
-## In __version 2.0__
-```javascript
-(var a,b,c)=(1,2,3);
-var (r,g,b)=color;
-```
-These two types of statements are both definition_expr.
-
-```javascript
-(a,b,c)=(1,2,3);
-(a,b)=(b,a);
-```
-This type of statement is multi_assignment.
-
-And to check if an expr in '(' ')' is multi_scalar or multi_id.
-
-i used bool nasal_parse::check_multi_scalar() and bool nasal_parse::check_multi_assignment().
-
-## In __version 3.0__
+## Version 3.0
 
 I refactored parser and make it easier to maintain.
 
-the EBNF is also refactored.
+The EBNF is also refactored.
 
 # Abstract Syntax Tree
 
-In __version 1.2__ the ast has been completed.
+## Version 1.2
 
-In __version 3.0__ the ast is refactored and is now easier to read and maintain.
+The ast has been completed in this version.
 
-# Version 2.0
+## Version 2.0
 
-a completed ast-interpreter with unfinished lib functions.
+A completed ast-interpreter with unfinished lib functions.
 
-# Version 3.0
+## Version 3.0
 
-ast-interpreter uses new techniques so it can run codes more efficiently.
+The ast is refactored and is now easier to read and maintain.
 
-byte-code-interpreter is in progress(i need a lot of time to learn that :( ).
+Ast-interpreter uses new techniques so it can run codes more efficiently.
+
+Now you can add your own functions as builtin-functions in this interpreter!
+
+I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
+
+# Byte Code Interpreter
+
+## Version 4.0
+
+I have just finished the first version of byte-code-interpreter.
+
+This interpreter is still in test.After this test,i will release version 4.0!
+
+Now i am trying to search hidden bugs in this interpreter.Hope you could help me! :)
+
+There's an example of byte code below:
+
+```javascript
+var (a,b,c)=(1,2,3);
+```
+
+```asm
+.number 1
+.number 2
+.number 3
+.symbol a
+.symbol b
+.symbol c
+0x00000000: pone   0x00000000
+0x00000001: load   0x00000000  (a)
+0x00000002: pnum   0x00000001  (2)
+0x00000003: load   0x00000001  (b)
+0x00000004: pnum   0x00000002  (3)
+0x00000005: load   0x00000002  (c)
+0x00000006: nop    0x00000000
+```
