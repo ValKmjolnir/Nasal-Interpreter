@@ -7,16 +7,27 @@ private:
     int error;
     int ptr;
     int global_scope_addr;
+    // garbage collector and memory manager
     nasal_virtual_machine vm;
+    // byte codes store here
     std::vector<opcode> exec_code;
+    // main calculation stack
     std::stack<int> value_stack;
+    // local scope for function block
     std::stack<int> local_scope_stack;
+    // slice stack for vec[val,val,val:val]
     std::stack<int> slice_stack;
+    // ptr stack stores address for function to return
     std::stack<int> call_stack;
+    // iterator stack for forindex/foreach
     std::stack<int> counter_stack;
+    // string table
     std::vector<std::string> string_table;
+    // number table
     std::vector<double> number_table;
+    // opcode -> function address table
     std::vector<void (nasal_bytecode_vm::*)()> opr_table;
+    // builtin function address table
     std::map<std::string,int (*)(int x,nasal_virtual_machine& vm)> builtin_func_hashmap;
     void die(std::string);
     bool check_condition(int);
@@ -182,7 +193,15 @@ void nasal_bytecode_vm::clear()
 void nasal_bytecode_vm::die(std::string str)
 {
     ++error;
-    std::cout<<">> [vm] "<<str<<'\n';
+    std::string numinfo="";
+    int num=ptr;
+    for(int i=0;i<8;++i)
+    {
+        int tmp=num&0x0f;
+        numinfo=(char)(tmp>9? 'a'+tmp-10:'0'+tmp)+numinfo;
+        num>>=4;
+    }
+    std::cout<<">> [vm] 0x"<<numinfo<<": "<<str<<'\n';
     return;
 }
 bool nasal_bytecode_vm::check_condition(int value_addr)
@@ -1004,6 +1023,7 @@ void nasal_bytecode_vm::opr_forindex()
     {
         vm.del_reference(value_stack.top());
         value_stack.pop();
+        counter_stack.pop();
         ptr=exec_code[ptr].index-1;
         return;
     }
@@ -1020,6 +1040,7 @@ void nasal_bytecode_vm::opr_foreach()
     {
         vm.del_reference(value_stack.top());
         value_stack.pop();
+        counter_stack.pop();
         ptr=exec_code[ptr].index-1;
         return;
     }
@@ -1033,10 +1054,14 @@ void nasal_bytecode_vm::opr_call()
     int val_addr=-1;
     if(local_scope_stack.top()>=0)
         val_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_value_address(string_table[exec_code[ptr].index]);
-    else
+    if(val_addr<0)
         val_addr=vm.gc_get(global_scope_addr).get_closure().get_value_address(string_table[exec_code[ptr].index]);
     if(val_addr<0)
+    {
         die("call: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
+        return;
+    }
+    vm.add_reference(val_addr);
     value_stack.push(val_addr);
     return;
 }
@@ -1098,6 +1123,11 @@ void nasal_bytecode_vm::opr_callv()
             die("callv: cannot find member \""+vm.gc_get(val_addr).get_string()+"\" of this hash");
             return;
         }
+        if(vm.gc_get(res).get_type()==vm_function)
+        {
+            vm.gc_get(vm.gc_get(res).get_func().get_closure_addr()).get_closure().add_new_value("me",val_addr);
+            vm.add_reference(val_addr);
+        }
         vm.add_reference(res);
         value_stack.push(res);
     }
@@ -1133,8 +1163,16 @@ void nasal_bytecode_vm::opr_callh()
         return;
     }
     int res=vm.gc_get(val_addr).get_hash().get_value_address(string_table[exec_code[ptr].index]);
+    if(res<0)
+    {
+        die("callh: hash member \""+string_table[exec_code[ptr].index]+"\" does not exist");
+        return;
+    }
     vm.add_reference(res);
-    vm.del_reference(val_addr);
+    if(vm.gc_get(res).get_type()==vm_function)
+        vm.gc_get(vm.gc_get(res).get_func().get_closure_addr()).get_closure().add_new_value("me",val_addr);
+    else
+        vm.del_reference(val_addr);
     value_stack.push(res);
     return;
 }
@@ -1154,7 +1192,6 @@ void nasal_bytecode_vm::opr_callf()
     ref_closure.add_scope();
     local_scope_stack.push(closure);
     vm.add_reference(closure);
-    // unfinished
     if(vm.gc_get(para_addr).get_type()==vm_vector)
     {
         nasal_vector& ref_vec=vm.gc_get(para_addr).get_vector();
@@ -1212,8 +1249,8 @@ void nasal_bytecode_vm::opr_callf()
                 die("callf: lack argument(s)");
                 return;
             }
-            vm.add_reference(tmp);
             ref_closure.add_new_value(ref_para[i],tmp);
+            vm.add_reference(tmp);
         }
     }
     vm.del_reference(para_addr);
@@ -1333,7 +1370,7 @@ void nasal_bytecode_vm::opr_mcall()
     int mem_addr=-1;
     if(local_scope_stack.top()>=0)
         mem_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
-    else
+    if(mem_addr<0)
         mem_addr=vm.gc_get(global_scope_addr).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
     if(mem_addr<0)
         die("mcall: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
@@ -1390,8 +1427,6 @@ void nasal_bytecode_vm::opr_mcallv()
 void nasal_bytecode_vm::opr_mcallh()
 {
     int mem_addr=-1;
-    int val_addr=value_stack.top();
-    value_stack.pop();
     int hash_addr=vm.mem_get(value_stack.top());
     value_stack.pop();
     if(vm.gc_get(hash_addr).get_type()!=vm_hash)
@@ -1399,7 +1434,7 @@ void nasal_bytecode_vm::opr_mcallh()
         die("mcallh: must call a hash");
         return;
     }
-    mem_addr=vm.gc_get(hash_addr).get_hash().get_mem_address(vm.gc_get(val_addr).get_string());
+    mem_addr=vm.gc_get(hash_addr).get_hash().get_mem_address(string_table[exec_code[ptr].index]);
     if(mem_addr<0)
     {
         die("mcallh: cannot get memory space in this hash");
@@ -1435,18 +1470,23 @@ void nasal_bytecode_vm::run(std::vector<std::string>& strs,std::vector<double>& 
         tmp=exec[i];
         exec_code.push_back(tmp);
     }
-
+    
     error=0;
     global_scope_addr=vm.gc_alloc(vm_closure);
     size=exec_code.size();
+    time_t begin_time=std::time(NULL);
     for(ptr=0;ptr<size;++ptr)
     {
-        std::cout<<ptr<<'\n';
         (this->*opr_table[exec_code[ptr].op])();
         if(error)
             break;
     }
+    time_t end_time=std::time(NULL);
+    time_t total_run_time=end_time-begin_time;
+    if(total_run_time>=1)
+        std::cout<<">> [vm] process exited after "<<total_run_time<<"s.\n";
     vm.del_reference(global_scope_addr);
+
     clear();
     return;
 }

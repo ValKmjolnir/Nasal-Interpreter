@@ -17,7 +17,8 @@ void help()
 	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
 	std::cout<<">> [run   ] run abstract syntax tree.\n";
-	std::cout<<">> [exec  ] generate byte code.\n";
+	std::cout<<">> [code  ] show byte code.\n";
+	std::cout<<">> [exec  ] execute program on bytecode vm.\n";
 	std::cout<<">> [logo  ] print logo of nasal .\n";
 	std::cout<<">> [exit  ] quit nasal interpreter.\n";
 	return;
@@ -108,7 +109,7 @@ void runtime_start()
 	return;
 }
 
-void execute()
+void show_bytecode()
 {
 	lexer.openfile(inputfile);
 	lexer.scanner();
@@ -132,6 +133,32 @@ void execute()
 	}
 	code_generator.main_progress(import.get_root());
 	code_generator.print_byte_code();
+	return;
+}
+
+void execute()
+{
+	lexer.openfile(inputfile);
+	lexer.scanner();
+	if(lexer.get_error())
+	{
+		die("lexer",inputfile);
+		return;
+	}
+	parse.set_toklist(lexer.get_token_list());
+	parse.main_process();
+	if(parse.get_error())
+	{
+		die("parse",inputfile);
+		return;
+	}
+	import.link(parse.get_root());
+	if(import.get_error())
+	{
+		die("import",inputfile);
+		return;
+	}
+	code_generator.main_progress(import.get_root());
 	bytevm.run(
 		code_generator.get_string_table(),
 		code_generator.get_number_table(),
@@ -189,6 +216,8 @@ int main()
 			ast_print();
 		else if(command=="run")
 			runtime_start();
+		else if(command=="code")
+			show_bytecode();
 		else if(command=="exec")
 			execute();
 		else if(command=="logo")
