@@ -27,7 +27,7 @@ enum token_type
     tok_colon,tok_add,tok_sub,tok_mult,tok_div,tok_link,tok_not,
     tok_equal,
     tok_add_equal,tok_sub_equal,tok_mult_equal,tok_div_equal,tok_link_equal,
-    tok_cmp_equal,tok_cmp_not_equal,tok_less_than,tok_greater_than,tok_less_equal,tok_greater_equal
+    tok_cmp_equal,tok_cmp_not_equal,tok_less_than,tok_less_equal,tok_greater_than,tok_greater_equal
 };
 
 struct
@@ -78,8 +78,8 @@ struct
     {"=="      ,tok_cmp_equal    },
     {"!="      ,tok_cmp_not_equal},
     {"<"       ,tok_less_than    },
+	{"<="      ,tok_less_equal   },
     {">"       ,tok_greater_than },
-    {"<="      ,tok_less_equal   },
     {">="      ,tok_greater_equal},
 	{NULL      ,-1               }
 };
