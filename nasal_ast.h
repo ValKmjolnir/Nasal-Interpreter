@@ -97,7 +97,7 @@ private:
     double num;
     std::vector<nasal_ast> children;
 public:
-    nasal_ast();
+    nasal_ast(int,int);
     nasal_ast(const nasal_ast&);
     ~nasal_ast();
     nasal_ast& operator=(const nasal_ast&);
@@ -115,10 +115,10 @@ public:
     void print_ast(int);
 };
 
-nasal_ast::nasal_ast()
+nasal_ast::nasal_ast(int init_line=0,int init_type=ast_null)
 {
-    this->line=0;
-    this->type=ast_null;
+    this->line=init_line;
+    this->type=init_type;
     return;
 }
 
