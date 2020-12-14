@@ -4,7 +4,7 @@
 class nasal_bytecode_vm
 {
 private:
-    int error;
+    bool main_loop_break_mark;
     int ptr;
     int global_scope_addr;
     // garbage collector and memory manager
@@ -25,8 +25,6 @@ private:
     std::vector<std::string> string_table;
     // number table
     std::vector<double> number_table;
-    // opcode -> function address table
-    std::vector<void (nasal_bytecode_vm::*)()> opr_table;
     // builtin function address table
     std::map<std::string,int (*)(int x,nasal_virtual_machine& vm)> builtin_func_hashmap;
     void die(std::string);
@@ -89,90 +87,16 @@ private:
     void opr_return();
 public:
     nasal_bytecode_vm();
-    ~nasal_bytecode_vm();
     void clear();
     void run(std::vector<std::string>&,std::vector<double>&,std::vector<opcode>&);
+    void nas_switch_threading(std::vector<std::string>&,std::vector<double>&,std::vector<opcode>&);
 };
 
 nasal_bytecode_vm::nasal_bytecode_vm()
 {
     local_scope_stack.push(-1);
-
-    struct
-    {
-        int op;
-        void (nasal_bytecode_vm::*ptr)();
-    }function_table[]=
-    {
-        {op_nop,         nasal_bytecode_vm::opr_nop},
-        {op_load,        nasal_bytecode_vm::opr_load},
-        {op_pushnum,     nasal_bytecode_vm::opr_pushnum},
-        {op_pushone,     nasal_bytecode_vm::opr_pushone},
-        {op_pushzero,    nasal_bytecode_vm::opr_pushzero},
-        {op_pushnil,     nasal_bytecode_vm::opr_pushnil},
-        {op_pushstr,     nasal_bytecode_vm::opr_pushstr},
-        {op_newvec,      nasal_bytecode_vm::opr_newvec},
-        {op_newhash,     nasal_bytecode_vm::opr_newhash},
-        {op_newfunc,     nasal_bytecode_vm::opr_newfunc},
-        {op_vecapp,      nasal_bytecode_vm::opr_vecapp},
-        {op_hashapp,     nasal_bytecode_vm::opr_hashapp},
-        {op_para,        nasal_bytecode_vm::opr_para},
-        {op_defpara,     nasal_bytecode_vm::opr_defpara},
-        {op_dynpara,     nasal_bytecode_vm::opr_dynpara},
-        {op_entry,       nasal_bytecode_vm::opr_entry},
-        {op_unot,        nasal_bytecode_vm::opr_unot},
-        {op_usub,        nasal_bytecode_vm::opr_usub},
-        {op_add,         nasal_bytecode_vm::opr_add},
-        {op_sub,         nasal_bytecode_vm::opr_sub},
-        {op_mul,         nasal_bytecode_vm::opr_mul},
-        {op_div,         nasal_bytecode_vm::opr_div},
-        {op_lnk,         nasal_bytecode_vm::opr_lnk},
-        {op_addeq,       nasal_bytecode_vm::opr_addeq},
-        {op_subeq,       nasal_bytecode_vm::opr_subeq},
-        {op_muleq,       nasal_bytecode_vm::opr_muleq},
-        {op_diveq,       nasal_bytecode_vm::opr_diveq},
-        {op_lnkeq,       nasal_bytecode_vm::opr_lnkeq},
-        {op_meq,         nasal_bytecode_vm::opr_meq},
-        {op_eq,          nasal_bytecode_vm::opr_eq},
-        {op_neq,         nasal_bytecode_vm::opr_neq},
-        {op_less,        nasal_bytecode_vm::opr_less},
-        {op_leq,         nasal_bytecode_vm::opr_leq},
-        {op_grt,         nasal_bytecode_vm::opr_grt},
-        {op_geq,         nasal_bytecode_vm::opr_geq},
-        {op_pop,         nasal_bytecode_vm::opr_pop},
-        {op_jmp,         nasal_bytecode_vm::opr_jmp},
-        {op_jmptrue,     nasal_bytecode_vm::opr_jmptrue},
-        {op_jmpfalse,    nasal_bytecode_vm::opr_jmpfalse},
-        {op_counter,     nasal_bytecode_vm::opr_counter},
-        {op_forindex,    nasal_bytecode_vm::opr_forindex},
-        {op_foreach,     nasal_bytecode_vm::opr_foreach},
-        {op_call,        nasal_bytecode_vm::opr_call},
-        {op_callv,       nasal_bytecode_vm::opr_callv},
-        {op_callvi,      nasal_bytecode_vm::opr_callvi},
-        {op_callh,       nasal_bytecode_vm::opr_callh},
-        {op_callf,       nasal_bytecode_vm::opr_callf},
-        {op_builtincall, nasal_bytecode_vm::opr_builtincall},
-        {op_slicebegin,  nasal_bytecode_vm::opr_slicebegin},
-        {op_sliceend,    nasal_bytecode_vm::opr_sliceend},
-        {op_slice,       nasal_bytecode_vm::opr_slice},
-        {op_slice2,      nasal_bytecode_vm::opr_slice2},
-        {op_mcall,       nasal_bytecode_vm::opr_mcall},
-        {op_mcallv,      nasal_bytecode_vm::opr_mcallv},
-        {op_mcallh,      nasal_bytecode_vm::opr_mcallh},
-        {op_return,      nasal_bytecode_vm::opr_return},
-        {-1,NULL}
-    };
-    for(int i=0;function_table[i].ptr;++i)
-        opr_table.push_back(NULL);
-    for(int i=0;function_table[i].ptr;++i)
-        opr_table[function_table[i].op]=function_table[i].ptr;
     for(int i=0;builtin_func_table[i].func_pointer;++i)
         builtin_func_hashmap[builtin_func_table[i].func_name]=builtin_func_table[i].func_pointer;
-    return;
-}
-nasal_bytecode_vm::~nasal_bytecode_vm()
-{
-    opr_table.clear();
     return;
 }
 void nasal_bytecode_vm::clear()
@@ -192,7 +116,6 @@ void nasal_bytecode_vm::clear()
 }
 void nasal_bytecode_vm::die(std::string str)
 {
-    ++error;
     std::string numinfo="";
     int num=ptr;
     for(int i=0;i<8;++i)
@@ -202,6 +125,7 @@ void nasal_bytecode_vm::die(std::string str)
         num>>=4;
     }
     std::cout<<">> [vm] 0x"<<numinfo<<": "<<str<<'\n';
+    main_loop_break_mark=false;
     return;
 }
 bool nasal_bytecode_vm::check_condition(int value_addr)
@@ -225,6 +149,8 @@ bool nasal_bytecode_vm::check_condition(int value_addr)
 }
 void nasal_bytecode_vm::opr_nop()
 {
+    // nop is the end of this program
+    main_loop_break_mark=false;
     return;
 }
 void nasal_bytecode_vm::opr_load()
@@ -260,8 +186,7 @@ void nasal_bytecode_vm::opr_pushzero()
 }
 void nasal_bytecode_vm::opr_pushnil()
 {
-    int val_addr=vm.gc_alloc(vm_nil);
-    value_stack.push(val_addr);
+    value_stack.push(vm.gc_alloc(vm_nil));
     return;
 }
 void nasal_bytecode_vm::opr_pushstr()
@@ -273,14 +198,12 @@ void nasal_bytecode_vm::opr_pushstr()
 }
 void nasal_bytecode_vm::opr_newvec()
 {
-    int val_addr=vm.gc_alloc(vm_vector);
-    value_stack.push(val_addr);
+    value_stack.push(vm.gc_alloc(vm_vector));
     return;
 }
 void nasal_bytecode_vm::opr_newhash()
 {
-    int val_addr=vm.gc_alloc(vm_hash);
-    value_stack.push(val_addr);
+    value_stack.push(vm.gc_alloc(vm_hash));
     return;
 }
 void nasal_bytecode_vm::opr_newfunc()
@@ -314,22 +237,19 @@ void nasal_bytecode_vm::opr_hashapp()
 }
 void nasal_bytecode_vm::opr_para()
 {
-    std::string str=string_table[exec_code[ptr].index];
-    vm.gc_get(value_stack.top()).get_func().add_para(str);
+    vm.gc_get(value_stack.top()).get_func().add_para(string_table[exec_code[ptr].index]);
     return;
 }
 void nasal_bytecode_vm::opr_defpara()
 {
     int val_addr=value_stack.top();
     value_stack.pop();
-    std::string str=string_table[exec_code[ptr].index];
-    vm.gc_get(value_stack.top()).get_func().add_para(str,val_addr);
+    vm.gc_get(value_stack.top()).get_func().add_para(string_table[exec_code[ptr].index],val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_dynpara()
 {
-    std::string str=string_table[exec_code[ptr].index];
-    vm.gc_get(value_stack.top()).get_func().add_para(str,-1,true);
+    vm.gc_get(value_stack.top()).get_func().add_para(string_table[exec_code[ptr].index],-1,true);
     return;
 }
 void nasal_bytecode_vm::opr_entry()
@@ -983,9 +903,8 @@ void nasal_bytecode_vm::opr_geq()
 }
 void nasal_bytecode_vm::opr_pop()
 {
-    int val_addr=value_stack.top();
+    vm.del_reference(value_stack.top());
     value_stack.pop();
-    vm.del_reference(val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_jmp()
@@ -1265,24 +1184,22 @@ void nasal_bytecode_vm::opr_builtincall()
     if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
     {
         ret_value_addr=(*builtin_func_hashmap[val_name])(local_scope_stack.top(),vm);
-        error+=builtin_die_state;
+        main_loop_break_mark=!builtin_die_state;
     }
     value_stack.push(ret_value_addr);
     return;
 }
 void nasal_bytecode_vm::opr_slicebegin()
 {
-    int val_addr=vm.gc_alloc(vm_vector);
-    slice_stack.push(val_addr);
+    slice_stack.push(vm.gc_alloc(vm_vector));
     if(vm.gc_get(value_stack.top()).get_type()!=vm_vector)
         die("slcbegin: must slice a vector");
     return;
 }
 void nasal_bytecode_vm::opr_sliceend()
 {
-    int val_addr=slice_stack.top();
+    value_stack.push(slice_stack.top());
     slice_stack.pop();
-    value_stack.push(val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_slice()
@@ -1463,24 +1380,78 @@ void nasal_bytecode_vm::run(std::vector<std::string>& strs,std::vector<double>& 
 {
     string_table=strs;
     number_table=nums;
-    int size=exec.size();
-    for(int i=0;i<size;++i)
+    exec_code=exec;
+
+    static void (nasal_bytecode_vm::*opr_table[])()=
     {
-        opcode tmp;
-        tmp=exec[i];
-        exec_code.push_back(tmp);
-    }
-    
-    error=0;
+        nasal_bytecode_vm::opr_nop,
+        nasal_bytecode_vm::opr_load,
+        nasal_bytecode_vm::opr_pushnum,
+        nasal_bytecode_vm::opr_pushone,
+        nasal_bytecode_vm::opr_pushzero,
+        nasal_bytecode_vm::opr_pushnil,
+        nasal_bytecode_vm::opr_pushstr,
+        nasal_bytecode_vm::opr_newvec,
+        nasal_bytecode_vm::opr_newhash,
+        nasal_bytecode_vm::opr_newfunc,
+        nasal_bytecode_vm::opr_vecapp,
+        nasal_bytecode_vm::opr_hashapp,
+        nasal_bytecode_vm::opr_para,
+        nasal_bytecode_vm::opr_defpara,
+        nasal_bytecode_vm::opr_dynpara,
+        nasal_bytecode_vm::opr_entry,
+        nasal_bytecode_vm::opr_unot,
+        nasal_bytecode_vm::opr_usub,
+        nasal_bytecode_vm::opr_add,
+        nasal_bytecode_vm::opr_sub,
+        nasal_bytecode_vm::opr_mul,
+        nasal_bytecode_vm::opr_div,
+        nasal_bytecode_vm::opr_lnk,
+        nasal_bytecode_vm::opr_addeq,
+        nasal_bytecode_vm::opr_subeq,
+        nasal_bytecode_vm::opr_muleq,
+        nasal_bytecode_vm::opr_diveq,
+        nasal_bytecode_vm::opr_lnkeq,
+        nasal_bytecode_vm::opr_meq,
+        nasal_bytecode_vm::opr_eq,
+        nasal_bytecode_vm::opr_neq,
+        nasal_bytecode_vm::opr_less,
+        nasal_bytecode_vm::opr_leq,
+        nasal_bytecode_vm::opr_grt,
+        nasal_bytecode_vm::opr_geq,
+        nasal_bytecode_vm::opr_pop,
+        nasal_bytecode_vm::opr_jmp,
+        nasal_bytecode_vm::opr_jmptrue,
+        nasal_bytecode_vm::opr_jmpfalse,
+        nasal_bytecode_vm::opr_counter,
+        nasal_bytecode_vm::opr_forindex,
+        nasal_bytecode_vm::opr_foreach,
+        nasal_bytecode_vm::opr_call,
+        nasal_bytecode_vm::opr_callv,
+        nasal_bytecode_vm::opr_callvi,
+        nasal_bytecode_vm::opr_callh,
+        nasal_bytecode_vm::opr_callf,
+        nasal_bytecode_vm::opr_builtincall,
+        nasal_bytecode_vm::opr_slicebegin,
+        nasal_bytecode_vm::opr_sliceend,
+        nasal_bytecode_vm::opr_slice,
+        nasal_bytecode_vm::opr_slice2,
+        nasal_bytecode_vm::opr_mcall,
+        nasal_bytecode_vm::opr_mcallv,
+        nasal_bytecode_vm::opr_mcallh,
+        nasal_bytecode_vm::opr_return
+    };
+
+    main_loop_break_mark=true;
+    builtin_die_state=false;
+
     global_scope_addr=vm.gc_alloc(vm_closure);
-    size=exec_code.size();
     time_t begin_time=std::time(NULL);
-    for(ptr=0;ptr<size;++ptr)
-    {
+
+    // main loop
+    for(ptr=0;main_loop_break_mark;++ptr)
         (this->*opr_table[exec_code[ptr].op])();
-        if(error)
-            break;
-    }
+    
     time_t end_time=std::time(NULL);
     time_t total_run_time=end_time-begin_time;
     if(total_run_time>=1)

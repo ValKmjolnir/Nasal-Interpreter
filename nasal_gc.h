@@ -756,19 +756,19 @@ int nasal_virtual_machine::gc_alloc(int val_type)
 }
 nasal_scalar& nasal_virtual_machine::gc_get(int value_address)
 {
-    if(0<=value_address && value_address<garbage_collector_memory.size() && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
         return garbage_collector_memory[value_address]->elem;
     return error_returned_value;
 }
 void nasal_virtual_machine::add_reference(int value_address)
 {
-    if(0<=value_address && value_address<garbage_collector_memory.size() && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
         ++garbage_collector_memory[value_address]->ref_cnt;
     return;
 }
 void nasal_virtual_machine::del_reference(int value_address)
 {
-    if(0<=value_address && value_address<garbage_collector_memory.size() && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
         --garbage_collector_memory[value_address]->ref_cnt;
     else
         return;
@@ -798,7 +798,7 @@ void nasal_virtual_machine::mem_free(int memory_address)
 {
     // mem_free has helped scalar to delete the reference
     // so don't need to delete reference again
-    if(0<=memory_address && memory_address<memory_manager_memory.size())
+    if(0<=memory_address)
     {
         this->del_reference(memory_manager_memory[memory_address]);
         memory_manager_free_space.push(memory_address);
@@ -809,7 +809,7 @@ void nasal_virtual_machine::mem_change(int memory_address,int value_address)
 {
     // this progress is used to change a memory space's value address
     // be careful! this process doesn't check if this mem_space is in use.
-    if(0<=memory_address && memory_address<memory_manager_memory.size())
+    if(0<=memory_address)
     {
         this->del_reference(memory_manager_memory[memory_address]);
         memory_manager_memory[memory_address]=value_address;
@@ -819,7 +819,7 @@ void nasal_virtual_machine::mem_change(int memory_address,int value_address)
 int nasal_virtual_machine::mem_get(int memory_address)
 {
     // be careful! this process doesn't check if this mem_space is in use.
-    if(0<=memory_address && memory_address<memory_manager_memory.size())
+    if(0<=memory_address)
         return memory_manager_memory[memory_address];
     return -1;
 }
