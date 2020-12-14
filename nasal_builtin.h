@@ -51,7 +51,7 @@ int builtin_contains(int,nasal_virtual_machine&);
 int builtin_delete(int,nasal_virtual_machine&);
 int builtin_getkeys(int,nasal_virtual_machine&);
 int builtin_import(int,nasal_virtual_machine&);
-int builtin_die_state;// used in builtin_die
+bool builtin_die_state;// used in builtin_die
 int builtin_die(int,nasal_virtual_machine&);
 int builtin_type(int,nasal_virtual_machine&);
 int builtin_substr(int,nasal_virtual_machine&);
@@ -773,7 +773,7 @@ int builtin_die(int local_scope_addr,nasal_virtual_machine& nasal_vm)
         std::cout<<">> [runtime] builtin_die: \"str\" has wrong type(must be string).\n";
         return -1;
     }
-    builtin_die_state=1;
+    builtin_die_state=true;
     std::cout<<">> [runtime] error: "<<nasal_vm.gc_get(str_addr).get_string()<<'\n';
     int ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;

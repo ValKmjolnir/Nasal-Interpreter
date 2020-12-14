@@ -122,7 +122,7 @@ void nasal_runtime::set_root(nasal_ast& parse_result)
 void nasal_runtime::run()
 {
     // this state is reserved for builtin_die
-    builtin_die_state=0;
+    builtin_die_state=false;
 
     this->error=0;
     this->function_returned_address=-1;

@@ -107,10 +107,10 @@ public:
     void set_str(std::string&);
     void set_num(double);
     void add_child(nasal_ast);
-    int  get_line();
-    int  get_type();
+    int         get_line();
+    int         get_type();
     std::string get_str();
-    double get_num();
+    double      get_num();
     std::vector<nasal_ast>& get_children();
     void print_ast(int);
 };

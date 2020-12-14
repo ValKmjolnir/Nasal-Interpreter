@@ -77,9 +77,9 @@ struct
     {op_meq,         "memeq "},
     {op_eq,          "eq    "},
     {op_neq,         "neq   "},
-    {op_less,        "l     "},
+    {op_less,        "less  "},
     {op_leq,         "leq   "},
-    {op_grt,         "g     "},
+    {op_grt,         "grt   "},
     {op_geq,         "geq   "},
     {op_pop,         "pop   "},
     {op_jmp,         "jmp   "},
@@ -115,7 +115,7 @@ struct opcode
         index=0;
         return;
     }
-    opcode& operator=(opcode& tmp)
+    opcode& operator=(const opcode& tmp)
     {
         op=tmp.op;
         index=tmp.index;
@@ -1205,15 +1205,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
 void nasal_codegen::print_op(int index)
 {
     // print opcode ptr
-    std::string numinfo="";
-    int num=index;
-    for(int i=0;i<8;++i)
-    {
-        int tmp=num&0x0f;
-        numinfo=(char)(tmp>9? 'a'+tmp-10:'0'+tmp)+numinfo;
-        num>>=4;
-    }
-    std::cout<<"0x"<<numinfo<<": ";
+    printf("0x%.8x: ",index);
     // print opcode name
     for(int i=0;code_table[i].name;++i)
         if(exec_code[index].op==code_table[i].type)
@@ -1222,15 +1214,7 @@ void nasal_codegen::print_op(int index)
             break;
         }
     // print opcode index
-    numinfo="";
-    num=exec_code[index].index;
-    for(int i=0;i<8;++i)
-    {
-        int tmp=num&0x0f;
-        numinfo=(char)(tmp>9? 'a'+tmp-10:'0'+tmp)+numinfo;
-        num>>=4;
-    }
-    std::cout<<"0x"<<numinfo<<"  ";
+    printf("0x%.8x ",exec_code[index].index);
     // print detail info
     switch(exec_code[index].op)
     {
