@@ -180,6 +180,15 @@ void nasal_parse::die(int line,std::string info)
 {
     ++error;
     std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
+    while(ptr<tok_list_size)// panic
+    {
+        if(tok_list[ptr].type==tok_semi)
+        {
+            --ptr;
+            break;
+        }
+        ++ptr;
+    }
     return;
 }
 
@@ -597,6 +606,7 @@ nasal_ast nasal_parse::calculation()
         // trinocular calculation
         nasal_ast tmp(tok_list[ptr].line,ast_trinocular);
         tmp.add_child(node);
+        ++ptr;
         tmp.add_child(calculation());
         ++ptr;
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
