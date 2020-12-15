@@ -590,6 +590,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             op.index=string_table[str];
             exec_code.push_back(op);
         }
+        pop_gen();
     }
     return;
 }
@@ -633,6 +634,7 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
             exec_code.push_back(op);
             pop_gen();
         }
+        pop_gen();
     }
     return;
 }
