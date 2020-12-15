@@ -176,16 +176,6 @@ int main()
 	system("cls");
 #endif
 	logo();
-#ifdef _WIN32
-	std::cout<<">> [system] Windows system.\n";
-#endif
-#ifdef _linux_
-	std::cout<<">> [system] Linux system.\n";
-#endif
-#ifdef TARGET_OS_MAC
-	std::cout<<">> [system] MacOS system.\n";
-#endif
-	
 	std::cout<<">> Nasal interpreter ver 3.0 .\n";
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
 	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";

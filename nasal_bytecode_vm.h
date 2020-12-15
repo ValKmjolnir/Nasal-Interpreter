@@ -152,10 +152,7 @@ void nasal_bytecode_vm::opr_load()
 {
     int val_addr=value_stack.top();
     value_stack.pop();
-    if(local_scope_stack.top()>=0)
-        vm.gc_get(local_scope_stack.top()).get_closure().add_new_value(string_table[exec_code[ptr].index],val_addr);
-    else
-        vm.gc_get(global_scope_addr).get_closure().add_new_value(string_table[exec_code[ptr].index],val_addr);
+    vm.gc_get(local_scope_stack.top()>=0?local_scope_stack.top():global_scope_addr).get_closure().add_new_value(string_table[exec_code[ptr].index],val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_pushnum()
@@ -266,9 +263,8 @@ void nasal_bytecode_vm::opr_unot()
     }
     else if(type==vm_number)
     {
-        double number=(ref.get_number()==0);
         new_value_address=vm.gc_alloc(vm_number);
-        vm.gc_get(new_value_address).set_number(number);
+        vm.gc_get(new_value_address).set_number(ref.get_number()==0);
     }
     else if(type==vm_string)
     {
@@ -276,12 +272,12 @@ void nasal_bytecode_vm::opr_unot()
         if(std::isnan(number))
         {
             new_value_address=vm.gc_alloc(vm_number);
-            vm.gc_get(new_value_address).set_number(!(ref.get_string()).length());
+            vm.gc_get(new_value_address).set_number(!ref.get_string().length());
         }
         else
         {
             new_value_address=vm.gc_alloc(vm_number);
-            vm.gc_get(new_value_address).set_number((double)(number==0));
+            vm.gc_get(new_value_address).set_number(number==0);
         }
     }
     else
@@ -296,7 +292,7 @@ void nasal_bytecode_vm::opr_usub()
     value_stack.pop();
     nasal_scalar& ref=vm.gc_get(val_addr);
     int type=ref.get_type();
-    double num=(1/0.0)+(-1/0.0);
+    double num=std::nan("");
     if(type==vm_number)
         num=ref.get_number();
     else if(type==vm_string)
@@ -317,8 +313,8 @@ void nasal_bytecode_vm::opr_add()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -345,8 +341,8 @@ void nasal_bytecode_vm::opr_sub()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -373,8 +369,8 @@ void nasal_bytecode_vm::opr_mul()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -401,8 +397,8 @@ void nasal_bytecode_vm::opr_div()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -454,8 +450,8 @@ void nasal_bytecode_vm::opr_addeq()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -485,8 +481,8 @@ void nasal_bytecode_vm::opr_subeq()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -516,8 +512,8 @@ void nasal_bytecode_vm::opr_muleq()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -547,8 +543,8 @@ void nasal_bytecode_vm::opr_diveq()
     nasal_scalar& b_ref=vm.gc_get(val_addr2);
     int a_ref_type=a_ref.get_type();
     int b_ref_type=b_ref.get_type();
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -767,8 +763,8 @@ void nasal_bytecode_vm::opr_less()
         vm.del_reference(val_addr2);
         return;
     }
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -806,8 +802,8 @@ void nasal_bytecode_vm::opr_leq()
         vm.del_reference(val_addr2);
         return;
     }
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -845,8 +841,8 @@ void nasal_bytecode_vm::opr_grt()
         vm.del_reference(val_addr2);
         return;
     }
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -884,8 +880,8 @@ void nasal_bytecode_vm::opr_geq()
         vm.del_reference(val_addr2);
         return;
     }
-    double a_num=(1/0.0)+(-1/0.0);
-    double b_num=(1/0.0)+(-1/0.0);
+    double a_num=std::nan("");
+    double b_num=std::nan("");
     if(a_ref_type==vm_number)
         a_num=a_ref.get_number();
     else if(a_ref_type==vm_string)
@@ -1182,11 +1178,8 @@ void nasal_bytecode_vm::opr_builtincall()
 {
     int ret_value_addr=-1;
     std::string val_name=string_table[exec_code[ptr].index];
-    if(builtin_func_hashmap.find(val_name)!=builtin_func_hashmap.end())
-    {
-        ret_value_addr=(*builtin_func_hashmap[val_name])(local_scope_stack.top(),vm);
-        main_loop_break_mark=!builtin_die_state;
-    }
+    ret_value_addr=(*builtin_func_hashmap[val_name])(local_scope_stack.top(),vm);
+    main_loop_break_mark=!builtin_die_state;
     value_stack.push(ret_value_addr);
     return;
 }
@@ -1199,6 +1192,8 @@ void nasal_bytecode_vm::opr_slicebegin()
 }
 void nasal_bytecode_vm::opr_sliceend()
 {
+    vm.del_reference(value_stack.top());
+    value_stack.pop();
     value_stack.push(slice_stack.top());
     slice_stack.pop();
     return;
@@ -1273,7 +1268,7 @@ void nasal_bytecode_vm::opr_slice2()
         die("slc2: begin or end index out of range");
         return;
     }
-    for(int i=num1;i<num2;++i)
+    for(int i=num1;i<=num2;++i)
     {
         int tmp=ref.get_value_address(i);
         vm.add_reference(tmp);
@@ -1389,62 +1384,62 @@ void nasal_bytecode_vm::run(std::vector<std::string>& strs,std::vector<double>& 
 
     static void (nasal_bytecode_vm::*opr_table[])()=
     {
-        nasal_bytecode_vm::opr_nop,
-        nasal_bytecode_vm::opr_load,
-        nasal_bytecode_vm::opr_pushnum,
-        nasal_bytecode_vm::opr_pushone,
-        nasal_bytecode_vm::opr_pushzero,
-        nasal_bytecode_vm::opr_pushnil,
-        nasal_bytecode_vm::opr_pushstr,
-        nasal_bytecode_vm::opr_newvec,
-        nasal_bytecode_vm::opr_newhash,
-        nasal_bytecode_vm::opr_newfunc,
-        nasal_bytecode_vm::opr_vecapp,
-        nasal_bytecode_vm::opr_hashapp,
-        nasal_bytecode_vm::opr_para,
-        nasal_bytecode_vm::opr_defpara,
-        nasal_bytecode_vm::opr_dynpara,
-        nasal_bytecode_vm::opr_entry,
-        nasal_bytecode_vm::opr_unot,
-        nasal_bytecode_vm::opr_usub,
-        nasal_bytecode_vm::opr_add,
-        nasal_bytecode_vm::opr_sub,
-        nasal_bytecode_vm::opr_mul,
-        nasal_bytecode_vm::opr_div,
-        nasal_bytecode_vm::opr_lnk,
-        nasal_bytecode_vm::opr_addeq,
-        nasal_bytecode_vm::opr_subeq,
-        nasal_bytecode_vm::opr_muleq,
-        nasal_bytecode_vm::opr_diveq,
-        nasal_bytecode_vm::opr_lnkeq,
-        nasal_bytecode_vm::opr_meq,
-        nasal_bytecode_vm::opr_eq,
-        nasal_bytecode_vm::opr_neq,
-        nasal_bytecode_vm::opr_less,
-        nasal_bytecode_vm::opr_leq,
-        nasal_bytecode_vm::opr_grt,
-        nasal_bytecode_vm::opr_geq,
-        nasal_bytecode_vm::opr_pop,
-        nasal_bytecode_vm::opr_jmp,
-        nasal_bytecode_vm::opr_jmptrue,
-        nasal_bytecode_vm::opr_jmpfalse,
-        nasal_bytecode_vm::opr_counter,
-        nasal_bytecode_vm::opr_forindex,
-        nasal_bytecode_vm::opr_foreach,
-        nasal_bytecode_vm::opr_call,
-        nasal_bytecode_vm::opr_callv,
-        nasal_bytecode_vm::opr_callvi,
-        nasal_bytecode_vm::opr_callh,
-        nasal_bytecode_vm::opr_callf,
-        nasal_bytecode_vm::opr_builtincall,
-        nasal_bytecode_vm::opr_slicebegin,
-        nasal_bytecode_vm::opr_sliceend,
-        nasal_bytecode_vm::opr_slice,
-        nasal_bytecode_vm::opr_slice2,
-        nasal_bytecode_vm::opr_mcall,
-        nasal_bytecode_vm::opr_mcallv,
-        nasal_bytecode_vm::opr_mcallh,
-        nasal_bytecode_vm::opr_return
+        &nasal_bytecode_vm::opr_nop,
+        &nasal_bytecode_vm::opr_load,
+        &nasal_bytecode_vm::opr_pushnum,
+        &nasal_bytecode_vm::opr_pushone,
+        &nasal_bytecode_vm::opr_pushzero,
+        &nasal_bytecode_vm::opr_pushnil,
+        &nasal_bytecode_vm::opr_pushstr,
+        &nasal_bytecode_vm::opr_newvec,
+        &nasal_bytecode_vm::opr_newhash,
+        &nasal_bytecode_vm::opr_newfunc,
+        &nasal_bytecode_vm::opr_vecapp,
+        &nasal_bytecode_vm::opr_hashapp,
+        &nasal_bytecode_vm::opr_para,
+        &nasal_bytecode_vm::opr_defpara,
+        &nasal_bytecode_vm::opr_dynpara,
+        &nasal_bytecode_vm::opr_entry,
+        &nasal_bytecode_vm::opr_unot,
+        &nasal_bytecode_vm::opr_usub,
+        &nasal_bytecode_vm::opr_add,
+        &nasal_bytecode_vm::opr_sub,
+        &nasal_bytecode_vm::opr_mul,
+        &nasal_bytecode_vm::opr_div,
+        &nasal_bytecode_vm::opr_lnk,
+        &nasal_bytecode_vm::opr_addeq,
+        &nasal_bytecode_vm::opr_subeq,
+        &nasal_bytecode_vm::opr_muleq,
+        &nasal_bytecode_vm::opr_diveq,
+        &nasal_bytecode_vm::opr_lnkeq,
+        &nasal_bytecode_vm::opr_meq,
+        &nasal_bytecode_vm::opr_eq,
+        &nasal_bytecode_vm::opr_neq,
+        &nasal_bytecode_vm::opr_less,
+        &nasal_bytecode_vm::opr_leq,
+        &nasal_bytecode_vm::opr_grt,
+        &nasal_bytecode_vm::opr_geq,
+        &nasal_bytecode_vm::opr_pop,
+        &nasal_bytecode_vm::opr_jmp,
+        &nasal_bytecode_vm::opr_jmptrue,
+        &nasal_bytecode_vm::opr_jmpfalse,
+        &nasal_bytecode_vm::opr_counter,
+        &nasal_bytecode_vm::opr_forindex,
+        &nasal_bytecode_vm::opr_foreach,
+        &nasal_bytecode_vm::opr_call,
+        &nasal_bytecode_vm::opr_callv,
+        &nasal_bytecode_vm::opr_callvi,
+        &nasal_bytecode_vm::opr_callh,
+        &nasal_bytecode_vm::opr_callf,
+        &nasal_bytecode_vm::opr_builtincall,
+        &nasal_bytecode_vm::opr_slicebegin,
+        &nasal_bytecode_vm::opr_sliceend,
+        &nasal_bytecode_vm::opr_slice,
+        &nasal_bytecode_vm::opr_slice2,
+        &nasal_bytecode_vm::opr_mcall,
+        &nasal_bytecode_vm::opr_mcallv,
+        &nasal_bytecode_vm::opr_mcallh,
+        &nasal_bytecode_vm::opr_return
     };
 
     main_loop_break_mark=true;
