@@ -56,9 +56,9 @@ private:
     int call_function(nasal_ast&,int,int,int);
     int call_builtin_function(std::string,int);
     // get scalars' memory place in complex data structure like vector/hash/function/closure(scope)
-    int call_scalar_mem(nasal_ast&,int);
-    int call_vector_mem(nasal_ast&,int,int);
-    int call_hash_mem(nasal_ast&,int,int);
+    int* call_scalar_mem(nasal_ast&,int);
+    int* call_vector_mem(nasal_ast&,int*,int);
+    int* call_hash_mem(nasal_ast&,int*,int);
     // calculate scalars
     int nasal_scalar_add(int,int);
     int nasal_scalar_sub(int,int);
@@ -337,7 +337,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr)
             return rt_error;
         }
         // begin loop progress
-        int mem_addr=-1;
+        int* mem_addr=NULL;
         if(iter_node.get_type()==ast_new_iter)
         {
             int new_value_addr=nasal_vm.gc_alloc(vm_nil);
@@ -347,7 +347,7 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr)
         }
         else
             mem_addr=call_scalar_mem(iter_node,local_scope_addr);
-        if(mem_addr<0)
+        if(!mem_addr)
         {
             die(iter_node.get_line(),"get null iterator");
             return rt_error;
@@ -361,13 +361,15 @@ int nasal_runtime::loop_progress(nasal_ast& node,int local_scope_addr)
             {
                 int new_iter_val_addr=nasal_vm.gc_alloc(vm_number);
                 nasal_vm.gc_get(new_iter_val_addr).set_number((double)i);
-                nasal_vm.mem_change(mem_addr,new_iter_val_addr);
+                nasal_vm.del_reference(*mem_addr);
+                *mem_addr=new_iter_val_addr;
             }
             else
             {
                 int value_addr=ref_vector.get_value_address(i);
                 nasal_vm.add_reference(value_addr);
-                nasal_vm.mem_change(mem_addr,value_addr);
+                nasal_vm.del_reference(*mem_addr);
+                *mem_addr=value_addr;
             }
             ret_state=block_progress(run_block_node,local_scope_addr);
             if(ret_state==rt_break || ret_state==rt_return || error)
@@ -923,37 +925,37 @@ int nasal_runtime::call_builtin_function(std::string val_name,int local_scope_ad
     }
     return ret_value_addr;
 }
-int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
+int* nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
 {
-    int mem_address=-1;
+    int* mem_address=NULL;
     if(node.get_type()==ast_identifier)
     {
         std::string id_name=node.get_str();
         if(local_scope_addr>=0)
             mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(id_name);
-        if(mem_address<0)
+        if(!mem_address)
             mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
-        if(mem_address<0)
+        if(!mem_address)
         {
             die(node.get_line(),"cannot find \""+id_name+"\"");
-            return -1;
+            return NULL;
         }
         return mem_address;
     }
     std::string id_name=node.get_children()[0].get_str();
     if(local_scope_addr>=0)
         mem_address=nasal_vm.gc_get(local_scope_addr).get_closure().get_mem_address(id_name);
-    if(mem_address<0)
+    if(!mem_address)
         mem_address=nasal_vm.gc_get(global_scope_address).get_closure().get_mem_address(id_name);
-    if(mem_address<0)
+    if(!mem_address)
     {
         die(node.get_children()[0].get_line(),"cannot find \""+id_name+"\"");
-        return -1;
+        return NULL;
     }
     int call_expr_size=node.get_children().size();
     for(int i=1;i<call_expr_size;++i)
     {
-        int tmp_mem_addr=-1;
+        int* tmp_mem_addr=NULL;
         nasal_ast& call_expr=node.get_children()[i];
         switch(call_expr.get_type())
         {
@@ -961,7 +963,7 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
             case ast_call_hash: tmp_mem_addr=call_hash_mem(call_expr,mem_address,local_scope_addr);break;
         }
         mem_address=tmp_mem_addr;
-        if(mem_address<0)
+        if(!mem_address)
         {
             die(call_expr.get_line(),"incorrect memory space");
             break;
@@ -969,15 +971,15 @@ int nasal_runtime::call_scalar_mem(nasal_ast& node,int local_scope_addr)
     }
     return mem_address;
 }
-int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
+int* nasal_runtime::call_vector_mem(nasal_ast& node,int* base_mem_addr,int local_scope_addr)
 {
-    int return_mem_addr=-1;
-    int base_value_addr=nasal_vm.mem_get(base_mem_addr);
+    int* return_mem_addr=NULL;
+    int base_value_addr=*base_mem_addr;
     int base_value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(base_value_type!=vm_vector && base_value_type!=vm_hash)
     {
         die(node.get_line(),"incorrect value type,must be vector/hash");
-        return -1;
+        return NULL;
     }
     if(base_value_type==vm_vector)
     {
@@ -988,7 +990,7 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
         if(index_value_type!=vm_number && index_value_type!=vm_string)
         {
             die(tmp.get_line(),"index is not a number/numerable string");
-            return -1;
+            return NULL;
         }
         int index_num=0;
         if(index_value_type==vm_string)
@@ -1001,6 +1003,8 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
             index_num=(int)nasal_vm.gc_get(index_value_addr).get_number();
         nasal_vm.del_reference(index_value_addr);
         return_mem_addr=reference_value.get_mem_address(index_num);
+        if(!return_mem_addr)
+            die(tmp.get_line(),"incorrect memory space");
     }
     else
     {
@@ -1009,25 +1013,31 @@ int nasal_runtime::call_vector_mem(nasal_ast& node,int base_mem_addr,int local_s
         if(str_addr<0 || nasal_vm.gc_get(str_addr).get_type()!=vm_string)
         {
             die(tmp.get_line(),"must use string as the key");
-            return -1;
+            return NULL;
         }
         std::string str=nasal_vm.gc_get(str_addr).get_string();
         return_mem_addr=nasal_vm.gc_get(base_value_addr).get_hash().get_mem_address(str);
+        if(!return_mem_addr)
+        {
+            nasal_hash& ref=nasal_vm.gc_get(base_value_addr).get_hash();
+            ref.add_elem(str,nasal_vm.gc_alloc(vm_nil));
+            return_mem_addr=ref.get_mem_address(str);
+        }
     }
     return return_mem_addr;
 }
-int nasal_runtime::call_hash_mem(nasal_ast& node,int base_mem_addr,int local_scope_addr)
+int* nasal_runtime::call_hash_mem(nasal_ast& node,int* base_mem_addr,int local_scope_addr)
 {
-    int base_value_addr=nasal_vm.mem_get(base_mem_addr);
+    int base_value_addr=*base_mem_addr;
     int value_type=nasal_vm.gc_get(base_value_addr).get_type();
     if(value_type!=vm_hash)
     {
         die(node.get_line(),"called a value that is not a hash");
-        return -1;
+        return NULL;
     }
     nasal_hash& ref=nasal_vm.gc_get(base_value_addr).get_hash();
-    int ret_mem_addr=ref.get_mem_address(node.get_str());
-    if(ret_mem_addr<0)
+    int* ret_mem_addr=ref.get_mem_address(node.get_str());
+    if(!ret_mem_addr)
     {
         ref.add_elem(node.get_str(),nasal_vm.gc_alloc(vm_nil));
         ret_mem_addr=ref.get_mem_address(node.get_str());
@@ -1693,64 +1703,76 @@ int nasal_runtime::calculation(nasal_ast& node,int local_scope_addr)
     }
     else if(calculation_type==ast_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
-        nasal_vm.mem_change(scalar_mem_space,new_scalar_gc_addr);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(*scalar_mem_space);
+        *scalar_mem_space=new_scalar_gc_addr;
         nasal_vm.add_reference(new_scalar_gc_addr);// this reference is reserved for ret_address
         ret_address=new_scalar_gc_addr;
     }
     else if(calculation_type==ast_add_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
-        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
+        int scalar_val_space=*scalar_mem_space;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_add(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.del_reference(new_scalar_gc_addr);
-        nasal_vm.mem_change(scalar_mem_space,result_val_address);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(scalar_val_space);
+        *scalar_mem_space=result_val_address;
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
     else if(calculation_type==ast_sub_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
-        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
+        int scalar_val_space=*scalar_mem_space;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_sub(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.del_reference(new_scalar_gc_addr);
-        nasal_vm.mem_change(scalar_mem_space,result_val_address);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(scalar_val_space);
+        *scalar_mem_space=result_val_address;
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
     else if(calculation_type==ast_div_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
-        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
+        int scalar_val_space=*scalar_mem_space;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_div(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.del_reference(new_scalar_gc_addr);
-        nasal_vm.mem_change(scalar_mem_space,result_val_address);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(scalar_val_space);
+        *scalar_mem_space=result_val_address;
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
     else if(calculation_type==ast_mult_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
-        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
+        int scalar_val_space=*scalar_mem_space;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_mult(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.del_reference(new_scalar_gc_addr);
-        nasal_vm.mem_change(scalar_mem_space,result_val_address);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(scalar_val_space);
+        *scalar_mem_space=result_val_address;
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
     else if(calculation_type==ast_link_equal)
     {
-        int scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
-        int scalar_val_space=nasal_vm.mem_get(scalar_mem_space);
+        int* scalar_mem_space=call_scalar_mem(node.get_children()[0],local_scope_addr);
+        if(!scalar_mem_space) return -1;
+        int scalar_val_space=*scalar_mem_space;
         int new_scalar_gc_addr=calculation(node.get_children()[1],local_scope_addr);
         int result_val_address=nasal_scalar_link(scalar_val_space,new_scalar_gc_addr);
         nasal_vm.del_reference(new_scalar_gc_addr);
-        nasal_vm.mem_change(scalar_mem_space,result_val_address);// this progress will delete the reference to old gc_addr in scalar_mem_space
+        nasal_vm.del_reference(scalar_val_space);
+        *scalar_mem_space=result_val_address;
         nasal_vm.add_reference(result_val_address);// this reference is reserved for ret_address
         ret_address=result_val_address;
     }
@@ -1818,13 +1840,7 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
 {
     nasal_ast& multi_call_node=node.get_children()[0];
     nasal_ast& value_node=node.get_children()[1];
-    std::vector<int> mem_table;
     int id_size=multi_call_node.get_children().size();
-    for(int i=0;i<id_size;++i)
-    {
-        nasal_ast& tmp_node=multi_call_node.get_children()[i];
-        mem_table.push_back(call_scalar_mem(tmp_node,local_scope_addr));
-    }
     if(value_node.get_type()==ast_multi_scalar)
     {
         // there's no need to check value_size==id_size
@@ -1833,7 +1849,13 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
         for(int i=0;i<id_size;++i)
             value_table.push_back(calculation(value_node.get_children()[i],local_scope_addr));
         for(int i=0;i<id_size;++i)
-            nasal_vm.mem_change(mem_table[i],value_table[i]);
+        {
+            nasal_ast& tmp_node=multi_call_node.get_children()[i];
+            int* mem_addr=call_scalar_mem(tmp_node,local_scope_addr);
+            if(!mem_addr) return;
+            nasal_vm.del_reference(*mem_addr);
+            *mem_addr=value_table[i];
+        }
     }
     else
     {
@@ -1859,7 +1881,13 @@ void nasal_runtime::multi_assignment(nasal_ast& node,int local_scope_addr)
             value_table.push_back(tmp_addr);
         }
         for(int i=0;i<id_size;++i)
-            nasal_vm.mem_change(mem_table[i],value_table[i]);
+        {
+            nasal_ast& tmp_node=multi_call_node.get_children()[i];
+            int* mem_addr=call_scalar_mem(tmp_node,local_scope_addr);
+            if(!mem_addr) return;
+            nasal_vm.del_reference(*mem_addr);
+            *mem_addr=value_table[i];
+        }
         nasal_vm.del_reference(value_addr);
     }
     return;
