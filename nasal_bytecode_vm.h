@@ -968,13 +968,14 @@ void nasal_bytecode_vm::opr_foreach()
 void nasal_bytecode_vm::opr_call()
 {
     int val_addr=-1;
+    std::string symbol=string_table[exec_code[ptr].index];
     if(local_scope_stack.top()>=0)
-        val_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_value_address(string_table[exec_code[ptr].index]);
+        val_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_value_address(symbol);
     if(val_addr<0)
-        val_addr=vm.gc_get(global_scope_addr).get_closure().get_value_address(string_table[exec_code[ptr].index]);
+        val_addr=vm.gc_get(global_scope_addr).get_closure().get_value_address(symbol);
     if(val_addr<0)
     {
-        die("call: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
+        die("call: cannot find symbol named \""+symbol+"\"");
         return;
     }
     vm.add_reference(val_addr);
@@ -1281,12 +1282,13 @@ void nasal_bytecode_vm::opr_slice2()
 void nasal_bytecode_vm::opr_mcall()
 {
     int* mem_addr=NULL;
+    std::string symbol=string_table[exec_code[ptr].index];
     if(local_scope_stack.top()>=0)
-        mem_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
+        mem_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(symbol);
     if(!mem_addr)
-        mem_addr=vm.gc_get(global_scope_addr).get_closure().get_mem_address(string_table[exec_code[ptr].index]);
+        mem_addr=vm.gc_get(global_scope_addr).get_closure().get_mem_address(symbol);
     if(!mem_addr)
-        die("mcall: cannot find symbol named \""+string_table[exec_code[ptr].index]+"\"");
+        die("mcall: cannot find symbol named \""+symbol+"\"");
     pointer_stack.push(mem_addr);
     return;
 }
