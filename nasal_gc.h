@@ -131,12 +131,10 @@ class nasal_virtual_machine
 {
     struct gc_unit
     {
-        bool collected;
         int ref_cnt;
         nasal_scalar elem;
         gc_unit()
         {
-            collected=true;
             ref_cnt=0;
             return;
         }
@@ -662,7 +660,6 @@ nasal_virtual_machine::~nasal_virtual_machine()
         if(garbage_collector_memory[i]->ref_cnt)
         {
             garbage_collector_memory[i]->ref_cnt=0;
-            garbage_collector_memory[i]->collected=true;
             garbage_collector_memory[i]->elem.clear();
         }
     for(int i=0;i<gc_mem_size;++i)
@@ -700,7 +697,6 @@ void nasal_virtual_machine::clear()
         if(garbage_collector_memory[i]->ref_cnt)
         {
             garbage_collector_memory[i]->ref_cnt=0;
-            garbage_collector_memory[i]->collected=true;
             garbage_collector_memory[i]->elem.clear();
         }
     for(int i=0;i<gc_mem_size;++i)
@@ -724,7 +720,6 @@ int nasal_virtual_machine::gc_alloc(int val_type)
     }
     int ret=garbage_collector_free_space.front();
     gc_unit& unit_ref=*garbage_collector_memory[ret];
-    unit_ref.collected=false;
     unit_ref.ref_cnt=1;
     unit_ref.elem.set_type(val_type,*this);
     garbage_collector_free_space.pop();
@@ -732,25 +727,24 @@ int nasal_virtual_machine::gc_alloc(int val_type)
 }
 nasal_scalar& nasal_virtual_machine::gc_get(int value_address)
 {
-    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address)
         return garbage_collector_memory[value_address]->elem;
     return error_returned_value;
 }
 void nasal_virtual_machine::add_reference(int value_address)
 {
-    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address)
         ++garbage_collector_memory[value_address]->ref_cnt;
     return;
 }
 void nasal_virtual_machine::del_reference(int value_address)
 {
-    if(0<=value_address && !garbage_collector_memory[value_address]->collected)
+    if(0<=value_address)
         --garbage_collector_memory[value_address]->ref_cnt;
     else
         return;
     if(!garbage_collector_memory[value_address]->ref_cnt)
     {
-        garbage_collector_memory[value_address]->collected=true;
         garbage_collector_memory[value_address]->elem.clear();
         garbage_collector_free_space.push(value_address);
     }
