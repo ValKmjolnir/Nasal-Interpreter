@@ -144,7 +144,6 @@ private:
     std::queue<int> garbage_collector_free_space;
     std::vector<gc_unit*> garbage_collector_memory;
 public:
-    nasal_virtual_machine();
     ~nasal_virtual_machine();
     void clear();
     void debug();
@@ -591,11 +590,6 @@ void nasal_scalar::clear()
 }
 void nasal_scalar::set_type(int nasal_scalar_type,nasal_virtual_machine& nvm)
 {
-    if(this->scalar_ptr)
-    {
-        std::cout<<">> [vm] scalar_ptr is in use: "<<type<<" "<<scalar_ptr<<"\n";
-        return;
-    }
     this->type=nasal_scalar_type;
     switch(nasal_scalar_type)
     {
@@ -649,10 +643,6 @@ nasal_closure& nasal_scalar::get_closure()
 }
 
 /*functions of nasal_virtual_machine*/
-nasal_virtual_machine::nasal_virtual_machine()
-{
-    return;
-}
 nasal_virtual_machine::~nasal_virtual_machine()
 {
     int gc_mem_size=garbage_collector_memory.size();
