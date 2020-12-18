@@ -4,7 +4,6 @@ nasal_lexer    lexer;
 nasal_parse    parse;
 nasal_import   import;
 std::string    inputfile="null";
-nasal_runtime  runtime;
 nasal_codegen  code_generator;
 nasal_bytecode_vm bytevm;
 
@@ -16,7 +15,6 @@ void help()
 	std::cout<<">> [del   ] clear the input filename.\n";
 	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
-	std::cout<<">> [run   ] run abstract syntax tree.\n";
 	std::cout<<">> [code  ] show byte code.\n";
 	std::cout<<">> [exec  ] execute program on bytecode vm.\n";
 	std::cout<<">> [logo  ] print logo of nasal .\n";
@@ -79,33 +77,6 @@ void ast_print()
 		return;
 	}
 	parse.get_root().print_ast(0);
-	return;
-}
-
-void runtime_start()
-{
-	lexer.openfile(inputfile);
-	lexer.scanner();
-	if(lexer.get_error())
-	{
-		die("lexer",inputfile);
-		return;
-	}
-	parse.set_toklist(lexer.get_token_list());
-	parse.main_process();
-	if(parse.get_error())
-	{
-		die("parse",inputfile);
-		return;
-	}
-	import.link(parse.get_root());
-	if(import.get_error())
-	{
-		die("import",inputfile);
-		return;
-	}
-	runtime.set_root(import.get_root());
-	runtime.run();
 	return;
 }
 
@@ -176,7 +147,7 @@ int main()
 	system("cls");
 #endif
 	logo();
-	std::cout<<">> Nasal interpreter ver 3.0 .\n";
+	std::cout<<">> Nasal interpreter ver 5.0 .\n";
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
 	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";
 	std::cout<<">> Input \"help\" to get help .\n";
@@ -204,8 +175,6 @@ int main()
 			lex_func();
 		else if(command=="ast")
 			ast_print();
-		else if(command=="run")
-			runtime_start();
 		else if(command=="code")
 			show_bytecode();
 		else if(command=="exec")
