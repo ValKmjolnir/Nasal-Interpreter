@@ -8,9 +8,10 @@
 //     return nil;
 // }
 // builtin function nasal_call_builtin_std_cout is wrapped up by print
-
+std::map<std::string,int> builtin_use_string_table;
 // used to find values that builtin function uses
-#define in_builtin_find(value_name_string) (local_scope_addr>=0?nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(value_name_string):-1)
+#define in_builtin_find(value_name_string)\
+    (local_scope_addr>=0?nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(builtin_use_string_table[value_name_string]):-1)
 // used to check found value's type
 // types are:vm_nil vm_number vm_string vm_vector vm_hash vm_function
 // dynamic values will be generated as vector by the outer function

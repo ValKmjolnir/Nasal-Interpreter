@@ -44,6 +44,12 @@ I refactored parser and make it easier to maintain.
 
 The EBNF is also refactored.
 
+## Version 4.0
+
+Parser in this version will pre-calculate some mathematical equations.
+
+This will make bytecode vm running more quickly.
+
 # Abstract Syntax Tree
 
 ## Version 1.2
@@ -63,6 +69,12 @@ Ast-interpreter uses new techniques so it can run codes more efficiently.
 Now you can add your own functions as builtin-functions in this interpreter!
 
 I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
+
+## Version 5.0
+
+I change my mind.AST interpreter leaves me too much things to do.
+
+If i continue saving this interpreter,it will be harder for me to make the bytecode vm become more efficient.
 
 # Byte Code Interpreter
 
@@ -95,3 +107,9 @@ var (a,b,c)=(1,2,3);
 0x00000005: load   0x00000002  (c)
 0x00000006: nop    0x00000000
 ```
+
+## Version 5.0
+
+I decide to optimize bytecode vm in this version.
+
+Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not efficient at all!

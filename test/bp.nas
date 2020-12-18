@@ -125,6 +125,7 @@ var backward=func(x)
 }
 
 var cnt=0;
+var show=0;
 var error=1e8;
 while(error>0.01)
 {
@@ -136,18 +137,22 @@ while(error>0.01)
         backward(i);
     }
     cnt+=1;
-    print('epoch ',cnt,':',error);
+    show+=1;
+    if(show==100)
+    {
+        show=0;
+        print('epoch ',cnt,':',error);
+    }
 }
 print('\afinished.');
-while(1)
+var vec=[
+    [0,0],
+    [0,1],
+    [1,0],
+    [1,1]
+];
+foreach(var v;vec)
 {
-    var vec=[];
-    var command=input();
-    if(command=="exit")break;
-    append(vec,num(command));
-    command=input();
-    if(command=="exit")break;
-    append(vec,num(command));
-    run(vec);
-    print(output[0].out);
+    run(v);
+    print(v,': ',output[0].out);
 }
