@@ -95,7 +95,6 @@ public:
     ~nasal_bytecode_vm();
     void clear();
     void run(std::vector<std::string>&,std::vector<double>&,std::vector<opcode>&);
-    void nas_switch_threading(std::vector<std::string>&,std::vector<double>&,std::vector<opcode>&);
 };
 
 nasal_bytecode_vm::nasal_bytecode_vm()
@@ -729,17 +728,24 @@ void nasal_bytecode_vm::opr_call()
 {
     int val_addr=-1;
     int name_index=exec_code[ptr].index;
-    if(local_scope_stack.top()>=0)
-        val_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_value_address(name_index);
-    if(val_addr<0)
-        val_addr=vm.gc_get(global_scope_addr).get_closure().get_value_address(name_index);
-    if(val_addr<0)
+    int local_scope_top=local_scope_stack.top();
+    if(local_scope_top>=0)
+        val_addr=vm.gc_get(local_scope_top).get_closure().get_value_address(name_index);
+    if(val_addr>=0)
     {
-        die("call: cannot find symbol named \""+string_table[name_index]+"\"");
+        vm.add_reference(val_addr);
+        *(++value_stack_top)=val_addr;
         return;
     }
-    vm.add_reference(val_addr);
-    *(++value_stack_top)=val_addr;
+    else
+        val_addr=vm.gc_get(global_scope_addr).get_closure().get_value_address(name_index);
+    if(val_addr>=0)
+    {
+        vm.add_reference(val_addr);
+        *(++value_stack_top)=val_addr;
+        return;
+    }
+    die("call: cannot find symbol named \""+string_table[name_index]+"\"");
     return;
 }
 void nasal_bytecode_vm::opr_callv()
@@ -751,27 +757,16 @@ void nasal_bytecode_vm::opr_callv()
     {
         int num=vm.gc_get(val_addr).to_number();
         int res=vm.gc_get(vec_addr).get_vector().get_value_address(num);
-        if(res<0)
+        if(res>=0)
+        {
+            vm.add_reference(res);
+            *(++value_stack_top)=res;
+        }
+        else
         {
             die("callv: index out of range");
             return;
         }
-        vm.add_reference(res);
-        *(++value_stack_top)=res;
-    }
-    else if(type==vm_string)
-    {
-        std::string str=vm.gc_get(vec_addr).get_string();
-        int num=vm.gc_get(val_addr).to_number();
-        int str_size=str.length();
-        if(num<-str_size || num>=str_size)
-        {
-            die("callv: index out of range");
-            return;
-        }
-        int res=vm.gc_alloc(vm_number);
-        vm.gc_get(res).set_number((double)str[(num+str_size)%str_size]);
-        *(++value_stack_top)=res;
     }
     else if(type==vm_hash)
     {
@@ -792,6 +787,20 @@ void nasal_bytecode_vm::opr_callv()
             vm.add_reference(val_addr);
         }
         vm.add_reference(res);
+        *(++value_stack_top)=res;
+    }
+    else if(type==vm_string)
+    {
+        std::string str=vm.gc_get(vec_addr).get_string();
+        int num=vm.gc_get(val_addr).to_number();
+        int str_size=str.length();
+        if(num<-str_size || num>=str_size)
+        {
+            die("callv: index out of range");
+            return;
+        }
+        int res=vm.gc_alloc(vm_number);
+        vm.gc_get(res).set_number((double)str[num>=0? num:num+str_size]);
         *(++value_stack_top)=res;
     }
     vm.del_reference(val_addr);
@@ -825,12 +834,13 @@ void nasal_bytecode_vm::opr_callh()
         return;
     }
     int res=vm.gc_get(val_addr).get_hash().get_value_address(string_table[exec_code[ptr].index]);
-    if(res<0)
+    if(res>=0)
+        vm.add_reference(res);
+    else
     {
         die("callh: hash member \""+string_table[exec_code[ptr].index]+"\" does not exist");
         return;
     }
-    vm.add_reference(res);
     if(vm.gc_get(res).get_type()==vm_function)
         vm.gc_get(vm.gc_get(res).get_func().get_closure_addr()).get_closure().add_new_value(me_index,val_addr);
     else
@@ -931,8 +941,9 @@ void nasal_bytecode_vm::opr_builtincall()
 void nasal_bytecode_vm::opr_slicebegin()
 {
     slice_stack.push(vm.gc_alloc(vm_vector));
-    if(vm.gc_get(*value_stack_top).get_type()!=vm_vector)
-        die("slcbegin: must slice a vector");
+    if(vm.gc_get(*value_stack_top).get_type()==vm_vector)
+        return;
+    die("slcbegin: must slice a vector");
     return;
 }
 void nasal_bytecode_vm::opr_sliceend()
@@ -954,14 +965,14 @@ void nasal_bytecode_vm::opr_slice()
         default:die("slc: error value type");break;
     }
     int res=vm.gc_get(*value_stack_top).get_vector().get_value_address((int)num);
-    if(res<0)
+    if(res>=0)
     {
-        die("slc: index out of range");
+        vm.add_reference(res);
+        vm.gc_get(slice_stack.top()).get_vector().add_elem(res);
+        vm.del_reference(val_addr);
         return;
     }
-    vm.add_reference(res);
-    vm.gc_get(slice_stack.top()).get_vector().add_elem(res);
-    vm.del_reference(val_addr);
+    die("slc: index out of range");
     return;
 }
 void nasal_bytecode_vm::opr_slice2()
@@ -1023,13 +1034,22 @@ void nasal_bytecode_vm::opr_mcall()
 {
     int* mem_addr=NULL;
     int name_index=exec_code[ptr].index;
-    if(local_scope_stack.top()>=0)
-        mem_addr=vm.gc_get(local_scope_stack.top()).get_closure().get_mem_address(name_index);
-    if(!mem_addr)
+    int local_scope_top=local_scope_stack.top();
+    if(local_scope_top>=0)
+        mem_addr=vm.gc_get(local_scope_top).get_closure().get_mem_address(name_index);
+    if(mem_addr)
+    {
+        pointer_stack.push(mem_addr);
+        return;
+    }
+    else
         mem_addr=vm.gc_get(global_scope_addr).get_closure().get_mem_address(name_index);
-    if(!mem_addr)
-        die("mcall: cannot find symbol named \""+string_table[name_index]+"\"");
-    pointer_stack.push(mem_addr);
+    if(mem_addr)
+    {
+        pointer_stack.push(mem_addr);
+        return;
+    }
+    die("mcall: cannot find symbol named \""+string_table[name_index]+"\"");
     return;
 }
 void nasal_bytecode_vm::opr_mcallv()
@@ -1038,11 +1058,6 @@ void nasal_bytecode_vm::opr_mcallv()
     int* vec_addr=pointer_stack.top();
     pointer_stack.pop();
     int type=vm.gc_get(*vec_addr).get_type();
-    if(type==vm_string)
-    {
-        die("mcallv: cannot get memory space in a string");
-        return;
-    }
     if(type==vm_vector)
     {
         int num;
@@ -1076,6 +1091,11 @@ void nasal_bytecode_vm::opr_mcallv()
             res=ref.get_mem_address(str);
         }
         pointer_stack.push(res);
+    }
+    else
+    {
+        die("mcallv: cannot get memory space in a string");
+        return;
     }
     vm.del_reference(val_addr);
     return;
