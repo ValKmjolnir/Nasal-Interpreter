@@ -1061,10 +1061,7 @@ nasal_ast nasal_parse::unary()
     if(node.get_children()[0].get_type()==ast_number)
     {
         double num=node.get_children()[0].get_num();
-        if(node.get_type()==ast_unary_not)
-            num=(!num);
-        else
-            num=-num;
+        num=(node.get_type()==ast_unary_not?(!num):-num);
         node.set_type(ast_number);
         node.set_num(num);
         node.get_children().clear();

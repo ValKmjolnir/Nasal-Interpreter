@@ -114,8 +114,8 @@ protected:
         nasal_function* func;
         nasal_closure* cls;
     }ptr;
-    
 public:
+    int ref_cnt;
     nasal_scalar();
     ~nasal_scalar();
     void clear();
@@ -135,20 +135,10 @@ public:
 
 class nasal_virtual_machine
 {
-    struct gc_unit
-    {
-        int ref_cnt;
-        nasal_scalar elem;
-        gc_unit()
-        {
-            ref_cnt=0;
-            return;
-        }
-    };
 private:
     nasal_scalar error_returned_value;
     std::queue<int> garbage_collector_free_space;
-    std::vector<gc_unit*> garbage_collector_memory;
+    std::vector<nasal_scalar*> garbage_collector_memory;
 public:
     ~nasal_virtual_machine();
     void clear();
@@ -646,10 +636,7 @@ nasal_virtual_machine::~nasal_virtual_machine()
     int gc_mem_size=garbage_collector_memory.size();
     for(int i=0;i<gc_mem_size;++i)
         if(garbage_collector_memory[i]->ref_cnt)
-        {
-            garbage_collector_memory[i]->ref_cnt=0;
-            garbage_collector_memory[i]->elem.clear();
-        }
+            garbage_collector_memory[i]->clear();
     for(int i=0;i<gc_mem_size;++i)
         delete garbage_collector_memory[i];
     while(!garbage_collector_free_space.empty())
@@ -664,11 +651,11 @@ void nasal_virtual_machine::debug()
         if(garbage_collector_memory[i]->ref_cnt)
         {
             std::cout<<">> [debug] "<<i<<": "<<garbage_collector_memory[i]->ref_cnt<<" ";
-            switch(garbage_collector_memory[i]->elem.get_type())
+            switch(garbage_collector_memory[i]->get_type())
             {
                 case vm_nil:std::cout<<"nil";break;
-                case vm_number:std::cout<<"number "<<garbage_collector_memory[i]->elem.get_number();break;
-                case vm_string:std::cout<<"string "<<garbage_collector_memory[i]->elem.get_string();break;
+                case vm_number:std::cout<<"number "<<garbage_collector_memory[i]->get_number();break;
+                case vm_string:std::cout<<"string "<<garbage_collector_memory[i]->get_string();break;
                 case vm_vector:std::cout<<"vector";break;
                 case vm_hash:std::cout<<"hash";break;
                 case vm_function:std::cout<<"function";break;
@@ -683,10 +670,7 @@ void nasal_virtual_machine::clear()
     int gc_mem_size=garbage_collector_memory.size();
     for(int i=0;i<gc_mem_size;++i)
         if(garbage_collector_memory[i]->ref_cnt)
-        {
-            garbage_collector_memory[i]->ref_cnt=0;
-            garbage_collector_memory[i]->elem.clear();
-        }
+            garbage_collector_memory[i]->clear();
     for(int i=0;i<gc_mem_size;++i)
         delete garbage_collector_memory[i];
     while(!garbage_collector_free_space.empty())
@@ -699,41 +683,41 @@ int nasal_virtual_machine::gc_alloc(int val_type)
     if(garbage_collector_free_space.empty())
     {
         int mem_size=garbage_collector_memory.size();
-        gc_unit* new_unit=new gc_unit;
+        nasal_scalar* new_unit=new nasal_scalar;
         garbage_collector_memory.push_back(new_unit);
         int ret=mem_size;
         new_unit->ref_cnt=1;
-        new_unit->elem.set_type(val_type,*this);
+        new_unit->set_type(val_type,*this);
         return ret;
     }
     int ret=garbage_collector_free_space.front();
-    gc_unit& unit_ref=*garbage_collector_memory[ret];
+    nasal_scalar& unit_ref=*garbage_collector_memory[ret];
     unit_ref.ref_cnt=1;
-    unit_ref.elem.set_type(val_type,*this);
+    unit_ref.set_type(val_type,*this);
     garbage_collector_free_space.pop();
     return ret;
 }
 nasal_scalar& nasal_virtual_machine::gc_get(int value_address)
 {
-    if(0<=value_address)
-        return garbage_collector_memory[value_address]->elem;
+    if(value_address>=0)
+        return *garbage_collector_memory[value_address];
     return error_returned_value;
 }
 void nasal_virtual_machine::add_reference(int value_address)
 {
-    if(0<=value_address)
+    if(value_address>=0)
         ++garbage_collector_memory[value_address]->ref_cnt;
     return;
 }
 void nasal_virtual_machine::del_reference(int value_address)
 {
-    if(0<=value_address)
+    if(value_address>=0)
         --garbage_collector_memory[value_address]->ref_cnt;
     else
         return;
     if(!garbage_collector_memory[value_address]->ref_cnt)
     {
-        garbage_collector_memory[value_address]->elem.clear();
+        garbage_collector_memory[value_address]->clear();
         garbage_collector_free_space.push(value_address);
     }
     return;
