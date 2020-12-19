@@ -10,59 +10,58 @@
 // builtin function nasal_call_builtin_std_cout is wrapped up by print
 std::map<std::string,int> builtin_use_string_table;
 // used to find values that builtin function uses
-#define in_builtin_find(value_name_string)\
-    (local_scope_addr>=0?nasal_vm.gc_get(local_scope_addr).get_closure().get_value_address(builtin_use_string_table[value_name_string]):-1)
+#define in_builtin_find(value_name_string) (local_scope_addr->get_closure().get_value_address(builtin_use_string_table[value_name_string]))
 // used to check found value's type
 // types are:vm_nil vm_number vm_string vm_vector vm_hash vm_function
 // dynamic values will be generated as vector by the outer function
-#define in_builtin_check(value_addr,value_type) (nasal_vm.gc_get(value_addr).get_type()==(value_type))
+#define in_builtin_check(value_addr,value_type) (value_addr->get_type()==(value_type))
 
 // declaration of builtin functions
 // to add new builtin function,declare it here and write the definition below
-int builtin_print(int,nasal_virtual_machine&);
-int builtin_append(int,nasal_virtual_machine&);
-int builtin_setsize(int,nasal_virtual_machine&);
-int builtin_system(int,nasal_virtual_machine&);
-int builtin_input(int,nasal_virtual_machine&);
-int builtin_sleep(int,nasal_virtual_machine&);
-int builtin_finput(int,nasal_virtual_machine&);
-int builtin_foutput(int,nasal_virtual_machine&);
-int builtin_split(int,nasal_virtual_machine&);
-int builtin_rand(int,nasal_virtual_machine&);
-int builtin_id(int,nasal_virtual_machine&);
-int builtin_int(int,nasal_virtual_machine&);
-int builtin_num(int,nasal_virtual_machine&);
-int builtin_pop(int,nasal_virtual_machine&);
-int builtin_str(int,nasal_virtual_machine&);
-int builtin_size(int,nasal_virtual_machine&);
-int builtin_xor(int,nasal_virtual_machine&);
-int builtin_and(int,nasal_virtual_machine&);
-int builtin_or(int,nasal_virtual_machine&);
-int builtin_nand(int,nasal_virtual_machine&);
-int builtin_not(int,nasal_virtual_machine&);
-int builtin_sin(int,nasal_virtual_machine&);
-int builtin_cos(int,nasal_virtual_machine&);
-int builtin_tan(int,nasal_virtual_machine&);
-int builtin_exp(int,nasal_virtual_machine&);
-int builtin_ln(int,nasal_virtual_machine&);
-int builtin_sqrt(int,nasal_virtual_machine&);
-int builtin_atan2(int,nasal_virtual_machine&);
-int builtin_time(int,nasal_virtual_machine&);
-int builtin_contains(int,nasal_virtual_machine&);
-int builtin_delete(int,nasal_virtual_machine&);
-int builtin_getkeys(int,nasal_virtual_machine&);
-int builtin_import(int,nasal_virtual_machine&);
-bool builtin_die_state;// used in builtin_die
-int builtin_die(int,nasal_virtual_machine&);
-int builtin_type(int,nasal_virtual_machine&);
-int builtin_substr(int,nasal_virtual_machine&);
+nasal_scalar* builtin_print(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_append(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_setsize(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_system(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_input(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_sleep(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_finput(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_foutput(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_split(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_rand(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_id(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_int(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_num(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_pop(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_str(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_size(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_xor(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_and(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_or(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_nand(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_not(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_sin(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_cos(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_tan(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_exp(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_ln(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_sqrt(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_atan2(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_time(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_contains(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_delete(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_getkeys(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_import(nasal_scalar*,nasal_virtual_machine&);
+bool          builtin_die_state;// used in builtin_die
+nasal_scalar* builtin_die(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_type(nasal_scalar*,nasal_virtual_machine&);
+nasal_scalar* builtin_substr(nasal_scalar*,nasal_virtual_machine&);
 
 // register builtin function's name and it's address here in this table below
 // this table must and with {"",NULL}
 struct FUNC_TABLE
 {
     std::string func_name;
-    int (*func_pointer)(int x,nasal_virtual_machine& nasal_vm);
+    nasal_scalar* (*func_pointer)(nasal_scalar* x,nasal_virtual_machine& nasal_vm);
 } builtin_func_table[]=
 {
     {"nasal_call_builtin_std_cout",      builtin_print},
@@ -104,129 +103,110 @@ struct FUNC_TABLE
     {"",                                 NULL}
 };
 
-int builtin_print(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_print(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     // get arguments
-    int vector_value_addr=in_builtin_find("elements");
-    if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
+    nasal_scalar* vector_value_addr=in_builtin_find("elements");
+    if(!in_builtin_check(vector_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_print: \"elements\" has wrong value type(must be vector).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_print: \"elements\" has wrong value type(must be vector).\n";
+        return NULL;
     }
     // main process
-    nasal_vector& ref_vec=nasal_vm.gc_get(vector_value_addr).get_vector();
+    nasal_vector& ref_vec=vector_value_addr->get_vector();
     int size=ref_vec.size();
     for(int i=0;i<size;++i)
     {
-        nasal_scalar& tmp=nasal_vm.gc_get(ref_vec.get_value_address(i));
-        switch(tmp.get_type())
+        nasal_scalar* tmp=ref_vec.get_value_address(i);
+        switch(tmp->get_type())
         {
-            case vm_nil:std::cout<<"nil";break;
-            case vm_number:std::cout<<tmp.get_number();break;
-            case vm_string:std::cout<<tmp.get_string();break;
-            case vm_vector:tmp.get_vector().print();break;
-            case vm_hash:tmp.get_hash().print();break;
-            case vm_function:std::cout<<"func(...){...}";break;
+            case vm_nil:      std::cout<<"nil";             break;
+            case vm_number:   std::cout<<tmp->get_number(); break;
+            case vm_string:   std::cout<<tmp->get_string(); break;
+            case vm_vector:   tmp->get_vector().print();    break;
+            case vm_hash:     tmp->get_hash().print();      break;
+            case vm_function: std::cout<<"func(...){...}";  break;
         }
     }
     std::cout<<"\n";
     // generate return value
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_append(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_append(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int vector_value_addr=in_builtin_find("vector");
-    int elem_value_addr=in_builtin_find("elements");
-    if(vector_value_addr<0 || !in_builtin_check(vector_value_addr,vm_vector))
+    nasal_scalar* vector_value_addr=in_builtin_find("vector");
+    nasal_scalar* elem_value_addr=in_builtin_find("elements");
+    if(!in_builtin_check(vector_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_append: \"vector\" has wrong value type(must be vector).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_append: \"vector\" has wrong value type(must be vector).\n";
+        return NULL;
     }
-    if(elem_value_addr<0 || !in_builtin_check(elem_value_addr,vm_vector))
+    if(!in_builtin_check(elem_value_addr,vm_vector))
     {
-        std::cout<<">> [runtime] builtin_append: \"elements\" has wrong value type(must be vector).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_append: \"elements\" has wrong value type(must be vector).\n";
+        return NULL;
     }
-    nasal_vector& ref_vector=nasal_vm.gc_get(vector_value_addr).get_vector();
-    nasal_vector& ref_elements=nasal_vm.gc_get(elem_value_addr).get_vector();
+    nasal_vector& ref_vector=vector_value_addr->get_vector();
+    nasal_vector& ref_elements=elem_value_addr->get_vector();
     int size=ref_elements.size();
     for(int i=0;i<size;++i)
     {
-        int value_address=ref_elements.get_value_address(i);
+        nasal_scalar* value_address=ref_elements.get_value_address(i);
         nasal_vm.add_reference(value_address);
         ref_vector.add_elem(value_address);
     }
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_setsize(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_setsize(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int vector_value_addr=in_builtin_find("vector");
-    int size_value_addr=in_builtin_find("size");
-    if(vector_value_addr<0 || nasal_vm.gc_get(vector_value_addr).get_type()!=vm_vector)
+    nasal_scalar* vector_value_addr=in_builtin_find("vector");
+    nasal_scalar* size_value_addr=in_builtin_find("size");
+    if(vector_value_addr->get_type()!=vm_vector)
     {
-        std::cout<<">> [runtime] builtin_setsize: \"vector\" has wrong value type(must be vector).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_setsize: \"vector\" has wrong value type(must be vector).\n";
+        return NULL;
     }
-    if(size_value_addr<0)
-    {
-        std::cout<<">> [runtime] builtin_setsize: \"size\" has wrong value type(must be string or number).\n";
-        return -1;
-    }
-    int type=nasal_vm.gc_get(size_value_addr).get_type();
+    int type=size_value_addr->get_type();
     if(type!=vm_number && type!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_setsize: size is not a number.\n";
-        return -1;
+        std::cout<<">> [vm] builtin_setsize: size is not a number.\n";
+        return NULL;
     }
-    int number;
-    if(type==vm_number)
-        number=(int)nasal_vm.gc_get(size_value_addr).get_number();
-    else
-    {
-        std::string str=nasal_vm.gc_get(size_value_addr).get_string();
-        double tmp=trans_string_to_number(str);
-        if(std::isnan(tmp))
-        {
-            std::cout<<">> [runtime] builtin_setsize: size is not a numerable string.\n";
-            return -1;
-        }
-        number=(int)tmp;
-    }
+    int number=size_value_addr->to_number();
     if(number<0)
     {
-        std::cout<<">> [runtime] builtin_setsize: size must be greater than -1.\n";
-        return -1;
+        std::cout<<">> [vm] builtin_setsize: size must be greater than NULL.\n";
+        return NULL;
     }
-    nasal_vector& ref_vector=nasal_vm.gc_get(vector_value_addr).get_vector();
+    nasal_vector& ref_vector=vector_value_addr->get_vector();
     int vec_size=ref_vector.size();
     if(number<vec_size)
         for(int i=number;i<vec_size;++i)
         {
-            int addr=ref_vector.del_elem();
-            if(addr>=0)
-                nasal_vm.del_reference(addr);
+            nasal_scalar* addr=ref_vector.del_elem();
+            if(addr) nasal_vm.del_reference(addr);
         }
     else if(number>vec_size)
         for(int i=vec_size;i<number;++i)
         {
-            int new_val_addr=nasal_vm.gc_alloc(vm_nil);
+            nasal_scalar* new_val_addr=nasal_vm.gc_alloc(vm_nil);
             ref_vector.add_elem(new_val_addr);
         }
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
-int builtin_system(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_system(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int str_value_addr=in_builtin_find("str");
-    if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
+    nasal_scalar* str_value_addr=in_builtin_find("str");
+    if(str_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_system: \"str\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_system: \"str\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    std::string str=nasal_vm.gc_get(str_value_addr).get_string();
+    std::string str=str_value_addr->get_string();
     int size=str.length();
     char* command=new char[size+1];
     for(int i=0;i<size;++i)
@@ -234,54 +214,55 @@ int builtin_system(int local_scope_addr,nasal_virtual_machine& nasal_vm)
     command[size]='\0';
     system(command);
     delete []command;
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
-int builtin_input(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_input(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int ret_addr=nasal_vm.gc_alloc(vm_string);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
     std::string str;
     std::cin>>str;
-    nasal_vm.gc_get(ret_addr).set_string(str);
+    ret_addr->set_string(str);
     return ret_addr;
 }
 
-int builtin_sleep(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_sleep(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("duration");
-    if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_string && nasal_vm.gc_get(value_addr).get_type()!=vm_number))
+    nasal_scalar* value_addr=in_builtin_find("duration");
+    if(value_addr->get_type()!=vm_string && value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_sleep: \"duration\" has wrong value type(must be string or number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_sleep: \"duration\" has wrong value type(must be string or number).\n";
+        return NULL;
     }
     unsigned long sleep_time=0;
-    if(nasal_vm.gc_get(value_addr).get_type()==vm_string)
+    if(value_addr->get_type()==vm_string)
     {
-        std::string str=nasal_vm.gc_get(value_addr).get_string();
+        std::string str=value_addr->get_string();
         double number=trans_string_to_number(str);
         if(std::isnan(number))
         {
-            std::cout<<">> [runtime] builtin_sleep: this is not a numerable string.\n";
-            return -1;
-        }sleep_time=(unsigned long)number;
+            std::cout<<">> [vm] builtin_sleep: this is not a numerable string.\n";
+            return NULL;
+        }
+        sleep_time=(unsigned long)number;
     }
     else
-        sleep_time=(unsigned long)nasal_vm.gc_get(value_addr).get_number();
+        sleep_time=(unsigned long)value_addr->get_number();
     sleep(sleep_time); // sleep in unistd.h will make this progress sleep sleep_time seconds.
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
-int builtin_finput(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_finput(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("filename");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    nasal_scalar* value_addr=in_builtin_find("filename");
+    if(value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_finput: \"filename\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_finput: \"filename\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    std::string filename=nasal_vm.gc_get(value_addr).get_string();
+    std::string filename=value_addr->get_string();
     std::ifstream fin(filename);
     std::string file_content="";
     if(!fin.fail())
@@ -295,55 +276,55 @@ int builtin_finput(int local_scope_addr,nasal_virtual_machine& nasal_vm)
     else
         file_content="";
     fin.close();
-    int ret_addr=nasal_vm.gc_alloc(vm_string);
-    nasal_vm.gc_get(ret_addr).set_string(file_content);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
+    ret_addr->set_string(file_content);
     return ret_addr;
 }
 
-int builtin_foutput(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_foutput(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("filename");
-    int str_value_addr=in_builtin_find("str");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_string)
+    nasal_scalar* value_addr=in_builtin_find("filename");
+    nasal_scalar* str_value_addr=in_builtin_find("str");
+    if(value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_foutput: \"filename\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_foutput: \"filename\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    if(str_value_addr<0 || nasal_vm.gc_get(str_value_addr).get_type()!=vm_string)
+    if(str_value_addr<0 || str_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_foutput: \"str\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_foutput: \"str\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    std::string filename=nasal_vm.gc_get(value_addr).get_string();
-    std::string file_content=nasal_vm.gc_get(str_value_addr).get_string();
+    std::string filename=value_addr->get_string();
+    std::string file_content=str_value_addr->get_string();
     std::ofstream fout(filename);
     fout<<file_content;
     fout.close();
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 
-int builtin_split(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_split(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int delimeter_value_addr=in_builtin_find("delimeter");
-    int string_value_addr=in_builtin_find("string");
-    if(delimeter_value_addr<0 || nasal_vm.gc_get(delimeter_value_addr).get_type()!=vm_string)
+    nasal_scalar* delimeter_value_addr=in_builtin_find("delimeter");
+    nasal_scalar* string_value_addr=in_builtin_find("string");
+    if(delimeter_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_split: \"delimeter\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_split: \"delimeter\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    if(string_value_addr<0 || nasal_vm.gc_get(string_value_addr).get_type()!=vm_string)
+    if(string_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [runtime] builtin_split: \"string\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_split: \"string\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    std::string delimeter=nasal_vm.gc_get(delimeter_value_addr).get_string();
-    std::string source=nasal_vm.gc_get(string_value_addr).get_string();
+    std::string delimeter=delimeter_value_addr->get_string();
+    std::string source=string_value_addr->get_string();
     int delimeter_len=delimeter.length();
     int source_len=source.length();
 
-    int ret_addr=nasal_vm.gc_alloc(vm_vector);
-    nasal_vector& ref_vec=nasal_vm.gc_get(ret_addr).get_vector();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_vector);
+    nasal_vector& ref_vec=ret_addr->get_vector();
     std::string tmp="";
 
     if(!delimeter_len)
@@ -351,8 +332,8 @@ int builtin_split(int local_scope_addr,nasal_virtual_machine& nasal_vm)
         for(int i=0;i<source_len;++i)
         {
             tmp+=source[i];
-            int str_addr=nasal_vm.gc_alloc(vm_string);
-            nasal_vm.gc_get(str_addr).set_string(tmp);
+            nasal_scalar* str_addr=nasal_vm.gc_alloc(vm_string);
+            str_addr->set_string(tmp);
             ref_vec.add_elem(str_addr);
             tmp="";
         }
@@ -372,8 +353,8 @@ int builtin_split(int local_scope_addr,nasal_virtual_machine& nasal_vm)
             }
         if(check_delimeter)
         {
-            int str_addr=nasal_vm.gc_alloc(vm_string);
-            nasal_vm.gc_get(str_addr).set_string(tmp);
+            nasal_scalar* str_addr=nasal_vm.gc_alloc(vm_string);
+            str_addr->set_string(tmp);
             ref_vec.add_elem(str_addr);
             tmp="";
             i+=delimeter_len-1;
@@ -383,456 +364,442 @@ int builtin_split(int local_scope_addr,nasal_virtual_machine& nasal_vm)
     }
     if(tmp.length())
     {
-        int str_addr=nasal_vm.gc_alloc(vm_string);
-        nasal_vm.gc_get(str_addr).set_string(tmp);
+        nasal_scalar* str_addr=nasal_vm.gc_alloc(vm_string);
+        str_addr->set_string(tmp);
         ref_vec.add_elem(str_addr);
         tmp="";
     }
     return ret_addr;
 }
-int builtin_rand(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_rand(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("seed");
-    if(value_addr<0 || (nasal_vm.gc_get(value_addr).get_type()!=vm_number && nasal_vm.gc_get(value_addr).get_type()!=vm_nil))
+    nasal_scalar* value_addr=in_builtin_find("seed");
+    if(value_addr->get_type()!=vm_number && value_addr->get_type()!=vm_nil)
     {
-        std::cout<<">> [runtime] builtin_rand: \"seed\" has wrong value type(must be nil or number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_rand: \"seed\" has wrong value type(must be nil or number).\n";
+        return NULL;
     }
-    if(nasal_vm.gc_get(value_addr).get_type()==vm_number)
+    if(value_addr->get_type()==vm_number)
     {
-        unsigned int number=(unsigned int)nasal_vm.gc_get(value_addr).get_number();
+        unsigned int number=(unsigned int)value_addr->get_number();
         srand(number);
-        int ret_addr=nasal_vm.gc_alloc(vm_nil);
+        nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
         return ret_addr;
     }
     double num=0;
     for(int i=0;i<5;++i)
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(num);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(num);
     return ret_addr;
 }
-int builtin_id(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_id(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("thing");
-    if(value_addr<0)
-    {
-        std::cout<<">> [runtime] builtin_id: cannot find \"thing\".\n";
-        return -1;
-    }
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)value_addr);
+    nasal_scalar* value_addr=in_builtin_find("thing");
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
+    char buf[32];
+    sprintf(buf,"0x%p",value_addr);
+    ret_addr->set_string(buf);
     return ret_addr;
 }
-int builtin_int(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_int(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("value");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("value");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_int: \"value\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_int: \"value\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number=(int)nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)number);
+    int number=(int)value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)number);
     return ret_addr;
 }
-int builtin_num(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_num(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("value");
-    if(value_addr<0 || !in_builtin_check(value_addr,vm_string))
+    nasal_scalar* value_addr=in_builtin_find("value");
+    if(!in_builtin_check(value_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_num: \"value\" has wrong value type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_num: \"value\" has wrong value type(must be string).\n";
+        return NULL;
     }
-    std::string str=nasal_vm.gc_get(value_addr).get_string();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(trans_string_to_number(str));
+    std::string str=value_addr->get_string();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(trans_string_to_number(str));
     return ret_addr;
 }
-int builtin_pop(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_pop(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("vector");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_vector)
+    nasal_scalar* value_addr=in_builtin_find("vector");
+    if(value_addr->get_type()!=vm_vector)
     {
-        std::cout<<">> [runtime] builtin_pop: \"vector\" has wrong value type(must be vector).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_pop: \"vector\" has wrong value type(must be vector).\n";
+        return NULL;
     }
-    int ret_addr=nasal_vm.gc_get(value_addr).get_vector().del_elem();
+    nasal_scalar* ret_addr=value_addr->get_vector().del_elem();
     return ret_addr;
 }
-int builtin_str(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_str(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("number");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("number");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_str: \"number\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_str: \"number\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_string(trans_number_to_string(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_string(trans_number_to_string(number));
     return ret_addr;
 }
-int builtin_size(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_size(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("object");
-    if(value_addr<0)
-    {
-        std::cout<<">> [runtime] builtin_size: cannot find value \"object\".\n";
-        return -1;
-    }
-    int type=nasal_vm.gc_get(value_addr).get_type();
+    nasal_scalar* value_addr=in_builtin_find("object");
+    int type=value_addr->get_type();
     int number=-1;
     switch(type)
     {
         case vm_nil:
         case vm_number:
-        case vm_function:
-        case vm_closure:break;
-        case vm_string:number=nasal_vm.gc_get(value_addr).get_string().length();break;
-        case vm_vector:number=nasal_vm.gc_get(value_addr).get_vector().size();break;
-        case vm_hash:number=nasal_vm.gc_get(value_addr).get_hash().size();break;
+        case vm_function: 
+        case vm_closure: return nasal_vm.gc_alloc(vm_nil);         break;
+        case vm_string:  number=value_addr->get_string().length(); break;
+        case vm_vector:  number=value_addr->get_vector().size();   break;
+        case vm_hash:    number=value_addr->get_hash().size();     break;
     }
-    int ret_addr=-1;
-    if(number<0)
-        ret_addr=nasal_vm.gc_alloc(vm_nil);
-    else
-    {
-        ret_addr=nasal_vm.gc_alloc(vm_number);
-        nasal_vm.gc_get(ret_addr).set_number((double)number);
-    }
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)number);
     return ret_addr;
 }
-int builtin_xor(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_xor(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int a_addr=in_builtin_find("a");
-    int b_addr=in_builtin_find("b");
-    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    nasal_scalar* a_addr=in_builtin_find("a");
+    nasal_scalar* b_addr=in_builtin_find("b");
+    if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_xor: \"a\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_xor: \"a\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_xor: \"b\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_xor: \"b\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
-    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)(number_a^number_b));
+    int number_a=(int)a_addr->get_number();
+    int number_b=(int)b_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)(number_a^number_b));
     return ret_addr;
 }
-int builtin_and(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_and(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int a_addr=in_builtin_find("a");
-    int b_addr=in_builtin_find("b");
-    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    nasal_scalar* a_addr=in_builtin_find("a");
+    nasal_scalar* b_addr=in_builtin_find("b");
+    if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_and: \"a\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_and: \"a\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_and: \"b\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_and: \"b\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
-    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)(number_a&number_b));
+    int number_a=(int)a_addr->get_number();
+    int number_b=(int)b_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)(number_a&number_b));
     return ret_addr;
 }
-int builtin_or(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_or(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int a_addr=in_builtin_find("a");
-    int b_addr=in_builtin_find("b");
-    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    nasal_scalar* a_addr=in_builtin_find("a");
+    nasal_scalar* b_addr=in_builtin_find("b");
+    if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_or: \"a\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_or: \"a\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_or: \"b\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_or: \"b\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
-    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)(number_a|number_b));
+    int number_a=(int)a_addr->get_number();
+    int number_b=(int)b_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)(number_a|number_b));
     return ret_addr;
 }
-int builtin_nand(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_nand(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int a_addr=in_builtin_find("a");
-    int b_addr=in_builtin_find("b");
-    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    nasal_scalar* a_addr=in_builtin_find("a");
+    nasal_scalar* b_addr=in_builtin_find("b");
+    if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_nand: \"a\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_nand: \"a\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    if(b_addr<0 || nasal_vm.gc_get(b_addr).get_type()!=vm_number)
+    if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_nand: \"b\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_nand: \"b\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number_a=(int)nasal_vm.gc_get(a_addr).get_number();
-    int number_b=(int)nasal_vm.gc_get(b_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)(~(number_a&number_b)));
+    int number_a=(int)a_addr->get_number();
+    int number_b=(int)b_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)(~(number_a&number_b)));
     return ret_addr;
 }
-int builtin_not(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_not(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int a_addr=in_builtin_find("a");
-    if(a_addr<0 || nasal_vm.gc_get(a_addr).get_type()!=vm_number)
+    nasal_scalar* a_addr=in_builtin_find("a");
+    if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_not: \"a\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_not: \"a\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    int number=(int)nasal_vm.gc_get(a_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)(~number));
+    int number=(int)a_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)(~number));
     return ret_addr;
 }
-int builtin_sin(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_sin(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_sin: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_sin: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(sin(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(sin(number));
     return ret_addr;
 }
-int builtin_cos(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_cos(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_cos: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_cos: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(cos(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(cos(number));
     return ret_addr;
 }
-int builtin_tan(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_tan(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_tan: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_tan: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(tan(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(tan(number));
     return ret_addr;
 }
-int builtin_exp(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_exp(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_exp: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_exp: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(exp(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(exp(number));
     return ret_addr;
 }
-int builtin_ln(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_ln(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_ln: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_ln: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(log(number)/log(2.7182818284590452354));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(log(number)/log(2.7182818284590452354));
     return ret_addr;
 }
-int builtin_sqrt(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_sqrt(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("x");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("x");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_sqrt: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_sqrt: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double number=nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(sqrt(number));
+    double number=value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(sqrt(number));
     return ret_addr;
 }
-int builtin_atan2(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_atan2(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int x_value_addr=in_builtin_find("x");
-    int y_value_addr=in_builtin_find("y");
-    if(x_value_addr<0 || nasal_vm.gc_get(x_value_addr).get_type()!=vm_number)
+    nasal_scalar* x_value_addr=in_builtin_find("x");
+    nasal_scalar* y_value_addr=in_builtin_find("y");
+    if(x_value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_atan2: \"x\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_atan2: \"x\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    if(y_value_addr<0 || nasal_vm.gc_get(y_value_addr).get_type()!=vm_number)
+    if(y_value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_atan2: \"y\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_atan2: \"y\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    double x=nasal_vm.gc_get(x_value_addr).get_number();
-    double y=nasal_vm.gc_get(y_value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number(atan2(y,x));
+    double x=x_value_addr->get_number();
+    double y=y_value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number(atan2(y,x));
     return ret_addr;
 }
-int builtin_time(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_time(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("begin_time");
-    if(value_addr<0 || nasal_vm.gc_get(value_addr).get_type()!=vm_number)
+    nasal_scalar* value_addr=in_builtin_find("begin_time");
+    if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [runtime] builtin_time: \"begin_time\" has wrong value type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_time: \"begin_time\" has wrong value type(must be number).\n";
+        return NULL;
     }
-    time_t begin_time=(time_t)nasal_vm.gc_get(value_addr).get_number();
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)time(&begin_time));
+    time_t begin_time=(time_t)value_addr->get_number();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)time(&begin_time));
     return ret_addr;
 }
-int builtin_contains(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_contains(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int hash_addr=in_builtin_find("hash");
-    int key_addr=in_builtin_find("key");
-    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    nasal_scalar* hash_addr=in_builtin_find("hash");
+    nasal_scalar* key_addr=in_builtin_find("key");
+    if(!in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_contains: \"hash\" has wrong type(must be hash).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_contains: \"hash\" has wrong type(must be hash).\n";
+        return NULL;
     }
-    if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
+    if(!in_builtin_check(key_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_contains: \"key\" has wrong type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_contains: \"key\" has wrong type(must be string).\n";
+        return NULL;
     }
-    std::string key=nasal_vm.gc_get(key_addr).get_string();
-    bool contains=nasal_vm.gc_get(hash_addr).get_hash().check_contain(key);
-    int ret_addr=nasal_vm.gc_alloc(vm_number);
-    nasal_vm.gc_get(ret_addr).set_number((double)contains);
+    std::string key=key_addr->get_string();
+    bool contains=hash_addr->get_hash().check_contain(key);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
+    ret_addr->set_number((double)contains);
     return ret_addr;
 }
-int builtin_delete(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_delete(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int hash_addr=in_builtin_find("hash");
-    int key_addr=in_builtin_find("key");
-    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    nasal_scalar* hash_addr=in_builtin_find("hash");
+    nasal_scalar* key_addr=in_builtin_find("key");
+    if(!in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_delete: \"hash\" has wrong type(must be hash).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_delete: \"hash\" has wrong type(must be hash).\n";
+        return NULL;
     }
-    if(key_addr<0 || !in_builtin_check(key_addr,vm_string))
+    if(!in_builtin_check(key_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_delete: \"key\" has wrong type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_delete: \"key\" has wrong type(must be string).\n";
+        return NULL;
     }
-    std::string key=nasal_vm.gc_get(key_addr).get_string();
-    nasal_vm.gc_get(hash_addr).get_hash().del_elem(key);
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    std::string key=key_addr->get_string();
+    hash_addr->get_hash().del_elem(key);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_getkeys(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_getkeys(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int hash_addr=in_builtin_find("hash");
-    if(hash_addr<0 || !in_builtin_check(hash_addr,vm_hash))
+    nasal_scalar* hash_addr=in_builtin_find("hash");
+    if(!in_builtin_check(hash_addr,vm_hash))
     {
-        std::cout<<">> [runtime] builtin_delete: \"hash\" has wrong type(must be hash).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_delete: \"hash\" has wrong type(must be hash).\n";
+        return NULL;
     }
-    int ret_addr=nasal_vm.gc_get(hash_addr).get_hash().get_keys();
+    nasal_scalar* ret_addr=hash_addr->get_hash().get_keys();
     return ret_addr;
 }
-int builtin_import(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_import(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
-    std::cout<<">> [runtime] builtin_import: cannot use import when running.\n";
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    std::cout<<">> [vm] builtin_import: cannot use import when running.\n";
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_die(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_die(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int str_addr=in_builtin_find("str");
-    if(str_addr<0 || !in_builtin_check(str_addr,vm_string))
+    nasal_scalar* str_addr=in_builtin_find("str");
+    if(!in_builtin_check(str_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_die: \"str\" has wrong type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_die: \"str\" has wrong type(must be string).\n";
+        return NULL;
     }
     builtin_die_state=true;
-    std::cout<<">> [runtime] error: "<<nasal_vm.gc_get(str_addr).get_string()<<'\n';
-    int ret_addr=nasal_vm.gc_alloc(vm_nil);
+    std::cout<<">> [vm] error: "<<str_addr->get_string()<<'\n';
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
-int builtin_type(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_type(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int value_addr=in_builtin_find("object");
+    nasal_scalar* value_addr=in_builtin_find("object");
     if(value_addr<0)
     {
-        std::cout<<">> [runtime] builtin_type: cannot find \"object\".\n";
-        return -1;
+        std::cout<<">> [vm] builtin_type: cannot find \"object\".\n";
+        return NULL;
     }
-    int type=nasal_vm.gc_get(value_addr).get_type();
-    int ret_addr=nasal_vm.gc_alloc(vm_string);
+    int type=value_addr->get_type();
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
     switch(type)
     {
-        case vm_nil:      nasal_vm.gc_get(ret_addr).set_string("nil");break;
-        case vm_number:   nasal_vm.gc_get(ret_addr).set_string("number");break;
-        case vm_string:   nasal_vm.gc_get(ret_addr).set_string("string");break;
-        case vm_vector:   nasal_vm.gc_get(ret_addr).set_string("vector");break;
-        case vm_hash:     nasal_vm.gc_get(ret_addr).set_string("hash");break;
-        case vm_function: nasal_vm.gc_get(ret_addr).set_string("function");break;
+        case vm_nil:      ret_addr->set_string("nil");break;
+        case vm_number:   ret_addr->set_string("number");break;
+        case vm_string:   ret_addr->set_string("string");break;
+        case vm_vector:   ret_addr->set_string("vector");break;
+        case vm_hash:     ret_addr->set_string("hash");break;
+        case vm_function: ret_addr->set_string("function");break;
     }
     return ret_addr;
 }
-int builtin_substr(int local_scope_addr,nasal_virtual_machine& nasal_vm)
+nasal_scalar* builtin_substr(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
-    int str_addr=in_builtin_find("str");
-    int begin_addr=in_builtin_find("begin");
-    int length_addr=in_builtin_find("length");
-    if(str_addr<0 || !in_builtin_check(str_addr,vm_string))
+    nasal_scalar* str_addr=in_builtin_find("str");
+    nasal_scalar* begin_addr=in_builtin_find("begin");
+    nasal_scalar* length_addr=in_builtin_find("length");
+    if(!in_builtin_check(str_addr,vm_string))
     {
-        std::cout<<">> [runtime] builtin_substr: cannot find \"str\" or wrong type(must be string).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_substr: cannot find \"str\" or wrong type(must be string).\n";
+        return NULL;
     }
-    if(begin_addr<0 || !in_builtin_check(begin_addr,vm_number))
+    if(!in_builtin_check(begin_addr,vm_number))
     {
-        std::cout<<">> [runtime] builtin_substr: cannot find \"begin\" or wrong type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_substr: cannot find \"begin\" or wrong type(must be number).\n";
+        return NULL;
     }
-    if(length_addr<0 || !in_builtin_check(length_addr,vm_number))
+    if(!in_builtin_check(length_addr,vm_number))
     {
-        std::cout<<">> [runtime] builtin_substr: cannot find \"length\" or wrong type(must be number).\n";
-        return -1;
+        std::cout<<">> [vm] builtin_substr: cannot find \"length\" or wrong type(must be number).\n";
+        return NULL;
     }
-    std::string str=nasal_vm.gc_get(str_addr).get_string();
-    int begin=(int)nasal_vm.gc_get(begin_addr).get_number();
-    int len=(int)nasal_vm.gc_get(length_addr).get_number();
+    std::string str=str_addr->get_string();
+    int begin=(int)begin_addr->get_number();
+    int len=(int)length_addr->get_number();
     if(begin>=str.length() || begin+len>=str.length())
     {
-        std::cout<<">> [runtime] builtin_substr: index out of range.\n";
-        return -1;
+        std::cout<<">> [vm] builtin_substr: index out of range.\n";
+        return NULL;
     }
     std::string tmp="";
     for(int i=begin;i<begin+len;++i)
         tmp+=str[i];
-    int ret_addr=nasal_vm.gc_alloc(vm_string);
-    nasal_vm.gc_get(ret_addr).set_string(tmp);
+    nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
+    ret_addr->set_string(tmp);
     return ret_addr;
 }
 #endif
