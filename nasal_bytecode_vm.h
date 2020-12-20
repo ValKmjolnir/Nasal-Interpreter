@@ -213,11 +213,7 @@ void nasal_bytecode_vm::opr_newfunc()
     if(local_scope_top)
         val_addr->get_func().set_closure_addr(local_scope_top);
     else
-    {
-        nasal_scalar* tmp_closure=vm.gc_alloc(vm_closure);
-        val_addr->get_func().set_closure_addr(tmp_closure);
-        vm.del_reference(tmp_closure);
-    }
+        val_addr->get_func().set_new_closure();
     *(++value_stack_top)=val_addr;
     return;
 }
