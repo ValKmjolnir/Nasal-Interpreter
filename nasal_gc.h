@@ -84,6 +84,7 @@ public:
     int  get_dynamic_para();
     std::vector<nasal_scalar*>& get_default();
     void set_closure_addr(nasal_scalar*);
+    void set_new_closure();
     nasal_scalar* get_closure_addr();
 };
 
@@ -390,7 +391,7 @@ nasal_function::~nasal_function()
     if(closure_addr)
         vm.del_reference(closure_addr);
     for(int i=0;i<default_para_addr.size();++i)
-        if(default_para_addr[i]>=0)
+        if(default_para_addr[i])
             vm.del_reference(default_para_addr[i]);
     return;
 }
@@ -428,11 +429,14 @@ std::vector<nasal_scalar*>& nasal_function::get_default()
 }
 void nasal_function::set_closure_addr(nasal_scalar* value_address)
 {
-    if(closure_addr)
-        vm.del_reference(closure_addr);
     nasal_scalar* new_closure=vm.gc_alloc(vm_closure);
     new_closure->get_closure().set_closure(value_address->get_closure());
     closure_addr=new_closure;
+    return;
+}
+void nasal_function::set_new_closure()
+{
+    closure_addr=vm.gc_alloc(vm_closure);
     return;
 }
 nasal_scalar* nasal_function::get_closure_addr()
