@@ -195,20 +195,22 @@ nasal_scalar* nasal_vector::get_value_address(int index)
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
     {
-        std::cout<<">> [runtime] nasal_vector::get_value_address: index out of range: "<<index<<"\n";
+        std::cout<<">> [vm] nasal_vector::get_value_address: index out of range: "<<index<<"\n";
         return NULL;
     }
-    return elems[(index+vec_size)%vec_size];
+    int idx[2]={index+vec_size,index};
+    return elems[idx[index>=0]];
 }
 nasal_scalar** nasal_vector::get_mem_address(int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
     {
-        std::cout<<">> [runtime] nasal_vector::get_mem_address: index out of range: "<<index<<"\n";
+        std::cout<<">> [vm] nasal_vector::get_mem_address: index out of range: "<<index<<"\n";
         return NULL;
     }
-    return &elems[(index+vec_size)%vec_size];
+    int idx[2]={index+vec_size,index};
+    return &elems[idx[index>=0]];
 }
 void nasal_vector::print()
 {
@@ -462,26 +464,26 @@ nasal_closure::~nasal_closure()
 void nasal_closure::add_scope()
 {
     std::map<int,nasal_scalar*> new_scope;
-    elems.push_back(new_scope);
+    elems.push_front(new_scope);
     return;
 }
 void nasal_closure::del_scope()
 {
-    std::map<int,nasal_scalar*>& last_scope=elems.back();
+    std::map<int,nasal_scalar*>& last_scope=elems.front();
     for(std::map<int,nasal_scalar*>::iterator i=last_scope.begin();i!=last_scope.end();++i)
         vm.del_reference(i->second);
-    elems.pop_back();
+    elems.pop_front();
     return;
 }
 void nasal_closure::add_new_value(int key,nasal_scalar* value_address)
 {
-    if(elems.back().find(key)!=elems.back().end())
+    if(elems.front().find(key)!=elems.front().end())
     {
         // if this value already exists,delete the old value and update a new value
-        nasal_scalar* old_val_address=elems.back()[key];
+        nasal_scalar* old_val_address=elems.front()[key];
         vm.del_reference(old_val_address);
     }
-    elems.back()[key]=value_address;
+    elems.front()[key]=value_address;
     return;
 }
 nasal_scalar* nasal_closure::get_value_address(int key)
@@ -489,7 +491,7 @@ nasal_scalar* nasal_closure::get_value_address(int key)
     nasal_scalar* ret_address=NULL;
     for(std::list<std::map<int,nasal_scalar*> >::iterator i=elems.begin();i!=elems.end();++i)
         if(i->find(key)!=i->end())
-            ret_address=(*i)[key];
+            return (*i)[key];
     return ret_address;
 }
 nasal_scalar** nasal_closure::get_mem_address(int key)
@@ -497,7 +499,7 @@ nasal_scalar** nasal_closure::get_mem_address(int key)
     nasal_scalar** ret_address=NULL;
     for(std::list<std::map<int,nasal_scalar*> >::iterator i=elems.begin();i!=elems.end();++i)
         if(i->find(key)!=i->end())
-            ret_address=&((*i)[key]);
+            return &((*i)[key]);
     return ret_address;
 }
 void nasal_closure::set_closure(nasal_closure& tmp)
