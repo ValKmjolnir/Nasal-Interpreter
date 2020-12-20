@@ -677,7 +677,7 @@ void nasal_bytecode_vm::opr_counter()
 void nasal_bytecode_vm::opr_forindex()
 {
     nasal_vector& ref=(*value_stack_top)->get_vector();
-    counter_stack.top()++;
+    ++counter_stack.top();
     if(counter_stack.top()>=ref.size())
     {
         vm.del_reference(*value_stack_top--);
@@ -693,7 +693,7 @@ void nasal_bytecode_vm::opr_forindex()
 void nasal_bytecode_vm::opr_foreach()
 {
     nasal_vector& ref=(*value_stack_top)->get_vector();
-    counter_stack.top()++;
+    ++counter_stack.top();
     if(counter_stack.top()>=ref.size())
     {
         vm.del_reference(*value_stack_top--);
@@ -701,7 +701,7 @@ void nasal_bytecode_vm::opr_foreach()
         ptr=exec_code[ptr].index-1;
         return;
     }
-    nasal_scalar* res=ref.get_value_address(counter_stack.top());
+    nasal_scalar* res=ref[counter_stack.top()];
     vm.add_reference(res);
     *(++value_stack_top)=res;
     return;
