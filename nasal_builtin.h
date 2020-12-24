@@ -8,16 +8,14 @@
 //     return nil;
 // }
 // builtin function nasal_call_builtin_std_cout is wrapped up by print
+
 std::map<std::string,int> builtin_use_string_table;
 // used to find values that builtin function uses
 #define in_builtin_find(value_name_string) (local_scope_addr->get_closure().get_value_address(builtin_use_string_table[value_name_string]))
-// used to check found value's type
-// types are:vm_nil vm_number vm_string vm_vector vm_hash vm_function
-// dynamic values will be generated as vector by the outer function
-#define in_builtin_check(value_addr,value_type) (value_addr->get_type()==(value_type))
 
 // declaration of builtin functions
 // to add new builtin function,declare it here and write the definition below
+
 nasal_scalar* builtin_print(nasal_scalar*,nasal_virtual_machine&);
 nasal_scalar* builtin_append(nasal_scalar*,nasal_virtual_machine&);
 nasal_scalar* builtin_setsize(nasal_scalar*,nasal_virtual_machine&);
@@ -55,6 +53,13 @@ bool          builtin_die_state;// used in builtin_die
 nasal_scalar* builtin_die(nasal_scalar*,nasal_virtual_machine&);
 nasal_scalar* builtin_type(nasal_scalar*,nasal_virtual_machine&);
 nasal_scalar* builtin_substr(nasal_scalar*,nasal_virtual_machine&);
+
+void builtin_error_occurred(std::string func_name,std::string info)
+{
+    builtin_die_state=true;
+    std::cout<<">> [vm] "<<func_name<<": "<<info<<".\n";
+    return;
+}
 
 // register builtin function's name and it's address here in this table below
 // this table must and with {"",NULL}
@@ -107,17 +112,12 @@ nasal_scalar* builtin_print(nasal_scalar* local_scope_addr,nasal_virtual_machine
 {
     // get arguments
     nasal_scalar* vector_value_addr=in_builtin_find("elements");
-    if(!in_builtin_check(vector_value_addr,vm_vector))
-    {
-        std::cout<<">> [vm] builtin_print: \"elements\" has wrong value type(must be vector).\n";
-        return NULL;
-    }
     // main process
     nasal_vector& ref_vec=vector_value_addr->get_vector();
     int size=ref_vec.size();
     for(int i=0;i<size;++i)
     {
-        nasal_scalar* tmp=ref_vec.get_value_address(i);
+        nasal_scalar* tmp=ref_vec[i];
         switch(tmp->get_type())
         {
             case vm_nil:      std::cout<<"nil";             break;
@@ -137,14 +137,9 @@ nasal_scalar* builtin_append(nasal_scalar* local_scope_addr,nasal_virtual_machin
 {
     nasal_scalar* vector_value_addr=in_builtin_find("vector");
     nasal_scalar* elem_value_addr=in_builtin_find("elements");
-    if(!in_builtin_check(vector_value_addr,vm_vector))
+    if(vector_value_addr->get_type()!=vm_vector)
     {
-        std::cout<<">> [vm] builtin_append: \"vector\" has wrong value type(must be vector).\n";
-        return NULL;
-    }
-    if(!in_builtin_check(elem_value_addr,vm_vector))
-    {
-        std::cout<<">> [vm] builtin_append: \"elements\" has wrong value type(must be vector).\n";
+        builtin_error_occurred("append","\"vector\" must be vector");
         return NULL;
     }
     nasal_vector& ref_vector=vector_value_addr->get_vector();
@@ -165,19 +160,19 @@ nasal_scalar* builtin_setsize(nasal_scalar* local_scope_addr,nasal_virtual_machi
     nasal_scalar* size_value_addr=in_builtin_find("size");
     if(vector_value_addr->get_type()!=vm_vector)
     {
-        std::cout<<">> [vm] builtin_setsize: \"vector\" has wrong value type(must be vector).\n";
+        builtin_error_occurred("setsize","\"vector\" must be vector");
         return NULL;
     }
     int type=size_value_addr->get_type();
     if(type!=vm_number && type!=vm_string)
     {
-        std::cout<<">> [vm] builtin_setsize: size is not a number.\n";
+        builtin_error_occurred("setsize","\"size\" is not a number");
         return NULL;
     }
     int number=size_value_addr->to_number();
     if(number<0)
     {
-        std::cout<<">> [vm] builtin_setsize: size must be greater than NULL.\n";
+        builtin_error_occurred("setsize","\"size\" must be greater than -1");
         return NULL;
     }
     nasal_vector& ref_vector=vector_value_addr->get_vector();
@@ -203,7 +198,7 @@ nasal_scalar* builtin_system(nasal_scalar* local_scope_addr,nasal_virtual_machin
     nasal_scalar* str_value_addr=in_builtin_find("str");
     if(str_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_system: \"str\" has wrong value type(must be string).\n";
+        builtin_error_occurred("system","\"str\" must be string");
         return NULL;
     }
     std::string str=str_value_addr->get_string();
@@ -230,19 +225,19 @@ nasal_scalar* builtin_input(nasal_scalar* local_scope_addr,nasal_virtual_machine
 nasal_scalar* builtin_sleep(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     nasal_scalar* value_addr=in_builtin_find("duration");
-    if(value_addr->get_type()!=vm_string && value_addr->get_type()!=vm_number)
+    int type=value_addr->get_type();
+    if(type!=vm_string && type!=vm_number)
     {
-        std::cout<<">> [vm] builtin_sleep: \"duration\" has wrong value type(must be string or number).\n";
+        builtin_error_occurred("sleep","\"duration\" must be string or number");
         return NULL;
     }
     unsigned long sleep_time=0;
-    if(value_addr->get_type()==vm_string)
+    if(type==vm_string)
     {
-        std::string str=value_addr->get_string();
-        double number=trans_string_to_number(str);
+        double number=value_addr->to_number();
         if(std::isnan(number))
         {
-            std::cout<<">> [vm] builtin_sleep: this is not a numerable string.\n";
+            builtin_error_occurred("sleep","\"duration\" is not a numerable string");
             return NULL;
         }
         sleep_time=(unsigned long)number;
@@ -259,7 +254,7 @@ nasal_scalar* builtin_finput(nasal_scalar* local_scope_addr,nasal_virtual_machin
     nasal_scalar* value_addr=in_builtin_find("filename");
     if(value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_finput: \"filename\" has wrong value type(must be string).\n";
+        builtin_error_occurred("io.fin","\"filename\" must be string");
         return NULL;
     }
     std::string filename=value_addr->get_string();
@@ -287,12 +282,12 @@ nasal_scalar* builtin_foutput(nasal_scalar* local_scope_addr,nasal_virtual_machi
     nasal_scalar* str_value_addr=in_builtin_find("str");
     if(value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_foutput: \"filename\" has wrong value type(must be string).\n";
+        builtin_error_occurred("io.fout","\"filename\" must be string");
         return NULL;
     }
-    if(str_value_addr<0 || str_value_addr->get_type()!=vm_string)
+    if(str_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_foutput: \"str\" has wrong value type(must be string).\n";
+        builtin_error_occurred("io.fout","\"str\" must be string");
         return NULL;
     }
     std::string filename=value_addr->get_string();
@@ -310,12 +305,12 @@ nasal_scalar* builtin_split(nasal_scalar* local_scope_addr,nasal_virtual_machine
     nasal_scalar* string_value_addr=in_builtin_find("string");
     if(delimeter_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_split: \"delimeter\" has wrong value type(must be string).\n";
+        builtin_error_occurred("split","\"delimeter\" must be string");
         return NULL;
     }
     if(string_value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_split: \"string\" has wrong value type(must be string).\n";
+        builtin_error_occurred("split","\"string\" must be string");
         return NULL;
     }
     std::string delimeter=delimeter_value_addr->get_string();
@@ -331,11 +326,10 @@ nasal_scalar* builtin_split(nasal_scalar* local_scope_addr,nasal_virtual_machine
     {
         for(int i=0;i<source_len;++i)
         {
-            tmp+=source[i];
+            tmp=source[i];
             nasal_scalar* str_addr=nasal_vm.gc_alloc(vm_string);
             str_addr->set_string(tmp);
             ref_vec.add_elem(str_addr);
-            tmp="";
         }
         return ret_addr;
     }
@@ -376,7 +370,7 @@ nasal_scalar* builtin_rand(nasal_scalar* local_scope_addr,nasal_virtual_machine&
     nasal_scalar* value_addr=in_builtin_find("seed");
     if(value_addr->get_type()!=vm_number && value_addr->get_type()!=vm_nil)
     {
-        std::cout<<">> [vm] builtin_rand: \"seed\" has wrong value type(must be nil or number).\n";
+        builtin_error_occurred("rand","\"seed\" must be nil or number");
         return NULL;
     }
     if(value_addr->get_type()==vm_number)
@@ -407,7 +401,7 @@ nasal_scalar* builtin_int(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("value");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_int: \"value\" has wrong value type(must be number).\n";
+        builtin_error_occurred("int","\"value\" must be number");
         return NULL;
     }
     int number=(int)value_addr->get_number();
@@ -418,9 +412,9 @@ nasal_scalar* builtin_int(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
 nasal_scalar* builtin_num(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     nasal_scalar* value_addr=in_builtin_find("value");
-    if(!in_builtin_check(value_addr,vm_string))
+    if(value_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_num: \"value\" has wrong value type(must be string).\n";
+        builtin_error_occurred("num","\"value\" must be string");
         return NULL;
     }
     std::string str=value_addr->get_string();
@@ -433,7 +427,7 @@ nasal_scalar* builtin_pop(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("vector");
     if(value_addr->get_type()!=vm_vector)
     {
-        std::cout<<">> [vm] builtin_pop: \"vector\" has wrong value type(must be vector).\n";
+        builtin_error_occurred("pop","\"vector\" must be vector");
         return NULL;
     }
     nasal_scalar* ret_addr=value_addr->get_vector().del_elem();
@@ -444,12 +438,11 @@ nasal_scalar* builtin_str(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("number");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_str: \"number\" has wrong value type(must be number).\n";
+        builtin_error_occurred("str","\"number\" must be number");
         return NULL;
     }
-    double number=value_addr->get_number();
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
-    ret_addr->set_string(trans_number_to_string(number));
+    ret_addr->set_string(value_addr->to_string());
     return ret_addr;
 }
 nasal_scalar* builtin_size(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
@@ -477,12 +470,12 @@ nasal_scalar* builtin_xor(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* b_addr=in_builtin_find("b");
     if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_xor: \"a\" has wrong value type(must be number).\n";
+        builtin_error_occurred("xor","\"a\" must be number");
         return NULL;
     }
     if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_xor: \"b\" has wrong value type(must be number).\n";
+        builtin_error_occurred("xor","\"b\" must be number");
         return NULL;
     }
     int number_a=(int)a_addr->get_number();
@@ -497,12 +490,12 @@ nasal_scalar* builtin_and(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* b_addr=in_builtin_find("b");
     if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_and: \"a\" has wrong value type(must be number).\n";
+        builtin_error_occurred("and","\"a\" must be number");
         return NULL;
     }
     if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_and: \"b\" has wrong value type(must be number).\n";
+        builtin_error_occurred("and","\"b\" must be number");
         return NULL;
     }
     int number_a=(int)a_addr->get_number();
@@ -517,12 +510,12 @@ nasal_scalar* builtin_or(nasal_scalar* local_scope_addr,nasal_virtual_machine& n
     nasal_scalar* b_addr=in_builtin_find("b");
     if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_or: \"a\" has wrong value type(must be number).\n";
+        builtin_error_occurred("or","\"a\" must be number");
         return NULL;
     }
     if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_or: \"b\" has wrong value type(must be number).\n";
+        builtin_error_occurred("or","\"b\" must be number");
         return NULL;
     }
     int number_a=(int)a_addr->get_number();
@@ -537,12 +530,12 @@ nasal_scalar* builtin_nand(nasal_scalar* local_scope_addr,nasal_virtual_machine&
     nasal_scalar* b_addr=in_builtin_find("b");
     if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_nand: \"a\" has wrong value type(must be number).\n";
+        builtin_error_occurred("nand","\"a\" must be number");
         return NULL;
     }
     if(b_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_nand: \"b\" has wrong value type(must be number).\n";
+        builtin_error_occurred("nand","\"b\" must be number");
         return NULL;
     }
     int number_a=(int)a_addr->get_number();
@@ -556,7 +549,7 @@ nasal_scalar* builtin_not(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* a_addr=in_builtin_find("a");
     if(a_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_not: \"a\" has wrong value type(must be number).\n";
+        builtin_error_occurred("not","\"a\" must be number");
         return NULL;
     }
     int number=(int)a_addr->get_number();
@@ -569,7 +562,7 @@ nasal_scalar* builtin_sin(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_sin: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("sin","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -582,7 +575,7 @@ nasal_scalar* builtin_cos(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_cos: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("cos","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -595,7 +588,7 @@ nasal_scalar* builtin_tan(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_tan: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("tan","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -608,7 +601,7 @@ nasal_scalar* builtin_exp(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_exp: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("exp","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -621,7 +614,7 @@ nasal_scalar* builtin_ln(nasal_scalar* local_scope_addr,nasal_virtual_machine& n
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_ln: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("ln","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -634,7 +627,7 @@ nasal_scalar* builtin_sqrt(nasal_scalar* local_scope_addr,nasal_virtual_machine&
     nasal_scalar* value_addr=in_builtin_find("x");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_sqrt: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("sqrt","\"x\" must be number");
         return NULL;
     }
     double number=value_addr->get_number();
@@ -648,12 +641,12 @@ nasal_scalar* builtin_atan2(nasal_scalar* local_scope_addr,nasal_virtual_machine
     nasal_scalar* y_value_addr=in_builtin_find("y");
     if(x_value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_atan2: \"x\" has wrong value type(must be number).\n";
+        builtin_error_occurred("atan2","\"x\" must be number");
         return NULL;
     }
     if(y_value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_atan2: \"y\" has wrong value type(must be number).\n";
+        builtin_error_occurred("atan2","\"y\" must be number");
         return NULL;
     }
     double x=x_value_addr->get_number();
@@ -667,7 +660,7 @@ nasal_scalar* builtin_time(nasal_scalar* local_scope_addr,nasal_virtual_machine&
     nasal_scalar* value_addr=in_builtin_find("begin_time");
     if(value_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_time: \"begin_time\" has wrong value type(must be number).\n";
+        builtin_error_occurred("time","\"begin_time\" must be number");
         return NULL;
     }
     time_t begin_time=(time_t)value_addr->get_number();
@@ -679,14 +672,14 @@ nasal_scalar* builtin_contains(nasal_scalar* local_scope_addr,nasal_virtual_mach
 {
     nasal_scalar* hash_addr=in_builtin_find("hash");
     nasal_scalar* key_addr=in_builtin_find("key");
-    if(!in_builtin_check(hash_addr,vm_hash))
+    if(hash_addr->get_type()!=vm_hash)
     {
-        std::cout<<">> [vm] builtin_contains: \"hash\" has wrong type(must be hash).\n";
+        builtin_error_occurred("contains","\"hash\" must be hash");
         return NULL;
     }
-    if(!in_builtin_check(key_addr,vm_string))
+    if(key_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_contains: \"key\" has wrong type(must be string).\n";
+        builtin_error_occurred("contains","\"key\" must be string");
         return NULL;
     }
     std::string key=key_addr->get_string();
@@ -699,14 +692,14 @@ nasal_scalar* builtin_delete(nasal_scalar* local_scope_addr,nasal_virtual_machin
 {
     nasal_scalar* hash_addr=in_builtin_find("hash");
     nasal_scalar* key_addr=in_builtin_find("key");
-    if(!in_builtin_check(hash_addr,vm_hash))
+    if(hash_addr->get_type()!=vm_hash)
     {
-        std::cout<<">> [vm] builtin_delete: \"hash\" has wrong type(must be hash).\n";
+        builtin_error_occurred("delete","\"hash\" must be hash");
         return NULL;
     }
-    if(!in_builtin_check(key_addr,vm_string))
+    if(key_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_delete: \"key\" has wrong type(must be string).\n";
+        builtin_error_occurred("delete","\"key\" must be string");
         return NULL;
     }
     std::string key=key_addr->get_string();
@@ -717,9 +710,9 @@ nasal_scalar* builtin_delete(nasal_scalar* local_scope_addr,nasal_virtual_machin
 nasal_scalar* builtin_getkeys(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     nasal_scalar* hash_addr=in_builtin_find("hash");
-    if(!in_builtin_check(hash_addr,vm_hash))
+    if(hash_addr->get_type()!=vm_hash)
     {
-        std::cout<<">> [vm] builtin_delete: \"hash\" has wrong type(must be hash).\n";
+        builtin_error_occurred("keys","\"hash\" must be hash");
         return NULL;
     }
     nasal_scalar* ret_addr=hash_addr->get_hash().get_keys();
@@ -729,16 +722,16 @@ nasal_scalar* builtin_import(nasal_scalar* local_scope_addr,nasal_virtual_machin
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
-    std::cout<<">> [vm] builtin_import: cannot use import when running.\n";
+    builtin_error_occurred("import","cannot use import when running");
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
 nasal_scalar* builtin_die(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     nasal_scalar* str_addr=in_builtin_find("str");
-    if(!in_builtin_check(str_addr,vm_string))
+    if(str_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_die: \"str\" has wrong type(must be string).\n";
+        builtin_error_occurred("die","\"str\" must be string");
         return NULL;
     }
     builtin_die_state=true;
@@ -749,11 +742,6 @@ nasal_scalar* builtin_die(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
 nasal_scalar* builtin_type(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
 {
     nasal_scalar* value_addr=in_builtin_find("object");
-    if(value_addr<0)
-    {
-        std::cout<<">> [vm] builtin_type: cannot find \"object\".\n";
-        return NULL;
-    }
     int type=value_addr->get_type();
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
     switch(type)
@@ -772,27 +760,27 @@ nasal_scalar* builtin_substr(nasal_scalar* local_scope_addr,nasal_virtual_machin
     nasal_scalar* str_addr=in_builtin_find("str");
     nasal_scalar* begin_addr=in_builtin_find("begin");
     nasal_scalar* length_addr=in_builtin_find("length");
-    if(!in_builtin_check(str_addr,vm_string))
+    if(str_addr->get_type()!=vm_string)
     {
-        std::cout<<">> [vm] builtin_substr: cannot find \"str\" or wrong type(must be string).\n";
+        builtin_error_occurred("substr","\"str\" must be string");
         return NULL;
     }
-    if(!in_builtin_check(begin_addr,vm_number))
+    if(begin_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_substr: cannot find \"begin\" or wrong type(must be number).\n";
+        builtin_error_occurred("substr","\"begin\" must be number");
         return NULL;
     }
-    if(!in_builtin_check(length_addr,vm_number))
+    if(length_addr->get_type()!=vm_number)
     {
-        std::cout<<">> [vm] builtin_substr: cannot find \"length\" or wrong type(must be number).\n";
+        builtin_error_occurred("substr","\"length\" must be number");
         return NULL;
     }
     std::string str=str_addr->get_string();
     int begin=(int)begin_addr->get_number();
     int len=(int)length_addr->get_number();
-    if(begin>=str.length() || begin+len>=str.length())
+    if(begin+len>=str.length())
     {
-        std::cout<<">> [vm] builtin_substr: index out of range.\n";
+        builtin_error_occurred("susbtr","index out of range");
         return NULL;
     }
     std::string tmp="";
