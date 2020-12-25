@@ -833,6 +833,7 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
         op.op=op_meq;
         op.index=0;
         exec_code.push_back(op);
+        pop_gen();
     }
     block_gen(ast.get_children()[2]);
     op.op=op_jmp;
