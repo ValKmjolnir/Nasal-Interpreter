@@ -13,7 +13,7 @@ private:
     // byte codes store here
     std::vector<opcode> exec_code;
     // main calculation stack
-#define VALUE_STACK_MAX_DEPTH 2048
+#define VALUE_STACK_MAX_DEPTH 8192
     nasal_scalar** value_stack;
     nasal_scalar** value_stack_top;
     // stack for mem_call
@@ -785,6 +785,8 @@ void nasal_bytecode_vm::opr_callv()
         res->set_number((double)str[num>=0? num:num+str_size]);
         *(++value_stack_top)=res;
     }
+    else
+        die("callv: must call a vector/hash/string");
     vm.del_reference(val_addr);
     vm.del_reference(vec_addr);
     return;
