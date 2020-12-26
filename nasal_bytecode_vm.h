@@ -74,6 +74,7 @@ private:
     void opr_jmptrue();
     void opr_jmpfalse();
     void opr_counter();
+    void opr_cntpop();
     void opr_forindex();
     void opr_foreach();
     void opr_call();
@@ -438,15 +439,6 @@ void nasal_bytecode_vm::opr_eq()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
     nasal_scalar* val_addr1=*value_stack_top--;
-    if(val_addr1==val_addr2)
-    {
-        nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
-        new_value_address->set_number(1);
-        *(++value_stack_top)=new_value_address;
-        vm.del_reference(val_addr1);
-        vm.del_reference(val_addr2);
-        return;
-    }
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_nil && b_ref_type==vm_nil)
@@ -481,7 +473,7 @@ void nasal_bytecode_vm::opr_eq()
     else
     {
         nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
-        new_value_address->set_number(0);
+        new_value_address->set_number(val_addr1==val_addr2);
         *(++value_stack_top)=new_value_address;
         vm.del_reference(val_addr1);
         vm.del_reference(val_addr2);
@@ -493,15 +485,6 @@ void nasal_bytecode_vm::opr_neq()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
     nasal_scalar* val_addr1=*value_stack_top--;
-    if(val_addr1==val_addr2)
-    {
-        nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
-        new_value_address->set_number(0);
-        *(++value_stack_top)=new_value_address;
-        vm.del_reference(val_addr1);
-        vm.del_reference(val_addr2);
-        return;
-    }
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_nil && b_ref_type==vm_nil)
@@ -536,7 +519,7 @@ void nasal_bytecode_vm::opr_neq()
     else
     {
         nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
-        new_value_address->set_number(1);
+        new_value_address->set_number(val_addr1!=val_addr2);
         *(++value_stack_top)=new_value_address;
         vm.del_reference(val_addr1);
         vm.del_reference(val_addr2);
@@ -674,14 +657,17 @@ void nasal_bytecode_vm::opr_counter()
     counter_stack.push(-1);
     return;
 }
+void nasal_bytecode_vm::opr_cntpop()
+{
+    counter_stack.pop();
+    return;
+}
 void nasal_bytecode_vm::opr_forindex()
 {
     nasal_vector& ref=(*value_stack_top)->get_vector();
     ++counter_stack.top();
     if(counter_stack.top()>=ref.size())
     {
-        vm.del_reference(*value_stack_top--);
-        counter_stack.pop();
         ptr=exec_code[ptr].index-1;
         return;
     }
@@ -696,8 +682,6 @@ void nasal_bytecode_vm::opr_foreach()
     ++counter_stack.top();
     if(counter_stack.top()>=ref.size())
     {
-        vm.del_reference(*value_stack_top--);
-        counter_stack.pop();
         ptr=exec_code[ptr].index-1;
         return;
     }
@@ -799,6 +783,7 @@ void nasal_bytecode_vm::opr_callvi()
         die("callvi: multi-definition/multi-assignment must use a vector");
         return;
     }
+    // cannot use operator[],because this may cause overflow
     nasal_scalar* res=val_addr->get_vector().get_value_address(exec_code[ptr].index);
     if(!res)
     {
@@ -1175,6 +1160,7 @@ void nasal_bytecode_vm::run(std::vector<std::string>& strs,std::vector<double>& 
         &nasal_bytecode_vm::opr_jmptrue,
         &nasal_bytecode_vm::opr_jmpfalse,
         &nasal_bytecode_vm::opr_counter,
+        &nasal_bytecode_vm::opr_cntpop,
         &nasal_bytecode_vm::opr_forindex,
         &nasal_bytecode_vm::opr_foreach,
         &nasal_bytecode_vm::opr_call,
