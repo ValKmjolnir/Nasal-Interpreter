@@ -22,6 +22,7 @@ enum op_code
     op_jmptrue,
     op_jmpfalse,
     op_counter,    // add counter for forindex/foreach
+    op_cntpop,     // pop counter
     op_forindex,   // index counter on the top of forindex_stack plus 1
     op_foreach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,       // call identifier
@@ -86,6 +87,7 @@ struct
     {op_jmptrue,     "jt    "},
     {op_jmpfalse,    "jf    "},
     {op_counter,     "cnt   "},
+    {op_cntpop,      "cntpop"},
     {op_forindex,    "findx "},
     {op_foreach,     "feach "},
     {op_call,        "call  "},
@@ -115,6 +117,12 @@ struct opcode
         index=0;
         return;
     }
+    opcode(unsigned char _op,unsigned int _index)
+    {
+        op=_op;
+        index=_index;
+        return;
+    }
     opcode& operator=(const opcode& tmp)
     {
         op=tmp.op;
@@ -123,9 +131,6 @@ struct opcode
     }
 };
 
-// unfinished
-// now it can output ast but it is not byte code yet
-// please wait...
 class nasal_codegen
 {
 private:
@@ -134,8 +139,8 @@ private:
     std::vector<double> number_result_table;
     std::vector<std::string> string_result_table;
     std::vector<opcode> exec_code;
-    std::vector<int> continue_ptr;
-    std::vector<int> break_ptr;
+    std::list<std::vector<int> > continue_ptr;
+    std::list<std::vector<int> > break_ptr;
     int error;
     void regist_number(double);
     void regist_string(std::string);
@@ -206,17 +211,14 @@ void nasal_codegen::regist_string(std::string str)
 
 void nasal_codegen::pop_gen()
 {
-    opcode op;
-    op.op=op_pop;
-    op.index=0;
+    opcode op(op_pop,0);
     exec_code.push_back(op);
     return;
 }
 
 void nasal_codegen::nil_gen()
 {
-    opcode op;
-    op.op=op_pushnil;
+    opcode op(op_pushnil,0);
     exec_code.push_back(op);
     return;
 }
@@ -243,9 +245,7 @@ void nasal_codegen::string_gen(nasal_ast& ast)
 {
     std::string str=ast.get_str();
     regist_string(str);
-    opcode op;
-    op.op=op_pushstr;
-    op.index=string_table[str];
+    opcode op(op_pushstr,string_table[str]);
     exec_code.push_back(op);
     return;
 }
@@ -253,16 +253,12 @@ void nasal_codegen::string_gen(nasal_ast& ast)
 void nasal_codegen::vector_gen(nasal_ast& ast)
 {
     int size=ast.get_children().size();
-    opcode op;
-    op.op=op_newvec;
-    op.index=0;
+    opcode op(op_newvec,0);
     exec_code.push_back(op);
     for(int i=0;i<size;++i)
     {
         calculation_gen(ast.get_children()[i]);
-        opcode tmp;
-        tmp.op=op_vecapp;
-        tmp.index=0;
+        opcode tmp(op_vecapp,0);
         exec_code.push_back(tmp);
     }
     return;
@@ -271,27 +267,22 @@ void nasal_codegen::vector_gen(nasal_ast& ast)
 void nasal_codegen::hash_gen(nasal_ast& ast)
 {
     int size=ast.get_children().size();
-    opcode op;
-    op.op=op_newhash;
-    op.index=0;
+    opcode op(op_newhash,0);
     exec_code.push_back(op);
     for(int i=0;i<size;++i)
     {
         calculation_gen(ast.get_children()[i].get_children()[1]);
-        op.op=op_hashapp;
         std::string str=ast.get_children()[i].get_children()[0].get_str();
         regist_string(str);
-        op.index=string_table[str];
-        exec_code.push_back(op);
+        opcode tmp(op_hashapp,string_table[str]);
+        exec_code.push_back(tmp);
     }
     return;
 }
 
 void nasal_codegen::function_gen(nasal_ast& ast)
 {
-    opcode op;
-    op.op=op_newfunc;
-    op.index=0;
+    opcode op(op_newfunc,0);
     exec_code.push_back(op);
 
     nasal_ast& ref_arg=ast.get_children()[0];
@@ -303,9 +294,7 @@ void nasal_codegen::function_gen(nasal_ast& ast)
         {
             std::string str=tmp.get_str();
             regist_string(str);
-            opcode tmp;
-            tmp.op=op_para;
-            tmp.index=string_table[str];
+            opcode tmp(op_para,string_table[str]);
             exec_code.push_back(tmp);
         }
         else if(tmp.get_type()==ast_default_arg)
@@ -313,18 +302,14 @@ void nasal_codegen::function_gen(nasal_ast& ast)
             calculation_gen(tmp.get_children()[1]);
             std::string str=tmp.get_children()[0].get_str();
             regist_string(str);
-            opcode tmp;
-            tmp.op=op_defpara;
-            tmp.index=string_table[str];
+            opcode tmp(op_defpara,string_table[str]);
             exec_code.push_back(tmp);
         }
         else if(tmp.get_type()==ast_dynamic_id)
         {
             std::string str=tmp.get_str();
             regist_string(str);
-            opcode tmp;
-            tmp.op=op_dynpara;
-            tmp.index=string_table[str];
+            opcode tmp(op_dynpara,string_table[str]);
             exec_code.push_back(tmp);
         }
     }
@@ -374,8 +359,7 @@ void nasal_codegen::call_gen(nasal_ast& ast)
 
 void nasal_codegen::call_id(nasal_ast& ast)
 {
-    opcode op;
-    op.op=op_call;
+    opcode op(op_call,0);
     std::string str=ast.get_str();
     for(int i=0;builtin_func_table[i].func_pointer;++i)
         if(builtin_func_table[i].func_name==str)
@@ -391,11 +375,9 @@ void nasal_codegen::call_id(nasal_ast& ast)
 
 void nasal_codegen::call_hash(nasal_ast& ast)
 {
-    opcode op;
-    op.op=op_callh;
     std::string str=ast.get_str();
     regist_string(str);
-    op.index=string_table[str];
+    opcode op(op_callh,string_table[str]);
     exec_code.push_back(op);
     return;
 }
@@ -405,15 +387,11 @@ void nasal_codegen::call_vec(nasal_ast& ast)
     if(ast.get_children().size()==1 && ast.get_children()[0].get_type()!=ast_subvec)
     {
         calculation_gen(ast.get_children()[0]);
-        opcode op;
-        op.op=op_callv;
-        op.index=0;
+        opcode op(op_callv,0);
         exec_code.push_back(op);
         return;
     }
-    opcode op;
-    op.op=op_slicebegin;
-    op.index=0;
+    opcode op(op_slicebegin,0);
     exec_code.push_back(op);
     int size=ast.get_children().size();
     for(int i=0;i<size;++i)
@@ -445,9 +423,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
 {
     if(!ast.get_children().size())
     {
-        opcode op;
-        op.op=op_newvec;
-        op.index=0;
+        opcode op(op_newvec,0);
         exec_code.push_back(op);
 
         op.op=op_callf;
@@ -457,9 +433,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
     }
     if(ast.get_children()[0].get_type()==ast_hashmember)
     {
-        opcode op;
-        op.op=op_newhash;
-        op.index=0;
+        opcode op(op_newhash,0);
         exec_code.push_back(op);
         int size=ast.get_children().size();
         for(int i=0;i<size;++i)
@@ -478,9 +452,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
     }
     else
     {
-        opcode op;
-        op.op=op_newvec;
-        op.index=0;
+        opcode op(op_newvec,0);
         exec_code.push_back(op);
         int size=ast.get_children().size();
         for(int i=0;i<size;++i)
@@ -520,9 +492,7 @@ void nasal_codegen::mem_call_id(nasal_ast& ast)
 {
     std::string str=ast.get_str();
     regist_string(str);
-    opcode op;
-    op.op=op_mcall;
-    op.index=string_table[str];
+    opcode op(op_mcall,string_table[str]);
     exec_code.push_back(op);
     return;
 }
@@ -530,9 +500,7 @@ void nasal_codegen::mem_call_id(nasal_ast& ast)
 void nasal_codegen::mem_call_vec(nasal_ast& ast)
 {
     calculation_gen(ast.get_children()[0]);
-    opcode op;
-    op.op=op_mcallv;
-    op.index=0;
+    opcode op(op_mcallv,0);
     exec_code.push_back(op);
     return;
 }
@@ -541,9 +509,7 @@ void nasal_codegen::mem_call_hash(nasal_ast& ast)
 {
     std::string str=ast.get_str();
     regist_string(str);
-    opcode op;
-    op.op=op_mcallh;
-    op.index=string_table[str];
+    opcode op(op_mcallh,string_table[str]);
     exec_code.push_back(op);
     return;
 }
@@ -551,11 +517,9 @@ void nasal_codegen::mem_call_hash(nasal_ast& ast)
 void nasal_codegen::single_def(nasal_ast& ast)
 {
     calculation_gen(ast.get_children()[1]);
-    opcode op;
-    op.op=op_load;
     std::string str=ast.get_children()[0].get_str();
     regist_string(str);
-    op.index=string_table[str];
+    opcode op(op_load,string_table[str]);
     exec_code.push_back(op);
     return;
 }
@@ -567,11 +531,9 @@ void nasal_codegen::multi_def(nasal_ast& ast)
         for(int i=0;i<size;++i)
         {
             calculation_gen(ast.get_children()[1].get_children()[i]);
-            opcode op;
-            op.op=op_load;
             std::string str=ast.get_children()[0].get_children()[i].get_str();
             regist_string(str);
-            op.index=string_table[str];
+            opcode op(op_load,string_table[str]);
             exec_code.push_back(op);
         }
     }
@@ -580,9 +542,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
         calculation_gen(ast.get_children()[1]);
         for(int i=0;i<size;++i)
         {
-            opcode op;
-            op.op=op_callvi;
-            op.index=i;
+            opcode op(op_callvi,i);
             exec_code.push_back(op);
             op.op=op_load;
             std::string str=ast.get_children()[0].get_children()[i].get_str();
@@ -614,8 +574,7 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
         for(int i=0;i<size;++i)
         {
             mem_call(ast.get_children()[0].get_children()[i]);
-            opcode op;
-            op.op=op_meq;
+            opcode op(op_meq,0);
             exec_code.push_back(op);
             pop_gen();
         }
@@ -625,9 +584,7 @@ void nasal_codegen::multi_assignment_gen(nasal_ast& ast)
         calculation_gen(ast.get_children()[1]);
         for(int i=0;i<size;++i)
         {
-            opcode op;
-            op.op=op_callvi;
-            op.index=i;
+            opcode op(op_callvi,i);
             exec_code.push_back(op);
             mem_call(ast.get_children()[0].get_children()[i]);
             op.op=op_meq;
@@ -688,12 +645,12 @@ void nasal_codegen::loop_gen(nasal_ast& ast)
 
 void nasal_codegen::load_continue_break(int continue_place,int break_place)
 {
-    for(int i=0;i<continue_ptr.size();++i)
-        exec_code[continue_ptr[i]].index=continue_place;
-    continue_ptr.clear();
-    for(int i=0;i<break_ptr.size();++i)
-        exec_code[break_ptr[i]].index=break_place;
-    break_ptr.clear();
+    for(int i=0;i<continue_ptr.front().size();++i)
+        exec_code[continue_ptr.front()[i]].index=continue_place;
+    for(int i=0;i<break_ptr.front().size();++i)
+        exec_code[break_ptr.front()[i]].index=break_place;
+    continue_ptr.pop_front();
+    break_ptr.pop_front();
     return;
 }
 
@@ -706,6 +663,11 @@ void nasal_codegen::while_gen(nasal_ast& ast)
     int condition_ptr=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
+
+    std::vector<int> new_continue_ptr;
+    std::vector<int> new_break_ptr;
+    continue_ptr.push_front(new_continue_ptr);
+    break_ptr.push_front(new_break_ptr);
     block_gen(ast.get_children()[1]);
     op.op=op_jmp;
     op.index=loop_ptr;
@@ -746,6 +708,10 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     int label_exit=exec_code.size();
     exec_code.push_back(op);
     pop_gen();
+    std::vector<int> new_continue_ptr;
+    std::vector<int> new_break_ptr;
+    continue_ptr.push_front(new_continue_ptr);
+    break_ptr.push_front(new_break_ptr);
     block_gen(ast.get_children()[3]);
     int continue_place=exec_code.size();
     switch(ast.get_children()[2].get_type())
@@ -797,13 +763,22 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
         op.op=op_meq;
         op.index=0;
         exec_code.push_back(op);
+        pop_gen();
     }
+    std::vector<int> new_continue_ptr;
+    std::vector<int> new_break_ptr;
+    continue_ptr.push_front(new_continue_ptr);
+    break_ptr.push_front(new_break_ptr);
     block_gen(ast.get_children()[2]);
     op.op=op_jmp;
     op.index=ptr;
     exec_code.push_back(op);
     exec_code[ptr].index=exec_code.size();
     load_continue_break(exec_code.size()-1,exec_code.size());
+    pop_gen();
+    op.op=op_cntpop;
+    op.index=0;
+    exec_code.push_back(op);
     return;
 }
 void nasal_codegen::foreach_gen(nasal_ast& ast)
@@ -835,12 +810,20 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
         exec_code.push_back(op);
         pop_gen();
     }
+    std::vector<int> new_continue_ptr;
+    std::vector<int> new_break_ptr;
+    continue_ptr.push_front(new_continue_ptr);
+    break_ptr.push_front(new_break_ptr);
     block_gen(ast.get_children()[2]);
     op.op=op_jmp;
     op.index=ptr;
     exec_code.push_back(op);
     exec_code[ptr].index=exec_code.size();
     load_continue_break(exec_code.size()-1,exec_code.size());
+    pop_gen();
+    op.op=op_cntpop;
+    op.index=0;
+    exec_code.push_back(op);
     return;
 }
 
@@ -1081,13 +1064,13 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_continue:
                 op.op=op_jmp;
                 op.index=0;
-                continue_ptr.push_back(exec_code.size());
+                continue_ptr.front().push_back(exec_code.size());
                 exec_code.push_back(op);
                 break;
             case ast_break:
                 op.op=op_jmp;
                 op.index=0;
-                break_ptr.push_back(exec_code.size());
+                break_ptr.front().push_back(exec_code.size());
                 exec_code.push_back(op);
                 break;
             case ast_while:
