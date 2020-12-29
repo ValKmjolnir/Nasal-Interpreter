@@ -645,6 +645,7 @@ void nasal_bytecode_vm::opr_jmpfalse()
 {
     if(!check_condition(*value_stack_top))
         ptr=exec_code[ptr].index-1;
+    vm.del_reference(*value_stack_top--);
     return;
 }
 void nasal_bytecode_vm::opr_counter()
