@@ -24,68 +24,67 @@ enum ast_node
 
 std::string ast_str(int type)
 {
-    std::string str;
     switch(type)
     {
-        case ast_null:         str="null";break;
-        case ast_root:         str="root";break;
-        case ast_block:        str="block";break;
-        case ast_nil:          str="nil";break;
-        case ast_number:       str="number";break;
-        case ast_string:       str="string";break;
-        case ast_identifier:   str="id";break;
-        case ast_function:     str="function";break;
-        case ast_hash:         str="hash";break;
-        case ast_vector:       str="vector";break;
-        case ast_hashmember:   str="hashmember";break;
-        case ast_call:         str="call";break;
-        case ast_call_hash:    str="call_hash";break;
-        case ast_call_vec:     str="call_vector";break;
-        case ast_call_func:    str="call_func";break;
-        case ast_subvec:       str="subvec";break;
-        case ast_args:         str="arguments";break;
-        case ast_default_arg:  str="default_arg";break;
-        case ast_dynamic_id:   str="dynamic_id";break;
-        case ast_and:          str="and";break;
-        case ast_or:           str="or";break;
-        case ast_equal:        str="=";break;
-        case ast_add_equal:    str="+=";break;
-        case ast_sub_equal:    str="-=";break;
-        case ast_mult_equal:   str="*=";break;
-        case ast_div_equal:    str="/=";break;
-        case ast_link_equal:   str="~=";break;
-        case ast_cmp_equal:    str="==";break;
-        case ast_cmp_not_equal:str="!=";break;
-        case ast_less_than:    str="<";break;
-        case ast_less_equal:   str="<=";break;
-        case ast_greater_than: str=">";break;
-        case ast_greater_equal:str=">=";break;
-        case ast_add:          str="+";break;
-        case ast_sub:          str="-";break;
-        case ast_mult:         str="*";break;
-        case ast_div:          str="/";break;
-        case ast_link:         str="~";break;
-        case ast_unary_sub:    str="unary-";break;
-        case ast_unary_not:    str="unary!";break;
-        case ast_trinocular:   str="trinocular";break;
-        case ast_for:          str="for";break;
-        case ast_forindex:     str="forindex";break;
-        case ast_foreach:      str="foreach";break;
-        case ast_while:        str="while";break;
-        case ast_new_iter:     str="new_iterator";break;
-        case ast_conditional:  str="conditional";break;
-        case ast_if:           str="if";break;
-        case ast_elsif:        str="elsif";break;
-        case ast_else:         str="else";break;
-        case ast_multi_id:     str="multi_id";break;
-        case ast_multi_scalar: str="multi_scalar";break;
-        case ast_definition:   str="definition";break;
-        case ast_multi_assign: str="multi_assignment";break;
-        case ast_continue:     str="continue";break;
-        case ast_break:        str="break";break;
-        case ast_return:       str="return";break;
+        case ast_null:         return "null";
+        case ast_root:         return "root";
+        case ast_block:        return "block";
+        case ast_nil:          return "nil";
+        case ast_number:       return "number";
+        case ast_string:       return "string";
+        case ast_identifier:   return "id";
+        case ast_function:     return "function";
+        case ast_hash:         return "hash";
+        case ast_vector:       return "vector";
+        case ast_hashmember:   return "hashmember";
+        case ast_call:         return "call";
+        case ast_call_hash:    return "callh";
+        case ast_call_vec:     return "callv";
+        case ast_call_func:    return "callf";
+        case ast_subvec:       return "subvec";
+        case ast_args:         return "args";
+        case ast_default_arg:  return "deflt_arg";
+        case ast_dynamic_id:   return "dyn_id";
+        case ast_and:          return "and";
+        case ast_or:           return "or";
+        case ast_equal:        return "=";
+        case ast_add_equal:    return "+=";
+        case ast_sub_equal:    return "-=";
+        case ast_mult_equal:   return "*=";
+        case ast_div_equal:    return "/=";
+        case ast_link_equal:   return "~=";
+        case ast_cmp_equal:    return "==";
+        case ast_cmp_not_equal:return "!=";
+        case ast_less_than:    return "<";
+        case ast_less_equal:   return "<=";
+        case ast_greater_than: return ">";
+        case ast_greater_equal:return ">=";
+        case ast_add:          return "+";
+        case ast_sub:          return "-";
+        case ast_mult:         return "*";
+        case ast_div:          return "/";
+        case ast_link:         return "~";
+        case ast_unary_sub:    return "unary-";
+        case ast_unary_not:    return "unary!";
+        case ast_trinocular:   return "trino";
+        case ast_for:          return "for";
+        case ast_forindex:     return "forindex";
+        case ast_foreach:      return "foreach";
+        case ast_while:        return "while";
+        case ast_new_iter:     return "iter";
+        case ast_conditional:  return "conditional";
+        case ast_if:           return "if";
+        case ast_elsif:        return "elsif";
+        case ast_else:         return "else";
+        case ast_multi_id:     return "multi_id";
+        case ast_multi_scalar: return "multi_scalar";
+        case ast_definition:   return "def";
+        case ast_multi_assign: return "multi_assign";
+        case ast_continue:     return "continue";
+        case ast_break:        return "break";
+        case ast_return:       return "return";
     }
-    return str;
+    return "null";
 }
 
 class nasal_ast
@@ -223,7 +222,7 @@ void nasal_ast::print_ast(int depth)
         std::cout<<":"<<this->str;
     else if(this->type==ast_number)
         std::cout<<":"<<this->num;
-    std::cout<<std::endl;
+    std::cout<<'\n';
     int child_size=this->children.size();
     for(int i=0;i<child_size;++i)
         this->children[i].print_ast(depth+1);

@@ -10,39 +10,21 @@ private:
     std::vector<std::string> filename_table;
     int error;
     void die(std::string,std::string);
-    void init();
     bool check_import(nasal_ast&);
     bool check_exist(std::string);
     void linker(nasal_ast&,nasal_ast&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&);
 public:
-    nasal_import();
     int  get_error();
     void link(nasal_ast&);
     nasal_ast& get_root();
 };
 
-nasal_import::nasal_import()
-{
-    import_lex.clear();
-    import_par.clear();
-    import_ast.clear();
-    filename_table.clear();
-    return;
-}
-
 void nasal_import::die(std::string filename,std::string error_stage)
 {
     ++error;
     std::cout<<">> [import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<"."<<std::endl;
-    return;
-}
-
-void nasal_import::init()
-{
-    import_lex.clear();
-    import_par.clear();
     return;
 }
 
@@ -94,10 +76,9 @@ void nasal_import::linker(nasal_ast& root,nasal_ast& add_root)
 nasal_ast nasal_import::file_import(nasal_ast& node)
 {
     // initializing
-    nasal_ast tmp;
-    tmp.set_line(0);
-    tmp.set_type(ast_root);
-    init();
+    nasal_ast tmp(0,ast_root);
+    import_lex.clear();
+    import_par.clear();
 
     // get filename and set node to ast_null
     std::string filename=node.get_children()[1].get_children()[0].get_str();
@@ -131,9 +112,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
 
 nasal_ast nasal_import::load(nasal_ast& root)
 {
-    nasal_ast new_root;
-    new_root.set_line(0);
-    new_root.set_type(ast_root);
+    nasal_ast new_root(0,ast_root);
 
     std::vector<nasal_ast>& ref_vec=root.get_children();
     int size=ref_vec.size();
@@ -148,7 +127,6 @@ nasal_ast nasal_import::load(nasal_ast& root)
     }
     // add root to the back of new_root
     linker(new_root,root);
-
     // oops,i think it is not efficient if the root is too ... large?
     return new_root;
 }
