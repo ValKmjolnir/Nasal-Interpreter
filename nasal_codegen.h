@@ -806,87 +806,25 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             mem_call(ast.get_children()[0]);
             gen(op_meq,0);
             break;
-        case ast_add_equal:
+        // ast_add_equal(22)~ast_link_equal(26) op_addeq(23)~op_lnkeq(27)
+        case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
-            gen(op_addeq,0);
-            break;
-        case ast_sub_equal:
-            calculation_gen(ast.get_children()[1]);
-            mem_call(ast.get_children()[0]);
-            gen(op_subeq,0);
-            break;
-        case ast_mult_equal:
-            calculation_gen(ast.get_children()[1]);
-            mem_call(ast.get_children()[0]);
-            gen(op_muleq,0);
-            break;
-        case ast_div_equal:
-            calculation_gen(ast.get_children()[1]);
-            mem_call(ast.get_children()[0]);
-            gen(op_diveq,0);
-            break;
-        case ast_link_equal:
-            calculation_gen(ast.get_children()[1]);
-            mem_call(ast.get_children()[0]);
-            gen(op_lnkeq,0);
+            gen(ast.get_type()-ast_add_equal+op_addeq,0);
             break;
         case ast_or:or_gen(ast);break;
         case ast_and:and_gen(ast);break;
-        case ast_add:
+        // ast_add(33)~ast_link(37) op_add(18)~op_lnk(22)
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
-            gen(op_add,0);
+            gen(ast.get_type()-ast_add+op_add,0);
             break;
-        case ast_sub:
+        // ast_cmp_equal(27)~ast_greater_equal(32) op_eq(29)~op_geq(34)
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_than:case ast_less_equal:case ast_greater_than:case ast_greater_equal:
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
-            gen(op_sub,0);
-            break;
-        case ast_mult:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_mul,0);
-            break;
-        case ast_div:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_div,0);
-            break;
-        case ast_link:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_lnk,0);
-            break;
-        case ast_cmp_equal:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_eq,0);
-            break;
-        case ast_cmp_not_equal:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_neq,0);
-            break;
-        case ast_less_equal:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_leq,0);
-            break;
-        case ast_less_than:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_less,0);
-            break;
-        case ast_greater_equal:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_geq,0);
-            break;
-        case ast_greater_than:
-            calculation_gen(ast.get_children()[0]);
-            calculation_gen(ast.get_children()[1]);
-            gen(op_grt,0);
+            gen(ast.get_type()-ast_cmp_equal+op_eq,0);
             break;
         case ast_trinocular:trino_gen(ast);break;
         case ast_unary_sub:
@@ -909,11 +847,7 @@ void nasal_codegen::block_gen(nasal_ast& ast)
         nasal_ast& tmp=ast.get_children()[i];
         switch(tmp.get_type())
         {
-            case ast_null:
-            case ast_nil:
-            case ast_number:
-            case ast_string:
-            case ast_function:break;
+            case ast_null:case ast_nil:case ast_number:case ast_string:case ast_function:break;
             case ast_definition:definition_gen(tmp);break;
             case ast_multi_assign:multi_assignment_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
