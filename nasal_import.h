@@ -77,8 +77,6 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
 {
     // initializing
     nasal_ast tmp(0,ast_root);
-    import_lex.clear();
-    import_par.clear();
 
     // get filename and set node to ast_null
     std::string filename=node.get_children()[1].get_children()[0].get_str();

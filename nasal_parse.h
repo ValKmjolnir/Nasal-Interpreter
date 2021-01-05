@@ -55,6 +55,7 @@ private:
     bool check_function_end(nasal_ast&);
     bool check_special_call();
     bool need_semi_check(nasal_ast&);
+    void check_memory_reachable(nasal_ast&);
     nasal_ast null_node_gen();
     nasal_ast nil_gen();
     nasal_ast number_gen();
@@ -97,7 +98,6 @@ private:
     nasal_ast return_expr();
 public:
     int get_error();
-    void clear();
     void set_toklist(std::vector<token>&);
     void main_process();
     nasal_ast& get_root();
@@ -106,14 +106,6 @@ public:
 int nasal_parse::get_error()
 {
     return error;
-}
-
-void nasal_parse::clear()
-{
-    tok_list_size=ptr=error=in_function=in_loop=0;
-    tok_list.clear();
-    root.clear();
-    return;
 }
 
 void nasal_parse::set_toklist(std::vector<token>& lex_token)
@@ -260,6 +252,27 @@ bool nasal_parse::need_semi_check(nasal_ast& node)
     if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_conditional)
         return false;
     return !check_function_end(node);
+}
+
+void nasal_parse::check_memory_reachable(nasal_ast& node)
+{
+    if(node.get_type()==ast_call)
+    {
+        if(node.get_children()[0].get_type()!=ast_identifier)
+            die(node.get_line(),"cannot get the memory of a temporary data");
+        int size=node.get_children().size();
+        for(int i=0;i<size;++i)
+        {
+            nasal_ast& tmp_node=node.get_children()[i];
+            if(tmp_node.get_type()==ast_call_func)
+                die(tmp_node.get_line(),"cannot get the memory of function-returned value");
+            if(tmp_node.get_type()==ast_call_vec && (tmp_node.get_children().size()>1 || tmp_node.get_children()[0].get_type()==ast_subvec))
+                die(tmp_node.get_line(),"cannot get the memory in temporary sliced vector");
+        } 
+    }
+    else if(node.get_type()!=ast_identifier)
+        die(node.get_line(),"cannot use calculation as the memory of scalar");
+    return;
 }
 
 nasal_ast nasal_parse::null_node_gen()
@@ -561,8 +574,7 @@ nasal_ast nasal_parse::calculation()
         tmp.add_child(node);
         ++ptr;
         tmp.add_child(calculation());
-        ++ptr;
-        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
+        if(++ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
         {
             die(error_line,"expected \":\"");
             return node;
@@ -574,27 +586,7 @@ nasal_ast nasal_parse::calculation()
     else if(ptr<tok_list_size && tok_equal<=tok_list[ptr].type && tok_list[ptr].type<=tok_link_equal)
     {
         // check the left expression to confirm it is available to get memory
-        if(node.get_type()!=ast_call && node.get_type()!=ast_identifier)
-            die(node.get_line(),"cannot use calculation as the memory of scalar");
-        if(node.get_type()==ast_call)
-        {
-            if(node.get_children()[0].get_type()!=ast_identifier)
-                die(node.get_children()[0].get_line(),"cannot get the memory of temporary value");
-            int size=node.get_children().size();
-            for(int i=0;i<size;++i)
-            {
-                nasal_ast& tmp_node=node.get_children()[i];
-                if(tmp_node.get_type()==ast_call_func)
-                    die(tmp_node.get_line(),"cannot get the memory of function-returned value");
-                if(tmp_node.get_type()==ast_call_vec)
-                {
-                    if(tmp_node.get_children().size()>1)
-                        die(tmp_node.get_line(),"cannot get the memory in temporary sliced vector");
-                    else if(tmp_node.get_children()[0].get_type()==ast_subvec)
-                        die(tmp_node.get_children()[0].get_line(),"cannot get the memory in temporary sliced vector");
-                }
-            } 
-        }
+        check_memory_reachable(node);
         // tok_equal~tok_link_equal is 37 to 42,ast_equal~ast_link_equal is 21~26
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_equal+ast_equal);
         tmp.add_child(node);
@@ -914,7 +906,12 @@ nasal_ast nasal_parse::definition()
     nasal_ast node(tok_list[ptr].line,ast_definition);
     if(tok_list[ptr].type==tok_var)
     {
-        switch(tok_list[++ptr].type)
+        if(++ptr>=tok_list_size)
+        {
+            die(error_line,"expected identifier");
+            return node;
+        }
+        switch(tok_list[ptr].type)
         {
             case tok_identifier:node.add_child(id_gen());           break;
             case tok_left_curve:node.add_child(var_outcurve_def()); break;
@@ -947,12 +944,8 @@ nasal_ast nasal_parse::definition()
 nasal_ast nasal_parse::var_incurve_def()
 {
     nasal_ast node;
-    ptr+=2;// check_multi_definition will check the 'var'
-    if(ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
-    {
-        die(error_line,"expected identifier");
-        return node;
-    }
+    ptr+=2;
+    // check_multi_definition will check the 'var',so there's no need to check this again
     node=multi_id();
     if(++ptr<tok_list_size && is_call(tok_list[ptr].type))
         die(error_line,"don\'t call identifier in multi-definition");
@@ -963,13 +956,9 @@ nasal_ast nasal_parse::var_incurve_def()
 nasal_ast nasal_parse::var_outcurve_def()
 {
     nasal_ast node;
-    if(++ptr>=tok_list_size || tok_list[ptr].type!=tok_identifier)
-    {
-        die(error_line,"expected identifier");
-        return node;
-    }
+    ++ptr;
     node=multi_id();
-    if(++ptr<tok_list_size && (tok_list[ptr].type==tok_dot || tok_list[ptr].type==tok_left_bracket || tok_list[ptr].type==tok_left_curve))
+    if(++ptr<tok_list_size && is_call(tok_list[ptr].type))
         die(error_line,"don\'t call identifier in multi-definition");
     else if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_curve)
         die(error_line,"expected \")\"");
@@ -1006,9 +995,8 @@ nasal_ast nasal_parse::multi_scalar(bool check_call_memory)
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_curve)
     {
         node.add_child(calculation());
-        int type=node.get_children().back().get_type();
-        if(check_call_memory && type!=ast_call && type!=ast_identifier)
-            die(node.get_children().back().get_line(),"cannot use calculation as the memory of scalar");
+        if(check_call_memory)
+            check_memory_reachable(node.get_children().back());
         if(++ptr>=tok_list_size)
             break;
         if(tok_list[ptr].type==tok_comma)
