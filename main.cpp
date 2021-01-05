@@ -12,7 +12,6 @@ void help()
 	std::cout<<">> [\"file\"] input a file name.\n";
 	std::cout<<">> [help  ] show help.\n";
 	std::cout<<">> [clear ] clear the screen.\n";
-	std::cout<<">> [del   ] clear the input filename.\n";
 	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
 	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
 	std::cout<<">> [code  ] show byte code.\n";
@@ -30,15 +29,6 @@ void logo()
 	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  \n";
 	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
     return;
-}
-
-void del_func()
-{
-	lexer.clear();
-	parse.clear();
-	inputfile="null";
-	std::cout<<">> [Delete] complete.\n";
-	return;
 }
 
 void die(std::string stage,std::string filename)
@@ -169,8 +159,6 @@ int main()
 			system("clear");
 #endif
 		}
-		else if(command=="del")
-			del_func();
 		else if(command=="lex")
 			lex_func();
 		else if(command=="ast")

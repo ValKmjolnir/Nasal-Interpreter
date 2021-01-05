@@ -136,8 +136,6 @@ void nasal_bytecode_vm::die(std::string str)
 }
 bool nasal_bytecode_vm::check_condition(nasal_scalar* value_addr)
 {
-    if(!value_addr)
-        return false;
     int type=value_addr->get_type();
     if(type==vm_number)
         return (value_addr->get_number()!=0);
@@ -918,8 +916,8 @@ void nasal_bytecode_vm::opr_slicebegin()
 }
 void nasal_bytecode_vm::opr_sliceend()
 {
-    vm.del_reference(*value_stack_top--);
-    *(++value_stack_top)=slice_stack.top();
+    vm.del_reference(*value_stack_top);
+    *value_stack_top=slice_stack.top();
     slice_stack.pop();
     return;
 }

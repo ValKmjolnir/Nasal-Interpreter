@@ -106,7 +106,6 @@ private:
     std::string number_gen();
     std::string string_gen();
 public:
-    void clear();
 	void openfile(std::string);
 	void die(std::string,int,int);
     void scanner();
@@ -114,15 +113,6 @@ public:
     int  get_error();
 	std::vector<token>& get_token_list();
 };
-
-void nasal_lexer::clear()
-{
-	error=res_size=line=ptr=0;
-	line_code="";
-	res.clear();
-    token_list.clear();
-    return;
-}
 
 void nasal_lexer::openfile(std::string filename)
 {
