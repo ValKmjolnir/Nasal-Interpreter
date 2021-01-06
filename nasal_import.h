@@ -81,7 +81,6 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     // get filename and set node to ast_null
     std::string filename=node.get_children()[1].get_children()[0].get_str();
     node.clear();
-    node.set_type(ast_null);
 
     // avoid infinite loading loop
     if(check_exist(filename))

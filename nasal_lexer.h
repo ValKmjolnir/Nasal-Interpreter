@@ -7,7 +7,7 @@
 #define IS_DIGIT(c)           ('0'<=c&&c<='9')
 #define IS_STRING(c)          (c=='\''||c=='\"'||c=='`')
 // single operators have only one character
-#define IS_SINGLE_OPRATOR(c)  (c=='('||c==')'||c=='['||c==']'||c=='{'||c=='}'||c==','||c==';'||c=='|'||c==':'||\
+#define IS_SINGLE_OPERATOR(c) (c=='('||c==')'||c=='['||c==']'||c=='{'||c=='}'||c==','||c==';'||c=='|'||c==':'||\
 							   c=='?'||c=='`'||c=='&'||c=='@'||c=='%'||c=='$'||c=='^'||c=='\\')
 // calculation operators may have two chars, for example: += -= *= /= ~= != == >= <=
 #define IS_CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
@@ -102,12 +102,13 @@ private:
 	std::string line_code;
 	std::vector<char> res;
     std::vector<token> token_list;
+	int  get_token_type(std::string);
+	void die(std::string,int,int);
 	std::string identifier_gen();
     std::string number_gen();
     std::string string_gen();
 public:
 	void openfile(std::string);
-	void die(std::string,int,int);
     void scanner();
     void print_token();
     int  get_error();
@@ -138,6 +139,14 @@ void nasal_lexer::openfile(std::string filename)
     return;
 }
 
+int nasal_lexer::get_token_type(std::string tk_str)
+{
+	for(int i=0;token_table[i].str;++i)
+		if(tk_str==token_table[i].str)
+			return token_table[i].tok_type;
+	return tok_null;
+}
+
 void nasal_lexer::die(std::string error_info,int line=-1,int column=-1)
 {
 	++error;
@@ -160,7 +169,7 @@ std::string nasal_lexer::number_gen()
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
 	std::string token_str="";
 	// generate hex number
-	if(res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='x')
+	if(ptr+1<res_size && res[ptr]=='0' && res[ptr+1]=='x')
 	{
 		token_str="0x";
 		ptr+=2;
@@ -175,7 +184,7 @@ std::string nasal_lexer::number_gen()
 		return token_str;
 	}
 	// generate oct number
-	else if(res[ptr]=='0' && ptr+1<res_size && res[ptr+1]=='o')
+	else if(ptr+1<res_size && res[ptr]=='0' && res[ptr+1]=='o')
 	{
 		token_str="0o";
 		ptr+=2;
@@ -248,9 +257,9 @@ std::string nasal_lexer::number_gen()
 std::string nasal_lexer::string_gen()
 {
 	std::string token_str="";
-	line_code+=res[ptr];
-	char str_begin=res[ptr++];
-	while(ptr<res_size && res[ptr]!=str_begin)
+	char str_begin=res[ptr];
+	line_code+=str_begin;
+	while(++ptr<res_size && res[ptr]!=str_begin)
 	{
 		line_code+=res[ptr];
 		if(res[ptr]=='\n')
@@ -277,10 +286,9 @@ std::string nasal_lexer::string_gen()
 				case '\"':token_str.push_back('\"');break;
 				default:  token_str.push_back(res[ptr]);break;
 			}
+			continue;
 		}
-		else
-			token_str+=res[ptr];
-		++ptr;
+		token_str+=res[ptr];
 	}
 	// check if this string ends with a " or '
 	if(ptr++>=res_size)
@@ -312,13 +320,7 @@ void nasal_lexer::scanner()
 		if(IS_IDENTIFIER(res[ptr]))
 		{
 			token_str=identifier_gen();
-			token new_token(line,0,token_str);
-            for(int i=0;token_table[i].str;++i)
-                if(token_str==token_table[i].str)
-                {
-                    new_token.type=token_table[i].tok_type;
-                    break;
-                }
+			token new_token(line,get_token_type(token_str),token_str);
             if(!new_token.type)
                 new_token.type=tok_identifier;
 			token_list.push_back(new_token);
@@ -335,19 +337,13 @@ void nasal_lexer::scanner()
 			token new_token(line,tok_string,token_str);
 			token_list.push_back(new_token);
 		}
-		else if(IS_SINGLE_OPRATOR(res[ptr]))
+		else if(IS_SINGLE_OPERATOR(res[ptr]))
 		{
 			token_str="";
 			token_str+=res[ptr];
 			line_code+=res[ptr];
-			token new_token(line,-1,token_str);
-            for(int i=0;token_table[i].str;++i)
-                if(token_str==token_table[i].str)
-                {
-                    new_token.type=token_table[i].tok_type;
-                    break;
-                }
-			if(new_token.type<0)
+			token new_token(line,get_token_type(token_str),token_str);
+			if(!new_token.type)
 				die("["+line_code+"_] incorrect operator.",line,line_code.length());
 			token_list.push_back(new_token);
 			++ptr;
@@ -365,39 +361,21 @@ void nasal_lexer::scanner()
                 ++ptr;
             }
 			line_code+=token_str;
-            token new_token(line,-1,token_str);
-            for(int i=0;token_table[i].str;++i)
-                if(token_str==token_table[i].str)
-                {
-                    new_token.type=token_table[i].tok_type;
-                    break;
-                }
+            token new_token(line,get_token_type(token_str),token_str);
 			token_list.push_back(new_token);
         }
 		else if(IS_CALC_OPERATOR(res[ptr]))
 		{
 			// get calculation operator
-			token_str=res[ptr];
-			++ptr;
+			token_str=res[ptr++];
 			if(ptr<res_size && res[ptr]=='=')
 				token_str+=res[ptr++];
 			line_code+=token_str;
-			token new_token(line,-1,token_str);
-            for(int i=0;token_table[i].str;++i)
-                if(token_str==token_table[i].str)
-                {
-                    new_token.type=token_table[i].tok_type;
-                    break;
-                }
+			token new_token(line,get_token_type(token_str),token_str);
 			token_list.push_back(new_token);
 		}
-		else if(IS_NOTE(res[ptr]))
-		{
-			// avoid note
-			while(ptr<res_size && res[ptr]!='\n') ++ptr;
-			// after this process ptr will point to a '\n'
-			// don't ++ptr then the counter for line can work correctly
-		}
+		else if(IS_NOTE(res[ptr]))// avoid note, after this process ptr will point to a '\n', so next loop line counter+1
+			while(++ptr<res_size && res[ptr]!='\n');
 		else
 		{
 			line_code+=res[ptr++];
