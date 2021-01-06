@@ -225,9 +225,7 @@ nasal_scalar* builtin_sleep(nasal_scalar* local_scope_addr,nasal_virtual_machine
         builtin_error_occurred("sleep","\"duration\" must be number");
         return NULL;
     }
-    unsigned long sleep_time=0;
-    sleep_time=(unsigned long)value_addr->get_number();
-    sleep(sleep_time); // sleep in unistd.h will make this progress sleep sleep_time seconds.
+    sleep((unsigned long)value_addr->get_number()); // sleep in unistd.h will make this progress sleep sleep_time seconds.
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
