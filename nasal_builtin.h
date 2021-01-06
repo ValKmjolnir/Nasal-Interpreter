@@ -164,12 +164,12 @@ nasal_scalar* builtin_setsize(nasal_scalar* local_scope_addr,nasal_virtual_machi
         return NULL;
     }
     int type=size_value_addr->get_type();
-    if(type!=vm_number && type!=vm_string)
+    if(type!=vm_number)
     {
         builtin_error_occurred("setsize","\"size\" is not a number");
         return NULL;
     }
-    int number=size_value_addr->to_number();
+    int number=size_value_addr->get_number();
     if(number<0)
     {
         builtin_error_occurred("setsize","\"size\" must be greater than -1");
@@ -202,13 +202,7 @@ nasal_scalar* builtin_system(nasal_scalar* local_scope_addr,nasal_virtual_machin
         return NULL;
     }
     std::string str=str_value_addr->get_string();
-    int size=str.length();
-    char* command=new char[size+1];
-    for(int i=0;i<size;++i)
-        command[i]=str[i];
-    command[size]='\0';
-    system(command);
-    delete []command;
+    system(str.data());
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
@@ -226,24 +220,13 @@ nasal_scalar* builtin_sleep(nasal_scalar* local_scope_addr,nasal_virtual_machine
 {
     nasal_scalar* value_addr=in_builtin_find("duration");
     int type=value_addr->get_type();
-    if(type!=vm_string && type!=vm_number)
+    if(type!=vm_number)
     {
-        builtin_error_occurred("sleep","\"duration\" must be string or number");
+        builtin_error_occurred("sleep","\"duration\" must be number");
         return NULL;
     }
     unsigned long sleep_time=0;
-    if(type==vm_string)
-    {
-        double number=value_addr->to_number();
-        if(std::isnan(number))
-        {
-            builtin_error_occurred("sleep","\"duration\" is not a numerable string");
-            return NULL;
-        }
-        sleep_time=(unsigned long)number;
-    }
-    else
-        sleep_time=(unsigned long)value_addr->get_number();
+    sleep_time=(unsigned long)value_addr->get_number();
     sleep(sleep_time); // sleep in unistd.h will make this progress sleep sleep_time seconds.
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
@@ -269,7 +252,7 @@ nasal_scalar* builtin_finput(nasal_scalar* local_scope_addr,nasal_virtual_machin
             file_content.push_back(c);
         }
     else
-        file_content="";
+        builtin_error_occurred("io.fin","cannot open \""+filename+"\".");
     fin.close();
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_string);
     ret_addr->set_string(file_content);
@@ -417,9 +400,8 @@ nasal_scalar* builtin_num(nasal_scalar* local_scope_addr,nasal_virtual_machine& 
         builtin_error_occurred("num","\"value\" must be string");
         return NULL;
     }
-    std::string str=value_addr->get_string();
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
-    ret_addr->set_number(trans_string_to_number(str));
+    ret_addr->set_number(value_addr->to_number());
     return ret_addr;
 }
 nasal_scalar* builtin_pop(nasal_scalar* local_scope_addr,nasal_virtual_machine& nasal_vm)
@@ -682,8 +664,7 @@ nasal_scalar* builtin_contains(nasal_scalar* local_scope_addr,nasal_virtual_mach
         builtin_error_occurred("contains","\"key\" must be string");
         return NULL;
     }
-    std::string key=key_addr->get_string();
-    bool contains=hash_addr->get_hash().check_contain(key);
+    bool contains=hash_addr->get_hash().check_contain(key_addr->get_string());
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_number);
     ret_addr->set_number((double)contains);
     return ret_addr;
@@ -702,8 +683,7 @@ nasal_scalar* builtin_delete(nasal_scalar* local_scope_addr,nasal_virtual_machin
         builtin_error_occurred("delete","\"key\" must be string");
         return NULL;
     }
-    std::string key=key_addr->get_string();
-    hash_addr->get_hash().del_elem(key);
+    hash_addr->get_hash().del_elem(key_addr->get_string());
     nasal_scalar* ret_addr=nasal_vm.gc_alloc(vm_nil);
     return ret_addr;
 }
