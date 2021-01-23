@@ -251,7 +251,7 @@ void nasal_bytecode_vm::opr_entry()
 }
 void nasal_bytecode_vm::opr_unot()
 {
-    nasal_scalar* val_addr=*value_stack_top--;
+    nasal_scalar* val_addr=*value_stack_top;
     int type=val_addr->get_type();
     nasal_scalar* new_value_address=NULL;
     if(type==vm_nil)
@@ -280,26 +280,26 @@ void nasal_bytecode_vm::opr_unot()
     }
     else
         die("unot: incorrect value type");
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_usub()
 {
-    nasal_scalar* val_addr=*value_stack_top--;
+    nasal_scalar* val_addr=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(-val_addr->to_number());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr);
     return;
 }
 void nasal_bytecode_vm::opr_add()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
-    nasal_scalar* val_addr1=*value_stack_top--;
+    nasal_scalar* val_addr1=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()+val_addr2->to_number());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr1);
     vm.del_reference(val_addr2);
     return;
@@ -307,10 +307,10 @@ void nasal_bytecode_vm::opr_add()
 void nasal_bytecode_vm::opr_sub()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
-    nasal_scalar* val_addr1=*value_stack_top--;
+    nasal_scalar* val_addr1=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()-val_addr2->to_number());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr1);
     vm.del_reference(val_addr2);
     return;
@@ -318,10 +318,10 @@ void nasal_bytecode_vm::opr_sub()
 void nasal_bytecode_vm::opr_mul()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
-    nasal_scalar* val_addr1=*value_stack_top--;
+    nasal_scalar* val_addr1=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()*val_addr2->to_number());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr1);
     vm.del_reference(val_addr2);
     return;
@@ -329,10 +329,10 @@ void nasal_bytecode_vm::opr_mul()
 void nasal_bytecode_vm::opr_div()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
-    nasal_scalar* val_addr1=*value_stack_top--;
+    nasal_scalar* val_addr1=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()/val_addr2->to_number());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr1);
     vm.del_reference(val_addr2);
     return;
@@ -340,10 +340,10 @@ void nasal_bytecode_vm::opr_div()
 void nasal_bytecode_vm::opr_lnk()
 {
     nasal_scalar* val_addr2=*value_stack_top--;
-    nasal_scalar* val_addr1=*value_stack_top--;
+    nasal_scalar* val_addr1=*value_stack_top;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_string);
     new_value_address->set_string(val_addr1->to_string()+val_addr2->to_string());
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(val_addr1);
     vm.del_reference(val_addr2);
     return;
@@ -352,12 +352,12 @@ void nasal_bytecode_vm::opr_addeq()
 {
     nasal_scalar** mem_addr=pointer_stack.top();
     pointer_stack.pop();
-    nasal_scalar* val_addr2=*value_stack_top--;
+    nasal_scalar* val_addr2=*value_stack_top;
     nasal_scalar* val_addr1=*mem_addr;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()+val_addr2->to_number());
     vm.add_reference(new_value_address);
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(*mem_addr);
     *mem_addr=new_value_address;
     vm.del_reference(val_addr2);
@@ -367,12 +367,12 @@ void nasal_bytecode_vm::opr_subeq()
 {
     nasal_scalar** mem_addr=pointer_stack.top();
     pointer_stack.pop();
-    nasal_scalar* val_addr2=*value_stack_top--;
+    nasal_scalar* val_addr2=*value_stack_top;
     nasal_scalar* val_addr1=*mem_addr;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()-val_addr2->to_number());
     vm.add_reference(new_value_address);
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(*mem_addr);
     *mem_addr=new_value_address;
     vm.del_reference(val_addr2);
@@ -382,12 +382,12 @@ void nasal_bytecode_vm::opr_muleq()
 {
     nasal_scalar** mem_addr=pointer_stack.top();
     pointer_stack.pop();
-    nasal_scalar* val_addr2=*value_stack_top--;
+    nasal_scalar* val_addr2=*value_stack_top;
     nasal_scalar* val_addr1=*mem_addr;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()*val_addr2->to_number());
     vm.add_reference(new_value_address);
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(*mem_addr);
     *mem_addr=new_value_address;
     vm.del_reference(val_addr2);
@@ -397,12 +397,12 @@ void nasal_bytecode_vm::opr_diveq()
 {
     nasal_scalar** mem_addr=pointer_stack.top();
     pointer_stack.pop();
-    nasal_scalar* val_addr2=*value_stack_top--;
+    nasal_scalar* val_addr2=*value_stack_top;
     nasal_scalar* val_addr1=*mem_addr;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_number);
     new_value_address->set_number(val_addr1->to_number()/val_addr2->to_number());
     vm.add_reference(new_value_address);
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(*mem_addr);
     *mem_addr=new_value_address;
     vm.del_reference(val_addr2);
@@ -412,12 +412,12 @@ void nasal_bytecode_vm::opr_lnkeq()
 {
     nasal_scalar** mem_addr=pointer_stack.top();
     pointer_stack.pop();
-    nasal_scalar* val_addr2=*value_stack_top--;
+    nasal_scalar* val_addr2=*value_stack_top;
     nasal_scalar* val_addr1=*mem_addr;
     nasal_scalar* new_value_address=vm.gc_alloc(vm_string);
     new_value_address->set_string(val_addr1->to_string()+val_addr2->to_string());
     vm.add_reference(new_value_address);
-    *(++value_stack_top)=new_value_address;
+    *value_stack_top=new_value_address;
     vm.del_reference(*mem_addr);
     *mem_addr=new_value_address;
     vm.del_reference(val_addr2);

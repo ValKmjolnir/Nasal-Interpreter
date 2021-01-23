@@ -133,12 +133,6 @@ void nasal_parse::main_process()
             if(ptr<tok_list_size)
                 die(error_line,"expected \";\"");
         }
-        if(root.get_children().size())
-        {
-            int type=root.get_children().back().get_type();
-            if(type==ast_continue || type==ast_break || type==ast_return)
-                die(root.get_children().back().get_line(),ast_str(type)+" is not allowed in main scope");
-        }
     }
     return;
 }
@@ -518,8 +512,7 @@ nasal_ast nasal_parse::exprs_gen()
     nasal_ast node(tok_list[ptr].line,ast_block);
     if(tok_list[ptr].type==tok_left_brace)
     {
-        int left_brace_line=tok_list[ptr].line;
-        ++ptr;
+        int left_brace_line=tok_list[ptr++].line;
         while(ptr<tok_list_size && tok_list[ptr].type!=tok_right_brace)
         {
             node.add_child(expr());
@@ -540,7 +533,7 @@ nasal_ast nasal_parse::exprs_gen()
         if(ptr>=tok_list_size || tok_list[ptr].type!=tok_right_brace)
         {
             std::string lb_line="";
-            while(left_brace_line>1)
+            while(left_brace_line)
             {
                 lb_line=(char)('0'+(left_brace_line%10))+lb_line;
                 left_brace_line/=10;
@@ -551,9 +544,7 @@ nasal_ast nasal_parse::exprs_gen()
     else
     {
         node.add_child(expr());
-        ++ptr;
-        if(ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
-            --ptr;
+        if(++ptr<tok_list_size && tok_list[ptr].type!=tok_semi) --ptr;
     }
     return node;
 }
@@ -667,37 +658,6 @@ nasal_ast nasal_parse::additive_expr()
             tmp.add_child(multive_expr());
         else
             die(error_line,"expected calculation");
-        // pre-calculation
-        if(tmp.get_type()!=ast_link)
-        {
-            int type1=tmp.get_children()[0].get_type();
-            int type2=tmp.get_children()[1].get_type();
-            double num1,num2,num;
-            if(type1==ast_number && type2==ast_number)
-            {
-                num1=tmp.get_children()[0].get_num();
-                num2=tmp.get_children()[1].get_num();
-                num=(tmp.get_type()==ast_add? num1+num2:num1-num2);
-                tmp.set_type(ast_number);
-                tmp.set_num(num);
-                tmp.get_children().clear();
-            }
-        }
-        else
-        {
-            int type1=tmp.get_children()[0].get_type();
-            int type2=tmp.get_children()[1].get_type();
-            std::string s1,s2;
-            if(type1==ast_string && type2==ast_string)
-            {
-                s1=tmp.get_children()[0].get_str();
-                s2=tmp.get_children()[1].get_str();
-                s1+=s2;
-                tmp.set_type(ast_string);
-                tmp.set_str(s1);
-                tmp.get_children().clear();
-            }
-        }
         node=tmp;
     }
     --ptr;
