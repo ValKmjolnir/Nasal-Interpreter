@@ -616,10 +616,10 @@ double nasal_scalar::to_number()
 {
     switch(type)
     {
-        case vm_nil:return 0;
+        case vm_nil:    return 0;
         case vm_number: return ptr.num;
         case vm_string: return trans_string_to_number(*ptr.str);
-        default: return std::nan("");
+        default:        return std::nan("");
     }
     return 0;
 }
@@ -720,16 +720,12 @@ nasal_scalar* nasal_virtual_machine::gc_alloc(int val_type)
 }
 void nasal_virtual_machine::add_reference(nasal_scalar* value_address)
 {
-    if(value_address)
-        ++value_address->ref_cnt;
+    ++value_address->ref_cnt;
     return;
 }
 void nasal_virtual_machine::del_reference(nasal_scalar* value_address)
 {
-    if(value_address)
-        --value_address->ref_cnt;
-    else
-        return;
+    --value_address->ref_cnt;
     if(!value_address->ref_cnt)
     {
         value_address->clear();
