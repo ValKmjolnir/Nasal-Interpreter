@@ -6,49 +6,41 @@
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
 
-There is a Nasal console in FlightGear but sometimes it is not so easy for every developer to use.
+The interpreter is still in development. We really need your support!
 
-So this is an interpreter for Nasal written by C++.
-
-The interpreter is still in development.We really need your support!
+Also,i am a member of [FGPRC](https://www.fgprc.org/), welcome to join us!
 
 # Why Writing Nasal Interpreter
 
 Nasal is a script language first used in Flightgear.
 
-But in last summer holiday, members in FGPRC told me that it is hard to debug with nasal-console in Flightgear, especially when checking syntax error.
+But in last summer holiday, members in FGPRC told me that it is hard to debug with nasal-console in Flightgear, especially when checking syntax errors.
 
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
 
-I wrote the lexer, parser and runtime(nasal virtual machine/ast-runtime virtual machine) to help checking errors.
+I wrote the lexer, parser and runtime(bytecode virtual machine/ast-runtime virtual machine) to help checking errors.
 
 They found it easier for them to check errors before copying nasal-codes in nasal-console in Flightgear to test.
 
 # How to Compile
 
 > g++ -std=c++11 main.cpp -o main.exe
-  
-# Lexical Analysis
-
-The flow chart of lexer is here:
-
-[![nasal_lexer.png](pic/nasal_lexer.png?raw=true)](https://github.com/ValKmjolnir/Nasal-Interpreter/blob/master/pic/nasal_lexer.png)
-
-This picture seems ugly. I will re-draw it later(maybe 1000 years later).
 
 # Parser
 
-## Version 3.0
+LL(k) parser.
 
-I refactored parser and make it easier to maintain.
+```javascript
 
-The EBNF is also refactored.
+(var a,b,c)=[{b:nil},[1,2],func{return 0;}];
 
-## Version 4.0
+(a.b,b[0],c)=(1,2,3);
 
-Parser in this version will pre-calculate some mathematical equations.
+```
 
-This will make bytecode vm running more quickly.
+have the same first set,so LL(1) is useless for this language.
+
+Maybe in the future i can refactor it to LL(1) with special checks.
 
 # Abstract Syntax Tree
 
@@ -89,23 +81,26 @@ Now i am trying to search hidden bugs in this interpreter.Hope you could help me
 There's an example of byte code below:
 
 ```javascript
-var (a,b,c)=(1,2,3);
+for(var i=0;i<4000000;i+=1);
 ```
 
 ```asm
+.number 0
+.number 4e+006
 .number 1
-.number 2
-.number 3
-.symbol a
-.symbol b
-.symbol c
-0x00000000: pone   0x00000000
-0x00000001: load   0x00000000  (a)
-0x00000002: pnum   0x00000001  (2)
-0x00000003: load   0x00000001  (b)
-0x00000004: pnum   0x00000002  (3)
-0x00000005: load   0x00000002  (c)
-0x00000006: nop    0x00000000
+.symbol i
+0x00000000: pzero  0x00000000
+0x00000001: load   0x00000000 (i)
+0x00000002: call   0x00000000 (i)
+0x00000003: pnum   0x00000001 (4e+006)
+0x00000004: less   0x00000000
+0x00000005: jf     0x0000000b
+0x00000006: pone   0x00000000
+0x00000007: mcall  0x00000000 (i)
+0x00000008: addeq  0x00000000
+0x00000009: pop    0x00000000
+0x0000000a: jmp    0x00000002
+0x0000000b: nop    0x00000000
 ```
 
 ## Version 5.0
@@ -113,3 +108,280 @@ var (a,b,c)=(1,2,3);
 I decide to optimize bytecode vm in this version.
 
 Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not efficient at all!
+
+2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
+
+# How to Use Nasal to Program
+
+## basic value type
+
+nasal has 6 value types.Number,string,vector,hash,function,nil.
+
+Number has 3 formats.Dec,hex and oct;
+
+String has 3 formats.But the third one is often used to declare a character.
+
+Vector has unlimited length and can store all types of values.
+
+Hash is a hashmap that stores values with strings/identifiers as the key.
+
+Function is also a value type in nasal.
+
+```javascript
+var spc=nil;
+
+var a=1;
+a=0x7fffffff;
+a=0o170001;
+
+var b='str';
+b="another string";
+b=`c`;
+
+var c=[];
+c=[0,nil,{},[],func(){return 0;}];
+append(c,0,1,2);
+
+var d={
+    member1:nil,
+    member2:'str',
+    'member3':'member\'s name can also be a string constant',
+    "member4":"also this"
+};
+
+var e=func(x,y,z)
+{
+    return nil;
+}
+e=func
+{
+    return 1024;
+}
+e=func(x,y,z,default_parameter1=1,default_parameter2=2)
+{
+    return x+y+z+default_parameter1+default_parameter2;
+}
+e=func(x,y,z,dynamic_parameter...)
+{
+    var sum=0;
+    foreach(var i;dynamic_parameter)
+        sum+=i;
+    return sum+x+y+z;
+}
+```
+
+## operators
+
+```javascript
+1+2;
+1-2;
+1*2;
+1/2;
+'str1'~'str2';
+
+1+1 and 0;
+1+2*3 or 0;
+1<0;
+1>0;
+1<=0;
+1>=0;
+1==0;
+1!=0;
+
+-1;
+!0;
+
+a=b=c=d=1;
+a+=1;
+a-=1;
+a*=1;
+a/=1;
+a~='string';
+```
+
+## definition
+
+```javascript
+var a=1;
+var (a,b,c)=[0,1,2];
+var (a,b,c)=(0,1,2);
+(var a,b,c)=[0,1,2];
+(var a,b,c)=(0,1,2);
+```
+
+## multi-assignment
+
+```javascript
+(a,b[0],c.d)=[0,1,2];
+(a,b[1],c.e)=(0,1,2);
+```
+
+## conditional expression
+
+```javascript
+if(1)
+{
+    ;
+}
+elsif(2)
+{
+    ;
+}
+else if(3)
+{
+    ;
+}
+else
+{
+    ;
+}
+```
+
+## loop
+
+```javascript
+while(condition)
+    continue;
+
+for(var i=0;i<10;i+=1)
+    break;
+
+forindex(var i;elem)
+    print(elem[i]);
+
+foreach(var i;elem)
+    print(i);
+```
+
+## subvec
+
+```javascript
+a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
+```
+
+## special function call
+
+```javascript
+a(x:0,y:1,z:2);
+```
+
+## often used builtin functions
+
+Must import lib.nas or has these functions' definitions inside your code.
+
+Also you could add builtin functions of your own(written in C/C++) to help you calculate things more quickly.(Advanced usage)
+
+```javascript
+
+var import=func(filename)
+{
+    nasal_call_import(filename);
+    return nil;
+}
+var print=func(elements...)
+{
+    nasal_call_builtin_std_cout(elements);
+    return nil;
+};
+var append=func(vector,elements...)
+{
+    nasal_call_builtin_push_back(vector,elements);
+    return nil;
+}
+var setsize=func(vector,size)
+{
+    nasal_call_builtin_set_size(vector,size);
+    return nil;
+}
+var split=func(delimeter,string)
+{
+    return nasal_call_builtin_split(delimeter,string);
+}
+var rand=func(seed=nil)
+{
+    return nasal_call_builtin_rand(seed);
+}
+var id=func(thing)
+{
+    return nasal_call_builtin_get_id(thing);
+}
+var int=func(value)
+{
+    return nasal_call_builtin_trans_int(value);
+}
+var num=func(value)
+{
+    return nasal_call_builtin_trans_num(value);
+}
+var pop=func(vector)
+{
+    return nasal_call_builtin_pop_back(vector);
+}
+var str=func(number)
+{
+    return nasal_call_builtin_trans_str(number);
+}
+var size=func(object)
+{
+    return nasal_call_builtin_size(object);
+}
+var contains=func(hash,key)
+{
+    return nasal_call_builtin_contains(hash,key);
+}
+var delete=func(hash,key)
+{
+    nasal_call_builtin_delete(hash,key);
+    return;
+}
+var keys=func(hash)
+{
+    return nasal_call_builtin_get_keys(hash);
+}
+var die=func(str)
+{
+    nasal_call_builtin_die(str);
+    return nil;
+}
+var typeof=func(object)
+{
+    return nasal_call_builtin_type(object);
+}
+var substr=func(str,begin,length)
+{
+    return nasal_call_builtin_substr(str,begin,length);
+}
+var math=
+{
+    e:2.7182818284590452354,
+    pi:3.14159265358979323846264338327950288,
+    sin:func(x)
+    {
+        return nasal_call_builtin_sin(x);
+    },
+    cos:func(x)
+    {
+        return nasal_call_builtin_cos(x);
+    },
+    tan:func(x)
+    {
+        return nasal_call_builtin_tan(x);
+    },
+    exp:func(x)
+    {
+        return nasal_call_builtin_exp(x);
+    }, 
+    ln:func(x)
+    {
+        return nasal_call_builtin_cpp_math_ln(x);
+    },
+    sqrt:func(x)
+    {
+        return nasal_call_builtin_cpp_math_sqrt(x);
+    },
+    atan2:func(x,y)
+    {
+        return nasal_call_builtin_cpp_atan2(x,y);
+    },
+};
+```
