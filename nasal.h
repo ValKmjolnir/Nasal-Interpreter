@@ -134,6 +134,6 @@ std::string trans_number_to_string(double number)
 #include "nasal_gc.h"
 #include "nasal_builtin.h"
 #include "nasal_codegen.h"
-#include "nasal_bytecode_vm.h"
+#include "nasal_vm.h"
 
 #endif

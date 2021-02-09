@@ -986,7 +986,8 @@ nasal_ast nasal_parse::multi_assgin()
         node.add_child(check_multi_scalar()?multi_scalar(false):calculation());
     else
         node.add_child(calculation());
-    if(node.get_children()[1].get_type()==ast_multi_scalar && node.get_children()[0].get_children().size()!=node.get_children()[1].get_children().size())
+    if(node.get_children()[1].get_type()==ast_multi_scalar
+        && node.get_children()[0].get_children().size()!=node.get_children()[1].get_children().size())
         die(node.get_children()[0].get_line(),"too much or lack values in multi-assignment");
     return node;
 }
@@ -1045,7 +1046,15 @@ nasal_ast nasal_parse::for_loop()
     else if(tok_list[ptr].type==tok_var)
         node.add_child(definition());
     else if(tok_list[ptr].type==tok_left_curve)
-        node.add_child(check_multi_definition()?definition():(check_multi_scalar()?multi_assgin():calculation()));
+        node.add_child(
+            check_multi_definition()?
+                definition():
+                (
+                    check_multi_scalar()?
+                    multi_assgin():
+                    calculation()
+                )
+        );
     else
         node.add_child(calculation());
     if(++ptr>=tok_list_size || tok_list[ptr].type!=tok_semi)
