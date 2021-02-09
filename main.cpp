@@ -5,7 +5,7 @@ nasal_parse    parse;
 nasal_import   import;
 std::string    inputfile="null";
 nasal_codegen  code_generator;
-nasal_bytecode_vm bytevm;
+nasal_vm       bytevm;
 
 void help()
 {
