@@ -4,14 +4,14 @@
 enum ast_node
 {
     ast_null=0,ast_root,ast_block,
-    ast_nil,ast_number,ast_string,ast_identifier,ast_function,ast_hash,ast_vector,
+    ast_nil,ast_num,ast_str,ast_id,ast_func,ast_hash,ast_vec,
     ast_hashmember,ast_call,ast_call_hash,ast_call_vec,ast_call_func,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
     ast_and,ast_or,
     ast_equal,ast_add_equal,ast_sub_equal,ast_mult_equal,ast_div_equal,ast_link_equal,
     ast_cmp_equal,ast_cmp_not_equal,
-    ast_less_than,ast_less_equal,
-    ast_greater_than,ast_greater_equal,
+    ast_less,ast_leq,
+    ast_grt,ast_geq,
     ast_add,ast_sub,ast_mult,ast_div,ast_link,
     ast_unary_sub,ast_unary_not,
     ast_trinocular,
@@ -22,7 +22,7 @@ enum ast_node
     ast_continue,ast_break,ast_return
 };
 
-std::string ast_str(int type)
+std::string ast_name(int type)
 {
     switch(type)
     {
@@ -30,12 +30,12 @@ std::string ast_str(int type)
         case ast_root:         return "root";
         case ast_block:        return "block";
         case ast_nil:          return "nil";
-        case ast_number:       return "number";
-        case ast_string:       return "string";
-        case ast_identifier:   return "id";
-        case ast_function:     return "function";
+        case ast_num:          return "number";
+        case ast_str:          return "string";
+        case ast_id:           return "id";
+        case ast_func:         return "function";
         case ast_hash:         return "hash";
-        case ast_vector:       return "vector";
+        case ast_vec:          return "vector";
         case ast_hashmember:   return "hashmember";
         case ast_call:         return "call";
         case ast_call_hash:    return "callh";
@@ -55,10 +55,10 @@ std::string ast_str(int type)
         case ast_link_equal:   return "~=";
         case ast_cmp_equal:    return "==";
         case ast_cmp_not_equal:return "!=";
-        case ast_less_than:    return "<";
-        case ast_less_equal:   return "<=";
-        case ast_greater_than: return ">";
-        case ast_greater_equal:return ">=";
+        case ast_less:         return "<";
+        case ast_leq:          return "<=";
+        case ast_grt:          return ">";
+        case ast_geq:          return ">=";
         case ast_add:          return "+";
         case ast_sub:          return "-";
         case ast_mult:         return "*";
@@ -216,11 +216,11 @@ void nasal_ast::print_ast(int depth)
 {
     std::string indentation="";
     for(int i=0;i<depth;++i) indentation+="|  ";
-    indentation+=ast_str(this->type);
+    indentation+=ast_name(this->type);
     std::cout<<indentation;
-    if(this->type==ast_string || this->type==ast_identifier || this->type==ast_dynamic_id || this->type==ast_call_hash)
+    if(this->type==ast_str || this->type==ast_id || this->type==ast_dynamic_id || this->type==ast_call_hash)
         std::cout<<":"<<this->str;
-    else if(this->type==ast_number)
+    else if(this->type==ast_num)
         std::cout<<":"<<this->num;
     std::cout<<'\n';
     int child_size=this->children.size();
