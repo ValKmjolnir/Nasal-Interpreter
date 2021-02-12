@@ -278,7 +278,7 @@ void nasal_codegen::function_gen(nasal_ast& ast)
     for(int i=0;i<arg_size;++i)
     {
         nasal_ast& tmp=ref_arg.get_children()[i];
-        if(tmp.get_type()==ast_identifier)
+        if(tmp.get_type()==ast_id)
         {
             std::string str=tmp.get_str();
             regist_string(str);
@@ -396,7 +396,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
 
 void nasal_codegen::mem_call(nasal_ast& ast)
 {
-    if(ast.get_type()==ast_identifier)
+    if(ast.get_type()==ast_id)
         mem_call_id(ast);
     else
         mem_call_id(ast.get_children()[0]);
@@ -473,7 +473,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
 
 void nasal_codegen::definition_gen(nasal_ast& ast)
 {
-    if(ast.get_children()[0].get_type()==ast_identifier)
+    if(ast.get_children()[0].get_type()==ast_id)
         single_def(ast);
     else
         multi_def(ast);
@@ -585,13 +585,13 @@ void nasal_codegen::for_gen(nasal_ast& ast)
         case ast_null:break;
         case ast_definition:definition_gen(ast.get_children()[0]);break;
         case ast_multi_assign:multi_assignment_gen(ast.get_children()[0]);break;
-        case ast_nil:case ast_number:case ast_string:case ast_function:break;
-        case ast_vector:case ast_hash:
+        case ast_nil:case ast_num:case ast_str:case ast_func:break;
+        case ast_vec:case ast_hash:
         case ast_call:
         case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_leq:case ast_less:case ast_geq:case ast_grt:
         case ast_trinocular:calculation_gen(ast.get_children()[0]);pop_gen();break;
     }
     int jmp_place=exec_code.size();
@@ -609,13 +609,13 @@ void nasal_codegen::for_gen(nasal_ast& ast)
         case ast_null:break;
         case ast_definition:definition_gen(ast.get_children()[2]);break;
         case ast_multi_assign:multi_assignment_gen(ast.get_children()[2]);break;
-        case ast_nil:case ast_number:case ast_string:case ast_function:break;
-        case ast_vector:case ast_hash:
+        case ast_nil:case ast_num:case ast_str:case ast_func:break;
+        case ast_vec:case ast_hash:
         case ast_call:
         case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
         case ast_unary_sub:case ast_unary_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_equal:case ast_less_than:case ast_greater_equal:case ast_greater_than:
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_leq:case ast_less:case ast_geq:case ast_grt:
         case ast_trinocular:calculation_gen(ast.get_children()[2]);pop_gen();break;
     }
     gen(op_jmp,jmp_place);
@@ -734,14 +734,14 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
 {
     switch(ast.get_type())
     {
-        case ast_nil:        nil_gen();         break;
-        case ast_number:     number_gen(ast);   break;
-        case ast_string:     string_gen(ast);   break;
-        case ast_identifier: call_id(ast);      break;
-        case ast_vector:     vector_gen(ast);   break;
-        case ast_hash:       hash_gen(ast);     break;
-        case ast_function:   function_gen(ast); break;
-        case ast_call:       call_gen(ast);     break;
+        case ast_nil:  nil_gen();         break;
+        case ast_num:  number_gen(ast);   break;
+        case ast_str:  string_gen(ast);   break;
+        case ast_id:   call_id(ast);      break;
+        case ast_vec:  vector_gen(ast);   break;
+        case ast_hash: hash_gen(ast);     break;
+        case ast_func: function_gen(ast); break;
+        case ast_call: call_gen(ast);     break;
         case ast_equal:
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
@@ -761,8 +761,8 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             calculation_gen(ast.get_children()[1]);
             gen(ast.get_type()-ast_add+op_add,0);
             break;
-        // ast_cmp_equal(27)~ast_greater_equal(32) op_eq(29)~op_geq(34)
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less_than:case ast_less_equal:case ast_greater_than:case ast_greater_equal:
+        // ast_cmp_equal(27)~ast_geq(32) op_eq(29)~op_geq(34)
+        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less:case ast_leq:case ast_grt:case ast_geq:
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
             gen(ast.get_type()-ast_cmp_equal+op_eq,0);
@@ -788,7 +788,7 @@ void nasal_codegen::block_gen(nasal_ast& ast)
         nasal_ast& tmp=ast.get_children()[i];
         switch(tmp.get_type())
         {
-            case ast_null:case ast_nil:case ast_number:case ast_string:case ast_function:break;
+            case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
             case ast_definition:definition_gen(tmp);break;
             case ast_multi_assign:multi_assignment_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
@@ -804,8 +804,8 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_for:
             case ast_forindex:
             case ast_foreach:loop_gen(tmp);break;
-            case ast_identifier:
-            case ast_vector:
+            case ast_id:
+            case ast_vec:
             case ast_hash:
             case ast_call:
             case ast_equal:
@@ -823,10 +823,10 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_link:
             case ast_cmp_equal:
             case ast_cmp_not_equal:
-            case ast_less_equal:
-            case ast_less_than:
-            case ast_greater_equal:
-            case ast_greater_than:
+            case ast_leq:
+            case ast_less:
+            case ast_geq:
+            case ast_grt:
             case ast_or:
             case ast_and:
             case ast_trinocular:calculation_gen(tmp);pop_gen();break;
@@ -859,7 +859,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
         nasal_ast& tmp=ast.get_children()[i];
         switch(tmp.get_type())
         {
-            case ast_null:case ast_nil:case ast_number:case ast_string:case ast_function:break;
+            case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
             case ast_definition:definition_gen(tmp);break;
             case ast_multi_assign:multi_assignment_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
@@ -867,8 +867,8 @@ void nasal_codegen::main_progress(nasal_ast& ast)
             case ast_for:
             case ast_forindex:
             case ast_foreach:loop_gen(tmp);break;
-            case ast_identifier:
-            case ast_vector:
+            case ast_id:
+            case ast_vec:
             case ast_hash:
             case ast_call:
             case ast_equal:
@@ -886,10 +886,10 @@ void nasal_codegen::main_progress(nasal_ast& ast)
             case ast_link:
             case ast_cmp_equal:
             case ast_cmp_not_equal:
-            case ast_less_equal:
-            case ast_less_than:
-            case ast_greater_equal:
-            case ast_greater_than:
+            case ast_leq:
+            case ast_less:
+            case ast_geq:
+            case ast_grt:
             case ast_or:
             case ast_and:
             case ast_trinocular:calculation_gen(tmp);pop_gen();break;

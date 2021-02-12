@@ -47,7 +47,7 @@ bool nasal_import::check_import(nasal_ast& node)
         return false;
     if(ref_vec[1].get_type()!=ast_call_func)
         return false;
-    if(ref_vec[1].get_children().size()!=1 || ref_vec[1].get_children()[0].get_type()!=ast_string)
+    if(ref_vec[1].get_children().size()!=1 || ref_vec[1].get_children()[0].get_type()!=ast_str)
         return false;
     return true;
 }

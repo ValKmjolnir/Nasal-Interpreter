@@ -16,18 +16,18 @@
 enum token_type
 {
     tok_null=0,
-    tok_number,tok_string,tok_identifier,
+    tok_num,tok_str,tok_id,
     tok_for,tok_forindex,tok_foreach,tok_while,
     tok_var,tok_func,tok_break,tok_continue,
-    tok_return,tok_if,tok_elsif,tok_else,tok_nil,
-    tok_left_curve,tok_right_curve,
-    tok_left_bracket,tok_right_bracket,
-    tok_left_brace,tok_right_brace,
+    tok_ret,tok_if,tok_elsif,tok_else,tok_nil,
+    tok_lcurve,tok_rcurve,
+    tok_lbracket,tok_rbracket,
+    tok_lbrace,tok_rbrace,
     tok_semi,tok_and,tok_or,tok_comma,tok_dot,tok_ellipsis,tok_quesmark,
     tok_colon,tok_add,tok_sub,tok_mult,tok_div,tok_link,tok_not,
-    tok_equal,
-    tok_add_equal,tok_sub_equal,tok_mult_equal,tok_div_equal,tok_link_equal,
-    tok_cmp_equal,tok_cmp_not_equal,tok_less_than,tok_less_equal,tok_greater_than,tok_greater_equal
+    tok_eq,
+    tok_addeq,tok_subeq,tok_multeq,tok_diveq,tok_lnkeq,
+    tok_cmpeq,tok_neq,tok_less,tok_leq,tok_grt,tok_geq
 };
 
 struct
@@ -36,52 +36,52 @@ struct
     int tok_type;
 }token_table[]=
 {
-    {"for"     ,tok_for          },
-    {"forindex",tok_forindex     },
-    {"foreach" ,tok_foreach      },
-    {"while"   ,tok_while        },
-    {"var"     ,tok_var          },
-    {"func"    ,tok_func         },
-    {"break"   ,tok_break        },
-    {"continue",tok_continue     },
-    {"return"  ,tok_return       },
-    {"if"      ,tok_if           },
-    {"elsif"   ,tok_elsif        },
-    {"else"    ,tok_else         },
-    {"nil"     ,tok_nil          },
-    {"("       ,tok_left_curve   },
-    {")"       ,tok_right_curve  },
-    {"["       ,tok_left_bracket },
-    {"]"       ,tok_right_bracket},
-    {"{"       ,tok_left_brace   },
-    {"}"       ,tok_right_brace  },
-    {";"       ,tok_semi         },
-    {"and"     ,tok_and          },
-    {"or"      ,tok_or           },
-    {","       ,tok_comma        },
-    {"."       ,tok_dot          },
-    {"..."     ,tok_ellipsis     },
-    {"?"       ,tok_quesmark     },
-    {":"       ,tok_colon        },
-    {"+"       ,tok_add          },
-    {"-"       ,tok_sub          },
-    {"*"       ,tok_mult         },
-    {"/"       ,tok_div          },
-    {"~"       ,tok_link         },
-    {"!"       ,tok_not          },
-	{"="       ,tok_equal        },
-    {"+="      ,tok_add_equal    },
-    {"-="      ,tok_sub_equal    },
-    {"*="      ,tok_mult_equal   },
-    {"/="      ,tok_div_equal    },
-    {"~="      ,tok_link_equal   },
-    {"=="      ,tok_cmp_equal    },
-    {"!="      ,tok_cmp_not_equal},
-    {"<"       ,tok_less_than    },
-	{"<="      ,tok_less_equal   },
-    {">"       ,tok_greater_than },
-    {">="      ,tok_greater_equal},
-	{NULL      ,-1               }
+    {"for"     ,tok_for      },
+    {"forindex",tok_forindex },
+    {"foreach" ,tok_foreach  },
+    {"while"   ,tok_while    },
+    {"var"     ,tok_var      },
+    {"func"    ,tok_func     },
+    {"break"   ,tok_break    },
+    {"continue",tok_continue },
+    {"return"  ,tok_ret      },
+    {"if"      ,tok_if       },
+    {"elsif"   ,tok_elsif    },
+    {"else"    ,tok_else     },
+    {"nil"     ,tok_nil      },
+    {"("       ,tok_lcurve   },
+    {")"       ,tok_rcurve   },
+    {"["       ,tok_lbracket },
+    {"]"       ,tok_rbracket },
+    {"{"       ,tok_lbrace   },
+    {"}"       ,tok_rbrace   },
+    {";"       ,tok_semi     },
+    {"and"     ,tok_and      },
+    {"or"      ,tok_or       },
+    {","       ,tok_comma    },
+    {"."       ,tok_dot      },
+    {"..."     ,tok_ellipsis },
+    {"?"       ,tok_quesmark },
+    {":"       ,tok_colon    },
+    {"+"       ,tok_add      },
+    {"-"       ,tok_sub      },
+    {"*"       ,tok_mult     },
+    {"/"       ,tok_div      },
+    {"~"       ,tok_link     },
+    {"!"       ,tok_not      },
+	{"="       ,tok_eq       },
+    {"+="      ,tok_addeq    },
+    {"-="      ,tok_subeq    },
+    {"*="      ,tok_multeq   },
+    {"/="      ,tok_diveq    },
+    {"~="      ,tok_lnkeq    },
+    {"=="      ,tok_cmpeq    },
+    {"!="      ,tok_neq      },
+    {"<"       ,tok_less     },
+	{"<="      ,tok_leq      },
+    {">"       ,tok_grt      },
+    {">="      ,tok_geq      },
+	{NULL      ,-1           }
 };
 
 struct token
@@ -322,19 +322,19 @@ void nasal_lexer::scanner()
 			token_str=identifier_gen();
 			token new_token(line,get_token_type(token_str),token_str);
             if(!new_token.type)
-                new_token.type=tok_identifier;
+                new_token.type=tok_id;
 			token_list.push_back(new_token);
 		}
 		else if(IS_DIGIT(res[ptr]))
 		{
 			token_str=number_gen();
-			token new_token(line,tok_number,token_str);
+			token new_token(line,tok_num,token_str);
 			token_list.push_back(new_token);
 		}
 		else if(IS_STRING(res[ptr]))
 		{
 			token_str=string_gen();
-			token new_token(line,tok_string,token_str);
+			token new_token(line,tok_str,token_str);
 			token_list.push_back(new_token);
 		}
 		else if(IS_SINGLE_OPERATOR(res[ptr]))
