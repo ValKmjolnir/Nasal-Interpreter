@@ -68,7 +68,7 @@ void builtin_error_occurred(std::string func_name,std::string info)
 }
 
 // register builtin function's name and it's address here in this table below
-// this table must and with {"",NULL}
+// this table must end with {"",NULL}
 struct FUNC_TABLE
 {
     std::string func_name;
@@ -134,10 +134,8 @@ nasal_val* builtin_print(nasal_val* local_scope_addr,nasal_gc& gc)
             case vm_func: std::cout<<"func(...){...}";  break;
         }
     }
-    std::cout<<"\n";
     // generate return value
-    nasal_val* ret_addr=gc.gc_alloc(vm_nil);
-    return ret_addr;
+    return gc.gc_alloc(vm_nil);
 }
 nasal_val* builtin_append(nasal_val* local_scope_addr,nasal_gc& gc)
 {
@@ -157,8 +155,7 @@ nasal_val* builtin_append(nasal_val* local_scope_addr,nasal_gc& gc)
         gc.add_reference(value_address);
         ref_vector.add_elem(value_address);
     }
-    nasal_val* ret_addr=gc.gc_alloc(vm_nil);
-    return ret_addr;
+    return gc.gc_alloc(vm_nil);
 }
 nasal_val* builtin_setsize(nasal_val* local_scope_addr,nasal_gc& gc)
 {
@@ -335,10 +332,13 @@ nasal_val* builtin_split(nasal_val* local_scope_addr,nasal_gc& gc)
             }
         if(check_delimeter)
         {
-            nasal_val* str_addr=gc.gc_alloc(vm_str);
-            str_addr->set_string(tmp);
-            ref_vec.add_elem(str_addr);
-            tmp="";
+            if(tmp.length())
+            {
+                nasal_val* str_addr=gc.gc_alloc(vm_str);
+                str_addr->set_string(tmp);
+                ref_vec.add_elem(str_addr);
+                tmp="";
+            }
             i+=delimeter_len-1;
         }
         else
@@ -763,7 +763,7 @@ nasal_val* builtin_substr(nasal_val* local_scope_addr,nasal_gc& gc)
     std::string str=str_addr->get_string();
     int begin=(int)begin_addr->get_number();
     int len=(int)length_addr->get_number();
-    if(begin+len>=str.length())
+    if(begin+len>str.length())
     {
         builtin_error_occurred("susbtr","index out of range");
         return NULL;
