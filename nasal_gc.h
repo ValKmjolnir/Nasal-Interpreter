@@ -275,7 +275,7 @@ nasal_val* nasal_hash::get_value_address(std::string key)
                 nasal_val* tmp_val_addr=vec_ref.get_value_address(i);
                 if(tmp_val_addr->get_type()==vm_hash)
                     ret_value_addr=tmp_val_addr->get_hash().get_value_address(key);
-                if(ret_value_addr>=0)
+                if(ret_value_addr)
                     break;
             }
         }
@@ -299,7 +299,7 @@ nasal_val** nasal_hash::get_mem_address(std::string key)
                 nasal_val* tmp_val_addr=vec_ref.get_value_address(i);
                 if(tmp_val_addr->get_type()==vm_hash)
                     mem_addr=tmp_val_addr->get_hash().get_mem_address(key);
-                if(mem_addr>0)
+                if(mem_addr)
                     break;
             }
         }
