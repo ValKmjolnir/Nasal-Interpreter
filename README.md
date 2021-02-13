@@ -261,127 +261,16 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 ## special function call
 
+This is of great use but is not very efficient.
+
 ```javascript
 a(x:0,y:1,z:2);
 ```
 
-## often used builtin functions
+## built-in functions
 
 Must import lib.nas or has these functions' definitions inside your code.
 
 Also you could add builtin functions of your own(written in C/C++) to help you calculate things more quickly.(Advanced usage)
 
-```javascript
-
-var import=func(filename)
-{
-    nasal_call_import(filename);
-    return nil;
-}
-var print=func(elements...)
-{
-    nasal_call_builtin_std_cout(elements);
-    return nil;
-};
-var append=func(vector,elements...)
-{
-    nasal_call_builtin_push_back(vector,elements);
-    return nil;
-}
-var setsize=func(vector,size)
-{
-    nasal_call_builtin_set_size(vector,size);
-    return nil;
-}
-var split=func(delimeter,string)
-{
-    return nasal_call_builtin_split(delimeter,string);
-}
-var rand=func(seed=nil)
-{
-    return nasal_call_builtin_rand(seed);
-}
-var id=func(thing)
-{
-    return nasal_call_builtin_get_id(thing);
-}
-var int=func(value)
-{
-    return nasal_call_builtin_trans_int(value);
-}
-var num=func(value)
-{
-    return nasal_call_builtin_trans_num(value);
-}
-var pop=func(vector)
-{
-    return nasal_call_builtin_pop_back(vector);
-}
-var str=func(number)
-{
-    return nasal_call_builtin_trans_str(number);
-}
-var size=func(object)
-{
-    return nasal_call_builtin_size(object);
-}
-var contains=func(hash,key)
-{
-    return nasal_call_builtin_contains(hash,key);
-}
-var delete=func(hash,key)
-{
-    nasal_call_builtin_delete(hash,key);
-    return;
-}
-var keys=func(hash)
-{
-    return nasal_call_builtin_get_keys(hash);
-}
-var die=func(str)
-{
-    nasal_call_builtin_die(str);
-    return nil;
-}
-var typeof=func(object)
-{
-    return nasal_call_builtin_type(object);
-}
-var substr=func(str,begin,length)
-{
-    return nasal_call_builtin_substr(str,begin,length);
-}
-var math=
-{
-    e:2.7182818284590452354,
-    pi:3.14159265358979323846264338327950288,
-    sin:func(x)
-    {
-        return nasal_call_builtin_sin(x);
-    },
-    cos:func(x)
-    {
-        return nasal_call_builtin_cos(x);
-    },
-    tan:func(x)
-    {
-        return nasal_call_builtin_tan(x);
-    },
-    exp:func(x)
-    {
-        return nasal_call_builtin_exp(x);
-    }, 
-    ln:func(x)
-    {
-        return nasal_call_builtin_cpp_math_ln(x);
-    },
-    sqrt:func(x)
-    {
-        return nasal_call_builtin_cpp_math_sqrt(x);
-    },
-    atan2:func(x,y)
-    {
-        return nasal_call_builtin_cpp_atan2(x,y);
-    },
-};
-```
+Check built-in functions in lib.nas!

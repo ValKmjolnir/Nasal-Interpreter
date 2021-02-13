@@ -27,7 +27,8 @@ enum token_type
     tok_colon,tok_add,tok_sub,tok_mult,tok_div,tok_link,tok_not,
     tok_eq,
     tok_addeq,tok_subeq,tok_multeq,tok_diveq,tok_lnkeq,
-    tok_cmpeq,tok_neq,tok_less,tok_leq,tok_grt,tok_geq
+    tok_cmpeq,tok_neq,tok_less,tok_leq,tok_grt,tok_geq,
+	tok_eof
 };
 
 struct
@@ -382,6 +383,8 @@ void nasal_lexer::scanner()
 			die("["+line_code+"_] unknown character.",line,line_code.length());
 		}
 	}
+	token tk(line,tok_eof,"");
+	token_list.push_back(tk);
 	return;
 }
 

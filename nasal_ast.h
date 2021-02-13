@@ -5,16 +5,16 @@ enum ast_node
 {
     ast_null=0,ast_root,ast_block,
     ast_nil,ast_num,ast_str,ast_id,ast_func,ast_hash,ast_vec,
-    ast_hashmember,ast_call,ast_call_hash,ast_call_vec,ast_call_func,ast_subvec,
+    ast_hashmember,ast_call,ast_callh,ast_callv,ast_callf,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
     ast_and,ast_or,
-    ast_equal,ast_add_equal,ast_sub_equal,ast_mult_equal,ast_div_equal,ast_link_equal,
-    ast_cmp_equal,ast_cmp_not_equal,
+    ast_equal,ast_addeq,ast_subeq,ast_multeq,ast_diveq,ast_lnkeq,
+    ast_cmpeq,ast_neq,
     ast_less,ast_leq,
     ast_grt,ast_geq,
     ast_add,ast_sub,ast_mult,ast_div,ast_link,
-    ast_unary_sub,ast_unary_not,
-    ast_trinocular,
+    ast_neg,ast_not,
+    ast_trino,
     ast_for,ast_forindex,ast_foreach,ast_while,ast_new_iter,
     ast_conditional,ast_if,ast_elsif,ast_else,
     ast_multi_id,ast_multi_scalar,
@@ -38,9 +38,9 @@ std::string ast_name(int type)
         case ast_vec:          return "vector";
         case ast_hashmember:   return "hashmember";
         case ast_call:         return "call";
-        case ast_call_hash:    return "callh";
-        case ast_call_vec:     return "callv";
-        case ast_call_func:    return "callf";
+        case ast_callh:        return "callh";
+        case ast_callv:        return "callv";
+        case ast_callf:        return "callf";
         case ast_subvec:       return "subvec";
         case ast_args:         return "args";
         case ast_default_arg:  return "deflt_arg";
@@ -48,13 +48,13 @@ std::string ast_name(int type)
         case ast_and:          return "and";
         case ast_or:           return "or";
         case ast_equal:        return "=";
-        case ast_add_equal:    return "+=";
-        case ast_sub_equal:    return "-=";
-        case ast_mult_equal:   return "*=";
-        case ast_div_equal:    return "/=";
-        case ast_link_equal:   return "~=";
-        case ast_cmp_equal:    return "==";
-        case ast_cmp_not_equal:return "!=";
+        case ast_addeq:        return "+=";
+        case ast_subeq:        return "-=";
+        case ast_multeq:       return "*=";
+        case ast_diveq:        return "/=";
+        case ast_lnkeq:        return "~=";
+        case ast_cmpeq:        return "==";
+        case ast_neq:          return "!=";
         case ast_less:         return "<";
         case ast_leq:          return "<=";
         case ast_grt:          return ">";
@@ -64,9 +64,9 @@ std::string ast_name(int type)
         case ast_mult:         return "*";
         case ast_div:          return "/";
         case ast_link:         return "~";
-        case ast_unary_sub:    return "unary-";
-        case ast_unary_not:    return "unary!";
-        case ast_trinocular:   return "trino";
+        case ast_neg:          return "unary-";
+        case ast_not:          return "unary!";
+        case ast_trino:        return "trino";
         case ast_for:          return "for";
         case ast_forindex:     return "forindex";
         case ast_foreach:      return "foreach";
@@ -218,7 +218,7 @@ void nasal_ast::print_ast(int depth)
     for(int i=0;i<depth;++i) indentation+="|  ";
     indentation+=ast_name(this->type);
     std::cout<<indentation;
-    if(this->type==ast_str || this->type==ast_id || this->type==ast_dynamic_id || this->type==ast_call_hash)
+    if(this->type==ast_str || this->type==ast_id || this->type==ast_dynamic_id || this->type==ast_callh)
         std::cout<<":"<<this->str;
     else if(this->type==ast_num)
         std::cout<<":"<<this->num;
