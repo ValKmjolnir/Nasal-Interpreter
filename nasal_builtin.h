@@ -63,6 +63,7 @@ nasal_val* builtin_streq(nasal_val*,nasal_gc&);
 nasal_val* builtin_left(nasal_val*,nasal_gc&);
 nasal_val* builtin_right(nasal_val*,nasal_gc&);
 nasal_val* builtin_cmp(nasal_val*,nasal_gc&);
+nasal_val* builtin_chr(nasal_val*,nasal_gc&);
 
 void builtin_error_occurred(std::string func_name,std::string info)
 {
@@ -119,6 +120,7 @@ struct FUNC_TABLE
     {"nasal_call_builtin_left",          builtin_left},
     {"nasal_call_builtin_right",         builtin_right},
     {"nasal_call_builtin_cmp",           builtin_cmp},
+    {"nasal_call_builtin_chr",           builtin_chr},
     {"",                                 NULL}
 };
 
@@ -875,6 +877,21 @@ nasal_val* builtin_cmp(nasal_val* local_scope_addr,nasal_gc& gc)
         }
     }
     ret_addr->set_number(alen == blen ? 0 : (alen < blen ? -1 : 1));
+    return ret_addr;
+}
+nasal_val* builtin_chr(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* code_addr=in_builtin_find("code");
+    if(code_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("chr","\"code\" must be number");
+        return NULL;
+    }
+    char chr[2];
+    chr[0] = (char)code_addr->get_number();
+    chr[1] = '\0';
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(chr);
     return ret_addr;
 }
 #endif
