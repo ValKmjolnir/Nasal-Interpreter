@@ -116,6 +116,10 @@ var cmp=func(a,b)
 {
     return nasal_call_builtin_cmp(a,b);
 }
+var chr=func(code)
+{
+    return nasal_call_builtin_chr(code);
+}
 
 var io=
 {
