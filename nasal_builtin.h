@@ -59,6 +59,8 @@ bool       builtin_die_state;// used in builtin_die
 nasal_val* builtin_die(nasal_val*,nasal_gc&);
 nasal_val* builtin_type(nasal_val*,nasal_gc&);
 nasal_val* builtin_substr(nasal_val*,nasal_gc&);
+nasal_val* builtin_left(nasal_val*,nasal_gc&);
+nasal_val* builtin_right(nasal_val*,nasal_gc&);
 
 void builtin_error_occurred(std::string func_name,std::string info)
 {
@@ -111,6 +113,8 @@ struct FUNC_TABLE
     {"nasal_call_builtin_die",           builtin_die},
     {"nasal_call_builtin_type",          builtin_type},
     {"nasal_call_builtin_substr",        builtin_substr},
+    {"nasal_call_builtin_left",          builtin_left},
+    {"nasal_call_builtin_right",         builtin_right},
     {"",                                 NULL}
 };
 
@@ -771,6 +775,54 @@ nasal_val* builtin_substr(nasal_val* local_scope_addr,nasal_gc& gc)
     std::string tmp="";
     for(int i=begin;i<begin+len;++i)
         tmp+=str[i];
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(tmp);
+    return ret_addr;
+}
+nasal_val* builtin_left(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* string_addr=in_builtin_find("string");
+    nasal_val* length_addr=in_builtin_find("length");
+    if(string_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("left","\"string\" must be string");
+        return NULL;
+    }
+    if(length_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("left","\"length\" must be number");
+        return NULL;
+    }
+    std::string str=string_addr->get_string();
+    int len=(int)length_addr->get_number();
+    if(len < 0) len = 0;
+    std::string tmp=str.substr(0, len);
+    
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(tmp);
+    return ret_addr;
+}
+nasal_val* builtin_right(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* string_addr=in_builtin_find("string");
+    nasal_val* length_addr=in_builtin_find("length");
+    if(string_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("right","\"string\" must be string");
+        return NULL;
+    }
+    if(length_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("right","\"length\" must be number");
+        return NULL;
+    } 
+    std::string str=string_addr->get_string();
+    int len=(int)length_addr->get_number();
+    int srclen = str.length();
+    if (len > srclen) len = srclen;
+    if(len < 0) len = 0;
+    std::string tmp=str.substr(srclen-len, srclen);
+    
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     ret_addr->set_string(tmp);
     return ret_addr;

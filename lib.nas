@@ -100,6 +100,14 @@ var substr=func(str,begin,length)
 {
     return nasal_call_builtin_substr(str,begin,length);
 }
+var left=func(string,length)
+{
+    return nasal_call_builtin_left(string,length);
+}
+var right=func(string,length)
+{
+    return nasal_call_builtin_right(string,length);
+}
 
 var io=
 {
