@@ -776,6 +776,10 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             calculation_gen(ast.get_children()[0]);
             gen(op_unot,0);
             break;
+        case ast_definition:
+            single_def(ast);
+            call_id(ast.get_children()[0]);
+            break;
     }
     return;
 }

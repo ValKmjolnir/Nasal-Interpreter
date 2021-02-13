@@ -150,6 +150,8 @@ void nasal_parse::die(int line,std::string info)
 {
     ++error;
     std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
+    if(tok_list[ptr].type==tok_eof)
+        return;
     ++ptr;
     while(tok_list[ptr].type!=tok_eof)// panic
     {
@@ -184,6 +186,8 @@ void nasal_parse::match(int type)
         else
             die(error_line,"expect \'"+s+"\'");
     }
+    if(tok_list[ptr].type==tok_eof)
+        return;
     ++ptr;
     return;
 }
@@ -678,6 +682,15 @@ nasal_ast nasal_parse::scalar()
         match(tok_lcurve);
         node=calc();
         match(tok_rcurve);
+    }
+    else if(tok_list[ptr].type==tok_var)
+    {
+        match(tok_var);
+        node.set_type(ast_definition);
+        node.add_child(id_gen());
+        match(tok_id);
+        match(tok_eq);
+        node.add_child(calc());
     }
     else
     {

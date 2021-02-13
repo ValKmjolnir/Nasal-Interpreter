@@ -104,7 +104,7 @@ private:
 	std::vector<char> res;
     std::vector<token> token_list;
 	int  get_token_type(std::string);
-	void die(std::string,int,int);
+	void die(std::string,std::string,int,int);
 	std::string identifier_gen();
     std::string number_gen();
     std::string string_gen();
@@ -148,10 +148,13 @@ int nasal_lexer::get_token_type(std::string tk_str)
 	return tok_null;
 }
 
-void nasal_lexer::die(std::string error_info,int line=-1,int column=-1)
+void nasal_lexer::die(std::string code,std::string error_info,int line=-1,int column=-1)
 {
 	++error;
-	std::cout<<">> [lexer] line "<<line<<" column "<<column<<": "<<error_info<<"\n";
+	std::cout<<">> [lexer] line "<<line<<" column "<<column<<": \n"<<code<<"\n";
+	for(int i=0;i<column-1;++i)
+		std::cout<<(code[i]=='\t'?'\t':' ');
+	std::cout<<"^ "<<error_info<<'\n';
 	return;
 }
 
@@ -179,7 +182,7 @@ std::string nasal_lexer::number_gen()
 		line_code+=token_str;
 		if(token_str=="0x")
 		{
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 		return token_str;
@@ -194,7 +197,7 @@ std::string nasal_lexer::number_gen()
 		line_code+=token_str;
 		if(token_str=="0o")
 		{
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 		return token_str;
@@ -210,7 +213,7 @@ std::string nasal_lexer::number_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 		while(ptr<res_size && IS_DIGIT(res[ptr]))
@@ -219,7 +222,7 @@ std::string nasal_lexer::number_gen()
 		if(token_str.back()=='.')
 		{
 			line_code+=token_str;
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 	}
@@ -230,7 +233,7 @@ std::string nasal_lexer::number_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 		if(ptr<res_size && (res[ptr]=='-' || res[ptr]=='+'))
@@ -238,7 +241,7 @@ std::string nasal_lexer::number_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 		while(ptr<res_size && IS_DIGIT(res[ptr]))
@@ -247,7 +250,7 @@ std::string nasal_lexer::number_gen()
 		if(token_str.back()=='e' || token_str.back()=='E' || token_str.back()=='-' || token_str.back()=='+')
 		{
 			line_code+=token_str;
-			die("["+line_code+"_] incorrect number.",line,line_code.length());
+			die(line_code,"incorrect number.",line,line_code.length());
 			return "0";
 		}
 	}
@@ -293,7 +296,7 @@ std::string nasal_lexer::string_gen()
 	}
 	// check if this string ends with a " or '
 	if(ptr++>=res_size)
-		die("["+line_code+"_] get EOF when generating string.",line,line_code.length());
+		die(line_code,"get EOF when generating string.",line,line_code.length());
 	return token_str;
 }
 
@@ -345,7 +348,7 @@ void nasal_lexer::scanner()
 			line_code+=res[ptr];
 			token new_token(line,get_token_type(token_str),token_str);
 			if(!new_token.type)
-				die("["+line_code+"_] incorrect operator.",line,line_code.length());
+				die(line_code,"incorrect operator.",line,line_code.length());
 			token_list.push_back(new_token);
 			++ptr;
 		}
@@ -380,7 +383,7 @@ void nasal_lexer::scanner()
 		else
 		{
 			line_code+=res[ptr++];
-			die("["+line_code+"_] unknown character.",line,line_code.length());
+			die(line_code,"unknown character.",line,line_code.length());
 		}
 	}
 	token tk(line,tok_eof,"");
