@@ -116,7 +116,7 @@ var cmp=func(a,b)
 {
     return nasal_call_builtin_cmp(a,b);
 }
-var chr=func(code)
+var chr=func(code) #//Unlike in FG, this chr does not support Extended ASCII
 {
     return nasal_call_builtin_chr(code);
 }
