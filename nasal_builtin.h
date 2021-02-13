@@ -59,6 +59,11 @@ bool       builtin_die_state;// used in builtin_die
 nasal_val* builtin_die(nasal_val*,nasal_gc&);
 nasal_val* builtin_type(nasal_val*,nasal_gc&);
 nasal_val* builtin_substr(nasal_val*,nasal_gc&);
+nasal_val* builtin_streq(nasal_val*,nasal_gc&);
+nasal_val* builtin_left(nasal_val*,nasal_gc&);
+nasal_val* builtin_right(nasal_val*,nasal_gc&);
+nasal_val* builtin_cmp(nasal_val*,nasal_gc&);
+nasal_val* builtin_chr(nasal_val*,nasal_gc&);
 
 void builtin_error_occurred(std::string func_name,std::string info)
 {
@@ -111,6 +116,11 @@ struct FUNC_TABLE
     {"nasal_call_builtin_die",           builtin_die},
     {"nasal_call_builtin_type",          builtin_type},
     {"nasal_call_builtin_substr",        builtin_substr},
+    {"nasal_call_builtin_streq",         builtin_streq},
+    {"nasal_call_builtin_left",          builtin_left},
+    {"nasal_call_builtin_right",         builtin_right},
+    {"nasal_call_builtin_cmp",           builtin_cmp},
+    {"nasal_call_builtin_chr",           builtin_chr},
     {"",                                 NULL}
 };
 
@@ -773,6 +783,115 @@ nasal_val* builtin_substr(nasal_val* local_scope_addr,nasal_gc& gc)
         tmp+=str[i];
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     ret_addr->set_string(tmp);
+    return ret_addr;
+}
+nasal_val* builtin_streq(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* a_addr=in_builtin_find("a");
+    nasal_val* b_addr=in_builtin_find("b");
+    nasal_val* ret_addr=gc.gc_alloc(vm_num);
+    if(a_addr->get_type()!=vm_str || b_addr->get_type()!=vm_str)
+    {
+        ret_addr->set_number((double)0);
+        return ret_addr;
+    }
+    int ret=(a_addr->get_string()==b_addr->get_string());
+    
+    ret_addr->set_number((double)ret);
+    return ret_addr;
+}
+nasal_val* builtin_left(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* string_addr=in_builtin_find("string");
+    nasal_val* length_addr=in_builtin_find("length");
+    if(string_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("left","\"string\" must be string");
+        return NULL;
+    }
+    if(length_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("left","\"length\" must be number");
+        return NULL;
+    }
+    std::string str=string_addr->get_string();
+    int len=(int)length_addr->get_number();
+    if(len < 0) len = 0;
+    std::string tmp=str.substr(0, len);
+    
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(tmp);
+    return ret_addr;
+}
+nasal_val* builtin_right(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* string_addr=in_builtin_find("string");
+    nasal_val* length_addr=in_builtin_find("length");
+    if(string_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("right","\"string\" must be string");
+        return NULL;
+    }
+    if(length_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("right","\"length\" must be number");
+        return NULL;
+    } 
+    std::string str=string_addr->get_string();
+    int len=(int)length_addr->get_number();
+    int srclen = str.length();
+    if (len > srclen) len = srclen;
+    if(len < 0) len = 0;
+    std::string tmp=str.substr(srclen-len, srclen);
+    
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(tmp);
+    return ret_addr;
+}
+nasal_val* builtin_cmp(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* a_addr=in_builtin_find("a");
+    nasal_val* b_addr=in_builtin_find("b");
+    if(a_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("cmp","\"a\" must be string");
+        return NULL;
+    }
+    if(b_addr->get_type()!=vm_str)
+    {
+        builtin_error_occurred("cmp","\"b\" must be string");
+        return NULL;
+    }
+    std::string a=a_addr->get_string();
+    std::string b=b_addr->get_string();
+    int alen=a.length();
+    int blen=b.length();
+    nasal_val* ret_addr=gc.gc_alloc(vm_num);
+    for(int i=0; i<alen && i<blen; i++)
+    {
+        int diff = a[i] - b[i];
+        if(diff)
+        {
+            ret_addr->set_number((double)diff < 0 ? -1 : 1);
+            return ret_addr;
+        }
+    }
+    ret_addr->set_number(alen == blen ? 0 : (alen < blen ? -1 : 1));
+    return ret_addr;
+}
+nasal_val* builtin_chr(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    nasal_val* code_addr=in_builtin_find("code");
+    if(code_addr->get_type()!=vm_num)
+    {
+        builtin_error_occurred("chr","\"code\" must be number");
+        return NULL;
+    }
+    char chr[2];
+    chr[0] = (char)code_addr->get_number();
+    chr[1] = '\0';
+    nasal_val* ret_addr=gc.gc_alloc(vm_str);
+    ret_addr->set_string(chr);
     return ret_addr;
 }
 #endif
