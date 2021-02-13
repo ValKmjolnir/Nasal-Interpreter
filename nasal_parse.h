@@ -50,6 +50,7 @@ private:
     int in_loop;     // count when generating loop block,used to check break/continue-expression
     void reset();
     void die(int,std::string);
+    void match(int);
     bool check_multi_def();
     bool check_multi_scalar();
     bool check_function_end(nasal_ast&);
@@ -165,6 +166,30 @@ void nasal_parse::die(int line,std::string info)
     return;
 }
 
+void nasal_parse::match(int type)
+{
+    if(ptr>=tok_list_size || tok_list[ptr].type!=type)
+    {
+        std::string s="";
+        for(int i=0;token_table[i].str;++i)
+            if(token_table[i].tok_type==type)
+            {
+                s=token_table[i].str;
+                break;
+            }
+        if(type==tok_num)
+            die(error_line,"expect a number");
+        else if(type==tok_str)
+            die(error_line,"expect a string");
+        else if(type==tok_id)
+            die(error_line,"expect an identifier");
+        else
+            die(error_line,"expect \'"+s+"\'");
+    }
+    ++ptr;
+    return;
+}
+
 bool nasal_parse::check_multi_def()
 {
     return ptr+1<tok_list_size && tok_list[ptr+1].type==tok_var;
@@ -202,11 +227,11 @@ bool nasal_parse::check_function_end(nasal_ast& node)
         (
             type!=ast_definition &&
             type!=ast_equal &&
-            type!=ast_add_equal &&
-            type!=ast_sub_equal &&
-            type!=ast_mult_equal &&
-            type!=ast_div_equal &&
-            type!=ast_link_equal
+            type!=ast_addeq &&
+            type!=ast_subeq &&
+            type!=ast_multeq &&
+            type!=ast_diveq &&
+            type!=ast_lnkeq
         )
     )
         return false;
@@ -258,9 +283,9 @@ void nasal_parse::check_memory_reachable(nasal_ast& node)
         for(int i=0;i<size;++i)
         {
             nasal_ast& tmp=node.get_children()[i];
-            if(tmp.get_type()==ast_call_func)
+            if(tmp.get_type()==ast_callf)
                 die(tmp.get_line(),"cannot get the memory of function-returned value");
-            if(tmp.get_type()==ast_call_vec && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
+            if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
                 die(tmp.get_line(),"cannot get the memory in temporary sliced vector");
         } 
     }
@@ -305,7 +330,7 @@ nasal_ast nasal_parse::id_gen()
 nasal_ast nasal_parse::vec_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_vec);
-    ++ptr;
+    match(tok_lbracket);
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_rbracket)
     {
         node.add_child(calc());
@@ -323,7 +348,7 @@ nasal_ast nasal_parse::vec_gen()
 nasal_ast nasal_parse::hash_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_hash);
-    ++ptr;
+    match(tok_lbrace);
     while (ptr<tok_list_size && tok_list[ptr].type!=tok_rbrace)
     {
         node.add_child(hmem_gen());
@@ -348,19 +373,16 @@ nasal_ast nasal_parse::hmem_gen()
     }
     nasal_ast node(tok_list[ptr].line,ast_hashmember);
     node.add_child(tok_list[ptr].type==tok_id?id_gen():str_gen());
-    if(++ptr>=tok_list_size || tok_list[ptr].type!=tok_colon)
-    {
-        die(error_line,"expected \":\"");
-        return node;
-    }
     ++ptr;
+    match(tok_colon);
     node.add_child(calc());
     return node;
 }
 nasal_ast nasal_parse::func_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_func);
-    if(++ptr>=tok_list_size)
+    match(tok_func);
+    if(ptr>=tok_list_size)
     {
         die(error_line,"expected argument(s)/expression block");
         return node;
@@ -561,7 +583,7 @@ nasal_ast nasal_parse::calc()
     if(ptr<tok_list_size && tok_list[ptr].type==tok_quesmark)
     {
         // trinocular calculation
-        nasal_ast tmp(tok_list[ptr].line,ast_trinocular);
+        nasal_ast tmp(tok_list[ptr].line,ast_trino);
         tmp.add_child(node);
         ++ptr;
         tmp.add_child(calc());
@@ -578,7 +600,7 @@ nasal_ast nasal_parse::calc()
     {
         // check the left expression to confirm it is available to get memory
         check_memory_reachable(node);
-        // tok_eq~tok_lnkeq is 37 to 42,ast_equal~ast_link_equal is 21~26
+        // tok_eq~tok_lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_eq+ast_equal);
         tmp.add_child(node);
         ++ptr;
@@ -628,8 +650,8 @@ nasal_ast nasal_parse::cmp_expr()
     node=additive_expr();
     while(++ptr<tok_list_size && tok_cmpeq<=tok_list[ptr].type && tok_list[ptr].type<=tok_geq)
     {
-        // tok_cmpeq~tok_geq is 43~48,ast_cmp_equal~ast_geq is 27~32
-        nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_cmpeq+ast_cmp_equal);
+        // tok_cmpeq~tok_geq is 43~48,ast_cmpeq~ast_geq is 27~32
+        nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_cmpeq+ast_cmpeq);
         tmp.add_child(node);
         if(++ptr<tok_list_size)
             tmp.add_child(additive_expr());
@@ -701,8 +723,8 @@ nasal_ast nasal_parse::unary()
     nasal_ast node(tok_list[ptr].line);
     switch(tok_list[ptr].type)
     {
-        case tok_sub:node.set_type(ast_unary_sub);break;
-        case tok_not:node.set_type(ast_unary_not);break;
+        case tok_sub:node.set_type(ast_neg);break;
+        case tok_not:node.set_type(ast_not);break;
     }
     if(++ptr<tok_list_size)
         node.add_child((tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar());
@@ -712,7 +734,7 @@ nasal_ast nasal_parse::unary()
     if(node.get_children()[0].get_type()==ast_num)
     {
         double num=node.get_children()[0].get_num();
-        num=(node.get_type()==ast_unary_not?(!num):-num);
+        num=(node.get_type()==ast_not?(!num):-num);
         node.set_type(ast_num);
         node.set_num(num);
         node.get_children().clear();
@@ -788,7 +810,7 @@ nasal_ast nasal_parse::call_scalar()
 }
 nasal_ast nasal_parse::call_hash()
 {
-    nasal_ast node(tok_list[ptr].line,ast_call_hash);
+    nasal_ast node(tok_list[ptr].line,ast_callh);
     if(++ptr<tok_list_size && tok_list[ptr].type==tok_id)
         node.set_str(tok_list[ptr].str);
     else
@@ -797,7 +819,7 @@ nasal_ast nasal_parse::call_hash()
 }
 nasal_ast nasal_parse::call_vec()
 {
-    nasal_ast node(tok_list[ptr].line,ast_call_vec);
+    nasal_ast node(tok_list[ptr].line,ast_callv);
     ++ptr;
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_rbracket)
     {
@@ -815,7 +837,7 @@ nasal_ast nasal_parse::call_vec()
 }
 nasal_ast nasal_parse::call_func()
 {
-    nasal_ast node(tok_list[ptr].line,ast_call_func);
+    nasal_ast node(tok_list[ptr].line,ast_callf);
     bool special_call=check_special_call();
     ++ptr;
     while(ptr<tok_list_size && tok_list[ptr].type!=tok_rcurve)

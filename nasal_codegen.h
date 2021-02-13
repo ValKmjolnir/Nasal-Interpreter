@@ -128,11 +128,11 @@ struct opcode
 class nasal_codegen
 {
 private:
-    std::map<double,int> number_table;
-    std::map<std::string,int> string_table;
-    std::vector<double> number_result_table;
-    std::vector<std::string> string_result_table;
-    std::vector<opcode> exec_code;
+    std::map<double,int>         number_table;
+    std::map<std::string,int>    string_table;
+    std::vector<double>          number_result_table;
+    std::vector<std::string>     string_result_table;
+    std::vector<opcode>          exec_code;
     std::list<std::vector<int> > continue_ptr;
     std::list<std::vector<int> > break_ptr;
     int error;
@@ -323,9 +323,9 @@ void nasal_codegen::call_gen(nasal_ast& ast)
         nasal_ast& tmp=ast.get_children()[i];
         switch(tmp.get_type())
         {
-            case ast_call_hash:call_hash(tmp);break;
-            case ast_call_vec: call_vec(tmp); break;
-            case ast_call_func:call_func(tmp);break;
+            case ast_callh:call_hash(tmp);break;
+            case ast_callv: call_vec(tmp); break;
+            case ast_callf:call_func(tmp);break;
         }
     }
     return;
@@ -404,9 +404,9 @@ void nasal_codegen::mem_call(nasal_ast& ast)
     for(int i=1;i<child_size;++i)
     {
         nasal_ast& tmp=ast.get_children()[i];
-        if(tmp.get_type()==ast_call_hash)
+        if(tmp.get_type()==ast_callh)
             mem_call_hash(tmp);
-        else if(tmp.get_type()==ast_call_vec)
+        else if(tmp.get_type()==ast_callv)
             mem_call_vec(tmp);
     }
     return;
@@ -588,11 +588,11 @@ void nasal_codegen::for_gen(nasal_ast& ast)
         case ast_nil:case ast_num:case ast_str:case ast_func:break;
         case ast_vec:case ast_hash:
         case ast_call:
-        case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
-        case ast_unary_sub:case ast_unary_not:
+        case ast_equal:case ast_addeq:case ast_subeq:case ast_multeq:case ast_diveq:case ast_lnkeq:
+        case ast_neg:case ast_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_leq:case ast_less:case ast_geq:case ast_grt:
-        case ast_trinocular:calculation_gen(ast.get_children()[0]);pop_gen();break;
+        case ast_cmpeq:case ast_neq:case ast_leq:case ast_less:case ast_geq:case ast_grt:
+        case ast_trino:calculation_gen(ast.get_children()[0]);pop_gen();break;
     }
     int jmp_place=exec_code.size();
     if(ast.get_children()[1].get_type()==ast_null)
@@ -612,11 +612,11 @@ void nasal_codegen::for_gen(nasal_ast& ast)
         case ast_nil:case ast_num:case ast_str:case ast_func:break;
         case ast_vec:case ast_hash:
         case ast_call:
-        case ast_equal:case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
-        case ast_unary_sub:case ast_unary_not:
+        case ast_equal:case ast_addeq:case ast_subeq:case ast_multeq:case ast_diveq:case ast_lnkeq:
+        case ast_neg:case ast_not:
         case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_leq:case ast_less:case ast_geq:case ast_grt:
-        case ast_trinocular:calculation_gen(ast.get_children()[2]);pop_gen();break;
+        case ast_cmpeq:case ast_neq:case ast_leq:case ast_less:case ast_geq:case ast_grt:
+        case ast_trino:calculation_gen(ast.get_children()[2]);pop_gen();break;
     }
     gen(op_jmp,jmp_place);
     exec_code[label_exit].index=exec_code.size();
@@ -747,11 +747,11 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             mem_call(ast.get_children()[0]);
             gen(op_meq,0);
             break;
-        // ast_add_equal(22)~ast_link_equal(26) op_addeq(23)~op_lnkeq(27)
-        case ast_add_equal:case ast_sub_equal:case ast_mult_equal:case ast_div_equal:case ast_link_equal:
+        // ast_addeq(22)~ast_lnkeq(26) op_addeq(23)~op_lnkeq(27)
+        case ast_addeq:case ast_subeq:case ast_multeq:case ast_diveq:case ast_lnkeq:
             calculation_gen(ast.get_children()[1]);
             mem_call(ast.get_children()[0]);
-            gen(ast.get_type()-ast_add_equal+op_addeq,0);
+            gen(ast.get_type()-ast_addeq+op_addeq,0);
             break;
         case ast_or:or_gen(ast);break;
         case ast_and:and_gen(ast);break;
@@ -761,18 +761,18 @@ void nasal_codegen::calculation_gen(nasal_ast& ast)
             calculation_gen(ast.get_children()[1]);
             gen(ast.get_type()-ast_add+op_add,0);
             break;
-        // ast_cmp_equal(27)~ast_geq(32) op_eq(29)~op_geq(34)
-        case ast_cmp_equal:case ast_cmp_not_equal:case ast_less:case ast_leq:case ast_grt:case ast_geq:
+        // ast_cmpeq(27)~ast_geq(32) op_eq(29)~op_geq(34)
+        case ast_cmpeq:case ast_neq:case ast_less:case ast_leq:case ast_grt:case ast_geq:
             calculation_gen(ast.get_children()[0]);
             calculation_gen(ast.get_children()[1]);
-            gen(ast.get_type()-ast_cmp_equal+op_eq,0);
+            gen(ast.get_type()-ast_cmpeq+op_eq,0);
             break;
-        case ast_trinocular:trino_gen(ast);break;
-        case ast_unary_sub:
+        case ast_trino:trino_gen(ast);break;
+        case ast_neg:
             calculation_gen(ast.get_children()[0]);
             gen(op_usub,0);
             break;
-        case ast_unary_not:
+        case ast_not:
             calculation_gen(ast.get_children()[0]);
             gen(op_unot,0);
             break;
@@ -809,27 +809,27 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_hash:
             case ast_call:
             case ast_equal:
-            case ast_add_equal:
-            case ast_sub_equal:
-            case ast_mult_equal:
-            case ast_div_equal:
-            case ast_link_equal:
-            case ast_unary_sub:
-            case ast_unary_not:
+            case ast_addeq:
+            case ast_subeq:
+            case ast_multeq:
+            case ast_diveq:
+            case ast_lnkeq:
+            case ast_neg:
+            case ast_not:
             case ast_add:
             case ast_sub:
             case ast_mult:
             case ast_div:
             case ast_link:
-            case ast_cmp_equal:
-            case ast_cmp_not_equal:
+            case ast_cmpeq:
+            case ast_neq:
             case ast_leq:
             case ast_less:
             case ast_geq:
             case ast_grt:
             case ast_or:
             case ast_and:
-            case ast_trinocular:calculation_gen(tmp);pop_gen();break;
+            case ast_trino:calculation_gen(tmp);pop_gen();break;
             case ast_return:return_gen(tmp);break;
         }
     }
@@ -872,27 +872,27 @@ void nasal_codegen::main_progress(nasal_ast& ast)
             case ast_hash:
             case ast_call:
             case ast_equal:
-            case ast_add_equal:
-            case ast_sub_equal:
-            case ast_mult_equal:
-            case ast_div_equal:
-            case ast_link_equal:
-            case ast_unary_sub:
-            case ast_unary_not:
+            case ast_addeq:
+            case ast_subeq:
+            case ast_multeq:
+            case ast_diveq:
+            case ast_lnkeq:
+            case ast_neg:
+            case ast_not:
             case ast_add:
             case ast_sub:
             case ast_mult:
             case ast_div:
             case ast_link:
-            case ast_cmp_equal:
-            case ast_cmp_not_equal:
+            case ast_cmpeq:
+            case ast_neq:
             case ast_leq:
             case ast_less:
             case ast_geq:
             case ast_grt:
             case ast_or:
             case ast_and:
-            case ast_trinocular:calculation_gen(tmp);pop_gen();break;
+            case ast_trino:calculation_gen(tmp);pop_gen();break;
         }
     }
     gen(op_nop,0);
