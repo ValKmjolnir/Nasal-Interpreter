@@ -5,7 +5,7 @@ nasal_parse    parse;
 nasal_import   import;
 std::string    inputfile="null";
 nasal_codegen  code_generator;
-nasal_vm       bytevm;
+nasal_vm       vm;
 
 void help()
 {
@@ -120,7 +120,7 @@ void execute()
 		return;
 	}
 	code_generator.main_progress(import.get_root());
-	bytevm.run(
+	vm.run(
 		code_generator.get_string_table(),
 		code_generator.get_number_table(),
 		code_generator.get_exec_code()
