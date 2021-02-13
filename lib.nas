@@ -100,6 +100,10 @@ var substr=func(str,begin,length)
 {
     return nasal_call_builtin_substr(str,begin,length);
 }
+var streq=func(a,b)
+{
+    return nasal_call_builtin_streq(a,b);
+}
 var left=func(string,length)
 {
     return nasal_call_builtin_left(string,length);
@@ -107,6 +111,10 @@ var left=func(string,length)
 var right=func(string,length)
 {
     return nasal_call_builtin_right(string,length);
+}
+var cmp=func(a,b)
+{
+    return nasal_call_builtin_cmp(a,b);
 }
 
 var io=
