@@ -796,7 +796,6 @@ nasal_val* builtin_streq(nasal_val* local_scope_addr,nasal_gc& gc)
         return ret_addr;
     }
     int ret=(a_addr->get_string()==b_addr->get_string());
-    
     ret_addr->set_number((double)ret);
     return ret_addr;
 }
@@ -816,9 +815,9 @@ nasal_val* builtin_left(nasal_val* local_scope_addr,nasal_gc& gc)
     }
     std::string str=string_addr->get_string();
     int len=(int)length_addr->get_number();
-    if(len < 0) len = 0;
+    if(len<0)
+        len=0;
     std::string tmp=str.substr(0, len);
-    
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     ret_addr->set_string(tmp);
     return ret_addr;
@@ -839,11 +838,12 @@ nasal_val* builtin_right(nasal_val* local_scope_addr,nasal_gc& gc)
     } 
     std::string str=string_addr->get_string();
     int len=(int)length_addr->get_number();
-    int srclen = str.length();
-    if (len > srclen) len = srclen;
-    if(len < 0) len = 0;
+    int srclen=str.length();
+    if(len>srclen)
+        len=srclen;
+    if(len<0)
+        len=0;
     std::string tmp=str.substr(srclen-len, srclen);
-    
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     ret_addr->set_string(tmp);
     return ret_addr;
@@ -862,21 +862,8 @@ nasal_val* builtin_cmp(nasal_val* local_scope_addr,nasal_gc& gc)
         builtin_error_occurred("cmp","\"b\" must be string");
         return NULL;
     }
-    std::string a=a_addr->get_string();
-    std::string b=b_addr->get_string();
-    int alen=a.length();
-    int blen=b.length();
     nasal_val* ret_addr=gc.gc_alloc(vm_num);
-    for(int i=0; i<alen && i<blen; i++)
-    {
-        int diff = a[i] - b[i];
-        if(diff)
-        {
-            ret_addr->set_number((double)diff < 0 ? -1 : 1);
-            return ret_addr;
-        }
-    }
-    ret_addr->set_number(alen == blen ? 0 : (alen < blen ? -1 : 1));
+    ret_addr->set_number(strcmp(a_addr->get_string().data(),b_addr->get_string().data()));
     return ret_addr;
 }
 nasal_val* builtin_chr(nasal_val* local_scope_addr,nasal_gc& gc)
@@ -887,9 +874,7 @@ nasal_val* builtin_chr(nasal_val* local_scope_addr,nasal_gc& gc)
         builtin_error_occurred("chr","\"code\" must be number");
         return NULL;
     }
-    char chr[2];
-    chr[0] = (char)code_addr->get_number();
-    chr[1] = '\0';
+    char chr[2]={(char)code_addr->get_number(),'\0'};
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     ret_addr->set_string(chr);
     return ret_addr;
