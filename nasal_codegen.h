@@ -338,7 +338,7 @@ void nasal_codegen::call_id(nasal_ast& ast)
     for(int i=0;builtin_func_table[i].func_pointer;++i)
         if(builtin_func_table[i].func_name==str)
         {
-            gen(op_builtincall,string_table[str]);
+            gen(op_builtincall,i);
             return;
         }
     gen(op_call,string_table[str]);
@@ -926,9 +926,9 @@ void nasal_codegen::print_op(int index)
     switch(exec_code[index].op)
     {
         case op_pushnum:std::cout<<'('<<number_result_table[exec_code[index].index]<<')';break;
+        case op_builtincall:std::cout<<'('<<builtin_func_table[exec_code[index].index].func_name<<')';break;
         case op_hashapp:
         case op_call:
-        case op_builtincall:
         case op_mcall:
         case op_pushstr:
         case op_callh:

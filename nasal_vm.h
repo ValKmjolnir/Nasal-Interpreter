@@ -30,8 +30,6 @@ private:
     std::vector<std::string> string_table;
     // number table
     std::vector<double> number_table;
-    // builtin function address table
-    std::map<std::string,nasal_val* (*)(nasal_val* x,nasal_gc& vm)> builtin_func_hashmap;
     void die(std::string);
     bool check_condition(nasal_val*);
     void opr_nop();
@@ -103,8 +101,6 @@ nasal_vm::nasal_vm()
     val_stack=new nasal_val*[val_stack_MAX_DEPTH];
     val_stack_top=val_stack;
     local_scope_stack.push(NULL);
-    for(int i=0;builtin_func_table[i].func_pointer;++i)
-        builtin_func_hashmap[builtin_func_table[i].func_name]=builtin_func_table[i].func_pointer;
     return;
 }
 nasal_vm::~nasal_vm()
@@ -899,11 +895,8 @@ void nasal_vm::opr_callf()
 }
 void nasal_vm::opr_builtincall()
 {
-    nasal_val* ret_value_addr=NULL;
-    std::string val_name=string_table[exec_code[ptr].index];
-    ret_value_addr=(*builtin_func_hashmap[val_name])(local_scope_stack.top(),vm);
+    *(++val_stack_top)=(*builtin_func_table[exec_code[ptr].index].func_pointer)(local_scope_stack.top(),vm);
     main_loop_break_mark=!builtin_die_state;
-    *(++val_stack_top)=ret_value_addr;
     return;
 }
 void nasal_vm::opr_slicebegin()
