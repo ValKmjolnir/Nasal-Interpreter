@@ -1,12 +1,8 @@
-# Nasal Interpreter
-
-[![nasal_new_logo](pic/nasal.png?raw=true)](http://wiki.flightgear.org/File:Nasallogo3.png)
-
-# Nasal script language
+# Nasal Script Language
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
 
-The interpreter is still in development. We really need your support!
+The interpreter is still in development(now it works well --2021/2/15). We really need your support!
 
 Also,i am a member of [FGPRC](https://www.fgprc.org/), welcome to join us!
 
