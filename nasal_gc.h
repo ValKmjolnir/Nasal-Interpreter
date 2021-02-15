@@ -602,10 +602,10 @@ double nasal_val::to_number()
 {
     switch(type)
     {
-        case vm_nil:    return 0;
+        case vm_nil: return 0;
         case vm_num: return ptr.num;
         case vm_str: return trans_string_to_number(*ptr.str);
-        default:        return std::nan("");
+        default:     return std::nan("");
     }
     return 0;
 }
