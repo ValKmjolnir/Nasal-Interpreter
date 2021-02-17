@@ -82,12 +82,10 @@ class nasal_scop
 {
 private:
     nasal_gc& gc;
-    std::list<std::map<int,nasal_val*> > elems;
+    std::map<int,nasal_val*> elems;
 public:
     nasal_scop(nasal_gc&);
     ~nasal_scop();
-    void add_scope();
-    void del_scope();
     void set_closure(nasal_scop&);
     void add_new_value(int,nasal_val*);
     nasal_val*  get_value_address(int);
@@ -435,76 +433,44 @@ nasal_val* nasal_func::get_closure_addr()
 /*functions of nasal_scop*/
 nasal_scop::nasal_scop(nasal_gc& ngc):gc(ngc)
 {
-    std::map<int,nasal_val*> new_scope;
-    elems.push_back(new_scope);
     return;
 }
 nasal_scop::~nasal_scop()
 {
-    for(std::list<std::map<int,nasal_val*> >::iterator i=elems.begin();i!=elems.end();++i)
-        for(std::map<int,nasal_val*>::iterator j=i->begin();j!=i->end();++j)
-            gc.del_reference(j->second);
-    elems.clear();
-    return;
-}
-void nasal_scop::add_scope()
-{
-    std::map<int,nasal_val*> new_scope;
-    elems.push_front(new_scope);
-    return;
-}
-void nasal_scop::del_scope()
-{
-    std::map<int,nasal_val*>& last_scope=elems.front();
-    for(std::map<int,nasal_val*>::iterator i=last_scope.begin();i!=last_scope.end();++i)
+    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
         gc.del_reference(i->second);
-    elems.pop_front();
+    elems.clear();
     return;
 }
 void nasal_scop::add_new_value(int key,nasal_val* value_address)
 {
-    if(elems.front().find(key)!=elems.front().end())
+    if(elems.find(key)!=elems.end())
     {
         // if this value already exists,delete the old value and update a new value
-        nasal_val* old_val_address=elems.front()[key];
-        gc.del_reference(old_val_address);
+        gc.del_reference(elems[key]);
     }
-    elems.front()[key]=value_address;
+    elems[key]=value_address;
     return;
 }
 nasal_val* nasal_scop::get_value_address(int key)
 {
-    nasal_val* ret_address=NULL;
-    for(std::list<std::map<int,nasal_val*> >::iterator i=elems.begin();i!=elems.end();++i)
-        if(i->find(key)!=i->end())
-            return (*i)[key];
-    return ret_address;
+    if(elems.find(key)!=elems.end())
+        return elems[key];
+    return NULL;
 }
 nasal_val** nasal_scop::get_mem_address(int key)
 {
-    nasal_val** ret_address=NULL;
-    for(std::list<std::map<int,nasal_val*> >::iterator i=elems.begin();i!=elems.end();++i)
-        if(i->find(key)!=i->end())
-            return &((*i)[key]);
-    return ret_address;
+    if(elems.find(key)!=elems.end())
+        return &(elems[key]);
+    return NULL;
 }
 void nasal_scop::set_closure(nasal_scop& tmp)
 {
-    for(std::list<std::map<int,nasal_val*> >::iterator i=elems.begin();i!=elems.end();++i)
-        for(std::map<int,nasal_val*>::iterator j=i->begin();j!=i->end();++j)
-            gc.del_reference(j->second);
-    elems.clear();
-    for(std::list<std::map<int,nasal_val*> >::iterator i=tmp.elems.begin();i!=tmp.elems.end();++i)
-    {
-        std::map<int,nasal_val*> new_scope;
-        elems.push_back(new_scope);
-        for(std::map<int,nasal_val*>::iterator j=i->begin();j!=i->end();++j)
-        {
-            nasal_val* value_addr=j->second;
-            gc.add_reference(value_addr);
-            elems.back()[j->first]=value_addr;
-        }
-    }
+    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
+        gc.del_reference(i->second);
+    elems=tmp.elems;
+    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
+        gc.add_reference(i->second);
     return;
 }
 
@@ -521,13 +487,13 @@ nasal_val::nasal_val(int nasal_val_type,nasal_gc& nvm)
     type=nasal_val_type;
     switch(nasal_val_type)
     {
-        case vm_nil:      break;
-        case vm_num:   ptr.num=0;                      break;
-        case vm_str:   ptr.str=new std::string;        break;
-        case vm_vec:   ptr.vec=new nasal_vec(nvm);     break;
-        case vm_hash:     ptr.hash=new nasal_hash(nvm);   break;
-        case vm_func: ptr.func=new nasal_func(nvm);   break;
-        case vm_scop:  ptr.cls=new nasal_scop(nvm); break;
+        case vm_nil:  break;
+        case vm_num:  ptr.num=0;                    break;
+        case vm_str:  ptr.str=new std::string;      break;
+        case vm_vec:  ptr.vec=new nasal_vec(nvm);   break;
+        case vm_hash: ptr.hash=new nasal_hash(nvm); break;
+        case vm_func: ptr.func=new nasal_func(nvm); break;
+        case vm_scop: ptr.cls=new nasal_scop(nvm);  break;
     }
     return;
 }
@@ -540,13 +506,13 @@ nasal_val::~nasal_val()
     type=vm_nil;
     switch(tmp_type)
     {
-        case vm_nil:      break;
-        case vm_num:   break;
-        case vm_str:   delete ptr.str;  break;
-        case vm_vec:   delete ptr.vec;  break;
-        case vm_hash:     delete ptr.hash; break;
+        case vm_nil:  break;
+        case vm_num:  break;
+        case vm_str:  delete ptr.str;  break;
+        case vm_vec:  delete ptr.vec;  break;
+        case vm_hash: delete ptr.hash; break;
         case vm_func: delete ptr.func; break;
-        case vm_scop:  delete ptr.cls;  break;
+        case vm_scop: delete ptr.cls;  break;
     }
     return;
 }
@@ -559,13 +525,13 @@ void nasal_val::clear()
     type=vm_nil;
     switch(tmp_type)
     {
-        case vm_nil:      break;
-        case vm_num:   break;
-        case vm_str:   delete ptr.str;  break;
-        case vm_vec:   delete ptr.vec;  break;
-        case vm_hash:     delete ptr.hash; break;
+        case vm_nil:  break;
+        case vm_num:  break;
+        case vm_str:  delete ptr.str;  break;
+        case vm_vec:  delete ptr.vec;  break;
+        case vm_hash: delete ptr.hash; break;
         case vm_func: delete ptr.func; break;
-        case vm_scop:  delete ptr.cls;  break;
+        case vm_scop: delete ptr.cls;  break;
     }
     return;
 }
@@ -574,13 +540,13 @@ void nasal_val::set_type(int nasal_val_type,nasal_gc& nvm)
     type=nasal_val_type;
     switch(nasal_val_type)
     {
-        case vm_nil:      break;
-        case vm_num:   ptr.num=0;                      break;
-        case vm_str:   ptr.str=new std::string;        break;
-        case vm_vec:   ptr.vec=new nasal_vec(nvm);     break;
-        case vm_hash:     ptr.hash=new nasal_hash(nvm);   break;
-        case vm_func: ptr.func=new nasal_func(nvm);   break;
-        case vm_scop:  ptr.cls=new nasal_scop(nvm); break;
+        case vm_nil:  break;
+        case vm_num:  ptr.num=0;                    break;
+        case vm_str:  ptr.str=new std::string;      break;
+        case vm_vec:  ptr.vec=new nasal_vec(nvm);   break;
+        case vm_hash: ptr.hash=new nasal_hash(nvm); break;
+        case vm_func: ptr.func=new nasal_func(nvm); break;
+        case vm_scop: ptr.cls=new nasal_scop(nvm);  break;
     }
     return;
 }

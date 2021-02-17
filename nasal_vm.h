@@ -825,17 +825,16 @@ void nasal_vm::opr_callf()
         die("callf: called a value that is not a function");
         return;
     }
-    nasal_func& ref=func_addr->get_func();
-    nasal_val* closure=ref.get_closure_addr();
+    nasal_func& ref_func=func_addr->get_func();
+    nasal_val*  closure=gc.gc_alloc(vm_scop);
     nasal_scop& ref_closure=closure->get_closure();
-    ref_closure.add_scope();
+    ref_closure.set_closure(ref_func.get_closure_addr()->get_closure());
     local_scope_stack.push(closure);
-    gc.add_reference(closure);
     if(para_addr->get_type()==vm_vec)
     {
         nasal_vec& ref_vec=para_addr->get_vector();
-        std::vector<int>& ref_para=ref.get_para();
-        std::vector<nasal_val*>& ref_default=ref.get_default();
+        std::vector<int>& ref_para=ref_func.get_para();
+        std::vector<nasal_val*>& ref_default=ref_func.get_default();
         int i=0;
         for(;i<ref_para.size();++i)
         {
@@ -856,7 +855,7 @@ void nasal_vm::opr_callf()
                 gc.add_reference(tmp);
             }
         }
-        if(ref.get_dynamic_para()>=0)
+        if(ref_func.get_dynamic_para()>=0)
         {
             nasal_val* vec_addr=gc.gc_alloc(vm_vec);
             for(;i<ref_vec.size();++i)
@@ -865,15 +864,15 @@ void nasal_vm::opr_callf()
                 vec_addr->get_vector().add_elem(tmp);
                 gc.add_reference(tmp);
             }
-            ref_closure.add_new_value(ref.get_dynamic_para(),vec_addr);
+            ref_closure.add_new_value(ref_func.get_dynamic_para(),vec_addr);
         }
     }
     else
     {
         nasal_hash& ref_hash=para_addr->get_hash();
-        std::vector<int>& ref_para=ref.get_para();
-        std::vector<nasal_val*>& ref_default=ref.get_default();
-        if(ref.get_dynamic_para()>=0)
+        std::vector<int>& ref_para=ref_func.get_para();
+        std::vector<nasal_val*>& ref_default=ref_func.get_default();
+        if(ref_func.get_dynamic_para()>=0)
         {
             die("callf: special call cannot use dynamic parameter");
             return;
@@ -894,7 +893,7 @@ void nasal_vm::opr_callf()
     }
     gc.del_reference(para_addr);
     call_stack.push(ptr);
-    ptr=ref.get_entry()-1;
+    ptr=ref_func.get_entry()-1;
     return;
 }
 void nasal_vm::opr_builtincall()
@@ -1086,7 +1085,6 @@ void nasal_vm::opr_return()
 {
     nasal_val* closure_addr=local_scope_stack.top();
     local_scope_stack.pop();
-    closure_addr->get_closure().del_scope();
     gc.del_reference(closure_addr);
     ptr=call_stack.top();
     call_stack.pop();
