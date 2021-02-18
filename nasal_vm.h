@@ -1083,9 +1083,8 @@ void nasal_vm::opr_mcallh()
 }
 void nasal_vm::opr_return()
 {
-    nasal_val* closure_addr=local_scope_stack.top();
+    gc.del_reference(local_scope_stack.top());
     local_scope_stack.pop();
-    gc.del_reference(closure_addr);
     ptr=call_stack.top();
     call_stack.pop();
     nasal_val* tmp=*val_stack_top--;
