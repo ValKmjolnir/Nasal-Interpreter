@@ -523,7 +523,9 @@ void nasal_codegen::conditional_gen(nasal_ast& ast)
             gen(op_jmpfalse,0);
             block_gen(tmp.get_children()[1]);
             jmp_label.push_back(exec_code.size());
-            gen(op_jmp,0);
+            // without 'else' the last condition doesn't need to jmp
+            if(i!=size-1)
+                gen(op_jmp,0);
             exec_code[ptr].index=exec_code.size();
         }
         else
@@ -532,8 +534,8 @@ void nasal_codegen::conditional_gen(nasal_ast& ast)
             break;
         }
     }
-    for(std::vector<int>::iterator j=jmp_label.begin();j!=jmp_label.end();++j)
-        exec_code[*j].index=exec_code.size();
+    for(std::vector<int>::iterator i=jmp_label.begin();i!=jmp_label.end();++i)
+        exec_code[*i].index=exec_code.size();
     return;
 }
 
