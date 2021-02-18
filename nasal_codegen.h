@@ -136,6 +136,8 @@ private:
     std::list<std::vector<int> > continue_ptr;
     std::list<std::vector<int> > break_ptr;
     int error;
+    int in_forindex;
+    int in_foreach;
     void regist_number(double);
     void regist_string(std::string);
     void gen(unsigned char,unsigned int);
@@ -185,6 +187,8 @@ public:
 nasal_codegen::nasal_codegen()
 {
     error=0;
+    in_foreach=0;
+    in_forindex=0;
     return;
 }
 
@@ -548,8 +552,8 @@ void nasal_codegen::loop_gen(nasal_ast& ast)
     {
         case ast_while:    while_gen(ast);    break;
         case ast_for:      for_gen(ast);      break;
-        case ast_forindex: forindex_gen(ast); break;
-        case ast_foreach:  foreach_gen(ast);  break;
+        case ast_forindex: ++in_forindex;forindex_gen(ast);--in_forindex; break;
+        case ast_foreach:  ++in_foreach; foreach_gen(ast); --in_foreach;  break;
     }
     return;
 }
@@ -844,6 +848,16 @@ void nasal_codegen::block_gen(nasal_ast& ast)
 
 void nasal_codegen::return_gen(nasal_ast& ast)
 {
+    for(int i=0;i<in_foreach;++i)
+    {
+        gen(op_pop,0);
+        gen(op_cntpop,0);
+    }
+    for(int i=0;i<in_forindex;++i)
+    {
+        gen(op_pop,0);
+        gen(op_cntpop,0);
+    }
     if(ast.get_children().size())
         calculation_gen(ast.get_children()[0]);
     else
