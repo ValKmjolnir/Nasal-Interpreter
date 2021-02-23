@@ -37,6 +37,16 @@ void die(std::string stage,std::string filename)
 	return;
 }
 
+void clear()
+{
+	// this will clear the data in lexer/parser/import modules
+	// to reduce memory footprint
+	lexer.get_token_list().clear();
+	parse.get_root().clear();
+	import.get_root().clear();
+	return;
+}
+
 void lex_func()
 {
 	lexer.openfile(inputfile);
@@ -47,6 +57,7 @@ void lex_func()
 		return;
 	}
 	lexer.print_token();
+	clear();
 	return;
 }
 
@@ -67,6 +78,7 @@ void ast_print()
 		return;
 	}
 	parse.get_root().print_ast(0);
+	clear();
 	return;
 }
 
@@ -93,6 +105,7 @@ void show_bytecode()
 		return;
 	}
 	code_generator.main_progress(import.get_root());
+	clear();
 	code_generator.print_byte_code();
 	return;
 }
@@ -120,6 +133,7 @@ void execute()
 		return;
 	}
 	code_generator.main_progress(import.get_root());
+	clear();
 	vm.run(
 		code_generator.get_string_table(),
 		code_generator.get_number_table(),
