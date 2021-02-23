@@ -127,37 +127,46 @@ Function is also a value type in nasal.
 var spc=nil;
 
 var a=1;
-a=0x7fffffff;
-a=0o170001;
+var a=2.71828;
+var a=2.147e16;
+var a=1e-10;
+var a=0x7fffffff;
+var a=0xAA55;
+var a=0o170001;
 
 var b='str';
-b="another string";
-b=`c`;
+var b="another string";
+var b=`c`;
 
 var c=[];
-c=[0,nil,{},[],func(){return 0;}];
+var c=[0,nil,{},[],func(){return 0;}];
 append(c,0,1,2);
 
 var d={
     member1:nil,
     member2:'str',
     'member3':'member\'s name can also be a string constant',
-    "member4":"also this"
+    "member4":"also this",
+    function:func()
+    {
+        var a=me.member2~me.member3;
+        return a;
+    }
 };
 
-var e=func(x,y,z)
+var f=func(x,y,z)
 {
     return nil;
 }
-e=func
+var f=func
 {
     return 1024;
 }
-e=func(x,y,z,default_parameter1=1,default_parameter2=2)
+var f=func(x,y,z,default_parameter1=1,default_parameter2=2)
 {
     return x+y+z+default_parameter1+default_parameter2;
 }
-e=func(x,y,z,dynamic_parameter...)
+var f=func(x,y,z,dynamic_parameter...)
 {
     var sum=0;
     foreach(var i;dynamic_parameter)
@@ -174,6 +183,7 @@ e=func(x,y,z,dynamic_parameter...)
 1*2;
 1/2;
 'str1'~'str2';
+(1+2)*(3+4)
 
 1+1 and 0;
 1+2*3 or 0;
@@ -251,8 +261,11 @@ foreach(var i;elem)
 
 ## subvec
 
+Use index to search one element in the string will get the ascii number of this character.If you want to get the character,use built-in function chr().
+
 ```javascript
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
+"hello world"[0];
 ```
 
 ## special function call
@@ -263,6 +276,16 @@ This is of great use but is not very efficient.
 a(x:0,y:1,z:2);
 ```
 
+## closure
+```javascript
+var f=func()
+{
+    var a=1;
+    return func(){return a;};
+}
+print(f()());
+```
+
 ## built-in functions
 
 Must import lib.nas or has these functions' definitions inside your code.
@@ -270,3 +293,70 @@ Must import lib.nas or has these functions' definitions inside your code.
 Also you could add builtin functions of your own(written in C/C++) to help you calculate things more quickly.(Advanced usage)
 
 Check built-in functions in lib.nas!
+
+If you want to add your own built-in functions,define the function in nasal_builtin.h.
+
+definition:
+
+```C++
+nasal_val* builtin_chr(nasal_val*,nasal_gc&);
+```
+
+Then complete this function using C++:
+
+```C++
+nasal_val* builtin_print(nasal_val* local_scope_addr,nasal_gc& gc)
+{
+    // get arguments by using in_builtin_find
+    nasal_val* vector_value_addr=in_builtin_find("elements");
+    // main process
+    // also check type here,if get a type error,use builtin_error_occurred and return nullptr
+    nasal_vec& ref_vec=vector_value_addr->get_vector();
+    int size=ref_vec.size();
+    for(int i=0;i<size;++i)
+    {
+        nasal_val* tmp=ref_vec[i];
+        switch(tmp->get_type())
+        {
+            case vm_nil:  std::cout<<"nil";             break;
+            case vm_num:  std::cout<<tmp->get_number(); break;
+            case vm_str:  std::cout<<tmp->get_string(); break;
+            case vm_vec:  tmp->get_vector().print();    break;
+            case vm_hash: tmp->get_hash().print();      break;
+            case vm_func: std::cout<<"func(...){...}";  break;
+        }
+    }
+    // if a nasal value is not in use,use gc::del_reference to delete it
+    // if get a new reference of a nasal value,use gc::add_reference
+    // generate return value,use gc::gc_alloc(type) to make a new value
+    return gc.gc_alloc(vm_nil);
+}
+```
+
+After that, write the built-in function's name(in nasal) and the function's pointer in this table:
+
+```C++
+struct FUNC_TABLE
+{
+    std::string func_name;
+    nasal_val* (*func_pointer)(nasal_val* x,nasal_gc& gc);
+} builtin_func_table[]=
+{
+    {"nasal_call_builtin_std_cout",builtin_print},
+    {"",NULL}
+};
+```
+
+At last,warp the 'nasal_call_builtin_std_cout' in a nasal file:
+
+```javascript
+var print=func(elements...)
+{
+    nasal_call_builtin_std_cout(elements);
+    return nil;
+};
+```
+
+In version 5.0,if you don't warp built-in function in a normal nasal function,this built-in function may cause a fault when searching arguments,which will cause SIGSEGV segmentation error(maybe).
+
+Use import("") to get the nasal file including your biult-in functions,then you could use it.
