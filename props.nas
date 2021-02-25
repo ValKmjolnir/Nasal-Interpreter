@@ -102,6 +102,15 @@ props.Node=
                 return k;
         return '';
     },
+    getParent:func()
+    {
+        return me.parent;
+    },
+    getPath:func()
+    {
+        if(me.parent==nil) return '';
+        return me.parent.getPath()~'/'~me.getName();
+    },
     equals:func(node){return me==node;},
     debug:func(s='')
     {
@@ -140,3 +149,4 @@ props.getNode('/test/in',1).setValue('/','false');
 props.getNode('/test/in',2).setValue('/','welcome aboard,need help? use help->tutorial');
 props.getNode('/test/in',3).setValue('/',2147483648);
 props.globals.debug();
+println(props.getNode('/test/in',3).getPath());
