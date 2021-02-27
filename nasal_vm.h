@@ -437,14 +437,14 @@ void nasal_vm::opr_meq()
 void nasal_vm::opr_eq()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_nil && b_ref_type==vm_nil)
     {
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(1);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
@@ -457,14 +457,14 @@ void nasal_vm::opr_eq()
             std::string bstr=val_addr2->get_string();
             nasal_val* new_val_addr=gc.gc_alloc(vm_num);
             new_val_addr->set_number((double)(astr==bstr));
-            *(++val_stack_top)=new_val_addr;
+            *val_stack_top=new_val_addr;
             gc.del_reference(val_addr1);
             gc.del_reference(val_addr2);
             return;
         }
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number((double)(val_addr1->to_number()==val_addr2->to_number()));
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
@@ -473,7 +473,7 @@ void nasal_vm::opr_eq()
     {
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(val_addr1==val_addr2);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
@@ -483,14 +483,14 @@ void nasal_vm::opr_eq()
 void nasal_vm::opr_neq()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_nil && b_ref_type==vm_nil)
     {
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(0);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
@@ -503,14 +503,14 @@ void nasal_vm::opr_neq()
             std::string bstr=val_addr2->get_string();
             nasal_val* new_val_addr=gc.gc_alloc(vm_num);
             new_val_addr->set_number((double)(astr!=bstr));
-            *(++val_stack_top)=new_val_addr;
+            *val_stack_top=new_val_addr;
             gc.del_reference(val_addr1);
             gc.del_reference(val_addr2);
             return;
         }
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number((double)(val_addr1->to_number()!=val_addr2->to_number()));
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
@@ -519,19 +519,17 @@ void nasal_vm::opr_neq()
     {
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(val_addr1!=val_addr2);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
     }
-    gc.del_reference(val_addr1);
-    gc.del_reference(val_addr2);
     return;
 }
 void nasal_vm::opr_less()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_str && b_ref_type==vm_str)
@@ -540,14 +538,14 @@ void nasal_vm::opr_less()
         std::string b_str=val_addr2->get_string();
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(a_str<b_str);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
     }
     nasal_val* new_val_addr=gc.gc_alloc(vm_num);
     new_val_addr->set_number(val_addr1->to_number()<val_addr2->to_number());
-    *(++val_stack_top)=new_val_addr;
+    *val_stack_top=new_val_addr;
     gc.del_reference(val_addr1);
     gc.del_reference(val_addr2);
     return;
@@ -555,7 +553,7 @@ void nasal_vm::opr_less()
 void nasal_vm::opr_leq()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_str && b_ref_type==vm_str)
@@ -564,14 +562,14 @@ void nasal_vm::opr_leq()
         std::string b_str=val_addr2->get_string();
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(a_str<=b_str);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
     }
     nasal_val* new_val_addr=gc.gc_alloc(vm_num);
     new_val_addr->set_number(val_addr1->to_number()<=val_addr2->to_number());
-    *(++val_stack_top)=new_val_addr;
+    *val_stack_top=new_val_addr;
     gc.del_reference(val_addr1);
     gc.del_reference(val_addr2);
     return;
@@ -579,7 +577,7 @@ void nasal_vm::opr_leq()
 void nasal_vm::opr_grt()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_str && b_ref_type==vm_str)
@@ -588,14 +586,14 @@ void nasal_vm::opr_grt()
         std::string b_str=val_addr2->get_string();
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(a_str>b_str);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
     }
     nasal_val* new_val_addr=gc.gc_alloc(vm_num);
     new_val_addr->set_number(val_addr1->to_number()>val_addr2->to_number());
-    *(++val_stack_top)=new_val_addr;
+    *val_stack_top=new_val_addr;
     gc.del_reference(val_addr1);
     gc.del_reference(val_addr2);
     return;
@@ -603,7 +601,7 @@ void nasal_vm::opr_grt()
 void nasal_vm::opr_geq()
 {
     nasal_val* val_addr2=*val_stack_top--;
-    nasal_val* val_addr1=*val_stack_top--;
+    nasal_val* val_addr1=*val_stack_top;
     int a_ref_type=val_addr1->get_type();
     int b_ref_type=val_addr2->get_type();
     if(a_ref_type==vm_str && b_ref_type==vm_str)
@@ -612,14 +610,14 @@ void nasal_vm::opr_geq()
         std::string b_str=val_addr2->get_string();
         nasal_val* new_val_addr=gc.gc_alloc(vm_num);
         new_val_addr->set_number(a_str>=b_str);
-        *(++val_stack_top)=new_val_addr;
+        *val_stack_top=new_val_addr;
         gc.del_reference(val_addr1);
         gc.del_reference(val_addr2);
         return;
     }
     nasal_val* new_val_addr=gc.gc_alloc(vm_num);
     new_val_addr->set_number(val_addr1->to_number()>=val_addr2->to_number());
-    *(++val_stack_top)=new_val_addr;
+    *val_stack_top=new_val_addr;
     gc.del_reference(val_addr1);
     gc.del_reference(val_addr2);
     return;
@@ -795,7 +793,7 @@ void nasal_vm::opr_callvi()
 }
 void nasal_vm::opr_callh()
 {
-    nasal_val* val_addr=*val_stack_top--;
+    nasal_val* val_addr=*val_stack_top;
     if(val_addr->get_type()!=vm_hash)
     {
         die("callh: must call a hash");
@@ -813,7 +811,7 @@ void nasal_vm::opr_callh()
         (res->get_func().get_closure_addr())->get_closure().add_new_value(me_index,val_addr);
     else
         gc.del_reference(val_addr);
-    *(++val_stack_top)=res;
+    *val_stack_top=res;
     return;
 }
 void nasal_vm::opr_callf()
