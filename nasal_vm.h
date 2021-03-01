@@ -1,18 +1,18 @@
 #ifndef __NASAL_VM_H__
 #define __NASAL_VM_H__
-#define val_stack_MAX_DEPTH 8192
+#define STACK_MAX_DEPTH 8192
 
 class nasal_vm
 {
 private:
-    bool main_loop_break_mark;
-    int ptr;      // program counter
-    int me_index; // this is the index of "me" in string_table
-    nasal_val* global_scope_addr;
-    // garbage collector and memory manager
-    nasal_gc gc;
-    // byte codes store here
-    std::vector<opcode> exec_code;
+    nasal_val* zero_addr;          // reserved address of nasal_val,type vm_num, 0
+    nasal_val* one_addr;           // reserved address of nasal_val,type vm_num, 1
+    bool main_loop_break_mark;     // when mark is false,break the main loop
+    int ptr;                       // program counter
+    int me_index;                  // this is the index of "me" in string_table
+    nasal_val* global_scope_addr;  // global scope address,type vm_scop
+    nasal_gc gc;                   // garbage collector and memory manager
+    std::vector<opcode> exec_code; // byte codes store here
     // main calculation stack
     nasal_val** val_stack;
     nasal_val** val_stack_top;
@@ -26,9 +26,7 @@ private:
     std::stack<int> call_stack;
     // iterator stack for forindex/foreach
     std::stack<int> counter_stack;
-    // string table
     std::vector<std::string> string_table;
-    // number table
     std::vector<double> number_table;
     void die(std::string);
     bool check_condition(nasal_val*);
@@ -98,7 +96,7 @@ public:
 
 nasal_vm::nasal_vm()
 {
-    val_stack=new nasal_val*[val_stack_MAX_DEPTH];
+    val_stack=new nasal_val*[STACK_MAX_DEPTH];
     val_stack_top=val_stack;
     local_scope_stack.push(NULL);
     return;
@@ -139,14 +137,14 @@ bool nasal_vm::check_condition(nasal_val* value_addr)
 {
     int type=value_addr->get_type();
     if(type==vm_num)
-        return (value_addr->get_number()!=0);
+        return value_addr->get_number();
     else if(type==vm_str)
     {
         std::string str=value_addr->get_string();
         double number=trans_string_to_number(str);
         if(std::isnan(number))
-            return str.length()!=0;
-        return (number!=0);
+            return str.length();
+        return number;
     }
     return false;
 }
@@ -172,16 +170,14 @@ void nasal_vm::opr_pushnum()
 }
 void nasal_vm::opr_pushone()
 {
-    nasal_val* val_addr=gc.gc_alloc(vm_num);
-    val_addr->set_number(1);
-    *(++val_stack_top)=val_addr;
+    *(++val_stack_top)=one_addr;
+    gc.add_reference(one_addr);
     return;
 }
 void nasal_vm::opr_pushzero()
 {
-    nasal_val* val_addr=gc.gc_alloc(vm_num);
-    val_addr->set_number(0);
-    *(++val_stack_top)=val_addr;
+    *(++val_stack_top)=zero_addr;
+    gc.add_reference(zero_addr);
     return;
 }
 void nasal_vm::opr_pushnil()
@@ -691,15 +687,17 @@ void nasal_vm::opr_foreach()
 void nasal_vm::opr_call()
 {
     nasal_val* val_addr=NULL;
-    int name_index=exec_code[ptr].index;
     nasal_val* local_scope_top=local_scope_stack.top();
+    int name_index=exec_code[ptr].index;
     if(local_scope_top)
-        val_addr=local_scope_top->get_closure().get_value_address(name_index);
-    if(val_addr)
     {
-        gc.add_reference(val_addr);
-        *(++val_stack_top)=val_addr;
-        return;
+        val_addr=local_scope_top->get_closure().get_value_address(name_index);
+        if(val_addr)
+        {
+            gc.add_reference(val_addr);
+            *(++val_stack_top)=val_addr;
+            return;
+        }
     }
     val_addr=global_scope_addr->get_closure().get_value_address(name_index);
     if(val_addr)
@@ -1097,6 +1095,10 @@ void nasal_vm::run(std::vector<std::string>& strs,std::vector<double>& nums,std:
     string_table=strs;
     number_table=nums;
     exec_code=exec;
+    zero_addr=gc.gc_alloc(vm_num);
+    zero_addr->set_number(0);
+    one_addr=gc.gc_alloc(vm_num);
+    one_addr->set_number(1);
     builtin_use_string_table.clear();
     for(int i=0;i<string_table.size();++i)
     {

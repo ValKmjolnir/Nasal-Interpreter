@@ -128,8 +128,8 @@ struct opcode
 class nasal_codegen
 {
 private:
-    std::map<double,int>         number_table;
-    std::map<std::string,int>    string_table;
+    std::unordered_map<double,int>      number_table;
+    std::unordered_map<std::string,int> string_table;
     std::vector<double>          number_result_table;
     std::vector<std::string>     string_result_table;
     std::vector<opcode>          exec_code;
@@ -918,9 +918,9 @@ void nasal_codegen::main_progress(nasal_ast& ast)
     gen(op_nop,0);
     number_result_table.resize(number_table.size());
     string_result_table.resize(string_table.size());
-    for(std::map<double,int>::iterator i=number_table.begin();i!=number_table.end();++i)
+    for(auto i=number_table.begin();i!=number_table.end();++i)
         number_result_table[i->second]=i->first;
-    for(std::map<std::string,int>::iterator i=string_table.begin();i!=string_table.end();++i)
+    for(auto i=string_table.begin();i!=string_table.end();++i)
         string_result_table[i->second]=i->first;
     return;
 }

@@ -296,7 +296,7 @@ Check built-in functions in lib.nas!
 
 If you want to add your own built-in functions,define the function in nasal_builtin.h.
 
-definition:
+Definition:
 
 ```C++
 nasal_val* builtin_chr(nasal_val*,nasal_gc&);

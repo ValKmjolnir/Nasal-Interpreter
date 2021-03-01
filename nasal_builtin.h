@@ -9,7 +9,7 @@
 // }
 // builtin function nasal_call_builtin_std_cout is wrapped up by print
 
-std::map<std::string,int> builtin_use_string_table;
+std::unordered_map<std::string,int> builtin_use_string_table;
 // used to find values that builtin function uses
 #define in_builtin_find(value_name_string) \
 (\
