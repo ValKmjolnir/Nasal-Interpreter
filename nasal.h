@@ -19,7 +19,7 @@
 #include <stack>
 #include <queue>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 /*
 	check if a string can be converted to a number

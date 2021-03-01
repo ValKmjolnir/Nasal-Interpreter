@@ -40,7 +40,7 @@ class nasal_hash
 {
 private:
     nasal_gc& gc;
-    std::map<std::string,nasal_val*> elems;
+    std::unordered_map<std::string,nasal_val*> elems;
 public:
     nasal_hash(nasal_gc&);
     ~nasal_hash();
@@ -82,7 +82,7 @@ class nasal_scop
 {
 private:
     nasal_gc& gc;
-    std::map<int,nasal_val*> elems;
+    std::unordered_map<int,nasal_val*> elems;
 public:
     nasal_scop(nasal_gc&);
     ~nasal_scop();
@@ -133,7 +133,6 @@ private:
 public:
     ~nasal_gc();
     void clear();
-    void debug();
     nasal_val* gc_alloc(int);
     void add_reference(nasal_val*);
     void del_reference(nasal_val*);
@@ -226,20 +225,20 @@ nasal_hash::nasal_hash(nasal_gc& ngc):gc(ngc)
 }
 nasal_hash::~nasal_hash()
 {
-    for(std::map<std::string,nasal_val*>::iterator iter=elems.begin();iter!=elems.end();++iter)
+    for(auto iter=elems.begin();iter!=elems.end();++iter)
         gc.del_reference(iter->second);
     elems.clear();
     return;
 }
 void nasal_hash::add_elem(std::string key,nasal_val* value_address)
 {
-    if(elems.find(key)==elems.end())
+    if(!elems.count(key))
         elems[key]=value_address;
     return;
 }
 void nasal_hash::del_elem(std::string key)
 {
-    if(elems.find(key)!=elems.end())
+    if(!elems.count(key))
     {
         gc.del_reference(elems[key]);
         elems.erase(key);
@@ -252,16 +251,16 @@ int nasal_hash::size()
 }
 nasal_val* nasal_hash::get_special_para(std::string key)
 {
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return elems[key];
     return NULL;
 }
 nasal_val* nasal_hash::get_value_address(std::string key)
 {
     nasal_val* ret_value_addr=NULL;
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return elems[key];
-    else if(elems.find("parents")!=elems.end())
+    else if(elems.count("parents"))
     {
         nasal_val* val_addr=elems["parents"];
         if(val_addr->get_type()==vm_vec)
@@ -283,9 +282,9 @@ nasal_val* nasal_hash::get_value_address(std::string key)
 nasal_val** nasal_hash::get_mem_address(std::string key)
 {
     nasal_val** mem_addr=NULL;
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return &elems[key];
-    else if(elems.find("parents")!=elems.end())
+    else if(elems.count("parents"))
     {
         nasal_val* val_addr=elems["parents"];
         if(val_addr->get_type()==vm_vec)
@@ -306,9 +305,9 @@ nasal_val** nasal_hash::get_mem_address(std::string key)
 }
 bool nasal_hash::check_contain(std::string key)
 {
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return true;
-    if(elems.find("parents")!=elems.end())
+    if(elems.count("parents"))
     {
         bool result=false;
         nasal_val* val_addr=elems["parents"];
@@ -333,7 +332,7 @@ nasal_val* nasal_hash::get_keys()
 {
     nasal_val* ret_addr=gc.gc_alloc(vm_vec);
     nasal_vec& ref_vec=ret_addr->get_vector();
-    for(std::map<std::string,nasal_val*>::iterator iter=elems.begin();iter!=elems.end();++iter)
+    for(auto iter=elems.begin();iter!=elems.end();++iter)
     {
         nasal_val* str_addr=gc.gc_alloc(vm_str);
         str_addr->set_string(iter->first);
@@ -343,12 +342,15 @@ nasal_val* nasal_hash::get_keys()
 }
 void nasal_hash::print()
 {
-    std::cout<<"{";
+    std::cout<<'{';
     if(!elems.size())
-        std::cout<<"}";
-    for(std::map<std::string,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
     {
-        std::cout<<i->first<<":";
+        std::cout<<'}';
+        return;
+    }
+    for(auto i=elems.begin();i!=elems.end();++i)
+    {
+        std::cout<<i->first<<':';
         nasal_val* tmp=i->second;
         switch(tmp->get_type())
         {
@@ -359,9 +361,9 @@ void nasal_hash::print()
             case vm_hash: tmp->get_hash().print();      break;
             case vm_func: std::cout<<"func(...){...}";  break;
         }
-        std::cout<<",}"[(++i)==elems.end()];
-        --i;
+        std::cout<<',';
     }
+    std::cout<<'}';
     return;
 }
 
@@ -437,14 +439,14 @@ nasal_scop::nasal_scop(nasal_gc& ngc):gc(ngc)
 }
 nasal_scop::~nasal_scop()
 {
-    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
+    for(auto i=elems.begin();i!=elems.end();++i)
         gc.del_reference(i->second);
     elems.clear();
     return;
 }
 void nasal_scop::add_new_value(int key,nasal_val* value_address)
 {
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
     {
         // if this value already exists,delete the old value and update a new value
         gc.del_reference(elems[key]);
@@ -454,22 +456,22 @@ void nasal_scop::add_new_value(int key,nasal_val* value_address)
 }
 nasal_val* nasal_scop::get_value_address(int key)
 {
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return elems[key];
     return NULL;
 }
 nasal_val** nasal_scop::get_mem_address(int key)
 {
-    if(elems.find(key)!=elems.end())
+    if(elems.count(key))
         return &(elems[key]);
     return NULL;
 }
 void nasal_scop::set_closure(nasal_scop& tmp)
 {
-    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
+    for(auto i=elems.begin();i!=elems.end();++i)
         gc.del_reference(i->second);
     elems=tmp.elems;
-    for(std::map<int,nasal_val*>::iterator i=elems.begin();i!=elems.end();++i)
+    for(auto i=elems.begin();i!=elems.end();++i)
         gc.add_reference(i->second);
     return;
 }
@@ -566,13 +568,10 @@ int nasal_val::get_type()
 }
 double nasal_val::to_number()
 {
-    switch(type)
-    {
-        case vm_nil: return 0;
-        case vm_num: return ptr.num;
-        case vm_str: return trans_string_to_number(*ptr.str);
-        default:     return std::nan("");
-    }
+    if(type==vm_num)
+        return ptr.num;
+    else if(type==vm_str)
+        return trans_string_to_number(*ptr.str);
     return 0;
 }
 double nasal_val::get_number()
@@ -581,12 +580,10 @@ double nasal_val::get_number()
 }
 std::string nasal_val::to_string()
 {
-    switch(type)
-    {
-        case vm_num:return trans_number_to_string(ptr.num);
-        case vm_str:return *ptr.str;
-        default:return "";
-    }
+    if(type==vm_str)
+        return *ptr.str;
+    else if(type==vm_num)
+        return trans_number_to_string(ptr.num);
     return "";
 }
 std::string nasal_val::get_string()
@@ -621,27 +618,6 @@ nasal_gc::~nasal_gc()
     while(!free_space.empty())
         free_space.pop();
     memory.clear();
-    return;
-}
-void nasal_gc::debug()
-{
-    int gc_mem_size=memory.size();
-    for(int i=0;i<gc_mem_size;++i)
-        if(memory[i]->ref_cnt)
-        {
-            std::cout<<">> [debug] "<<i<<": "<<memory[i]->ref_cnt<<" ";
-            switch(memory[i]->get_type())
-            {
-                case vm_nil:std::cout<<"nil";break;
-                case vm_num:std::cout<<"number "<<memory[i]->get_number();break;
-                case vm_str:std::cout<<"string "<<memory[i]->get_string();break;
-                case vm_vec:std::cout<<"vector";break;
-                case vm_hash:std::cout<<"hash";break;
-                case vm_func:std::cout<<"function";break;
-                case vm_scop:std::cout<<"closure";break;
-            }
-            std::cout<<"\n";
-        }
     return;
 }
 void nasal_gc::clear()

@@ -449,7 +449,7 @@ nasal_ast nasal_parse::args_gen()
         if(checked_dynamic_ids && i!=node_child_size-1)
             die(node.get_children()[i].get_line(),"dynamic identifier must be the end of argument list: "+args_format);
     }
-    std::map<std::string,bool> argname_table;
+    std::unordered_map<std::string,bool> argname_table;
     for(int i=0;i<node_child_size;++i)
     {
         std::string new_name;

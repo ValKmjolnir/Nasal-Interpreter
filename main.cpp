@@ -9,25 +9,27 @@ nasal_vm       vm;
 
 void help()
 {
-	std::cout<<">> [\"file\"] input a file name.\n";
-	std::cout<<">> [help  ] show help.\n";
-	std::cout<<">> [clear ] clear the screen.\n";
-	std::cout<<">> [lex   ] use lexer to turn code into tokens.\n";
-	std::cout<<">> [ast   ] do parsing and check the abstract syntax tree.\n";
-	std::cout<<">> [code  ] show byte code.\n";
-	std::cout<<">> [exec  ] execute program on bytecode vm.\n";
-	std::cout<<">> [logo  ] print logo of nasal .\n";
-	std::cout<<">> [exit  ] quit nasal interpreter.\n";
+	std::cout
+	<<">> [\"file\"] input a file name.\n"
+	<<">> [help  ] show help.\n"
+	<<">> [clear ] clear the screen.\n"
+	<<">> [lex   ] use lexer to turn code into tokens.\n"
+	<<">> [ast   ] do parsing and check the abstract syntax tree.\n"
+	<<">> [code  ] show byte code.\n"
+	<<">> [exec  ] execute program on bytecode vm.\n"
+	<<">> [logo  ] print logo of nasal .\n"
+	<<">> [exit  ] quit nasal interpreter.\n";
 	return;
 }
 
 void logo()
 {
-    std::cout<<"       __                _      \n";
-	std::cout<<"    /\\ \\ \\__ _ ___  __ _| |  \n";
-	std::cout<<"   /  \\/ / _` / __|/ _` | |    \n";
-	std::cout<<"  / /\\  / (_| \\__ \\ (_| | |  \n";
-	std::cout<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
+    std::cout
+	<<"       __                _      \n"
+	<<"    /\\ \\ \\__ _ ___  __ _| |  \n"
+	<<"   /  \\/ / _` / __|/ _` | |    \n"
+	<<"  / /\\  / (_| \\__ \\ (_| | |  \n"
+	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
     return;
 }
 
