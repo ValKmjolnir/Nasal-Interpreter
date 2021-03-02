@@ -128,6 +128,7 @@ var curve5=func()
     return;
 }
 trans_ttf("just for test");
+trans_ttf("ValKmjolnir");
 curve1();
 curve2();
 curve3();

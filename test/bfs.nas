@@ -20,7 +20,7 @@ var prt=func()
             s~=map[i][j];
         s~='\n';
     }
-    print(s);
+    print(s,'\n');
 }
 
 var bfs=func(begin,end)
@@ -50,7 +50,7 @@ var bfs=func(begin,end)
         }
         prt();
     }
-    print("cannot reach.");
+    print("cannot reach.\n");
     return;
 }
 

@@ -127,7 +127,7 @@ var backward=func(x)
 var cnt=0;
 var show=0;
 var error=1e8;
-while(error>0.01)
+while(error>0.0005)
 {
     error=0;
     for(var i=0;i<4;i+=1)
@@ -138,13 +138,13 @@ while(error>0.01)
     }
     cnt+=1;
     show+=1;
-    if(show==100)
+    if(show==200)
     {
         show=0;
-        print('epoch ',cnt,':',error);
+        print('epoch ',cnt,':',error,'\r');
     }
 }
-print('\afinished.');
+print('finished after ',cnt,' epoch.\n');
 var vec=[
     [0,0],
     [0,1],
@@ -154,5 +154,5 @@ var vec=[
 foreach(var v;vec)
 {
     run(v);
-    print(v,': ',output[0].out);
+    print(v,': ',output[0].out,'\n');
 }
