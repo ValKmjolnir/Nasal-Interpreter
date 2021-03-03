@@ -45,7 +45,7 @@ var trans_ttf=func(string)
                 str[j]~=char_ttf[0][j];
     }
     foreach(var i;str)
-        print(i);
+        println(i);
     return;
 }
 var curve1=func()
@@ -100,7 +100,7 @@ var curve4=func()
         {
             forindex(var i;s)
             {
-                print(s[i]);
+                println(s[i]);
                 s[i]='';
             }
             cnt=0;
@@ -123,7 +123,7 @@ var curve5=func()
         var s="";
         for(var i=0;i<size(arr);i+=1)
                 s~=shadow[arr[i]];
-            print(s);
+        println(s);
     }
     return;
 }

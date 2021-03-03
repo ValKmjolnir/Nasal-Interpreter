@@ -55,11 +55,7 @@ var bfs=func(begin,end)
 }
 
 prt();
-var x=num(input());
-var y=num(input());
-var begin=[x,y];
-x=num(input());
-y=num(input());
-var end=[x,y];
+var begin=[input(),input()];
+var end=[input(),input()];
 bfs(begin,end);
 prt();

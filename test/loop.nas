@@ -1,3 +1,4 @@
+import("lib.nas");
 for(;;)break;
 for(;;)
 {

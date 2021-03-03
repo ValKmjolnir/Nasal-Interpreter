@@ -9,6 +9,24 @@
 # local node, there is no equivalent of the "relative path" variants
 # available in C++; just use node.getNode(path).whatever() instead.
 #
+
+##
+# Utility.  Turns any ghosts it finds (either solo, or in an
+# array) into Node objects.
+#
+var wrap = func(node) {
+    var argtype = typeof(node);
+    if(argtype == "ghost") {
+        return wrapNode(node);
+    } elsif(argtype == "vector") {
+        var v = node;
+        var n = size(v);
+        for(var i=0; i<n; i+=1) { v[i] = wrapNode(v[i]); }
+        return v;
+    }
+    return node;
+}
+
 var Node = {
     getNode          : func wrap(_getNode(me._g, arg)),
     getParent        : func wrap(_getParent(me._g, arg)),
@@ -164,23 +182,6 @@ var copy = func(src, dest, attr = 0) {
     elsif(type == "FLOAT" or type == "DOUBLE") dest.setDoubleValue(val);
     else dest.setValue(val);
     if(attr) dest.setAttribute(src.getAttribute());
-}
-
-##
-# Utility.  Turns any ghosts it finds (either solo, or in an
-# array) into Node objects.
-#
-var wrap = func(node) {
-    var argtype = typeof(node);
-    if(argtype == "ghost") {
-        return wrapNode(node);
-    } elsif(argtype == "vector") {
-        var v = node;
-        var n = size(v);
-        for(var i=0; i<n; i+=1) { v[i] = wrapNode(v[i]); }
-        return v;
-    }
-    return node;
 }
 
 ##

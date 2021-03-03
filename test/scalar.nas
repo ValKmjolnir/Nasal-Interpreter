@@ -1,4 +1,5 @@
 # basic type
+import("lib.nas");
 nil;
 2147483647;
 0x7fffffff;
@@ -54,7 +55,7 @@ var hash_4={
 
 # function
 var func_1=func(){return 1;}
-var prt=func(x){print(x);return nil;}
+var prt=func(x){println(x);return nil;}
 var func_with_dynamic_id=func(a,b,c,d...){return [a,b,c,d];}
 var func_with_lack_para=func(a,b,c=1,d=2){return a+b+c+d;}
 var func_with_func_para=func(a,f){return f(a);}
@@ -72,21 +73,21 @@ var source={
  member_1: func func_1(),         # this will get a number
  member_2: func {return 2.71828;} # this will get a function
 };
-print(source['member_2']());
-print(source.member_2());
+println(source['member_2']());
+println(source.member_2());
 
 var test_func=func{return 1;}
-print(func test_func());       # 1
-print(test_func());            # 1
-print(func test_func);         # nothing
-print(test_func);              # nothing
-print(([0,1,2,3])[1]);         # 1
-print(({str:"what?"})["str"]); # what?
-print(({str:"what?"}).str);    # what?
+println(func test_func());       # 1
+println(test_func());            # 1
+println(func test_func);         # nothing
+println(test_func);              # nothing
+println(([0,1,2,3])[1]);         # 1
+println(({str:"what?"})["str"]); # what?
+println(({str:"what?"}).str);    # what?
 
 # lambda
 (func(x){return x>0? x:0;})(12);
-(func{print("hello world");})();
+(func{println("hello world");})();
 (((func(x){return 1.0/math.exp(x);})))(0);
 
 # flexible definition & assignment
@@ -124,3 +125,28 @@ nil and 1+7*8;
 [0,1,4,3,2][4]*2-4+1*2*2*2*2*2/8;
 {num:0}.num or {what_is_the_secret_of_universe:42}["what_is_the_secret_of_universe"];
 "123"~"456"-123456*2/2;
+
+var hash={str:'hello',f:func{return me.str;}};
+var tmp_f=hash.f;
+hash=1;
+print(tmp_f());
+# undefined symbol 'me'
+# this means that 
+# when generating local_scope for function f,
+# nasal_gc will not count 'me' as one reference of this hash
+
+var h1={str:'hello',f:func{return me.str;}};
+var h2={str:'world',f:func{return nil;}};
+h2.f=h1.f;
+print(h2.f());
+# print 'world'
+# this means that 'me' in hash's functions
+# only points to the hash this function belongs to
+
+var f1=func(){print(1);return 1;}
+var f2=func(){print(2);return 0;}
+f1() or f2();
+# print '1'
+# this means that when using 'or' or 'and',
+# if the result is clear when calculating,
+# objects behind will not be calculated
