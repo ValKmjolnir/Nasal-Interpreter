@@ -13,16 +13,16 @@ var film_node=[];
 for(var i=0;i<1000;i+=1)
     append(film_node,node("film"));
 var director_node=[];
-for(var i=0;i<400;i+=1)
+for(var i=0;i<200;i+=1)
     append(director_node,node("direct"));
 var actor_node=[];
-for(var i=0;i<2000;i+=1)
+for(var i=0;i<400;i+=1)
     append(actor_node,node("actor"));
 var writer_node=[];
-for(var i=0;i<300;i+=1)
+for(var i=0;i<100;i+=1)
     append(writer_node,node("writer"));
 var type_node=[];
-for(var i=0;i<20;i+=1)
+for(var i=0;i<40;i+=1)
     append(type_node,node("type"));
 var lang_node=[];
 for(var i=0;i<120;i+=1)
@@ -40,14 +40,14 @@ func()
     var lang_size=size(lang_node);
     var country_size=size(country_node);
 
-    var director_link=int(1+rand()*2);
-    var actor_link=int(1+rand()*10);
-    var writer_link=int(1+rand());
-    var type_link=int(1+rand()*3);
-    var lang_link=int(1+rand()*4);
-    var country_link=int(1+rand()*2);
     foreach(var film;film_node)
     {
+        var director_link=int(1+rand()*2);
+        var actor_link=int(1+rand()*20);
+        var writer_link=int(1+rand()*2);
+        var type_link=int(1+rand()*5);
+        var lang_link=int(1+rand()*4);
+        var country_link=int(1+rand()*4);
         for(var i=0;i<director_link;i+=1)
         {
             var director=director_node[rand()*director_size];
@@ -118,18 +118,9 @@ var sort_list=func(begin,end)
     return;
 }
 
-while(1)
+var get_next=func(index)
 {
-    var list_size=size(film_list);
-    list_size=list_size>10?10:list_size;
-    for(var i=0;i<list_size;i+=1)
-        print(i,'\t:',film_list[i].name,'\t',count_list[i]);
-    var choose=input();
-    if(choose=="exit")
-        break;
-    if(num(choose)>=list_size)
-        die("choose a correct index");
-    var label_list=film_node[num(choose)].next;
+    var label_list=film_list[index].next;
     film_list=[];
     count_list=[];
     foreach(var label;label_list)
@@ -140,7 +131,7 @@ while(1)
                 if(film_list[i].name==film.name)
                 {
                     has=1;
-                    count_list[i]+=rand();
+                    count_list[i]+=1;
                     break;
                 }
             if(has==0)
@@ -150,6 +141,21 @@ while(1)
             }
         }
     sort_list(0,size(film_list));
+    return;
+}
+
+while(1)
+{
+    var list_size=size(film_list);
+    list_size=list_size>10?10:list_size;
+    for(var i=1;i<list_size;i+=1)
+        println('| ',i,'\t:',film_list[i].name,'\t',count_list[i]);
+    var choose=input();
+    if(choose=="exit")
+        break;
+    if(num(choose)==0 or num(choose)>=list_size)
+        die("choose a correct index");
+    get_next(num(choose));
 }
 
 foreach(var film;film_node)

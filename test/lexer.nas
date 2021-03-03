@@ -1,6 +1,6 @@
 import("lib.nas");
 
-var s=io.fin("a.nas");
+var s=io.fin(input());
 s=split('',s);
 var len=size(s);
 var ptr=0;
@@ -59,7 +59,7 @@ var generate_str=func()
         ptr+=1;
     }
     if(ptr>=len)
-        print("read eof when generating string.");
+        print("read eof when generating string.\n");
     ptr+=1;
     return tok_str;
 }
@@ -178,6 +178,6 @@ while(ptr<len)
 }
 foreach(var i;token)
 {
-    print("(",cnt," | ",i,")");
+    print("(",cnt," | ",i,")\n");
     cnt+=1;
 }

@@ -8,6 +8,12 @@ var print=func(elements...)
     nasal_call_builtin_std_cout(elements);
     return nil;
 };
+var println=func(elements...)
+{
+    nasal_call_builtin_std_cout(elements);
+    print('\n');
+    return nil;
+}
 var append=func(vector,elements...)
 {
     nasal_call_builtin_push_back(vector,elements);
@@ -94,6 +100,26 @@ var substr=func(str,begin,length)
 {
     return nasal_call_builtin_substr(str,begin,length);
 }
+var streq=func(a,b)
+{
+    return nasal_call_builtin_streq(a,b);
+}
+var left=func(string,length)
+{
+    return nasal_call_builtin_left(string,length);
+}
+var right=func(string,length)
+{
+    return nasal_call_builtin_right(string,length);
+}
+var cmp=func(a,b)
+{
+    return nasal_call_builtin_cmp(a,b);
+}
+var chr=func(code) #//Unlike in FG, this chr does not support Extended ASCII
+{
+    return nasal_call_builtin_chr(code);
+}
 
 var io=
 {
@@ -110,58 +136,22 @@ var io=
 
 var bits=
 {
-    bitxor:func(a,b)
-    {
-        return nasal_call_builtin_xor(a,b);
-    },
-    bitand:func(a,b)
-    {
-        return nasal_call_builtin_and(a,b);
-    },
-    bitor:func(a,b)
-    {
-        return nasal_call_builtin_or(a,b);
-    },
-    bitnand:func(a,b)
-    {
-        return nasal_call_builtin_nand(a,b);
-    },
-    bitnot:func(a)
-    {
-        return nasal_call_builtin_not(a);
-    }
+    bitxor:  func(a,b){return nasal_call_builtin_xor(a,b); },
+    bitand:  func(a,b){return nasal_call_builtin_and(a,b); },
+    bitor:   func(a,b){return nasal_call_builtin_or(a,b);  },
+    bitnand: func(a,b){return nasal_call_builtin_nand(a,b);},
+    bitnot:  func(a)  {return nasal_call_builtin_not(a);   }
 };
 
 var math=
 {
-    e:2.7182818284590452354,
-    pi:3.14159265358979323846,
-    sin:func(x)
-    {
-        return nasal_call_builtin_sin(x);
-    },
-    cos:func(x)
-    {
-        return nasal_call_builtin_cos(x);
-    },
-    tan:func(x)
-    {
-        return nasal_call_builtin_tan(x);
-    },
-    exp:func(x)
-    {
-        return nasal_call_builtin_exp(x);
-    }, 
-    ln:func(x)
-    {
-        return nasal_call_builtin_cpp_math_ln(x);
-    },
-    sqrt:func(x)
-    {
-        return nasal_call_builtin_cpp_math_sqrt(x);
-    },
-    atan2:func(x,y)
-    {
-        return nasal_call_builtin_cpp_atan2(x,y);
-    },
+    e:     2.7182818284590452354,
+    pi:    3.14159265358979323846264338327950288,
+    sin:   func(x)  {return nasal_call_builtin_sin(x);          },
+    cos:   func(x)  {return nasal_call_builtin_cos(x);          },
+    tan:   func(x)  {return nasal_call_builtin_tan(x);          },
+    exp:   func(x)  {return nasal_call_builtin_exp(x);          }, 
+    ln:    func(x)  {return nasal_call_builtin_cpp_math_ln(x);  },
+    sqrt:  func(x)  {return nasal_call_builtin_cpp_math_sqrt(x);},
+    atan2: func(x,y){return nasal_call_builtin_cpp_atan2(x,y);  }
 };

@@ -1,35 +1,40 @@
 # lib queue.nas
-var block_alloc=func()
-{
-    return {elem:nil,next:nil};
-}
+# valkmjolnir 2021/3/3
 var new_queue=func()
 {
-    return {next:nil};
+    return {begin:nil,end:nil};
 }
-var queue_push=func(queue,elem)
+var queue_push=func(queue_head,elem)
 {
-    var tmp=queue;
-    while(tmp.next!=nil)
-        tmp=tmp.next;
-    tmp.next=block_alloc();
-    tmp.next.elem=elem;
-}
-var queue_pop=func(queue)
-{
-    var tmp=queue.next;
-    if(tmp!=nil)
-        queue.next=tmp.next;
+    var new_node=
+    {
+        elem:elem,
+        next:nil
+    };
+    if(queue_head.begin==nil)
+        queue_head.begin=queue_head.end=new_node;
+    else
+    {
+        queue_head.end.next=new_node;
+        queue_head.end=new_node;
+    }
     return;
 }
-var queue_front=func(queue)
+var queue_pop=func(queue_head)
 {
-    var tmp=queue.next;
-    if(tmp!=nil)
-        return tmp.elem;
+    var t=queue_head.begin;
+    queue_head.begin=queue_head.begin.next;
+    if(queue_head.begin==nil)
+        queue_head.end=nil;
+    return t;
+}
+var queue_front=func(queue_head)
+{
+    if(queue_head.begin!=nil)
+        return queue_head.begin.elem;
     return nil;
 }
-var queue_empty=func(queue)
+var queue_empty=func(queue_head)
 {
-    return queue.next==nil;
+    return queue_head.begin==nil;
 }
