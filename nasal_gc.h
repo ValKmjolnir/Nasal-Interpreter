@@ -148,7 +148,6 @@ nasal_vec::~nasal_vec()
     int size=elems.size();
     for(int i=0;i<size;++i)
         gc.del_reference(elems[i]);
-    elems.clear();
     return;
 }
 void nasal_vec::add_elem(nasal_val* value_address)
@@ -227,7 +226,6 @@ nasal_hash::~nasal_hash()
 {
     for(auto iter=elems.begin();iter!=elems.end();++iter)
         gc.del_reference(iter->second);
-    elems.clear();
     return;
 }
 void nasal_hash::add_elem(std::string key,nasal_val* value_address)
@@ -441,7 +439,6 @@ nasal_scop::~nasal_scop()
 {
     for(auto i=elems.begin();i!=elems.end();++i)
         gc.del_reference(i->second);
-    elems.clear();
     return;
 }
 void nasal_scop::add_new_value(int key,nasal_val* value_address)
@@ -468,8 +465,6 @@ nasal_val** nasal_scop::get_mem_address(int key)
 }
 void nasal_scop::set_closure(nasal_scop& tmp)
 {
-    for(auto i=elems.begin();i!=elems.end();++i)
-        gc.del_reference(i->second);
     elems=tmp.elems;
     for(auto i=elems.begin();i!=elems.end();++i)
         gc.add_reference(i->second);
@@ -617,7 +612,6 @@ nasal_gc::~nasal_gc()
         delete memory[i];
     while(!free_space.empty())
         free_space.pop();
-    memory.clear();
     return;
 }
 void nasal_gc::clear()

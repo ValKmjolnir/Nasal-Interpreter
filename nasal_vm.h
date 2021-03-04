@@ -7,6 +7,7 @@ class nasal_vm
 private:
     nasal_val* zero_addr;          // reserved address of nasal_val,type vm_num, 0
     nasal_val* one_addr;           // reserved address of nasal_val,type vm_num, 1
+    nasal_val* nil_addr;           // reserved address of nasal_val,type vm_nil
     bool main_loop_break_mark;     // when mark is false,break the main loop
     int ptr;                       // program counter
     int me_index;                  // this is the index of "me" in string_table
@@ -45,7 +46,6 @@ private:
     void opr_para();
     void opr_defpara();
     void opr_dynpara();
-    void opr_entry();
     void opr_unot();
     void opr_usub();
     void opr_add();
@@ -182,7 +182,8 @@ void nasal_vm::opr_pushzero()
 }
 void nasal_vm::opr_pushnil()
 {
-    *(++val_stack_top)=gc.gc_alloc(vm_nil);
+    *(++val_stack_top)=nil_addr;
+    gc.add_reference(nil_addr);
     return;
 }
 void nasal_vm::opr_pushstr()
@@ -206,6 +207,7 @@ void nasal_vm::opr_newfunc()
 {
     nasal_val* val_addr=gc.gc_alloc(vm_func);
     nasal_val* local_scope_top=local_scope_stack.top();
+    val_addr->get_func().set_entry(exec_code[ptr].index);
     if(local_scope_top)
         val_addr->get_func().set_closure_addr(local_scope_top);
     else
@@ -215,14 +217,12 @@ void nasal_vm::opr_newfunc()
 }
 void nasal_vm::opr_vecapp()
 {
-    nasal_val* val_addr=*val_stack_top--;
-    (*val_stack_top)->get_vector().add_elem(val_addr);
+    (*val_stack_top)->get_vector().add_elem(*val_stack_top--);
     return;
 }
 void nasal_vm::opr_hashapp()
 {
-    nasal_val* val_addr=*val_stack_top--;
-    (*val_stack_top)->get_hash().add_elem(string_table[exec_code[ptr].index],val_addr);
+    (*val_stack_top)->get_hash().add_elem(string_table[exec_code[ptr].index],*val_stack_top--);
     return;
 }
 void nasal_vm::opr_para()
@@ -232,18 +232,12 @@ void nasal_vm::opr_para()
 }
 void nasal_vm::opr_defpara()
 {
-    nasal_val* val_addr=*val_stack_top--;
-    (*val_stack_top)->get_func().add_para(exec_code[ptr].index,val_addr);
+    (*val_stack_top)->get_func().add_para(exec_code[ptr].index,*val_stack_top--);
     return;
 }
 void nasal_vm::opr_dynpara()
 {
     (*val_stack_top)->get_func().add_para(exec_code[ptr].index,NULL,true);
-    return;
-}
-void nasal_vm::opr_entry()
-{
-    (*val_stack_top)->get_func().set_entry(exec_code[ptr].index);
     return;
 }
 void nasal_vm::opr_unot()
@@ -1099,6 +1093,8 @@ void nasal_vm::run(std::vector<std::string>& strs,std::vector<double>& nums,std:
     zero_addr->set_number(0);
     one_addr=gc.gc_alloc(vm_num);
     one_addr->set_number(1);
+    nil_addr=gc.gc_alloc(vm_nil);
+
     builtin_use_string_table.clear();
     for(int i=0;i<string_table.size();++i)
     {
@@ -1124,7 +1120,6 @@ void nasal_vm::run(std::vector<std::string>& strs,std::vector<double>& nums,std:
         &nasal_vm::opr_para,
         &nasal_vm::opr_defpara,
         &nasal_vm::opr_dynpara,
-        &nasal_vm::opr_entry,
         &nasal_vm::opr_unot,
         &nasal_vm::opr_usub,
         &nasal_vm::opr_add,
