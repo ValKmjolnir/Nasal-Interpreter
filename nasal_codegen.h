@@ -12,7 +12,7 @@ enum op_code
     op_pushstr,
     op_newvec,op_newhash,op_newfunc,
     op_vecapp,op_hashapp,
-    op_para,op_defpara,op_dynpara,op_entry,
+    op_para,op_defpara,op_dynpara,
     op_unot,op_usub,
     op_add,op_sub,op_mul,op_div,op_lnk,
     op_addeq,op_subeq,op_muleq,op_diveq,op_lnkeq,op_meq,
@@ -62,7 +62,6 @@ struct
     {op_para,        "para  "},
     {op_defpara,     "deflt "},
     {op_dynpara,     "dyn   "},
-    {op_entry,       "entry "},
     {op_unot,        "not   "},
     {op_usub,        "usub  "},
     {op_add,         "add   "},
@@ -275,6 +274,7 @@ void nasal_codegen::hash_gen(nasal_ast& ast)
 
 void nasal_codegen::function_gen(nasal_ast& ast)
 {
+    int newfunc_label=exec_code.size();
     gen(op_newfunc,0);
 
     nasal_ast& ref_arg=ast.get_children()[0];
@@ -302,7 +302,7 @@ void nasal_codegen::function_gen(nasal_ast& ast)
             gen(op_dynpara,string_table[str]);
         }
     }
-    gen(op_entry,exec_code.size()+2);
+    exec_code[newfunc_label].index=exec_code.size()+1;
     int ptr=exec_code.size();
     gen(op_jmp,0);
     nasal_ast& block=ast.get_children()[1];
