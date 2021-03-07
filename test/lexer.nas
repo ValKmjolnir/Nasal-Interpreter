@@ -1,7 +1,6 @@
 import("lib.nas");
 
-var s=io.fin(input());
-s=split('',s);
+var s=split('',io.fin(input()));
 var len=size(s);
 var ptr=0;
 
