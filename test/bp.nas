@@ -127,7 +127,7 @@ var backward=func(x)
 var cnt=0;
 var show=0;
 var error=1e8;
-while(error>0.0005)
+while(error>0.001)
 {
     error=0;
     for(var i=0;i<4;i+=1)

@@ -8,6 +8,7 @@ private:
     nasal_val* zero_addr;          // reserved address of nasal_val,type vm_num, 0
     nasal_val* one_addr;           // reserved address of nasal_val,type vm_num, 1
     nasal_val* nil_addr;           // reserved address of nasal_val,type vm_nil
+    std::vector<nasal_val*> num_addrs; // reserved address for const vm_num
     bool main_loop_break_mark;     // when mark is false,break the main loop
     int ptr;                       // program counter
     int me_index;                  // this is the index of "me" in string_table
@@ -163,27 +164,27 @@ void nasal_vm::opr_load()
 }
 void nasal_vm::opr_pushnum()
 {
-    nasal_val* val_addr=gc.gc_alloc(vm_num);
-    val_addr->set_number(number_table[exec_code[ptr].index]);
+    nasal_val* val_addr=num_addrs[exec_code[ptr].index];
+    ++val_addr->ref_cnt;
     *(++val_stack_top)=val_addr;
     return;
 }
 void nasal_vm::opr_pushone()
 {
     *(++val_stack_top)=one_addr;
-    gc.add_reference(one_addr);
+    ++one_addr->ref_cnt;
     return;
 }
 void nasal_vm::opr_pushzero()
 {
     *(++val_stack_top)=zero_addr;
-    gc.add_reference(zero_addr);
+    ++zero_addr->ref_cnt;
     return;
 }
 void nasal_vm::opr_pushnil()
 {
     *(++val_stack_top)=nil_addr;
-    gc.add_reference(nil_addr);
+    ++nil_addr->ref_cnt;
     return;
 }
 void nasal_vm::opr_pushstr()
@@ -246,31 +247,20 @@ void nasal_vm::opr_unot()
     nasal_val* new_val_addr=NULL;
     int type=val_addr->get_type();
     if(type==vm_nil)
-    {
-        new_val_addr=gc.gc_alloc(vm_num);
-        new_val_addr->set_number(1);
-    }
+        new_val_addr=one_addr;
     else if(type==vm_num)
-    {
-        new_val_addr=gc.gc_alloc(vm_num);
-        new_val_addr->set_number(val_addr->get_number()==0);
-    }
+        new_val_addr=val_addr->get_number()?zero_addr:one_addr;
     else if(type==vm_str)
     {
         double number=trans_string_to_number(val_addr->get_string());
         if(std::isnan(number))
-        {
-            new_val_addr=gc.gc_alloc(vm_num);
-            new_val_addr->set_number(!val_addr->get_string().length());
-        }
+            new_val_addr=val_addr->get_string().length()?zero_addr:one_addr;
         else
-        {
-            new_val_addr=gc.gc_alloc(vm_num);
-            new_val_addr->set_number(number==0);
-        }
+            new_val_addr=number?zero_addr:one_addr;
     }
     else
         die("unot: incorrect value type");
+    ++new_val_addr->ref_cnt;
     *val_stack_top=new_val_addr;
     gc.del_reference(val_addr);
     return;
@@ -1094,6 +1084,12 @@ void nasal_vm::run(std::vector<std::string>& strs,std::vector<double>& nums,std:
     one_addr=gc.gc_alloc(vm_num);
     one_addr->set_number(1);
     nil_addr=gc.gc_alloc(vm_nil);
+    num_addrs.clear();
+    for(int i=0;i<number_table.size();++i)
+    {
+        num_addrs.push_back(gc.gc_alloc(vm_num));
+        num_addrs.back()->set_number(number_table[i]);
+    }
 
     builtin_use_string_table.clear();
     for(int i=0;i<string_table.size();++i)
