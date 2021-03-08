@@ -153,7 +153,7 @@ int main()
 	system("cls");
 #endif
 	logo();
-	std::cout<<">> Nasal interpreter ver 5.0 .\n";
+	std::cout<<">> Nasal interpreter ver 6.0 .\n";
 	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
 	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";
 	std::cout<<">> Input \"help\" to get help .\n";

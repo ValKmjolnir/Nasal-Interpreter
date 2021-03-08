@@ -103,7 +103,7 @@ struct
     {op_mcallv,      "mcallv"},
     {op_mcallh,      "mcallh"},
     {op_return,      "ret   "},
-    {-1,             NULL},
+    {-1,             NULL    },
 };
 
 struct opcode
@@ -231,10 +231,13 @@ void nasal_codegen::nil_gen()
 void nasal_codegen::number_gen(nasal_ast& ast)
 {
     double num=ast.get_num();
-    regist_number(num);
     if(num==1)      gen(op_pushone,0);
     else if(num==0) gen(op_pushzero,0);
-    else            gen(op_pushnum,number_table[num]);
+    else
+    {
+        regist_number(num);
+        gen(op_pushnum,number_table[num]);
+    }
     return;
 }
 
