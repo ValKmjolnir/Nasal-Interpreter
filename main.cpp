@@ -3,8 +3,8 @@
 nasal_lexer    lexer;
 nasal_parse    parse;
 nasal_import   import;
-std::string    inputfile="null";
-nasal_codegen  code_generator;
+std::string    file="null";
+nasal_codegen  codegen;
 nasal_vm       vm;
 
 void help()
@@ -49,97 +49,51 @@ void clear()
 	return;
 }
 
-void lex_func()
+void execute(std::string& command)
 {
-	lexer.openfile(inputfile);
+	lexer.openfile(file);
 	lexer.scanner();
 	if(lexer.get_error())
 	{
-		die("lexer",inputfile);
+		die("lexer",file);
 		return;
 	}
-	lexer.print_token();
-	clear();
-	return;
-}
-
-void ast_print()
-{
-	lexer.openfile(inputfile);
-	lexer.scanner();
-	if(lexer.get_error())
+	if(command=="lex")
 	{
-		die("lexer",inputfile);
+		lexer.print_token();
+		clear();
 		return;
 	}
 	parse.set_toklist(lexer.get_token_list());
 	parse.main_process();
 	if(parse.get_error())
 	{
-		die("parse",inputfile);
+		die("parse",file);
 		return;
 	}
-	parse.get_root().print_ast(0);
-	clear();
-	return;
-}
-
-void show_bytecode()
-{
-	lexer.openfile(inputfile);
-	lexer.scanner();
-	if(lexer.get_error())
+	if(command=="ast")
 	{
-		die("lexer",inputfile);
-		return;
-	}
-	parse.set_toklist(lexer.get_token_list());
-	parse.main_process();
-	if(parse.get_error())
-	{
-		die("parse",inputfile);
+		parse.get_root().print_ast(0);
+		clear();
 		return;
 	}
 	import.link(parse.get_root());
 	if(import.get_error())
 	{
-		die("import",inputfile);
+		die("import",file);
 		return;
 	}
-	code_generator.main_progress(import.get_root());
+	codegen.main_progress(import.get_root());
 	clear();
-	code_generator.print_byte_code();
-	return;
-}
-
-void execute()
-{
-	lexer.openfile(inputfile);
-	lexer.scanner();
-	if(lexer.get_error())
+	if(command=="code")
 	{
-		die("lexer",inputfile);
+		codegen.print_byte_code();
 		return;
 	}
-	parse.set_toklist(lexer.get_token_list());
-	parse.main_process();
-	if(parse.get_error())
-	{
-		die("parse",inputfile);
-		return;
-	}
-	import.link(parse.get_root());
-	if(import.get_error())
-	{
-		die("import",inputfile);
-		return;
-	}
-	code_generator.main_progress(import.get_root());
-	clear();
 	vm.run(
-		code_generator.get_string_table(),
-		code_generator.get_number_table(),
-		code_generator.get_exec_code()
+		codegen.get_string_table(),
+		codegen.get_number_table(),
+		codegen.get_exec_code()
 	);
 	return;
 }
@@ -175,20 +129,14 @@ int main()
 			system("clear");
 #endif
 		}
-		else if(command=="lex")
-			lex_func();
-		else if(command=="ast")
-			ast_print();
-		else if(command=="code")
-			show_bytecode();
-		else if(command=="exec")
-			execute();
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")
 			break;
+		else if(command=="lex" || command=="ast" || command=="code" || command=="exec")
+			execute(command);
 		else
-			inputfile=command;
+			file=command;
 	}
     return 0;
 }

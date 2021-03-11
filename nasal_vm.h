@@ -885,9 +885,8 @@ void nasal_vm::opr_builtincall()
 void nasal_vm::opr_slicebegin()
 {
     slice_stack.push(gc.gc_alloc(vm_vec));
-    if((*val_stack_top)->get_type()==vm_vec)
-        return;
-    die("slcbegin: must slice a vector");
+    if((*val_stack_top)->get_type()!=vm_vec)
+        die("slcbegin: must slice a vector");
     return;
 }
 void nasal_vm::opr_sliceend()
