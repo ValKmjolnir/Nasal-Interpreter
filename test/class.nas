@@ -1,19 +1,23 @@
 import("lib.nas");
 
-var student=
+var student=func(name,age)
 {
-    new:func(name,age)
-    {
-        return {
-            parents:[student],
-            name:name,
-            age:age
-        };
-    },
-    print_info:func(){println(me.name,' ',me.age);},
-    get_age:func(){return me.age;},
-    get_name:func(){return me.name;}
+    var val={
+        name:name,
+        age:age
+    };
+    return {
+        print_info:func(){println(val.name,' ',val.age);},
+        set_age:   func(age){val.age=age;},
+        get_age:   func(){return val.age;},
+        set_name:  func(name){val.name=name;},
+        get_name:  func(){return val.name;}
+    }
 };
-var s=student.new('tiansuohaoer',24);
+var s=student('valk',24);
+s.print_info();
+println(s.get_age(),' ',s.get_name());
+s.set_age(18);
+s.set_name('aluo');
 s.print_info();
 println(s.get_age(),' ',s.get_name());

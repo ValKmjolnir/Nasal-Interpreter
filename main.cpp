@@ -10,15 +10,15 @@ nasal_vm       vm;
 void help()
 {
 	std::cout
-	<<">> [\"file\"] input a file name.\n"
-	<<">> [help  ] show help.\n"
-	<<">> [clear ] clear the screen.\n"
-	<<">> [lex   ] use lexer to turn code into tokens.\n"
+	<<">> [\"file\"] input a file name.                          \n"
+	<<">> [help  ] show help.                                    \n"
+	<<">> [clear ] clear the screen.                             \n"
+	<<">> [lex   ] use lexer to turn code into tokens.           \n"
 	<<">> [ast   ] do parsing and check the abstract syntax tree.\n"
-	<<">> [code  ] show byte code.\n"
-	<<">> [exec  ] execute program on bytecode vm.\n"
-	<<">> [logo  ] print logo of nasal .\n"
-	<<">> [exit  ] quit nasal interpreter.\n";
+	<<">> [code  ] show byte code.                               \n"
+	<<">> [exec  ] execute program on bytecode vm.               \n"
+	<<">> [logo  ] print logo of nasal .                         \n"
+	<<">> [exit  ] quit nasal interpreter.                       \n";
 	return;
 }
 
@@ -90,11 +90,13 @@ void execute(std::string& command)
 		codegen.print_byte_code();
 		return;
 	}
-	vm.run(
-		codegen.get_string_table(),
-		codegen.get_number_table(),
+	vm.init(
+		codegen.get_str_table(),
+		codegen.get_num_table(),
 		codegen.get_exec_code()
 	);
+	vm.run();
+	vm.clear();
 	return;
 }
 

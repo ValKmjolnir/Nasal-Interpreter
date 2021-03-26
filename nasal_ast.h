@@ -3,7 +3,9 @@
 
 enum ast_node
 {
-    ast_null=0,ast_root,ast_block,
+    ast_null=0,
+    ast_root,
+    ast_block,
     ast_nil,ast_num,ast_str,ast_id,ast_func,ast_hash,ast_vec,
     ast_hashmember,ast_call,ast_callh,ast_callv,ast_callf,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
@@ -116,68 +118,68 @@ public:
 
 nasal_ast::nasal_ast(int init_line=0,int init_type=ast_null)
 {
-    this->line=init_line;
-    this->type=init_type;
+    line=init_line;
+    type=init_type;
     return;
 }
 
 nasal_ast::nasal_ast(const nasal_ast& tmp)
 {
-    this->line=tmp.line;
-    this->type=tmp.type;
-    this->str=tmp.str;
-    this->num=tmp.num;
-    this->children=tmp.children;
+    line=tmp.line;
+    type=tmp.type;
+    str=tmp.str;
+    num=tmp.num;
+    children=tmp.children;
     return;
 }
 
 nasal_ast::~nasal_ast()
 {
-    this->children.clear();
+    children.clear();
     return;
 }
 
 nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 {
-    this->line=tmp.line;
-    this->type=tmp.type;
-    this->str=tmp.str;
-    this->num=tmp.num;
-    this->children=tmp.children;
+    line=tmp.line;
+    type=tmp.type;
+    str=tmp.str;
+    num=tmp.num;
+    children=tmp.children;
     return *this;
 }
 
 void nasal_ast::clear()
 {
-    this->line=0;
-    this->str="";
-    this->num=0;
-    this->type=ast_null;
-    this->children.clear();
+    line=0;
+    str="";
+    num=0;
+    type=ast_null;
+    children.clear();
     return;
 }
 
 void nasal_ast::set_line(int l)
 {
-    this->line=l;
+    line=l;
     return;
 }
 
 void nasal_ast::set_type(int t)
 {
-    this->type=t;
+    type=t;
     return;
 }
 
 void nasal_ast::set_str(std::string& s)
 {
-    this->str=s;
+    str=s;
     return;
 }
 
 void nasal_ast::set_num(double n)
 {
-    this->num=n;
+    num=n;
     return;
 }
 
@@ -189,43 +191,43 @@ void nasal_ast::add_child(nasal_ast ast)
 
 int nasal_ast::get_line()
 {
-    return this->line;
+    return line;
 }
 
 int nasal_ast::get_type()
 {
-    return this->type;
+    return type;
 }
 
 std::string nasal_ast::get_str()
 {
-    return this->str;
+    return str;
 }
 
 double nasal_ast::get_num()
 {
-    return this->num;
+    return num;
 }
 
 std::vector<nasal_ast>& nasal_ast::get_children()
 {
-    return this->children;
+    return children;
 }
 
 void nasal_ast::print_ast(int depth)
 {
     std::string indentation="";
     for(int i=0;i<depth;++i) indentation+="|  ";
-    indentation+=ast_name(this->type);
+    indentation+=ast_name(type);
     std::cout<<indentation;
-    if(this->type==ast_str || this->type==ast_id || this->type==ast_dynamic_id || this->type==ast_callh)
-        std::cout<<":"<<this->str;
-    else if(this->type==ast_num)
-        std::cout<<":"<<this->num;
+    if(type==ast_str || type==ast_id || type==ast_dynamic_id || type==ast_callh)
+        std::cout<<":"<<str;
+    else if(type==ast_num)
+        std::cout<<":"<<num;
     std::cout<<'\n';
-    int child_size=this->children.size();
+    int child_size=children.size();
     for(int i=0;i<child_size;++i)
-        this->children[i].print_ast(depth+1);
+        children[i].print_ast(depth+1);
     return;
 }
 

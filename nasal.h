@@ -25,7 +25,7 @@
 	check if a string can be converted to a number
 	if this string cannot be converted to a number,it will return nan
 */
-inline double hex_to_double(std::string str)
+inline double hex_to_double(std::string& str)
 {
 	double ret=0;
 	for(int i=2;str[i];++i)
@@ -42,7 +42,7 @@ inline double hex_to_double(std::string str)
 	}
 	return ret;
 }
-inline double oct_to_double(std::string str)
+inline double oct_to_double(std::string& str)
 {
 	double ret=0;
 	for(int i=2;str[i];++i)
@@ -55,7 +55,7 @@ inline double oct_to_double(std::string str)
 	}
 	return ret;
 }
-inline double dec_to_double(std::string str,int len)
+inline double dec_to_double(std::string& str,int len)
 {
 	double ret=0;
 	int i=0;
@@ -96,14 +96,13 @@ inline double dec_to_double(std::string str,int len)
 }
 double trans_string_to_number(std::string str)
 {
-	double is_negative=1;
+	bool is_negative=false;
 	int len=str.length();
 	double ret_num=0;
-	if(!len) return std::nan("");
 	if(str[0]=='-' || str[0]=='+')
 	{
 		if(len==1) return std::nan("");
-		is_negative=(str[0]=='-'?-1:1);
+		is_negative=(str[0]=='-');
 		str=str.substr(1,len--);
 	}
 	if(len>1 && str[0]=='0' && str[1]=='x')
@@ -112,7 +111,7 @@ double trans_string_to_number(std::string str)
 		ret_num=oct_to_double(str);
 	else
 		ret_num=dec_to_double(str,len);
-	return is_negative*ret_num;
+	return is_negative?-ret_num:ret_num;
 }
 
 /*
