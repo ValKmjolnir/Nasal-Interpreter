@@ -4,14 +4,13 @@ rand(time(0));
 
 var new_neuron=func()
 {
-    var neuron={
+    return {
         in:0,
         out:0,
         w:[],
         bia:0,
         diff:0
     };
-    return neuron;
 }
 
 var sigmoid=func(x)
@@ -126,7 +125,7 @@ var backward=func(x)
 
 var cnt=0;
 var show=0;
-var error=1e8;
+var error=100;
 while(error>0.001)
 {
     error=0;
@@ -138,20 +137,14 @@ while(error>0.001)
     }
     cnt+=1;
     show+=1;
-    if(show==200)
+    if(show==150)
     {
         show=0;
         print('epoch ',cnt,':',error,'\r');
     }
 }
 print('finished after ',cnt,' epoch.\n');
-var vec=[
-    [0,0],
-    [0,1],
-    [1,0],
-    [1,1]
-];
-foreach(var v;vec)
+foreach(var v;training_set)
 {
     run(v);
     print(v,': ',output[0].out,'\n');

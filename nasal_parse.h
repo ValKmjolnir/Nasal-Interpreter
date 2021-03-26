@@ -77,9 +77,9 @@ private:
     nasal_ast unary();
     nasal_ast scalar();
     nasal_ast call_scalar();
-    nasal_ast call_hash();
-    nasal_ast call_vec();
-    nasal_ast call_func();
+    nasal_ast callh();
+    nasal_ast callv();
+    nasal_ast callf();
     nasal_ast subvec();
     nasal_ast definition();
     nasal_ast var_incurve_def();
@@ -95,7 +95,7 @@ private:
     nasal_ast conditional();
     nasal_ast continue_expr();
     nasal_ast break_expr();
-    nasal_ast return_expr();
+    nasal_ast ret_expr();
 public:
     int get_error();
     void set_toklist(std::vector<token>&);
@@ -494,7 +494,7 @@ nasal_ast nasal_parse::expr()
         case tok_if:         node=conditional();   break;
         case tok_continue:   node=continue_expr(); break;
         case tok_break:      node=break_expr();    break;
-        case tok_ret:        node=return_expr();   break;
+        case tok_ret:        node=ret_expr();   break;
         case tok_semi:                             break;
         default: die(error_line,"error token \""+tok_list[ptr].str+"\"");break;
     }
@@ -714,13 +714,13 @@ nasal_ast nasal_parse::call_scalar()
     nasal_ast node;
     switch(tok_list[ptr].type)
     {
-        case tok_lcurve:   node=call_func(); break;
-        case tok_lbracket: node=call_vec();  break;
-        case tok_dot:      node=call_hash(); break;
+        case tok_lcurve:   node=callf(); break;
+        case tok_lbracket: node=callv();  break;
+        case tok_dot:      node=callh(); break;
     }
     return node;
 }
-nasal_ast nasal_parse::call_hash()
+nasal_ast nasal_parse::callh()
 {
     nasal_ast node(tok_list[ptr].line,ast_callh);
     match(tok_dot);
@@ -728,7 +728,7 @@ nasal_ast nasal_parse::call_hash()
     match(tok_id);
     return node;
 }
-nasal_ast nasal_parse::call_vec()
+nasal_ast nasal_parse::callv()
 {
     nasal_ast node(tok_list[ptr].line,ast_callv);
     match(tok_lbracket);
@@ -743,7 +743,7 @@ nasal_ast nasal_parse::call_vec()
     match(tok_rbracket);
     return node;
 }
-nasal_ast nasal_parse::call_func()
+nasal_ast nasal_parse::callf()
 {
     nasal_ast node(tok_list[ptr].line,ast_callf);
     bool special_call=check_special_call();
@@ -1033,7 +1033,7 @@ nasal_ast nasal_parse::break_expr()
     match(tok_break);
     return node;
 }
-nasal_ast nasal_parse::return_expr()
+nasal_ast nasal_parse::ret_expr()
 {
     nasal_ast node(tok_list[ptr].line,ast_return);
     match(tok_ret);

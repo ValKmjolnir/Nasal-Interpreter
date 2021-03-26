@@ -342,7 +342,7 @@ struct FUNC_TABLE
     nasal_val* (*func_pointer)(nasal_val* x,nasal_gc& gc);
 } builtin_func_table[]=
 {
-    {"nasal_call_builtin_std_cout",builtin_print},
+    {"__builtin_std_cout",builtin_print},
     {"",NULL}
 };
 ```
