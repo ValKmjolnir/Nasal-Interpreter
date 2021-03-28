@@ -52,10 +52,8 @@ struct nasal_hash
 
     bool        check_contain(std::string&);
     void        print();
-    nasal_val*  get_special_para(std::string&);
     nasal_val*  get_val(std::string&);
     nasal_val** get_mem(std::string&);
-    nasal_val*  get_keys();
 };
 
 struct nasal_func
@@ -147,12 +145,6 @@ void nasal_vec::print()
 }
 
 /*functions of nasal_hash*/
-nasal_val* nasal_hash::get_special_para(std::string& key)
-{
-    if(elems.count(key))
-        return elems[key];
-    return nullptr;
-}
 nasal_val* nasal_hash::get_val(std::string& key)
 {
     nasal_val* ret_addr=nullptr;
@@ -224,18 +216,6 @@ bool nasal_hash::check_contain(std::string& key)
         }
     }
     return false;
-}
-nasal_val* nasal_hash::get_keys()
-{
-    nasal_val* ret_addr=gc_alloc(vm_vec);
-    std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
-    for(auto iter=elems.begin();iter!=elems.end();++iter)
-    {
-        nasal_val* str_addr=gc_alloc(vm_str);
-        *str_addr->ptr.str=iter->first;
-        ref_vec.push_back(str_addr);
-    }
-    return ret_addr;
 }
 void nasal_hash::print()
 {
@@ -426,7 +406,6 @@ void mark()
     }
     return;
 }
-
 void sweep()
 {
     int size=memory.size();
@@ -441,7 +420,6 @@ void sweep()
     }
     return;
 }
-
 void gc_init()
 {
     for(int i=0;i<65536;++i)
@@ -452,7 +430,6 @@ void gc_init()
     }
     return;
 }
-
 void gc_clear()
 {
     int size=memory.size();
@@ -466,7 +443,6 @@ void gc_clear()
         free_list.pop();
     return;
 }
-
 nasal_val* gc_alloc(int type)
 {
     if(free_list.empty())

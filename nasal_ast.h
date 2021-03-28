@@ -92,34 +92,34 @@ std::string ast_name(int type)
 class nasal_ast
 {
 private:
-    int line;
-    int type;
+    int         line;
+    int         type;
+    double      num;
     std::string str;
-    double num;
     std::vector<nasal_ast> children;
 public:
     nasal_ast(int,int);
     nasal_ast(const nasal_ast&);
     ~nasal_ast();
-    nasal_ast& operator=(const nasal_ast&);
-    void clear();
-    void set_line(int);
-    void set_type(int);
-    void set_str(std::string&);
-    void set_num(double);
-    void add_child(nasal_ast);
+    nasal_ast&  operator=(const nasal_ast&);
+    void        print_ast(int);
+    void        clear();
+    void        set_line(int);
+    void        set_type(int);
+    void        set_str(std::string&);
+    void        set_num(double);
+    void        add_child(nasal_ast);
     int         get_line();
     int         get_type();
-    std::string get_str();
     double      get_num();
+    std::string get_str();
     std::vector<nasal_ast>& get_children();
-    void print_ast(int);
 };
 
-nasal_ast::nasal_ast(int init_line=0,int init_type=ast_null)
+nasal_ast::nasal_ast(int _line=0,int _type=ast_null)
 {
-    line=init_line;
-    type=init_type;
+    line=_line;
+    type=_type;
     return;
 }
 
@@ -127,8 +127,8 @@ nasal_ast::nasal_ast(const nasal_ast& tmp)
 {
     line=tmp.line;
     type=tmp.type;
-    str=tmp.str;
-    num=tmp.num;
+    str =tmp.str;
+    num =tmp.num;
     children=tmp.children;
     return;
 }
@@ -217,9 +217,9 @@ std::vector<nasal_ast>& nasal_ast::get_children()
 void nasal_ast::print_ast(int depth)
 {
     std::string indentation="";
-    for(int i=0;i<depth;++i) indentation+="|  ";
-    indentation+=ast_name(type);
-    std::cout<<indentation;
+    for(int i=0;i<depth;++i)
+        indentation+="|  ";
+    std::cout<<indentation<<ast_name(type);
     if(type==ast_str || type==ast_id || type==ast_dynamic_id || type==ast_callh)
         std::cout<<":"<<str;
     else if(type==ast_num)
