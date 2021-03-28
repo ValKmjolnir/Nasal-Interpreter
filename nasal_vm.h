@@ -692,7 +692,7 @@ void nasal_vm::opr_callh()
 }
 void nasal_vm::opr_callf()
 {
-    nasal_val* closure=gc_alloc(vm_scop);
+    // get parameter list and function value
     nasal_val* para_addr=*stack_top;
     nasal_val* func_addr=*(stack_top-1);
     if(func_addr->type!=vm_func)
@@ -700,49 +700,46 @@ void nasal_vm::opr_callf()
         die("callf: called a value that is not a function");
         return;
     }
-    nasal_func& ref_func=*func_addr->ptr.func;
-    nasal_scop& ref_closure=*closure->ptr.scop;
-    ref_closure.elems=ref_func.closure;
+    // push new local scope
+    nasal_val*        closure=gc_alloc(vm_scop);
     local.push_back(closure);
+    // load parameters
+    nasal_func&                         ref_func=*func_addr->ptr.func;
+    std::vector<int>&                   ref_para=ref_func.para;
+    std::vector<nasal_val*>&            ref_default=ref_func.default_para;
+    std::unordered_map<int,nasal_val*>& ref_closure=closure->ptr.scop->elems;
+    ref_closure=ref_func.closure;
+    
     if(para_addr->type==vm_vec)
     {
         std::vector<nasal_val*>& ref_vec=para_addr->ptr.vec->elems;
-        std::vector<int>& ref_para=ref_func.para;
-        std::vector<nasal_val*>& ref_default=ref_func.default_para;
-        int i=0;
-        for(;i<ref_para.size();++i)
+        int vec_size=ref_vec.size();
+        int para_size=ref_para.size();
+        for(int i=0;i<para_size;++i)
         {
-            if(i>=ref_vec.size())
+            if(i>=vec_size)
             {
                 if(!ref_default[i])
                 {
                     die("callf: lack argument(s)");
                     return;
                 }
-                ref_closure.elems[ref_para[i]]=ref_default[i];
+                ref_closure[ref_para[i]]=ref_default[i];
             }
             else
-            {
-                nasal_val* tmp=ref_vec[i];
-                ref_closure.elems[ref_para[i]]=tmp;
-            }
+                ref_closure[ref_para[i]]=ref_vec[i];
         }
         if(ref_func.dynpara>=0)
         {
             nasal_val* vec_addr=gc_alloc(vm_vec);
-            for(;i<ref_vec.size();++i)
-            {
-                nasal_val* tmp=ref_vec[i];
-                vec_addr->ptr.vec->elems.push_back(tmp);
-            }
-            ref_closure.elems[ref_func.dynpara]=vec_addr;
+            for(int i=para_size;i<vec_size;++i)
+                vec_addr->ptr.vec->elems.push_back(ref_vec[i]);
+            ref_closure[ref_func.dynpara]=vec_addr;
         }
     }
     else
     {
-        nasal_hash& ref_hash=*para_addr->ptr.hash;
-        std::vector<int>& ref_para=ref_func.para;
-        std::vector<nasal_val*>& ref_default=ref_func.default_para;
+        std::unordered_map<std::string,nasal_val*>& ref_hash=para_addr->ptr.hash->elems;
         if(ref_func.dynpara>=0)
         {
             die("callf: special call cannot use dynamic parameter");
@@ -750,15 +747,16 @@ void nasal_vm::opr_callf()
         }
         for(int i=0;i<ref_para.size();++i)
         {
-            nasal_val* tmp=ref_hash.get_special_para(str_table[ref_para[i]]);
-            if(!tmp)
-                tmp=ref_default[i];
-            if(!tmp)
+            std::string& sym=str_table[ref_para[i]];
+            if(ref_hash.count(sym))
+                ref_closure[ref_para[i]]=ref_hash[sym];
+            else if(ref_default[i])
+                ref_closure[ref_para[i]]=ref_default[i];
+            else
             {
                 die("callf: lack argument(s)");
                 return;
             }
-            ref_closure.elems[ref_para[i]]=tmp;
         }
     }
     --stack_top;
