@@ -18,25 +18,6 @@ struct nasal_func;
 struct nasal_scop;
 struct nasal_val;
 
-nasal_val*               zero_addr;   // reserved address of nasal_val,type vm_num, 0
-nasal_val*               one_addr;    // reserved address of nasal_val,type vm_num, 1
-nasal_val*               nil_addr;    // reserved address of nasal_val,type vm_nil
-nasal_val*               global;      // global scope address,type vm_scop
-nasal_val**              val_stack;   // main stack
-nasal_val**              stack_top;   // stack top
-std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
-std::vector<nasal_val*>  local;       // local scope for function block
-std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
-std::vector<nasal_val*>  memory;      // gc memory
-std::queue<nasal_val*>   free_list;   // gc free list
-
-/* gc functions */
-void       mark();
-void       sweep();
-void       gc_init();
-void       gc_clear();
-nasal_val* gc_alloc(int);
-
 struct nasal_vec
 {
     std::vector<nasal_val*> elems;
@@ -183,9 +164,9 @@ nasal_val** nasal_hash::get_mem(std::string& key)
             int size=vec_ref.size();
             for(int i=0;i<size;++i)
             {
-                nasal_val* tmp_val_addr=vec_ref[i];
-                if(tmp_val_addr->type==vm_hash)
-                    mem_addr=tmp_val_addr->ptr.hash->get_mem(key);
+                nasal_val* tmp=vec_ref[i];
+                if(tmp->type==vm_hash)
+                    mem_addr=tmp->ptr.hash->get_mem(key);
                 if(mem_addr)
                     return mem_addr;
             }
@@ -345,16 +326,37 @@ std::string nasal_val::to_string()
     return "";
 }
 
-void mark()
+struct nasal_gc
 {
-    int size;
+#define STACK_MAX_DEPTH (65536<<4)
+    nasal_val*               zero_addr;   // reserved address of nasal_val,type vm_num, 0
+    nasal_val*               one_addr;    // reserved address of nasal_val,type vm_num, 1
+    nasal_val*               nil_addr;    // reserved address of nasal_val,type vm_nil
+    nasal_val*               global;      // global scope address,type vm_scop
+    nasal_val**              val_stack;   // main stack
+    nasal_val**              stack_top;   // stack top
+    std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
+    std::vector<nasal_val*>  local;       // local scope for function block
+    std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
+    std::vector<nasal_val*>  memory;      // gc memory
+    std::queue<nasal_val*>   free_list;   // gc free list
+    void                     mark();
+    void                     sweep();
+    void                     gc_init(std::vector<double>&);
+    void                     gc_clear();
+    nasal_val*               gc_alloc(int);
+};
+
+/* gc functions */
+void nasal_gc::mark()
+{
     std::queue<nasal_val*> bfs;
     bfs.push(zero_addr);
     bfs.push(one_addr);
     bfs.push(nil_addr);
     bfs.push(global);
 
-    size=num_addrs.size();
+    int size=num_addrs.size();
     for(int i=0;i<size;++i)
         bfs.push(num_addrs[i]);
     size=local.size();
@@ -406,7 +408,7 @@ void mark()
     }
     return;
 }
-void sweep()
+void nasal_gc::sweep()
 {
     int size=memory.size();
     for(int i=0;i<size;++i)
@@ -420,7 +422,7 @@ void sweep()
     }
     return;
 }
-void gc_init()
+void nasal_gc::gc_init(std::vector<double>& nums)
 {
     for(int i=0;i<65536;++i)
     {
@@ -428,9 +430,35 @@ void gc_init()
         memory.push_back(tmp);
         free_list.push(tmp);
     }
+    val_stack=new nasal_val*[STACK_MAX_DEPTH]; // init runtime stack
+    stack_top=val_stack; // set stack_top to val_stack
+
+    zero_addr=new nasal_val(vm_num); // init constant 0
+    zero_addr->ptr.num=0;
+    memory.push_back(zero_addr);
+
+    one_addr=new nasal_val(vm_num); // init constant 1
+    one_addr->ptr.num=1;
+    memory.push_back(one_addr);
+
+    nil_addr=new nasal_val(vm_nil); // init nil
+    memory.push_back(nil_addr);
+
+    *val_stack=nil_addr; // the first space will not store any values,but gc checks
+
+    global=new nasal_val(vm_scop); // init global symbol table
+    memory.push_back(global);
+
+    num_addrs.clear(); // init constant numbers
+    for(int i=0;i<nums.size();++i)
+    {
+        nasal_val* tmp=new nasal_val(vm_num);
+        tmp->ptr.num=nums[i];
+        num_addrs.push_back(tmp);
+    }
     return;
 }
-void gc_clear()
+void nasal_gc::gc_clear()
 {
     int size=memory.size();
     for(int i=0;i<size;++i)
@@ -441,9 +469,13 @@ void gc_clear()
     memory.clear();
     while(!free_list.empty())
         free_list.pop();
+    global=nullptr;
+    delete []val_stack;
+    local.clear();
+    slice_stack.clear();
     return;
 }
-nasal_val* gc_alloc(int type)
+nasal_val* nasal_gc::gc_alloc(int type)
 {
     if(free_list.empty())
     {

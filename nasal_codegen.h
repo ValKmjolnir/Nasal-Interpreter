@@ -48,6 +48,8 @@ enum op_code
     op_findex,   // index counter on the top of forindex_stack plus 1
     op_feach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_call,     // call identifier
+    op_callg,
+    op_calll,
     op_callv,    // call vec[index]
     op_callvi,   // call vec[immediate] (used in multi-assign/multi-define)
     op_callh,    // call hash.label
@@ -58,6 +60,8 @@ enum op_code
     op_slc,      // slice like vec[1]
     op_slc2,     // slice like vec[nil:10]
     op_mcall,    // get memory of identifier
+    op_mcallg,
+    op_mcalll,
     op_mcallv,   // get memory of vec[index]
     op_mcallh,   // get memory of hash.label
     op_ret       // return
@@ -114,6 +118,8 @@ struct
     {op_findex,   "findx "},
     {op_feach,    "feach "},
     {op_call,     "call  "},
+    {op_callg,    "callg "},
+    {op_calll,    "calll "},
     {op_callv,    "callv "},
     {op_callvi,   "callvi"},
     {op_callh,    "callh "},
@@ -124,6 +130,8 @@ struct
     {op_slc,      "slc   "},
     {op_slc2,     "slc2  "},
     {op_mcall,    "mcall "},
+    {op_mcallg,   "mcallg"},
+    {op_mcalll,   "mcalll"},
     {op_mcallv,   "mcallv"},
     {op_mcallh,   "mcallh"},
     {op_ret,      "ret   "},
@@ -154,16 +162,20 @@ private:
     int error;
     int in_forindex;
     int in_foreach;
-    std::unordered_map<double,int>      number_table;
-    std::unordered_map<std::string,int> string_table;
-    std::vector<double>                 num_res_table;
-    std::vector<std::string>            str_res_table;
-    std::vector<opcode>                 exec_code;
-    std::list<std::vector<int> >        continue_ptr;
-    std::list<std::vector<int> >        break_ptr;
+    std::unordered_map<double,int>       number_table;
+    std::unordered_map<std::string,int>  string_table;
+    std::vector<double>                  num_res_table;
+    std::vector<std::string>             str_res_table;
+    std::vector<opcode>                  exec_code;
+    std::list<std::vector<int> >         continue_ptr;
+    std::list<std::vector<int> >         break_ptr;
+    std::vector<std::string>             global;
+    std::list<std::vector<std::string> > local;
     
     void regist_number(double);
-    void regist_string(std::string);
+    void regist_string(std::string&);
+    void add_sym(std::string&);
+    bool find_sym(std::string&);
     void gen(unsigned char,unsigned int);
     void pop_gen();
     void nil_gen();
@@ -224,12 +236,27 @@ void nasal_codegen::regist_number(double num)
     return;
 }
 
-void nasal_codegen::regist_string(std::string str)
+void nasal_codegen::regist_string(std::string& str)
 {
     int size=string_table.size();
     if(string_table.find(str)==string_table.end())
         string_table[str]=size;
     return;
+}
+
+void nasal_codegen::add_sym(std::string&)
+{
+    if(local.empty())
+    ;
+    else
+    ;
+    return;
+}
+
+bool nasal_codegen::find_sym(std::string&)
+{
+
+    return false;
 }
 
 void nasal_codegen::gen(unsigned char op,unsigned int index)
@@ -334,7 +361,11 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     int ptr=exec_code.size();
     gen(op_jmp,0);
     nasal_ast& block=ast.get_children()[1];
+
+    std::vector<std::string> new_scope;
+    local.push_front(new_scope);
     block_gen(block);
+    local.pop_front();
     if(!block.get_children().size() || block.get_children().back().get_type()!=ast_return)
     {
         nil_gen();
