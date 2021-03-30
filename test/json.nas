@@ -1,4 +1,5 @@
 #lib json.nas
+import("lib.nas");
 var json={
     text:'',
     line:1,

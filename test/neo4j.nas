@@ -1,12 +1,12 @@
 import("lib.nas");
 
 rand(time(0));
-var chartable=split('','abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+var chartable='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 var node=func(type)
 {
     var s="";
     for(var i=0;i<10;i+=1)
-        s~=chartable[rand()*62];
+        s~=chr(chartable[rand()*62]);
     return {name:s,type:type,next:[]};
 }
 var film_node=[];

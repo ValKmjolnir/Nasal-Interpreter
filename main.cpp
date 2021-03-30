@@ -10,15 +10,15 @@ nasal_vm       vm;
 void help()
 {
 	std::cout
-	<<">> [\"file\"] input a file name.                          \n"
-	<<">> [help  ] show help.                                    \n"
-	<<">> [clear ] clear the screen.                             \n"
-	<<">> [lex   ] use lexer to turn code into tokens.           \n"
-	<<">> [ast   ] do parsing and check the abstract syntax tree.\n"
-	<<">> [code  ] show byte code.                               \n"
-	<<">> [exec  ] execute program on bytecode vm.               \n"
-	<<">> [logo  ] print logo of nasal .                         \n"
-	<<">> [exit  ] quit nasal interpreter.                       \n";
+	<<">> [\"file\"] input file name.              \n"
+	<<">> [help  ] show help.                      \n"
+	<<">> [clear ] clear the screen.               \n"
+	<<">> [lex   ] view tokens.                    \n"
+	<<">> [ast   ] view abstract syntax tree.      \n"
+	<<">> [code  ] view byte code.                 \n"
+	<<">> [exec  ] execute program on bytecode vm. \n"
+	<<">> [logo  ] print logo of nasal .           \n"
+	<<">> [exit  ] quit nasal interpreter.         \n";
 	return;
 }
 
@@ -39,16 +39,6 @@ void die(std::string stage,std::string filename)
 	return;
 }
 
-void clear()
-{
-	// this will clear the data in lexer/parser/import modules
-	// to reduce memory footprint
-	lexer.get_token_list().clear();
-	parse.get_root().clear();
-	import.get_root().clear();
-	return;
-}
-
 void execute(std::string& command)
 {
 	lexer.openfile(file);
@@ -61,7 +51,6 @@ void execute(std::string& command)
 	if(command=="lex")
 	{
 		lexer.print_token();
-		clear();
 		return;
 	}
 	parse.set_toklist(lexer.get_token_list());
@@ -74,7 +63,6 @@ void execute(std::string& command)
 	if(command=="ast")
 	{
 		parse.get_root().print_ast(0);
-		clear();
 		return;
 	}
 	import.link(parse.get_root());
@@ -84,7 +72,11 @@ void execute(std::string& command)
 		return;
 	}
 	codegen.main_progress(import.get_root());
-	clear();
+	if(codegen.get_error())
+	{
+		die("codegen",file);
+		return;
+	}
 	if(command=="code")
 	{
 		codegen.print_byte_code();

@@ -29,4 +29,4 @@ var makeConnect=func(n,connections)
     return cnt;
 }
 
-print(makeConnect(n,input));
+println(makeConnect(n,input));
