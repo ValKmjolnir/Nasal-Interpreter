@@ -115,7 +115,7 @@ var multi_assign_2=[10,9,8,7];
 ((-1*2+9))/7-1;
 ((({num:2})))["num"]*2*2*2;
 ((((([0,1,2])[0:2]))[0:2]))[1]-1;
-(((((((((((((((((((1+1+2+3+5)+8))+13)))+21))))+34)))))+55))))*89;
+println((((((((((((((((((((1+1+2+3+5)+8))+13)))+21))))+34)))))+55))))*89); # 12727
 number_1*(number_2+number_3)/90-number_4;
 (func test_func)()-1;
 hash_3.member_3+(func {return {what:"i don't tell you.",case_small:80,case_large:100}})()["case_large"]/10;
@@ -129,7 +129,7 @@ nil and 1+7*8;
 var hash={str:'hello',f:func{return me.str;}};
 var tmp_f=hash.f;
 hash=1;
-print(tmp_f());
+println(tmp_f());
 # undefined symbol 'me'
 # this means that 
 # when generating local_scope for function f,
@@ -138,13 +138,13 @@ print(tmp_f());
 var h1={str:'hello',f:func{return me.str;}};
 var h2={str:'world',f:func{return nil;}};
 h2.f=h1.f;
-print(h2.f());
+println(h2.f());
 # print 'world'
 # this means that 'me' in hash's functions
 # only points to the hash this function belongs to
 
-var f1=func(){print(1);return 1;}
-var f2=func(){print(2);return 0;}
+var f1=func(){println(1);return 1;}
+var f2=func(){println(2);return 0;}
 f1() or f2();
 # print '1'
 # this means that when using 'or' or 'and',

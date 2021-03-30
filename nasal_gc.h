@@ -333,13 +333,13 @@ struct nasal_gc
     nasal_val*               one_addr;    // reserved address of nasal_val,type vm_num, 1
     nasal_val*               nil_addr;    // reserved address of nasal_val,type vm_nil
     nasal_val*               global;      // global scope address,type vm_scop
-    nasal_val**              val_stack;   // main stack
+    nasal_val*               val_stack[STACK_MAX_DEPTH];
     nasal_val**              stack_top;   // stack top
     std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
     std::vector<nasal_val*>  local;       // local scope for function block
     std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*>  memory;      // gc memory
-    std::queue<nasal_val*>   free_list;   // gc free list
+    std::queue <nasal_val*>  free_list;   // gc free list
     void                     mark();
     void                     sweep();
     void                     gc_init(std::vector<double>&);
@@ -430,7 +430,6 @@ void nasal_gc::gc_init(std::vector<double>& nums)
         memory.push_back(tmp);
         free_list.push(tmp);
     }
-    val_stack=new nasal_val*[STACK_MAX_DEPTH]; // init runtime stack
     stack_top=val_stack; // set stack_top to val_stack
 
     zero_addr=new nasal_val(vm_num); // init constant 0
@@ -470,7 +469,6 @@ void nasal_gc::gc_clear()
     while(!free_list.empty())
         free_list.pop();
     global=nullptr;
-    delete []val_stack;
     local.clear();
     slice_stack.clear();
     return;

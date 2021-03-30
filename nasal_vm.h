@@ -20,7 +20,6 @@ private:
     void die(std::string);
     bool condition(nasal_val*);
     void opr_nop();
-    void opr_load();
     void opr_loadg();
     void opr_loadl();
     void opr_pnum();
@@ -63,7 +62,6 @@ private:
     void opr_cntpop();
     void opr_findex();
     void opr_feach();
-    void opr_call();
     void opr_callg();
     void opr_calll();
     void opr_callv();
@@ -75,7 +73,6 @@ private:
     void opr_slcend();
     void opr_slc();
     void opr_slc2();
-    void opr_mcall();
     void opr_mcallg();
     void opr_mcalll();
     void opr_mcallv();
@@ -153,12 +150,6 @@ void nasal_vm::opr_nop()
     loop_mark=false;
     return;
 }
-void nasal_vm::opr_load()
-{
-    nasal_val* val=*stack_top--;
-    (gc.local.empty()?gc.global:gc.local.back())->ptr.scop->elems[exec_code[pc].num]=val;
-    return;
-}
 void nasal_vm::opr_loadg()
 {
     gc.global->ptr.scop->elems[exec_code[pc].num]=*stack_top--;
@@ -214,6 +205,7 @@ void nasal_vm::opr_newf()
     val->ptr.func->entry=exec_code[pc].num;
     if(!gc.local.empty())
         val->ptr.func->closure=gc.local.back()->ptr.scop->elems;
+    val->ptr.func->closure[me]=gc.nil_addr;
     *(++stack_top)=val;
     return;
 }
@@ -561,26 +553,6 @@ void nasal_vm::opr_feach()
     *(++stack_top)=res;
     return;
 }
-void nasal_vm::opr_call()
-{
-    nasal_val* val=nullptr;
-    int name_index=exec_code[pc].num;
-    if(!gc.local.empty())
-        val=gc.local.back()->ptr.scop->get_val(name_index);
-    if(val)
-    {
-        *(++stack_top)=val;
-        return;
-    }
-    val=gc.global->ptr.scop->get_val(name_index);
-    if(val)
-    {
-        *(++stack_top)=val;
-        return;
-    }
-    die("call: cannot find symbol named \""+str_table[name_index]+"\"");
-    return;
-}
 void nasal_vm::opr_callg()
 {
     *(++stack_top)=gc.global->ptr.scop->elems[exec_code[pc].num];
@@ -826,26 +798,6 @@ void nasal_vm::opr_slc2()
         aim.push_back(ref[i]);
     return;
 }
-void nasal_vm::opr_mcall()
-{
-    nasal_val** mem_addr=nullptr;
-    int name_index=exec_code[pc].num;
-    if(!gc.local.empty())
-        mem_addr=gc.local.back()->ptr.scop->get_mem(name_index);
-    if(mem_addr)
-    {
-        addr_stack.push(mem_addr);
-        return;
-    }
-    mem_addr=gc.global->ptr.scop->get_mem(name_index);
-    if(mem_addr)
-    {
-        addr_stack.push(mem_addr);
-        return;
-    }
-    die("mcall: cannot find symbol named \""+str_table[name_index]+"\"");
-    return;
-}
 void nasal_vm::opr_mcallg()
 {
     addr_stack.push(&gc.global->ptr.scop->elems[exec_code[pc].num]);
@@ -938,7 +890,6 @@ void nasal_vm::run()
     static void (nasal_vm::*opr_table[])()=
     {
         &nasal_vm::opr_nop,
-        &nasal_vm::opr_load,
         &nasal_vm::opr_loadg,
         &nasal_vm::opr_loadl,
         &nasal_vm::opr_pnum,
@@ -981,7 +932,6 @@ void nasal_vm::run()
         &nasal_vm::opr_cntpop,
         &nasal_vm::opr_findex,
         &nasal_vm::opr_feach,
-        &nasal_vm::opr_call,
         &nasal_vm::opr_callg,
         &nasal_vm::opr_calll,
         &nasal_vm::opr_callv,
@@ -993,7 +943,6 @@ void nasal_vm::run()
         &nasal_vm::opr_slcend,
         &nasal_vm::opr_slc,
         &nasal_vm::opr_slc2,
-        &nasal_vm::opr_mcall,
         &nasal_vm::opr_mcallg,
         &nasal_vm::opr_mcalll,
         &nasal_vm::opr_mcallv,

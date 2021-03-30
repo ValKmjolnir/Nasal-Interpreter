@@ -1,4 +1,4 @@
-
+import("lib.nas");
 var condition_true=1;
 var condition_false=0;
 if(condition_true)

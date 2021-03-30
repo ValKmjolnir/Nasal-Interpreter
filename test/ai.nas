@@ -81,13 +81,12 @@ var matrix=
         var prt_s='[\n';
         foreach(var i;mat.mat)
         {
-            var s='[';
+            prt_s~='[';
             foreach(var j;i)
-                s~=(j~',');
-            s~='],\n';
-            prt_s~=s;
+                prt_s~=(j~',');
+            prt_s~='],\n';
         }
-        prt_s~=']';
+        prt_s~=']\n';
         print(prt_s);
         return nil;
     },
@@ -295,9 +294,9 @@ var bp=
         var hidden_diff=matrix.mult_mat();
         matrix.prt_mat(hidden_diff);
 
-        output_layer=matrix.add_mat(output_layer,output_diff);
+        me.output_layer=matrix.add_mat(me.output_layer,output_diff);
         var error=0;
-        foreach(var i;tmp.mat[0])
+        foreach(var i;me.result.mat[0])
             error+=i;
         error*=0.5;
         return error;
