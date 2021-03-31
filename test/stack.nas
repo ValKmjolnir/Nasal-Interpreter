@@ -1,34 +1,36 @@
 # lib stack.nas
-var block_alloc=func()
+# valkmjolnir 2021/3/31
+var stack=func()
 {
-    return {elem:nil,next:nil};
-}
-var new_stack=func()
-{
-    return {next:nil};
-}
-var stack_push=func(stack,elem)
-{
-    var tmp=stack.next;
-    stack.next=block_alloc();
-    stack.next.elem=elem;
-    stack.next.next=tmp;
-}
-var stack_pop=func(stack)
-{
-    var tmp=stack.next;
-    if(tmp!=nil)
-        stack.next=tmp.next;
-    return;
-}
-var stack_top=func(stack)
-{
-    var tmp=stack.next;
-    if(tmp!=nil)
-        return tmp.elem;
-    return nil;
-}
-var stack_empty=func(stack)
-{
-    return stack.next==nil;
+    var _={next:nil};
+    return
+    {
+        push:func(elem)
+        {
+            _.next={elem:elem,next:_.next};
+            return;
+        },
+        pop:func()
+        {
+            var tmp=_.next;
+            if(tmp!=nil)
+                _.next=tmp.next;
+            return;
+        },
+        top:func()
+        {
+            var tmp=_.next;
+            if(tmp!=nil)
+                return tmp.elem;
+            return nil;
+        },
+        clear:func()
+        {
+            _.next=nil;
+        },
+        empty:func()
+        {
+            return _.next==nil;
+        }
+    };
 }

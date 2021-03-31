@@ -4,21 +4,19 @@ var map=nil;
 
 var check=func(x,y)
 {
-    if(x>=30) x=0;
-    if(x<0)   x=19;
-    if(y>=40) y=0;
-    if(y<0)   y=39;
+    if(x>14) x=0;
+    if(y>19) y=0;
     return map[x][y];
 }
 
 var new_map=func()
 {
     var tmp=[];
-    setsize(tmp,30);
+    setsize(tmp,15);
     forindex(var i;tmp)
     {
         tmp[i]=[];
-        setsize(tmp[i],40);
+        setsize(tmp[i],20);
     }
     return tmp;
 }
@@ -44,7 +42,7 @@ func()
         forindex(var j;map[i])
             map[i][j]=rand()>0.7?'O':' ';
     var calc=[[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]];
-    for(var r=0;r<200;r+=1)
+    for(var r=0;r<100;r+=1)
     {
         prt(map);
         var tmp=new_map();

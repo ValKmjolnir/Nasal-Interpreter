@@ -1,40 +1,46 @@
 # lib queue.nas
-# valkmjolnir 2021/3/3
-var new_queue=func()
+# valkmjolnir 2021/3/31
+var queue=func()
 {
-    return {begin:nil,end:nil};
-}
-var queue_push=func(queue_head,elem)
-{
-    var new_node=
+    var _={begin:nil,end:nil};
+    return
     {
-        elem:elem,
-        next:nil
+        push:func(elem)
+        {
+            var new_node=
+            {
+                elem:elem,
+                next:nil
+            };
+            if(_.begin==nil)
+                _.begin=_.end=new_node;
+            else
+            {
+                _.end.next=new_node;
+                _.end=new_node;
+            }
+            return;
+        },
+        pop:func()
+        {
+            if(_.begin!=nil)
+                _.begin=_.begin.next;
+            if(_.begin==nil)
+                _.end=nil;
+        },
+        front:func()
+        {
+            if(_.begin!=nil)
+                return _.begin.elem;
+            return nil;
+        },
+        clear:func()
+        {
+            _.begin=_.end=nil;
+        },
+        empty:func()
+        {
+            return _.begin==nil;
+        }
     };
-    if(queue_head.begin==nil)
-        queue_head.begin=queue_head.end=new_node;
-    else
-    {
-        queue_head.end.next=new_node;
-        queue_head.end=new_node;
-    }
-    return;
-}
-var queue_pop=func(queue_head)
-{
-    var t=queue_head.begin;
-    queue_head.begin=queue_head.begin.next;
-    if(queue_head.begin==nil)
-        queue_head.end=nil;
-    return t;
-}
-var queue_front=func(queue_head)
-{
-    if(queue_head.begin!=nil)
-        return queue_head.begin.elem;
-    return nil;
-}
-var queue_empty=func(queue_head)
-{
-    return queue_head.begin==nil;
 }

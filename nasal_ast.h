@@ -98,6 +98,7 @@ private:
     std::string str;
     std::vector<nasal_ast> children;
 public:
+    nasal_ast();
     nasal_ast(int,int);
     nasal_ast(const nasal_ast&);
     ~nasal_ast();
@@ -116,7 +117,14 @@ public:
     std::vector<nasal_ast>& get_children();
 };
 
-nasal_ast::nasal_ast(int _line=0,int _type=ast_null)
+nasal_ast::nasal_ast()
+{
+    line=0;
+    type=ast_null;
+    return;
+}
+
+nasal_ast::nasal_ast(int _line,int _type)
 {
     line=_line;
     type=_type;
