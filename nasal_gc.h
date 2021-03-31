@@ -148,7 +148,7 @@ nasal_val* nasal_hash::get_val(std::string& key)
             }
         }
     }
-    return ret_addr;
+    return nullptr;
 }
 nasal_val** nasal_hash::get_mem(std::string& key)
 {
@@ -172,7 +172,7 @@ nasal_val** nasal_hash::get_mem(std::string& key)
             }
         }
     }
-    return mem_addr;
+    return nullptr;
 }
 bool nasal_hash::check_contain(std::string& key)
 {
@@ -285,8 +285,6 @@ void nasal_val::clear()
 {
     switch(type)
     {
-        case vm_nil:  break;
-        case vm_num:  break;
         case vm_str:  delete ptr.str;  break;
         case vm_vec:  delete ptr.vec;  break;
         case vm_hash: delete ptr.hash; break;
@@ -301,7 +299,6 @@ void nasal_val::set_type(int val_type)
     type=val_type;
     switch(type)
     {
-        case vm_nil:  break;
         case vm_num:  ptr.num=0;               break;
         case vm_str:  ptr.str=new std::string; break;
         case vm_vec:  ptr.vec=new nasal_vec;   break;
@@ -351,9 +348,9 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_val*> bfs;
-    bfs.push(zero_addr);
-    bfs.push(one_addr);
-    bfs.push(nil_addr);
+    zero_addr->mark=true;
+    one_addr->mark=true;
+    nil_addr->mark=true;
     bfs.push(global);
 
     int size=num_addrs.size();

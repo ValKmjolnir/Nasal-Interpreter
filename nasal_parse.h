@@ -400,7 +400,7 @@ nasal_ast nasal_parse::args_gen()
         match(tok_id);
         if(tok_list[ptr].type==tok_eq || tok_list[ptr].type==tok_ellipsis)
         {
-            nasal_ast special_arg(tok_list[ptr].line);
+            nasal_ast special_arg(tok_list[ptr].line,ast_null);
             if(tok_list[ptr].type==tok_eq)
             {
                 special_arg.add_child(tmp);
@@ -468,7 +468,7 @@ nasal_ast nasal_parse::args_gen()
 }
 nasal_ast nasal_parse::expr()
 {
-    nasal_ast node(tok_list[ptr].line);
+    nasal_ast node(tok_list[ptr].line,ast_null);
     int tok_type=tok_list[ptr].type;
     if((tok_type==tok_break || tok_type==tok_continue) && !in_loop)
         die(error_line,"cannot use break/continue outside loop");
@@ -612,7 +612,7 @@ nasal_ast nasal_parse::additive_expr()
     node=multive_expr();
     while(tok_list[ptr].type==tok_add || tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_link)
     {
-        nasal_ast tmp(tok_list[ptr].line);
+        nasal_ast tmp(tok_list[ptr].line,ast_null);
         switch(tok_list[ptr].type)
         {
             case tok_add:  tmp.set_type(ast_add);  break;
@@ -642,7 +642,7 @@ nasal_ast nasal_parse::multive_expr()
 }
 nasal_ast nasal_parse::unary()
 {
-    nasal_ast node(tok_list[ptr].line);
+    nasal_ast node(tok_list[ptr].line,ast_null);
     switch(tok_list[ptr].type)
     {
         case tok_sub:node.set_type(ast_neg);match(tok_sub);break;
@@ -653,7 +653,7 @@ nasal_ast nasal_parse::unary()
 }
 nasal_ast nasal_parse::scalar()
 {
-    nasal_ast node(tok_list[ptr].line);
+    nasal_ast node(tok_list[ptr].line,ast_null);
     if(tok_list[ptr].type==tok_nil)     {node=nil_gen(); match(tok_nil);}
     else if(tok_list[ptr].type==tok_num){node=num_gen(); match(tok_num);}
     else if(tok_list[ptr].type==tok_str){node=str_gen(); match(tok_str);}
@@ -949,7 +949,7 @@ nasal_ast nasal_parse::for_loop()
 }
 nasal_ast nasal_parse::forei_loop()
 {
-    nasal_ast node(tok_list[ptr].line);
+    nasal_ast node(tok_list[ptr].line,ast_null);
     switch(tok_list[ptr].type)
     {
         case tok_forindex: node.set_type(ast_forindex);match(tok_forindex); break;
@@ -972,7 +972,7 @@ nasal_ast nasal_parse::forei_loop()
 
 nasal_ast nasal_parse::new_iter_gen()
 {
-    nasal_ast node(tok_list[ptr].line);
+    nasal_ast node(tok_list[ptr].line,ast_null);
     if(tok_list[ptr].type==tok_var)
     {
         match(tok_var);
