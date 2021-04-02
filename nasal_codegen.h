@@ -395,7 +395,7 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         }
     }
     exec_code[newfunc_label].num=exec_code.size()+1;
-    int ptr=exec_code.size();
+    int jmp_ptr=exec_code.size();
     gen(op_jmp,0);
     nasal_ast& block=ast.get_children()[1];
 
@@ -407,7 +407,7 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         nil_gen();
         gen(op_ret,0);
     }
-    exec_code[ptr].num=exec_code.size();
+    exec_code[jmp_ptr].num=exec_code.size();
     return;
 }
 
