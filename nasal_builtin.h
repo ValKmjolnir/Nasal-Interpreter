@@ -12,58 +12,52 @@
 
 std::unordered_map<std::string,int> builtin_use_str;
 // used to find values that builtin function uses
-#define builtin_find(name) \
-(\
-    local_scope\
-    ->ptr.scop\
-    ->get_val\
-    (builtin_use_str[name])\
-)
+#define builtin_find(name) (local_scope[builtin_use_str[name]])
 
 // declaration of builtin functions
 // to add new builtin function,declare it here and write the definition below
 
-nasal_val* builtin_print(nasal_val*,nasal_gc&);
-nasal_val* builtin_append(nasal_val*,nasal_gc&);
-nasal_val* builtin_setsize(nasal_val*,nasal_gc&);
-nasal_val* builtin_system(nasal_val*,nasal_gc&);
-nasal_val* builtin_input(nasal_val*,nasal_gc&);
-nasal_val* builtin_sleep(nasal_val*,nasal_gc&);
-nasal_val* builtin_fin(nasal_val*,nasal_gc&);
-nasal_val* builtin_fout(nasal_val*,nasal_gc&);
-nasal_val* builtin_split(nasal_val*,nasal_gc&);
-nasal_val* builtin_rand(nasal_val*,nasal_gc&);
-nasal_val* builtin_id(nasal_val*,nasal_gc&);
-nasal_val* builtin_int(nasal_val*,nasal_gc&);
-nasal_val* builtin_num(nasal_val*,nasal_gc&);
-nasal_val* builtin_pop(nasal_val*,nasal_gc&);
-nasal_val* builtin_str(nasal_val*,nasal_gc&);
-nasal_val* builtin_size(nasal_val*,nasal_gc&);
-nasal_val* builtin_xor(nasal_val*,nasal_gc&);
-nasal_val* builtin_and(nasal_val*,nasal_gc&);
-nasal_val* builtin_or(nasal_val*,nasal_gc&);
-nasal_val* builtin_nand(nasal_val*,nasal_gc&);
-nasal_val* builtin_not(nasal_val*,nasal_gc&);
-nasal_val* builtin_sin(nasal_val*,nasal_gc&);
-nasal_val* builtin_cos(nasal_val*,nasal_gc&);
-nasal_val* builtin_tan(nasal_val*,nasal_gc&);
-nasal_val* builtin_exp(nasal_val*,nasal_gc&);
-nasal_val* builtin_ln(nasal_val*,nasal_gc&);
-nasal_val* builtin_sqrt(nasal_val*,nasal_gc&);
-nasal_val* builtin_atan2(nasal_val*,nasal_gc&);
-nasal_val* builtin_time(nasal_val*,nasal_gc&);
-nasal_val* builtin_contains(nasal_val*,nasal_gc&);
-nasal_val* builtin_delete(nasal_val*,nasal_gc&);
-nasal_val* builtin_getkeys(nasal_val*,nasal_gc&);
-nasal_val* builtin_import(nasal_val*,nasal_gc&);
-nasal_val* builtin_die(nasal_val*,nasal_gc&);
-nasal_val* builtin_type(nasal_val*,nasal_gc&);
-nasal_val* builtin_substr(nasal_val*,nasal_gc&);
-nasal_val* builtin_streq(nasal_val*,nasal_gc&);
-nasal_val* builtin_left(nasal_val*,nasal_gc&);
-nasal_val* builtin_right(nasal_val*,nasal_gc&);
-nasal_val* builtin_cmp(nasal_val*,nasal_gc&);
-nasal_val* builtin_chr(nasal_val*,nasal_gc&);
+nasal_val* builtin_print(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_append(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_setsize(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_system(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_input(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_sleep(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_fin(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_fout(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_split(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_rand(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_id(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_int(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_num(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_pop(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_str(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_size(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_xor(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_and(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_or(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_nand(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_not(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_sin(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_cos(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_tan(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_exp(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_ln(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_sqrt(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_atan2(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_time(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_contains(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_delete(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_getkeys(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_import(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_die(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_type(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_substr(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_streq(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_left(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_right(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_cmp(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_chr(std::unordered_map<int,nasal_val*>&,nasal_gc&);
 
 void builtin_err(std::string func_name,std::string info)
 {
@@ -76,7 +70,7 @@ void builtin_err(std::string func_name,std::string info)
 struct FUNC_TABLE
 {
     std::string name;
-    nasal_val* (*func)(nasal_val* x,nasal_gc&);
+    nasal_val* (*func)(std::unordered_map<int,nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {
     {"__builtin_std_cout", builtin_print   },
@@ -123,7 +117,7 @@ struct FUNC_TABLE
     {"",                   nullptr         }
 };
 
-nasal_val* builtin_print(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     // get arguments
     nasal_val* vector_val_addr=builtin_find("elements");
@@ -146,7 +140,7 @@ nasal_val* builtin_print(nasal_val* local_scope,nasal_gc& gc)
     // generate return value
     return gc.nil_addr;
 }
-nasal_val* builtin_append(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_append(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* vec_addr=builtin_find("vector");
     nasal_val* elem_addr=builtin_find("elements");
@@ -162,7 +156,7 @@ nasal_val* builtin_append(nasal_val* local_scope,nasal_gc& gc)
         ref_vec.push_back(ref_elems[i]);
     return gc.nil_addr;
 }
-nasal_val* builtin_setsize(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_setsize(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* vec_addr=builtin_find("vector");
     nasal_val* size_addr=builtin_find("size");
@@ -193,7 +187,7 @@ nasal_val* builtin_setsize(nasal_val* local_scope,nasal_gc& gc)
     return gc.nil_addr;
 }
 
-nasal_val* builtin_system(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_system(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* str_addr=builtin_find("str");
     if(str_addr->type!=vm_str)
@@ -205,14 +199,14 @@ nasal_val* builtin_system(nasal_val* local_scope,nasal_gc& gc)
     return gc.nil_addr;
 }
 
-nasal_val* builtin_input(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_input(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     std::cin>>*ret_addr->ptr.str;
     return ret_addr;
 }
 
-nasal_val* builtin_sleep(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_sleep(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("duration");
     if(val_addr->type!=vm_num)
@@ -225,7 +219,7 @@ nasal_val* builtin_sleep(nasal_val* local_scope,nasal_gc& gc)
     return gc.nil_addr;
 }
 
-nasal_val* builtin_fin(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_fin(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("filename");
     if(val_addr->type!=vm_str)
@@ -251,7 +245,7 @@ nasal_val* builtin_fin(nasal_val* local_scope,nasal_gc& gc)
     return ret_addr;
 }
 
-nasal_val* builtin_fout(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_fout(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("filename");
     nasal_val* str_addr=builtin_find("str");
@@ -276,7 +270,7 @@ nasal_val* builtin_fout(nasal_val* local_scope,nasal_gc& gc)
     return gc.nil_addr;
 }
 
-nasal_val* builtin_split(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_split(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* delimeter_val_addr=builtin_find("delimeter");
     nasal_val* string_val_addr=builtin_find("string");
@@ -344,7 +338,7 @@ nasal_val* builtin_split(nasal_val* local_scope,nasal_gc& gc)
     }
     return ret_addr;
 }
-nasal_val* builtin_rand(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_rand(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("seed");
     if(val_addr->type!=vm_num && val_addr->type!=vm_nil)
@@ -364,7 +358,7 @@ nasal_val* builtin_rand(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=num;
     return ret_addr;
 }
-nasal_val* builtin_id(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_id(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("thing");
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
@@ -373,7 +367,7 @@ nasal_val* builtin_id(nasal_val* local_scope,nasal_gc& gc)
     *ret_addr->ptr.str=buf;
     return ret_addr;
 }
-nasal_val* builtin_int(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_int(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("value");
     if(val_addr->type!=vm_num)
@@ -386,7 +380,7 @@ nasal_val* builtin_int(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(double)number;
     return ret_addr;
 }
-nasal_val* builtin_num(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_num(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("value");
     if(val_addr->type!=vm_str)
@@ -398,7 +392,7 @@ nasal_val* builtin_num(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=val_addr->to_number();
     return ret_addr;
 }
-nasal_val* builtin_pop(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_pop(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("vector");
     if(val_addr->type!=vm_vec)
@@ -414,7 +408,7 @@ nasal_val* builtin_pop(nasal_val* local_scope,nasal_gc& gc)
     }
     return gc.nil_addr;
 }
-nasal_val* builtin_str(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_str(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("number");
     if(val_addr->type!=vm_num)
@@ -426,7 +420,7 @@ nasal_val* builtin_str(nasal_val* local_scope,nasal_gc& gc)
     *ret_addr->ptr.str=val_addr->to_string();
     return ret_addr;
 }
-nasal_val* builtin_size(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_size(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("object");
     nasal_val* ret_addr=gc.gc_alloc(vm_num);
@@ -435,14 +429,13 @@ nasal_val* builtin_size(nasal_val* local_scope,nasal_gc& gc)
         case vm_nil:  ret_addr->ptr.num=0;                               break;
         case vm_num:  ret_addr->ptr.num=val_addr->ptr.num;               break;
         case vm_func: ret_addr->ptr.num=0;                               break;
-        case vm_scop: ret_addr->ptr.num=val_addr->ptr.scop->elems.size();break;
         case vm_str:  ret_addr->ptr.num=val_addr->ptr.str->length();     break;
         case vm_vec:  ret_addr->ptr.num=val_addr->ptr.vec->elems.size(); break;
         case vm_hash: ret_addr->ptr.num=val_addr->ptr.hash->elems.size();break;
     }
     return ret_addr;
 }
-nasal_val* builtin_xor(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_xor(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -462,7 +455,7 @@ nasal_val* builtin_xor(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(number_a^number_b);
     return ret_addr;
 }
-nasal_val* builtin_and(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_and(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -482,7 +475,7 @@ nasal_val* builtin_and(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(number_a&number_b);
     return ret_addr;
 }
-nasal_val* builtin_or(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_or(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -502,7 +495,7 @@ nasal_val* builtin_or(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(number_a|number_b);
     return ret_addr;
 }
-nasal_val* builtin_nand(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_nand(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -522,7 +515,7 @@ nasal_val* builtin_nand(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(~(number_a&number_b));
     return ret_addr;
 }
-nasal_val* builtin_not(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_not(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     if(a_addr->type!=vm_num)
@@ -535,7 +528,7 @@ nasal_val* builtin_not(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(~number);
     return ret_addr;
 }
-nasal_val* builtin_sin(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_sin(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -547,7 +540,7 @@ nasal_val* builtin_sin(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=sin(val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_cos(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_cos(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -559,7 +552,7 @@ nasal_val* builtin_cos(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=cos(val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_tan(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_tan(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -571,7 +564,7 @@ nasal_val* builtin_tan(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=tan(val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_exp(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_exp(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -583,7 +576,7 @@ nasal_val* builtin_exp(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=exp(val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_ln(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_ln(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -595,7 +588,7 @@ nasal_val* builtin_ln(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(log(val_addr->ptr.num)/log(2.7182818284590452354));
     return ret_addr;
 }
-nasal_val* builtin_sqrt(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_sqrt(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("x");
     if(val_addr->type!=vm_num)
@@ -607,7 +600,7 @@ nasal_val* builtin_sqrt(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=sqrt(val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_atan2(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_atan2(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* x_val_addr=builtin_find("x");
     nasal_val* y_val_addr=builtin_find("y");
@@ -625,7 +618,7 @@ nasal_val* builtin_atan2(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=atan2(y_val_addr->ptr.num,x_val_addr->ptr.num);
     return ret_addr;
 }
-nasal_val* builtin_time(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_time(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("begin_time");
     if(val_addr->type!=vm_num)
@@ -638,7 +631,7 @@ nasal_val* builtin_time(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=time(&begin_time);
     return ret_addr;
 }
-nasal_val* builtin_contains(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_contains(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* hash_addr=builtin_find("hash");
     nasal_val* key_addr=builtin_find("key");
@@ -656,7 +649,7 @@ nasal_val* builtin_contains(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=hash_addr->ptr.hash->check_contain(*key_addr->ptr.str);
     return ret_addr;
 }
-nasal_val* builtin_delete(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_delete(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* hash_addr=builtin_find("hash");
     nasal_val* key_addr=builtin_find("key");
@@ -674,7 +667,7 @@ nasal_val* builtin_delete(nasal_val* local_scope,nasal_gc& gc)
         hash_addr->ptr.hash->elems.erase(*key_addr->ptr.str);
     return gc.nil_addr;
 }
-nasal_val* builtin_getkeys(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_getkeys(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* hash_addr=builtin_find("hash");
     if(hash_addr->type!=vm_hash)
@@ -693,14 +686,14 @@ nasal_val* builtin_getkeys(nasal_val* local_scope,nasal_gc& gc)
     }
     return ret_addr;
 }
-nasal_val* builtin_import(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_import(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
     builtin_err("import","cannot use import when running");
     return nullptr;
 }
-nasal_val* builtin_die(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_die(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* str_addr=builtin_find("str");
     if(str_addr->type!=vm_str)
@@ -708,10 +701,10 @@ nasal_val* builtin_die(nasal_val* local_scope,nasal_gc& gc)
         builtin_err("die","\"str\" must be string");
         return nullptr;
     }
-    std::cout<<">> [vm] error: "<<str_addr->ptr.str<<'\n';
+    std::cout<<">> [vm] error: "<<*str_addr->ptr.str<<'\n';
     return nullptr;
 }
-nasal_val* builtin_type(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_type(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* val_addr=builtin_find("object");
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
@@ -726,7 +719,7 @@ nasal_val* builtin_type(nasal_val* local_scope,nasal_gc& gc)
     }
     return ret_addr;
 }
-nasal_val* builtin_substr(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_substr(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* str_addr=builtin_find("str");
     nasal_val* beg_addr=builtin_find("begin");
@@ -760,7 +753,7 @@ nasal_val* builtin_substr(nasal_val* local_scope,nasal_gc& gc)
     *ret_addr->ptr.str=str.substr(beg,len);
     return ret_addr;
 }
-nasal_val* builtin_streq(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_streq(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -768,7 +761,7 @@ nasal_val* builtin_streq(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=(a_addr->type!=vm_str || b_addr->type!=vm_str)?0:(*a_addr->ptr.str==*b_addr->ptr.str);
     return ret_addr;
 }
-nasal_val* builtin_left(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_left(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* str_addr=builtin_find("string");
     nasal_val* len_addr=builtin_find("length");
@@ -790,7 +783,7 @@ nasal_val* builtin_left(nasal_val* local_scope,nasal_gc& gc)
     *ret_addr->ptr.str=str.substr(0, len);
     return ret_addr;
 }
-nasal_val* builtin_right(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_right(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* str_addr=builtin_find("string");
     nasal_val* len_addr=builtin_find("length");
@@ -815,7 +808,7 @@ nasal_val* builtin_right(nasal_val* local_scope,nasal_gc& gc)
     *ret_addr->ptr.str=str.substr(srclen-len, srclen);
     return ret_addr;
 }
-nasal_val* builtin_cmp(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_cmp(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* a_addr=builtin_find("a");
     nasal_val* b_addr=builtin_find("b");
@@ -833,7 +826,7 @@ nasal_val* builtin_cmp(nasal_val* local_scope,nasal_gc& gc)
     ret_addr->ptr.num=strcmp(a_addr->ptr.str->data(),b_addr->ptr.str->data());
     return ret_addr;
 }
-nasal_val* builtin_chr(nasal_val* local_scope,nasal_gc& gc)
+nasal_val* builtin_chr(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* code_addr=builtin_find("code");
     if(code_addr->type!=vm_num)

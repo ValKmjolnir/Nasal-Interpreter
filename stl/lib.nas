@@ -155,3 +155,5 @@ var math=
     sqrt:  func(x)  {return __builtin_sqrt(x);   },
     atan2: func(x,y){return __builtin_atan2(x,y);}
 };
+
+var D2R=math.pi/180;

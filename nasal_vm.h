@@ -152,12 +152,12 @@ void nasal_vm::opr_nop()
 }
 void nasal_vm::opr_loadg()
 {
-    gc.global->ptr.scop->elems[exec_code[pc].num]=*stack_top--;
+    gc.global[exec_code[pc].num]=*stack_top--;
     return;
 }
 void nasal_vm::opr_loadl()
 {
-    gc.local.back()->ptr.scop->elems[exec_code[pc].num]=*stack_top--;
+    gc.local.back()[exec_code[pc].num]=*stack_top--;
     return;
 }
 void nasal_vm::opr_pnum()
@@ -204,7 +204,7 @@ void nasal_vm::opr_newf()
     nasal_val* val=gc.gc_alloc(vm_func);
     val->ptr.func->entry=exec_code[pc].num;
     if(!gc.local.empty())
-        val->ptr.func->closure=gc.local.back()->ptr.scop->elems;
+        val->ptr.func->closure=gc.local.back();
     val->ptr.func->closure[me]=gc.nil_addr;
     *(++stack_top)=val;
     return;
@@ -525,12 +525,12 @@ void nasal_vm::opr_feach()
 }
 void nasal_vm::opr_callg()
 {
-    *(++stack_top)=gc.global->ptr.scop->elems[exec_code[pc].num];
+    *(++stack_top)=gc.global[exec_code[pc].num];
     return;
 }
 void nasal_vm::opr_calll()
 {
-    *(++stack_top)=gc.local.back()->ptr.scop->elems[exec_code[pc].num];
+    *(++stack_top)=gc.local.back()[exec_code[pc].num];
     return;
 }
 void nasal_vm::opr_callv()
@@ -633,14 +633,12 @@ void nasal_vm::opr_callf()
         return;
     }
     // push new local scope
-    nasal_val* closure=gc.gc_alloc(vm_scop);
-    gc.local.push_back(closure);
+    gc.local.push_back(func_addr->ptr.func->closure);
     // load parameters
     nasal_func&                         ref_func=*func_addr->ptr.func;
     std::vector<int>&                   ref_para=ref_func.para;
     std::vector<nasal_val*>&            ref_default=ref_func.default_para;
-    std::unordered_map<int,nasal_val*>& ref_closure=closure->ptr.scop->elems;
-    ref_closure=ref_func.closure;
+    std::unordered_map<int,nasal_val*>& ref_closure=gc.local.back();
     
     if(para_addr->type==vm_vec)
     {
@@ -677,7 +675,8 @@ void nasal_vm::opr_callf()
             die("callf: special call cannot use dynamic parameter");
             return;
         }
-        for(int i=0;i<ref_para.size();++i)
+        int para_size=ref_para.size();
+        for(int i=0;i<para_size;++i)
         {
             std::string& sym=str_table[ref_para[i]];
             if(ref_hash.count(sym))
@@ -770,12 +769,12 @@ void nasal_vm::opr_slc2()
 }
 void nasal_vm::opr_mcallg()
 {
-    addr_stack.push(&gc.global->ptr.scop->elems[exec_code[pc].num]);
+    addr_stack.push(&gc.global[exec_code[pc].num]);
     return;
 }
 void nasal_vm::opr_mcalll()
 {
-    addr_stack.push(&gc.local.back()->ptr.scop->elems[exec_code[pc].num]);
+    addr_stack.push(&gc.local.back()[exec_code[pc].num]);
     return;
 }
 void nasal_vm::opr_mcallv()

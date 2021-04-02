@@ -1,5 +1,5 @@
-import("lib.nas");
-import("queue.nas");
+import("stl/lib.nas");
+import("stl/queue.nas");
 
 rand(time(0));
 
@@ -26,13 +26,13 @@ var prt=func()
 var bfs=func(begin,end)
 {
     var move=[[1,0],[0,1],[-1,0],[0,-1]];
-    var queue=new_queue();
-    queue_push(queue,begin);
+    var que=queue();
+    que.push(begin);
     map[begin[0]][begin[1]]=3;
-    while(!queue_empty(queue))
+    while(!que.empty())
     {
-        var vertex=queue_front(queue);
-        queue_pop(queue);
+        var vertex=que.front();
+        que.pop();
         foreach(var i;move)
         {
             var x=vertex[0]+i[0];
@@ -44,7 +44,7 @@ var bfs=func(begin,end)
             }
             if(0<=x and x<10 and 0<=y and y<10 and map[x][y]==0)
             {
-                queue_push(queue,[x,y]);
+                que.push([x,y]);
                 map[x][y]=3;
             }
         }

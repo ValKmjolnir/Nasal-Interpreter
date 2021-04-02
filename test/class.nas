@@ -17,7 +17,11 @@ var student=func(name,age)
 var s=student('valk',24);
 s.print_info();
 println(s.get_age(),' ',s.get_name());
-s.set_age(18);
+s.set_age(20);
 s.set_name('aluo');
+s.print_info();
+println(s.get_age(),' ',s.get_name());
+s.set_age(20);
+s.set_name('Sidi Liang');
 s.print_info();
 println(s.get_age(),' ',s.get_name());

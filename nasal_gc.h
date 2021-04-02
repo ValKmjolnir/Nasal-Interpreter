@@ -6,7 +6,6 @@ enum nasal_type
     vm_nil=0,
     vm_num,
     vm_str,
-    vm_scop,
     vm_func,
     vm_vec,
     vm_hash
@@ -48,14 +47,6 @@ struct nasal_func
     nasal_func();
 };
 
-struct nasal_scop
-{
-    std::unordered_map<int,nasal_val*> elems;
-
-    nasal_val*  get_val(int);
-    nasal_val** get_mem(int);
-};
-
 struct nasal_val
 {
     bool mark;
@@ -67,7 +58,6 @@ struct nasal_val
         nasal_vec*   vec;
         nasal_hash*  hash;
         nasal_func*  func;
-        nasal_scop*  scop;
     }ptr;
 
     nasal_val();
@@ -232,20 +222,6 @@ nasal_func::nasal_func()
     return;
 }
 
-/*functions of nasal_scop*/
-nasal_val* nasal_scop::get_val(int key)
-{
-    if(elems.count(key))
-        return elems[key];
-    return nullptr;
-}
-nasal_val** nasal_scop::get_mem(int key)
-{
-    if(elems.count(key))
-        return &(elems[key]);
-    return nullptr;
-}
-
 /*functions of nasal_val*/
 nasal_val::nasal_val()
 {
@@ -264,7 +240,6 @@ nasal_val::nasal_val(int val_type)
         case vm_vec:  ptr.vec=new nasal_vec;   break;
         case vm_hash: ptr.hash=new nasal_hash; break;
         case vm_func: ptr.func=new nasal_func; break;
-        case vm_scop: ptr.scop=new nasal_scop; break;
     }
     return;
 }
@@ -276,7 +251,6 @@ nasal_val::~nasal_val()
         case vm_vec:  delete ptr.vec;  break;
         case vm_hash: delete ptr.hash; break;
         case vm_func: delete ptr.func; break;
-        case vm_scop: delete ptr.scop; break;
     }
     type=vm_nil;
     return;
@@ -289,7 +263,6 @@ void nasal_val::clear()
         case vm_vec:  delete ptr.vec;  break;
         case vm_hash: delete ptr.hash; break;
         case vm_func: delete ptr.func; break;
-        case vm_scop: delete ptr.scop; break;
     }
     type=vm_nil;
     return;
@@ -304,7 +277,6 @@ void nasal_val::set_type(int val_type)
         case vm_vec:  ptr.vec=new nasal_vec;   break;
         case vm_hash: ptr.hash=new nasal_hash; break;
         case vm_func: ptr.func=new nasal_func; break;
-        case vm_scop: ptr.scop=new nasal_scop; break;
     }
     return;
 }
@@ -329,14 +301,14 @@ struct nasal_gc
     nasal_val*               zero_addr;   // reserved address of nasal_val,type vm_num, 0
     nasal_val*               one_addr;    // reserved address of nasal_val,type vm_num, 1
     nasal_val*               nil_addr;    // reserved address of nasal_val,type vm_nil
-    nasal_val*               global;      // global scope address,type vm_scop
     nasal_val*               val_stack[STACK_MAX_DEPTH];
     nasal_val**              stack_top;   // stack top
     std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
-    std::vector<nasal_val*>  local;       // local scope for function block
     std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*>  memory;      // gc memory
     std::queue <nasal_val*>  free_list;   // gc free list
+    std::unordered_map<int,nasal_val*> global;
+    std::vector<std::unordered_map<int,nasal_val*> > local;
     void                     mark();
     void                     sweep();
     void                     gc_init(std::vector<double>&);
@@ -351,14 +323,16 @@ void nasal_gc::mark()
     zero_addr->mark=true;
     one_addr->mark=true;
     nil_addr->mark=true;
-    bfs.push(global);
+    for(auto i=global.begin();i!=global.end();++i)
+        bfs.push(i->second);
 
     int size=num_addrs.size();
     for(int i=0;i<size;++i)
         bfs.push(num_addrs[i]);
     size=local.size();
-    for(int i=0;i<size;++i)
-        bfs.push(local[i]);
+    for(auto i=local.begin();i!=local.end();++i)
+        for(auto j=i->begin();j!=i->end();++j)
+            bfs.push(j->second);
     size=slice_stack.size();
     for(int i=0;i<size;++i)
         bfs.push(slice_stack[i]);
@@ -394,13 +368,6 @@ void nasal_gc::mark()
             for(auto i=def.begin();i!=def.end();++i)
                 if(*i && !(*i)->mark)
                     bfs.push(*i);
-        }
-        else if(tmp->type==vm_scop)
-        {
-            std::unordered_map<int,nasal_val*>& scop=tmp->ptr.scop->elems;
-            for(auto i=scop.begin();i!=scop.end();++i)
-                if(!i->second->mark)
-                    bfs.push(i->second);
         }
     }
     return;
@@ -442,9 +409,6 @@ void nasal_gc::gc_init(std::vector<double>& nums)
 
     *val_stack=nil_addr; // the first space will not store any values,but gc checks
 
-    global=new nasal_val(vm_scop); // init global symbol table
-    memory.push_back(global);
-
     num_addrs.clear(); // init constant numbers
     for(int i=0;i<nums.size();++i)
     {
@@ -465,7 +429,7 @@ void nasal_gc::gc_clear()
     memory.clear();
     while(!free_list.empty())
         free_list.pop();
-    global=nullptr;
+    global.clear();
     local.clear();
     slice_stack.clear();
     return;
