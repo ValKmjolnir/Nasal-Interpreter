@@ -86,13 +86,13 @@ for(var i=0;i<4000000;i+=1);
 .number 1
 .symbol i
 0x00000000: pzero  0x00000000
-0x00000001: load   0x00000000 (i)
-0x00000002: call   0x00000000 (i)
+0x00000001: loadg  0x00000000 (i)
+0x00000002: callg  0x00000000 (i)
 0x00000003: pnum   0x00000001 (4e+006)
 0x00000004: less   0x00000000
 0x00000005: jf     0x0000000b
 0x00000006: pone   0x00000000
-0x00000007: mcall  0x00000000 (i)
+0x00000007: mcallg 0x00000000 (i)
 0x00000008: addeq  0x00000000
 0x00000009: pop    0x00000000
 0x0000000a: jmp    0x00000002
@@ -106,6 +106,20 @@ I decide to optimize bytecode vm in this version.
 Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not efficient at all!
 
 2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
+
+## Version 6.0
+
+Use loadg loadl callg calll mcallg mcalll to avoid branches.
+
+Delete type vm_scop.
+
+Use const vm_num to avoid frequently new & delete.
+
+Change garbage collector from reference-counting to mark-sweep.
+
+Vapp and newf operand use .num to reduce the size of exec_code.
+
+2021/4/3 update: Now it can count from 0 to 4000000-1 in 0.8s.
 
 # How to Use Nasal to Program
 
@@ -299,13 +313,13 @@ If you want to add your own built-in functions,define the function in nasal_buil
 Definition:
 
 ```C++
-nasal_val* builtin_chr(nasal_val*,nasal_gc&);
+nasal_val* builtin_chr(std::unordered_map<int,nasal_val*>&,nasal_gc&);
 ```
 
 Then complete this function using C++:
 
 ```C++
-nasal_val* builtin_print(nasal_val* local_scope_addr,nasal_gc& gc)
+nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope_addr,nasal_gc& gc)
 {
     // get arguments by using in_builtin_find
     nasal_val* vector_value_addr=in_builtin_find("elements");
@@ -329,7 +343,7 @@ nasal_val* builtin_print(nasal_val* local_scope_addr,nasal_gc& gc)
     // if a nasal value is not in use,use gc::del_reference to delete it
     // if get a new reference of a nasal value,use gc::add_reference
     // generate return value,use gc::gc_alloc(type) to make a new value
-    return gc.gc_alloc(vm_nil);
+    return nil_addr;
 }
 ```
 
@@ -339,7 +353,7 @@ After that, write the built-in function's name(in nasal) and the function's poin
 struct FUNC_TABLE
 {
     std::string func_name;
-    nasal_val* (*func_pointer)(nasal_val* x,nasal_gc& gc);
+    nasal_val* (*func_pointer)(std::unordered_map<int,nasal_val*>&,nasal_gc&);
 } builtin_func_table[]=
 {
     {"__builtin_std_cout",builtin_print},
@@ -352,7 +366,7 @@ At last,warp the 'nasal_call_builtin_std_cout' in a nasal file:
 ```javascript
 var print=func(elements...)
 {
-    nasal_call_builtin_std_cout(elements);
+    __builtin_std_cout(elements);
     return nil;
 };
 ```

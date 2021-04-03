@@ -211,8 +211,10 @@ void nasal_vm::opr_newf()
 }
 void nasal_vm::opr_vapp()
 {
-    nasal_val* val=*stack_top--;
-    (*stack_top)->ptr.vec->elems.push_back(val);
+    nasal_val* vec=*(stack_top-exec_code[pc].num);
+    for(nasal_val** i=stack_top-exec_code[pc].num+1;i<=stack_top;++i)
+        vec->ptr.vec->elems.push_back(*i);
+    stack_top-=exec_code[pc].num;
     return;
 }
 void nasal_vm::opr_happ()
