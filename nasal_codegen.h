@@ -334,10 +334,8 @@ void nasal_codegen::vec_gen(nasal_ast& ast)
     int size=ast.get_children().size();
     gen(op_newv,0);
     for(int i=0;i<size;++i)
-    {
         calc_gen(ast.get_children()[i]);
-        gen(op_vapp,0);
-    }
+    gen(op_vapp,size);
     return;
 }
 
