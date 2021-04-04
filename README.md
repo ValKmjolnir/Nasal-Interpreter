@@ -291,6 +291,9 @@ a(x:0,y:1,z:2);
 ```
 
 ## closure
+
+Use closure to OOP.
+
 ```javascript
 var f=func()
 {
@@ -298,6 +301,21 @@ var f=func()
     return func(){return a;};
 }
 print(f()());
+
+var student=func(name,age)
+{
+    var val={
+        name:name,
+        age:age
+    };
+    return {
+        print_info:func(){println(val.name,' ',val.age);},
+        set_age:   func(age){val.age=age;},
+        get_age:   func(){return val.age;},
+        set_name:  func(name){val.name=name;},
+        get_name:  func(){return val.name;}
+    };
+}
 ```
 
 ## built-in functions
@@ -319,13 +337,13 @@ nasal_val* builtin_chr(std::unordered_map<int,nasal_val*>&,nasal_gc&);
 Then complete this function using C++:
 
 ```C++
-nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope_addr,nasal_gc& gc)
+nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
 {
-    // get arguments by using in_builtin_find
-    nasal_val* vector_value_addr=in_builtin_find("elements");
+    // get arguments by using builtin_find
+    nasal_val* vector_value=builtin_find("elements");
     // main process
-    // also check type here,if get a type error,use builtin_error_occurred and return nullptr
-    nasal_vec& ref_vec=vector_value_addr->get_vector();
+    // also check number of arguments and type here,if get a type error,use builtin_err and return nullptr
+    nasal_vec& ref_vec=vector_value->get_vector();
     int size=ref_vec.size();
     for(int i=0;i<size;++i)
     {
@@ -341,8 +359,8 @@ nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope_addr,na
         }
     }
     // if a nasal value is not in use,use gc::del_reference to delete it
-    // if get a new reference of a nasal value,use gc::add_reference
     // generate return value,use gc::gc_alloc(type) to make a new value
+    // or use reserved reference nil_addr/one_addr/zero_addr
     return nil_addr;
 }
 ```
@@ -352,16 +370,16 @@ After that, write the built-in function's name(in nasal) and the function's poin
 ```C++
 struct FUNC_TABLE
 {
-    std::string func_name;
-    nasal_val* (*func_pointer)(std::unordered_map<int,nasal_val*>&,nasal_gc&);
-} builtin_func_table[]=
+    std::string name;
+    nasal_val* (*func)(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+} builtin_func[]=
 {
     {"__builtin_std_cout",builtin_print},
-    {"",NULL}
+    {"",                  NULL         }
 };
 ```
 
-At last,warp the 'nasal_call_builtin_std_cout' in a nasal file:
+At last,warp the '__builtin_std_cout' in a nasal file:
 
 ```javascript
 var print=func(elements...)
@@ -373,4 +391,4 @@ var print=func(elements...)
 
 In version 5.0,if you don't warp built-in function in a normal nasal function,this built-in function may cause a fault when searching arguments,which will cause SIGSEGV segmentation error(maybe).
 
-Use import("") to get the nasal file including your biult-in functions,then you could use it.
+Use import("") to get the nasal file including your built-in functions,then you could use it.
