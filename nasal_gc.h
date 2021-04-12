@@ -304,6 +304,7 @@ struct nasal_gc
     nasal_val*               val_stack[STACK_MAX_DEPTH];
     nasal_val**              stack_top;   // stack top
     std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
+    std::vector<nasal_val*>  str_addrs;   // reserved address for const vm_str
     std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*>  memory;      // gc memory
     std::queue <nasal_val*>  free_list;   // gc free list
@@ -311,7 +312,7 @@ struct nasal_gc
     std::vector<std::unordered_map<int,nasal_val*> > local;
     void                     mark();
     void                     sweep();
-    void                     gc_init(std::vector<double>&);
+    void                     gc_init(std::vector<double>&,std::vector<std::string>&);
     void                     gc_clear();
     nasal_val*               gc_alloc(int);
 };
@@ -386,7 +387,7 @@ void nasal_gc::sweep()
     }
     return;
 }
-void nasal_gc::gc_init(std::vector<double>& nums)
+void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 {
     for(int i=0;i<65536;++i)
     {
@@ -409,12 +410,20 @@ void nasal_gc::gc_init(std::vector<double>& nums)
 
     *val_stack=nil_addr; // the first space will not store any values,but gc checks
 
-    num_addrs.clear(); // init constant numbers
+    // init constant numbers
     for(int i=0;i<nums.size();++i)
     {
         nasal_val* tmp=new nasal_val(vm_num);
         tmp->ptr.num=nums[i];
         num_addrs.push_back(tmp);
+    }
+
+    // init constant strings
+    for(int i=0;i<strs.size();++i)
+    {
+        nasal_val* tmp=new nasal_val(vm_str);
+        *tmp->ptr.str=strs[i];
+        str_addrs.push_back(tmp);
     }
     return;
 }
@@ -432,6 +441,13 @@ void nasal_gc::gc_clear()
     global.clear();
     local.clear();
     slice_stack.clear();
+
+    for(int i=0;i<num_addrs.size();++i)
+        delete num_addrs[i];
+    num_addrs.clear();
+    for(int i=0;i<str_addrs.size();++i)
+        delete str_addrs[i];
+    str_addrs.clear();
     return;
 }
 nasal_val* nasal_gc::gc_alloc(int type)
