@@ -98,7 +98,7 @@ void nasal_vm::init(
     std::vector<double>&      nums,
     std::vector<opcode>&      exec)
 {
-    gc.gc_init(nums);
+    gc.gc_init(nums,strs);
     str_table=strs; // get constant strings & symbols
     exec_code=exec; // get bytecodes
 
@@ -182,9 +182,7 @@ void nasal_vm::opr_pnil()
 }
 void nasal_vm::opr_pstr()
 {
-    nasal_val* val=gc.gc_alloc(vm_str);
-    *val->ptr.str=str_table[exec_code[pc].num];
-    *(++stack_top)=val;
+    *(++stack_top)=gc.str_addrs[exec_code[pc].num];
     return;
 }
 void nasal_vm::opr_newv()
