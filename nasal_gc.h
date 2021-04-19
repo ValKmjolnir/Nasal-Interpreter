@@ -38,11 +38,12 @@ struct nasal_hash
 
 struct nasal_func
 {
-    int dynpara;
+    int dynpara;// dynamic parameter name index in hash
+    int offset;
     int entry;
-    std::vector<int> para;
     std::vector<nasal_val*> default_para;
-    std::unordered_map<int,nasal_val*> closure;
+    std::unordered_map<std::string,int> key_table;// parameter name hash
+    std::vector<nasal_val*> closure;
 
     nasal_func();
 };
@@ -298,18 +299,18 @@ std::string nasal_val::to_string()
 struct nasal_gc
 {
 #define STACK_MAX_DEPTH (65536<<4)
-    nasal_val*               zero_addr;   // reserved address of nasal_val,type vm_num, 0
-    nasal_val*               one_addr;    // reserved address of nasal_val,type vm_num, 1
-    nasal_val*               nil_addr;    // reserved address of nasal_val,type vm_nil
-    nasal_val*               val_stack[STACK_MAX_DEPTH];
-    nasal_val**              stack_top;   // stack top
-    std::vector<nasal_val*>  num_addrs;   // reserved address for const vm_num
-    std::vector<nasal_val*>  str_addrs;   // reserved address for const vm_str
-    std::vector<nasal_val*>  slice_stack; // slice stack for vec[val,val,val:val]
-    std::vector<nasal_val*>  memory;      // gc memory
-    std::queue <nasal_val*>  free_list;   // gc free list
-    std::unordered_map<int,nasal_val*> global;
-    std::vector<std::unordered_map<int,nasal_val*> > local;
+    nasal_val*              zero_addr;   // reserved address of nasal_val,type vm_num, 0
+    nasal_val*              one_addr;    // reserved address of nasal_val,type vm_num, 1
+    nasal_val*              nil_addr;    // reserved address of nasal_val,type vm_nil
+    nasal_val*              val_stack[STACK_MAX_DEPTH];
+    nasal_val**             stack_top;   // stack top
+    std::vector<nasal_val*> num_addrs;   // reserved address for const vm_num
+    std::vector<nasal_val*> str_addrs;   // reserved address for const vm_str
+    std::vector<nasal_val*> slice_stack; // slice stack for vec[val,val,val:val]
+    std::vector<nasal_val*> memory;      // gc memory
+    std::queue <nasal_val*> free_list;   // gc free list
+    std::vector<nasal_val*> global;
+    std::list<std::vector<nasal_val*> > local;
     void                     mark();
     void                     sweep();
     void                     gc_init(std::vector<double>&,std::vector<std::string>&);
@@ -325,15 +326,14 @@ void nasal_gc::mark()
     one_addr->mark=true;
     nil_addr->mark=true;
     for(auto i=global.begin();i!=global.end();++i)
-        bfs.push(i->second);
-
+        bfs.push(*i);
     int size=num_addrs.size();
     for(int i=0;i<size;++i)
         bfs.push(num_addrs[i]);
     size=local.size();
     for(auto i=local.begin();i!=local.end();++i)
         for(auto j=i->begin();j!=i->end();++j)
-            bfs.push(j->second);
+            bfs.push(*j);
     size=slice_stack.size();
     for(int i=0;i<size;++i)
         bfs.push(slice_stack[i]);
@@ -343,32 +343,28 @@ void nasal_gc::mark()
     {
         nasal_val* tmp=bfs.front();
         bfs.pop();
-        if(tmp->mark) continue;
+        if(!tmp || tmp->mark) continue;
         tmp->mark=true;
         if(tmp->type==vm_vec)
         {
             std::vector<nasal_val*>& vec=tmp->ptr.vec->elems;
             for(auto i=vec.begin();i!=vec.end();++i)
-                if(!(*i)->mark)
-                    bfs.push(*i);
+                bfs.push(*i);
         }
         else if(tmp->type==vm_hash)
         {
             std::unordered_map<std::string,nasal_val*>& hash=tmp->ptr.hash->elems;
             for(auto i=hash.begin();i!=hash.end();++i)
-                if(!i->second->mark)
-                    bfs.push(i->second);
+                bfs.push(i->second);
         }
         else if(tmp->type==vm_func)
         {
-            std::unordered_map<int,nasal_val*>& cls=tmp->ptr.func->closure;
+            std::vector<nasal_val*>& cls=tmp->ptr.func->closure;
             std::vector<nasal_val*>& def=tmp->ptr.func->default_para;
             for(auto i=cls.begin();i!=cls.end();++i)
-                if(!i->second->mark)
-                    bfs.push(i->second);
+                bfs.push(*i);
             for(auto i=def.begin();i!=def.end();++i)
-                if(*i && !(*i)->mark)
-                    bfs.push(*i);
+                bfs.push(*i);
         }
     }
     return;
