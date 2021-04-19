@@ -20,7 +20,11 @@ They found it easier for them to check errors before copying nasal-codes in nasa
 
 # How to Compile
 
-> g++ -std=c++11 main.cpp -o main.exe
+MUST USE -O2 !
+
+pragma gcc optimize(2) seems useless when using g++
+
+> g++ -std=c++11 -O2 main.cpp -o main.exe
 
 # Parser
 
@@ -120,6 +124,33 @@ Change garbage collector from reference-counting to mark-sweep.
 Vapp and newf operand use .num to reduce the size of exec_code.
 
 2021/4/3 update: Now it can count from 0 to 4000000-1 in 0.8s.
+
+2021/4/19 update: Now it can count from 0 to 4e6-1 in 0.4s.
+
+In this update i changed global and local scope from unordered_map to vector.
+
+So the bytecode generator changed a lot.
+
+```javascript
+for(var i=0;i<4000000;i+=1);
+```
+
+```asm
+.number 4e+006
+0x00000000: intg   0x00000001
+0x00000001: pzero  0x00000000
+0x00000002: loadg  0x00000000
+0x00000003: callg  0x00000000
+0x00000004: pnum   0x00000000 (4e+006)
+0x00000005: less   0x00000000
+0x00000006: jf     0x0000000c
+0x00000007: pone   0x00000000
+0x00000008: mcallg 0x00000000
+0x00000009: addeq  0x00000000
+0x0000000a: pop    0x00000000
+0x0000000b: jmp    0x00000003
+0x0000000c: nop    0x00000000
+```
 
 # How to Use Nasal to Program
 
@@ -284,7 +315,7 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 ## special function call
 
-This is of great use but is not very efficient.
+This is of great use but is not very efficient(because hashmap use string as the key to compare).
 
 ```javascript
 a(x:0,y:1,z:2);
@@ -331,16 +362,18 @@ If you want to add your own built-in functions,define the function in nasal_buil
 Definition:
 
 ```C++
-nasal_val* builtin_chr(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+nasal_val* builtin_chr(std::vector<nasal_val*>&,nasal_gc&);
 ```
 
 Then complete this function using C++:
 
 ```C++
-nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope,nasal_gc& gc)
+nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
     // get arguments by using builtin_find
-    nasal_val* vector_value=builtin_find("elements");
+    // find value with index begin from 1
+    // because local_scope[0] is reserved for value 'me'
+    nasal_val* vector_value=local_scope[1];
     // main process
     // also check number of arguments and type here,if get a type error,use builtin_err and return nullptr
     nasal_vec& ref_vec=vector_value->get_vector();
@@ -360,8 +393,8 @@ nasal_val* builtin_print(std::unordered_map<int,nasal_val*>& local_scope,nasal_g
     }
     // if a nasal value is not in use,use gc::del_reference to delete it
     // generate return value,use gc::gc_alloc(type) to make a new value
-    // or use reserved reference nil_addr/one_addr/zero_addr
-    return nil_addr;
+    // or use reserved reference gc.nil_addr/gc.one_addr/gc.zero_addr
+    return gc.nil_addr;
 }
 ```
 
@@ -371,7 +404,7 @@ After that, write the built-in function's name(in nasal) and the function's poin
 struct FUNC_TABLE
 {
     std::string name;
-    nasal_val* (*func)(std::unordered_map<int,nasal_val*>&,nasal_gc&);
+    nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {
     {"__builtin_std_cout",builtin_print},

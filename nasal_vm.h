@@ -8,7 +8,6 @@ private:
     nasal_val**&             stack_top;  // stack top
     /* values of nasal_vm */
     int                      pc;         // program counter
-    int                      me;         // this is the index of "me" in str_table
     bool                     loop_mark;  // when mark is false,break the main loop
     std::stack<int>          ret;        // ptr stack stores address for function to return
     std::stack<int>          counter;    // iterator stack for forindex/foreach
@@ -20,6 +19,8 @@ private:
     void die(std::string);
     bool condition(nasal_val*);
     void opr_nop();
+    void opr_intg();
+    void opr_intl();
     void opr_loadg();
     void opr_loadl();
     void opr_pnum();
@@ -101,12 +102,6 @@ void nasal_vm::init(
     gc.gc_init(nums,strs);
     str_table=strs; // get constant strings & symbols
     exec_code=exec; // get bytecodes
-
-    builtin_use_str.clear(); // create map that builtin functions use
-    for(int i=0;i<str_table.size();++i)
-        builtin_use_str[str_table[i]]=i;
-    me=builtin_use_str.count("me")?builtin_use_str["me"]:-1; // get symbol index of 'me'
-
     loop_mark=true; // set loop mark to true
     return;
 }
@@ -148,6 +143,17 @@ bool nasal_vm::condition(nasal_val* val_addr)
 void nasal_vm::opr_nop()
 {
     loop_mark=false;
+    return;
+}
+void nasal_vm::opr_intg()
+{
+    gc.global.resize(exec_code[pc].num);
+    return;
+}
+void nasal_vm::opr_intl()
+{
+    (*stack_top)->ptr.func->closure.resize(exec_code[pc].num);
+    (*stack_top)->ptr.func->closure[0]=gc.nil_addr;// me
     return;
 }
 void nasal_vm::opr_loadg()
@@ -203,7 +209,9 @@ void nasal_vm::opr_newf()
     val->ptr.func->entry=exec_code[pc].num;
     if(!gc.local.empty())
         val->ptr.func->closure=gc.local.back();
-    val->ptr.func->closure[me]=gc.nil_addr;
+    else
+        val->ptr.func->closure.push_back(gc.nil_addr);
+    val->ptr.func->offset=val->ptr.func->closure.size();
     *(++stack_top)=val;
     return;
 }
@@ -223,14 +231,16 @@ void nasal_vm::opr_happ()
 }
 void nasal_vm::opr_para()
 {
-    (*stack_top)->ptr.func->para.push_back(exec_code[pc].num);
+    int size=(*stack_top)->ptr.func->key_table.size();
+    (*stack_top)->ptr.func->key_table[str_table[exec_code[pc].num]]=size;
     (*stack_top)->ptr.func->default_para.push_back(nullptr);
     return;
 }
 void nasal_vm::opr_defpara()
 {
     nasal_val* def_val=*stack_top--;
-    (*stack_top)->ptr.func->para.push_back(exec_code[pc].num);
+    int size=(*stack_top)->ptr.func->key_table.size();
+    (*stack_top)->ptr.func->key_table[str_table[exec_code[pc].num]]=size;
     (*stack_top)->ptr.func->default_para.push_back(def_val);
     return;
 }
@@ -564,7 +574,7 @@ void nasal_vm::opr_callv()
             return;
         }
         if(res->type==vm_func)
-            res->ptr.func->closure[me]=val;
+            res->ptr.func->closure[0]=val;// me
         *stack_top=res;
     }
     else if(type==vm_str)
@@ -618,7 +628,7 @@ void nasal_vm::opr_callh()
         return;
     }
     if(res->type==vm_func)
-        res->ptr.func->closure[me]=val;
+        res->ptr.func->closure[0]=val;// me
     *stack_top=res;
     return;
 }
@@ -635,36 +645,36 @@ void nasal_vm::opr_callf()
     // push new local scope
     gc.local.push_back(func_addr->ptr.func->closure);
     // load parameters
-    nasal_func&                         ref_func=*func_addr->ptr.func;
-    std::vector<int>&                   ref_para=ref_func.para;
-    std::vector<nasal_val*>&            ref_default=ref_func.default_para;
-    std::unordered_map<int,nasal_val*>& ref_closure=gc.local.back();
+    nasal_func&              ref_func=*func_addr->ptr.func;
+    std::vector<nasal_val*>& ref_default=ref_func.default_para;
+    std::vector<nasal_val*>& ref_closure=gc.local.back();
+    std::unordered_map<std::string,int>& ref_keys=ref_func.key_table;
     
     if(para_addr->type==vm_vec)
     {
-        std::vector<nasal_val*>& ref_vec=para_addr->ptr.vec->elems;
-        int vec_size=ref_vec.size();
-        int para_size=ref_para.size();
+        std::vector<nasal_val*>& args=para_addr->ptr.vec->elems;
+        int args_size=args.size();
+        int para_size=ref_keys.size();
         for(int i=0;i<para_size;++i)
         {
-            if(i>=vec_size)
+            if(i>=args_size)
             {
                 if(!ref_default[i])
                 {
                     die("callf: lack argument(s)");
                     return;
                 }
-                ref_closure[ref_para[i]]=ref_default[i];
+                ref_closure[i+ref_func.offset]=ref_default[i];
             }
             else
-                ref_closure[ref_para[i]]=ref_vec[i];
+                ref_closure[i+ref_func.offset]=args[i];
         }
         if(ref_func.dynpara>=0)
         {
             nasal_val* vec_addr=gc.gc_alloc(vm_vec);
-            for(int i=para_size;i<vec_size;++i)
-                vec_addr->ptr.vec->elems.push_back(ref_vec[i]);
-            ref_closure[ref_func.dynpara]=vec_addr;
+            for(int i=para_size;i<args_size;++i)
+                vec_addr->ptr.vec->elems.push_back(args[i]);
+            ref_closure[para_size+ref_func.offset]=vec_addr;
         }
     }
     else
@@ -672,20 +682,18 @@ void nasal_vm::opr_callf()
         std::unordered_map<std::string,nasal_val*>& ref_hash=para_addr->ptr.hash->elems;
         if(ref_func.dynpara>=0)
         {
-            die("callf: special call cannot use dynamic parameter");
+            die("callf: special call cannot use dynamic argument");
             return;
         }
-        int para_size=ref_para.size();
-        for(int i=0;i<para_size;++i)
+        for(auto i=ref_keys.begin();i!=ref_keys.end();++i)
         {
-            std::string& sym=str_table[ref_para[i]];
-            if(ref_hash.count(sym))
-                ref_closure[ref_para[i]]=ref_hash[sym];
-            else if(ref_default[i])
-                ref_closure[ref_para[i]]=ref_default[i];
+            if(ref_hash.count(i->first))
+                ref_closure[i->second+ref_func.offset]=ref_hash[i->first];
+            else if(ref_default[i->second])
+                ref_closure[i->second+ref_func.offset]=ref_default[i->second];
             else
             {
-                die("callf: lack argument(s)");
+                die("callf: lack argument(s): \""+i->first+"\"");
                 return;
             }
         }
@@ -859,6 +867,8 @@ void nasal_vm::run()
     static void (nasal_vm::*opr_table[])()=
     {
         &nasal_vm::opr_nop,
+        &nasal_vm::opr_intg,
+        &nasal_vm::opr_intl,
         &nasal_vm::opr_loadg,
         &nasal_vm::opr_loadl,
         &nasal_vm::opr_pnum,

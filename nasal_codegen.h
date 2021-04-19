@@ -4,6 +4,8 @@
 enum op_code
 {
     op_nop,
+    op_intg,
+    op_intl,
     op_loadg,
     op_loadl,
     op_pnum,
@@ -71,6 +73,8 @@ struct
 }code_table[]=
 {
     {op_nop,      "nop   "},
+    {op_intg,     "intg  "},
+    {op_intl,     "intl  "},
     {op_loadg,    "loadg "},
     {op_loadl,    "loadl "},
     {op_pnum,     "pnum  "},
@@ -97,7 +101,7 @@ struct
     {op_subeq,    "subeq "},
     {op_muleq,    "muleq "},
     {op_diveq,    "diveq "},
-    {op_lnkeq,    "linkeq"},
+    {op_lnkeq,    "lnkeq "},
     {op_meq,      "meq   "},
     {op_eq,       "eq    "},
     {op_neq,      "neq   "},
@@ -170,8 +174,8 @@ private:
     void regist_number(double);
     void regist_string(std::string&);
     void add_sym(std::string);
-    bool local_find(std::string&);
-    bool global_find(std::string&);
+    int  local_find(std::string&);
+    int  global_find(std::string&);
     void gen(unsigned char,unsigned int);
     void pop_gen();
     void nil_gen();
@@ -255,36 +259,38 @@ void nasal_codegen::add_sym(std::string name)
         for(int i=0;i<global.size();++i)
             if(global[i]==name)
                 return;
-        regist_string(name);
         global.push_back(name);
     }
     else
     {
-        for(auto i=local.begin();i!=local.end();++i)
-            for(int j=0;j<i->size();++j)
-                if((*i)[j]==name)
-                    return;
-        regist_string(name);
-        local.front().push_back(name);
+        for(int i=0;i<local.back().size();++i)
+            if(local.back()[i]==name)
+                return;
+        local.back().push_back(name);
     }
     return;
 }
 
-bool nasal_codegen::local_find(std::string& name)
+int nasal_codegen::local_find(std::string& name)
 {
+    int index=-1;
+    int cnt=0;
     for(auto i=local.begin();i!=local.end();++i)
+    {
         for(int j=0;j<i->size();++j)
             if((*i)[j]==name)
-                return true;
-    return false;
+                index=cnt+j;
+        cnt+=i->size();
+    }
+    return index;
 }
 
-bool nasal_codegen::global_find(std::string& name)
+int nasal_codegen::global_find(std::string& name)
 {
     for(int i=0;i<global.size();++i)
         if(global[i]==name)
-            return true;
-    return false;
+            return i;
+    return -1;
 }
 
 void nasal_codegen::gen(unsigned char op,unsigned int index)
@@ -357,15 +363,18 @@ void nasal_codegen::func_gen(nasal_ast& ast)
 {
     int newfunc_label=exec_code.size();
     gen(op_newf,0);
-
+    int local_label=exec_code.size();
+    gen(op_intl,0);
     std::vector<std::string> new_scope;
-    local.push_front(new_scope); // symbol table push front
+    local.push_back(new_scope);
 
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
     // this keyword is set to nil as default value
     // after calling a hash, this keyword is set to this hash
-    add_sym("me");
+    // this symbol's index will be 0
+    if(local.size()==1)
+        add_sym("me");
 
     nasal_ast& ref_arg=ast.get_children()[0];
     int arg_size=ref_arg.get_children().size();
@@ -375,6 +384,7 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         if(tmp.get_type()==ast_id)
         {
             std::string str=tmp.get_str();
+            regist_string(str);
             add_sym(str);
             gen(op_para,string_table[str]);
         }
@@ -382,12 +392,14 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         {
             calc_gen(tmp.get_children()[1]);
             std::string str=tmp.get_children()[0].get_str();
+            regist_string(str);
             add_sym(str);
             gen(op_defpara,string_table[str]);
         }
         else if(tmp.get_type()==ast_dynamic_id)
         {
             std::string str=tmp.get_str();
+            regist_string(str);
             add_sym(str);
             gen(op_dynpara,string_table[str]);
         }
@@ -398,7 +410,9 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     nasal_ast& block=ast.get_children()[1];
 
     block_gen(block);
-    local.pop_front(); // symbol table pop front
+    for(auto i=local.begin();i!=local.end();++i)
+        exec_code[local_label].num+=i->size();
+    local.pop_back();
 
     if(!block.get_children().size() || block.get_children().back().get_type()!=ast_return)
     {
@@ -431,19 +445,25 @@ void nasal_codegen::call_gen(nasal_ast& ast)
 void nasal_codegen::call_id(nasal_ast& ast)
 {
     std::string str=ast.get_str();
-    regist_string(str);
     for(int i=0;builtin_func[i].func;++i)
         if(builtin_func[i].name==str)
         {
             gen(op_callb,i);
             return;
         }
-    if(local_find(str))
-        gen(op_calll,string_table[str]);
-    else if(global_find(str))
-        gen(op_callg,string_table[str]);
-    else
-        die("cannot find symbol named \""+str+"\".",ast.get_line());
+    int index=local_find(str);
+    if(index>=0)
+    {
+        gen(op_calll,index);
+        return;
+    }
+    index=global_find(str);
+    if(index>=0)
+    {
+        gen(op_callg,index);
+        return;
+    }
+    die("cannot find symbol named \""+str+"\".",ast.get_line());
     return;
 }
 
@@ -517,13 +537,19 @@ void nasal_codegen::mcall(nasal_ast& ast)
 void nasal_codegen::mcall_id(nasal_ast& ast)
 {
     std::string str=ast.get_str();
-    regist_string(str);
-    if(local_find(str))
-        gen(op_mcalll,string_table[str]);
-    else if(global_find(str))
-        gen(op_mcallg,string_table[str]);
-    else
-        die("cannot find symbol named \""+str+"\".",ast.get_line());
+    int index=local_find(str);
+    if(index>=0)
+    {
+        gen(op_mcalll,index);
+        return;
+    }
+    index=global_find(str);
+    if(index>=0)
+    {
+        gen(op_mcallg,index);
+        return;
+    }
+    die("cannot find symbol named \""+str+"\".",ast.get_line());
     return;
 }
 
@@ -547,7 +573,10 @@ void nasal_codegen::single_def(nasal_ast& ast)
     std::string str=ast.get_children()[0].get_str();
     add_sym(str);
     calc_gen(ast.get_children()[1]);
-    gen(local.empty()?op_loadg:op_loadl,string_table[str]);
+    if(local.empty())
+        gen(op_loadg,global_find(str));
+    else
+        gen(op_loadl,local_find(str));
     return;
 }
 void nasal_codegen::multi_def(nasal_ast& ast)
@@ -560,7 +589,10 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             std::string str=ast.get_children()[0].get_children()[i].get_str();
             add_sym(str);
             calc_gen(ast.get_children()[1].get_children()[i]);
-            gen(local.empty()?op_loadg:op_loadl,string_table[str]);
+            if(local.empty())
+                gen(op_loadg,global_find(str));
+            else
+                gen(op_loadl,local_find(str));
         }
     }
     else
@@ -571,7 +603,10 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             gen(op_callvi,i);
             std::string str=ast.get_children()[0].get_children()[i].get_str();
             add_sym(str);
-            gen(local.empty()?op_loadg:op_loadl,string_table[str]);
+            if(local.empty())
+                gen(op_loadg,global_find(str));
+            else
+                gen(op_loadl,local_find(str));
         }
         pop_gen();
     }
@@ -762,7 +797,10 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     {
         std::string str=ast.get_children()[0].get_children()[0].get_str();
         add_sym(str);
-        gen(local.empty()?op_loadg:op_loadl,string_table[str]);
+        if(local.empty())
+            gen(op_loadg,global_find(str));
+        else
+            gen(op_loadl,local_find(str));
     }
     else
     {
@@ -789,7 +827,10 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
     {
         std::string str=ast.get_children()[0].get_children()[0].get_str();
         add_sym(str);
-        gen(local.empty()?op_loadg:op_loadl,string_table[str]);
+        if(local.empty())
+            gen(op_loadg,global_find(str));
+        else
+            gen(op_loadl,local_find(str));
     }
     else
     {
@@ -997,7 +1038,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
 
     global.clear();
     local.clear();
-
+    gen(op_intg,0);
     int size=ast.get_children().size();
     for(int i=0;i<size;++i)
     {
@@ -1041,6 +1082,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
         }
     }
     gen(op_nop,0);
+    exec_code[0].num=global.size();
     num_res_table.resize(number_table.size());
     str_res_table.resize(string_table.size());
     for(auto i=number_table.begin();i!=number_table.end();++i)
@@ -1069,18 +1111,12 @@ void nasal_codegen::print_op(int index)
         case op_pnum:std::cout<<'('<<num_res_table[exec_code[index].num]<<')';break;
         case op_callb:std::cout<<'('<<builtin_func[exec_code[index].num].name<<')';break;
         case op_happ:
-        case op_callg:
-        case op_calll:
-        case op_mcallg:
-        case op_mcalll:
         case op_pstr:
         case op_callh:
         case op_mcallh:
         case op_para:
         case op_defpara:
-        case op_dynpara:
-        case op_loadg:
-        case op_loadl:std::cout<<'('<<str_res_table[exec_code[index].num]<<')';break;
+        case op_dynpara:std::cout<<'('<<str_res_table[exec_code[index].num]<<')';break;
     }
     std::cout<<'\n';
     return;
