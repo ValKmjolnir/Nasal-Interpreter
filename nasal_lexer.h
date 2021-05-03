@@ -297,6 +297,8 @@ std::string nasal_lexer::string_gen()
 	// check if this string ends with a " or '
 	if(ptr++>=res_size)
 		die(line_code,"get EOF when generating string.",line,line_code.length());
+	if(str_begin=='`' && token_str.length()>1)
+		die(line_code,"\'`\' is used for string that includes one character.",line,line_code.length());
 	return token_str;
 }
 

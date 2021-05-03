@@ -68,6 +68,7 @@ scalar::=
     |hash {call_scalar}
     |number
     |string
+    |nil
     |'(' calculation ')' {call_scalar}
 ;
 call_scalar::=

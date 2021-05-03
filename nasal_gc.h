@@ -311,32 +311,24 @@ struct nasal_gc
     std::queue <nasal_val*> free_list;   // gc free list
     std::vector<nasal_val*> global;
     std::list<std::vector<nasal_val*> > local;
-    void                     mark();
-    void                     sweep();
-    void                     gc_init(std::vector<double>&,std::vector<std::string>&);
-    void                     gc_clear();
-    nasal_val*               gc_alloc(int);
+    void                    mark();
+    void                    sweep();
+    void                    gc_init(std::vector<double>&,std::vector<std::string>&);
+    void                    gc_clear();
+    nasal_val*              gc_alloc(int);
 };
 
 /* gc functions */
 void nasal_gc::mark()
 {
     std::queue<nasal_val*> bfs;
-    zero_addr->mark=true;
-    one_addr->mark=true;
-    nil_addr->mark=true;
     for(auto i=global.begin();i!=global.end();++i)
         bfs.push(*i);
-    int size=num_addrs.size();
-    for(int i=0;i<size;++i)
-        bfs.push(num_addrs[i]);
-    size=local.size();
     for(auto i=local.begin();i!=local.end();++i)
         for(auto j=i->begin();j!=i->end();++j)
             bfs.push(*j);
-    size=slice_stack.size();
-    for(int i=0;i<size;++i)
-        bfs.push(slice_stack[i]);
+    for(auto i=slice_stack.begin();i!=slice_stack.end();++i)
+        bfs.push(*i);
     for(nasal_val** i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
     while(!bfs.empty())
@@ -395,14 +387,11 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 
     zero_addr=new nasal_val(vm_num); // init constant 0
     zero_addr->ptr.num=0;
-    memory.push_back(zero_addr);
 
     one_addr=new nasal_val(vm_num); // init constant 1
     one_addr->ptr.num=1;
-    memory.push_back(one_addr);
 
     nil_addr=new nasal_val(vm_nil); // init nil
-    memory.push_back(nil_addr);
 
     *val_stack=nil_addr; // the first space will not store any values,but gc checks
 
@@ -425,8 +414,7 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 }
 void nasal_gc::gc_clear()
 {
-    int size=memory.size();
-    for(int i=0;i<size;++i)
+    for(int i=0;i<memory.size();++i)
     {
         memory[i]->clear();
         delete memory[i];
@@ -438,6 +426,9 @@ void nasal_gc::gc_clear()
     local.clear();
     slice_stack.clear();
 
+    delete nil_addr;
+    delete one_addr;
+    delete zero_addr;
     for(int i=0;i<num_addrs.size();++i)
         delete num_addrs[i];
     num_addrs.clear();

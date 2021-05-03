@@ -115,11 +115,7 @@ int main()
 		{
 #ifdef _WIN32
 			system("cls");
-#endif
-#ifdef _linux_
-			system("clear");
-#endif
-#ifdef TARGET_OS_MAC
+#else
 			system("clear");
 #endif
 		}

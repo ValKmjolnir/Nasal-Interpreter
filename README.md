@@ -14,15 +14,19 @@ But in last summer holiday, members in FGPRC told me that it is hard to debug wi
 
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
 
-I wrote the lexer, parser and runtime(bytecode virtual machine/ast-runtime virtual machine) to help checking errors.
+I wrote the lexer, parser and runtimebytecode virtual machine(there was an ast-interpreter,but i deleted it after version4.0) to help checking errors.
 
-They found it easier for them to check errors before copying nasal-codes in nasal-console in Flightgear to test.
+They found it much easier to check syntax and runtime errors before copying nasal-codes in nasal-console in Flightgear to test.
+
+Also, you could use this language to write some interesting programs and run them without the lib of Flightgear.
+
+You could add your own built-in functions to change this interpreter to a useful tool in your own projects(such as a script in your own game).
 
 # How to Compile
 
-MUST USE -O2 !
+Better choose the latest update of the interpreter.
 
-pragma gcc optimize(2) seems useless when using g++
+MUST USE -O2 ! pragma gcc optimize(2) seems useless when using g++
 
 > g++ -std=c++11 -O2 main.cpp -o main.exe
 
@@ -156,7 +160,7 @@ for(var i=0;i<4000000;i+=1);
 
 ## basic value type
 
-nasal has 6 value types.Number,string,vector,hash,function,nil.
+Nasal has 6 value types.Number,string,vector,hash,function,nil.
 
 Number has 3 formats.Dec,hex and oct;
 
