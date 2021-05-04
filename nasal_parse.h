@@ -120,24 +120,30 @@ void nasal_parse::main_process()
     root.set_type(ast_root);
     while(tok_list[ptr].type!=tok_eof)
     {
+        int err_tok_size=error_token.size();
         root.add_child(expr());
         if(tok_list[ptr].type==tok_semi)
             match(tok_semi);
+        // if detect error token, avoid checking semicolon
+        else if(error_token.size()>err_tok_size)
+            continue;
+        // the last expression can be recognized without semi
         else if(need_semi_check(root.get_children().back()) && tok_list[ptr].type!=tok_eof)
-        {
-            // the last expression can be recognized without semi
             die(error_line,"expected \";\"");
-        }
     }
     if(!error_token.size())
         return;
-    int sameline=error_token[0].line;
-    for(int i=0;i<error_token.size();++i)
-        if(sameline!=error_token[i].line)
-        {
-            die(sameline,"error tokens in this line maybe recorded because of fatal syntax errors");
-            sameline=error_token[i].line;
-        }
+    std::vector<int> err_lines;
+    err_lines.push_back(error_token[0].line);
+    for(auto tok:error_token)
+        if(err_lines.back()!=tok.line)
+            err_lines.push_back(tok.line);
+    ++error;
+    std::cout<<">> [parse] error tokens in line";
+    for(auto line:err_lines)
+        std::cout<<' '<<line;
+    std::cout<<" maybe recorded because of fatal syntax errors."
+    <<"please check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
 }
 nasal_ast& nasal_parse::get_root()
@@ -189,15 +195,13 @@ void nasal_parse::match(int type,std::string err_info)
 }
 bool nasal_parse::check_comma(int* panic_set)
 {
-    bool in_panic_set=false;
     for(int i=0;panic_set[i];++i)
         if(tok_list[ptr].type==panic_set[i])
         {
-            in_panic_set=true;
             die(error_line,"expected \',\' between scalars");
-            break;
+            return true;
         }
-    return in_panic_set;
+    return false;
 }
 bool nasal_parse::check_multi_def()
 {
@@ -519,14 +523,16 @@ nasal_ast nasal_parse::exprs_gen()
         match(tok_lbrace);
         while(tok_list[ptr].type!=tok_rbrace && tok_list[ptr].type!=tok_eof)
         {
+            int err_tok_size=error_token.size();
             node.add_child(expr());
             if(tok_list[ptr].type==tok_semi)
                 match(tok_semi);
+            // if detect error token, avoid checking semicolon
+            else if(error_token.size()>err_tok_size)
+                continue;
+            // the last expression can be recognized without semi
             else if(need_semi_check(node.get_children().back()) && tok_list[ptr].type!=tok_rbrace)
-            {
-                // the last expression can be recognized without semi
                 die(error_line,"expected \";\"");
-            }
         }
         match(tok_rbrace,"expected \'}\' when generating expressions");
     }
