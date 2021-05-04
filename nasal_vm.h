@@ -108,7 +108,6 @@ void nasal_vm::init(
 void nasal_vm::clear()
 {
     gc.gc_clear();
-
     while(!addr_stack.empty())
         addr_stack.pop();
     while(!ret.empty())

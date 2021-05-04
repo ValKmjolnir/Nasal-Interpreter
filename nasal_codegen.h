@@ -3,44 +3,44 @@
 
 enum op_code
 {
-    op_nop,
-    op_intg,
-    op_intl,
-    op_loadg,
-    op_loadl,
-    op_pnum,
-    op_pone,
-    op_pzero,
-    op_pnil,
-    op_pstr,
-    op_newv,
-    op_newh,
-    op_newf,
-    op_vapp,
-    op_happ,
-    op_para,
-    op_defpara,
-    op_dynpara,
-    op_unot,
-    op_usub,
-    op_add,
-    op_sub,
-    op_mul,
-    op_div,
-    op_lnk,
-    op_addeq,
-    op_subeq,
-    op_muleq,
-    op_diveq,
-    op_lnkeq,
-    op_meq,
-    op_eq,
-    op_neq,
-    op_less,
-    op_leq,
-    op_grt,
-    op_geq,
-    op_pop,
+    op_nop,      // do nothing and end the vm main loop
+    op_intg,     // global scope size
+    op_intl,     // local scope size
+    op_loadg,    // load global symbol value
+    op_loadl,    // load local symbol value
+    op_pnum,     // push constant number to the stack
+    op_pone,     // push 1 to the stack
+    op_pzero,    // push 0 to the stack
+    op_pnil,     // push constant nil to the stack
+    op_pstr,     // push constant string to the stack
+    op_newv,     // push new vector to the stack
+    op_newh,     // push new hash to the stack
+    op_newf,     // push new function to the stack
+    op_vapp,     // vector append
+    op_happ,     // hash append
+    op_para,     // normal  parameter
+    op_defpara,  // default parameter
+    op_dynpara,  // dynamic parameter
+    op_unot,     // !
+    op_usub,     // -
+    op_add,      // +
+    op_sub,      // -
+    op_mul,      // *
+    op_div,      // /
+    op_lnk,      // ~
+    op_addeq,    // +=
+    op_subeq,    // -=
+    op_muleq,    // *=
+    op_diveq,    // /=
+    op_lnkeq,    // ~=
+    op_meq,      // =
+    op_eq,       // ==
+    op_neq,      // !=
+    op_less,     // <
+    op_leq,      // <=
+    op_grt,      // >
+    op_geq,      // >=
+    op_pop,      // pop a value from stack
     op_jmp,      // jump with no condition
     op_jt,       // used in operator and/or,jmp when condition is true and DO NOT POP
     op_jf,       // used in conditional/loop,jmp when condition is false and POP STACK
@@ -256,15 +256,15 @@ void nasal_codegen::add_sym(std::string name)
 {
     if(local.empty())
     {
-        for(int i=0;i<global.size();++i)
-            if(global[i]==name)
+        for(auto sym:global)
+            if(sym==name)
                 return;
         global.push_back(name);
     }
     else
     {
-        for(int i=0;i<local.back().size();++i)
-            if(local.back()[i]==name)
+        for(auto sym:local.back())
+            if(sym==name)
                 return;
         local.back().push_back(name);
     }
@@ -275,12 +275,12 @@ int nasal_codegen::local_find(std::string& name)
 {
     int index=-1;
     int cnt=0;
-    for(auto i=local.begin();i!=local.end();++i)
+    for(auto i:local)
     {
-        for(int j=0;j<i->size();++j)
-            if((*i)[j]==name)
+        for(int j=0;j<i.size();++j)
+            if(i[j]==name)
                 index=cnt+j;
-        cnt+=i->size();
+        cnt+=i.size();
     }
     return index;
 }
@@ -337,22 +337,20 @@ void nasal_codegen::str_gen(nasal_ast& ast)
 
 void nasal_codegen::vec_gen(nasal_ast& ast)
 {
-    int size=ast.get_children().size();
     gen(op_newv,0);
-    for(int i=0;i<size;++i)
-        calc_gen(ast.get_children()[i]);
-    gen(op_vapp,size);
+    for(auto node:ast.get_children())
+        calc_gen(node);
+    gen(op_vapp,ast.get_children().size());
     return;
 }
 
 void nasal_codegen::hash_gen(nasal_ast& ast)
 {
-    int size=ast.get_children().size();
     gen(op_newh,0);
-    for(int i=0;i<size;++i)
+    for(auto node:ast.get_children())
     {
-        calc_gen(ast.get_children()[i].get_children()[1]);
-        std::string str=ast.get_children()[i].get_children()[0].get_str();
+        calc_gen(node.get_children()[1]);
+        std::string str=node.get_children()[0].get_str();
         regist_string(str);
         gen(op_happ,string_table[str]);
     }
@@ -375,12 +373,9 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     // this symbol's index will be 0
     if(local.size()==1)
         add_sym("me");
-
-    nasal_ast& ref_arg=ast.get_children()[0];
-    int arg_size=ref_arg.get_children().size();
-    for(int i=0;i<arg_size;++i)
+    // generate parameter list
+    for(auto tmp:ast.get_children()[0].get_children())
     {
-        nasal_ast& tmp=ref_arg.get_children()[i];
         if(tmp.get_type()==ast_id)
         {
             std::string str=tmp.get_str();
@@ -463,7 +458,7 @@ void nasal_codegen::call_id(nasal_ast& ast)
         gen(op_callg,index);
         return;
     }
-    die("cannot find symbol named \""+str+"\".",ast.get_line());
+    die("undefined symbol \""+str+"\".",ast.get_line());
     return;
 }
 
@@ -484,10 +479,8 @@ void nasal_codegen::call_vec(nasal_ast& ast)
         return;
     }
     gen(op_slcbegin,0);
-    int size=ast.get_children().size();
-    for(int i=0;i<size;++i)
+    for(auto tmp:ast.get_children())
     {
-        nasal_ast& tmp=ast.get_children()[i];
         if(tmp.get_type()!=ast_subvec)
         {
             calc_gen(tmp);
@@ -549,7 +542,7 @@ void nasal_codegen::mcall_id(nasal_ast& ast)
         gen(op_mcallg,index);
         return;
     }
-    die("cannot find symbol named \""+str+"\".",ast.get_line());
+    die("undefined symbol \""+str+"\".",ast.get_line());
     return;
 }
 
@@ -955,10 +948,7 @@ void nasal_codegen::calc_gen(nasal_ast& ast)
 
 void nasal_codegen::block_gen(nasal_ast& ast)
 {
-    int size=ast.get_children().size();
-    for(int i=0;i<size;++i)
-    {
-        nasal_ast& tmp=ast.get_children()[i];
+    for(auto tmp:ast.get_children())
         switch(tmp.get_type())
         {
             case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
@@ -1005,7 +995,6 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_trino:calc_gen(tmp);pop_gen();break;
             case ast_return:ret_gen(tmp);break;
         }
-    }
     return;
 }
 
@@ -1085,10 +1074,10 @@ void nasal_codegen::main_progress(nasal_ast& ast)
     exec_code[0].num=global.size();
     num_res_table.resize(number_table.size());
     str_res_table.resize(string_table.size());
-    for(auto i=number_table.begin();i!=number_table.end();++i)
-        num_res_table[i->second]=i->first;
-    for(auto i=string_table.begin();i!=string_table.end();++i)
-        str_res_table[i->second]=i->first;
+    for(auto i:number_table)
+        num_res_table[i.second]=i.first;
+    for(auto i:string_table)
+        str_res_table[i.second]=i.first;
     return;
 }
 
@@ -1124,10 +1113,10 @@ void nasal_codegen::print_op(int index)
 
 void nasal_codegen::print_byte_code()
 {
-    for(int i=0;i<num_res_table.size();++i)
-        std::cout<<".number "<<num_res_table[i]<<'\n';
-    for(int i=0;i<str_res_table.size();++i)
-        std::cout<<".symbol "<<str_res_table[i]<<'\n';
+    for(auto num:num_res_table)
+        std::cout<<".number "<<num<<'\n';
+    for(auto str:str_res_table)
+        std::cout<<".symbol "<<str<<'\n';
     int size=exec_code.size();
     for(int i=0;i<size;++i)
         print_op(i);

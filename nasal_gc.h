@@ -96,23 +96,21 @@ nasal_val** nasal_vec::get_mem(int index)
 void nasal_vec::print()
 {
     int size=elems.size();
-    std::cout<<"[";
-    if(!size)
-        std::cout<<"]";
-    for(int i=0;i<size;++i)
+    std::cout<<'[';  
+    for(auto i:elems)
     {
-        nasal_val* tmp=elems[i];
-        switch(tmp->type)
+        switch(i->type)
         {
             case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<tmp->ptr.num;     break;
-            case vm_str:  std::cout<<*tmp->ptr.str;    break;
-            case vm_vec:  tmp->ptr.vec->print();       break;
-            case vm_hash: tmp->ptr.hash->print();      break;
+            case vm_num:  std::cout<<i->ptr.num;       break;
+            case vm_str:  std::cout<<*i->ptr.str;      break;
+            case vm_vec:  i->ptr.vec->print();         break;
+            case vm_hash: i->ptr.hash->print();        break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
-        std::cout<<",]"[i==size-1];
+        std::cout<<',';
     }
+    std::cout<<']';
     return;
 }
 
@@ -126,18 +124,13 @@ nasal_val* nasal_hash::get_val(std::string& key)
     {
         nasal_val* val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
-        {
-            std::vector<nasal_val*>& vec_ref=val_addr->ptr.vec->elems;
-            int size=vec_ref.size();
-            for(int i=0;i<size;++i)
+            for(auto i:val_addr->ptr.vec->elems)
             {
-                nasal_val* tmp=vec_ref[i];
-                if(tmp->type==vm_hash)
-                    ret_addr=tmp->ptr.hash->get_val(key);
+                if(i->type==vm_hash)
+                    ret_addr=i->ptr.hash->get_val(key);
                 if(ret_addr)
                     return ret_addr;
             }
-        }
     }
     return nullptr;
 }
@@ -150,18 +143,13 @@ nasal_val** nasal_hash::get_mem(std::string& key)
     {
         nasal_val* val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
-        {
-            std::vector<nasal_val*>& vec_ref=val_addr->ptr.vec->elems;
-            int size=vec_ref.size();
-            for(int i=0;i<size;++i)
+            for(auto i:val_addr->ptr.vec->elems)
             {
-                nasal_val* tmp=vec_ref[i];
-                if(tmp->type==vm_hash)
-                    mem_addr=tmp->ptr.hash->get_mem(key);
+                if(i->type==vm_hash)
+                    mem_addr=i->ptr.hash->get_mem(key);
                 if(mem_addr)
                     return mem_addr;
             }
-        }
     }
     return nullptr;
 }
@@ -175,13 +163,10 @@ bool nasal_hash::check_contain(std::string& key)
         if(val_addr->type==vm_vec)
         {
             bool result=false;
-            std::vector<nasal_val*>& vec_ref=val_addr->ptr.vec->elems;
-            int size=vec_ref.size();
-            for(int i=0;i<size;++i)
+            for(auto i:val_addr->ptr.vec->elems)
             {
-                nasal_val* tmp=vec_ref[i];
-                if(tmp->type==vm_hash)
-                    result=tmp->ptr.hash->check_contain(key);
+                if(i->type==vm_hash)
+                    result=i->ptr.hash->check_contain(key);
                 if(result)
                     return true;
             }
@@ -192,15 +177,10 @@ bool nasal_hash::check_contain(std::string& key)
 void nasal_hash::print()
 {
     std::cout<<'{';
-    if(!elems.size())
+    for(auto i:elems)
     {
-        std::cout<<'}';
-        return;
-    }
-    for(auto i=elems.begin();i!=elems.end();++i)
-    {
-        std::cout<<i->first<<':';
-        nasal_val* tmp=i->second;
+        std::cout<<i.first<<':';
+        nasal_val* tmp=i.second;
         switch(tmp->type)
         {
             case vm_nil:  std::cout<<"nil";            break;
@@ -322,13 +302,13 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_val*> bfs;
-    for(auto i=global.begin();i!=global.end();++i)
-        bfs.push(*i);
-    for(auto i=local.begin();i!=local.end();++i)
-        for(auto j=i->begin();j!=i->end();++j)
-            bfs.push(*j);
-    for(auto i=slice_stack.begin();i!=slice_stack.end();++i)
-        bfs.push(*i);
+    for(auto i:global)
+        bfs.push(i);
+    for(auto i:local)
+        for(auto j:i)
+            bfs.push(j);
+    for(auto i:slice_stack)
+        bfs.push(i);
     for(nasal_val** i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
     while(!bfs.empty())
@@ -338,40 +318,31 @@ void nasal_gc::mark()
         if(!tmp || tmp->mark) continue;
         tmp->mark=true;
         if(tmp->type==vm_vec)
-        {
-            std::vector<nasal_val*>& vec=tmp->ptr.vec->elems;
-            for(auto i=vec.begin();i!=vec.end();++i)
-                bfs.push(*i);
-        }
+            for(auto i:tmp->ptr.vec->elems)
+                bfs.push(i);
         else if(tmp->type==vm_hash)
-        {
-            std::unordered_map<std::string,nasal_val*>& hash=tmp->ptr.hash->elems;
-            for(auto i=hash.begin();i!=hash.end();++i)
-                bfs.push(i->second);
-        }
+            for(auto i:tmp->ptr.hash->elems)
+                bfs.push(i.second);
         else if(tmp->type==vm_func)
         {
-            std::vector<nasal_val*>& cls=tmp->ptr.func->closure;
-            std::vector<nasal_val*>& def=tmp->ptr.func->default_para;
-            for(auto i=cls.begin();i!=cls.end();++i)
-                bfs.push(*i);
-            for(auto i=def.begin();i!=def.end();++i)
-                bfs.push(*i);
+            for(auto i:tmp->ptr.func->closure)
+                bfs.push(i);
+            for(auto i:tmp->ptr.func->default_para)
+                bfs.push(i);
         }
     }
     return;
 }
 void nasal_gc::sweep()
 {
-    int size=memory.size();
-    for(int i=0;i<size;++i)
+    for(auto i:memory)
     {
-        if(!memory[i]->mark)
+        if(!i->mark)
         {
-            memory[i]->clear();
-            free_list.push(memory[i]);
+            i->clear();
+            free_list.push(i);
         }
-        memory[i]->mark=false;
+        i->mark=false;
     }
     return;
 }
@@ -414,11 +385,8 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 }
 void nasal_gc::gc_clear()
 {
-    for(int i=0;i<memory.size();++i)
-    {
-        memory[i]->clear();
-        delete memory[i];
-    }
+    for(auto i:memory)
+        delete i;
     memory.clear();
     while(!free_list.empty())
         free_list.pop();
@@ -429,11 +397,11 @@ void nasal_gc::gc_clear()
     delete nil_addr;
     delete one_addr;
     delete zero_addr;
-    for(int i=0;i<num_addrs.size();++i)
-        delete num_addrs[i];
+    for(auto i:num_addrs)
+        delete i;
     num_addrs.clear();
-    for(int i=0;i<str_addrs.size();++i)
-        delete str_addrs[i];
+    for(auto i:str_addrs)
+        delete i;
     str_addrs.clear();
     return;
 }

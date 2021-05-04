@@ -119,21 +119,16 @@ nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     // local_scope[0] is reserved for 'me'
     nasal_val* vec_addr=local_scope[1];
     // main process
-    std::vector<nasal_val*>& ref_vec=vec_addr->ptr.vec->elems;
-    int size=ref_vec.size();
-    for(int i=0;i<size;++i)
-    {
-        nasal_val* tmp=ref_vec[i];
-        switch(tmp->type)
+    for(auto i:vec_addr->ptr.vec->elems)
+        switch(i->type)
         {
             case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<tmp->ptr.num;     break;
-            case vm_str:  std::cout<<*tmp->ptr.str;    break;
-            case vm_vec:  tmp->ptr.vec->print();       break;
-            case vm_hash: tmp->ptr.hash->print();      break;
+            case vm_num:  std::cout<<i->ptr.num;       break;
+            case vm_str:  std::cout<<*i->ptr.str;      break;
+            case vm_vec:  i->ptr.vec->print();         break;
+            case vm_hash: i->ptr.hash->print();        break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
-    }
     // generate return value
     return gc.nil_addr;
 }
@@ -147,10 +142,8 @@ nasal_val* builtin_append(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         return nullptr;
     }
     std::vector<nasal_val*>& ref_vec=vec_addr->ptr.vec->elems;
-    std::vector<nasal_val*>& ref_elems=elem_addr->ptr.vec->elems;
-    int size=ref_elems.size();
-    for(int i=0;i<size;++i)
-        ref_vec.push_back(ref_elems[i]);
+    for(auto i:elem_addr->ptr.vec->elems)
+        ref_vec.push_back(i);
     return gc.nil_addr;
 }
 nasal_val* builtin_setsize(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
@@ -173,14 +166,7 @@ nasal_val* builtin_setsize(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         builtin_err("setsize","\"size\" must be greater than -1");
         return nullptr;
     }
-    std::vector<nasal_val*>& ref_vec=vec_addr->ptr.vec->elems;
-    int vec_size=ref_vec.size();
-    if(num<vec_size)
-        for(int i=num;i<vec_size;++i)
-            ref_vec.pop_back();
-    else if(num>vec_size)
-        for(int i=vec_size;i<num;++i)
-            ref_vec.push_back(gc.nil_addr);
+    vec_addr->ptr.vec->elems.resize(num,gc.nil_addr);
     return gc.nil_addr;
 }
 
@@ -285,7 +271,6 @@ nasal_val* builtin_split(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     std::string source=*string_val_addr->ptr.str;
     int delimeter_len=delimeter.length();
     int source_len=source.length();
-
     nasal_val* ret_addr=gc.gc_alloc(vm_vec);
     std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
     std::string tmp="";
@@ -674,11 +659,10 @@ nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     }
     nasal_val* ret_addr=gc.gc_alloc(vm_vec);
     std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
-    std::unordered_map<std::string,nasal_val*>& ref_hash=hash_addr->ptr.hash->elems;
-    for(auto iter=ref_hash.begin();iter!=ref_hash.end();++iter)
+    for(auto iter:hash_addr->ptr.hash->elems)
     {
         nasal_val* str_addr=gc.gc_alloc(vm_str);
-        *str_addr->ptr.str=iter->first;
+        *str_addr->ptr.str=iter.first;
         ref_vec.push_back(str_addr);
     }
     return ret_addr;
@@ -687,7 +671,7 @@ nasal_val* builtin_import(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
-    builtin_err("import","cannot use import when running");
+    builtin_err("import","must use this function in global scope");
     return nullptr;
 }
 nasal_val* builtin_die(std::vector<nasal_val*>& local_scope,nasal_gc& gc)

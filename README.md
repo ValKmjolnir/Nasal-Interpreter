@@ -2,13 +2,17 @@
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
 
+The interpreter is totally rewritten by ValKmjolnir using C++(standard c++11) without reusing the code in Andy Ross's nasal interpreter(https://github.com/andyross/nasal). But we really appreciate that Andy created this amazing programming language and his interpreter project.
+
 The interpreter is still in development(now it works well --2021/2/15). We really need your support!
 
 Also,i am a member of [FGPRC](https://www.fgprc.org/), welcome to join us!
 
+(2021/5/4) Now this project uses MIT license.Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).
+
 # Why Writing Nasal Interpreter
 
-Nasal is a script language first used in Flightgear.
+Nasal is a script language first used in Flightgear, created by Andy Ross(https://github.com/andyross).
 
 But in last summer holiday, members in FGPRC told me that it is hard to debug with nasal-console in Flightgear, especially when checking syntax errors.
 
@@ -379,22 +383,18 @@ nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     // because local_scope[0] is reserved for value 'me'
     nasal_val* vector_value=local_scope[1];
     // main process
-    // also check number of arguments and type here,if get a type error,use builtin_err and return nullptr
-    nasal_vec& ref_vec=vector_value->get_vector();
-    int size=ref_vec.size();
-    for(int i=0;i<size;++i)
-    {
-        nasal_val* tmp=ref_vec[i];
-        switch(tmp->get_type())
+    // also check number of arguments and type here
+    // if get a type error,use builtin_err and return nullptr
+    for(auto i:vec_addr->ptr.vec->elems)
+        switch(i->type)
         {
-            case vm_nil:  std::cout<<"nil";             break;
-            case vm_num:  std::cout<<tmp->get_number(); break;
-            case vm_str:  std::cout<<tmp->get_string(); break;
-            case vm_vec:  tmp->get_vector().print();    break;
-            case vm_hash: tmp->get_hash().print();      break;
-            case vm_func: std::cout<<"func(...){...}";  break;
+            case vm_nil:  std::cout<<"nil";            break;
+            case vm_num:  std::cout<<i->ptr.num;       break;
+            case vm_str:  std::cout<<*i->ptr.str;      break;
+            case vm_vec:  i->ptr.vec->print();         break;
+            case vm_hash: i->ptr.hash->print();        break;
+            case vm_func: std::cout<<"func(...){...}"; break;
         }
-    }
     // if a nasal value is not in use,use gc::del_reference to delete it
     // generate return value,use gc::gc_alloc(type) to make a new value
     // or use reserved reference gc.nil_addr/gc.one_addr/gc.zero_addr
