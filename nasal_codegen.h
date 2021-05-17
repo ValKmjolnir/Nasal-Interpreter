@@ -6,6 +6,7 @@ enum op_code
     op_nop,      // do nothing and end the vm main loop
     op_intg,     // global scope size
     op_intl,     // local scope size
+    op_offset,   // offset of local scope of function in closure
     op_loadg,    // load global symbol value
     op_loadl,    // load local symbol value
     op_pnum,     // push constant number to the stack
@@ -75,6 +76,7 @@ struct
     {op_nop,      "nop   "},
     {op_intg,     "intg  "},
     {op_intl,     "intl  "},
+    {op_offset,   "offset"},
     {op_loadg,    "loadg "},
     {op_loadl,    "loadl "},
     {op_pnum,     "pnum  "},
@@ -373,6 +375,10 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     // this symbol's index will be 0
     if(local.size()==1)
         add_sym("me");
+    
+    gen(op_offset,0);
+    for(auto i:local)
+        exec_code.back().num+=i.size();
     // generate parameter list
     for(auto tmp:ast.get_children()[0].get_children())
     {
