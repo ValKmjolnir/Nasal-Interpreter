@@ -21,6 +21,7 @@ private:
     void opr_nop();
     void opr_intg();
     void opr_intl();
+    void opr_offset();
     void opr_loadg();
     void opr_loadl();
     void opr_pnum();
@@ -146,14 +147,18 @@ void nasal_vm::opr_nop()
 }
 void nasal_vm::opr_intg()
 {
-    gc.global.resize(exec_code[pc].num);
+    gc.global.resize(exec_code[pc].num,gc.nil_addr);
     return;
 }
 void nasal_vm::opr_intl()
 {
-    (*stack_top)->ptr.func->closure.resize(exec_code[pc].num);
+    (*stack_top)->ptr.func->closure.resize(exec_code[pc].num,gc.nil_addr);
     (*stack_top)->ptr.func->closure[0]=gc.nil_addr;// me
     return;
+}
+void nasal_vm::opr_offset()
+{
+    (*stack_top)->ptr.func->offset=exec_code[pc].num;
 }
 void nasal_vm::opr_loadg()
 {
@@ -209,8 +214,7 @@ void nasal_vm::opr_newf()
     if(!gc.local.empty())
         val->ptr.func->closure=gc.local.back();
     else
-        val->ptr.func->closure.push_back(gc.nil_addr);
-    val->ptr.func->offset=val->ptr.func->closure.size();
+        val->ptr.func->closure.push_back(gc.nil_addr);// me
     *(++stack_top)=val;
     return;
 }
@@ -868,6 +872,7 @@ void nasal_vm::run()
         &nasal_vm::opr_nop,
         &nasal_vm::opr_intg,
         &nasal_vm::opr_intl,
+        &nasal_vm::opr_offset,
         &nasal_vm::opr_loadg,
         &nasal_vm::opr_loadl,
         &nasal_vm::opr_pnum,
