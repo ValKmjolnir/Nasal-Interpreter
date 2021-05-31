@@ -99,13 +99,15 @@ int main()
 	// use chcp 65001 to use unicode io
 	system("chcp 65001");
 	system("cls");
+#else
+	system("clear");
 #endif
 	logo();
-	std::cout<<">> Nasal interpreter ver 6.0 .\n";
-	std::cout<<">> Code:   https://github.com/ValKmjolnir/Nasal-Interpreter\n";
-	std::cout<<">> Code:   https://gitee.com/valkmjolnir/Nasal-Interpreter\n";
-	std::cout<<">> Thanks: https://github.com/andyross/nasal\n";
-	std::cout<<">> Info:   http://wiki.flightgear.org/Nasal_scripting_language\n";
+	std::cout<<">> Nasal interpreter ver 6.5 efficient gc test .\n";
+	std::cout<<">> Thanks to https://github.com/andyross/nasal\n";
+	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
+	std::cout<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n";
+	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";
 	std::cout<<">> Input \"help\" to get help .\n";
     while(1)
 	{

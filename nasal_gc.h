@@ -8,7 +8,18 @@ enum nasal_type
     vm_str,
     vm_func,
     vm_vec,
-    vm_hash
+    vm_hash,
+    vm_type_size
+};
+
+const int increment[vm_type_size]=
+{
+    8,    // vm_nil,in fact it is not in use
+    65536,// vm_num
+    512,  // vm_str
+    16,   // vm_func
+    128,  // vm_vec
+    16    // vm_hash
 };
 
 struct nasal_vec;
@@ -30,7 +41,6 @@ struct nasal_hash
 {
     std::unordered_map<std::string,nasal_val*> elems;
 
-    bool        check_contain(std::string&);
     void        print();
     nasal_val*  get_val(std::string&);
     nasal_val** get_mem(std::string&);
@@ -38,20 +48,22 @@ struct nasal_hash
 
 struct nasal_func
 {
-    int dynpara;// dynamic parameter name index in hash
-    int offset;
-    int entry;
+    int32_t dynpara;// dynamic parameter name index in hash
+    uint32_t offset;
+    uint32_t entry;
     std::vector<nasal_val*> default_para;
     std::unordered_map<std::string,int> key_table;// parameter name hash
     std::vector<nasal_val*> closure;
 
     nasal_func();
+    void clear();
 };
 
 struct nasal_val
 {
+    bool collected;
     bool mark;
-    int type;
+    uint16_t type;
     union 
     {
         double       num;
@@ -64,9 +76,7 @@ struct nasal_val
     nasal_val();
     nasal_val(int);
     ~nasal_val();
-    void        clear();
-    void        set_type(int);
-    double      to_number();
+    double to_number();
     std::string to_string();
 };
 
@@ -95,7 +105,6 @@ nasal_val** nasal_vec::get_mem(int index)
 }
 void nasal_vec::print()
 {
-    int size=elems.size();
     std::cout<<'[';  
     for(auto i:elems)
     {
@@ -153,31 +162,10 @@ nasal_val** nasal_hash::get_mem(std::string& key)
     }
     return nullptr;
 }
-bool nasal_hash::check_contain(std::string& key)
-{
-    if(elems.count(key))
-        return true;
-    if(elems.count("parents"))
-    {
-        nasal_val* val_addr=elems["parents"];
-        if(val_addr->type==vm_vec)
-        {
-            bool result=false;
-            for(auto i:val_addr->ptr.vec->elems)
-            {
-                if(i->type==vm_hash)
-                    result=i->ptr.hash->check_contain(key);
-                if(result)
-                    return true;
-            }
-        }
-    }
-    return false;
-}
 void nasal_hash::print()
 {
     std::cout<<'{';
-    for(auto i:elems)
+    for(auto& i:elems)
     {
         std::cout<<i.first<<':';
         nasal_val* tmp=i.second;
@@ -202,16 +190,26 @@ nasal_func::nasal_func()
     dynpara=-1;
     return;
 }
+void nasal_func::clear()
+{
+    dynpara=-1;
+    default_para.clear();
+    key_table.clear();
+    closure.clear();
+    return;
+}
 
 /*functions of nasal_val*/
 nasal_val::nasal_val()
 {
+    collected=true;
     mark=false;
     type=vm_nil;
     return;
 }
 nasal_val::nasal_val(int val_type)
 {
+    collected=true;
     mark=false;
     type=val_type;
     switch(type)
@@ -236,35 +234,10 @@ nasal_val::~nasal_val()
     type=vm_nil;
     return;
 }
-void nasal_val::clear()
-{
-    switch(type)
-    {
-        case vm_str:  delete ptr.str;  break;
-        case vm_vec:  delete ptr.vec;  break;
-        case vm_hash: delete ptr.hash; break;
-        case vm_func: delete ptr.func; break;
-    }
-    type=vm_nil;
-    return;
-}
-void nasal_val::set_type(int val_type)
-{
-    type=val_type;
-    switch(type)
-    {
-        case vm_num:  ptr.num=0;               break;
-        case vm_str:  ptr.str=new std::string; break;
-        case vm_vec:  ptr.vec=new nasal_vec;   break;
-        case vm_hash: ptr.hash=new nasal_hash; break;
-        case vm_func: ptr.func=new nasal_func; break;
-    }
-    return;
-}
 double nasal_val::to_number()
 {
     if(type==vm_str)
-        return trans_string_to_number(*ptr.str);
+        return str2num(*ptr.str);
     return ptr.num;
 }
 std::string nasal_val::to_string()
@@ -272,7 +245,7 @@ std::string nasal_val::to_string()
     if(type==vm_str)
         return *ptr.str;
     else if(type==vm_num)
-        return trans_number_to_string(ptr.num);
+        return num2str(ptr.num);
     return "";
 }
 
@@ -288,7 +261,7 @@ struct nasal_gc
     std::vector<nasal_val*> str_addrs;   // reserved address for const vm_str
     std::vector<nasal_val*> slice_stack; // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*> memory;      // gc memory
-    std::queue <nasal_val*> free_list;   // gc free list
+    std::queue <nasal_val*> free_list[vm_type_size];   // gc free list
     std::vector<nasal_val*> global;
     std::list<std::vector<nasal_val*> > local;
     void                    mark();
@@ -296,6 +269,7 @@ struct nasal_gc
     void                    gc_init(std::vector<double>&,std::vector<std::string>&);
     void                    gc_clear();
     nasal_val*              gc_alloc(int);
+    nasal_val*              builtin_alloc(int);
 };
 
 /* gc functions */
@@ -304,7 +278,7 @@ void nasal_gc::mark()
     std::queue<nasal_val*> bfs;
     for(auto i:global)
         bfs.push(i);
-    for(auto i:local)
+    for(auto& i:local)
         for(auto j:i)
             bfs.push(j);
     for(auto i:slice_stack)
@@ -321,7 +295,7 @@ void nasal_gc::mark()
             for(auto i:tmp->ptr.vec->elems)
                 bfs.push(i);
         else if(tmp->type==vm_hash)
-            for(auto i:tmp->ptr.hash->elems)
+            for(auto& i:tmp->ptr.hash->elems)
                 bfs.push(i.second);
         else if(tmp->type==vm_func)
         {
@@ -337,10 +311,19 @@ void nasal_gc::sweep()
 {
     for(auto i:memory)
     {
-        if(!i->mark)
+        if(!i->collected && !i->mark)
         {
-            i->clear();
-            free_list.push(i);
+            switch(i->type)
+            {
+                case vm_nil:                            break;
+                case vm_num: i->ptr.num=0;              break;
+                case vm_str: i->ptr.str->clear();       break;
+                case vm_vec: i->ptr.vec->elems.clear(); break;
+                case vm_hash:i->ptr.hash->elems.clear();break;
+                case vm_func:i->ptr.func->clear();      break;
+            }
+            free_list[i->type].push(i);
+            i->collected=true;
         }
         i->mark=false;
     }
@@ -348,12 +331,13 @@ void nasal_gc::sweep()
 }
 void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 {
-    for(int i=0;i<65536;++i)
-    {
-        nasal_val* tmp=new nasal_val;
-        memory.push_back(tmp);
-        free_list.push(tmp);
-    }
+    for(int i=vm_num;i<vm_type_size;++i)
+        for(int j=0;j<increment[i];++j)
+        {
+            nasal_val* tmp=new nasal_val(i);
+            memory.push_back(tmp);
+            free_list[i].push(tmp);
+        }
     stack_top=val_stack; // set stack_top to val_stack
 
     zero_addr=new nasal_val(vm_num); // init constant 0
@@ -388,8 +372,9 @@ void nasal_gc::gc_clear()
     for(auto i:memory)
         delete i;
     memory.clear();
-    while(!free_list.empty())
-        free_list.pop();
+    for(int i=0;i<vm_type_size;++i)
+        while(!free_list[i].empty())
+            free_list[i].pop();
     global.clear();
     local.clear();
     slice_stack.clear();
@@ -407,21 +392,39 @@ void nasal_gc::gc_clear()
 }
 nasal_val* nasal_gc::gc_alloc(int type)
 {
-    if(free_list.empty())
+    if(free_list[type].empty())
     {
         mark();
         sweep();
     }
-    if(free_list.empty())
-        for(int i=0;i<65536;++i)
+    if(free_list[type].empty())
+        for(int i=0;i<increment[type];++i)
         {
-            nasal_val* tmp=new nasal_val;
+            nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
-            free_list.push(tmp);
+            free_list[type].push(tmp);
         }
-    nasal_val* ret=free_list.front();
-    free_list.pop();
-    ret->set_type(type);
+    nasal_val* ret=free_list[type].front();
+    ret->collected=false;
+    free_list[type].pop();
+    return ret;
+}
+nasal_val* nasal_gc::builtin_alloc(int type)
+{
+    // when running a builtin function,alloc will run more than one time
+    // this may cause mark-sweep in gc_alloc
+    // and the value got before will be collected,this is a fatal error
+    // so use builtin_alloc in builtin functions if this function uses alloc more then one time
+    if(free_list[type].empty())
+        for(int i=0;i<increment[type];++i)
+        {
+            nasal_val* tmp=new nasal_val(type);
+            memory.push_back(tmp);
+            free_list[type].push(tmp);
+        }
+    nasal_val* ret=free_list[type].front();
+    ret->collected=false;
+    free_list[type].pop();
     return ret;
 }
 #endif

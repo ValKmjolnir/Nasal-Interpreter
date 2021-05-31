@@ -271,7 +271,7 @@ nasal_val* builtin_split(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     std::string source=*string_val_addr->ptr.str;
     int delimeter_len=delimeter.length();
     int source_len=source.length();
-    nasal_val* ret_addr=gc.gc_alloc(vm_vec);
+    nasal_val* ret_addr=gc.builtin_alloc(vm_vec);
     std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
     std::string tmp="";
 
@@ -279,7 +279,7 @@ nasal_val* builtin_split(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     {
         for(int i=0;i<source_len;++i)
         {
-            nasal_val* str_addr=gc.gc_alloc(vm_str);
+            nasal_val* str_addr=gc.builtin_alloc(vm_str);
             *str_addr->ptr.str=source[i];
             ref_vec.push_back(str_addr);
         }
@@ -301,7 +301,7 @@ nasal_val* builtin_split(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         {
             if(tmp.length())
             {
-                nasal_val* str_addr=gc.gc_alloc(vm_str);
+                nasal_val* str_addr=gc.builtin_alloc(vm_str);
                 *str_addr->ptr.str=tmp;
                 ref_vec.push_back(str_addr);
                 tmp="";
@@ -313,7 +313,7 @@ nasal_val* builtin_split(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     }
     if(tmp.length())
     {
-        nasal_val* str_addr=gc.gc_alloc(vm_str);
+        nasal_val* str_addr=gc.builtin_alloc(vm_str);
         *str_addr->ptr.str=tmp;
         ref_vec.push_back(str_addr);
         tmp="";
@@ -585,7 +585,7 @@ nasal_val* builtin_sqrt(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 nasal_val* builtin_atan2(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* x_val_addr=local_scope[1];
-    nasal_val* y_val_addr=local_scope[1];
+    nasal_val* y_val_addr=local_scope[2];
     if(x_val_addr->type!=vm_num)
     {
         builtin_err("atan2","\"x\" must be number");
@@ -628,7 +628,7 @@ nasal_val* builtin_contains(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         return nullptr;
     }
     nasal_val* ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=hash_addr->ptr.hash->check_contain(*key_addr->ptr.str);
+    ret_addr->ptr.num=hash_addr->ptr.hash->elems.count(*key_addr->ptr.str);
     return ret_addr;
 }
 nasal_val* builtin_delete(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
@@ -657,11 +657,11 @@ nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         builtin_err("keys","\"hash\" must be hash");
         return nullptr;
     }
-    nasal_val* ret_addr=gc.gc_alloc(vm_vec);
+    nasal_val* ret_addr=gc.builtin_alloc(vm_vec);
     std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
     for(auto iter:hash_addr->ptr.hash->elems)
     {
-        nasal_val* str_addr=gc.gc_alloc(vm_str);
+        nasal_val* str_addr=gc.builtin_alloc(vm_str);
         *str_addr->ptr.str=iter.first;
         ref_vec.push_back(str_addr);
     }

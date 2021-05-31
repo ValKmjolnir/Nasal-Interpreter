@@ -103,17 +103,17 @@ public:
     nasal_ast(const nasal_ast&);
     ~nasal_ast();
     nasal_ast&  operator=(const nasal_ast&);
-    void        print_ast(int);
-    void        clear();
-    void        set_line(int);
-    void        set_type(int);
-    void        set_str(std::string&);
-    void        set_num(double);
-    void        add_child(nasal_ast);
-    int         get_line();
-    int         get_type();
-    double      get_num();
-    std::string get_str();
+    void   print_ast(int);
+    void   clear();
+    void   set_line(int);
+    void   set_type(int);
+    void   set_str(std::string&);
+    void   set_num(double);
+    void   add_child(nasal_ast);
+    int    get_line();
+    int    get_type();
+    double get_num();
+    std::string& get_str();
     std::vector<nasal_ast>& get_children();
 };
 
@@ -207,7 +207,7 @@ int nasal_ast::get_type()
     return type;
 }
 
-std::string nasal_ast::get_str()
+std::string& nasal_ast::get_str()
 {
     return str;
 }
@@ -233,9 +233,8 @@ void nasal_ast::print_ast(int depth)
     else if(type==ast_num)
         std::cout<<":"<<num;
     std::cout<<'\n';
-    int child_size=children.size();
-    for(int i=0;i<child_size;++i)
-        children[i].print_ast(depth+1);
+    for(auto& i:children)
+        i.print_ast(depth+1);
     return;
 }
 

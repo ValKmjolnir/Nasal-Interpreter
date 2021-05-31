@@ -3,6 +3,7 @@
 
 #pragma GCC optimize(2)
 
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -94,7 +95,7 @@ inline double dec_to_double(std::string& str,int len)
 	}
 	return ret*std::pow(10,negative*num_pow);
 }
-double trans_string_to_number(std::string str)
+double str2num(std::string str)
 {
 	bool is_negative=false;
 	int len=str.length();
@@ -118,7 +119,7 @@ double trans_string_to_number(std::string str)
 	trans_number_to_string:
 	convert number to string
 */
-std::string trans_number_to_string(double number)
+std::string num2str(double number)
 {
 	std::string res;
 	std::stringstream ss;
