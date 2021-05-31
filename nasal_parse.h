@@ -135,14 +135,15 @@ void nasal_parse::main_process()
         return;
     std::vector<int> err_lines;
     err_lines.push_back(error_token[0].line);
-    for(auto tok:error_token)
+    for(auto& tok:error_token)
         if(err_lines.back()!=tok.line)
             err_lines.push_back(tok.line);
     ++error;
     std::cout<<">> [parse] error tokens in line";
-    for(auto line:err_lines)
+    for(auto& line:err_lines)
         std::cout<<' '<<line;
-    std::cout<<" maybe recorded because of fatal syntax errors."
+    std::cout
+    <<" maybe recorded because of fatal syntax errors."
     <<"please check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
 }
@@ -314,7 +315,7 @@ nasal_ast nasal_parse::nil_gen()
 nasal_ast nasal_parse::num_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_num);
-    node.set_num(trans_string_to_number(tok_list[ptr].str));
+    node.set_num(str2num(tok_list[ptr].str));
     return node;
 }
 nasal_ast nasal_parse::str_gen()

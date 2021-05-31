@@ -103,11 +103,11 @@ private:
 	std::string line_code;
 	std::vector<char> res;
     std::vector<token> token_list;
-	int  get_token_type(std::string);
+	int  get_tok_type(std::string);
 	void die(std::string,std::string,int,int);
-	std::string identifier_gen();
-    std::string number_gen();
-    std::string string_gen();
+	std::string id_gen();
+    std::string num_gen();
+    std::string str_gen();
 public:
 	void openfile(std::string);
     void scanner();
@@ -140,7 +140,7 @@ void nasal_lexer::openfile(std::string filename)
     return;
 }
 
-int nasal_lexer::get_token_type(std::string tk_str)
+int nasal_lexer::get_tok_type(std::string tk_str)
 {
 	for(int i=0;token_table[i].str;++i)
 		if(tk_str==token_table[i].str)
@@ -158,7 +158,7 @@ void nasal_lexer::die(std::string code,std::string error_info,int line=-1,int co
 	return;
 }
 
-std::string nasal_lexer::identifier_gen()
+std::string nasal_lexer::id_gen()
 {
 	std::string token_str="";
 	while(ptr<res_size && (IS_IDENTIFIER(res[ptr])||IS_DIGIT(res[ptr])))
@@ -168,7 +168,7 @@ std::string nasal_lexer::identifier_gen()
 	// after running this process, ptr will point to the next token's beginning character
 }
 
-std::string nasal_lexer::number_gen()
+std::string nasal_lexer::num_gen()
 {
 	bool scientific_notation=false;// numbers like 1e8 are scientific_notation
 	std::string token_str="";
@@ -258,7 +258,7 @@ std::string nasal_lexer::number_gen()
 	return token_str;
 }
 
-std::string nasal_lexer::string_gen()
+std::string nasal_lexer::str_gen()
 {
 	std::string token_str="";
 	char str_begin=res[ptr];
@@ -325,21 +325,21 @@ void nasal_lexer::scanner()
 		if(ptr>=res_size) break;
 		if(IS_IDENTIFIER(res[ptr]))
 		{
-			token_str=identifier_gen();
-			token new_token(line,get_token_type(token_str),token_str);
+			token_str=id_gen();
+			token new_token(line,get_tok_type(token_str),token_str);
             if(!new_token.type)
                 new_token.type=tok_id;
 			token_list.push_back(new_token);
 		}
 		else if(IS_DIGIT(res[ptr]))
 		{
-			token_str=number_gen();
+			token_str=num_gen();
 			token new_token(line,tok_num,token_str);
 			token_list.push_back(new_token);
 		}
 		else if(IS_STRING(res[ptr]))
 		{
-			token_str=string_gen();
+			token_str=str_gen();
 			token new_token(line,tok_str,token_str);
 			token_list.push_back(new_token);
 		}
@@ -348,7 +348,7 @@ void nasal_lexer::scanner()
 			token_str="";
 			token_str+=res[ptr];
 			line_code+=res[ptr];
-			token new_token(line,get_token_type(token_str),token_str);
+			token new_token(line,get_tok_type(token_str),token_str);
 			if(!new_token.type)
 				die(line_code,"incorrect operator.",line,line_code.length());
 			token_list.push_back(new_token);
@@ -367,7 +367,7 @@ void nasal_lexer::scanner()
                 ++ptr;
             }
 			line_code+=token_str;
-            token new_token(line,get_token_type(token_str),token_str);
+            token new_token(line,get_tok_type(token_str),token_str);
 			token_list.push_back(new_token);
         }
 		else if(IS_CALC_OPERATOR(res[ptr]))
@@ -377,7 +377,7 @@ void nasal_lexer::scanner()
 			if(ptr<res_size && res[ptr]=='=')
 				token_str+=res[ptr++];
 			line_code+=token_str;
-			token new_token(line,get_token_type(token_str),token_str);
+			token new_token(line,get_tok_type(token_str),token_str);
 			token_list.push_back(new_token);
 		}
 		else if(IS_NOTE(res[ptr]))// avoid note, after this process ptr will point to a '\n', so next loop line counter+1

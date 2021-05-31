@@ -139,6 +139,14 @@ In this update i changed global and local scope from unordered_map to vector.
 
 So the bytecode generator changed a lot.
 
+## Version 6.5
+
+2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
+
+Add builtin_alloc to avoid mark-sweep when running a built-in function,which will mark useful items as useless garbage to collect.
+
+Better use setsize and assignment to get a big array,append is very slow in this situation.
+
 ```javascript
 for(var i=0;i<4000000;i+=1);
 ```
@@ -429,3 +437,34 @@ var print=func(elements...)
 In version 5.0,if you don't warp built-in function in a normal nasal function,this built-in function may cause a fault when searching arguments,which will cause SIGSEGV segmentation error(maybe).
 
 Use import("") to get the nasal file including your built-in functions,then you could use it.
+
+version 6.5 update:
+
+Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more then one time.
+
+When running a builtin function,alloc will run more than one time,this may cause mark-sweep in gc_alloc.
+
+The value got before will be collected,but stil in use in this builtin function,this is a fatal error.
+
+So use builtin_alloc in builtin functions like this:
+
+```C++
+nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
+{
+    nasal_val* hash_addr=local_scope[1];
+    if(hash_addr->type!=vm_hash)
+    {
+        builtin_err("keys","\"hash\" must be hash");
+        return nullptr;
+    }
+    nasal_val* ret_addr=gc.builtin_alloc(vm_vec);
+    std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
+    for(auto iter:hash_addr->ptr.hash->elems)
+    {
+        nasal_val* str_addr=gc.builtin_alloc(vm_str);
+        *str_addr->ptr.str=iter.first;
+        ref_vec.push_back(str_addr);
+    }
+    return ret_addr;
+}
+```

@@ -24,15 +24,14 @@ public:
 void nasal_import::die(std::string filename,std::string error_stage)
 {
     ++error;
-    std::cout<<">> [import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<"."<<std::endl;
+    std::cout<<">> [import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
     return;
 }
 
 bool nasal_import::check_import(nasal_ast& node)
 {
 /*
-    only this kind of node can be recognized as 'import':
-
+only this kind of node can be recognized as 'import':
     call
         id:import
         call_func
@@ -55,9 +54,8 @@ bool nasal_import::check_import(nasal_ast& node)
 bool nasal_import::check_exist(std::string filename)
 {
     // avoid importing the same file
-    int size=filename_table.size();
-    for(int i=0;i<size;++i)
-        if(filename==filename_table[i])
+    for(auto& fname:filename_table)
+        if(filename==fname)
             return true;
     filename_table.push_back(filename);
     return false;
@@ -66,10 +64,8 @@ bool nasal_import::check_exist(std::string filename)
 void nasal_import::linker(nasal_ast& root,nasal_ast& add_root)
 {
     // add children of add_root to the back of root
-    std::vector<nasal_ast>& ref_vec=add_root.get_children();
-    int size=ref_vec.size();
-    for(int i=0;i<size;++i)
-        root.add_child(ref_vec[i]);
+    for(auto& i:add_root.get_children())
+        root.add_child(i);
     return;
 }
 
@@ -110,18 +106,13 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
 nasal_ast nasal_import::load(nasal_ast& root)
 {
     nasal_ast new_root(0,ast_root);
-
-    std::vector<nasal_ast>& ref_vec=root.get_children();
-    int size=ref_vec.size();
-    for(int i=0;i<size;++i)
-    {
-        if(check_import(ref_vec[i]))
+    for(auto& i:root.get_children())
+        if(check_import(i))
         {
-            nasal_ast tmp=file_import(ref_vec[i]);
+            nasal_ast tmp=file_import(i);
             // add tmp to the back of new_root
             linker(new_root,tmp);
         }
-    }
     // add root to the back of new_root
     linker(new_root,root);
     // oops,i think it is not efficient if the root is too ... large?
