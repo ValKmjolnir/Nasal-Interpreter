@@ -54,7 +54,8 @@ enum op_code
     op_callv,    // call vec[index]
     op_callvi,   // call vec[immediate] (used in multi-assign/multi-define)
     op_callh,    // call hash.label
-    op_callf,    // call function(parameters)
+    op_callfv,   // call function(vector as parameters)
+    op_callfh,   // call function(hash as parameters)
     op_callb,    // call builtin-function
     op_slcbegin, // begin of slice like: vec[1,2,3:6,0,-1]
     op_slcend,   // end of slice
@@ -124,7 +125,8 @@ struct
     {op_callv,    "callv "},
     {op_callvi,   "callvi"},
     {op_callh,    "callh "},
-    {op_callf,    "callf "},
+    {op_callfv,   "callfv"},
+    {op_callfh,   "callfh"},
     {op_callb,    "callb "},
     {op_slcbegin, "slcbeg"},
     {op_slcend,   "slcend"},
@@ -509,12 +511,18 @@ void nasal_codegen::call_vec(nasal_ast& ast)
 void nasal_codegen::call_func(nasal_ast& ast)
 {
     if(!ast.get_children().size())
-        gen(op_newv,0);
+        gen(op_callfv,0);
     else if(ast.get_children()[0].get_type()==ast_hashmember)
+    {
         hash_gen(ast);
+        gen(op_callfh,0);
+    }
     else
-        vec_gen(ast);
-    gen(op_callf,0);
+    {
+        for(auto& node:ast.get_children())
+            calc_gen(node);
+        gen(op_callfv,ast.get_children().size());
+    }
     return;
 }
 

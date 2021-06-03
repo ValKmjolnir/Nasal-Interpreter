@@ -26,8 +26,7 @@ var setsize=func(vector,size)
 }
 var system=func(str)
 {
-    __builtin_system(str);
-    return;
+    return __builtin_system(str);
 }
 var input=func()
 {
