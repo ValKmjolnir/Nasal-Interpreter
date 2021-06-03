@@ -147,6 +147,12 @@ Add builtin_alloc to avoid mark-sweep when running a built-in function,which wil
 
 Better use setsize and assignment to get a big array,append is very slow in this situation.
 
+2021/6/3 update: Fixed a bug that gc still re-collects garbage,this time i use three mark states to make sure garbage is ready to be collected.
+
+Change callf to callfv and callfh.And callfv fetches arguments from val_stack directly instead of using vm_vec,a not very efficient way.
+
+Better use callfv instead of callfh,callfh will fetch a vm_hash from stack and parse it,making this process slow.
+
 ```javascript
 for(var i=0;i<4000000;i+=1);
 ```
