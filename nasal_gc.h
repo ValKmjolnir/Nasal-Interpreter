@@ -12,21 +12,22 @@ enum nasal_type
     vm_type_size
 };
 
+// change parameters here to make your own efficient gc
+// better set bigger number on vm_num and vm_vec
 const int increment[vm_type_size]=
 {
-    8,    // vm_nil,in fact it is not in use
+    0,    // vm_nil,in fact it is not in use
     65536,// vm_num
-    512,  // vm_str
+    256,  // vm_str
     16,   // vm_func
-    128,  // vm_vec
-    16    // vm_hash
+    2048, // vm_vec
+    8     // vm_hash
 };
 
-struct nasal_vec;
-struct nasal_hash;
-struct nasal_func;
-struct nasal_scop;
-struct nasal_val;
+struct nasal_vec; //24 bytes
+struct nasal_hash;//56 bytes
+struct nasal_func;//120 bytes
+struct nasal_val; // 16 bytes
 
 struct nasal_vec
 {
@@ -61,8 +62,10 @@ struct nasal_func
 
 struct nasal_val
 {
-    bool collected;
-    bool mark;
+#define GC_UNCOLLECTED 0   
+#define GC_FOUND       1
+#define GC_COLLECTED   2
+    uint8_t mark;
     uint16_t type;
     union 
     {
@@ -202,15 +205,13 @@ void nasal_func::clear()
 /*functions of nasal_val*/
 nasal_val::nasal_val()
 {
-    collected=true;
-    mark=false;
+    mark=GC_COLLECTED;
     type=vm_nil;
     return;
 }
 nasal_val::nasal_val(int val_type)
 {
-    collected=true;
-    mark=false;
+    mark=GC_COLLECTED;
     type=val_type;
     switch(type)
     {
@@ -252,16 +253,16 @@ std::string nasal_val::to_string()
 struct nasal_gc
 {
 #define STACK_MAX_DEPTH (65536<<4)
-    nasal_val*              zero_addr;   // reserved address of nasal_val,type vm_num, 0
-    nasal_val*              one_addr;    // reserved address of nasal_val,type vm_num, 1
-    nasal_val*              nil_addr;    // reserved address of nasal_val,type vm_nil
+    nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
+    nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
+    nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
     nasal_val*              val_stack[STACK_MAX_DEPTH];
-    nasal_val**             stack_top;   // stack top
-    std::vector<nasal_val*> num_addrs;   // reserved address for const vm_num
-    std::vector<nasal_val*> str_addrs;   // reserved address for const vm_str
-    std::vector<nasal_val*> slice_stack; // slice stack for vec[val,val,val:val]
-    std::vector<nasal_val*> memory;      // gc memory
-    std::queue <nasal_val*> free_list[vm_type_size];   // gc free list
+    nasal_val**             stack_top;               // stack top
+    std::vector<nasal_val*> num_addrs;               // reserved address for const vm_num
+    std::vector<nasal_val*> str_addrs;               // reserved address for const vm_str
+    std::vector<nasal_val*> slice_stack;             // slice stack for vec[val,val,val:val]
+    std::vector<nasal_val*> memory;                  // gc memory
+    std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
     std::vector<nasal_val*> global;
     std::list<std::vector<nasal_val*> > local;
     void                    mark();
@@ -290,7 +291,7 @@ void nasal_gc::mark()
         nasal_val* tmp=bfs.front();
         bfs.pop();
         if(!tmp || tmp->mark) continue;
-        tmp->mark=true;
+        tmp->mark=GC_FOUND;
         if(tmp->type==vm_vec)
             for(auto i:tmp->ptr.vec->elems)
                 bfs.push(i);
@@ -311,21 +312,20 @@ void nasal_gc::sweep()
 {
     for(auto i:memory)
     {
-        if(!i->collected && !i->mark)
+        if(i->mark==GC_UNCOLLECTED)
         {
             switch(i->type)
             {
-                case vm_nil:                            break;
-                case vm_num: i->ptr.num=0;              break;
                 case vm_str: i->ptr.str->clear();       break;
                 case vm_vec: i->ptr.vec->elems.clear(); break;
                 case vm_hash:i->ptr.hash->elems.clear();break;
                 case vm_func:i->ptr.func->clear();      break;
             }
             free_list[i->type].push(i);
-            i->collected=true;
+            i->mark=GC_COLLECTED;
         }
-        i->mark=false;
+        else if(i->mark==GC_FOUND)
+            i->mark=GC_UNCOLLECTED;
     }
     return;
 }
@@ -338,6 +338,7 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
             memory.push_back(tmp);
             free_list[i].push(tmp);
         }
+
     stack_top=val_stack; // set stack_top to val_stack
 
     zero_addr=new nasal_val(vm_num); // init constant 0
@@ -349,21 +350,21 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
     nil_addr=new nasal_val(vm_nil); // init nil
 
     *val_stack=nil_addr; // the first space will not store any values,but gc checks
-
     // init constant numbers
+    num_addrs.resize(nums.size());
     for(int i=0;i<nums.size();++i)
     {
         nasal_val* tmp=new nasal_val(vm_num);
         tmp->ptr.num=nums[i];
-        num_addrs.push_back(tmp);
+        num_addrs[i]=tmp;
     }
-
     // init constant strings
+    str_addrs.resize(strs.size());
     for(int i=0;i<strs.size();++i)
     {
         nasal_val* tmp=new nasal_val(vm_str);
         *tmp->ptr.str=strs[i];
-        str_addrs.push_back(tmp);
+        str_addrs[i]=tmp;
     }
     return;
 }
@@ -405,7 +406,7 @@ nasal_val* nasal_gc::gc_alloc(int type)
             free_list[type].push(tmp);
         }
     nasal_val* ret=free_list[type].front();
-    ret->collected=false;
+    ret->mark=GC_UNCOLLECTED;
     free_list[type].pop();
     return ret;
 }
@@ -423,7 +424,7 @@ nasal_val* nasal_gc::builtin_alloc(int type)
             free_list[type].push(tmp);
         }
     nasal_val* ret=free_list[type].front();
-    ret->collected=false;
+    ret->mark=GC_UNCOLLECTED;
     free_list[type].pop();
     return ret;
 }

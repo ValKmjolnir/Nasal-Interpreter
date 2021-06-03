@@ -1,24 +1,19 @@
 #include "nasal.h"
 
-nasal_lexer    lexer;
-nasal_parse    parse;
-nasal_import   import;
-std::string    file="null";
-nasal_codegen  codegen;
-nasal_vm       vm;
+nasal_vm vm;
 
 void help()
 {
 	std::cout
-	<<">> [\"file\"] input file name.              \n"
-	<<">> [help  ] show help.                      \n"
-	<<">> [clear ] clear the screen.               \n"
-	<<">> [lex   ] view tokens.                    \n"
-	<<">> [ast   ] view abstract syntax tree.      \n"
-	<<">> [code  ] view byte code.                 \n"
-	<<">> [exec  ] execute program on bytecode vm. \n"
-	<<">> [logo  ] print logo of nasal .           \n"
-	<<">> [exit  ] quit nasal interpreter.         \n";
+	<<">> [\"file\"] input file name.            \n"
+	<<">> [help ] show help.                     \n"
+	<<">> [clear] clear the screen.              \n"
+	<<">> [lex  ] view tokens.                   \n"
+	<<">> [ast  ] view abstract syntax tree.     \n"
+	<<">> [code ] view byte code.                \n"
+	<<">> [exec ] execute program on bytecode vm.\n"
+	<<">> [logo ] print logo of nasal .          \n"
+	<<">> [exit ] quit nasal interpreter.        \n";
 	return;
 }
 
@@ -39,8 +34,12 @@ void die(std::string stage,std::string filename)
 	return;
 }
 
-void execute(std::string& command)
+void execute(std::string& file,std::string& command)
 {
+	nasal_lexer   lexer;
+	nasal_parse   parse;
+	nasal_import  import;
+	nasal_codegen codegen;
 	lexer.openfile(file);
 	lexer.scanner();
 	if(lexer.get_error())
@@ -95,12 +94,13 @@ void execute(std::string& command)
 int main()
 {
 	std::string command;
+	std::string file="null";
 #ifdef _WIN32
 	// use chcp 65001 to use unicode io
 	system("chcp 65001");
 	system("cls");
 #else
-	system("clear");
+	int rs=system("clear");// avoid annoying warning of high version gcc/g++
 #endif
 	logo();
 	std::cout<<">> Nasal interpreter ver 6.5 efficient gc test .\n";
@@ -120,7 +120,7 @@ int main()
 #ifdef _WIN32
 			system("cls");
 #else
-			system("clear");
+			int rs=system("clear");
 #endif
 		}
 		else if(command=="logo")
@@ -128,7 +128,7 @@ int main()
 		else if(command=="exit")
 			break;
 		else if(command=="lex" || command=="ast" || command=="code" || command=="exec")
-			execute(command);
+			execute(file,command);
 		else
 			file=command;
 	}

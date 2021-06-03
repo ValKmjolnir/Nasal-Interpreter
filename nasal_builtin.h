@@ -172,14 +172,15 @@ nasal_val* builtin_setsize(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 
 nasal_val* builtin_system(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
+    nasal_val* ret_addr=gc.gc_alloc(vm_num);
     nasal_val* str_addr=local_scope[1];
     if(str_addr->type!=vm_str)
     {
         builtin_err("system","\"str\" must be string");
         return nullptr;
     }
-    system(str_addr->ptr.str->data());
-    return gc.nil_addr;
+    ret_addr->ptr.num=(double)system(str_addr->ptr.str->data());
+    return ret_addr;
 }
 
 nasal_val* builtin_input(std::vector<nasal_val*>& local_scope,nasal_gc& gc)

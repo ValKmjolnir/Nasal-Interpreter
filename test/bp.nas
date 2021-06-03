@@ -137,7 +137,7 @@ while(error>0.0005)
     }
     cnt+=1;
     show+=1;
-    if(show==300)
+    if(show==350)
     {
         show=0;
         print('epoch ',cnt,':',error,'\r');

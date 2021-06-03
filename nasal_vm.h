@@ -14,7 +14,7 @@ private:
     std::vector<std::string> str_table;  // symbols used in process
     std::vector<opcode>      exec_code;  // byte codes store here
     std::stack<nasal_val**>  addr_stack; // stack for mem_call
-    nasal_gc                 gc;         //garbage collector
+    nasal_gc                 gc;         // garbage collector
     
     void die(std::string);
     bool condition(nasal_val*);
@@ -69,7 +69,8 @@ private:
     void opr_callv();
     void opr_callvi();
     void opr_callh();
-    void opr_callf();
+    void opr_callfv();
+    void opr_callfh();
     void opr_callb();
     void opr_slcbegin();
     void opr_slcend();
@@ -101,6 +102,7 @@ void nasal_vm::init(
     std::vector<opcode>&      exec)
 {
     gc.gc_init(nums,strs);
+    gc.val_stack[STACK_MAX_DEPTH-1]=nullptr;
     str_table=strs; // get constant strings & symbols
     exec_code=exec; // get bytecodes
     loop_mark=true; // set loop mark to true
@@ -135,7 +137,7 @@ bool nasal_vm::condition(nasal_val* val_addr)
         std::string& str=*val_addr->ptr.str;
         double number=str2num(str);
         if(std::isnan(number))
-            return str.length();
+            return !str.empty();
         return number;
     }
     return false;
@@ -211,19 +213,21 @@ void nasal_vm::opr_newf()
 {
     nasal_val* val=gc.gc_alloc(vm_func);
     val->ptr.func->entry=exec_code[pc].num;
-    if(!gc.local.empty())
-        val->ptr.func->closure=gc.local.back();// local contains 'me'
-    else
+    if(gc.local.empty())
         val->ptr.func->closure.push_back(gc.nil_addr);// me
+    else
+        val->ptr.func->closure=gc.local.back();// local contains 'me'
     *(++stack_top)=val;
     return;
 }
 void nasal_vm::opr_vapp()
 {
-    nasal_val* vec=*(stack_top-exec_code[pc].num);
-    for(nasal_val** i=stack_top-exec_code[pc].num+1;i<=stack_top;++i)
-        vec->ptr.vec->elems.push_back(*i);
-    stack_top-=exec_code[pc].num;
+    nasal_val** begin=stack_top-exec_code[pc].num+1;
+    auto& vec=begin[-1]->ptr.vec->elems;// stack_top-exec_code[pc].num stores the vector
+    vec.resize(exec_code[pc].num);
+    for(int i=0;i<exec_code[pc].num;++i)
+        vec[i]=begin[i];
+    stack_top=begin-1;
     return;
 }
 void nasal_vm::opr_happ()
@@ -265,7 +269,7 @@ void nasal_vm::opr_unot()
     {
         double number=str2num(*val->ptr.str);
         if(std::isnan(number))
-            new_val=val->ptr.str->length()?gc.zero_addr:gc.one_addr;
+            new_val=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
         else
             new_val=number?gc.zero_addr:gc.one_addr;
     }
@@ -526,8 +530,7 @@ void nasal_vm::opr_findex()
 void nasal_vm::opr_feach()
 {
     std::vector<nasal_val*>& ref=(*stack_top)->ptr.vec->elems;
-    ++counter.top();
-    if(counter.top()>=ref.size())
+    if(++counter.top()>=ref.size())
     {
         pc=exec_code[pc].num-1;
         return;
@@ -635,73 +638,89 @@ void nasal_vm::opr_callh()
     *stack_top=res;
     return;
 }
-void nasal_vm::opr_callf()
+void nasal_vm::opr_callfv()
 {
     // get parameter list and function value
-    nasal_val* para_addr=*stack_top;
-    nasal_val* func_addr=*(stack_top-1);
+    int args_size=exec_code[pc].num;
+    nasal_val** vec=stack_top-args_size+1;
+    nasal_val* func_addr=*(vec-1);
     if(func_addr->type!=vm_func)
     {
-        die("callf: called a value that is not a function");
+        die("callfv: called a value that is not a function");
         return;
     }
     // push new local scope
-    gc.local.push_back(func_addr->ptr.func->closure);
+    auto& ref_func=*func_addr->ptr.func;
+    gc.local.push_back(ref_func.closure);
     // load parameters
-    nasal_func&              ref_func=*func_addr->ptr.func;
-    std::vector<nasal_val*>& ref_default=ref_func.default_para;
-    std::vector<nasal_val*>& ref_closure=gc.local.back();
-    std::unordered_map<std::string,int>& ref_keys=ref_func.key_table;
-    
-    if(para_addr->type==vm_vec)
+    auto& ref_default=ref_func.default_para;
+    auto& ref_closure=gc.local.back();
+    auto& ref_keys=ref_func.key_table;
+
+    int offset=ref_func.offset;
+    int para_size=ref_keys.size();
+    // load arguments
+    if(args_size<para_size && !ref_default[args_size])
     {
-        std::vector<nasal_val*>& args=para_addr->ptr.vec->elems;
-        int args_size=args.size();
-        int para_size=ref_keys.size();
-        for(int i=0;i<para_size;++i)
-        {
-            if(i>=args_size)
-            {
-                if(!ref_default[i])
-                {
-                    die("callf: lack argument(s)");
-                    return;
-                }
-                ref_closure[i+ref_func.offset]=ref_default[i];
-            }
-            else
-                ref_closure[i+ref_func.offset]=args[i];
-        }
-        if(ref_func.dynpara>=0)
-        {
-            nasal_val* vec_addr=gc.gc_alloc(vm_vec);
-            for(int i=para_size;i<args_size;++i)
-                vec_addr->ptr.vec->elems.push_back(args[i]);
-            ref_closure[para_size+ref_func.offset]=vec_addr;
-        }
+        // if the first default value is not nullptr,then values after it are not nullptr
+        die("callfv: lack argument(s)");
+        return;
     }
-    else
+    // if args_size>para_size,for 0 to args_size will cause corruption
+    for(int i=0;i<para_size;++i)
+        ref_closure[i+offset]=(i>=args_size)?ref_default[i]:vec[i];
+    // load dynamic argument if args_size>=para_size
+    if(ref_func.dynpara>=0)
     {
-        std::unordered_map<std::string,nasal_val*>& ref_hash=para_addr->ptr.hash->elems;
-        if(ref_func.dynpara>=0)
+        nasal_val* vec_addr=gc.gc_alloc(vm_vec);
+        for(int i=para_size;i<args_size;++i)
+            vec_addr->ptr.vec->elems.push_back(vec[i]);
+        ref_closure[para_size+offset]=vec_addr;
+    }
+    
+    stack_top-=args_size;// pop arguments
+    ret.push(pc);
+    pc=ref_func.entry-1;
+    return;
+}
+void nasal_vm::opr_callfh()
+{
+    // get parameter list and function value
+    std::unordered_map<std::string,nasal_val*>& ref_hash=(*stack_top)->ptr.hash->elems;
+    nasal_val* func_addr=*(stack_top-1);
+    if(func_addr->type!=vm_func)
+    {
+        die("callfh: called a value that is not a function");
+        return;
+    }
+    // push new local scope
+    auto& ref_func=*func_addr->ptr.func;
+    gc.local.push_back(ref_func.closure);
+    // load parameters
+    auto& ref_default=ref_func.default_para;
+    auto& ref_closure=gc.local.back();
+    auto& ref_keys=ref_func.key_table;
+
+    if(ref_func.dynpara>=0)
+    {
+        die("callfh: special call cannot use dynamic argument");
+        return;
+    }
+    int offset=ref_func.offset;
+    for(auto& i:ref_keys)
+    {
+        if(ref_hash.count(i.first))
+            ref_closure[i.second+offset]=ref_hash[i.first];
+        else if(ref_default[i.second])
+            ref_closure[i.second+offset]=ref_default[i.second];
+        else
         {
-            die("callf: special call cannot use dynamic argument");
+            die("callfh: lack argument(s): \""+i.first+"\"");
             return;
         }
-        for(auto& i:ref_keys)
-        {
-            if(ref_hash.count(i.first))
-                ref_closure[i.second+ref_func.offset]=ref_hash[i.first];
-            else if(ref_default[i.second])
-                ref_closure[i.second+ref_func.offset]=ref_default[i.second];
-            else
-            {
-                die("callf: lack argument(s): \""+i.first+"\"");
-                return;
-            }
-        }
     }
-    --stack_top;
+
+    --stack_top;// pop hash
     ret.push(pc);
     pc=ref_func.entry-1;
     return;
@@ -920,7 +939,8 @@ void nasal_vm::run()
         &nasal_vm::opr_callv,
         &nasal_vm::opr_callvi,
         &nasal_vm::opr_callh,
-        &nasal_vm::opr_callf,
+        &nasal_vm::opr_callfv,
+        &nasal_vm::opr_callfh,
         &nasal_vm::opr_callb,
         &nasal_vm::opr_slcbegin,
         &nasal_vm::opr_slcend,
@@ -934,7 +954,7 @@ void nasal_vm::run()
     };
     clock_t begin_time=clock();
     // main loop
-    for(pc=0;loop_mark;++pc)
+    for(pc=0;loop_mark&&!gc.val_stack[STACK_MAX_DEPTH-1];++pc)
         (this->*opr_table[exec_code[pc].op])();
     float total_time=((double)(clock()-begin_time))/CLOCKS_PER_SEC;
     std::cout<<">> [vm] process exited after "<<total_time<<"s.\n";
