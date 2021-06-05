@@ -39,28 +39,37 @@ MUST USE -O2 ! pragma gcc optimize(2) seems useless when using g++
 LL(k) parser.
 
 ```javascript
-
 (var a,b,c)=[{b:nil},[1,2],func{return 0;}];
-
 (a.b,b[0],c)=(1,2,3);
-
 ```
 
-have the same first set,so LL(1) is useless for this language.
+These two expressions have the same first set,so LL(1) is useless for this language.
 
 Maybe in the future i can refactor it to LL(1) with special checks.
 
+## version 1.0(last update 2019/10/14)
+
+First fully functional version of nasal_parser.
+
+Before version 1.0,i tried many times to create a correct parser.
+
+Finally i learned LL(1) and LL(k) and wrote a parser for math formulas in version 0.16(last update 2019/9/14).
+
+In version 0.17(2019/9/15) 0.18(2019/9/18) 0.19(2019/10/1)i was playing the parser happily and after that i wrote version 1.0.
+
+This project began at 2019/8/31.
+
 # Abstract Syntax Tree
 
-## Version 1.2
+## Version 1.2(last update 2019/10/31)
 
 The ast has been completed in this version.
 
-## Version 2.0
+## Version 2.0(last update 2020/8/31)
 
 A completed ast-interpreter with unfinished lib functions.
 
-## Version 3.0
+## Version 3.0(last update 2020/10/23)
 
 The ast is refactored and is now easier to read and maintain.
 
@@ -70,7 +79,7 @@ Now you can add your own functions as builtin-functions in this interpreter!
 
 I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
 
-## Version 5.0
+## Version 5.0(last update 2021/3/7)
 
 I change my mind.AST interpreter leaves me too much things to do.
 
@@ -78,7 +87,7 @@ If i continue saving this interpreter,it will be harder for me to make the bytec
 
 # Byte Code Interpreter
 
-## Version 4.0
+## Version 4.0(last update 2020/12/17)
 
 I have just finished the first version of byte-code-interpreter.
 
@@ -111,7 +120,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000b: nop    0x00000000
 ```
 
-## Version 5.0
+## Version 5.0(last update 2021/3/7)
 
 I decide to optimize bytecode vm in this version.
 
@@ -119,7 +128,7 @@ Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not effic
 
 2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
 
-## Version 6.0
+## Version 6.0(last update 2021/6/1)
 
 Use loadg loadl callg calll mcallg mcalll to avoid branches.
 
@@ -138,20 +147,6 @@ Vapp and newf operand use .num to reduce the size of exec_code.
 In this update i changed global and local scope from unordered_map to vector.
 
 So the bytecode generator changed a lot.
-
-## Version 6.5
-
-2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
-
-Add builtin_alloc to avoid mark-sweep when running a built-in function,which will mark useful items as useless garbage to collect.
-
-Better use setsize and assignment to get a big array,append is very slow in this situation.
-
-2021/6/3 update: Fixed a bug that gc still re-collects garbage,this time i use three mark states to make sure garbage is ready to be collected.
-
-Change callf to callfv and callfh.And callfv fetches arguments from val_stack directly instead of using vm_vec,a not very efficient way.
-
-Better use callfv instead of callfh,callfh will fetch a vm_hash from stack and parse it,making this process slow.
 
 ```javascript
 for(var i=0;i<4000000;i+=1);
@@ -172,6 +167,50 @@ for(var i=0;i<4000000;i+=1);
 0x0000000a: pop    0x00000000
 0x0000000b: jmp    0x00000003
 0x0000000c: nop    0x00000000
+```
+
+## Version 6.5(latest)
+
+2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
+
+Add builtin_alloc to avoid mark-sweep when running a built-in function,which will mark useful items as useless garbage to collect.
+
+Better use setsize and assignment to get a big array,append is very slow in this situation.
+
+2021/6/3 update: Fixed a bug that gc still re-collects garbage,this time i use three mark states to make sure garbage is ready to be collected.
+
+Change callf to callfv and callfh.And callfv fetches arguments from val_stack directly instead of using vm_vec,a not very efficient way.
+
+Better use callfv instead of callfh,callfh will fetch a vm_hash from stack and parse it,making this process slow.
+
+```javascript
+var f=func(x,y){return x+y;}
+f(1024,2048);
+```
+
+```asm
+.number 1024
+.number 2048
+.symbol x   
+.symbol y
+0x00000000: intg   0x00000001
+0x00000001: newf   0x00000007
+0x00000002: intl   0x00000003
+0x00000003: offset 0x00000001
+0x00000004: para   0x00000000 (x)
+0x00000005: para   0x00000001 (y)
+0x00000006: jmp    0x0000000b
+0x00000007: calll  0x00000001
+0x00000008: calll  0x00000002
+0x00000009: add    0x00000000
+0x0000000a: ret    0x00000000
+0x0000000b: loadg  0x00000000
+0x0000000c: callg  0x00000000
+0x0000000d: pnum   0x00000000 (1024)
+0x0000000e: pnum   0x00000001 (2048)
+0x0000000f: callfv 0x00000002
+0x00000010: pop    0x00000000
+0x00000011: nop    0x00000000
 ```
 
 # How to Use Nasal to Program
@@ -229,14 +268,14 @@ var f=func
 {
     return 1024;
 }
-var f=func(x,y,z,default_parameter1=1,default_parameter2=2)
+var f=func(x,y,z,default_para1=1,default_para2=2)
 {
-    return x+y+z+default_parameter1+default_parameter2;
+    return x+y+z+default_para1+default_para2;
 }
-var f=func(x,y,z,dynamic_parameter...)
+var f=func(x,y,z,dynamic_para...)
 {
     var sum=0;
-    foreach(var i;dynamic_parameter)
+    foreach(var i;dynamic_para)
         sum+=i;
     return sum+x+y+z;
 }
@@ -341,6 +380,15 @@ This is of great use but is not very efficient(because hashmap use string as the
 
 ```javascript
 a(x:0,y:1,z:2);
+```
+
+## lambda
+
+Also functions have this kind of use:
+
+```javascript
+func(x,y){return x+y}(0,1);
+func(x){return 1/(1+math.exp(-x));}(0.5);
 ```
 
 ## closure
@@ -474,3 +522,11 @@ nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     return ret_addr;
 }
 ```
+
+# 写在最后
+
+我要怎么才能告诉gitee的逆天管理员gitee上的ValKmjolnir和github的ValKmjolnir是一个人？
+
+他居然告诉我，我从github同步的仓库是他人项目？
+
+我证明我是我自己？:sweat_smile:
