@@ -24,12 +24,9 @@ const int increment[vm_type_size]=
     8     // vm_hash
 };
 
-struct nasal_vec; //24 bytes
-struct nasal_hash;//56 bytes
-struct nasal_func;//120 bytes
-struct nasal_val; // 16 bytes
+struct nasal_val;//declaration of nasal_val
 
-struct nasal_vec
+struct nasal_vec// 24 bytes
 {
     std::vector<nasal_val*> elems;
 
@@ -38,7 +35,7 @@ struct nasal_vec
     nasal_val** get_mem(int);
 };
 
-struct nasal_hash
+struct nasal_hash// 56 bytes
 {
     std::unordered_map<std::string,nasal_val*> elems;
 
@@ -47,20 +44,20 @@ struct nasal_hash
     nasal_val** get_mem(std::string&);
 };
 
-struct nasal_func
+struct nasal_func// 120 bytes
 {
-    int32_t dynpara;// dynamic parameter name index in hash
-    uint32_t offset;
-    uint32_t entry;
-    std::vector<nasal_val*> default_para;
+    int32_t  dynpara;// dynamic parameter name index in hash
+    uint32_t offset; // arguments will be loaded into local scope from this offset 
+    uint32_t entry;  // pc will set to entry-1 to call this function
+    std::vector<nasal_val*> default_para;// default value(nasal_val*)
     std::unordered_map<std::string,int> key_table;// parameter name hash
-    std::vector<nasal_val*> closure;
+    std::vector<nasal_val*> closure;// closure will be loaded to gc.local.back() as the local scope
 
     nasal_func();
     void clear();
 };
 
-struct nasal_val
+struct nasal_val// 16 bytes
 {
 #define GC_UNCOLLECTED 0   
 #define GC_FOUND       1
@@ -76,7 +73,6 @@ struct nasal_val
         nasal_func*  func;
     }ptr;
 
-    nasal_val();
     nasal_val(int);
     ~nasal_val();
     double to_number();
@@ -203,12 +199,6 @@ void nasal_func::clear()
 }
 
 /*functions of nasal_val*/
-nasal_val::nasal_val()
-{
-    mark=GC_COLLECTED;
-    type=vm_nil;
-    return;
-}
 nasal_val::nasal_val(int val_type)
 {
     mark=GC_COLLECTED;
@@ -238,7 +228,7 @@ nasal_val::~nasal_val()
 double nasal_val::to_number()
 {
     if(type==vm_str)
-        return str2num(*ptr.str);
+        return str2num(ptr.str->c_str());
     return ptr.num;
 }
 std::string nasal_val::to_string()

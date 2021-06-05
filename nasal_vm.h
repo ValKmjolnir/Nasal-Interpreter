@@ -135,7 +135,7 @@ bool nasal_vm::condition(nasal_val* val_addr)
     else if(type==vm_str)
     {
         std::string& str=*val_addr->ptr.str;
-        double number=str2num(str);
+        double number=str2num(str.c_str());
         if(std::isnan(number))
             return !str.empty();
         return number;
@@ -267,7 +267,7 @@ void nasal_vm::opr_unot()
         new_val=val->ptr.num?gc.zero_addr:gc.one_addr;
     else if(type==vm_str)
     {
-        double number=str2num(*val->ptr.str);
+        double number=str2num(val->ptr.str->c_str());
         if(std::isnan(number))
             new_val=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
         else
@@ -752,7 +752,7 @@ void nasal_vm::opr_slc()
     switch(val->type)
     {
         case vm_num:num=val->ptr.num;break;
-        case vm_str:num=str2num(*val->ptr.str);break;
+        case vm_str:num=str2num(val->ptr.str->c_str());break;
         default:die("slc: error value type");break;
     }
     nasal_val* res=(*stack_top)->ptr.vec->get_val((int)num);
@@ -819,7 +819,7 @@ void nasal_vm::opr_mcallv()
         switch(val->type)
         {
             case vm_num:num=(int)val->ptr.num;break;
-            case vm_str:num=(int)str2num(*val->ptr.str);break;
+            case vm_str:num=(int)str2num(val->ptr.str->c_str());break;
             default:die("mcallv: error value type");break;
         }
         nasal_val** res=(*vec_addr)->ptr.vec->get_mem(num);
