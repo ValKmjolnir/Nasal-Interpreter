@@ -26,92 +26,84 @@
 	check if a string can be converted to a number
 	if this string cannot be converted to a number,it will return nan
 */
-inline double hex_to_double(std::string& str)
+
+inline double hex_to_double(const char* str)
 {
 	double ret=0;
-	for(int i=2;str[i];++i)
+	for(;*str;++str)
 	{
 		ret*=16;
-		if('0'<=str[i] && str[i]<='9')
-			ret+=(str[i]-'0');
-		else if('a'<=str[i] && str[i]<='f')
-			ret+=(str[i]-'a'+10);
-		else if('A'<=str[i] && str[i]<='F')
-			ret+=(str[i]-'A'+10);
+		if('0'<=*str && *str<='9')
+			ret+=(*str-'0');
+		else if('a'<=*str && *str<='f')
+			ret+=(*str-'a'+10);
+		else if('A'<=*str && *str<='F')
+			ret+=(*str-'A'+10);
 		else
-			return std::nan("");
+			return nan("");
 	}
 	return ret;
 }
-inline double oct_to_double(std::string& str)
+inline double oct_to_double(const char* str)
 {
 	double ret=0;
-	for(int i=2;str[i];++i)
+	for(;*str;++str)
 	{
 		ret*=8;
-		if('0'<=str[i] && str[i]<='8')
-			ret+=(str[i]-'0');
+		if('0'<=*str && *str<='8')
+			ret+=(*str-'0');
 		else
-			return std::nan("");
+			return nan("");
 	}
 	return ret;
 }
-inline double dec_to_double(std::string& str,int len)
+inline double dec_to_double(const char* str)
 {
-	double ret=0;
-	int i=0;
-	while('0'<=str[i] && str[i]<='9' && i<len)
-		ret=ret*10+(str[i++]-'0');
-	if(i==len) return ret;
-	if(str[i]!='.' && str[i]!='e' && str[i]!='E')
-		return std::nan("");
-	if(str[i]=='.')
+	double ret=0,negative=1,num_pow=0;
+	while('0'<=*str && *str<='9')
+		ret=ret*10+(*str++-'0');
+	if(!*str) return ret;
+	if(*str=='.')
 	{
-		++i;
-		if(i==len) return std::nan("");
-		double num_pow=0.1;
-		while('0'<=str[i] && str[i]<='9' && i<len)
+		if(!*++str) return nan("");
+		num_pow=0.1;
+		while('0'<=*str && *str<='9')
 		{
-			ret+=num_pow*(str[i++]-'0');
+			ret+=num_pow*(*str++-'0');
 			num_pow*=0.1;
 		}
+		if(!*str) return ret;
 	}
-	if(i==len) return ret;
-	if(str[i]!='e' && str[i]!='E')
-		return std::nan("");
-	++i;
-	if(i==len) return std::nan("");
-	double negative=(str[i]=='-'? -1:1);
-	if(str[i]=='-' || str[i]=='+')
-		++i;
-	if(i==len) return std::nan("");
-	double num_pow=0;
-	for(;i<len;++i)
+	if(*str!='e' && *str!='E')
+		return nan("");
+	if(!*++str) return nan("");
+	if(*str=='-' || *str=='+')
+		negative=(*str++=='-'? -1:1);
+	if(!*str) return nan("");
+	num_pow=0;
+	for(;*str;++str)
 	{
-		if('0'<=str[i] && str[i]<='9')
-			num_pow=num_pow*10+(str[i]-'0');
+		if('0'<=*str && *str<='9')
+			num_pow=num_pow*10+(*str-'0');
 		else
-			return std::nan("");
+			return nan("");
 	}
 	return ret*std::pow(10,negative*num_pow);
 }
-double str2num(std::string str)
+double str2num(const char* str)
 {
 	bool is_negative=false;
-	int len=str.length();
 	double ret_num=0;
-	if(str[0]=='-' || str[0]=='+')
-	{
-		if(len==1) return std::nan("");
-		is_negative=(str[0]=='-');
-		str=str.substr(1,len--);
-	}
-	if(len>1 && str[0]=='0' && str[1]=='x')
-		ret_num=hex_to_double(str);
-	else if(len>1 && str[0]=='0' && str[1]=='o')
-		ret_num=oct_to_double(str);
+	if(*str=='-' || *str=='+')
+		is_negative=(*str++=='-');
+	if(!*str)
+		return nan("");
+	if(str[0]=='0' && str[1]=='x')
+		ret_num=hex_to_double(str+2);
+	else if(str[0]=='0' && str[1]=='o')
+		ret_num=oct_to_double(str+2);
 	else
-		ret_num=dec_to_double(str,len);
+		ret_num=dec_to_double(str);
 	return is_negative?-ret_num:ret_num;
 }
 

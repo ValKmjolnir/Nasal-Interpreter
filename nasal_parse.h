@@ -315,7 +315,7 @@ nasal_ast nasal_parse::nil_gen()
 nasal_ast nasal_parse::num_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_num);
-    node.set_num(str2num(tok_list[ptr].str));
+    node.set_num(str2num(tok_list[ptr].str.c_str()));
     return node;
 }
 nasal_ast nasal_parse::str_gen()
