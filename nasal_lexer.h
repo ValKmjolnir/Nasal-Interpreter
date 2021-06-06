@@ -125,7 +125,8 @@ void nasal_lexer::openfile(std::string filename)
     {
 		++error;
         std::cout<<">> [lexer] cannot open file \""<<filename<<"\".\n";
-        fin.close();
+		fin.close();
+		res_size=0;
         return;
     }
     while(!fin.eof())
@@ -390,6 +391,7 @@ void nasal_lexer::scanner()
 	}
 	token tk(line,tok_eof,"");
 	token_list.push_back(tk);
+	res.clear();
 	return;
 }
 

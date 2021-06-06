@@ -53,6 +53,7 @@ void execute(std::string& file,std::string& command)
 		return;
 	}
 	parse.set_toklist(lexer.get_token_list());
+	lexer.get_token_list().clear();
 	parse.main_process();
 	if(parse.get_error())
 	{
@@ -65,6 +66,7 @@ void execute(std::string& file,std::string& command)
 		return;
 	}
 	import.link(parse.get_root());
+	parse.get_root().clear();
 	if(import.get_error())
 	{
 		die("import",file);
