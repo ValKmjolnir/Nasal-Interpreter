@@ -87,18 +87,19 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     import_lex.scanner();
     if(import_lex.get_error())
     {
-        this->die(filename,"lexer");
+        die(filename,"lexer");
         return tmp;
     }
     import_par.set_toklist(import_lex.get_token_list());
+    import_lex.get_token_list().clear();
     import_par.main_process();
     if(import_par.get_error())
     {
-        this->die(filename,"parser");
+        die(filename,"parser");
         return tmp;
     }
     tmp=import_par.get_root();
-
+    import_par.get_root().clear();
     // check if tmp has 'import'
     return load(tmp);
 }
