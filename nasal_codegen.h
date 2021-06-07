@@ -216,13 +216,13 @@ private:
     void ret_gen(nasal_ast&);
 public:
     nasal_codegen();
-    int                       get_error();
+    int                       get_error(){return error;}
     void                      main_progress(nasal_ast&);
     void                      print_op(int);
     void                      print_byte_code();
-    std::vector<std::string>& get_str_table();
-    std::vector<double>&      get_num_table();
-    std::vector<opcode>&      get_exec_code();
+    std::vector<std::string>& get_str_table(){return str_res_table;}
+    std::vector<double>&      get_num_table(){return num_res_table;}
+    std::vector<opcode>&      get_exec_code(){return exec_code;}
 };
 
 nasal_codegen::nasal_codegen()
@@ -420,7 +420,7 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         exec_code[local_label].num+=i.size();
     local.pop_back();
 
-    if(!block.get_children().size() || block.get_children().back().get_type()!=ast_return)
+    if(!block.get_children().size() || block.get_children().back().get_type()!=ast_ret)
     {
         nil_gen();
         gen(op_ret,0);
@@ -708,10 +708,10 @@ void nasal_codegen::loop_gen(nasal_ast& ast)
 
 void nasal_codegen::load_continue_break(int continue_place,int break_place)
 {
-    for(int i=0;i<continue_ptr.front().size();++i)
-        exec_code[continue_ptr.front()[i]].num=continue_place;
-    for(int i=0;i<break_ptr.front().size();++i)
-        exec_code[break_ptr.front()[i]].num=break_place;
+    for(auto i:continue_ptr.front())
+        exec_code[i].num=continue_place;
+    for(auto i:break_ptr.front())
+        exec_code[i].num=break_place;
     continue_ptr.pop_front();
     break_ptr.pop_front();
     return;
@@ -737,7 +737,7 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     switch(ast.get_children()[0].get_type())
     {
         case ast_null:break;
-        case ast_definition:def_gen(ast.get_children()[0]);break;
+        case ast_def:def_gen(ast.get_children()[0]);break;
         case ast_multi_assign:multi_assign_gen(ast.get_children()[0]);break;
         case ast_nil:
         case ast_num:
@@ -780,7 +780,7 @@ void nasal_codegen::for_gen(nasal_ast& ast)
     switch(ast.get_children()[2].get_type())
     {
         case ast_null:break;
-        case ast_definition:def_gen(ast.get_children()[2]);break;
+        case ast_def:def_gen(ast.get_children()[2]);break;
         case ast_multi_assign:multi_assign_gen(ast.get_children()[2]);break;
         case ast_nil:case ast_num:case ast_str:case ast_func:break;
         case ast_vec:case ast_hash:
@@ -955,7 +955,7 @@ void nasal_codegen::calc_gen(nasal_ast& ast)
             calc_gen(ast.get_children()[0]);
             gen(op_unot,0);
             break;
-        case ast_definition:
+        case ast_def:
             single_def(ast);
             call_id(ast.get_children()[0]);
             break;
@@ -969,7 +969,7 @@ void nasal_codegen::block_gen(nasal_ast& ast)
         switch(tmp.get_type())
         {
             case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
-            case ast_definition:def_gen(tmp);break;
+            case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
             case ast_continue:
@@ -1010,7 +1010,7 @@ void nasal_codegen::block_gen(nasal_ast& ast)
             case ast_or:
             case ast_and:
             case ast_trino:calc_gen(tmp);pop_gen();break;
-            case ast_return:ret_gen(tmp);break;
+            case ast_ret:ret_gen(tmp);break;
         }
     return;
 }
@@ -1045,14 +1045,12 @@ void nasal_codegen::main_progress(nasal_ast& ast)
     global.clear();
     local.clear();
     gen(op_intg,0);
-    int size=ast.get_children().size();
-    for(int i=0;i<size;++i)
+    for(auto& tmp:ast.get_children())
     {
-        nasal_ast& tmp=ast.get_children()[i];
         switch(tmp.get_type())
         {
             case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
-            case ast_definition:def_gen(tmp);break;
+            case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
             case ast_while:
@@ -1100,31 +1098,22 @@ void nasal_codegen::main_progress(nasal_ast& ast)
 
 void nasal_codegen::print_op(int index)
 {
-    // print opcode ptr
-    printf("0x%.8x: ",index);
-    // print opcode name
-    for(int i=0;code_table[i].name;++i)
-        if(exec_code[index].op==code_table[i].type)
-        {
-            std::cout<<code_table[i].name<<" ";
-            break;
-        }
-    // print opcode index
-    printf("0x%.8x ",exec_code[index].num);
+    // print opcode index,opcode name,opcode immediate number
+    printf("0x%.8x: %s 0x%.8x",index,code_table[exec_code[index].op].name,exec_code[index].num);
     // print detail info
     switch(exec_code[index].op)
     {
-        case op_pnum:std::cout<<'('<<num_res_table[exec_code[index].num]<<')';break;
-        case op_callb:std::cout<<'('<<builtin_func[exec_code[index].num].name<<')';break;
+        case op_pnum:printf(" (%lf)\n",num_res_table[exec_code[index].num]);break;
+        case op_callb:printf(" (%s)\n",builtin_func[exec_code[index].num].name);break;
         case op_happ:
         case op_pstr:
         case op_callh:
         case op_mcallh:
         case op_para:
         case op_defpara:
-        case op_dynpara:std::cout<<'('<<str_res_table[exec_code[index].num]<<')';break;
+        case op_dynpara:printf(" (%s)\n",str_res_table[exec_code[index].num].c_str());break;
+        default:printf("\n");break;
     }
-    std::cout<<'\n';
     return;
 }
 
@@ -1134,30 +1123,9 @@ void nasal_codegen::print_byte_code()
         std::cout<<".number "<<num<<'\n';
     for(auto& str:str_res_table)
         std::cout<<".symbol "<<str<<'\n';
-    int size=exec_code.size();
-    for(int i=0;i<size;++i)
+    for(int i=0;i<exec_code.size();++i)
         print_op(i);
     return;
-}
-
-std::vector<std::string>& nasal_codegen::get_str_table()
-{
-    return str_res_table;
-}
-
-std::vector<double>& nasal_codegen::get_num_table()
-{
-    return num_res_table;
-}
-
-std::vector<opcode>& nasal_codegen::get_exec_code()
-{
-    return exec_code;
-}
-
-int nasal_codegen::get_error()
-{
-    return error;
 }
 
 #endif

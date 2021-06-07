@@ -99,20 +99,11 @@ private:
     nasal_ast break_expr();
     nasal_ast ret_expr();
 public:
-    int get_error();
-    void set_toklist(std::vector<token>&);
+    int get_error(){return error;}
+    void set_toklist(std::vector<token>& toks){tok_list=toks;}
     void main_process();
-    nasal_ast& get_root();
+    nasal_ast& get_root(){return root;}
 };
-int nasal_parse::get_error()
-{
-    return error;
-}
-void nasal_parse::set_toklist(std::vector<token>& toks)
-{
-    tok_list=toks;
-    return;
-}
 void nasal_parse::main_process()
 {
     reset();
@@ -146,10 +137,6 @@ void nasal_parse::main_process()
     <<" maybe recorded because of fatal syntax errors."
     <<"please check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
-}
-nasal_ast& nasal_parse::get_root()
-{
-    return root;
 }
 void nasal_parse::reset()
 {
@@ -237,7 +224,7 @@ bool nasal_parse::check_function_end(nasal_ast& node)
     if(
         node.get_children().empty() || 
         (
-            type!=ast_definition &&
+            type!=ast_def &&
             type!=ast_equal &&
             type!=ast_addeq &&
             type!=ast_subeq &&
@@ -695,7 +682,7 @@ nasal_ast nasal_parse::scalar()
     else if(tok_list[ptr].type==tok_var)
     {
         match(tok_var);
-        node.set_type(ast_definition);
+        node.set_type(ast_def);
         node.add_child(id_gen());
         match(tok_id);
         match(tok_eq);
@@ -795,7 +782,7 @@ nasal_ast nasal_parse::subvec()
 }
 nasal_ast nasal_parse::definition()
 {
-    nasal_ast node(tok_list[ptr].line,ast_definition);
+    nasal_ast node(tok_list[ptr].line,ast_def);
     if(tok_list[ptr].type==tok_var)
     {
         match(tok_var);
@@ -1058,7 +1045,7 @@ nasal_ast nasal_parse::break_expr()
 }
 nasal_ast nasal_parse::ret_expr()
 {
-    nasal_ast node(tok_list[ptr].line,ast_return);
+    nasal_ast node(tok_list[ptr].line,ast_ret);
     match(tok_ret);
     int type=tok_list[ptr].type;
     if(type==tok_nil || type==tok_num || type==tok_str || type==tok_id || type==tok_func ||

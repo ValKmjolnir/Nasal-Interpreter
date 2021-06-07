@@ -103,20 +103,20 @@ private:
 	std::string line_code;
 	std::vector<char> res;
     std::vector<token> token_list;
-	int  get_tok_type(std::string);
-	void die(std::string,std::string,int,int);
+	int  get_tok_type(std::string&);
+	void die(std::string,int);
 	std::string id_gen();
     std::string num_gen();
     std::string str_gen();
 public:
-	void openfile(std::string);
+	void openfile(std::string&);
     void scanner();
     void print_token();
-    int  get_error();
-	std::vector<token>& get_token_list();
+    int  get_error(){return error;}
+	std::vector<token>& get_token_list(){return token_list;}
 };
 
-void nasal_lexer::openfile(std::string filename)
+void nasal_lexer::openfile(std::string& filename)
 {
 	error=0;
 	res.clear();
@@ -126,7 +126,6 @@ void nasal_lexer::openfile(std::string filename)
 		++error;
         std::cout<<">> [lexer] cannot open file \""<<filename<<"\".\n";
 		fin.close();
-		res_size=0;
         return;
     }
     while(!fin.eof())
@@ -137,11 +136,10 @@ void nasal_lexer::openfile(std::string filename)
         res.push_back(c);
     }
     fin.close();
-	res_size=res.size();
     return;
 }
 
-int nasal_lexer::get_tok_type(std::string tk_str)
+int nasal_lexer::get_tok_type(std::string& tk_str)
 {
 	for(int i=0;token_table[i].str;++i)
 		if(tk_str==token_table[i].str)
@@ -149,12 +147,12 @@ int nasal_lexer::get_tok_type(std::string tk_str)
 	return tok_null;
 }
 
-void nasal_lexer::die(std::string code,std::string error_info,int line=-1,int column=-1)
+void nasal_lexer::die(std::string error_info,int line)
 {
 	++error;
-	std::cout<<">> [lexer] line "<<line<<" column "<<column<<": \n"<<code<<"\n";
-	for(int i=0;i<column-1;++i)
-		std::cout<<(code[i]=='\t'?'\t':' ');
+	std::cout<<">> [lexer] line "<<line<<" column "<<line_code.length()<<": \n"<<line_code<<"\n";
+	for(auto i:line_code)
+		std::cout<<(i=='\t'?'\t':' ');
 	std::cout<<"^ "<<error_info<<'\n';
 	return;
 }
@@ -183,7 +181,7 @@ std::string nasal_lexer::num_gen()
 		line_code+=token_str;
 		if(token_str=="0x")
 		{
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 		return token_str;
@@ -198,7 +196,7 @@ std::string nasal_lexer::num_gen()
 		line_code+=token_str;
 		if(token_str=="0o")
 		{
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 		return token_str;
@@ -214,7 +212,7 @@ std::string nasal_lexer::num_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 		while(ptr<res_size && IS_DIGIT(res[ptr]))
@@ -223,7 +221,7 @@ std::string nasal_lexer::num_gen()
 		if(token_str.back()=='.')
 		{
 			line_code+=token_str;
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 	}
@@ -234,7 +232,7 @@ std::string nasal_lexer::num_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 		if(ptr<res_size && (res[ptr]=='-' || res[ptr]=='+'))
@@ -242,7 +240,7 @@ std::string nasal_lexer::num_gen()
 		if(ptr>=res_size)
 		{
 			line_code+=token_str;
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 		while(ptr<res_size && IS_DIGIT(res[ptr]))
@@ -251,7 +249,7 @@ std::string nasal_lexer::num_gen()
 		if(token_str.back()=='e' || token_str.back()=='E' || token_str.back()=='-' || token_str.back()=='+')
 		{
 			line_code+=token_str;
-			die(line_code,"incorrect number.",line,line_code.length());
+			die("incorrect number.",line);
 			return "0";
 		}
 	}
@@ -277,15 +275,15 @@ std::string nasal_lexer::str_gen()
 			line_code+=res[++ptr];
 			switch(res[ptr])
 			{
-				case 'a':token_str.push_back('\a');break;
-				case 'b':token_str.push_back('\b');break;
-				case 'f':token_str.push_back('\f');break;
-				case 'n':token_str.push_back('\n');break;
-				case 'r':token_str.push_back('\r');break;
-				case 't':token_str.push_back('\t');break;
-				case 'v':token_str.push_back('\v');break;
-				case '?':token_str.push_back('\?');break;
-				case '0':token_str.push_back('\0');break;
+				case 'a': token_str.push_back('\a');break;
+				case 'b': token_str.push_back('\b');break;
+				case 'f': token_str.push_back('\f');break;
+				case 'n': token_str.push_back('\n');break;
+				case 'r': token_str.push_back('\r');break;
+				case 't': token_str.push_back('\t');break;
+				case 'v': token_str.push_back('\v');break;
+				case '?': token_str.push_back('\?');break;
+				case '0': token_str.push_back('\0');break;
 				case '\\':token_str.push_back('\\');break;
 				case '\'':token_str.push_back('\'');break;
 				case '\"':token_str.push_back('\"');break;
@@ -297,9 +295,9 @@ std::string nasal_lexer::str_gen()
 	}
 	// check if this string ends with a " or '
 	if(ptr++>=res_size)
-		die(line_code,"get EOF when generating string.",line,line_code.length());
+		die("get EOF when generating string.",line);
 	if(str_begin=='`' && token_str.length()>1)
-		die(line_code,"\'`\' is used for string that includes one character.",line,line_code.length());
+		die("\'`\' is used for string that includes one character.",line);
 	return token_str;
 }
 
@@ -309,6 +307,7 @@ void nasal_lexer::scanner()
     line=1;
 	ptr=0;
 	line_code="";
+	res_size=res.size();
 
 	std::string token_str;
 	while(ptr<res_size)
@@ -351,7 +350,7 @@ void nasal_lexer::scanner()
 			line_code+=res[ptr];
 			token new_token(line,get_tok_type(token_str),token_str);
 			if(!new_token.type)
-				die(line_code,"incorrect operator.",line,line_code.length());
+				die("incorrect operator.",line);
 			token_list.push_back(new_token);
 			++ptr;
 		}
@@ -386,7 +385,7 @@ void nasal_lexer::scanner()
 		else
 		{
 			line_code+=res[ptr++];
-			die(line_code,"unknown character.",line,line_code.length());
+			die("unknown character.",line);
 		}
 	}
 	token tk(line,tok_eof,"");
@@ -397,19 +396,9 @@ void nasal_lexer::scanner()
 
 void nasal_lexer::print_token()
 {
-    int size=token_list.size();
-    for(int i=0;i<size;++i)
-        std::cout<<"("<<token_list[i].line<<" | "<<token_list[i].str<<")\n";
+    for(auto tok:token_list)
+        std::cout<<"("<<tok.line<<" | "<<tok.str<<")\n";
     return;
 }
 
-int nasal_lexer::get_error()
-{
-    return error;
-}
-
-std::vector<token>& nasal_lexer::get_token_list()
-{
-	return token_list;
-}
 #endif

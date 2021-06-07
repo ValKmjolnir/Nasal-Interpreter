@@ -4,8 +4,7 @@
 enum ast_node
 {
     ast_null=0,
-    ast_root,
-    ast_block,
+    ast_root,ast_block,
     ast_nil,ast_num,ast_str,ast_id,ast_func,ast_hash,ast_vec,
     ast_hashmember,ast_call,ast_callh,ast_callv,ast_callf,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
@@ -20,74 +19,31 @@ enum ast_node
     ast_for,ast_forindex,ast_foreach,ast_while,ast_new_iter,
     ast_conditional,ast_if,ast_elsif,ast_else,
     ast_multi_id,ast_multi_scalar,
-    ast_definition,ast_multi_assign,
-    ast_continue,ast_break,ast_return
+    ast_def,ast_multi_assign,
+    ast_continue,ast_break,ast_ret
 };
 
-std::string ast_name(int type)
+const char* ast_name[]=
 {
-    switch(type)
-    {
-        case ast_null:         return "null";
-        case ast_root:         return "root";
-        case ast_block:        return "block";
-        case ast_nil:          return "nil";
-        case ast_num:          return "number";
-        case ast_str:          return "string";
-        case ast_id:           return "id";
-        case ast_func:         return "function";
-        case ast_hash:         return "hash";
-        case ast_vec:          return "vector";
-        case ast_hashmember:   return "hashmember";
-        case ast_call:         return "call";
-        case ast_callh:        return "callh";
-        case ast_callv:        return "callv";
-        case ast_callf:        return "callf";
-        case ast_subvec:       return "subvec";
-        case ast_args:         return "args";
-        case ast_default_arg:  return "deflt_arg";
-        case ast_dynamic_id:   return "dyn_id";
-        case ast_and:          return "and";
-        case ast_or:           return "or";
-        case ast_equal:        return "=";
-        case ast_addeq:        return "+=";
-        case ast_subeq:        return "-=";
-        case ast_multeq:       return "*=";
-        case ast_diveq:        return "/=";
-        case ast_lnkeq:        return "~=";
-        case ast_cmpeq:        return "==";
-        case ast_neq:          return "!=";
-        case ast_less:         return "<";
-        case ast_leq:          return "<=";
-        case ast_grt:          return ">";
-        case ast_geq:          return ">=";
-        case ast_add:          return "+";
-        case ast_sub:          return "-";
-        case ast_mult:         return "*";
-        case ast_div:          return "/";
-        case ast_link:         return "~";
-        case ast_neg:          return "unary-";
-        case ast_not:          return "unary!";
-        case ast_trino:        return "trino";
-        case ast_for:          return "for";
-        case ast_forindex:     return "forindex";
-        case ast_foreach:      return "foreach";
-        case ast_while:        return "while";
-        case ast_new_iter:     return "iter";
-        case ast_conditional:  return "conditional";
-        case ast_if:           return "if";
-        case ast_elsif:        return "elsif";
-        case ast_else:         return "else";
-        case ast_multi_id:     return "multi_id";
-        case ast_multi_scalar: return "multi_scalar";
-        case ast_definition:   return "def";
-        case ast_multi_assign: return "multi_assign";
-        case ast_continue:     return "continue";
-        case ast_break:        return "break";
-        case ast_return:       return "return";
-    }
-    return "null";
-}
+    "null",
+    "root","block",
+    "nil","num","str","id","func","hash","vec",
+    "hashmember","call","callh","callv","callf","subvec",
+    "args","deflt_arg","dyn_id",
+    "and","or",
+    "=","+=","-=","*=","/=","~=",
+    "==","!=",
+    "<","<=",
+    ">",">=",
+    "+","-","*","/","~",
+    "unary-","unary!",
+    "trino",
+    "for","forindex","foreach","while","iter",
+    "conditional","if","elsif","else",
+    "multi_id","multi_scalar",
+    "def","multi_assign",
+    "continue","break","return"
+};
 
 class nasal_ast
 {
@@ -98,38 +54,23 @@ private:
     std::string str;
     std::vector<nasal_ast> children;
 public:
-    nasal_ast();
-    nasal_ast(int,int);
+    nasal_ast(){line=0;type=ast_null;}
+    nasal_ast(int l,int t){line=l;type=t;}
     nasal_ast(const nasal_ast&);
-    ~nasal_ast();
     nasal_ast&  operator=(const nasal_ast&);
     void   print_ast(int);
     void   clear();
-    void   set_line(int);
-    void   set_type(int);
-    void   set_str(std::string&);
-    void   set_num(double);
-    void   add_child(nasal_ast);
-    int    get_line();
-    int    get_type();
-    double get_num();
-    std::string& get_str();
-    std::vector<nasal_ast>& get_children();
+    void   add_child(nasal_ast ast){children.push_back(ast);}
+    void   set_line(int l){line=l;}
+    void   set_type(int t){type=t;}
+    void   set_str(std::string& s){str=s;}
+    void   set_num(double n){num=n;}
+    int    get_line(){return line;}
+    int    get_type(){return type;}
+    double get_num(){return num;}
+    std::string& get_str(){return str;}
+    std::vector<nasal_ast>& get_children(){return children;}
 };
-
-nasal_ast::nasal_ast()
-{
-    line=0;
-    type=ast_null;
-    return;
-}
-
-nasal_ast::nasal_ast(int _line,int _type)
-{
-    line=_line;
-    type=_type;
-    return;
-}
 
 nasal_ast::nasal_ast(const nasal_ast& tmp)
 {
@@ -138,12 +79,6 @@ nasal_ast::nasal_ast(const nasal_ast& tmp)
     str =tmp.str;
     num =tmp.num;
     children=tmp.children;
-    return;
-}
-
-nasal_ast::~nasal_ast()
-{
-    children.clear();
     return;
 }
 
@@ -167,67 +102,12 @@ void nasal_ast::clear()
     return;
 }
 
-void nasal_ast::set_line(int l)
-{
-    line=l;
-    return;
-}
-
-void nasal_ast::set_type(int t)
-{
-    type=t;
-    return;
-}
-
-void nasal_ast::set_str(std::string& s)
-{
-    str=s;
-    return;
-}
-
-void nasal_ast::set_num(double n)
-{
-    num=n;
-    return;
-}
-
-void nasal_ast::add_child(nasal_ast ast)
-{
-    children.push_back(ast);
-    return;
-}
-
-int nasal_ast::get_line()
-{
-    return line;
-}
-
-int nasal_ast::get_type()
-{
-    return type;
-}
-
-std::string& nasal_ast::get_str()
-{
-    return str;
-}
-
-double nasal_ast::get_num()
-{
-    return num;
-}
-
-std::vector<nasal_ast>& nasal_ast::get_children()
-{
-    return children;
-}
-
 void nasal_ast::print_ast(int depth)
 {
     std::string indentation="";
     for(int i=0;i<depth;++i)
         indentation+="|  ";
-    std::cout<<indentation<<ast_name(type);
+    std::cout<<indentation<<ast_name[type];
     if(type==ast_str || type==ast_id || type==ast_dynamic_id || type==ast_callh)
         std::cout<<":"<<str;
     else if(type==ast_num)

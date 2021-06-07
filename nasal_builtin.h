@@ -55,7 +55,7 @@ nasal_val* builtin_right(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_cmp(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_chr(std::vector<nasal_val*>&,nasal_gc&);
 
-void builtin_err(std::string func_name,std::string info)
+void builtin_err(const char* func_name,std::string info)
 {
     std::cout<<">> [vm] "<<func_name<<": "<<info<<".\n";
     return;
@@ -65,7 +65,7 @@ void builtin_err(std::string func_name,std::string info)
 // this table must end with {"",NULL}
 struct FUNC_TABLE
 {
-    std::string name;
+    const char* name;
     nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {

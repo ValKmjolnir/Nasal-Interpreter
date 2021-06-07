@@ -242,11 +242,11 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (65536<<4)
+#define STACK_MAX_DEPTH (65536<<2)
     nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
-    nasal_val*              val_stack[STACK_MAX_DEPTH];
+    nasal_val*              val_stack[STACK_MAX_DEPTH+16];// 16 reserved to avoid stack overflow
     nasal_val**             stack_top;               // stack top
     std::vector<nasal_val*> num_addrs;               // reserved address for const vm_num
     std::vector<nasal_val*> str_addrs;               // reserved address for const vm_str
@@ -344,17 +344,15 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
     num_addrs.resize(nums.size());
     for(int i=0;i<nums.size();++i)
     {
-        nasal_val* tmp=new nasal_val(vm_num);
-        tmp->ptr.num=nums[i];
-        num_addrs[i]=tmp;
+        num_addrs[i]=new nasal_val(vm_num);
+        num_addrs[i]->ptr.num=nums[i];
     }
     // init constant strings
     str_addrs.resize(strs.size());
     for(int i=0;i<strs.size();++i)
     {
-        nasal_val* tmp=new nasal_val(vm_str);
-        *tmp->ptr.str=strs[i];
-        str_addrs[i]=tmp;
+        str_addrs[i]=new nasal_val(vm_str);
+        *str_addrs[i]->ptr.str=strs[i];
     }
     return;
 }
