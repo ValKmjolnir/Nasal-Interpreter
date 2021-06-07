@@ -4,24 +4,24 @@
 class nasal_import
 {
 private:
-    nasal_lexer    import_lex;
-    nasal_parse    import_par;
-    nasal_ast      import_ast;
-    std::vector<std::string> filename_table;
     int error;
-    void die(std::string,std::string);
+    nasal_lexer import_lex;
+    nasal_parse import_par;
+    nasal_ast   import_ast;
+    std::vector<std::string> filename_table;
+    void die(std::string&,const char*);
     bool check_import(nasal_ast&);
-    bool check_exist(std::string);
+    bool check_exist(std::string&);
     void linker(nasal_ast&,nasal_ast&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&);
 public:
-    int  get_error();
+    int  get_error(){return error;}
     void link(nasal_ast&);
-    nasal_ast& get_root();
+    nasal_ast& get_root(){return import_ast;}
 };
 
-void nasal_import::die(std::string filename,std::string error_stage)
+void nasal_import::die(std::string& filename,const char* error_stage)
 {
     ++error;
     std::cout<<">> [import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
@@ -51,7 +51,7 @@ only this kind of node can be recognized as 'import':
     return true;
 }
 
-bool nasal_import::check_exist(std::string filename)
+bool nasal_import::check_exist(std::string& filename)
 {
     // avoid importing the same file
     for(auto& fname:filename_table)
@@ -75,7 +75,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     nasal_ast tmp(0,ast_root);
 
     // get filename and set node to ast_null
-    std::string filename=node.get_children()[1].get_children()[0].get_str();
+    std::string& filename=node.get_children()[1].get_children()[0].get_str();
     node.clear();
 
     // avoid infinite loading loop
@@ -129,16 +129,6 @@ void nasal_import::link(nasal_ast& root)
     // scan root and import files,then generate a new ast and return to import_ast
     import_ast=load(root);
     return;
-}
-
-nasal_ast& nasal_import::get_root()
-{
-    return import_ast;
-}
-
-int nasal_import::get_error()
-{
-    return error;
 }
 
 #endif

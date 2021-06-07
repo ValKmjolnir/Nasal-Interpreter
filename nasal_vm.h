@@ -82,7 +82,7 @@ private:
     void opr_mcallh();
     void opr_ret();
 public:
-    nasal_vm();
+    nasal_vm():stack_top(gc.stack_top){};
     void init(
         std::vector<std::string>&,
         std::vector<double>&,
@@ -90,11 +90,6 @@ public:
     void clear();
     void run();
 };
-
-nasal_vm::nasal_vm():stack_top(gc.stack_top)
-{
-    return;
-}
 
 void nasal_vm::init(
     std::vector<std::string>& strs,
@@ -123,7 +118,7 @@ void nasal_vm::clear()
 }
 void nasal_vm::die(std::string str)
 {
-    printf(">> [vm] 0x%.8x: %s\n",pc,str.data());
+    printf(">> [vm] 0x%.8x: %s\n",pc,str.c_str());
     loop_mark=false;
     return;
 }
@@ -137,7 +132,7 @@ bool nasal_vm::condition(nasal_val* val_addr)
         std::string& str=*val_addr->ptr.str;
         double number=str2num(str.c_str());
         if(std::isnan(number))
-            return !str.empty();
+            return str.empty();
         return number;
     }
     return false;
@@ -262,20 +257,19 @@ void nasal_vm::opr_unot()
     nasal_val* new_val=nullptr;
     int type=val->type;
     if(type==vm_nil)
-        new_val=gc.one_addr;
+        *stack_top=gc.one_addr;
     else if(type==vm_num)
-        new_val=val->ptr.num?gc.zero_addr:gc.one_addr;
+        *stack_top=val->ptr.num?gc.zero_addr:gc.one_addr;
     else if(type==vm_str)
     {
         double number=str2num(val->ptr.str->c_str());
         if(std::isnan(number))
-            new_val=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
+            *stack_top=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
         else
-            new_val=number?gc.zero_addr:gc.one_addr;
+            *stack_top=number?gc.zero_addr:gc.one_addr;
     }
     else
         die("unot: incorrect value type");
-    *stack_top=new_val;
     return;
 }
 void nasal_vm::opr_usub()
@@ -433,9 +427,7 @@ void nasal_vm::opr_less()
 {
     nasal_val* val2=*stack_top--;
     nasal_val* val1=*stack_top;
-    int a_type=val1->type;
-    int b_type=val2->type;
-    if(a_type==vm_str && b_type==vm_str)
+    if(val1->type==vm_str && val2->type==vm_str)
         *stack_top=(*val1->ptr.str<*val2->ptr.str)?gc.one_addr:gc.zero_addr;
     else
         *stack_top=(val1->to_number()<val2->to_number())?gc.one_addr:gc.zero_addr;
@@ -445,9 +437,7 @@ void nasal_vm::opr_leq()
 {
     nasal_val* val2=*stack_top--;
     nasal_val* val1=*stack_top;
-    int a_type=val1->type;
-    int b_type=val2->type;
-    if(a_type==vm_str && b_type==vm_str)
+    if(val1->type==vm_str && val2->type==vm_str)
         *stack_top=(*val1->ptr.str<=*val2->ptr.str)?gc.one_addr:gc.zero_addr;
     else
         *stack_top=(val1->to_number()<=val2->to_number())?gc.one_addr:gc.zero_addr;
@@ -457,9 +447,7 @@ void nasal_vm::opr_grt()
 {
     nasal_val* val2=*stack_top--;
     nasal_val* val1=*stack_top;
-    int a_type=val1->type;
-    int b_type=val2->type;
-    if(a_type==vm_str && b_type==vm_str) 
+    if(val1->type==vm_str && val2->type==vm_str) 
         *stack_top=(*val1->ptr.str>*val2->ptr.str)?gc.one_addr:gc.zero_addr;
     else
         *stack_top=(val1->to_number()>val2->to_number())?gc.one_addr:gc.zero_addr;
@@ -469,9 +457,7 @@ void nasal_vm::opr_geq()
 {
     nasal_val* val2=*stack_top--;
     nasal_val* val1=*stack_top;
-    int a_type=val1->type;
-    int b_type=val2->type;
-    if(a_type==vm_str && b_type==vm_str)
+    if(val1->type==vm_str && val2->type==vm_str)
         *stack_top=(*val1->ptr.str>=*val2->ptr.str)?gc.one_addr:gc.zero_addr;
     else
         *stack_top=(val1->to_number()>=val2->to_number())?gc.one_addr:gc.zero_addr;
@@ -502,12 +488,9 @@ void nasal_vm::opr_jf()
 }
 void nasal_vm::opr_counter()
 {
-    if((*stack_top)->type!=vm_vec)
-    {
-        die("cnt: must use vector in forindex/foreach");
-        return;
-    }
     counter.push(-1);
+    if((*stack_top)->type!=vm_vec)
+        die("cnt: must use vector in forindex/foreach");
     return;
 }
 void nasal_vm::opr_cntpop()
@@ -556,15 +539,10 @@ void nasal_vm::opr_callv()
     int type=vec_addr->type;
     if(type==vm_vec)
     {
-        int num=val->to_number();
-        nasal_val* res=vec_addr->ptr.vec->get_val(num);
-        if(res)
-            *stack_top=res;
-        else
-        {
+        nasal_val* res=vec_addr->ptr.vec->get_val(val->to_number());
+        if(!res)
             die("callv: index out of range");
-            return;
-        }
+        *stack_top=res;
     }
     else if(type==vm_hash)
     {
@@ -612,10 +590,7 @@ void nasal_vm::opr_callvi()
     // cannot use operator[],because this may cause overflow
     nasal_val* res=val->ptr.vec->get_val(exec_code[pc].num);
     if(!res)
-    {
         die("callvi: index out of range");
-        return;
-    }
     *(++stack_top)=res;
     return;
 }
@@ -646,7 +621,7 @@ void nasal_vm::opr_callfv()
     nasal_val* func_addr=*(vec-1);
     if(func_addr->type!=vm_func)
     {
-        die("callfv: called a value that is not a function");
+        die("callfv: must call a function");
         return;
     }
     // push new local scope
@@ -690,7 +665,7 @@ void nasal_vm::opr_callfh()
     nasal_val* func_addr=*(stack_top-1);
     if(func_addr->type!=vm_func)
     {
-        die("callfh: called a value that is not a function");
+        die("callfh: must call a function");
         return;
     }
     // push new local scope
@@ -756,10 +731,9 @@ void nasal_vm::opr_slc()
         default:die("slc: error value type");break;
     }
     nasal_val* res=(*stack_top)->ptr.vec->get_val((int)num);
-    if(res)
-        gc.slice_stack.back()->ptr.vec->elems.push_back(res);
-    else
+    if(!res)
         die("slc: index out of range");
+    gc.slice_stack.back()->ptr.vec->elems.push_back(res);
     return;
 }
 void nasal_vm::opr_slc2()
@@ -824,10 +798,7 @@ void nasal_vm::opr_mcallv()
         }
         nasal_val** res=(*vec_addr)->ptr.vec->get_mem(num);
         if(!res)
-        {
             die("mcallv: index out of range");
-            return;
-        }
         addr_stack.push(res);
     }
     else if(type==vm_hash)
@@ -848,10 +819,7 @@ void nasal_vm::opr_mcallv()
         addr_stack.push(res);
     }
     else
-    {
         die("mcallv: cannot get memory space in a string");
-        return;
-    }
     return;
 }
 void nasal_vm::opr_mcallh()
@@ -957,6 +925,8 @@ void nasal_vm::run()
     for(pc=0;loop_mark&&!gc.val_stack[STACK_MAX_DEPTH-1];++pc)
         (this->*opr_table[exec_code[pc].op])();
     float total_time=((double)(clock()-begin_time))/CLOCKS_PER_SEC;
+    if(gc.val_stack[STACK_MAX_DEPTH-1])
+        die("stack overflow");
     std::cout<<">> [vm] process exited after "<<total_time<<"s.\n";
     return;
 }
