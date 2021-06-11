@@ -1,7 +1,5 @@
 # Nasal Script Language
 
-[TOC]
-
 ## Introduction
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
@@ -56,7 +54,7 @@ Use these commands to get version of interpreter:
 
 > ./nasal -v | -version
 
-Use these commands to get version of interpreter:
+Use these commands to get help:
 
 > ./nasal -h | -help
 

@@ -19,6 +19,7 @@ void help_interact()
 void help_cmd()
 {
 	std::cout
+	<<"nasal             | use interactive interpreter.\n"
 	<<"nasal -h -help    | get help.\n"
 	<<"nasal -v -version | get version of nasal interpreter.\n"
 	<<"nasal filename    | execute script file.\n";
@@ -153,7 +154,7 @@ int main(int argc,const char* argv[])
 	}
 	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"-help")))
 		help_cmd();
-	else if(argc==2)
+	else if(argc==2 && argv[1][0]!='-')
 	{
 		file=argv[1];
 		command="exec";
@@ -161,6 +162,10 @@ int main(int argc,const char* argv[])
 		return 0;
 	}
 	else
-		help_cmd();
+	{
+		std::cout
+		<<"invalid command.\n"
+		<<"use nasal -h to get help.\n";
+	}
     return 0;
 }
