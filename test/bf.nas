@@ -151,8 +151,6 @@ var bf=func(program)
 {
     var paper=[];
     setsize(paper,131072);
-    #for(var i=0;i<131072;i+=1)
-    #    paper[i]=0;
     var ptr=0;
     var s=program;
     var len=size(s);
@@ -213,8 +211,8 @@ var bf=func(program)
                 return;
             }
             var label=pop(stack);
-            append(code,[jt,label]);
-            code[label][1]=size(code)-1;
+            append(code,[jt,label-1]);
+            code[label][1]=size(code)-2;
         }
     }
     if(size(stack))
@@ -227,25 +225,18 @@ var bf=func(program)
     for(var i=0;i<len;i+=1)
     {
         if(code[i][0]==add)
-        {
             paper[ptr]+=code[i][1];
-            if(paper[ptr]>255)
-                paper[ptr]-=256;
-            elsif(paper[ptr]<0)
-                paper[ptr]+=256;
-        }
         elsif(code[i][0]==mov)
             ptr+=code[i][1];
-        elsif(code[i][0]==in)
-            paper[ptr]=input()[0];
+        elsif(code[i][0]==jt and paper[ptr])
+            i=code[i][1];
+        elsif(code[i][0]==jf and !paper[ptr])
+            i=code[i][1];
         elsif(code[i][0]==out)
             print(chr(paper[ptr]));
-        elsif(code[i][0]==jt and paper[ptr])
-            i=code[i][1]-1;
-        elsif(code[i][0]==jf and !paper[ptr])
-            i=code[i][1]-1;
+        elsif(code[i][0]==in)
+            paper[ptr]=input()[0];
     }
-    print('\n');
     return;
 }
 
