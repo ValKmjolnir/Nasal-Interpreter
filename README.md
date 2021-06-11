@@ -34,7 +34,28 @@ Better choose the latest update of the interpreter.
 
 MUST USE -O2 ! pragma gcc optimize(2) seems useless when using g++
 
-> g++ -std=c++11 -O2 main.cpp -o main.exe
+> g++ -std=c++11 -O2 main.cpp -o nasal.exe
+
+Or use this in linux/macOS/Unix
+
+> g++ -std=c++11 -O2 main.cpp -o nasal
+
+## How to Use?
+
+Input this command to use interactive interpreter mode:
+
+> ./nasal
+
+Input this command to run scripts directly:
+
+> ./nasal filename
+
+Use these commands to get some information of interpreter:
+
+> ./nasal -v
+> ./nasal -version
+> ./nasal -h
+> ./nasal -help
 
 ## Parser
 
@@ -471,7 +492,7 @@ After that, write the built-in function's name(in nasal) and the function's poin
 ```C++
 struct FUNC_TABLE
 {
-    std::string name;
+    const char* name;
     nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {

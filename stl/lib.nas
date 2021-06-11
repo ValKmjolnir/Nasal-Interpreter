@@ -1,28 +1,23 @@
 var import=func(filename)
 {
-    __builtin_import(filename);
-    return nil;
+    return __builtin_import(filename);
 }
-var print=func(elements...)
+var print=func(elems...)
 {
-    __builtin_std_cout(elements);
-    return nil;
+    return __builtin_std_cout(elems);
 };
-var println=func(elements...)
+var println=func(elems...)
 {
-    __builtin_std_cout(elements);
-    print('\n');
-    return nil;
+    __builtin_std_cout(elems);
+    return print('\n');
 }
-var append=func(vector,elements...)
+var append=func(vec,elems...)
 {
-    __builtin_push_back(vector,elements);
-    return nil;
+    return __builtin_push_back(vec,elems);
 }
-var setsize=func(vector,size)
+var setsize=func(vec,size)
 {
-    __builtin_set_size(vector,size);
-    return nil;
+    return __builtin_set_size(vec,size);
 }
 var system=func(str)
 {
@@ -34,36 +29,35 @@ var input=func()
 }
 var sleep=func(duration)
 {
-    __builtin_sleep(duration);
-    return;
+    return __builtin_sleep(duration);
 }
-var split=func(delimeter,string)
+var split=func(deli,str)
 {
-    return __builtin_split(delimeter,string);
+    return __builtin_split(deli,str);
 }
 var rand=func(seed=nil)
 {
     return __builtin_rand(seed);
 }
-var id=func(thing)
+var id=func(object)
 {
-    return __builtin_get_id(thing);
+    return __builtin_get_id(object);
 }
-var int=func(value)
+var int=func(val)
 {
-    return __builtin_int(value);
+    return __builtin_int(val);
 }
-var num=func(value)
+var num=func(val)
 {
-    return __builtin_num(value);
+    return __builtin_num(val);
 }
-var pop=func(vector)
+var pop=func(vec)
 {
-    return __builtin_pop_back(vector);
+    return __builtin_pop_back(vec);
 }
-var str=func(number)
+var str=func(num)
 {
-    return __builtin_str(number);
+    return __builtin_str(num);
 }
 var size=func(object)
 {
@@ -75,8 +69,7 @@ var contains=func(hash,key)
 }
 var delete=func(hash,key)
 {
-    __builtin_delete(hash,key);
-    return;
+    return __builtin_delete(hash,key);
 }
 var keys=func(hash)
 {
@@ -88,49 +81,41 @@ var time=func(begin_time)
 }
 var die=func(str)
 {
-    __builtin_die(str);
-    return nil;
+    return __builtin_die(str);
 }
 var typeof=func(object)
 {
     return __builtin_type(object);
 }
-var substr=func(str,begin,length)
+var substr=func(str,begin,len)
 {
-    return __builtin_substr(str,begin,length);
+    return __builtin_substr(str,begin,len);
 }
 var streq=func(a,b)
 {
     return __builtin_streq(a,b);
 }
-var left=func(string,length)
+var left=func(str,len)
 {
-    return __builtin_left(string,length);
+    return __builtin_left(str,len);
 }
-var right=func(string,length)
+var right=func(str,len)
 {
-    return __builtin_right(string,length);
+    return __builtin_right(str,len);
 }
 var cmp=func(a,b)
 {
     return __builtin_cmp(a,b);
 }
-var chr=func(code) #//Unlike in FG, this chr does not support Extended ASCII
+var chr=func(code)
 {
     return __builtin_chr(code);
 }
 
 var io=
 {
-    fin:func(filename)
-    {
-        return __builtin_fin(filename);
-    },
-    fout:func(filename,str)
-    {
-        __builtin_fout(filename,str);
-        return;
-    }
+    fin: func(filename){return __builtin_fin(filename);},
+    fout:func(filename,str){return __builtin_fout(filename,str);}
 };
 
 var bits=

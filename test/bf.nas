@@ -146,16 +146,13 @@ var mandelbrot=
 >>>]>[-]+<]]+>[-<[>>>>>>>>>]<<<<<<<<]>>>>>>>>]<<<<<<<<<[<<<<<<<<<]>>>>[-]<<<++++
 +[-[->>>>>>>>>+<<<<<<<<<]>>>>>>>>>]>>>>>->>>>>>>>>>>>>>>>>>>>>>>>>>>-<<<<<<[<<<<
 <<<<<]]>>>]";
-var hello=
-"++[>++<-]>[>++<-]>[>++<-]>[>++<-]>[>++<-]>+++++++++++++++++++++++++++++++++++++
-+++.---.+++++++..+++.<.>++++++++.--------.+++.------.--------.";
 
 var bf=func(program)
 {
     var paper=[];
     setsize(paper,131072);
-    for(var i=0;i<131072;i+=1)
-        paper[i]=0;
+    #for(var i=0;i<131072;i+=1)
+    #    paper[i]=0;
     var ptr=0;
     var s=program;
     var len=size(s);
@@ -243,16 +240,10 @@ var bf=func(program)
             paper[ptr]=input()[0];
         elsif(code[i][0]==out)
             print(chr(paper[ptr]));
-        elsif(code[i][0]==jt)
-        {
-            if(paper[ptr])
-                i=code[i][1]-1;
-        }
-        elsif(code[i][0]==jf)
-        {
-            if(!paper[ptr])
-                i=code[i][1]-1;
-        }
+        elsif(code[i][0]==jt and paper[ptr])
+            i=code[i][1]-1;
+        elsif(code[i][0]==jf and !paper[ptr])
+            i=code[i][1]-1;
     }
     print('\n');
     return;
