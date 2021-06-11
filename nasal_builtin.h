@@ -199,7 +199,7 @@ nasal_val* builtin_sleep(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         return nullptr;
     }
     // sleep in unistd.h will make this progress sleep sleep_time seconds.
-    sleep((unsigned long)val_addr->ptr.num);
+    sleep((unsigned int)val_addr->ptr.num);
     return gc.nil_addr;
 }
 
@@ -628,9 +628,7 @@ nasal_val* builtin_contains(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         builtin_err("contains","\"key\" must be string");
         return nullptr;
     }
-    nasal_val* ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=hash_addr->ptr.hash->elems.count(*key_addr->ptr.str);
-    return ret_addr;
+    return hash_addr->ptr.hash->elems.count(*key_addr->ptr.str)?gc.one_addr:gc.zero_addr;
 }
 nasal_val* builtin_delete(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
@@ -810,6 +808,24 @@ nasal_val* builtin_cmp(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 }
 nasal_val* builtin_chr(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
+    const char* extend[]={
+        "€"," ","‚","ƒ","„","…","†","‡",
+        "ˆ","‰","Š","‹","Œ"," ","Ž"," ",
+        " ","‘","’","“","”","•","–","—",
+        "˜","™","š","›","œ"," ","ž","Ÿ",
+        " ","¡","¢","£","¤","¥","¦","§",
+        "¨","©","ª","«","¬"," ","®","¯",
+        "°","±","²","³","´","µ","¶","·",
+        "¸","¹","º","»","¼","½","¾","¿",
+        "À","Á","Â","Ã","Ä","Å","Æ","Ç",
+        "È","É","Ê","Ë","Ì","Í","Î","Ï",
+        "Ð","Ñ","Ò","Ó","Ô","Õ","Ö","×",
+        "Ø","Ù","Ú","Û","Ü","Ý","Þ","ß",
+        "à","á","â","ã","ä","å","æ","ç",
+        "è","é","ê","ë","ì","í","î","ï",
+        "ð","ñ","ò","ó","ô","õ","ö","÷",
+        "ø","ù","ú","û","ü","ý","þ","ÿ"
+    };
     nasal_val* code_addr=local_scope[1];
     if(code_addr->type!=vm_num)
     {
@@ -817,7 +833,13 @@ nasal_val* builtin_chr(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         return nullptr;
     }
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=(char)code_addr->ptr.num;
+    int num=code_addr->ptr.num;
+    if(0<=num && num<128)
+        *ret_addr->ptr.str=(char)num;
+    else if(128<=num && num<256)
+        *ret_addr->ptr.str=extend[num-128];
+    else
+        *ret_addr->ptr.str=" ";
     return ret_addr;
 }
 

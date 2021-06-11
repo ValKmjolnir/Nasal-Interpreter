@@ -113,11 +113,9 @@ double str2num(const char* str)
 */
 std::string num2str(double number)
 {
-	std::string res;
-	std::stringstream ss;
+	std::ostringstream ss;
 	ss<<number;
-	ss>>res;
-	return res;
+	return ss.str();
 }
 #include "nasal_lexer.h"
 #include "nasal_ast.h"

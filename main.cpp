@@ -2,10 +2,10 @@
 
 nasal_vm vm;
 
-void help()
+void help_interact()
 {
 	std::cout
-	<<">> [\"file\"] input file name.            \n"
+	<<">> [     ] input a file name to execute.  \n"
 	<<">> [help ] show help.                     \n"
 	<<">> [clear] clear the screen.              \n"
 	<<">> [lex  ] view tokens.                   \n"
@@ -16,7 +16,25 @@ void help()
 	<<">> [exit ] quit nasal interpreter.        \n";
 	return;
 }
-
+void help_cmd()
+{
+	std::cout
+	<<"nasal -h -help    | get help.\n"
+	<<"nasal -v -version | get version of nasal interpreter.\n"
+	<<"nasal filename    | execute script file.\n";
+	return;
+}
+void info()
+{
+	std::cout
+	<<">> Nasal interpreter ver 6.5 efficient gc test .\n"
+	<<">> Thanks to https://github.com/andyross/nasal\n"
+	<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n"
+	<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
+	<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n"
+	<<">> Input \"help\" to get help .\n";
+	return;
+}
 void logo()
 {
     std::cout
@@ -27,13 +45,11 @@ void logo()
 	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
     return;
 }
-
 void die(const char* stage,std::string& filename)
 {
 	std::cout<<">> ["<<stage<<"] in <\""<<filename<<"\">: error(s) occurred,stop.\n";
 	return;
 }
-
 void execute(std::string& file,std::string& command)
 {
 	nasal_lexer   lexer;
@@ -92,31 +108,21 @@ void execute(std::string& file,std::string& command)
 	vm.clear();
 	return;
 }
-
-int main()
+void interact()
 {
-	std::string command;
-	std::string file="null";
 #ifdef _WIN32
 	// use chcp 65001 to use unicode io
 	system("chcp 65001");
-	system("cls");
-#else
-	int rs=system("clear");// avoid annoying warning of high version gcc/g++
 #endif
+	std::string command,file="null";
 	logo();
-	std::cout<<">> Nasal interpreter ver 6.5 efficient gc test .\n";
-	std::cout<<">> Thanks to https://github.com/andyross/nasal\n";
-	std::cout<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n";
-	std::cout<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n";
-	std::cout<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n";
-	std::cout<<">> Input \"help\" to get help .\n";
+	info();
     while(1)
 	{
 		std::cout<<">> ";
 		std::cin>>command;
 		if(command=="help")
-			help();
+			help_interact();
 		else if(command=="clear")
 		{
 #ifdef _WIN32
@@ -128,11 +134,33 @@ int main()
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")
-			break;
+			return;
 		else if(command=="lex" || command=="ast" || command=="code" || command=="exec")
 			execute(file,command);
 		else
 			file=command;
 	}
+}
+int main(int argc,const char* argv[])
+{
+	std::string command,file="null";
+	if(argc==1)
+		interact();
+	else if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"-version")))
+	{
+		logo();
+		std::cout<<"Nasal interpreter ver 6.5 efficient gc test\n";
+	}
+	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"-help")))
+		help_cmd();
+	else if(argc==2)
+	{
+		file=argv[1];
+		command="exec";
+		execute(file,command);
+		return 0;
+	}
+	else
+		help_cmd();
     return 0;
 }

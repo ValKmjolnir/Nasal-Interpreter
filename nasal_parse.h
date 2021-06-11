@@ -161,12 +161,8 @@ void nasal_parse::match(int type,std::string err_info)
             return;
         }
         std::string s="";
-        for(int i=0;token_table[i].str;++i)
-            if(token_table[i].tok_type==type)
-            {
-                s=token_table[i].str;
-                break;
-            }
+        if(type>=tok_for)// token_table begins at tok_for
+            s=token_table[type-tok_for].str;
         switch(type)
         {
             case tok_num:die(error_line,"expected number");    break;
@@ -391,8 +387,7 @@ nasal_ast nasal_parse::args_gen()
     match(tok_lcurve);
     while(tok_list[ptr].type!=tok_rcurve)
     {
-        nasal_ast tmp;
-        tmp=id_gen();
+        nasal_ast tmp=id_gen();
         match(tok_id);
         if(tok_list[ptr].type==tok_eq || tok_list[ptr].type==tok_ellipsis)
         {
