@@ -1,5 +1,7 @@
 # Nasal Script Language
 
+[TOC]
+
 ## Introduction
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
@@ -50,12 +52,13 @@ Input this command to run scripts directly:
 
 > ./nasal filename
 
-Use these commands to get some information of interpreter:
+Use these commands to get version of interpreter:
 
-> ./nasal -v
-> ./nasal -version
-> ./nasal -h
-> ./nasal -help
+> ./nasal -v | -version
+
+Use these commands to get version of interpreter:
+
+> ./nasal -h | -help
 
 ## Parser
 
@@ -307,21 +310,14 @@ var f=func(x,y,z,dynamic_para...)
 ### operators
 
 ```javascript
-1+2;
-1-2;
-1*2;
-1/2;
+1+2-1*2/1;
 'str1'~'str2';
 (1+2)*(3+4)
 
 1+1 and 0;
-1+2*3 or 0;
-1<0;
-1>0;
-1<=0;
-1>=0;
-1==0;
-1!=0;
+1<0 or 1>0;
+1<=0 and 1>=0;
+1==0 or 1!=0;
 
 -1;
 !0;
@@ -506,8 +502,7 @@ At last,warp the '__builtin_std_cout' in a nasal file:
 ```javascript
 var print=func(elements...)
 {
-    __builtin_std_cout(elements);
-    return nil;
+    return __builtin_std_cout(elements);
 };
 ```
 
