@@ -271,10 +271,8 @@ void nasal_parse::check_memory_reachable(nasal_ast& node)
     {
         if(node.get_children()[0].get_type()!=ast_id)
             die(node.get_line(),"cannot get the memory of a temporary data");
-        int size=node.get_children().size();
-        for(int i=0;i<size;++i)
+        for(auto& tmp:node.get_children())
         {
-            nasal_ast& tmp=node.get_children()[i];
             if(tmp.get_type()==ast_callf)
                 die(tmp.get_line(),"cannot get the memory of function-returned value");
             if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
@@ -419,41 +417,40 @@ nasal_ast nasal_parse::args_gen()
     match(tok_rcurve,"expected \')\' after parameter list");
 
     std::string args_format="func(";
-    int node_child_size=node.get_children().size();
-    for(int i=0;i<node_child_size;++i)
+    for(auto& tmp:node.get_children())
     {
-        switch(node.get_children()[i].get_type())
+        switch(tmp.get_type())
         {
-            case ast_id:  args_format+="val";break;
+            case ast_id:          args_format+="val";break;
             case ast_default_arg: args_format+="val=scalar";break;
             case ast_dynamic_id:  args_format+="val...";break;
         }
-        args_format+=",)"[i==node_child_size-1];
+        args_format+=",)"[&tmp==&node.get_children().back()];
     }
     bool checked_default_val=false,checked_dynamic_ids=false;
-    for(int i=0;i<node_child_size;++i)
+    for(auto& tmp:node.get_children())
     {
-        if(node.get_children()[i].get_type()==ast_default_arg)
+        if(tmp.get_type()==ast_default_arg)
             checked_default_val=true;
-        else if(node.get_children()[i].get_type()==ast_dynamic_id)
+        else if(tmp.get_type()==ast_dynamic_id)
             checked_dynamic_ids=true;
-        if(checked_default_val && node.get_children()[i].get_type()!=ast_default_arg)
-            die(node.get_children()[i].get_line(),"must use default arguments until the end of argument list: "+args_format);
-        if(checked_dynamic_ids && i!=node_child_size-1)
-            die(node.get_children()[i].get_line(),"dynamic identifier must be the end of argument list: "+args_format);
+        if(checked_default_val && tmp.get_type()!=ast_default_arg)
+            die(tmp.get_line(),"must use default parameters after using it once: "+args_format);
+        if(checked_dynamic_ids && &tmp!=&node.get_children().back())
+            die(tmp.get_line(),"dynamic parameter must be the end: "+args_format);
     }
     std::unordered_map<std::string,bool> argname_table;
-    for(int i=0;i<node_child_size;++i)
+    for(auto& tmp:node.get_children())
     {
         std::string new_name;
-        switch(node.get_children()[i].get_type())
+        switch(tmp.get_type())
         {
             case ast_dynamic_id:
-            case ast_id:new_name=node.get_children()[i].get_str();break;
-            case ast_default_arg:new_name=node.get_children()[i].get_children()[0].get_str();break;
+            case ast_id:new_name=tmp.get_str();break;
+            case ast_default_arg:tmp.get_children()[0].get_str();break;
         }
-        if(argname_table.find(new_name)!=argname_table.end())
-            die(node.get_children()[i].get_line(),"argument name should not repeat");
+        if(argname_table.count(new_name))
+            die(tmp.get_line(),"parameter's name repeats: "+new_name);
         else
             argname_table[new_name]=true;
     }
@@ -464,9 +461,9 @@ nasal_ast nasal_parse::expr()
     nasal_ast node(tok_list[ptr].line,ast_null);
     int tok_type=tok_list[ptr].type;
     if((tok_type==tok_break || tok_type==tok_continue) && !in_loop)
-        die(error_line,"cannot use break/continue outside loop");
+        die(error_line,"use break/continue in the loop");
     if(tok_type==tok_ret && !in_function)
-        die(error_line,"cannot use return outside function");
+        die(error_line,"use return in the function");
     switch(tok_type)
     {   
         case tok_nil:

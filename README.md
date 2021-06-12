@@ -58,6 +58,12 @@ Use these commands to get help:
 
 > ./nasal -h | -help
 
+If your system is Windows and you want to output unicode,please use this command before running nasal interpreter:
+
+> chcp 65001
+
+The interpreter's interactive mode will do this automatically,so you don't need to run this command if you use the interactive interpreter.
+
 ## Parser
 
 LL(k) parser.
