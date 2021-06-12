@@ -19,6 +19,9 @@ void help_interact()
 void help_cmd()
 {
 	std::cout
+#ifdef _WIN32
+	<<"use command \'chcp 65001\' if want to use unicode.\n"
+#endif
 	<<"nasal             | use interactive interpreter.\n"
 	<<"nasal -h -help    | get help.\n"
 	<<"nasal -v -version | get version of nasal interpreter.\n"
