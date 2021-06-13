@@ -26,5 +26,5 @@ func(){
         cnt +=line_cnt;
         semi+=semi_cnt;
     }
-    println('total: ',cnt,' line | ',semi,' semi');
+    println('total:         | ',cnt,' \tline | ',semi,' \tsemi');
 }();
