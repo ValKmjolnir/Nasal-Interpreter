@@ -526,8 +526,7 @@ nasal_ast nasal_parse::exprs_gen()
 }
 nasal_ast nasal_parse::calc()
 {
-    nasal_ast node;
-    node=or_expr();
+    nasal_ast node=or_expr();
     if(tok_list[ptr].type==tok_quesmark)
     {
         // trinocular calculation
@@ -553,8 +552,7 @@ nasal_ast nasal_parse::calc()
 }
 nasal_ast nasal_parse::or_expr()
 {
-    nasal_ast node;
-    node=and_expr();
+    nasal_ast node=and_expr();
     while(tok_list[ptr].type==tok_or)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_or);
@@ -567,8 +565,7 @@ nasal_ast nasal_parse::or_expr()
 }
 nasal_ast nasal_parse::and_expr()
 {
-    nasal_ast node;
-    node=cmp_expr();
+    nasal_ast node=cmp_expr();
     while(tok_list[ptr].type==tok_and)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_and);
@@ -581,8 +578,7 @@ nasal_ast nasal_parse::and_expr()
 }
 nasal_ast nasal_parse::cmp_expr()
 {
-    nasal_ast node;
-    node=additive_expr();
+    nasal_ast node=additive_expr();
     while(tok_cmpeq<=tok_list[ptr].type && tok_list[ptr].type<=tok_geq)
     {
         // tok_cmpeq~tok_geq is 43~48,ast_cmpeq~ast_geq is 27~32
@@ -596,8 +592,7 @@ nasal_ast nasal_parse::cmp_expr()
 }
 nasal_ast nasal_parse::additive_expr()
 {
-    nasal_ast node;
-    node=multive_expr();
+    nasal_ast node=multive_expr();
     while(tok_list[ptr].type==tok_add || tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_link)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_null);
@@ -616,8 +611,7 @@ nasal_ast nasal_parse::additive_expr()
 }
 nasal_ast nasal_parse::multive_expr()
 {
-    nasal_ast node;
-    node=(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar();
+    nasal_ast node=(tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar();
     while(tok_list[ptr].type==tok_mult || tok_list[ptr].type==tok_div)
     {
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_mult+ast_mult);
@@ -699,14 +693,12 @@ nasal_ast nasal_parse::scalar()
 }
 nasal_ast nasal_parse::call_scalar()
 {
-    nasal_ast node;
     switch(tok_list[ptr].type)
     {
-        case tok_lcurve:   node=callf(); break;
-        case tok_lbracket: node=callv();  break;
-        case tok_dot:      node=callh(); break;
+        case tok_lcurve:   return callf(); break;
+        case tok_lbracket: return callv(); break;
+        case tok_dot:      return callh(); break;
     }
-    return node;
 }
 nasal_ast nasal_parse::callh()
 {
@@ -801,26 +793,22 @@ nasal_ast nasal_parse::definition()
 }
 nasal_ast nasal_parse::var_incurve_def()
 {
-    nasal_ast node;
     match(tok_lcurve);
     match(tok_var);
-    node=multi_id();
+    nasal_ast node=multi_id();
     match(tok_rcurve);
     return node;
 }
 nasal_ast nasal_parse::var_outcurve_def()
 {
-    nasal_ast node;
     match(tok_lcurve);
-    node=multi_id();
+    nasal_ast node=multi_id();
     match(tok_rcurve);
     return node;
 }
 nasal_ast nasal_parse::multi_id()
 {
-    nasal_ast node;
-    node.set_line(tok_list[ptr].line);
-    node.set_type(ast_multi_id);
+    nasal_ast node(tok_list[ptr].line,ast_multi_id);
     while(tok_list[ptr].type!=tok_eof)
     {
         node.add_child(id_gen());

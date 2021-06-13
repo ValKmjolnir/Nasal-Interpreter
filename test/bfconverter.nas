@@ -147,93 +147,101 @@ var mandelbrot=
 +[-[->>>>>>>>>+<<<<<<<<<]>>>>>>>>>]>>>>>->>>>>>>>>>>>>>>>>>>>>>>>>>>-<<<<<<[<<<<
 <<<<<]]>>>]";
 
-var paper=[];
-var (ptr,pc)=(0,0);
-var (code,inum,stack)=(nil,nil,nil);
-var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
-var func_table=[
-    func(){paper[ptr]+=inum[pc];return;},
-    func(){ptr+=inum[pc];return;},
-    func(){if(paper[ptr])pc=inum[pc];return;},
-    func(){if(!paper[ptr])pc=inum[pc];return;},
-    func(){paper[ptr]=input()[0];return;},
-    func(){print(chr(paper[ptr]));return;}
-];
-
 var bf=func(program)
 {
-    setsize(paper,131072);
-    (ptr,code,inum,stack)=(0,[],[],[]);
+    var stack=[];
     var len=size(program);
-
+    var f="import('lib.nas');\nvar ptr=0;\nvar paper=[];\nsetsize(paper,131072);\n";
     for(var i=0;i<len;i+=1)
     {
         var c=chr(program[i]);
         if(c=='+' or c=='-')
         {
-            append(code,add);
-            append(inum,0);
+            var cnt=0;
             for(;i<len;i+=1)
             {
                 if(chr(program[i])=='+')
-                    inum[-1]+=1;
+                    cnt+=1;
                 elsif(chr(program[i])=='-')
-                    inum[-1]-=1;
+                    cnt-=1;
                 else
                 {
                     i-=1;
                     break;
                 }
             }
+            if(cnt!=0)
+                for(var j=0;j<size(stack);j+=1)
+                    f~='\t';
+            if(cnt>0)
+                f~="paper[ptr]+="~cnt~";\n";
+            elsif(cnt<0)
+                f~="paper[ptr]-="~(-cnt)~";\n";
         }
         elsif(c=='<' or c=='>')
         {
-            append(code,mov);
-            append(inum,0);
+            var cnt=0;
             for(;i<len;i+=1)
             {
                 if(chr(program[i])=='>')
-                    inum[-1]+=1;
+                    cnt+=1;
                 elsif(chr(program[i])=='<')
-                    inum[-1]-=1;
+                    cnt-=1;
                 else
                 {
                     i-=1;
                     break;
                 }
             }
+            if(cnt!=0)
+                for(var j=0;j<size(stack);j+=1)
+                    f~='\t';
+            if(cnt>0)
+                f~="ptr+="~cnt~";\n";
+            elsif(cnt<0)
+                f~="ptr-="~(-cnt)~";\n";
         }
         elsif(c==',')
         {
-            append(code,in);
-            append(inum,0);
+            for(var j=0;j<size(stack);j+=1)
+                f~='\t';
+            f~="paper[ptr]=input();\n";
         }
         elsif(c=='.')
         {
-            append(code,out);
-            append(inum,0);
+            for(var j=0;j<size(stack);j+=1)
+                f~='\t';
+            f~="print(chr(paper[ptr]));\n";
         }
         elsif(c=='[')
         {
-            append(code,jf);
-            append(inum,0);
-            append(stack,size(code)-1);
+            for(var j=0;j<size(stack);j+=1)
+                f~='\t';
+            f~="while(paper[ptr])\n";
+            for(var j=0;j<size(stack);j+=1)
+                f~='\t';
+            f~="{\n";
+            append(stack,0);
         }
         elsif(c==']')
         {
             if(!size(stack))
-                die("lack [");
-            var label=pop(stack);
-            append(code,jt);
-            append(inum,label-1);
-            inum[label]=size(code)-2;
+            {
+                println("lack [");
+                return;
+            }
+            pop(stack);
+            for(var j=0;j<size(stack);j+=1)
+                f~='\t';
+            f~="}\n";
         }
     }
     if(size(stack))
-        die("lack ]");
-    len=size(code);
-    for(pc=0;pc<len;pc+=1)
-        func_table[code[pc]]();
+    {
+        println("lack ]");
+        return;
+    }
+    io.fout("mandel.nas",f);
     return;
 }
 
