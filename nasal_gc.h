@@ -242,7 +242,7 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (65536<<2)
+#define STACK_MAX_DEPTH (65536<<1)
     nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
@@ -254,7 +254,7 @@ struct nasal_gc
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
     std::vector<nasal_val*> global;
-    std::list<std::vector<nasal_val*> > local;
+    std::list<std::vector<nasal_val*>> local;
     void                    mark();
     void                    sweep();
     void                    gc_init(std::vector<double>&,std::vector<std::string>&);
