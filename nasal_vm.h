@@ -32,7 +32,6 @@ private:
     void opr_newv();
     void opr_newh();
     void opr_newf();
-    void opr_vapp();
     void opr_happ();
     void opr_para();
     void opr_defpara();
@@ -150,12 +149,12 @@ void nasal_vm::opr_intg()
 void nasal_vm::opr_intl()
 {
     (*stack_top)->ptr.func->closure.resize(exec_code[pc].num,gc.nil_addr);
-    (*stack_top)->ptr.func->closure[0]=gc.nil_addr;// me
     return;
 }
 void nasal_vm::opr_offset()
 {
     (*stack_top)->ptr.func->offset=exec_code[pc].num;
+    return;
 }
 void nasal_vm::opr_loadg()
 {
@@ -194,8 +193,14 @@ void nasal_vm::opr_pstr()
 }
 void nasal_vm::opr_newv()
 {
-    nasal_val* vec=gc.gc_alloc(vm_vec);
-    *(++stack_top)=vec;
+    nasal_val*  vec_addr=gc.gc_alloc(vm_vec);
+    nasal_val** begin=stack_top-exec_code[pc].num+1;
+    auto& vec=vec_addr->ptr.vec->elems;// stack_top-exec_code[pc].num stores the vector
+    vec.resize(exec_code[pc].num);
+    for(int i=0;i<exec_code[pc].num;++i)
+        vec[i]=begin[i];
+    stack_top=begin;
+    *stack_top=vec_addr;
     return;
 }
 void nasal_vm::opr_newh()
@@ -213,16 +218,6 @@ void nasal_vm::opr_newf()
     else
         val->ptr.func->closure=gc.local.back();// local contains 'me'
     *(++stack_top)=val;
-    return;
-}
-void nasal_vm::opr_vapp()
-{
-    nasal_val** begin=stack_top-exec_code[pc].num+1;
-    auto& vec=begin[-1]->ptr.vec->elems;// stack_top-exec_code[pc].num stores the vector
-    vec.resize(exec_code[pc].num);
-    for(int i=0;i<exec_code[pc].num;++i)
-        vec[i]=begin[i];
-    stack_top=begin-1;
     return;
 }
 void nasal_vm::opr_happ()
@@ -723,14 +718,14 @@ void nasal_vm::opr_slcend()
 void nasal_vm::opr_slc()
 {
     nasal_val* val=*stack_top--;
-    double num;
+    int num;
     switch(val->type)
     {
-        case vm_num:num=val->ptr.num;break;
-        case vm_str:num=str2num(val->ptr.str->c_str());break;
+        case vm_num:num=(int)val->ptr.num;break;
+        case vm_str:num=(int)str2num(val->ptr.str->c_str());break;
         default:die("slc: error value type");break;
     }
-    nasal_val* res=(*stack_top)->ptr.vec->get_val((int)num);
+    nasal_val* res=(*stack_top)->ptr.vec->get_val(num);
     if(!res)
         die("slc: index out of range");
     gc.slice_stack.back()->ptr.vec->elems.push_back(res);
@@ -762,13 +757,18 @@ void nasal_vm::opr_slc2()
         die("slc2: begin index must be less than end index");
         return;
     }
-    if(num1<-ref_size || num1>=ref_size || num2<-ref_size || num2>=ref_size)
+    else if(num1<-ref_size || num1>=ref_size)
     {
-        die("slc2: begin or end index out of range");
+        die("slc2: begin index out of range: "+num2str(num1));
+        return;
+    }
+    else if(num2<-ref_size || num2>=ref_size)
+    {
+        die("slc2: end index out of range: "+num2str(num2));
         return;
     }
     for(int i=num1;i<=num2;++i)
-        aim.push_back(ref[i]);
+        aim.push_back(i>=0?ref[i]:ref[i+ref_size]);
     return;
 }
 void nasal_vm::opr_mcallg()
@@ -849,6 +849,7 @@ void nasal_vm::opr_ret()
     pc=ret.top();
     ret.pop();
     nasal_val* ret_val=*stack_top--;
+    (*stack_top)->ptr.func->closure[0]=gc.nil_addr;// set me to nil
     *stack_top=ret_val;
     return;
 }
@@ -870,7 +871,6 @@ void nasal_vm::run()
         &nasal_vm::opr_newv,
         &nasal_vm::opr_newh,
         &nasal_vm::opr_newf,
-        &nasal_vm::opr_vapp,
         &nasal_vm::opr_happ,
         &nasal_vm::opr_para,
         &nasal_vm::opr_defpara,

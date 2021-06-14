@@ -14,10 +14,9 @@ enum op_code
     op_pzero,    // push 0 to the stack
     op_pnil,     // push constant nil to the stack
     op_pstr,     // push constant string to the stack
-    op_newv,     // push new vector to the stack
+    op_newv,     // push new vector with initial values from stack
     op_newh,     // push new hash to the stack
     op_newf,     // push new function to the stack
-    op_vapp,     // vector append
     op_happ,     // hash append
     op_para,     // normal  parameter
     op_defpara,  // default parameter
@@ -88,7 +87,6 @@ struct
     {op_newv,     "newv  "},
     {op_newh,     "newh  "},
     {op_newf,     "newf  "},
-    {op_vapp,     "vapp  "},
     {op_happ,     "happ  "},
     {op_para,     "para  "},
     {op_defpara,  "def   "},
@@ -164,15 +162,15 @@ private:
     int error;
     int in_forindex;
     int in_foreach;
-    std::unordered_map<double,int>       number_table;
-    std::unordered_map<std::string,int>  string_table;
-    std::vector<double>                  num_res_table;
-    std::vector<std::string>             str_res_table;
-    std::vector<opcode>                  exec_code;
-    std::list<std::vector<int> >         continue_ptr;
-    std::list<std::vector<int> >         break_ptr;
-    std::vector<std::string>             global;
-    std::list<std::vector<std::string> > local;
+    std::unordered_map<double,int>      number_table;
+    std::unordered_map<std::string,int> string_table;
+    std::vector<double>                 num_res_table;
+    std::vector<std::string>            str_res_table;
+    std::vector<opcode>                 exec_code;
+    std::list<std::vector<int>>         continue_ptr;
+    std::list<std::vector<int>>         break_ptr;
+    std::vector<std::string>            global;
+    std::list<std::vector<std::string>> local;
     
     void die(std::string,int);
     void regist_number(double);
@@ -325,10 +323,9 @@ void nasal_codegen::str_gen(nasal_ast& ast)
 
 void nasal_codegen::vec_gen(nasal_ast& ast)
 {
-    gen(op_newv,0);
     for(auto& node:ast.get_children())
         calc_gen(node);
-    gen(op_vapp,ast.get_children().size());
+    gen(op_newv,ast.get_children().size());
     return;
 }
 
