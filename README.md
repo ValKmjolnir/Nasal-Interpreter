@@ -243,6 +243,55 @@ f(1024,2048);
 0x00000011: nop    0x00000000
 ```
 
+## Test data
+
+### version 6.5 gc(i5-8250U windows10)
+
+running time and gc time:
+
+|file|call|total time|gc time|
+|:----|:----|:----|:----|
+|pi.nas|12000049|0.593s|0.222s|
+|fib.nas|10573747|2.838s|0.187s|
+|bp.nas|4419829|1.99s|0.18s|
+|bigloop.nas|4000000|0.419s|0.039s|
+|mandelbrot.nas|1044630|0.433s|0.041s|
+|life.nas|817112|8.557s|0.199s|
+|ascii-art.nas|45612|0.48s|0.027s|
+|calc.nas|8089|0.068s|0.006s|
+|quick_sort.nas|2768|0.107s|0s|
+|bfs.nas|2471|1.763s|0.003s|
+
+operands calling frequency:
+
+|file|1st called op|2nd called op|3rd called op|4th called op|5th called op|
+|:----|:----|:----|:----|:----|:----|
+|pi.nas|callg|pop|mcallg|pnum|pone|
+|fib.nas|calll|pnum|callg|less|jf|
+|bp.nas|calll|callg|pop|callv|addeq|
+|bigloop.nas|pnum|less|jf|callg|pone|
+|mandelbrot.nas|callg|mult|loadg|pnum|pop|
+|life.nas|calll|callv|pnum|jf|callg|
+|ascii-art.nas|calll|pop|mcalll|callg|callb|
+|calc.nas|calll|pop|pstr|mcalll|jmp|
+|quick_sort.nas|calll|pop|jt|jf|less|
+|bfs.nas|calll|pop|callv|mcalll|jf|
+
+operands calling total times:
+
+|file|1st called time|2nd called time|3rd called time|4th called time|5th called time|
+|:----|:----|:----|:----|:----|:----|
+|pi.nas|6000004|6000003|6000000|4000005|4000002|
+|fib.nas|17622792|10573704|7049218|7049155|7049155|
+|bp.nas|7081480|4227268|2764676|2617112|2065441|
+|bigloop.nas|4000001|4000001|4000001|4000001|4000000|
+|mandelbrot.nas|1519632|563856|290641|286795|284844|
+|life.nas|2114371|974244|536413|534794|489743|
+|ascii-art.nas|37906|22736|22402|18315|18292|
+|calc.nas|191|124|109|99|87|
+|quick_sort.nas|16226|5561|4144|3524|2833|
+|bfs.nas|24707|16297|14606|14269|8672|
+
 ## How to Use Nasal to Program
 
 ### basic value type
@@ -496,17 +545,26 @@ struct FUNC_TABLE
     nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {
-    {"__builtin_std_cout",builtin_print},
-    {"",                  NULL         }
+    {"__builtin_print",builtin_print},
+    {nullptr,          nullptr      }
 };
 ```
 
-At last,warp the '__builtin_std_cout' in a nasal file:
+At last,warp the '__builtin_print' in a nasal file:
 
 ```javascript
-var print=func(elements...)
+var print=func(elems...)
 {
-    return __builtin_std_cout(elements);
+    return __builtin_print(elems);
+};
+```
+
+In fact the arguments that '__builtin_print' uses is not necessary,So writting it like this is also right:
+
+```javascript
+var print=func(elems...)
+{
+    return __builtin_print;
 };
 ```
 
@@ -525,7 +583,7 @@ The value got before will be collected,but stil in use in this builtin function,
 So use builtin_alloc in builtin functions like this:
 
 ```C++
-nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
+nasal_val* builtin_keys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* hash_addr=local_scope[1];
     if(hash_addr->type!=vm_hash)
