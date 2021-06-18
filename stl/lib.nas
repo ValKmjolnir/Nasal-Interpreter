@@ -4,20 +4,21 @@ var import=func(filename)
 }
 var print=func(elems...)
 {
-    return __builtin_std_cout(elems);
+    return __builtin_print(elems);
 };
 var println=func(elems...)
 {
-    __builtin_std_cout(elems);
-    return print('\n');
+    __builtin_print(elems);
+    elems=['\n'];
+    return __builtin_print(elems);
 }
 var append=func(vec,elems...)
 {
-    return __builtin_push_back(vec,elems);
+    return __builtin_append(vec,elems);
 }
 var setsize=func(vec,size)
 {
-    return __builtin_set_size(vec,size);
+    return __builtin_setsize(vec,size);
 }
 var system=func(str)
 {
@@ -41,7 +42,7 @@ var rand=func(seed=nil)
 }
 var id=func(object)
 {
-    return __builtin_get_id(object);
+    return __builtin_id(object);
 }
 var int=func(val)
 {
@@ -53,7 +54,7 @@ var num=func(val)
 }
 var pop=func(vec)
 {
-    return __builtin_pop_back(vec);
+    return __builtin_pop(vec);
 }
 var str=func(num)
 {
@@ -73,7 +74,7 @@ var delete=func(hash,key)
 }
 var keys=func(hash)
 {
-    return __builtin_get_keys(hash);
+    return __builtin_keys(hash);
 }
 var time=func(begin_time)
 {

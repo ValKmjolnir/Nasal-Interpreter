@@ -273,8 +273,7 @@ void nasal_codegen::add_sym(std::string& name)
 
 int nasal_codegen::local_find(std::string& name)
 {
-    int index=-1;
-    int cnt=0;
+    int index=-1,cnt=0;
     for(auto& i:local)
     {
         for(int j=0;j<i.size();++j)
@@ -293,10 +292,9 @@ int nasal_codegen::global_find(std::string& name)
     return -1;
 }
 
-void nasal_codegen::gen(unsigned char op,unsigned int index)
+void nasal_codegen::gen(uint8_t op,uint32_t num)
 {
-    opcode opr(op,index);
-    exec_code.push_back(opr);
+    exec_code.push_back({op,num});
     return;
 }
 
@@ -422,7 +420,7 @@ void nasal_codegen::call_gen(nasal_ast& ast)
         switch(tmp.get_type())
         {
             case ast_callh:call_hash(tmp);break;
-            case ast_callv: call_vec(tmp); break;
+            case ast_callv:call_vec(tmp); break;
             case ast_callf:call_func(tmp);break;
         }
     }
@@ -432,10 +430,12 @@ void nasal_codegen::call_gen(nasal_ast& ast)
 void nasal_codegen::call_id(nasal_ast& ast)
 {
     std::string& str=ast.get_str();
-    for(int i=0;builtin_func[i].func;++i)
+    for(int i=0;builtin_func[i].name;++i)
         if(builtin_func[i].name==str)
         {
             gen(op_callb,i);
+            if(local.empty())
+                die("builtin functions work in a local scope.",ast.get_line());
             return;
         }
     int index=local_find(str);
@@ -528,6 +528,12 @@ void nasal_codegen::mcall(nasal_ast& ast)
 void nasal_codegen::mcall_id(nasal_ast& ast)
 {
     std::string& str=ast.get_str();
+    for(int i=0;builtin_func[i].name;++i)
+        if(builtin_func[i].name==str)
+        {
+            die("cannot change builtin function.",ast.get_line());
+            return;
+        }
     int index=local_find(str);
     if(index>=0)
     {
@@ -564,10 +570,7 @@ void nasal_codegen::single_def(nasal_ast& ast)
     std::string& str=ast.get_children()[0].get_str();
     add_sym(str);
     calc_gen(ast.get_children()[1]);
-    if(local.empty())
-        gen(op_loadg,global_find(str));
-    else
-        gen(op_loadl,local_find(str));
+    local.empty()?gen(op_loadg,global_find(str)):gen(op_loadl,local_find(str));
     return;
 }
 void nasal_codegen::multi_def(nasal_ast& ast)
@@ -582,10 +585,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             calc_gen(vals[i]);
             std::string& str=ids[i].get_str();
             add_sym(str);
-            if(local.empty())
-                gen(op_loadg,global_find(str));
-            else
-                gen(op_loadl,local_find(str));
+            local.empty()?gen(op_loadg,global_find(str)):gen(op_loadl,local_find(str));
         }
     }
     else
@@ -596,10 +596,7 @@ void nasal_codegen::multi_def(nasal_ast& ast)
             gen(op_callvi,i);
             std::string& str=ids[i].get_str();
             add_sym(str);
-            if(local.empty())
-                gen(op_loadg,global_find(str));
-            else
-                gen(op_loadl,local_find(str));
+            local.empty()?gen(op_loadg,global_find(str)):gen(op_loadl,local_find(str));
         }
         gen(op_pop,0);
     }
@@ -714,7 +711,6 @@ void nasal_codegen::while_gen(nasal_ast& ast)
 
 void nasal_codegen::for_gen(nasal_ast& ast)
 {
-    opcode op;
     switch(ast.get_children()[0].get_type())
     {
         case ast_null:break;
@@ -788,10 +784,7 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     {
         std::string& str=ast.get_children()[0].get_children()[0].get_str();
         add_sym(str);
-        if(local.empty())
-            gen(op_loadg,global_find(str));
-        else
-            gen(op_loadl,local_find(str));
+        local.empty()?gen(op_loadg,global_find(str)):gen(op_loadl,local_find(str));
     }
     else
     {
@@ -818,10 +811,7 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
     {
         std::string& str=ast.get_children()[0].get_children()[0].get_str();
         add_sym(str);
-        if(local.empty())
-            gen(op_loadg,global_find(str));
-        else
-            gen(op_loadl,local_find(str));
+        local.empty()?gen(op_loadg,global_find(str)):gen(op_loadl,local_find(str));
     }
     else
     {

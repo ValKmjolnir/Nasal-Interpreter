@@ -44,7 +44,7 @@ nasal_val* builtin_atan2(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_time(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_contains(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_delete(std::vector<nasal_val*>&,nasal_gc&);
-nasal_val* builtin_getkeys(std::vector<nasal_val*>&,nasal_gc&);
+nasal_val* builtin_keys(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_import(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_die(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_type(std::vector<nasal_val*>&,nasal_gc&);
@@ -69,9 +69,9 @@ struct FUNC_TABLE
     nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
 } builtin_func[]=
 {
-    {"__builtin_std_cout", builtin_print   },
-    {"__builtin_push_back",builtin_append  },
-    {"__builtin_set_size", builtin_setsize },
+    {"__builtin_print",    builtin_print   },
+    {"__builtin_append",   builtin_append  },
+    {"__builtin_setsize",  builtin_setsize },
     {"__builtin_system",   builtin_system  },
     {"__builtin_input",    builtin_input   },
     {"__builtin_sleep",    builtin_sleep   },
@@ -79,10 +79,10 @@ struct FUNC_TABLE
     {"__builtin_fout",     builtin_fout    },
     {"__builtin_split",    builtin_split   },
     {"__builtin_rand",     builtin_rand    },
-    {"__builtin_get_id",   builtin_id      },
+    {"__builtin_id",       builtin_id      },
     {"__builtin_int",      builtin_int     },
     {"__builtin_num",      builtin_num     },
-    {"__builtin_pop_back", builtin_pop     },
+    {"__builtin_pop",      builtin_pop     },
     {"__builtin_str",      builtin_str     },
     {"__builtin_size",     builtin_size    },
     {"__builtin_xor",      builtin_xor     },
@@ -100,7 +100,7 @@ struct FUNC_TABLE
     {"__builtin_time",     builtin_time    },
     {"__builtin_contains", builtin_contains},
     {"__builtin_delete",   builtin_delete  },
-    {"__builtin_get_keys", builtin_getkeys },
+    {"__builtin_keys",     builtin_keys    },
     {"__builtin_import",   builtin_import  },
     {"__builtin_die",      builtin_die     },
     {"__builtin_type",     builtin_type    },
@@ -110,7 +110,7 @@ struct FUNC_TABLE
     {"__builtin_right",    builtin_right   },
     {"__builtin_cmp",      builtin_cmp     },
     {"__builtin_chr",      builtin_chr     },
-    {"",                   nullptr         }
+    {nullptr,              nullptr         }
 };
 
 nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
@@ -648,7 +648,7 @@ nasal_val* builtin_delete(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         hash_addr->ptr.hash->elems.erase(*key_addr->ptr.str);
     return gc.nil_addr;
 }
-nasal_val* builtin_getkeys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
+nasal_val* builtin_keys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
 {
     nasal_val* hash_addr=local_scope[1];
     if(hash_addr->type!=vm_hash)
