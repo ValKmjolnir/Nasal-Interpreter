@@ -245,11 +245,11 @@ f(1024,2048);
 
 ## Test data
 
-### version 6.5 gc(i5-8250U windows10)
+### version 6.5(i5-8250U windows10 2021/6/19)
 
 running time and gc time:
 
-|file|call|total time|gc time|
+|file|call gc|total time|gc time|
 |:----|:----|:----|:----|
 |pi.nas|12000049|0.593s|0.222s|
 |fib.nas|10573747|2.838s|0.187s|
@@ -264,7 +264,7 @@ running time and gc time:
 
 operands calling frequency:
 
-|file|1st called op|2nd called op|3rd called op|4th called op|5th called op|
+|file|1st|2nd|3rd|4th|5th|
 |:----|:----|:----|:----|:----|:----|
 |pi.nas|callg|pop|mcallg|pnum|pone|
 |fib.nas|calll|pnum|callg|less|jf|
@@ -279,7 +279,7 @@ operands calling frequency:
 
 operands calling total times:
 
-|file|1st called time|2nd called time|3rd called time|4th called time|5th called time|
+|file|1st|2nd|3rd|4th|5th|
 |:----|:----|:----|:----|:----|:----|
 |pi.nas|6000004|6000003|6000000|4000005|4000002|
 |fib.nas|17622792|10573704|7049218|7049155|7049155|

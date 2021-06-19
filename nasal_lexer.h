@@ -82,7 +82,7 @@ struct
 	{"<="      ,tok_leq      },
     {">"       ,tok_grt      },
     {">="      ,tok_geq      },
-	{NULL      ,-1           }
+	{nullptr   ,-1           }
 };
 
 struct token

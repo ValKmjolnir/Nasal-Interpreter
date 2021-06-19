@@ -26,7 +26,6 @@
 	check if a string can be converted to a number
 	if this string cannot be converted to a number,it will return nan
 */
-
 inline double hex_to_double(const char* str)
 {
 	double ret=0;

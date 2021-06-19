@@ -73,69 +73,69 @@ struct
     const char* name;
 }code_table[]=
 {
-    {op_nop,      "nop   "},
-    {op_intg,     "intg  "},
-    {op_intl,     "intl  "},
-    {op_offset,   "offset"},
-    {op_loadg,    "loadg "},
-    {op_loadl,    "loadl "},
-    {op_pnum,     "pnum  "},
-    {op_pone,     "pone  "},
-    {op_pzero,    "pzero "},
-    {op_pnil,     "pnil  "},
-    {op_pstr,     "pstr  "},
-    {op_newv,     "newv  "},
-    {op_newh,     "newh  "},
-    {op_newf,     "newf  "},
-    {op_happ,     "happ  "},
-    {op_para,     "para  "},
-    {op_defpara,  "def   "},
-    {op_dynpara,  "dyn   "},
-    {op_unot,     "not   "},
-    {op_usub,     "usub  "},
-    {op_add,      "add   "},
-    {op_sub,      "sub   "},
-    {op_mul,      "mult  "},
-    {op_div,      "div   "},
-    {op_lnk,      "link  "},
-    {op_addeq,    "addeq "},
-    {op_subeq,    "subeq "},
-    {op_muleq,    "muleq "},
-    {op_diveq,    "diveq "},
-    {op_lnkeq,    "lnkeq "},
-    {op_meq,      "meq   "},
-    {op_eq,       "eq    "},
-    {op_neq,      "neq   "},
-    {op_less,     "less  "},
-    {op_leq,      "leq   "},
-    {op_grt,      "grt   "},
-    {op_geq,      "geq   "},
-    {op_pop,      "pop   "},
-    {op_jmp,      "jmp   "},
-    {op_jt,       "jt    "},
-    {op_jf,       "jf    "},
-    {op_cnt,      "cnt   "},
-    {op_cntpop,   "cntpop"},
-    {op_findex,   "findx "},
-    {op_feach,    "feach "},
-    {op_callg,    "callg "},
-    {op_calll,    "calll "},
-    {op_callv,    "callv "},
-    {op_callvi,   "callvi"},
-    {op_callh,    "callh "},
-    {op_callfv,   "callfv"},
-    {op_callfh,   "callfh"},
-    {op_callb,    "callb "},
-    {op_slcbegin, "slcbeg"},
-    {op_slcend,   "slcend"},
-    {op_slc,      "slc   "},
-    {op_slc2,     "slc2  "},
-    {op_mcallg,   "mcallg"},
-    {op_mcalll,   "mcalll"},
-    {op_mcallv,   "mcallv"},
-    {op_mcallh,   "mcallh"},
-    {op_ret,      "ret   "},
-    {-1,          NULL    },
+    {op_nop,     "nop   "},
+    {op_intg,    "intg  "},
+    {op_intl,    "intl  "},
+    {op_offset,  "offset"},
+    {op_loadg,   "loadg "},
+    {op_loadl,   "loadl "},
+    {op_pnum,    "pnum  "},
+    {op_pone,    "pone  "},
+    {op_pzero,   "pzero "},
+    {op_pnil,    "pnil  "},
+    {op_pstr,    "pstr  "},
+    {op_newv,    "newv  "},
+    {op_newh,    "newh  "},
+    {op_newf,    "newf  "},
+    {op_happ,    "happ  "},
+    {op_para,    "para  "},
+    {op_defpara, "def   "},
+    {op_dynpara, "dyn   "},
+    {op_unot,    "not   "},
+    {op_usub,    "usub  "},
+    {op_add,     "add   "},
+    {op_sub,     "sub   "},
+    {op_mul,     "mult  "},
+    {op_div,     "div   "},
+    {op_lnk,     "link  "},
+    {op_addeq,   "addeq "},
+    {op_subeq,   "subeq "},
+    {op_muleq,   "muleq "},
+    {op_diveq,   "diveq "},
+    {op_lnkeq,   "lnkeq "},
+    {op_meq,     "meq   "},
+    {op_eq,      "eq    "},
+    {op_neq,     "neq   "},
+    {op_less,    "less  "},
+    {op_leq,     "leq   "},
+    {op_grt,     "grt   "},
+    {op_geq,     "geq   "},
+    {op_pop,     "pop   "},
+    {op_jmp,     "jmp   "},
+    {op_jt,      "jt    "},
+    {op_jf,      "jf    "},
+    {op_cnt,     "cnt   "},
+    {op_cntpop,  "cntpop"},
+    {op_findex,  "findx "},
+    {op_feach,   "feach "},
+    {op_callg,   "callg "},
+    {op_calll,   "calll "},
+    {op_callv,   "callv "},
+    {op_callvi,  "callvi"},
+    {op_callh,   "callh "},
+    {op_callfv,  "callfv"},
+    {op_callfh,  "callfh"},
+    {op_callb,   "callb "},
+    {op_slcbegin,"slcbeg"},
+    {op_slcend,  "slcend"},
+    {op_slc,     "slc   "},
+    {op_slc2,    "slc2  "},
+    {op_mcallg,  "mcallg"},
+    {op_mcalll,  "mcalll"},
+    {op_mcallv,  "mcallv"},
+    {op_mcallh,  "mcallh"},
+    {op_ret,     "ret   "},
+    {-1,         nullptr },
 };
 
 struct opcode
@@ -211,7 +211,6 @@ private:
     void block_gen(nasal_ast&);
     void ret_gen(nasal_ast&);
 public:
-    nasal_codegen();
     int                       get_error(){return error;}
     void                      main_progress(nasal_ast&);
     void                      print_op(int);
@@ -220,14 +219,6 @@ public:
     std::vector<double>&      get_num_table(){return num_res_table;}
     std::vector<opcode>&      get_exec_code(){return exec_code;}
 };
-
-nasal_codegen::nasal_codegen()
-{
-    error=0;
-    in_foreach=0;
-    in_forindex=0;
-    return;
-}
 
 void nasal_codegen::die(std::string info,int line)
 {
@@ -301,8 +292,8 @@ void nasal_codegen::gen(uint8_t op,uint32_t num)
 void nasal_codegen::num_gen(nasal_ast& ast)
 {
     double num=ast.get_num();
-    if(num==1)      gen(op_pone,0);
-    else if(num==0) gen(op_pzero,0);
+    if(num==0)gen(op_pzero,0);
+    else if(num==1)gen(op_pone,0);
     else
     {
         regist_number(num);
@@ -346,8 +337,7 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     gen(op_newf,0);
     int local_label=exec_code.size();
     gen(op_intl,0);
-    std::vector<std::string> new_scope;
-    local.push_back(new_scope);
+    local.push_back(std::vector<std::string>());
 
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
@@ -392,8 +382,8 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     exec_code[newfunc_label].num=exec_code.size()+1;
     int jmp_ptr=exec_code.size();
     gen(op_jmp,0);
-    nasal_ast& block=ast.get_children()[1];
 
+    nasal_ast& block=ast.get_children()[1];
     block_gen(block);
     for(auto& i:local)
         exec_code[local_label].num+=i.size();
@@ -509,10 +499,7 @@ void nasal_codegen::call_func(nasal_ast& ast)
 
 void nasal_codegen::mcall(nasal_ast& ast)
 {
-    if(ast.get_type()==ast_id)
-        mcall_id(ast);
-    else
-        mcall_id(ast.get_children()[0]);
+    mcall_id(ast.get_type()==ast_id?ast:ast.get_children()[0]);
     int child_size=ast.get_children().size();
     for(int i=1;i<child_size;++i)
     {
@@ -671,9 +658,8 @@ void nasal_codegen::conditional_gen(nasal_ast& ast)
 
 void nasal_codegen::loop_gen(nasal_ast& ast)
 {
-    std::vector<int> new_level;
-    continue_ptr.push_front(new_level);
-    break_ptr.push_front(new_level);
+    continue_ptr.push_front(std::vector<int>());
+    break_ptr.push_front(std::vector<int>());
     switch(ast.get_type())
     {
         case ast_while:    while_gen(ast);    break;
@@ -1009,6 +995,9 @@ void nasal_codegen::ret_gen(nasal_ast& ast)
 void nasal_codegen::main_progress(nasal_ast& ast)
 {
     error=0;
+    in_foreach=0;
+    in_forindex=0;
+
     number_table.clear();
     string_table.clear();
     exec_code.clear();

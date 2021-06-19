@@ -48,7 +48,6 @@ private:
     std::vector<token> error_token;
     int in_function; // count when generating function block,used to check return-expression
     int in_loop;     // count when generating loop block,used to check break/continue-expression
-    void reset();
     void die(int,std::string);
     void match(int type,std::string err_info="");
     bool check_comma(int*);
@@ -106,7 +105,10 @@ public:
 };
 void nasal_parse::main_process()
 {
-    reset();
+    ptr=in_function=in_loop=error=0;
+    root.clear();
+    error_token.clear();
+
     root.set_line(1);
     root.set_type(ast_root);
     while(tok_list[ptr].type!=tok_eof)
@@ -136,13 +138,6 @@ void nasal_parse::main_process()
     std::cout
     <<" maybe recorded because of fatal syntax errors."
     <<"please check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
-    return;
-}
-void nasal_parse::reset()
-{
-    ptr=in_function=in_loop=error=0;
-    root.clear();
-    error_token.clear();
     return;
 }
 void nasal_parse::die(int line,std::string info)
@@ -285,13 +280,11 @@ void nasal_parse::check_memory_reachable(nasal_ast& node)
 }
 nasal_ast nasal_parse::null_node_gen()
 {
-    nasal_ast node(tok_list[ptr].line,ast_null);
-    return node;
+    return nasal_ast(tok_list[ptr].line,ast_null);
 }
 nasal_ast nasal_parse::nil_gen()
 {
-    nasal_ast node(tok_list[ptr].line,ast_nil);
-    return node;
+    return nasal_ast(tok_list[ptr].line,ast_nil);
 }
 nasal_ast nasal_parse::num_gen()
 {
@@ -336,7 +329,7 @@ nasal_ast nasal_parse::hash_gen()
 {
     nasal_ast node(tok_list[ptr].line,ast_hash);
     match(tok_lbrace);
-    while (tok_list[ptr].type!=tok_rbrace)
+    while(tok_list[ptr].type!=tok_rbrace)
     {
         node.add_child(hmem_gen());
         if(tok_list[ptr].type==tok_comma)
