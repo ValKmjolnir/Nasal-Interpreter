@@ -5,16 +5,16 @@ class nasal_vm
 {
 private:
     /* reference from nasal_gc */
-    nasal_val**&             stack_top;  // stack top
+    nasal_val**&             stack_top; // stack top
     /* values of nasal_vm */
-    int                      pc;         // program counter
-    bool                     loop_mark;  // when mark is false,break the main loop
-    std::stack<int>          ret;        // ptr stack stores address for function to return
-    std::stack<int>          counter;    // iterator stack for forindex/foreach
-    std::vector<std::string> str_table;  // symbols used in process
-    std::vector<opcode>      exec_code;  // byte codes store here
-    std::stack<nasal_val**>  addr_stack; // stack for mem_call
-    nasal_gc                 gc;         // garbage collector
+    int                      pc;        // program counter
+    bool                     loop_mark; // when mark is false,break the main loop
+    std::stack<int>          ret;       // ptr stack stores address for function to return
+    std::stack<int>          counter;   // iterator stack for forindex/foreach
+    std::vector<std::string> str_table; // symbols used in process
+    std::vector<opcode>      exec_code; // byte codes store here
+    std::stack<nasal_val**>  addr_stack;// used for mem_call
+    nasal_gc                 gc;        // garbage collector
     
     void die(std::string);
     bool condition(nasal_val*);
@@ -105,8 +105,6 @@ void nasal_vm::init(
 void nasal_vm::clear()
 {
     gc.gc_clear();
-    while(!addr_stack.empty())
-        addr_stack.pop();
     while(!ret.empty())
         ret.pop();
     while(!counter.empty())
@@ -123,16 +121,15 @@ void nasal_vm::die(std::string str)
 }
 bool nasal_vm::condition(nasal_val* val_addr)
 {
-    int type=val_addr->type;
-    if(type==vm_num)
+    if(val_addr->type==vm_num)
         return val_addr->ptr.num;
-    else if(type==vm_str)
+    else if(val_addr->type==vm_str)
     {
         std::string& str=*val_addr->ptr.str;
-        double number=str2num(str.c_str());
-        if(std::isnan(number))
+        double num=str2num(str.c_str());
+        if(std::isnan(num))
             return str.empty();
-        return number;
+        return num;
     }
     return false;
 }
@@ -257,11 +254,11 @@ void nasal_vm::opr_unot()
         stack_top[0]=val->ptr.num?gc.zero_addr:gc.one_addr;
     else if(type==vm_str)
     {
-        double number=str2num(val->ptr.str->c_str());
-        if(std::isnan(number))
+        double num=str2num(val->ptr.str->c_str());
+        if(std::isnan(num))
             stack_top[0]=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
         else
-            stack_top[0]=number?gc.zero_addr:gc.one_addr;
+            stack_top[0]=num?gc.zero_addr:gc.one_addr;
     }
     else
         die("unot: incorrect value type");
@@ -311,8 +308,7 @@ void nasal_vm::opr_lnk()
 }
 void nasal_vm::opr_addeq()
 {
-    nasal_val** mem_addr=addr_stack.top();
-    addr_stack.pop();
+    nasal_val** mem_addr=addr_stack.top();addr_stack.pop();
     nasal_val* new_val=gc.gc_alloc(vm_num);
     new_val->ptr.num=mem_addr[0]->to_number()+stack_top[0]->to_number();
     stack_top[0]=mem_addr[0]=new_val;
@@ -320,8 +316,7 @@ void nasal_vm::opr_addeq()
 }
 void nasal_vm::opr_subeq()
 {
-    nasal_val** mem_addr=addr_stack.top();
-    addr_stack.pop();
+    nasal_val** mem_addr=addr_stack.top();addr_stack.pop();
     nasal_val* new_val=gc.gc_alloc(vm_num);
     new_val->ptr.num=mem_addr[0]->to_number()-stack_top[0]->to_number();
     stack_top[0]=mem_addr[0]=new_val;
@@ -329,8 +324,7 @@ void nasal_vm::opr_subeq()
 }
 void nasal_vm::opr_muleq()
 {
-    nasal_val** mem_addr=addr_stack.top();
-    addr_stack.pop();
+    nasal_val** mem_addr=addr_stack.top();addr_stack.pop();
     nasal_val* new_val=gc.gc_alloc(vm_num);
     new_val->ptr.num=mem_addr[0]->to_number()*stack_top[0]->to_number();
     stack_top[0]=mem_addr[0]=new_val;
@@ -338,8 +332,7 @@ void nasal_vm::opr_muleq()
 }
 void nasal_vm::opr_diveq()
 {
-    nasal_val** mem_addr=addr_stack.top();
-    addr_stack.pop();
+    nasal_val** mem_addr=addr_stack.top();addr_stack.pop();
     nasal_val* new_val=gc.gc_alloc(vm_num);
     new_val->ptr.num=mem_addr[0]->to_number()/stack_top[0]->to_number();
     stack_top[0]=mem_addr[0]=new_val;
@@ -347,8 +340,7 @@ void nasal_vm::opr_diveq()
 }
 void nasal_vm::opr_lnkeq()
 {
-    nasal_val** mem_addr=addr_stack.top();
-    addr_stack.pop();
+    nasal_val** mem_addr=addr_stack.top();addr_stack.pop();
     nasal_val* new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=mem_addr[0]->to_string()+stack_top[0]->to_string();
     stack_top[0]=mem_addr[0]=new_val;
@@ -502,14 +494,14 @@ void nasal_vm::opr_calll()
 }
 void nasal_vm::opr_callv()
 {
-    nasal_val* val=*stack_top--;
-    nasal_val* vec_addr=*stack_top;
+    nasal_val* val=stack_top[0];
+    nasal_val* vec_addr=(--stack_top)[0];
     int type=vec_addr->type;
     if(type==vm_vec)
     {
         nasal_val* res=vec_addr->ptr.vec->get_val(val->to_number());
         if(!res)
-            die("callv: index out of range");
+            die("callv: index out of range:"+val->to_string());
         stack_top[0]=res;
     }
     else if(type==vm_hash)
@@ -536,7 +528,7 @@ void nasal_vm::opr_callv()
         int str_size=str.length();
         if(num<-str_size || num>=str_size)
         {
-            die("callv: index out of range");
+            die("callv: index out of range:"+val->to_string());
             return;
         }
         nasal_val* res=gc.gc_alloc(vm_num);
@@ -558,7 +550,7 @@ void nasal_vm::opr_callvi()
     // cannot use operator[],because this may cause overflow
     nasal_val* res=val->ptr.vec->get_val(exec_code[pc].num);
     if(!res)
-        die("callvi: index out of range");
+        die("callvi: index out of range:"+num2str(exec_code[pc].num));
     (++stack_top)[0]=res;
     return;
 }
@@ -700,7 +692,7 @@ void nasal_vm::opr_slc()
     }
     nasal_val* res=stack_top[0]->ptr.vec->get_val(num);
     if(!res)
-        die("slc: index out of range");
+        die("slc: index out of range:"+num2str(num));
     gc.slice_stack.back()->ptr.vec->elems.push_back(res);
     return;
 }
@@ -756,10 +748,9 @@ void nasal_vm::opr_mcalll()
 }
 void nasal_vm::opr_mcallv()
 {
-    nasal_val*  val=*stack_top--;
-    nasal_val** vec_addr=addr_stack.top();
-    addr_stack.pop();
-    int type=(*vec_addr)->type;
+    nasal_val* val=*stack_top--;
+    nasal_val* vec_addr=*addr_stack.top();
+    int type=vec_addr->type;
     if(type==vm_vec)
     {
         int num;
@@ -769,10 +760,10 @@ void nasal_vm::opr_mcallv()
             case vm_str:num=(int)str2num(val->ptr.str->c_str());break;
             default:die("mcallv: error value type");break;
         }
-        nasal_val** res=(*vec_addr)->ptr.vec->get_mem(num);
-        if(!res)
-            die("mcallv: index out of range");
-        addr_stack.push(res);
+        nasal_val** mem_addr=vec_addr->ptr.vec->get_mem(num);
+        if(!mem_addr)
+            die("mcallv: index out of range:"+num2str(num));
+        addr_stack.top()=mem_addr;
     }
     else if(type==vm_hash)
     {
@@ -781,39 +772,37 @@ void nasal_vm::opr_mcallv()
             die("mcallv: must use string as the key");
             return;
         }
-        nasal_hash& ref=*(*vec_addr)->ptr.hash;
+        nasal_hash& ref=*vec_addr->ptr.hash;
         std::string& str=*val->ptr.str;
-        nasal_val** res=ref.get_mem(str);
-        if(!res)
+        nasal_val** mem_addr=ref.get_mem(str);
+        if(!mem_addr)
         {
             ref.elems[str]=gc.nil_addr;
-            res=ref.get_mem(str);
+            mem_addr=ref.get_mem(str);
         }
-        addr_stack.push(res);
+        addr_stack.top()=mem_addr;
     }
     else
-        die("mcallv: cannot get memory space in a string");
+        die("mcallv: cannot get memory space in other types");
     return;
 }
 void nasal_vm::opr_mcallh()
 {
-    nasal_val** mem_addr=nullptr;
-    nasal_val** hash_addr=addr_stack.top();
-    addr_stack.pop();
-    if((*hash_addr)->type!=vm_hash)
+    nasal_val* hash_addr=*addr_stack.top();
+    if(hash_addr->type!=vm_hash)
     {
         die("mcallh: must call a hash");
         return;
     }
-    nasal_hash& ref=*(*hash_addr)->ptr.hash;
+    nasal_hash& ref=*hash_addr->ptr.hash;
     std::string& str=str_table[exec_code[pc].num];
-    mem_addr=ref.get_mem(str);
+    nasal_val** mem_addr=ref.get_mem(str);
     if(!mem_addr) // create a new key
     {
         ref.elems[str]=gc.nil_addr;
         mem_addr=ref.get_mem(str);
     }
-    addr_stack.push(mem_addr);
+    addr_stack.top()=mem_addr;
     return;
 }
 void nasal_vm::opr_ret()
@@ -828,7 +817,7 @@ void nasal_vm::opr_ret()
 }
 void nasal_vm::run()
 {
-    static void (nasal_vm::*opr_table[])()=
+    void (nasal_vm::*opr_table[])()=
     {
         &nasal_vm::opr_nop,
         &nasal_vm::opr_intg,

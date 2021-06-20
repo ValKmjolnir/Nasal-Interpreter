@@ -265,17 +265,17 @@ void nasal_parse::check_memory_reachable(nasal_ast& node)
     if(node.get_type()==ast_call)
     {
         if(node.get_children()[0].get_type()!=ast_id)
-            die(node.get_line(),"cannot get the memory of a temporary data");
+            die(node.get_line(),"cannot get memory of temp data");
         for(auto& tmp:node.get_children())
         {
             if(tmp.get_type()==ast_callf)
-                die(tmp.get_line(),"cannot get the memory of function-returned value");
+                die(tmp.get_line(),"cannot get memory of func-returned value");
             if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
-                die(tmp.get_line(),"cannot get the memory in temporary sliced vector");
-        } 
+                die(tmp.get_line(),"cannot get memory of temp sliced vector");
+        }
     }
     else if(node.get_type()!=ast_id)
-        die(node.get_line(),"cannot use calculation as the memory of scalar");
+        die(node.get_line(),"cannot get memory of temp data");
     return;
 }
 nasal_ast nasal_parse::null_node_gen()
@@ -458,7 +458,7 @@ nasal_ast nasal_parse::expr()
     if(tok_type==tok_ret && !in_function)
         die(error_line,"use return in the function");
     switch(tok_type)
-    {   
+    {
         case tok_nil:
         case tok_num:
         case tok_str:
