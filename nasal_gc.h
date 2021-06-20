@@ -60,8 +60,8 @@ struct nasal_func// 120 bytes
 struct nasal_val// 16 bytes
 {
 #define GC_UNCOLLECTED 0   
-#define GC_FOUND       1
-#define GC_COLLECTED   2
+#define GC_COLLECTED   1
+#define GC_FOUND       2
     uint8_t mark;
     uint16_t type;
     union 
@@ -84,23 +84,15 @@ nasal_val* nasal_vec::get_val(int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
-    {
-        std::cout<<">> [gc] nasal_vec::get_val: index out of range: "<<index<<"\n";
         return nullptr;
-    }
-    int idx[2]={index+vec_size,index};
-    return elems[idx[index>=0]];
+    return elems[index>=0?index:index+vec_size];
 }
 nasal_val** nasal_vec::get_mem(int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
-    {
-        std::cout<<">> [gc] nasal_vec::get_mem: index out of range: "<<index<<"\n";
         return nullptr;
-    }
-    int idx[2]={index+vec_size,index};
-    return &elems[idx[index>=0]];
+    return &elems[index>=0?index:index+vec_size];
 }
 void nasal_vec::print()
 {
@@ -280,7 +272,7 @@ void nasal_gc::mark()
     {
         nasal_val* tmp=bfs.front();
         bfs.pop();
-        if(!tmp || tmp->mark) continue;
+        if(tmp->mark) continue;
         tmp->mark=GC_FOUND;
         if(tmp->type==vm_vec)
             for(auto i:tmp->ptr.vec->elems)
@@ -293,7 +285,8 @@ void nasal_gc::mark()
             for(auto i:tmp->ptr.func->closure)
                 bfs.push(i);
             for(auto i:tmp->ptr.func->default_para)
-                bfs.push(i);
+                if(i)
+                    bfs.push(i);
         }
     }
     return;
