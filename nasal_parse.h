@@ -264,18 +264,14 @@ void nasal_parse::check_memory_reachable(nasal_ast& node)
 {
     if(node.get_type()==ast_call)
     {
-        if(node.get_children()[0].get_type()!=ast_id)
-            die(node.get_line(),"cannot get memory of temp data");
-        for(auto& tmp:node.get_children())
-        {
-            if(tmp.get_type()==ast_callf)
-                die(tmp.get_line(),"cannot get memory of func-returned value");
-            if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
-                die(tmp.get_line(),"cannot get memory of temp sliced vector");
-        }
+        nasal_ast& tmp=node.get_children().back();
+        if(tmp.get_type()==ast_callf)
+            die(tmp.get_line(),"bad left-value");
+        if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
+            die(tmp.get_line(),"bad left-value");
     }
     else if(node.get_type()!=ast_id)
-        die(node.get_line(),"cannot get memory of temp data");
+        die(node.get_line(),"bad left-value");
     return;
 }
 nasal_ast nasal_parse::null_node_gen()
@@ -428,9 +424,9 @@ nasal_ast nasal_parse::args_gen()
         else if(tmp.get_type()==ast_dynamic_id)
             checked_dynamic_ids=true;
         if(checked_default_val && tmp.get_type()!=ast_default_arg)
-            die(tmp.get_line(),"must use default parameters after using it once: "+args_format);
+            die(tmp.get_line(),"must use default paras after using it once: "+args_format);
         if(checked_dynamic_ids && &tmp!=&node.get_children().back())
-            die(tmp.get_line(),"dynamic parameter must be the end: "+args_format);
+            die(tmp.get_line(),"dynamic para must be the end: "+args_format);
     }
     std::unordered_map<std::string,bool> argname_table;
     for(auto& tmp:node.get_children())
@@ -439,8 +435,8 @@ nasal_ast nasal_parse::args_gen()
         switch(tmp.get_type())
         {
             case ast_dynamic_id:
-            case ast_id:new_name=tmp.get_str();break;
-            case ast_default_arg:tmp.get_children()[0].get_str();break;
+            case ast_id:         new_name=tmp.get_str();break;
+            case ast_default_arg:new_name=tmp.get_children()[0].get_str();break;
         }
         if(argname_table.count(new_name))
             die(tmp.get_line(),"parameter's name repeats: "+new_name);

@@ -3,68 +3,68 @@
 
 enum op_code
 {
-    op_nop,      // do nothing and end the vm main loop
-    op_intg,     // global scope size
-    op_intl,     // local scope size
-    op_offset,   // offset of local scope of function in closure
-    op_loadg,    // load global symbol value
-    op_loadl,    // load local symbol value
-    op_pnum,     // push constant number to the stack
-    op_pone,     // push 1 to the stack
-    op_pzero,    // push 0 to the stack
-    op_pnil,     // push constant nil to the stack
-    op_pstr,     // push constant string to the stack
-    op_newv,     // push new vector with initial values from stack
-    op_newh,     // push new hash to the stack
-    op_newf,     // push new function to the stack
-    op_happ,     // hash append
-    op_para,     // normal  parameter
-    op_defpara,  // default parameter
-    op_dynpara,  // dynamic parameter
-    op_unot,     // !
-    op_usub,     // -
-    op_add,      // +
-    op_sub,      // -
-    op_mul,      // *
-    op_div,      // /
-    op_lnk,      // ~
-    op_addeq,    // +=
-    op_subeq,    // -=
-    op_muleq,    // *=
-    op_diveq,    // /=
-    op_lnkeq,    // ~=
-    op_meq,      // =
-    op_eq,       // ==
-    op_neq,      // !=
-    op_less,     // <
-    op_leq,      // <=
-    op_grt,      // >
-    op_geq,      // >=
-    op_pop,      // pop a value from stack
-    op_jmp,      // jump with no condition
-    op_jt,       // used in operator and/or,jmp when condition is true and DO NOT POP
-    op_jf,       // used in conditional/loop,jmp when condition is false and POP STACK
-    op_cnt,      // add counter for forindex/foreach
-    op_cntpop,   // pop counter
-    op_findex,   // index counter on the top of forindex_stack plus 1
-    op_feach,    // index counter on the top of forindex_stack plus 1 and get the value in vector
-    op_callg,    // call value in global scope
-    op_calll,    // call value in local scope
-    op_callv,    // call vec[index]
-    op_callvi,   // call vec[immediate] (used in multi-assign/multi-define)
-    op_callh,    // call hash.label
-    op_callfv,   // call function(vector as parameters)
-    op_callfh,   // call function(hash as parameters)
-    op_callb,    // call builtin-function
-    op_slcbegin, // begin of slice like: vec[1,2,3:6,0,-1]
-    op_slcend,   // end of slice
-    op_slc,      // slice like vec[1]
-    op_slc2,     // slice like vec[nil:10]
-    op_mcallg,   // get memory space of value in global scope
-    op_mcalll,   // get memory space of value in local scope
-    op_mcallv,   // get memory space of vec[index]
-    op_mcallh,   // get memory space of hash.label
-    op_ret       // return
+    op_nop,     // do nothing and end the vm main loop
+    op_intg,    // global scope size
+    op_intl,    // local scope size
+    op_offset,  // offset of local scope of function in closure
+    op_loadg,   // load global symbol value
+    op_loadl,   // load local symbol value
+    op_pnum,    // push constant number to the stack
+    op_pone,    // push 1 to the stack
+    op_pzero,   // push 0 to the stack
+    op_pnil,    // push constant nil to the stack
+    op_pstr,    // push constant string to the stack
+    op_newv,    // push new vector with initial values from stack
+    op_newh,    // push new hash to the stack
+    op_newf,    // push new function to the stack
+    op_happ,    // hash append
+    op_para,    // normal  parameter
+    op_defpara, // default parameter
+    op_dynpara, // dynamic parameter
+    op_unot,    // !
+    op_usub,    // -
+    op_add,     // +
+    op_sub,     // -
+    op_mul,     // *
+    op_div,     // /
+    op_lnk,     // ~
+    op_addeq,   // +=
+    op_subeq,   // -=
+    op_muleq,   // *=
+    op_diveq,   // /=
+    op_lnkeq,   // ~=
+    op_meq,     // =
+    op_eq,      // ==
+    op_neq,     // !=
+    op_less,    // <
+    op_leq,     // <=
+    op_grt,     // >
+    op_geq,     // >=
+    op_pop,     // pop a value from stack
+    op_jmp,     // jump with no condition
+    op_jt,      // used in operator and/or,jmp when condition is true and DO NOT POP
+    op_jf,      // used in conditional/loop,jmp when condition is false and POP STACK
+    op_cnt,     // add counter for forindex/foreach
+    op_cntpop,  // pop counter
+    op_findex,  // index counter on the top of forindex_stack plus 1
+    op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
+    op_callg,   // call value in global scope
+    op_calll,   // call value in local scope
+    op_callv,   // call vec[index]
+    op_callvi,  // call vec[immediate] (used in multi-assign/multi-define)
+    op_callh,   // call hash.label
+    op_callfv,  // call function(vector as parameters)
+    op_callfh,  // call function(hash as parameters)
+    op_callb,   // call builtin-function
+    op_slcbegin,// begin of slice like: vec[1,2,3:6,0,-1]
+    op_slcend,  // end of slice
+    op_slc,     // slice like vec[1]
+    op_slc2,    // slice like vec[nil:10]
+    op_mcallg,  // get memory space of value in global scope
+    op_mcalll,  // get memory space of value in local scope
+    op_mcallv,  // get memory space of vec[index]
+    op_mcallh,  // get memory space of hash.label
+    op_ret      // return
 };
 
 struct
@@ -499,16 +499,27 @@ void nasal_codegen::call_func(nasal_ast& ast)
 
 void nasal_codegen::mcall(nasal_ast& ast)
 {
-    mcall_id(ast.get_type()==ast_id?ast:ast.get_children()[0]);
-    int child_size=ast.get_children().size();
-    for(int i=1;i<child_size;++i)
+    if(ast.get_type()==ast_id)
+    {
+        mcall_id(ast);
+        return;
+    }
+    calc_gen(ast.get_children()[0]);
+    for(int i=1;i<ast.get_children().size()-1;++i)
     {
         nasal_ast& tmp=ast.get_children()[i];
-        if(tmp.get_type()==ast_callh)
-            mcall_hash(tmp);
-        else if(tmp.get_type()==ast_callv)
-            mcall_vec(tmp);
+        switch(tmp.get_type())
+        {
+            case ast_callh:call_hash(tmp);break;
+            case ast_callv:call_vec(tmp); break;
+            case ast_callf:call_func(tmp);break;
+        }
     }
+    nasal_ast& tmp=ast.get_children().back();
+    if(tmp.get_type()==ast_callh)
+        mcall_hash(tmp);
+    else if(tmp.get_type()==ast_callv)
+        mcall_vec(tmp);
     return;
 }
 
