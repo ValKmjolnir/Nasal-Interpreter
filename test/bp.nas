@@ -123,9 +123,7 @@ var backward=func(x)
     return;
 }
 
-var cnt=0;
-var show=0;
-var error=100;
+var (cnt,error)=(0,100);
 while(error>0.0005)
 {
     error=0;
@@ -136,12 +134,6 @@ while(error>0.0005)
         backward(i);
     }
     cnt+=1;
-    show+=1;
-    if(show==350)
-    {
-        show=0;
-        print('epoch ',cnt,':',error,'\r');
-    }
 }
 print('finished after ',cnt,' epoch.\n');
 foreach(var v;training_set)

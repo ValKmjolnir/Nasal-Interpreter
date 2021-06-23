@@ -32,7 +32,7 @@ You could add your own built-in functions to change this interpreter to a useful
 
 Better choose the latest update of the interpreter.
 
-MUST USE -O2 ! pragma gcc optimize(2) seems useless when using g++
+MUST USE -O2/-O3 if want to optimize the interpreter! pragma gcc optimize(2) seems useless when using g++
 
 > g++ -std=c++11 -O2 main.cpp -o nasal.exe
 
