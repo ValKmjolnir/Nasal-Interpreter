@@ -49,7 +49,7 @@ private:
     int in_function; // count when generating function block,used to check return-expression
     int in_loop;     // count when generating loop block,used to check break/continue-expression
     void die(int,std::string);
-    void match(int type,std::string err_info="");
+    void match(int type,const char* err_info="");
     bool check_comma(int*);
     bool check_multi_def();
     bool check_multi_scalar();
@@ -126,18 +126,18 @@ void nasal_parse::main_process()
     }
     if(!error_token.size())
         return;
-    std::vector<int> err_lines;
-    err_lines.push_back(error_token[0].line);
-    for(auto& tok:error_token)
-        if(err_lines.back()!=tok.line)
-            err_lines.push_back(tok.line);
     ++error;
-    std::cout<<">> [parse] error tokens in line";
-    for(auto& line:err_lines)
-        std::cout<<' '<<line;
+    std::cout<<">> [parse] line";
+    int err_line=0;
+    for(auto& tok:error_token)
+        if(err_line!=tok.line)
+        {
+            std::cout<<' '<<tok.line;
+            err_line=tok.line;
+        }
     std::cout
-    <<" maybe recorded because of fatal syntax errors."
-    <<"please check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
+    <<" have fatal syntax errors."
+    <<"check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
 }
 void nasal_parse::die(int line,std::string info)
@@ -146,24 +146,21 @@ void nasal_parse::die(int line,std::string info)
     std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
     return;
 }
-void nasal_parse::match(int type,std::string err_info)
+void nasal_parse::match(int type,const char* err_info)
 {
     if(tok_list[ptr].type!=type)
     {
-        if(err_info.length())
+        if(err_info[0])
         {
             die(error_line,err_info);
             return;
         }
-        std::string s="";
-        if(type>=tok_for)// token_table begins at tok_for
-            s=token_table[type-tok_for].str;
         switch(type)
         {
             case tok_num:die(error_line,"expected number");    break;
             case tok_str:die(error_line,"expected string");    break;
             case tok_id: die(error_line,"expected identifier");break;
-            default:     die(error_line,"expected \'"+s+"\'"); break;
+            default:     die(error_line,"expected \'"+std::string(token_table[type-tok_for].str)+"\'"); break;
         }
         return;
     }
@@ -628,7 +625,7 @@ nasal_ast nasal_parse::scalar()
     if(tok_list[ptr].type==tok_nil)     {node=nil_gen(); match(tok_nil);}
     else if(tok_list[ptr].type==tok_num){node=num_gen(); match(tok_num);}
     else if(tok_list[ptr].type==tok_str){node=str_gen(); match(tok_str);}
-    else if(tok_list[ptr].type==tok_id) {node= id_gen(); match(tok_id );}
+    else if(tok_list[ptr].type==tok_id) {node=id_gen();  match(tok_id); }
     else if(tok_list[ptr].type==tok_func)
     {
         if(tok_list[ptr+1].type==tok_id)

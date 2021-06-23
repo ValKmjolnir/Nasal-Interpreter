@@ -234,7 +234,7 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (65536<<1)
+#define STACK_MAX_DEPTH (65536)
     nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
