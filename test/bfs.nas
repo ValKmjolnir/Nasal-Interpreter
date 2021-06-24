@@ -20,7 +20,8 @@ var prt=func()
             s~=map[i][j];
         s~='\n';
     }
-    print(s,'\n');
+    s~='----------\n';
+    print(s);
 }
 
 var bfs=func(begin,end)
@@ -54,8 +55,4 @@ var bfs=func(begin,end)
     return;
 }
 
-prt();
-var begin=[input(),input()];
-var end=[input(),input()];
-bfs(begin,end);
-prt();
+bfs([0,0],[9,9]);

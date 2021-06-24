@@ -48,7 +48,7 @@ private:
     std::vector<token> error_token;
     int in_function; // count when generating function block,used to check return-expression
     int in_loop;     // count when generating loop block,used to check break/continue-expression
-    void die(int,std::string);
+    void die(int,std::string&&);
     void match(int type,const char* err_info="");
     bool check_comma(int*);
     bool check_multi_def();
@@ -140,7 +140,7 @@ void nasal_parse::main_process()
     <<"check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
 }
-void nasal_parse::die(int line,std::string info)
+void nasal_parse::die(int line,std::string&& info)
 {
     ++error;
     std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
@@ -378,21 +378,21 @@ nasal_ast nasal_parse::args_gen()
             nasal_ast special_arg(tok_list[ptr].line,ast_null);
             if(tok_list[ptr].type==tok_eq)
             {
-                special_arg.add_child(tmp);
                 match(tok_eq);
-                special_arg.add_child(calc());
+                special_arg=std::move(tmp);
                 special_arg.set_type(ast_default_arg);
+                special_arg.add_child(calc());
             }
             else
             {
                 match(tok_ellipsis);
-                special_arg=tmp;
+                special_arg=std::move(tmp);
                 special_arg.set_type(ast_dynamic_id);
             }
-            node.add_child(special_arg);
+            node.add_child(std::move(special_arg));
         }
         else
-            node.add_child(tmp);
+            node.add_child(std::move(tmp));
         if(tok_list[ptr].type==tok_comma)
             match(tok_comma);
         else if(tok_list[ptr].type==tok_id)// first set of identifier
@@ -407,9 +407,9 @@ nasal_ast nasal_parse::args_gen()
     {
         switch(tmp.get_type())
         {
-            case ast_id:          args_format+="val";break;
-            case ast_default_arg: args_format+="val=scalar";break;
-            case ast_dynamic_id:  args_format+="val...";break;
+            case ast_id:          args_format+=tmp.get_str();break;
+            case ast_default_arg: args_format+=tmp.get_str()+"=val";break;
+            case ast_dynamic_id:  args_format+=tmp.get_str()+"...";break;
         }
         args_format+=",)"[&tmp==&node.get_children().back()];
     }
@@ -433,7 +433,7 @@ nasal_ast nasal_parse::args_gen()
         {
             case ast_dynamic_id:
             case ast_id:         new_name=tmp.get_str();break;
-            case ast_default_arg:new_name=tmp.get_children()[0].get_str();break;
+            case ast_default_arg:new_name=tmp.get_str();break;
         }
         if(argname_table.count(new_name))
             die(tmp.get_line(),"parameter's name repeats: "+new_name);
@@ -518,21 +518,21 @@ nasal_ast nasal_parse::calc()
         // trinocular calculation
         nasal_ast tmp(tok_list[ptr].line,ast_trino);
         match(tok_quesmark);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         tmp.add_child(calc());
         match(tok_colon);
         tmp.add_child(calc());
-        node=tmp;
+        node=std::move(tmp);
     }
     else if(tok_eq<=tok_list[ptr].type && tok_list[ptr].type<=tok_lnkeq)
     {
         check_memory_reachable(node);
         // tok_eq~tok_lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_eq+ast_equal);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_list[ptr].type);
         tmp.add_child(calc());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -542,10 +542,10 @@ nasal_ast nasal_parse::or_expr()
     while(tok_list[ptr].type==tok_or)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_or);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_or);
         tmp.add_child(and_expr());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -555,10 +555,10 @@ nasal_ast nasal_parse::and_expr()
     while(tok_list[ptr].type==tok_and)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_and);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_and);
         tmp.add_child(cmp_expr());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -569,10 +569,10 @@ nasal_ast nasal_parse::cmp_expr()
     {
         // tok_cmpeq~tok_geq is 43~48,ast_cmpeq~ast_geq is 27~32
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_cmpeq+ast_cmpeq);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_list[ptr].type);
         tmp.add_child(additive_expr());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -588,10 +588,10 @@ nasal_ast nasal_parse::additive_expr()
             case tok_sub:  tmp.set_type(ast_sub);  break;
             case tok_link: tmp.set_type(ast_link); break;
         }
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_list[ptr].type);
         tmp.add_child(multive_expr());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -601,10 +601,10 @@ nasal_ast nasal_parse::multive_expr()
     while(tok_list[ptr].type==tok_mult || tok_list[ptr].type==tok_div)
     {
         nasal_ast tmp(tok_list[ptr].line,tok_list[ptr].type-tok_mult+ast_mult);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         match(tok_list[ptr].type);
         tmp.add_child((tok_list[ptr].type==tok_sub || tok_list[ptr].type==tok_not)?unary():scalar());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -667,11 +667,10 @@ nasal_ast nasal_parse::scalar()
     }
     if(is_call(tok_list[ptr].type))
     {
-        nasal_ast tmp=node;
-        node.clear();
+        nasal_ast tmp=std::move(node);
         node.set_line(tok_list[ptr].line);
         node.set_type(ast_call);
-        node.add_child(tmp);
+        node.add_child(std::move(tmp));
     }
     while(is_call(tok_list[ptr].type))
         node.add_child(call_scalar());
@@ -744,9 +743,9 @@ nasal_ast nasal_parse::subvec()
     {
         nasal_ast tmp(node.get_line(),ast_subvec);
         match(tok_colon);
-        tmp.add_child(node);
+        tmp.add_child(std::move(node));
         tmp.add_child((tok_list[ptr].type==tok_comma || tok_list[ptr].type==tok_rbracket)?nil_gen():calc());
-        node=tmp;
+        node=std::move(tmp);
     }
     return node;
 }
@@ -905,7 +904,7 @@ nasal_ast nasal_parse::for_loop()
     match(tok_semi,"expected \';\' in for(;;)");
     // conditional expression
     if(tok_list[ptr].type==tok_eof)
-        die(error_line,"expected conditional expression");
+        die(error_line,"expected conditional expr");
     if(tok_list[ptr].type==tok_semi)
         node.add_child(null_node_gen());
     else
@@ -976,7 +975,7 @@ nasal_ast nasal_parse::conditional()
     tmp.add_child(calc());
     match(tok_rcurve);
     tmp.add_child(exprs_gen());
-    node.add_child(tmp);
+    node.add_child(std::move(tmp));
     // end of if-expression
     while(tok_list[ptr].type==tok_elsif)
     {
@@ -986,14 +985,14 @@ nasal_ast nasal_parse::conditional()
         tmp.add_child(calc());
         match(tok_rcurve);
         tmp.add_child(exprs_gen());
-        node.add_child(tmp);
+        node.add_child(std::move(tmp));
     }
     if(tok_list[ptr].type==tok_else)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_else);
         match(tok_else);
         tmp.add_child(exprs_gen());
-        node.add_child(tmp);
+        node.add_child(std::move(tmp));
     }
     return node;
 }

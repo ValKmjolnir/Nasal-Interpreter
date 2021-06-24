@@ -1,11 +1,8 @@
 import("lib.nas");
-rand(time(0));
 var sort=func(vec,left,right)
 {
-    if(left>=right) return nil;
-    var L=left;
-    var R=right;
-    var tmp=vec[L];
+    if(left>=right) return;
+    var (L,R,tmp)=(left,right,vec[left]);
     while(left<right)
     {
         while(left<right and tmp<=vec[right])
@@ -13,19 +10,15 @@ var sort=func(vec,left,right)
         while(left<right and tmp>=vec[left])
             left+=1;
         if(left!=right)
-        {
-            var t=vec[left];
-            vec[left]=vec[right];
-            vec[right]=t;
-        }
+            (vec[left],vec[right])=(vec[right],vec[left]);
     }
-    vec[L]=vec[left];
-    vec[left]=tmp;
+    (vec[L],vec[left])=(vec[left],tmp);
     sort(vec,L,left-1);
     sort(vec,left+1,R);
-    return nil;
+    return;
 }
 var vec=[];
+rand(time(0));
 for(var i=0;i<200;i+=1)
     append(vec,int(rand()*1000));
 sort(vec,0,size(vec)-1);

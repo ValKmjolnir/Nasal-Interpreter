@@ -171,7 +171,7 @@ var bf=func(program)
         var c=chr(program[i]);
         if(c=='+' or c=='-')
         {
-            append(code,add);
+            append(code,func_table[add]);
             append(inum,0);
             for(;i<len;i+=1)
             {
@@ -188,7 +188,7 @@ var bf=func(program)
         }
         elsif(c=='<' or c=='>')
         {
-            append(code,mov);
+            append(code,func_table[mov]);
             append(inum,0);
             for(;i<len;i+=1)
             {
@@ -205,17 +205,17 @@ var bf=func(program)
         }
         elsif(c==',')
         {
-            append(code,in);
+            append(code,func_table[in]);
             append(inum,0);
         }
         elsif(c=='.')
         {
-            append(code,out);
+            append(code,func_table[out]);
             append(inum,0);
         }
         elsif(c=='[')
         {
-            append(code,jf);
+            append(code,func_table[jf]);
             append(inum,0);
             append(stack,size(code)-1);
         }
@@ -224,7 +224,7 @@ var bf=func(program)
             if(!size(stack))
                 die("lack [");
             var label=pop(stack);
-            append(code,jt);
+            append(code,func_table[jt]);
             append(inum,label-1);
             inum[label]=size(code)-2;
         }
@@ -233,7 +233,7 @@ var bf=func(program)
         die("lack ]");
     len=size(code);
     for(pc=0;pc<len;pc+=1)
-        func_table[code[pc]]();
+        code[pc]();
     return;
 }
 
