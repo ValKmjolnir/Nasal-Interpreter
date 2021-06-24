@@ -1,7 +1,5 @@
 #include "nasal.h"
 
-nasal_vm vm;
-
 void help_interact()
 {
 	std::cout
@@ -31,7 +29,7 @@ void help_cmd()
 void info()
 {
 	std::cout
-	<<">> Nasal interpreter ver 6.5 efficient gc test .\n"
+	<<">> Nasal interpreter ver 6.5.\n"
 	<<">> Thanks to https://github.com/andyross/nasal\n"
 	<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n"
 	<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
@@ -60,6 +58,7 @@ void execute(std::string& file,std::string& command)
 	nasal_parse   parse;
 	nasal_import  import;
 	nasal_codegen codegen;
+	nasal_vm      vm;
 	lexer.openfile(file);
 	lexer.scanner();
 	if(lexer.get_error())
@@ -153,7 +152,7 @@ int main(int argc,const char* argv[])
 	else if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"-version")))
 	{
 		logo();
-		std::cout<<"Nasal interpreter ver 6.5 efficient gc test\n";
+		std::cout<<"Nasal interpreter ver 6.5\n";
 	}
 	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"-help")))
 		help_cmd();

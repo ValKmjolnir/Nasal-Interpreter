@@ -53,9 +53,9 @@ var curve1=func()
     var shadow=["░","▒","▓","█","▀","▄","▐","▌"];
     rand(100);
     var s="";
-    for(var i=0;i<25;i+=1)
+    for(var i=0;i<10;i+=1)
     {
-        for(var j=0;j<100;j+=1)
+        for(var j=0;j<40;j+=1)
             s~=shadow[int(8*rand())];
         s~='\n';
     }
@@ -66,28 +66,15 @@ var curve2=func()
     var table=["╚","═","╝","╔","║","╗"];
     rand(100);
     var s="";
-    for(var i=0;i<25;i+=1)
+    for(var i=0;i<10;i+=1)
     {
-        for(var j=0;j<100;j+=1)
+        for(var j=0;j<40;j+=1)
             s~=table[int(6*rand())];
         s~='\n';
     }
     print(s);
 }
 var curve3=func()
-{
-    var block=["░░","▒▒","▓▓","██","▀▀","▄▄","▄▀","▀▄","▐▐","▌▌"];
-    rand(100);
-    var s="";
-    for(var i=0;i<25;i+=1)
-    {
-        for(var j=0;j<50;j+=1)
-            s~=block[int(10*rand())];
-        s~='\n';
-    }
-    print(s);
-}
-var curve4=func()
 {
     var s=["","","","","",""];
     var cnt=0;
@@ -108,12 +95,12 @@ var curve4=func()
     }
     return;
 }
-var curve5=func()
+var curve4=func()
 {
-    for(var loop=0;loop<100;loop+=1)
+    var arr=[0,1,2,3,4,5,6,7,8,0,1,2,3,4,5,6,7,8,0,1,2,3,4,5,6,7,8];
+    for(var loop=0;loop<10;loop+=1)
     {
-        var arr=[0,1,2,3,4,5,6,7,8,0,1,2,3,4,5,6,7,8];
-        for(var i=17;i>=0;i-=1)
+        for(var i=26;i>=0;i-=1)
         {
             var rand_index=int(i*rand());
             (arr[i],arr[rand_index])=(arr[rand_index],arr[i]);
@@ -128,9 +115,8 @@ var curve5=func()
     return;
 }
 trans_ttf("just for test");
-trans_ttf("ValKmjolnir");
+trans_ttf(" ValKmjolnir ");
 curve1();
 curve2();
 curve3();
 curve4();
-curve5();

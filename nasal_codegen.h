@@ -365,8 +365,8 @@ void nasal_codegen::func_gen(nasal_ast& ast)
         }
         else if(tmp.get_type()==ast_default_arg)
         {
-            calc_gen(tmp.get_children()[1]);
-            std::string& str=tmp.get_children()[0].get_str();
+            calc_gen(tmp.get_children()[0]);
+            std::string& str=tmp.get_str();
             regist_string(str);
             add_sym(str);
             gen(op_defpara,string_table[str]);

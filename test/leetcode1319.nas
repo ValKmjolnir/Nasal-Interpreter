@@ -1,5 +1,5 @@
 import("lib.nas");
-# 并查集
+# union set
 var n=4;
 var input=[[0,1],[0,2],[1,2]];
 
@@ -23,8 +23,8 @@ var makeConnect=func(n,connections)
     var cnt=n-1;
     var parent=[];
     setsize(parent,n);
-    for(var i=0;i<size(connections);i+=1)
-        if(union_root(connections[i][0],connections[i][1],parent))
+    foreach(var i;connections)
+        if(union_root(i[0],i[1],parent))
             cnt-=1;
     return cnt;
 }

@@ -57,10 +57,12 @@ public:
     nasal_ast(){line=0;type=ast_null;}
     nasal_ast(int l,int t){line=l;type=t;}
     nasal_ast(const nasal_ast&);
-    nasal_ast&  operator=(const nasal_ast&);
+    nasal_ast(nasal_ast&&);
+    nasal_ast& operator=(const nasal_ast&);
+    nasal_ast& operator=(nasal_ast&&);
     void   print_ast(int);
     void   clear();
-    void   add_child(nasal_ast ast){children.push_back(ast);}
+    void   add_child(nasal_ast&& ast){children.push_back(std::move(ast));}
     void   set_line(int l){line=l;}
     void   set_type(int t){type=t;}
     void   set_str(std::string& s){str=s;}
@@ -82,6 +84,16 @@ nasal_ast::nasal_ast(const nasal_ast& tmp)
     return;
 }
 
+nasal_ast::nasal_ast(nasal_ast&& tmp)
+{
+    line=tmp.line;
+    type=tmp.type;
+    str.swap(tmp.str);
+    num =tmp.num;
+    children.swap(tmp.children);
+    return;
+}
+
 nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 {
     line=tmp.line;
@@ -89,6 +101,16 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
     str=tmp.str;
     num=tmp.num;
     children=tmp.children;
+    return *this;
+}
+
+nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
+{
+    line=tmp.line;
+    type=tmp.type;
+    str.swap(tmp.str);
+    num=tmp.num;
+    children.swap(tmp.children);
     return *this;
 }
 
@@ -104,11 +126,10 @@ void nasal_ast::clear()
 
 void nasal_ast::print_ast(int depth)
 {
-    std::string indentation="";
     for(int i=0;i<depth;++i)
-        indentation+="|  ";
-    std::cout<<indentation<<ast_name[type];
-    if(type==ast_str || type==ast_id || type==ast_dynamic_id || type==ast_callh)
+        std::cout<<"|  ";
+    std::cout<<ast_name[type];
+    if(type==ast_str || type==ast_id || type==ast_default_arg || type==ast_dynamic_id || type==ast_callh)
         std::cout<<":"<<str;
     else if(type==ast_num)
         std::cout<<":"<<num;

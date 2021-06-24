@@ -23,12 +23,9 @@ var diffsigmoid=func(x)
     return x*(1-x);
 }
 
-var inum=2;
-var hnum=4;
-var onum=1;
-var lr=0.1;
+var (inum,hnum,onum,lr)=(2,4,1,0.1);
 var training_set=[[0,0],[0,1],[1,0],[1,1]];
-var expect=[[0],[1],[1],[0]];
+var expect=[0,1,1,0];
 
 var hidden=[];
 for(var i=0;i<hnum;i+=1)
@@ -88,19 +85,12 @@ var run=func(vec)
 }
 var get_error=func(x)
 {
-    var error=0;
-    var expect_set=expect[x];
-    for(var i=0;i<onum;i+=1)
-        error+=(expect_set[i]-output[i].out)*(expect_set[i]-output[i].out);
-    error*=0.5;
-    return error;
+    return 0.5*(expect[x]-output[0].out)*(expect[x]-output[0].out);
 }
 var backward=func(x)
 {
     var input=training_set[x];
-    var expect_set=expect[x];
-    for(var i=0;i<onum;i+=1)
-        output[i].diff=(expect_set[i]-output[i].out)*diffsigmoid(output[i].in);
+    output[0].diff=(expect[x]-output[0].out)*diffsigmoid(output[0].in);
     for(var i=0;i<hnum;i+=1)
     {
         hidden[i].diff=0;

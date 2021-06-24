@@ -46,8 +46,8 @@ func()
     {
         prt(map);
         var tmp=new_map();
-        forindex(var i;map)
-            forindex(var j;map[i])
+        for(var i=0;i<15;i+=1)
+            for(var j=0;j<20;j+=1)
             {
                 var cnt=0;
                 foreach(var k;calc)

@@ -12,7 +12,7 @@ private:
     void die(std::string&,const char*);
     bool check_import(nasal_ast&);
     bool check_exist(std::string&);
-    void linker(nasal_ast&,nasal_ast&);
+    void linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&);
 public:
@@ -51,21 +51,21 @@ only this kind of node can be recognized as 'import':
     return true;
 }
 
-bool nasal_import::check_exist(std::string& filename)
+bool nasal_import::check_exist(std::string& file)
 {
     // avoid importing the same file
     for(auto& fname:filename_table)
-        if(filename==fname)
+        if(file==fname)
             return true;
-    filename_table.push_back(filename);
+    filename_table.push_back(file);
     return false;
 }
 
-void nasal_import::linker(nasal_ast& root,nasal_ast& add_root)
+void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
 {
     // add children of add_root to the back of root
     for(auto& i:add_root.get_children())
-        root.add_child(i);
+        root.add_child(std::move(i));
     return;
 }
 
@@ -75,7 +75,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     nasal_ast tmp(0,ast_root);
 
     // get filename and set node to ast_null
-    std::string& filename=node.get_children()[1].get_children()[0].get_str();
+    std::string filename=node.get_children()[1].get_children()[0].get_str();
     node.clear();
 
     // avoid infinite loading loop
@@ -98,7 +98,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         die(filename,"parser");
         return tmp;
     }
-    tmp=import_par.get_root();
+    tmp=std::move(import_par.get_root());
     import_par.get_root().clear();
     // check if tmp has 'import'
     return load(tmp);
@@ -109,14 +109,9 @@ nasal_ast nasal_import::load(nasal_ast& root)
     nasal_ast new_root(0,ast_root);
     for(auto& i:root.get_children())
         if(check_import(i))
-        {
-            nasal_ast tmp=file_import(i);
-            // add tmp to the back of new_root
-            linker(new_root,tmp);
-        }
+            linker(new_root,file_import(i));
     // add root to the back of new_root
-    linker(new_root,root);
-    // oops,i think it is not efficient if the root is too ... large?
+    linker(new_root,std::move(root));
     return new_root;
 }
 
