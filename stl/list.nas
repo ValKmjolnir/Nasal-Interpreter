@@ -15,10 +15,7 @@ var list=func()
                 _.end=tmp;
             }
             else
-            {
-                _.begin=tmp;
-                _.end=tmp;
-            }
+                _.begin=_.end=tmp;
             return;
         },
         push_front:func(elem)
@@ -31,10 +28,7 @@ var list=func()
                 _.begin=tmp;
             }
             else
-            {
-                _.begin=tmp;
-                _.end=tmp;
-            }
+                _.begin=_.end=tmp;
             return;
         },
         pop_back:func()

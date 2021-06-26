@@ -199,7 +199,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000c: nop    0x00000000
 ```
 
-### Version 6.5(latest)
+### Version 6.5(last update 2021/6/24)
 
 2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
 
@@ -329,6 +329,16 @@ As you could see from the bytecode above,mcall/mcallv/mcallh operands' using fre
 
 And because of the new structure of mcall, addr_stack, a stack used to store the memory address, is deleted from nasal_vm, and now nasal_vm use nasal_val** mem_addr to store the memory address. This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
+### version 7.0(latest)
+
+2021/6/26 update:
+
+Instruction dispatch is changed from call-threading to computed-goto(with inline function).After changing the way of instruction dispatch,there is a great improvement in nasal_vm.Now vm can run test/bigloop and test/pi in 0.2s!And vm runs test/fib in 0.8s on linux.You could see the time use data below,in Test data section.
+
+This version uses gcc extension "labels as values", which is also supported by clang.(But i don't know if MSVC supports this)
+
+There is also a change in nasal_gc: std::vector global is deleted,now the global values are all stored on stack(from val_stack+0 to val_stack+intg-1).
+
 ## Test data
 
 ### version 6.5(i5-8250U windows10 2021/6/19)
@@ -377,6 +387,23 @@ operands calling total times:
 |calc.nas|191|124|109|99|87|
 |quick_sort.nas|16226|5561|4144|3524|2833|
 |bfs.nas|24707|16297|14606|14269|8672|
+
+### version 7.0(i5-8250U ubuntu-WSL on windows10 2021/6/26)
+
+running time:
+
+|file|total time|info|
+|:----|:----|:----|
+|pi.nas|0.17s|great improvement|
+|fib.nas|0.75s|great improvement|
+|bp.nas|0.32s(5467 epoch)|good improvement|
+|bigloop.nas|0.11s|great improvement|
+|mandelbrot.nas|0.04s|great improvment|
+|life.nas|8.80s(windows) 1.34(ubuntu WSL)|little improvement|
+|ascii-art.nas|0.015s|little improvement|
+|calc.nas|0.0625s|little improvement|
+|quick_sort.nas|0s|great improvement|
+|bfs.nas|0.0156s|great improvement|
 
 ## How to Use Nasal to Program
 
@@ -660,7 +687,7 @@ Use import("") to get the nasal file including your built-in functions,then you 
 
 version 6.5 update:
 
-Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more then one time.
+Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more than one time.
 
 When running a builtin function,alloc will run more than one time,this may cause mark-sweep in gc_alloc.
 
