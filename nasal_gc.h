@@ -245,7 +245,6 @@ struct nasal_gc
     std::vector<nasal_val*> slice_stack;             // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
-    std::vector<nasal_val*> global;
     std::list<std::vector<nasal_val*>> local;
     void                    mark();
     void                    sweep();
@@ -259,8 +258,6 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_val*> bfs;
-    for(auto i:global)
-        bfs.push(i);
     for(auto& i:local)
         for(auto j:i)
             bfs.push(j);
@@ -332,7 +329,6 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
 
     nil_addr=new nasal_val(vm_nil); // init nil
 
-    *val_stack=nil_addr; // the first space will not store any values,but gc checks
     // init constant numbers
     num_addrs.resize(nums.size());
     for(int i=0;i<nums.size();++i)
@@ -357,7 +353,7 @@ void nasal_gc::gc_clear()
     for(int i=0;i<vm_type_size;++i)
         while(!free_list[i].empty())
             free_list[i].pop();
-    global.clear();
+    //global.clear();
     local.clear();
     slice_stack.clear();
 

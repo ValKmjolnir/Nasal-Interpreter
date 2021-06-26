@@ -722,7 +722,7 @@ nasal_val* builtin_substr(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     std::string& str=*str_addr->ptr.str;
     int beg=(int)beg_addr->ptr.num;
     int len=(int)len_addr->ptr.num;
-    if(beg>=str.length() || beg+len>=str.length())
+    if(beg>=str.length() || beg+len-1>=str.length())
     {
         builtin_err("susbtr","index out of range");
         return nullptr;

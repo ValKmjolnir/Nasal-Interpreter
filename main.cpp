@@ -29,7 +29,6 @@ void help_cmd()
 void info()
 {
 	std::cout
-	<<">> Nasal interpreter ver 6.5.\n"
 	<<">> Thanks to https://github.com/andyross/nasal\n"
 	<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n"
 	<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
@@ -44,7 +43,8 @@ void logo()
 	<<"    /\\ \\ \\__ _ ___  __ _| |  \n"
 	<<"   /  \\/ / _` / __|/ _` | |    \n"
 	<<"  / /\\  / (_| \\__ \\ (_| | |  \n"
-	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n";
+	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
+	<<">> Nasal interpreter ver 7.0    \n";
     return;
 }
 void die(const char* stage,std::string& filename)
@@ -104,10 +104,9 @@ void execute(std::string& file,std::string& command)
 	}
 	vm.init(
 		codegen.get_str_table(),
-		codegen.get_num_table(),
-		codegen.get_exec_code()
+		codegen.get_num_table()
 	);
-	vm.run();
+	vm.run(codegen.get_exec_code());
 	vm.clear();
 	return;
 }
@@ -150,10 +149,7 @@ int main(int argc,const char* argv[])
 	if(argc==1)
 		interact();
 	else if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"-version")))
-	{
 		logo();
-		std::cout<<"Nasal interpreter ver 6.5\n";
-	}
 	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"-help")))
 		help_cmd();
 	else if(argc==2 && argv[1][0]!='-')
