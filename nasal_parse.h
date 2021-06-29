@@ -684,6 +684,8 @@ nasal_ast nasal_parse::call_scalar()
         case tok_lbracket: return callv(); break;
         case tok_dot:      return callh(); break;
     }
+    // should never run this expression
+    return nasal_ast(tok_list[ptr].line,ast_nil);
 }
 nasal_ast nasal_parse::callh()
 {

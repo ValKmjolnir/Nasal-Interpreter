@@ -32,13 +32,15 @@ You could add your own built-in functions to change this interpreter to a useful
 
 Better choose the latest update of the interpreter.
 
-MUST USE -O2/-O3 if want to optimize the interpreter! pragma gcc optimize(2) seems useless when using g++
+MUST USE -O2/-O3 if want to optimize the interpreter!
 
-> g++ -std=c++11 -O2 main.cpp -o nasal.exe
+Also remember to use g++ and clang++.
+
+> g++|clang++ -std=c++11 -O2 main.cpp -o nasal.exe
 
 Or use this in linux/macOS/Unix
 
-> g++ -std=c++11 -O2 main.cpp -o nasal
+> g++|clang++ -std=c++11 -O2 main.cpp -o nasal
 
 ## How to Use?
 
@@ -117,7 +119,7 @@ If i continue saving this interpreter,it will be harder for me to make the bytec
 
 ## Byte Code Interpreter
 
-### Version 4.0(last update 2020/12/17)
+### Version 4.0 (last update 2020/12/17)
 
 I have just finished the first version of byte-code-interpreter.
 
@@ -150,7 +152,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000b: nop    0x00000000
 ```
 
-### Version 5.0(last update 2021/3/7)
+### Version 5.0 (last update 2021/3/7)
 
 I decide to optimize bytecode vm in this version.
 
@@ -158,7 +160,7 @@ Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not effic
 
 2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
 
-### Version 6.0(last update 2021/6/1)
+### Version 6.0 (last update 2021/6/1)
 
 Use loadg loadl callg calll mcallg mcalll to avoid branches.
 
@@ -199,7 +201,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000c: nop    0x00000000
 ```
 
-### Version 6.5(last update 2021/6/24)
+### Version 6.5 (last update 2021/6/24)
 
 2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
 
@@ -329,15 +331,61 @@ As you could see from the bytecode above,mcall/mcallv/mcallh operands' using fre
 
 And because of the new structure of mcall, addr_stack, a stack used to store the memory address, is deleted from nasal_vm, and now nasal_vm use nasal_val** mem_addr to store the memory address. This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
-### version 7.0(latest)
+### version 7.0 (latest)
 
 2021/6/26 update:
 
 Instruction dispatch is changed from call-threading to computed-goto(with inline function).After changing the way of instruction dispatch,there is a great improvement in nasal_vm.Now vm can run test/bigloop and test/pi in 0.2s!And vm runs test/fib in 0.8s on linux.You could see the time use data below,in Test data section.
 
-This version uses gcc extension "labels as values", which is also supported by clang.(But i don't know if MSVC supports this)
+This version uses g++ extension "labels as values", which is also supported by clang++.(But i don't know if MSVC supports this)
 
 There is also a change in nasal_gc: std::vector global is deleted,now the global values are all stored on stack(from val_stack+0 to val_stack+intg-1).
+
+2021/6/29 update:
+
+Add some instructions that execute const values:op_addc,op_subc,op_mulc,op_divc,op_lnkc,op_addeqc,op_subeqc,op_muleqc,op_diveqc,op_lnkeqc.
+
+Now the bytecode of test/bigloop.nas seems like this:
+
+```asm
+.number 4e+006
+.number 1
+0x00000000: intg   0x00000001
+0x00000001: pzero  0x00000000
+0x00000002: loadg  0x00000000
+0x00000003: callg  0x00000000
+0x00000004: pnum   0x00000000 (4000000)
+0x00000005: less   0x00000000
+0x00000006: jf     0x0000000b
+0x00000007: mcallg 0x00000000
+0x00000008: addeqc 0x00000001 (1)
+0x00000009: pop    0x00000000
+0x0000000a: jmp    0x00000003
+0x0000000b: nop    0x00000000
+```
+
+And this test file runs in 0.1s after this update.Most of the calculations are accelerated.
+
+Also, assignment bytecode has changed a lot. Now the first identifier that called in assignment will use op_load to assign, instead of op_meq,op_pop.
+
+```javascript
+var (a,b)=(1,2);
+a=b=0;
+```
+
+```asm
+.number 2
+0x00000000: intg   0x00000002
+0x00000001: pone   0x00000000
+0x00000002: loadg  0x00000000
+0x00000003: pnum   0x00000000 (2)
+0x00000004: loadg  0x00000001
+0x00000005: pzero  0x00000000
+0x00000006: mcallg 0x00000001
+0x00000007: meq    0x00000000 (b=2 use meq,pop->a)
+0x00000008: loadg  0x00000000 (a=b use loadg)
+0x00000009: nop    0x00000000
+```
 
 ## Test data
 
@@ -388,20 +436,20 @@ operands calling total times:
 |quick_sort.nas|16226|5561|4144|3524|2833|
 |bfs.nas|24707|16297|14606|14269|8672|
 
-### version 7.0(i5-8250U ubuntu-WSL on windows10 2021/6/26)
+### version 7.0(i5-8250U ubuntu-WSL on windows10 2021/6/29)
 
 running time:
 
 |file|total time|info|
 |:----|:----|:----|
-|pi.nas|0.17s|great improvement|
+|pi.nas|0.15625s|great improvement|
 |fib.nas|0.75s|great improvement|
-|bp.nas|0.32s(5467 epoch)|good improvement|
-|bigloop.nas|0.11s|great improvement|
-|mandelbrot.nas|0.04s|great improvment|
-|life.nas|8.80s(windows) 1.34(ubuntu WSL)|little improvement|
+|bp.nas|0.4218s(7162 epoch)|good improvement|
+|bigloop.nas|0.09375s|great improvement|
+|mandelbrot.nas|0.0312s|great improvement|
+|life.nas|8.80s(windows) 1.25(ubuntu WSL)|little improvement|
 |ascii-art.nas|0.015s|little improvement|
-|calc.nas|0.0625s|little improvement|
+|calc.nas|0.0468s|little improvement|
 |quick_sort.nas|0s|great improvement|
 |bfs.nas|0.0156s|great improvement|
 
