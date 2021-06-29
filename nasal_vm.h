@@ -11,7 +11,7 @@ private:
     std::stack<int>          ret;      // ptr stack stores address for function to return
     std::stack<int>          counter;  // iterator stack for forindex/foreach
     std::vector<std::string> str_table;// symbols used in process
-    std::vector<uint32_t>    imm;      // immediate number
+    std::vector<int32_t>    imm;      // immediate number
     nasal_val**              mem_addr; // used for mem_call
     nasal_gc                 gc;       // garbage collector
     
@@ -41,11 +41,21 @@ private:
     void opr_mul();
     void opr_div();
     void opr_lnk();
+    void opr_addc();
+    void opr_subc();
+    void opr_mulc();
+    void opr_divc();
+    void opr_lnkc();
     void opr_addeq();
     void opr_subeq();
     void opr_muleq();
     void opr_diveq();
     void opr_lnkeq();
+    void opr_addeqc();
+    void opr_subeqc();
+    void opr_muleqc();
+    void opr_diveqc();
+    void opr_lnkeqc();
     void opr_meq();
     void opr_eq();
     void opr_neq();
@@ -298,6 +308,41 @@ inline void nasal_vm::opr_lnk()
     (--stack_top)[0]=new_val;
     return;
 }
+inline void nasal_vm::opr_addc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=stack_top[0]->to_number()+gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_subc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=stack_top[0]->to_number()-gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_mulc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=stack_top[0]->to_number()*gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_divc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=stack_top[0]->to_number()/gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_lnkc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_str);
+    *new_val->ptr.str=stack_top[0]->to_string()+str_table[imm[pc]];
+    stack_top[0]=new_val;
+    return;
+}
 inline void nasal_vm::opr_addeq()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
@@ -331,6 +376,41 @@ inline void nasal_vm::opr_lnkeq()
     nasal_val* new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=mem_addr[0]->to_string()+stack_top[-1]->to_string();
     (--stack_top)[0]=mem_addr[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_addeqc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=mem_addr[0]->to_number()+gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=mem_addr[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_subeqc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=mem_addr[0]->to_number()-gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=mem_addr[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_muleqc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=mem_addr[0]->to_number()*gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=mem_addr[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_diveqc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_num);
+    new_val->ptr.num=mem_addr[0]->to_number()/gc.num_addrs[imm[pc]]->ptr.num;
+    stack_top[0]=mem_addr[0]=new_val;
+    return;
+}
+inline void nasal_vm::opr_lnkeqc()
+{
+    nasal_val* new_val=gc.gc_alloc(vm_str);
+    *new_val->ptr.str=mem_addr[0]->to_string()+str_table[imm[pc]];
+    stack_top[0]=mem_addr[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_meq()
@@ -510,7 +590,7 @@ inline void nasal_vm::opr_callvi()
     nasal_val* val=stack_top[0];
     if(val->type!=vm_vec)
     {
-        die("callvi: multi-definition/multi-assignment must use a vector");
+        die("callvi: must use a vector");
         return;
     }
     // cannot use operator[],because this may cause overflow
@@ -761,6 +841,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
+    int count[72]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -769,16 +850,18 @@ void nasal_vm::run(std::vector<opcode>& exec)
         &&newh,    &&newf,     &&happ,   &&para,
         &&defpara, &&dynpara,  &&unot,   &&usub,
         &&add,     &&sub,      &&mul,    &&div,
-        &&lnk,     &&addeq,    &&subeq,  &&muleq,
-        &&diveq,   &&lnkeq,    &&meq,    &&eq,
-        &&neq,     &&less,     &&leq,    &&grt,
-        &&geq,     &&pop,      &&jmp,    &&jt,
-        &&jf,      &&counter,  &&cntpop, &&findex,
-        &&feach,   &&callg,    &&calll,  &&callv,
-        &&callvi,  &&callh,    &&callfv, &&callfh,
-        &&callb,   &&slcbegin, &&slcend, &&slc,
-        &&slc2,    &&mcallg,   &&mcalll, &&mcallv,
-        &&mcallh,  &&ret
+        &&lnk,     &&addc,     &&subc,   &&mulc,
+        &&divc,    &&lnkc,     &&addeq,  &&subeq,
+        &&muleq,   &&diveq,    &&lnkeq,  &&addeqc,
+        &&subeqc,  &&muleqc,   &&diveqc, &&lnkeqc,
+        &&meq,     &&eq,       &&neq,    &&less,
+        &&leq,     &&grt,      &&geq,    &&pop,
+        &&jmp,     &&jt,       &&jf,     &&counter,
+        &&cntpop,  &&findex,   &&feach,  &&callg,
+        &&calll,   &&callv,    &&callvi, &&callh,
+        &&callfv,  &&callfh,   &&callb,  &&slcbegin,
+        &&slcend,  &&slc,      &&slc2,   &&mcallg,
+        &&mcalll,  &&mcallv,   &&mcallh, &&ret
     };
     std::vector<void*> code;
     for(auto& i:exec)
@@ -795,68 +878,91 @@ nop:
     if(gc.val_stack[STACK_MAX_DEPTH-1]&&gc.val_stack[STACK_MAX_DEPTH-1]!=(nasal_val*)0xffff)
         std::cout<<">> [vm] stack overflow.\n";
     std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
+    // debug
+    // for(int i=0;i<15;++i)
+    // {
+    //     int maxnum=0,index=0;
+    //     for(int j=0;j<62;++j)
+    //         if(count[j]>maxnum)
+    //         {
+    //             index=j;
+    //             maxnum=count[j];
+    //         }
+    //     std::cout<<code_table[index].name<<": "<<maxnum<<"\n";
+    //     count[index]=0;
+    // }
     return;
-#define exec_operand(op) {op();if(!gc.val_stack[STACK_MAX_DEPTH-1])goto *code[++pc];goto nop;}
-intg:    exec_operand(opr_intg    );
-intl:    exec_operand(opr_intl    );
-offset:  exec_operand(opr_offset  );
-loadg:   exec_operand(opr_loadg   );
-loadl:   exec_operand(opr_loadl   );
-pnum:    exec_operand(opr_pnum    );
-pone:    exec_operand(opr_pone    );
-pzero:   exec_operand(opr_pzero   );
-pnil:    exec_operand(opr_pnil    );
-pstr:    exec_operand(opr_pstr    );
-newv:    exec_operand(opr_newv    );
-newh:    exec_operand(opr_newh    );
-newf:    exec_operand(opr_newf    );
-happ:    exec_operand(opr_happ    );
-para:    exec_operand(opr_para    );
-defpara: exec_operand(opr_defpara );
-dynpara: exec_operand(opr_dynpara );
-unot:    exec_operand(opr_unot    );
-usub:    exec_operand(opr_usub    );
-add:     exec_operand(opr_add     );
-sub:     exec_operand(opr_sub     );
-mul:     exec_operand(opr_mul     );
-div:     exec_operand(opr_div     );
-lnk:     exec_operand(opr_lnk     );
-addeq:   exec_operand(opr_addeq   );
-subeq:   exec_operand(opr_subeq   );
-muleq:   exec_operand(opr_muleq   );
-diveq:   exec_operand(opr_diveq   );
-lnkeq:   exec_operand(opr_lnkeq   );
-meq:     exec_operand(opr_meq     );
-eq:      exec_operand(opr_eq      );
-neq:     exec_operand(opr_neq     );
-less:    exec_operand(opr_less    );
-leq:     exec_operand(opr_leq     );
-grt:     exec_operand(opr_grt     );
-geq:     exec_operand(opr_geq     );
-pop:     exec_operand(opr_pop     );
-jmp:     exec_operand(opr_jmp     );
-jt:      exec_operand(opr_jt      );
-jf:      exec_operand(opr_jf      );
-counter: exec_operand(opr_counter );
-cntpop:  exec_operand(opr_cntpop  );
-findex:  exec_operand(opr_findex  );
-feach:   exec_operand(opr_feach   );
-callg:   exec_operand(opr_callg   );
-calll:   exec_operand(opr_calll   );
-callv:   exec_operand(opr_callv   );
-callvi:  exec_operand(opr_callvi  );
-callh:   exec_operand(opr_callh   );
-callfv:  exec_operand(opr_callfv  );
-callfh:  exec_operand(opr_callfh  );
-callb:   exec_operand(opr_callb   );
-slcbegin:exec_operand(opr_slcbegin);
-slcend:  exec_operand(opr_slcend  );
-slc:     exec_operand(opr_slc     );
-slc2:    exec_operand(opr_slc2    );
-mcallg:  exec_operand(opr_mcallg  );
-mcalll:  exec_operand(opr_mcalll  );
-mcallv:  exec_operand(opr_mcallv  );
-mcallh:  exec_operand(opr_mcallh  );
-ret:     exec_operand(opr_ret     );
+#define exec_operand(op,num) {op();/*++count[num];*/if(!gc.val_stack[STACK_MAX_DEPTH-1])goto *code[++pc];goto nop;}
+intg:    exec_operand(opr_intg    ,1);
+intl:    exec_operand(opr_intl    ,2);
+offset:  exec_operand(opr_offset  ,3);
+loadg:   exec_operand(opr_loadg   ,4);
+loadl:   exec_operand(opr_loadl   ,5);
+pnum:    exec_operand(opr_pnum    ,6);
+pone:    exec_operand(opr_pone    ,7);
+pzero:   exec_operand(opr_pzero   ,8);
+pnil:    exec_operand(opr_pnil    ,9);
+pstr:    exec_operand(opr_pstr    ,10);
+newv:    exec_operand(opr_newv    ,11);
+newh:    exec_operand(opr_newh    ,12);
+newf:    exec_operand(opr_newf    ,13);
+happ:    exec_operand(opr_happ    ,14);
+para:    exec_operand(opr_para    ,15);
+defpara: exec_operand(opr_defpara ,16);
+dynpara: exec_operand(opr_dynpara ,17);
+unot:    exec_operand(opr_unot    ,18);
+usub:    exec_operand(opr_usub    ,19);
+add:     exec_operand(opr_add     ,20);
+sub:     exec_operand(opr_sub     ,21);
+mul:     exec_operand(opr_mul     ,22);
+div:     exec_operand(opr_div     ,23);
+lnk:     exec_operand(opr_lnk     ,24);
+addc:    exec_operand(opr_addc    ,25);
+subc:    exec_operand(opr_subc    ,26);
+mulc:    exec_operand(opr_mulc    ,27);
+divc:    exec_operand(opr_divc    ,28);
+lnkc:    exec_operand(opr_lnkc    ,29);
+addeq:   exec_operand(opr_addeq   ,30);
+subeq:   exec_operand(opr_subeq   ,31);
+muleq:   exec_operand(opr_muleq   ,32);
+diveq:   exec_operand(opr_diveq   ,33);
+lnkeq:   exec_operand(opr_lnkeq   ,34);
+addeqc:  exec_operand(opr_addeqc  ,35);
+subeqc:  exec_operand(opr_subeqc  ,36);
+muleqc:  exec_operand(opr_muleqc  ,37);
+diveqc:  exec_operand(opr_diveqc  ,38);
+lnkeqc:  exec_operand(opr_lnkeqc  ,39);
+meq:     exec_operand(opr_meq     ,40);
+eq:      exec_operand(opr_eq      ,41);
+neq:     exec_operand(opr_neq     ,42);
+less:    exec_operand(opr_less    ,43);
+leq:     exec_operand(opr_leq     ,44);
+grt:     exec_operand(opr_grt     ,45);
+geq:     exec_operand(opr_geq     ,46);
+pop:     exec_operand(opr_pop     ,47);
+jmp:     exec_operand(opr_jmp     ,48);
+jt:      exec_operand(opr_jt      ,49);
+jf:      exec_operand(opr_jf      ,50);
+counter: exec_operand(opr_counter ,51);
+cntpop:  exec_operand(opr_cntpop  ,52);
+findex:  exec_operand(opr_findex  ,53);
+feach:   exec_operand(opr_feach   ,54);
+callg:   exec_operand(opr_callg   ,55);
+calll:   exec_operand(opr_calll   ,56);
+callv:   exec_operand(opr_callv   ,57);
+callvi:  exec_operand(opr_callvi  ,58);
+callh:   exec_operand(opr_callh   ,59);
+callfv:  exec_operand(opr_callfv  ,60);
+callfh:  exec_operand(opr_callfh  ,61);
+callb:   exec_operand(opr_callb   ,62);
+slcbegin:exec_operand(opr_slcbegin,63);
+slcend:  exec_operand(opr_slcend  ,64);
+slc:     exec_operand(opr_slc     ,65);
+slc2:    exec_operand(opr_slc2    ,66);
+mcallg:  exec_operand(opr_mcallg  ,67);
+mcalll:  exec_operand(opr_mcalll  ,68);
+mcallv:  exec_operand(opr_mcallv  ,69);
+mcallh:  exec_operand(opr_mcallh  ,70);
+ret:     exec_operand(opr_ret     ,71);
 }
 #endif
