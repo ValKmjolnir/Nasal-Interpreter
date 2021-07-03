@@ -11,7 +11,7 @@ private:
     std::stack<int>          ret;      // ptr stack stores address for function to return
     std::stack<int>          counter;  // iterator stack for forindex/foreach
     std::vector<std::string> str_table;// symbols used in process
-    std::vector<int32_t>    imm;      // immediate number
+    std::vector<uint32_t>    imm;      // immediate number
     nasal_val**              mem_addr; // used for mem_call
     nasal_gc                 gc;       // garbage collector
     
@@ -63,6 +63,10 @@ private:
     void opr_leq();
     void opr_grt();
     void opr_geq();
+    void opr_lessc();
+    void opr_leqc();
+    void opr_grtc();
+    void opr_geqc();
     void opr_pop();
     void opr_jmp();
     void opr_jt();
@@ -474,6 +478,26 @@ inline void nasal_vm::opr_geq()
     stack_top[0]=(stack_top[0]->to_number()>=stack_top[1]->to_number())?gc.one_addr:gc.zero_addr;
     return;
 }
+inline void nasal_vm::opr_lessc()
+{
+    stack_top[0]=(stack_top[0]->to_number()<gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    return;
+}
+inline void nasal_vm::opr_leqc()
+{
+    stack_top[0]=(stack_top[0]->to_number()<=gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    return;
+}
+inline void nasal_vm::opr_grtc()
+{
+    stack_top[0]=(stack_top[0]->to_number()>gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    return;
+}
+inline void nasal_vm::opr_geqc()
+{
+    stack_top[0]=(stack_top[0]->to_number()>=gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    return;
+}
 inline void nasal_vm::opr_pop()
 {
     --stack_top;
@@ -841,7 +865,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
-    int count[72]={0};
+    // int count[op_ret]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -855,7 +879,8 @@ void nasal_vm::run(std::vector<opcode>& exec)
         &&muleq,   &&diveq,    &&lnkeq,  &&addeqc,
         &&subeqc,  &&muleqc,   &&diveqc, &&lnkeqc,
         &&meq,     &&eq,       &&neq,    &&less,
-        &&leq,     &&grt,      &&geq,    &&pop,
+        &&leq,     &&grt,      &&geq,    &&lessc,
+        &&leqc,    &&grtc,     &&geqc,   &&pop,
         &&jmp,     &&jt,       &&jf,     &&counter,
         &&cntpop,  &&findex,   &&feach,  &&callg,
         &&calll,   &&callv,    &&callvi, &&callh,
@@ -939,30 +964,34 @@ less:    exec_operand(opr_less    ,43);
 leq:     exec_operand(opr_leq     ,44);
 grt:     exec_operand(opr_grt     ,45);
 geq:     exec_operand(opr_geq     ,46);
-pop:     exec_operand(opr_pop     ,47);
-jmp:     exec_operand(opr_jmp     ,48);
-jt:      exec_operand(opr_jt      ,49);
-jf:      exec_operand(opr_jf      ,50);
-counter: exec_operand(opr_counter ,51);
-cntpop:  exec_operand(opr_cntpop  ,52);
-findex:  exec_operand(opr_findex  ,53);
-feach:   exec_operand(opr_feach   ,54);
-callg:   exec_operand(opr_callg   ,55);
-calll:   exec_operand(opr_calll   ,56);
-callv:   exec_operand(opr_callv   ,57);
-callvi:  exec_operand(opr_callvi  ,58);
-callh:   exec_operand(opr_callh   ,59);
-callfv:  exec_operand(opr_callfv  ,60);
-callfh:  exec_operand(opr_callfh  ,61);
-callb:   exec_operand(opr_callb   ,62);
-slcbegin:exec_operand(opr_slcbegin,63);
-slcend:  exec_operand(opr_slcend  ,64);
-slc:     exec_operand(opr_slc     ,65);
-slc2:    exec_operand(opr_slc2    ,66);
-mcallg:  exec_operand(opr_mcallg  ,67);
-mcalll:  exec_operand(opr_mcalll  ,68);
-mcallv:  exec_operand(opr_mcallv  ,69);
-mcallh:  exec_operand(opr_mcallh  ,70);
-ret:     exec_operand(opr_ret     ,71);
+lessc:   exec_operand(opr_lessc   ,47);
+leqc:    exec_operand(opr_leqc    ,48);
+grtc:    exec_operand(opr_grtc    ,49);
+geqc:    exec_operand(opr_geqc    ,50);
+pop:     exec_operand(opr_pop     ,51);
+jmp:     exec_operand(opr_jmp     ,52);
+jt:      exec_operand(opr_jt      ,53);
+jf:      exec_operand(opr_jf      ,54);
+counter: exec_operand(opr_counter ,55);
+cntpop:  exec_operand(opr_cntpop  ,56);
+findex:  exec_operand(opr_findex  ,57);
+feach:   exec_operand(opr_feach   ,58);
+callg:   exec_operand(opr_callg   ,59);
+calll:   exec_operand(opr_calll   ,60);
+callv:   exec_operand(opr_callv   ,61);
+callvi:  exec_operand(opr_callvi  ,62);
+callh:   exec_operand(opr_callh   ,63);
+callfv:  exec_operand(opr_callfv  ,64);
+callfh:  exec_operand(opr_callfh  ,65);
+callb:   exec_operand(opr_callb   ,66);
+slcbegin:exec_operand(opr_slcbegin,67);
+slcend:  exec_operand(opr_slcend  ,68);
+slc:     exec_operand(opr_slc     ,69);
+slc2:    exec_operand(opr_slc2    ,70);
+mcallg:  exec_operand(opr_mcallg  ,71);
+mcalll:  exec_operand(opr_mcalll  ,72);
+mcallv:  exec_operand(opr_mcallv  ,73);
+mcallh:  exec_operand(opr_mcallh  ,74);
+ret:     exec_operand(opr_ret     ,75);
 }
 #endif
