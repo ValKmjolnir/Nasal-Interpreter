@@ -234,7 +234,7 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (65536)
+#define STACK_MAX_DEPTH (4096)
     nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
@@ -271,19 +271,23 @@ void nasal_gc::mark()
         bfs.pop();
         if(tmp->mark) continue;
         tmp->mark=GC_FOUND;
-        if(tmp->type==vm_vec)
-            for(auto i:tmp->ptr.vec->elems)
-                bfs.push(i);
-        else if(tmp->type==vm_hash)
-            for(auto& i:tmp->ptr.hash->elems)
-                bfs.push(i.second);
-        else if(tmp->type==vm_func)
+        switch(tmp->type)
         {
-            for(auto i:tmp->ptr.func->closure)
-                bfs.push(i);
-            for(auto i:tmp->ptr.func->default_para)
-                if(i)
+            case vm_vec:
+                for(auto i:tmp->ptr.vec->elems)
                     bfs.push(i);
+                break;
+            case vm_hash:
+                for(auto& i:tmp->ptr.hash->elems)
+                    bfs.push(i.second);
+                break;
+            case vm_func:
+                for(auto i:tmp->ptr.func->closure)
+                    bfs.push(i);
+                for(auto i:tmp->ptr.func->default_para)
+                    if(i)
+                        bfs.push(i);
+                break;
         }
     }
     return;

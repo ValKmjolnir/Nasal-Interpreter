@@ -50,6 +50,10 @@ enum op_code
     op_leq,     // <=
     op_grt,     // >
     op_geq,     // >=
+    op_lessc,   // < const
+    op_leqc,    // <= const
+    op_grtc,    // > const
+    op_geqc,    // >= const
     op_pop,     // pop a value from stack
     op_jmp,     // jump with no condition
     op_jt,      // used in operator and/or,jmp when condition is true and DO NOT POP
@@ -130,6 +134,10 @@ struct
     {op_leq,     "leq   "},
     {op_grt,     "grt   "},
     {op_geq,     "geq   "},
+    {op_lessc,   "lessc "},
+    {op_leqc,    "leqc  "},
+    {op_grtc,    "grtc  "},
+    {op_geqc,    "geqc  "},
     {op_pop,     "pop   "},
     {op_jmp,     "jmp   "},
     {op_jt,      "jt    "},
@@ -161,8 +169,8 @@ struct
 struct opcode
 {
     uint8_t op;
-    int32_t num;
-    opcode(uint8_t _op=op_nop,int32_t _num=0)
+    uint32_t num;
+    opcode(uint8_t _op=op_nop,uint32_t _num=0)
     {
         op=_op;
         num=_num;
@@ -198,7 +206,7 @@ private:
     void add_sym(std::string&);
     int  local_find(std::string&);
     int  global_find(std::string&);
-    void gen(uint8_t,int32_t);
+    void gen(uint8_t,uint32_t);
     void num_gen(nasal_ast&);
     void str_gen(nasal_ast&);
     void vec_gen(nasal_ast&);
@@ -303,7 +311,7 @@ int nasal_codegen::global_find(std::string& name)
     return -1;
 }
 
-void nasal_codegen::gen(uint8_t op,int32_t num)
+void nasal_codegen::gen(uint8_t op,uint32_t num)
 {
     exec_code.push_back({op,num});
     return;
@@ -987,10 +995,23 @@ void nasal_codegen::calc_gen(nasal_ast& ast)
             }
             break;
         // ast_cmpeq(27)~ast_geq(32) op_eq(29)~op_geq(34)
-        case ast_cmpeq:case ast_neq:case ast_less:case ast_leq:case ast_grt:case ast_geq:
+        case ast_cmpeq:case ast_neq:
             calc_gen(ast.get_children()[0]);
             calc_gen(ast.get_children()[1]);
             gen(ast.get_type()-ast_cmpeq+op_eq,0);
+            break;
+        case ast_less:case ast_leq:case ast_grt:case ast_geq:
+            calc_gen(ast.get_children()[0]);
+            if(ast.get_children()[1].get_type()!=ast_num)
+            {
+                calc_gen(ast.get_children()[1]);
+                gen(ast.get_type()-ast_less+op_less,0);
+            }
+            else
+            {
+                regist_number(ast.get_children()[1].get_num());
+                gen(ast.get_type()-ast_less+op_lessc,number_table[ast.get_children()[1].get_num()]);
+            }
             break;
         case ast_trino:trino_gen(ast);break;
         case ast_neg:
@@ -1186,6 +1207,7 @@ void nasal_codegen::print_op(int index)
     {
         case op_addc:case op_subc:case op_mulc:case op_divc:
         case op_addeqc:case op_subeqc:case op_muleqc:case op_diveqc:
+        case op_lessc:case op_leqc:case op_grtc:case op_geqc:
         case op_pnum:printf(" (%lf)\n",num_res_table[exec_code[index].num]);break;
         case op_callb:printf(" (%s)\n",builtin_func[exec_code[index].num].name);break;
         case op_happ:
