@@ -10,6 +10,7 @@ private:
     uint32_t                 pc;       // program counter
     std::stack<int>          ret;      // ptr stack stores address for function to return
     std::stack<int>          counter;  // iterator stack for forindex/foreach
+    std::vector<double>      num_table;// numbers used in process(const calculation)
     std::vector<std::string> str_table;// symbols used in process
     std::vector<uint32_t>    imm;      // immediate number
     nasal_val**              mem_addr; // used for mem_call
@@ -107,6 +108,7 @@ void nasal_vm::init(
 {
     gc.gc_init(nums,strs);
     gc.val_stack[STACK_MAX_DEPTH-1]=nullptr;
+    num_table=nums; // get constant numbers
     str_table=strs; // get constant strings & symbols
     return;
 }
@@ -117,6 +119,7 @@ void nasal_vm::clear()
         ret.pop();
     while(!counter.empty())
         counter.pop();
+    num_table.clear();
     str_table.clear();
     imm.clear();
     return;
@@ -315,28 +318,28 @@ inline void nasal_vm::opr_lnk()
 inline void nasal_vm::opr_addc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=stack_top[0]->to_number()+gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=stack_top[0]->to_number()+num_table[imm[pc]];
     stack_top[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_subc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=stack_top[0]->to_number()-gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=stack_top[0]->to_number()-num_table[imm[pc]];
     stack_top[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_mulc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=stack_top[0]->to_number()*gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=stack_top[0]->to_number()*num_table[imm[pc]];
     stack_top[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_divc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=stack_top[0]->to_number()/gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=stack_top[0]->to_number()/num_table[imm[pc]];
     stack_top[0]=new_val;
     return;
 }
@@ -385,28 +388,28 @@ inline void nasal_vm::opr_lnkeq()
 inline void nasal_vm::opr_addeqc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=mem_addr[0]->to_number()+gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=mem_addr[0]->to_number()+num_table[imm[pc]];
     stack_top[0]=mem_addr[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_subeqc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=mem_addr[0]->to_number()-gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=mem_addr[0]->to_number()-num_table[imm[pc]];
     stack_top[0]=mem_addr[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_muleqc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=mem_addr[0]->to_number()*gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=mem_addr[0]->to_number()*num_table[imm[pc]];
     stack_top[0]=mem_addr[0]=new_val;
     return;
 }
 inline void nasal_vm::opr_diveqc()
 {
     nasal_val* new_val=gc.gc_alloc(vm_num);
-    new_val->ptr.num=mem_addr[0]->to_number()/gc.num_addrs[imm[pc]]->ptr.num;
+    new_val->ptr.num=mem_addr[0]->to_number()/num_table[imm[pc]];
     stack_top[0]=mem_addr[0]=new_val;
     return;
 }
@@ -480,22 +483,22 @@ inline void nasal_vm::opr_geq()
 }
 inline void nasal_vm::opr_lessc()
 {
-    stack_top[0]=(stack_top[0]->to_number()<gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    stack_top[0]=(stack_top[0]->to_number()<num_table[imm[pc]])?gc.one_addr:gc.zero_addr;
     return;
 }
 inline void nasal_vm::opr_leqc()
 {
-    stack_top[0]=(stack_top[0]->to_number()<=gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    stack_top[0]=(stack_top[0]->to_number()<=num_table[imm[pc]])?gc.one_addr:gc.zero_addr;
     return;
 }
 inline void nasal_vm::opr_grtc()
 {
-    stack_top[0]=(stack_top[0]->to_number()>gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    stack_top[0]=(stack_top[0]->to_number()>num_table[imm[pc]])?gc.one_addr:gc.zero_addr;
     return;
 }
 inline void nasal_vm::opr_geqc()
 {
-    stack_top[0]=(stack_top[0]->to_number()>=gc.num_addrs[imm[pc]]->ptr.num)?gc.one_addr:gc.zero_addr;
+    stack_top[0]=(stack_top[0]->to_number()>=num_table[imm[pc]])?gc.one_addr:gc.zero_addr;
     return;
 }
 inline void nasal_vm::opr_pop()
@@ -734,32 +737,36 @@ inline void nasal_vm::opr_callb()
 }
 inline void nasal_vm::opr_slcbegin()
 {
-    gc.slice_stack.push_back(gc.gc_alloc(vm_vec));
-    if(stack_top[0]->type!=vm_vec)
+    // | slice_vector | <-- stack_top[0]
+    // ----------------
+    // | resource_vec | <-- stack_top[-1]
+    // ----------------
+    (++stack_top)[0]=gc.gc_alloc(vm_vec);
+    if(stack_top[-1]->type!=vm_vec)
         die("slcbegin: must slice a vector");
     return;
 }
 inline void nasal_vm::opr_slcend()
 {
-    stack_top[0]=gc.slice_stack.back();
-    gc.slice_stack.pop_back();
+    stack_top[-1]=stack_top[0];
+    --stack_top;
     return;
 }
 inline void nasal_vm::opr_slc()
 {
     nasal_val* val=(stack_top--)[0];
-    nasal_val* res=stack_top[0]->ptr.vec->get_val(val->to_number());
+    nasal_val* res=stack_top[-1]->ptr.vec->get_val(val->to_number());
     if(!res)
         die("slc: index out of range:"+num2str(val->to_number()));
-    gc.slice_stack.back()->ptr.vec->elems.push_back(res);
+    stack_top[0]->ptr.vec->elems.push_back(res);
     return;
 }
 inline void nasal_vm::opr_slc2()
 {
     nasal_val* val2=(stack_top--)[0];
     nasal_val* val1=(stack_top--)[0];
-    std::vector<nasal_val*>& ref=stack_top[0]->ptr.vec->elems;
-    std::vector<nasal_val*>& aim=gc.slice_stack.back()->ptr.vec->elems;
+    std::vector<nasal_val*>& ref=stack_top[-1]->ptr.vec->elems;
+    std::vector<nasal_val*>& aim=stack_top[0]->ptr.vec->elems;
 
     int type1=val1->type,type2=val2->type;
     int num1=val1->to_number();
@@ -865,7 +872,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
-    // int count[op_ret]={0};
+    // int count[op_ret+1]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -895,12 +902,13 @@ void nasal_vm::run(std::vector<opcode>& exec)
         imm.push_back(i.num);
     }
 
+    nasal_val** canary=gc.val_stack+STACK_MAX_DEPTH-1;
     clock_t begin=clock();
     pc=0;
     goto *code[pc];
 
 nop:
-    if(gc.val_stack[STACK_MAX_DEPTH-1]&&gc.val_stack[STACK_MAX_DEPTH-1]!=(nasal_val*)0xffff)
+    if(canary[0] && canary[0]!=(nasal_val*)0xffff)
         std::cout<<">> [vm] stack overflow.\n";
     std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
     // debug
@@ -917,7 +925,7 @@ nop:
     //     count[index]=0;
     // }
     return;
-#define exec_operand(op,num) {op();/*++count[num];*/if(!gc.val_stack[STACK_MAX_DEPTH-1])goto *code[++pc];goto nop;}
+#define exec_operand(op,num) {op();/*++count[num];*/if(!canary[0])goto *code[++pc];goto nop;}
 intg:    exec_operand(opr_intg    ,1);
 intl:    exec_operand(opr_intl    ,2);
 offset:  exec_operand(opr_offset  ,3);

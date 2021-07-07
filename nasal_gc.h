@@ -18,10 +18,10 @@ const int increment[vm_type_size]=
 {
     0,    // vm_nil,in fact it is not in use
     65536,// vm_num
-    256,  // vm_str
-    16,   // vm_func
+    512,  // vm_str
+    64,   // vm_func
     2048, // vm_vec
-    8     // vm_hash
+    512   // vm_hash
 };
 
 struct nasal_val;//declaration of nasal_val
@@ -63,7 +63,7 @@ struct nasal_val// 16 bytes
 #define GC_COLLECTED   1
 #define GC_FOUND       2
     uint8_t mark;
-    uint16_t type;
+    uint8_t type;
     union 
     {
         double       num;
@@ -234,7 +234,7 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (4096)
+#define STACK_MAX_DEPTH (4080)
     nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
@@ -242,7 +242,6 @@ struct nasal_gc
     nasal_val**             stack_top;               // stack top
     std::vector<nasal_val*> num_addrs;               // reserved address for const vm_num
     std::vector<nasal_val*> str_addrs;               // reserved address for const vm_str
-    std::vector<nasal_val*> slice_stack;             // slice stack for vec[val,val,val:val]
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
     std::list<std::vector<nasal_val*>> local;
@@ -261,8 +260,6 @@ void nasal_gc::mark()
     for(auto& i:local)
         for(auto j:i)
             bfs.push(j);
-    for(auto i:slice_stack)
-        bfs.push(i);
     for(nasal_val** i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
     while(!bfs.empty())
@@ -357,9 +354,7 @@ void nasal_gc::gc_clear()
     for(int i=0;i<vm_type_size;++i)
         while(!free_list[i].empty())
             free_list[i].pop();
-    //global.clear();
     local.clear();
-    slice_stack.clear();
 
     delete nil_addr;
     delete one_addr;
