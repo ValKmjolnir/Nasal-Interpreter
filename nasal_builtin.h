@@ -2,12 +2,11 @@
 #define __NASAL_BUILTIN_H__
 /*
     builtin functions must be called inside a outer function like this:
-    var print=func(elements...)
+    var print=func(elems...)
     {
-        __builtin_std_cout(elements);
-        return nil;
+        return __builtin_print(elems);
     }
-    builtin function __builtin_std_cout is wrapped up by print
+    builtin function __builtin_print is wrapped up by print
 */
 
 // declaration of builtin functions
@@ -690,12 +689,12 @@ nasal_val* builtin_type(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
     switch(val_addr->type)
     {
-        case vm_nil:  *ret_addr->ptr.str="nil";      break;
-        case vm_num:  *ret_addr->ptr.str="number";   break;
-        case vm_str:  *ret_addr->ptr.str="string";   break;
-        case vm_vec:  *ret_addr->ptr.str="vector";   break;
-        case vm_hash: *ret_addr->ptr.str="hash";     break;
-        case vm_func: *ret_addr->ptr.str="function"; break;
+        case vm_nil:  *ret_addr->ptr.str="nil";  break;
+        case vm_num:  *ret_addr->ptr.str="num";  break;
+        case vm_str:  *ret_addr->ptr.str="str";  break;
+        case vm_vec:  *ret_addr->ptr.str="vec";  break;
+        case vm_hash: *ret_addr->ptr.str="hash"; break;
+        case vm_func: *ret_addr->ptr.str="func"; break;
     }
     return ret_addr;
 }
