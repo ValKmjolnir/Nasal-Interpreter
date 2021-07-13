@@ -672,8 +672,11 @@ inline void nasal_vm::opr_callfv()
         return;
     }
     // if args_size>para_size,for 0 to args_size will cause corruption
-    for(int i=0;i<para_size;++i)
-        ref_closure[i+offset]=(i<args_size)?vec[i]:ref_default[i];
+    int min_size=std::min(para_size,args_size);
+    for(int i=0;i<min_size;++i)
+        ref_closure[i+offset]=vec[i];
+    for(int i=args_size;i<para_size;++i)
+        ref_closure[i+offset]=ref_default[i];
     // load dynamic argument if args_size>=para_size
     if(ref_func.dynpara>=0)
     {
@@ -872,7 +875,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
-    // int count[op_ret+1]={0};
+    uint32_t count[op_ret+1]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -915,7 +918,7 @@ nop:
     // for(int i=0;i<15;++i)
     // {
     //     int maxnum=0,index=0;
-    //     for(int j=0;j<62;++j)
+    //     for(int j=0;j<op_ret+1;++j)
     //         if(count[j]>maxnum)
     //         {
     //             index=j;
@@ -925,81 +928,82 @@ nop:
     //     count[index]=0;
     // }
     return;
-#define exec_operand(op,num) {op();/*++count[num];*/if(!canary[0])goto *code[++pc];goto nop;}
-intg:    exec_operand(opr_intg    ,1);
-intl:    exec_operand(opr_intl    ,2);
-offset:  exec_operand(opr_offset  ,3);
-loadg:   exec_operand(opr_loadg   ,4);
-loadl:   exec_operand(opr_loadl   ,5);
-pnum:    exec_operand(opr_pnum    ,6);
-pone:    exec_operand(opr_pone    ,7);
-pzero:   exec_operand(opr_pzero   ,8);
-pnil:    exec_operand(opr_pnil    ,9);
-pstr:    exec_operand(opr_pstr    ,10);
-newv:    exec_operand(opr_newv    ,11);
-newh:    exec_operand(opr_newh    ,12);
-newf:    exec_operand(opr_newf    ,13);
-happ:    exec_operand(opr_happ    ,14);
-para:    exec_operand(opr_para    ,15);
-defpara: exec_operand(opr_defpara ,16);
-dynpara: exec_operand(opr_dynpara ,17);
-unot:    exec_operand(opr_unot    ,18);
-usub:    exec_operand(opr_usub    ,19);
-add:     exec_operand(opr_add     ,20);
-sub:     exec_operand(opr_sub     ,21);
-mul:     exec_operand(opr_mul     ,22);
-div:     exec_operand(opr_div     ,23);
-lnk:     exec_operand(opr_lnk     ,24);
-addc:    exec_operand(opr_addc    ,25);
-subc:    exec_operand(opr_subc    ,26);
-mulc:    exec_operand(opr_mulc    ,27);
-divc:    exec_operand(opr_divc    ,28);
-lnkc:    exec_operand(opr_lnkc    ,29);
-addeq:   exec_operand(opr_addeq   ,30);
-subeq:   exec_operand(opr_subeq   ,31);
-muleq:   exec_operand(opr_muleq   ,32);
-diveq:   exec_operand(opr_diveq   ,33);
-lnkeq:   exec_operand(opr_lnkeq   ,34);
-addeqc:  exec_operand(opr_addeqc  ,35);
-subeqc:  exec_operand(opr_subeqc  ,36);
-muleqc:  exec_operand(opr_muleqc  ,37);
-diveqc:  exec_operand(opr_diveqc  ,38);
-lnkeqc:  exec_operand(opr_lnkeqc  ,39);
-meq:     exec_operand(opr_meq     ,40);
-eq:      exec_operand(opr_eq      ,41);
-neq:     exec_operand(opr_neq     ,42);
-less:    exec_operand(opr_less    ,43);
-leq:     exec_operand(opr_leq     ,44);
-grt:     exec_operand(opr_grt     ,45);
-geq:     exec_operand(opr_geq     ,46);
-lessc:   exec_operand(opr_lessc   ,47);
-leqc:    exec_operand(opr_leqc    ,48);
-grtc:    exec_operand(opr_grtc    ,49);
-geqc:    exec_operand(opr_geqc    ,50);
-pop:     exec_operand(opr_pop     ,51);
-jmp:     exec_operand(opr_jmp     ,52);
-jt:      exec_operand(opr_jt      ,53);
-jf:      exec_operand(opr_jf      ,54);
-counter: exec_operand(opr_counter ,55);
-cntpop:  exec_operand(opr_cntpop  ,56);
-findex:  exec_operand(opr_findex  ,57);
-feach:   exec_operand(opr_feach   ,58);
-callg:   exec_operand(opr_callg   ,59);
-calll:   exec_operand(opr_calll   ,60);
-callv:   exec_operand(opr_callv   ,61);
-callvi:  exec_operand(opr_callvi  ,62);
-callh:   exec_operand(opr_callh   ,63);
-callfv:  exec_operand(opr_callfv  ,64);
-callfh:  exec_operand(opr_callfh  ,65);
-callb:   exec_operand(opr_callb   ,66);
-slcbegin:exec_operand(opr_slcbegin,67);
-slcend:  exec_operand(opr_slcend  ,68);
-slc:     exec_operand(opr_slc     ,69);
-slc2:    exec_operand(opr_slc2    ,70);
-mcallg:  exec_operand(opr_mcallg  ,71);
-mcalll:  exec_operand(opr_mcalll  ,72);
-mcallv:  exec_operand(opr_mcallv  ,73);
-mcallh:  exec_operand(opr_mcallh  ,74);
-ret:     exec_operand(opr_ret     ,75);
+//#define exec_operand(op,num) {op();++count[num];if(!canary[0])goto *code[++pc];goto nop;}
+#define exec_operand(op,num) {op();if(!canary[0])goto *code[++pc];goto nop;}
+intg:    exec_operand(opr_intg    ,op_intg);
+intl:    exec_operand(opr_intl    ,op_intl);
+offset:  exec_operand(opr_offset  ,op_offset);
+loadg:   exec_operand(opr_loadg   ,op_loadg);
+loadl:   exec_operand(opr_loadl   ,op_loadl);
+pnum:    exec_operand(opr_pnum    ,op_pnum);
+pone:    exec_operand(opr_pone    ,op_pone);
+pzero:   exec_operand(opr_pzero   ,op_pzero);
+pnil:    exec_operand(opr_pnil    ,op_pnil);
+pstr:    exec_operand(opr_pstr    ,op_pstr);
+newv:    exec_operand(opr_newv    ,op_newv);
+newh:    exec_operand(opr_newh    ,op_newh);
+newf:    exec_operand(opr_newf    ,op_newf);
+happ:    exec_operand(opr_happ    ,op_happ);
+para:    exec_operand(opr_para    ,op_para);
+defpara: exec_operand(opr_defpara ,op_defpara);
+dynpara: exec_operand(opr_dynpara ,op_dynpara);
+unot:    exec_operand(opr_unot    ,op_unot);
+usub:    exec_operand(opr_usub    ,op_usub);
+add:     exec_operand(opr_add     ,op_add);
+sub:     exec_operand(opr_sub     ,op_sub);
+mul:     exec_operand(opr_mul     ,op_mul);
+div:     exec_operand(opr_div     ,op_div);
+lnk:     exec_operand(opr_lnk     ,op_lnk);
+addc:    exec_operand(opr_addc    ,op_addc);
+subc:    exec_operand(opr_subc    ,op_subc);
+mulc:    exec_operand(opr_mulc    ,op_mulc);
+divc:    exec_operand(opr_divc    ,op_divc);
+lnkc:    exec_operand(opr_lnkc    ,op_lnkc);
+addeq:   exec_operand(opr_addeq   ,op_addeq);
+subeq:   exec_operand(opr_subeq   ,op_subeq);
+muleq:   exec_operand(opr_muleq   ,op_muleq);
+diveq:   exec_operand(opr_diveq   ,op_diveq);
+lnkeq:   exec_operand(opr_lnkeq   ,op_lnkeq);
+addeqc:  exec_operand(opr_addeqc  ,op_addeqc);
+subeqc:  exec_operand(opr_subeqc  ,op_subeqc);
+muleqc:  exec_operand(opr_muleqc  ,op_muleqc);
+diveqc:  exec_operand(opr_diveqc  ,op_diveqc);
+lnkeqc:  exec_operand(opr_lnkeqc  ,op_lnkeqc);
+meq:     exec_operand(opr_meq     ,op_meq);
+eq:      exec_operand(opr_eq      ,op_eq);
+neq:     exec_operand(opr_neq     ,op_neq);
+less:    exec_operand(opr_less    ,op_less);
+leq:     exec_operand(opr_leq     ,op_leq);
+grt:     exec_operand(opr_grt     ,op_grt);
+geq:     exec_operand(opr_geq     ,op_geq);
+lessc:   exec_operand(opr_lessc   ,op_lessc);
+leqc:    exec_operand(opr_leqc    ,op_leqc);
+grtc:    exec_operand(opr_grtc    ,op_grtc);
+geqc:    exec_operand(opr_geqc    ,op_geqc);
+pop:     exec_operand(opr_pop     ,op_pop);
+jmp:     exec_operand(opr_jmp     ,op_jmp);
+jt:      exec_operand(opr_jt      ,op_jt);
+jf:      exec_operand(opr_jf      ,op_jf);
+counter: exec_operand(opr_counter ,op_cnt);
+cntpop:  exec_operand(opr_cntpop  ,op_cntpop);
+findex:  exec_operand(opr_findex  ,op_findex);
+feach:   exec_operand(opr_feach   ,op_feach);
+callg:   exec_operand(opr_callg   ,op_callg);
+calll:   exec_operand(opr_calll   ,op_calll);
+callv:   exec_operand(opr_callv   ,op_callv);
+callvi:  exec_operand(opr_callvi  ,op_callvi);
+callh:   exec_operand(opr_callh   ,op_callh);
+callfv:  exec_operand(opr_callfv  ,op_callfv);
+callfh:  exec_operand(opr_callfh  ,op_callfh);
+callb:   exec_operand(opr_callb   ,op_callb);
+slcbegin:exec_operand(opr_slcbegin,op_slcbegin);
+slcend:  exec_operand(opr_slcend  ,op_slcend);
+slc:     exec_operand(opr_slc     ,op_slc);
+slc2:    exec_operand(opr_slc2    ,op_slc2);
+mcallg:  exec_operand(opr_mcallg  ,op_mcallg);
+mcalll:  exec_operand(opr_mcalll  ,op_mcalll);
+mcallv:  exec_operand(opr_mcallv  ,op_mcallv);
+mcallh:  exec_operand(opr_mcallh  ,op_mcallh);
+ret:     exec_operand(opr_ret     ,op_ret);
 }
 #endif
