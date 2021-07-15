@@ -5,7 +5,6 @@ void help_interact()
 	std::cout
 	<<">> [     ] input a file name to execute.  \n"
 	<<">> [help ] show help.                     \n"
-	<<">> [clear] clear the screen.              \n"
 	<<">> [lex  ] view tokens.                   \n"
 	<<">> [ast  ] view abstract syntax tree.     \n"
 	<<">> [code ] view byte code.                \n"
@@ -20,10 +19,10 @@ void help_cmd()
 #ifdef _WIN32
 	<<"use command \'chcp 65001\' if want to use unicode.\n"
 #endif
-	<<"nasal             | use interactive interpreter.\n"
-	<<"nasal -h -help    | get help.\n"
-	<<"nasal -v -version | get version of nasal interpreter.\n"
-	<<"nasal filename    | execute script file.\n";
+	<<"nasal               | use interactive interpreter.\n"
+	<<"nasal -h, --help    | get help.\n"
+	<<"nasal -v, --version | get version of nasal interpreter.\n"
+	<<"nasal filename      | execute script file.\n";
 	return;
 }
 void info()
@@ -125,14 +124,6 @@ void interact()
 		std::cin>>command;
 		if(command=="help")
 			help_interact();
-		else if(command=="clear")
-		{
-#ifdef _WIN32
-			system("cls");
-#else
-			int rs=system("clear");
-#endif
-		}
 		else if(command=="logo")
 			logo();
 		else if(command=="exit")
@@ -148,9 +139,9 @@ int main(int argc,const char* argv[])
 	std::string command,file="null";
 	if(argc==1)
 		interact();
-	else if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"-version")))
+	else if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
 		logo();
-	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"-help")))
+	else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))
 		help_cmd();
 	else if(argc==2 && argv[1][0]!='-')
 	{
