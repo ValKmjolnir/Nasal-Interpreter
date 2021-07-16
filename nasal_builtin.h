@@ -54,11 +54,7 @@ nasal_val* builtin_right(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_cmp(std::vector<nasal_val*>&,nasal_gc&);
 nasal_val* builtin_chr(std::vector<nasal_val*>&,nasal_gc&);
 
-void builtin_err(const char* func_name,std::string info)
-{
-    std::cout<<">> [vm] "<<func_name<<": "<<info<<".\n";
-    return;
-}
+#define builtin_err(func_name,info) std::cout<<">> [vm] "<<func_name<<": "<<info<<".\n"
 
 // register builtin function's name and it's address here in this table below
 // this table must end with {"",nullptr}

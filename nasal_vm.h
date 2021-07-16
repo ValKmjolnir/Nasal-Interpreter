@@ -15,7 +15,10 @@ private:
     std::vector<uint32_t>    imm;      // immediate number
     nasal_val**              mem_addr; // used for mem_call
     nasal_gc                 gc;       // garbage collector
-    
+    /* values used for debug */
+    std::vector<opcode>      bytecode; // bytecode
+    std::vector<std::string> files;    // files
+
     void die(std::string);
     bool condition(nasal_val*);
     void opr_intg();
@@ -97,19 +100,22 @@ public:
     nasal_vm():stack_top(gc.stack_top){};
     void init(
         std::vector<std::string>&,
-        std::vector<double>&);
+        std::vector<double>&,
+        std::vector<std::string>&);
     void clear();
     void run(std::vector<opcode>&);
 };
 
 void nasal_vm::init(
     std::vector<std::string>& strs,
-    std::vector<double>&      nums)
+    std::vector<double>&      nums,
+    std::vector<std::string>& filenames)
 {
     gc.gc_init(nums,strs);
     gc.val_stack[STACK_MAX_DEPTH-1]=nullptr;
     num_table=nums; // get constant numbers
     str_table=strs; // get constant strings & symbols
+    files=filenames;// get filenames for debugger
     return;
 }
 void nasal_vm::clear()
@@ -126,7 +132,22 @@ void nasal_vm::clear()
 }
 void nasal_vm::die(std::string str)
 {
-    printf(">> [vm] 0x%.8x: %s\n",pc,str.c_str());
+    printf(">> [vm] error: %s\ntrace back:\n",str.c_str());
+    // add error pc into ret_stack
+    ret.push(pc);
+    // trace back will use ret_stack
+    while(!ret.empty())
+    {
+        uint32_t point=ret.top();
+        ret.pop();
+        printf(
+            "\tpc 0x%.8x: %s 0x%.8x (%s line %d)\n",
+            point,
+            code_table[bytecode[point].op].name,
+            bytecode[point].num,
+            files[bytecode[point].fidx].c_str(),
+            bytecode[point].line);
+    }
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
     return;
 }
@@ -735,7 +756,8 @@ inline void nasal_vm::opr_callfh()
 inline void nasal_vm::opr_callb()
 {
     (++stack_top)[0]=(*builtin_func[imm[pc]].func)(gc.local.back(),gc);
-    gc.val_stack[STACK_MAX_DEPTH-1]=(stack_top[0]?nullptr:(nasal_val*)0xffff);
+    if(!stack_top[0])
+        die("native function error.");
     return;
 }
 inline void nasal_vm::opr_slcbegin()
@@ -898,6 +920,8 @@ void nasal_vm::run(std::vector<opcode>& exec)
         &&slcend,  &&slc,      &&slc2,   &&mcallg,
         &&mcalll,  &&mcallv,   &&mcallh, &&ret
     };
+    
+    bytecode=exec;
     std::vector<void*> code;
     for(auto& i:exec)
     {
@@ -912,7 +936,7 @@ void nasal_vm::run(std::vector<opcode>& exec)
 
 nop:
     if(canary[0] && canary[0]!=(nasal_val*)0xffff)
-        std::cout<<">> [vm] stack overflow.\n";
+        die("stack overflow");
     std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
     // debug
     // for(int i=0;i<15;++i)
@@ -933,80 +957,80 @@ nop:
 //#define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 #define exec_opnodie(op,num) {op();goto *code[++pc];}
 
-intg:    exec_opnodie(opr_intg    ,op_intg);
-intl:    exec_opnodie(opr_intl    ,op_intl);
-offset:  exec_opnodie(opr_offset  ,op_offset);
-loadg:   exec_opnodie(opr_loadg   ,op_loadg);
-loadl:   exec_opnodie(opr_loadl   ,op_loadl);
-pnum:    exec_operand(opr_pnum    ,op_pnum);
-pone:    exec_operand(opr_pone    ,op_pone);
-pzero:   exec_operand(opr_pzero   ,op_pzero);
-pnil:    exec_operand(opr_pnil    ,op_pnil);
-pstr:    exec_operand(opr_pstr    ,op_pstr);
-newv:    exec_operand(opr_newv    ,op_newv);
-newh:    exec_operand(opr_newh    ,op_newh);
-newf:    exec_operand(opr_newf    ,op_newf);
-happ:    exec_opnodie(opr_happ    ,op_happ);
-para:    exec_opnodie(opr_para    ,op_para);
-defpara: exec_opnodie(opr_defpara ,op_defpara);
-dynpara: exec_opnodie(opr_dynpara ,op_dynpara);
-unot:    exec_operand(opr_unot    ,op_unot);
-usub:    exec_opnodie(opr_usub    ,op_usub);
-add:     exec_opnodie(opr_add     ,op_add);
-sub:     exec_opnodie(opr_sub     ,op_sub);
-mul:     exec_opnodie(opr_mul     ,op_mul);
-div:     exec_opnodie(opr_div     ,op_div);
-lnk:     exec_opnodie(opr_lnk     ,op_lnk);
-addc:    exec_opnodie(opr_addc    ,op_addc);
-subc:    exec_opnodie(opr_subc    ,op_subc);
-mulc:    exec_opnodie(opr_mulc    ,op_mulc);
-divc:    exec_opnodie(opr_divc    ,op_divc);
-lnkc:    exec_opnodie(opr_lnkc    ,op_lnkc);
-addeq:   exec_opnodie(opr_addeq   ,op_addeq);
-subeq:   exec_opnodie(opr_subeq   ,op_subeq);
-muleq:   exec_opnodie(opr_muleq   ,op_muleq);
-diveq:   exec_opnodie(opr_diveq   ,op_diveq);
-lnkeq:   exec_opnodie(opr_lnkeq   ,op_lnkeq);
-addeqc:  exec_opnodie(opr_addeqc  ,op_addeqc);
-subeqc:  exec_opnodie(opr_subeqc  ,op_subeqc);
-muleqc:  exec_opnodie(opr_muleqc  ,op_muleqc);
-diveqc:  exec_opnodie(opr_diveqc  ,op_diveqc);
-lnkeqc:  exec_opnodie(opr_lnkeqc  ,op_lnkeqc);
-meq:     exec_opnodie(opr_meq     ,op_meq);
-eq:      exec_opnodie(opr_eq      ,op_eq);
-neq:     exec_opnodie(opr_neq     ,op_neq);
-less:    exec_opnodie(opr_less    ,op_less);
-leq:     exec_opnodie(opr_leq     ,op_leq);
-grt:     exec_opnodie(opr_grt     ,op_grt);
-geq:     exec_opnodie(opr_geq     ,op_geq);
-lessc:   exec_opnodie(opr_lessc   ,op_lessc);
-leqc:    exec_opnodie(opr_leqc    ,op_leqc);
-grtc:    exec_opnodie(opr_grtc    ,op_grtc);
-geqc:    exec_opnodie(opr_geqc    ,op_geqc);
-pop:     exec_opnodie(opr_pop     ,op_pop);
-jmp:     exec_opnodie(opr_jmp     ,op_jmp);
-jt:      exec_opnodie(opr_jt      ,op_jt);
-jf:      exec_opnodie(opr_jf      ,op_jf);
-counter: exec_operand(opr_counter ,op_cnt);
-cntpop:  exec_opnodie(opr_cntpop  ,op_cntpop);
-findex:  exec_opnodie(opr_findex  ,op_findex);
-feach:   exec_opnodie(opr_feach   ,op_feach);
-callg:   exec_opnodie(opr_callg   ,op_callg);
-calll:   exec_opnodie(opr_calll   ,op_calll);
-callv:   exec_operand(opr_callv   ,op_callv);
-callvi:  exec_operand(opr_callvi  ,op_callvi);
-callh:   exec_operand(opr_callh   ,op_callh);
-callfv:  exec_operand(opr_callfv  ,op_callfv);
-callfh:  exec_operand(opr_callfh  ,op_callfh);
-callb:   exec_operand(opr_callb   ,op_callb);
+intg:    exec_opnodie(opr_intg    ,op_intg    );
+intl:    exec_opnodie(opr_intl    ,op_intl    );
+offset:  exec_opnodie(opr_offset  ,op_offset  );
+loadg:   exec_opnodie(opr_loadg   ,op_loadg   );
+loadl:   exec_opnodie(opr_loadl   ,op_loadl   );
+pnum:    exec_operand(opr_pnum    ,op_pnum    );
+pone:    exec_operand(opr_pone    ,op_pone    );
+pzero:   exec_operand(opr_pzero   ,op_pzero   );
+pnil:    exec_operand(opr_pnil    ,op_pnil    );
+pstr:    exec_operand(opr_pstr    ,op_pstr    );
+newv:    exec_operand(opr_newv    ,op_newv    );
+newh:    exec_operand(opr_newh    ,op_newh    );
+newf:    exec_operand(opr_newf    ,op_newf    );
+happ:    exec_opnodie(opr_happ    ,op_happ    );
+para:    exec_opnodie(opr_para    ,op_para    );
+defpara: exec_opnodie(opr_defpara ,op_defpara );
+dynpara: exec_opnodie(opr_dynpara ,op_dynpara );
+unot:    exec_operand(opr_unot    ,op_unot    );
+usub:    exec_opnodie(opr_usub    ,op_usub    );
+add:     exec_opnodie(opr_add     ,op_add     );
+sub:     exec_opnodie(opr_sub     ,op_sub     );
+mul:     exec_opnodie(opr_mul     ,op_mul     );
+div:     exec_opnodie(opr_div     ,op_div     );
+lnk:     exec_opnodie(opr_lnk     ,op_lnk     );
+addc:    exec_opnodie(opr_addc    ,op_addc    );
+subc:    exec_opnodie(opr_subc    ,op_subc    );
+mulc:    exec_opnodie(opr_mulc    ,op_mulc    );
+divc:    exec_opnodie(opr_divc    ,op_divc    );
+lnkc:    exec_opnodie(opr_lnkc    ,op_lnkc    );
+addeq:   exec_opnodie(opr_addeq   ,op_addeq   );
+subeq:   exec_opnodie(opr_subeq   ,op_subeq   );
+muleq:   exec_opnodie(opr_muleq   ,op_muleq   );
+diveq:   exec_opnodie(opr_diveq   ,op_diveq   );
+lnkeq:   exec_opnodie(opr_lnkeq   ,op_lnkeq   );
+addeqc:  exec_opnodie(opr_addeqc  ,op_addeqc  );
+subeqc:  exec_opnodie(opr_subeqc  ,op_subeqc  );
+muleqc:  exec_opnodie(opr_muleqc  ,op_muleqc  );
+diveqc:  exec_opnodie(opr_diveqc  ,op_diveqc  );
+lnkeqc:  exec_opnodie(opr_lnkeqc  ,op_lnkeqc  );
+meq:     exec_opnodie(opr_meq     ,op_meq     );
+eq:      exec_opnodie(opr_eq      ,op_eq      );
+neq:     exec_opnodie(opr_neq     ,op_neq     );
+less:    exec_opnodie(opr_less    ,op_less    );
+leq:     exec_opnodie(opr_leq     ,op_leq     );
+grt:     exec_opnodie(opr_grt     ,op_grt     );
+geq:     exec_opnodie(opr_geq     ,op_geq     );
+lessc:   exec_opnodie(opr_lessc   ,op_lessc   );
+leqc:    exec_opnodie(opr_leqc    ,op_leqc    );
+grtc:    exec_opnodie(opr_grtc    ,op_grtc    );
+geqc:    exec_opnodie(opr_geqc    ,op_geqc    );
+pop:     exec_opnodie(opr_pop     ,op_pop     );
+jmp:     exec_opnodie(opr_jmp     ,op_jmp     );
+jt:      exec_opnodie(opr_jt      ,op_jt      );
+jf:      exec_opnodie(opr_jf      ,op_jf      );
+counter: exec_operand(opr_counter ,op_cnt     );
+cntpop:  exec_opnodie(opr_cntpop  ,op_cntpop  );
+findex:  exec_opnodie(opr_findex  ,op_findex  );
+feach:   exec_opnodie(opr_feach   ,op_feach   );
+callg:   exec_opnodie(opr_callg   ,op_callg   );
+calll:   exec_opnodie(opr_calll   ,op_calll   );
+callv:   exec_operand(opr_callv   ,op_callv   );
+callvi:  exec_operand(opr_callvi  ,op_callvi  );
+callh:   exec_operand(opr_callh   ,op_callh   );
+callfv:  exec_operand(opr_callfv  ,op_callfv  );
+callfh:  exec_operand(opr_callfh  ,op_callfh  );
+callb:   exec_operand(opr_callb   ,op_callb   );
 slcbegin:exec_operand(opr_slcbegin,op_slcbegin);
-slcend:  exec_opnodie(opr_slcend  ,op_slcend);
-slc:     exec_operand(opr_slc     ,op_slc);
-slc2:    exec_operand(opr_slc2    ,op_slc2);
-mcallg:  exec_opnodie(opr_mcallg  ,op_mcallg);
-mcalll:  exec_opnodie(opr_mcalll  ,op_mcalll);
-mcallv:  exec_operand(opr_mcallv  ,op_mcallv);
-mcallh:  exec_operand(opr_mcallh  ,op_mcallh);
-ret:     exec_opnodie(opr_ret     ,op_ret);
+slcend:  exec_opnodie(opr_slcend  ,op_slcend  );
+slc:     exec_operand(opr_slc     ,op_slc     );
+slc2:    exec_operand(opr_slc2    ,op_slc2    );
+mcallg:  exec_opnodie(opr_mcallg  ,op_mcallg  );
+mcalll:  exec_opnodie(opr_mcalll  ,op_mcalll  );
+mcallv:  exec_operand(opr_mcallv  ,op_mcallv  );
+mcallh:  exec_operand(opr_mcallh  ,op_mcallh  );
+ret:     exec_opnodie(opr_ret     ,op_ret     );
 }
 #endif

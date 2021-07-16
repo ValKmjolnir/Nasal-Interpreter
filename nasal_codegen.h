@@ -168,12 +168,14 @@ struct
 
 struct opcode
 {
-    uint8_t op;
+    uint16_t op;
+    uint16_t fidx;
     uint32_t num;
     uint32_t line;
-    opcode(uint8_t _op=op_nop,uint32_t _num=0,uint32_t _line=0)
+    opcode(uint8_t _op=op_nop,uint16_t _fidx=0,uint32_t _num=0,uint32_t _line=0)
     {
         op=_op;
+        fidx=_fidx;
         num=_num;
         line=_line;
         return;
@@ -181,6 +183,7 @@ struct opcode
     opcode& operator=(const opcode& tmp)
     {
         op=tmp.op;
+        fidx=tmp.fidx;
         num=tmp.num;
         line=tmp.line;
         return *this;
@@ -191,6 +194,7 @@ class nasal_codegen
 {
 private:
     int error;
+    uint16_t fileindex;
     int in_forindex;
     int in_foreach;
     std::unordered_map<double,int>      number_table;
@@ -316,7 +320,7 @@ int nasal_codegen::global_find(std::string& name)
 
 void nasal_codegen::gen(uint8_t op,uint32_t num,uint32_t line)
 {
-    exec_code.push_back({op,num,line});
+    exec_code.push_back({op,fileindex,num,line});
     return;
 }
 
@@ -1136,6 +1140,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
     error=0;
     in_foreach=0;
     in_forindex=0;
+    fileindex=0;
 
     number_table.clear();
     string_table.clear();
@@ -1149,6 +1154,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
         switch(tmp.get_type())
         {
             case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
+            case ast_file:fileindex=tmp.get_num();break;
             case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
