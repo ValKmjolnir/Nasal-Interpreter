@@ -36,11 +36,11 @@ MUST USE -O2/-O3 if want to optimize the interpreter!
 
 Also remember to use g++ and clang++.
 
-> g++|clang++ -std=c++11 -O2 main.cpp -o nasal.exe
+> g++ | clang++ -std=c++11 -O2 main.cpp -o nasal.exe
 
 Or use this in linux/macOS/Unix
 
-> g++|clang++ -std=c++11 -O2 main.cpp -o nasal
+> g++ | clang++ -std=c++11 -O2 main.cpp -o nasal
 
 ## How to Use?
 
@@ -54,11 +54,11 @@ Input this command to run scripts directly:
 
 Use these commands to get version of interpreter:
 
-> ./nasal -v | -version
+> ./nasal -v | --version
 
 Use these commands to get help:
 
-> ./nasal -h | -help
+> ./nasal -h | --help
 
 If your system is Windows and you want to output unicode,please use this command before running nasal interpreter:
 

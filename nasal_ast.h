@@ -5,6 +5,7 @@ enum ast_node
 {
     ast_null=0,
     ast_root,ast_block,
+    ast_file, // ast_file is only used to store which file the subtree is on,codegen will generate nothing
     ast_nil,ast_num,ast_str,ast_id,ast_func,ast_hash,ast_vec,
     ast_hashmember,ast_call,ast_callh,ast_callv,ast_callf,ast_subvec,
     ast_args,ast_default_arg,ast_dynamic_id,
@@ -27,6 +28,7 @@ const char* ast_name[]=
 {
     "null",
     "root","block",
+    "file",
     "nil","num","str","id","func","hash","vec",
     "hashmember","call","callh","callv","callf","subvec",
     "args","deflt_arg","dyn_id",
@@ -131,7 +133,7 @@ void nasal_ast::print_ast(int depth)
     std::cout<<ast_name[type];
     if(type==ast_str || type==ast_id || type==ast_default_arg || type==ast_dynamic_id || type==ast_callh)
         std::cout<<":"<<str;
-    else if(type==ast_num)
+    else if(type==ast_num || type==ast_file)
         std::cout<<":"<<num;
     std::cout<<'\n';
     for(auto& i:children)

@@ -5,7 +5,6 @@ void help_interact()
 	std::cout
 	<<">> [     ] input a file name to execute.  \n"
 	<<">> [help ] show help.                     \n"
-	<<">> [lex  ] view tokens.                   \n"
 	<<">> [ast  ] view abstract syntax tree.     \n"
 	<<">> [code ] view byte code.                \n"
 	<<">> [exec ] execute program on bytecode vm.\n"
@@ -65,13 +64,7 @@ void execute(std::string& file,std::string& command)
 		die("lexer",file);
 		return;
 	}
-	if(command=="lex")
-	{
-		lexer.print_token();
-		return;
-	}
 	parse.set_toklist(lexer.get_token_list());
-	lexer.get_token_list().clear();
 	parse.main_process();
 	if(parse.get_error())
 	{
@@ -83,8 +76,8 @@ void execute(std::string& file,std::string& command)
 		parse.get_root().print_ast(0);
 		return;
 	}
-	import.link(parse.get_root());
-	parse.get_root().clear();
+	// first used file is itself
+	import.link(parse.get_root(),file);
 	if(import.get_error())
 	{
 		die("import",file);
@@ -103,7 +96,8 @@ void execute(std::string& file,std::string& command)
 	}
 	vm.init(
 		codegen.get_str_table(),
-		codegen.get_num_table()
+		codegen.get_num_table(),
+		import.get_file()
 	);
 	vm.run(codegen.get_exec_code());
 	vm.clear();
@@ -128,7 +122,7 @@ void interact()
 			logo();
 		else if(command=="exit")
 			return;
-		else if(command=="lex" || command=="ast" || command=="code" || command=="exec")
+		else if(command=="ast" || command=="code" || command=="exec")
 			execute(file,command);
 		else
 			file=command;

@@ -4,21 +4,22 @@
 class nasal_import
 {
 private:
-    int error;
-    nasal_lexer import_lex;
-    nasal_parse import_par;
-    nasal_ast   import_ast;
+    int                      error;
+    nasal_lexer              import_lex;
+    nasal_parse              import_par;
+    nasal_ast                import_ast;
     std::vector<std::string> filename_table;
-    void die(std::string&,const char*);
-    bool check_import(nasal_ast&);
-    bool check_exist(std::string&);
-    void linker(nasal_ast&,nasal_ast&&);
+    void      die(std::string&,const char*);
+    bool      check_import(nasal_ast&);
+    bool      check_exist(std::string&);
+    void      linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
-    nasal_ast load(nasal_ast&);
+    nasal_ast load(nasal_ast&,uint16_t);
 public:
-    int  get_error(){return error;}
-    void link(nasal_ast&);
+    int        get_error(){return error;}
+    void       link(nasal_ast&,std::string&);
     nasal_ast& get_root(){return import_ast;}
+    std::vector<std::string>& get_file(){return filename_table;}
 };
 
 void nasal_import::die(std::string& filename,const char* error_stage)
@@ -91,7 +92,6 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return tmp;
     }
     import_par.set_toklist(import_lex.get_token_list());
-    import_lex.get_token_list().clear();
     import_par.main_process();
     if(import_par.get_error())
     {
@@ -99,30 +99,34 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return tmp;
     }
     tmp=std::move(import_par.get_root());
-    import_par.get_root().clear();
     // check if tmp has 'import'
-    return load(tmp);
+    return load(tmp,filename_table.size()-1);
 }
 
-nasal_ast nasal_import::load(nasal_ast& root)
+nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
 {
     nasal_ast new_root(0,ast_root);
     for(auto& i:root.get_children())
         if(check_import(i))
             linker(new_root,file_import(i));
     // add root to the back of new_root
+    nasal_ast file_head(0,ast_file);
+    file_head.set_num(fileindex);
+    new_root.add_child(std::move(file_head));
     linker(new_root,std::move(root));
     return new_root;
 }
 
-void nasal_import::link(nasal_ast& root)
+void nasal_import::link(nasal_ast& root,std::string& self)
 {
     // initializing
     error=0;
     filename_table.clear();
+    filename_table.push_back(self);
     import_ast.clear();
     // scan root and import files,then generate a new ast and return to import_ast
-    import_ast=load(root);
+    // the main file's index is 0
+    import_ast=load(root,0);
     return;
 }
 
