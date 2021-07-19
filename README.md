@@ -34,13 +34,13 @@ Better choose the latest update of the interpreter.
 
 MUST USE -O2/-O3 if want to optimize the interpreter!
 
-Also remember to use g++ and clang++.
+Also remember to use g++ or clang++.
 
-> g++ | clang++ -std=c++11 -O2 main.cpp -o nasal.exe
+> [cpp compiler] -std=c++11 -O2 main.cpp -o nasal.exe
 
 Or use this in linux/macOS/Unix
 
-> g++ | clang++ -std=c++11 -O2 main.cpp -o nasal
+> [cpp compiler] -std=c++11 -O2 main.cpp -o nasal
 
 ## How to Use?
 
@@ -71,7 +71,11 @@ The interpreter's interactive mode will do this automatically,so you don't need 
 LL(k) parser.
 
 ```javascript
-(var a,b,c)=[{b:nil},[1,2],func{return 0;}];
+(var a,b,c)=[
+    {b:nil},
+    [1,2],
+    func{return 0;}
+];
 (a.b,b[0],c)=(1,2,3);
 ```
 
@@ -485,7 +489,13 @@ var b="another string";
 var b=`c`;
 
 var c=[];
-var c=[0,nil,{},[],func(){return 0;}];
+var c=[
+    0,
+    nil,
+    {},
+    [],
+    func(){return 0;}
+];
 append(c,0,1,2);
 
 var d={
@@ -690,6 +700,7 @@ nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
             case vm_hash: i->ptr.hash->print();        break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
+    std::cout<<std::flush;
     // if a nasal value is not in use,use gc::del_reference to delete it
     // generate return value,use gc::gc_alloc(type) to make a new value
     // or use reserved reference gc.nil_addr/gc.one_addr/gc.zero_addr
