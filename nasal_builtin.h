@@ -124,6 +124,7 @@ nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
             case vm_hash: i->ptr.hash->print();        break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
+    std::cout<<std::flush;
     // generate return value
     return gc.nil_addr;
 }

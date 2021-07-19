@@ -68,7 +68,7 @@ private:
     nasal_ast func_gen();
     nasal_ast args_gen();
     nasal_ast expr();
-    nasal_ast exprs_gen();
+    nasal_ast exprs();
     nasal_ast calc();
     nasal_ast or_expr();
     nasal_ast and_expr();
@@ -362,7 +362,7 @@ nasal_ast nasal_parse::func_gen()
         node.add_child(args_gen());
     else
         node.add_child(null_node_gen());
-    node.add_child(exprs_gen());
+    node.add_child(exprs());
     return node;
 }
 nasal_ast nasal_parse::args_gen()
@@ -476,7 +476,7 @@ nasal_ast nasal_parse::expr()
     }
     return node;
 }
-nasal_ast nasal_parse::exprs_gen()
+nasal_ast nasal_parse::exprs()
 {
     if(tok_list[ptr].type==tok_eof)
     {
@@ -875,7 +875,7 @@ nasal_ast nasal_parse::while_loop()
     match(tok_lcurve);
     node.add_child(calc());
     match(tok_rcurve);
-    node.add_child(exprs_gen());
+    node.add_child(exprs());
     return node;
 }
 nasal_ast nasal_parse::for_loop()
@@ -921,7 +921,7 @@ nasal_ast nasal_parse::for_loop()
     else
         node.add_child(calc());
     match(tok_rcurve);
-    node.add_child(exprs_gen());
+    node.add_child(exprs());
     return node;
 }
 nasal_ast nasal_parse::forei_loop()
@@ -945,7 +945,7 @@ nasal_ast nasal_parse::forei_loop()
         die(error_line,"expected vector");
     node.add_child(calc());
     match(tok_rcurve);
-    node.add_child(exprs_gen());
+    node.add_child(exprs());
     return node;
 }
 nasal_ast nasal_parse::new_iter_gen()
@@ -976,7 +976,7 @@ nasal_ast nasal_parse::conditional()
     match(tok_lcurve);
     tmp.add_child(calc());
     match(tok_rcurve);
-    tmp.add_child(exprs_gen());
+    tmp.add_child(exprs());
     node.add_child(std::move(tmp));
     // end of if-expression
     while(tok_list[ptr].type==tok_elsif)
@@ -986,14 +986,14 @@ nasal_ast nasal_parse::conditional()
         match(tok_lcurve);
         tmp.add_child(calc());
         match(tok_rcurve);
-        tmp.add_child(exprs_gen());
+        tmp.add_child(exprs());
         node.add_child(std::move(tmp));
     }
     if(tok_list[ptr].type==tok_else)
     {
         nasal_ast tmp(tok_list[ptr].line,ast_else);
         match(tok_else);
-        tmp.add_child(exprs_gen());
+        tmp.add_child(exprs());
         node.add_child(std::move(tmp));
     }
     return node;
