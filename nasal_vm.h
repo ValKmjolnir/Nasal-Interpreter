@@ -8,7 +8,7 @@ private:
     nasal_val**&             stack_top;// stack top
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
-    std::stack<int>          ret;      // ptr stack stores address for function to return
+    std::stack<uint32_t>     ret;      // ptr stack stores address for function to return
     std::stack<int>          counter;  // iterator stack for forindex/foreach
     std::vector<double>      num_table;// numbers used in process(const calculation)
     std::vector<std::string> str_table;// symbols used in process
@@ -132,7 +132,7 @@ void nasal_vm::clear()
 }
 void nasal_vm::die(std::string str)
 {
-    printf(">> [vm] error: %s\ntrace back:\n",str.c_str());
+    printf(">> [vm] error at 0x%.8x: %s\ntrace back:\n",pc,str.c_str());
     // add error pc into ret_stack
     ret.push(pc);
     // trace back will use ret_stack
@@ -141,12 +141,30 @@ void nasal_vm::die(std::string str)
         uint32_t point=ret.top();
         ret.pop();
         printf(
-            "\tpc 0x%.8x: %s 0x%.8x (%s line %d)\n",
+            "\t0x%.8x: %s 0x%.8x (%s line %d)\n",
             point,
             code_table[bytecode[point].op].name,
             bytecode[point].num,
             files[bytecode[point].fidx].c_str(),
             bytecode[point].line);
+    }
+    printf("vm stack(limit 10):\n");
+    for(int i=0;i<10 && stack_top-i>=gc.val_stack;++i)
+    {
+        printf("\t0x%.p ",stack_top[-i]);
+        if(!stack_top[-i])
+            printf(" nullptr\n");
+        else
+            switch(stack_top[-i]->type)
+            {
+                case vm_nil:  printf("nil\n");break;
+                case vm_num:  printf("num  %lf\n",stack_top[-i]->ptr.num);   break;
+                case vm_str:  printf("str  at %p\n",stack_top[-i]->ptr.str); break;
+                case vm_func: printf("func at %p\n",stack_top[-i]->ptr.func);break;
+                case vm_vec:  printf("vec  at %p\n",stack_top[-i]->ptr.vec); break;
+                case vm_hash: printf("hash at %p\n",stack_top[-i]->ptr.hash);break;
+                default:      printf("unknown\n");break;
+            }
     }
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
     return;
@@ -277,21 +295,21 @@ inline void nasal_vm::opr_dynpara()
 inline void nasal_vm::opr_unot()
 {
     nasal_val* val=stack_top[0];
-    int type=val->type;
-    if(type==vm_nil)
-        stack_top[0]=gc.one_addr;
-    else if(type==vm_num)
-        stack_top[0]=val->ptr.num?gc.zero_addr:gc.one_addr;
-    else if(type==vm_str)
+    switch(val->type)
     {
-        double num=str2num(val->ptr.str->c_str());
-        if(std::isnan(num))
-            stack_top[0]=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
-        else
-            stack_top[0]=num?gc.zero_addr:gc.one_addr;
+        case vm_nil:stack_top[0]=gc.one_addr;break;
+        case vm_num:stack_top[0]=val->ptr.num?gc.zero_addr:gc.one_addr;break;
+        case vm_str:
+        {
+            double num=str2num(val->ptr.str->c_str());
+            if(std::isnan(num))
+                stack_top[0]=val->ptr.str->empty()?gc.one_addr:gc.zero_addr;
+            else
+                stack_top[0]=num?gc.zero_addr:gc.one_addr;
+        }
+        break;
+        default:die("unot: incorrect value type");break;
     }
-    else
-        die("unot: incorrect value type");
     return;
 }
 inline void nasal_vm::opr_usub()
@@ -897,7 +915,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
-    uint32_t count[op_ret+1]={0};
+    uint64_t count[op_ret+1]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -929,19 +947,19 @@ void nasal_vm::run(std::vector<opcode>& exec)
         imm.push_back(i.num);
     }
 
-    nasal_val** canary=gc.val_stack+STACK_MAX_DEPTH-1;
+    auto& canary=gc.val_stack[STACK_MAX_DEPTH-1];
     clock_t begin=clock();
     pc=0;
     goto *code[pc];
 
 nop:
-    if(canary[0] && canary[0]!=(nasal_val*)0xffff)
+    if(canary && canary!=(nasal_val*)0xffff)
         die("stack overflow");
     std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
     // debug
     // for(int i=0;i<15;++i)
     // {
-    //     int maxnum=0,index=0;
+    //     uint64_t maxnum=0,index=0;
     //     for(int j=0;j<op_ret+1;++j)
     //         if(count[j]>maxnum)
     //         {
@@ -953,7 +971,7 @@ nop:
     // }
     return;
 //#define exec_operand(op,num) {op();++count[num];if(!canary[0])goto *code[++pc];goto nop;}
-#define exec_operand(op,num) {op();if(!canary[0])goto *code[++pc];goto nop;}
+#define exec_operand(op,num) {op();if(!canary)goto *code[++pc];goto nop;}
 //#define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 #define exec_opnodie(op,num) {op();goto *code[++pc];}
 
