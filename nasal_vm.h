@@ -151,19 +151,18 @@ void nasal_vm::die(std::string str)
     printf("vm stack(limit 10):\n");
     for(int i=0;i<10 && stack_top-i>=gc.val_stack;++i)
     {
-        printf("\t0x%.p ",stack_top[-i]);
         if(!stack_top[-i])
-            printf(" nullptr\n");
+            printf("\t%p nullptr\n",stack_top[-i]);
         else
             switch(stack_top[-i]->type)
             {
-                case vm_nil:  printf("nil\n");break;
-                case vm_num:  printf("num  %lf\n",stack_top[-i]->ptr.num);   break;
-                case vm_str:  printf("str  at %p\n",stack_top[-i]->ptr.str); break;
-                case vm_func: printf("func at %p\n",stack_top[-i]->ptr.func);break;
-                case vm_vec:  printf("vec  at %p\n",stack_top[-i]->ptr.vec); break;
-                case vm_hash: printf("hash at %p\n",stack_top[-i]->ptr.hash);break;
-                default:      printf("unknown\n");break;
+                case vm_nil:  printf("\t%p nil\n",stack_top[-i]);break;
+                case vm_num:  printf("\t%p num :%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
+                case vm_str:  printf("\t%p str :",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
+                case vm_func: printf("\t%p func\n",stack_top[-i]->ptr.func);break;
+                case vm_vec:  printf("\t%p vec \n",stack_top[-i]->ptr.vec); break;
+                case vm_hash: printf("\t%p hash\n",stack_top[-i]->ptr.hash);break;
+                default:      printf("\t%p unknown\n",stack_top[-i]);break;
             }
     }
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;

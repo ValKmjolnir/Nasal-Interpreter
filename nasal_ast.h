@@ -132,7 +132,10 @@ void nasal_ast::print_ast(int depth)
         std::cout<<"|  ";
     std::cout<<ast_name[type];
     if(type==ast_str || type==ast_id || type==ast_default_arg || type==ast_dynamic_id || type==ast_callh)
-        std::cout<<":"<<str;
+    {
+        std::cout<<":";
+        raw_string(str);
+    }
     else if(type==ast_num || type==ast_file)
         std::cout<<":"<<num;
     std::cout<<'\n';

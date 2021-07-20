@@ -1236,7 +1236,11 @@ void nasal_codegen::print_op(int index)
         case op_mcallh:
         case op_para:
         case op_defpara:
-        case op_dynpara:printf(" (%s)\n",str_res_table[exec_code[index].num].c_str());break;
+        case op_dynpara:
+            printf(" (");
+            raw_string(str_res_table[exec_code[index].num]);
+            printf(")\n");
+            break;
         default:printf("\n");break;
     }
     return;
@@ -1247,7 +1251,11 @@ void nasal_codegen::print_byte_code()
     for(auto& num:num_res_table)
         std::cout<<".number "<<num<<'\n';
     for(auto& str:str_res_table)
-        std::cout<<".symbol "<<str<<'\n';
+    {
+        std::cout<<".symbol ";
+        raw_string(str);
+        std::cout<<'\n';
+    }
     for(int i=0;i<exec_code.size();++i)
         print_op(i);
     return;

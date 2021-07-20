@@ -116,6 +116,27 @@ std::string num2str(double number)
 	ss<<number;
 	return ss.str();
 }
+
+/*
+	show raw string
+*/
+void raw_string(std::string& str)
+{
+	for(auto i:str)
+		switch(i)
+		{
+			case '\a': std::cout<<"\\a";break;
+			case '\b': std::cout<<"\\b";break;
+			case '\f': std::cout<<"\\f";break;
+			case '\n': std::cout<<"\\n";break;
+			case '\r': std::cout<<"\\r";break;
+			case '\t': std::cout<<"\\t";break;
+			case '\v': std::cout<<"\\v";break;
+			case '\0': std::cout<<"\\0";break;
+			default:   std::cout<<i;    break;
+		}
+	return;
+}
 #include "nasal_lexer.h"
 #include "nasal_ast.h"
 #include "nasal_parse.h"
