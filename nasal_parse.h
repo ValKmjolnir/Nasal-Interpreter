@@ -628,18 +628,9 @@ nasal_ast nasal_parse::scalar()
     else if(tok_list[ptr].type==tok_id) {node=id_gen();  match(tok_id); }
     else if(tok_list[ptr].type==tok_func)
     {
-        if(tok_list[ptr+1].type==tok_id)
-        {
-            match(tok_func);
-            node=id_gen();
-            match(tok_id);
-        }
-        else
-        {
-            ++in_function;
-            node=func_gen();
-            --in_function;
-        }
+        ++in_function;
+        node=func_gen();
+        --in_function;
     }
     else if(tok_list[ptr].type==tok_lbracket)
         node=vec_gen();

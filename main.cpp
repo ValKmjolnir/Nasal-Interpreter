@@ -42,7 +42,7 @@ void logo()
 	<<"   /  \\/ / _` / __|/ _` | |    \n"
 	<<"  / /\\  / (_| \\__ \\ (_| | |  \n"
 	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-	<<">> Nasal interpreter ver 7.0    \n";
+	<<"   Nasal interpreter ver 7.0    \n";
     return;
 }
 void die(const char* stage,std::string& filename)
