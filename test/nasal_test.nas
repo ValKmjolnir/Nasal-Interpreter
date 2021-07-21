@@ -49,6 +49,6 @@ println(f);#//func(...){...}
 f();#//f is called
 println(z.funcc);#//func(...){...}
 z.funcc();#//f is called
-println(z.funcccall);#//nil
+println(z.funcccall);#//func(...){...}
 z2.listt2[3].hashh.funcc();#//f is called
 println(y1[f2()][w]);#//hello

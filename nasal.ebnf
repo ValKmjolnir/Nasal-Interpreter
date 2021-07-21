@@ -20,7 +20,7 @@ hashmember::=
     id|string ':' calculation
 ;
 function::= 
-    func argument_list expressions
+    func {argument_list} exprs|expr
 ;
 argument_list::=
     '(' [{id ','} ([id '...']|{id '=' scalar ','})] ')'
@@ -35,7 +35,7 @@ expr::=
     |continue_expr
     |break_expr
 ;
-expressions::=
+exprs::=
     '{' {expr} '}'
 ;
 calculation::=
@@ -63,7 +63,6 @@ unary::=
 ;
 scalar::=
     function {call_scalar}
-    |[func] identifier {call_scalar}
     |vector {call_scalar}
     |hash {call_scalar}
     |number
@@ -109,18 +108,18 @@ loop::=
     |forei_loop
 ;
 while_loop::=
-    while '(' calculation ')' expressions
+    while '(' calculation ')' exprs
 ;
 for_loop::=
-    for '(' [definition|calculation] ';' [calculation] ';' [calculation] ')' expressions
+    for '(' [definition|calculation] ';' [calculation] ';' [calculation] ')' exprs
 ;
 forei_loop::=
-    (forindex | foreach) '(' (definition | calculation) ';' calculation ')' expressions
+    (forindex | foreach) '(' (definition | calculation) ';' calculation ')' exprs
 ;
 conditional::=
-    if '(' calculation ')' expressions
-    {elsif '(' calculation ')' expressions}
-    [else expressions]
+    if '(' calculation ')' exprs
+    {elsif '(' calculation ')' exprs}
+    [else exprs]
 ;
 continue_expr::=
     continue

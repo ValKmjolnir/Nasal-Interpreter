@@ -363,7 +363,7 @@ void nasal_lexer::scanner()
 
 void nasal_lexer::print_token()
 {
-    for(auto tok:token_list)
+    for(auto& tok:token_list)
         std::cout<<"("<<tok.line<<" | "<<tok.str<<")\n";
     return;
 }

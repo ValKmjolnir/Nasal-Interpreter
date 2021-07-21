@@ -164,7 +164,7 @@ var bf=func(program)
                     cnt+=1;
                 elsif(chr(program[i])=='-')
                     cnt-=1;
-                else
+                elsif(chr(program[i])!='\n')
                 {
                     i-=1;
                     break;
@@ -187,7 +187,7 @@ var bf=func(program)
                     cnt+=1;
                 elsif(chr(program[i])=='<')
                     cnt-=1;
-                else
+                elsif(chr(program[i])!='\n')
                 {
                     i-=1;
                     break;

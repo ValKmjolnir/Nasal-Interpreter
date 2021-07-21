@@ -152,12 +152,12 @@ var (ptr,pc)=(0,0);
 var (code,inum,stack)=(nil,nil,nil);
 var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
 var func_table=[
-    func(){paper[ptr]+=inum[pc];return;},
-    func(){ptr+=inum[pc];return;},
-    func(){if(paper[ptr])pc=inum[pc];return;},
-    func(){if(!paper[ptr])pc=inum[pc];return;},
-    func(){paper[ptr]=input()[0];return;},
-    func(){print(chr(paper[ptr]));return;}
+    func paper[ptr]+=inum[pc],
+    func ptr+=inum[pc],
+    func if(paper[ptr])pc=inum[pc],
+    func if(!paper[ptr])pc=inum[pc],
+    func paper[ptr]=input()[0],
+    func print(chr(paper[ptr]))
 ];
 
 var bf=func(program)
@@ -179,7 +179,7 @@ var bf=func(program)
                     inum[-1]+=1;
                 elsif(chr(program[i])=='-')
                     inum[-1]-=1;
-                else
+                elsif(chr(program[i])!='\n')
                 {
                     i-=1;
                     break;
@@ -196,7 +196,7 @@ var bf=func(program)
                     inum[-1]+=1;
                 elsif(chr(program[i])=='<')
                     inum[-1]-=1;
-                else
+                elsif(chr(program[i])!='\n')
                 {
                     i-=1;
                     break;
@@ -230,7 +230,10 @@ var bf=func(program)
         }
     }
     if(size(stack))
+    {
         die("lack ]");
+        return;
+    }
     len=size(code);
     for(pc=0;pc<len;pc+=1)
         code[pc]();
