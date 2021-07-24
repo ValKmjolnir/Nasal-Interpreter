@@ -19,7 +19,9 @@ private:
     std::vector<opcode>      bytecode; // bytecode
     std::vector<std::string> files;    // files
 
+    void stackinfo(int);
     void die(std::string);
+    void stackoverflow();
     bool condition(nasal_val*);
     void opr_intg();
     void opr_intl();
@@ -130,6 +132,27 @@ void nasal_vm::clear()
     imm.clear();
     return;
 }
+void nasal_vm::stackinfo(int limit)
+{
+    printf("vm stack(limit %d):\n",limit);
+    for(int i=0;i<limit && stack_top-i>=gc.val_stack;++i)
+    {
+        if(!stack_top[-i])
+            printf("\t%p nullptr\n",stack_top[-i]);
+        else
+            switch(stack_top[-i]->type)
+            {
+                case vm_nil:  printf("\t%p nil\n",stack_top[-i]);break;
+                case vm_num:  printf("\t%p num :%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
+                case vm_str:  printf("\t%p str :",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
+                case vm_func: printf("\t%p func\n",stack_top[-i]->ptr.func);break;
+                case vm_vec:  printf("\t%p vec \n",stack_top[-i]->ptr.vec); break;
+                case vm_hash: printf("\t%p hash\n",stack_top[-i]->ptr.hash);break;
+                default:      printf("\t%p unknown\n",stack_top[-i]);break;
+            }
+    }
+    return;
+}
 void nasal_vm::die(std::string str)
 {
     printf(">> [vm] error at 0x%.8x: %s\ntrace back:\n",pc,str.c_str());
@@ -148,24 +171,25 @@ void nasal_vm::die(std::string str)
             files[bytecode[point].fidx].c_str(),
             bytecode[point].line);
     }
-    printf("vm stack(limit 10):\n");
-    for(int i=0;i<10 && stack_top-i>=gc.val_stack;++i)
-    {
-        if(!stack_top[-i])
-            printf("\t%p nullptr\n",stack_top[-i]);
-        else
-            switch(stack_top[-i]->type)
-            {
-                case vm_nil:  printf("\t%p nil\n",stack_top[-i]);break;
-                case vm_num:  printf("\t%p num :%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
-                case vm_str:  printf("\t%p str :",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
-                case vm_func: printf("\t%p func\n",stack_top[-i]->ptr.func);break;
-                case vm_vec:  printf("\t%p vec \n",stack_top[-i]->ptr.vec); break;
-                case vm_hash: printf("\t%p hash\n",stack_top[-i]->ptr.hash);break;
-                default:      printf("\t%p unknown\n",stack_top[-i]);break;
-            }
-    }
+    stackinfo(10);
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
+    return;
+}
+void nasal_vm::stackoverflow()
+{
+    printf(">> [vm] stack overflow\nlast called(limit 10):\n");
+    for(int i=0;i<10 && !ret.empty();++i,ret.pop())
+    {
+        uint32_t point=ret.top();
+        printf(
+            "\t0x%.8x: %s 0x%.8x (%s line %d)\n",
+            point,
+            code_table[bytecode[point].op].name,
+            bytecode[point].num,
+            files[bytecode[point].fidx].c_str(),
+            bytecode[point].line);
+    }
+    stackinfo(10);
     return;
 }
 bool nasal_vm::condition(nasal_val* val_addr)
@@ -947,14 +971,14 @@ void nasal_vm::run(std::vector<opcode>& exec)
     }
 
     auto& canary=gc.val_stack[STACK_MAX_DEPTH-1];
-    clock_t begin=clock();
+    // clock_t begin=clock();
     pc=0;
     goto *code[pc];
 
 nop:
     if(canary && canary!=(nasal_val*)0xffff)
-        die("stack overflow");
-    std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
+        stackoverflow();
+    // std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
     // debug
     // for(int i=0;i<15;++i)
     // {
