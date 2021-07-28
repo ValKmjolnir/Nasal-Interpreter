@@ -51,7 +51,6 @@ private:
     void die(int,std::string&&);
     void match(int type,const char* err_info="");
     bool check_comma(int*);
-    bool check_multi_def();
     bool check_multi_scalar();
     bool check_function_end(nasal_ast&);
     bool check_special_call();
@@ -67,6 +66,7 @@ private:
     nasal_ast hmem_gen();
     nasal_ast func_gen();
     nasal_ast args_gen();
+    nasal_ast lcurve_expr();
     nasal_ast expr();
     nasal_ast exprs();
     nasal_ast calc();
@@ -178,10 +178,6 @@ bool nasal_parse::check_comma(int* panic_set)
             return true;
         }
     return false;
-}
-bool nasal_parse::check_multi_def()
-{
-    return tok_list[ptr+1].type==tok_var;
 }
 bool nasal_parse::check_multi_scalar()
 {
@@ -442,6 +438,12 @@ nasal_ast nasal_parse::args_gen()
     }
     return node;
 }
+nasal_ast nasal_parse::lcurve_expr()
+{
+    if(tok_list[ptr+1].type==tok_var)
+        return definition();
+    return check_multi_scalar()?multi_assgin():calc();
+}
 nasal_ast nasal_parse::expr()
 {
     nasal_ast node(tok_list[ptr].line,ast_null);
@@ -460,18 +462,18 @@ nasal_ast nasal_parse::expr()
         case tok_lbracket:
         case tok_lbrace:
         case tok_sub:
-        case tok_not:        node=calc();          break;
-        case tok_var:        node=definition();    break;
-        case tok_lcurve:     node=(check_multi_def()?definition():(check_multi_scalar()?multi_assgin():calc()));break;
+        case tok_not:      node=calc();          break;
+        case tok_var:      node=definition();    break;
+        case tok_lcurve:   node=lcurve_expr();   break;
         case tok_for:
         case tok_forindex:
         case tok_foreach:
-        case tok_while:      node=loop();          break;
-        case tok_if:         node=conditional();   break;
-        case tok_continue:   node=continue_expr(); break;
-        case tok_break:      node=break_expr();    break;
-        case tok_ret:        node=ret_expr();      break;
-        case tok_semi:                             break;
+        case tok_while:    node=loop();          break;
+        case tok_if:       node=conditional();   break;
+        case tok_continue: node=continue_expr(); break;
+        case tok_break:    node=break_expr();    break;
+        case tok_ret:      node=ret_expr();      break;
+        case tok_semi:                           break;
         default:error_token.push_back(tok_list[ptr]);++ptr;break;
     }
     return node;
@@ -882,15 +884,7 @@ nasal_ast nasal_parse::for_loop()
     else if(tok_list[ptr].type==tok_var)
         node.add_child(definition());
     else if(tok_list[ptr].type==tok_lcurve)
-        node.add_child(
-            check_multi_def()?
-                definition():
-                (
-                    check_multi_scalar()?
-                    multi_assgin():
-                    calc()
-                )
-        );
+        node.add_child(lcurve_expr());
     else
         node.add_child(calc());
     // check first semi
