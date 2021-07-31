@@ -658,15 +658,16 @@ nasal_ast nasal_parse::scalar()
         die(error_line,"expected scalar");
         return node;
     }
-    if(is_call(tok_list[ptr].type))
+    // check call and avoid ambiguous syntax
+    if(is_call(tok_list[ptr].type) && !(tok_list[ptr].type==tok_lcurve && tok_list[ptr+1].type==tok_var))
     {
         nasal_ast tmp=std::move(node);
         node.set_line(tok_list[ptr].line);
         node.set_type(ast_call);
         node.add_child(std::move(tmp));
+        while(is_call(tok_list[ptr].type))
+            node.add_child(call_scalar());
     }
-    while(is_call(tok_list[ptr].type))
-        node.add_child(call_scalar());
     return node;
 }
 nasal_ast nasal_parse::call_scalar()
