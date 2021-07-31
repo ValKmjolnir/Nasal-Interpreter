@@ -774,3 +774,56 @@ nasal_val* builtin_keys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
     return ret_addr;
 }
 ```
+
+## Difference Between Andy's Nasal Interpreter and This Interpreter
+
+This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
+
+In Andy's interpreter:
+
+```javascript
+foreach(i;[0,1,2,3])
+    print(i)
+```
+
+This program can run normally with output 0 1 2 3.
+But take a look at the iterator 'i',this symbol is defined in foreach without using keyword 'var'.
+I think this design will make programmers filling confused.
+This is ambiguous that programmers maybe difficult to find the 'i' is defined here.
+Without 'var',programmers may think this 'i' is defined anywhere else.
+
+So in this new interpreter i use a more strict syntax to force users to use 'var' to define iterator of forindex and foreach.
+If you forget to add the keyword 'var', and you haven't defined this symbol before, you will get this:
+
+```javascript
+>> [code] line 1: undefined symbol "i".
+>> [codegen] in <"test.nas">: error(s) occurred,stop.
+```
+
+Also there's another difference.
+In Andy's interpreter:
+
+```javascript
+var a=func {print(b);}
+var b=1;
+a();
+```
+
+This program runs normally with output 1.
+But in this new interpreter, it will get:
+
+```javascript
+>> [code] line 1: undefined symbol "b".
+>> [codegen] in <"test.nas">: error(s) occurred,stop.
+```
+
+This difference is caused by different kinds of ways of lexical analysis.
+In most script language interpreters, they use dynamic analysis to check if this symbol is defined yet.
+However, this kind of analysis is at the cost of lower efficiency.
+To make sure the interpreter runs at higher efficiency, i choose static analysis to manage the memory space of each symbol.
+By this way, runtime will never need to check if a symbol exists or not.
+But this causes a difference.
+You will get an error of 'undefined symbol', instead of nothing happening in most script language interpreters.
+
+This change is __controversial__ among FGPRC's members.
+So maybe in the future i will use dynamic analysis again to cater to the habits of senior programmers.

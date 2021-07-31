@@ -18,20 +18,23 @@ void help_cmd()
 #ifdef _WIN32
 	<<"use command \'chcp 65001\' if want to use unicode.\n"
 #endif
-	<<"nasal               | use interactive interpreter.\n"
-	<<"nasal -h, --help    | get help.\n"
-	<<"nasal -v, --version | get version of nasal interpreter.\n"
-	<<"nasal filename      | execute script file.\n";
+	<<"nasal [option]|[file]\n"
+	<<"    input 0 argument to use the interactive interpreter.\n"
+	<<"option:\n"
+	<<"    -h, --help    | get help.\n"
+	<<"    -v, --version | get version of nasal interpreter.\n"
+	<<"file:\n"
+	<<"    input file name to execute script file.\n";
 	return;
 }
 void info()
 {
 	std::cout
-	<<">> Thanks to https://github.com/andyross/nasal\n"
-	<<">> Code: https://github.com/ValKmjolnir/Nasal-Interpreter\n"
-	<<">> Code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
-	<<">> Info: http://wiki.flightgear.org/Nasal_scripting_language\n"
-	<<">> Input \"help\" to get help .\n";
+	<<">> thanks to https://github.com/andyross/nasal\n"
+	<<">> code: https://github.com/ValKmjolnir/Nasal-Interpreter\n"
+	<<">> code: https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
+	<<">> info: http://wiki.flightgear.org/Nasal_scripting_language\n"
+	<<">> input \"help\" to get help .\n";
 	return;
 }
 void logo()
@@ -42,7 +45,7 @@ void logo()
 	<<"   /  \\/ / _` / __|/ _` | |    \n"
 	<<"  / /\\  / (_| \\__ \\ (_| | |  \n"
 	<<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-	<<"   Nasal interpreter ver 7.0    \n";
+	<<"   nasal interpreter ver 7.0    \n";
     return;
 }
 void die(const char* stage,std::string& filename)
