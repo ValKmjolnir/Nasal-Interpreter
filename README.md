@@ -71,17 +71,39 @@ The interpreter's interactive mode will do this automatically,so you don't need 
 LL(k) parser.
 
 ```javascript
-(var a,b,c)=[
-    {b:nil},
-    [1,2],
-    func{return 0;}
-];
+(var a,b,c)=[{b:nil},[1,2],func return 0;];
 (a.b,b[0],c)=(1,2,3);
 ```
 
 These two expressions have the same first set,so LL(1) is useless for this language.
 
 Maybe in the future i can refactor it to LL(1) with special checks.
+
+Problems mentioned above have been solved for a long time, but recently i found a new problem here:
+
+```javascript
+var f=func(x,y,z){return x+y+z}
+(a,b,c)=(0,1,2);
+```
+
+This will be recognized as this:
+
+```javascript
+var f=func(x,y,z){return x+y+z}(a,b,c)
+=(0,1,2);
+```
+
+and causes fatal syntax error.
+And i tried this program in flightgear nasal console.
+It also found this is a syntax error.
+I think this is a serious design fault.
+To avoid this syntax error, change program like this, just add a semicolon:
+
+```javascript
+var f=func(x,y,z){return x+y+z};
+                               ^ here
+(a,b,c)=(0,1,2);
+```
 
 ### version 1.0(last update 2019/10/14)
 
