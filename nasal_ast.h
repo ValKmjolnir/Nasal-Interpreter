@@ -80,8 +80,8 @@ nasal_ast::nasal_ast(const nasal_ast& tmp)
 {
     line=tmp.line;
     type=tmp.type;
-    str =tmp.str;
     num =tmp.num;
+    str =tmp.str;
     children=tmp.children;
     return;
 }
@@ -90,8 +90,8 @@ nasal_ast::nasal_ast(nasal_ast&& tmp)
 {
     line=tmp.line;
     type=tmp.type;
-    str.swap(tmp.str);
     num =tmp.num;
+    str.swap(tmp.str);
     children.swap(tmp.children);
     return;
 }
@@ -100,8 +100,8 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 {
     line=tmp.line;
     type=tmp.type;
-    str=tmp.str;
     num=tmp.num;
+    str=tmp.str;
     children=tmp.children;
     return *this;
 }
@@ -110,8 +110,8 @@ nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
 {
     line=tmp.line;
     type=tmp.type;
-    str.swap(tmp.str);
     num=tmp.num;
+    str.swap(tmp.str);
     children.swap(tmp.children);
     return *this;
 }
@@ -119,8 +119,8 @@ nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
 void nasal_ast::clear()
 {
     line=0;
-    str="";
     num=0;
+    str="";
     type=ast_null;
     children.clear();
     return;
