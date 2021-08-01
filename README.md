@@ -485,15 +485,15 @@ running time:
 
 Nasal has 6 value types.Number,string,vector,hash,function,nil.
 
-Number has 3 formats.Dec,hex and oct;
+__Number__ has 3 formats.Dec,hex and oct;
 
-String has 3 formats.But the third one is often used to declare a character.
+__String__ has 3 formats.But the third one is often used to declare a character.
 
-Vector has unlimited length and can store all types of values.
+__Vector__ has unlimited length and can store all types of values.
 
-Hash is a hashmap that stores values with strings/identifiers as the key.
+__Hash__ is a hashmap that stores values with strings/identifiers as the key.
 
-Function is also a value type in nasal.
+__Function__ is also a value type in nasal.
 
 ```javascript
 var spc=nil;
@@ -591,25 +591,19 @@ var (a,b,c)=(0,1,2);
 ```javascript
 (a,b[0],c.d)=[0,1,2];
 (a,b[1],c.e)=(0,1,2);
+(a,b)=(b,a);
 ```
 
 ### conditional expression
 
 ```javascript
-if(1)
-{
+if(1){
     ;
-}
-elsif(2)
-{
+}elsif(2){
     ;
-}
-else if(3)
-{
+}else if(3){
     ;
-}
-else
-{
+}else{
     ;
 }
 ```
@@ -849,3 +843,6 @@ You will get an error of 'undefined symbol', instead of nothing happening in mos
 
 This change is __controversial__ among FGPRC's members.
 So maybe in the future i will use dynamic analysis again to cater to the habits of senior programmers.
+
+In this new interpreter, function doesn't put dynamic arguments into vector 'arg' automatically.
+So if you use 'arg' without definition, you'll get an error of 'undefined symbol'.
