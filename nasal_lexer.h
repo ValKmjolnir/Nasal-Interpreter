@@ -90,7 +90,7 @@ struct token
     int line;
     int type;
     std::string str;
-	token(int l=0,int t=tok_null,std::string s=""){line=l;type=t;str=s;return;}
+	token(int l=0,int t=tok_null,std::string s=""){line=l;type=t;str=s;}
 };
 
 class nasal_lexer

@@ -99,12 +99,12 @@ private:
     nasal_ast ret_expr();
 public:
     int get_error(){return error;}
-    void set_toklist(std::vector<token>& toks){tok_list=toks;}
-    void main_process();
+    void main_process(std::vector<token>&);
     nasal_ast& get_root(){return root;}
 };
-void nasal_parse::main_process()
+void nasal_parse::main_process(std::vector<token>& toks)
 {
+    tok_list=toks;
     ptr=in_function=in_loop=error=0;
     root.clear();
     error_token.clear();

@@ -67,8 +67,7 @@ void execute(std::string& file,std::string& command)
 		die("lexer",file);
 		return;
 	}
-	parse.set_toklist(lexer.get_token_list());
-	parse.main_process();
+	parse.main_process(lexer.get_token_list());
 	if(parse.get_error())
 	{
 		die("parse",file);
