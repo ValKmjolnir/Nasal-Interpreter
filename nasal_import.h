@@ -91,8 +91,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         die(filename,"lexer");
         return tmp;
     }
-    import_par.set_toklist(import_lex.get_token_list());
-    import_par.main_process();
+    import_par.main_process(import_lex.get_token_list());
     if(import_par.get_error())
     {
         die(filename,"parser");
