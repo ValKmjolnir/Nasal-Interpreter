@@ -44,10 +44,6 @@ Or use this in linux/macOS/Unix
 
 ## How to Use?
 
-Input this command to use interactive interpreter mode:
-
-> ./nasal
-
 Input this command to run scripts directly:
 
 > ./nasal filename
@@ -56,7 +52,7 @@ Use these commands to get version of interpreter:
 
 > ./nasal -v | --version
 
-Use these commands to get help:
+Use these commands to get help(see more debug commands in help):
 
 > ./nasal -h | --help
 
