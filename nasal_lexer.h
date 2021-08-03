@@ -124,7 +124,7 @@ void nasal_lexer::openfile(std::string& filename)
     if(fin.fail())
     {
 		++error;
-        std::cout<<">> [lexer] cannot open file \""<<filename<<"\".\n";
+        std::cout<<">> [lexer] cannot open file <"<<filename<<">.\n";
 		fin.close();
         return;
     }

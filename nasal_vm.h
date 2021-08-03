@@ -18,10 +18,12 @@ private:
     /* values used for debug */
     std::vector<opcode>      bytecode; // bytecode
     std::vector<std::string> files;    // files
-
+    /* debug functions */
+    void bytecodeinfo(uint32_t);
     void stackinfo(int);
     void die(std::string);
     void stackoverflow();
+    /* vm calculation functions*/
     bool condition(nasal_val*);
     void opr_intg();
     void opr_intl();
@@ -132,6 +134,14 @@ void nasal_vm::clear()
     imm.clear();
     return;
 }
+void nasal_vm::bytecodeinfo(uint32_t p)
+{
+    printf("\t0x%.8x: %s 0x%.8x",p,code_table[bytecode[p].op].name,bytecode[p].num);
+    if(bytecode[p].op==op_callb)
+        printf(":%s",builtin_func[bytecode[p].num].name);
+    printf(" (%s line %d)\n",files[bytecode[p].fidx].c_str(),bytecode[p].line);
+    return;
+}
 void nasal_vm::stackinfo(int limit)
 {
     printf("vm stack(limit %d):\n",limit);
@@ -143,10 +153,10 @@ void nasal_vm::stackinfo(int limit)
             switch(stack_top[-i]->type)
             {
                 case vm_nil:  printf("\t%p nil\n",stack_top[-i]);break;
-                case vm_num:  printf("\t%p num :%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
-                case vm_str:  printf("\t%p str :",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
+                case vm_num:  printf("\t%p num:%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
+                case vm_str:  printf("\t%p str:",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
                 case vm_func: printf("\t%p func\n",stack_top[-i]->ptr.func);break;
-                case vm_vec:  printf("\t%p vec \n",stack_top[-i]->ptr.vec); break;
+                case vm_vec:  printf("\t%p vec\n",stack_top[-i]->ptr.vec);break;
                 case vm_hash: printf("\t%p hash\n",stack_top[-i]->ptr.hash);break;
                 default:      printf("\t%p unknown\n",stack_top[-i]);break;
             }
@@ -156,20 +166,12 @@ void nasal_vm::stackinfo(int limit)
 void nasal_vm::die(std::string str)
 {
     printf(">> [vm] error at 0x%.8x: %s\ntrace back:\n",pc,str.c_str());
-    // add error pc into ret_stack
-    ret.push(pc);
     // trace back will use ret_stack
+    bytecodeinfo(pc);
     while(!ret.empty())
     {
-        uint32_t point=ret.top();
+        bytecodeinfo(ret.top());
         ret.pop();
-        printf(
-            "\t0x%.8x: %s 0x%.8x (%s line %d)\n",
-            point,
-            code_table[bytecode[point].op].name,
-            bytecode[point].num,
-            files[bytecode[point].fidx].c_str(),
-            bytecode[point].line);
     }
     stackinfo(10);
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
@@ -177,17 +179,21 @@ void nasal_vm::die(std::string str)
 }
 void nasal_vm::stackoverflow()
 {
-    printf(">> [vm] stack overflow\nlast called(limit 10):\n");
-    for(int i=0;i<10 && !ret.empty();++i,ret.pop())
+    printf(">> [vm] stack overflow\ntrace back:\n");
+    for(uint32_t same_cnt=0,point=0,last_point=0;!ret.empty();last_point=point,ret.pop())
     {
-        uint32_t point=ret.top();
-        printf(
-            "\t0x%.8x: %s 0x%.8x (%s line %d)\n",
-            point,
-            code_table[bytecode[point].op].name,
-            bytecode[point].num,
-            files[bytecode[point].fidx].c_str(),
-            bytecode[point].line);
+        point=ret.top();
+        if(point!=last_point)
+        {
+            if(same_cnt)
+            {
+                printf("\t0x%.8x: %d same call(s) ...\n",last_point,same_cnt);
+                same_cnt=0;
+            }
+            bytecodeinfo(point);
+        }
+        else
+            ++same_cnt;
     }
     stackinfo(10);
     return;
@@ -709,7 +715,7 @@ inline void nasal_vm::opr_callh()
 inline void nasal_vm::opr_callfv()
 {
     // get parameter list and function value
-    int args_size=imm[pc];
+    uint32_t args_size=imm[pc];
     nasal_val** vec=stack_top-args_size+1;
     nasal_val* func_addr=vec[-1];
     if(func_addr->type!=vm_func)
@@ -724,8 +730,8 @@ inline void nasal_vm::opr_callfv()
     auto& ref_default=ref_func.default_para;
     auto& ref_closure=gc.local.back();
 
-    int offset=ref_func.offset;
-    int para_size=ref_func.key_table.size();
+    uint32_t offset=ref_func.offset;
+    uint32_t para_size=ref_func.key_table.size();
     // load arguments
     if(args_size<para_size && !ref_default[args_size])
     {
@@ -734,7 +740,7 @@ inline void nasal_vm::opr_callfv()
         return;
     }
     // if args_size>para_size,for 0 to args_size will cause corruption
-    int min_size=std::min(para_size,args_size);
+    uint32_t min_size=std::min(para_size,args_size);
     for(int i=0;i<min_size;++i)
         ref_closure[i+offset]=vec[i];
     for(int i=args_size;i<para_size;++i)
@@ -775,7 +781,7 @@ inline void nasal_vm::opr_callfh()
         die("callfh: special call cannot use dynamic argument");
         return;
     }
-    int offset=ref_func.offset;
+    uint32_t offset=ref_func.offset;
     for(auto& i:ref_func.key_table)
     {
         if(ref_hash.count(i.first))
@@ -938,7 +944,7 @@ inline void nasal_vm::opr_ret()
 }
 void nasal_vm::run(std::vector<opcode>& exec)
 {
-    uint64_t count[op_ret+1]={0};
+    //uint64_t count[op_ret+1]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -970,15 +976,15 @@ void nasal_vm::run(std::vector<opcode>& exec)
         imm.push_back(i.num);
     }
 
+    // set canary and program counter
     auto& canary=gc.val_stack[STACK_MAX_DEPTH-1];
-    // clock_t begin=clock();
     pc=0;
+    // run
     goto *code[pc];
 
 nop:
     if(canary && canary!=(nasal_val*)0xffff)
         stackoverflow();
-    // std::cout<<">> [vm] process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
     // debug
     // for(int i=0;i<15;++i)
     // {

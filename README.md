@@ -844,5 +844,9 @@ You will get an error of 'undefined symbol', instead of nothing happening in mos
 This change is __controversial__ among FGPRC's members.
 So maybe in the future i will use dynamic analysis again to cater to the habits of senior programmers.
 
+(2021/8/3 update) __Now i use scanning ast twice to reload symbols.
+So this difference does not exist from this update.__
+But a new difference is that if you call a variable before defining it, you'll get nil instead of 'undefined error'.
+
 In this new interpreter, function doesn't put dynamic arguments into vector 'arg' automatically.
 So if you use 'arg' without definition, you'll get an error of 'undefined symbol'.

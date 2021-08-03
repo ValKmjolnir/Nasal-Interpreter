@@ -210,6 +210,7 @@ private:
     void die(std::string,int);
     void regist_number(double);
     void regist_string(std::string&);
+    void find_symbol(nasal_ast&);
     void add_sym(std::string&);
     int  local_find(std::string&);
     int  global_find(std::string&);
@@ -275,6 +276,32 @@ void nasal_codegen::regist_string(std::string& str)
     int size=string_table.size();
     if(!string_table.count(str))
         string_table[str]=size;
+    return;
+}
+
+void nasal_codegen::find_symbol(nasal_ast& node)
+{
+    // symbol definition checked here
+    // if find a function, return
+    if(node.get_type()==ast_func)
+        return;
+    // find definition, check
+    else if(node.get_type()==ast_def)
+    {
+        if(node.get_children()[0].get_type()==ast_multi_id)
+            for(auto& i:node.get_children()[0].get_children())
+                add_sym(i.get_str());
+        else
+            add_sym(node.get_children()[0].get_str());
+        find_symbol(node.get_children()[1]);
+    }
+    // find iterator(foreach, forindex), check
+    else if(node.get_type()==ast_new_iter)
+        add_sym(node.get_children()[0].get_str());
+    // check children
+    else
+        for(auto& i:node.get_children())
+            find_symbol(i);
     return;
 }
 
@@ -419,6 +446,9 @@ void nasal_codegen::func_gen(nasal_ast& ast)
     gen(op_jmp,0,0);
 
     nasal_ast& block=ast.get_children()[1];
+    // search symbols first, must use after loading parameters
+    // or the location of symbols will change and cause fatal error
+    find_symbol(block);
     block_gen(block);
     for(auto& i:local)
         exec_code[local_label].num+=i.size();
@@ -602,7 +632,6 @@ void nasal_codegen::mcall_hash(nasal_ast& ast)
 void nasal_codegen::single_def(nasal_ast& ast)
 {
     std::string& str=ast.get_children()[0].get_str();
-    add_sym(str);
     calc_gen(ast.get_children()[1]);
     local.empty()?gen(op_loadg,global_find(str),ast.get_line()):gen(op_loadl,local_find(str),ast.get_line());
     return;
@@ -618,7 +647,6 @@ void nasal_codegen::multi_def(nasal_ast& ast)
         {
             calc_gen(vals[i]);
             std::string& str=ids[i].get_str();
-            add_sym(str);
             local.empty()?gen(op_loadg,global_find(str),ids[i].get_line()):gen(op_loadl,local_find(str),ids[i].get_line());
         }
     }
@@ -629,7 +657,6 @@ void nasal_codegen::multi_def(nasal_ast& ast)
         {
             gen(op_callvi,i,ast.get_children()[1].get_line());
             std::string& str=ids[i].get_str();
-            add_sym(str);
             local.empty()?gen(op_loadg,global_find(str),ids[i].get_line()):gen(op_loadl,local_find(str),ids[i].get_line());
         }
         gen(op_pop,0,ast.get_line());
@@ -840,7 +867,6 @@ void nasal_codegen::forindex_gen(nasal_ast& ast)
     if(ast.get_children()[0].get_type()==ast_new_iter)
     {
         std::string& str=ast.get_children()[0].get_children()[0].get_str();
-        add_sym(str);
         local.empty()?
             gen(op_loadg,global_find(str),ast.get_children()[0].get_children()[0].get_line())
             :gen(op_loadl,local_find(str),ast.get_children()[0].get_children()[0].get_line());
@@ -869,7 +895,6 @@ void nasal_codegen::foreach_gen(nasal_ast& ast)
     if(ast.get_children()[0].get_type()==ast_new_iter)
     {
         std::string& str=ast.get_children()[0].get_children()[0].get_str();
-        add_sym(str);
         local.empty()?
             gen(op_loadg,global_find(str),ast.get_children()[0].get_children()[0].get_line())
             :gen(op_loadl,local_find(str),ast.get_children()[0].get_children()[0].get_line());
@@ -1148,6 +1173,9 @@ void nasal_codegen::main_progress(nasal_ast& ast)
 
     global.clear();
     local.clear();
+
+    // search symbols first
+    find_symbol(ast);
     gen(op_intg,0,0);
     for(auto& tmp:ast.get_children())
     {
