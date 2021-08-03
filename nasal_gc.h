@@ -96,6 +96,11 @@ nasal_val** nasal_vec::get_mem(int index)
 }
 void nasal_vec::print()
 {
+    if(!elems.size())
+    {
+        std::cout<<"[]";
+        return;
+    }
     std::cout<<'[';  
     for(auto i:elems)
     {
@@ -108,20 +113,19 @@ void nasal_vec::print()
             case vm_hash: i->ptr.hash->print();        break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
-        std::cout<<',';
+        std::cout<<",]"[i==elems.back()];
     }
-    std::cout<<']';
     return;
 }
 
 /*functions of nasal_hash*/
 nasal_val* nasal_hash::get_val(std::string& key)
 {
-    nasal_val* ret_addr=nullptr;
     if(elems.count(key))
         return elems[key];
     else if(elems.count("parents"))
     {
+        nasal_val* ret_addr=nullptr;
         nasal_val* val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
             for(auto i:val_addr->ptr.vec->elems)
@@ -136,11 +140,11 @@ nasal_val* nasal_hash::get_val(std::string& key)
 }
 nasal_val** nasal_hash::get_mem(std::string& key)
 {
-    nasal_val** mem_addr=nullptr;
     if(elems.count(key))
         return &elems[key];
     else if(elems.count("parents"))
     {
+        nasal_val** mem_addr=nullptr;
         nasal_val* val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
             for(auto i:val_addr->ptr.vec->elems)
@@ -155,6 +159,12 @@ nasal_val** nasal_hash::get_mem(std::string& key)
 }
 void nasal_hash::print()
 {
+    if(!elems.size())
+    {
+        std::cout<<"{}";
+        return;
+    }
+    size_t iter=0;
     std::cout<<'{';
     for(auto& i:elems)
     {
@@ -169,9 +179,8 @@ void nasal_hash::print()
             case vm_hash: tmp->ptr.hash->print();      break;
             case vm_func: std::cout<<"func(...){...}"; break;
         }
-        std::cout<<',';
+        std::cout<<",}"[(++iter)==elems.size()];
     }
-    std::cout<<'}';
     return;
 }
 
