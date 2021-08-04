@@ -20,6 +20,7 @@ private:
     std::vector<std::string> files;    // files
     /* debug functions */
     void bytecodeinfo(uint32_t);
+    void traceback();
     void stackinfo(int);
     void die(std::string);
     void stackoverflow();
@@ -142,59 +143,81 @@ void nasal_vm::bytecodeinfo(uint32_t p)
     printf(" (%s line %d)\n",files[bytecode[p].fidx].c_str(),bytecode[p].line);
     return;
 }
+void nasal_vm::traceback()
+{
+    printf("trace back:\n");
+    uint32_t same_cnt=0,last_point=0;
+    for(uint32_t point=0;!ret.empty();last_point=point,ret.pop())
+    {
+        point=ret.top();
+        if(point==last_point)
+        {
+            ++same_cnt;
+            continue;
+        }
+        if(same_cnt)
+        {
+            printf("\t0x%.8x: %d same call(s) ...\n",last_point,same_cnt);
+            same_cnt=0;
+        }
+        bytecodeinfo(point);
+    }
+    if(same_cnt)
+        printf("\t0x%.8x: %d same call(s) ...\n",last_point,same_cnt);
+    return;
+}
 void nasal_vm::stackinfo(int limit)
 {
     printf("vm stack(limit %d):\n",limit);
+    uint32_t same_cnt=0;
+    nasal_val* last_ptr=(nasal_val*)0xffff;
     for(int i=0;i<limit && stack_top-i>=gc.val_stack;++i)
     {
+        if(stack_top[-i]==last_ptr)
+        {
+            ++same_cnt;
+            continue;
+        }
+        if(same_cnt)
+        {
+            printf("\t%p %d same value(s) ...\n",last_ptr,same_cnt);
+            same_cnt=0;
+        }
+        last_ptr=stack_top[-i];
+        printf("\t%p ",stack_top[-i]);
         if(!stack_top[-i])
-            printf("\t%p nullptr\n",stack_top[-i]);
+            printf("nullptr");
         else
             switch(stack_top[-i]->type)
             {
-                case vm_nil:  printf("\t%p nil\n",stack_top[-i]);break;
-                case vm_num:  printf("\t%p num:%lf\n",stack_top[-i],stack_top[-i]->ptr.num);break;
-                case vm_str:  printf("\t%p str:",stack_top[-i]->ptr.str);raw_string(*stack_top[-i]->ptr.str);putchar('\n');break;
-                case vm_func: printf("\t%p func\n",stack_top[-i]->ptr.func);break;
-                case vm_vec:  printf("\t%p vec\n",stack_top[-i]->ptr.vec);break;
-                case vm_hash: printf("\t%p hash\n",stack_top[-i]->ptr.hash);break;
-                default:      printf("\t%p unknown\n",stack_top[-i]);break;
+                case vm_nil:  printf("nil");break;
+                case vm_num:  printf("num  | %lf",stack_top[-i]->ptr.num);break;
+                case vm_str:  printf("str  | ");raw_string(*stack_top[-i]->ptr.str);break;
+                case vm_func: printf("func | func(..){..}");break;
+                case vm_vec:  printf("vec  | ");stack_top[-i]->ptr.vec->print();break;
+                case vm_hash: printf("hash | ");stack_top[-i]->ptr.hash->print();break;
+                default:      printf("unknown");break;
             }
+        putchar('\n');
     }
+    if(same_cnt)
+       printf("\t%p %d same value(s) ...\n",last_ptr,same_cnt);
     return;
 }
 void nasal_vm::die(std::string str)
 {
-    printf(">> [vm] error at 0x%.8x: %s\ntrace back:\n",pc,str.c_str());
+    printf(">> [vm] error at 0x%.8x: %s\n",pc,str.c_str());
     // trace back will use ret_stack
-    bytecodeinfo(pc);
-    while(!ret.empty())
-    {
-        bytecodeinfo(ret.top());
-        ret.pop();
-    }
+    ret.push(pc);
+    traceback();
     stackinfo(10);
     gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
     return;
 }
 void nasal_vm::stackoverflow()
 {
-    printf(">> [vm] stack overflow\ntrace back:\n");
-    for(uint32_t same_cnt=0,point=0,last_point=0;!ret.empty();last_point=point,ret.pop())
-    {
-        point=ret.top();
-        if(point!=last_point)
-        {
-            if(same_cnt)
-            {
-                printf("\t0x%.8x: %d same call(s) ...\n",last_point,same_cnt);
-                same_cnt=0;
-            }
-            bytecodeinfo(point);
-        }
-        else
-            ++same_cnt;
-    }
+    printf(">> [vm] stack overflow\n");
+    traceback();
     stackinfo(10);
     return;
 }
