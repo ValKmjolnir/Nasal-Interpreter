@@ -106,12 +106,12 @@ void nasal_vec::print()
     {
         switch(i->type)
         {
-            case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i->ptr.num;       break;
-            case vm_str:  std::cout<<*i->ptr.str;      break;
-            case vm_vec:  i->ptr.vec->print();         break;
-            case vm_hash: i->ptr.hash->print();        break;
-            case vm_func: std::cout<<"func(...){...}"; break;
+            case vm_nil:  std::cout<<"nil";          break;
+            case vm_num:  std::cout<<i->ptr.num;     break;
+            case vm_str:  std::cout<<*i->ptr.str;    break;
+            case vm_vec:  i->ptr.vec->print();       break;
+            case vm_hash: i->ptr.hash->print();      break;
+            case vm_func: std::cout<<"func(..){..}"; break;
         }
         std::cout<<",]"[i==elems.back()];
     }
@@ -172,12 +172,12 @@ void nasal_hash::print()
         nasal_val* tmp=i.second;
         switch(tmp->type)
         {
-            case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<tmp->ptr.num;     break;
-            case vm_str:  std::cout<<*tmp->ptr.str;    break;
-            case vm_vec:  tmp->ptr.vec->print();       break;
-            case vm_hash: tmp->ptr.hash->print();      break;
-            case vm_func: std::cout<<"func(...){...}"; break;
+            case vm_nil:  std::cout<<"nil";          break;
+            case vm_num:  std::cout<<tmp->ptr.num;   break;
+            case vm_str:  std::cout<<*tmp->ptr.str;  break;
+            case vm_vec:  tmp->ptr.vec->print();     break;
+            case vm_hash: tmp->ptr.hash->print();    break;
+            case vm_func: std::cout<<"func(..){..}"; break;
         }
         std::cout<<",}"[(++iter)==elems.size()];
     }
