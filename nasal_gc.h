@@ -101,7 +101,8 @@ void nasal_vec::print()
         std::cout<<"[]";
         return;
     }
-    std::cout<<'[';  
+    ssize_t iter=0;
+    std::cout<<'[';
     for(auto i:elems)
     {
         switch(i->type)
@@ -113,7 +114,7 @@ void nasal_vec::print()
             case vm_hash: i->ptr.hash->print();      break;
             case vm_func: std::cout<<"func(..){..}"; break;
         }
-        std::cout<<",]"[i==elems.back()];
+        std::cout<<",]"[(++iter)==elems.size()];
     }
     return;
 }

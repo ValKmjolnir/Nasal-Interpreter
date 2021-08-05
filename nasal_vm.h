@@ -108,7 +108,7 @@ public:
         std::vector<double>&,
         std::vector<std::string>&);
     void clear();
-    void run(std::vector<opcode>&);
+    void run(std::vector<opcode>&,bool);
 };
 
 void nasal_vm::init(
@@ -180,7 +180,7 @@ void nasal_vm::stackinfo(int limit)
         }
         if(same_cnt)
         {
-            printf("\t%p %d same value(s) ...\n",last_ptr,same_cnt);
+            printf("\t%p ...  | %d same value(s)\n",last_ptr,same_cnt);
             same_cnt=0;
         }
         last_ptr=stack_top[-i];
@@ -190,18 +190,18 @@ void nasal_vm::stackinfo(int limit)
         else
             switch(stack_top[-i]->type)
             {
-                case vm_nil:  printf("nil");break;
+                case vm_nil:  printf("nil  | gc.nil_addr");break;
                 case vm_num:  printf("num  | %lf",stack_top[-i]->ptr.num);break;
                 case vm_str:  printf("str  | ");raw_string(*stack_top[-i]->ptr.str);break;
-                case vm_func: printf("func | func(..){..}");break;
-                case vm_vec:  printf("vec  | ");stack_top[-i]->ptr.vec->print();break;
-                case vm_hash: printf("hash | ");stack_top[-i]->ptr.hash->print();break;
+                case vm_func: printf("func | func(%lu para){..}",stack_top[-i]->ptr.func->key_table.size());break;
+                case vm_vec:  printf("vec  | [%lu val]",stack_top[-i]->ptr.vec->elems.size());break;
+                case vm_hash: printf("hash | {%lu member}",stack_top[-i]->ptr.hash->elems.size());break;
                 default:      printf("unknown");break;
             }
         putchar('\n');
     }
     if(same_cnt)
-       printf("\t%p %d same value(s) ...\n",last_ptr,same_cnt);
+       printf("\t%p ...  | %d same value(s)\n",last_ptr,same_cnt);
     return;
 }
 void nasal_vm::die(std::string str)
@@ -221,7 +221,7 @@ void nasal_vm::stackoverflow()
     stackinfo(10);
     return;
 }
-bool nasal_vm::condition(nasal_val* val_addr)
+inline bool nasal_vm::condition(nasal_val* val_addr)
 {
     if(val_addr->type==vm_num)
         return val_addr->ptr.num;
@@ -965,9 +965,9 @@ inline void nasal_vm::opr_ret()
     stack_top[0]=stack_top[1];// rewrite nasal_func with returned value
     return;
 }
-void nasal_vm::run(std::vector<opcode>& exec)
+void nasal_vm::run(std::vector<opcode>& exec,bool op_cnt)
 {
-    //uint64_t count[op_ret+1]={0};
+    uint64_t count[op_ret+1]={0};
     void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
@@ -1009,23 +1009,25 @@ nop:
     if(canary && canary!=(nasal_val*)0xffff)
         stackoverflow();
     // debug
-    // for(int i=0;i<15;++i)
-    // {
-    //     uint64_t maxnum=0,index=0;
-    //     for(int j=0;j<op_ret+1;++j)
-    //         if(count[j]>maxnum)
-    //         {
-    //             index=j;
-    //             maxnum=count[j];
-    //         }
-    //     std::cout<<code_table[index].name<<": "<<maxnum<<"\n";
-    //     count[index]=0;
-    // }
+    if(op_cnt)
+    {
+        std::cout<<std::endl;
+        for(int i=0;i<15;++i)
+        {
+            uint64_t maxnum=0,index=0;
+            for(int j=0;j<op_ret+1;++j)
+                if(count[j]>maxnum)
+                {
+                    index=j;
+                    maxnum=count[j];
+                }
+            std::cout<<code_table[index].name<<": "<<maxnum<<"\n";
+            count[index]=0;
+        }
+    }
     return;
-//#define exec_operand(op,num) {op();++count[num];if(!canary[0])goto *code[++pc];goto nop;}
-#define exec_operand(op,num) {op();if(!canary)goto *code[++pc];goto nop;}
-//#define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
-#define exec_opnodie(op,num) {op();goto *code[++pc];}
+#define exec_operand(op,num) {op();++count[num];if(!canary)goto *code[++pc];goto nop;}
+#define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 
 intg:    exec_opnodie(opr_intg    ,op_intg    );
 intl:    exec_opnodie(opr_intl    ,op_intl    );
