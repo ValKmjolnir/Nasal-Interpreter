@@ -1276,13 +1276,17 @@ void nasal_codegen::print_op(int index)
 
 void nasal_codegen::print_byte_code()
 {
+    if(num_res_table.size())
+        std::cout<<".number"<<std::endl;
     for(auto& num:num_res_table)
-        std::cout<<".number "<<num<<'\n';
+        std::cout<<'\t'<<num<<'\n';
+    if(str_res_table.size())
+        std::cout<<".symbol"<<std::endl;
     for(auto& str:str_res_table)
     {
-        std::cout<<".symbol ";
+        std::cout<<'\t';
         raw_string(str);
-        std::cout<<'\n';
+        std::cout<<std::endl;
     }
     for(int i=0;i<exec_code.size();++i)
         print_op(i);

@@ -63,14 +63,14 @@ props.Node=
         foreach(var label;path)
             tmp=tmp.val[label];
         tmp.val=val;
-        if(typeof(val)=='string')
+        if(typeof(val)=='str')
         {
             if(val=='true' or val=='false')
                 tmp.type='BOOL';
             else
                 tmp.type='STRING';
         }
-        elsif(typeof(val)=='number')
+        elsif(typeof(val)=='num')
             tmp.type='DOUBLE';
         return;
     },
@@ -117,6 +117,11 @@ props.Node=
         if(typeof(me.val)=='hash')
         {
             var key=keys(me.val);
+            if(!size(key))
+            {
+                println("{}");
+                return;
+            }
             println('{');
             foreach(var k;key)
             {

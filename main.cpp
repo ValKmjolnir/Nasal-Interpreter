@@ -20,6 +20,7 @@ void help_cmd()
 	<<"    --code        | view bytecode.\n"
 	<<"    --exec        | execute script file.\n"
 	<<"    --time        | execute and get the running time.\n"
+	<<"    --opcnt       | count operands while running.\n"
 	<<"file:\n"
 	<<"    input file name to execute script file.\n";
 	return;
@@ -101,12 +102,12 @@ void execute(std::string& file,std::string& command)
 		codegen.get_num_table(),
 		import.get_file()
 	);
-	if(command=="--exec")
-		vm.run(codegen.get_exec_code());
+	if(command=="--exec" || command=="--opcnt")
+		vm.run(codegen.get_exec_code(),command=="--opcnt");
 	else if(command=="--time")
 	{
 		clock_t begin=clock();
-		vm.run(codegen.get_exec_code());
+		vm.run(codegen.get_exec_code(),false);
 		std::cout<<"process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
 	}
 	vm.clear();
@@ -127,9 +128,10 @@ int main(int argc,const char* argv[])
 	}
 	else if(argc==3 &&
 		(!strcmp(argv[1],"--lex") ||
-		!strcmp(argv[1],"--ast") ||
+		!strcmp(argv[1],"--ast")  ||
 		!strcmp(argv[1],"--code") ||
 		!strcmp(argv[1],"--exec") ||
+		!strcmp(argv[1],"--opcnt")||
 		!strcmp(argv[1],"--time")))
 	{
 		file=argv[2];
