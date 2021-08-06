@@ -15,12 +15,12 @@ void help_cmd()
 	<<"    input file name to execute script file.\n\n"
 	<<"nasal [option] [file]\n"
 	<<"option:\n"
-	<<"    --lex         | view token info.\n"
-	<<"    --ast         | view abstract syntax tree.\n"
-	<<"    --code        | view bytecode.\n"
-	<<"    --exec        | execute script file.\n"
-	<<"    --time        | execute and get the running time.\n"
-	<<"    --opcnt       | count operands while running.\n"
+	<<"    -l, --lex     | view token info.\n"
+	<<"    -a, --ast     | view abstract syntax tree.\n"
+	<<"    -c, --code    | view bytecode.\n"
+	<<"    -e, --exec    | execute script file.\n"
+	<<"    -t, --time    | execute and get the running time.\n"
+	<<"    -o, --opcn    | count operands while running.\n"
 	<<"file:\n"
 	<<"    input file name to execute script file.\n";
 	return;
@@ -63,7 +63,7 @@ void execute(std::string& file,std::string& command)
 		die("lexer",file);
 		return;
 	}
-	if(command=="--lex")
+	if(command=="--lex" || command=="-l")
 	{
 		lexer.print_token();
 		return;
@@ -74,7 +74,7 @@ void execute(std::string& file,std::string& command)
 		die("parse",file);
 		return;
 	}
-	if(command=="--ast")
+	if(command=="--ast" || command=="-a")
 	{
 		parse.get_root().print_ast(0);
 		return;
@@ -92,7 +92,7 @@ void execute(std::string& file,std::string& command)
 		die("codegen",file);
 		return;
 	}
-	if(command=="--code")
+	if(command=="--code" || command=="-c")
 	{
 		codegen.print_byte_code();
 		return;
@@ -102,9 +102,9 @@ void execute(std::string& file,std::string& command)
 		codegen.get_num_table(),
 		import.get_file()
 	);
-	if(command=="--exec" || command=="--opcnt")
-		vm.run(codegen.get_exec_code(),command=="--opcnt");
-	else if(command=="--time")
+	if(command=="--exec" || command=="-e" || command=="--opcnt" || command=="-o")
+		vm.run(codegen.get_exec_code(),command=="--opcnt" || command=="-o");
+	else if(command=="--time" || command=="-t")
 	{
 		clock_t begin=clock();
 		vm.run(codegen.get_exec_code(),false);
@@ -123,16 +123,22 @@ int main(int argc,const char* argv[])
 	else if(argc==2 && argv[1][0]!='-')
 	{
 		file=argv[1];
-		command="--exec";
+		command="-e";
 		execute(file,command);
 	}
 	else if(argc==3 &&
 		(!strcmp(argv[1],"--lex") ||
+		!strcmp(argv[1],"-l")     ||
 		!strcmp(argv[1],"--ast")  ||
+		!strcmp(argv[1],"-a")     ||
 		!strcmp(argv[1],"--code") ||
+		!strcmp(argv[1],"-c")     ||
 		!strcmp(argv[1],"--exec") ||
+		!strcmp(argv[1],"-e")     ||
 		!strcmp(argv[1],"--opcnt")||
-		!strcmp(argv[1],"--time")))
+		!strcmp(argv[1],"-o")     ||
+		!strcmp(argv[1],"--time") ||
+		!strcmp(argv[1],"-t")))
 	{
 		file=argv[2];
 		command=argv[1];
