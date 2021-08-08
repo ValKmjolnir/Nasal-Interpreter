@@ -20,7 +20,7 @@ void help_cmd()
 	<<"    -c, --code    | view bytecode.\n"
 	<<"    -e, --exec    | execute script file.\n"
 	<<"    -t, --time    | execute and get the running time.\n"
-	<<"    -o, --opcn    | count operands while running.\n"
+	<<"    -o, --opcnt   | count operands while running.\n"
 	<<"file:\n"
 	<<"    input file name to execute script file.\n";
 	return;

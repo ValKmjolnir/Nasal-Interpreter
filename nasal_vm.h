@@ -206,7 +206,7 @@ void nasal_vm::stackinfo(int limit)
 }
 void nasal_vm::die(std::string str)
 {
-    printf(">> [vm] error at 0x%.8x: %s\n",pc,str.c_str());
+    printf("[vm] error at 0x%.8x: %s\n",pc,str.c_str());
     // trace back will use ret_stack
     ret.push(pc);
     traceback();
@@ -216,7 +216,7 @@ void nasal_vm::die(std::string str)
 }
 void nasal_vm::stackoverflow()
 {
-    printf(">> [vm] stack overflow\n");
+    printf("[vm] stack overflow\n");
     traceback();
     stackinfo(10);
     return;

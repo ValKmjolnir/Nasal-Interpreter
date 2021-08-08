@@ -259,7 +259,7 @@ public:
 void nasal_codegen::die(std::string info,int line)
 {
     ++error;
-    std::cout<<">> [code] line "<<line<<": "<<info<<"\n";
+    std::cout<<"[code] line "<<line<<": "<<info<<"\n";
     return;
 }
 
