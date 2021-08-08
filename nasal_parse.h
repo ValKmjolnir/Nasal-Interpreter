@@ -127,7 +127,7 @@ void nasal_parse::main_process(std::vector<token>& toks)
     if(!error_token.size())
         return;
     ++error;
-    std::cout<<">> [parse] line";
+    std::cout<<"[parse] line";
     int err_line=0;
     for(auto& tok:error_token)
         if(err_line!=tok.line)
@@ -143,7 +143,7 @@ void nasal_parse::main_process(std::vector<token>& toks)
 void nasal_parse::die(int line,std::string&& info)
 {
     ++error;
-    std::cout<<">> [parse] line "<<line<<": "<<info<<".\n";
+    std::cout<<"[parse] line "<<line<<": "<<info<<".\n";
     return;
 }
 void nasal_parse::match(int type,const char* err_info)

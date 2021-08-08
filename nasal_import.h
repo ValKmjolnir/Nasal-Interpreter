@@ -25,7 +25,7 @@ public:
 void nasal_import::die(std::string& filename,const char* error_stage)
 {
     ++error;
-    std::cout<<">> [import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
+    std::cout<<"[import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
     return;
 }
 

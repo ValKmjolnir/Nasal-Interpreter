@@ -124,7 +124,7 @@ void nasal_lexer::openfile(std::string& filename)
     if(fin.fail())
     {
 		++error;
-        std::cout<<">> [lexer] cannot open file <"<<filename<<">.\n";
+        std::cout<<"[lexer] cannot open file <"<<filename<<">.\n";
 		fin.close();
         return;
     }
@@ -150,7 +150,7 @@ int nasal_lexer::get_tok_type(std::string& tk_str)
 void nasal_lexer::die(const char* error_info)
 {
 	++error;
-	std::cout<<">> [lexer] line "<<line<<" column "<<line_code.length()<<": \n"<<line_code<<"\n";
+	std::cout<<"[lexer] line "<<line<<" column "<<line_code.length()<<": \n"<<line_code<<"\n";
 	for(auto i:line_code)
 		std::cout<<(i=='\t'?'\t':' ');
 	std::cout<<"^"<<error_info<<'\n';
