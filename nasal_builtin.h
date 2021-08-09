@@ -395,7 +395,7 @@ nasal_val* builtin_str(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         return nullptr;
     }
     nasal_val* ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=val_addr->to_string();
+    *ret_addr->ptr.str=std::to_string(val_addr->ptr.num);
     return ret_addr;
 }
 nasal_val* builtin_size(std::vector<nasal_val*>& local_scope,nasal_gc& gc)

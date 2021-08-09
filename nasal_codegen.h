@@ -201,6 +201,7 @@ private:
     std::unordered_map<std::string,int> string_table;
     std::vector<double>                 num_res_table;
     std::vector<std::string>            str_res_table;
+    std::vector<std::string>            file_name;
     std::vector<opcode>                 exec_code;
     std::list<std::vector<int>>         continue_ptr;
     std::list<std::vector<int>>         break_ptr;
@@ -248,7 +249,7 @@ private:
     void ret_gen(nasal_ast&);
 public:
     int                       get_error(){return error;}
-    void                      main_progress(nasal_ast&);
+    void                      main_progress(nasal_ast&,std::vector<std::string>&);
     void                      print_op(int);
     void                      print_byte_code();
     std::vector<std::string>& get_str_table(){return str_res_table;}
@@ -259,7 +260,7 @@ public:
 void nasal_codegen::die(std::string info,int line)
 {
     ++error;
-    std::cout<<"[code] line "<<line<<": "<<info<<"\n";
+    std::cout<<"[code] <"<<file_name[fileindex]<<"> line "<<line<<": "<<info<<"\n";
     return;
 }
 
@@ -1160,7 +1161,7 @@ void nasal_codegen::ret_gen(nasal_ast& ast)
     return;
 }
 
-void nasal_codegen::main_progress(nasal_ast& ast)
+void nasal_codegen::main_progress(nasal_ast& ast,std::vector<std::string>& files)
 {
     error=0;
     in_foreach=0;
@@ -1169,6 +1170,7 @@ void nasal_codegen::main_progress(nasal_ast& ast)
 
     number_table.clear();
     string_table.clear();
+    file_name=files;
     exec_code.clear();
 
     global.clear();

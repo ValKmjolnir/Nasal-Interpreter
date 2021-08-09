@@ -132,7 +132,7 @@ void nasal_lexer::openfile(std::string& filename)
     {
         char c=fin.get();
         if(fin.eof())
-            break;
+			break;
         res.push_back(c);
     }
     fin.close();

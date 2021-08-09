@@ -49,7 +49,7 @@ inline double oct_to_double(const char* str)
 	for(;*str;++str)
 	{
 		ret*=8;
-		if('0'<=*str && *str<='8')
+		if('0'<=*str && *str<'8')
 			ret+=(*str-'0');
 		else
 			return nan("");
@@ -104,17 +104,6 @@ double str2num(const char* str)
 	else
 		ret_num=dec_to_double(str);
 	return is_negative?-ret_num:ret_num;
-}
-
-/*
-	trans_number_to_string:
-	convert number to string
-*/
-std::string num2str(double number)
-{
-	std::ostringstream ss;
-	ss<<number;
-	return ss.str();
 }
 
 /*
