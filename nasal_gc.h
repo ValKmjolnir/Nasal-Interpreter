@@ -96,6 +96,14 @@ nasal_val** nasal_vec::get_mem(int index)
 }
 void nasal_vec::print()
 {
+    static int depth=0;
+    ++depth;
+    if(depth>1024)
+    {
+        std::cout<<"[..]";
+        --depth;
+        return;
+    }
     if(!elems.size())
     {
         std::cout<<"[]";
@@ -116,6 +124,7 @@ void nasal_vec::print()
         }
         std::cout<<",]"[(++iter)==elems.size()];
     }
+    --depth;
     return;
 }
 
@@ -160,6 +169,14 @@ nasal_val** nasal_hash::get_mem(std::string& key)
 }
 void nasal_hash::print()
 {
+    static int depth=0;
+    ++depth;
+    if(depth>1024)
+    {
+        std::cout<<"{..}";
+        --depth;
+        return;
+    }
     if(!elems.size())
     {
         std::cout<<"{}";
@@ -182,6 +199,7 @@ void nasal_hash::print()
         }
         std::cout<<",}"[(++iter)==elems.size()];
     }
+    --depth;
     return;
 }
 
@@ -238,7 +256,7 @@ std::string nasal_val::to_string()
     if(type==vm_str)
         return *ptr.str;
     else if(type==vm_num)
-        return num2str(ptr.num);
+        return std::to_string(ptr.num);
     return "";
 }
 

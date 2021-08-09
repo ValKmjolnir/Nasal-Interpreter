@@ -45,7 +45,7 @@ void logo()
 
 void die(const char* stage,std::string& filename)
 {
-	std::cout<<">> ["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
+	std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
 	return;
 }
 
@@ -86,7 +86,7 @@ void execute(std::string& file,std::string& command)
 		die("import",file);
 		return;
 	}
-	codegen.main_progress(import.get_root());
+	codegen.main_progress(import.get_root(),import.get_file());
 	if(codegen.get_error())
 	{
 		die("codegen",file);

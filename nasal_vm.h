@@ -569,7 +569,7 @@ inline void nasal_vm::opr_callv()
     {
         stack_top[0]=vec_addr->ptr.vec->get_val(val->to_number());
         if(!stack_top[0])
-            die("callv: index out of range:"+num2str(val->to_number()));
+            die("callv: index out of range:"+std::to_string(val->to_number()));
     }
     else if(vec_addr->type==vm_hash)
     {
@@ -594,7 +594,7 @@ inline void nasal_vm::opr_callv()
         int str_size=str.length();
         if(num<-str_size || num>=str_size)
         {
-            die("callv: index out of range:"+num2str(val->to_number()));
+            die("callv: index out of range:"+std::to_string(val->to_number()));
             return;
         }
         stack_top[0]=gc.gc_alloc(vm_num);
@@ -615,7 +615,7 @@ inline void nasal_vm::opr_callvi()
     // cannot use operator[],because this may cause overflow
     (++stack_top)[0]=val->ptr.vec->get_val(imm[pc]);
     if(!stack_top[0])
-        die("callvi: index out of range:"+num2str(imm[pc]));
+        die("callvi: index out of range:"+std::to_string(imm[pc]));
     return;
 }
 inline void nasal_vm::opr_callh()
@@ -753,7 +753,7 @@ inline void nasal_vm::opr_slc()
     nasal_val* val=(stack_top--)[0];
     nasal_val* res=stack_top[-1]->ptr.vec->get_val(val->to_number());
     if(!res)
-        die("slc: index out of range:"+num2str(val->to_number()));
+        die("slc: index out of range:"+std::to_string(val->to_number()));
     stack_top[0]->ptr.vec->elems.push_back(res);
     return;
 }
@@ -781,9 +781,9 @@ inline void nasal_vm::opr_slc2()
     if(num1>=num2)
         die("slc2: begin index must be less than end index");
     else if(num1<-ref_size || num1>=ref_size)
-        die("slc2: begin index out of range: "+num2str(num1));
+        die("slc2: begin index out of range: "+std::to_string(num1));
     else if(num2<-ref_size || num2>=ref_size)
-        die("slc2: end index out of range: "+num2str(num2));
+        die("slc2: end index out of range: "+std::to_string(num2));
     else
         for(int i=num1;i<=num2;++i)
             aim.push_back(i>=0?ref[i]:ref[i+ref_size]);
@@ -810,7 +810,7 @@ inline void nasal_vm::opr_mcallv()
     {
         mem_addr=vec_addr->ptr.vec->get_mem(val->to_number());
         if(!mem_addr)
-            die("mcallv: index out of range:"+num2str(val->to_number()));
+            die("mcallv: index out of range:"+std::to_string(val->to_number()));
     }
     else if(type==vm_hash)
     {
