@@ -678,7 +678,7 @@ nasal_val* builtin_die(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
         builtin_err("die","\"str\" must be string");
         return nullptr;
     }
-    std::cout<<">> [vm] error: "<<*str_addr->ptr.str<<'\n';
+    std::cout<<"[vm] error: "<<*str_addr->ptr.str<<'\n';
     return nullptr;
 }
 nasal_val* builtin_type(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
