@@ -808,8 +808,8 @@ So in this new interpreter i use a more strict syntax to force users to use 'var
 If you forget to add the keyword 'var', and you haven't defined this symbol before, you will get this:
 
 ```javascript
->> [code] line 1: undefined symbol "i".
->> [codegen] in <"test.nas">: error(s) occurred,stop.
+[code] <test.nas> line 1: undefined symbol "i".
+[codegen] in <test.nas>: error(s) occurred,stop.
 ```
 
 Also there's another difference.
@@ -825,8 +825,8 @@ This program runs normally with output 1.
 But in this new interpreter, it will get:
 
 ```javascript
->> [code] line 1: undefined symbol "b".
->> [codegen] in <"test.nas">: error(s) occurred,stop.
+[code] <test.nas> line 1: undefined symbol "b".
+[codegen] in <test.nas>: error(s) occurred,stop.
 ```
 
 This difference is caused by different kinds of ways of lexical analysis.
@@ -846,3 +846,65 @@ But a new difference is that if you call a variable before defining it, you'll g
 
 In this new interpreter, function doesn't put dynamic arguments into vector 'arg' automatically.
 So if you use 'arg' without definition, you'll get an error of 'undefined symbol'.
+
+## Trace Back Info
+
+Now when the interpreter crashes,it will print trace back information:
+
+```javascript
+func()
+{
+    println("hello");
+    die("error occurred this line");
+    return;
+}();
+```
+
+Function 'die' is used to throw error and crash.
+
+```javascript
+hello
+[vm] error: error occurred this line
+[vm] error at 0x000000b0: native function error.
+trace back:
+        0x000000b0: callb  0x00000021:__builtin_die (lib.nas line 85)
+        0x0000017f: callfv 0x00000001 (a.nas line 19)
+        0x00000183: callfv 0x00000000 (a.nas line 21)
+vm stack(limit 10):
+        0x0 nullptr
+        0x7fa5f8e19c80 func | func(1 para){..}
+        0x7fa5f8e1a780 func | func(0 para){..}
+        0x7fa5f8c0c040 num  | 0.017453
+        0x7fa5f8e33370 hash | {9 member}
+        0x7fa5f8e33330 hash | {5 member}
+        0x7fa5f8e332e0 hash | {2 member}
+        0x7fa5f8e1a000 func | func(1 para){..}
+        0x7fa5f8e19f80 func | func(2 para){..}
+        0x7fa5f8e19f00 func | func(2 para){..}
+```
+
+Here is an example of stack overflow:
+
+```javascript
+func(f){
+    return f(f);
+}(
+    func(f){
+        f(f);
+    }
+)();
+```
+
+And the trace back info:
+
+```javascript
+[vm] stack overflow
+trace back:
+        0x00000011: callfv 0x00000001 (a.nas line 5)
+        0x00000011: 4076 same call(s) ...
+        0x00000008: callfv 0x00000001 (a.nas line 2)
+        0x00000015: callfv 0x00000001 (a.nas line 3)
+vm stack(limit 10):
+        0x7fcc3110ad00 func | func(1 para){..}
+        0x7fcc3110ad00 ...  | 9 same value(s)
+```
