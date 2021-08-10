@@ -307,13 +307,12 @@ inline void nasal_vm::opr_newh()
 }
 inline void nasal_vm::opr_newf()
 {
-    nasal_val* val=gc.gc_alloc(vm_func);
-    val->ptr.func->entry=imm[pc];
+    (++stack_top)[0]=gc.gc_alloc(vm_func);
+    stack_top[0]->ptr.func->entry=imm[pc];
     if(gc.local.empty())
-        val->ptr.func->closure.push_back(gc.nil_addr);// me
+        stack_top[0]->ptr.func->closure.push_back(gc.nil_addr);// me
     else
-        val->ptr.func->closure=gc.local.back();// local contains 'me'
-    (++stack_top)[0]=val;
+        stack_top[0]->ptr.func->closure=gc.local.back();// local contains 'me'
     return;
 }
 inline void nasal_vm::opr_happ()
