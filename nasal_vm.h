@@ -245,7 +245,12 @@ inline void nasal_vm::opr_intg()
 }
 inline void nasal_vm::opr_intl()
 {
-    stack_top[0]->ptr.func->closure.resize(imm[pc],gc.nil_addr);
+    auto& vec=stack_top[0]->ptr.func->closure->ptr.vec->elems;
+    // if many functions share the same closure
+    // resize will break the size of vector and cause exe_bad_access
+    // so choose the maximum size as the size of this closure
+    if(vec.size()<imm[pc])
+        vec.resize(imm[pc],gc.nil_addr);
     return;
 }
 inline void nasal_vm::opr_offset()
@@ -260,7 +265,7 @@ inline void nasal_vm::opr_loadg()
 }
 inline void nasal_vm::opr_loadl()
 {
-    gc.local.back()[imm[pc]]=(stack_top--)[0];
+    gc.local.back()->ptr.vec->elems[imm[pc]]=(stack_top--)[0];
     return;
 }
 inline void nasal_vm::opr_pnum()
@@ -309,8 +314,9 @@ inline void nasal_vm::opr_newf()
 {
     (++stack_top)[0]=gc.gc_alloc(vm_func);
     stack_top[0]->ptr.func->entry=imm[pc];
+    stack_top[0]->ptr.func->closure=gc.nil_addr;
     if(gc.local.empty())
-        stack_top[0]->ptr.func->closure.push_back(gc.nil_addr);// me
+        stack_top[0]->ptr.func->closure=gc.gc_alloc(vm_vec);
     else
         stack_top[0]->ptr.func->closure=gc.local.back();// local contains 'me'
     return;
@@ -557,7 +563,7 @@ inline void nasal_vm::opr_callg()
 }
 inline void nasal_vm::opr_calll()
 {
-    (++stack_top)[0]=gc.local.back()[imm[pc]];
+    (++stack_top)[0]=gc.local.back()->ptr.vec->elems[imm[pc]];
     return;
 }
 inline void nasal_vm::opr_callv()
@@ -584,7 +590,7 @@ inline void nasal_vm::opr_callv()
             return;
         }
         if(stack_top[0]->type==vm_func)
-            stack_top[0]->ptr.func->closure[0]=val;// me
+            stack_top[0]->ptr.func->closure->ptr.vec->elems[0]=val;// me
     }
     else if(vec_addr->type==vm_str)
     {
@@ -632,7 +638,7 @@ inline void nasal_vm::opr_callh()
         return;
     }
     if(stack_top[0]->type==vm_func)
-        stack_top[0]->ptr.func->closure[0]=val;// me
+        stack_top[0]->ptr.func->closure->ptr.vec->elems[0]=val;// me
     return;
 }
 inline void nasal_vm::opr_callfv()
@@ -648,10 +654,11 @@ inline void nasal_vm::opr_callfv()
     }
     // push new local scope
     auto& ref_func=*func_addr->ptr.func;
-    gc.local.push_back(ref_func.closure);
+    gc.local.push_back(gc.gc_alloc(vm_vec));
+    gc.local.back()->ptr.vec->elems=ref_func.closure->ptr.vec->elems;
     // load parameters
     auto& ref_default=ref_func.default_para;
-    auto& ref_closure=gc.local.back();
+    auto& ref_closure=gc.local.back()->ptr.vec->elems;
 
     uint32_t offset=ref_func.offset;
     uint32_t para_size=ref_func.key_table.size();
@@ -694,10 +701,11 @@ inline void nasal_vm::opr_callfh()
     }
     // push new local scope
     auto& ref_func=*func_addr->ptr.func;
-    gc.local.push_back(ref_func.closure);
+    gc.local.push_back(gc.gc_alloc(vm_vec));
+    gc.local.back()->ptr.vec->elems=ref_func.closure->ptr.vec->elems;
     // load parameters
     auto& ref_default=ref_func.default_para;
-    auto& ref_closure=gc.local.back();
+    auto& ref_closure=gc.local.back()->ptr.vec->elems;
 
     if(ref_func.dynpara>=0)
     {
@@ -725,7 +733,7 @@ inline void nasal_vm::opr_callfh()
 }
 inline void nasal_vm::opr_callb()
 {
-    (++stack_top)[0]=(*builtin_func[imm[pc]].func)(gc.local.back(),gc);
+    (++stack_top)[0]=(*builtin_func[imm[pc]].func)(gc.local.back()->ptr.vec->elems,gc);
     if(!stack_top[0])
         die("native function error.");
     return;
@@ -796,7 +804,7 @@ inline void nasal_vm::opr_mcallg()
 }
 inline void nasal_vm::opr_mcalll()
 {
-    mem_addr=&gc.local.back()[imm[pc]];
+    mem_addr=&(gc.local.back()->ptr.vec->elems[imm[pc]]);
     (++stack_top)[0]=mem_addr[0];
     return;
 }
@@ -851,9 +859,13 @@ inline void nasal_vm::opr_mcallh()
 }
 inline void nasal_vm::opr_ret()
 {
+    auto& vec=stack_top[-1]->ptr.func->closure->ptr.vec->elems;
+    for(uint32_t i=0;i<stack_top[-1]->ptr.func->offset;++i)
+        vec[i]=gc.local.back()->ptr.vec->elems[i];
+    vec[0]=gc.nil_addr;// set 'me' to nil
     gc.local.pop_back();// delete local scope
     pc=ret.top();ret.pop();// fetch pc
-    (--stack_top)[0]->ptr.func->closure[0]=gc.nil_addr;// set 'me' to nil
+    --stack_top;
     stack_top[0]=stack_top[1];// rewrite nasal_func with returned value
     return;
 }

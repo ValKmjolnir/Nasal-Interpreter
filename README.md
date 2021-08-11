@@ -829,7 +829,7 @@ But in this new interpreter, it will get:
 [codegen] in <test.nas>: error(s) occurred,stop.
 ```
 
-This difference is caused by different kinds of ways of lexical analysis.
+(outdated)This difference is caused by different kinds of ways of lexical analysis.
 In most script language interpreters, they use dynamic analysis to check if this symbol is defined yet.
 However, this kind of analysis is at the cost of lower efficiency.
 To make sure the interpreter runs at higher efficiency, i choose static analysis to manage the memory space of each symbol.

@@ -2,65 +2,65 @@
 # valkmjolnir 2021/3/31
 var list=func()
 {
-    var _={begin:nil,end:nil};
+    var (begin,end)=(nil,nil);
     return
     {
         push_back:func(elem)
         {
             var tmp={elem:elem,prev:nil,next:nil};
-            if(_.end!=nil)
+            if(end!=nil)
             {
-                _.end.next=tmp;
-                tmp.prev=_.end;
-                _.end=tmp;
+                end.next=tmp;
+                tmp.prev=end;
+                end=tmp;
             }
             else
-                _.begin=_.end=tmp;
+                begin=end=tmp;
             return;
         },
         push_front:func(elem)
         {
             var tmp={elem:elem,prev:nil,next:nil};
-            if(_.begin!=nil)
+            if(begin!=nil)
             {
-                _.begin.prev=tmp;
-                tmp.next=_.begin;
-                _.begin=tmp;
+                begin.prev=tmp;
+                tmp.next=begin;
+                begin=tmp;
             }
             else
-                _.begin=_.end=tmp;
+                begin=end=tmp;
             return;
         },
         pop_back:func()
         {
-            if(_.end!=nil)
-                _.end=_.end.prev;
-            if(_.end==nil)
-                _.begin=nil;
+            if(end!=nil)
+                end=end.prev;
+            if(end==nil)
+                begin=nil;
             else
-                _.end.next=nil;
+                end.next=nil;
             return;
         },
         pop_front:func()
         {
-            if(_.begin!=nil)
-                _.begin=_.begin.next;
-            if(_.begin==nil)
-                _.end=nil;
+            if(begin!=nil)
+                begin=begin.next;
+            if(begin==nil)
+                end=nil;
             else
-                _.begin.prev=nil;
+                begin.prev=nil;
             return;
         },
         front:func()
         {
-            if(_.begin!=nil)
-                return _.begin.elem;
+            if(begin!=nil)
+                return begin.elem;
             return nil;
         },
         back:func()
         {
-            if(_.end!=nil)
-                return _.end.elem;
+            if(end!=nil)
+                return end.elem;
             return nil;
         },
     };
