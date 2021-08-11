@@ -2,35 +2,35 @@
 # valkmjolnir 2021/3/31
 var stack=func()
 {
-    var _={next:nil};
+    var next=nil;
     return
     {
         push:func(elem)
         {
-            _.next={elem:elem,next:_.next};
+            next={elem:elem,next:next};
             return;
         },
         pop:func()
         {
-            var tmp=_.next;
+            var tmp=next;
             if(tmp!=nil)
-                _.next=tmp.next;
+                next=tmp.next;
             return;
         },
         top:func()
         {
-            var tmp=_.next;
+            var tmp=next;
             if(tmp!=nil)
                 return tmp.elem;
             return nil;
         },
         clear:func()
         {
-            _.next=nil;
+            next=nil;
         },
         empty:func()
         {
-            return _.next==nil;
+            return next==nil;
         }
     };
 }

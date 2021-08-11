@@ -14,5 +14,5 @@ var fib=func(f){
     }
 );
 
-for(var i=1;i<=20;i+=1)
+for(var i=1;i<31;i+=1)
     println(fib(i));

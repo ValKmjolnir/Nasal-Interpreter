@@ -115,7 +115,7 @@ void execute(std::string& file,std::string& command)
 }
 int main(int argc,const char* argv[])
 {
-    std::string command,file="null";
+    std::string command,file;
     if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
         logo();
     else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))

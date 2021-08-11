@@ -51,7 +51,7 @@ struct nasal_func// 120 bytes
     uint32_t entry;  // pc will set to entry-1 to call this function
     std::vector<nasal_val*> default_para;// default value(nasal_val*)
     std::unordered_map<std::string,int> key_table;// parameter name hash
-    std::vector<nasal_val*> closure;// closure will be loaded to gc.local.back() as the local scope
+    nasal_val* closure;// closure will be loaded to gc.local.back() as the local scope
 
     nasal_func();
     void clear();
@@ -214,7 +214,6 @@ void nasal_func::clear()
     dynpara=-1;
     default_para.clear();
     key_table.clear();
-    closure.clear();
     return;
 }
 
@@ -272,7 +271,7 @@ struct nasal_gc
     std::vector<nasal_val*> str_addrs;               // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
-    std::list<std::vector<nasal_val*>> local;
+    std::vector<nasal_val*> local;
     void                    mark();
     void                    sweep();
     void                    gc_init(std::vector<double>&,std::vector<std::string>&);
@@ -285,9 +284,8 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_val*> bfs;
-    for(auto& i:local)
-        for(auto j:i)
-            bfs.push(j);
+    for(auto i:local)
+        bfs.push(i);
     for(nasal_val** i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
     while(!bfs.empty())
@@ -307,8 +305,7 @@ void nasal_gc::mark()
                     bfs.push(i.second);
                 break;
             case vm_func:
-                for(auto i:tmp->ptr.func->closure)
-                    bfs.push(i);
+                bfs.push(tmp->ptr.func->closure);
                 for(auto i:tmp->ptr.func->default_para)
                     if(i)
                         bfs.push(i);
