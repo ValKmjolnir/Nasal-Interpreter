@@ -101,7 +101,7 @@ private:
     int line;
     int ptr;
     std::string line_code;
-    std::vector<char> res;
+    std::string res;
     std::vector<token> token_list;
     int  get_tok_type(std::string&);
     void die(const char*);
@@ -125,7 +125,6 @@ void nasal_lexer::openfile(std::string& filename)
     {
         ++error;
         std::cout<<"[lexer] cannot open file <"<<filename<<">.\n";
-        fin.close();
         return;
     }
     while(!fin.eof())
@@ -133,9 +132,8 @@ void nasal_lexer::openfile(std::string& filename)
         char c=fin.get();
         if(fin.eof())
             break;
-        res.push_back(c);
+        res+=c;
     }
-    fin.close();
     return;
 }
 
@@ -177,7 +175,7 @@ std::string nasal_lexer::num_gen()
         while(ptr<res_size && IS_HEX_NUMBER(res[ptr]))
             token_str+=res[ptr++];
         line_code+=token_str;
-        if(token_str=="0x")
+        if(token_str.length()<3)// "0x"
             die("incorrect number.");
         return token_str;
     }
@@ -189,7 +187,7 @@ std::string nasal_lexer::num_gen()
         while(ptr<res_size && IS_OCT_NUMEBR(res[ptr]))
             token_str+=res[ptr++];
         line_code+=token_str;
-        if(token_str=="0o")
+        if(token_str.length()<3)// "0o"
             die("incorrect number.");
         return token_str;
     }
@@ -299,21 +297,14 @@ void nasal_lexer::scanner()
         if(IS_IDENTIFIER(res[ptr]))
         {
             token_str=id_gen();
-            token new_token(line,get_tok_type(token_str),token_str);
-            if(!new_token.type)
-                new_token.type=tok_id;
-            token_list.push_back(new_token);
+            token_list.push_back({line,get_tok_type(token_str),token_str});
+            if(!token_list.back().type)
+                token_list.back().type=tok_id;
         }
         else if(IS_DIGIT(res[ptr]))
-        {
-            token_str=num_gen();
-            token_list.push_back({line,tok_num,token_str});
-        }
+            token_list.push_back({line,tok_num,num_gen()});
         else if(IS_STRING(res[ptr]))
-        {
-            token_str=str_gen();
-            token_list.push_back({line,tok_str,token_str});
-        }
+            token_list.push_back({line,tok_str,str_gen()});
         else if(IS_SINGLE_OPERATOR(res[ptr]))
         {
             token_str=res[ptr];
