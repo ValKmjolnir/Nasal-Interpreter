@@ -5,15 +5,16 @@ class nasal_vm
 {
 private:
     /* reference from nasal_gc */
-    nasal_val**&             stack_top;// stack top
+    nasal_ref*&              stack_top;// stack top
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
+    std::stack<nasal_ref>    cls_stk;  // stack to store closure,if same closures detected,load the local scope
     std::stack<uint32_t>     ret;      // ptr stack stores address for function to return
     std::stack<int>          counter;  // iterator stack for forindex/foreach
     std::vector<double>      num_table;// numbers used in process(const calculation)
     std::vector<std::string> str_table;// symbols used in process
     std::vector<uint32_t>    imm;      // immediate number
-    nasal_val**              mem_addr; // used for mem_call
+    nasal_ref*               mem_addr; // used for mem_call
     nasal_gc                 gc;       // garbage collector
     /* values used for debug */
     std::vector<opcode>      bytecode; // bytecode
@@ -25,7 +26,7 @@ private:
     void die(std::string);
     void stackoverflow();
     /* vm calculation functions*/
-    bool condition(nasal_val*);
+    bool condition(nasal_ref);
     void opr_intg();
     void opr_intl();
     void opr_offset();
@@ -128,6 +129,8 @@ void nasal_vm::clear()
     gc.gc_clear();
     while(!ret.empty())
         ret.pop();
+    while(!cls_stk.empty())
+        cls_stk.pop();
     while(!counter.empty())
         counter.pop();
     num_table.clear();
@@ -170,7 +173,7 @@ void nasal_vm::stackinfo(int limit)
 {
     printf("vm stack(limit %d):\n",limit);
     uint32_t same_cnt=0;
-    nasal_val* last_ptr=(nasal_val*)0xffff;
+    nasal_ref last_ptr=(nasal_ref)0xffff;
     for(int i=0;i<limit && stack_top-i>=gc.val_stack;++i)
     {
         if(stack_top[-i]==last_ptr)
@@ -211,7 +214,7 @@ void nasal_vm::die(std::string str)
     ret.push(pc);
     traceback();
     stackinfo(10);
-    gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_val*)0xffff;
+    gc.val_stack[STACK_MAX_DEPTH-1]=(nasal_ref)0xffff;
     return;
 }
 void nasal_vm::stackoverflow()
@@ -221,7 +224,7 @@ void nasal_vm::stackoverflow()
     stackinfo(10);
     return;
 }
-inline bool nasal_vm::condition(nasal_val* val_addr)
+inline bool nasal_vm::condition(nasal_ref val_addr)
 {
     if(val_addr->type==vm_num)
         return val_addr->ptr.num;
@@ -295,8 +298,8 @@ inline void nasal_vm::opr_pstr()
 }
 inline void nasal_vm::opr_newv()
 {
-    nasal_val*  vec_addr=gc.gc_alloc(vm_vec);
-    nasal_val** begin=stack_top-imm[pc]+1;
+    nasal_ref  vec_addr=gc.gc_alloc(vm_vec);
+    nasal_ref* begin=stack_top-imm[pc]+1;
     auto& vec=vec_addr->ptr.vec->elems;// stack_top-imm[pc] stores the vector
     vec.resize(imm[pc]);
     for(uint32_t i=0;i<imm[pc];++i)
@@ -323,7 +326,7 @@ inline void nasal_vm::opr_newf()
 }
 inline void nasal_vm::opr_happ()
 {
-    nasal_val* val=stack_top[0];
+    nasal_ref val=stack_top[0];
     (--stack_top)[0]->ptr.hash->elems[str_table[imm[pc]]]=val;
     return;
 }
@@ -337,7 +340,7 @@ inline void nasal_vm::opr_para()
 }
 inline void nasal_vm::opr_defpara()
 {
-    nasal_val* def_val=stack_top[0];
+    nasal_ref def_val=stack_top[0];
     nasal_func* func=(--stack_top)[0]->ptr.func;
     int size=func->key_table.size();
     func->key_table[str_table[imm[pc]]]=size;
@@ -351,7 +354,7 @@ inline void nasal_vm::opr_dynpara()
 }
 inline void nasal_vm::opr_unot()
 {
-    nasal_val* val=stack_top[0];
+    nasal_ref val=stack_top[0];
     switch(val->type)
     {
         case vm_nil:stack_top[0]=gc.one_addr;break;
@@ -371,14 +374,14 @@ inline void nasal_vm::opr_unot()
 }
 inline void nasal_vm::opr_usub()
 {
-    nasal_val* new_val=gc.gc_alloc(vm_num);
+    nasal_ref new_val=gc.gc_alloc(vm_num);
     new_val->ptr.num=-stack_top[0]->to_number();
     stack_top[0]=new_val;
     return;
 }
 
 #define op_calc(type)\
-    nasal_val* new_val=gc.gc_alloc(vm_num);\
+    nasal_ref new_val=gc.gc_alloc(vm_num);\
     new_val->ptr.num=stack_top[-1]->to_number() type stack_top[0]->to_number();\
     (--stack_top)[0]=new_val;
 
@@ -388,14 +391,14 @@ inline void nasal_vm::opr_mul(){op_calc(*);}
 inline void nasal_vm::opr_div(){op_calc(/);}
 inline void nasal_vm::opr_lnk()
 {
-    nasal_val* new_val=gc.gc_alloc(vm_str);
+    nasal_ref new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=stack_top[-1]->to_string()+stack_top[0]->to_string();
     (--stack_top)[0]=new_val;
     return;
 }
 
 #define op_calc_const(type)\
-    nasal_val* new_val=gc.gc_alloc(vm_num);\
+    nasal_ref new_val=gc.gc_alloc(vm_num);\
     new_val->ptr.num=stack_top[0]->to_number() type num_table[imm[pc]];\
     stack_top[0]=new_val;
 
@@ -405,14 +408,14 @@ inline void nasal_vm::opr_mulc(){op_calc_const(*);}
 inline void nasal_vm::opr_divc(){op_calc_const(/);}
 inline void nasal_vm::opr_lnkc()
 {
-    nasal_val* new_val=gc.gc_alloc(vm_str);
+    nasal_ref new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=stack_top[0]->to_string()+str_table[imm[pc]];
     stack_top[0]=new_val;
     return;
 }
 
 #define op_calc_eq(type)\
-    nasal_val* new_val=gc.gc_alloc(vm_num);\
+    nasal_ref new_val=gc.gc_alloc(vm_num);\
     new_val->ptr.num=mem_addr[0]->to_number() type stack_top[-1]->to_number();\
     (--stack_top)[0]=mem_addr[0]=new_val;
 
@@ -422,14 +425,14 @@ inline void nasal_vm::opr_muleq(){op_calc_eq(*);}
 inline void nasal_vm::opr_diveq(){op_calc_eq(/);}
 inline void nasal_vm::opr_lnkeq()
 {
-    nasal_val* new_val=gc.gc_alloc(vm_str);
+    nasal_ref new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=mem_addr[0]->to_string()+stack_top[-1]->to_string();
     (--stack_top)[0]=mem_addr[0]=new_val;
     return;
 }
 
 #define op_calc_eq_const(type)\
-    nasal_val* new_val=gc.gc_alloc(vm_num);\
+    nasal_ref new_val=gc.gc_alloc(vm_num);\
     new_val->ptr.num=mem_addr[0]->to_number() type num_table[imm[pc]];\
     stack_top[0]=mem_addr[0]=new_val;
 
@@ -439,7 +442,7 @@ inline void nasal_vm::opr_muleqc(){op_calc_eq_const(*);}
 inline void nasal_vm::opr_diveqc(){op_calc_eq_const(/);}
 inline void nasal_vm::opr_lnkeqc()
 {
-    nasal_val* new_val=gc.gc_alloc(vm_str);
+    nasal_ref new_val=gc.gc_alloc(vm_str);
     *new_val->ptr.str=mem_addr[0]->to_string()+str_table[imm[pc]];
     stack_top[0]=mem_addr[0]=new_val;
     return;
@@ -452,8 +455,8 @@ inline void nasal_vm::opr_meq()
 }
 inline void nasal_vm::opr_eq()
 {
-    nasal_val* val2=stack_top[0];
-    nasal_val* val1=(--stack_top)[0];
+    nasal_ref val2=stack_top[0];
+    nasal_ref val1=(--stack_top)[0];
     int a_type=val1->type;
     int b_type=val2->type;
     if(a_type==vm_nil && b_type==vm_nil)
@@ -468,8 +471,8 @@ inline void nasal_vm::opr_eq()
 }
 inline void nasal_vm::opr_neq()
 {
-    nasal_val* val2=stack_top[0];
-    nasal_val* val1=(--stack_top)[0];
+    nasal_ref val2=stack_top[0];
+    nasal_ref val1=(--stack_top)[0];
     int a_type=val1->type;
     int b_type=val2->type;
     if(a_type==vm_nil && b_type==vm_nil)
@@ -547,7 +550,7 @@ inline void nasal_vm::opr_findex()
 }
 inline void nasal_vm::opr_feach()
 {
-    std::vector<nasal_val*>& ref=stack_top[0]->ptr.vec->elems;
+    std::vector<nasal_ref>& ref=stack_top[0]->ptr.vec->elems;
     if(++counter.top()>=ref.size())
     {
         pc=imm[pc]-1;
@@ -568,8 +571,8 @@ inline void nasal_vm::opr_calll()
 }
 inline void nasal_vm::opr_callv()
 {
-    nasal_val* val=stack_top[0];
-    nasal_val* vec_addr=(--stack_top)[0];
+    nasal_ref val=stack_top[0];
+    nasal_ref vec_addr=(--stack_top)[0];
     if(vec_addr->type==vm_vec)
     {
         stack_top[0]=vec_addr->ptr.vec->get_val(val->to_number());
@@ -611,7 +614,7 @@ inline void nasal_vm::opr_callv()
 }
 inline void nasal_vm::opr_callvi()
 {
-    nasal_val* val=stack_top[0];
+    nasal_ref val=stack_top[0];
     if(val->type!=vm_vec)
     {
         die("callvi: must use a vector");
@@ -625,7 +628,7 @@ inline void nasal_vm::opr_callvi()
 }
 inline void nasal_vm::opr_callh()
 {
-    nasal_val* val=stack_top[0];
+    nasal_ref val=stack_top[0];
     if(val->type!=vm_hash)
     {
         die("callh: must call a hash");
@@ -645,8 +648,8 @@ inline void nasal_vm::opr_callfv()
 {
     // get parameter list and function value
     uint32_t args_size=imm[pc];
-    nasal_val** vec=stack_top-args_size+1;
-    nasal_val* func_addr=vec[-1];
+    nasal_ref* vec=stack_top-args_size+1;
+    nasal_ref func_addr=vec[-1];
     if(func_addr->type!=vm_func)
     {
         die("callfv: must call a function");
@@ -654,6 +657,7 @@ inline void nasal_vm::opr_callfv()
     }
     // push new local scope
     auto& ref_func=*func_addr->ptr.func;
+    cls_stk.push(func_addr->ptr.func->closure);
     gc.local.push_back(gc.gc_alloc(vm_vec));
     gc.local.back()->ptr.vec->elems=ref_func.closure->ptr.vec->elems;
     // load parameters
@@ -678,7 +682,7 @@ inline void nasal_vm::opr_callfv()
     // load dynamic argument if args_size>=para_size
     if(ref_func.dynpara>=0)
     {
-        nasal_val* vec_addr=gc.gc_alloc(vm_vec);
+        nasal_ref vec_addr=gc.gc_alloc(vm_vec);
         for(uint32_t i=para_size;i<args_size;++i)
             vec_addr->ptr.vec->elems.push_back(vec[i]);
         ref_closure[para_size+offset]=vec_addr;
@@ -693,7 +697,7 @@ inline void nasal_vm::opr_callfh()
 {
     // get parameter list and function value
     auto& ref_hash=stack_top[0]->ptr.hash->elems;
-    nasal_val* func_addr=stack_top[-1];
+    nasal_ref func_addr=stack_top[-1];
     if(func_addr->type!=vm_func)
     {
         die("callfh: must call a function");
@@ -701,6 +705,7 @@ inline void nasal_vm::opr_callfh()
     }
     // push new local scope
     auto& ref_func=*func_addr->ptr.func;
+    cls_stk.push(func_addr->ptr.func->closure);
     gc.local.push_back(gc.gc_alloc(vm_vec));
     gc.local.back()->ptr.vec->elems=ref_func.closure->ptr.vec->elems;
     // load parameters
@@ -757,8 +762,8 @@ inline void nasal_vm::opr_slcend()
 }
 inline void nasal_vm::opr_slc()
 {
-    nasal_val* val=(stack_top--)[0];
-    nasal_val* res=stack_top[-1]->ptr.vec->get_val(val->to_number());
+    nasal_ref val=(stack_top--)[0];
+    nasal_ref res=stack_top[-1]->ptr.vec->get_val(val->to_number());
     if(!res)
         die("slc: index out of range:"+std::to_string(val->to_number()));
     stack_top[0]->ptr.vec->elems.push_back(res);
@@ -766,10 +771,10 @@ inline void nasal_vm::opr_slc()
 }
 inline void nasal_vm::opr_slc2()
 {
-    nasal_val* val2=(stack_top--)[0];
-    nasal_val* val1=(stack_top--)[0];
-    std::vector<nasal_val*>& ref=stack_top[-1]->ptr.vec->elems;
-    std::vector<nasal_val*>& aim=stack_top[0]->ptr.vec->elems;
+    nasal_ref val2=(stack_top--)[0];
+    nasal_ref val1=(stack_top--)[0];
+    std::vector<nasal_ref>& ref=stack_top[-1]->ptr.vec->elems;
+    std::vector<nasal_ref>& aim=stack_top[0]->ptr.vec->elems;
 
     int type1=val1->type,type2=val2->type;
     int num1=val1->to_number();
@@ -810,8 +815,8 @@ inline void nasal_vm::opr_mcalll()
 }
 inline void nasal_vm::opr_mcallv()
 {
-    nasal_val* val=stack_top[0];
-    nasal_val* vec_addr=(--stack_top)[0];
+    nasal_ref val=stack_top[0];
+    nasal_ref vec_addr=(--stack_top)[0];
     int type=vec_addr->type;
     if(type==vm_vec)
     {
@@ -841,7 +846,7 @@ inline void nasal_vm::opr_mcallv()
 }
 inline void nasal_vm::opr_mcallh()
 {
-    nasal_val* hash_addr=stack_top[0];
+    nasal_ref hash_addr=stack_top[0];
     if(hash_addr->type!=vm_hash)
     {
         die("mcallh: must call a hash");
@@ -859,11 +864,27 @@ inline void nasal_vm::opr_mcallh()
 }
 inline void nasal_vm::opr_ret()
 {
-    auto& vec=stack_top[-1]->ptr.func->closure->ptr.vec->elems;
-    for(uint32_t i=0;i<stack_top[-1]->ptr.func->offset;++i)
-        vec[i]=gc.local.back()->ptr.vec->elems[i];
-    vec[0]=gc.nil_addr;// set 'me' to nil
-    gc.local.pop_back();// delete local scope
+    nasal_func* func=stack_top[-1]->ptr.func;
+    uint32_t offset=func->offset;
+    nasal_ref cls=cls_stk.top();cls_stk.pop();
+    // same closure detected,update the last local scope instead of the closure
+    if(!cls_stk.empty() && cls_stk.top()==cls)
+    {
+        auto& vec=gc.local.back()->ptr.vec->elems;
+        auto& func_vec=func->closure->ptr.vec->elems;
+        gc.local.pop_back();
+        for(uint32_t i=0;i<offset;++i)
+            gc.local.back()->ptr.vec->elems[i]=func_vec[i]=vec[i];
+    }
+    else
+    {
+        auto& vec=func->closure->ptr.vec->elems;
+        for(uint32_t i=0;i<offset;++i)
+            vec[i]=gc.local.back()->ptr.vec->elems[i];
+        gc.local.pop_back();
+        vec[0]=gc.nil_addr;// set 'me' to nil
+    }
+    
     pc=ret.top();ret.pop();// fetch pc
     --stack_top;
     stack_top[0]=stack_top[1];// rewrite nasal_func with returned value
@@ -910,7 +931,7 @@ void nasal_vm::run(std::vector<opcode>& exec,bool op_cnt)
     goto *code[pc];
 
 nop:
-    if(canary && canary!=(nasal_val*)0xffff)
+    if(canary && canary!=(nasal_ref)0xffff)
         stackoverflow();
     if(op_cnt)
     {

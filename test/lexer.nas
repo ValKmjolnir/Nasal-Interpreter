@@ -2,23 +2,23 @@ import("lib.nas");
 
 var lexer=func(file)
 {
-    var _={ptr:0,token:[]};
+    var (ptr,token)=(0,[]);
     var s=io.fin(file);
     var len=size(s);
     return
     {
         jmp_note:func()
         {
-            while(_.ptr<len and chr(s[_.ptr])!='\n')
-                _.ptr+=1;
-            _.ptr+=1;
+            while(ptr<len and chr(s[ptr])!='\n')
+                ptr+=1;
+            ptr+=1;
         },
         id_gen:func()
         {
             var tmp="";
-            while(_.ptr<len)
+            while(ptr<len)
             {
-                var c=s[_.ptr];
+                var c=s[ptr];
                 if(('a'[0]<=c and c<='z'[0])
                 or ('A'[0]<=c and c<='Z'[0])
                 or ('0'[0]<=c and c<='9'[0])
@@ -26,21 +26,21 @@ var lexer=func(file)
                     tmp~=chr(c);
                 else
                     break;
-                _.ptr+=1;
+                ptr+=1;
             }
-            append(_.token,tmp);
+            append(token,tmp);
         },
         str_gen:func()
         {
             var str="";
-            var mark=chr(s[_.ptr]);
-            _.ptr+=1;
-            while(_.ptr<len and chr(s[_.ptr])!=mark)
+            var mark=chr(s[ptr]);
+            ptr+=1;
+            while(ptr<len and chr(s[ptr])!=mark)
             {
-                if(chr(s[_.ptr])=='\\')
+                if(chr(s[ptr])=='\\')
                 {
-                    _.ptr+=1;
-                    var c=chr(s[_.ptr]);
+                    ptr+=1;
+                    var c=chr(s[ptr]);
                     if   (c=='a' ) str~='\a';
                     elsif(c=='b' ) str~='\b';
                     elsif(c=='f' ) str~='\f';
@@ -56,116 +56,116 @@ var lexer=func(file)
                     else           str~=c;
                 }
                 else
-                    str~=chr(s[_.ptr]);
-                _.ptr+=1;
+                    str~=chr(s[ptr]);
+                ptr+=1;
             }
-            if(_.ptr>=len)
+            if(ptr>=len)
                 print("read eof when generating string.\n");
-            _.ptr+=1;
-            append(_.token,str);
+            ptr+=1;
+            append(token,str);
         },
         num_gen:func()
         {
-            var number=chr(s[_.ptr]);
-            _.ptr+=1;
-            if(_.ptr<len and chr(s[_.ptr])=='x')
+            var number=chr(s[ptr]);
+            ptr+=1;
+            if(ptr<len and chr(s[ptr])=='x')
             {
-                _.ptr+=1;
-                while(_.ptr<len and
-                ('a'[0]<=s[_.ptr] and s[_.ptr]<='f'[0]
-                or '0'[0]<=s[_.ptr] and s[_.ptr]<='9'[0]))
+                ptr+=1;
+                while(ptr<len and
+                ('a'[0]<=s[ptr] and s[ptr]<='f'[0]
+                or '0'[0]<=s[ptr] and s[ptr]<='9'[0]))
                 {
-                    number~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    number~=chr(s[ptr]);
+                    ptr+=1;
                 }
-                append(_.token,num(number));
+                append(token,num(number));
                 return;
             }
-            elsif(_.ptr<len and chr(s[_.ptr])=='o')
+            elsif(ptr<len and chr(s[ptr])=='o')
             {
-                _.ptr+=1;
-                while(_.ptr<len and ('0'[0]<=s[_.ptr] and s[_.ptr]<='7'[0]))
+                ptr+=1;
+                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='7'[0]))
                 {
-                    number~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    number~=chr(s[ptr]);
+                    ptr+=1;
                 }
-                append(_.token,num(number));
+                append(token,num(number));
                 return;
             }
-            while(_.ptr<len and ('0'[0]<=s[_.ptr] and s[_.ptr]<='9'[0]))
+            while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0]))
             {
-                number~=chr(s[_.ptr]);
-                _.ptr+=1;
+                number~=chr(s[ptr]);
+                ptr+=1;
             }
-            if(_.ptr<len and chr(s[_.ptr])=='.')
+            if(ptr<len and chr(s[ptr])=='.')
             {
-                number~=chr(s[_.ptr]);
-                _.ptr+=1;
-                while(_.ptr<len and ('0'[0]<=s[_.ptr] and s[_.ptr]<='9'[0]))
+                number~=chr(s[ptr]);
+                ptr+=1;
+                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0]))
                 {
-                    number~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    number~=chr(s[ptr]);
+                    ptr+=1;
                 }
             }
-            if(chr(s[_.ptr])=='e' or chr(s[_.ptr])=='E')
+            if(chr(s[ptr])=='e' or chr(s[ptr])=='E')
             {
-                number~=chr(s[_.ptr]);
-                _.ptr+=1;
-                if(chr(s[_.ptr])=='-' or chr(s[_.ptr])=='+')
+                number~=chr(s[ptr]);
+                ptr+=1;
+                if(chr(s[ptr])=='-' or chr(s[ptr])=='+')
                 {
-                    number~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    number~=chr(s[ptr]);
+                    ptr+=1;
                 }
-                while(_.ptr<len and ('0'[0]<=s[_.ptr] and s[_.ptr]<='9'[0]))
+                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0]))
                 {
-                    number~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    number~=chr(s[ptr]);
+                    ptr+=1;
                 }
             }
             var last_c=chr(number[-1]);
             if(last_c=='.' or last_c=='e' or last_c=='E' or last_c=='-' or last_c=='+')
                 println("error number: ",number);
-            append(_.token,num(number));
+            append(token,num(number));
         },
         opr_gen:func()
         {
-            var c=chr(s[_.ptr]);
+            var c=chr(s[ptr]);
             if(c=='+' or c=='-' or c=='~' or c=='/' or c=='*' or c=='>' or c=='<' or c=='!' or c=='=')
             {
                 var tmp=c;
-                _.ptr+=1;
-                if(_.ptr<len and chr(s[_.ptr])=='=')
+                ptr+=1;
+                if(ptr<len and chr(s[ptr])=='=')
                 {
-                    tmp~=chr(s[_.ptr]);
-                    _.ptr+=1;
+                    tmp~=chr(s[ptr]);
+                    ptr+=1;
                 }
-                append(_.token,tmp);
+                append(token,tmp);
                 return;
             }
             elsif(c=='.')
             {
-                if(_.ptr+2<len and chr(s[_.ptr+1])=='.' and chr(s[_.ptr+2])=='.')
+                if(ptr+2<len and chr(s[ptr+1])=='.' and chr(s[ptr+2])=='.')
                 {
-                    append(_.token,"...");
-                    _.ptr+=3;
+                    append(token,"...");
+                    ptr+=3;
                 }
                 else
                 {
-                    append(_.token,".");
-                    _.ptr+=1;
+                    append(token,".");
+                    ptr+=1;
                 }
                 return;
             }
-            elsif(c!=' ' and c!='\t' and c!='\n' and c!='\r' and s[_.ptr]>0)
-                append(_.token,c);
-            _.ptr+=1;
+            elsif(c!=' ' and c!='\t' and c!='\n' and c!='\r' and s[ptr]>0)
+                append(token,c);
+            ptr+=1;
             return;
         },
         main:func()
         {
-            while(_.ptr<len)
+            while(ptr<len)
             {
-                var c=s[_.ptr];
+                var c=s[ptr];
                 if(c=='#'[0])
                     me.jmp_note();
                 elsif('a'[0]<=c and c<='z'[0]
@@ -181,12 +181,13 @@ var lexer=func(file)
             }
             return;
         },
-        get_token:func(){return _.token;}
+        get_token:func(){return token;}
     };
 }
 
 var nasal_lexer=lexer("test/lexer.nas");
 nasal_lexer.main();
+var info="";
 foreach(var tok;nasal_lexer.get_token())
-    print(tok,' ');
-println();
+    info~=tok~' ';
+println(info);

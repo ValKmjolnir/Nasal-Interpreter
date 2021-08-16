@@ -24,34 +24,37 @@ const int increment[vm_type_size]=
     512   // vm_hash
 };
 
-struct nasal_val;//declaration of nasal_val
+// declaration of nasal_val
+struct nasal_val;
+// define nasal_ref => nasal_val*
+typedef nasal_val* nasal_ref;
 
 struct nasal_vec// 24 bytes
 {
-    std::vector<nasal_val*> elems;
+    std::vector<nasal_ref> elems;
 
     void        print();
-    nasal_val*  get_val(int);
-    nasal_val** get_mem(int);
+    nasal_ref  get_val(int);
+    nasal_ref* get_mem(int);
 };
 
 struct nasal_hash// 56 bytes
 {
-    std::unordered_map<std::string,nasal_val*> elems;
+    std::unordered_map<std::string,nasal_ref> elems;
 
     void        print();
-    nasal_val*  get_val(std::string&);
-    nasal_val** get_mem(std::string&);
+    nasal_ref  get_val(std::string&);
+    nasal_ref* get_mem(std::string&);
 };
 
 struct nasal_func// 120 bytes
 {
-    int32_t  dynpara;// dynamic parameter name index in hash
-    uint32_t offset; // arguments will be loaded into local scope from this offset 
-    uint32_t entry;  // pc will set to entry-1 to call this function
-    std::vector<nasal_val*> default_para;// default value(nasal_val*)
+    int32_t  dynpara;  // dynamic parameter name index in hash
+    uint32_t offset;   // arguments will be loaded into local scope from this offset 
+    uint32_t entry;    // pc will set to entry-1 to call this function
+    std::vector<nasal_ref> default_para;// default value(nasal_ref)
     std::unordered_map<std::string,int> key_table;// parameter name hash
-    nasal_val* closure;// closure will be loaded to gc.local.back() as the local scope
+    nasal_ref closure; // closure will be loaded to gc.local.back() as the local scope
 
     nasal_func();
     void clear();
@@ -80,14 +83,14 @@ struct nasal_val// 16 bytes
 };
 
 /*functions of nasal_vec*/
-nasal_val* nasal_vec::get_val(int index)
+nasal_ref nasal_vec::get_val(int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
         return nullptr;
     return elems[index>=0?index:index+vec_size];
 }
-nasal_val** nasal_vec::get_mem(int index)
+nasal_ref* nasal_vec::get_mem(int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
@@ -129,14 +132,14 @@ void nasal_vec::print()
 }
 
 /*functions of nasal_hash*/
-nasal_val* nasal_hash::get_val(std::string& key)
+nasal_ref nasal_hash::get_val(std::string& key)
 {
     if(elems.count(key))
         return elems[key];
     else if(elems.count("parents"))
     {
-        nasal_val* ret_addr=nullptr;
-        nasal_val* val_addr=elems["parents"];
+        nasal_ref ret_addr=nullptr;
+        nasal_ref val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
             for(auto i:val_addr->ptr.vec->elems)
             {
@@ -148,14 +151,14 @@ nasal_val* nasal_hash::get_val(std::string& key)
     }
     return nullptr;
 }
-nasal_val** nasal_hash::get_mem(std::string& key)
+nasal_ref* nasal_hash::get_mem(std::string& key)
 {
     if(elems.count(key))
         return &elems[key];
     else if(elems.count("parents"))
     {
-        nasal_val** mem_addr=nullptr;
-        nasal_val* val_addr=elems["parents"];
+        nasal_ref* mem_addr=nullptr;
+        nasal_ref val_addr=elems["parents"];
         if(val_addr->type==vm_vec)
             for(auto i:val_addr->ptr.vec->elems)
             {
@@ -187,7 +190,7 @@ void nasal_hash::print()
     for(auto& i:elems)
     {
         std::cout<<i.first<<':';
-        nasal_val* tmp=i.second;
+        nasal_ref tmp=i.second;
         switch(tmp->type)
         {
             case vm_nil:  std::cout<<"nil";          break;
@@ -262,35 +265,35 @@ std::string nasal_val::to_string()
 struct nasal_gc
 {
 #define STACK_MAX_DEPTH (4080)
-    nasal_val*              zero_addr;               // reserved address of nasal_val,type vm_num, 0
-    nasal_val*              one_addr;                // reserved address of nasal_val,type vm_num, 1
-    nasal_val*              nil_addr;                // reserved address of nasal_val,type vm_nil
-    nasal_val*              val_stack[STACK_MAX_DEPTH+16];// 16 reserved to avoid stack overflow
-    nasal_val**             stack_top;               // stack top
-    std::vector<nasal_val*> num_addrs;               // reserved address for const vm_num
-    std::vector<nasal_val*> str_addrs;               // reserved address for const vm_str
-    std::vector<nasal_val*> memory;                  // gc memory
-    std::queue <nasal_val*> free_list[vm_type_size]; // gc free list
-    std::vector<nasal_val*> local;
-    void                    mark();
-    void                    sweep();
-    void                    gc_init(std::vector<double>&,std::vector<std::string>&);
-    void                    gc_clear();
-    nasal_val*              gc_alloc(int);
-    nasal_val*              builtin_alloc(int);
+    nasal_ref              zero_addr;               // reserved address of nasal_val,type vm_num, 0
+    nasal_ref              one_addr;                // reserved address of nasal_val,type vm_num, 1
+    nasal_ref              nil_addr;                // reserved address of nasal_val,type vm_nil
+    nasal_ref              val_stack[STACK_MAX_DEPTH+16];// 16 reserved to avoid stack overflow
+    nasal_ref*             stack_top;               // stack top
+    std::vector<nasal_ref> num_addrs;               // reserved address for const vm_num
+    std::vector<nasal_ref> str_addrs;               // reserved address for const vm_str
+    std::vector<nasal_ref> memory;                  // gc memory
+    std::queue <nasal_ref> free_list[vm_type_size]; // gc free list
+    std::vector<nasal_ref> local;
+    void                   mark();
+    void                   sweep();
+    void                   gc_init(std::vector<double>&,std::vector<std::string>&);
+    void                   gc_clear();
+    nasal_ref              gc_alloc(int);
+    nasal_ref              builtin_alloc(int);
 };
 
 /* gc functions */
 void nasal_gc::mark()
 {
-    std::queue<nasal_val*> bfs;
+    std::queue<nasal_ref> bfs;
     for(auto i:local)
         bfs.push(i);
-    for(nasal_val** i=val_stack;i<=stack_top;++i)
+    for(nasal_ref* i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
     while(!bfs.empty())
     {
-        nasal_val* tmp=bfs.front();
+        nasal_ref tmp=bfs.front();
         bfs.pop();
         if(tmp->mark) continue;
         tmp->mark=GC_FOUND;
@@ -340,7 +343,7 @@ void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
     for(int i=vm_num;i<vm_type_size;++i)
         for(int j=0;j<increment[i];++j)
         {
-            nasal_val* tmp=new nasal_val(i);
+            nasal_ref tmp=new nasal_val(i);
             memory.push_back(tmp);
             free_list[i].push(tmp);
         }
@@ -392,7 +395,7 @@ void nasal_gc::gc_clear()
     str_addrs.clear();
     return;
 }
-nasal_val* nasal_gc::gc_alloc(int type)
+nasal_ref nasal_gc::gc_alloc(int type)
 {
     if(free_list[type].empty())
     {
@@ -402,16 +405,16 @@ nasal_val* nasal_gc::gc_alloc(int type)
     if(free_list[type].empty())
         for(int i=0;i<increment[type];++i)
         {
-            nasal_val* tmp=new nasal_val(type);
+            nasal_ref tmp=new nasal_val(type);
             memory.push_back(tmp);
             free_list[type].push(tmp);
         }
-    nasal_val* ret=free_list[type].front();
+    nasal_ref ret=free_list[type].front();
     ret->mark=GC_UNCOLLECTED;
     free_list[type].pop();
     return ret;
 }
-nasal_val* nasal_gc::builtin_alloc(int type)
+nasal_ref nasal_gc::builtin_alloc(int type)
 {
     // when running a builtin function,alloc will run more than one time
     // this may cause mark-sweep in gc_alloc
@@ -420,11 +423,11 @@ nasal_val* nasal_gc::builtin_alloc(int type)
     if(free_list[type].empty())
         for(int i=0;i<increment[type];++i)
         {
-            nasal_val* tmp=new nasal_val(type);
+            nasal_ref tmp=new nasal_val(type);
             memory.push_back(tmp);
             free_list[type].push(tmp);
         }
-    nasal_val* ret=free_list[type].front();
+    nasal_ref ret=free_list[type].front();
     ret->mark=GC_UNCOLLECTED;
     free_list[type].pop();
     return ret;
