@@ -89,7 +89,7 @@ void execute(std::string& file,std::string& command)
     codegen.main_progress(import.get_root(),import.get_file());
     if(codegen.get_error())
     {
-        die("codegen",file);
+        die("code",file);
         return;
     }
     if(command=="--code" || command=="-c")

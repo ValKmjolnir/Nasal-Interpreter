@@ -264,11 +264,11 @@ std::string nasal_val::to_string()
 
 struct nasal_gc
 {
-#define STACK_MAX_DEPTH (4080)
+#define STACK_MAX_DEPTH (4095)
     nasal_ref              zero_addr;               // reserved address of nasal_val,type vm_num, 0
     nasal_ref              one_addr;                // reserved address of nasal_val,type vm_num, 1
     nasal_ref              nil_addr;                // reserved address of nasal_val,type vm_nil
-    nasal_ref              val_stack[STACK_MAX_DEPTH+16];// 16 reserved to avoid stack overflow
+    nasal_ref              val_stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow, stack grows 1 each time
     nasal_ref*             stack_top;               // stack top
     std::vector<nasal_ref> num_addrs;               // reserved address for const vm_num
     std::vector<nasal_ref> str_addrs;               // reserved address for const vm_str

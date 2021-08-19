@@ -85,7 +85,7 @@ func()
     }
     for(var l=cnt;l<16;l+=1)
         print('   ');
-    if(cnt<8)
+    if(cnt<=8)
         print(' ');
     textprint(i);
 }();
