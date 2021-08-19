@@ -268,7 +268,10 @@ void nasal_codegen::regist_number(double num)
 {
     int size=number_table.size();
     if(!number_table.count(num))
+    {
         number_table[num]=size;
+        num_res_table.push_back(num);
+    }
     return;
 }
 
@@ -276,7 +279,10 @@ void nasal_codegen::regist_string(std::string& str)
 {
     int size=string_table.size();
     if(!string_table.count(str))
+    {
         string_table[str]=size;
+        str_res_table.push_back(str);
+    }
     return;
 }
 
@@ -1170,6 +1176,8 @@ void nasal_codegen::main_progress(nasal_ast& ast,std::vector<std::string>& files
 
     number_table.clear();
     string_table.clear();
+    num_res_table.clear();
+    str_res_table.clear();
     file_name=files;
     exec_code.clear();
 
@@ -1237,13 +1245,9 @@ void nasal_codegen::main_progress(nasal_ast& ast,std::vector<std::string>& files
         }
     }
     gen(op_nop,0,0);
+    if(global.size()>=STACK_MAX_DEPTH)
+        die("too many global variants: "+std::to_string(global.size())+".",0);
     exec_code[0].num=global.size();
-    num_res_table.resize(number_table.size());
-    str_res_table.resize(string_table.size());
-    for(auto& i:number_table)
-        num_res_table[i.second]=i.first;
-    for(auto& i:string_table)
-        str_res_table[i.second]=i.first;
     return;
 }
 
