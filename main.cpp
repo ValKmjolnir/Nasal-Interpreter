@@ -46,6 +46,7 @@ void logo()
 void die(const char* stage,std::string& filename)
 {
     std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
+    exit(1);
     return;
 }
 
@@ -59,10 +60,7 @@ void execute(std::string& file,std::string& command)
     lexer.openfile(file);
     lexer.scanner();
     if(lexer.get_error())
-    {
         die("lexer",file);
-        return;
-    }
     if(command=="--lex" || command=="-l")
     {
         lexer.print_token();
@@ -70,10 +68,7 @@ void execute(std::string& file,std::string& command)
     }
     parse.main_process(lexer.get_token_list());
     if(parse.get_error())
-    {
         die("parse",file);
-        return;
-    }
     if(command=="--ast" || command=="-a")
     {
         parse.get_root().print_ast(0);
@@ -82,16 +77,10 @@ void execute(std::string& file,std::string& command)
     // first used file is itself
     import.link(parse.get_root(),file);
     if(import.get_error())
-    {
         die("import",file);
-        return;
-    }
     codegen.main_progress(import.get_root(),import.get_file());
     if(codegen.get_error())
-    {
         die("code",file);
-        return;
-    }
     if(command=="--code" || command=="-c")
     {
         codegen.print_byte_code();
@@ -149,6 +138,7 @@ int main(int argc,const char* argv[])
         std::cout
         <<"invalid argument(s).\n"
         <<"use nasal -h to get help.\n";
+        exit(1);
     }
     return 0;
 }
