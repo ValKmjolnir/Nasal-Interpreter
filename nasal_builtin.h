@@ -40,6 +40,7 @@ nasal_ref builtin_exp(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_ln(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_sqrt(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_atan2(std::vector<nasal_ref>&,nasal_gc&);
+nasal_ref builtin_isnan(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_time(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_contains(std::vector<nasal_ref>&,nasal_gc&);
 nasal_ref builtin_delete(std::vector<nasal_ref>&,nasal_gc&);
@@ -92,6 +93,7 @@ struct FUNC_TABLE
     {"__builtin_ln",      builtin_ln      },
     {"__builtin_sqrt",    builtin_sqrt    },
     {"__builtin_atan2",   builtin_atan2   },
+    {"__builtin_isnan",   builtin_isnan   },
     {"__builtin_time",    builtin_time    },
     {"__builtin_contains",builtin_contains},
     {"__builtin_delete",  builtin_delete  },
@@ -595,6 +597,13 @@ nasal_ref builtin_atan2(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     nasal_ref ret_addr=gc.gc_alloc(vm_num);
     ret_addr->ptr.num=atan2(y_val_addr->ptr.num,x_val_addr->ptr.num);
     return ret_addr;
+}
+nasal_ref builtin_isnan(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
+{
+    nasal_ref x=local_scope[1];
+    if(x->type==vm_num && std::isnan(x->ptr.num))
+        return gc.one_addr;
+    return gc.zero_addr;
 }
 nasal_ref builtin_time(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
