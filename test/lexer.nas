@@ -48,7 +48,7 @@ var lexer=func(file)
                     elsif(c=='r' ) str~='\r';
                     elsif(c=='t' ) str~='\t';
                     elsif(c=='v' ) str~='\v';
-                    elsif(c=='?' ) str~='?';
+                    elsif(c=='?' ) str~='\?';
                     elsif(c=='0' ) str~='\0';
                     elsif(c=='\\') str~='\\';
                     elsif(c=='\'') str~='\'';

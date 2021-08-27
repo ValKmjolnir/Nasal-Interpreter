@@ -15,7 +15,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-#include <thread>
 #include <list>
 #include <stack>
 #include <queue>
