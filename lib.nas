@@ -139,7 +139,8 @@ var math=
     ln:    func(x)  {return __builtin_ln(x);     },
     sqrt:  func(x)  {return __builtin_sqrt(x);   },
     atan2: func(x,y){return __builtin_atan2(x,y);},
-    nan:   func()   {return 1/0-1/0;             },
+    inf:   1/0,
+    nan:   1/0-1/0,
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
 
