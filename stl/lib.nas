@@ -145,3 +145,18 @@ var math=
 };
 
 var D2R=math.pi/180;
+var FPS2KT=0.5925;
+var FT2M=0.3048;
+var GAL2L=3.7854;
+var IN2M=0.0254;
+var KG2LB=2.2046;
+var KT2FPS=1.6878;
+var KT2MPS=0.5144;
+var L2GAL=0.2642;
+var LB2KG=0.4536;
+var M2FT=3.2808;
+var M2IN=39.3701;
+var M2NM=0.00054;
+var MPS2KT=1.9438;
+var NM2M=1852;
+var R2D=180/math.pi;

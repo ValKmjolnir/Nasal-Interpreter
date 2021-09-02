@@ -351,10 +351,7 @@ nasal_ref builtin_int(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
     if(val_addr->type!=vm_num)
-    {
-        builtin_err("int","\"value\" must be number");
-        return nullptr;
-    }
+        return gc.nil_addr;
     int number=(int)val_addr->ptr.num;
     nasal_ref ret_addr=gc.gc_alloc(vm_num);
     ret_addr->ptr.num=(double)number;
@@ -364,10 +361,7 @@ nasal_ref builtin_num(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
     if(val_addr->type!=vm_str)
-    {
-        builtin_err("num","\"value\" must be string");
-        return nullptr;
-    }
+        return gc.nil_addr;
     nasal_ref ret_addr=gc.gc_alloc(vm_num);
     ret_addr->ptr.num=val_addr->to_number();
     return ret_addr;
