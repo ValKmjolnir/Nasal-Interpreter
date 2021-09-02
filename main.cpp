@@ -46,7 +46,7 @@ void logo()
 void die(const char* stage,std::string& filename)
 {
     std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
-    exit(1);
+    std::exit(1);
     return;
 }
 
