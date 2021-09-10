@@ -71,9 +71,15 @@ public:
     void   set_num(double n){num=n;}
     int    get_line(){return line;}
     int    get_type(){return type;}
-    double get_num(){return num;}
+    double get_num() {return num;}
     std::string& get_str(){return str;}
     std::vector<nasal_ast>& get_children(){return children;}
+
+    int    get_line() const {return line;}
+    int    get_type() const {return type;}
+    double get_num()  const {return num;}
+    const std::string& get_str() const {return str;}
+    const std::vector<nasal_ast>& get_children() const {return children;}
 };
 
 nasal_ast::nasal_ast(const nasal_ast& tmp)
