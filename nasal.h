@@ -108,7 +108,7 @@ double str2num(const char* str)
 /*
     show raw string
 */
-void raw_string(std::string& str)
+void raw_string(const std::string& str)
 {
     for(auto i:str)
         switch(i)

@@ -43,14 +43,14 @@ void logo()
     return;
 }
 
-void die(const char* stage,std::string& filename)
+void die(const char* stage,const std::string& filename)
 {
     std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
     std::exit(1);
     return;
 }
 
-void execute(std::string& file,std::string& command)
+void execute(const std::string& file,const std::string& command)
 {
     nasal_lexer   lexer;
     nasal_parse   parse;

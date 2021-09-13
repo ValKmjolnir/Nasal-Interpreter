@@ -57,18 +57,19 @@ private:
     std::vector<nasal_ast> children;
 public:
     nasal_ast(){line=0;type=ast_null;}
-    nasal_ast(int l,int t){line=l;type=t;}
+    nasal_ast(const int l,const int t){line=l;type=t;}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     nasal_ast& operator=(const nasal_ast&);
     nasal_ast& operator=(nasal_ast&&);
-    void   print_ast(int);
+    void   print_ast(const int);
     void   clear();
     void   add_child(nasal_ast&& ast){children.push_back(std::move(ast));}
-    void   set_line(int l){line=l;}
-    void   set_type(int t){type=t;}
-    void   set_str(std::string& s){str=s;}
-    void   set_num(double n){num=n;}
+    void   add_child(const nasal_ast& ast){children.push_back(ast);}
+    void   set_line(const int l){line=l;}
+    void   set_type(const int t){type=t;}
+    void   set_str(const std::string& s){str=s;}
+    void   set_num(const double n){num=n;}
     int    get_line(){return line;}
     int    get_type(){return type;}
     double get_num() {return num;}
@@ -132,7 +133,7 @@ void nasal_ast::clear()
     return;
 }
 
-void nasal_ast::print_ast(int depth)
+void nasal_ast::print_ast(const int depth)
 {
     for(int i=0;i<depth;++i)
         std::cout<<"|  ";

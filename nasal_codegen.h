@@ -208,8 +208,8 @@ private:
     std::vector<std::string>            global;
     std::list<std::vector<std::string>> local;
     
-    void die(std::string,int);
-    void regist_number(double);
+    void die(const std::string,const int);
+    void regist_number(const double);
     void regist_string(const std::string&);
     void find_symbol(const nasal_ast&);
     void add_sym(const std::string&);
@@ -249,7 +249,7 @@ private:
     void ret_gen(const nasal_ast&);
 public:
     int                       get_error(){return error;}
-    void                      main_progress(const nasal_ast&,std::vector<std::string>&);
+    void                      main_progress(const nasal_ast&,const std::vector<std::string>&);
     void                      print_op(int);
     void                      print_byte_code();
     std::vector<std::string>& get_str_table(){return str_res_table;}
@@ -257,14 +257,14 @@ public:
     std::vector<opcode>&      get_exec_code(){return exec_code;}
 };
 
-void nasal_codegen::die(std::string info,int line)
+void nasal_codegen::die(const std::string info,const int line)
 {
     ++error;
     std::cout<<"[code] <"<<file_name[fileindex]<<"> line "<<line<<": "<<info<<"\n";
     return;
 }
 
-void nasal_codegen::regist_number(double num)
+void nasal_codegen::regist_number(const double num)
 {
     int size=number_table.size();
     if(!number_table.count(num))
@@ -740,10 +740,12 @@ void nasal_codegen::conditional_gen(const nasal_ast& ast)
             int ptr=exec_code.size();
             gen(op_jf,0,0);
             block_gen(tmp.get_children()[1]);
-            jmp_label.push_back(exec_code.size());
             // without 'else' the last condition doesn't need to jmp
             if(&tmp!=&ast.get_children().back())
+            {
+                jmp_label.push_back(exec_code.size());
                 gen(op_jmp,0,0);
+            }
             exec_code[ptr].num=exec_code.size();
         }
         else
@@ -1169,7 +1171,7 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
     return;
 }
 
-void nasal_codegen::main_progress(const nasal_ast& ast,std::vector<std::string>& files)
+void nasal_codegen::main_progress(const nasal_ast& ast,const std::vector<std::string>& files)
 {
     error=0;
     in_foreach=0;

@@ -34,7 +34,7 @@ enum token_type
 struct
 {
     const char* str;
-    int tok_type;
+    const int tok_type;
 }token_table[]=
 {
     {"for"     ,tok_for      },
@@ -103,20 +103,20 @@ private:
     std::string line_code;
     std::string res;
     std::vector<token> token_list;
-    int  get_tok_type(std::string&);
+    int  get_tok_type(const std::string&);
     void die(const char*);
     std::string id_gen();
     std::string num_gen();
     std::string str_gen();
 public:
-    void openfile(std::string&);
+    void openfile(const std::string&);
     void scanner();
     void print_token();
     int  get_error(){return error;}
     std::vector<token>& get_token_list(){return token_list;}
 };
 
-void nasal_lexer::openfile(std::string& filename)
+void nasal_lexer::openfile(const std::string& filename)
 {
     error=0;
     res.clear();
@@ -137,7 +137,7 @@ void nasal_lexer::openfile(std::string& filename)
     return;
 }
 
-int nasal_lexer::get_tok_type(std::string& tk_str)
+int nasal_lexer::get_tok_type(const std::string& tk_str)
 {
     for(int i=0;token_table[i].str;++i)
         if(tk_str==token_table[i].str)

@@ -48,14 +48,15 @@ private:
     std::vector<token> error_token;
     int in_function; // count when generating function block,used to check return-expression
     int in_loop;     // count when generating loop block,used to check break/continue-expression
-    void die(int,std::string&&);
+    void die(int,const std::string&&);
+    void die(int,const char*);
     void match(int type,const char* err_info="");
-    bool check_comma(int*);
+    bool check_comma(const int*);
     bool check_multi_scalar();
-    bool check_function_end(nasal_ast&);
+    bool check_function_end(const nasal_ast&);
     bool check_special_call();
-    bool need_semi_check(nasal_ast&);
-    void check_memory_reachable(nasal_ast&);
+    bool need_semi_check(const nasal_ast&);
+    void check_memory_reachable(const nasal_ast&);
     nasal_ast null_node_gen();
     nasal_ast nil_gen();
     nasal_ast num_gen();
@@ -140,11 +141,15 @@ void nasal_parse::main_process(std::vector<token>& toks)
     <<"check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
     return;
 }
-void nasal_parse::die(int line,std::string&& info)
+void nasal_parse::die(int line,const std::string&& info)
 {
     ++error;
     std::cout<<"[parse] line "<<line<<": "<<info<<".\n";
-    return;
+}
+void nasal_parse::die(int line,const char* info)
+{
+    ++error;
+    std::cout<<"[parse] line "<<line<<": "<<info<<".\n";
 }
 void nasal_parse::match(int type,const char* err_info)
 {
@@ -169,7 +174,7 @@ void nasal_parse::match(int type,const char* err_info)
     ++ptr;
     return;
 }
-bool nasal_parse::check_comma(int* panic_set)
+bool nasal_parse::check_comma(const int* panic_set)
 {
     for(int i=0;panic_set[i];++i)
         if(tok_list[ptr].type==panic_set[i])
@@ -198,7 +203,7 @@ bool nasal_parse::check_multi_scalar()
     }
     return false;
 }
-bool nasal_parse::check_function_end(nasal_ast& node)
+bool nasal_parse::check_function_end(const nasal_ast& node)
 {
     int type=node.get_type();
     if(type==ast_func)
@@ -246,18 +251,18 @@ bool nasal_parse::check_special_call()
     }
     return false;
 }
-bool nasal_parse::need_semi_check(nasal_ast& node)
+bool nasal_parse::need_semi_check(const nasal_ast& node)
 {
     int type=node.get_type();
     if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_conditional)
         return false;
     return !check_function_end(node);
 }
-void nasal_parse::check_memory_reachable(nasal_ast& node)
+void nasal_parse::check_memory_reachable(const nasal_ast& node)
 {
     if(node.get_type()==ast_call)
     {
-        nasal_ast& tmp=node.get_children().back();
+        const nasal_ast& tmp=node.get_children().back();
         if(tmp.get_type()==ast_callf)
             die(tmp.get_line(),"bad left-value");
         if(tmp.get_type()==ast_callv && (tmp.get_children().size()>1 || tmp.get_children()[0].get_type()==ast_subvec))
@@ -298,7 +303,7 @@ nasal_ast nasal_parse::vec_gen()
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok_null=0
-    int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
+    const int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
     nasal_ast node(tok_list[ptr].line,ast_vec);
     match(tok_lbracket);
     while(tok_list[ptr].type!=tok_rbracket)
@@ -694,7 +699,7 @@ nasal_ast nasal_parse::callv()
     // panic set for this token is not ','
     // this is the FIRST set of subvec
     // array end with tok_null=0
-    int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_colon,tok_null};
+    const int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_colon,tok_null};
     nasal_ast node(tok_list[ptr].line,ast_callv);
     match(tok_lbracket);
     while(tok_list[ptr].type!=tok_rbracket)
@@ -715,7 +720,7 @@ nasal_ast nasal_parse::callf()
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
     // array end with tok_null=0
-    int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
+    const int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
     nasal_ast node(tok_list[ptr].line,ast_callf);
     bool special_call=check_special_call();
     match(tok_lcurve);
@@ -811,7 +816,7 @@ nasal_ast nasal_parse::multi_id()
 nasal_ast nasal_parse::multi_scalar(bool check_call_memory)
 {
     // if check_call_memory is true,we will check if value called here can reach a memory space
-    int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
+    const int panic_set[]={tok_id,tok_str,tok_num,tok_not,tok_sub,tok_nil,tok_func,tok_var,tok_lcurve,tok_lbrace,tok_lbracket,tok_null};
     nasal_ast node(tok_list[ptr].line,ast_multi_scalar);
     match(tok_lcurve);
     while(tok_list[ptr].type!=tok_rcurve)
