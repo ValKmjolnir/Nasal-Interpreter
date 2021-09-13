@@ -9,27 +9,29 @@ private:
     nasal_parse              import_par;
     nasal_ast                import_ast;
     std::vector<std::string> filename_table;
-    void      die(std::string&,const char*);
-    bool      check_import(nasal_ast&);
-    bool      check_exist(std::string&);
+    void      die(const std::string&,const char*);
+    bool      check_import(const nasal_ast&);
+    bool      check_exist(const std::string&);
     void      linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&,uint16_t);
 public:
-    int        get_error(){return error;}
-    void       link(nasal_ast&,std::string&);
-    nasal_ast& get_root(){return import_ast;}
-    std::vector<std::string>& get_file(){return filename_table;}
+    const int get_error(){return error;}
+    void      link(nasal_ast&,const std::string&);
+    const nasal_ast& 
+        get_root(){return import_ast;}
+    const std::vector<std::string>& 
+        get_file(){return filename_table;}
 };
 
-void nasal_import::die(std::string& filename,const char* error_stage)
+void nasal_import::die(const std::string& filename,const char* error_stage)
 {
     ++error;
     std::cout<<"[import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
     return;
 }
 
-bool nasal_import::check_import(nasal_ast& node)
+bool nasal_import::check_import(const nasal_ast& node)
 {
 /*
 only this kind of node can be recognized as 'import':
@@ -40,7 +42,7 @@ only this kind of node can be recognized as 'import':
 */
     if(node.get_type()!=ast_call)
         return false;
-    std::vector<nasal_ast>& ref_vec=node.get_children();
+    const std::vector<nasal_ast>& ref_vec=node.get_children();
     if(ref_vec.size()!=2)
         return false;
     if(ref_vec[0].get_str()!="import")
@@ -52,7 +54,7 @@ only this kind of node can be recognized as 'import':
     return true;
 }
 
-bool nasal_import::check_exist(std::string& file)
+bool nasal_import::check_exist(const std::string& file)
 {
     // avoid importing the same file
     for(auto& fname:filename_table)
@@ -116,7 +118,7 @@ nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
     return new_root;
 }
 
-void nasal_import::link(nasal_ast& root,std::string& self)
+void nasal_import::link(nasal_ast& root,const std::string& self)
 {
     // initializing
     error=0;

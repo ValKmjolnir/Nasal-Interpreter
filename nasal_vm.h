@@ -105,17 +105,17 @@ private:
 public:
     nasal_vm():stack_top(gc.stack_top){};
     void init(
-        std::vector<std::string>&,
-        std::vector<double>&,
-        std::vector<std::string>&);
+        const std::vector<std::string>&,
+        const std::vector<double>&,
+        const std::vector<std::string>&);
     void clear();
     void run(std::vector<opcode>&,bool);
 };
 
 void nasal_vm::init(
-    std::vector<std::string>& strs,
-    std::vector<double>&      nums,
-    std::vector<std::string>& filenames)
+    const std::vector<std::string>& strs,
+    const std::vector<double>&      nums,
+    const std::vector<std::string>& filenames)
 {
     gc.gc_init(nums,strs);
     gc.val_stack[STACK_MAX_DEPTH-1]=nullptr;

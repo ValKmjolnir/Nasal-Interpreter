@@ -277,7 +277,7 @@ struct nasal_gc
     std::vector<nasal_ref> local;
     void                   mark();
     void                   sweep();
-    void                   gc_init(std::vector<double>&,std::vector<std::string>&);
+    void                   gc_init(const std::vector<double>&,const std::vector<std::string>&);
     void                   gc_clear();
     nasal_ref              gc_alloc(int);
     nasal_ref              builtin_alloc(int);
@@ -338,7 +338,7 @@ void nasal_gc::sweep()
     }
     return;
 }
-void nasal_gc::gc_init(std::vector<double>& nums,std::vector<std::string>& strs)
+void nasal_gc::gc_init(const std::vector<double>& nums,const std::vector<std::string>& strs)
 {
     for(int i=vm_num;i<vm_type_size;++i)
         for(int j=0;j<increment[i];++j)
