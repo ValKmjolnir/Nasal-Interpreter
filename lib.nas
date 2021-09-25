@@ -140,7 +140,7 @@ var math=
     sqrt:  func(x)  {return __builtin_sqrt(x);   },
     atan2: func(x,y){return __builtin_atan2(x,y);},
     inf:   1/0,
-    nan:   1/0-1/0,
+    nan:   0/0,
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
 
