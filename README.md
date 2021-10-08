@@ -2,31 +2,46 @@
 
 ## Introduction
 
-[Nasal](http://wiki.flightgear.org/Nasal_scripting_language) is a script language that used in [FlightGear](https://www.flightgear.org/).
+[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
+is a script language that used in [FlightGear](https://www.flightgear.org/).
 
-The interpreter is totally rewritten by ValKmjolnir using C++(standard c++11) without reusing the code in Andy Ross's nasal interpreter(<https://github.com/andyross/nasal>). But we really appreciate that Andy created this amazing programming language and his interpreter project.
+The interpreter is totally rewritten by ValKmjolnir using C++(standard c++11)
+without reusing the code in Andy Ross's nasal interpreter(<https://github.com/andyross/nasal>).
+But we really appreciate that Andy created this amazing programming language and his interpreter project.
 
-The interpreter is still in development(now it works well --2021/2/15). We really need your support!
+The interpreter is still in development(now it works well --2021/2/15)
+ We really need your support!
 
-Also,i am a member of [FGPRC](https://www.fgprc.org/), welcome to join us!
+Also,i am a member of [FGPRC](https://www.fgprc.org/),
+welcome to join us!
 
-(2021/5/4) Now this project uses MIT license.Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).
+(2021/5/4) Now this project uses MIT license.Edit it if you want,
+use this project to learn or create more interesting things(But don't forget me XD).
 
 ## Why Writing Nasal Interpreter
 
-Nasal is a script language first used in Flightgear, created by Andy Ross(<https://github.com/andyross>).
+Nasal is a script language first used in Flightgear,
+created by Andy Ross(<https://github.com/andyross>).
 
-But in last summer holiday, members in FGPRC told me that it is hard to debug with nasal-console in Flightgear, especially when checking syntax errors.
+But in last summer holiday,
+members in FGPRC told me that it is hard to debug with nasal-console in Flightgear,
+especially when checking syntax errors.
 
-So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
+So i tried to write a new interpreter to help them checking syntax error and even,
+runtime error.
 
-I wrote the lexer, parser and runtimebytecode virtual machine(there was an ast-interpreter,but i deleted it after version4.0) to help checking errors.
+I wrote the lexer,
+parser and runtimebytecode virtual machine(there was an ast-interpreter,
+but i deleted it after version4.0) to help checking errors.
 
-They found it much easier to check syntax and runtime errors before copying nasal-codes in nasal-console in Flightgear to test.
+They found it much easier to check syntax and runtime
+errors before copying nasal-codes in nasal-console in Flightgear to test.
 
-Also, you could use this language to write some interesting programs and run them without the lib of Flightgear.
+Also, you could use this language to write some
+interesting programs and run them without the lib of Flightgear.
 
-You could add your own built-in functions to change this interpreter to a useful tool in your own projects(such as a script in your own game).
+You could add your own built-in functions to change
+this interpreter to a useful tool in your own projects(such as a script in your own game).
 
 ## How to Compile
 
@@ -139,7 +154,7 @@ I change my mind.AST interpreter leaves me too much things to do.
 
 If i continue saving this interpreter,it will be harder for me to make the bytecode vm become more efficient.
 
-## Byte Code Interpreter
+## Byte Code VM
 
 ### Version 4.0 (last update 2020/12/17)
 
@@ -225,17 +240,29 @@ for(var i=0;i<4000000;i+=1);
 
 ### Version 6.5 (last update 2021/6/24)
 
-2021/5/31 update: Now gc can collect garbage correctly without re-collecting,which will cause fatal error.
+2021/5/31 update:
 
-Add builtin_alloc to avoid mark-sweep when running a built-in function,which will mark useful items as useless garbage to collect.
+Now gc can collect garbage correctly without re-collecting,
+which will cause fatal error.
 
-Better use setsize and assignment to get a big array,append is very slow in this situation.
+Add builtin_alloc to avoid mark-sweep when running a built-in function,
+which will mark useful items as useless garbage to collect.
 
-2021/6/3 update: Fixed a bug that gc still re-collects garbage,this time i use three mark states to make sure garbage is ready to be collected.
+Better use setsize and assignment to get a big array,
+append is very slow in this situation.
 
-Change callf to callfv and callfh.And callfv fetches arguments from val_stack directly instead of using vm_vec,a not very efficient way.
+2021/6/3 update:
 
-Better use callfv instead of callfh,callfh will fetch a vm_hash from stack and parse it,making this process slow.
+Fixed a bug that gc still re-collects garbage,
+this time i use three mark states to make sure garbage is ready to be collected.
+
+Change callf to callfv and callfh.
+And callfv fetches arguments from val_stack directly instead of using vm_vec,
+a not very efficient way.
+
+Better use callfv instead of callfh,
+callfh will fetch a vm_hash from stack and parse it,
+making this process slow.
 
 ```javascript
 var f=func(x,y){return x+y;}
@@ -267,7 +294,9 @@ f(1024,2048);
 0x00000011: nop    0x00000000
 ```
 
-2021/6/21 update: Now gc will not collect nullptr.And the function of assignment is complete,now these kinds of assignment is allowed:
+2021/6/21 update: Now gc will not collect nullptr.
+And the function of assignment is complete,
+now these kinds of assignment is allowed:
 
 ```javascript
 var f=func()
@@ -284,9 +313,15 @@ m(0)._=m(1)._=10;
 [0,1,2][1:2][0]=0;
 ```
 
-In the old version,parser will check this left-value and tells that these kinds of left-value are not allowed(bad lvalue).
+In the old version,
+parser will check this left-value and tells that these kinds of left-value are not allowed(bad lvalue).
 
-But now it can work.And you could see its use by reading the code above.To make sure this assignment works correctly,codegen will generate byte code by nasal_codegen::call_gen() instead of nasal_codegen::mcall_gen(),and the last child of the ast will be generated by nasal_codegen::mcall_gen().So the bytecode is totally different now:
+But now it can work.
+And you could see its use by reading the code above.
+To make sure this assignment works correctly,
+codegen will generate byte code by nasal_codegen::call_gen() instead of nasal_codegen::mcall_gen(),
+and the last child of the ast will be generated by nasal_codegen::mcall_gen().
+So the bytecode is totally different now:
 
 ```asm
 .number 10
@@ -349,23 +384,40 @@ But now it can work.And you could see its use by reading the code above.To make 
 0x00000035: nop    0x00000000
 ```
 
-As you could see from the bytecode above,mcall/mcallv/mcallh operands' using frequency will reduce,call/callv/callh/callfv/callfh at the opposite.
+As you could see from the bytecode above,
+mcall/mcallv/mcallh operands' using frequency will reduce,
+call/callv/callh/callfv/callfh at the opposite.
 
-And because of the new structure of mcall, addr_stack, a stack used to store the memory address, is deleted from nasal_vm, and now nasal_vm use nasal_val** mem_addr to store the memory address. This will not cause fatal errors because the memory address is used __immediately__ after getting it.
+And because of the new structure of mcall,
+addr_stack, a stack used to store the memory address,
+is deleted from nasal_vm,
+and now nasal_vm use nasal_val** mem_addr to store the memory address.
+This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
-### version 7.0 (latest)
+### version 7.0 (2021/10/8)
 
 2021/6/26 update:
 
-Instruction dispatch is changed from call-threading to computed-goto(with inline function).After changing the way of instruction dispatch,there is a great improvement in nasal_vm.Now vm can run test/bigloop and test/pi in 0.2s!And vm runs test/fib in 0.8s on linux.You could see the time use data below,in Test data section.
+Instruction dispatch is changed from call-threading to computed-goto(with inline function).
+After changing the way of instruction dispatch,
+there is a great improvement in nasal_vm.
+Now vm can run test/bigloop and test/pi in 0.2s!
+And vm runs test/fib in 0.8s on linux.
+You could see the time use data below,
+in Test data section.
 
-This version uses g++ extension "labels as values", which is also supported by clang++.(But i don't know if MSVC supports this)
+This version uses g++ extension "labels as values",
+which is also supported by clang++.
+(But i don't know if MSVC supports this)
 
-There is also a change in nasal_gc: std::vector global is deleted,now the global values are all stored on stack(from val_stack+0 to val_stack+intg-1).
+There is also a change in nasal_gc:
+std::vector global is deleted,
+now the global values are all stored on stack(from val_stack+0 to val_stack+intg-1).
 
 2021/6/29 update:
 
-Add some instructions that execute const values:op_addc,op_subc,op_mulc,op_divc,op_lnkc,op_addeqc,op_subeqc,op_muleqc,op_diveqc,op_lnkeqc.
+Add some instructions that execute const values:
+op_addc,op_subc,op_mulc,op_divc,op_lnkc,op_addeqc,op_subeqc,op_muleqc,op_diveqc,op_lnkeqc.
 
 Now the bytecode of test/bigloop.nas seems like this:
 
@@ -386,9 +438,12 @@ Now the bytecode of test/bigloop.nas seems like this:
 0x0000000b: nop    0x00000000
 ```
 
-And this test file runs in 0.1s after this update.Most of the calculations are accelerated.
+And this test file runs in 0.1s after this update.
+Most of the calculations are accelerated.
 
-Also, assignment bytecode has changed a lot. Now the first identifier that called in assignment will use op_load to assign, instead of op_meq,op_pop.
+Also, assignment bytecode has changed a lot.
+Now the first identifier that called in assignment will use op_load to assign,
+instead of op_meq,op_pop.
 
 ```javascript
 var (a,b)=(1,2);
@@ -408,6 +463,17 @@ a=b=0;
 0x00000008: loadg  0x00000000 (a=b use loadg)
 0x00000009: nop    0x00000000
 ```
+
+### version 8.0 (latest)
+
+2021/10/8 update:
+
+In this version vm_nil and vm_num now is not managed by nasal_gc,
+this will decrease the usage of gc_alloc and increase the efficiency of execution.
+
+New value type is added: vm_obj.
+This type is reserved for user to define their own value types.
+Related API will be added in the future.
 
 ## Test data
 
@@ -622,7 +688,8 @@ foreach(var i;elem)
 
 ### subvec
 
-Use index to search one element in the string will get the ascii number of this character.If you want to get the character,use built-in function chr().
+Use index to search one element in the string will get the ascii number of this character.
+If you want to get the character,use built-in function chr().
 
 ```javascript
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
@@ -687,36 +754,37 @@ If you want to add your own built-in functions,define the function in nasal_buil
 Definition:
 
 ```C++
-nasal_val* builtin_chr(std::vector<nasal_val*>&,nasal_gc&);
+nasal_ref builtin_chr(std::vector<nasal_ref>&,nasal_gc&);
 ```
 
 Then complete this function using C++:
 
 ```C++
-nasal_val* builtin_print(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
+nasal_ref builtin_print(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     // get arguments by using builtin_find
     // find value with index begin from 1
     // because local_scope[0] is reserved for value 'me'
-    nasal_val* vector_value=local_scope[1];
+    nasal_ref vec_addr=local_scope[1];
     // main process
     // also check number of arguments and type here
     // if get a type error,use builtin_err and return nullptr
-    for(auto i:vec_addr->ptr.vec->elems)
-        switch(i->type)
+    for(auto i:vec_addr.vec()->elems)
+        switch(i.type)
         {
             case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i->ptr.num;       break;
-            case vm_str:  std::cout<<*i->ptr.str;      break;
-            case vm_vec:  i->ptr.vec->print();         break;
-            case vm_hash: i->ptr.hash->print();        break;
+            case vm_num:  std::cout<<i.num();          break;
+            case vm_str:  std::cout<<*i.str();         break;
+            case vm_vec:  i.vec()->print();            break;
+            case vm_hash: i.hash()->print();           break;
             case vm_func: std::cout<<"func(...){...}"; break;
+            case vm_obj:  std::cout<<"<obj>";          break;
         }
     std::cout<<std::flush;
     // if a nasal value is not in use,use gc::del_reference to delete it
     // generate return value,use gc::gc_alloc(type) to make a new value
-    // or use reserved reference gc.nil_addr/gc.one_addr/gc.zero_addr
-    return gc.nil_addr;
+    // or use reserved reference gc.nil/gc.one/gc.zero
+    return gc.nil;
 }
 ```
 
@@ -726,7 +794,7 @@ After that, write the built-in function's name(in nasal) and the function's poin
 struct FUNC_TABLE
 {
     const char* name;
-    nasal_val* (*func)(std::vector<nasal_val*>&,nasal_gc&);
+    nasal_ref (*func)(std::vector<nasal_ref>&,nasal_gc&);
 } builtin_func[]=
 {
     {"__builtin_print",builtin_print},
@@ -752,38 +820,46 @@ var print=func(elems...)
 };
 ```
 
-In version 5.0,if you don't warp built-in function in a normal nasal function,this built-in function may cause a fault when searching arguments,which will cause SIGSEGV segmentation error(maybe).
+In version 5.0,
+if you don't warp built-in function in a normal nasal function,
+this built-in function may cause a fault when searching arguments,
+which will cause SIGSEGV segmentation error(maybe).
 
-Use import("") to get the nasal file including your built-in functions,then you could use it.
+Use import("") to get the nasal file including your built-in functions,
+then you could use it.
 
 version 6.5 update:
 
 Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more than one time.
 
-When running a builtin function,alloc will run more than one time,this may cause mark-sweep in gc_alloc.
+When running a builtin function,alloc will run more than one time,
+this may cause mark-sweep in gc_alloc.
 
-The value got before will be collected,but stil in use in this builtin function,this is a fatal error.
+The value got before will be collected,but stil in use in this builtin function,
+this is a fatal error.
 
 So use builtin_alloc in builtin functions like this:
 
 ```C++
-nasal_val* builtin_keys(std::vector<nasal_val*>& local_scope,nasal_gc& gc)
+nasal_ref builtin_keys(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
-    nasal_val* hash_addr=local_scope[1];
-    if(hash_addr->type!=vm_hash)
+    nasal_ref hash_addr=local_scope[1];
+    if(hash_addr.type!=vm_hash)
     {
         builtin_err("keys","\"hash\" must be hash");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_val* ret_addr=gc.builtin_alloc(vm_vec);
-    std::vector<nasal_val*>& ref_vec=ret_addr->ptr.vec->elems;
-    for(auto iter:hash_addr->ptr.hash->elems)
+
+    // push vector into local scope to avoid being sweeped
+    local_scope.push_back(gc.gc_alloc(vm_vec));
+    std::vector<nasal_ref>& vec=local_scope.back().vec()->elems;
+    for(auto iter:hash_addr.hash()->elems)
     {
-        nasal_val* str_addr=gc.builtin_alloc(vm_str);
-        *str_addr->ptr.str=iter.first;
-        ref_vec.push_back(str_addr);
+        nasal_ref str_addr=gc.builtin_alloc(vm_str);
+        *str_addr.str()=iter.first;
+        vec.push_back(str_addr);
     }
-    return ret_addr;
+    return local_scope.back();
 }
 ```
 
@@ -799,13 +875,16 @@ foreach(i;[0,1,2,3])
 ```
 
 This program can run normally with output 0 1 2 3.
-But take a look at the iterator 'i',this symbol is defined in foreach without using keyword 'var'.
+But take a look at the iterator 'i',
+this symbol is defined in foreach without using keyword 'var'.
 I think this design will make programmers filling confused.
 This is ambiguous that programmers maybe difficult to find the 'i' is defined here.
 Without 'var',programmers may think this 'i' is defined anywhere else.
 
 So in this new interpreter i use a more strict syntax to force users to use 'var' to define iterator of forindex and foreach.
-If you forget to add the keyword 'var', and you haven't defined this symbol before, you will get this:
+If you forget to add the keyword 'var',
+and you haven't defined this symbol before,
+you will get this:
 
 ```javascript
 [code] <test.nas> line 1: undefined symbol "i".
@@ -830,26 +909,33 @@ But in this new interpreter, it will get:
 ```
 
 (outdated)This difference is caused by different kinds of ways of lexical analysis.
-In most script language interpreters, they use dynamic analysis to check if this symbol is defined yet.
+In most script language interpreters,
+they use dynamic analysis to check if this symbol is defined yet.
 However, this kind of analysis is at the cost of lower efficiency.
-To make sure the interpreter runs at higher efficiency, i choose static analysis to manage the memory space of each symbol.
+To make sure the interpreter runs at higher efficiency,
+i choose static analysis to manage the memory space of each symbol.
 By this way, runtime will never need to check if a symbol exists or not.
 But this causes a difference.
-You will get an error of 'undefined symbol', instead of nothing happening in most script language interpreters.
+You will get an error of 'undefined symbol',
+instead of nothing happening in most script language interpreters.
 
 This change is __controversial__ among FGPRC's members.
 So maybe in the future i will use dynamic analysis again to cater to the habits of senior programmers.
 
 (2021/8/3 update) __Now i use scanning ast twice to reload symbols.
 So this difference does not exist from this update.__
-But a new difference is that if you call a variable before defining it, you'll get nil instead of 'undefined error'.
+But a new difference is that if you call a variable before defining it,
+you'll get nil instead of 'undefined error'.
 
-In this new interpreter, function doesn't put dynamic arguments into vector 'arg' automatically.
-So if you use 'arg' without definition, you'll get an error of 'undefined symbol'.
+In this new interpreter,
+function doesn't put dynamic arguments into vector 'arg' automatically.
+So if you use 'arg' without definition,
+you'll get an error of 'undefined symbol'.
 
 ## Trace Back Info
 
-Now when the interpreter crashes,it will print trace back information:
+Now when the interpreter crashes,
+it will print trace back information:
 
 ```javascript
 func()

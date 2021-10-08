@@ -116,110 +116,111 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     // local_scope[0] is reserved for 'me'
     nasal_ref vec_addr=local_scope[1];
     // main process
-    for(auto i:vec_addr->ptr.vec->elems)
-        switch(i->type)
+    for(auto i:vec_addr.vec()->elems)
+        switch(i.type)
         {
             case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i->ptr.num;       break;
-            case vm_str:  std::cout<<*i->ptr.str;      break;
-            case vm_vec:  i->ptr.vec->print();         break;
-            case vm_hash: i->ptr.hash->print();        break;
+            case vm_num:  std::cout<<i.num();          break;
+            case vm_str:  std::cout<<*i.str();         break;
+            case vm_vec:  i.vec()->print();            break;
+            case vm_hash: i.hash()->print();           break;
             case vm_func: std::cout<<"func(...){...}"; break;
+            case vm_obj:  std::cout<<"<obj>";          break;
         }
     std::cout<<std::flush;
     // generate return value
-    return gc.nil_addr;
+    return gc.nil;
 }
 nasal_ref builtin_append(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref vec_addr=local_scope[1];
     nasal_ref elem_addr=local_scope[2];
-    if(vec_addr->type!=vm_vec)
+    if(vec_addr.type!=vm_vec)
     {
         builtin_err("append","\"vector\" must be vector");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::vector<nasal_ref>& ref_vec=vec_addr->ptr.vec->elems;
-    for(auto i:elem_addr->ptr.vec->elems)
+    std::vector<nasal_ref>& ref_vec=vec_addr.vec()->elems;
+    for(auto i:elem_addr.vec()->elems)
         ref_vec.push_back(i);
-    return gc.nil_addr;
+    return gc.nil;
 }
 nasal_ref builtin_setsize(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref vec_addr=local_scope[1];
     nasal_ref size_addr=local_scope[2];
-    if(vec_addr->type!=vm_vec)
+    if(vec_addr.type!=vm_vec)
     {
         builtin_err("setsize","\"vector\" must be vector");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(size_addr->type!=vm_num)
+    if(size_addr.type!=vm_num)
     {
         builtin_err("setsize","\"size\" is not a number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int num=size_addr->ptr.num;
+    int num=size_addr.num();
     if(num<0)
     {
         builtin_err("setsize","\"size\" must be greater than -1");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    vec_addr->ptr.vec->elems.resize(num,gc.nil_addr);
-    return gc.nil_addr;
+    vec_addr.vec()->elems.resize(num,gc.nil);
+    return gc.nil;
 }
 
 nasal_ref builtin_system(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
+    nasal_ref ret_addr(vm_num);
     nasal_ref str_addr=local_scope[1];
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("system","\"str\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    ret_addr->ptr.num=(double)system(str_addr->ptr.str->c_str());
+    ret_addr.num()=(double)system(str_addr.str()->c_str());
     return ret_addr;
 }
 
 nasal_ref builtin_input(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    std::cin>>*ret_addr->ptr.str;
+    std::cin>>*ret_addr.str();
     return ret_addr;
 }
 
 nasal_ref builtin_sleep(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("sleep","\"duration\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
     // sleep in unistd.h will make this progress sleep sleep_time seconds.
-    sleep((unsigned int)val_addr->ptr.num);
-    return gc.nil_addr;
+    sleep((unsigned int)val_addr.num());
+    return gc.nil;
 }
 
 nasal_ref builtin_fin(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_str)
+    if(val_addr.type!=vm_str)
     {
         builtin_err("io.fin","\"filename\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::string&  filename=*val_addr->ptr.str;
+    std::string&  filename=*val_addr.str();
     std::ifstream fin(filename);
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str="";
+    *ret_addr.str()="";
     if(!fin.fail())
         while(!fin.eof())
         {
             char c=fin.get();
             if(fin.eof())
                 break;
-            ret_addr->ptr.str->push_back(c);
+            ret_addr.str()->push_back(c);
         }
     else
         builtin_err("io.fin","cannot open \""+filename+"\"");
@@ -231,56 +232,56 @@ nasal_ref builtin_fout(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
     nasal_ref str_addr=local_scope[2];
-    if(val_addr->type!=vm_str)
+    if(val_addr.type!=vm_str)
     {
         builtin_err("io.fout","\"filename\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("io.fout","\"str\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::ofstream fout(*val_addr->ptr.str);
+    std::ofstream fout(*val_addr.str());
     if(fout.fail())
     {
-        builtin_err("io.fout","cannot open \""+*val_addr->ptr.str+"\"");
-        return nullptr;
+        builtin_err("io.fout","cannot open \""+*val_addr.str()+"\"");
+        return nasal_ref(vm_none);
     }
-    fout<<*str_addr->ptr.str;
+    fout<<*str_addr.str();
     fout.close();
-    return gc.nil_addr;
+    return gc.nil;
 }
 
 nasal_ref builtin_split(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref deli_val_addr=local_scope[1];
     nasal_ref str_val_addr=local_scope[2];
-    if(deli_val_addr->type!=vm_str)
+    if(deli_val_addr.type!=vm_str)
     {
         builtin_err("split","\"delimeter\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(str_val_addr->type!=vm_str)
+    if(str_val_addr.type!=vm_str)
     {
         builtin_err("split","\"string\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::string& delimeter=*deli_val_addr->ptr.str;
-    std::string& source=*str_val_addr->ptr.str;
+    std::string& delimeter=*deli_val_addr.str();
+    std::string& source=*str_val_addr.str();
     size_t delimeter_len=delimeter.length();
     size_t source_len=source.length();
 
     // push it to local scope to avoid being sweeped
     local_scope.push_back(gc.gc_alloc(vm_vec));
 
-    std::vector<nasal_ref>& vec=local_scope.back()->ptr.vec->elems;
+    std::vector<nasal_ref>& vec=local_scope.back().vec()->elems;
     if(!delimeter_len)
     {
         for(int i=0;i<source_len;++i)
         {
             vec.push_back(gc.gc_alloc(vm_str));
-            *vec.back()->ptr.str=source[i];
+            *vec.back().str()=source[i];
         }
         return local_scope.back();
     }
@@ -302,7 +303,7 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
             if(tmp.length())
             {
                 vec.push_back(gc.gc_alloc(vm_str));
-                *vec.back()->ptr.str=tmp;
+                *vec.back().str()=tmp;
                 tmp="";
             }
             i+=delimeter_len-1;
@@ -313,7 +314,7 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     if(tmp.length())
     {
         vec.push_back(gc.gc_alloc(vm_str));
-        *vec.back()->ptr.str=tmp;
+        *vec.back().str()=tmp;
         tmp="";
     }
     return local_scope.back();
@@ -321,21 +322,21 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 nasal_ref builtin_rand(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num && val_addr->type!=vm_nil)
+    if(val_addr.type!=vm_num && val_addr.type!=vm_nil)
     {
         builtin_err("rand","\"seed\" must be nil or number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(val_addr->type==vm_num)
+    if(val_addr.type==vm_num)
     {
-        srand((unsigned int)val_addr->ptr.num);
-        return gc.nil_addr;
+        srand((unsigned int)val_addr.num());
+        return gc.nil;
     }
 
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=0;
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=0;
     for(int i=0;i<5;++i)
-        ret_addr->ptr.num=(ret_addr->ptr.num+rand())*(1.0/(RAND_MAX+1.0));
+        ret_addr.num()=(ret_addr.num()+rand())*(1.0/(RAND_MAX+1.0));
     return ret_addr;
 }
 nasal_ref builtin_id(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
@@ -343,69 +344,72 @@ nasal_ref builtin_id(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     nasal_ref val_addr=local_scope[1];
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
     char buf[32];
-    sprintf(buf,"%p",val_addr);
-    *ret_addr->ptr.str=buf;
+    if(val_addr.type>vm_num)
+        sprintf(buf,"%p",val_addr.value.gcobj);
+    else
+        sprintf(buf,"0");
+    *ret_addr.str()=buf;
     return ret_addr;
 }
 nasal_ref builtin_int(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
-        return gc.nil_addr;
-    int number=(int)val_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(double)number;
+    if(val_addr.type!=vm_num)
+        return gc.nil;
+    int number=(int)val_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(double)number;
     return ret_addr;
 }
 nasal_ref builtin_num(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_str)
-        return gc.nil_addr;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=val_addr->to_number();
+    if(val_addr.type!=vm_str)
+        return gc.nil;
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=val_addr.to_number();
     return ret_addr;
 }
 nasal_ref builtin_pop(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_vec)
+    if(val_addr.type!=vm_vec)
     {
         builtin_err("pop","\"vector\" must be vector");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(val_addr->ptr.vec->elems.size())
+    if(val_addr.vec()->elems.size())
     {
-        nasal_ref tmp=val_addr->ptr.vec->elems.back();
-        val_addr->ptr.vec->elems.pop_back();
+        nasal_ref tmp=val_addr.vec()->elems.back();
+        val_addr.vec()->elems.pop_back();
         return tmp;
     }
-    return gc.nil_addr;
+    return gc.nil;
 }
 nasal_ref builtin_str(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("str","\"number\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=std::to_string(val_addr->ptr.num);
+    *ret_addr.str()=std::to_string(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_size(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    switch(val_addr->type)
+    nasal_ref ret_addr(vm_num);
+    switch(val_addr.type)
     {
-        case vm_nil:  ret_addr->ptr.num=0;                               break;
-        case vm_num:  ret_addr->ptr.num=val_addr->ptr.num;               break;
-        case vm_func: ret_addr->ptr.num=0;                               break;
-        case vm_str:  ret_addr->ptr.num=val_addr->ptr.str->length();     break;
-        case vm_vec:  ret_addr->ptr.num=val_addr->ptr.vec->elems.size(); break;
-        case vm_hash: ret_addr->ptr.num=val_addr->ptr.hash->elems.size();break;
+        case vm_nil:  ret_addr.num()=0;                            break;
+        case vm_num:  ret_addr.num()=val_addr.num();               break;
+        case vm_func: ret_addr.num()=0;                            break;
+        case vm_str:  ret_addr.num()=val_addr.str()->length();     break;
+        case vm_vec:  ret_addr.num()=val_addr.vec()->elems.size(); break;
+        case vm_hash: ret_addr.num()=val_addr.hash()->elems.size();break;
     }
     return ret_addr;
 }
@@ -413,255 +417,255 @@ nasal_ref builtin_xor(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    if(a_addr->type!=vm_num)
+    if(a_addr.type!=vm_num)
     {
         builtin_err("xor","\"a\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(b_addr->type!=vm_num)
+    if(b_addr.type!=vm_num)
     {
         builtin_err("xor","\"b\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int number_a=(int)a_addr->ptr.num;
-    int number_b=(int)b_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(number_a^number_b);
+    int number_a=(int)a_addr.num();
+    int number_b=(int)b_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(number_a^number_b);
     return ret_addr;
 }
 nasal_ref builtin_and(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    if(a_addr->type!=vm_num)
+    if(a_addr.type!=vm_num)
     {
         builtin_err("and","\"a\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(b_addr->type!=vm_num)
+    if(b_addr.type!=vm_num)
     {
         builtin_err("and","\"b\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int number_a=(int)a_addr->ptr.num;
-    int number_b=(int)b_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(number_a&number_b);
+    int number_a=(int)a_addr.num();
+    int number_b=(int)b_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(number_a&number_b);
     return ret_addr;
 }
 nasal_ref builtin_or(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    if(a_addr->type!=vm_num)
+    if(a_addr.type!=vm_num)
     {
         builtin_err("or","\"a\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(b_addr->type!=vm_num)
+    if(b_addr.type!=vm_num)
     {
         builtin_err("or","\"b\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int number_a=(int)a_addr->ptr.num;
-    int number_b=(int)b_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(number_a|number_b);
+    int number_a=(int)a_addr.num();
+    int number_b=(int)b_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(number_a|number_b);
     return ret_addr;
 }
 nasal_ref builtin_nand(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    if(a_addr->type!=vm_num)
+    if(a_addr.type!=vm_num)
     {
         builtin_err("nand","\"a\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(b_addr->type!=vm_num)
+    if(b_addr.type!=vm_num)
     {
         builtin_err("nand","\"b\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int number_a=(int)a_addr->ptr.num;
-    int number_b=(int)b_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(~(number_a&number_b));
+    int number_a=(int)a_addr.num();
+    int number_b=(int)b_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(~(number_a&number_b));
     return ret_addr;
 }
 nasal_ref builtin_not(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
-    if(a_addr->type!=vm_num)
+    if(a_addr.type!=vm_num)
     {
         builtin_err("not","\"a\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    int number=(int)a_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(~number);
+    int number=(int)a_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(~number);
     return ret_addr;
 }
 nasal_ref builtin_sin(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("sin","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=sin(val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=sin(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_cos(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("cos","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=cos(val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=cos(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_tan(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("tan","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=tan(val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=tan(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_exp(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("exp","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=exp(val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=exp(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_ln(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("ln","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(log(val_addr->ptr.num)/log(2.7182818284590452354));
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(log(val_addr.num())/log(2.7182818284590452354));
     return ret_addr;
 }
 nasal_ref builtin_sqrt(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("sqrt","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=sqrt(val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=sqrt(val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_atan2(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref x_val_addr=local_scope[1];
     nasal_ref y_val_addr=local_scope[2];
-    if(x_val_addr->type!=vm_num)
+    if(x_val_addr.type!=vm_num)
     {
         builtin_err("atan2","\"x\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(y_val_addr->type!=vm_num)
+    if(y_val_addr.type!=vm_num)
     {
         builtin_err("atan2","\"y\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=atan2(y_val_addr->ptr.num,x_val_addr->ptr.num);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=atan2(y_val_addr.num(),x_val_addr.num());
     return ret_addr;
 }
 nasal_ref builtin_isnan(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref x=local_scope[1];
-    if(x->type==vm_num && std::isnan(x->ptr.num))
-        return gc.one_addr;
-    return gc.zero_addr;
+    if(x.type==vm_num && std::isnan(x.num()))
+        return gc.one;
+    return gc.zero;
 }
 nasal_ref builtin_time(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
-    if(val_addr->type!=vm_num)
+    if(val_addr.type!=vm_num)
     {
         builtin_err("time","\"begin_time\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    time_t begin_time=(time_t)val_addr->ptr.num;
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=time(&begin_time);
+    time_t begin_time=(time_t)val_addr.num();
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=time(&begin_time);
     return ret_addr;
 }
 nasal_ref builtin_contains(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref hash_addr=local_scope[1];
     nasal_ref key_addr=local_scope[2];
-    if(hash_addr->type!=vm_hash)
+    if(hash_addr.type!=vm_hash)
     {
         builtin_err("contains","\"hash\" must be hash");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(key_addr->type!=vm_str)
+    if(key_addr.type!=vm_str)
     {
         builtin_err("contains","\"key\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    return hash_addr->ptr.hash->elems.count(*key_addr->ptr.str)?gc.one_addr:gc.zero_addr;
+    return hash_addr.hash()->elems.count(*key_addr.str())?gc.one:gc.zero;
 }
 nasal_ref builtin_delete(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref hash_addr=local_scope[1];
     nasal_ref key_addr=local_scope[2];
-    if(hash_addr->type!=vm_hash)
+    if(hash_addr.type!=vm_hash)
     {
         builtin_err("delete","\"hash\" must be hash");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(key_addr->type!=vm_str)
+    if(key_addr.type!=vm_str)
     {
         builtin_err("delete","\"key\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(hash_addr->ptr.hash->elems.count(*key_addr->ptr.str))
-        hash_addr->ptr.hash->elems.erase(*key_addr->ptr.str);
-    return gc.nil_addr;
+    if(hash_addr.hash()->elems.count(*key_addr.str()))
+        hash_addr.hash()->elems.erase(*key_addr.str());
+    return gc.nil;
 }
 nasal_ref builtin_keys(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref hash_addr=local_scope[1];
-    if(hash_addr->type!=vm_hash)
+    if(hash_addr.type!=vm_hash)
     {
         builtin_err("keys","\"hash\" must be hash");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
 
     // push vector into local scope to avoid being sweeped
     local_scope.push_back(gc.gc_alloc(vm_vec));
-    std::vector<nasal_ref>& vec=local_scope.back()->ptr.vec->elems;
-    for(auto iter:hash_addr->ptr.hash->elems)
+    std::vector<nasal_ref>& vec=local_scope.back().vec()->elems;
+    for(auto iter:hash_addr.hash()->elems)
     {
         nasal_ref str_addr=gc.gc_alloc(vm_str);
-        *str_addr->ptr.str=iter.first;
+        *str_addr.str()=iter.first;
         vec.push_back(str_addr);
     }
     return local_scope.back();
@@ -671,31 +675,31 @@ nasal_ref builtin_import(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     // this function is used in preprocessing.
     // this function will return nothing when running.
     builtin_err("import","must use this function in global scope");
-    return nullptr;
+    return nasal_ref(vm_none);
 }
 nasal_ref builtin_die(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref str_addr=local_scope[1];
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("die","\"str\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::cout<<"[vm] error: "<<*str_addr->ptr.str<<'\n';
-    return nullptr;
+    std::cout<<"[vm] error: "<<*str_addr.str()<<'\n';
+    return nasal_ref(vm_none);
 }
 nasal_ref builtin_type(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref val_addr=local_scope[1];
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    switch(val_addr->type)
+    switch(val_addr.type)
     {
-        case vm_nil:  *ret_addr->ptr.str="nil";  break;
-        case vm_num:  *ret_addr->ptr.str="num";  break;
-        case vm_str:  *ret_addr->ptr.str="str";  break;
-        case vm_vec:  *ret_addr->ptr.str="vec";  break;
-        case vm_hash: *ret_addr->ptr.str="hash"; break;
-        case vm_func: *ret_addr->ptr.str="func"; break;
+        case vm_nil:  *ret_addr.str()="nil";  break;
+        case vm_num:  *ret_addr.str()="num";  break;
+        case vm_str:  *ret_addr.str()="str";  break;
+        case vm_vec:  *ret_addr.str()="vec";  break;
+        case vm_hash: *ret_addr.str()="hash"; break;
+        case vm_func: *ret_addr.str()="func"; break;
     }
     return ret_addr;
 }
@@ -704,106 +708,106 @@ nasal_ref builtin_substr(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     nasal_ref str_addr=local_scope[1];
     nasal_ref beg_addr=local_scope[2];
     nasal_ref len_addr=local_scope[3];
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("substr","\"str\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(beg_addr->type!=vm_num)
+    if(beg_addr.type!=vm_num)
     {
         builtin_err("substr","\"begin\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(len_addr->type!=vm_num)
+    if(len_addr.type!=vm_num)
     {
         builtin_err("substr","\"length\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::string& str=*str_addr->ptr.str;
-    int beg=(int)beg_addr->ptr.num;
-    int len=(int)len_addr->ptr.num;
+    std::string& str=*str_addr.str();
+    int beg=(int)beg_addr.num();
+    int len=(int)len_addr.num();
     if(beg>=str.length() || beg+len-1>=str.length())
     {
         builtin_err("susbtr","index out of range");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
     if(len<0)
         len=0;
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=str.substr(beg,len);
+    *ret_addr.str()=str.substr(beg,len);
     return ret_addr;
 }
 nasal_ref builtin_streq(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=(a_addr->type!=vm_str || b_addr->type!=vm_str)?0:(*a_addr->ptr.str==*b_addr->ptr.str);
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=(a_addr.type!=vm_str || b_addr.type!=vm_str)?0:(*a_addr.str()==*b_addr.str());
     return ret_addr;
 }
 nasal_ref builtin_left(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref str_addr=local_scope[1];
     nasal_ref len_addr=local_scope[2];
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("left","\"string\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(len_addr->type!=vm_num)
+    if(len_addr.type!=vm_num)
     {
         builtin_err("left","\"length\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    std::string& str=*str_addr->ptr.str;
-    int len=(int)len_addr->ptr.num;
+    std::string& str=*str_addr.str();
+    int len=(int)len_addr.num();
     if(len<0)
         len=0;
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=str.substr(0, len);
+    *ret_addr.str()=str.substr(0, len);
     return ret_addr;
 }
 nasal_ref builtin_right(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref str_addr=local_scope[1];
     nasal_ref len_addr=local_scope[2];
-    if(str_addr->type!=vm_str)
+    if(str_addr.type!=vm_str)
     {
         builtin_err("right","\"string\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(len_addr->type!=vm_num)
+    if(len_addr.type!=vm_num)
     {
         builtin_err("right","\"length\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     } 
-    std::string& str=*str_addr->ptr.str;
-    int len=(int)len_addr->ptr.num;
+    std::string& str=*str_addr.str();
+    int len=(int)len_addr.num();
     int srclen=str.length();
     if(len>srclen)
         len=srclen;
     if(len<0)
         len=0;
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    *ret_addr->ptr.str=str.substr(srclen-len, srclen);
+    *ret_addr.str()=str.substr(srclen-len, srclen);
     return ret_addr;
 }
 nasal_ref builtin_cmp(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
 {
     nasal_ref a_addr=local_scope[1];
     nasal_ref b_addr=local_scope[2];
-    if(a_addr->type!=vm_str)
+    if(a_addr.type!=vm_str)
     {
         builtin_err("cmp","\"a\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    if(b_addr->type!=vm_str)
+    if(b_addr.type!=vm_str)
     {
         builtin_err("cmp","\"b\" must be string");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
-    nasal_ref ret_addr=gc.gc_alloc(vm_num);
-    ret_addr->ptr.num=strcmp(a_addr->ptr.str->c_str(),b_addr->ptr.str->c_str());
+    nasal_ref ret_addr(vm_num);
+    ret_addr.num()=strcmp(a_addr.str()->c_str(),b_addr.str()->c_str());
     return ret_addr;
 }
 nasal_ref builtin_chr(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
@@ -827,19 +831,19 @@ nasal_ref builtin_chr(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
         "ø","ù","ú","û","ü","ý","þ","ÿ"
     };
     nasal_ref code_addr=local_scope[1];
-    if(code_addr->type!=vm_num)
+    if(code_addr.type!=vm_num)
     {
         builtin_err("chr","\"code\" must be number");
-        return nullptr;
+        return nasal_ref(vm_none);
     }
     nasal_ref ret_addr=gc.gc_alloc(vm_str);
-    int num=code_addr->ptr.num;
+    int num=code_addr.num();
     if(0<=num && num<128)
-        *ret_addr->ptr.str=(char)num;
+        *ret_addr.str()=(char)num;
     else if(128<=num && num<256)
-        *ret_addr->ptr.str=extend[num-128];
+        *ret_addr.str()=extend[num-128];
     else
-        *ret_addr->ptr.str=" ";
+        *ret_addr.str()=" ";
     return ret_addr;
 }
 
