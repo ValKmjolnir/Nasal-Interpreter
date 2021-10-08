@@ -9,6 +9,7 @@ enum nasal_type
     vm_func,
     vm_vec,
     vm_hash,
+    vm_obj,
     vm_type_size
 };
 
@@ -18,10 +19,11 @@ const int increment[vm_type_size]=
 {
     0,    // vm_nil,in fact it is not in use
     65536,// vm_num
-    512,  // vm_str
-    64,   // vm_func
-    2048, // vm_vec
-    512   // vm_hash
+    2048, // vm_str
+    512,  // vm_func
+    8192, // vm_vec
+    512,  // vm_hash
+    0     // vm_obj
 };
 
 // declaration of nasal_val
@@ -29,11 +31,23 @@ struct nasal_val;
 // define nasal_ref => nasal_val*
 typedef nasal_val* nasal_ref;
 
+#ifdef __NASAL_REF__
+struct nasal_ref
+{
+    uint8_t type;
+    union
+    {
+        double num;
+        nasal_val* gcobj;
+    }value;
+};
+#endif
+
 struct nasal_vec// 24 bytes
 {
     std::vector<nasal_ref> elems;
 
-    void        print();
+    void       print();
     nasal_ref  get_val(int);
     nasal_ref* get_mem(int);
 };
@@ -42,7 +56,7 @@ struct nasal_hash// 56 bytes
 {
     std::unordered_map<std::string,nasal_ref> elems;
 
-    void        print();
+    void       print();
     nasal_ref  get_val(std::string&);
     nasal_ref* get_mem(std::string&);
 };
@@ -74,6 +88,7 @@ struct nasal_val// 16 bytes
         nasal_vec*   vec;
         nasal_hash*  hash;
         nasal_func*  func;
+        void*        obj;
     }ptr;
 
     nasal_val(int);
@@ -100,8 +115,7 @@ nasal_ref* nasal_vec::get_mem(int index)
 void nasal_vec::print()
 {
     static int depth=0;
-    ++depth;
-    if(depth>1024)
+    if(++depth>32)
     {
         std::cout<<"[..]";
         --depth;
@@ -173,8 +187,7 @@ nasal_ref* nasal_hash::get_mem(std::string& key)
 void nasal_hash::print()
 {
     static int depth=0;
-    ++depth;
-    if(depth>1024)
+    if(++depth>32)
     {
         std::cout<<"{..}";
         --depth;

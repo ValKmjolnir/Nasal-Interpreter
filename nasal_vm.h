@@ -869,8 +869,12 @@ inline void nasal_vm::opr_ret()
     uint32_t offset=func->offset;
     nasal_ref cls=cls_stk.top();cls_stk.pop();
     // same closure detected,update the last local scope instead of the closure
+    // because when calling a function,local scope get a copy of the func's closure,not the reference
     if(!cls_stk.empty() && cls_stk.top()==cls)
     {
+        // this condition in fact is that two called function are using the same closure
+        // if this copy of closure is changed, the closure will be updated at the same time
+        // also the copy of closure that still in using will alse be updated
         auto& vec=gc.local.back()->ptr.vec->elems;
         auto& func_vec=func->closure->ptr.vec->elems;
         gc.local.pop_back();
@@ -879,6 +883,7 @@ inline void nasal_vm::opr_ret()
     }
     else
     {
+        // two closures are not the same, update the func's closure and drop gc.local.back()
         auto& vec=func->closure->ptr.vec->elems;
         for(uint32_t i=0;i<offset;++i)
             vec[i]=gc.local.back()->ptr.vec->elems[i];
@@ -894,7 +899,7 @@ inline void nasal_vm::opr_ret()
 void nasal_vm::run(std::vector<opcode>& exec,bool op_cnt)
 {
     uint64_t count[op_ret+1]={0};
-    void* opr_table[]=
+    const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&offset,
         &&loadg,   &&loadl,    &&pnum,   &&pone,
@@ -918,7 +923,7 @@ void nasal_vm::run(std::vector<opcode>& exec,bool op_cnt)
     };
     
     bytecode=exec;
-    std::vector<void*> code;
+    std::vector<const void*> code;
     for(auto& i:exec)
     {
         code.push_back(opr_table[i.op]);
