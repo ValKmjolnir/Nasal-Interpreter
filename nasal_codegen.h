@@ -168,10 +168,10 @@ struct
 
 struct opcode
 {
-    uint16_t op;
-    uint16_t fidx;
-    uint32_t num;
-    uint32_t line;
+    uint16_t op;  // opcode
+    uint16_t fidx;// source code file index
+    uint32_t num; // imm num
+    uint32_t line;// line of source code
     opcode(uint8_t _op=op_nop,uint16_t _fidx=0,uint32_t _num=0,uint32_t _line=0)
     {
         op=_op;
@@ -448,6 +448,15 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
             gen(op_dynpara,string_table[str],tmp.get_line());
         }
     }
+    // default dynamic parameter name is arg.
+    // if there are too many arguments,unused arguments will be collected to a nasal_vec
+    // if(!ast.get_children().size() || ast.get_children().back().get_type()!=ast_dynamic_id)
+    // {
+    //     const std::string str="arg";
+    //     regist_string(str);
+    //     add_sym(str);
+    //     gen(op_dynpara,string_table[str],ast.get_line());
+    // }
     exec_code[newfunc_label].num=exec_code.size()+1;
     int jmp_ptr=exec_code.size();
     gen(op_jmp,0,0);
