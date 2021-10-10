@@ -163,6 +163,8 @@ var func_table=[
 var bf=func(program)
 {
     setsize(paper,131072);
+    for(var i=0;i<131072;i+=1)
+        paper[i]=0;
     (ptr,code,inum,stack)=(0,[],[],[]);
     var len=size(program);
 
@@ -234,6 +236,7 @@ var bf=func(program)
         die("lack ]");
         return;
     }
+
     len=size(code);
     for(pc=0;pc<len;pc+=1)
         code[pc]();

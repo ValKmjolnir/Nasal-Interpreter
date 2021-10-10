@@ -26,7 +26,7 @@ const uint32_t increment[vm_type_size]=
     0,    // vm_num
     // gc object
     2048, // vm_str
-    512,  // vm_func
+    1024, // vm_func
     8192, // vm_vec
     512,  // vm_hash
     0     // vm_obj
@@ -38,7 +38,7 @@ struct nasal_hash;
 struct nasal_func;
 struct nasal_val;
 // declaration of nasal_ref
-struct nasal_ref
+struct nasal_ref// 16 bytes
 {
     uint8_t type;
     union
@@ -46,6 +46,7 @@ struct nasal_ref
         double num;
         nasal_val* gcobj;
     }value;
+
     nasal_ref(const uint8_t t=vm_none):type(t){}
     nasal_ref(const uint8_t t,const double n):type(t){value.num=n;}
     nasal_ref(const uint8_t t,nasal_val* n):type(t){value.gcobj=n;}
@@ -106,11 +107,10 @@ struct nasal_hash// 56 bytes
 struct nasal_func// 120 bytes
 {
     int32_t  dynpara;  // dynamic parameter name index in hash
-    uint32_t offset;   // arguments will be loaded into local scope from this offset 
     uint32_t entry;    // pc will set to entry-1 to call this function
-    std::vector<nasal_ref> default_para;// default value(nasal_ref)
+    std::vector<nasal_ref> local;  // local scope with default value(nasal_ref)
+    std::vector<nasal_ref> upvalue;
     std::unordered_map<std::string,int> key_table;// parameter name hash
-    nasal_ref closure; // closure will be loaded to gc.local.back() as the local scope
 
     nasal_func();
     void clear();
@@ -269,7 +269,7 @@ nasal_func::nasal_func()
 void nasal_func::clear()
 {
     dynpara=-1;
-    default_para.clear();
+    local.clear();
     key_table.clear();
     return;
 }
@@ -368,10 +368,10 @@ void nasal_gc::mark()
                     bfs.push(i.second);
                 break;
             case vm_func:
-                bfs.push(tmp.func()->closure);
-                for(auto& i:tmp.func()->default_para)
-                    if(i.type>vm_num)
-                        bfs.push(i);
+                for(auto& i:tmp.func()->local)
+                    bfs.push(i);
+                for(auto& i:tmp.func()->upvalue)
+                    bfs.push(i);
                 break;
         }
     }

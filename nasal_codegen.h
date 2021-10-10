@@ -6,9 +6,9 @@ enum op_code
     op_nop,     // do nothing and end the vm main loop
     op_intg,    // global scope size
     op_intl,    // local scope size
-    op_offset,  // offset of local scope of function in closure
     op_loadg,   // load global symbol value
     op_loadl,   // load local symbol value
+    op_loadu,   // load upvalue
     op_pnum,    // push constant number to the stack
     op_pone,    // push 1 to the stack
     op_pzero,   // push 0 to the stack
@@ -64,6 +64,7 @@ enum op_code
     op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_callg,   // call value in global scope
     op_calll,   // call value in local scope
+    op_upval,   // call upvalue in closure
     op_callv,   // call vec[index]
     op_callvi,  // call vec[immediate] (used in multi-assign/multi-define)
     op_callh,   // call hash.label
@@ -76,6 +77,7 @@ enum op_code
     op_slc2,    // slice like vec[nil:10]
     op_mcallg,  // get memory space of value in global scope
     op_mcalll,  // get memory space of value in local scope
+    op_mupval,  // get memory space of value in closure
     op_mcallv,  // get memory space of vec[index]
     op_mcallh,  // get memory space of hash.label
     op_ret      // return
@@ -90,9 +92,9 @@ struct
     {op_nop,     "nop   "},
     {op_intg,    "intg  "},
     {op_intl,    "intl  "},
-    {op_offset,  "offset"},
     {op_loadg,   "loadg "},
     {op_loadl,   "loadl "},
+    {op_loadu,   "loadu "},
     {op_pnum,    "pnum  "},
     {op_pone,    "pone  "},
     {op_pzero,   "pzero "},
@@ -148,6 +150,7 @@ struct
     {op_feach,   "feach "},
     {op_callg,   "callg "},
     {op_calll,   "calll "},
+    {op_upval,   "upval "},
     {op_callv,   "callv "},
     {op_callvi,  "callvi"},
     {op_callh,   "callh "},
@@ -160,6 +163,7 @@ struct
     {op_slc2,    "slc2  "},
     {op_mcallg,  "mcallg"},
     {op_mcalll,  "mcalll"},
+    {op_mupval,  "mupval"},
     {op_mcallv,  "mcallv"},
     {op_mcallh,  "mcallh"},
     {op_ret,     "ret   "},
@@ -215,6 +219,7 @@ private:
     void add_sym(const std::string&);
     int  local_find(const std::string&);
     int  global_find(const std::string&);
+    int  upvalue_find(const std::string&);
     void gen(uint8_t,uint32_t,uint32_t);
     void num_gen(const nasal_ast&);
     void str_gen(const nasal_ast&);
@@ -333,15 +338,12 @@ void nasal_codegen::add_sym(const std::string& name)
 
 int nasal_codegen::local_find(const std::string& name)
 {
-    int index=-1,cnt=0;
-    for(auto& i:local)
-    {
-        for(int j=0;j<i.size();++j)
-            if(i[j]==name)
-                index=cnt+j;
-        cnt+=i.size();
-    }
-    return index;
+    if(local.empty())
+        return -1;
+    for(uint32_t i=0;i<local.back().size();++i)
+        if(local.back()[i]==name)
+            return i;
+    return -1;
 }
 
 int nasal_codegen::global_find(const std::string& name)
@@ -350,6 +352,24 @@ int nasal_codegen::global_find(const std::string& name)
         if(global[i]==name)
             return i;
     return -1;
+}
+
+int nasal_codegen::upvalue_find(const std::string& name)
+{
+    // 32768 level 65536 upvalues
+    int index=-1;
+    size_t size=local.size();
+    if(size<=1)
+        return -1;
+    auto iter=local.begin();
+    for(uint32_t i=0;i<size-1;++i)
+    {
+        for(uint32_t j=0;j<iter->size();++j)
+            if((*iter)[j]==name)
+                index=((i<<16)|j);
+        ++iter;
+    }
+    return index;
 }
 
 void nasal_codegen::gen(uint8_t op,uint32_t num,uint32_t line)
@@ -406,22 +426,14 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     gen(op_newf,0,ast.get_line());
     int local_label=exec_code.size();
     gen(op_intl,0,ast.get_line());
-    local.push_back(std::vector<std::string>());
-
+    
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
     // this keyword is set to nil as default value
     // after calling a hash, this keyword is set to this hash
     // this symbol's index will be 0
-    if(local.size()==1)
-    {
-        std::string me="me";
-        add_sym(me);
-    }
-    
-    gen(op_offset,0,ast.get_line());
-    for(auto& i:local)
-        exec_code.back().num+=i.size();
+    local.push_back({"me"});
+
     // generate parameter list
     for(auto& tmp:ast.get_children()[0].get_children())
     {
@@ -466,8 +478,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     // or the location of symbols will change and cause fatal error
     find_symbol(block);
     block_gen(block);
-    for(auto& i:local)
-        exec_code[local_label].num+=i.size();
+    exec_code[local_label].num=local.back().size();
     local.pop_back();
 
     if(!block.get_children().size() || block.get_children().back().get_type()!=ast_ret)
@@ -503,7 +514,7 @@ void nasal_codegen::call_gen(const nasal_ast& ast)
 void nasal_codegen::call_id(const nasal_ast& ast)
 {
     const std::string& str=ast.get_str();
-    for(int i=0;builtin_func[i].name;++i)
+    for(uint32_t i=0;builtin_func[i].name;++i)
         if(builtin_func[i].name==str)
         {
             gen(op_callb,i,ast.get_line());
@@ -515,6 +526,12 @@ void nasal_codegen::call_id(const nasal_ast& ast)
     if(index>=0)
     {
         gen(op_calll,index,ast.get_line());
+        return;
+    }
+    index=upvalue_find(str);
+    if(index>=0)
+    {
+        gen(op_upval,index,ast.get_line());
         return;
     }
     index=global_find(str);
@@ -622,6 +639,12 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
         gen(op_mcalll,index,ast.get_line());
         return;
     }
+    index=upvalue_find(str);
+    if(index>=0)
+    {
+        gen(op_mupval,index,ast.get_line());
+        return;
+    }
     index=global_find(str);
     if(index>=0)
     {
@@ -705,6 +728,8 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
             // and this operation changes local and global value directly
             if(exec_code.back().op==op_mcalll)
                 exec_code.back().op=op_loadl;
+            else if(exec_code.back().op==op_mupval)
+                exec_code.back().op=op_loadu;
             else if(exec_code.back().op==op_mcallg)
                 exec_code.back().op=op_loadg;
             else
@@ -725,6 +750,8 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
             mcall(ast.get_children()[0].get_children()[i]);
             if(exec_code.back().op==op_mcalll)
                 exec_code.back().op=op_loadl;
+            else if(exec_code.back().op==op_mupval)
+                exec_code.back().op=op_loadu;
             else if(exec_code.back().op==op_mcallg)
                 exec_code.back().op=op_loadg;
             else
@@ -1121,6 +1148,8 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
                     // only the first mcall_id can use load
                     if(exec_code.back().op==op_mcalll)
                         exec_code.back().op=op_loadl;
+                    else if(exec_code.back().op==op_mupval)
+                        exec_code.back().op=op_loadu;
                     else
                         exec_code.back().op=op_loadg;
                 }
@@ -1221,6 +1250,8 @@ void nasal_codegen::main_progress(const nasal_ast& ast,const std::vector<std::st
                     // only the first mcall_id can use load
                     if(exec_code.back().op==op_mcalll)
                         exec_code.back().op=op_loadl;
+                    else if(exec_code.back().op==op_mupval)
+                        exec_code.back().op=op_loadu;
                     else
                         exec_code.back().op=op_loadg;
                 }
