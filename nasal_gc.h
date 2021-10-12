@@ -104,15 +104,15 @@ struct nasal_hash// 56 bytes
     nasal_ref* get_mem(std::string&);
 };
 
-struct nasal_func// 120 bytes
+struct nasal_func// 112 bytes
 {
-    int32_t  dynpara;  // dynamic parameter name index in hash
-    uint32_t entry;    // pc will set to entry-1 to call this function
-    std::vector<nasal_ref> local;  // local scope with default value(nasal_ref)
-    std::vector<nasal_ref> upvalue;
-    std::unordered_map<std::string,int> key_table;// parameter name hash
+    int32_t  dynpara;                              // dynamic parameter name index in hash
+    uint32_t entry;                                // pc will set to entry-1 to call this function
+    std::vector<nasal_ref> local;                  // local scope with default value(nasal_ref)
+    std::vector<nasal_ref> upvalue;                // closure
+    std::unordered_map<std::string,int> key_table; // parameter name table
 
-    nasal_func();
+    nasal_func():dynpara(-1){}
     void clear();
 };
 
@@ -178,6 +178,7 @@ void nasal_vec::print()
             case vm_vec:  i.vec()->print();         break;
             case vm_hash: i.hash()->print();        break;
             case vm_func: std::cout<<"func(..){..}";break;
+            case vm_obj:  std::cout<<"<object>";    break;
         }
         std::cout<<",]"[(++iter)==elems.size()];
     }
@@ -253,6 +254,7 @@ void nasal_hash::print()
             case vm_vec:  tmp.vec()->print();       break;
             case vm_hash: tmp.hash()->print();      break;
             case vm_func: std::cout<<"func(..){..}";break;
+            case vm_obj:  std::cout<<"<object>";    break;
         }
         std::cout<<",}"[(++iter)==elems.size()];
     }
@@ -261,11 +263,6 @@ void nasal_hash::print()
 }
 
 /*functions of nasal_func*/
-nasal_func::nasal_func()
-{
-    dynpara=-1;
-    return;
-}
 void nasal_func::clear()
 {
     dynpara=-1;
@@ -403,20 +400,20 @@ void nasal_gc::gc_init(const std::vector<std::string>& strs)
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         for(uint32_t j=0;j<increment[i];++j)
         {
-            nasal_ref tmp={i,new nasal_val(i)};
-            memory.push_back(tmp.value.gcobj);
-            free_list[i].push(tmp.value.gcobj);
+            nasal_val* tmp=new nasal_val(i);
+            memory.push_back(tmp);
+            free_list[i].push(tmp);
         }
 
-    stack_top=val_stack; // set stack_top to val_stack
+    stack_top=val_stack;     // set stack_top to val_stack
 
     zero={vm_num,(double)0}; // init constant 0
     one ={vm_num,(double)1}; // init constant 1
-    nil.type=vm_nil;         // init constant nil
+    nil ={vm_nil,(double)0}; // init constant nil
 
     // init constant strings
     str_addrs.resize(strs.size());
-    for(int i=0;i<strs.size();++i)
+    for(uint32_t i=0;i<strs.size();++i)
     {
         str_addrs[i]={vm_str,new nasal_val(vm_str)};
         *str_addrs[i].str()=strs[i];
@@ -448,9 +445,9 @@ nasal_ref nasal_gc::gc_alloc(uint8_t type)
     if(free_list[type].empty())
         for(uint32_t i=0;i<increment[type];++i)
         {
-            nasal_ref tmp={type,new nasal_val(type)};
-            memory.push_back(tmp.value.gcobj);
-            free_list[type].push(tmp.value.gcobj);
+            nasal_val* tmp=new nasal_val(type);
+            memory.push_back(tmp);
+            free_list[type].push(tmp);
         }
     nasal_ref ret={type,free_list[type].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
@@ -466,9 +463,9 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     if(free_list[type].empty())
         for(uint32_t i=0;i<increment[type];++i)
         {
-            nasal_ref tmp={type,new nasal_val(type)};
-            memory.push_back(tmp.value.gcobj);
-            free_list[type].push(tmp.value.gcobj);
+            nasal_val* tmp=new nasal_val(type);
+            memory.push_back(tmp);
+            free_list[type].push(tmp);
         }
     nasal_ref ret={type,free_list[type].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
