@@ -760,18 +760,19 @@ nasal_ref builtin_chr(std::vector<nasal_ref>&,nasal_gc&);
 Then complete this function using C++:
 
 ```C++
-nasal_ref builtin_print(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
+nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     // get arguments by using builtin_find
     // find value with index begin from 1
     // because local_scope[0] is reserved for value 'me'
-    nasal_ref vec_addr=local_scope[1];
+    nasal_ref vec=local[1];
     // main process
     // also check number of arguments and type here
     // if get a type error,use builtin_err and return nullptr
-    for(auto i:vec_addr.vec()->elems)
+    for(auto i:vec.vec()->elems)
         switch(i.type)
         {
+            case vm_none: std::cout<<"undefined";      break;
             case vm_nil:  std::cout<<"nil";            break;
             case vm_num:  std::cout<<i.num();          break;
             case vm_str:  std::cout<<*i.str();         break;
@@ -841,9 +842,9 @@ this is a fatal error.
 So use builtin_alloc in builtin functions like this:
 
 ```C++
-nasal_ref builtin_keys(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
+nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
-    nasal_ref hash_addr=local_scope[1];
+    nasal_ref hash_addr=local[1];
     if(hash_addr.type!=vm_hash)
     {
         builtin_err("keys","\"hash\" must be hash");
@@ -851,15 +852,15 @@ nasal_ref builtin_keys(std::vector<nasal_ref>& local_scope,nasal_gc& gc)
     }
 
     // push vector into local scope to avoid being sweeped
-    local_scope.push_back(gc.gc_alloc(vm_vec));
-    std::vector<nasal_ref>& vec=local_scope.back().vec()->elems;
+    local.push_back(gc.gc_alloc(vm_vec));
+    std::vector<nasal_ref>& vec=local.back().vec()->elems;
     for(auto iter:hash_addr.hash()->elems)
     {
         nasal_ref str_addr=gc.builtin_alloc(vm_str);
         *str_addr.str()=iter.first;
         vec.push_back(str_addr);
     }
-    return local_scope.back();
+    return local.back();
 }
 ```
 

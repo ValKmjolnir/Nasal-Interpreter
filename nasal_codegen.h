@@ -197,10 +197,10 @@ struct opcode
 class nasal_codegen
 {
 private:
-    int error;
+    uint32_t error;
     uint16_t fileindex;
-    int in_forindex;
-    int in_foreach;
+    uint32_t in_forindex;
+    uint32_t in_foreach;
     std::unordered_map<double,int>      number_table;
     std::unordered_map<std::string,int> string_table;
     std::vector<double>                 num_res_table;
@@ -253,7 +253,7 @@ private:
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
 public:
-    int                       get_error(){return error;}
+    uint32_t                  get_error(){return error;}
     void                      main_progress(const nasal_ast&,const std::vector<std::string>&);
     void                      print_op(int);
     void                      print_byte_code();
@@ -1191,12 +1191,12 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
 
 void nasal_codegen::ret_gen(const nasal_ast& ast)
 {
-    for(int i=0;i<in_foreach;++i)
+    for(uint32_t i=0;i<in_foreach;++i)
     {
         gen(op_pop,0,0);
         gen(op_cntpop,0,0);
     }
-    for(int i=0;i<in_forindex;++i)
+    for(uint32_t i=0;i<in_forindex;++i)
     {
         gen(op_pop,0,0);
         gen(op_cntpop,0,0);
