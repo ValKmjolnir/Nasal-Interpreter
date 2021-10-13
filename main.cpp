@@ -138,7 +138,7 @@ int main(int argc,const char* argv[])
         std::cout
         <<"invalid argument(s).\n"
         <<"use nasal -h to get help.\n";
-        exit(1);
+        std::exit(1);
     }
     return 0;
 }

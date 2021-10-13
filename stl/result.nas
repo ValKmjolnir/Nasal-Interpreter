@@ -13,7 +13,7 @@ var ResultTrait={
     },
     unwrap:func(){
         if(me.flag)
-            die("error: "~me.err);
+            die(me.err);
         return me.ok;
     }
 };

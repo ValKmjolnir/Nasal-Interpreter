@@ -3,11 +3,11 @@
 
 enum op_code
 {
-    op_nop,     // do nothing and end the vm main loop
+    op_nop,     // do nothing
     op_intg,    // global scope size
     op_intl,    // local scope size
-    op_loadg,   // load global symbol value
-    op_loadl,   // load local symbol value
+    op_loadg,   // load global value
+    op_loadl,   // load local value
     op_loadu,   // load upvalue
     op_pnum,    // push constant number to the stack
     op_pone,    // push 1 to the stack
@@ -62,9 +62,9 @@ enum op_code
     op_cntpop,  // pop counter
     op_findex,  // index counter on the top of forindex_stack plus 1
     op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
-    op_callg,   // call value in global scope
-    op_calll,   // call value in local scope
-    op_upval,   // call upvalue in closure
+    op_callg,   // get value in global scope
+    op_calll,   // get value in local scope
+    op_upval,   // get upvalue in closure
     op_callv,   // call vec[index]
     op_callvi,  // call vec[immediate] (used in multi-assign/multi-define)
     op_callh,   // call hash.label
@@ -80,7 +80,8 @@ enum op_code
     op_mupval,  // get memory space of value in closure
     op_mcallv,  // get memory space of vec[index]
     op_mcallh,  // get memory space of hash.label
-    op_ret      // return
+    op_ret,     // return
+    op_exit     // stop the virtual machine
 };
 
 struct
@@ -113,7 +114,7 @@ struct
     {op_sub,     "sub   "},
     {op_mul,     "mult  "},
     {op_div,     "div   "},
-    {op_lnk,     "link  "},
+    {op_lnk,     "lnk   "},
     {op_addc,    "addc  "},
     {op_subc,    "subc  "},
     {op_mulc,    "multc "},
@@ -167,6 +168,7 @@ struct
     {op_mcallv,  "mcallv"},
     {op_mcallh,  "mcallh"},
     {op_ret,     "ret   "},
+    {op_exit,    "exit  "},
     {-1,         nullptr },
 };
 
@@ -255,7 +257,7 @@ private:
 public:
     uint32_t                  get_error(){return error;}
     void                      main_progress(const nasal_ast&,const std::vector<std::string>&);
-    void                      print_op(int);
+    void                      print_op(uint32_t);
     void                      print_byte_code();
     std::vector<std::string>& get_str_table(){return str_res_table;}
     std::vector<double>&      get_num_table(){return num_res_table;}
@@ -479,6 +481,8 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     find_symbol(block);
     block_gen(block);
     exec_code[local_label].num=local.back().size();
+    if(local.back().size()>65536)
+        die("too many local variants: "+std::to_string(local.back().size())+".",block.get_line());
     local.pop_back();
 
     if(!block.get_children().size() || block.get_children().back().get_type()!=ast_ret)
@@ -1288,35 +1292,43 @@ void nasal_codegen::main_progress(const nasal_ast& ast,const std::vector<std::st
             case ast_trino:calc_gen(tmp);gen(op_pop,0,tmp.get_line());break;
         }
     }
-    gen(op_nop,0,0);
+    gen(op_exit,0,0);
     if(global.size()>=STACK_MAX_DEPTH)
         die("too many global variants: "+std::to_string(global.size())+".",0);
     return;
 }
 
-void nasal_codegen::print_op(int index)
+void nasal_codegen::print_op(uint32_t index)
 {
     // print opcode index,opcode name,opcode immediate number
-    printf("0x%.8x: %s 0x%.8x",index,code_table[exec_code[index].op].name,exec_code[index].num);
+    const opcode& code=exec_code[index];
+    printf("0x%.8x: %s ",index,code_table[code.op].name);
     // print detail info
-    switch(exec_code[index].op)
+    switch(code.op)
     {
         case op_addc:case op_subc:case op_mulc:case op_divc:
         case op_addeqc:case op_subeqc:case op_muleqc:case op_diveqc:
         case op_lessc:case op_leqc:case op_grtc:case op_geqc:
-        case op_pnum:printf(" (%lf)\n",num_res_table[exec_code[index].num]);break;
-        case op_callb:printf(" (%s)\n",builtin_func[exec_code[index].num].name);break;
-        case op_happ:
-        case op_pstr:
+        case op_pnum:
+            printf("0x%x (%lf)\n",code.num,num_res_table[code.num]);break;
+        case op_callvi:case op_newv:case op_callfv:
+        case op_intg:case op_intl:
+        case op_newf:case op_jmp:case op_jt:case op_jf:
+            printf("0x%x\n",code.num);break;
+        case op_callb:
+            printf("0x%x <%s>\n",code.num,builtin_func[code.num].name);break;
+        case op_callg:case op_mcallg:case op_loadg:
+        case op_calll:case op_mcalll:case op_loadl:
+            printf("0x%x\n",code.num);break;
+        case op_upval:case op_mupval:case op_loadu:
+            printf("0x%x[0x%x]\n",(code.num>>16)&0xffff,code.num&0xffff);break;
+        case op_happ:case op_pstr:
         case op_lnkc:case op_lnkeqc:
-        case op_callh:
-        case op_mcallh:
-        case op_para:
-        case op_defpara:
-        case op_dynpara:
-            printf(" (");
-            raw_string(str_res_table[exec_code[index].num]);
-            printf(")\n");
+        case op_callh:case op_mcallh:
+        case op_para:case op_defpara:case op_dynpara:
+            printf("0x%x (\"",code.num);
+            raw_string(str_res_table[code.num]);
+            printf("\")\n");
             break;
         default:printf("\n");break;
     }
@@ -1325,19 +1337,15 @@ void nasal_codegen::print_op(int index)
 
 void nasal_codegen::print_byte_code()
 {
-    if(num_res_table.size())
-        std::cout<<".number"<<std::endl;
-    for(auto& num:num_res_table)
-        std::cout<<'\t'<<num<<'\n';
-    if(str_res_table.size())
-        std::cout<<".symbol"<<std::endl;
+    for(auto num:num_res_table)
+        std::cout<<".number "<<num<<'\n';
     for(auto& str:str_res_table)
     {
-        std::cout<<'\t';
+        std::cout<<".symbol \"";
         raw_string(str);
-        std::cout<<std::endl;
+        std::cout<<"\"\n";
     }
-    for(int i=0;i<exec_code.size();++i)
+    for(uint32_t i=0;i<exec_code.size();++i)
         print_op(i);
     return;
 }
