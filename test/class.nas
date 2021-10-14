@@ -1,8 +1,6 @@
 import("lib.nas");
 
-var student=func(name,age)
-{
-    var (n,a)=(name,age);
+var student=func(n,a){
     return {
         print_info:func println(n,' ',a),
         set_age:   func(age) a=age,
