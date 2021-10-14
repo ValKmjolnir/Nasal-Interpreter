@@ -42,7 +42,7 @@ class nasal_parse
 #define is_call(type) ((type)==tok_lcurve || (type)==tok_lbracket || (type)==tok_dot)
 private:
     int ptr;
-    int error;
+    uint32_t error;
     nasal_ast root;
     std::vector<token> tok_list;
     std::vector<token> error_token;
@@ -99,11 +99,11 @@ private:
     nasal_ast break_expr();
     nasal_ast ret_expr();
 public:
-    int get_error(){return error;}
-    void main_process(std::vector<token>&);
+    uint32_t   err(){return error;}
+    void       compile(const std::vector<token>&);
     nasal_ast& get_root(){return root;}
 };
-void nasal_parse::main_process(std::vector<token>& toks)
+void nasal_parse::compile(const std::vector<token>& toks)
 {
     tok_list=toks;
     ptr=in_function=in_loop=error=0;

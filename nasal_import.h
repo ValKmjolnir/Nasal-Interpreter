@@ -4,7 +4,7 @@
 class nasal_import
 {
 private:
-    int                      error;
+    uint32_t                 error;
     nasal_lexer              import_lex;
     nasal_parse              import_par;
     nasal_ast                import_ast;
@@ -16,19 +16,16 @@ private:
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&,uint16_t);
 public:
-    const int get_error(){return error;}
+    uint32_t  err(){return error;}
     void      link(nasal_ast&,const std::string&);
-    const nasal_ast& 
-        get_root(){return import_ast;}
-    const std::vector<std::string>& 
-        get_file(){return filename_table;}
+    const nasal_ast& get_root(){return import_ast;}
+    const std::vector<std::string>& get_file(){return filename_table;}
 };
 
 void nasal_import::die(const std::string& filename,const char* error_stage)
 {
     ++error;
     std::cout<<"[import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
-    return;
 }
 
 bool nasal_import::check_import(const nasal_ast& node)
@@ -69,7 +66,6 @@ void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
     // add children of add_root to the back of root
     for(auto& i:add_root.get_children())
         root.add_child(std::move(i));
-    return;
 }
 
 nasal_ast nasal_import::file_import(nasal_ast& node)
@@ -86,15 +82,15 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return tmp;
     
     // start importing...
-    import_lex.openfile(filename);
-    import_lex.scanner();
-    if(import_lex.get_error())
+    import_lex.open(filename);
+    import_lex.scan();
+    if(import_lex.err())
     {
         die(filename,"lexer");
         return tmp;
     }
-    import_par.main_process(import_lex.get_token_list());
-    if(import_par.get_error())
+    import_par.compile(import_lex.get_tokens());
+    if(import_par.err())
     {
         die(filename,"parser");
         return tmp;
@@ -128,7 +124,6 @@ void nasal_import::link(nasal_ast& root,const std::string& self)
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
     import_ast=load(root,0);
-    return;
 }
 
 #endif

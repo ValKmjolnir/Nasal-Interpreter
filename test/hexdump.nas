@@ -16,8 +16,7 @@ foreach(var i;hex_num)
         append(hex,i~j);
 
 # read file
-var s=func()
-{
+var s=func(){
     var filename=[
         "nasal.h",
         "main.cpp",
@@ -43,49 +42,45 @@ var cnt=0;
 var hex_index=[0,0,0,0];
 
 # print binary in text format
-var textprint=func(index)
-{
-    print(' |');
+var textprint=func(index){
+    var info='';
     for(var i=index-cnt;i<index;i+=1)
-        print((0<=s[i] and s[i]<32)?'.':chr(s[i]));
+        info~=(0<=s[i] and s[i]<32)?'.':chr(s[i]);
     for(var i=cnt;i<16;i+=1)
-        print('.');
-    print('|\n');
+        info~='.';
+    return ' |'~info~'|\n';
 }
 
 # print index
-var indexprint=func(index)
-{
-    forindex(var i;hex_index)
-    {
+var indexprint=func(index){
+    forindex(var i;hex_index){
         hex_index[i]=index-int(index/256)*256;
         index=int(index/256);
     }
+    var info='';
     for(var i=3;i>=0;i-=1)
-        print(hex[hex_index[i]]);
-    print('  ');
-    return;
+        info~=hex[hex_index[i]];
+    return info~'  ';
 }
 
 # main
-func()
-{
-    indexprint(0);
-    for(var i=0;i<size(s);i+=1)
-    {
+func(){
+    var info=indexprint(0);
+    for(var i=0;i<size(s);i+=1){
         if(cnt==16){
-            textprint(i);
+            info~=textprint(i);
+            print(info);
             cnt=0;
-            indexprint(i);
-        }elsif(cnt==8){
-            print(' ');
-        }
+            info=indexprint(i);
+        }elsif(cnt==8)
+            info~=' ';
         cnt+=1;
-        print(hex[s[i]],' ');
+        info~=hex[s[i]]~' ';
     }
     for(var l=cnt;l<16;l+=1)
-        print('   ');
+        info~='   ';
     if(cnt<=8)
-        print(' ');
-    textprint(i);
+        info~=' ';
+    info~=textprint(i);
+    print(info);
 }();

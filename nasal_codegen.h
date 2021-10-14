@@ -255,13 +255,13 @@ private:
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
 public:
-    uint32_t                  get_error(){return error;}
-    void                      main_progress(const nasal_ast&,const std::vector<std::string>&);
+    uint32_t                  err(){return error;}
+    void                      compile(const nasal_ast&,const std::vector<std::string>&);
     void                      print_op(uint32_t);
-    void                      print_byte_code();
-    std::vector<std::string>& get_str_table(){return str_res_table;}
-    std::vector<double>&      get_num_table(){return num_res_table;}
-    std::vector<opcode>&      get_exec_code(){return exec_code;}
+    void                      print();
+    std::vector<std::string>& get_strs(){return str_res_table;}
+    std::vector<double>&      get_nums(){return num_res_table;}
+    std::vector<opcode>&      get_code(){return exec_code;}
 };
 
 void nasal_codegen::die(const std::string info,const int line)
@@ -631,7 +631,7 @@ void nasal_codegen::mcall(const nasal_ast& ast)
 void nasal_codegen::mcall_id(const nasal_ast& ast)
 {
     const std::string& str=ast.get_str();
-    for(int i=0;builtin_func[i].name;++i)
+    for(uint32_t i=0;builtin_func[i].name;++i)
         if(builtin_func[i].name==str)
         {
             die("cannot change builtin function.",ast.get_line());
@@ -1213,7 +1213,7 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
     return;
 }
 
-void nasal_codegen::main_progress(const nasal_ast& ast,const std::vector<std::string>& files)
+void nasal_codegen::compile(const nasal_ast& ast,const std::vector<std::string>& files)
 {
     error=0;
     in_foreach=0;
@@ -1326,25 +1326,19 @@ void nasal_codegen::print_op(uint32_t index)
         case op_lnkc:case op_lnkeqc:
         case op_callh:case op_mcallh:
         case op_para:case op_defpara:case op_dynpara:
-            printf("0x%x (\"",code.num);
-            raw_string(str_res_table[code.num]);
-            printf("\")\n");
+            printf("0x%x (\"%s\")\n",code.num,raw_string(str_res_table[code.num]).c_str());
             break;
         default:printf("\n");break;
     }
     return;
 }
 
-void nasal_codegen::print_byte_code()
+void nasal_codegen::print()
 {
     for(auto num:num_res_table)
         std::cout<<".number "<<num<<'\n';
     for(auto& str:str_res_table)
-    {
-        std::cout<<".symbol \"";
-        raw_string(str);
-        std::cout<<"\"\n";
-    }
+        std::cout<<".symbol \""<<raw_string(str)<<"\"\n";
     for(uint32_t i=0;i<exec_code.size();++i)
         print_op(i);
     return;

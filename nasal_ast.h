@@ -50,36 +50,37 @@ const char* ast_name[]=
 class nasal_ast
 {
 private:
-    int         line;
-    int         type;
+    uint32_t    line;
+    uint32_t    type;
     double      num;
     std::string str;
     std::vector<nasal_ast> children;
 public:
     nasal_ast(){line=0;type=ast_null;}
-    nasal_ast(const int l,const int t){line=l;type=t;}
+    nasal_ast(const uint32_t l,const uint32_t t){line=l;type=t;}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     nasal_ast& operator=(const nasal_ast&);
     nasal_ast& operator=(nasal_ast&&);
-    void   print_ast(const int);
+    void   print(const int);
     void   clear();
     void   add_child(nasal_ast&& ast){children.push_back(std::move(ast));}
     void   add_child(const nasal_ast& ast){children.push_back(ast);}
-    void   set_line(const int l){line=l;}
-    void   set_type(const int t){type=t;}
+    void   set_line(const uint32_t l){line=l;}
+    void   set_type(const uint32_t t){type=t;}
     void   set_str(const std::string& s){str=s;}
     void   set_num(const double n){num=n;}
-    int    get_line(){return line;}
-    int    get_type(){return type;}
-    double get_num() {return num;}
-    std::string& get_str(){return str;}
+
+    uint32_t     get_line(){return line;}
+    uint32_t     get_type(){return type;}
+    double       get_num() {return num;}
+    std::string& get_str() {return str;}
     std::vector<nasal_ast>& get_children(){return children;}
 
-    int    get_line() const {return line;}
-    int    get_type() const {return type;}
-    double get_num()  const {return num;}
-    const std::string& get_str() const {return str;}
+    uint32_t           get_line() const {return line;}
+    uint32_t           get_type() const {return type;}
+    double             get_num()  const {return num;}
+    const std::string& get_str()  const {return str;}
     const std::vector<nasal_ast>& get_children() const {return children;}
 };
 
@@ -133,21 +134,18 @@ void nasal_ast::clear()
     return;
 }
 
-void nasal_ast::print_ast(const int depth)
+void nasal_ast::print(const int depth)
 {
     for(int i=0;i<depth;++i)
         std::cout<<"|  ";
     std::cout<<ast_name[type];
     if(type==ast_str || type==ast_id || type==ast_default_arg || type==ast_dynamic_id || type==ast_callh)
-    {
-        std::cout<<":";
-        raw_string(str);
-    }
+        std::cout<<":"<<raw_string(str);
     else if(type==ast_num || type==ast_file)
         std::cout<<":"<<num;
     std::cout<<'\n';
     for(auto& i:children)
-        i.print_ast(depth+1);
+        i.print(depth+1);
     return;
 }
 

@@ -1,6 +1,5 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
-
 #pragma GCC optimize(2)
 
 #include <stdint.h>
@@ -108,22 +107,23 @@ double str2num(const char* str)
 /*
     show raw string
 */
-void raw_string(const std::string& str)
+std::string raw_string(const std::string& str)
 {
+    std::string ret("");
     for(auto i:str)
         switch(i)
         {
-            case '\a': std::cout<<"\\a";break;
-            case '\b': std::cout<<"\\b";break;
-            case '\f': std::cout<<"\\f";break;
-            case '\n': std::cout<<"\\n";break;
-            case '\r': std::cout<<"\\r";break;
-            case '\t': std::cout<<"\\t";break;
-            case '\v': std::cout<<"\\v";break;
-            case '\0': std::cout<<"\\0";break;
-            default:   std::cout<<i;    break;
+            case '\a': ret+="\\a";break;
+            case '\b': ret+="\\b";break;
+            case '\f': ret+="\\f";break;
+            case '\n': ret+="\\n";break;
+            case '\r': ret+="\\r";break;
+            case '\t': ret+="\\t";break;
+            case '\v': ret+="\\v";break;
+            case '\0': ret+="\\0";break;
+            default:   ret+=i;    break;
         }
-    return;
+    return ret;
 }
 #include "nasal_lexer.h"
 #include "nasal_ast.h"

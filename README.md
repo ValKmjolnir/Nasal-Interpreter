@@ -904,7 +904,7 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
 ```
 After that, register the built-in function's name(in nasal) and the function's pointer in this table:
 ```C++
-struct FUNC_TABLE
+struct func
 {
     const char* name;
     nasal_ref (*func)(std::vector<nasal_ref>&,nasal_gc&);
