@@ -62,8 +62,8 @@ nasal_ref builtin_err(const char* func_name,std::string info)
 }
 
 // register builtin function's name and it's address here in this table below
-// this table must end with {"",nullptr}
-struct FUNC_TABLE
+// this table must end with {nullptr,nullptr}
+struct func
 {
     const char* name;
     nasal_ref (*func)(std::vector<nasal_ref>&,nasal_gc&);
@@ -123,7 +123,7 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
     for(auto i:vec.vec()->elems)
         switch(i.type)
         {
-            case vm_none: std::cout<<"undefined";      break;
+            case vm_none: std::cout<<"null";           break;
             case vm_nil:  std::cout<<"nil";            break;
             case vm_num:  std::cout<<i.num();          break;
             case vm_str:  std::cout<<*i.str();         break;

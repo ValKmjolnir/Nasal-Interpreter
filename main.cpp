@@ -1,24 +1,28 @@
 #include "nasal.h"
-
+#define VM_LEXINFO   1
+#define VM_ASTINFO   2
+#define VM_CODEINFO  4
+#define VM_EXECTIME  8
+#define VM_OPCALLNUM 16
+#define VM_EXEC      32
 void help_cmd()
 {
     std::cout
 #ifdef _WIN32
     <<"use command \'chcp 65001\' if want to use unicode.\n"
 #endif
-    <<"nasal [option]\n"
+    <<"nasal <option>\n"
     <<"option:\n"
     <<"    -h, --help    | get help.\n"
     <<"    -v, --version | get version of nasal interpreter.\n\n"
-    <<"nasal [file]\n"
+    <<"nasal <file>\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n\n"
-    <<"nasal [option] [file]\n"
+    <<"nasal [options] <file>\n"
     <<"option:\n"
     <<"    -l, --lex     | view token info.\n"
     <<"    -a, --ast     | view abstract syntax tree.\n"
     <<"    -c, --code    | view bytecode.\n"
-    <<"    -e, --exec    | execute script file.\n"
     <<"    -t, --time    | execute and get the running time.\n"
     <<"    -o, --opcnt   | count operands while running.\n"
     <<"file:\n"
@@ -47,98 +51,94 @@ void die(const char* stage,const std::string& filename)
 {
     std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
     std::exit(1);
-    return;
 }
 
-void execute(const std::string& file,const std::string& command)
+void cmderr()
+{
+    std::cout
+    <<"invalid argument(s).\n"
+    <<"use nasal -h to get help.\n";
+    std::exit(1);
+}
+
+void execute(const std::string& file,const uint16_t cmd)
 {
     nasal_lexer   lexer;
     nasal_parse   parse;
     nasal_import  import;
     nasal_codegen codegen;
     nasal_vm      vm;
-    lexer.openfile(file);
-    lexer.scanner();
-    if(lexer.get_error())
+    lexer.open(file);
+    lexer.scan();
+    if(lexer.err())
         die("lexer",file);
-    if(command=="--lex" || command=="-l")
-    {
-        lexer.print_token();
-        return;
-    }
-    parse.main_process(lexer.get_token_list());
-    if(parse.get_error())
+    if(cmd&VM_LEXINFO)
+        lexer.print();
+    parse.compile(lexer.get_tokens());
+    if(parse.err())
         die("parse",file);
-    if(command=="--ast" || command=="-a")
-    {
-        parse.get_root().print_ast(0);
-        return;
-    }
+    if(cmd&VM_ASTINFO)
+        parse.get_root().print(0);
     // first used file is itself
     import.link(parse.get_root(),file);
-    if(import.get_error())
+    if(import.err())
         die("import",file);
-    codegen.main_progress(import.get_root(),import.get_file());
-    if(codegen.get_error())
+    codegen.compile(import.get_root(),import.get_file());
+    if(codegen.err())
         die("code",file);
-    if(command=="--code" || command=="-c")
-    {
-        codegen.print_byte_code();
-        return;
-    }
+    if(cmd&VM_CODEINFO)
+        codegen.print();
     vm.init(
-        codegen.get_str_table(),
-        codegen.get_num_table(),
+        codegen.get_strs(),
+        codegen.get_nums(),
         import.get_file()
     );
-    if(command=="--exec" || command=="-e" || command=="--opcnt" || command=="-o")
-        vm.run(codegen.get_exec_code(),command=="--opcnt" || command=="-o");
-    else if(command=="--time" || command=="-t")
+    if(cmd&VM_EXECTIME)
     {
-        clock_t begin=clock();
-        vm.run(codegen.get_exec_code(),false);
-        std::cout<<"process exited after "<<((double)(clock()-begin))/CLOCKS_PER_SEC<<"s.\n";
+        clock_t t=clock();
+        vm.run(codegen.get_code(),cmd&VM_OPCALLNUM);
+        std::cout<<"process exited after "<<((double)(clock()-t))/CLOCKS_PER_SEC<<"s.\n";
     }
+    else if(cmd&VM_EXEC)
+        vm.run(codegen.get_code(),cmd&VM_OPCALLNUM);
     vm.clear();
     return;
 }
+
 int main(int argc,const char* argv[])
 {
-    std::string command,file;
+    std::string filename;
+    uint16_t cmd=0;
     if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
         logo();
     else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))
         help_cmd();
     else if(argc==2 && argv[1][0]!='-')
+        cmd|=VM_EXEC;
+    else if(argc>=3)
     {
-        file=argv[1];
-        command="-e";
-        execute(file,command);
-    }
-    else if(argc==3 &&
-        (!strcmp(argv[1],"--lex") ||
-        !strcmp(argv[1],"-l")     ||
-        !strcmp(argv[1],"--ast")  ||
-        !strcmp(argv[1],"-a")     ||
-        !strcmp(argv[1],"--code") ||
-        !strcmp(argv[1],"-c")     ||
-        !strcmp(argv[1],"--exec") ||
-        !strcmp(argv[1],"-e")     ||
-        !strcmp(argv[1],"--opcnt")||
-        !strcmp(argv[1],"-o")     ||
-        !strcmp(argv[1],"--time") ||
-        !strcmp(argv[1],"-t")))
-    {
-        file=argv[2];
-        command=argv[1];
-        execute(file,command);
+        for(int i=1;i<argc-1;++i)
+        {
+            std::string s(argv[i]);
+            if(s=="--lex" || s=="-l")
+                cmd|=VM_LEXINFO;
+            else if(s=="--ast" || s=="-a")
+                cmd|=VM_ASTINFO;
+            else if(s=="--code" || s=="-c")
+                cmd|=VM_CODEINFO;
+            else if(s=="--opcnt" || s=="-o")
+                cmd|=VM_OPCALLNUM|VM_EXEC;
+            else if(s=="--time" || s=="-t")
+                cmd|=VM_EXECTIME;
+            else
+                cmderr();
+        }
     }
     else
-    {
-        std::cout
-        <<"invalid argument(s).\n"
-        <<"use nasal -h to get help.\n";
-        std::exit(1);
-    }
+        cmderr();
+    if(argv[argc-1][0]=='-')
+        cmderr();
+    if(cmd)
+        execute(argv[argc-1],cmd);
     return 0;
 }

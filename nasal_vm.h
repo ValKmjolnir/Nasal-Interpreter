@@ -193,20 +193,17 @@ void nasal_vm::stackinfo(const uint32_t limit)
         }
         last_ptr=stack_top[0];
         const nasal_val* ptr=stack_top[0].value.gcobj;
-        putchar('\t');
         switch(stack_top[0].type)
         {
-            case vm_none: printf("null |");break;
-            case vm_nil:  printf("nil  |");break;
-            case vm_num:  printf("num  | %lf",stack_top[0].num());break;
-            case vm_str:  printf("str  | <%p> ",ptr);raw_string(*stack_top[0].str());break;
-            case vm_func: printf("func | <%p> func{entry=0x%x}",ptr,stack_top[0].func()->entry);break;
-            case vm_vec:  printf("vec  | <%p> [%lu val]",ptr,stack_top[0].vec()->elems.size());break;
-            case vm_hash: printf("hash | <%p> {%lu member}",ptr,stack_top[0].hash()->elems.size());break;
-            case vm_obj:  printf("obj  | <%p>",ptr);break;
-            default:      printf("unknown");break;
+            case vm_none: printf("\tnull |\n");break;
+            case vm_nil:  printf("\tnil  |\n");break;
+            case vm_num:  printf("\tnum  | %lf\n",stack_top[0].num());break;
+            case vm_str:  printf("\tstr  | <%p> %s\n",ptr,raw_string(*stack_top[0].str()).c_str());break;
+            case vm_func: printf("\tfunc | <%p> func{entry=0x%x}\n",ptr,stack_top[0].func()->entry);break;
+            case vm_vec:  printf("\tvec  | <%p> [%lu val]\n",ptr,stack_top[0].vec()->elems.size());break;
+            case vm_hash: printf("\thash | <%p> {%lu member}\n",ptr,stack_top[0].hash()->elems.size());break;
+            case vm_obj:  printf("\tobj  | <%p>\n",ptr);break;
         }
-        putchar('\n');
     }
     if(same_cnt)
        printf("\t...  | %d same value(s)\n",same_cnt);
@@ -839,7 +836,9 @@ inline void nasal_vm::opr_ret()
     pc=ret.top();ret.pop(); // fetch pc
     return;
 }
-void nasal_vm::run(const std::vector<opcode>& exec,const bool op_cnt)
+void nasal_vm::run(
+    const std::vector<opcode>& exec,
+    const bool op_cnt)
 {
     uint64_t count[op_exit+1]={0};
     const void* opr_table[]=
@@ -865,7 +864,6 @@ void nasal_vm::run(const std::vector<opcode>& exec,const bool op_cnt)
         &&mcallg,  &&mcalll,   &&mupval, &&mcallv,
         &&mcallh,  &&ret,      &&vmexit
     };
-    
     bytecode=exec;
     std::vector<const void*> code;
     for(auto& i:exec)

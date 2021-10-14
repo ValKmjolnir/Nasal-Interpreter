@@ -87,36 +87,36 @@ struct
 
 struct token
 {
-    int line;
-    int type;
+    uint32_t line;
+    uint32_t type;
     std::string str;
-    token(int l=0,int t=tok_null,std::string s=""){line=l;type=t;str=s;}
+    token(uint32_t l=0,uint32_t t=tok_null,std::string s=""){line=l;type=t;str=s;}
 };
 
 class nasal_lexer
 {
 private:
-    int error;
-    int res_size;
-    int line;
-    int ptr;
+    uint32_t    error;
+    uint32_t    line;
+    uint32_t    ptr;
+    size_t      res_size;
     std::string line_code;
     std::string res;
     std::vector<token> token_list;
-    int  get_tok_type(const std::string&);
+    uint32_t get_type(const std::string&);
     void die(const char*);
     std::string id_gen();
     std::string num_gen();
     std::string str_gen();
 public:
-    void openfile(const std::string&);
-    void scanner();
-    void print_token();
-    int  get_error(){return error;}
-    std::vector<token>& get_token_list(){return token_list;}
+    void open(const std::string&);
+    void scan();
+    void print();
+    uint32_t err(){return error;}
+    const std::vector<token>& get_tokens(){return token_list;}
 };
 
-void nasal_lexer::openfile(const std::string& filename)
+void nasal_lexer::open(const std::string& filename)
 {
     error=0;
     res.clear();
@@ -137,7 +137,7 @@ void nasal_lexer::openfile(const std::string& filename)
     return;
 }
 
-int nasal_lexer::get_tok_type(const std::string& tk_str)
+uint32_t nasal_lexer::get_type(const std::string& tk_str)
 {
     for(int i=0;token_table[i].str;++i)
         if(tk_str==token_table[i].str)
@@ -272,7 +272,7 @@ std::string nasal_lexer::str_gen()
     return token_str;
 }
 
-void nasal_lexer::scanner()
+void nasal_lexer::scan()
 {
     token_list.clear();
     line=1;
@@ -297,7 +297,7 @@ void nasal_lexer::scanner()
         if(IS_IDENTIFIER(res[ptr]))
         {
             token_str=id_gen();
-            token_list.push_back({line,get_tok_type(token_str),token_str});
+            token_list.push_back({line,get_type(token_str),token_str});
             if(!token_list.back().type)
                 token_list.back().type=tok_id;
         }
@@ -309,7 +309,7 @@ void nasal_lexer::scanner()
         {
             token_str=res[ptr];
             line_code+=res[ptr];
-            int type=get_tok_type(token_str);
+            uint32_t type=get_type(token_str);
             if(!type)
                 die("incorrect operator.");
             token_list.push_back({line,type,token_str});
@@ -328,7 +328,7 @@ void nasal_lexer::scanner()
                 ++ptr;
             }
             line_code+=token_str;
-            token_list.push_back({line,get_tok_type(token_str),token_str});
+            token_list.push_back({line,get_type(token_str),token_str});
         }
         else if(IS_CALC_OPERATOR(res[ptr]))
         {
@@ -337,7 +337,7 @@ void nasal_lexer::scanner()
             if(ptr<res_size && res[ptr]=='=')
                 token_str+=res[ptr++];
             line_code+=token_str;
-            token_list.push_back({line,get_tok_type(token_str),token_str});
+            token_list.push_back({line,get_type(token_str),token_str});
         }
         else if(IS_NOTE(res[ptr]))// avoid note, after this process ptr will point to a '\n', so next loop line counter+1
             while(++ptr<res_size && res[ptr]!='\n');
@@ -352,7 +352,7 @@ void nasal_lexer::scanner()
     return;
 }
 
-void nasal_lexer::print_token()
+void nasal_lexer::print()
 {
     for(auto& tok:token_list)
         std::cout<<"("<<tok.line<<" | "<<tok.str<<")\n";

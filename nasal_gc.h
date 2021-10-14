@@ -3,11 +3,11 @@
 
 enum nasal_type
 {
-    // none-gc object
+    /* none-gc object */
     vm_none=0,
     vm_nil,
     vm_num,
-    // gc object
+    /* gc object */
     vm_str,
     vm_func,
     vm_vec,
@@ -17,19 +17,19 @@ enum nasal_type
 };
 
 // change parameters here to make your own efficient gc
-// better set bigger number on vm_num and vm_vec
+// better set bigger number on vm_vec
 const uint32_t increment[vm_type_size]=
 {
-    // none-gc object
+    /* none-gc object */
     0,    // vm_none, error type
     0,    // vm_nil
     0,    // vm_num
-    // gc object
+    /* gc object */
     2048, // vm_str
     1024, // vm_func
     8192, // vm_vec
     512,  // vm_hash
-    0     // vm_obj
+    128   // vm_obj
 };
 
 // declaration of nasal value type
@@ -83,7 +83,7 @@ struct nasal_ref// 16 bytes
     inline nasal_vec*   vec ();
     inline nasal_hash*  hash();
     inline nasal_func*  func();
-    inline void*        obj ();
+    inline void*&       obj ();
 };
 
 struct nasal_vec// 24 bytes
@@ -282,6 +282,7 @@ nasal_val::nasal_val(uint8_t val_type)
         case vm_vec:  ptr.vec=new nasal_vec;   break;
         case vm_hash: ptr.hash=new nasal_hash; break;
         case vm_func: ptr.func=new nasal_func; break;
+        case vm_obj:  ptr.obj=nullptr;         break;
     }
     return;
 }
@@ -293,7 +294,12 @@ nasal_val::~nasal_val()
         case vm_vec:  delete ptr.vec;  break;
         case vm_hash: delete ptr.hash; break;
         case vm_func: delete ptr.func; break;
+        case vm_obj:
+            if(ptr.obj)
+                free(ptr.obj);
+            break;
     }
+    ptr.obj=nullptr;
     type=vm_nil;
     return;
 }
@@ -313,12 +319,12 @@ std::string nasal_ref::to_string()
         return std::to_string(num());
     return "";
 }
-inline double&      nasal_ref::num (){return value.num;}
-inline std::string* nasal_ref::str (){return value.gcobj->ptr.str;}
-inline nasal_vec*   nasal_ref::vec (){return value.gcobj->ptr.vec;}
+inline double&      nasal_ref::num (){return value.num;            }
+inline std::string* nasal_ref::str (){return value.gcobj->ptr.str; }
+inline nasal_vec*   nasal_ref::vec (){return value.gcobj->ptr.vec; }
 inline nasal_hash*  nasal_ref::hash(){return value.gcobj->ptr.hash;}
 inline nasal_func*  nasal_ref::func(){return value.gcobj->ptr.func;}
-inline void*        nasal_ref::obj (){return value.gcobj->ptr.obj;}
+inline void*&       nasal_ref::obj (){return value.gcobj->ptr.obj; }
 
 struct nasal_gc
 {
@@ -326,7 +332,7 @@ struct nasal_gc
     nasal_ref               zero;               // reserved address of nasal_val,type vm_num, 0
     nasal_ref               one;                // reserved address of nasal_val,type vm_num, 1
     nasal_ref               nil;                // reserved address of nasal_val,type vm_nil
-    nasal_ref               val_stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow, stack grows 1 each time
+    nasal_ref               val_stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
     nasal_ref*              stack_top;               // stack top
     std::vector<nasal_ref>  str_addrs;               // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
@@ -386,6 +392,11 @@ void nasal_gc::sweep()
                 case vm_vec: i->ptr.vec->elems.clear(); break;
                 case vm_hash:i->ptr.hash->elems.clear();break;
                 case vm_func:i->ptr.func->clear();      break;
+                case vm_obj:
+                    if(i->ptr.obj)
+                        free(i->ptr.obj);
+                    i->ptr.obj=nullptr;
+                    break;
             }
             free_list[i->type].push(i);
             i->mark=GC_COLLECTED;
@@ -429,7 +440,6 @@ void nasal_gc::gc_clear()
         while(!free_list[i].empty())
             free_list[i].pop();
     local.clear();
-
     for(auto& i:str_addrs)
         delete i.value.gcobj;
     str_addrs.clear();
