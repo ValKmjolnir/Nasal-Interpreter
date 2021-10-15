@@ -101,7 +101,7 @@ private:
 public:
     uint32_t   err(){return error;}
     void       compile(const std::vector<token>&);
-    nasal_ast& get_root(){return root;}
+    nasal_ast& ast(){return root;}
 };
 void nasal_parse::compile(const std::vector<token>& toks)
 {
