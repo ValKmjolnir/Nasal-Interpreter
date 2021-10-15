@@ -127,13 +127,16 @@ void nasal_lexer::open(const std::string& filename)
         std::cout<<"[lexer] cannot open file <"<<filename<<">.\n";
         return;
     }
-    while(!fin.eof())
-    {
-        char c=fin.get();
-        if(fin.eof())
-            break;
-        res+=c;
-    }
+    std::stringstream ss;
+    ss<<fin.rdbuf();
+    res=ss.str();
+    // while(!fin.eof())
+    // {
+    //     char c=fin.get();
+    //     if(fin.eof())
+    //         break;
+    //     res+=c;
+    // }
     return;
 }
 

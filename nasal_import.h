@@ -18,14 +18,14 @@ private:
 public:
     uint32_t  err(){return error;}
     void      link(nasal_ast&,const std::string&);
-    const nasal_ast& get_root(){return import_ast;}
+    const nasal_ast& ast(){return import_ast;}
     const std::vector<std::string>& get_file(){return filename_table;}
 };
 
-void nasal_import::die(const std::string& filename,const char* error_stage)
+void nasal_import::die(const std::string& file,const char* stage)
 {
     ++error;
-    std::cout<<"[import] in <\""<<filename<<"\">: error(s) occurred in "<<error_stage<<".\n";
+    std::cout<<"[import] in <\""<<file<<"\">: error(s) occurred in "<<stage<<".\n";
 }
 
 bool nasal_import::check_import(const nasal_ast& node)
@@ -95,7 +95,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         die(filename,"parser");
         return tmp;
     }
-    tmp=std::move(import_par.get_root());
+    tmp=std::move(import_par.ast());
     // check if tmp has 'import'
     return load(tmp,filename_table.size()-1);
 }

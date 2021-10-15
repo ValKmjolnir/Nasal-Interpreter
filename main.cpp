@@ -78,12 +78,12 @@ void execute(const std::string& file,const uint16_t cmd)
     if(parse.err())
         die("parse",file);
     if(cmd&VM_ASTINFO)
-        parse.get_root().print(0);
+        parse.ast().print(0);
     // first used file is itself
-    import.link(parse.get_root(),file);
+    import.link(parse.ast(),file);
     if(import.err())
         die("import",file);
-    codegen.compile(import.get_root(),import.get_file());
+    codegen.compile(import.ast(),import.get_file());
     if(codegen.err())
         die("code",file);
     if(cmd&VM_CODEINFO)
@@ -107,16 +107,15 @@ void execute(const std::string& file,const uint16_t cmd)
 
 int main(int argc,const char* argv[])
 {
-    std::string filename;
-    uint16_t cmd=0;
     if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
         logo();
     else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))
         help_cmd();
     else if(argc==2 && argv[1][0]!='-')
-        cmd|=VM_EXEC;
+        execute(argv[1],VM_EXEC);
     else if(argc>=3)
     {
+        uint16_t cmd=0;
         for(int i=1;i<argc-1;++i)
         {
             std::string s(argv[i]);
@@ -133,12 +132,9 @@ int main(int argc,const char* argv[])
             else
                 cmderr();
         }
+        execute(argv[argc-1],cmd);
     }
     else
         cmderr();
-    if(argv[argc-1][0]=='-')
-        cmderr();
-    if(cmd)
-        execute(argv[argc-1],cmd);
     return 0;
 }
