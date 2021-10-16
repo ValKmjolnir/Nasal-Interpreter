@@ -5,10 +5,9 @@ class nasal_import
 {
 private:
     uint32_t                 error;
-    nasal_lexer              import_lex;
-    nasal_parse              import_par;
-    nasal_ast                import_ast;
-    std::vector<std::string> file_table;
+    nasal_lexer              lex;
+    nasal_parse              par;
+    std::vector<std::string> files;
     void      die(const std::string&,const char*);
     bool      check_import(const nasal_ast&);
     bool      check_exist(const std::string&);
@@ -18,7 +17,7 @@ private:
 public:
     uint32_t  err(){return error;}
     void      link(nasal_parse&,const std::string&);
-    const std::vector<std::string>& get_file() const {return file_table;}
+    const std::vector<std::string>& get_file() const {return files;}
 };
 
 void nasal_import::die(const std::string& file,const char* stage)
@@ -38,14 +37,14 @@ only this kind of node can be recognized as 'import':
 */
     if(node.type()!=ast_call)
         return false;
-    const std::vector<nasal_ast>& ref_vec=node.child();
-    if(ref_vec.size()!=2)
+    const std::vector<nasal_ast>& vec=node.child();
+    if(vec.size()!=2)
         return false;
-    if(ref_vec[0].str()!="import")
+    if(vec[0].str()!="import")
         return false;
-    if(ref_vec[1].type()!=ast_callf)
+    if(vec[1].type()!=ast_callf)
         return false;
-    if(ref_vec[1].child().size()!=1 || ref_vec[1].child()[0].type()!=ast_str)
+    if(vec[1].child().size()!=1 || vec[1].child()[0].type()!=ast_str)
         return false;
     return true;
 }
@@ -53,10 +52,10 @@ only this kind of node can be recognized as 'import':
 bool nasal_import::check_exist(const std::string& file)
 {
     // avoid importing the same file
-    for(auto& fname:file_table)
+    for(auto& fname:files)
         if(file==fname)
             return true;
-    file_table.push_back(file);
+    files.push_back(file);
     return false;
 }
 
@@ -78,21 +77,21 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
         return {0,ast_root};
     
     // start importing...
-    import_lex.scan(filename);
-    if(import_lex.err())
+    lex.scan(filename);
+    if(lex.err())
     {
         die(filename,"lexer");
         return {0,ast_root};
     }
-    import_par.compile(import_lex);
-    if(import_par.err())
+    par.compile(lex);
+    if(par.err())
     {
         die(filename,"parser");
         return {0,ast_root};
     }
-    nasal_ast tmp=std::move(import_par.ast());
+    nasal_ast tmp=std::move(par.ast());
     // check if tmp has 'import'
-    return load(tmp,file_table.size()-1);
+    return load(tmp,files.size()-1);
 }
 
 nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
@@ -113,7 +112,7 @@ void nasal_import::link(nasal_parse& parse,const std::string& self)
 {
     // initializing
     error=0;
-    file_table={self};
+    files={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
     parse.ast()=load(parse.ast(),0);
