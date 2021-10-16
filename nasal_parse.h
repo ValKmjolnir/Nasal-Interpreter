@@ -100,6 +100,7 @@ private:
     nasal_ast ret_expr();
 public:
     uint32_t   err(){return error;}
+    void       print(){root.print(0);}
     void       compile(const nasal_lexer&);
     nasal_ast& ast(){return root;}
     const nasal_ast& ast() const {return root;}

@@ -91,8 +91,8 @@ struct nasal_vec// 24 bytes
     std::vector<nasal_ref> elems;
 
     void       print();
-    nasal_ref  get_val(int);
-    nasal_ref* get_mem(int);
+    nasal_ref  get_val(const int);
+    nasal_ref* get_mem(const int);
 };
 
 struct nasal_hash// 56 bytes
@@ -100,8 +100,8 @@ struct nasal_hash// 56 bytes
     std::unordered_map<std::string,nasal_ref> elems;
 
     void       print();
-    nasal_ref  get_val(std::string&);
-    nasal_ref* get_mem(std::string&);
+    nasal_ref  get_val(const std::string&);
+    nasal_ref* get_mem(const std::string&);
 };
 
 struct nasal_func// 112 bytes
@@ -137,14 +137,14 @@ struct nasal_val// 16 bytes
 };
 
 /*functions of nasal_vec*/
-nasal_ref nasal_vec::get_val(int index)
+nasal_ref nasal_vec::get_val(const int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
-        return nasal_ref(vm_none);
+        return {vm_none};
     return elems[index>=0?index:index+vec_size];
 }
-nasal_ref* nasal_vec::get_mem(int index)
+nasal_ref* nasal_vec::get_mem(const int index)
 {
     int vec_size=elems.size();
     if(index<-vec_size || index>=vec_size)
@@ -187,7 +187,7 @@ void nasal_vec::print()
 }
 
 /*functions of nasal_hash*/
-nasal_ref nasal_hash::get_val(std::string& key)
+nasal_ref nasal_hash::get_val(const std::string& key)
 {
     if(elems.count(key))
         return elems[key];
@@ -204,9 +204,9 @@ nasal_ref nasal_hash::get_val(std::string& key)
                     return ret;
             }
     }
-    return nasal_ref(vm_none);
+    return {vm_none};
 }
-nasal_ref* nasal_hash::get_mem(std::string& key)
+nasal_ref* nasal_hash::get_mem(const std::string& key)
 {
     if(elems.count(key))
         return &elems[key];

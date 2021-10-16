@@ -14,7 +14,7 @@ private:
     std::stack<int>          counter;  // iterator stack for forindex/foreach
     const double*            num_table;// numbers used in process(const calculation)
     std::vector<std::string> str_table;// symbols used in process
-    const uint32_t*          imm;      // immediate number
+    std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     nasal_gc                 gc;       // garbage collector
     /* values used for debug */
@@ -124,7 +124,6 @@ void nasal_vm::init(
     const std::vector<std::string>& filenames)
 {
     gc.init(strs);
-    gc.val_stack[STACK_MAX_DEPTH-1].value.gcobj=nullptr;
     num_table=nums.data(); // get constant numbers
     str_table=strs; // get constant strings & symbols
     files=filenames;// get filenames for debugger
@@ -804,20 +803,18 @@ void nasal_vm::run(const nasal_codegen& gen,const nasal_import& linker,const boo
         &&mcallh,  &&ret,      &&vmexit
     };
     bytecode=gen.get_code();
-    std::vector<const void*> codes;
-    std::vector<uint32_t> imms;
+    std::vector<const void*> code;
     for(auto& i:bytecode)
     {
-        codes.push_back(opr_table[i.op]);
-        imms.push_back(i.num);
+        code.push_back(opr_table[i.op]);
+        imm.push_back(i.num);
     }
-    auto code=codes.data();
-    imm=imms.data();
 
     // set canary and program counter
     auto& canary=gc.val_stack[STACK_MAX_DEPTH-1];
+    canary.value.gcobj=nullptr;
     pc=0;
-    // run
+    // goto the first operand
     goto *code[pc];
 
 vmexit:
@@ -846,83 +843,83 @@ vmexit:
 // do not cause stackoverflow
 #define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 
-nop:     exec_opnodie(opr_nop     ,op_nop     ); // do nothing
-intg:    exec_opnodie(opr_intg    ,op_intg    ); // stack+=imm[pc] (detected at codegen)
-intl:    exec_opnodie(opr_intl    ,op_intl    ); // stack-=0
-loadg:   exec_opnodie(opr_loadg   ,op_loadg   ); // stack-=1
-loadl:   exec_opnodie(opr_loadl   ,op_loadl   ); // stack-=1
-loadu:   exec_opnodie(opr_loadu   ,op_loadu   ); // stack-=1
-pnum:    exec_operand(opr_pnum    ,op_pnum    ); // stack+=1
-pone:    exec_operand(opr_pone    ,op_pone    ); // stack+=1
-pzero:   exec_operand(opr_pzero   ,op_pzero   ); // stack+=1
-pnil:    exec_operand(opr_pnil    ,op_pnil    ); // stack+=1
-pstr:    exec_operand(opr_pstr    ,op_pstr    ); // stack+=1
-newv:    exec_operand(opr_newv    ,op_newv    ); // stack+=1-imm[pc]
-newh:    exec_operand(opr_newh    ,op_newh    ); // stack+=1
-newf:    exec_operand(opr_newf    ,op_newf    ); // stack+=1
-happ:    exec_opnodie(opr_happ    ,op_happ    ); // stack-=1
-para:    exec_opnodie(opr_para    ,op_para    ); // stack-=0
-defpara: exec_opnodie(opr_defpara ,op_defpara ); // stack-=1
-dynpara: exec_opnodie(opr_dynpara ,op_dynpara ); // stack-=0
-unot:    exec_opnodie(opr_unot    ,op_unot    ); // stack-=0
-usub:    exec_opnodie(opr_usub    ,op_usub    ); // stack-=0
-add:     exec_opnodie(opr_add     ,op_add     ); // stack-=1
-sub:     exec_opnodie(opr_sub     ,op_sub     ); // stack-=1
-mul:     exec_opnodie(opr_mul     ,op_mul     ); // stack-=1
-div:     exec_opnodie(opr_div     ,op_div     ); // stack-=1
-lnk:     exec_opnodie(opr_lnk     ,op_lnk     ); // stack-=1
-addc:    exec_opnodie(opr_addc    ,op_addc    ); // stack-=0
-subc:    exec_opnodie(opr_subc    ,op_subc    ); // stack-=0
-mulc:    exec_opnodie(opr_mulc    ,op_mulc    ); // stack-=0
-divc:    exec_opnodie(opr_divc    ,op_divc    ); // stack-=0
-lnkc:    exec_opnodie(opr_lnkc    ,op_lnkc    ); // stack-=0
-addeq:   exec_opnodie(opr_addeq   ,op_addeq   ); // stack-=1
-subeq:   exec_opnodie(opr_subeq   ,op_subeq   ); // stack-=1
-muleq:   exec_opnodie(opr_muleq   ,op_muleq   ); // stack-=1
-diveq:   exec_opnodie(opr_diveq   ,op_diveq   ); // stack-=1
-lnkeq:   exec_opnodie(opr_lnkeq   ,op_lnkeq   ); // stack-=1
-addeqc:  exec_opnodie(opr_addeqc  ,op_addeqc  ); // stack-=0
-subeqc:  exec_opnodie(opr_subeqc  ,op_subeqc  ); // stack-=0
-muleqc:  exec_opnodie(opr_muleqc  ,op_muleqc  ); // stack-=0
-diveqc:  exec_opnodie(opr_diveqc  ,op_diveqc  ); // stack-=0
-lnkeqc:  exec_opnodie(opr_lnkeqc  ,op_lnkeqc  ); // stack-=0
-meq:     exec_opnodie(opr_meq     ,op_meq     ); // stack-=1
-eq:      exec_opnodie(opr_eq      ,op_eq      ); // stack-=1
-neq:     exec_opnodie(opr_neq     ,op_neq     ); // stack-=1
-less:    exec_opnodie(opr_less    ,op_less    ); // stack-=1
-leq:     exec_opnodie(opr_leq     ,op_leq     ); // stack-=1
-grt:     exec_opnodie(opr_grt     ,op_grt     ); // stack-=1
-geq:     exec_opnodie(opr_geq     ,op_geq     ); // stack-=1
-lessc:   exec_opnodie(opr_lessc   ,op_lessc   ); // stack-=0
-leqc:    exec_opnodie(opr_leqc    ,op_leqc    ); // stack-=0
-grtc:    exec_opnodie(opr_grtc    ,op_grtc    ); // stack-=0
-geqc:    exec_opnodie(opr_geqc    ,op_geqc    ); // stack-=0
-pop:     exec_opnodie(opr_pop     ,op_pop     ); // stack-=1
-jmp:     exec_opnodie(opr_jmp     ,op_jmp     ); // stack-=0
-jt:      exec_opnodie(opr_jt      ,op_jt      ); // stack-=0
-jf:      exec_opnodie(opr_jf      ,op_jf      ); // stack-=1
-counter: exec_opnodie(opr_counter ,op_cnt     ); // stack-=0
-cntpop:  exec_opnodie(opr_cntpop  ,op_cntpop  ); // stack-=0
-findex:  exec_operand(opr_findex  ,op_findex  ); // stack+=1
-feach:   exec_operand(opr_feach   ,op_feach   ); // stack+=1
-callg:   exec_operand(opr_callg   ,op_callg   ); // stack+=1
-calll:   exec_operand(opr_calll   ,op_calll   ); // stack+=1
-upval:   exec_operand(opr_upval   ,op_upval   ); // stack+=1
-callv:   exec_opnodie(opr_callv   ,op_callv   ); // stack-=0
-callvi:  exec_opnodie(opr_callvi  ,op_callvi  ); // stack-=0
-callh:   exec_opnodie(opr_callh   ,op_callh   ); // stack-=0
-callfv:  exec_opnodie(opr_callfv  ,op_callfv  ); // stack-=0
-callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // stack-=0
-callb:   exec_opnodie(opr_callb   ,op_callb   ); // stack-=0
-slcbegin:exec_operand(opr_slcbegin,op_slcbegin); // stack+=1
-slcend:  exec_opnodie(opr_slcend  ,op_slcend  ); // stack-=1
-slc:     exec_opnodie(opr_slc     ,op_slc     ); // stack-=1
-slc2:    exec_opnodie(opr_slc2    ,op_slc2    ); // stack-=2
-mcallg:  exec_operand(opr_mcallg  ,op_mcallg  ); // stack+=1
-mcalll:  exec_operand(opr_mcalll  ,op_mcalll  ); // stack+=1
-mupval:  exec_operand(opr_mupval  ,op_mupval  ); // stack+=1
-mcallv:  exec_opnodie(opr_mcallv  ,op_mcallv  ); // stack-=0
-mcallh:  exec_opnodie(opr_mcallh  ,op_mcallh  ); // stack-=0
-ret:     exec_opnodie(opr_ret     ,op_ret     ); // stack-=1
+nop:     exec_opnodie(opr_nop     ,op_nop     ); // 0
+intg:    exec_opnodie(opr_intg    ,op_intg    ); // +imm[pc] (detected at codegen)
+intl:    exec_opnodie(opr_intl    ,op_intl    ); // -0
+loadg:   exec_opnodie(opr_loadg   ,op_loadg   ); // -1
+loadl:   exec_opnodie(opr_loadl   ,op_loadl   ); // -1
+loadu:   exec_opnodie(opr_loadu   ,op_loadu   ); // -1
+pnum:    exec_operand(opr_pnum    ,op_pnum    ); // +1
+pone:    exec_operand(opr_pone    ,op_pone    ); // +1
+pzero:   exec_operand(opr_pzero   ,op_pzero   ); // +1
+pnil:    exec_operand(opr_pnil    ,op_pnil    ); // +1
+pstr:    exec_operand(opr_pstr    ,op_pstr    ); // +1
+newv:    exec_operand(opr_newv    ,op_newv    ); // +1-imm[pc]
+newh:    exec_operand(opr_newh    ,op_newh    ); // +1
+newf:    exec_operand(opr_newf    ,op_newf    ); // +1
+happ:    exec_opnodie(opr_happ    ,op_happ    ); // -1
+para:    exec_opnodie(opr_para    ,op_para    ); // -0
+defpara: exec_opnodie(opr_defpara ,op_defpara ); // -1
+dynpara: exec_opnodie(opr_dynpara ,op_dynpara ); // -0
+unot:    exec_opnodie(opr_unot    ,op_unot    ); // -0
+usub:    exec_opnodie(opr_usub    ,op_usub    ); // -0
+add:     exec_opnodie(opr_add     ,op_add     ); // -1
+sub:     exec_opnodie(opr_sub     ,op_sub     ); // -1
+mul:     exec_opnodie(opr_mul     ,op_mul     ); // -1
+div:     exec_opnodie(opr_div     ,op_div     ); // -1
+lnk:     exec_opnodie(opr_lnk     ,op_lnk     ); // -1
+addc:    exec_opnodie(opr_addc    ,op_addc    ); // -0
+subc:    exec_opnodie(opr_subc    ,op_subc    ); // -0
+mulc:    exec_opnodie(opr_mulc    ,op_mulc    ); // -0
+divc:    exec_opnodie(opr_divc    ,op_divc    ); // -0
+lnkc:    exec_opnodie(opr_lnkc    ,op_lnkc    ); // -0
+addeq:   exec_opnodie(opr_addeq   ,op_addeq   ); // -1
+subeq:   exec_opnodie(opr_subeq   ,op_subeq   ); // -1
+muleq:   exec_opnodie(opr_muleq   ,op_muleq   ); // -1
+diveq:   exec_opnodie(opr_diveq   ,op_diveq   ); // -1
+lnkeq:   exec_opnodie(opr_lnkeq   ,op_lnkeq   ); // -1
+addeqc:  exec_opnodie(opr_addeqc  ,op_addeqc  ); // -0
+subeqc:  exec_opnodie(opr_subeqc  ,op_subeqc  ); // -0
+muleqc:  exec_opnodie(opr_muleqc  ,op_muleqc  ); // -0
+diveqc:  exec_opnodie(opr_diveqc  ,op_diveqc  ); // -0
+lnkeqc:  exec_opnodie(opr_lnkeqc  ,op_lnkeqc  ); // -0
+meq:     exec_opnodie(opr_meq     ,op_meq     ); // -1
+eq:      exec_opnodie(opr_eq      ,op_eq      ); // -1
+neq:     exec_opnodie(opr_neq     ,op_neq     ); // -1
+less:    exec_opnodie(opr_less    ,op_less    ); // -1
+leq:     exec_opnodie(opr_leq     ,op_leq     ); // -1
+grt:     exec_opnodie(opr_grt     ,op_grt     ); // -1
+geq:     exec_opnodie(opr_geq     ,op_geq     ); // -1
+lessc:   exec_opnodie(opr_lessc   ,op_lessc   ); // -0
+leqc:    exec_opnodie(opr_leqc    ,op_leqc    ); // -0
+grtc:    exec_opnodie(opr_grtc    ,op_grtc    ); // -0
+geqc:    exec_opnodie(opr_geqc    ,op_geqc    ); // -0
+pop:     exec_opnodie(opr_pop     ,op_pop     ); // -1
+jmp:     exec_opnodie(opr_jmp     ,op_jmp     ); // -0
+jt:      exec_opnodie(opr_jt      ,op_jt      ); // -0
+jf:      exec_opnodie(opr_jf      ,op_jf      ); // -1
+counter: exec_opnodie(opr_counter ,op_cnt     ); // -0
+cntpop:  exec_opnodie(opr_cntpop  ,op_cntpop  ); // -0
+findex:  exec_operand(opr_findex  ,op_findex  ); // +1
+feach:   exec_operand(opr_feach   ,op_feach   ); // +1
+callg:   exec_operand(opr_callg   ,op_callg   ); // +1
+calll:   exec_operand(opr_calll   ,op_calll   ); // +1
+upval:   exec_operand(opr_upval   ,op_upval   ); // +1
+callv:   exec_opnodie(opr_callv   ,op_callv   ); // -0
+callvi:  exec_opnodie(opr_callvi  ,op_callvi  ); // -0
+callh:   exec_opnodie(opr_callh   ,op_callh   ); // -0
+callfv:  exec_opnodie(opr_callfv  ,op_callfv  ); // -0
+callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // -0
+callb:   exec_opnodie(opr_callb   ,op_callb   ); // -0
+slcbegin:exec_operand(opr_slcbegin,op_slcbegin); // +1
+slcend:  exec_opnodie(opr_slcend  ,op_slcend  ); // -1
+slc:     exec_opnodie(opr_slc     ,op_slc     ); // -1
+slc2:    exec_opnodie(opr_slc2    ,op_slc2    ); // -2
+mcallg:  exec_operand(opr_mcallg  ,op_mcallg  ); // +1
+mcalll:  exec_operand(opr_mcalll  ,op_mcalll  ); // +1
+mupval:  exec_operand(opr_mupval  ,op_mupval  ); // +1
+mcallv:  exec_opnodie(opr_mcallv  ,op_mcallv  ); // -0
+mcallh:  exec_opnodie(opr_mcallh  ,op_mcallh  ); // -0
+ret:     exec_opnodie(opr_ret     ,op_ret     ); // -1
 }
 #endif

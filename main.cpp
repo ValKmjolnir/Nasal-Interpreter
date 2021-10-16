@@ -90,7 +90,7 @@ void execute(const std::string& file,const uint16_t cmd)
     if(cmd&VM_LEXINFO)
         lexer.print();
     if(cmd&VM_ASTINFO)
-        parse.ast().print(0);
+        parse.print();
     if(cmd&VM_CODEINFO)
         gen.print();
     if(cmd&VM_EXECTIME)
