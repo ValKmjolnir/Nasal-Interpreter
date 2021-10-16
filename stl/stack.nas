@@ -3,33 +3,22 @@
 var stack=func()
 {
     var next=nil;
-    return
-    {
-        push:func(elem)
-        {
+    return{
+        push:func(elem){
             next={elem:elem,next:next};
-            return;
         },
-        pop:func()
-        {
-            var tmp=next;
-            if(tmp!=nil)
-                next=tmp.next;
-            return;
+        pop:func(){
+            if(next!=nil)
+                next=next.next;
         },
-        top:func()
-        {
-            var tmp=next;
-            if(tmp!=nil)
-                return tmp.elem;
-            return nil;
+        top:func(){
+            if(next!=nil)
+                return next.elem;
         },
-        clear:func()
-        {
+        clear:func(){
             next=nil;
         },
-        empty:func()
-        {
+        empty:func(){
             return next==nil;
         }
     };
