@@ -20,6 +20,25 @@
 #include <vector>
 #include <unordered_map>
 
+class nasal_err
+{
+private:
+    uint32_t error;
+    std::string stage;
+public:
+    nasal_err(
+        const uint32_t _error,
+        const std::string _stage
+        ):error(_error),stage(_stage){}
+    void unwarp(const std::string& error_file)
+    {
+        if(!error)
+            return;
+        std::cout<<"["<<stage<<"] in <"<<error_file<<">: error(s) occurred,stop.\n";
+        std::exit(1);
+    }
+};
+
 /*
     check if a string can be converted to a number
     if this string cannot be converted to a number,it will return nan

@@ -120,7 +120,7 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
     // local[0] is reserved for 'me'
     nasal_ref vec=local[1];
     // main process
-    for(auto i:vec.vec()->elems)
+    for(auto& i:vec.vec()->elems)
         switch(i.type)
         {
             case vm_none: std::cout<<"null";           break;
@@ -143,7 +143,7 @@ nasal_ref builtin_append(std::vector<nasal_ref>& local,nasal_gc& gc)
     if(vec.type!=vm_vec)
         return builtin_err("append","\"vector\" must be vector");
     auto& ref_vec=vec.vec()->elems;
-    for(auto i:elem.vec()->elems)
+    for(auto& i:elem.vec()->elems)
         ref_vec.push_back(i);
     return gc.nil;
 }
@@ -170,7 +170,7 @@ nasal_ref builtin_system(std::vector<nasal_ref>& local,nasal_gc& gc)
 }
 nasal_ref builtin_input(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     std::cin>>*ret.str();
     return ret;
 }
@@ -192,7 +192,7 @@ nasal_ref builtin_fin(std::vector<nasal_ref>& local,nasal_gc& gc)
     std::ifstream fin(filename);
     if(!fin.fail())
     {
-        nasal_ref ret=gc.gc_alloc(vm_str);
+        nasal_ref ret=gc.alloc(vm_str);
         std::stringstream rd;
         rd<<fin.rdbuf();
         *ret.str()=rd.str();
@@ -228,14 +228,14 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local,nasal_gc& gc)
     size_t source_len=source.length();
 
     // push it to local scope to avoid being sweeped
-    local.push_back(gc.gc_alloc(vm_vec));
+    local.push_back(gc.alloc(vm_vec));
 
     std::vector<nasal_ref>& vec=local.back().vec()->elems;
     if(!delimeter_len)
     {
         for(int i=0;i<source_len;++i)
         {
-            vec.push_back(gc.gc_alloc(vm_str));
+            vec.push_back(gc.alloc(vm_str));
             *vec.back().str()=source[i];
         }
         return local.back();
@@ -257,7 +257,7 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local,nasal_gc& gc)
         {
             if(tmp.length())
             {
-                vec.push_back(gc.gc_alloc(vm_str));
+                vec.push_back(gc.alloc(vm_str));
                 *vec.back().str()=tmp;
                 tmp="";
             }
@@ -268,7 +268,7 @@ nasal_ref builtin_split(std::vector<nasal_ref>& local,nasal_gc& gc)
     }
     if(tmp.length())
     {
-        vec.push_back(gc.gc_alloc(vm_str));
+        vec.push_back(gc.alloc(vm_str));
         *vec.back().str()=tmp;
         tmp="";
     }
@@ -292,7 +292,7 @@ nasal_ref builtin_rand(std::vector<nasal_ref>& local,nasal_gc& gc)
 nasal_ref builtin_id(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     char buf[32];
     if(val.type>vm_num)
         sprintf(buf,"%p",val.value.gcobj);
@@ -334,7 +334,7 @@ nasal_ref builtin_str(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref val=local[1];
     if(val.type!=vm_num)
         return builtin_err("str","\"number\" must be number");
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     *ret.str()=std::to_string(val.num());
     return ret;
 }
@@ -500,11 +500,11 @@ nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    local.push_back(gc.gc_alloc(vm_vec));
+    local.push_back(gc.alloc(vm_vec));
     auto& vec=local.back().vec()->elems;
     for(auto& iter:hash.hash()->elems)
     {
-        nasal_ref str=gc.gc_alloc(vm_str);
+        nasal_ref str=gc.alloc(vm_str);
         *str.str()=iter.first;
         vec.push_back(str);
     }
@@ -527,7 +527,7 @@ nasal_ref builtin_die(std::vector<nasal_ref>& local,nasal_gc& gc)
 nasal_ref builtin_type(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     switch(val.type)
     {
         case vm_none: *ret.str()="undefined";break;
@@ -558,7 +558,7 @@ nasal_ref builtin_substr(std::vector<nasal_ref>& local,nasal_gc& gc)
         return builtin_err("susbtr","index out of range");
     if(length<0)
         length=0;
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     *ret.str()=str.str()->substr(begin,length);
     return ret;
 }
@@ -579,7 +579,7 @@ nasal_ref builtin_left(std::vector<nasal_ref>& local,nasal_gc& gc)
     int length=(int)len.num();
     if(length<0)
         length=0;
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     *ret.str()=str.str()->substr(0,length);
     return ret;
 }
@@ -597,7 +597,7 @@ nasal_ref builtin_right(std::vector<nasal_ref>& local,nasal_gc& gc)
         length=srclen;
     if(length<0)
         length=0;
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     *ret.str()=str.str()->substr(srclen-length, srclen);
     return ret;
 }
@@ -634,7 +634,7 @@ nasal_ref builtin_chr(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref code=local[1];
     if(code.type!=vm_num)
         return builtin_err("chr","\"code\" must be number");
-    nasal_ref ret=gc.gc_alloc(vm_str);
+    nasal_ref ret=gc.alloc(vm_str);
     int num=code.num();
     if(0<=num && num<128)
         *ret.str()=(char)num;

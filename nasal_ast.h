@@ -29,7 +29,7 @@ const char* ast_name[]=
     "null",
     "root","block",
     "file",
-    "nil","num","str","id","func","hash","vec",
+    "nil","node_num","node_str","id","func","hash","vec",
     "hashmember","call","callh","callv","callf","subvec",
     "args","deflt_arg","dyn_id",
     "and","or",
@@ -50,103 +50,98 @@ const char* ast_name[]=
 class nasal_ast
 {
 private:
-    uint32_t    line;
-    uint32_t    type;
-    double      num;
-    std::string str;
-    std::vector<nasal_ast> children;
+    uint32_t    text_line;
+    uint32_t    node_type;
+    double      node_num;
+    std::string node_str;
+    std::vector<nasal_ast> node_child;
 public:
-    nasal_ast(){line=0;type=ast_null;}
-    nasal_ast(const uint32_t l,const uint32_t t){line=l;type=t;}
+    nasal_ast(const uint32_t l=0,const uint32_t t=ast_null):text_line(l),node_type(t){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     nasal_ast& operator=(const nasal_ast&);
     nasal_ast& operator=(nasal_ast&&);
-    void   print(const int);
-    void   clear();
-    void   add_child(nasal_ast&& ast){children.push_back(std::move(ast));}
-    void   add_child(const nasal_ast& ast){children.push_back(ast);}
-    void   set_line(const uint32_t l){line=l;}
-    void   set_type(const uint32_t t){type=t;}
-    void   set_str(const std::string& s){str=s;}
-    void   set_num(const double n){num=n;}
+    void print(const int);
+    void clear();
+    void add(nasal_ast&& ast){node_child.push_back(std::move(ast));}
+    void add(const nasal_ast& ast){node_child.push_back(ast);}
+    void set_line(const uint32_t l){text_line=l;}
+    void set_type(const uint32_t t){node_type=t;}
+    void set_str(const std::string& s){node_str=s;}
+    void set_num(const double n){node_num=n;}
 
-    uint32_t     get_line(){return line;}
-    uint32_t     get_type(){return type;}
-    double       get_num() {return num;}
-    std::string& get_str() {return str;}
-    std::vector<nasal_ast>& get_children(){return children;}
-
-    uint32_t           get_line() const {return line;}
-    uint32_t           get_type() const {return type;}
-    double             get_num()  const {return num;}
-    const std::string& get_str()  const {return str;}
-    const std::vector<nasal_ast>& get_children() const {return children;}
+    inline const uint32_t     line() const {return text_line;}
+    inline const uint32_t     type() const {return node_type;}
+    inline const double       num()  const {return node_num;}
+    inline const std::string& str()  const {return node_str;}
+    inline const std::vector<nasal_ast>& child() const {return node_child;}
+    inline std::vector<nasal_ast>& child(){return node_child;}
 };
 
 nasal_ast::nasal_ast(const nasal_ast& tmp)
 {
-    line=tmp.line;
-    type=tmp.type;
-    num =tmp.num;
-    str =tmp.str;
-    children=tmp.children;
-    return;
+    text_line=tmp.text_line;
+    node_type=tmp.node_type;
+    node_num =tmp.node_num;
+    node_str =tmp.node_str;
+    node_child=tmp.node_child;
 }
 
 nasal_ast::nasal_ast(nasal_ast&& tmp)
 {
-    line=tmp.line;
-    type=tmp.type;
-    num =tmp.num;
-    str.swap(tmp.str);
-    children.swap(tmp.children);
-    return;
+    text_line=tmp.text_line;
+    node_type=tmp.node_type;
+    node_num =tmp.node_num;
+    node_str.swap(tmp.node_str);
+    node_child.swap(tmp.node_child);
 }
 
 nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 {
-    line=tmp.line;
-    type=tmp.type;
-    num=tmp.num;
-    str=tmp.str;
-    children=tmp.children;
+    text_line=tmp.text_line;
+    node_type=tmp.node_type;
+    node_num=tmp.node_num;
+    node_str=tmp.node_str;
+    node_child=tmp.node_child;
     return *this;
 }
 
 nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
 {
-    line=tmp.line;
-    type=tmp.type;
-    num=tmp.num;
-    str.swap(tmp.str);
-    children.swap(tmp.children);
+    text_line=tmp.text_line;
+    node_type=tmp.node_type;
+    node_num=tmp.node_num;
+    node_str.swap(tmp.node_str);
+    node_child.swap(tmp.node_child);
     return *this;
 }
 
 void nasal_ast::clear()
 {
-    line=0;
-    num=0;
-    str="";
-    type=ast_null;
-    children.clear();
-    return;
+    text_line=0;
+    node_num=0;
+    node_str="";
+    node_type=ast_null;
+    node_child.clear();
 }
 
 void nasal_ast::print(const int depth)
 {
     for(int i=0;i<depth;++i)
         std::cout<<"|  ";
-    std::cout<<ast_name[type];
-    if(type==ast_str || type==ast_id || type==ast_default_arg || type==ast_dynamic_id || type==ast_callh)
-        std::cout<<":"<<raw_string(str);
-    else if(type==ast_num || type==ast_file)
-        std::cout<<":"<<num;
+    std::cout<<ast_name[node_type];
+    if(
+        node_type==ast_str ||
+        node_type==ast_id ||
+        node_type==ast_default_arg ||
+        node_type==ast_dynamic_id ||
+        node_type==ast_callh)
+        std::cout<<":"<<raw_string(node_str);
+    else if(node_type==ast_num || node_type==ast_file)
+        std::cout<<":"<<node_num;
     std::cout<<'\n';
-    for(auto& i:children)
+    for(auto& i:node_child)
         i.print(depth+1);
-    return;
 }
 
 #endif

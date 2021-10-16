@@ -161,7 +161,7 @@ var lexer=func(file)
             ptr+=1;
             return;
         },
-        main:func()
+        compile:func()
         {
             while(ptr<len)
             {
@@ -185,9 +185,8 @@ var lexer=func(file)
     };
 }
 
-var nasal_lexer=lexer("test/lexer.nas");
-nasal_lexer.main();
-var info="";
-foreach(var tok;nasal_lexer.get_token())
-    info~=tok~' ';
-println(info);
+var lex=lexer("test/props.nas");
+lex.compile();
+foreach(var tok;lex.get_token())
+    print(tok,' ');
+print('\n');

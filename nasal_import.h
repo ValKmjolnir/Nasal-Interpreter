@@ -8,7 +8,7 @@ private:
     nasal_lexer              import_lex;
     nasal_parse              import_par;
     nasal_ast                import_ast;
-    std::vector<std::string> filename_table;
+    std::vector<std::string> file_table;
     void      die(const std::string&,const char*);
     bool      check_import(const nasal_ast&);
     bool      check_exist(const std::string&);
@@ -17,9 +17,8 @@ private:
     nasal_ast load(nasal_ast&,uint16_t);
 public:
     uint32_t  err(){return error;}
-    void      link(nasal_ast&,const std::string&);
-    const nasal_ast& ast(){return import_ast;}
-    const std::vector<std::string>& get_file(){return filename_table;}
+    void      link(nasal_parse&,const std::string&);
+    const std::vector<std::string>& get_file() const {return file_table;}
 };
 
 void nasal_import::die(const std::string& file,const char* stage)
@@ -37,16 +36,16 @@ only this kind of node can be recognized as 'import':
         call_func
             string:'filename'
 */
-    if(node.get_type()!=ast_call)
+    if(node.type()!=ast_call)
         return false;
-    const std::vector<nasal_ast>& ref_vec=node.get_children();
+    const std::vector<nasal_ast>& ref_vec=node.child();
     if(ref_vec.size()!=2)
         return false;
-    if(ref_vec[0].get_str()!="import")
+    if(ref_vec[0].str()!="import")
         return false;
-    if(ref_vec[1].get_type()!=ast_callf)
+    if(ref_vec[1].type()!=ast_callf)
         return false;
-    if(ref_vec[1].get_children().size()!=1 || ref_vec[1].get_children()[0].get_type()!=ast_str)
+    if(ref_vec[1].child().size()!=1 || ref_vec[1].child()[0].type()!=ast_str)
         return false;
     return true;
 }
@@ -54,76 +53,70 @@ only this kind of node can be recognized as 'import':
 bool nasal_import::check_exist(const std::string& file)
 {
     // avoid importing the same file
-    for(auto& fname:filename_table)
+    for(auto& fname:file_table)
         if(file==fname)
             return true;
-    filename_table.push_back(file);
+    file_table.push_back(file);
     return false;
 }
 
 void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
 {
     // add children of add_root to the back of root
-    for(auto& i:add_root.get_children())
-        root.add_child(std::move(i));
+    for(auto& i:add_root.child())
+        root.add(std::move(i));
 }
 
 nasal_ast nasal_import::file_import(nasal_ast& node)
 {
-    // initializing
-    nasal_ast tmp(0,ast_root);
-
     // get filename and set node to ast_null
-    std::string filename=node.get_children()[1].get_children()[0].get_str();
+    std::string filename=node.child()[1].child()[0].str();
     node.clear();
 
     // avoid infinite loading loop
     if(check_exist(filename))
-        return tmp;
+        return {0,ast_root};
     
     // start importing...
-    import_lex.open(filename);
-    import_lex.scan();
+    import_lex.scan(filename);
     if(import_lex.err())
     {
         die(filename,"lexer");
-        return tmp;
+        return {0,ast_root};
     }
-    import_par.compile(import_lex.get_tokens());
+    import_par.compile(import_lex);
     if(import_par.err())
     {
         die(filename,"parser");
-        return tmp;
+        return {0,ast_root};
     }
-    tmp=std::move(import_par.ast());
+    nasal_ast tmp=std::move(import_par.ast());
     // check if tmp has 'import'
-    return load(tmp,filename_table.size()-1);
+    return load(tmp,file_table.size()-1);
 }
 
 nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
 {
     nasal_ast new_root(0,ast_root);
-    for(auto& i:root.get_children())
+    for(auto& i:root.child())
         if(check_import(i))
             linker(new_root,file_import(i));
     // add root to the back of new_root
     nasal_ast file_head(0,ast_file);
     file_head.set_num(fileindex);
-    new_root.add_child(std::move(file_head));
+    new_root.add(std::move(file_head));
     linker(new_root,std::move(root));
     return new_root;
 }
 
-void nasal_import::link(nasal_ast& root,const std::string& self)
+void nasal_import::link(nasal_parse& parse,const std::string& self)
 {
     // initializing
     error=0;
-    filename_table.clear();
-    filename_table.push_back(self);
-    import_ast.clear();
+    file_table={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
-    import_ast=load(root,0);
+    parse.ast()=load(parse.ast(),0);
 }
 
 #endif
