@@ -3,43 +3,33 @@
 var queue=func()
 {
     var (begin,end)=(nil,nil);
-    return
-    {
-        push:func(elem)
-        {
-            var new_node=
-            {
+    return{
+        push:func(elem){
+            var new_node={
                 elem:elem,
                 next:nil
             };
             if(begin==nil)
                 begin=end=new_node;
-            else
-            {
+            else{
                 end.next=new_node;
                 end=new_node;
             }
-            return;
         },
-        pop:func()
-        {
+        pop:func(){
             if(begin!=nil)
                 begin=begin.next;
             if(begin==nil)
                 end=nil;
         },
-        front:func()
-        {
+        front:func(){
             if(begin!=nil)
                 return begin.elem;
-            return nil;
         },
-        clear:func()
-        {
+        clear:func(){
             begin=end=nil;
         },
-        empty:func()
-        {
+        empty:func(){
             return begin==nil;
         }
     };
