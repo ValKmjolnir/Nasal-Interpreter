@@ -1,11 +1,11 @@
 #include "nasal.h"
-#define VM_LEXINFO   1
-#define VM_ASTINFO   2
-#define VM_CODEINFO  4
-#define VM_EXECTIME  8
-#define VM_OPCALLNUM 16
-#define VM_EXEC      32
-void help_cmd()
+constexpr uint32_t VM_LEXINFO  =1;
+constexpr uint32_t VM_ASTINFO  =2;
+constexpr uint32_t VM_CODEINFO =4;
+constexpr uint32_t VM_EXECTIME =8;
+constexpr uint32_t VM_OPCALLNUM=16;
+constexpr uint32_t VM_EXEC     =32;
+void help()
 {
     std::cout
 #ifdef _WIN32
@@ -27,7 +27,6 @@ void help_cmd()
     <<"    -o, --opcnt   | count operands while running.\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
-    return;
 }
 
 void logo()
@@ -43,8 +42,7 @@ void logo()
     <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     <<"lang info : http://wiki.flightgear.org/Nasal_scripting_language\n"
-    <<"input \"nasal -h\" to get help .\n";
-    return;
+    <<"input <nasal -h> to get help .\n";
 }
 
 void die(const char* stage,const std::string& filename)
@@ -53,11 +51,11 @@ void die(const char* stage,const std::string& filename)
     std::exit(1);
 }
 
-void cmderr()
+void err()
 {
     std::cout
     <<"invalid argument(s).\n"
-    <<"use nasal -h to get help.\n";
+    <<"use <nasal -h> to get help.\n";
     std::exit(1);
 }
 
@@ -65,44 +63,44 @@ void execute(const std::string& file,const uint16_t cmd)
 {
     nasal_lexer   lexer;
     nasal_parse   parse;
-    nasal_import  import;
-    nasal_codegen codegen;
+    nasal_import  linker;
+    nasal_codegen gen;
     nasal_vm      vm;
-    lexer.open(file);
-    lexer.scan();
+
+    // lexer scans file to get tokens
+    lexer.scan(file);
     if(lexer.err())
         die("lexer",file);
-    if(cmd&VM_LEXINFO)
-        lexer.print();
-    parse.compile(lexer.get_tokens());
+    
+    // parser gets lexer's token list to compile
+    parse.compile(lexer);
     if(parse.err())
         die("parse",file);
+
+    // linker gets parser's ast and load import files to this ast
+    linker.link(parse,file);
+    if(linker.err())
+        die("import",file);
+    
+    // code generator gets parser's ast and linker's import file list to generate code
+    gen.compile(parse,linker);
+    if(gen.err())
+        die("code",file);
+
+    if(cmd&VM_LEXINFO)
+        lexer.print();
     if(cmd&VM_ASTINFO)
         parse.ast().print(0);
-    // first used file is itself
-    import.link(parse.ast(),file);
-    if(import.err())
-        die("import",file);
-    codegen.compile(import.ast(),import.get_file());
-    if(codegen.err())
-        die("code",file);
     if(cmd&VM_CODEINFO)
-        codegen.print();
-    vm.init(
-        codegen.get_strs(),
-        codegen.get_nums(),
-        import.get_file()
-    );
+        gen.print();
     if(cmd&VM_EXECTIME)
     {
         clock_t t=clock();
-        vm.run(codegen.get_code(),cmd&VM_OPCALLNUM);
+        vm.run(gen,linker,cmd&VM_OPCALLNUM);
         std::cout<<"process exited after "<<((double)(clock()-t))/CLOCKS_PER_SEC<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(codegen.get_code(),cmd&VM_OPCALLNUM);
-    vm.clear();
-    return;
+        vm.run(gen,linker,cmd&VM_OPCALLNUM);
 }
 
 int main(int argc,const char* argv[])
@@ -110,7 +108,7 @@ int main(int argc,const char* argv[])
     if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
         logo();
     else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))
-        help_cmd();
+        help();
     else if(argc==2 && argv[1][0]!='-')
         execute(argv[1],VM_EXEC);
     else if(argc>=3)
@@ -130,11 +128,11 @@ int main(int argc,const char* argv[])
             else if(s=="--time" || s=="-t")
                 cmd|=VM_EXECTIME;
             else
-                cmderr();
+                err();
         }
         execute(argv[argc-1],cmd);
     }
     else
-        cmderr();
+        err();
     return 0;
 }

@@ -340,9 +340,9 @@ struct nasal_gc
     std::vector<nasal_ref>  local;
     void                    mark();
     void                    sweep();
-    void                    gc_init(const std::vector<std::string>&);
-    void                    gc_clear();
-    nasal_ref               gc_alloc(const uint8_t);
+    void                    init(const std::vector<std::string>&);
+    void                    clear();
+    nasal_ref               alloc(const uint8_t);
     nasal_ref               builtin_alloc(const uint8_t);
 };
 
@@ -350,7 +350,7 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
-    for(auto i:local)
+    for(auto& i:local)
         bfs.push(i);
     for(nasal_ref* i=val_stack;i<=stack_top;++i)
         bfs.push(*i);
@@ -406,7 +406,7 @@ void nasal_gc::sweep()
     }
     return;
 }
-void nasal_gc::gc_init(const std::vector<std::string>& strs)
+void nasal_gc::init(const std::vector<std::string>& strs)
 {
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         for(uint32_t j=0;j<increment[i];++j)
@@ -431,7 +431,7 @@ void nasal_gc::gc_init(const std::vector<std::string>& strs)
     }
     return;
 }
-void nasal_gc::gc_clear()
+void nasal_gc::clear()
 {
     for(auto i:memory)
         delete i;
@@ -445,7 +445,7 @@ void nasal_gc::gc_clear()
     str_addrs.clear();
     return;
 }
-nasal_ref nasal_gc::gc_alloc(uint8_t type)
+nasal_ref nasal_gc::alloc(uint8_t type)
 {
     if(free_list[type].empty())
     {
@@ -467,7 +467,7 @@ nasal_ref nasal_gc::gc_alloc(uint8_t type)
 nasal_ref nasal_gc::builtin_alloc(uint8_t type)
 {
     // when running a builtin function,alloc will run more than one time
-    // this may cause mark-sweep in gc_alloc
+    // this may cause mark-sweep in gc::alloc
     // and the value got before will be collected,this is a fatal error
     // so use builtin_alloc in builtin functions if this function uses alloc more then one time
     if(free_list[type].empty())

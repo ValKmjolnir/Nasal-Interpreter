@@ -32,7 +32,7 @@ var a=func(){
 }
 
 var b=func(){
-    return Result().Err("unknown");
+    return Result().Err("exception test");
 }
 
 println(a().unwrap());

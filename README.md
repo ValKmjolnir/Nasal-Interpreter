@@ -465,7 +465,7 @@ a=b=0;
 2021/10/8 update:
 
 In this version vm_nil and vm_num now is not managed by nasal_gc,
-this will decrease the usage of gc_alloc and increase the efficiency of execution.
+this will decrease the usage of gc::alloc and increase the efficiency of execution.
 
 New value type is added: vm_obj.
 This type is reserved for user to define their own value types.
@@ -897,7 +897,7 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
             case vm_obj:  std::cout<<"<object>";       break;
         }
     std::cout<<std::flush;
-    // generate return value,use gc::gc_alloc(type) to make a new value
+    // generate return value,use gc::alloc(type) to make a new value
     // or use reserved reference gc.nil/gc.one/gc.zero
     return gc.nil;
 }
@@ -943,7 +943,7 @@ version 6.5 update:
 Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more than one time.
 
 When running a builtin function,alloc will run more than one time,
-this may cause mark-sweep in gc_alloc.
+this may cause mark-sweep in gc::alloc.
 
 The value got before will be collected,but stil in use in this builtin function,
 this is a fatal error.
@@ -961,7 +961,7 @@ nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
     }
 
     // push vector into local scope to avoid being sweeped
-    local.push_back(gc.gc_alloc(vm_vec));
+    local.push_back(gc.alloc(vm_vec));
     std::vector<nasal_ref>& vec=local.back().vec()->elems;
     for(auto& iter:hash.hash()->elems)
     {
