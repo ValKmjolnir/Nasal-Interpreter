@@ -5,6 +5,7 @@ constexpr uint32_t VM_CODEINFO =4;
 constexpr uint32_t VM_EXECTIME =8;
 constexpr uint32_t VM_OPCALLNUM=16;
 constexpr uint32_t VM_EXEC     =32;
+constexpr uint32_t VM_DBGINFO  =64;
 void help()
 {
     std::cout
@@ -25,6 +26,7 @@ void help()
     <<"    -c, --code    | view bytecode.\n"
     <<"    -t, --time    | execute and get the running time.\n"
     <<"    -o, --opcnt   | count operands while running.\n"
+    <<"    -d, --detail  | get detail crash info.\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
 }
@@ -59,7 +61,7 @@ void err()
     std::exit(1);
 }
 
-void execute(const std::string& file,const uint16_t cmd)
+void execute(const std::string& file,const uint32_t cmd)
 {
     nasal_lexer   lexer;
     nasal_parse   parse;
@@ -96,11 +98,11 @@ void execute(const std::string& file,const uint16_t cmd)
     if(cmd&VM_EXECTIME)
     {
         clock_t t=clock();
-        vm.run(gen,linker,cmd&VM_OPCALLNUM);
+        vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
         std::cout<<"process exited after "<<((double)(clock()-t))/CLOCKS_PER_SEC<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,linker,cmd&VM_OPCALLNUM);
+        vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
 }
 
 int main(int argc,const char* argv[])
@@ -113,7 +115,7 @@ int main(int argc,const char* argv[])
         execute(argv[1],VM_EXEC);
     else if(argc>=3)
     {
-        uint16_t cmd=0;
+        uint32_t cmd=0;
         for(int i=1;i<argc-1;++i)
         {
             std::string s(argv[i]);
@@ -127,6 +129,8 @@ int main(int argc,const char* argv[])
                 cmd|=VM_OPCALLNUM|VM_EXEC;
             else if(s=="--time" || s=="-t")
                 cmd|=VM_EXECTIME;
+            else if(s=="--detail" || s=="-d")
+                cmd|=VM_DBGINFO|VM_EXEC;
             else
                 err();
         }
