@@ -106,13 +106,13 @@ struct nasal_hash// 56 bytes
 
 struct nasal_func// 112 bytes
 {
-    uint32_t dynpara;                         // dynamic parameter index in hash. index 0 is reserved for 'me'.
+    int32_t dynpara;                          // dynamic parameter name index in hash.
     uint32_t entry;                           // pc will set to entry-1 to call this function
     std::vector<nasal_ref> local;             // local scope with default value(nasal_ref)
     std::vector<nasal_ref> upvalue;           // closure
     std::unordered_map<std::string,int> keys; // parameter name table
 
-    nasal_func():dynpara(0){}
+    nasal_func():dynpara(-1){}
     void clear();
 };
 
@@ -265,7 +265,7 @@ void nasal_hash::print()
 /*functions of nasal_func*/
 void nasal_func::clear()
 {
-    dynpara=0;
+    dynpara=-1;
     local.clear();
     upvalue.clear();
     keys.clear();
