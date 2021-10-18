@@ -665,7 +665,7 @@ inline void nasal_vm::opr_callfv()
     for(uint32_t i=0;i<min_size;++i)
         closure[i+1]=args[i];
     // load dynamic argument if args_size>=para_size
-    if(func.dynpara)
+    if(func.dynpara>=0)
     {
         nasal_ref vec=gc.alloc(vm_vec);
         for(uint32_t i=para_size;i<args_size;++i)
@@ -690,7 +690,7 @@ inline void nasal_vm::opr_callfh()
     gc.local.back().vec()->elems=func.local;
     // load parameters
     auto& closure=gc.local.back().vec()->elems;
-    if(func.dynpara)
+    if(func.dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
 
     for(auto& i:func.keys)
