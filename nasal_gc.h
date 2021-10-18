@@ -106,13 +106,13 @@ struct nasal_hash// 56 bytes
 
 struct nasal_func// 112 bytes
 {
-    int32_t  dynpara;                              // dynamic parameter name index in hash
-    uint32_t entry;                                // pc will set to entry-1 to call this function
-    std::vector<nasal_ref> local;                  // local scope with default value(nasal_ref)
-    std::vector<nasal_ref> upvalue;                // closure
-    std::unordered_map<std::string,int> key_table; // parameter name table
+    uint32_t dynpara;                         // dynamic parameter index in hash. index 0 is reserved for 'me'.
+    uint32_t entry;                           // pc will set to entry-1 to call this function
+    std::vector<nasal_ref> local;             // local scope with default value(nasal_ref)
+    std::vector<nasal_ref> upvalue;           // closure
+    std::unordered_map<std::string,int> keys; // parameter name table
 
-    nasal_func():dynpara(-1){}
+    nasal_func():dynpara(0){}
     void clear();
 };
 
@@ -139,17 +139,17 @@ struct nasal_val// 16 bytes
 /*functions of nasal_vec*/
 nasal_ref nasal_vec::get_val(const int index)
 {
-    int vec_size=elems.size();
-    if(index<-vec_size || index>=vec_size)
+    int size=elems.size();
+    if(index<-size || index>=size)
         return {vm_none};
-    return elems[index>=0?index:index+vec_size];
+    return elems[index>=0?index:index+size];
 }
 nasal_ref* nasal_vec::get_mem(const int index)
 {
-    int vec_size=elems.size();
-    if(index<-vec_size || index>=vec_size)
+    int size=elems.size();
+    if(index<-size || index>=size)
         return nullptr;
-    return &elems[index>=0?index:index+vec_size];
+    return &elems[index>=0?index:index+size];
 }
 void nasal_vec::print()
 {
@@ -212,15 +212,15 @@ nasal_ref* nasal_hash::get_mem(const std::string& key)
         return &elems[key];
     else if(elems.count("parents"))
     {
-        nasal_ref* mem_addr=nullptr;
+        nasal_ref* addr=nullptr;
         nasal_ref val=elems["parents"];
         if(val.type==vm_vec)
             for(auto& i:val.vec()->elems)
             {
                 if(i.type==vm_hash)
-                    mem_addr=i.hash()->get_mem(key);
-                if(mem_addr)
-                    return mem_addr;
+                    addr=i.hash()->get_mem(key);
+                if(addr)
+                    return addr;
             }
     }
     return nullptr;
@@ -265,9 +265,10 @@ void nasal_hash::print()
 /*functions of nasal_func*/
 void nasal_func::clear()
 {
-    dynpara=-1;
+    dynpara=0;
     local.clear();
-    key_table.clear();
+    upvalue.clear();
+    keys.clear();
     return;
 }
 
@@ -332,9 +333,9 @@ struct nasal_gc
     nasal_ref               zero;               // reserved address of nasal_val,type vm_num, 0
     nasal_ref               one;                // reserved address of nasal_val,type vm_num, 1
     nasal_ref               nil;                // reserved address of nasal_val,type vm_nil
-    nasal_ref               val_stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
-    nasal_ref*              stack_top;               // stack top
-    std::vector<nasal_ref>  str_addrs;               // reserved address for const vm_str
+    nasal_ref               stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
+    nasal_ref*              top;                     // stack top
+    std::vector<nasal_ref>  strs;               // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
     std::vector<nasal_ref>  local;
@@ -352,7 +353,7 @@ void nasal_gc::mark()
     std::queue<nasal_ref> bfs;
     for(auto& i:local)
         bfs.push(i);
-    for(nasal_ref* i=val_stack;i<=stack_top;++i)
+    for(nasal_ref* i=stack;i<=top;++i)
         bfs.push(*i);
     while(!bfs.empty())
     {
@@ -406,7 +407,7 @@ void nasal_gc::sweep()
     }
     return;
 }
-void nasal_gc::init(const std::vector<std::string>& strs)
+void nasal_gc::init(const std::vector<std::string>& s)
 {
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         for(uint32_t j=0;j<increment[i];++j)
@@ -416,18 +417,18 @@ void nasal_gc::init(const std::vector<std::string>& strs)
             free_list[i].push(tmp);
         }
 
-    stack_top=val_stack;     // set stack_top to val_stack
+    top=stack;     // set top to stack
 
     zero={vm_num,(double)0}; // init constant 0
     one ={vm_num,(double)1}; // init constant 1
     nil ={vm_nil,(double)0}; // init constant nil
 
     // init constant strings
-    str_addrs.resize(strs.size());
+    strs.resize(s.size());
     for(uint32_t i=0;i<strs.size();++i)
     {
-        str_addrs[i]={vm_str,new nasal_val(vm_str)};
-        *str_addrs[i].str()=strs[i];
+        strs[i]={vm_str,new nasal_val(vm_str)};
+        *strs[i].str()=s[i];
     }
     return;
 }
@@ -440,9 +441,9 @@ void nasal_gc::clear()
         while(!free_list[i].empty())
             free_list[i].pop();
     local.clear();
-    for(auto& i:str_addrs)
+    for(auto& i:strs)
         delete i.value.gcobj;
-    str_addrs.clear();
+    strs.clear();
     return;
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
