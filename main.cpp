@@ -19,7 +19,7 @@ void help()
     <<"nasal <file>\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n\n"
-    <<"nasal [options] <file>\n"
+    <<"nasal [options...] <file>\n"
     <<"option:\n"
     <<"    -l, --lex     | view token info.\n"
     <<"    -a, --ast     | view abstract syntax tree.\n"
@@ -107,36 +107,38 @@ void execute(const std::string& file,const uint32_t cmd)
 
 int main(int argc,const char* argv[])
 {
-    if(argc==2 && (!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")))
-        logo();
-    else if(argc==2 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")))
-        help();
-    else if(argc==2 && argv[1][0]!='-')
-        execute(argv[1],VM_EXEC);
-    else if(argc>=3)
+    if(argc==2)
     {
-        uint32_t cmd=0;
-        for(int i=1;i<argc-1;++i)
-        {
-            std::string s(argv[i]);
-            if(s=="--lex" || s=="-l")
-                cmd|=VM_LEXINFO;
-            else if(s=="--ast" || s=="-a")
-                cmd|=VM_ASTINFO;
-            else if(s=="--code" || s=="-c")
-                cmd|=VM_CODEINFO;
-            else if(s=="--opcnt" || s=="-o")
-                cmd|=VM_OPCALLNUM|VM_EXEC;
-            else if(s=="--time" || s=="-t")
-                cmd|=VM_EXECTIME;
-            else if(s=="--detail" || s=="-d")
-                cmd|=VM_DBGINFO|VM_EXEC;
-            else
-                err();
-        }
-        execute(argv[argc-1],cmd);
+        std::string s(argv[1]);
+        if(s=="-v" || s=="--version")
+            logo();
+        else if(s=="-h" || s=="--help")
+            help();
+        else if(s[0]!='-')
+            execute(s,VM_EXEC);
+        else
+            err();
+        return 0;
     }
-    else
-        err();
+    uint32_t cmd=0;
+    for(int i=1;i<argc-1;++i)
+    {
+        std::string s(argv[i]);
+        if(s=="--lex" || s=="-l")
+            cmd|=VM_LEXINFO;
+        else if(s=="--ast" || s=="-a")
+            cmd|=VM_ASTINFO;
+        else if(s=="--code" || s=="-c")
+            cmd|=VM_CODEINFO;
+        else if(s=="--opcnt" || s=="-o")
+            cmd|=VM_OPCALLNUM|VM_EXEC;
+        else if(s=="--time" || s=="-t")
+            cmd|=VM_EXECTIME;
+        else if(s=="--detail" || s=="-d")
+            cmd|=VM_DBGINFO|VM_EXEC;
+        else
+            err();
+    }
+    execute(argv[argc-1],cmd);
     return 0;
 }

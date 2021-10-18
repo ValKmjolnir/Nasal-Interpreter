@@ -340,10 +340,11 @@ inline void nasal_vm::opr_pstr()
 }
 inline void nasal_vm::opr_newv()
 {
-    nasal_ref  newv=gc.alloc(vm_vec);
+    nasal_ref newv=gc.alloc(vm_vec);
     auto& vec=newv.vec()->elems;// top-imm[pc] stores the vector
     vec.resize(imm[pc]);
-    top-=imm[pc]-1;
+    // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
+    top=top-imm[pc]+1;
     for(uint32_t i=0;i<imm[pc];++i)
         vec[i]=top[i];
     top[0]=newv;
