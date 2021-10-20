@@ -106,7 +106,7 @@ struct nasal_hash// 56 bytes
 
 struct nasal_func// 112 bytes
 {
-    int32_t dynpara;                          // dynamic parameter name index in hash.
+    int32_t  dynpara;                         // dynamic parameter name index in hash.
     uint32_t entry;                           // pc will set to entry-1 to call this function
     std::vector<nasal_ref> local;             // local scope with default value(nasal_ref)
     std::vector<nasal_ref> upvalue;           // closure
@@ -116,11 +116,11 @@ struct nasal_func// 112 bytes
     void clear();
 };
 
+constexpr uint8_t GC_UNCOLLECTED=0;   
+constexpr uint8_t GC_COLLECTED  =1;
+constexpr uint8_t GC_FOUND      =2;
 struct nasal_val// 16 bytes
 {
-#define GC_UNCOLLECTED 0   
-#define GC_COLLECTED   1
-#define GC_FOUND       2
     uint8_t mark;
     uint8_t type;
     union 

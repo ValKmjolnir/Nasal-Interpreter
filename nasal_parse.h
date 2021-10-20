@@ -43,8 +43,8 @@ class nasal_parse
 private:
     uint32_t ptr;
     uint32_t error;
-    uint32_t in_func; // count when generating function block,used to check return-expression
-    uint32_t in_loop; // count when generating loop block,used to check break/continue-expression
+    uint32_t in_func; // count when generating function block
+    uint32_t in_loop; // count when generating loop block
     nasal_ast root;
     std::vector<token> tokens;
     std::vector<token> error_token;
@@ -53,7 +53,7 @@ private:
     void match(uint32_t type,const char* info=nullptr);
     bool check_comma(const uint32_t*);
     bool check_multi_scalar();
-    bool check_function_end(const nasal_ast&);
+    bool check_func_end(const nasal_ast&);
     bool check_special_call();
     bool need_semi_check(const nasal_ast&);
     void check_memory_reachable(const nasal_ast&);
@@ -93,7 +93,7 @@ private:
     nasal_ast while_loop();
     nasal_ast for_loop();
     nasal_ast forei_loop();
-    nasal_ast new_iter_gen();
+    nasal_ast iter_gen();
     nasal_ast conditional();
     nasal_ast continue_expr();
     nasal_ast break_expr();
@@ -197,7 +197,7 @@ bool nasal_parse::check_multi_scalar()
     }
     return false;
 }
-bool nasal_parse::check_function_end(const nasal_ast& node)
+bool nasal_parse::check_func_end(const nasal_ast& node)
 {
     uint32_t type=node.type();
     if(type==ast_func)
@@ -218,7 +218,7 @@ bool nasal_parse::check_function_end(const nasal_ast& node)
     )
         return false;
     else
-        return check_function_end(node.child().back());
+        return check_func_end(node.child().back());
     return false;
 }
 bool nasal_parse::check_special_call()
@@ -250,7 +250,7 @@ bool nasal_parse::need_semi_check(const nasal_ast& node)
     uint32_t type=node.type();
     if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_conditional)
         return false;
-    return !check_function_end(node);
+    return !check_func_end(node);
 }
 void nasal_parse::check_memory_reachable(const nasal_ast& node)
 {
@@ -259,7 +259,7 @@ void nasal_parse::check_memory_reachable(const nasal_ast& node)
         const nasal_ast& tmp=node.child().back();
         if(tmp.type()==ast_callf)
             die(tmp.line(),"bad left-value");
-        if(tmp.type()==ast_callv && (tmp.child().size()>1 || tmp.child()[0].type()==ast_subvec))
+        if(tmp.type()==ast_callv && (tmp.size()>1 || tmp[0].type()==ast_subvec))
             die(tmp.line(),"bad left-value");
     }
     else if(node.type()!=ast_id)
@@ -380,14 +380,14 @@ nasal_ast nasal_parse::args()
             {
                 match(tok_eq);
                 special_arg=std::move(tmp);
-                special_arg.set_type(ast_default_arg);
+                special_arg.set_type(ast_default);
                 special_arg.add(calc());
             }
             else
             {
                 match(tok_ellipsis);
                 special_arg=std::move(tmp);
-                special_arg.set_type(ast_dynamic_id);
+                special_arg.set_type(ast_dynamic);
             }
             node.add(std::move(special_arg));
         }
@@ -405,40 +405,41 @@ nasal_ast nasal_parse::args()
     std::string format="func(";
     for(auto& tmp:node.child())
     {
+        format+=tmp.str();
         switch(tmp.type())
         {
-            case ast_id:          format+=tmp.str();break;
-            case ast_default_arg: format+=tmp.str()+"=val";break;
-            case ast_dynamic_id:  format+=tmp.str()+"...";break;
+            case ast_id:                     break;
+            case ast_default: format+="=val";break;
+            case ast_dynamic: format+="..."; break;
         }
         format+=",)"[&tmp==&node.child().back()];
     }
-    bool checked_default_val=false,checked_dynamic_ids=false;
+    bool checked_default=false,checked_dynamic=false;
     for(auto& tmp:node.child())
     {
-        if(tmp.type()==ast_default_arg)
-            checked_default_val=true;
-        else if(tmp.type()==ast_dynamic_id)
-            checked_dynamic_ids=true;
-        if(checked_default_val && tmp.type()!=ast_default_arg)
-            die(tmp.line(),"must use default paras after using it once: "+format);
-        if(checked_dynamic_ids && &tmp!=&node.child().back())
+        if(tmp.type()==ast_default)
+            checked_default=true;
+        else if(tmp.type()==ast_dynamic)
+            checked_dynamic=true;
+        if(checked_default && tmp.type()!=ast_default)
+            die(tmp.line(),"must use default paras after using once: "+format);
+        if(checked_dynamic && &tmp!=&node.child().back())
             die(tmp.line(),"dynamic para must be the end: "+format);
     }
-    std::unordered_map<std::string,bool> argname_table;
+    std::unordered_map<std::string,bool> argname;
     for(auto& tmp:node.child())
     {
-        std::string new_name;
+        std::string name;
         switch(tmp.type())
         {
-            case ast_dynamic_id:
-            case ast_id:         new_name=tmp.str();break;
-            case ast_default_arg:new_name=tmp.str();break;
+            case ast_dynamic:
+            case ast_id:     name=tmp.str();break;
+            case ast_default:name=tmp.str();break;
         }
-        if(argname_table.count(new_name))
-            die(tmp.line(),"parameter's name repeats: "+new_name);
+        if(argname.count(name))
+            die(tmp.line(),"parameter's name repeats: "+name);
         else
-            argname_table[new_name]=true;
+            argname[name]=true;
     }
     return node;
 }
@@ -766,9 +767,9 @@ nasal_ast nasal_parse::definition()
         match(tok_var);
         switch(tokens[ptr].type)
         {
-            case tok_id:     node.add(id());match(tok_id); break;
-            case tok_lcurve: node.add(var_outcurve_def());     break;
-            default:         die(error_line,"expected identifier");  break;
+            case tok_id:     node.add(id());match(tok_id);break;
+            case tok_lcurve: node.add(var_outcurve_def());break;
+            default:         die(error_line,"expected identifier");break;
         }
     }
     else if(tokens[ptr].type==tok_lcurve)
@@ -778,11 +779,11 @@ nasal_ast nasal_parse::definition()
         node.add(check_multi_scalar()?multi_scalar(false):calc());
     else
         node.add(calc());
-    if(node.child()[0].type()==ast_id && node.child()[1].type()==ast_multi_scalar)
-        die(node.child()[1].line(),"one identifier cannot accept too many values");
-    else if(node.child()[0].type()==ast_multi_id && node.child()[1].type()==ast_multi_scalar)
-        if(node.child()[0].child().size()!=node.child()[1].child().size())
-            die(node.child()[0].line(),"too much or lack values in multi-definition");
+    if(node[0].type()==ast_id && node[1].type()==ast_multi_scalar)
+        die(node[1].line(),"one identifier cannot accept too many values");
+    else if(node[0].type()==ast_multi_id && node[1].type()==ast_multi_scalar)
+        if(node[0].size()!=node[1].size())
+            die(node[0].line(),"too much or lack values in multi-definition");
     return node;
 }
 nasal_ast nasal_parse::var_incurve_def()
@@ -861,9 +862,9 @@ nasal_ast nasal_parse::multi_assgin()
         node.add(check_multi_scalar()?multi_scalar(false):calc());
     else
         node.add(calc());
-    if(node.child()[1].type()==ast_multi_scalar
-        && node.child()[0].child().size()!=node.child()[1].child().size())
-        die(node.child()[0].line(),"too much or lack values in multi-assignment");
+    if(node[1].type()==ast_multi_scalar
+        && node[0].size()!=node[1].size())
+        die(node[0].line(),"too much or lack values in multi-assignment");
     return node;
 }
 nasal_ast nasal_parse::loop()
@@ -933,15 +934,15 @@ nasal_ast nasal_parse::forei_loop()
     nasal_ast node(tokens[ptr].line,ast_null);
     switch(tokens[ptr].type)
     {
-        case tok_forindex: node.set_type(ast_forindex);match(tok_forindex); break;
-        case tok_foreach:  node.set_type(ast_foreach); match(tok_foreach);  break;
+        case tok_forindex:node.set_type(ast_forindex);match(tok_forindex);break;
+        case tok_foreach: node.set_type(ast_foreach); match(tok_foreach); break;
     }
     match(tok_lcurve);
     // first expression
     // foreach/forindex must have an iterator to loop through
     if(tokens[ptr].type!=tok_var && tokens[ptr].type!=tok_id)
         die(error_line,"expected iterator");
-    node.add(new_iter_gen());
+    node.add(iter_gen());
     // check semi
     match(tok_semi,"expected \';\' in foreach/forindex(iter;vector)");
     // check vector
@@ -952,7 +953,7 @@ nasal_ast nasal_parse::forei_loop()
     node.add(exprs());
     return node;
 }
-nasal_ast nasal_parse::new_iter_gen()
+nasal_ast nasal_parse::iter_gen()
 {
     nasal_ast node(tokens[ptr].line,ast_null);
     if(tokens[ptr].type==tok_var)
@@ -975,30 +976,29 @@ nasal_ast nasal_parse::new_iter_gen()
 nasal_ast nasal_parse::conditional()
 {
     nasal_ast node(tokens[ptr].line,ast_conditional);
-    nasal_ast tmp(tokens[ptr].line,ast_if);
+    nasal_ast ifnode(tokens[ptr].line,ast_if);
     match(tok_if);
     match(tok_lcurve);
-    tmp.add(calc());
+    ifnode.add(calc());
     match(tok_rcurve);
-    tmp.add(exprs());
-    node.add(std::move(tmp));
-    // end of if-expression
+    ifnode.add(exprs());
+    node.add(std::move(ifnode));
     while(tokens[ptr].type==tok_elsif)
     {
-        nasal_ast tmp(tokens[ptr].line,ast_elsif);
+        nasal_ast elsifnode(tokens[ptr].line,ast_elsif);
         match(tok_elsif);
         match(tok_lcurve);
-        tmp.add(calc());
+        elsifnode.add(calc());
         match(tok_rcurve);
-        tmp.add(exprs());
-        node.add(std::move(tmp));
+        elsifnode.add(exprs());
+        node.add(std::move(elsifnode));
     }
     if(tokens[ptr].type==tok_else)
     {
-        nasal_ast tmp(tokens[ptr].line,ast_else);
+        nasal_ast elsenode(tokens[ptr].line,ast_else);
         match(tok_else);
-        tmp.add(exprs());
-        node.add(std::move(tmp));
+        elsenode.add(exprs());
+        node.add(std::move(elsenode));
     }
     return node;
 }
@@ -1019,8 +1019,17 @@ nasal_ast nasal_parse::ret_expr()
     nasal_ast node(tokens[ptr].line,ast_ret);
     match(tok_ret);
     uint32_t type=tokens[ptr].type;
-    if(type==tok_nil || type==tok_num || type==tok_str || type==tok_id || type==tok_func ||
-    type==tok_sub || type==tok_not || type==tok_lcurve || type==tok_lbracket || type==tok_lbrace)
+    if(
+        type==tok_nil ||
+        type==tok_num ||
+        type==tok_str ||
+        type==tok_id ||
+        type==tok_func ||
+        type==tok_sub ||
+        type==tok_not ||
+        type==tok_lcurve ||
+        type==tok_lbracket ||
+        type==tok_lbrace)
         node.add(calc());
     return node;
 }

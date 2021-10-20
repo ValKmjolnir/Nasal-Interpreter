@@ -37,14 +37,13 @@ only this kind of node can be recognized as 'import':
 */
     if(node.type()!=ast_call)
         return false;
-    const std::vector<nasal_ast>& vec=node.child();
-    if(vec.size()!=2)
+    if(node.size()!=2)
         return false;
-    if(vec[0].str()!="import")
+    if(node[0].str()!="import")
         return false;
-    if(vec[1].type()!=ast_callf)
+    if(node[1].type()!=ast_callf)
         return false;
-    if(vec[1].child().size()!=1 || vec[1].child()[0].type()!=ast_str)
+    if(node[1].size()!=1 || node[1][0].type()!=ast_str)
         return false;
     return true;
 }
@@ -69,7 +68,7 @@ void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
 nasal_ast nasal_import::file_import(nasal_ast& node)
 {
     // get filename and set node to ast_null
-    std::string filename=node.child()[1].child()[0].str();
+    std::string filename=node[1][0].str();
     node.clear();
 
     // avoid infinite loading loop
