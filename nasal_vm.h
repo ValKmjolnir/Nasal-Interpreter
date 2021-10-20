@@ -165,7 +165,7 @@ void nasal_vm::bytecodeinfo(const uint32_t p)
     const opcode& code=bytecode[p];
     printf("\t0x%.8x: %s 0x%x",p,code_table[code.op].name,code.num);
     if(code.op==op_callb)
-        printf(" <%s>",builtin_func[code.num].name);
+        printf(" <%s>",builtin[code.num].name);
     printf(" (<%s> line %d)\n",files[code.fidx].c_str(),code.line);
 }
 void nasal_vm::traceback()
@@ -286,10 +286,9 @@ inline bool nasal_vm::condition(nasal_ref val)
         return val.value.num;
     else if(val.type==vm_str)
     {
-        const std::string& str=*val.str();
-        double num=str2num(str.c_str());
+        double num=str2num(val.str()->c_str());
         if(std::isnan(num))
-            return str.empty();
+            return val.str()->empty();
         return num;
     }
     return false;
@@ -560,7 +559,7 @@ inline void nasal_vm::opr_findex()
         pc=imm[pc]-1;
         return;
     }
-    (++top)[0]={vm_num,static_cast<double>(counter.top())};
+    (++top)[0]={vm_num,(double)counter.top()};
 }
 inline void nasal_vm::opr_feach()
 {
@@ -642,7 +641,7 @@ inline void nasal_vm::opr_callh()
 }
 inline void nasal_vm::opr_callfv()
 {
-    size_t args_size=imm[pc];
+    uint32_t args_size=imm[pc];
     nasal_ref* args=top-args_size+1;
     if(args[-1].type!=vm_func)
         die("callfv: must call a function");
@@ -655,13 +654,13 @@ inline void nasal_vm::opr_callfv()
     // load parameters
     auto& closure=gc.local.back().vec()->elems;
 
-    size_t para_size=func.keys.size();
+    uint32_t para_size=func.keys.size();
     // load arguments
     // if the first default value is not vm_none,then values after it are not nullptr
     if(args_size<para_size && func.local[args_size+1/*1 is reserved for 'me'*/].type==vm_none)
         die("callfv: lack argument(s)");
     // if args_size>para_size,for 0 to args_size will cause corruption
-    size_t min_size=std::min(para_size,args_size);
+    uint32_t min_size=std::min(para_size,args_size);
     for(uint32_t i=0;i<min_size;++i)
         closure[i+1]=args[i];
     // load dynamic argument if args_size>=para_size
@@ -707,7 +706,7 @@ inline void nasal_vm::opr_callfh()
 }
 inline void nasal_vm::opr_callb()
 {
-    (++top)[0]=(*builtin_func[imm[pc]].func)(gc.local.back().vec()->elems,gc);
+    (++top)[0]=(*builtin[imm[pc]].func)(gc.local.back().vec()->elems,gc);
     if(top[0].type==vm_none)
         die("native function error.");
 }
@@ -744,7 +743,7 @@ inline void nasal_vm::opr_slc2()
     uint8_t type1=val1.type,type2=val2.type;
     int num1=val1.to_number();
     int num2=val2.to_number();
-    size_t size=ref.size();
+    int size=ref.size();
     if(type1==vm_nil && type2==vm_nil)
     {
         num1=0;
@@ -799,7 +798,7 @@ inline void nasal_vm::opr_mcallv()
         mem_addr=ref.get_mem(str);
         if(!mem_addr)
         {
-            ref.elems[str]=gc.nil;
+            ref.elems[str]={vm_nil};
             mem_addr=ref.get_mem(str);
         }
     }
@@ -816,7 +815,7 @@ inline void nasal_vm::opr_mcallh()
     mem_addr=ref.get_mem(str);
     if(!mem_addr) // create a new key
     {
-        ref.elems[str]=gc.nil;
+        ref.elems[str]={vm_nil};
         mem_addr=ref.get_mem(str);
     }
 }

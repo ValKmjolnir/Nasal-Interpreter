@@ -63,11 +63,11 @@ nasal_ref builtin_err(const char* func_name,std::string info)
 
 // register builtin function's name and it's address here in this table below
 // this table must end with {nullptr,nullptr}
-struct func
+struct
 {
     const char* name;
     nasal_ref (*func)(std::vector<nasal_ref>&,nasal_gc&);
-} builtin_func[]=
+} builtin[]=
 {
     {"__builtin_print",   builtin_print   },
     {"__builtin_append",  builtin_append  },
