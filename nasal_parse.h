@@ -225,7 +225,7 @@ bool nasal_parse::check_special_call()
 {
     // special call means like this:
     // function_name(a:1,b:2,c:3);
-    uint32_t check_ptr=ptr,curve=1,bracket=0,brace=0,ques=0;
+    uint32_t check_ptr=ptr,curve=1,bracket=0,brace=0;
     while(tokens[++check_ptr].type!=tok_eof && curve)
     {
         switch(tokens[check_ptr].type)

@@ -1,6 +1,5 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
-#pragma GCC optimize(2)
 
 #include <stdint.h>
 #include <unistd.h>
@@ -20,10 +19,6 @@
 #include <vector>
 #include <unordered_map>
 
-/*
-    check if a string can be converted to a number
-    if this string cannot be converted to a number,it will return nan
-*/
 inline double hex_to_double(const char* str)
 {
     double ret=0;
@@ -104,9 +99,6 @@ double str2num(const char* str)
     return is_negative?-ret_num:ret_num;
 }
 
-/*
-    show raw string
-*/
 std::string raw_string(const std::string& str)
 {
     std::string ret("");
