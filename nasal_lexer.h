@@ -144,7 +144,7 @@ void nasal_lexer::die(const char* info)
 {
     ++error;
     std::cout<<"[lexer] line "<<line<<" column "<<code.length()<<": \n"<<code<<'\n';
-    for(uint32_t i=0;i<code.size()-1;++i)
+    for(int i=0;i<(int)code.size()-1;++i)
         std::cout<<char(" \t"[code[i]=='\t']);
     std::cout<<'^'<<info<<'\n';
 }
@@ -259,7 +259,10 @@ std::string nasal_lexer::str_gen()
     }
     // check if this string ends with a " or '
     if(ptr++>=size)
+    {
         die("get EOF when generating string.");
+        return str;
+    }
     code+=res[ptr-1];
     if(begin=='`' && str.length()!=1)
         die("\'`\' is used for string that includes one character.");
