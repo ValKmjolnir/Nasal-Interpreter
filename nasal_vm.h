@@ -151,7 +151,7 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_none: printf("\tnull |\n");break;
         case vm_nil:  printf("\tnil  |\n");break;
         case vm_num:  printf("\tnum  | %lf\n",val.num());break;
-        case vm_str:  printf("\tstr  | <%p> %s\n",p,raw_string(*val.str()).c_str());break;
+        case vm_str:  printf("\tstr  | <%p> %s\n",p,rawstr(*val.str()).c_str());break;
         case vm_func: printf("\tfunc | <%p> func{entry=0x%x}\n",p,val.func()->entry);break;
         case vm_vec:  printf("\tvec  | <%p> [%lu val]\n",p,val.vec()->elems.size());break;
         case vm_hash: printf("\thash | <%p> {%lu member}\n",p,val.hash()->elems.size());break;
@@ -389,7 +389,7 @@ inline void nasal_vm::opr_unot()
     nasal_ref val=gc.top[0];
     switch(val.type)
     {
-        case vm_nil:gc.top[0]=gc.zero;break;
+        case vm_nil:gc.top[0]=gc.one;break;
         case vm_num:gc.top[0]=val.num()?gc.zero:gc.one;break;
         case vm_str:
         {

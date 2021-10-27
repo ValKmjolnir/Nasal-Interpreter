@@ -166,7 +166,6 @@ void nasal_parse::match(uint32_t type,const char* info)
     if(tokens[ptr].type==tok_eof)
         return;
     ++ptr;
-    return;
 }
 bool nasal_parse::check_comma(const uint32_t* panic_set)
 {
@@ -264,7 +263,6 @@ void nasal_parse::check_memory_reachable(const nasal_ast& node)
     }
     else if(node.type()!=ast_id)
         die(node.line(),"bad left-value");
-    return;
 }
 nasal_ast nasal_parse::null()
 {
@@ -907,7 +905,6 @@ nasal_ast nasal_parse::for_loop()
         node.add(lcurve_expr());
     else
         node.add(calc());
-    // check first semi
     match(tok_semi,"expected \';\' in for(;;)");
     // conditional expression
     if(tokens[ptr].type==tok_eof)
@@ -916,7 +913,6 @@ nasal_ast nasal_parse::for_loop()
         node.add(null());
     else
         node.add(calc());
-    // check second semi
     match(tok_semi,"expected \';\' in for(;;)");
     //after loop expression
     if(tokens[ptr].type==tok_eof)
@@ -943,9 +939,7 @@ nasal_ast nasal_parse::forei_loop()
     if(tokens[ptr].type!=tok_var && tokens[ptr].type!=tok_id)
         die(error_line,"expected iterator");
     node.add(iter_gen());
-    // check semi
     match(tok_semi,"expected \';\' in foreach/forindex(iter;vector)");
-    // check vector
     if(tokens[ptr].type==tok_eof)
         die(error_line,"expected vector");
     node.add(calc());

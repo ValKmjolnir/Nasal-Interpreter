@@ -345,7 +345,7 @@ void nasal_lexer::scan(const std::string& file)
 void nasal_lexer::print()
 {
     for(auto& tok:tokens)
-        std::cout<<"("<<tok.line<<" | "<<raw_string(tok.str)<<")\n";
+        std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str)<<")\n";
 }
 
 #endif

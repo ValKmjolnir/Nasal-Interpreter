@@ -116,7 +116,18 @@ var chr=func(code)
 var io=
 {
     fin: func(filename){return __builtin_fin(filename);},
-    fout:func(filename,str){return __builtin_fout(filename,str);}
+    fout:func(filename,str){return __builtin_fout(filename,str);},
+    SEEK_SET:0,
+    SEEK_CUR:1,
+    SEEK_END:2,
+    open:func(filename,mode="r"){return __builtin_open(filename,mode);},
+    close:func(filehandle){return __builtin_close(filehandle);},
+    read:func(filehandle,buf,len){return __builtin_read(filehandle,buf,len);},
+    write:func(filehandle,str){return __builtin_write(filehandle,str);},
+    seek:func(filehandle,pos,whence){return __builtin_seek(filehandle,pos,whence);},
+    tell:func(filehandle){return __builtin_tell(filehandle);},
+    readln:func(filehandle){return __builtin_readln(filehandle);},
+    stat:func(filename){return __builtin_stat(filename);}
 };
 
 var bits=
