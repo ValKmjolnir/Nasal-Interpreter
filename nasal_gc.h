@@ -29,7 +29,7 @@ const uint32_t increment[vm_type_size]=
     1024, // vm_func
     8192, // vm_vec
     512,  // vm_hash
-    128   // vm_obj
+    64    // vm_obj
 };
 
 struct nasal_vec;
@@ -105,7 +105,7 @@ struct nasal_obj
     uint32_t type;
     void* ptr;
     nasal_obj():ptr(nullptr){}
-    void clear();
+    void clear(){ptr=nullptr;}
 };
 
 constexpr uint8_t GC_UNCOLLECTED=0;   
@@ -258,18 +258,11 @@ void nasal_func::clear()
     keys.clear();
 }
 
-void nasal_obj::clear()
-{
-    if(ptr)
-        free(ptr);
-    ptr=nullptr;
-}
-
 nasal_val::nasal_val(uint8_t val_type)
 {
     mark=GC_COLLECTED;
     type=val_type;
-    switch(type)
+    switch(val_type)
     {
         case vm_str:  ptr.str=new std::string; break;
         case vm_vec:  ptr.vec=new nasal_vec;   break;
@@ -364,7 +357,6 @@ void nasal_gc::mark()
                 break;
         }
     }
-    return;
 }
 void nasal_gc::sweep()
 {
@@ -386,7 +378,6 @@ void nasal_gc::sweep()
         else if(i->mark==GC_FOUND)
             i->mark=GC_UNCOLLECTED;
     }
-    return;
 }
 void nasal_gc::init(const std::vector<std::string>& s)
 {
@@ -411,7 +402,6 @@ void nasal_gc::init(const std::vector<std::string>& s)
         strs[i]={vm_str,new nasal_val(vm_str)};
         *strs[i].str()=s[i];
     }
-    return;
 }
 void nasal_gc::clear()
 {
@@ -425,7 +415,6 @@ void nasal_gc::clear()
     for(auto& i:strs)
         delete i.value.gcobj;
     strs.clear();
-    return;
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {

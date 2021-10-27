@@ -1,59 +1,69 @@
 #ifndef __NASAL_BUILTIN_H__
 #define __NASAL_BUILTIN_H__
 /*
-    builtin functions must be called inside a outer function like this:
-    var print=func(elems...)
-    {
+    builtin functions must be called inside a function like this:
+    var print=func(elems...){
         return __builtin_print(elems);
     }
     builtin function __builtin_print is wrapped up by print
 */
-
+enum obj_type
+{
+    obj_file,
+};
 // declaration of builtin functions
-// to add new builtin function,declare it here and write the definition below
-
-nasal_ref builtin_print(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_append(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_setsize(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_system(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_input(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_sleep(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_fin(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_fout(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_split(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_rand(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_id(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_int(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_num(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_pop(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_str(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_size(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_xor(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_and(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_or(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_nand(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_not(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_sin(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_cos(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_tan(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_exp(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_ln(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_sqrt(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_atan2(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_isnan(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_time(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_contains(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_delete(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_keys(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_import(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_die(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_type(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_substr(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_streq(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_left(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_right(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_cmp(std::vector<nasal_ref>&,nasal_gc&);
-nasal_ref builtin_chr(std::vector<nasal_ref>&,nasal_gc&);
+// to add new builtin function, declare it here and write the definition below
+#define nas_native(name) nasal_ref name(std::vector<nasal_ref>&,nasal_gc&)
+nas_native(builtin_print);
+nas_native(builtin_append);
+nas_native(builtin_setsize);
+nas_native(builtin_system);
+nas_native(builtin_input);
+nas_native(builtin_sleep);
+nas_native(builtin_fin);
+nas_native(builtin_fout);
+nas_native(builtin_split);
+nas_native(builtin_rand);
+nas_native(builtin_id);
+nas_native(builtin_int);
+nas_native(builtin_num);
+nas_native(builtin_pop);
+nas_native(builtin_str);
+nas_native(builtin_size);
+nas_native(builtin_xor);
+nas_native(builtin_and);
+nas_native(builtin_or);
+nas_native(builtin_nand);
+nas_native(builtin_not);
+nas_native(builtin_sin);
+nas_native(builtin_cos);
+nas_native(builtin_tan);
+nas_native(builtin_exp);
+nas_native(builtin_ln);
+nas_native(builtin_sqrt);
+nas_native(builtin_atan2);
+nas_native(builtin_isnan);
+nas_native(builtin_time);
+nas_native(builtin_contains);
+nas_native(builtin_delete);
+nas_native(builtin_keys);
+nas_native(builtin_import);
+nas_native(builtin_die);
+nas_native(builtin_type);
+nas_native(builtin_substr);
+nas_native(builtin_streq);
+nas_native(builtin_left);
+nas_native(builtin_right);
+nas_native(builtin_cmp);
+nas_native(builtin_chr);
+nas_native(builtin_open);
+nas_native(builtin_close);
+nas_native(builtin_read);
+nas_native(builtin_write);
+nas_native(builtin_seek);
+nas_native(builtin_tell);
+nas_native(builtin_readln);
+nas_native(builtin_stat);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
@@ -111,6 +121,14 @@ struct
     {"__builtin_right",   builtin_right   },
     {"__builtin_cmp",     builtin_cmp     },
     {"__builtin_chr",     builtin_chr     },
+    {"__builtin_open",    builtin_open    },
+    {"__builtin_close",   builtin_close   },
+    {"__builtin_read",    builtin_read    },
+    {"__builtin_write",   builtin_write   },
+    {"__builtin_seek",    builtin_seek    },
+    {"__builtin_tell",    builtin_tell    },
+    {"__builtin_readln",  builtin_readln  },
+    {"__builtin_stat",    builtin_stat    },
     {nullptr,             nullptr         }
 };
 
@@ -644,5 +662,114 @@ nasal_ref builtin_chr(std::vector<nasal_ref>& local,nasal_gc& gc)
         *ret.str()=" ";
     return ret;
 }
-
+nasal_ref builtin_open(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filename=local[1];
+    nasal_ref mode=local[2];
+    if(filename.type!=vm_str)
+        return builtin_err("open","\"filename\" must be string");
+    if(mode.type!=vm_str)
+        return builtin_err("open","\"mode\" must be string");
+    FILE* res=fopen(filename.str()->c_str(),mode.str()->c_str());
+    if(!res)
+        return builtin_err("open","failed to open file <"+*filename.str()+"> errno "+std::to_string(errno));
+    nasal_ref ret=gc.alloc(vm_obj);
+    ret.obj()->type=obj_file;
+    ret.obj()->ptr=(void*)res;
+    return ret;
+}
+nasal_ref builtin_close(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("close","not a correct filehandle");
+    fclose((FILE*)filehandle.obj()->ptr);
+    return gc.nil;
+}
+nasal_ref builtin_read(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    nasal_ref buf=local[2];
+    nasal_ref len=local[3];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("read","not a correct filehandle");
+    if(buf.type!=vm_str)
+        return builtin_err("read","\"buf\" must be string");
+    if(len.type!=vm_num)
+        return builtin_err("read","\"len\" must be number");
+    if(len.num()<=0 || len.num()>=(1<<30))
+        return builtin_err("read","\"len\" less than 1 or too large");
+    char* buff=new char[(size_t)len.num()+1];
+    if(!buff)
+        return builtin_err("read","memory allocation error");
+    double res=fread(buff,1,len.num(),(FILE*)filehandle.obj()->ptr);
+    *buf.str()=buff;
+    delete []buff;
+    return {vm_num,res};
+}
+nasal_ref builtin_write(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    nasal_ref str=local[2];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("write","not a correct filehandle");
+    if(str.type!=vm_str)
+        return builtin_err("write","\"str\" must be string");
+    double res=(double)fwrite(str.str()->c_str(),1,str.str()->length(),(FILE*)filehandle.obj()->ptr);
+    return {vm_num,res};
+}
+nasal_ref builtin_seek(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    nasal_ref position=local[2];
+    nasal_ref whence=local[3];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("seek","not a correct filehandle");
+    if(position.type!=vm_num)
+        return builtin_err("seek","\"pos\" must be number");
+    if(whence.type!=vm_num || whence.num()<0 || whence.num()>2)
+        return builtin_err("seek","\"whence\" must be number between 0 and 2");
+    double res=fseek((FILE*)filehandle.obj()->ptr,position.num(),whence.num());
+    return {vm_num,res};
+}
+nasal_ref builtin_tell(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("tell","not a correct filehandle");
+    double res=ftell((FILE*)filehandle.obj()->ptr);
+    return {vm_num,res};
+}
+nasal_ref builtin_readln(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("readln","not a correct filehandle");
+    /* unfinished */
+    return gc.nil;
+}
+nasal_ref builtin_stat(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filename=local[1];
+    if(filename!=vm_str)
+        return builtin_err("stat","\"filename\" must be string");
+    struct stat buf;
+    if(stat(filename.str()->c_str(),&buf)<0)
+        return builtin_err("stat","failed to open file <"+*filename.str()+">");
+    nasal_ref ret=gc.alloc(vm_vec);
+    ret.vec()->elems={
+        {vm_num,(double)buf.st_dev},
+        {vm_num,(double)buf.st_ino},
+        {vm_num,(double)buf.st_mode},
+        {vm_num,(double)buf.st_nlink},
+        {vm_num,(double)buf.st_uid},
+        {vm_num,(double)buf.st_gid},
+        {vm_num,(double)buf.st_rdev},
+        {vm_num,(double)buf.st_size},
+        {vm_num,(double)buf.st_atime},
+        {vm_num,(double)buf.st_mtime},
+        {vm_num,(double)buf.st_ctime}
+    };
+    return ret;
+}
 #endif

@@ -19,6 +19,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <sys/stat.h>
+
 inline double hex_to_double(const char* str)
 {
     double ret=0;
@@ -99,7 +101,7 @@ double str2num(const char* str)
     return is_negative?-ret_num:ret_num;
 }
 
-std::string raw_string(const std::string& str)
+std::string rawstr(const std::string& str)
 {
     std::string ret("");
     for(auto i:str)
