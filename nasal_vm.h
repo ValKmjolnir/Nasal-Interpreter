@@ -607,7 +607,7 @@ inline void nasal_vm::opr_callv()
         int str_size=str.length();
         if(num<-str_size || num>=str_size)
             die("callv: index out of range:"+std::to_string(val.to_number()));
-        gc.top[0]={vm_num,static_cast<double>(str[num>=0? num:num+str_size])};
+        gc.top[0]={vm_num,double((uint8_t)str[num>=0? num:num+str_size])};
     }
     else
         die("callv: must call a vector/hash/string");
