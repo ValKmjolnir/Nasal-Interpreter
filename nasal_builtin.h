@@ -64,6 +64,11 @@ nas_native(builtin_seek);
 nas_native(builtin_tell);
 nas_native(builtin_readln);
 nas_native(builtin_stat);
+nas_native(builtin_eof);
+nas_native(builtin_fld);
+nas_native(builtin_sfld);
+nas_native(builtin_setfld);
+nas_native(builtin_buf);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
@@ -129,6 +134,11 @@ struct
     {"__builtin_tell",    builtin_tell    },
     {"__builtin_readln",  builtin_readln  },
     {"__builtin_stat",    builtin_stat    },
+    {"__builtin_eof",     builtin_eof     },
+    {"__builtin_fld",     builtin_fld     },
+    {"__builtin_sfld",    builtin_sfld    },
+    {"__builtin_setfld",  builtin_setfld  },
+    {"__builtin_buf",     builtin_buf     },
     {nullptr,             nullptr         }
 };
 
@@ -745,7 +755,19 @@ nasal_ref builtin_readln(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref filehandle=local[1];
     if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
         return builtin_err("readln","not a correct filehandle");
-    /* unfinished */
+    nasal_ref str=gc.alloc(vm_str);
+    auto& s=*str.str();
+    char c;
+    while((c=fgetc((FILE*)filehandle.obj()->ptr))!=EOF)
+    {
+        if(c=='\r')
+            continue;
+        if(c=='\n')
+            return str;
+        s+=c;
+    }
+    if(s.length())
+        return str;
     return gc.nil;
 }
 nasal_ref builtin_stat(std::vector<nasal_ref>& local,nasal_gc& gc)
@@ -771,5 +793,101 @@ nasal_ref builtin_stat(std::vector<nasal_ref>& local,nasal_gc& gc)
         {vm_num,(double)buf.st_ctime}
     };
     return ret;
+}
+nasal_ref builtin_eof(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref filehandle=local[1];
+    if(filehandle.type!=vm_obj || filehandle.obj()->type!=obj_file)
+        return builtin_err("readln","not a correct filehandle");
+    double res=feof((FILE*)filehandle.obj()->ptr);
+    return {vm_num,res};
+}
+nasal_ref builtin_fld(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    // bits.fld(s,0,3);
+    // if s stores 10100010(162)
+    // will get 101(5)
+    nasal_ref str=local[1];
+    nasal_ref startbit=local[2];
+    nasal_ref length=local[3];
+    if(str.type!=vm_str || str.value.gcobj->unmut)
+        return builtin_err("fld","\"str\" must be mutable string");
+    if(startbit.type!=vm_num || length.type!=vm_num)
+        return builtin_err("fld","\"startbit\",\"len\" must be number");
+    uint32_t bit=(uint32_t)startbit.num();
+    uint32_t len=(uint32_t)length.num();
+    if(bit+len>8*str.str()->length())
+        return builtin_err("fld","bitfield out of bounds");
+    uint32_t res=0;
+    auto& s=*str.str();
+    for(uint32_t i=bit;i<bit+len;++i)
+        if(s[i>>3]&(1<<(7-(i&7))))
+            res|=1<<(bit+len-i-1);
+    return {vm_num,(double)res};
+}
+nasal_ref builtin_sfld(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    // bits.sfld(s,0,3);
+    // if s stores 10100010(162)
+    // will get 101(5) then this will be signed extended to
+    // 11111101(-3)
+    nasal_ref str=local[1];
+    nasal_ref startbit=local[2];
+    nasal_ref length=local[3];
+    if(str.type!=vm_str || str.value.gcobj->unmut)
+        return builtin_err("sfld","\"str\" must be mutable string");
+    if(startbit.type!=vm_num || length.type!=vm_num)
+        return builtin_err("sfld","\"startbit\",\"len\" must be number");
+    uint32_t bit=(uint32_t)startbit.num();
+    uint32_t len=(uint32_t)length.num();
+    if(bit+len>8*str.str()->length())
+        return builtin_err("sfld","bitfield out of bounds");
+    uint32_t res=0;
+    auto& s=*str.str();
+    for(uint32_t i=bit;i<bit+len;++i)
+        if(s[i>>3]&(1<<(7-(i&7))))
+            res|=1<<(bit+len-i-1);
+    if(res&(1<<(len-1)))
+        res|=~((1<<len)-1);
+    return {vm_num,(double)((int32_t)res)};
+}
+nasal_ref builtin_setfld(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    // bits.setfld(s,0,8,69);
+    // set 1000101(69) to string will get this:
+    // 10100010(162)
+    // so s[0]=162
+    nasal_ref str=local[1];
+    nasal_ref startbit=local[2];
+    nasal_ref length=local[3];
+    nasal_ref value=local[4];
+    if(str.type!=vm_str  || str.value.gcobj->unmut)
+        return builtin_err("setfld","\"str\" must be mutable string");
+    if(startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num)
+        return builtin_err("setfld","\"startbit\",\"len\",\"val\" must be number");
+    uint32_t bit=(uint32_t)startbit.num();
+    uint32_t len=(uint32_t)length.num();
+    uint64_t val=(uint64_t)value.num();
+    if(bit+len>8*str.str()->length())
+        return builtin_err("setfld","bitfield out of bounds");
+    auto& s=*str.str();
+    for(uint32_t i=bit;i<bit+len;++i)
+    {
+        if(val&(1<<(i-bit)))
+            s[i>>3]|=(1<<(7-(i&7)));
+        else
+            s[i>>3]&=~(1<<(7-(i&7)));
+    }
+    return gc.nil;
+}
+nasal_ref builtin_buf(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref length=local[1];
+    if(length.type!=vm_num || length.num()<=0)
+        return builtin_err("buf","\"len\" must be a number greater than 9");
+    nasal_ref str=gc.alloc(vm_str);
+    auto& s=*str.str();
+    s.resize(length.num(),'\0');
+    return str;
 }
 #endif

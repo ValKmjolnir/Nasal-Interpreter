@@ -115,6 +115,7 @@ struct nasal_val
 {
     uint8_t mark;
     uint8_t type;
+    uint8_t unmut;
     union 
     {
         std::string* str;
@@ -262,6 +263,7 @@ nasal_val::nasal_val(uint8_t val_type)
 {
     mark=GC_COLLECTED;
     type=val_type;
+    unmut=0;
     switch(val_type)
     {
         case vm_str:  ptr.str=new std::string; break;
@@ -400,6 +402,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
     for(uint32_t i=0;i<strs.size();++i)
     {
         strs[i]={vm_str,new nasal_val(vm_str)};
+        strs[i].value.gcobj->unmut=1;
         *strs[i].str()=s[i];
     }
 }
