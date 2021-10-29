@@ -1118,3 +1118,74 @@ trace back:
 vm stack(limit 10):
         num  | 0.000000
 ```
+
+Use command `-d` or `--detail` the trace back info will be this:
+```javascript
+hello world
+[vm] error: exception test
+[vm] native function error.
+trace back:
+        0x0000008f: callb  0x22 <__builtin_die> (<lib.nas> line 20)
+        0x00000214: callfv 0x1 (<test/exception.nas> line 16)      
+        0x00000248: callfv 0x0 (<test/exception.nas> line 39)      
+vm stack(limit 10):
+        null |
+        func | <0x23bc3f0> func{entry=0x8f}
+        func | <0x23bdc50> func{entry=0x20e}
+mcall address: 0x24a4b88
+global:
+[0]     func | <0x23d3960> func{entry=0x5}
+[1]     func | <0x23bb8b0> func{entry=0xc}
+[2]     func | <0x23bb950> func{entry=0x14}
+[3]     func | <0x23bb9f0> func{entry=0x1c}
+[4]     func | <0x23bba90> func{entry=0x23}
+[5]     func | <0x23bbb30> func{entry=0x29}
+[6]     func | <0x23bbbd0> func{entry=0x30}
+[7]     func | <0x23bbc70> func{entry=0x38}
+[8]     func | <0x23bbd10> func{entry=0x40}
+[9]     func | <0x23bbdb0> func{entry=0x47}
+[10]    func | <0x23bbe50> func{entry=0x4e}
+[11]    func | <0x23bbef0> func{entry=0x55}
+[12]    func | <0x23bbf90> func{entry=0x5c}
+[13]    func | <0x23bc030> func{entry=0x63}
+[14]    func | <0x23bc0d0> func{entry=0x6a}
+[15]    func | <0x23bc170> func{entry=0x72}
+[16]    func | <0x23bc210> func{entry=0x7a}
+[17]    func | <0x23bc2b0> func{entry=0x81}
+[18]    func | <0x23bc350> func{entry=0x88}
+[19]    func | <0x23bc3f0> func{entry=0x8f}
+[20]    func | <0x23bc490> func{entry=0x96}
+[21]    func | <0x23bc530> func{entry=0x9f}
+[22]    func | <0x23bc5d0> func{entry=0xa7}
+[23]    func | <0x23bc670> func{entry=0xaf}
+[24]    func | <0x23bc710> func{entry=0xb7}
+[25]    func | <0x23bc7b0> func{entry=0xbf}
+[26]    func | <0x23bc850> func{entry=0xc6}
+[27]    func | <0x23bc8f0> func{entry=0xcd}
+[28]    hash | <0x248ae70> {14 member}
+[29]    hash | <0x248aed0> {9 member}
+[30]    hash | <0x248af30> {12 member}
+[31]    num  | 0.017453
+[32]    num  | 0.592500
+[33]    num  | 0.304800
+[34]    num  | 3.785400
+[35]    num  | 0.025400
+[36]    num  | 2.204600
+[37]    num  | 1.687800
+[38]    num  | 0.514400
+[39]    num  | 0.264200
+[40]    num  | 0.453600
+[41]    num  | 3.280800
+[42]    num  | 39.370100
+[43]    num  | 0.000540
+[44]    num  | 1.943800
+[45]    num  | 1852.000000
+[46]    num  | 57.295780
+[47]    hash | <0x248af90> {3 member}
+[48]    func | <0x23bdcf0> func{entry=0x21e}
+[49]    func | <0x23bdd90> func{entry=0x22d}
+[50]    func | <0x23bde30> func{entry=0x237}
+local:
+[0]     nil  |
+[1]     str  | <0x249abd0> exception test
+```

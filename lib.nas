@@ -4,7 +4,6 @@ var append=   func(vec,elems...){return __builtin_append(vec,elems);}
 var setsize=  func(vec,size){return __builtin_setsize(vec,size);}
 var system=   func(str){return __builtin_system(str);}
 var input=    func(){return __builtin_input();}
-var sleep=    func(duration){return __builtin_sleep(duration);}
 var split=    func(deli,str){return __builtin_split(deli,str);}
 var rand=     func(seed=nil){return __builtin_rand(seed);}
 var id=       func(object){return __builtin_id(object);}
@@ -30,6 +29,7 @@ var println=func(elems...){
     elems=['\n'];
     return __builtin_print(elems);
 }
+
 var io=
 {
     SEEK_SET:0,
@@ -76,7 +76,6 @@ var math=
     nan:   0/0,
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
-
 var D2R=math.pi/180;
 var FPS2KT=0.5925;
 var FT2M=0.3048;
@@ -93,3 +92,21 @@ var M2NM=0.00054;
 var MPS2KT=1.9438;
 var NM2M=1852;
 var R2D=180/math.pi;
+
+var unix=
+{
+    pipe:     func(){die("not supported yet");},
+    fork:     func(){die("not supported yet");},
+    dup2:     func(fd0,fd1){die("not supported yet");},
+    exec:     func(filename,argv,envp){die("not supported yet");},
+    waitpid:  func(pid,nohang=0){die("not supported yet");},
+    opendir:  func(path){die("not supported yet");},
+    readdir:  func(handle){die("not supported yet");},
+    closedir: func(handle){die("not supported yet");},
+    time:     func(){return time(0);},
+    sleep:    func(secs){return __builtin_sleep(secs);},
+    chdir:    func(path){return __builtin_chdir(path);},
+    environ:  func(){die("not supported yet");},
+    getcwd:   func(){return __builtin_getcwd();},
+    getenv:   func(envvar){return __builtin_getenv(envvar);}
+};

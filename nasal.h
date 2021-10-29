@@ -20,6 +20,7 @@
 #include <unordered_map>
 
 #include <sys/stat.h>
+#include <fcntl.h>
 
 inline double hex_to_double(const char* str)
 {

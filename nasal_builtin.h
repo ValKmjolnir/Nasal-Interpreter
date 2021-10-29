@@ -19,7 +19,6 @@ nas_native(builtin_append);
 nas_native(builtin_setsize);
 nas_native(builtin_system);
 nas_native(builtin_input);
-nas_native(builtin_sleep);
 nas_native(builtin_fin);
 nas_native(builtin_fout);
 nas_native(builtin_split);
@@ -69,6 +68,10 @@ nas_native(builtin_fld);
 nas_native(builtin_sfld);
 nas_native(builtin_setfld);
 nas_native(builtin_buf);
+nas_native(builtin_sleep);
+nas_native(builtin_chdir);
+nas_native(builtin_getcwd);
+nas_native(builtin_getenv);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
@@ -89,7 +92,6 @@ struct
     {"__builtin_setsize", builtin_setsize },
     {"__builtin_system",  builtin_system  },
     {"__builtin_input",   builtin_input   },
-    {"__builtin_sleep",   builtin_sleep   },
     {"__builtin_fin",     builtin_fin     },
     {"__builtin_fout",    builtin_fout    },
     {"__builtin_split",   builtin_split   },
@@ -139,6 +141,10 @@ struct
     {"__builtin_sfld",    builtin_sfld    },
     {"__builtin_setfld",  builtin_setfld  },
     {"__builtin_buf",     builtin_buf     },
+    {"__builtin_sleep",   builtin_sleep   },
+    {"__builtin_chdir",   builtin_chdir   },
+    {"__builtin_getcwd",  builtin_getcwd  },
+    {"__builtin_getenv",  builtin_getenv  },
     {nullptr,             nullptr         }
 };
 
@@ -201,15 +207,6 @@ nasal_ref builtin_input(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref ret=gc.alloc(vm_str);
     std::cin>>*ret.str();
     return ret;
-}
-nasal_ref builtin_sleep(std::vector<nasal_ref>& local,nasal_gc& gc)
-{
-    nasal_ref val=local[1];
-    if(val.type!=vm_num)
-        return builtin_err("sleep","\"duration\" must be number");
-    // sleep in unistd.h will make this progress sleep sleep_time seconds.
-    sleep((unsigned int)val.num());
-    return gc.nil;
 }
 nasal_ref builtin_fin(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
@@ -888,6 +885,43 @@ nasal_ref builtin_buf(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref str=gc.alloc(vm_str);
     auto& s=*str.str();
     s.resize(length.num(),'\0');
+    return str;
+}
+nasal_ref builtin_sleep(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref val=local[1];
+    if(val.type!=vm_num)
+        return builtin_err("sleep","\"duration\" must be number");
+    usleep((useconds_t)(val.num()*1e6));
+    return gc.nil;
+}
+nasal_ref builtin_chdir(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref path=local[1];
+    if(path.type!=vm_str)
+        return builtin_err("chdir","\"path\" must be string");
+    if(chdir(path.str()->c_str())<0)
+        return builtin_err("chdir","failed to execute chdir");
+    return gc.nil;
+}
+nasal_ref builtin_getcwd(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    char buf[1024];
+    getcwd(buf,sizeof(buf));
+    nasal_ref str=gc.alloc(vm_str);
+    *str.str()=buf;
+    return str;
+}
+nasal_ref builtin_getenv(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref envvar=local[1];
+    if(envvar.type!=vm_str)
+        return builtin_err("getenv","\"envvar\" must be string");
+    char* res=getenv(envvar.str()->c_str());
+    if(!res)
+        return gc.nil;
+    nasal_ref str=gc.alloc(vm_str);
+    *str.str()=res;
     return str;
 }
 #endif
