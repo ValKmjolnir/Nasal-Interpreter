@@ -63,6 +63,7 @@ void err()
 
 void execute(const std::string& file,const uint32_t cmd)
 {
+    // 33kb space on stack
     nasal_lexer   lexer;
     nasal_parse   parse;
     nasal_import  linker;
@@ -107,6 +108,11 @@ void execute(const std::string& file,const uint32_t cmd)
 
 int main(int argc,const char* argv[])
 {
+    if(argc==1)
+    {
+        help();
+        return 0;
+    }
     if(argc==2)
     {
         std::string s(argv[1]);
