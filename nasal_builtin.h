@@ -9,7 +9,8 @@
 */
 enum obj_type
 {
-    obj_file,
+    obj_file=1,
+    obj_dir,
 };
 // declaration of builtin functions
 // to add new builtin function, declare it here and write the definition below
@@ -69,6 +70,9 @@ nas_native(builtin_sfld);
 nas_native(builtin_setfld);
 nas_native(builtin_buf);
 nas_native(builtin_sleep);
+nas_native(builtin_opendir);
+nas_native(builtin_readdir);
+nas_native(builtin_closedir);
 nas_native(builtin_chdir);
 nas_native(builtin_getcwd);
 nas_native(builtin_getenv);
@@ -142,6 +146,9 @@ struct
     {"__builtin_setfld",  builtin_setfld  },
     {"__builtin_buf",     builtin_buf     },
     {"__builtin_sleep",   builtin_sleep   },
+    {"__builtin_opendir", builtin_opendir },
+    {"__builtin_readdir", builtin_readdir },
+    {"__builtin_closedir",builtin_closedir},
     {"__builtin_chdir",   builtin_chdir   },
     {"__builtin_getcwd",  builtin_getcwd  },
     {"__builtin_getenv",  builtin_getenv  },
@@ -893,6 +900,39 @@ nasal_ref builtin_sleep(std::vector<nasal_ref>& local,nasal_gc& gc)
     if(val.type!=vm_num)
         return builtin_err("sleep","\"duration\" must be number");
     usleep((useconds_t)(val.num()*1e6));
+    return gc.nil;
+}
+nasal_ref builtin_opendir(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref path=local[1];
+    if(path.type!=vm_str)
+        return builtin_err("opendir","\"path\" must be string");
+    DIR* p=opendir(path.str()->c_str());
+    if(!p)
+        return builtin_err("opendir","cannot open dir <"+*path.str()+">");
+    nasal_ref ret=gc.alloc(vm_obj);
+    ret.obj()->type=obj_dir;
+    ret.obj()->ptr=(void*)p;
+    return ret;
+}
+nasal_ref builtin_readdir(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref handle=local[1];
+    if(handle.type!=vm_obj || handle.obj()->type!=obj_dir)
+        return builtin_err("readdir","not a correct dir handle");
+    dirent* p=readdir((DIR*)handle.obj()->ptr);
+    if(!p)
+        return gc.nil;
+    nasal_ref ret=gc.alloc(vm_str);
+    *ret.str()=p->d_name;
+    return ret;
+}
+nasal_ref builtin_closedir(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref handle=local[1];
+    if(handle.type!=vm_obj || handle.obj()->type!=obj_dir)
+        return builtin_err("closedir","not a correct dir handle");
+    closedir((DIR*)handle.obj()->ptr);
     return gc.nil;
 }
 nasal_ref builtin_chdir(std::vector<nasal_ref>& local,nasal_gc& gc)

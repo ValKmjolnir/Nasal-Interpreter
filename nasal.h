@@ -21,6 +21,7 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 inline double hex_to_double(const char* str)
 {

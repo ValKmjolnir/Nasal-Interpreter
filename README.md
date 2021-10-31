@@ -24,7 +24,7 @@ especially when checking syntax errors.
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
 
 I wrote the lexer,
-parser and 
+parser and
 bytecode virtual machine(there was an ast-interpreter,
 but i deleted it after version4.0) to help checking errors.
 We found it much easier to check syntax and runtime
@@ -43,7 +43,7 @@ It's quite easy to build this interpreter.
 
 MUST USE `-O2/-O3` if want to optimize the interpreter!
 
-Also remember to use g++ or clang++.
+Also remember to use g++ or clang++.(mingw-w64 in Windows)
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions
 
@@ -592,10 +592,13 @@ You could totally use it after reading this simple tutorial:
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
 
 `vm_nil` is a null type. It means nothing.
+
 ```javascript
 var spc=nil;
 ```
+
 `vm_num` has 3 formats. Dec, hex and oct. Using IEEE754 double to store.
+
 ```javascript
 var n=1;
 var n=2.71828;
@@ -605,13 +608,17 @@ var n=0x7fffffff;
 var n=0xAA55;
 var n=0o170001;
 ```
+
 `vm_str` has 3 formats. But the third one is often used to declare a character.
+
 ```javascript
 var s='str';
 var s="another string";
 var s=`c`;
 ```
+
 `vm_vec` has unlimited length and can store all types of values.
+
 ```javascript
 var vec=[];
 var vec=[
@@ -623,7 +630,9 @@ var vec=[
 ];
 append(vec,0,1,2);
 ```
+
 `vm_hash` is a hashmap that stores values with strings/identifiers as the key.
+
 ```javascript
 var hash={
     member1:nil,
@@ -636,7 +645,9 @@ var hash={
     }
 };
 ```
+
 `vm_func` is a function type (in fact it is lambda).
+
 ```javascript
 var f=func(x,y,z){
     return nil;
@@ -654,11 +665,13 @@ var f=func(args...){
     return sum;
 }
 ```
+
 `vm_obj` is a special type that stores user data.
 This means you could use other complex C/C++ data types in nasal.
 This type is used when you are trying to add a new data structure into nasal,
 so this type is often created by native-function that programmed in C/C++ by library developers.
 You could see how to write your own native-functions below.
+
 ```javascript
 var my_new_obj=func(){
     return __builtin_my_obj();
@@ -675,20 +688,26 @@ Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that l
 'str1'~'str2';
 (1+2)*(3+4)
 ```
+
 For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
 `and` `or` have the same function as C/C++ `&&` `||`, link comparations together.
+
 ```javascript
 1+1 and 0;
 1<0 or 1>0;
 1<=0 and 1>=0;
 1==0 or 1!=0;
 ```
+
 Unary operators `-` `!` have the same function as C/C++.
+
 ```javascript
 -1;
 !0;
 ```
+
 Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
+
 ```javascript
 a=b=c=d=1;
 a+=1;
@@ -736,6 +755,7 @@ if(1){
 ### __Loop__
 
 While loop and for loop is simalar to C/C++.
+
 ```javascript
 while(condition)
     continue;
@@ -743,14 +763,18 @@ while(condition)
 for(var i=0;i<10;i+=1)
     break;
 ```
+
 Nasal has another two kinds of loops that iterates through a vector:
 
 `forindex` will get the index of a vector.
+
 ```javascript
 forindex(var i;elem)
     print(elem[i]);
 ```
+
 `foreach` will get the element of a vector.
+
 ```javascript
 foreach(var i;elem)
     print(i);
@@ -786,6 +810,7 @@ func(x){return 1/(1+math.exp(-x));}(0.5);
 
 There's an interesting test file 'y-combinator.nas',
 try it for fun:
+
 ```javascript
 var fib=func(f){
     return f(f);
@@ -800,8 +825,10 @@ var fib=func(f){
 ```
 
 ### __Closure__
+
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
+
 ```javascript
 var f=func(){
     var a=1;
@@ -809,7 +836,9 @@ var f=func(){
 }
 print(f()());
 ```
+
 Using closure makes it easier to OOP.
+
 ```javascript
 var student=func(n,a){
     var (name,age)=(n,a);
@@ -833,6 +862,7 @@ virtual machine will search the member is parents.
 If there is a hash that has the member, you will get the member's value.
 
 Using this mechanism, we could OOP like this, the result is `114514`:
+
 ```javascript
 var trait={
     get:func{return me.val;},
@@ -848,9 +878,11 @@ var class={
     }
 };
 ```
+
 First virtual machine cannot find member `set` in hash `a`, but in `a.parents` there's a hash `trait` has the member `set`, so we get the `set`.
 variable `me` points to hash `a`, so we change the `a.val`.
 And `get` has the same process.
+
 ```javascript
 var a=class.new();
 a.set(114514);
@@ -874,7 +906,9 @@ Definition:
 ```C++
 nasal_ref builtin_chr(std::vector<nasal_ref>&,nasal_gc&);
 ```
+
 Then complete this function using C++:
+
 ```C++
 nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
@@ -902,7 +936,9 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
     return gc.nil;
 }
 ```
+
 After that, register the built-in function's name(in nasal) and the function's pointer in this table:
+
 ```C++
 struct func
 {
@@ -922,6 +958,7 @@ var print=func(elems...){
     return __builtin_print(elems);
 };
 ```
+
 In fact the arguments that `__builtin_print` uses is not necessary.
 So writting it like this is also right:
 
@@ -1080,6 +1117,7 @@ vm stack(limit 10):
 ```
 
 Here is an example of stack overflow:
+
 ```javascript
 func(f){
     return f(f);
@@ -1091,6 +1129,7 @@ func(f){
 ```
 
 And the trace back info:
+
 ```javascript
 [vm] stack overflow
 trace back:
@@ -1104,6 +1143,7 @@ vm stack(limit 10):
 ```
 
 Error will be thrown if there's a fatal error when executing:
+
 ```javascript
 func(){
     return 0;
@@ -1111,6 +1151,7 @@ func(){
 ```
 
 And the trace back info:
+
 ```javascript
 [vm] error at 0x00000008: callv: must call a vector/hash/string
 trace back:
@@ -1120,6 +1161,7 @@ vm stack(limit 10):
 ```
 
 Use command `-d` or `--detail` the trace back info will be this:
+
 ```javascript
 hello world
 [vm] error: exception test
