@@ -7,18 +7,18 @@ private:
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
     uint32_t                 offset;   // used to load default parameters to a new function
+    const double*            num_table;// const numbers, ref from nasal_codegen
+    const std::string*       str_table;// const symbols, ref from nasal_codegen
     std::stack<uint32_t>     ret;      // stack to store return pc
     std::stack<nasal_func*>  func_stk; // stack to store function, used to get upvalues
     std::stack<int>          counter;  // iterator stack for forindex/foreach
-    const double*            num_table;// const numbers
-    std::vector<std::string> str_table;// const symbols
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     /* garbage collector */
     nasal_gc                 gc;
     /* values used for debug */
-    std::vector<opcode>      bytecode;
-    std::vector<std::string> files;
+    const opcode*            bytecode; // ref from nasal_codegen
+    const std::string*       files;    // ref from nasal_import
 
     void init(
         const std::vector<std::string>&,
@@ -130,8 +130,8 @@ void nasal_vm::init(
 {
     gc.init(strs);
     num_table=nums.data();
-    str_table=strs;
-    files=filenames;
+    str_table=strs.data();
+    files=filenames.data();
 }
 void nasal_vm::clear()
 {
@@ -140,7 +140,6 @@ void nasal_vm::clear()
         ret.pop();
     while(!counter.empty())
         counter.pop();
-    str_table.clear();
     imm.clear();
 }
 void nasal_vm::valinfo(nasal_ref& val)
@@ -804,7 +803,7 @@ inline void nasal_vm::opr_mcallh()
     if(hash.type!=vm_hash)
         die("mcallh: must call a hash");
     nasal_hash& ref=*hash.hash();
-    std::string& str=str_table[imm[pc]];
+    const std::string& str=str_table[imm[pc]];
     mem_addr=ref.get_mem(str);
     if(!mem_addr) // create a new key
     {
@@ -856,9 +855,9 @@ void nasal_vm::run(
         &&mcallg,  &&mcalll,   &&mupval, &&mcallv,
         &&mcallh,  &&ret,      &&vmexit
     };
-    bytecode=gen.get_code();
+    bytecode=gen.get_code().data();
     std::vector<const void*> code;
-    for(auto& i:bytecode)
+    for(auto& i:gen.get_code())
     {
         code.push_back(opr_table[i.op]);
         imm.push_back(i.num);

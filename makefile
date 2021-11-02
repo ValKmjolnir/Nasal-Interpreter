@@ -13,6 +13,7 @@ test:nasal
 	./nasal test/class.nas
 	# ./nasal test/exception.nas
 	./nasal -t test/fib.nas
+	./nasal test/filesystem.nas
 	./nasal test/hexdump.nas
 	./nasal test/json.nas
 	./nasal test/leetcode1319.nas

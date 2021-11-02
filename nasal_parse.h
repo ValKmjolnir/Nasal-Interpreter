@@ -43,12 +43,11 @@ class nasal_parse
 private:
     uint32_t ptr;
     uint32_t error;
-    uint32_t in_func; // count when generating function block
-    uint32_t in_loop; // count when generating loop block
+    uint32_t in_func; // count function block
+    uint32_t in_loop; // count loop block
+    const token* tokens;// ref from nasal_lexer
     nasal_ast root;
-    std::vector<token> tokens;
-    std::vector<token> error_token;
-    
+
     void die(uint32_t,const std::string&);
     void match(uint32_t type,const char* info=nullptr);
     bool check_comma(const uint32_t*);
@@ -84,8 +83,8 @@ private:
     nasal_ast callf();
     nasal_ast subvec();
     nasal_ast definition();
-    nasal_ast var_incurve_def();
-    nasal_ast var_outcurve_def();
+    nasal_ast incurve_def();
+    nasal_ast outcurve_def();
     nasal_ast multi_id();
     nasal_ast multi_scalar(bool);
     nasal_ast multi_assgin();
@@ -107,38 +106,19 @@ public:
 };
 void nasal_parse::compile(const nasal_lexer& lexer)
 {
-    tokens=lexer.get_tokens();
+    tokens=lexer.get_tokens().data();
     ptr=in_func=in_loop=error=0;
-    error_token.clear();
 
     root={1,ast_root};
     while(tokens[ptr].type!=tok_eof)
     {
-        uint32_t err_tok_size=error_token.size();
         root.add(expr());
         if(tokens[ptr].type==tok_semi)
             match(tok_semi);
-        // if detect error token, avoid checking semicolon
-        else if(error_token.size()>err_tok_size)
-            continue;
         // the last expression can be recognized without semi
         else if(need_semi_check(root.child().back()) && tokens[ptr].type!=tok_eof)
             die(error_line,"expected \";\"");
     }
-    if(!error_token.size())
-        return;
-    ++error;
-    std::cout<<"[parse] line";
-    uint32_t err_line=0;
-    for(auto& tok:error_token)
-        if(err_line!=tok.line)
-        {
-            std::cout<<' '<<tok.line;
-            err_line=tok.line;
-        }
-    std::cout
-    <<" have fatal syntax errors."
-    <<"check \'(\',\'[\',\'{\',\')\',\']\',\'}\' match or not.\n";
 }
 void nasal_parse::die(uint32_t line,const std::string& info)
 {
@@ -476,7 +456,10 @@ nasal_ast nasal_parse::expr()
         case tok_break:    return break_expr();    break;
         case tok_ret:      return ret_expr();      break;
         case tok_semi:                             break;
-        default:error_token.push_back(tokens[ptr]);++ptr;break;
+        default:
+            die(error_line,"incorrect token <"+tokens[ptr].str+">");
+            ++ptr;
+            break;
     }
     return {tokens[ptr].line,ast_null};
 }
@@ -493,13 +476,9 @@ nasal_ast nasal_parse::exprs()
         match(tok_lbrace);
         while(tokens[ptr].type!=tok_rbrace && tokens[ptr].type!=tok_eof)
         {
-            uint32_t err_tok_size=error_token.size();
             node.add(expr());
             if(tokens[ptr].type==tok_semi)
                 match(tok_semi);
-            // if detect error token, avoid checking semicolon
-            else if(error_token.size()>err_tok_size)
-                continue;
             // the last expression can be recognized without semi
             else if(need_semi_check(node.child().back()) && tokens[ptr].type!=tok_rbrace)
                 die(error_line,"expected \";\"");
@@ -766,12 +745,12 @@ nasal_ast nasal_parse::definition()
         switch(tokens[ptr].type)
         {
             case tok_id:     node.add(id());match(tok_id);break;
-            case tok_lcurve: node.add(var_outcurve_def());break;
+            case tok_lcurve: node.add(outcurve_def());break;
             default:         die(error_line,"expected identifier");break;
         }
     }
     else if(tokens[ptr].type==tok_lcurve)
-        node.add(var_incurve_def());
+        node.add(incurve_def());
     match(tok_eq);
     if(tokens[ptr].type==tok_lcurve)
         node.add(check_multi_scalar()?multi_scalar(false):calc());
@@ -784,7 +763,7 @@ nasal_ast nasal_parse::definition()
             die(node[0].line(),"too much or lack values in multi-definition");
     return node;
 }
-nasal_ast nasal_parse::var_incurve_def()
+nasal_ast nasal_parse::incurve_def()
 {
     match(tok_lcurve);
     match(tok_var);
@@ -792,7 +771,7 @@ nasal_ast nasal_parse::var_incurve_def()
     match(tok_rcurve);
     return node;
 }
-nasal_ast nasal_parse::var_outcurve_def()
+nasal_ast nasal_parse::outcurve_def()
 {
     match(tok_lcurve);
     nasal_ast node=multi_id();

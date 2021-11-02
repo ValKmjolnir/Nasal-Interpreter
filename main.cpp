@@ -63,7 +63,6 @@ void err()
 
 void execute(const std::string& file,const uint32_t cmd)
 {
-    // 33kb space on stack
     nasal_lexer   lexer;
     nasal_parse   parse;
     nasal_import  linker;
