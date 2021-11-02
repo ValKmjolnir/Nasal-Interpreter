@@ -197,11 +197,11 @@ private:
     uint16_t fileindex;
     uint32_t in_forindex;
     uint32_t in_foreach;
+    const std::string* file;
     std::unordered_map<double,int>      num_table;
     std::unordered_map<std::string,int> str_table;
     std::vector<double>                 num_res;
     std::vector<std::string>            str_res;
-    std::vector<std::string>            file;
     std::vector<opcode>                 code;
     std::list<std::vector<int>>         continue_ptr;
     std::list<std::vector<int>>         break_ptr;
@@ -1146,20 +1146,9 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
 
 void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
 {
-    error=0;
-    in_foreach=0;
-    in_forindex=0;
+    error=in_foreach=in_forindex=0;
     fileindex=0;
-
-    num_table.clear();
-    str_table.clear();
-    num_res.clear();
-    str_res.clear();
-    file=import.get_file();
-    code.clear();
-
-    global.clear();
-    local.clear();
+    file=import.get_file().data();
 
     // search symbols first
     find_symbol(parse.ast());
@@ -1263,7 +1252,7 @@ void nasal_codegen::print_op(uint32_t index)
 
 void nasal_codegen::print()
 {
-    for(auto num:num_res)
+    for(auto& num:num_res)
         std::cout<<".number "<<num<<'\n';
     for(auto& str:str_res)
         std::cout<<".symbol \""<<rawstr(str)<<"\"\n";

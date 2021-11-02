@@ -5,8 +5,6 @@ class nasal_import
 {
 private:
     uint32_t                 error;
-    nasal_lexer              lex;
-    nasal_parse              par;
     std::vector<std::string> files;
     void      die(const std::string&,const char*);
     bool      check_import(const nasal_ast&);
@@ -67,6 +65,8 @@ void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
 
 nasal_ast nasal_import::file_import(nasal_ast& node)
 {
+    nasal_lexer lex;
+    nasal_parse par;
     // get filename and set node to ast_null
     std::string filename=node[1][0].str();
     node.clear();
