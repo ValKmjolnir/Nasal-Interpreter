@@ -749,10 +749,10 @@ void nasal_codegen::loop_gen(const nasal_ast& ast)
     break_ptr.push_front(std::vector<int>());
     switch(ast.type())
     {
-        case ast_while:    while_gen(ast); break;
-        case ast_for:      for_gen(ast);   break;
-        case ast_forindex: ++in_forindex;forindex_gen(ast);--in_forindex; break;
-        case ast_foreach:  ++in_foreach; foreach_gen(ast); --in_foreach;  break;
+        case ast_while:   while_gen(ast);   break;
+        case ast_for:     for_gen(ast);     break;
+        case ast_forindex:forindex_gen(ast);break;
+        case ast_foreach: foreach_gen(ast); break;
     }
 }
 
@@ -872,8 +872,9 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
         gen(op_meq,0,ast[0].line());
         gen(op_pop,0,0);
     }
-
+    ++in_forindex;
     block_gen(ast[2]);
+    --in_forindex;
     gen(op_jmp,ptr,0);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
@@ -899,8 +900,9 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
         gen(op_meq,0,ast[0].line());
         gen(op_pop,0,0);
     }
-
+    ++in_foreach;
     block_gen(ast[2]);
+    --in_foreach;
     gen(op_jmp,ptr,0);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());

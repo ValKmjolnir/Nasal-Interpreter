@@ -284,7 +284,7 @@ inline bool nasal_vm::condition(nasal_ref val)
     {
         double num=str2num(val.str()->c_str());
         if(std::isnan(num))
-            return val.str()->empty();
+            return !val.str()->empty();
         return num;
     }
     return false;
