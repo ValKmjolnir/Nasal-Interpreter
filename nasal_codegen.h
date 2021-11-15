@@ -1231,7 +1231,7 @@ void nasal_codegen::print_op(uint32_t index)
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
-            printf("0x%x (%lf)\n",c.num,num_res[c.num]);break;
+            printf("0x%x (",c.num);std::cout<<num_res[c.num]<<")\n";break;
         case op_callvi:case op_newv:   case op_callfv:
         case op_intg:  case op_intl:
         case op_newf:  case op_jmp:    case op_jt:    case op_jf:

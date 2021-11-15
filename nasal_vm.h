@@ -188,7 +188,7 @@ void nasal_vm::traceback()
     if(same)
         printf("\t0x%.8x: %d same call(s) ...\n",last,same);
 }
-void nasal_vm::stackinfo(const uint32_t limit=10)
+void nasal_vm::stackinfo(const uint32_t limit=20)
 {
     printf("vm stack(limit %d):\n",limit);
     uint32_t same=0,global_size=bytecode[0].num;
@@ -327,7 +327,7 @@ inline void nasal_vm::opr_pzero()
 }
 inline void nasal_vm::opr_pnil()
 {
-    (++gc.top)[0].type=vm_nil;
+    (++gc.top)[0]={vm_nil,(double)0};
 }
 inline void nasal_vm::opr_pstr()
 {
@@ -394,7 +394,7 @@ inline void nasal_vm::opr_unot()
         {
             double num=str2num(val.str()->c_str());
             if(std::isnan(num))
-                gc.top[0]=val.str()->empty()?gc.one:gc.zero;
+                gc.top[0]={vm_num,(double)val.str()->empty()};
             else
                 gc.top[0]=num?gc.zero:gc.one;
         }

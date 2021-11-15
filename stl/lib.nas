@@ -100,6 +100,8 @@ var unix=
     dup2:     func(fd0,fd1){die("not supported yet");},
     exec:     func(filename,argv,envp){die("not supported yet");},
     waitpid:  func(pid,nohang=0){die("not supported yet");},
+    isdir:    func(path){return bits.bitand(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
+    isfile:   func(path){return bits.bitand(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
     opendir:  func(path){return __builtin_opendir;},
     readdir:  func(handle){return __builtin_readdir;},
     closedir: func(handle){return __builtin_closedir;},

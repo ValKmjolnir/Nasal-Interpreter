@@ -307,7 +307,7 @@ inline nasal_hash*  nasal_ref::hash(){return value.gcobj->ptr.hash;}
 inline nasal_func*  nasal_ref::func(){return value.gcobj->ptr.func;}
 inline nasal_obj*   nasal_ref::obj (){return value.gcobj->ptr.obj; }
 
-constexpr uint32_t STACK_MAX_DEPTH=2047;
+constexpr uint32_t STACK_MAX_DEPTH=4095;
 struct nasal_gc
 {
     nasal_ref               zero;
