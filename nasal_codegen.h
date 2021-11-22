@@ -195,9 +195,8 @@ class nasal_codegen
 private:
     uint32_t error;
     uint16_t fileindex;
-    uint32_t in_forindex;
-    uint32_t in_foreach;
     const std::string* file;
+    std::stack<uint32_t> in_iterloop;
     std::unordered_map<double,int>      num_table;
     std::unordered_map<std::string,int> str_table;
     std::vector<double>                 num_res;
@@ -439,7 +438,9 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     // search symbols first, must use after loading parameters
     // or the location of symbols will change and cause fatal error
     find_symbol(block);
+    in_iterloop.push(0);
     block_gen(block);
+    in_iterloop.pop();
     code[local_label].num=local.back().size();
     if(local.back().size()>65536)
         die("too many local variants: "+std::to_string(local.back().size())+".",block.line());
@@ -872,9 +873,9 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
         gen(op_meq,0,ast[0].line());
         gen(op_pop,0,0);
     }
-    ++in_forindex;
+    ++in_iterloop.top();
     block_gen(ast[2]);
-    --in_forindex;
+    --in_iterloop.top();
     gen(op_jmp,ptr,0);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
@@ -900,9 +901,9 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
         gen(op_meq,0,ast[0].line());
         gen(op_pop,0,0);
     }
-    ++in_foreach;
+    ++in_iterloop.top();
     block_gen(ast[2]);
-    --in_foreach;
+    --in_iterloop.top();
     gen(op_jmp,ptr,0);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
@@ -1134,7 +1135,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
 
 void nasal_codegen::ret_gen(const nasal_ast& ast)
 {
-    for(uint32_t i=0;i<in_foreach+in_forindex;++i)
+    for(uint32_t i=0;i<in_iterloop.top();++i)
     {
         gen(op_pop,0,0);
         gen(op_cntpop,0,0);
@@ -1148,9 +1149,10 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
 
 void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
 {
-    error=in_foreach=in_forindex=0;
+    error=0;
     fileindex=0;
     file=import.get_file().data();
+    in_iterloop.push(0);
 
     // search symbols first
     find_symbol(parse.ast());
