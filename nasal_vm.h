@@ -11,7 +11,6 @@ private:
     const std::string*       str_table;// const symbols, ref from nasal_codegen
     std::stack<uint32_t>     ret;      // stack to store return pc
     std::stack<nasal_func*>  func_stk; // stack to store function, used to get upvalues
-    std::stack<int>          counter;  // iterator stack for forindex/foreach
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     /* garbage collector */
@@ -92,7 +91,6 @@ private:
     void opr_jt();
     void opr_jf();
     void opr_counter();
-    void opr_cntpop();
     void opr_findex();
     void opr_feach();
     void opr_callg();
@@ -138,8 +136,6 @@ void nasal_vm::clear()
     gc.clear();
     while(!ret.empty())
         ret.pop();
-    while(!counter.empty())
-        counter.pop();
     imm.clear();
 }
 void nasal_vm::valinfo(nasal_ref& val)
@@ -147,14 +143,15 @@ void nasal_vm::valinfo(nasal_ref& val)
     const nasal_val* p=val.value.gcobj;
     switch(val.type)
     {
-        case vm_none: printf("\tnull |\n");break;
-        case vm_nil:  printf("\tnil  |\n");break;
-        case vm_num:  printf("\tnum  | %lf\n",val.num());break;
-        case vm_str:  printf("\tstr  | <%p> %s\n",p,rawstr(*val.str()).c_str());break;
-        case vm_func: printf("\tfunc | <%p> func{entry=0x%x}\n",p,val.func()->entry);break;
-        case vm_vec:  printf("\tvec  | <%p> [%lu val]\n",p,val.vec()->elems.size());break;
-        case vm_hash: printf("\thash | <%p> {%lu member}\n",p,val.hash()->elems.size());break;
-        case vm_obj:  printf("\tobj  | <%p>\n",p);break;
+        case vm_none: printf("\t|null   |\n");break;
+        case vm_cnt:  printf("\t|counter| %ld\n",val.cnt());break;
+        case vm_nil:  printf("\t|nil    |\n");break;
+        case vm_num:  printf("\t|number | %lf\n",val.num());break;
+        case vm_str:  printf("\t|string | <%p> %s\n",p,rawstr(*val.str()).c_str());break;
+        case vm_func: printf("\t|func   | <%p> func{entry=0x%x}\n",p,val.func()->entry);break;
+        case vm_vec:  printf("\t|vector | <%p> [%lu val]\n",p,val.vec()->elems.size());break;
+        case vm_hash: printf("\t|hash   | <%p> {%lu member}\n",p,val.hash()->elems.size());break;
+        case vm_obj:  printf("\t|object | <%p>\n",p);break;
     }
 }
 void nasal_vm::bytecodeinfo(const uint32_t p)
@@ -192,7 +189,7 @@ void nasal_vm::stackinfo(const uint32_t limit=20)
 {
     printf("vm stack(limit %d):\n",limit);
     uint32_t same=0,global_size=bytecode[0].num;
-    nasal_ref last={vm_none,0xffffffff};
+    nasal_ref last={vm_none,(nasal_val*)0xffffffff};
     for(uint32_t i=0;i<limit && gc.top>=gc.stack+global_size;++i,--gc.top)
     {
         if(gc.top[0]==last)
@@ -475,13 +472,11 @@ inline void nasal_vm::opr_eq()
 {
     nasal_ref val2=gc.top[0];
     nasal_ref val1=(--gc.top)[0];
-    uint8_t a_type=val1.type;
-    uint8_t b_type=val2.type;
-    if(a_type==vm_nil && b_type==vm_nil)
+    if(val1.type==vm_nil && val2.type==vm_nil)
         gc.top[0]=gc.one;
-    else if(a_type==vm_str && b_type==vm_str)
+    else if(val1.type==vm_str && val2.type==vm_str)
         gc.top[0]=(*val1.str()==*val2.str())?gc.one:gc.zero;
-    else if(a_type==vm_num || b_type==vm_num)
+    else if(val1.type==vm_num || val2.type==vm_num)
         gc.top[0]=(val1.to_number()==val2.to_number())?gc.one:gc.zero;
     else
         gc.top[0]=(val1==val2)?gc.one:gc.zero;
@@ -490,13 +485,11 @@ inline void nasal_vm::opr_neq()
 {
     nasal_ref val2=gc.top[0];
     nasal_ref val1=(--gc.top)[0];
-    uint8_t a_type=val1.type;
-    uint8_t b_type=val2.type;
-    if(a_type==vm_nil && b_type==vm_nil)
+    if(val1.type==vm_nil && val2.type==vm_nil)
         gc.top[0]=gc.zero;
-    else if(a_type==vm_str && b_type==vm_str)
+    else if(val1.type==vm_str && val2.type==vm_str)
         gc.top[0]=(*val1.str()!=*val2.str())?gc.one:gc.zero;
-    else if(a_type==vm_num || b_type==vm_num)
+    else if(val1.type==vm_num || val2.type==vm_num)
         gc.top[0]=(val1.to_number()!=val2.to_number())?gc.one:gc.zero;
     else
         gc.top[0]=(val1!=val2)?gc.one:gc.zero;
@@ -540,32 +533,30 @@ inline void nasal_vm::opr_jf()
 }
 inline void nasal_vm::opr_counter()
 {
-    counter.push(-1);
-    if(gc.top[0].type!=vm_vec)
+    (++gc.top)[0]={vm_cnt,(int64_t)-1};
+    if(gc.top[-1].type!=vm_vec)
         die("cnt: must use vector in forindex/foreach");
-}
-inline void nasal_vm::opr_cntpop()
-{
-    counter.pop();
 }
 inline void nasal_vm::opr_findex()
 {
-    if(++counter.top()>=gc.top[0].vec()->elems.size())
+    if(++gc.top[0].cnt()>=gc.top[-1].vec()->elems.size())
     {
         pc=imm[pc]-1;
         return;
     }
-    (++gc.top)[0]={vm_num,(double)counter.top()};
+    gc.top[1]={vm_num,(double)gc.top[0].cnt()};
+    ++gc.top;
 }
 inline void nasal_vm::opr_feach()
 {
-    std::vector<nasal_ref>& ref=gc.top[0].vec()->elems;
-    if(++counter.top()>=ref.size())
+    std::vector<nasal_ref>& ref=gc.top[-1].vec()->elems;
+    if(++gc.top[0].cnt()>=ref.size())
     {
         pc=imm[pc]-1;
         return;
     }
-    (++gc.top)[0]=ref[counter.top()];
+    gc.top[1]=ref[gc.top[0].cnt()];
+    ++gc.top;
 }
 inline void nasal_vm::opr_callg()
 {
@@ -848,12 +839,12 @@ void nasal_vm::run(
         &&leq,     &&grt,      &&geq,    &&lessc,
         &&leqc,    &&grtc,     &&geqc,   &&pop,
         &&jmp,     &&jt,       &&jf,     &&counter,
-        &&cntpop,  &&findex,   &&feach,  &&callg,
-        &&calll,   &&upval,    &&callv,  &&callvi,
-        &&callh,   &&callfv,   &&callfh, &&callb,
-        &&slcbegin,&&slcend,   &&slc,    &&slc2,
-        &&mcallg,  &&mcalll,   &&mupval, &&mcallv,
-        &&mcallh,  &&ret,      &&vmexit
+        &&findex,  &&feach,    &&callg,  &&calll,
+        &&upval,   &&callv,    &&callvi, &&callh,
+        &&callfv,  &&callfh,   &&callb,  &&slcbegin,
+        &&slcend,  &&slc,      &&slc2,   &&mcallg,
+        &&mcalll,  &&mupval,   &&mcallv, &&mcallh,
+        &&ret,     &&vmexit
     };
     bytecode=gen.get_code().data();
     std::vector<const void*> code;
@@ -938,7 +929,6 @@ jmp:     exec_opnodie(opr_jmp     ,op_jmp     ); // -0
 jt:      exec_opnodie(opr_jt      ,op_jt      ); // -0
 jf:      exec_opnodie(opr_jf      ,op_jf      ); // -1
 counter: exec_opnodie(opr_counter ,op_cnt     ); // -0
-cntpop:  exec_opnodie(opr_cntpop  ,op_cntpop  ); // -0
 findex:  exec_operand(opr_findex  ,op_findex  ); // +1
 feach:   exec_operand(opr_feach   ,op_feach   ); // +1
 callg:   exec_operand(opr_callg   ,op_callg   ); // +1

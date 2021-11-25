@@ -270,9 +270,9 @@ std::string nasal_lexer::str_gen()
 
 void nasal_lexer::scan(const std::string& file)
 {
-    open(file);
     line=1;
     error=ptr=0;
+    open(file);
 
     std::string str;
     while(ptr<res.size())
