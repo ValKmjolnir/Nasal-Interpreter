@@ -5,6 +5,7 @@ enum nasal_type
 {
     /* none-gc object */
     vm_none=0,
+    vm_cnt,
     vm_nil,
     vm_num,
     /* gc object */
@@ -22,6 +23,7 @@ const uint32_t increment[vm_type_size]=
 {
     /* none-gc object */
     0,    // vm_none, error type
+    0,    // vm_count, used in foreach/forindex
     0,    // vm_nil
     0,    // vm_num
     /* gc object */
@@ -43,11 +45,13 @@ struct nasal_ref
     uint8_t type;
     union
     {
+        int64_t cnt;
         double num;
         nasal_val* gcobj;
     }value;
 
     nasal_ref(const uint8_t t=vm_none):type(t){}
+    nasal_ref(const uint8_t t,const int64_t n):type(t){value.cnt=n;}
     nasal_ref(const uint8_t t,const double n):type(t){value.num=n;}
     nasal_ref(const uint8_t t,nasal_val* n):type(t){value.gcobj=n;}
     nasal_ref(const nasal_ref& nr):type(nr.type),value(nr.value){}
@@ -62,6 +66,7 @@ struct nasal_ref
     // number and string can be translated to each other
     double      to_number();
     std::string to_string();
+    inline int64_t&     cnt ();
     inline double&      num ();
     inline std::string* str ();
     inline nasal_vec*   vec ();
@@ -300,6 +305,7 @@ std::string nasal_ref::to_string()
         return std::to_string(num());
     return "";
 }
+inline int64_t&     nasal_ref::cnt (){return value.cnt;            }
 inline double&      nasal_ref::num (){return value.num;            }
 inline std::string* nasal_ref::str (){return value.gcobj->ptr.str; }
 inline nasal_vec*   nasal_ref::vec (){return value.gcobj->ptr.vec; }

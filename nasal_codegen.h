@@ -59,7 +59,6 @@ enum op_code
     op_jt,      // used in operator and/or,jmp when condition is true and DO NOT POP
     op_jf,      // used in conditional/loop,jmp when condition is false and POP STACK
     op_cnt,     // add counter for forindex/foreach
-    op_cntpop,  // pop counter
     op_findex,  // index counter on the top of forindex_stack plus 1
     op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_callg,   // get value in global scope
@@ -146,7 +145,6 @@ struct
     {op_jt,      "jt    "},
     {op_jf,      "jf    "},
     {op_cnt,     "cnt   "},
-    {op_cntpop,  "cntpop"},
     {op_findex,  "findx "},
     {op_feach,   "feach "},
     {op_callg,   "callg "},
@@ -880,7 +878,7 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
     gen(op_pop,0,0);// pop vector
-    gen(op_cntpop,0,0);
+    gen(op_pop,0,0);// pop iterator
 }
 void nasal_codegen::foreach_gen(const nasal_ast& ast)
 {
@@ -908,7 +906,7 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
     gen(op_pop,0,0);// pop vector
-    gen(op_cntpop,0,0);
+    gen(op_pop,0,0);// pop iterator
 }
 
 void nasal_codegen::or_gen(const nasal_ast& ast)
@@ -1138,7 +1136,7 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
     for(uint32_t i=0;i<in_iterloop.top();++i)
     {
         gen(op_pop,0,0);
-        gen(op_cntpop,0,0);
+        gen(op_pop,0,0);
     }
     if(ast.size())
         calc_gen(ast[0]);
