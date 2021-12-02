@@ -9,7 +9,6 @@ private:
     uint32_t                 offset;   // used to load default parameters to a new function
     const double*            num_table;// const numbers, ref from nasal_codegen
     const std::string*       str_table;// const symbols, ref from nasal_codegen
-    std::stack<uint32_t>     ret;      // stack to store return pc
     std::stack<nasal_func*>  func_stk; // stack to store function, used to get upvalues
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
@@ -23,7 +22,6 @@ private:
         const std::vector<std::string>&,
         const std::vector<double>&,
         const std::vector<std::string>&);
-    void clear();
     /* debug functions */
     bool detail_info;
     void valinfo(nasal_ref&);
@@ -113,7 +111,6 @@ private:
     void opr_mcallh();
     void opr_ret();
 public:
-    ~nasal_vm(){clear();}
     void run(
         const nasal_codegen&,
         const nasal_import&,
@@ -131,27 +128,21 @@ void nasal_vm::init(
     str_table=strs.data();
     files=filenames.data();
 }
-void nasal_vm::clear()
-{
-    gc.clear();
-    while(!ret.empty())
-        ret.pop();
-    imm.clear();
-}
 void nasal_vm::valinfo(nasal_ref& val)
 {
     const nasal_val* p=val.value.gcobj;
     switch(val.type)
     {
-        case vm_none: printf("\t|null   |\n");break;
-        case vm_cnt:  printf("\t|counter| %ld\n",val.cnt());break;
-        case vm_nil:  printf("\t|nil    |\n");break;
-        case vm_num:  printf("\t|number | %lf\n",val.num());break;
-        case vm_str:  printf("\t|string | <%p> %s\n",p,rawstr(*val.str()).c_str());break;
-        case vm_func: printf("\t|func   | <%p> func{entry=0x%x}\n",p,val.func()->entry);break;
-        case vm_vec:  printf("\t|vector | <%p> [%lu val]\n",p,val.vec()->elems.size());break;
-        case vm_hash: printf("\t|hash   | <%p> {%lu member}\n",p,val.hash()->elems.size());break;
-        case vm_obj:  printf("\t|object | <%p>\n",p);break;
+        case vm_none: printf("\t| null |\n");break;
+        case vm_ret:  printf("\t| addr | 0x%x\n",val.ret());break;
+        case vm_cnt:  printf("\t| cnt  | %ld\n",val.cnt());break;
+        case vm_nil:  printf("\t| nil  |\n");break;
+        case vm_num:  printf("\t| num  | %lf\n",val.num());break;
+        case vm_str:  printf("\t| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(*val.str()).c_str());break;
+        case vm_func: printf("\t| func | <0x%lx> func{entry=0x%x}\n",(uint64_t)p,val.func()->entry);break;
+        case vm_vec:  printf("\t| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
+        case vm_hash: printf("\t| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
+        case vm_obj:  printf("\t| obj  | <0x%lx>\n",(uint64_t)p);break;
     }
 }
 void nasal_vm::bytecodeinfo(const uint32_t p)
@@ -159,11 +150,18 @@ void nasal_vm::bytecodeinfo(const uint32_t p)
     const opcode& code=bytecode[p];
     printf("\t0x%.8x: %s 0x%x",p,code_table[code.op].name,code.num);
     if(code.op==op_callb)
-        printf(" <%s>",builtin[code.num].name);
+        printf(" <%s@0x%lx>",builtin[code.num].name,(uint64_t)builtin[code.num].func);
     printf(" (<%s> line %d)\n",files[code.fidx].c_str(),code.line);
 }
 void nasal_vm::traceback()
 {
+    uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
+    nasal_ref* top=gc.top;
+    nasal_ref* bottom=gc.stack+global_size;
+    std::stack<uint32_t> ret;
+    for(nasal_ref* i=bottom;i<=top;++i)
+        if(i->type==vm_ret)
+            ret.push(i->ret());
     // push pc to ret stack to store the position program crashed
     ret.push(pc);
     printf("trace back:\n");
@@ -177,46 +175,32 @@ void nasal_vm::traceback()
         }
         if(same)
         {
-            printf("\t0x%.8x: %d same call(s) ...\n",last,same);
+            printf("\t0x%.8x: %d same call(s)\n",last,same);
             same=0;
         }
         bytecodeinfo(point);
     }
     if(same)
-        printf("\t0x%.8x: %d same call(s) ...\n",last,same);
+        printf("\t0x%.8x: %d same call(s)\n",last,same);
 }
-void nasal_vm::stackinfo(const uint32_t limit=20)
+void nasal_vm::stackinfo(const uint32_t limit=10)
 {
-    printf("vm stack(limit %d):\n",limit);
-    uint32_t same=0,global_size=bytecode[0].num;
-    nasal_ref last={vm_none,(nasal_val*)0xffffffff};
-    for(uint32_t i=0;i<limit && gc.top>=gc.stack+global_size;++i,--gc.top)
-    {
-        if(gc.top[0]==last)
-        {
-            ++same;
-            continue;
-        }
-        if(same)
-        {
-            printf("\t...  | %d same value(s)\n",same);
-            same=0;
-        }
-        last=gc.top[0];
-        valinfo(gc.top[0]);
-    }
-    if(same)
-       printf("\t...  | %d same value(s)\n",same);
+    uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
+    nasal_ref* top=gc.top;
+    nasal_ref* bottom=gc.stack+global_size;
+    printf("vm stack(limit %d, total %ld):\n",limit,top-bottom+1);
+    for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
+        valinfo(top[0]);
 }
 void nasal_vm::detail()
 {
-    printf("mcall address: %p\n",mem_addr);
-    if(bytecode[0].num)// bytecode[0] is op_intg
+    printf("mcall address: 0x%lx\n",(uint64_t)mem_addr);
+    if(bytecode[0].num) // bytecode[0] is op_intg
     {
         printf("global:\n");
         for(uint32_t i=0;i<bytecode[0].num;++i)
         {
-            printf("[%d]",i);
+            printf("[0x%.8x]",i);
             valinfo(gc.stack[i]);
         }
     }
@@ -226,7 +210,7 @@ void nasal_vm::detail()
         auto& vec=gc.local.back().vec()->elems;
         for(uint32_t i=0;i<vec.size();++i)
         {
-            printf("[%d]",i);
+            printf("[0x%.8x]",i);
             valinfo(vec[i]);
         }
     }
@@ -239,7 +223,7 @@ void nasal_vm::detail()
             auto& vec=upval[i].vec()->elems;
             for(uint32_t j=0;j<vec.size();++j)
             {
-                printf("[%d][%d]",i,j);
+                printf("[%.4x][%.4x]",i,j);
                 valinfo(vec[j]);
             }
         }
@@ -657,8 +641,8 @@ inline void nasal_vm::opr_callfv()
         local.back()=vec;
     }
     
-    gc.top-=args_size;// pop arguments
-    ret.push(pc);
+    gc.top-=args_size; // pop arguments
+    (++gc.top)[0]={vm_ret,pc};
     pc=func.entry-1;
 }
 inline void nasal_vm::opr_callfh()
@@ -683,8 +667,7 @@ inline void nasal_vm::opr_callfh()
             die("callfh: lack argument(s): \""+i.first+"\"");
     }
 
-    --gc.top;// pop hash
-    ret.push(pc);
+    gc.top[0]={vm_ret,(uint32_t)pc}; // rewrite top with vm_ret
     pc=func.entry-1;
 }
 inline void nasal_vm::opr_callb()
@@ -804,15 +787,19 @@ inline void nasal_vm::opr_mcallh()
 }
 inline void nasal_vm::opr_ret()
 {
-    // get nasal_func and set 'me' to nil
-    // and rewrite nasal_func with returned value
-    gc.top[-1].func()->local[0]={vm_nil};
-    --gc.top;
-    gc.top[0]=gc.top[1];
+    // | return value    | <- gc.top[0]
+    // +-----------------+
+    // | return address  | <- gc.top[-1]
+    // +-----------------+
+    // | called function | <- gc.top[-2] funct is set on stack because gc may mark it
+    // +-----------------+
+    pc=gc.top[-1].ret();
+    gc.top[-2].func()->local[0]={vm_nil,nullptr}; // get func and set 'me' to nil
+    gc.top[-2]=gc.top[0]; // rewrite func with returned value
+    gc.top-=2;
 
     func_stk.pop();
     gc.local.pop_back();
-    pc=ret.top();ret.pop();
 }
 void nasal_vm::run(
     const nasal_codegen& gen,
@@ -855,21 +842,21 @@ void nasal_vm::run(
     }
 
     // set canary and program counter
-    auto& canary=gc.stack[STACK_MAX_DEPTH-1];
-    canary.value.gcobj=nullptr;
+    auto canary=gc.stack+STACK_MAX_DEPTH-1;
     pc=0;
     // goto the first operand
     goto *code[pc];
 
 vmexit:
-    if(canary.value.gcobj)
+    if(gc.top>=canary)
         die("stack overflow");
     if(opcnt)
         opcallsort(count);
-    clear();
+    gc.clear();
+    imm.clear();
     return;
 // may cause stackoverflow
-#define exec_operand(op,num) {op();++count[num];if(!canary.value.gcobj)goto *code[++pc];goto vmexit;}
+#define exec_operand(op,num) {op();++count[num];if(gc.top<canary)goto *code[++pc];goto vmexit;}
 // do not cause stackoverflow
 #define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 
@@ -937,8 +924,8 @@ upval:   exec_operand(opr_upval   ,op_upval   ); // +1
 callv:   exec_opnodie(opr_callv   ,op_callv   ); // -0
 callvi:  exec_opnodie(opr_callvi  ,op_callvi  ); // -0
 callh:   exec_opnodie(opr_callh   ,op_callh   ); // -0
-callfv:  exec_opnodie(opr_callfv  ,op_callfv  ); // -0
-callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // -0
+callfv:  exec_operand(opr_callfv  ,op_callfv  ); // +1-imm[pc] call this will push >=0 arguments
+callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // -0 call this will push one hash
 callb:   exec_opnodie(opr_callb   ,op_callb   ); // -0
 slcbegin:exec_operand(opr_slcbegin,op_slcbegin); // +1
 slcend:  exec_opnodie(opr_slcend  ,op_slcend  ); // -1

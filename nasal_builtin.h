@@ -39,6 +39,7 @@ nas_native(builtin_sin);
 nas_native(builtin_cos);
 nas_native(builtin_tan);
 nas_native(builtin_exp);
+nas_native(builtin_lg);
 nas_native(builtin_ln);
 nas_native(builtin_sqrt);
 nas_native(builtin_atan2);
@@ -115,6 +116,7 @@ struct
     {"__builtin_cos",     builtin_cos     },
     {"__builtin_tan",     builtin_tan     },
     {"__builtin_exp",     builtin_exp     },
+    {"__builtin_lg",      builtin_lg      },
     {"__builtin_ln",      builtin_ln      },
     {"__builtin_sqrt",    builtin_sqrt    },
     {"__builtin_atan2",   builtin_atan2   },
@@ -467,12 +469,19 @@ nasal_ref builtin_exp(std::vector<nasal_ref>& local,nasal_gc& gc)
         return builtin_err("exp","\"x\" must be number");
     return {vm_num,exp(val.num())};
 }
+nasal_ref builtin_lg(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref val=local[1];
+    if(val.type!=vm_num)
+        return builtin_err("ln","\"x\" must be number");
+    return {vm_num,log(val.num())/log(10.0)};
+}
 nasal_ref builtin_ln(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
     if(val.type!=vm_num)
         return builtin_err("ln","\"x\" must be number");
-    return {vm_num,log(val.num())/log(2.7182818284590452354)};
+    return {vm_num,log(val.num())};
 }
 nasal_ref builtin_sqrt(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
