@@ -23,6 +23,12 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
 inline double hex_to_double(const char* str)
 {
     double ret=0;

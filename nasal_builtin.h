@@ -11,6 +11,8 @@ enum obj_type
 {
     obj_file=1,
     obj_dir,
+    obj_dylib,
+    obj_extern
 };
 // declaration of builtin functions
 // to add new builtin function, declare it here and write the definition below
@@ -77,11 +79,15 @@ nas_native(builtin_closedir);
 nas_native(builtin_chdir);
 nas_native(builtin_getcwd);
 nas_native(builtin_getenv);
+nas_native(builtin_dlopen);
+nas_native(builtin_dlsym);
+nas_native(builtin_dlclose);
+nas_native(builtin_dlcall);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
     std::cout<<"[vm] "<<func_name<<": "<<info<<".\n";
-    return {vm_none};
+    return {vm_none,nullptr};
 }
 
 // register builtin function's name and it's address here in this table below
@@ -154,6 +160,10 @@ struct
     {"__builtin_chdir",   builtin_chdir   },
     {"__builtin_getcwd",  builtin_getcwd  },
     {"__builtin_getenv",  builtin_getenv  },
+    {"__builtin_dlopen",  builtin_dlopen  },
+    {"__builtin_dlsym",   builtin_dlsym   },
+    {"__builtin_dlclose", builtin_dlclose },
+    {"__builtin_dlcall",  builtin_dlcall  },
     {nullptr,             nullptr         }
 };
 
@@ -972,5 +982,70 @@ nasal_ref builtin_getenv(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref str=gc.alloc(vm_str);
     *str.str()=res;
     return str;
+}
+nasal_ref builtin_dlopen(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref dlname=local[1];
+    if(dlname.type!=vm_str)
+        return builtin_err("dlopen","\"libname\" must be string");
+#ifdef _WIN32
+    // wchar_t* str=new wchar_t[dlname.str()->size()+1];
+    // memset(str,0,sizeof(wchar_t)*dlname.str()->size()+1);
+    // mbstowcs(str,dlname.str()->c_str(),dlname.str()->size()+1);
+    // void* ptr=LoadLibrary(str);
+    // delete []str;
+    void* ptr=LoadLibrary(dlname.str()->c_str());
+#else
+    void* ptr=dlopen(dlname.str()->c_str(),RTLD_LOCAL|RTLD_LAZY);
+#endif
+    if(!ptr)
+        return builtin_err("dlopen","cannot open dynamic lib \""+*dlname.str()+"\"");
+    nasal_ref ret=gc.alloc(vm_obj);
+    ret.obj()->type=obj_dylib;
+    ret.obj()->ptr=ptr;
+    return ret;
+}
+nasal_ref builtin_dlsym(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref libptr=local[1];
+    nasal_ref sym=local[2];
+    if(libptr.type!=vm_obj || libptr.obj()->type!=obj_dylib)
+        return builtin_err("dlsym","\"lib\" is not a correct dynamic lib entry");
+    if(sym.type!=vm_str)
+        return builtin_err("dlsym","\"sym\" must be string");
+    void* func=nullptr;
+#ifdef _WIN32
+    func=(void*)GetProcAddress((HMODULE)libptr.obj()->ptr,sym.str()->c_str());
+#else
+    func=dlsym(libptr.obj()->ptr,sym.str()->c_str());
+#endif
+    if(!func)
+        return builtin_err("dlsym","cannot find symbol \""+*sym.str()+"\"");
+    nasal_ref ret=gc.alloc(vm_obj);
+    ret.obj()->type=obj_extern;
+    ret.obj()->ptr=func;
+    return ret;
+}
+nasal_ref builtin_dlclose(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref libptr=local[1];
+    if(libptr.type!=vm_obj || libptr.obj()->type!=obj_dylib)
+        return builtin_err("dlclose","\"lib\" is not a correct dynamic lib entry");
+#ifdef _WIN32
+    FreeLibrary((HMODULE)libptr.obj()->ptr);
+#else
+    dlclose(libptr.obj()->ptr);
+#endif
+    return gc.nil;
+}
+nasal_ref builtin_dlcall(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref funcptr=local[1];
+    nasal_ref args=local[2];
+    if(funcptr.type!=vm_obj || funcptr.obj()->type!=obj_extern)
+        return builtin_err("dlcall","\"funcptr\" is not a correct function pointer");
+    typedef nasal_ref (*extern_func)(std::vector<nasal_ref>&,nasal_gc&);
+    extern_func func=(extern_func)funcptr.obj()->ptr;
+    return func(args.vec()->elems,gc);
 }
 #endif

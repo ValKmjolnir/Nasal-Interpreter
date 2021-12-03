@@ -889,7 +889,7 @@ a.set(114514);
 println(a.get());
 ```
 
-### __Native Functions(This is for library developers)__
+### __Native Functions__
 
 You could add builtin functions of your own
 (written in C/C++) to help you calculate things more quickly.
@@ -1010,6 +1010,126 @@ nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
 }
 ```
 
+### __Modules(This is for library developers)__
+
+If there is only one way to add your own functions into nasal,
+that is really inconvenient.
+
+Luckily, we have developed some useful native-functions to help you add modules that created by you.
+
+After 2021/12/3, there are some new functions added to `lib.nas`:
+
+```javascript
+var dylib=
+{
+    dlopen:  func(libname){return __builtin_dlopen;},
+    dlsym:   func(lib,sym){return __builtin_dlsym; },
+    dlclose: func(lib){return __builtin_dlclose;   },
+    dlcall:  func(funcptr,args...){return __builtin_dlcall}
+};
+```
+
+Aha, as you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
+Let's see how they work.
+
+First, write a cpp file that you want to generate the dynamic lib, take the `fib.cpp` as the example(example codes are in `./module`):
+
+```C++
+// add header file nasal.h to get api
+#include "nasal.h"
+double fibonaci(double x){
+    if(x<=2)
+        return x;
+    return fibonaci(x-1)+fibonaci(x-2);
+}
+// remember to use extern "C",
+// so you could search the symbol quickly
+extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
+    // the arguments are generated into a vm_vec: args
+    // get values from the vector that must be used here
+    nasal_ref num=args[0];
+    // if you want your function safer, try this
+    // builtin_err will print the error info on screen
+    // and return vm_null for runtime to interrupt
+    if(num.type!=vm_num)
+        return builtin_err("extern_fib","\"num\" must be number");
+    // ok, you must know that vm_num now is not managed by gc
+    // if want to return a gc object, use gc.alloc(type)
+    // usage of gc is the same as adding a native function
+    return {vm_num,fibonaci(num.to_number())};
+}
+```
+
+Next, compile this `fib.cpp` into dynamic lib.
+
+Linux(`.so`):
+
+`clang++ -c -O3 fib.cpp -fPIC -o fib.o`
+
+`clang++ -shared -o libfib.so fib.o`
+
+Mac: same as Linux, but remember to generate `.dylib`
+
+Windows(`.dll`):
+
+`g++ -c -O3 fib.cpp -fPIC -o fib.o`
+
+`g++ -shared -o libfib.dll fib.o`
+
+Then we write a test nasal file to run this fib function, this example runs on Linux:
+
+```javascript
+import("lib.nas");
+var dlhandle=dylib.dlopen("./module/libfib.so");
+var fib=dylib.dlsym(dlhandle,"fib");
+for(var i=1;i<30;i+=1)
+    println(dylib.dlcall(fib,i));
+dylib.dlclose(dlhandle);
+```
+
+`dylib.dlopen` is used to load dynamic library.
+
+`dylib.dlsym` is used to get the function address.
+
+`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
+
+`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that gotten from it are invalid.
+
+If get this, Congratulations!
+
+```bash
+./nasal a.nas
+1
+2 
+3 
+5 
+8 
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+1597
+2584
+4181
+6765
+10946
+17711
+28657
+46368
+75025
+121393
+196418
+317811
+514229
+832040
+```
+
 ## Difference Between Andy's Nasal Interpreter and This Interpreter
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
@@ -1098,22 +1218,17 @@ Function 'die' is used to throw error and crash.
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] error at 0x0000009b: native function error.
+[vm] native function error.
 trace back:
-        0x0000009b: callb  0x22 <__builtin_die> (lib.nas line 85)
-        0x00000182: callfv 0x1 (a.nas line 6)
-        0x00000186: callfv 0x0 (a.nas line 8)
-vm stack(limit 10):
-        null |
-        func | <0x8b0f50> func{entry=0x9b}
-        func | <0x8b1db0> func{entry=0x17c}
-        num  | 57.295780
-        num  | 1852.000000
-        num  | 1.943800
-        num  | 0.000540
-        num  | 39.370100
-        num  | 3.280800
-        num  | 0.453600
+        0x00000088: callb  0x22 <__builtin_die@0x417620> (<lib.nas> line 19)
+        0x000002af: callfv 0x1 (<a.nas> line 5)
+        0x000002b3: callfv 0x0 (<a.nas> line 7)
+vm stack(limit 10, total 5):
+        | null |
+        | addr | 0x2af
+        | func | <0x6c62c0> func{entry=0x88}
+        | addr | 0x2b3
+        | func | <0x6c8910> func{entry=0x2a9}
 ```
 
 Here is an example of stack overflow:
@@ -1133,13 +1248,22 @@ And the trace back info:
 ```javascript
 [vm] stack overflow
 trace back:
-        0x0000000f: callfv 0x1 (a.nas line 5)
-        0x0000000f: 4090 same call(s) ...    
-        0x00000007: callfv 0x1 (a.nas line 2)
-        0x00000013: callfv 0x1 (a.nas line 3)
-vm stack(limit 10):
-        func | <0xc511e0> func{entry=0xd}    
-        ...  | 9 same value(s)
+        0x0000000d: calll  0x1 (<a.nas> line 5)
+        0x0000000f: callfv 0x1 (<a.nas> line 5)
+        0x0000000f: 2044 same call(s)
+        0x00000007: callfv 0x1 (<a.nas> line 2)
+        0x00000013: callfv 0x1 (<a.nas> line 3)
+vm stack(limit 10, total 4095):
+        | func | <0x24f1f10> func{entry=0xd}   
+        | addr | 0xf
+        | func | <0x24f1f10> func{entry=0xd}   
+        | addr | 0xf
+        | func | <0x24f1f10> func{entry=0xd}   
+        | addr | 0xf
+        | func | <0x24f1f10> func{entry=0xd}   
+        | addr | 0xf
+        | func | <0x24f1f10> func{entry=0xd}
+        | addr | 0xf
 ```
 
 Error will be thrown if there's a fatal error when executing:
@@ -1153,11 +1277,11 @@ func(){
 And the trace back info:
 
 ```javascript
-[vm] error at 0x00000008: callv: must call a vector/hash/string
+[vm] callv: must call a vector/hash/string
 trace back:
-        0x00000008: callv  0x0 (a.nas line 3)
-vm stack(limit 10):
-        num  | 0.000000
+        0x00000008: callv  0x0 (<a.nas> line 3)
+vm stack(limit 10, total 1):
+        | num  | 0.000000
 ```
 
 Use command `-d` or `--detail` the trace back info will be this:
@@ -1167,67 +1291,70 @@ hello world
 [vm] error: exception test
 [vm] native function error.
 trace back:
-        0x0000008f: callb  0x22 <__builtin_die> (<lib.nas> line 20)
-        0x00000214: callfv 0x1 (<test/exception.nas> line 16)      
-        0x00000248: callfv 0x0 (<test/exception.nas> line 39)      
-vm stack(limit 10):
-        null |
-        func | <0x23bc3f0> func{entry=0x8f}
-        func | <0x23bdc50> func{entry=0x20e}
-mcall address: 0x24a4b88
+        0x00000088: callb  0x22 <__builtin_die@0x417620> (<lib.nas> line 19)
+        0x000002d2: callfv 0x1 (<test/exception.nas> line 16)
+        0x00000306: callfv 0x0 (<test/exception.nas> line 39)
+vm stack(limit 10, total 5):
+        | null |
+        | addr | 0x2d2
+        | func | <0x827750> func{entry=0x88}
+        | addr | 0x306
+        | func | <0x829ee0> func{entry=0x2cc}
+mcall address: 0x90e498
 global:
-[0]     func | <0x23d3960> func{entry=0x5}
-[1]     func | <0x23bb8b0> func{entry=0xc}
-[2]     func | <0x23bb950> func{entry=0x14}
-[3]     func | <0x23bb9f0> func{entry=0x1c}
-[4]     func | <0x23bba90> func{entry=0x23}
-[5]     func | <0x23bbb30> func{entry=0x29}
-[6]     func | <0x23bbbd0> func{entry=0x30}
-[7]     func | <0x23bbc70> func{entry=0x38}
-[8]     func | <0x23bbd10> func{entry=0x40}
-[9]     func | <0x23bbdb0> func{entry=0x47}
-[10]    func | <0x23bbe50> func{entry=0x4e}
-[11]    func | <0x23bbef0> func{entry=0x55}
-[12]    func | <0x23bbf90> func{entry=0x5c}
-[13]    func | <0x23bc030> func{entry=0x63}
-[14]    func | <0x23bc0d0> func{entry=0x6a}
-[15]    func | <0x23bc170> func{entry=0x72}
-[16]    func | <0x23bc210> func{entry=0x7a}
-[17]    func | <0x23bc2b0> func{entry=0x81}
-[18]    func | <0x23bc350> func{entry=0x88}
-[19]    func | <0x23bc3f0> func{entry=0x8f}
-[20]    func | <0x23bc490> func{entry=0x96}
-[21]    func | <0x23bc530> func{entry=0x9f}
-[22]    func | <0x23bc5d0> func{entry=0xa7}
-[23]    func | <0x23bc670> func{entry=0xaf}
-[24]    func | <0x23bc710> func{entry=0xb7}
-[25]    func | <0x23bc7b0> func{entry=0xbf}
-[26]    func | <0x23bc850> func{entry=0xc6}
-[27]    func | <0x23bc8f0> func{entry=0xcd}
-[28]    hash | <0x248ae70> {14 member}
-[29]    hash | <0x248aed0> {9 member}
-[30]    hash | <0x248af30> {12 member}
-[31]    num  | 0.017453
-[32]    num  | 0.592500
-[33]    num  | 0.304800
-[34]    num  | 3.785400
-[35]    num  | 0.025400
-[36]    num  | 2.204600
-[37]    num  | 1.687800
-[38]    num  | 0.514400
-[39]    num  | 0.264200
-[40]    num  | 0.453600
-[41]    num  | 3.280800
-[42]    num  | 39.370100
-[43]    num  | 0.000540
-[44]    num  | 1.943800
-[45]    num  | 1852.000000
-[46]    num  | 57.295780
-[47]    hash | <0x248af90> {3 member}
-[48]    func | <0x23bdcf0> func{entry=0x21e}
-[49]    func | <0x23bdd90> func{entry=0x22d}
-[50]    func | <0x23bde30> func{entry=0x237}
+[0x00000000]    | func | <0x83da50> func{entry=0x5}
+[0x00000001]    | func | <0x826cb0> func{entry=0xc}
+[0x00000002]    | func | <0x826d50> func{entry=0x14}
+[0x00000003]    | func | <0x826df0> func{entry=0x1c}
+[0x00000004]    | func | <0x826e90> func{entry=0x23}
+[0x00000005]    | func | <0x826f30> func{entry=0x29}
+[0x00000006]    | func | <0x826fd0> func{entry=0x31}
+[0x00000007]    | func | <0x827070> func{entry=0x39}
+[0x00000008]    | func | <0x827110> func{entry=0x40}
+[0x00000009]    | func | <0x8271b0> func{entry=0x47}
+[0x0000000a]    | func | <0x827250> func{entry=0x4e}
+[0x0000000b]    | func | <0x8272f0> func{entry=0x55}
+[0x0000000c]    | func | <0x827390> func{entry=0x5c}
+[0x0000000d]    | func | <0x827430> func{entry=0x63}
+[0x0000000e]    | func | <0x8274d0> func{entry=0x6b}
+[0x0000000f]    | func | <0x827570> func{entry=0x73}
+[0x00000010]    | func | <0x827610> func{entry=0x7a}
+[0x00000011]    | func | <0x8276b0> func{entry=0x81}
+[0x00000012]    | func | <0x827750> func{entry=0x88}
+[0x00000013]    | func | <0x8277f0> func{entry=0x8f}
+[0x00000014]    | func | <0x827890> func{entry=0x98}
+[0x00000015]    | func | <0x827930> func{entry=0xa0}
+[0x00000016]    | func | <0x8279d0> func{entry=0xa8}
+[0x00000017]    | func | <0x827a70> func{entry=0xb0}
+[0x00000018]    | func | <0x827b10> func{entry=0xb8}
+[0x00000019]    | func | <0x827bb0> func{entry=0xbf}
+[0x0000001a]    | func | <0x827c50> func{entry=0xc6}
+[0x0000001b]    | hash | <0x8f4ce0> {14 member}
+[0x0000001c]    | hash | <0x8f4d40> {9 member}
+[0x0000001d]    | hash | <0x8f4da0> {13 member}
+[0x0000001e]    | num  | 0.017453
+[0x0000001f]    | num  | 0.592500
+[0x00000020]    | num  | 0.304800
+[0x00000021]    | num  | 3.785400
+[0x00000022]    | num  | 0.025400
+[0x00000023]    | num  | 2.204600
+[0x00000024]    | num  | 1.687800
+[0x00000025]    | num  | 0.514400
+[0x00000026]    | num  | 0.264200
+[0x00000027]    | num  | 0.453600
+[0x00000028]    | num  | 3.280800
+[0x00000029]    | num  | 39.370100
+[0x0000002a]    | num  | 0.000540
+[0x0000002b]    | num  | 1.943800
+[0x0000002c]    | num  | 1852.000000
+[0x0000002d]    | num  | 57.295780
+[0x0000002e]    | hash | <0x8f4e00> {16 member}
+[0x0000002f]    | hash | <0x8f4e60> {4 member}
+[0x00000030]    | hash | <0x8f4ec0> {3 member}
+[0x00000031]    | func | <0x829f80> func{entry=0x2dc}
+[0x00000032]    | func | <0x82a020> func{entry=0x2eb}
+[0x00000033]    | func | <0x82a0c0> func{entry=0x2f5}
 local:
-[0]     nil  |
-[1]     str  | <0x249abd0> exception test
+[0x00000000]    | nil  |
+[0x00000001]    | str  | <0x9057f0> exception test
 ```

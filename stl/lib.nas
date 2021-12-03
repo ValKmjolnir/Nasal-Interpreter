@@ -65,6 +65,8 @@ var math=
 {
     e:     2.7182818284590452354,
     pi:    3.14159265358979323846264338327950288,
+    inf:   1/0,
+    nan:   0/0,
     sin:   func(x)  {return __builtin_sin(x);    },
     cos:   func(x)  {return __builtin_cos(x);    },
     tan:   func(x)  {return __builtin_tan(x);    },
@@ -73,8 +75,6 @@ var math=
     ln:    func(x)  {return __builtin_ln(x);     },
     sqrt:  func(x)  {return __builtin_sqrt(x);   },
     atan2: func(x,y){return __builtin_atan2(x,y);},
-    inf:   1/0,
-    nan:   0/0,
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
 var D2R=math.pi/180;
@@ -112,4 +112,12 @@ var unix=
     environ:  func(){die("not supported yet");},
     getcwd:   func(){return __builtin_getcwd();},
     getenv:   func(envvar){return __builtin_getenv(envvar);}
+};
+
+var dylib=
+{
+    dlopen:  func(libname){return __builtin_dlopen;},
+    dlsym:   func(lib,sym){return __builtin_dlsym; },
+    dlclose: func(lib){return __builtin_dlclose;   },
+    dlcall:  func(funcptr,args...){return __builtin_dlcall}
 };
