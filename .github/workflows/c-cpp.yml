@@ -30,7 +30,7 @@ jobs:
         # Name of the tag for the release (will be associated with current branch)
         tag-name: next
         # Name for the asset
-        asset-name: macOS_next
+        asset-name: nasal
         # File to release
         file: nasal
    
