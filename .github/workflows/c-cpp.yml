@@ -1,0 +1,36 @@
+name: C/C++ CI
+
+on:
+  schedule:
+   - cron: "0 16 * * *"
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: make
+    - name: Release file
+      # You may pin to the exact commit or the version.
+      # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
+      uses: djnicholson/release-action@v2.10
+      with:
+        # GitHub auth token
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # Name of Release to add file to
+        release-name: nightly build
+        # Name of the tag for the release (will be associated with current branch)
+        tag-name: next
+        # Name for the asset
+        asset-name: nasal
+        # File to release
+        file: nasal
+   
