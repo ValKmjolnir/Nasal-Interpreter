@@ -83,6 +83,7 @@ nas_native(builtin_dlopen);
 nas_native(builtin_dlsym);
 nas_native(builtin_dlclose);
 nas_native(builtin_dlcall);
+nas_native(builtin_platform);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
@@ -164,6 +165,7 @@ struct
     {"__builtin_dlsym",   builtin_dlsym   },
     {"__builtin_dlclose", builtin_dlclose },
     {"__builtin_dlcall",  builtin_dlcall  },
+    {"__builtin_platform",builtin_platform},
     {nullptr,             nullptr         }
 };
 
@@ -796,7 +798,7 @@ nasal_ref builtin_readln(std::vector<nasal_ref>& local,nasal_gc& gc)
 nasal_ref builtin_stat(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     nasal_ref filename=local[1];
-    if(filename!=vm_str)
+    if(filename.type!=vm_str)
         return builtin_err("stat","\"filename\" must be string");
     struct stat buf;
     if(stat(filename.str()->c_str(),&buf)<0)
@@ -1013,11 +1015,10 @@ nasal_ref builtin_dlsym(std::vector<nasal_ref>& local,nasal_gc& gc)
         return builtin_err("dlsym","\"lib\" is not a correct dynamic lib entry");
     if(sym.type!=vm_str)
         return builtin_err("dlsym","\"sym\" must be string");
-    void* func=nullptr;
 #ifdef _WIN32
-    func=(void*)GetProcAddress((HMODULE)libptr.obj()->ptr,sym.str()->c_str());
+    void* func=(void*)GetProcAddress((HMODULE)libptr.obj()->ptr,sym.str()->c_str());
 #else
-    func=dlsym(libptr.obj()->ptr,sym.str()->c_str());
+    void* func=dlsym(libptr.obj()->ptr,sym.str()->c_str());
 #endif
     if(!func)
         return builtin_err("dlsym","cannot find symbol \""+*sym.str()+"\"");
@@ -1047,5 +1048,18 @@ nasal_ref builtin_dlcall(std::vector<nasal_ref>& local,nasal_gc& gc)
     typedef nasal_ref (*extern_func)(std::vector<nasal_ref>&,nasal_gc&);
     extern_func func=(extern_func)funcptr.obj()->ptr;
     return func(args.vec()->elems,gc);
+}
+nasal_ref builtin_platform(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    nasal_ref ret=gc.alloc(vm_str);
+#if defined _WIN32 || defined _WIN64
+    *ret.str()="windows";
+#elif defined __linux__
+    *ret.str()="linux";
+#elif defined __APPLE__
+    *ret.str()="macOS";
+#endif
+
+    return ret;
 }
 #endif
