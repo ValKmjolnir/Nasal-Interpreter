@@ -1068,7 +1068,7 @@ Linux(`.so`):
 
 `clang++ -shared -o libfib.so fib.o`
 
-Mac: same as Linux, but remember to generate `.dylib`
+Mac(`.so` & `.dylib`): same as Linux.
 
 Windows(`.dll`):
 

@@ -48,6 +48,23 @@ var io=
     eof:   func(filehandle){return __builtin_eof(filehandle);}
 };
 
+var fstat=func(filename){
+    var s=io.stat(filename);
+    return {
+        st_dev:  s[0],
+        st_ino:  s[1],
+        st_mode: s[2],
+        st_nlink:s[3],
+        st_uid:  s[4],
+        st_gid:  s[5],
+        st_rdev: s[6],
+        st_size: s[7],
+        st_atime:s[8],
+        st_mtime:s[9],
+        st_ctime:s[10]
+    };
+}
+
 var bits=
 {
     bitxor:  func(a,b){return __builtin_xor(a,b); },
@@ -120,4 +137,9 @@ var dylib=
     dlsym:   func(lib,sym){return __builtin_dlsym; },
     dlclose: func(lib){return __builtin_dlclose;   },
     dlcall:  func(funcptr,args...){return __builtin_dlcall}
+};
+
+var os=
+{
+    platform: func(){return __builtin_platform;}
 };

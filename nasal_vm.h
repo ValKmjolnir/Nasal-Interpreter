@@ -139,7 +139,7 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_nil:  printf("\t| nil  |\n");break;
         case vm_num:  printf("\t| num  | %lf\n",val.num());break;
         case vm_str:  printf("\t| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(*val.str()).c_str());break;
-        case vm_func: printf("\t| func | <0x%lx> func{entry=0x%x}\n",(uint64_t)p,val.func()->entry);break;
+        case vm_func: printf("\t| func | <0x%lx> entry=0x%x\n",(uint64_t)p,val.func()->entry);break;
         case vm_vec:  printf("\t| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
         case vm_hash: printf("\t| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
         case vm_obj:  printf("\t| obj  | <0x%lx>\n",(uint64_t)p);break;
@@ -174,10 +174,8 @@ void nasal_vm::traceback()
             continue;
         }
         if(same)
-        {
             printf("\t0x%.8x: %d same call(s)\n",last,same);
-            same=0;
-        }
+        same=0;
         bytecodeinfo(point);
     }
     if(same)

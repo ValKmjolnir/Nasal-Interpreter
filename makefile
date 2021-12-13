@@ -22,6 +22,7 @@ test:nasal
 	./nasal -t test/loop.nas
 	./nasal -c test/mandel.nas
 	./nasal -t test/mandelbrot.nas
+	# ./nasal -t test/module_test.nas
 	./nasal test/nasal_test.nas
 	./nasal -t test/pi.nas
 	./nasal -t test/prime.nas
