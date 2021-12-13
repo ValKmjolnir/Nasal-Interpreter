@@ -125,7 +125,7 @@ struct nasal_val
 {
     uint8_t mark;
     uint8_t type;
-    uint8_t unmut;
+    uint8_t unmut; // used toe mark if a string is mutable
     union 
     {
         std::string* str;
@@ -407,7 +407,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
 
     zero={vm_num,(double)0}; // init constant 0
     one ={vm_num,(double)1}; // init constant 1
-    nil ={vm_nil,(double)0}; // init constant nil
+    nil ={vm_nil,nullptr};   // init constant nil
 
     // init constant strings
     strs.resize(s.size());
