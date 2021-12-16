@@ -94,6 +94,7 @@ var math=
     atan2: func(x,y){return __builtin_atan2(x,y);},
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
+
 var D2R=math.pi/180;
 var FPS2KT=0.5925;
 var FT2M=0.3048;

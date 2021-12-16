@@ -134,7 +134,7 @@ void nasal_vm::valinfo(nasal_ref& val)
     switch(val.type)
     {
         case vm_none: printf("\t| null |\n");break;
-        case vm_ret:  printf("\t| addr | 0x%x\n",val.ret());break;
+        case vm_ret:  printf("\t| addr | pc=0x%x\n",val.ret());break;
         case vm_cnt:  printf("\t| cnt  | %ld\n",val.cnt());break;
         case vm_nil:  printf("\t| nil  |\n");break;
         case vm_num:  printf("\t| num  | %lf\n",val.num());break;
@@ -142,7 +142,8 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_func: printf("\t| func | <0x%lx> entry=0x%x\n",(uint64_t)p,val.func()->entry);break;
         case vm_vec:  printf("\t| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
         case vm_hash: printf("\t| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
-        case vm_obj:  printf("\t| obj  | <0x%lx>\n",(uint64_t)p);break;
+        case vm_obj:  printf("\t| obj  | <0x%lx> object=0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
+        default:      printf("\t| ???  | <0x%lx>\n",(uint64_t)p);break;
     }
 }
 void nasal_vm::bytecodeinfo(const uint32_t p)

@@ -202,8 +202,8 @@ private:
     std::vector<opcode>                 code;
     std::list<std::vector<int>>         continue_ptr;
     std::list<std::vector<int>>         break_ptr;
-    std::vector<std::string>            global;
-    std::list<std::vector<std::string>> local;
+    std::vector<std::string>            global; // global : max 4095 values
+    std::list<std::vector<std::string>> local;  // local  : max 32768 upvalues 65536 values
     
     void die(const std::string,const int);
     void regist_number(const double);
