@@ -430,7 +430,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
 
     code[newfunc_label].num=code.size()+1;
     int jmp_ptr=code.size();
-    gen(op_jmp,0,0);
+    gen(op_jmp,0,ast.line());
 
     const nasal_ast& block=ast[1];
     // search symbols first, must use after loading parameters
@@ -722,13 +722,13 @@ void nasal_codegen::conditional_gen(const nasal_ast& ast)
         {
             calc_gen(tmp[0]);
             int ptr=code.size();
-            gen(op_jf,0,0);
+            gen(op_jf,0,tmp.line());
             block_gen(tmp[1]);
             // without 'else' the last condition doesn't need to jmp
             if(&tmp!=&ast.child().back())
             {
                 jmp_label.push_back(code.size());
-                gen(op_jmp,0,0);
+                gen(op_jmp,0,tmp.line());
             }
             code[ptr].num=code.size();
         }
@@ -770,10 +770,10 @@ void nasal_codegen::while_gen(const nasal_ast& ast)
     int loop_ptr=code.size();
     calc_gen(ast[0]);
     int condition_ptr=code.size();
-    gen(op_jf,0,0);
+    gen(op_jf,0,ast[0].line());
 
     block_gen(ast[1]);
-    gen(op_jmp,loop_ptr,0);
+    gen(op_jmp,loop_ptr,ast[1].line());
     code[condition_ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
 }
@@ -813,7 +813,7 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_grt:
         case ast_trino:
             calc_gen(ast[0]);
-            gen(op_pop,0,0);
+            gen(op_pop,0,ast[0].line());
             break;
     }
     int jmp_place=code.size();
@@ -822,7 +822,7 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
     else
         calc_gen(ast[1]);
     int label_exit=code.size();
-    gen(op_jf,0,0);
+    gen(op_jf,0,ast[1].line());
 
     block_gen(ast[3]);
     int continue_place=code.size();
@@ -844,10 +844,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_less:case ast_geq:case ast_grt:
         case ast_trino:
             calc_gen(ast[2]);
-            gen(op_pop,0,0);
+            gen(op_pop,0,ast[2].line());
             break;
     }
-    gen(op_jmp,jmp_place,0);
+    gen(op_jmp,jmp_place,ast[2].line());
     code[label_exit].num=code.size();
 
     load_continue_break(continue_place,code.size());
@@ -869,16 +869,16 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
     {
         mcall(ast[0]);
         gen(op_meq,0,ast[0].line());
-        gen(op_pop,0,0);
+        gen(op_pop,0,ast[0].line());
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
     --in_iterloop.top();
-    gen(op_jmp,ptr,0);
+    gen(op_jmp,ptr,ast.line());
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
-    gen(op_pop,0,0);// pop vector
-    gen(op_pop,0,0);// pop iterator
+    gen(op_pop,0,ast[1].line());// pop vector
+    gen(op_pop,0,ast.line());// pop iterator
 }
 void nasal_codegen::foreach_gen(const nasal_ast& ast)
 {
@@ -897,31 +897,31 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
     {
         mcall(ast[0]);
         gen(op_meq,0,ast[0].line());
-        gen(op_pop,0,0);
+        gen(op_pop,0,ast[0].line());
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
     --in_iterloop.top();
-    gen(op_jmp,ptr,0);
+    gen(op_jmp,ptr,ast.line());
     code[ptr].num=code.size();
     load_continue_break(code.size()-1,code.size());
-    gen(op_pop,0,0);// pop vector
-    gen(op_pop,0,0);// pop iterator
+    gen(op_pop,0,ast[1].line());// pop vector
+    gen(op_pop,0,ast.line());// pop iterator
 }
 
 void nasal_codegen::or_gen(const nasal_ast& ast)
 {
     calc_gen(ast[0]);
     int l1=code.size();
-    gen(op_jt,0,0);
+    gen(op_jt,0,ast[0].line());
 
-    gen(op_pop,0,0);
+    gen(op_pop,0,ast[0].line());
     calc_gen(ast[1]);
     int l2=code.size();
-    gen(op_jt,0,0);
+    gen(op_jt,0,ast[1].line());
 
-    gen(op_pop,0,0);
-    gen(op_pnil,0,0);
+    gen(op_pop,0,ast[1].line());
+    gen(op_pnil,0,ast[1].line());
 
     code[l1].num=code[l2].num=code.size();
 }
@@ -929,18 +929,18 @@ void nasal_codegen::or_gen(const nasal_ast& ast)
 void nasal_codegen::and_gen(const nasal_ast& ast)
 {
     calc_gen(ast[0]);
-    gen(op_jt,code.size()+2,0);
+    gen(op_jt,code.size()+2,ast[0].line());
 
     int lfalse=code.size();
-    gen(op_jmp,0,0);
-    gen(op_pop,0,0);// jt jumps here
+    gen(op_jmp,0,ast[0].line());
+    gen(op_pop,0,ast[1].line());// jt jumps here
 
     calc_gen(ast[1]);
-    gen(op_jt,code.size()+3,0);
+    gen(op_jt,code.size()+3,ast[1].line());
 
     code[lfalse].num=code.size();
-    gen(op_pop,0,0);
-    gen(op_pnil,0,0);
+    gen(op_pop,0,ast[1].line());
+    gen(op_pnil,0,ast[1].line());
     //jt jumps here
 }
 
@@ -948,10 +948,10 @@ void nasal_codegen::trino_gen(const nasal_ast& ast)
 {
     calc_gen(ast[0]);
     int lfalse=code.size();
-    gen(op_jf,0,0);
+    gen(op_jf,0,ast[0].line());
     calc_gen(ast[1]);
     int lexit=code.size();
-    gen(op_jmp,0,0);
+    gen(op_jmp,0,ast[1].line());
     code[lfalse].num=code.size();
     calc_gen(ast[2]);
     code[lexit].num=code.size();
@@ -1073,11 +1073,11 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
             case ast_conditional:conditional_gen(tmp);break;
             case ast_continue:
                 continue_ptr.front().push_back(code.size());
-                gen(op_jmp,0,0);
+                gen(op_jmp,0,tmp.line());
                 break;
             case ast_break:
                 break_ptr.front().push_back(code.size());
-                gen(op_jmp,0,0);
+                gen(op_jmp,0,tmp.line());
                 break;
             case ast_while:
             case ast_for:
@@ -1126,7 +1126,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
             case ast_grt:
             case ast_or:
             case ast_and:
-            case ast_trino:calc_gen(tmp);gen(op_pop,0,0);break;
+            case ast_trino:calc_gen(tmp);gen(op_pop,0,tmp.line());break;
             case ast_ret:ret_gen(tmp);break;
         }
 }
@@ -1135,8 +1135,8 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
 {
     for(uint32_t i=0;i<in_iterloop.top();++i)
     {
-        gen(op_pop,0,0);
-        gen(op_pop,0,0);
+        gen(op_pop,0,ast.line());
+        gen(op_pop,0,ast.line());
     }
     if(ast.size())
         calc_gen(ast[0]);
@@ -1231,25 +1231,26 @@ void nasal_codegen::print_op(uint32_t index)
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
-            printf("0x%x (",c.num);std::cout<<num_res[c.num]<<")\n";break;
+            printf("0x%x (",c.num);std::cout<<num_res[c.num]<<")";break;
         case op_callvi:case op_newv:   case op_callfv:
         case op_intg:  case op_intl:
         case op_newf:  case op_jmp:    case op_jt:    case op_jf:
-            printf("0x%x\n",c.num);break;
+            printf("0x%x",c.num);break;
         case op_callb:
-            printf("0x%x <%s@0x%lx>\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+            printf("0x%x <%s@0x%lx>",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_callg: case op_mcallg: case op_loadg:
         case op_calll: case op_mcalll: case op_loadl:
-            printf("0x%x\n",c.num);break;
+            printf("0x%x",c.num);break;
         case op_upval:case op_mupval:  case op_loadu:
-            printf("0x%x[0x%x]\n",(c.num>>16)&0xffff,c.num&0xffff);break;
+            printf("0x%x[0x%x]",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
         case op_lnkc:  case op_lnkeqc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
-            printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num]).c_str());break;
-        default:printf("\n");break;
+            printf("0x%x (\"%s\")",c.num,rawstr(str_res[c.num]).c_str());break;
+        default:break;
     }
+    printf("\n");
 }
 
 void nasal_codegen::print()

@@ -135,5 +135,6 @@ std::string rawstr(const std::string& str)
 #include "nasal_builtin.h"
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
+#include "nasal_dbg.h"
 
 #endif

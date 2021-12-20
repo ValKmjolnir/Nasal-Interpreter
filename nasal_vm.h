@@ -3,7 +3,7 @@
 
 class nasal_vm
 {
-private:
+protected:
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
     uint32_t                 offset;   // used to load default parameters to a new function
@@ -15,8 +15,9 @@ private:
     /* garbage collector */
     nasal_gc                 gc;
     /* values used for debug */
-    const opcode*            bytecode; // ref from nasal_codegen
+    size_t                   files_size;
     const std::string*       files;    // ref from nasal_import
+    const opcode*            bytecode; // ref from nasal_codegen
 
     void init(
         const std::vector<std::string>&,
@@ -25,9 +26,12 @@ private:
     /* debug functions */
     bool detail_info;
     void valinfo(nasal_ref&);
-    void bytecodeinfo(const uint32_t);
+    void bytecodeinfo(const char*,const uint32_t);
     void traceback();
     void stackinfo(const uint32_t);
+    void global_state();
+    void local_state();
+    void upval_state();
     void detail();
     void opcallsort(const uint64_t*);
     void die(std::string);
@@ -116,6 +120,7 @@ public:
         const nasal_import&,
         const bool,
         const bool);
+    
 };
 
 void nasal_vm::init(
@@ -127,32 +132,50 @@ void nasal_vm::init(
     num_table=nums.data();
     str_table=strs.data();
     files=filenames.data();
+    files_size=filenames.size();
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
     const nasal_val* p=val.value.gcobj;
+    printf("\t");
     switch(val.type)
     {
-        case vm_none: printf("\t| null |\n");break;
-        case vm_ret:  printf("\t| addr | pc=0x%x\n",val.ret());break;
-        case vm_cnt:  printf("\t| cnt  | %ld\n",val.cnt());break;
-        case vm_nil:  printf("\t| nil  |\n");break;
-        case vm_num:  printf("\t| num  | %lf\n",val.num());break;
-        case vm_str:  printf("\t| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(*val.str()).c_str());break;
-        case vm_func: printf("\t| func | <0x%lx> entry=0x%x\n",(uint64_t)p,val.func()->entry);break;
-        case vm_vec:  printf("\t| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
-        case vm_hash: printf("\t| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
-        case vm_obj:  printf("\t| obj  | <0x%lx> object=0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
-        default:      printf("\t| ???  | <0x%lx>\n",(uint64_t)p);break;
+        case vm_none: printf("| null |\n");break;
+        case vm_ret:  printf("| addr | pc=0x%x\n",val.ret());break;
+        case vm_cnt:  printf("| cnt  | %ld\n",val.cnt());break;
+        case vm_nil:  printf("| nil  |\n");break;
+        case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
+        case vm_str:  printf("| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(*val.str()).c_str());break;
+        case vm_func: printf("| func | <0x%lx> entry=0x%x\n",(uint64_t)p,val.func()->entry);break;
+        case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
+        case vm_hash: printf("| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
+        case vm_obj:  printf("| obj  | <0x%lx> object=0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
+        default:      printf("| ???  | <0x%lx>\n",(uint64_t)p);break;
     }
 }
-void nasal_vm::bytecodeinfo(const uint32_t p)
+void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 {
-    const opcode& code=bytecode[p];
-    printf("\t0x%.8x: %s 0x%x",p,code_table[code.op].name,code.num);
-    if(code.op==op_callb)
-        printf(" <%s@0x%lx>",builtin[code.num].name,(uint64_t)builtin[code.num].func);
-    printf(" (<%s> line %d)\n",files[code.fidx].c_str(),code.line);
+    const opcode& c=bytecode[p];
+    printf("%s0x%.8x: %s 0x%x",header,p,code_table[c.op].name,c.num);
+    switch(c.op)
+    {
+        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
+        case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
+        case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
+        case op_pnum:
+            std::cout<<" ("<<num_table[c.num]<<")";break;
+        case op_callb:
+            printf(" <%s@0x%lx>",builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+        case op_happ:  case op_pstr:
+        case op_lnkc:  case op_lnkeqc:
+        case op_callh: case op_mcallh:
+        case op_para:  case op_defpara:case op_dynpara:
+            printf(" (\"%s\")",rawstr(str_table[c.num]).c_str());break;
+        case op_upval:case op_mupval:  case op_loadu:
+            printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
+        default:break;
+    }
+    printf(" (<%s> line %d)\n",files[c.fidx].c_str(),c.line);
 }
 void nasal_vm::traceback()
 {
@@ -177,7 +200,7 @@ void nasal_vm::traceback()
         if(same)
             printf("\t0x%.8x: %d same call(s)\n",last,same);
         same=0;
-        bytecodeinfo(point);
+        bytecodeinfo("\t",point);
     }
     if(same)
         printf("\t0x%.8x: %d same call(s)\n",last,same);
@@ -191,42 +214,60 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
         valinfo(top[0]);
 }
+void nasal_vm::global_state()
+{
+    if(!bytecode[0].num) // bytecode[0].op is op_intg
+    {
+        printf("no global value exists\n");
+        return;
+    }
+    printf("global:\n");
+    for(uint32_t i=0;i<bytecode[0].num;++i)
+    {
+        printf("[0x%.8x]",i);
+        valinfo(gc.stack[i]);
+    }
+}
+void nasal_vm::local_state()
+{
+    if(gc.local.empty() || !gc.local.back().vec()->elems.size())
+    {
+        printf("no local value exists\n");
+        return;
+    }
+    printf("local:\n");
+    auto& vec=gc.local.back().vec()->elems;
+    for(uint32_t i=0;i<vec.size();++i)
+    {
+        printf("[0x%.8x]",i);
+        valinfo(vec[i]);
+    }
+}
+void nasal_vm::upval_state()
+{
+    if(func_stk.empty() || func_stk.top()->upvalue.empty())
+    {
+        printf("no upvalue exists\n");
+        return;
+    }
+    printf("upvalue:\n");
+    auto& upval=func_stk.top()->upvalue;
+    for(uint32_t i=0;i<upval.size();++i)
+    {
+        auto& vec=upval[i].vec()->elems;
+        for(uint32_t j=0;j<vec.size();++j)
+        {
+            printf("[%.4x][%.4x]",i,j);
+            valinfo(vec[j]);
+        }
+    }
+}
 void nasal_vm::detail()
 {
     printf("mcall address: 0x%lx\n",(uint64_t)mem_addr);
-    if(bytecode[0].num) // bytecode[0] is op_intg
-    {
-        printf("global:\n");
-        for(uint32_t i=0;i<bytecode[0].num;++i)
-        {
-            printf("[0x%.8x]",i);
-            valinfo(gc.stack[i]);
-        }
-    }
-    if(!gc.local.empty())
-    {
-        printf("local:\n");
-        auto& vec=gc.local.back().vec()->elems;
-        for(uint32_t i=0;i<vec.size();++i)
-        {
-            printf("[0x%.8x]",i);
-            valinfo(vec[i]);
-        }
-    }
-    if(!func_stk.empty() && !func_stk.top()->upvalue.empty())
-    {
-        printf("upvalue:\n");
-        auto& upval=func_stk.top()->upvalue;
-        for(uint32_t i=0;i<upval.size();++i)
-        {
-            auto& vec=upval[i].vec()->elems;
-            for(uint32_t j=0;j<vec.size();++j)
-            {
-                printf("[%.4x][%.4x]",i,j);
-                valinfo(vec[j]);
-            }
-        }
-    }
+    global_state();
+    local_state();
+    upval_state();
 }
 void nasal_vm::opcallsort(const uint64_t* arr)
 {
@@ -804,9 +845,9 @@ void nasal_vm::run(
     const nasal_codegen& gen,
     const nasal_import& linker,
     const bool opcnt,
-    const bool debug)
+    const bool detail)
 {
-    detail_info=debug;
+    detail_info=detail;
     init(gen.get_strs(),gen.get_nums(),linker.get_file());
     uint64_t count[op_exit+1]={0};
     const void* opr_table[]=

@@ -94,6 +94,7 @@ var math=
     atan2: func(x,y){return __builtin_atan2(x,y);},
     isnan: func(x)  {return __builtin_isnan(x);  }
 };
+
 var D2R=math.pi/180;
 var FPS2KT=0.5925;
 var FT2M=0.3048;
@@ -137,4 +138,9 @@ var dylib=
     dlsym:   func(lib,sym){return __builtin_dlsym; },
     dlclose: func(lib){return __builtin_dlclose;   },
     dlcall:  func(funcptr,args...){return __builtin_dlcall}
+};
+
+var os=
+{
+    platform: func(){return __builtin_platform;}
 };

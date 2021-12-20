@@ -1,6 +1,6 @@
 import("lib.nas");
-var filename=["main.cpp","nasal_ast.h","nasal_builtin.h","nasal_codegen.h","nasal_gc.h","nasal_import.h","nasal_lexer.h","nasal_parse.h","nasal_vm.h","nasal.h"];
-var space=["       ","    ","","","     "," ","  ","  ","     ","        "];
+var filename=["main.cpp","nasal_ast.h","nasal_builtin.h","nasal_codegen.h","nasal_gc.h","nasal_import.h","nasal_lexer.h","nasal_parse.h","nasal_vm.h","nasal_dbg.h","nasal.h"];
+var space=["       ","    ","","","     "," ","  ","  ","     ","    ","        "];
 var enter_cnt=func(s)
 {
     var (cnt,len,enter)=(0,size(s),'\n'[0]);

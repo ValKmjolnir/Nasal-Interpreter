@@ -1059,7 +1059,6 @@ nasal_ref builtin_platform(std::vector<nasal_ref>& local,nasal_gc& gc)
 #elif defined __APPLE__
     *ret.str()="macOS";
 #endif
-
     return ret;
 }
 #endif

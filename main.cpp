@@ -1,4 +1,5 @@
 #include "nasal.h"
+
 constexpr uint32_t VM_LEXINFO  =1;
 constexpr uint32_t VM_ASTINFO  =2;
 constexpr uint32_t VM_CODEINFO =4;
@@ -6,6 +7,8 @@ constexpr uint32_t VM_EXECTIME =8;
 constexpr uint32_t VM_OPCALLNUM=16;
 constexpr uint32_t VM_EXEC     =32;
 constexpr uint32_t VM_DBGINFO  =64;
+constexpr uint32_t VM_DEBUG    =128;
+
 void help()
 {
     std::cout
@@ -21,12 +24,13 @@ void help()
     <<"    input file name to execute script file.\n\n"
     <<"nasal [options...] <file>\n"
     <<"option:\n"
-    <<"    -l, --lex     | view token info.\n"
-    <<"    -a, --ast     | view abstract syntax tree.\n"
-    <<"    -c, --code    | view bytecode.\n"
-    <<"    -t, --time    | execute and get the running time.\n"
-    <<"    -o, --opcnt   | count operands while running.\n"
-    <<"    -d, --detail  | get detail crash info.\n"
+    <<"    -l,   --lex   | view token info.\n"
+    <<"    -a,   --ast   | view abstract syntax tree.\n"
+    <<"    -c,   --code  | view bytecode.\n"
+    <<"    -t,   --time  | execute and get the running time.\n"
+    <<"    -o,   --opcnt | execute and count used operands.\n"
+    <<"    -d,   --detail| execute and get detail crash info.\n"
+    <<"    -dbg, --debug | debug mode (this will ignore -t -o -d).\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
 }
@@ -95,7 +99,12 @@ void execute(const std::string& file,const uint32_t cmd)
         parse.print();
     if(cmd&VM_CODEINFO)
         gen.print();
-    if(cmd&VM_EXECTIME)
+    if(cmd&VM_DEBUG)
+    {
+        nasal_dbg dbg;
+        dbg.run(gen,linker);
+    }
+    else if(cmd&VM_EXECTIME)
     {
         clock_t t=clock();
         vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
@@ -141,6 +150,8 @@ int main(int argc,const char* argv[])
             cmd|=VM_EXECTIME;
         else if(s=="--detail" || s=="-d")
             cmd|=VM_DBGINFO|VM_EXEC;
+        else if(s=="--debug" || s=="-dbg")
+            cmd|=VM_DEBUG;
         else
             err();
     }
