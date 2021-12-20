@@ -49,7 +49,7 @@ Also remember to use g++ or clang++.(mingw-w64 in Windows)
 
 Or use this in linux/macOS/Unix
 
-> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions
+> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
 ## How to Use?
 
