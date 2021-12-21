@@ -210,13 +210,18 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
     nasal_ref* top=gc.top;
     nasal_ref* bottom=gc.stack+global_size;
+    if(top<bottom)
+    {
+        printf("vm stack(limit %d, total 0)\n",limit);
+        return;
+    }
     printf("vm stack(limit %d, total %ld):\n",limit,top-bottom+1);
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
         valinfo(top[0]);
 }
 void nasal_vm::global_state()
 {
-    if(!bytecode[0].num) // bytecode[0].op is op_intg
+    if(!bytecode[0].num || gc.stack[0].type==vm_none) // bytecode[0].op is op_intg
     {
         printf("no global value exists\n");
         return;
