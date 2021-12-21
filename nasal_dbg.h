@@ -6,12 +6,24 @@
 class nasal_dbg:public nasal_vm
 {
 private:
+    bool next_step;
+    uint16_t last_fidx;
+    uint16_t bk_fidx;
+    uint32_t bk_line;
+    std::vector<std::string> src;
+
     std::vector<std::string> parse(std::string&);
     uint16_t get_fileindex(std::string&);
     void err();
     void help();
+    void load_src(const std::string&);
+    void stepinfo();
     void interact();
 public:
+    nasal_dbg():
+        next_step(false),
+        last_fidx(0),
+        bk_fidx(0),bk_line(0){}
     void run(
         const nasal_codegen&,
         const nasal_import&
@@ -69,12 +81,45 @@ void nasal_dbg::help()
     <<"\tbk,   break     | set break point\n";
 }
 
+void nasal_dbg::load_src(const std::string& filename)
+{
+    src.clear();
+    std::ifstream fin(filename,std::ios::binary);
+    if(fin.fail())
+    {
+        std::cout<<"[debug] cannot open source code file <"<<filename<<">\n";
+        std::exit(-1);
+    }
+    while(!fin.eof())
+    {
+        std::string tmp;
+        std::getline(fin,tmp);
+        src.push_back(tmp);
+    }
+}
+
+void nasal_dbg::stepinfo()
+{
+    uint32_t begin,end;
+    uint32_t line=bytecode[pc].line==0?0:bytecode[pc].line-1;
+    if(bytecode[pc].fidx!=last_fidx)
+        load_src(files[bytecode[pc].fidx]);
+    last_fidx=bytecode[pc].fidx;
+    printf("source code:\n");
+    begin=(line>>3)==0?0:((line>>3)<<3);
+    end=(1+(line>>3))<<3;
+    for(uint32_t i=begin;i<end && i<src.size();++i)
+        printf("%s\t%s\n",i==line?"-->":"   ",src[i].c_str());
+    printf("next bytecode:\n");
+    begin=(pc>>3)==0?0:((pc>>3)<<3);
+    end=(1+(pc>>3))<<3;
+    for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
+        bytecodeinfo(i==pc?"-->\t":"   \t",i);
+    stackinfo(5);
+}
+
 void nasal_dbg::interact()
 {
-    static bool next_step=false;
-    static uint16_t last_fidx=0;
-    static uint32_t last_line=0;
-
     // special operand
     if(bytecode[pc].op==op_intg)
     {
@@ -86,19 +131,13 @@ void nasal_dbg::interact()
         return;
     
     if(
-        (bytecode[pc].fidx!=last_fidx || bytecode[pc].line!=last_line) && // break point
+        (bytecode[pc].fidx!=bk_fidx || bytecode[pc].line!=bk_line) && // break point
         !next_step // next step
     )return;
 
     next_step=false;
     std::string cmd;
-    printf("next bytecode:\n");
-
-    uint32_t begin=(pc>>3)==0?0:((pc>>3)<<3);
-    uint32_t end=(1+(pc>>3))<<3;
-    for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
-        bytecodeinfo(i==pc?"->\t":"  \t",i);
-    stackinfo(5);
+    stepinfo();
     while(1)
     {
         printf(">> ");
@@ -138,17 +177,17 @@ void nasal_dbg::interact()
             case 3:
                 if(res[0]=="bk" || res[0]=="break")
                 {
-                    last_fidx=get_fileindex(res[1]);
-                    if(last_fidx==65535)
+                    bk_fidx=get_fileindex(res[1]);
+                    if(bk_fidx==65535)
                     {
                         printf("cannot find file named \"%s\"\n",res[1].c_str());
-                        last_fidx=0;
+                        bk_fidx=0;
                     }
                     int tmp=atoi(res[2].c_str());
                     if(tmp<=0)
                         printf("incorrect line number \"%s\"\n",res[2].c_str());
                     else
-                        last_line=tmp;
+                        bk_line=tmp;
                 }
                 else
                     err();
@@ -164,6 +203,7 @@ void nasal_dbg::run(
 {
     detail_info=true;
     init(gen.get_strs(),gen.get_nums(),linker.get_file());
+    load_src(files[0]);
     const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&loadg,
