@@ -7,7 +7,7 @@ class nasal_dbg:public nasal_vm
 {
 private:
     std::vector<std::string> parse(std::string&);
-    uint16_t get_fileindex(std::string);
+    uint16_t get_fileindex(std::string&);
     void err();
     void help();
     void interact();
@@ -37,7 +37,7 @@ std::vector<std::string> nasal_dbg::parse(std::string& cmd)
     return res;
 }
 
-uint16_t nasal_dbg::get_fileindex(std::string filename)
+uint16_t nasal_dbg::get_fileindex(std::string& filename)
 {
     for(uint16_t i=0;i<files_size;++i)
         if(filename==files[i])
@@ -58,40 +58,47 @@ void nasal_dbg::help()
     <<"<option>\n"
     <<"\th,    help      | get help\n"
     <<"\tbt,   backtrace | get function call trace\n"
-    <<"\tr,    run       | run program until break point or exit\n"
+    <<"\tc,    continue  | run program until break point or exit\n"
     <<"\tg,    global    | see global values\n"
     <<"\tl,    local     | see local values\n"
     <<"\tu,    upval     | see upvalue\n"
-    <<"\tquit, exit      | exit debugger\n";
+    <<"\ta,    all       | show global,local and upvalue\n"
+    <<"\tn,    next      | execute next bytecode\n"
+    <<"\tq,    exit      | exit debugger\n"
+    <<"<option> <filename> <line>\n"
+    <<"\tbk,   break     | set break point\n";
 }
 
 void nasal_dbg::interact()
 {
+    static bool next_step=false;
     static uint16_t last_fidx=0;
     static uint32_t last_line=0;
-    
+
+    // special operand
     if(bytecode[pc].op==op_intg)
     {
         std::cout
         <<"nasal debug mode\n"
         <<"input \'h\' to get help\n";
     }
-    else if(bytecode[pc].op==op_exit)
-    {
-        std::cout<<"debugger exited successfully\n";
+    else if(bytecode[pc].op==op_nop || bytecode[pc].op==op_exit)
         return;
-    }
-    else if(bytecode[pc].op==op_nop)
-        return;
-    if(bytecode[pc].fidx!=last_fidx || bytecode[pc].line!=last_line)
-        return;
+    
+    if(
+        (bytecode[pc].fidx!=last_fidx || bytecode[pc].line!=last_line) && // break point
+        !next_step // next step
+    )return;
 
-    last_fidx=0;
-    last_line=0;
+    next_step=false;
     std::string cmd;
-    bytecodeinfo("->\t",pc);
-    for(uint32_t i=1;i<5 && bytecode[pc+i].op!=op_exit;++i)
-        bytecodeinfo("  \t",pc+i);
+    printf("next bytecode:\n");
+
+    uint32_t begin=(pc>>3)==0?0:((pc>>3)<<3);
+    uint32_t end=(1+(pc>>3))<<3;
+    for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
+        bytecodeinfo(i==pc?"->\t":"  \t",i);
+    stackinfo(5);
     while(1)
     {
         printf(">> ");
@@ -104,7 +111,7 @@ void nasal_dbg::interact()
                     help();
                 else if(res[0]=="bt" || res[0]=="backtrace")
                     traceback();
-                else if(res[0]=="r" || res[0]=="run")
+                else if(res[0]=="c" || res[0]=="continue")
                     return;
                 else if(res[0]=="g" || res[0]=="global")
                     global_state();
@@ -112,13 +119,39 @@ void nasal_dbg::interact()
                     local_state();
                 else if(res[0]=="u" || res[0]=="upval")
                     upval_state();
-                else if(res[0]=="quit" || res[0]=="exit")
+                else if(res[0]=="a" || res[0]=="all")
+                {
+                    global_state();
+                    local_state();
+                    upval_state();
+                }
+                else if(res[0]=="n" || res[0]=="next")
+                {
+                    next_step=true;
+                    return;
+                }
+                else if(res[0]=="q" || res[0]=="exit")
                     std::exit(0);
                 else
                     err();
                 break;
             case 3:
-                std::cout<<"unfinished\n";
+                if(res[0]=="bk" || res[0]=="break")
+                {
+                    last_fidx=get_fileindex(res[1]);
+                    if(last_fidx==65535)
+                    {
+                        printf("cannot find file named \"%s\"\n",res[1].c_str());
+                        last_fidx=0;
+                    }
+                    int tmp=atoi(res[2].c_str());
+                    if(tmp<=0)
+                        printf("incorrect line number \"%s\"\n",res[2].c_str());
+                    else
+                        last_line=tmp;
+                }
+                else
+                    err();
                 break;
             default:err();break;
         }
@@ -173,6 +206,7 @@ vmexit:
         die("stack overflow");
     gc.clear();
     imm.clear();
+    printf("debugger exited\n");
     return;
 #define dbg(op) {interact();op();if(gc.top<canary)goto *code[++pc];goto vmexit;}
 
