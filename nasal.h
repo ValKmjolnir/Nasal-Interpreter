@@ -127,6 +127,7 @@ std::string rawstr(const std::string& str)
         }
     return ret;
 }
+#include "nasal_err.h"
 #include "nasal_lexer.h"
 #include "nasal_ast.h"
 #include "nasal_parse.h"

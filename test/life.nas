@@ -30,7 +30,10 @@ var prt=func()
             s~=elem~' ';
         s~='\n';
     }
-    system("cls");
+    if(os.platform()=="windows")
+        system("cls");
+    else
+        system("clear");
     print(s);
 }
 

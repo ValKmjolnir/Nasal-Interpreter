@@ -193,6 +193,7 @@ class nasal_codegen
 private:
     uint32_t error;
     uint16_t fileindex;
+    nasal_err& nerr;
     const std::string* file;
     std::stack<uint32_t> in_iterloop;
     std::unordered_map<double,int>      num_table;
@@ -205,7 +206,7 @@ private:
     std::vector<std::string>            global; // global : max 4095 values
     std::list<std::vector<std::string>> local;  // local  : max 32768 upvalues 65536 values
     
-    void die(const std::string,const int);
+    void die(const std::string&,const uint32_t);
     void regist_number(const double);
     void regist_string(const std::string&);
     void find_symbol(const nasal_ast&);
@@ -246,6 +247,7 @@ private:
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
 public:
+    nasal_codegen(nasal_err& e):nerr(e){}
     uint32_t                  err(){return error;}
     void                      compile(const nasal_parse&,const nasal_import&);
     void                      print_op(uint32_t);
@@ -255,10 +257,10 @@ public:
     const std::vector<opcode>&      get_code() const {return code;}
 };
 
-void nasal_codegen::die(const std::string info,const int line)
+void nasal_codegen::die(const std::string& info,const uint32_t line)
 {
-    ++error;
-    std::cout<<"[code] <"<<file[fileindex]<<":"<<line<<"> "<<info<<"\n";
+    nerr.load(file[fileindex]);
+    nerr.err("code",line,info.c_str());
 }
 
 void nasal_codegen::regist_number(const double num)
@@ -1217,6 +1219,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     gen(op_exit,0,0);
     if(global.size()>=STACK_MAX_DEPTH)
         die("too many global variants: "+std::to_string(global.size())+".",0);
+    nerr.chkerr();
 }
 
 void nasal_codegen::print_op(uint32_t index)

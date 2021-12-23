@@ -42,11 +42,11 @@ class nasal_parse
 #define is_call(type) ((type)==tok_lcurve || (type)==tok_lbracket || (type)==tok_dot)
 private:
     uint32_t ptr;
-    uint32_t error;
     uint32_t in_func; // count function block
     uint32_t in_loop; // count loop block
     const token* tokens;// ref from nasal_lexer
     nasal_ast root;
+    nasal_err& nerr;
 
     void die(uint32_t,const std::string&);
     void match(uint32_t type,const char* info=nullptr);
@@ -98,7 +98,7 @@ private:
     nasal_ast break_expr();
     nasal_ast ret_expr();
 public:
-    uint32_t   err(){return error;}
+    nasal_parse(nasal_err& e):nerr(e){}
     void       print(){root.print(0);}
     void       compile(const nasal_lexer&);
     nasal_ast& ast(){return root;}
@@ -107,7 +107,7 @@ public:
 void nasal_parse::compile(const nasal_lexer& lexer)
 {
     tokens=lexer.get_tokens().data();
-    ptr=in_func=in_loop=error=0;
+    ptr=in_func=in_loop=0;
 
     root={1,ast_root};
     while(tokens[ptr].type!=tok_eof)
@@ -119,11 +119,12 @@ void nasal_parse::compile(const nasal_lexer& lexer)
         else if(need_semi_check(root.child().back()) && tokens[ptr].type!=tok_eof)
             die(error_line,"expected \";\"");
     }
+    nerr.chkerr();
 }
 void nasal_parse::die(uint32_t line,const std::string& info)
 {
-    ++error;
-    std::cout<<"[parse] line "<<line<<": "<<info<<".\n";
+    int col=(int)tokens[ptr].column-(int)tokens[ptr].str.length();
+    nerr.err("parse",line,col<0?0:col,info);
 }
 void nasal_parse::match(uint32_t type,const char* info)
 {
