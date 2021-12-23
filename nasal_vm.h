@@ -141,15 +141,15 @@ void nasal_vm::valinfo(nasal_ref& val)
     switch(val.type)
     {
         case vm_none: printf("| null |\n");break;
-        case vm_ret:  printf("| addr | pc=0x%x\n",val.ret());break;
+        case vm_ret:  printf("| addr | pc:0x%x\n",val.ret());break;
         case vm_cnt:  printf("| cnt  | %ld\n",val.cnt());break;
         case vm_nil:  printf("| nil  |\n");break;
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
         case vm_str:  printf("| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(*val.str()).c_str());break;
-        case vm_func: printf("| func | <0x%lx> entry=0x%x\n",(uint64_t)p,val.func()->entry);break;
+        case vm_func: printf("| func | <0x%lx> entry:0x%x\n",(uint64_t)p,val.func()->entry);break;
         case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
-        case vm_hash: printf("| hash | <0x%lx> {%lu member}\n",(uint64_t)p,val.hash()->elems.size());break;
-        case vm_obj:  printf("| obj  | <0x%lx> object=0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
+        case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash()->elems.size());break;
+        case vm_obj:  printf("| obj  | <0x%lx> obj:0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
         default:      printf("| ???  | <0x%lx>\n",(uint64_t)p);break;
     }
 }
@@ -175,7 +175,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
             printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
         default:break;
     }
-    printf(" (<%s> line %d)\n",files[c.fidx].c_str(),c.line);
+    printf(" (%s:%d)\n",files[c.fidx].c_str(),c.line);
 }
 void nasal_vm::traceback()
 {

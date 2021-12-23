@@ -258,7 +258,7 @@ public:
 void nasal_codegen::die(const std::string info,const int line)
 {
     ++error;
-    std::cout<<"[code] <"<<file[fileindex]<<"> line "<<line<<": "<<info<<"\n";
+    std::cout<<"[code] <"<<file[fileindex]<<":"<<line<<"> "<<info<<"\n";
 }
 
 void nasal_codegen::regist_number(const double num)

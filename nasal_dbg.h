@@ -90,9 +90,9 @@ void nasal_dbg::load_src(const std::string& filename)
         std::cout<<"[debug] cannot open source code file <"<<filename<<">\n";
         std::exit(-1);
     }
+    std::string tmp;
     while(!fin.eof())
     {
-        std::string tmp;
         std::getline(fin,tmp);
         src.push_back(tmp);
     }
@@ -124,7 +124,7 @@ void nasal_dbg::interact()
     if(bytecode[pc].op==op_intg)
     {
         std::cout
-        <<"nasal debug mode\n"
+        <<"[debug] nasal debug mode\n"
         <<"input \'h\' to get help\n";
     }
     else if(bytecode[pc].op==op_nop || bytecode[pc].op==op_exit)
@@ -143,57 +143,57 @@ void nasal_dbg::interact()
         printf(">> ");
         std::getline(std::cin,cmd);
         auto res=parse(cmd);
-        switch(res.size())
+        if(res.size()==1)
         {
-            case 1:
-                if(res[0]=="h" || res[0]=="help")
-                    help();
-                else if(res[0]=="bt" || res[0]=="backtrace")
-                    traceback();
-                else if(res[0]=="c" || res[0]=="continue")
-                    return;
-                else if(res[0]=="g" || res[0]=="global")
-                    global_state();
-                else if(res[0]=="l" || res[0]=="local")
-                    local_state();
-                else if(res[0]=="u" || res[0]=="upval")
-                    upval_state();
-                else if(res[0]=="a" || res[0]=="all")
-                {
-                    global_state();
-                    local_state();
-                    upval_state();
-                }
-                else if(res[0]=="n" || res[0]=="next")
-                {
-                    next_step=true;
-                    return;
-                }
-                else if(res[0]=="q" || res[0]=="exit")
-                    std::exit(0);
-                else
-                    err();
-                break;
-            case 3:
-                if(res[0]=="bk" || res[0]=="break")
-                {
-                    bk_fidx=get_fileindex(res[1]);
-                    if(bk_fidx==65535)
-                    {
-                        printf("cannot find file named \"%s\"\n",res[1].c_str());
-                        bk_fidx=0;
-                    }
-                    int tmp=atoi(res[2].c_str());
-                    if(tmp<=0)
-                        printf("incorrect line number \"%s\"\n",res[2].c_str());
-                    else
-                        bk_line=tmp;
-                }
-                else
-                    err();
-                break;
-            default:err();break;
+            if(res[0]=="h" || res[0]=="help")
+                help();
+            else if(res[0]=="bt" || res[0]=="backtrace")
+                traceback();
+            else if(res[0]=="c" || res[0]=="continue")
+                return;
+            else if(res[0]=="g" || res[0]=="global")
+                global_state();
+            else if(res[0]=="l" || res[0]=="local")
+                local_state();
+            else if(res[0]=="u" || res[0]=="upval")
+                upval_state();
+            else if(res[0]=="a" || res[0]=="all")
+            {
+                global_state();
+                local_state();
+                upval_state();
+            }
+            else if(res[0]=="n" || res[0]=="next")
+            {
+                next_step=true;
+                return;
+            }
+            else if(res[0]=="q" || res[0]=="exit")
+                std::exit(0);
+            else
+                err();
         }
+        else if(res.size()==3)
+        {
+            if(res[0]=="bk" || res[0]=="break")
+            {
+                bk_fidx=get_fileindex(res[1]);
+                if(bk_fidx==65535)
+                {
+                    printf("cannot find file named \"%s\"\n",res[1].c_str());
+                    bk_fidx=0;
+                }
+                int tmp=atoi(res[2].c_str());
+                if(tmp<=0)
+                    printf("incorrect line number \"%s\"\n",res[2].c_str());
+                else
+                    bk_line=tmp;
+            }
+            else
+                err();
+        }
+        else
+            err();
     }
 }
 
@@ -246,7 +246,7 @@ vmexit:
         die("stack overflow");
     gc.clear();
     imm.clear();
-    printf("debugger exited\n");
+    printf("[debug] debugger exited\n");
     return;
 #define dbg(op) {interact();op();if(gc.top<canary)goto *code[++pc];goto vmexit;}
 
