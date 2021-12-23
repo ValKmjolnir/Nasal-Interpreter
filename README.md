@@ -480,38 +480,44 @@ Delete an old operand 'op_offset'.
 The format of output information of bytecodes changes to this:
 
 ```x86asm
-0x0000017c: jmp    0x181
-0x0000017d: calll  0x1
-0x0000017e: calll  0x1
-0x0000017f: callfv 0x1
-0x00000180: ret    
-0x00000181: newf   0x185
-0x00000182: intl   0x2
-0x00000183: para   0x29 ("f")
-0x00000184: jmp    0x19d
-0x00000185: newf   0x189
-0x00000186: intl   0x2
-0x00000187: para   0x1d ("x")
-0x00000188: jmp    0x19c
-0x00000189: calll  0x1
-0x0000018a: lessc  0x12 (2.000000)
-0x0000018b: jf     0x18e
-0x0000018c: calll  0x1
-0x0000018d: ret    
-0x0000018e: upval  0x0[0x1]
-0x0000018f: upval  0x0[0x1]
-0x00000190: callfv 0x1
-0x00000191: calll  0x1
-0x00000192: subc   0x13 (1.000000)
-0x00000193: callfv 0x1
-0x00000194: upval  0x0[0x1]
-0x00000195: upval  0x0[0x1]
-0x00000196: callfv 0x1
-0x00000197: calll  0x1
-0x00000198: subc   0x12 (2.000000)
-0x00000199: callfv 0x1
-0x0000019a: add    
-0x0000019b: ret    
+0x000002e6: newf   0x2ea
+0x000002e7: intl   0x2
+0x000002e8: para   0x6e ("f")
+0x000002e9: jmp    0x2ee
+0x000002ea: calll  0x1
+0x000002eb: calll  0x1
+0x000002ec: callfv 0x1
+0x000002ed: ret
+0x000002ee: newf   0x2f2
+0x000002ef: intl   0x2
+0x000002f0: para   0x6e ("f")
+0x000002f1: jmp    0x30a
+0x000002f2: newf   0x2f6
+0x000002f3: intl   0x2
+0x000002f4: para   0x3e ("x")
+0x000002f5: jmp    0x309
+0x000002f6: calll  0x1
+0x000002f7: lessc  0x0 (2)
+0x000002f8: jf     0x2fb
+0x000002f9: calll  0x1
+0x000002fa: ret
+0x000002fb: upval  0x0[0x1]
+0x000002fc: upval  0x0[0x1]
+0x000002fd: callfv 0x1
+0x000002fe: calll  0x1
+0x000002ff: subc   0x1d (1)
+0x00000300: callfv 0x1
+0x00000301: upval  0x0[0x1]
+0x00000302: upval  0x0[0x1]
+0x00000303: callfv 0x1
+0x00000304: calll  0x1
+0x00000305: subc   0x0 (2)
+0x00000306: callfv 0x1
+0x00000307: add
+0x00000308: ret
+0x00000309: ret
+0x0000030a: callfv 0x1
+0x0000030b: loadg  0x32
 ```
 
 ## Benchmark
@@ -1137,6 +1143,7 @@ This interpreter uses more strict syntax to make sure it is easier for you to pr
 In Andy's interpreter:
 
 ```javascript
+import("lib.nas");
 foreach(i;[0,1,2,3])
     print(i)
 ```
@@ -1154,8 +1161,10 @@ and you haven't defined this symbol before,
 you will get this:
 
 ```javascript
-[code] <test.nas> line 1: undefined symbol "i".
-[codegen] in <test.nas>: error(s) occurred,stop.
+[code] test.nas:2 undefined symbol "i".
+foreach(i;[0,1,2,3])
+[code] test.nas:3 undefined symbol "i".
+    print(i)
 ```
 
 Also there's another difference.
@@ -1171,8 +1180,8 @@ This program runs normally with output 1.
 But in this new interpreter, it will get:
 
 ```javascript
-[code] <test.nas> line 1: undefined symbol "b".
-[codegen] in <test.nas>: error(s) occurred,stop.
+[code] test.nas:1 undefined symbol "print".
+var a=func {print(b);}
 ```
 
 (outdated)This difference is caused by different kinds of ways of lexical analysis.
@@ -1220,15 +1229,15 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x00000088: callb  0x22 <__builtin_die@0x417620> (<lib.nas> line 19)
-        0x000002af: callfv 0x1 (<a.nas> line 5)
-        0x000002b3: callfv 0x0 (<a.nas> line 7)
+        0x00000088: callb  0x22 <__builtin_die@0x417620> (lib.nas:19)
+        0x000002af: callfv 0x1 (a.nas:5)
+        0x000002b3: callfv 0x0 (a.nas:7)
 vm stack(limit 10, total 5):
         | null |
-        | addr | 0x2af
-        | func | <0x6c62c0> func{entry=0x88}
-        | addr | 0x2b3
-        | func | <0x6c8910> func{entry=0x2a9}
+        | addr | pc:0x2af
+        | func | <0x6c62c0> entry:0x88
+        | addr | pc:0x2b3
+        | func | <0x6c8910> entry:0x2a9
 ```
 
 Here is an example of stack overflow:
@@ -1248,22 +1257,22 @@ And the trace back info:
 ```javascript
 [vm] stack overflow
 trace back:
-        0x0000000d: calll  0x1 (<a.nas> line 5)
-        0x0000000f: callfv 0x1 (<a.nas> line 5)
+        0x0000000d: calll  0x1 (a.nas:5)
+        0x0000000f: callfv 0x1 (a.nas:5)
         0x0000000f: 2044 same call(s)
-        0x00000007: callfv 0x1 (<a.nas> line 2)
-        0x00000013: callfv 0x1 (<a.nas> line 3)
+        0x00000007: callfv 0x1 (a.nas:2)
+        0x00000013: callfv 0x1 (a.nas:3)
 vm stack(limit 10, total 4095):
-        | func | <0x24f1f10> func{entry=0xd}   
-        | addr | 0xf
-        | func | <0x24f1f10> func{entry=0xd}   
-        | addr | 0xf
-        | func | <0x24f1f10> func{entry=0xd}   
-        | addr | 0xf
-        | func | <0x24f1f10> func{entry=0xd}   
-        | addr | 0xf
-        | func | <0x24f1f10> func{entry=0xd}
-        | addr | 0xf
+        | func | <0x24f1f10> entry:0xd
+        | addr | pc:0xf
+        | func | <0x24f1f10> entry:0xd
+        | addr | pc:0xf
+        | func | <0x24f1f10> entry:0xd
+        | addr | pc:0xf
+        | func | <0x24f1f10> entry:0xd
+        | addr | pc:0xf
+        | func | <0x24f1f10> entry:0xd
+        | addr | pc:0xf
 ```
 
 Error will be thrown if there's a fatal error when executing:
@@ -1279,9 +1288,9 @@ And the trace back info:
 ```javascript
 [vm] callv: must call a vector/hash/string
 trace back:
-        0x00000008: callv  0x0 (<a.nas> line 3)
+        0x00000008: callv  0x0 (a.nas:3)
 vm stack(limit 10, total 1):
-        | num  | 0.000000
+        | num  | 0
 ```
 
 Use command `-d` or `--detail` the trace back info will be this:
@@ -1291,70 +1300,68 @@ hello world
 [vm] error: exception test
 [vm] native function error.
 trace back:
-        0x00000088: callb  0x22 <__builtin_die@0x417620> (<lib.nas> line 19)
-        0x000002d2: callfv 0x1 (<test/exception.nas> line 16)
-        0x00000306: callfv 0x0 (<test/exception.nas> line 39)
+        0x00000088: callb  0x22 <__builtin_die@0x417280> (lib.nas:19)
+        0x00000312: callfv 0x1 (test/exception.nas:16)
+        0x00000346: callfv 0x0 (test/exception.nas:39)
 vm stack(limit 10, total 5):
         | null |
-        | addr | 0x2d2
-        | func | <0x827750> func{entry=0x88}
-        | addr | 0x306
-        | func | <0x829ee0> func{entry=0x2cc}
-mcall address: 0x90e498
+        | addr | pc:0x312
+        | func | <0x23ced40> entry:0x88
+        | addr | pc:0x346
+        | func | <0x23d1610> entry:0x30c
+mcall address: 0x24c2158
 global:
-[0x00000000]    | func | <0x83da50> func{entry=0x5}
-[0x00000001]    | func | <0x826cb0> func{entry=0xc}
-[0x00000002]    | func | <0x826d50> func{entry=0x14}
-[0x00000003]    | func | <0x826df0> func{entry=0x1c}
-[0x00000004]    | func | <0x826e90> func{entry=0x23}
-[0x00000005]    | func | <0x826f30> func{entry=0x29}
-[0x00000006]    | func | <0x826fd0> func{entry=0x31}
-[0x00000007]    | func | <0x827070> func{entry=0x39}
-[0x00000008]    | func | <0x827110> func{entry=0x40}
-[0x00000009]    | func | <0x8271b0> func{entry=0x47}
-[0x0000000a]    | func | <0x827250> func{entry=0x4e}
-[0x0000000b]    | func | <0x8272f0> func{entry=0x55}
-[0x0000000c]    | func | <0x827390> func{entry=0x5c}
-[0x0000000d]    | func | <0x827430> func{entry=0x63}
-[0x0000000e]    | func | <0x8274d0> func{entry=0x6b}
-[0x0000000f]    | func | <0x827570> func{entry=0x73}
-[0x00000010]    | func | <0x827610> func{entry=0x7a}
-[0x00000011]    | func | <0x8276b0> func{entry=0x81}
-[0x00000012]    | func | <0x827750> func{entry=0x88}
-[0x00000013]    | func | <0x8277f0> func{entry=0x8f}
-[0x00000014]    | func | <0x827890> func{entry=0x98}
-[0x00000015]    | func | <0x827930> func{entry=0xa0}
-[0x00000016]    | func | <0x8279d0> func{entry=0xa8}
-[0x00000017]    | func | <0x827a70> func{entry=0xb0}
-[0x00000018]    | func | <0x827b10> func{entry=0xb8}
-[0x00000019]    | func | <0x827bb0> func{entry=0xbf}
-[0x0000001a]    | func | <0x827c50> func{entry=0xc6}
-[0x0000001b]    | hash | <0x8f4ce0> {14 member}
-[0x0000001c]    | hash | <0x8f4d40> {9 member}
-[0x0000001d]    | hash | <0x8f4da0> {13 member}
-[0x0000001e]    | num  | 0.017453
-[0x0000001f]    | num  | 0.592500
-[0x00000020]    | num  | 0.304800
-[0x00000021]    | num  | 3.785400
-[0x00000022]    | num  | 0.025400
-[0x00000023]    | num  | 2.204600
-[0x00000024]    | num  | 1.687800
-[0x00000025]    | num  | 0.514400
-[0x00000026]    | num  | 0.264200
-[0x00000027]    | num  | 0.453600
-[0x00000028]    | num  | 3.280800
-[0x00000029]    | num  | 39.370100
-[0x0000002a]    | num  | 0.000540
-[0x0000002b]    | num  | 1.943800
-[0x0000002c]    | num  | 1852.000000
-[0x0000002d]    | num  | 57.295780
-[0x0000002e]    | hash | <0x8f4e00> {16 member}
-[0x0000002f]    | hash | <0x8f4e60> {4 member}
-[0x00000030]    | hash | <0x8f4ec0> {3 member}
-[0x00000031]    | func | <0x829f80> func{entry=0x2dc}
-[0x00000032]    | func | <0x82a020> func{entry=0x2eb}
-[0x00000033]    | func | <0x82a0c0> func{entry=0x2f5}
+[0x00000000]    | func | <0x23f11f0> entry:0x5
+[0x00000001]    | func | <0x23ce2a0> entry:0xc
+[0x00000002]    | func | <0x23ce340> entry:0x14
+...
+[0x0000001b]    | hash | <0x24a8480> {14 val}
+...
+[0x00000021]    | num  | 0.3048
+[0x00000022]    | num  | 3.7854
+...
+[0x0000002e]    | num  | 57.2958
+[0x0000002f]    | hash | <0x24a85a0> {16 val}
+[0x00000030]    | hash | <0x24a8600> {4 val}
+...
+[0x00000035]    | func | <0x23d17f0> entry:0x335
 local:
 [0x00000000]    | nil  |
-[0x00000001]    | str  | <0x9057f0> exception test
+[0x00000001]    | str  | <0x24b9410> exception test
+no upvalue exists
 ```
+
+## Debugger
+
+In nasal v8.0 we added a debugger.
+Now we could see both source code and bytecode when testing program.
+
+Use command `./nasal -dbg xxx.nas` to use the debugger,
+and the debugger will print this:
+
+```javascript
+[debug] nasal debug mode
+input 'h' to get help
+source code:
+-->     import("lib.nas");
+        var fib=func(x)
+        {
+                if(x<2) return x;
+                return fib(x-1)+fib(x-2);
+        }
+        for(var i=0;i<31;i+=1)
+                print(fib(i),'\n');
+next bytecode:
+-->     0x00000000: intg   0x34 (test/fib.nas:0)
+        0x00000001: newf   0x5 (lib.nas:1)
+        0x00000002: intl   0x2 (lib.nas:1)
+        0x00000003: para   0x0 ("filename") (lib.nas:1)
+        0x00000004: jmp    0x7 (lib.nas:1)
+        0x00000005: callb  0x21 <__builtin_import@0x417190> (lib.nas:1)
+        0x00000006: ret    0x0 (lib.nas:1)
+        0x00000007: loadg  0x0 (lib.nas:1)
+vm stack(limit 5, total 0)
+>>
+```
+
+If want help, input `h` to get help.

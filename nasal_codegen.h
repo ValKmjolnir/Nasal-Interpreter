@@ -191,7 +191,6 @@ struct opcode
 class nasal_codegen
 {
 private:
-    uint32_t error;
     uint16_t fileindex;
     nasal_err& nerr;
     const std::string* file;
@@ -248,10 +247,9 @@ private:
     void ret_gen(const nasal_ast&);
 public:
     nasal_codegen(nasal_err& e):nerr(e){}
-    uint32_t                  err(){return error;}
-    void                      compile(const nasal_parse&,const nasal_import&);
-    void                      print_op(uint32_t);
-    void                      print();
+    void compile(const nasal_parse&,const nasal_import&);
+    void print_op(uint32_t);
+    void print();
     const std::vector<std::string>& get_strs() const {return str_res;}
     const std::vector<double>&      get_nums() const {return num_res;}
     const std::vector<opcode>&      get_code() const {return code;}
@@ -1149,7 +1147,6 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
 
 void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
 {
-    error=0;
     fileindex=0;
     file=import.get_file().data();
     in_iterloop.push(0);
