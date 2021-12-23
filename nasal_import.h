@@ -4,25 +4,18 @@
 class nasal_import
 {
 private:
-    uint32_t                 error;
+    nasal_err&               nerr;
     std::vector<std::string> files;
-    void      die(const std::string&,const char*);
     bool      check_import(const nasal_ast&);
     bool      check_exist(const std::string&);
     void      linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&,uint16_t);
 public:
-    uint32_t  err(){return error;}
-    void      link(nasal_parse&,const std::string&);
+    nasal_import(nasal_err& e):nerr(e){}
+    void link(nasal_parse&,const std::string&);
     const std::vector<std::string>& get_file() const {return files;}
 };
-
-void nasal_import::die(const std::string& file,const char* stage)
-{
-    ++error;
-    std::cout<<"[import] in <\""<<file<<"\">: error(s) occurred in "<<stage<<".\n";
-}
 
 bool nasal_import::check_import(const nasal_ast& node)
 {
@@ -65,8 +58,8 @@ void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
 
 nasal_ast nasal_import::file_import(nasal_ast& node)
 {
-    nasal_lexer lex;
-    nasal_parse par;
+    nasal_lexer lex(nerr);
+    nasal_parse par(nerr);
     // get filename and set node to ast_null
     std::string filename=node[1][0].str();
     node.clear();
@@ -77,17 +70,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     
     // start importing...
     lex.scan(filename);
-    if(lex.err())
-    {
-        die(filename,"lexer");
-        return {0,ast_root};
-    }
     par.compile(lex);
-    if(par.err())
-    {
-        die(filename,"parser");
-        return {0,ast_root};
-    }
     nasal_ast tmp=std::move(par.ast());
     // check if tmp has 'import'
     return load(tmp,files.size()-1);
@@ -110,7 +93,6 @@ nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
 void nasal_import::link(nasal_parse& parse,const std::string& self)
 {
     // initializing
-    error=0;
     files={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0

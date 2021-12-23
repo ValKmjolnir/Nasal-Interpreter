@@ -7,22 +7,19 @@ class nasal_dbg:public nasal_vm
 {
 private:
     bool next_step;
-    uint16_t last_fidx;
     uint16_t bk_fidx;
     uint32_t bk_line;
-    std::vector<std::string> src;
+    file_line src;
 
-    std::vector<std::string> parse(std::string&);
-    uint16_t get_fileindex(std::string&);
+    std::vector<std::string> parse(const std::string&);
+    uint16_t get_fileindex(const std::string&);
     void err();
     void help();
-    void load_src(const std::string&);
     void stepinfo();
     void interact();
 public:
     nasal_dbg():
         next_step(false),
-        last_fidx(0),
         bk_fidx(0),bk_line(0){}
     void run(
         const nasal_codegen&,
@@ -30,7 +27,7 @@ public:
     );
 };
 
-std::vector<std::string> nasal_dbg::parse(std::string& cmd)
+std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
 {
     std::vector<std::string> res;
     std::string tmp="";
@@ -49,7 +46,7 @@ std::vector<std::string> nasal_dbg::parse(std::string& cmd)
     return res;
 }
 
-uint16_t nasal_dbg::get_fileindex(std::string& filename)
+uint16_t nasal_dbg::get_fileindex(const std::string& filename)
 {
     for(uint16_t i=0;i<files_size;++i)
         if(filename==files[i])
@@ -81,30 +78,11 @@ void nasal_dbg::help()
     <<"\tbk,   break     | set break point\n";
 }
 
-void nasal_dbg::load_src(const std::string& filename)
-{
-    src.clear();
-    std::ifstream fin(filename,std::ios::binary);
-    if(fin.fail())
-    {
-        std::cout<<"[debug] cannot open source code file <"<<filename<<">\n";
-        std::exit(-1);
-    }
-    std::string tmp;
-    while(!fin.eof())
-    {
-        std::getline(fin,tmp);
-        src.push_back(tmp);
-    }
-}
-
 void nasal_dbg::stepinfo()
 {
     uint32_t begin,end;
     uint32_t line=bytecode[pc].line==0?0:bytecode[pc].line-1;
-    if(bytecode[pc].fidx!=last_fidx)
-        load_src(files[bytecode[pc].fidx]);
-    last_fidx=bytecode[pc].fidx;
+    src.load(files[bytecode[pc].fidx]);
     printf("source code:\n");
     begin=(line>>3)==0?0:((line>>3)<<3);
     end=(1+(line>>3))<<3;
@@ -203,7 +181,6 @@ void nasal_dbg::run(
 {
     detail_info=true;
     init(gen.get_strs(),gen.get_nums(),linker.get_file());
-    load_src(files[0]);
     const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&loadg,

@@ -51,12 +51,6 @@ void logo()
     <<"input <nasal -h> to get help .\n";
 }
 
-void die(const char* stage,const std::string& filename)
-{
-    std::cout<<"["<<stage<<"] in <"<<filename<<">: error(s) occurred,stop.\n";
-    std::exit(1);
-}
-
 void err()
 {
     std::cout
@@ -67,43 +61,37 @@ void err()
 
 void execute(const std::string& file,const uint32_t cmd)
 {
-    nasal_lexer   lexer;
-    nasal_parse   parse;
-    nasal_import  linker;
-    nasal_codegen gen;
+    // front end use the same error module
+    nasal_err     nerr;
+    nasal_lexer   lexer(nerr);
+    nasal_parse   parse(nerr);
+    nasal_import  linker(nerr);
+    nasal_codegen gen(nerr);
+    // back end
     nasal_vm      vm;
 
     // lexer scans file to get tokens
     lexer.scan(file);
-    if(lexer.err())
-        die("lexer",file);
     if(cmd&VM_LEXINFO)
         lexer.print();
     
     // parser gets lexer's token list to compile
     parse.compile(lexer);
-    if(parse.err())
-        die("parse",file);
-
     // linker gets parser's ast and load import files to this ast
     linker.link(parse,file);
-    if(linker.err())
-        die("import",file);
     if(cmd&VM_ASTINFO)
         parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,linker);
-    if(gen.err())
-        die("code",file);
     if(cmd&VM_CODEINFO)
         gen.print();
     
     // run bytecode
     if(cmd&VM_DEBUG)
     {
-        nasal_dbg dbg;
-        dbg.run(gen,linker);
+        nasal_dbg debugger;
+        debugger.run(gen,linker);
     }
     else if(cmd&VM_EXECTIME)
     {
@@ -119,7 +107,7 @@ int main(int argc,const char* argv[])
 {
     if(argc==1)
     {
-        help();
+        logo();
         return 0;
     }
     if(argc==2)
