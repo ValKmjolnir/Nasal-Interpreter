@@ -77,6 +77,8 @@ void execute(const std::string& file,const uint32_t cmd)
     lexer.scan(file);
     if(lexer.err())
         die("lexer",file);
+    if(cmd&VM_LEXINFO)
+        lexer.print();
     
     // parser gets lexer's token list to compile
     parse.compile(lexer);
@@ -87,18 +89,17 @@ void execute(const std::string& file,const uint32_t cmd)
     linker.link(parse,file);
     if(linker.err())
         die("import",file);
+    if(cmd&VM_ASTINFO)
+        parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,linker);
     if(gen.err())
         die("code",file);
-
-    if(cmd&VM_LEXINFO)
-        lexer.print();
-    if(cmd&VM_ASTINFO)
-        parse.print();
     if(cmd&VM_CODEINFO)
         gen.print();
+    
+    // run bytecode
     if(cmd&VM_DEBUG)
     {
         nasal_dbg dbg;

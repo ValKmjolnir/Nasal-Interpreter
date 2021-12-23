@@ -101,6 +101,7 @@ private:
     uint32_t    error;
     uint32_t    line;
     uint32_t    ptr;
+    std::string filename;
     std::string code;
     std::string res;
     std::vector<token> tokens;
@@ -120,6 +121,7 @@ public:
 
 void nasal_lexer::open(const std::string& file)
 {
+    filename=file;
     std::ifstream fin(file,std::ios::binary);
     if(fin.fail())
     {
@@ -142,7 +144,7 @@ uint32_t nasal_lexer::get_type(const std::string& tk_str)
 void nasal_lexer::die(const char* info)
 {
     ++error;
-    std::cout<<"[lexer] line "<<line<<" column "<<code.length()<<": \n"<<code<<'\n';
+    std::cout<<"[lexer] "<<filename<<":"<<line<<":"<<code.length()<<"\n"<<code<<'\n';
     for(int i=0;i<(int)code.size()-1;++i)
         std::cout<<char(" \t"[code[i]=='\t']);
     std::cout<<'^'<<info<<'\n';
@@ -168,7 +170,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         code+=str;
         if(str.length()<3)// "0x"
-            die("incorrect number.");
+            die("invalid number.");
         return str;
     }
     // generate oct number
@@ -180,7 +182,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         code+=str;
         if(str.length()<3)// "0o"
-            die("incorrect number.");
+            die("invalid number.");
         return str;
     }
     // generate dec number
@@ -197,7 +199,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='.')
         {
             code+=str;
-            die("incorrect number.");
+            die("invalid number.");
             return "0";
         }
     }
@@ -212,7 +214,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
         {
             code+=str;
-            die("incorrect number.");
+            die("invalid number.");
             return "0";
         }
     }
@@ -304,7 +306,7 @@ void nasal_lexer::scan(const std::string& file)
             code+=res[ptr];
             uint32_t type=get_type(str);
             if(!type)
-                die("incorrect operator.");
+                die("invalid operator.");
             tokens.push_back({line,type,str});
             ++ptr;
         }
