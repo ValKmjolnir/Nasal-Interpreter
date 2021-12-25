@@ -294,9 +294,15 @@ void nasal_lexer::scan(const std::string& file)
             tokens.push_back({line,column,type?type:tok_id,str});
         }
         else if(DIGIT(res[ptr]))
-            tokens.push_back({line,column,tok_num,num_gen()});
+        {
+            str=num_gen(); // make sure column is correct
+            tokens.push_back({line,column,tok_num,str});
+        }
         else if(STR(res[ptr]))
-            tokens.push_back({line,column,tok_str,str_gen()});
+        {
+            str=str_gen(); // make sure column is correct
+            tokens.push_back({line,column,tok_str,str});
+        }
         else if(SINGLE_OPERATOR(res[ptr]))
         {
             str=res[ptr];

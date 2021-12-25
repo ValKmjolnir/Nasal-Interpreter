@@ -124,6 +124,8 @@ void nasal_parse::compile(const nasal_lexer& lexer)
 void nasal_parse::die(uint32_t line,const std::string& info)
 {
     int col=(int)tokens[ptr].column-(int)tokens[ptr].str.length();
+    if(tokens[ptr].type==tok_str)
+        col-=2; // tok_str's str has no \"
     nerr.err("parse",line,col<0?0:col,info);
 }
 void nasal_parse::match(uint32_t type,const char* info)
