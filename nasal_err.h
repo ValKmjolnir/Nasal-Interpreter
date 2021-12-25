@@ -48,11 +48,16 @@ public:
     void err(const char* stage,const std::string& info)
     {
         ++error;
-        std::cout<<"["<<stage<<"] "<<info<<'\n';
+        std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
     }
     void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
     {
         ++error;
+        if(!line)
+        {
+            err(stage,info);
+            return;
+        }
         std::cout<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<res[line-1]<<'\n';
         for(int i=0;i<(int)column-1;++i)
             std::cout<<char(" \t"[res[line-1][i]=='\t']);
@@ -61,6 +66,11 @@ public:
     void err(const char* stage,uint32_t line,const std::string& info)
     {
         ++error;
+        if(!line)
+        {
+            err(stage,info);
+            return;
+        }
         std::cout<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
     }
     void chkerr(){if(error)std::exit(1);}
