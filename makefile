@@ -29,5 +29,6 @@ test:nasal
 	./nasal -t test/quick_sort.nas
 	./nasal test/scalar.nas
 	./nasal test/trait.nas
+	./nasal -t test/turingmachine.nas
 	./nasal -t test/ycombinator.nas
 	
