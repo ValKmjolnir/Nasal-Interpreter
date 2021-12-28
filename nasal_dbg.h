@@ -83,7 +83,7 @@ void nasal_dbg::stepinfo()
     uint32_t begin,end;
     uint32_t line=bytecode[pc].line==0?0:bytecode[pc].line-1;
     src.load(files[bytecode[pc].fidx]);
-    printf("source code:\n");
+    printf("\nsource code:\n");
     begin=(line>>3)==0?0:((line>>3)<<3);
     end=(1+(line>>3))<<3;
     for(uint32_t i=begin;i<end && i<src.size();++i)

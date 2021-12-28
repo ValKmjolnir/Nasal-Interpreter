@@ -48,14 +48,14 @@ public:
     void err(const char* stage,const std::string& info)
     {
         ++error;
-        std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
+        std::cout<<"["<<stage<<"] "<<info<<'\n';
     }
     void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
     {
         ++error;
         if(!line)
         {
-            err(stage,info);
+            std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
             return;
         }
         std::cout<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<res[line-1]<<'\n';
@@ -68,7 +68,7 @@ public:
         ++error;
         if(!line)
         {
-            err(stage,info);
+            std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
             return;
         }
         std::cout<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';

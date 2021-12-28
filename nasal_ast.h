@@ -138,7 +138,7 @@ public:
     nasal_ast(const uint32_t l=0,const uint32_t t=ast_null):_line(l),_type(t){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
-    void print(const int);
+    void print(int,bool);
     void clear();
     
     nasal_ast& operator=(const nasal_ast&);
@@ -209,10 +209,11 @@ void nasal_ast::clear()
     _child.clear();
 }
 
-void nasal_ast::print(const int depth)
+void nasal_ast::print(int depth,bool last=false)
 {
-    for(int i=0;i<depth;++i)
-        std::cout<<"|  ";
+    static std::vector<std::string> intentation={};
+    for(auto& i:intentation)
+        std::cout<<i;
     std::cout<<ast_name[_type];
     if(
         _type==ast_str ||
@@ -224,8 +225,16 @@ void nasal_ast::print(const int depth)
     else if(_type==ast_num || _type==ast_file)
         std::cout<<":"<<_num;
     std::cout<<'\n';
-    for(auto& i:_child)
-        i.print(depth+1);
+    if(last && depth)
+        intentation.back()="  ";
+    else if(!last && depth)
+        intentation.back()="│ ";
+    for(uint32_t i=0;i<_child.size();++i)
+    {
+        intentation.push_back(i==_child.size()-1?"└─":"├─");
+        _child[i].print(depth+1,i==_child.size()-1);
+        intentation.pop_back();
+    }
 }
 
 #endif
