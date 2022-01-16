@@ -87,7 +87,7 @@ nas_native(builtin_platform);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
-    std::cout<<"[vm] "<<func_name<<": "<<info<<".\n";
+    std::cerr<<"[vm] "<<func_name<<": "<<info<<".\n";
     return {vm_none,nullptr};
 }
 
@@ -574,7 +574,7 @@ nasal_ref builtin_die(std::vector<nasal_ref>& local,nasal_gc& gc)
     nasal_ref str=local[1];
     if(str.type!=vm_str)
         return builtin_err("die","\"str\" must be string");
-    std::cout<<"[vm] error: "<<*str.str()<<'\n';
+    std::cerr<<"[vm] error: "<<*str.str()<<'\n';
     return nasal_ref(vm_none);
 }
 nasal_ref builtin_type(std::vector<nasal_ref>& local,nasal_gc& gc)

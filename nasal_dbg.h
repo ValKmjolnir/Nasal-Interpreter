@@ -56,7 +56,7 @@ uint16_t nasal_dbg::get_fileindex(const std::string& filename)
 
 void nasal_dbg::err()
 {
-    std::cout
+    std::cerr
     <<"incorrect command\n"
     <<"input \'h\' to get help\n";
 }

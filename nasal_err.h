@@ -13,7 +13,7 @@ protected:
 public:
     void load(const std::string& f)
     {
-        if(file==f)
+        if(file==f) // don't need to load a loaded file
             return;
         file=f;
         res.clear();
@@ -48,33 +48,32 @@ public:
     void err(const char* stage,const std::string& info)
     {
         ++error;
-        std::cout<<"["<<stage<<"] "<<info<<'\n';
+        std::cerr<<"["<<stage<<"] "<<info<<'\n';
     }
     void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
     {
         ++error;
         if(!line)
         {
-            std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
+            std::cerr<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
             return;
         }
-        std::cout<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<res[line-1]<<'\n';
+        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<res[line-1]<<'\n';
         for(int i=0;i<(int)column-1;++i)
-            std::cout<<char(" \t"[res[line-1][i]=='\t']);
-        std::cout<<"^\n";
+            std::cerr<<char(" \t"[res[line-1][i]=='\t']);
+        std::cerr<<"^\n";
     }
     void err(const char* stage,uint32_t line,const std::string& info)
     {
         ++error;
         if(!line)
         {
-            std::cout<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
+            std::cerr<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
             return;
         }
-        std::cout<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
+        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
     }
     void chkerr(){if(error)std::exit(1);}
-    
 };
 
 #endif

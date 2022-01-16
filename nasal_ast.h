@@ -4,63 +4,63 @@
 enum ast_node
 {
     ast_null=0,
-    ast_root,    // mark the root node of ast
-    ast_block,   // expression block 
-    ast_file,    // used to store which file the sub-tree is on
-    ast_nil,     // nil keyword
-    ast_num,     // number, basic value type
-    ast_str,     // string, basic value type
-    ast_id,      // identifier
-    ast_func,    // func keyword
-    ast_hash,    // hash, basic value type
-    ast_vec,     // vector, basic value type
-    ast_hashmember,// elements in hashmap
-    ast_call,    // mark a sub-tree of calling an identifier
-    ast_callh,   // id.name
-    ast_callv,   // id[index]
-    ast_callf,   // id()
-    ast_subvec,  // id[index:index]
-    ast_args,    // mark a sub-tree of function parameters
-    ast_default, // default parameter
-    ast_dynamic, // dynamic parameter
-    ast_and,     // and keyword
-    ast_or,      // or keyword
-    ast_equal,   // =
-    ast_addeq,   // +=
-    ast_subeq,   // -=
-    ast_multeq,  // *=
-    ast_diveq,   // /=
-    ast_lnkeq,   // ~=
-    ast_cmpeq,   // ==
-    ast_neq,     // !=
-    ast_less,    // <
-    ast_leq,     // <=
-    ast_grt,     // >
-    ast_geq,     // >=
-    ast_add,     // +
-    ast_sub,     // -
-    ast_mult,    // *
-    ast_div,     // /
-    ast_link,    // ~
-    ast_neg,     // -
-    ast_not,     // ~
-    ast_trino,   // ?:
-    ast_for,     // for keyword
-    ast_forindex,// forindex keyword
-    ast_foreach, // foreach keyword
-    ast_while,   // while
-    ast_new_iter,// iterator, used in forindex/foreach
-    ast_conditional,// mark a sub-tree of conditional expression
-    ast_if,      // if keyword
-    ast_elsif,   // elsif keyword
-    ast_else,    // else keyword
-    ast_multi_id,// multi identifiers sub-tree
+    ast_root,        // mark the root node of ast
+    ast_block,       // expression block 
+    ast_file,        // used to store which file the sub-tree is on, only used in main block
+    ast_nil,         // nil keyword
+    ast_num,         // number, basic value type
+    ast_str,         // string, basic value type
+    ast_id,          // identifier
+    ast_func,        // func keyword
+    ast_hash,        // hash, basic value type
+    ast_vec,         // vector, basic value type
+    ast_hashmember,  // elements in hashmap
+    ast_call,        // mark a sub-tree of calling an identifier
+    ast_callh,       // id.name
+    ast_callv,       // id[index]
+    ast_callf,       // id()
+    ast_subvec,      // id[index:index]
+    ast_args,        // mark a sub-tree of function parameters
+    ast_default,     // default parameter
+    ast_dynamic,     // dynamic parameter
+    ast_and,         // and keyword
+    ast_or,          // or keyword
+    ast_equal,       // =
+    ast_addeq,       // +=
+    ast_subeq,       // -=
+    ast_multeq,      // *=
+    ast_diveq,       // /=
+    ast_lnkeq,       // ~=
+    ast_cmpeq,       // ==
+    ast_neq,         // !=
+    ast_less,        // <
+    ast_leq,         // <=
+    ast_grt,         // >
+    ast_geq,         // >=
+    ast_add,         // +
+    ast_sub,         // -
+    ast_mult,        // *
+    ast_div,         // /
+    ast_link,        // ~
+    ast_neg,         // -
+    ast_not,         // ~
+    ast_trino,       // ?:
+    ast_for,         // for keyword
+    ast_forindex,    // forindex keyword
+    ast_foreach,     // foreach keyword
+    ast_while,       // while
+    ast_new_iter,    // iterator, used in forindex/foreach
+    ast_conditional, // mark a sub-tree of conditional expression
+    ast_if,          // if keyword
+    ast_elsif,       // elsif keyword
+    ast_else,        // else keyword
+    ast_multi_id,    // multi identifiers sub-tree
     ast_multi_scalar,// multi value sub-tree
-    ast_def,     // definition
+    ast_def,         // definition
     ast_multi_assign,// multi assignment sub-tree
-    ast_continue,// continue keyword
-    ast_break,   // break keyword
-    ast_ret      // return keyword
+    ast_continue,    // continue keyword, only used in loop
+    ast_break,       // break keyword, only used in loop
+    ast_ret          // return keyword, only used in function block
 };
 
 const char* ast_name[]=
@@ -228,10 +228,18 @@ void nasal_ast::print(int depth,bool last=false)
     if(last && depth)
         intentation.back()="  ";
     else if(!last && depth)
+#ifdef _WIN32
+        intentation.back()="| ";
+#else
         intentation.back()="│ ";
+#endif
     for(uint32_t i=0;i<_child.size();++i)
     {
+#ifdef _WIN32
+        intentation.push_back(i==_child.size()-1?"`-":"|-");
+#else
         intentation.push_back(i==_child.size()-1?"└─":"├─");
+#endif
         _child[i].print(depth+1,i==_child.size()-1);
         intentation.pop_back();
     }

@@ -205,7 +205,7 @@ private:
     std::vector<std::string>            global; // global : max 4095 values
     std::list<std::vector<std::string>> local;  // local  : max 32768 upvalues 65536 values
     
-    void die(const std::string&,const uint32_t);
+    void die(std::string,const uint32_t);
     void regist_number(const double);
     void regist_string(const std::string&);
     void find_symbol(const nasal_ast&);
@@ -255,10 +255,10 @@ public:
     const std::vector<opcode>&      get_code() const {return code;}
 };
 
-void nasal_codegen::die(const std::string& info,const uint32_t line)
+void nasal_codegen::die(std::string info,const uint32_t line)
 {
     nerr.load(file[fileindex]);
-    nerr.err("code",line,info.c_str());
+    nerr.err("code",line,info);
 }
 
 void nasal_codegen::regist_number(const double num)
@@ -455,8 +455,6 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
 void nasal_codegen::call_gen(const nasal_ast& ast)
 {
     calc_gen(ast[0]);
-    if(code.empty())
-        std::cout<<"warning\n";
     if(code.back().op==op_callb)
         return;
     int child_size=ast.size();
@@ -1068,6 +1066,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
         switch(tmp.type())
         {
             case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
+            case ast_file:fileindex=tmp.num();break; // special node type in main block
             case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
             case ast_conditional:conditional_gen(tmp);break;
@@ -1151,68 +1150,9 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     file=import.get_file().data();
     in_iterloop.push(0);
 
-    // search symbols first
-    find_symbol(parse.ast());
+    find_symbol(parse.ast()); // search symbols first
     gen(op_intg,global.size(),0);
-    for(auto& tmp:parse.ast().child())
-    {
-        switch(tmp.type())
-        {
-            case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
-            case ast_file:fileindex=tmp.num();break;
-            case ast_def:def_gen(tmp);break;
-            case ast_multi_assign:multi_assign_gen(tmp);break;
-            case ast_conditional:conditional_gen(tmp);break;
-            case ast_while:
-            case ast_for:
-            case ast_forindex:
-            case ast_foreach:loop_gen(tmp);break;
-            case ast_equal:
-                if(tmp[0].type()==ast_id)
-                {
-                    calc_gen(tmp[1]);
-                    mcall_id(tmp[0]);
-                    // only the first mcall_id can use load
-                    if(code.back().op==op_mcalll)
-                        code.back().op=op_loadl;
-                    else if(code.back().op==op_mupval)
-                        code.back().op=op_loadu;
-                    else
-                        code.back().op=op_loadg;
-                }
-                else
-                {
-                    calc_gen(tmp);
-                    gen(op_pop,0,tmp.line());
-                }
-                break;
-            case ast_id:
-            case ast_vec:
-            case ast_hash:
-            case ast_call:
-            case ast_addeq:
-            case ast_subeq:
-            case ast_multeq:
-            case ast_diveq:
-            case ast_lnkeq:
-            case ast_neg:
-            case ast_not:
-            case ast_add:
-            case ast_sub:
-            case ast_mult:
-            case ast_div:
-            case ast_link:
-            case ast_cmpeq:
-            case ast_neq:
-            case ast_leq:
-            case ast_less:
-            case ast_geq:
-            case ast_grt:
-            case ast_or:
-            case ast_and:
-            case ast_trino:calc_gen(tmp);gen(op_pop,0,tmp.line());break;
-        }
-    }
+    block_gen(parse.ast()); // generate main block
     gen(op_exit,0,0);
     if(global.size()>=STACK_MAX_DEPTH)
         die("too many global variants: "+std::to_string(global.size())+".",0);
