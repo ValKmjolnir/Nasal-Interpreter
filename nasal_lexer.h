@@ -113,7 +113,7 @@ private:
     std::vector<token> tokens;
 
     uint32_t get_type(const std::string&);
-    void die(const char* info){nerr.err("lexer",line,column,info);};
+    void die(std::string info){nerr.err("lexer",line,column,info);};
     void open(const std::string&);
     std::string id_gen();
     std::string num_gen();
@@ -165,7 +165,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0x"
-            die("invalid number.");
+            die("invalid number:"+str);
         return str;
     }
     // generate oct number
@@ -177,7 +177,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0o"
-            die("invalid number.");
+            die("invalid number:"+str);
         return str;
     }
     // generate dec number
@@ -194,7 +194,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='.')
         {
             column+=str.length();
-            die("invalid number.");
+            die("invalid number:"+str);
             return "0";
         }
     }
@@ -209,7 +209,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
         {
             column+=str.length();
-            die("invalid number.");
+            die("invalid number:"+str);
             return "0";
         }
     }
@@ -309,7 +309,7 @@ void nasal_lexer::scan(const std::string& file)
             ++column;
             uint32_t type=get_type(str);
             if(!type)
-                die("invalid operator.");
+                die("invalid operator:"+str);
             tokens.push_back({line,column,type,str});
             ++ptr;
         }

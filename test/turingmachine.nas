@@ -5,7 +5,7 @@ var table=[
     ['q1','1','1','R','q1'],
     ['q1','0','0','S','q2'],
     ['q2','0','1','R','q3'],
-    ['q3',' ',' ','S','q3']
+    ['q3',nil,nil,'S','q3']
 ];
 var prt=func(state,pointer,paper,act=nil){
     print(state,':',pointer,':',act!=nil?act:'','\n\t');
@@ -19,7 +19,7 @@ var prt=func(state,pointer,paper,act=nil){
     print(s,'^\n');
 }
 var run=func(table,node,start,stop){
-    var paper=['0','1','0','1','0','a'];
+    var paper=['0','1','1','1','0','1','0','a'];
     var pointer=0;
     foreach(var action;table){
         if(!contains(node,action[0]))
@@ -37,7 +37,7 @@ var run=func(table,node,start,stop){
     while(state!=stop){
         foreach(var action;table)
             if(action[0]==state and (action[1]==paper[pointer] or action[1]==' ')){
-                paper[pointer]=action[2]==' '?paper[pointer]:action[2];
+                paper[pointer]=action[2]==nil?paper[pointer]:action[2];
                 if(action[3]=='L') pointer-=1;
                 elsif(action[3]=='R') pointer+=1;
                 elsif(action[3]!='S') die("invalid action <"~action[3]~'>');

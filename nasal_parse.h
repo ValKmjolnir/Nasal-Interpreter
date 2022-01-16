@@ -48,7 +48,7 @@ private:
     nasal_ast root;
     nasal_err& nerr;
 
-    void die(uint32_t,const std::string&);
+    void die(uint32_t,std::string);
     void match(uint32_t type,const char* info=nullptr);
     bool check_comma(const uint32_t*);
     bool check_multi_scalar();
@@ -121,7 +121,7 @@ void nasal_parse::compile(const nasal_lexer& lexer)
     }
     nerr.chkerr();
 }
-void nasal_parse::die(uint32_t line,const std::string& info)
+void nasal_parse::die(uint32_t line,std::string info)
 {
     int col=(int)tokens[ptr].column-(int)tokens[ptr].str.length();
     if(tokens[ptr].type==tok_str)
@@ -434,9 +434,9 @@ nasal_ast nasal_parse::expr()
 {
     uint32_t tok_type=tokens[ptr].type;
     if((tok_type==tok_break || tok_type==tok_continue) && !in_loop)
-        die(error_line,"use break/continue in the loop");
+        die(error_line,"should use break/continue in loops");
     if(tok_type==tok_ret && !in_func)
-        die(error_line,"use return in the function");
+        die(error_line,"should use return in functions");
     switch(tok_type)
     {
         case tok_nil:

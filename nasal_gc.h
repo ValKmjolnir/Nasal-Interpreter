@@ -295,12 +295,9 @@ nasal_val::~nasal_val()
     }
     type=vm_nil;
 }
-
 double nasal_ref::to_number()
 {
-    if(type==vm_str)
-        return str2num(str()->c_str());
-    return value.num;
+    return type!=vm_str?value.num:str2num(str()->c_str());
 }
 std::string nasal_ref::to_string()
 {
