@@ -83,6 +83,7 @@ void execute(const std::string& file,const uint32_t cmd)
         parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
+    optimize(parse.ast());
     gen.compile(parse,linker);
     if(cmd&VM_CODEINFO)
         gen.print();
