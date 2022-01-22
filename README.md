@@ -1,9 +1,51 @@
 # Nasal Script Language
 
+## Contents
+
+* [Introduction](##Introduction)
+* [Why Writing Nasal Interpreter](##Why-Writing-Nasal-Interpreter)
+* [Compile](##How-to-Compile)
+* [Usage](##How-to-Use)
+* [Parser](##Parser)
+  * [v1.0](###Version-1.0-parser-(last-update-2019/10/14))
+* [Abstract Syntax Tree](##Abstract-Syntax-Tree)
+  * [v1.2](###Version-1.2-ast-(last-update-2019/10/31))
+  * [v2.0](###Version-2.0-ast-(last-update-2020/8/31))
+  * [v3.0](###Version-3.0-ast-(last-update-2020/10/23))
+  * [v5.0](###Version-5.0-ast-(last-update-2021/3/7))
+* [Bytecode VM](##Bytecode-Virtual-Machine)
+  * [v4.0](###Version-4.0-vm-(last-update-2020/12/17))
+  * [v5.0](###Version-5.0-vm-(last-update-2021/3/7))
+  * [v6.0](###Version-6.0-vm-(last-update-2021/6/1))
+  * [v6.5](###Version-6.5-vm-(last-update-2021/6/24))
+  * [v7.0](###Version-7.0-vm-(last-update-2021/10/8))
+  * [v8.0](###Version-8.0-vm-(latest))
+* [Benchmark](##Benchmark)
+  * [v6.5 (i5-8250U windows 10)](###Version-6.5-(i5-8250U-windows10-2021/6/19))
+  * [v6.5 (i5-8250U ubuntu-WSL)](###Version-7.0-(i5-8250U-ubuntu-WSL-on-windows10-2021/6/29))
+* [Tutorial](##Simple-Tutorial)
+  * [basic value type](###__Basic-Value-Type__)
+  * [operators](###__Operators__)
+  * [definition](###__Definition__)
+  * [multi-assignment](###__Multi-Assignment__)
+  * [conditional expression](###__Conditional-Expression__)
+  * [loop](###__Loop__)
+  * [subvec](###__Subvec__)
+  * [special function call](###__Special-Function-Call__)
+  * [lambda](###__Lambda__)
+  * [closure](###__Closure__)
+  * [trait](###__Trait__)
+  * [native functions](###__Native-Functions__)
+  * [modules](###__Modules(This-is-for-library-developers)__)
+* [Difference](##Difference-Between-Andy's-Nasal-Interpreter-and-This-Interpreter)
+* [Trace Back Info](##Trace-Back-Info)
+* [Debugger](##Debugger)
+
 ## Introduction
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 is an ECMAscript-like programming language that used in [FlightGear](https://www.flightgear.org/).
+This language is designed by [Andy Ross](https://github.com/andyross).
 
 The interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using C++(`-std=c++11`)
 without reusing the code in [Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>).
@@ -16,9 +58,7 @@ use this project to learn or create more interesting things
 
 ## Why Writing Nasal Interpreter
 
-Nasal is a script language first used in Flightgear,
-created by [Andy Ross](<https://github.com/andyross>).
-But in 2019 summer holiday,
+In 2019 summer holiday,
 members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
@@ -32,8 +72,8 @@ errors before copying nasal-codes in nasal-console in Flightgear to test.
 
 Also, you could use this language to write some
 interesting programs and run them without the lib of Flightgear.
-You could add your own built-in functions to change
-this interpreter to a useful tool in your own projects (such as a script in your own game).
+You could add your own modules to make
+this interpreter a useful tool in your own projects (such as a script in a game just as Flightgear does).
 
 ## How to Compile
 
@@ -110,7 +150,7 @@ var f=func(x,y,z){return x+y+z};
 (a,b,c)=(0,1,2);
 ```
 
-### version 1.0(last update 2019/10/14)
+### Version 1.0 parser (last update 2019/10/14)
 
 First fully functional version of nasal_parser.
 
@@ -124,15 +164,15 @@ This project began at 2019/8/31.
 
 ## Abstract Syntax Tree
 
-### Version 1.2(last update 2019/10/31)
+### Version 1.2 ast (last update 2019/10/31)
 
 The ast has been completed in this version.
 
-### Version 2.0(last update 2020/8/31)
+### Version 2.0 ast (last update 2020/8/31)
 
 A completed ast-interpreter with unfinished lib functions.
 
-### Version 3.0(last update 2020/10/23)
+### Version 3.0 ast (last update 2020/10/23)
 
 The ast is refactored and is now easier to read and maintain.
 
@@ -142,7 +182,7 @@ Now you can add your own functions as builtin-functions in this interpreter!
 
 I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
 
-### Version 5.0(last update 2021/3/7)
+### Version 5.0 ast (last update 2021/3/7)
 
 I change my mind.
 AST interpreter leaves me too much things to do.
@@ -150,9 +190,9 @@ AST interpreter leaves me too much things to do.
 If i continue saving this interpreter,
 it will be harder for me to make the bytecode vm become more efficient.
 
-## Byte Code Virtual Machine
+## Bytecode Virtual Machine
 
-### Version 4.0 (last update 2020/12/17)
+### Version 4.0 vm (last update 2020/12/17)
 
 I have just finished the first version of byte-code-interpreter.
 
@@ -185,7 +225,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000b: nop    0x00000000
 ```
 
-### Version 5.0 (last update 2021/3/7)
+### Version 5.0 vm (last update 2021/3/7)
 
 I decide to optimize bytecode vm in this version.
 
@@ -193,7 +233,7 @@ Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not effic
 
 2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
 
-### Version 6.0 (last update 2021/6/1)
+### Version 6.0 vm (last update 2021/6/1)
 
 Use loadg loadl callg calll mcallg mcalll to avoid branches.
 
@@ -234,7 +274,7 @@ for(var i=0;i<4000000;i+=1);
 0x0000000c: nop    0x00000000
 ```
 
-### Version 6.5 (last update 2021/6/24)
+### Version 6.5 vm (last update 2021/6/24)
 
 2021/5/31 update:
 
@@ -390,7 +430,7 @@ is deleted from nasal_vm,
 and now nasal_vm use nasal_val** mem_addr to store the memory address.
 This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
-### version 7.0 (last update 2021/10/8)
+### Version 7.0 vm (last update 2021/10/8)
 
 2021/6/26 update:
 
@@ -460,7 +500,7 @@ a=b=0;
 0x00000009: nop    0x00000000
 ```
 
-### version 8.0 (latest)
+### Version 8.0 vm (latest)
 
 2021/10/8 update:
 
@@ -520,9 +560,14 @@ The format of output information of bytecodes changes to this:
 0x0000030b: loadg  0x32
 ```
 
+2022/1/22 update:
+
+Delete `op_pone` and `op_pzero`.
+Both of them are meaningless and will be replaced by `op_pnum`.
+
 ## Benchmark
 
-### version 6.5 (i5-8250U windows10 2021/6/19)
+### Version 6.5 (i5-8250U windows10 2021/6/19)
 
 running time and gc time:
 
@@ -569,7 +614,7 @@ operands calling total times:
 |quick_sort.nas|16226|5561|4144|3524|2833|
 |bfs.nas|24707|16297|14606|14269|8672|
 
-### version 7.0 (i5-8250U ubuntu-WSL on windows10 2021/6/29)
+### Version 7.0 (i5-8250U ubuntu-WSL on windows10 2021/6/29)
 
 running time:
 
