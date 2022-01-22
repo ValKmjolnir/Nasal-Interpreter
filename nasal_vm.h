@@ -44,8 +44,6 @@ protected:
     void opr_loadl();
     void opr_loadu();
     void opr_pnum();
-    void opr_pone();
-    void opr_pzero();
     void opr_pnil();
     void opr_pstr();
     void opr_newv();
@@ -342,14 +340,6 @@ inline void nasal_vm::opr_loadu()
 inline void nasal_vm::opr_pnum()
 {
     (++gc.top)[0]={vm_num,num_table[imm[pc]]};
-}
-inline void nasal_vm::opr_pone()
-{
-    (++gc.top)[0]={vm_num,(double)1};
-}
-inline void nasal_vm::opr_pzero()
-{
-    (++gc.top)[0]={vm_num,(double)0};
 }
 inline void nasal_vm::opr_pnil()
 {
@@ -858,25 +848,24 @@ void nasal_vm::run(
     const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&loadg,
-        &&loadl,   &&loadu,    &&pnum,   &&pone,
-        &&pzero,   &&pnil,     &&pstr,   &&newv,
-        &&newh,    &&newf,     &&happ,   &&para,
-        &&defpara, &&dynpara,  &&unot,   &&usub,
-        &&add,     &&sub,      &&mul,    &&div,
-        &&lnk,     &&addc,     &&subc,   &&mulc,
-        &&divc,    &&lnkc,     &&addeq,  &&subeq,
-        &&muleq,   &&diveq,    &&lnkeq,  &&addeqc,
-        &&subeqc,  &&muleqc,   &&diveqc, &&lnkeqc,
-        &&meq,     &&eq,       &&neq,    &&less,
-        &&leq,     &&grt,      &&geq,    &&lessc,
-        &&leqc,    &&grtc,     &&geqc,   &&pop,
-        &&jmp,     &&jt,       &&jf,     &&counter,
-        &&findex,  &&feach,    &&callg,  &&calll,
-        &&upval,   &&callv,    &&callvi, &&callh,
-        &&callfv,  &&callfh,   &&callb,  &&slcbegin,
-        &&slcend,  &&slc,      &&slc2,   &&mcallg,
-        &&mcalll,  &&mupval,   &&mcallv, &&mcallh,
-        &&ret,     &&vmexit
+        &&loadl,   &&loadu,    &&pnum,   &&pnil,
+        &&pstr,    &&newv,     &&newh,   &&newf,
+        &&happ,    &&para,     &&defpara,&&dynpara,
+        &&unot,    &&usub,     &&add,    &&sub,
+        &&mul,     &&div,      &&lnk,    &&addc,
+        &&subc,    &&mulc,     &&divc,   &&lnkc,
+        &&addeq,   &&subeq,    &&muleq,  &&diveq,
+        &&lnkeq,   &&addeqc,   &&subeqc, &&muleqc,
+        &&diveqc,  &&lnkeqc,   &&meq,    &&eq,
+        &&neq,     &&less,     &&leq,    &&grt,
+        &&geq,     &&lessc,    &&leqc,   &&grtc,
+        &&geqc,    &&pop,      &&jmp,    &&jt,
+        &&jf,      &&counter,  &&findex, &&feach,
+        &&callg,   &&calll,    &&upval,  &&callv,
+        &&callvi,  &&callh,    &&callfv, &&callfh,
+        &&callb,   &&slcbegin, &&slcend, &&slc,
+        &&slc2,    &&mcallg,   &&mcalll, &&mupval,
+        &&mcallv,  &&mcallh,   &&ret,    &&vmexit
     };
     bytecode=gen.get_code().data();
     std::vector<const void*> code;
@@ -912,8 +901,6 @@ loadg:   exec_opnodie(opr_loadg   ,op_loadg   ); // -1
 loadl:   exec_opnodie(opr_loadl   ,op_loadl   ); // -1
 loadu:   exec_opnodie(opr_loadu   ,op_loadu   ); // -1
 pnum:    exec_operand(opr_pnum    ,op_pnum    ); // +1
-pone:    exec_operand(opr_pone    ,op_pone    ); // +1
-pzero:   exec_operand(opr_pzero   ,op_pzero   ); // +1
 pnil:    exec_operand(opr_pnil    ,op_pnil    ); // +1
 pstr:    exec_operand(opr_pstr    ,op_pstr    ); // +1
 newv:    exec_operand(opr_newv    ,op_newv    ); // +1-imm[pc]

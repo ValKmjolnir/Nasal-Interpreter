@@ -10,8 +10,6 @@ enum op_code
     op_loadl,   // load local value
     op_loadu,   // load upvalue
     op_pnum,    // push constant number to the stack
-    op_pone,    // push 1 to the stack
-    op_pzero,   // push 0 to the stack
     op_pnil,    // push constant nil to the stack
     op_pstr,    // push constant string to the stack
     op_newv,    // push new vector with initial values from stack
@@ -96,8 +94,6 @@ struct
     {op_loadl,   "loadl "},
     {op_loadu,   "loadu "},
     {op_pnum,    "pnum  "},
-    {op_pone,    "pone  "},
-    {op_pzero,   "pzero "},
     {op_pnil,    "pnil  "},
     {op_pstr,    "pstr  "},
     {op_newv,    "newv  "},
@@ -363,13 +359,8 @@ void nasal_codegen::gen(uint8_t op,uint32_t num,uint32_t line)
 void nasal_codegen::num_gen(const nasal_ast& ast)
 {
     double num=ast.num();
-    if(num==0)gen(op_pzero,0,ast.line());
-    else if(num==1)gen(op_pone,0,ast.line());
-    else
-    {
-        regist_number(num);
-        gen(op_pnum,num_table[num],ast.line());
-    }
+    regist_number(num);
+    gen(op_pnum,num_table[num],ast.line());
 }
 
 void nasal_codegen::str_gen(const nasal_ast& ast)
@@ -816,7 +807,7 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
     }
     int jmp_place=code.size();
     if(ast[1].type()==ast_null)
-        gen(op_pone,0,ast[1].line());
+        gen(op_pnum,num_table[1],ast[1].line());
     else
         calc_gen(ast[1]);
     int label_exit=code.size();
@@ -1149,6 +1140,9 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     fileindex=0;
     file=import.get_file().data();
     in_iterloop.push(0);
+
+    regist_number(0);
+    regist_number(1);
 
     find_symbol(parse.ast()); // search symbols first
     gen(op_intg,global.size(),0);

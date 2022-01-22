@@ -8,6 +8,7 @@ constexpr uint32_t VM_OPCALLNUM=16;
 constexpr uint32_t VM_EXEC     =32;
 constexpr uint32_t VM_DBGINFO  =64;
 constexpr uint32_t VM_DEBUG    =128;
+constexpr uint32_t VM_OPTIMIZE =256;
 
 void help()
 {
@@ -24,13 +25,14 @@ void help()
     <<"    input file name to execute script file.\n\n"
     <<"nasal [options...] <file>\n"
     <<"option:\n"
-    <<"    -l,   --lex   | view token info.\n"
-    <<"    -a,   --ast   | view abstract syntax tree.\n"
-    <<"    -c,   --code  | view bytecode.\n"
-    <<"    -t,   --time  | execute and get the running time.\n"
-    <<"    -o,   --opcnt | execute and count used operands.\n"
-    <<"    -d,   --detail| execute and get detail crash info.\n"
-    <<"    -dbg, --debug | debug mode (this will ignore -t -o -d).\n"
+    <<"    -l,   --lex     | view token info.\n"
+    <<"    -a,   --ast     | view abstract syntax tree.\n"
+    <<"    -c,   --code    | view bytecode.\n"
+    <<"    -t,   --time    | execute and get the running time.\n"
+    <<"    -o,   --opcnt   | execute and count used operands.\n"
+    <<"    -d,   --detail  | execute and get detail crash info.\n"
+    <<"    -op,  --optimize| use optimizer(beta).\n"
+    <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d).\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
 }
@@ -82,8 +84,11 @@ void execute(const std::string& file,const uint32_t cmd)
     if(cmd&VM_ASTINFO)
         parse.print();
     
+    // optimizer does simple optimization on ast
+    if(cmd&VM_OPTIMIZE)
+        optimize(parse.ast());
+    
     // code generator gets parser's ast and linker's import file list to generate code
-    optimize(parse.ast());
     gen.compile(parse,linker);
     if(cmd&VM_CODEINFO)
         gen.print();
@@ -140,6 +145,8 @@ int main(int argc,const char* argv[])
             cmd|=VM_EXECTIME;
         else if(s=="--detail" || s=="-d")
             cmd|=VM_DBGINFO|VM_EXEC;
+        else if(s=="--optimize" || s=="-op")
+            cmd|=VM_OPTIMIZE;
         else if(s=="--debug" || s=="-dbg")
             cmd|=VM_DEBUG;
         else

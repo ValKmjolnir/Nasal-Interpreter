@@ -184,25 +184,24 @@ void nasal_dbg::run(
     const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&loadg,
-        &&loadl,   &&loadu,    &&pnum,   &&pone,
-        &&pzero,   &&pnil,     &&pstr,   &&newv,
-        &&newh,    &&newf,     &&happ,   &&para,
-        &&defpara, &&dynpara,  &&unot,   &&usub,
-        &&add,     &&sub,      &&mul,    &&div,
-        &&lnk,     &&addc,     &&subc,   &&mulc,
-        &&divc,    &&lnkc,     &&addeq,  &&subeq,
-        &&muleq,   &&diveq,    &&lnkeq,  &&addeqc,
-        &&subeqc,  &&muleqc,   &&diveqc, &&lnkeqc,
-        &&meq,     &&eq,       &&neq,    &&less,
-        &&leq,     &&grt,      &&geq,    &&lessc,
-        &&leqc,    &&grtc,     &&geqc,   &&pop,
-        &&jmp,     &&jt,       &&jf,     &&counter,
-        &&findex,  &&feach,    &&callg,  &&calll,
-        &&upval,   &&callv,    &&callvi, &&callh,
-        &&callfv,  &&callfh,   &&callb,  &&slcbegin,
-        &&slcend,  &&slc,      &&slc2,   &&mcallg,
-        &&mcalll,  &&mupval,   &&mcallv, &&mcallh,
-        &&ret,     &&vmexit
+        &&loadl,   &&loadu,    &&pnum,   &&pnil,
+        &&pstr,    &&newv,     &&newh,   &&newf,
+        &&happ,    &&para,     &&defpara,&&dynpara,
+        &&unot,    &&usub,     &&add,    &&sub,
+        &&mul,     &&div,      &&lnk,    &&addc,
+        &&subc,    &&mulc,     &&divc,   &&lnkc,
+        &&addeq,   &&subeq,    &&muleq,  &&diveq,
+        &&lnkeq,   &&addeqc,   &&subeqc, &&muleqc,
+        &&diveqc,  &&lnkeqc,   &&meq,    &&eq,
+        &&neq,     &&less,     &&leq,    &&grt,
+        &&geq,     &&lessc,    &&leqc,   &&grtc,
+        &&geqc,    &&pop,      &&jmp,    &&jt,
+        &&jf,      &&counter,  &&findex, &&feach,
+        &&callg,   &&calll,    &&upval,  &&callv,
+        &&callvi,  &&callh,    &&callfv, &&callfh,
+        &&callb,   &&slcbegin, &&slcend, &&slc,
+        &&slc2,    &&mcallg,   &&mcalll, &&mupval,
+        &&mcallv,  &&mcallh,   &&ret,    &&vmexit
     };
     bytecode=gen.get_code().data();
     std::vector<const void*> code;
@@ -234,8 +233,6 @@ loadg:   dbg(opr_loadg   );
 loadl:   dbg(opr_loadl   );
 loadu:   dbg(opr_loadu   );
 pnum:    dbg(opr_pnum    );
-pone:    dbg(opr_pone    );
-pzero:   dbg(opr_pzero   );
 pnil:    dbg(opr_pnil    );
 pstr:    dbg(opr_pstr    );
 newv:    dbg(opr_newv    );
