@@ -23,6 +23,7 @@
 * [Benchmark](#benchmark)
   * [v6.5 (i5-8250U windows 10)](#version-65-i5-8250u-windows10-2021619)
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
+  * [v8.0 (R9-5900HX ubuntu-WSL)](#version-80-r9-5900hx-ubuntu-wsl-2022123)
 * [Tutorial](#simple-tutorial)
   * [basic value type](#basic-value-type)
   * [operators](#operators)
@@ -630,6 +631,24 @@ running time:
 |calc.nas|0.0468s|little improvement|
 |quick_sort.nas|0s|great improvement|
 |bfs.nas|0.0156s|great improvement|
+
+### Version 8.0 (R9-5900HX ubuntu-WSL 2022/1/23)
+
+running time:
+
+|file|total time|info|
+|:----|:----|:----|
+|bf.nas|1100.19s||
+|mandel.nas|28.98s||
+|life.nas|0.857s(windows) 0.56(ubuntu WSL)||
+|fib.nas|0.28s||
+|bfs.nas|0.156s|changed test file|
+|pi.nas|0.0625s||
+|bigloop.nas|0.047s||
+|calc.nas|0.03125s|changed test file|
+|mandelbrot.nas|0.0156s||
+|ascii-art.nas|0s||
+|quick_sort.nas|0s||
 
 ## Simple Tutorial
 
