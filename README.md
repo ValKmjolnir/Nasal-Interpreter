@@ -1,30 +1,38 @@
-# Nasal Script Language
+# __Nasal Script Language__
 
-## Contents
+```C++
+       __                _      
+    /\ \ \__ _ ___  __ _| |  
+   /  \/ / _` / __|/ _` | |    
+  / /\  / (_| \__ \ (_| | |  
+  \_\ \/ \__,_|___/\__,_|_|
+```
 
-* [Introduction](#introduction)
-* [Why Writing Nasal Interpreter](#why-writing-nasal-interpreter)
-* [Compile](#how-to-compile)
-* [Usage](#how-to-use)
-* [Parser](#parser)
+## __Contents__
+
+* [__Introduction__](#introduction)
+* [__Why Writing Nasal Interpreter__](#why-writing-nasal-interpreter)
+* [__Compile__](#how-to-compile)
+* [__Usage__](#how-to-use)
+* [__Parser__](#parser)
   * [v1.0](#version-10-parser-last-update-20191014)
-* [Abstract Syntax Tree](#abstract-syntax-tree)
+* [__Abstract Syntax Tree__](#abstract-syntax-tree)
   * [v1.2](#version-12-ast-last-update-20191031)
   * [v2.0](#version-20-ast-last-update-2020831)
   * [v3.0](#version-30-ast-last-update-20201023)
   * [v5.0](#version-50-ast-last-update-202137)
-* [Bytecode VM](#bytecode-virtual-machine)
+* [__Bytecode VM__](#bytecode-virtual-machine)
   * [v4.0](#version-40-vm-last-update-20201217)
   * [v5.0](#version-50-vm-last-update-202137)
   * [v6.0](#version-60-vm-last-update-202161)
   * [v6.5](#version-65-vm-last-update-2021624)
   * [v7.0](#version-70-vm-last-update-2021108)
   * [v8.0](#version-80-vm-latest)
-* [Benchmark](#benchmark)
+* [__Benchmark__](#benchmark)
   * [v6.5 (i5-8250U windows 10)](#version-65-i5-8250u-windows10-2021619)
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
   * [v8.0 (R9-5900HX ubuntu-WSL)](#version-80-r9-5900hx-ubuntu-wsl-2022123)
-* [Tutorial](#simple-tutorial)
+* [__Tutorial__](#tutorial)
   * [basic value type](#basic-value-type)
   * [operators](#operators)
   * [definition](#definition)
@@ -37,30 +45,43 @@
   * [closure](#closure)
   * [trait](#trait)
   * [native functions](#native-functions)
-  * [modules](#modulesthis-is-for-library-developers)
-* [Difference](#difference-between-andys-nasal-interpreter-and-this-interpreter)
-* [Trace Back Info](#trace-back-info)
-* [Debugger](#debugger)
+  * [modules](#modulesfor-library-developers)
+* [__Difference__](#difference-between-andys-and-this-interpreter)
+  * [strict definition](#1-must-use-var-to-define-variables)
+  * [(outdated)use after definition](#2-now-supported-couldnt-use-variables-before-definitions)
+  * [default dynamic arguments](#3-default-dynamic-arguments-not-supported)
+* [__Trace Back Info__](#trace-back-info)
+  * [native function 'die'](#1-native-function-die)
+  * [stack overflow](#2-stack-overflow-crash-info)
+  * [runtime error](#3-normal-vm-error-crash-info)
+  * [detailed crash info](#4-detailed-crash-info)
+* [__Debugger__](#debugger)
 
-## Introduction
+__Contact us if having great ideas to share!__
 
-[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
-is an ECMAscript-like programming language that used in [FlightGear](https://www.flightgear.org/).
-This language is designed by [Andy Ross](https://github.com/andyross).
+* __E-mail__: lhk101lhk101@qq.com
 
-The interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using C++(`-std=c++11`)
-without reusing the code in [Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>).
+* __QQ__: 896693328
+
+## __Introduction__
+
+__[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
+is an ECMAscript-like programming language that used in __[FlightGear](https://www.flightgear.org/)__.
+This language is designed by __[Andy Ross](https://github.com/andyross)__.
+
+The interpreter is totally rewritten by __[ValKmjolnir](https://github.com/ValKmjolnir)__ using `C++`(`-std=c++11`)
+without reusing the code in __[Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>)__.
 But we really appreciate that Andy created this amazing programming language and his interpreter project.
 
-Now this project uses MIT license (2021/5/4).
+Now this project uses __MIT license__ (2021/5/4).
 Edit it if you want,
 use this project to learn or create more interesting things
 (But don't forget me XD).
 
-## Why Writing Nasal Interpreter
+## __Why Writing Nasal Interpreter__
 
 In 2019 summer holiday,
-members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,
+members in __[FGPRC](https://www.fgprc.org/)__ told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
 
@@ -76,25 +97,25 @@ interesting programs and run them without the lib of Flightgear.
 You could add your own modules to make
 this interpreter a useful tool in your own projects (such as a script in a game just as Flightgear does).
 
-## How to Compile
+## __How to Compile__
 
 Better choose the latest update of the interpreter.
 Download the source code and build it!
 It's quite easy to build this interpreter.
 
-MUST USE `-O2/-O3` if want to optimize the interpreter!
+__MUST USE__ __`-O2/-O3`__ if want to optimize the interpreter!
 
-Also remember to use g++ or clang++.(mingw-w64 in Windows)
+Also remember to use g++ or clang++.(mingw-w64 in __`Windows`__)
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions
 
-Or use this in linux/macOS/Unix
+Or use this in __`linux/macOS/Unix`__
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
-## How to Use?
+## __How to Use__
 
-Input this command to run scripts directly:
+Input this command to run scripts __directly__:
 
 > ./nasal filename
 
@@ -102,28 +123,66 @@ Use these commands to get version of interpreter:
 
 > ./nasal -v | --version
 
+```bash
+       __                _      
+    /\ \ \__ _ ___  __ _| |  
+   /  \/ / _` / __|/ _` | |    
+  / /\  / (_| \__ \ (_| | |  
+  \_\ \/ \__,_|___/\__,_|_|
+nasal interpreter ver 8.0
+thanks to : https://github.com/andyross/nasal
+code repo : https://github.com/ValKmjolnir/Nasal-Interpreter   
+code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter    
+lang info : http://wiki.flightgear.org/Nasal_scripting_language
+input <nasal -h> to get help .
+```
+
 Use these commands to get help(see more debug commands in help):
 
 > ./nasal -h | --help
 
-If your system is Windows and you want to output unicode,please use this command before running nasal interpreter:
+```bash
+nasal <option>
+option:
+    -h, --help    | get help.
+    -v, --version | get version of nasal interpreter.
+
+nasal <file>
+file:
+    input file name to execute script file.
+
+nasal [options...] <file>
+option:
+    -l,   --lex     | view token info.
+    -a,   --ast     | view abstract syntax tree.     
+    -c,   --code    | view bytecode.
+    -t,   --time    | execute and get the running time.
+    -o,   --opcnt   | execute and count used operands.
+    -d,   --detail  | execute and get detail crash info.
+    -op,  --optimize| use optimizer(beta).
+    -dbg, --debug   | debug mode (this will ignore -t -o -d).
+file:
+    input file name to execute script file.
+```
+
+If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
 > chcp 65001
 
 The interpreter's interactive mode will do this automatically,so you don't need to run this command if you use the interactive interpreter.
 
-## Parser
+## __Parser__
 
-LL(k) parser.
+`LL(k)` parser.
 
 ```javascript
 (var a,b,c)=[{b:nil},[1,2],func return 0;];
 (a.b,b[0],c)=(1,2,3);
 ```
 
-These two expressions have the same first set,so LL(1) is useless for this language.
+These two expressions have the same first set,so `LL(1)` is useless for this language.
 
-Maybe in the future i can refactor it to LL(1) with special checks.
+Maybe in the future i can refactor it to `LL(1)` with special checks.
 
 Problems mentioned above have been solved for a long time, but recently i found a new problem here:
 
@@ -151,29 +210,29 @@ var f=func(x,y,z){return x+y+z};
 (a,b,c)=(0,1,2);
 ```
 
-### Version 1.0 parser (last update 2019/10/14)
+### version 1.0 parser (last update 2019/10/14)
 
 First fully functional version of nasal_parser.
 
 Before version 1.0,i tried many times to create a correct parser.
 
-Finally i learned LL(1) and LL(k) and wrote a parser for math formulas in version 0.16(last update 2019/9/14).
+Finally i learned `LL(1)` and `LL(k)` and wrote a parser for math formulas in version 0.16(last update 2019/9/14).
 
 In version 0.17(2019/9/15) 0.18(2019/9/18) 0.19(2019/10/1)i was playing the parser happily and after that i wrote version 1.0.
 
-This project began at 2019/8/31.
+__This project began at 2019/8/31__.
 
-## Abstract Syntax Tree
+## __Abstract Syntax Tree__
 
-### Version 1.2 ast (last update 2019/10/31)
+### version 1.2 ast (last update 2019/10/31)
 
 The ast has been completed in this version.
 
-### Version 2.0 ast (last update 2020/8/31)
+### version 2.0 ast (last update 2020/8/31)
 
 A completed ast-interpreter with unfinished lib functions.
 
-### Version 3.0 ast (last update 2020/10/23)
+### version 3.0 ast (last update 2020/10/23)
 
 The ast is refactored and is now easier to read and maintain.
 
@@ -183,7 +242,7 @@ Now you can add your own functions as builtin-functions in this interpreter!
 
 I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
 
-### Version 5.0 ast (last update 2021/3/7)
+### version 5.0 ast (last update 2021/3/7)
 
 I change my mind.
 AST interpreter leaves me too much things to do.
@@ -191,15 +250,17 @@ AST interpreter leaves me too much things to do.
 If i continue saving this interpreter,
 it will be harder for me to make the bytecode vm become more efficient.
 
-## Bytecode Virtual Machine
+## __Bytecode Virtual Machine__
 
-### Version 4.0 vm (last update 2020/12/17)
+### version 4.0 vm (last update 2020/12/17)
 
-I have just finished the first version of byte-code-interpreter.
+I have just finished the first version of bytecode-interpreter.
 
-This interpreter is still in test.After this test,i will release version 4.0!
+This interpreter is still in test.
+After this test, i will release version 4.0!
 
-Now i am trying to search hidden bugs in this interpreter.Hope you could help me! :)
+Now i am trying to search hidden bugs in this interpreter.
+Hope you could help me! :)
 
 There's an example of byte code below:
 
@@ -226,31 +287,31 @@ for(var i=0;i<4000000;i+=1);
 0x0000000b: nop    0x00000000
 ```
 
-### Version 5.0 vm (last update 2021/3/7)
+### version 5.0 vm (last update 2021/3/7)
 
 I decide to optimize bytecode vm in this version.
 
-Because it takes more than 1.5s to count i from 0 to 4000000-1.This is not efficient at all!
+Because it takes more than 1.5s to count i from `0` to `4000000-1`.This is not efficient at all!
 
-2021/1/23 update: Now it can count from 0 to 4000000-1 in 1.5s.
+2021/1/23 update: Now it can count from `0` to `4000000-1` in 1.5s.
 
-### Version 6.0 vm (last update 2021/6/1)
+### version 6.0 vm (last update 2021/6/1)
 
-Use loadg loadl callg calll mcallg mcalll to avoid branches.
+Use `loadg`/`loadl`/`callg`/`calll`/`mcallg`/`mcalll` to avoid branches.
 
-Delete type vm_scop.
+Delete type `vm_scop`.
 
-Use const vm_num to avoid frequently new & delete.
+Use const `vm_num` to avoid frequently new & delete.
 
 Change garbage collector from reference-counting to mark-sweep.
 
-Vapp and newf operand use .num to reduce the size of exec_code.
+`vapp` and `newf` operand use .num to reduce the size of `exec_code`.
 
-2021/4/3 update: Now it can count from 0 to 4000000-1 in 0.8s.
+2021/4/3 update: Now it can count from `0` to `4e6-1` in 0.8s.
 
-2021/4/19 update: Now it can count from 0 to 4e6-1 in 0.4s.
+2021/4/19 update: Now it can count from `0` to `4e6-1` in 0.4s.
 
-In this update i changed global and local scope from unordered_map to vector.
+In this update i changed global and local scope from `unordered_map` to `vector`.
 
 So the bytecode generator changed a lot.
 
@@ -275,30 +336,30 @@ for(var i=0;i<4000000;i+=1);
 0x0000000c: nop    0x00000000
 ```
 
-### Version 6.5 vm (last update 2021/6/24)
+### version 6.5 vm (last update 2021/6/24)
 
 2021/5/31 update:
 
 Now gc can collect garbage correctly without re-collecting,
 which will cause fatal error.
 
-Add builtin_alloc to avoid mark-sweep when running a built-in function,
+Add `builtin_alloc` to avoid mark-sweep when running a built-in function,
 which will mark useful items as useless garbage to collect.
 
 Better use setsize and assignment to get a big array,
-append is very slow in this situation.
+`append` is very slow in this situation.
 
 2021/6/3 update:
 
 Fixed a bug that gc still re-collects garbage,
 this time i use three mark states to make sure garbage is ready to be collected.
 
-Change callf to callfv and callfh.
-And callfv fetches arguments from val_stack directly instead of using vm_vec,
+Change `callf` to `callfv` and `callfh`.
+And `callfv` fetches arguments from `val_stack` directly instead of using `vm_vec`,
 a not very efficient way.
 
-Better use callfv instead of callfh,
-callfh will fetch a vm_hash from stack and parse it,
+Better use `callfv` instead of `callfh`,
+`callfh` will fetch a `vm_hash` from stack and parse it,
 making this process slow.
 
 ```javascript
@@ -356,8 +417,8 @@ parser will check this left-value and tells that these kinds of left-value are n
 But now it can work.
 And you could see its use by reading the code above.
 To make sure this assignment works correctly,
-codegen will generate byte code by nasal_codegen::call_gen() instead of nasal_codegen::mcall_gen(),
-and the last child of the ast will be generated by nasal_codegen::mcall_gen().
+codegen will generate byte code by `nasal_codegen::call_gen()` instead of `nasal_codegen::mcall_gen()`,
+and the last child of the ast will be generated by `nasal_codegen::mcall_gen()`.
 So the bytecode is totally different now:
 
 ```x86asm
@@ -422,16 +483,16 @@ So the bytecode is totally different now:
 ```
 
 As you could see from the bytecode above,
-mcall/mcallv/mcallh operands' using frequency will reduce,
-call/callv/callh/callfv/callfh at the opposite.
+`mcall`/`mcallv`/`mcallh` operands' using frequency will reduce,
+`call`/`callv`/`callh`/`callfv`/`callfh` at the opposite.
 
-And because of the new structure of mcall,
-addr_stack, a stack used to store the memory address,
-is deleted from nasal_vm,
-and now nasal_vm use nasal_val** mem_addr to store the memory address.
+And because of the new structure of `mcall`,
+`addr_stack`, a stack used to store the memory address,
+is deleted from `nasal_vm`,
+and now `nasal_vm` use `nasal_val** mem_addr` to store the memory address.
 This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
-### Version 7.0 vm (last update 2021/10/8)
+### version 7.0 vm (last update 2021/10/8)
 
 2021/6/26 update:
 
@@ -448,13 +509,13 @@ which is also supported by clang++.
 (But i don't know if MSVC supports this)
 
 There is also a change in nasal_gc:
-std::vector global is deleted,
-now the global values are all stored on stack(from val_stack+0 to val_stack+intg-1).
+`std::vector` global is deleted,
+now the global values are all stored on stack(from `val_stack+0` to `val_stack+intg-1`).
 
 2021/6/29 update:
 
 Add some instructions that execute const values:
-op_addc,op_subc,op_mulc,op_divc,op_lnkc,op_addeqc,op_subeqc,op_muleqc,op_diveqc,op_lnkeqc.
+`op_addc`,`op_subc`,`op_mulc`,`op_divc`,`op_lnkc`,`op_addeqc`,`op_subeqc`,`op_muleqc`,`op_diveqc`,`op_lnkeqc`.
 
 Now the bytecode of test/bigloop.nas seems like this:
 
@@ -479,8 +540,8 @@ And this test file runs in 0.1s after this update.
 Most of the calculations are accelerated.
 
 Also, assignment bytecode has changed a lot.
-Now the first identifier that called in assignment will use op_load to assign,
-instead of op_meq,op_pop.
+Now the first identifier that called in assignment will use `op_load` to assign,
+instead of `op_meq`,`op_pop`.
 
 ```javascript
 var (a,b)=(1,2);
@@ -501,20 +562,20 @@ a=b=0;
 0x00000009: nop    0x00000000
 ```
 
-### Version 8.0 vm (latest)
+### version 8.0 vm (latest)
 
 2021/10/8 update:
 
-In this version vm_nil and vm_num now is not managed by nasal_gc,
-this will decrease the usage of gc::alloc and increase the efficiency of execution.
+In this version vm_nil and vm_num now is not managed by    `nasal_gc`,
+this will decrease the usage of `gc::alloc` and increase the efficiency of execution.
 
-New value type is added: vm_obj.
+New value type is added: `vm_obj`.
 This type is reserved for user to define their own value types.
 Related API will be added in the future.
 
 Fully functional closure:
 Add new operands that get and set upvalues.
-Delete an old operand 'op_offset'.
+Delete an old operand `op_offset`.
 
 2021/10/13 update:
 
@@ -568,7 +629,7 @@ Both of them are meaningless and will be replaced by `op_pnum`.
 
 ## Benchmark
 
-### Version 6.5 (i5-8250U windows10 2021/6/19)
+### version 6.5 (i5-8250U windows10 2021/6/19)
 
 running time and gc time:
 
@@ -615,7 +676,7 @@ operands calling total times:
 |quick_sort.nas|16226|5561|4144|3524|2833|
 |bfs.nas|24707|16297|14606|14269|8672|
 
-### Version 7.0 (i5-8250U ubuntu-WSL on windows10 2021/6/29)
+### version 7.0 (i5-8250U ubuntu-WSL on windows10 2021/6/29)
 
 running time:
 
@@ -632,7 +693,7 @@ running time:
 |quick_sort.nas|0s|great improvement|
 |bfs.nas|0.0156s|great improvement|
 
-### Version 8.0 (R9-5900HX ubuntu-WSL 2022/1/23)
+### version 8.0 (R9-5900HX ubuntu-WSL 2022/1/23)
 
 running time:
 
@@ -650,13 +711,13 @@ running time:
 |ascii-art.nas|0s||
 |quick_sort.nas|0s||
 
-## Simple Tutorial
+## __Tutorial__
 
-Nasal is really easy to learn.
+Nasal is really __easy__ to learn.
 Reading this tutorial will not takes you over 15 minutes.
 You could totally use it after reading this simple tutorial:
 
-### __Basic Value Type__
+### __basic value type__
 
 `vm_none` is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
@@ -667,7 +728,7 @@ This type is used to interrupt the execution of virtual machine and will not be 
 var spc=nil;
 ```
 
-`vm_num` has 3 formats. Dec, hex and oct. Using IEEE754 double to store.
+`vm_num` has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
 
 ```javascript
 var n=1;
@@ -679,7 +740,7 @@ var n=0xAA55;
 var n=0o170001;
 ```
 
-`vm_str` has 3 formats. But the third one is often used to declare a character.
+`vm_str` has 3 formats. The third one is used to declare a character.
 
 ```javascript
 var s='str';
@@ -701,7 +762,7 @@ var vec=[
 append(vec,0,1,2);
 ```
 
-`vm_hash` is a hashmap that stores values with strings/identifiers as the key.
+`vm_hash` is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
 
 ```javascript
 var hash={
@@ -749,7 +810,7 @@ var my_new_obj=func(){
 var obj=my_new_obj();
 ```
 
-### __Operators__
+### __operators__
 
 Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
 
@@ -787,7 +848,7 @@ a/=1;
 a~='string';
 ```
 
-### __Definition__
+### __definition__
 
 ```javascript
 var a=1;
@@ -797,7 +858,9 @@ var (a,b,c)=(0,1,2);
 (var a,b,c)=(0,1,2);
 ```
 
-### __Multi-Assignment__
+### __multi-assignment__
+
+The last one is often used to swap two variables.
 
 ```javascript
 (a,b[0],c.d)=[0,1,2];
@@ -805,7 +868,7 @@ var (a,b,c)=(0,1,2);
 (a,b)=(b,a);
 ```
 
-### __Conditional Expression__
+### __conditional expression__
 
 In nasal there's a new key word `elsif`.
 It has the same functions as `else if`.
@@ -822,7 +885,7 @@ if(1){
 }
 ```
 
-### __Loop__
+### __loop__
 
 While loop and for loop is simalar to C/C++.
 
@@ -836,31 +899,31 @@ for(var i=0;i<10;i+=1)
 
 Nasal has another two kinds of loops that iterates through a vector:
 
-`forindex` will get the index of a vector.
+`forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
 
 ```javascript
 forindex(var i;elem)
     print(elem[i]);
 ```
 
-`foreach` will get the element of a vector.
+`foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
 
 ```javascript
 foreach(var i;elem)
     print(i);
 ```
 
-### __Subvec__
+### __subvec__
 
-Use index to search one element in the string will get the ascii number of this character.
-If you want to get the character,use built-in function chr().
+Use index to search one element in the string will get the __ascii number__ of this character.
+If you want to get the character, use built-in function chr().
 
 ```javascript
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 "hello world"[0];
 ```
 
-### __Special Function Call__
+### __special function call__
 
 This is of great use but is not very efficient
 (because hashmap use string as the key to compare).
@@ -869,7 +932,7 @@ This is of great use but is not very efficient
 f(x:0,y:nil,z:[]);
 ```
 
-### __Lambda__
+### __lambda__
 
 Also functions have this kind of use:
 
@@ -878,7 +941,7 @@ func(x,y){return x+y}(0,1);
 func(x){return 1/(1+math.exp(-x));}(0.5);
 ```
 
-There's an interesting test file 'y-combinator.nas',
+There's an interesting test file `y-combinator.nas`,
 try it for fun:
 
 ```javascript
@@ -894,7 +957,7 @@ var fib=func(f){
 );
 ```
 
-### __Closure__
+### __closure__
 
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
@@ -922,13 +985,13 @@ var student=func(n,a){
 }
 ```
 
-### __Trait__
+### __trait__
 
-Also there's another way to OOP,that is `trait`.
+Also there's another way to OOP, that is `trait`.
 
 When a hash has a member named `parents` and the value type is vector,
 then when you are trying to find a member that is not in this hash,
-virtual machine will search the member is parents.
+virtual machine will search the member in `parents`.
 If there is a hash that has the member, you will get the member's value.
 
 Using this mechanism, we could OOP like this, the result is `114514`:
@@ -959,22 +1022,20 @@ a.set(114514);
 println(a.get());
 ```
 
-### __Native Functions__
+### __native functions__
 
 You could add builtin functions of your own
 (written in C/C++) to help you calculate things more quickly.
-(Advanced usage)
+But you should add your own code into the source code of this interpreter and re-compile it.
 
-Check built-in functions in lib.nas!
-You could use this file as the example to learn.
+If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
 
-If you want to add your own built-in functions,
-define the function in nasal_builtin.h. (or any other place, but remember to compile it)
+If you really want to change source code, check built-in functions in lib.nas and see the example below.
 
 Definition:
 
 ```C++
-nasal_ref builtin_chr(std::vector<nasal_ref>&,nasal_gc&);
+nasal_ref builtin_print(std::vector<nasal_ref>&,nasal_gc&);
 ```
 
 Then complete this function using C++:
@@ -1040,22 +1101,22 @@ var print=func(elems...){
 
 If you don't warp built-in function in a normal nasal function,
 this built-in function may cause a fault when searching arguments,
-which will segmentation error.
+which will cause __segmentation error__.
 
-Use `import(".nas")` to get the nasal file including your built-in functions,
+Use `import("filename.nas")` to get the nasal file including your built-in functions,
 then you could use it.
 
 version 6.5 update:
 
-Use nasal_gc::builtin_alloc in builtin function if this function uses alloc more than one time.
+Use `gc::builtin_alloc` in builtin function if this function uses alloc more than one time.
 
 When running a builtin function,alloc will run more than one time,
-this may cause mark-sweep in gc::alloc.
+this may cause mark-sweep in `gc::alloc`.
 
 The value got before will be collected,but stil in use in this builtin function,
 this is a fatal error.
 
-So use builtin_alloc in builtin functions like this:
+So use `builtin_alloc` in builtin functions like this:
 
 ```C++
 nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
@@ -1080,7 +1141,7 @@ nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
 }
 ```
 
-### __Modules(This is for library developers)__
+### __modules(for library developers)__
 
 If there is only one way to add your own functions into nasal,
 that is really inconvenient.
@@ -1146,11 +1207,11 @@ Windows(`.dll`):
 
 `g++ -shared -o libfib.dll fib.o`
 
-Then we write a test nasal file to run this fib function, this example runs on Linux:
+Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
 
 ```javascript
 import("lib.nas");
-var dlhandle=dylib.dlopen("./module/libfib.so");
+var dlhandle=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib=dylib.dlsym(dlhandle,"fib");
 for(var i=1;i<30;i+=1)
     println(dylib.dlcall(fib,i));
@@ -1200,7 +1261,9 @@ If get this, Congratulations!
 832040
 ```
 
-## Difference Between Andy's Nasal Interpreter and This Interpreter
+## __Difference Between Andy's and This Interpreter__
+
+### 1. must use `var` to define variables
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
 
@@ -1217,7 +1280,7 @@ But take a look at the iterator 'i',
 this symbol is defined in foreach without using keyword 'var'.
 I think this design will make programmers filling confused.
 This is ambiguous that programmers maybe difficult to find the 'i' is defined here.
-Without 'var',programmers may think this 'i' is defined anywhere else.
+Without 'var', programmers may think this 'i' is defined anywhere else.
 
 So in this new interpreter i use a more strict syntax to force users to use 'var' to define iterator of forindex and foreach.
 If you forget to add the keyword 'var',
@@ -1231,7 +1294,9 @@ foreach(i;[0,1,2,3])
     print(i)
 ```
 
-Also there's another difference.
+### 2. (now supported) couldn't use variables before definitions
+
+(__Outdated__: this is now supported) Also there's another difference.
 In Andy's interpreter:
 
 ```javascript
@@ -1244,11 +1309,11 @@ This program runs normally with output 1.
 But in this new interpreter, it will get:
 
 ```javascript
-[code] test.nas:1 undefined symbol "print".
+[code] test.nas:1 undefined symbol "b".
 var a=func {print(b);}
 ```
 
-(outdated)This difference is caused by different kinds of ways of lexical analysis.
+This difference is caused by different kinds of ways of lexical analysis.
 In most script language interpreters,
 they use dynamic analysis to check if this symbol is defined yet.
 However, this kind of analysis is at the cost of lower efficiency.
@@ -1267,15 +1332,21 @@ So this difference does not exist from this update.__
 But a new difference is that if you call a variable before defining it,
 you'll get nil instead of 'undefined error'.
 
+### 3. default dynamic arguments not supported
+
 In this new interpreter,
-function doesn't put dynamic arguments into vector 'arg' automatically.
-So if you use 'arg' without definition,
-you'll get an error of 'undefined symbol'.
+function doesn't put dynamic arguments into vector `arg` automatically.
+So if you use `arg` without definition,
+you'll get an error of `undefined symbol`.
 
-## Trace Back Info
+## __Trace Back Info__
 
-Now when the interpreter crashes,
+When the interpreter crashes,
 it will print trace back information:
+
+### 1. native function `die`
+
+Function `die` is used to throw error and crash immediately.
 
 ```javascript
 func()
@@ -1285,8 +1356,6 @@ func()
     return;
 }();
 ```
-
-Function 'die' is used to throw error and crash.
 
 ```javascript
 hello
@@ -1304,6 +1373,8 @@ vm stack(limit 10, total 5):
         | func | <0x6c8910> entry:0x2a9
 ```
 
+### 2. stack overflow crash info
+
 Here is an example of stack overflow:
 
 ```javascript
@@ -1315,8 +1386,6 @@ func(f){
     }
 )();
 ```
-
-And the trace back info:
 
 ```javascript
 [vm] stack overflow
@@ -1339,6 +1408,8 @@ vm stack(limit 10, total 4095):
         | addr | pc:0xf
 ```
 
+### 3. normal vm error crash info
+
 Error will be thrown if there's a fatal error when executing:
 
 ```javascript
@@ -1346,8 +1417,6 @@ func(){
     return 0;
 }()[1];
 ```
-
-And the trace back info:
 
 ```javascript
 [vm] callv: must call a vector/hash/string
@@ -1357,7 +1426,9 @@ vm stack(limit 10, total 1):
         | num  | 0
 ```
 
-Use command `-d` or `--detail` the trace back info will be this:
+### 4. detailed crash info
+
+Use command __`-d`__ or __`--detail`__ the trace back info will show more details:
 
 ```javascript
 hello world
@@ -1395,7 +1466,7 @@ local:
 no upvalue exists
 ```
 
-## Debugger
+## __Debugger__
 
 In nasal v8.0 we added a debugger.
 Now we could see both source code and bytecode when testing program.
@@ -1429,3 +1500,19 @@ vm stack(limit 5, total 0)
 ```
 
 If want help, input `h` to get help.
+
+```bash
+>> h
+<option>
+        h,    help      | get help
+        bt,   backtrace | get function call trace
+        c,    continue  | run program until break point or exit
+        g,    global    | see global values
+        l,    local     | see local values
+        u,    upval     | see upvalue
+        a,    all       | show global,local and upvalue
+        n,    next      | execute next bytecode
+        q,    exit      | exit debugger
+<option> <filename> <line>
+        bk,   break     | set break point
+```
