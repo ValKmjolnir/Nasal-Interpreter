@@ -1,29 +1,161 @@
-var import=   func(filename){return __builtin_import(filename);}
-var print=    func(elems...){return __builtin_print(elems);}
-var append=   func(vec,elems...){return __builtin_append(vec,elems);}
-var setsize=  func(vec,size){return __builtin_setsize(vec,size);}
-var system=   func(str){return __builtin_system(str);}
-var input=    func(){return __builtin_input();}
-var split=    func(deli,str){return __builtin_split(deli,str);}
-var rand=     func(seed=nil){return __builtin_rand(seed);}
-var id=       func(object){return __builtin_id(object);}
-var int=      func(val){return __builtin_int(val);}
-var num=      func(val){return __builtin_num(val);}
-var pop=      func(vec){return __builtin_pop(vec);}
-var str=      func(num){return __builtin_str(num);}
-var size=     func(object){return __builtin_size(object);}
-var contains= func(hash,key){return __builtin_contains(hash,key);}
-var delete=   func(hash,key){return __builtin_delete(hash,key);}
-var keys=     func(hash){return __builtin_keys(hash);}
-var time=     func(begin){return __builtin_time(begin);}
-var die=      func(str){return __builtin_die(str);}
-var typeof=   func(object){return __builtin_type(object);}
-var substr=   func(str,begin,len){return __builtin_substr(str,begin,len);}
-var streq=    func(a,b){return __builtin_streq(a,b);}
-var left=     func(str,len){return __builtin_left(str,len);}
-var right=    func(str,len){return __builtin_right(str,len);}
-var cmp=      func(a,b){return __builtin_cmp(a,b);}
-var chr=      func(code){return __builtin_chr(code);}
+# lib.nas
+
+# import is used to link another file, this lib function will do nothing.
+# because nasal_import will recognize this and link files before generating bytecode.
+var import=func(filename){
+    return __builtin_import(filename);
+}
+
+# print is used to print all things in nasal, try and see how it works.
+# this function uses std::cout/printf to output logs.
+var print=func(elems...){
+    return __builtin_print(elems);
+}
+
+# append is used to add values into a vector.
+var append=func(vec,elems...){
+    return __builtin_append(vec,elems);
+}
+
+# setsize is used to change the size of vector.
+# if the size is larger than before,
+# this function will fill vm_nil into uninitialized space.
+var setsize=func(vec,size){
+    return __builtin_setsize(vec,size);
+}
+
+# system has the same use in C.
+var system=func(str){
+    return __builtin_system(str);
+}
+
+# input uses std::cin and returns what we input.
+var input=func(){
+    return __builtin_input();
+}
+
+# split a string by delimiter for example:
+# split("ll","hello world") -> ["he","o world"]
+# this function will return a vector.
+var split=func(deli,str){
+    return __builtin_split(deli,str);
+}
+
+# rand has the same function as the rand in C
+# if seed is nil, it will return the random number.
+# if seed is not nil, it will be initialized by this seed.
+var rand=func(seed=nil){
+    return __builtin_rand(seed);
+}
+
+# id will return the pointer of an gc-object.
+# if this object is not managed by gc, it will return 0.
+var id=func(object){
+    return __builtin_id(object);
+}
+
+# int will get the integer of input number.
+# but carefully use it, because int has range between -2147483648~2147483647
+var int=func(val){
+    return __builtin_int(val);
+}
+
+# num will change all the other types into number.
+# mostly used to change a numerable string.
+var num=func(val){
+    return __builtin_num(val);
+}
+
+# pop used to pop the last element in a vector.
+# this function will return the value that poped if vector has element(s).
+# if the vector is empty, it will return nil.
+var pop=func(vec){
+    return __builtin_pop(vec);
+}
+
+# str is used to change number into string.
+var str=func(num){
+    return __builtin_str(num);
+}
+
+# size can get the size of a string/vector/hashmap.
+# in fact it can also get the size of number, and the result is the number itself.
+# so don't do useless things, though it really works.
+var size=func(object){
+    return __builtin_size(object);
+}
+
+# contains is used to check if a key exists in a hashmap/dict.
+var contains=func(hash,key){
+    return __builtin_contains(hash,key);
+}
+
+# delete is used to delete a pair in a hashmap/dict by key.
+var delete=func(hash,key){
+    return __builtin_delete(hash,key);
+}
+
+# keys is used to get all keys in a hashmap/dict.
+# this function will return a vector.
+var keys=func(hash){
+    return __builtin_keys(hash);
+}
+
+# time has the same function in C.
+var time=func(begin){
+    return __builtin_time(begin);
+}
+
+# die is a special native function.
+# use it at where you want the program to crash immediately.
+var die=func(str){
+    return __builtin_die(str);
+}
+
+# typeof is used to get the type of an object.
+# this function returns a string.
+var typeof=func(object){
+    return __builtin_type(object);
+}
+
+# substr will get the sub-string.
+# it gets the string, the begin index and sub-string's length as arguments.
+var substr=func(str,begin,len){
+    return __builtin_substr(str,begin,len);
+}
+
+# streq is used to compare if two strings are the same.
+var streq=func(a,b){
+    return __builtin_streq(a,b);
+}
+
+# left is used to get the sub-string like substr.
+# but the begin index is 0.
+var left=func(str,len){
+    return __builtin_left(str,len);
+}
+
+# right i used to get the sub-string like substr.
+# but the begin index is strlen-len.
+var right=func(str,len){
+    return __builtin_right(str,len);
+}
+
+# cmp is used to compare two strings.
+# normal string will not be correctly compared by operators < > <= >=
+# because these operators will turn strings into numbers then compare.
+var cmp=func(a,b){
+    return __builtin_cmp(a,b);
+}
+
+# chr is used to get the character by ascii-number.
+# for example chr(65) -> 'A'
+var chr=func(code){
+    return __builtin_chr(code);
+}
+
+# println has the same function as print.
+# but it will output a '\n' after using print.
 var println=func(elems...){
     __builtin_print(elems);
     elems=['\n'];

@@ -567,7 +567,7 @@ nasal_ref builtin_import(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     // this function is used in preprocessing.
     // this function will return nothing when running.
-    return builtin_err("import","must use this function in global scope");
+    return builtin_err("import","this function is used to link files together");
 }
 nasal_ref builtin_die(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
