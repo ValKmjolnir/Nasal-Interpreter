@@ -1,4 +1,4 @@
-# __Nasal Script Language__
+# __Nasal Scripting Language__
 
 ```C++
        __                _      

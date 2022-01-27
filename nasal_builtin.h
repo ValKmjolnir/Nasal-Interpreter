@@ -358,9 +358,14 @@ nasal_ref builtin_int(std::vector<nasal_ref>& local,nasal_gc& gc)
 nasal_ref builtin_num(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
+    if(val.type==vm_num)
+        return val;
     if(val.type!=vm_str)
         return gc.nil;
-    return {vm_num,val.to_number()};
+    double res=val.to_number();
+    if(std::isnan(res))
+        return gc.nil;
+    return {vm_num,res};
 }
 nasal_ref builtin_pop(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
