@@ -20,7 +20,7 @@ public:
         std::ifstream fin(f,std::ios::binary);
         if(fin.fail())
         {
-            std::cout<<"[src] cannot open file <"<<f<<">\n";
+            std::cerr<<"[src] cannot open file <"<<f<<">\n";
             std::exit(1);
         }
         std::string line;
