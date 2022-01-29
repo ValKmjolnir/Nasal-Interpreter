@@ -157,7 +157,7 @@ public:
     inline uint32_t line() const {return _line;}
     inline uint32_t type() const {return _type;}
     inline double   num()  const {return _num;}
-    inline const std::string& str()  const {return _str;}
+    inline const std::string& str() const {return _str;}
     inline const std::vector<nasal_ast>& child() const {return _child;}
     inline std::vector<nasal_ast>& child(){return _child;}
 };

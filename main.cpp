@@ -111,7 +111,7 @@ void execute(const std::string& file,const uint32_t cmd)
 
 int main(int argc,const char* argv[])
 {
-    if(argc==1)
+    if(argc<=1)
     {
         logo();
         return 0;

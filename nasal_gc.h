@@ -156,15 +156,15 @@ nasal_ref* nasal_vec::get_mem(const int index)
 void nasal_vec::print()
 {
     static int depth=0;
-    if(++depth>32)
-    {
-        std::cout<<"[..]";
-        --depth;
-        return;
-    }
     if(!elems.size())
     {
         std::cout<<"[]";
+        return;
+    }
+    if(++depth>16)
+    {
+        std::cout<<"[..]";
+        --depth;
         return;
     }
     size_t iter=0;
@@ -228,15 +228,15 @@ nasal_ref* nasal_hash::get_mem(const std::string& key)
 void nasal_hash::print()
 {
     static int depth=0;
-    if(++depth>32)
-    {
-        std::cout<<"{..}";
-        --depth;
-        return;
-    }
     if(!elems.size())
     {
         std::cout<<"{}";
+        return;
+    }
+    if(++depth>16)
+    {
+        std::cout<<"{..}";
+        --depth;
         return;
     }
     size_t iter=0;
