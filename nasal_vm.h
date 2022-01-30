@@ -118,7 +118,6 @@ public:
         const nasal_import&,
         const bool,
         const bool);
-    
 };
 
 void nasal_vm::init(
