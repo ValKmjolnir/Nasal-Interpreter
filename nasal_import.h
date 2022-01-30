@@ -26,17 +26,14 @@ only this kind of node can be recognized as 'import':
         call_func
             string:'filename'
 */
-    if(node.type()!=ast_call)
-        return false;
-    if(node.size()!=2)
-        return false;
-    if(node[0].str()!="import")
-        return false;
-    if(node[1].type()!=ast_callf)
-        return false;
-    if(node[1].size()!=1 || node[1][0].type()!=ast_str)
-        return false;
-    return true;
+    return (
+        node.type()==ast_call &&
+        node.size()==2 &&
+        node[0].str()=="import" &&
+        node[1].type()==ast_callf &&
+        node[1].size()==1 &&
+        node[1][0].type()==ast_str
+    );
 }
 
 bool nasal_import::check_exist(const std::string& file)
