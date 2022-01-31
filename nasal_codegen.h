@@ -294,7 +294,7 @@ void nasal_codegen::find_symbol(const nasal_ast& node)
         find_symbol(node[1]);
     }
     // find iterator(foreach, forindex), check
-    else if(node.type()==ast_new_iter)
+    else if(node.type()==ast_iter)
         add_sym(node[0].str());
     // check children
     else
@@ -528,7 +528,7 @@ void nasal_codegen::call_func(const nasal_ast& ast)
 {
     if(!ast.size())
         gen(op_callfv,0,ast.line());
-    else if(ast[0].type()==ast_hashmember)
+    else if(ast[0].type()==ast_pair)
     {
         hash_gen(ast);
         gen(op_callfh,0,ast.line());
@@ -847,7 +847,7 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
     gen(op_cnt,0,ast[1].line());
     int ptr=code.size();
     gen(op_findex,0,ast.line());
-    if(ast[0].type()==ast_new_iter)
+    if(ast[0].type()==ast_iter)
     {
         const std::string& str=ast[0][0].str();
         local.empty()?
@@ -875,7 +875,7 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
     gen(op_cnt,0,ast.line());
     int ptr=code.size();
     gen(op_feach,0,ast.line());
-    if(ast[0].type()==ast_new_iter)
+    if(ast[0].type()==ast_iter)
     {
         const std::string& str=ast[0][0].str();
         local.empty()?

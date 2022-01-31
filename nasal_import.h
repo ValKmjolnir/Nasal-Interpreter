@@ -4,11 +4,11 @@
 class nasal_import
 {
 private:
-    nasal_err&               nerr;
+    nasal_err& nerr;
     std::vector<std::string> files;
-    bool      check_import(const nasal_ast&);
-    bool      check_exist(const std::string&);
-    void      linker(nasal_ast&,nasal_ast&&);
+    bool check_import(const nasal_ast&);
+    bool check_exist(const std::string&);
+    void linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
     nasal_ast load(nasal_ast&,uint16_t);
 public:
@@ -22,9 +22,9 @@ bool nasal_import::check_import(const nasal_ast& node)
 /*
 only this kind of node can be recognized as 'import':
     call
-        id:import
-        call_func
-            string:'filename'
+    |_id:import
+    |_call_func
+      |_string:'filename'
 */
     return (
         node.type()==ast_call &&

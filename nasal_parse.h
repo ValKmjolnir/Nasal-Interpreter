@@ -63,7 +63,7 @@ private:
     nasal_ast id();
     nasal_ast vec();
     nasal_ast hash();
-    nasal_ast hmem();
+    nasal_ast pair();
     nasal_ast func();
     nasal_ast args();
     nasal_ast lcurve_expr();
@@ -305,7 +305,7 @@ nasal_ast nasal_parse::hash()
     match(tok_lbrace);
     while(tokens[ptr].type!=tok_rbrace)
     {
-        node.add(hmem());
+        node.add(pair());
         if(tokens[ptr].type==tok_comma)
             match(tok_comma);
         else if(tokens[ptr].type==tok_id || tokens[ptr].type==tok_str)// first set of hashmember
@@ -316,9 +316,9 @@ nasal_ast nasal_parse::hash()
     match(tok_rbrace,"expected \'}\' when generating hash");
     return node;
 }
-nasal_ast nasal_parse::hmem()
+nasal_ast nasal_parse::pair()
 {
-    nasal_ast node(tokens[ptr].line,ast_hashmember);
+    nasal_ast node(tokens[ptr].line,ast_pair);
     if(tokens[ptr].type==tok_id)
     {
         node.add(id());
@@ -715,7 +715,7 @@ nasal_ast nasal_parse::callf()
     match(tok_lcurve);
     while(tokens[ptr].type!=tok_rcurve)
     {
-        node.add(special_call?hmem():calc());
+        node.add(special_call?pair():calc());
         if(tokens[ptr].type==tok_comma)
             match(tok_comma);
         else if(tokens[ptr].type==tok_eof)
@@ -935,7 +935,7 @@ nasal_ast nasal_parse::iter_gen()
     if(tokens[ptr].type==tok_var)
     {
         match(tok_var);
-        node.set_type(ast_new_iter);
+        node.set_type(ast_iter);
         node.add(id());
         match(tok_id);
     }

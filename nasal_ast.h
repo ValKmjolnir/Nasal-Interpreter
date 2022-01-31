@@ -14,7 +14,7 @@ enum ast_node
     ast_func,        // func keyword
     ast_hash,        // hash, basic value type
     ast_vec,         // vector, basic value type
-    ast_hashmember,  // elements in hashmap
+    ast_pair,        // pair of key and value in hashmap
     ast_call,        // mark a sub-tree of calling an identifier
     ast_callh,       // id.name
     ast_callv,       // id[index]
@@ -49,7 +49,7 @@ enum ast_node
     ast_forindex,    // forindex keyword
     ast_foreach,     // foreach keyword
     ast_while,       // while
-    ast_new_iter,    // iterator, used in forindex/foreach
+    ast_iter,        // iterator, used in forindex/foreach
     ast_conditional, // mark a sub-tree of conditional expression
     ast_if,          // if keyword
     ast_elsif,       // elsif keyword
