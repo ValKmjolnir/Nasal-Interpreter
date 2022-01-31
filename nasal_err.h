@@ -67,11 +67,9 @@ public:
     {
         ++error;
         if(!line)
-        {
             std::cerr<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
-            return;
-        }
-        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
+        else
+            std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
     }
     void chkerr(){if(error)std::exit(1);}
 };

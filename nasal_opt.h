@@ -20,14 +20,14 @@ void calc_const_num(nasal_ast& root)
     double res;
     switch(root.type())
     {
-        case ast_add:res=vec[0].num()+vec[1].num();break;
-        case ast_sub:res=vec[0].num()-vec[1].num();break;
-        case ast_mult:res=vec[0].num()*vec[1].num();break;
-        case ast_div:res=vec[0].num()/vec[1].num();break;
-        case ast_less:res=vec[0].num()<vec[1].num();break;
-        case ast_leq:res=vec[0].num()<=vec[1].num();break;
-        case ast_grt:res=vec[0].num()>vec[1].num();break;
-        case ast_geq:res=vec[0].num()>=vec[1].num();break;
+        case ast_add: res=vec[0].num()+vec[1].num(); break;
+        case ast_sub: res=vec[0].num()-vec[1].num(); break;
+        case ast_mult:res=vec[0].num()*vec[1].num(); break;
+        case ast_div: res=vec[0].num()/vec[1].num(); break;
+        case ast_less:res=vec[0].num()<vec[1].num(); break;
+        case ast_leq: res=vec[0].num()<=vec[1].num();break;
+        case ast_grt: res=vec[0].num()>vec[1].num(); break;
+        case ast_geq: res=vec[0].num()>=vec[1].num();break;
     }
     if(std::isinf(res) || std::isnan(res)) // inf and nan will cause number hashmap error in codegen
         return;
