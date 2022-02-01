@@ -99,8 +99,8 @@ private:
     nasal_ast ret_expr();
 public:
     nasal_parse(nasal_err& e):nerr(e){}
-    void       print(){root.print(0);}
-    void       compile(const nasal_lexer&);
+    void print(){root.print(0);}
+    void compile(const nasal_lexer&);
     nasal_ast& ast(){return root;}
     const nasal_ast& ast() const {return root;}
 };

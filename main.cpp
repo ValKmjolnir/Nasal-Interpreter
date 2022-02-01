@@ -28,10 +28,12 @@ void help()
     <<"    -l,   --lex     | view token info.\n"
     <<"    -a,   --ast     | view abstract syntax tree.\n"
     <<"    -c,   --code    | view bytecode.\n"
+    <<"    -e,   --exec    | execute.\n"
     <<"    -t,   --time    | execute and get the running time.\n"
     <<"    -o,   --opcnt   | execute and count used operands.\n"
     <<"    -d,   --detail  | execute and get detail crash info.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
+    <<"                    | if want to use -op and run, please use -op -e/-t/-o/-d.\n"
     <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d).\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
@@ -139,6 +141,8 @@ int main(int argc,const char* argv[])
             cmd|=VM_ASTINFO;
         else if(s=="--code" || s=="-c")
             cmd|=VM_CODEINFO;
+        else if(s=="--exec" || s=="-e")
+            cmd|=VM_EXEC;
         else if(s=="--opcnt" || s=="-o")
             cmd|=VM_OPCALLNUM|VM_EXEC;
         else if(s=="--time" || s=="-t")

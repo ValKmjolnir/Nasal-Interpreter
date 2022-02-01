@@ -3,7 +3,7 @@
 
 enum ast_node
 {
-    ast_null=0,
+    ast_null=0,      // null node
     ast_root,        // mark the root node of ast
     ast_block,       // expression block 
     ast_file,        // used to store which file the sub-tree is on, only used in main block
