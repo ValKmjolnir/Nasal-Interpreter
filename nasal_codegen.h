@@ -198,8 +198,10 @@ private:
     std::vector<opcode>                 code;
     std::list<std::vector<int>>         continue_ptr;
     std::list<std::vector<int>>         break_ptr;
-    std::vector<std::string>            global; // global : max 4095 values
-    std::list<std::vector<std::string>> local;  // local  : max 32768 upvalues 65536 values
+    // global : max 4095 values
+    std::unordered_map<std::string,int> global;
+    // local  : max 32768 upvalues 65536 values
+    std::list<std::unordered_map<std::string,int>> local;
     
     void die(std::string,const uint32_t);
     void regist_number(const double);
@@ -306,34 +308,28 @@ void nasal_codegen::add_sym(const std::string& name)
 {
     if(local.empty())
     {
-        for(auto& sym:global)
-            if(sym==name)
-                return;
-        global.push_back(name);
+        if(global.count(name))
+            return;
+        int index=global.size();
+        global[name]=index;
         return;
     }
-    for(auto& sym:local.back())
-        if(sym==name)
-            return;
-    local.back().push_back(name);
+    if(local.back().count(name))
+        return;
+    int index=local.back().size();
+    local.back()[name]=index;
 }
 
 int nasal_codegen::local_find(const std::string& name)
 {
     if(local.empty())
         return -1;
-    for(uint32_t i=0;i<local.back().size();++i)
-        if(local.back()[i]==name)
-            return i;
-    return -1;
+    return local.back().count(name)?local.back()[name]:-1;
 }
 
 int nasal_codegen::global_find(const std::string& name)
 {
-    for(int i=0;i<global.size();++i)
-        if(global[i]==name)
-            return i;
-    return -1;
+    return global.count(name)?global[name]:-1;
 }
 
 int nasal_codegen::upvalue_find(const std::string& name)
@@ -345,9 +341,8 @@ int nasal_codegen::upvalue_find(const std::string& name)
         return -1;
     auto iter=local.begin();
     for(uint32_t i=0;i<size-1;++i,++iter)
-        for(uint32_t j=0;j<iter->size();++j)
-            if((*iter)[j]==name)
-                index=((i<<16)|j);
+        if(iter->count(name))
+            index=((i<<16)|(*iter)[name]);
     return index;
 }
 
@@ -400,7 +395,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     // this keyword is set to nil as default value
     // after calling a hash, this keyword is set to this hash
     // this symbol's index will be 0
-    local.push_back({"me"});
+    local.push_back({{"me",0}});
 
     // generate parameter list
     for(auto& tmp:ast[0].child())
