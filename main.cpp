@@ -1,14 +1,14 @@
 #include "nasal.h"
 
-constexpr uint32_t VM_LEXINFO  =1;
-constexpr uint32_t VM_ASTINFO  =2;
-constexpr uint32_t VM_CODEINFO =4;
-constexpr uint32_t VM_EXECTIME =8;
-constexpr uint32_t VM_OPCALLNUM=16;
-constexpr uint32_t VM_EXEC     =32;
-constexpr uint32_t VM_DBGINFO  =64;
-constexpr uint32_t VM_DEBUG    =128;
-constexpr uint32_t VM_OPTIMIZE =256;
+const uint32_t VM_LEXINFO  =1;
+const uint32_t VM_ASTINFO  =2;
+const uint32_t VM_CODEINFO =4;
+const uint32_t VM_EXECTIME =8;
+const uint32_t VM_OPCALLNUM=16;
+const uint32_t VM_EXEC     =32;
+const uint32_t VM_DBGINFO  =64;
+const uint32_t VM_DEBUG    =128;
+const uint32_t VM_OPTIMIZE =256;
 
 void help()
 {

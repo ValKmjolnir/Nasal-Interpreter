@@ -1063,8 +1063,8 @@ nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
         }
     std::cout<<std::flush;
     // generate return value,use gc::alloc(type) to make a new value
-    // or use reserved reference gc.nil/gc.one/gc.zero
-    return gc.nil;
+    // or use reserved reference nil/one/zero
+    return nil;
 }
 ```
 
