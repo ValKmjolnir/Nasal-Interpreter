@@ -30,17 +30,17 @@ const uint32_t increment[vm_type_size]=
     0,   // vm_num
     /* gc object */
     512, // vm_str
-    512, // vm_func
-    512, // vm_vec
-    512, // vm_hash
-    64   // vm_obj
+    1024,// vm_func
+    4096,// vm_vec
+    256, // vm_hash
+    16   // vm_obj
 };
 
 struct nasal_vec;
 struct nasal_hash;
 struct nasal_func;
 struct nasal_obj;
-struct nasal_val;
+struct nasal_val; // nasal_val includes gc-managed types
 
 struct nasal_ref
 {
@@ -118,9 +118,9 @@ struct nasal_obj
     void clear(){ptr=nullptr;}
 };
 
-constexpr uint8_t GC_UNCOLLECTED=0;   
-constexpr uint8_t GC_COLLECTED  =1;
-constexpr uint8_t GC_FOUND      =2;
+const uint8_t GC_UNCOLLECTED=0;   
+const uint8_t GC_COLLECTED  =1;
+const uint8_t GC_FOUND      =2;
 struct nasal_val
 {
     uint8_t mark;
@@ -316,12 +316,12 @@ inline nasal_hash*  nasal_ref::hash(){return value.gcobj->ptr.hash;}
 inline nasal_func*  nasal_ref::func(){return value.gcobj->ptr.func;}
 inline nasal_obj*   nasal_ref::obj (){return value.gcobj->ptr.obj; }
 
-constexpr uint32_t STACK_MAX_DEPTH=4095;
+const uint32_t STACK_MAX_DEPTH=4095;
+const nasal_ref zero={vm_num,(double)0};
+const nasal_ref one ={vm_num,(double)1};
+const nasal_ref nil ={vm_nil,nullptr};
 struct nasal_gc
 {
-    nasal_ref               zero;
-    nasal_ref               one;
-    nasal_ref               nil;
     nasal_ref               stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
     nasal_ref*              top;                     // stack top
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
@@ -399,13 +399,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
             memory.push_back(tmp);
             free_list[i].push(tmp);
         }
-
-    top=stack; // set top to stack
-
-    zero={vm_num,(double)0}; // init constant 0
-    one ={vm_num,(double)1}; // init constant 1
-    nil ={vm_nil,nullptr};   // init constant nil
-
+    top=stack;
     // init constant strings
     strs.resize(s.size());
     for(uint32_t i=0;i<strs.size();++i)

@@ -322,7 +322,7 @@ inline void nasal_vm::opr_intg()
 }
 inline void nasal_vm::opr_intl()
 {
-    gc.top[0].func()->local.resize(imm[pc],gc.nil);
+    gc.top[0].func()->local.resize(imm[pc],nil);
 }
 inline void nasal_vm::opr_loadg()
 {
@@ -403,15 +403,15 @@ inline void nasal_vm::opr_unot()
     nasal_ref val=gc.top[0];
     switch(val.type)
     {
-        case vm_nil:gc.top[0]=gc.one;break;
-        case vm_num:gc.top[0]=val.num()?gc.zero:gc.one;break;
+        case vm_nil:gc.top[0]=one;break;
+        case vm_num:gc.top[0]=val.num()?zero:one;break;
         case vm_str:
         {
             double num=str2num(val.str()->c_str());
             if(std::isnan(num))
                 gc.top[0]={vm_num,(double)val.str()->empty()};
             else
-                gc.top[0]=num?gc.zero:gc.one;
+                gc.top[0]=num?zero:one;
         }
         break;
         default:die("unot: incorrect value type");break;
@@ -491,31 +491,31 @@ inline void nasal_vm::opr_eq()
     nasal_ref val2=gc.top[0];
     nasal_ref val1=(--gc.top)[0];
     if(val1.type==vm_nil && val2.type==vm_nil)
-        gc.top[0]=gc.one;
+        gc.top[0]=one;
     else if(val1.type==vm_str && val2.type==vm_str)
-        gc.top[0]=(*val1.str()==*val2.str())?gc.one:gc.zero;
+        gc.top[0]=(*val1.str()==*val2.str())?one:zero;
     else if(val1.type==vm_num || val2.type==vm_num)
-        gc.top[0]=(val1.to_number()==val2.to_number())?gc.one:gc.zero;
+        gc.top[0]=(val1.to_number()==val2.to_number())?one:zero;
     else
-        gc.top[0]=(val1==val2)?gc.one:gc.zero;
+        gc.top[0]=(val1==val2)?one:zero;
 }
 inline void nasal_vm::opr_neq()
 {
     nasal_ref val2=gc.top[0];
     nasal_ref val1=(--gc.top)[0];
     if(val1.type==vm_nil && val2.type==vm_nil)
-        gc.top[0]=gc.zero;
+        gc.top[0]=zero;
     else if(val1.type==vm_str && val2.type==vm_str)
-        gc.top[0]=(*val1.str()!=*val2.str())?gc.one:gc.zero;
+        gc.top[0]=(*val1.str()!=*val2.str())?one:zero;
     else if(val1.type==vm_num || val2.type==vm_num)
-        gc.top[0]=(val1.to_number()!=val2.to_number())?gc.one:gc.zero;
+        gc.top[0]=(val1.to_number()!=val2.to_number())?one:zero;
     else
-        gc.top[0]=(val1!=val2)?gc.one:gc.zero;
+        gc.top[0]=(val1!=val2)?one:zero;
 }
 
 #define op_cmp(type)\
     --gc.top;\
-    gc.top[0]=(gc.top[0].to_number() type gc.top[1].to_number())?gc.one:gc.zero;
+    gc.top[0]=(gc.top[0].to_number() type gc.top[1].to_number())?one:zero;
 
 inline void nasal_vm::opr_less(){op_cmp(<);}
 inline void nasal_vm::opr_leq(){op_cmp(<=);}
@@ -523,7 +523,7 @@ inline void nasal_vm::opr_grt(){op_cmp(>);}
 inline void nasal_vm::opr_geq(){op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    gc.top[0]=(gc.top[0].to_number() type num_table[imm[pc]])?gc.one:gc.zero;
+    gc.top[0]=(gc.top[0].to_number() type num_table[imm[pc]])?one:zero;
 
 inline void nasal_vm::opr_lessc(){op_cmp_const(<);}
 inline void nasal_vm::opr_leqc(){op_cmp_const(<=);}
@@ -650,17 +650,18 @@ inline void nasal_vm::opr_callfv()
     nasal_ref* args=gc.top-args_size+1;
     if(args[-1].type!=vm_func)
         die("callfv: must call a function");
-    // push function and new local scope
-    func_stk.push(args[-1].func());
+
+    func_stk.push(args[-1].func());// push called function into stack to provide upvalue
     auto& func=*args[-1].func();
-    gc.local.push_back(gc.alloc(vm_vec));
-    gc.local.back().vec()->elems=func.local;
+    gc.local.push_back(gc.alloc(vm_vec));   // get new vector as local scope
+    gc.local.back().vec()->elems=func.local;// copy data from func.local to local scope
     auto& local=gc.local.back().vec()->elems;
 
     uint32_t para_size=func.keys.size();
     // load arguments
     // if the first default value is not vm_none,then values after it are not nullptr
-    if(args_size<para_size && func.local[args_size+1/*1 is reserved for 'me'*/].type==vm_none)
+    // args_size+1 is because the first space is reserved for 'me'
+    if(args_size<para_size && local[args_size+1].type==vm_none)
         die("callfv: lack argument(s)");
     // if args_size>para_size,for 0 to args_size will cause corruption
     uint32_t min_size=std::min(para_size,args_size);
@@ -697,7 +698,7 @@ inline void nasal_vm::opr_callfh()
     {
         if(hash.count(i.first))
             local[i.second+1]=hash[i.first];
-        else if(func.local[i.second+1/*1 is reserved for 'me'*/].type==vm_none)
+        else if(local[i.second+1].type==vm_none)
             die("callfh: lack argument(s): \""+i.first+"\"");
     }
 
