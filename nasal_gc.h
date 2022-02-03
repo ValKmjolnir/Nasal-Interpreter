@@ -23,17 +23,17 @@ enum nasal_type
 const uint32_t increment[vm_type_size]=
 {
     /* none-gc object */
-    0,    // vm_none, error type
-    0,    // vm_count, used in foreach/forindex
-    0,    // vm_ret, used to store call-return address
-    0,    // vm_nil
-    0,    // vm_num
+    0,   // vm_none, error type
+    0,   // vm_count, used in foreach/forindex
+    0,   // vm_ret, used to store call-return address
+    0,   // vm_nil
+    0,   // vm_num
     /* gc object */
-    2048, // vm_str
-    1024, // vm_func
-    8192, // vm_vec
-    512,  // vm_hash
-    64    // vm_obj
+    512, // vm_str
+    512, // vm_func
+    512, // vm_vec
+    512, // vm_hash
+    64   // vm_obj
 };
 
 struct nasal_vec;
@@ -400,7 +400,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
             free_list[i].push(tmp);
         }
 
-    top=stack;     // set top to stack
+    top=stack; // set top to stack
 
     zero={vm_num,(double)0}; // init constant 0
     one ={vm_num,(double)1}; // init constant 1
