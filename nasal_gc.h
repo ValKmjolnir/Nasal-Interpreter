@@ -70,6 +70,7 @@ struct nasal_ref
     // number and string can be translated to each other
     double      to_number();
     std::string to_string();
+    void        print();
     inline uint32_t     ret ();
     inline int64_t&     cnt ();
     inline double&      num ();
@@ -171,17 +172,7 @@ void nasal_vec::print()
     std::cout<<'[';
     for(auto& i:elems)
     {
-        switch(i.type)
-        {
-            case vm_none: std::cout<<"undefined";   break;
-            case vm_nil:  std::cout<<"nil";         break;
-            case vm_num:  std::cout<<i.num();       break;
-            case vm_str:  std::cout<<*i.str();      break;
-            case vm_vec:  i.vec()->print();         break;
-            case vm_hash: i.hash()->print();        break;
-            case vm_func: std::cout<<"func(..){..}";break;
-            case vm_obj:  std::cout<<"<object>";    break;
-        }
+        i.print();
         std::cout<<",]"[(++iter)==elems.size()];
     }
     --depth;
@@ -244,18 +235,7 @@ void nasal_hash::print()
     for(auto& i:elems)
     {
         std::cout<<i.first<<':';
-        nasal_ref tmp=i.second;
-        switch(tmp.type)
-        {
-            case vm_none: std::cout<<"undefined";   break;
-            case vm_nil:  std::cout<<"nil";         break;
-            case vm_num:  std::cout<<tmp.num();     break;
-            case vm_str:  std::cout<<*tmp.str();    break;
-            case vm_vec:  tmp.vec()->print();       break;
-            case vm_hash: tmp.hash()->print();      break;
-            case vm_func: std::cout<<"func(..){..}";break;
-            case vm_obj:  std::cout<<"<object>";    break;
-        }
+        i.second.print();
         std::cout<<",}"[(++iter)==elems.size()];
     }
     --depth;
@@ -306,6 +286,20 @@ std::string nasal_ref::to_string()
     else if(type==vm_num)
         return std::to_string(num());
     return "";
+}
+void nasal_ref::print()
+{
+    switch(type)
+    {
+        case vm_none: std::cout<<"undefined";   break;
+        case vm_nil:  std::cout<<"nil";         break;
+        case vm_num:  std::cout<<value.num;     break;
+        case vm_str:  std::cout<<*(this->str());break;
+        case vm_vec:  this->vec()->print();     break;
+        case vm_hash: this->hash()->print();    break;
+        case vm_func: std::cout<<"func(..){..}";break;
+        case vm_obj:  std::cout<<"<object>";    break;
+    }
 }
 inline uint32_t     nasal_ref::ret (){return value.ret;            }
 inline int64_t&     nasal_ref::cnt (){return value.cnt;            }
