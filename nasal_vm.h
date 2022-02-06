@@ -147,7 +147,7 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec()->elems.size());break;
         case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash()->elems.size());break;
         case vm_obj:  printf("| obj  | <0x%lx> obj:0x%lx\n",(uint64_t)p,(uint64_t)val.obj()->ptr);break;
-        default:      printf("| ???  | <0x%lx>\n",(uint64_t)p);break;
+        default:      printf("| err  | <0x%lx> unknown object\n",(uint64_t)p);break;
     }
 }
 void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
