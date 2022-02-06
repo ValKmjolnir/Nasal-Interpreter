@@ -149,95 +149,78 @@ var mandelbrot=
 
 var paper=[];
 var (ptr,pc)=(0,0);
-var (code,inum,stack)=(nil,nil,nil);
+var (code,inum,stack)=([],[],[]);
 var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
-var func_table=[
-    func paper[ptr]+=inum[pc],
-    func ptr+=inum[pc],
-    func if(paper[ptr])pc=inum[pc],
-    func if(!paper[ptr])pc=inum[pc],
-    func paper[ptr]=input()[0],
-    func print(chr(paper[ptr]))
-];
 
-var bf=func(program)
-{
+var bf=func(program){
     setsize(paper,131072);
-    (ptr,code,inum,stack)=(0,[],[],[]);
     var len=size(program);
-
-    for(var i=0;i<len;i+=1)
-    {
+    for(var i=0;i<len;i+=1){
         var c=chr(program[i]);
-        if(c=='+' or c=='-')
-        {
-            append(code,func_table[add]);
+        if(c=='+' or c=='-'){
+            append(code,add);
             append(inum,0);
-            for(;i<len;i+=1)
-            {
+            for(;i<len;i+=1){
                 if(chr(program[i])=='+')
                     inum[-1]+=1;
                 elsif(chr(program[i])=='-')
                     inum[-1]-=1;
-                elsif(chr(program[i])!='\n')
-                {
+                elsif(chr(program[i])!='\n'){
                     i-=1;
                     break;
                 }
             }
         }
-        elsif(c=='<' or c=='>')
-        {
-            append(code,func_table[mov]);
+        elsif(c=='<' or c=='>'){
+            append(code,mov);
             append(inum,0);
-            for(;i<len;i+=1)
-            {
+            for(;i<len;i+=1){
                 if(chr(program[i])=='>')
                     inum[-1]+=1;
                 elsif(chr(program[i])=='<')
                     inum[-1]-=1;
-                elsif(chr(program[i])!='\n')
-                {
+                elsif(chr(program[i])!='\n'){
                     i-=1;
                     break;
                 }
             }
         }
-        elsif(c==',')
-        {
-            append(code,func_table[in]);
+        elsif(c==','){
+            append(code,in);
             append(inum,0);
         }
-        elsif(c=='.')
-        {
-            append(code,func_table[out]);
+        elsif(c=='.'){
+            append(code,out);
             append(inum,0);
         }
-        elsif(c=='[')
-        {
-            append(code,func_table[jf]);
+        elsif(c=='['){
+            append(code,jf);
             append(inum,0);
             append(stack,size(code)-1);
         }
-        elsif(c==']')
-        {
+        elsif(c==']'){
             if(!size(stack))
                 die("lack [");
             var label=pop(stack);
-            append(code,func_table[jt]);
+            append(code,jt);
             append(inum,label-1);
             inum[label]=size(code)-2;
         }
     }
-    if(size(stack))
-    {
+    if(size(stack)){
         die("lack ]");
         return;
     }
-
     len=size(code);
-    for(pc=0;pc<len;pc+=1)
-        code[pc]();
+    for(pc=0;pc<len;pc+=1){
+        var c=code[pc];
+        if(c==add)   paper[ptr]+=inum[pc];
+        elsif(c==mov)ptr+=inum[pc];
+        elsif(c==jt){if(paper[ptr])pc=inum[pc];}
+        elsif(c==jf){if(!paper[ptr])pc=inum[pc];}
+        elsif(c==in) paper[ptr]=input()[0];
+        else         print(chr(paper[ptr]));
+    }
     return;
 }
 

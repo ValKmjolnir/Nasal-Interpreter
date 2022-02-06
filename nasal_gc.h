@@ -29,17 +29,17 @@ const uint32_t increment[vm_type_size]=
     0,   // vm_nil
     0,   // vm_num
     /* gc object */
-    512, // vm_str
-    1024,// vm_func
-    4096,// vm_vec
-    256, // vm_hash
+    256, // vm_str
+    512, // vm_func
+    1024,// vm_vec
+    128, // vm_hash
     16   // vm_obj
 };
 
-struct nasal_vec;
-struct nasal_hash;
-struct nasal_func;
-struct nasal_obj;
+struct nasal_vec; // vector
+struct nasal_hash;// hashmap(dict)
+struct nasal_func;// function(lambda)
+struct nasal_obj; // special objects
 struct nasal_val; // nasal_val includes gc-managed types
 
 struct nasal_ref
@@ -126,7 +126,7 @@ struct nasal_val
 {
     uint8_t mark;
     uint8_t type;
-    uint8_t unmut; // used toe mark if a string is mutable
+    uint8_t unmut; // used to mark if a string is unmutable
     union 
     {
         std::string* str;
