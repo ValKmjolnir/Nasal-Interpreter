@@ -8,7 +8,8 @@ var fib=func(f){
     func(f){
         return func(x){
             if(x<2) return x;
-            return f(f)(x-1)+f(f)(x-2);
+            var tmp=f(f);
+            return tmp(x-1)+tmp(x-2);
         }
     }
 );

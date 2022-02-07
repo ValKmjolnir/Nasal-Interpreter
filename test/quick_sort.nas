@@ -19,7 +19,7 @@ var sort=func(vec,left,right)
 }
 var vec=[];
 rand(time(0));
-for(var i=0;i<200;i+=1)
-    append(vec,int(rand()*1000));
+for(var i=0;i<1e4;i+=1)
+    append(vec,int(rand()*1e5));
 sort(vec,0,size(vec)-1);
 println(vec);
