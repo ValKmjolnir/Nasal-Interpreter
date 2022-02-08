@@ -32,6 +32,7 @@ void help()
     <<"    -t,   --time    | execute and get the running time.\n"
     <<"    -o,   --opcnt   | execute and count used operands.\n"
     <<"    -d,   --detail  | execute and get detail crash info.\n"
+    <<"                    | get garbage collector info if didn't crash.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
     <<"                    | if want to use -op and run, please use -op -e/-t/-o/-d.\n"
     <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d).\n"
