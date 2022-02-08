@@ -886,6 +886,8 @@ vmexit:
         die("stack overflow");
     if(opcnt)
         opcallsort(count);
+    if(detail_info)
+        gc.info();
     gc.clear();
     imm.clear();
     return;

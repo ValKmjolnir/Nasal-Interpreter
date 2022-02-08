@@ -31,7 +31,7 @@ const uint32_t increment[vm_type_size]=
     /* gc object */
     256, // vm_str
     512, // vm_func
-    1024,// vm_vec
+    512, // vm_vec
     128, // vm_hash
     16   // vm_obj
 };
@@ -322,10 +322,13 @@ struct nasal_gc
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
     std::vector<nasal_ref>  local;
+    size_t                  size[vm_type_size];
+    uint64_t                count[vm_type_size];
     void                    mark();
     void                    sweep();
     void                    init(const std::vector<std::string>&);
     void                    clear();
+    void                    info();
     nasal_ref               alloc(const uint8_t);
     nasal_ref               builtin_alloc(const uint8_t);
 };
@@ -386,6 +389,11 @@ void nasal_gc::sweep()
 }
 void nasal_gc::init(const std::vector<std::string>& s)
 {
+    for(uint8_t i=0;i<vm_type_size;++i)
+    {
+        size[i]=increment[i];
+        count[i]=0;
+    }
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         for(uint32_t j=0;j<increment[i];++j)
         {
@@ -416,20 +424,38 @@ void nasal_gc::clear()
         delete i.value.gcobj;
     strs.clear();
 }
+void nasal_gc::info()
+{
+    const char* name[]={
+        "null","cnt ","ret ",
+        "nil ","num ","str ",
+        "func","vec ","hash","obj "
+    };
+    std::cout<<"\ngarbage collector info:\n";
+    for(uint8_t i=vm_str;i<vm_type_size;++i)
+        std::cout<<name[i]<<" | "<<count[i]<<"\n";
+    std::cout<<"\nmemory allocator info(max size):\n";
+    for(uint8_t i=vm_str;i<vm_type_size;++i)
+        std::cout<<name[i]<<" | "<<size[i]<<"\n";
+}
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
     if(free_list[type].empty())
     {
+        ++count[type];
         mark();
         sweep();
     }
     if(free_list[type].empty())
+    {
+        size[type]+=increment[type];
         for(uint32_t i=0;i<increment[type];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
             free_list[type].push(tmp);
         }
+    }
     nasal_ref ret={type,free_list[type].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
     free_list[type].pop();
@@ -442,12 +468,15 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     // and the value got before will be collected,this is a fatal error
     // so use builtin_alloc in builtin functions if this function uses alloc more then one time
     if(free_list[type].empty())
+    {
+        size[type]+=increment[type];
         for(uint32_t i=0;i<increment[type];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
             free_list[type].push(tmp);
         }
+    }
     nasal_ref ret={type,free_list[type].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
     free_list[type].pop();
