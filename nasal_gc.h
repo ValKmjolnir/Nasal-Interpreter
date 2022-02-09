@@ -436,7 +436,7 @@ void nasal_gc::info()
         std::cout<<name[i]<<" | "<<count[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size):\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        std::cout<<name[i]<<" | "<<size[i]<<"\n";
+        std::cout<<name[i]<<" | "<<size[i]<<"(+"<<size[i]/increment[i]-1<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {

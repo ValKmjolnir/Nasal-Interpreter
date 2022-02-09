@@ -84,6 +84,7 @@ nas_native(builtin_dlsym);
 nas_native(builtin_dlclose);
 nas_native(builtin_dlcall);
 nas_native(builtin_platform);
+nas_native(builtin_gc);
 
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
@@ -166,6 +167,7 @@ struct
     {"__builtin_dlclose", builtin_dlclose },
     {"__builtin_dlcall",  builtin_dlcall  },
     {"__builtin_platform",builtin_platform},
+    {"__builtin_gc",      builtin_gc      },
     {nullptr,             nullptr         }
 };
 
@@ -889,7 +891,7 @@ nasal_ref builtin_sfld(std::vector<nasal_ref>& local,nasal_gc& gc)
 nasal_ref builtin_setfld(std::vector<nasal_ref>& local,nasal_gc& gc)
 {
     // bits.setfld(s,0,8,69);
-    // set 1000101(69) to string will get this:
+    // set 01000101(69) to string will get this:
     // 10100010(162)
     // so s[0]=162
     nasal_ref str=local[1];
@@ -1070,5 +1072,11 @@ nasal_ref builtin_platform(std::vector<nasal_ref>& local,nasal_gc& gc)
     *ret.str()="macOS";
 #endif
     return ret;
+}
+nasal_ref builtin_gc(std::vector<nasal_ref>& local,nasal_gc& gc)
+{
+    gc.mark();
+    gc.sweep();
+    return nil;
 }
 #endif

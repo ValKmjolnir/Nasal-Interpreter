@@ -167,19 +167,32 @@ var io=
     SEEK_SET:0,
     SEEK_CUR:1,
     SEEK_END:2,
+    # get content of a file by filename. returns a string.
     fin:   func(filename){return __builtin_fin(filename);},
+    # input a string as the content of a file.
     fout:  func(filename,str){return __builtin_fout(filename,str);},
+    # same as C fopen. open file and get the FILE*.
     open:  func(filename,mode="r"){return __builtin_open(filename,mode);},
+    # same as C fclose. close file by FILE*.
     close: func(filehandle){return __builtin_close(filehandle);},
+    # same as C fread. read file by FILE*.
     read:  func(filehandle,buf,len){return __builtin_read(filehandle,buf,len);},
+    # same as C fwrite. write file by FILE*.
     write: func(filehandle,str){return __builtin_write(filehandle,str);},
+    # same as C fseek. seek place by FILE*.
     seek:  func(filehandle,pos,whence){return __builtin_seek(filehandle,pos,whence);},
+    # same as C ftell.
     tell:  func(filehandle){return __builtin_tell(filehandle);},
+    # read file by lines. use FILE*.
+    # get nil if EOF
     readln:func(filehandle){return __builtin_readln(filehandle);},
+    # same as C stat.
     stat:  func(filename){return __builtin_stat(filename);},
+    # same as C feof. check if FILE* gets the end of file(EOF).
     eof:   func(filehandle){return __builtin_eof(filehandle);}
 };
 
+# get file status. using data from io.stat
 var fstat=func(filename){
     var s=io.stat(filename);
     return {
@@ -197,19 +210,42 @@ var fstat=func(filename){
     };
 }
 
+# functions that do bitwise calculation.
+# carefully use it, all the calculations are based on integer.
 var bits=
 {
+    # xor
     bitxor:  func(a,b){return __builtin_xor(a,b); },
+    # and
     bitand:  func(a,b){return __builtin_and(a,b); },
+    # or
     bitor:   func(a,b){return __builtin_or(a,b);  },
+    # nand
     bitnand: func(a,b){return __builtin_nand(a,b);},
+    # not
     bitnot:  func(a)  {return __builtin_not(a);   },
+    # get bit data from a special string. for example:
+    # bits.fld(s,0,3);
+    # if s stores 10100010(162)
+    # will get 101(5).
     fld:     func(str,startbit,len){return __builtin_fld;},
+    # get sign-extended data from a special string. for example:
+    # bits.sfld(s,0,3);
+    # if s stores 10100010(162)
+    # will get 101(5) then this will be signed extended to
+    # 11111101(-3).
     sfld:    func(str,startbit,len){return __builtin_sfld;},
+    # set value into a special string to store it. little-endian, for example:
+    # bits.setfld(s,0,8,69);
+    # set 01000101(69) to string will get this:
+    # 10100010(162)
+    # so s[0]=162.
     setfld:  func(str,startbit,len,val){return __builtin_setfld;},
+    # get a special string filled by '\0' to use in setfld.
     buf:     func(len){return __builtin_buf;}
 };
 
+# mostly used math functions and special constants, you know.
 var math=
 {
     e:     2.7182818284590452354,
@@ -264,15 +300,31 @@ var unix=
     getenv:   func(envvar){return __builtin_getenv(envvar);}
 };
 
+# dylib is the core hashmap for developers to load their own library.
 var dylib=
 {
+    # open dynamic lib.
     dlopen:  func(libname){return __builtin_dlopen;},
+    # load symbol from an open dynamic lib.
     dlsym:   func(lib,sym){return __builtin_dlsym; },
+    # close dynamic lib, this operation will make all the symbols loaded from it invalid.
     dlclose: func(lib){return __builtin_dlclose;   },
+    # call the loaded symbol.
     dlcall:  func(funcptr,args...){return __builtin_dlcall}
 };
 
+# os is used to use or get some os-related info/functions.
+# windows/macOS/linux are supported.
 var os=
 {
+    # get a string that tell which os it runs on.
     platform: func(){return __builtin_platform;}
+};
+
+# runtime gives us some functions that we could manage it manually.
+var runtime=
+{
+    # do garbage collection manually.
+    # carefully use it because using it frequently may make program running slower.
+    gc: func(){return __builtin_gc;}
 };

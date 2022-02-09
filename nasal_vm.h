@@ -282,13 +282,15 @@ void nasal_vm::opcallsort(const uint64_t* arr)
         opcall.end(),
         [](op& a,op& b){return a.second>b.second;}
     );
-    std::cout<<'\n';
+    uint64_t total=0;
     for(auto& i:opcall)
     {
         if(!i.second)
             break;
-        std::cout<<code_table[i.first].name<<": "<<i.second<<'\n';
+        total+=i.second;
+        std::cout<<'\n'<<code_table[i.first].name<<": "<<i.second;
     }
+    std::cout<<"\ntotal : "<<total<<'\n';
 }
 void nasal_vm::die(std::string str)
 {
