@@ -20,7 +20,7 @@ test:nasal
 	./nasal -op -e -d test/lexer.nas
 	./nasal -op -e -d test/life.nas
 	./nasal -op -t test/loop.nas
-	./nasal -op -c test/mandel.nas
+	./nasal -op -t -d test/mandel.nas
 	./nasal -op -t -d test/mandelbrot.nas
 	./nasal -op -c test/module_test.nas
 	./nasal -op -e test/nasal_test.nas
