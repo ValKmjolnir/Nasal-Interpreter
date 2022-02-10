@@ -322,7 +322,7 @@ struct nasal_gc
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
     std::vector<nasal_ref>  local;
-    size_t                  size[vm_type_size];
+    uint64_t                size[vm_type_size];
     uint64_t                count[vm_type_size];
     void                    mark();
     void                    sweep();
@@ -390,10 +390,7 @@ void nasal_gc::sweep()
 void nasal_gc::init(const std::vector<std::string>& s)
 {
     for(uint8_t i=0;i<vm_type_size;++i)
-    {
-        size[i]=increment[i];
-        count[i]=0;
-    }
+        size[i]=count[i]=0;
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         for(uint32_t j=0;j<increment[i];++j)
         {
@@ -436,7 +433,7 @@ void nasal_gc::info()
         std::cout<<name[i]<<" | "<<count[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size):\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        std::cout<<name[i]<<" | "<<size[i]<<"(+"<<size[i]/increment[i]-1<<")\n";
+        std::cout<<name[i]<<" | "<<(size[i]+1)*increment[i]<<"(+"<<size[i]<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
@@ -448,7 +445,7 @@ nasal_ref nasal_gc::alloc(uint8_t type)
     }
     if(free_list[type].empty())
     {
-        size[type]+=increment[type];
+        ++size[type];
         for(uint32_t i=0;i<increment[type];++i)
         {
             nasal_val* tmp=new nasal_val(type);
@@ -469,7 +466,7 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     // so use builtin_alloc in builtin functions if this function uses alloc more then one time
     if(free_list[type].empty())
     {
-        size[type]+=increment[type];
+        ++size[type];
         for(uint32_t i=0;i<increment[type];++i)
         {
             nasal_val* tmp=new nasal_val(type);
