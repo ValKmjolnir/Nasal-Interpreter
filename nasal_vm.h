@@ -9,7 +9,7 @@ protected:
     const double*            num_table;// const numbers, ref from nasal_codegen
     const std::string*       str_table;// const symbols, ref from nasal_codegen
     std::stack<nasal_func*>  fstk;     // stack to store function, used to get upvalues
-    std::stack<uint32_t>     local_stk;
+    std::stack<nasal_ref*>   lstk;     // stack to store local scopes' begin address
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     /* garbage collector */
@@ -234,17 +234,16 @@ void nasal_vm::global_state()
 }
 void nasal_vm::local_state()
 {
-    if(gc.local.empty() || !gc.local.back().vec()->elems.size())
+    if(lstk.empty() || !fstk.top()->lsize)
     {
         printf("no local value exists\n");
         return;
     }
     printf("local:\n");
-    auto& vec=gc.local.back().vec()->elems;
-    for(uint32_t i=0;i<vec.size();++i)
+    for(uint32_t i=0;i<fstk.top()->lsize;++i)
     {
         printf("[0x%.8x]",i);
-        valinfo(vec[i]);
+        valinfo(lstk.top()[i]);
     }
 }
 void nasal_vm::upval_state()
@@ -335,7 +334,8 @@ inline void nasal_vm::opr_loadg()
 }
 inline void nasal_vm::opr_loadl()
 {
-    gc.local.back().vec()->elems[imm[pc]]=(gc.top--)[0];
+    lstk.top()[imm[pc]]=(gc.top--)[0];
+    //gc.local.back().vec()->elems[imm[pc]]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_loadu()
 {
@@ -374,10 +374,17 @@ inline void nasal_vm::opr_newf()
     nasal_func* func=gc.top[0].func();
     func->entry=imm[pc];
     func->psize=1;
-    if(!gc.local.empty())
+
+    /* this means you create a new function in local scope */
+    if(!lstk.empty())
     {
         func->upvalue=fstk.top()->upvalue;
-        func->upvalue.push_back(gc.local.back());
+        nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_vec):gc.upvalue.back();
+        func->upvalue.push_back(upval);
+        gc.upvalue.back()=upval;
+        auto& vec=upval.vec()->elems;
+        for(uint32_t i=0;i<fstk.top()->lsize;++i)
+            vec.push_back(lstk.top()[i]);
     }
 }
 inline void nasal_vm::opr_happ()
@@ -586,7 +593,7 @@ inline void nasal_vm::opr_callg()
 }
 inline void nasal_vm::opr_calll()
 {
-    (++gc.top)[0]=gc.local.back().vec()->elems[imm[pc]];
+    (++gc.top)[0]=lstk.top()[imm[pc]];
 }
 inline void nasal_vm::opr_upval()
 {
@@ -651,58 +658,60 @@ inline void nasal_vm::opr_callh()
 inline void nasal_vm::opr_callfv()
 {
     uint32_t   argc=imm[pc];      // arguments counter
-    nasal_ref* args=gc.top-argc+1;// arguments begin place
+    nasal_ref* args=gc.top-argc+1;// arguments begin address
     if(args[-1].type!=vm_func)
         die("callfv: must call a function");
     
     nasal_func* func=args[-1].func();
-    if(gc.top+func->lsize>=canary)
-        die("stackoverflow");
-    fstk.push(func);// push called function into stack to provide upvalue
-    
-    gc.local.push_back(gc.alloc(vm_vec));    // get new vector as local scope
-    gc.local.back().vec()->elems=func->local;// copy data from func.local to local scope
-    auto& local=gc.local.back().vec()->elems;
+    if(gc.top-argc+func->lsize+1>=canary) // gc.top-argc+lsize(local) +1(pc)
+        die("stack overflow");
+    fstk.push(func);          // push called function into stack to provide upvalue
+    lstk.push(gc.top-argc+1); // store begin of local scope
 
-    uint32_t psize=func->psize-1;// parameter size is func->psize-1, 1 is reserved for "me"
-    // load arguments
-    // if the first default value is not vm_none,then values after it are not nullptr
-    // args_size+1 is because the first space is reserved for 'me'
+    uint32_t psize=func->psize-1; // parameter size is func->psize-1, 1 is reserved for "me"
     if(argc<psize && func->local[argc+1].type==vm_none)
         die("callfv: lack argument(s)");
-    // if args_size>para_size,for 0 to args_size will cause corruption
-    uint32_t min_size=std::min(psize,argc);
-    for(uint32_t i=0;i<min_size;++i)
-        local[i+1]=args[i];
-    // load dynamic argument if args_size>=para_size
-    if(func->dynpara>=0)
+
+    nasal_ref* local=args;
+    nasal_ref  dynamic=nil;
+    gc.top=local+func->lsize;
+    if(func->dynpara>=0)// load dynamic arguments
     {
-        nasal_ref vec=gc.alloc(vm_vec);
+        dynamic=gc.alloc(vm_vec);
         for(uint32_t i=psize;i<argc;++i)
-            vec.vec()->elems.push_back(args[i]);
-        local[min_size+1]=vec;
+            dynamic.vec()->elems.push_back(args[i]);
     }
-    
-    gc.top-=argc; // pop arguments
-    (++gc.top)[0]={vm_ret,pc};
+    uint32_t min_size=std::min(psize,argc);
+    for(uint32_t i=min_size;i>=1;--i)// load arguments
+        local[i]=local[i-1];
+    local[0]=func->local[0];// load "me"
+    for(uint32_t i=min_size+1;i<func->lsize;++i)// load local scope & default arguments
+        local[i]=func->local[i];
+    if(func->dynpara>=0)
+        local[psize+1]=dynamic;
+
+    gc.top[0]={vm_ret,pc};
     pc=func->entry-1;
+    gc.upvalue.push_back(nil);
 }
 inline void nasal_vm::opr_callfh()
 {
     auto& hash=gc.top[0].hash()->elems;
     if(gc.top[-1].type!=vm_func)
         die("callfh: must call a function");
-    // push function and new local scope
+
     nasal_func* func=gc.top[-1].func();
-    if(gc.top+func->lsize>=canary)
-        die("stackoverflow");
+    if(gc.top+func->lsize>=canary) // gc.top -1(hash) +lsize(local) +1(pc)
+        die("stack overflow");
     if(func->dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
-    fstk.push(func);
+    fstk.push(func);   // push called function into stack to provide upvalue
+    lstk.push(gc.top); // store begin of local scope
 
-    gc.local.push_back(gc.alloc(vm_vec));
-    gc.local.back().vec()->elems=func->local;
-    auto& local=gc.local.back().vec()->elems;
+    nasal_ref* local=gc.top;
+    gc.top+=func->lsize;
+    for(uint32_t i=0;i<func->lsize;++i)
+        local[i]=func->local[i];
     
     for(auto& i:func->keys)
     {
@@ -714,10 +723,11 @@ inline void nasal_vm::opr_callfh()
 
     gc.top[0]={vm_ret,(uint32_t)pc}; // rewrite top with vm_ret
     pc=func->entry-1;
+    gc.upvalue.push_back(nil);
 }
 inline void nasal_vm::opr_callb()
 {
-    (++gc.top)[0]=(*builtin[imm[pc]].func)(gc.local.back().vec()->elems,gc);
+    (++gc.top)[0]=(*builtin[imm[pc]].func)(lstk.top(),gc);
     if(gc.top[0].type==vm_none)
         die("native function error.");
 }
@@ -782,7 +792,7 @@ inline void nasal_vm::opr_mcallg()
 }
 inline void nasal_vm::opr_mcalll()
 {
-    mem_addr=&(gc.local.back().vec()->elems[imm[pc]]);
+    mem_addr=lstk.top()+imm[pc];
     (++gc.top)[0]=mem_addr[0];
 }
 inline void nasal_vm::opr_mupval()
@@ -836,15 +846,21 @@ inline void nasal_vm::opr_ret()
     // +-----------------+
     // | return address  | <- gc.top[-1]
     // +-----------------+
-    // | called function | <- gc.top[-2] funct is set on stack because gc may mark it
+    // | local scope     |
+    // +-----------------+ <- local pointer stored in lstk
+    // | called function | <- funct is set on stack because gc may mark it
     // +-----------------+
+    nasal_ref ret=gc.top[0];
     pc=gc.top[-1].ret();
-    gc.top[-2].func()->local[0]={vm_nil,nullptr}; // get func and set 'me' to nil
-    gc.top[-2]=gc.top[0]; // rewrite func with returned value
-    gc.top-=2;
+
+    gc.top=lstk.top()-1;
+    lstk.pop();
+
+    gc.top[0].func()->local[0]={vm_nil,nullptr}; // get func and set 'me' to nil
+    gc.top[0]=ret; // rewrite func with returned value
 
     fstk.pop();
-    gc.local.pop_back();
+    gc.upvalue.pop_back();
 }
 void nasal_vm::run(
     const nasal_codegen& gen,
@@ -968,7 +984,7 @@ upval:   exec_operand(opr_upval   ,op_upval   ); // +1
 callv:   exec_opnodie(opr_callv   ,op_callv   ); // -0
 callvi:  exec_opnodie(opr_callvi  ,op_callvi  ); // -0
 callh:   exec_opnodie(opr_callh   ,op_callh   ); // -0
-callfv:  exec_operand(opr_callfv  ,op_callfv  ); // +1-imm[pc] call this will push >=0 arguments
+callfv:  exec_opnodie(opr_callfv  ,op_callfv  ); // check in the function
 callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // -0 call this will push one hash
 callb:   exec_opnodie(opr_callb   ,op_callb   ); // -0
 slcbegin:exec_operand(opr_slcbegin,op_slcbegin); // +1

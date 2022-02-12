@@ -212,7 +212,7 @@ void nasal_dbg::run(
     }
 
     // set canary and program counter
-    auto canary=gc.stack+STACK_MAX_DEPTH-1;
+    canary=gc.stack+STACK_MAX_DEPTH-1;
     pc=0;
     // goto the first operand
     goto *code[pc];

@@ -48,7 +48,7 @@ void logo()
     <<"   /  \\/ / _` / __|/ _` | |    \n"
     <<"  / /\\  / (_| \\__ \\ (_| | |  \n"
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    <<"nasal interpreter ver 8.0\n"
+    <<"nasal interpreter ver 9.0\n"
     <<"thanks to : https://github.com/andyross/nasal\n"
     <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
