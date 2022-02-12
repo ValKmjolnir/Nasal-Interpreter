@@ -152,6 +152,15 @@ var (ptr,pc)=(0,0);
 var (code,inum,stack)=([],[],[]);
 var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
 
+var funcs=[
+    func{paper[ptr]+=inum[pc];},
+    func{ptr+=inum[pc];},
+    func{if(paper[ptr])pc=inum[pc];},
+    func{if(!paper[ptr])pc=inum[pc];},
+    func{paper[ptr]=input()[0];},
+    func{print(chr(paper[ptr]));}
+];
+
 var bf=func(program){
     setsize(paper,131072);
     var len=size(program);
@@ -212,15 +221,8 @@ var bf=func(program){
         return;
     }
     len=size(code);
-    for(pc=0;pc<len;pc+=1){
-        var c=code[pc];
-        if(c==add)   paper[ptr]+=inum[pc];
-        elsif(c==mov)ptr+=inum[pc];
-        elsif(c==jt){if(paper[ptr])pc=inum[pc];}
-        elsif(c==jf){if(!paper[ptr])pc=inum[pc];}
-        elsif(c==in) paper[ptr]=input()[0];
-        else         print(chr(paper[ptr]));
-    }
+    for(pc=0;pc<len;pc+=1)
+        funcs[code[pc]]();
     return;
 }
 

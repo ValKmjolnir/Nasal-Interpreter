@@ -302,7 +302,7 @@ inline nasal_hash*  nasal_ref::hash(){return value.gcobj->ptr.hash;}
 inline nasal_func*  nasal_ref::func(){return value.gcobj->ptr.func;}
 inline nasal_obj*   nasal_ref::obj (){return value.gcobj->ptr.obj; }
 
-const uint32_t STACK_MAX_DEPTH=4095;
+const uint32_t STACK_MAX_DEPTH=8191;
 const nasal_ref zero={vm_num,(double)0};
 const nasal_ref one ={vm_num,(double)1};
 const nasal_ref nil ={vm_nil,nullptr};
@@ -313,7 +313,7 @@ struct nasal_gc
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
-    std::vector<nasal_ref>  local;
+    std::vector<nasal_ref>  upvalue;
     uint64_t                size[vm_type_size];
     uint64_t                count[vm_type_size];
     void                    mark();
@@ -329,7 +329,7 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
-    for(auto& i:local)
+    for(auto& i:upvalue)
         bfs.push(i);
     for(nasal_ref* i=stack;i<=top;++i)
         bfs.push(*i);
@@ -405,10 +405,10 @@ void nasal_gc::clear()
     for(auto i:memory)
         delete i;
     memory.clear();
+    upvalue.clear();
     for(uint8_t i=0;i<vm_type_size;++i)
         while(!free_list[i].empty())
             free_list[i].pop();
-    local.clear();
     for(auto& i:strs)
         delete i.value.gcobj;
     strs.clear();

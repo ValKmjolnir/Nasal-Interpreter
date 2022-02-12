@@ -1035,13 +1035,13 @@ If you really want to change source code, check built-in functions in lib.nas an
 Definition:
 
 ```C++
-nasal_ref builtin_print(std::vector<nasal_ref>&,nasal_gc&);
+nasal_ref builtin_print(nasal_ref*,nasal_gc&);
 ```
 
 Then complete this function using C++:
 
 ```C++
-nasal_ref builtin_print(std::vector<nasal_ref>& local,nasal_gc& gc)
+nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
 {
     // find value with index begin from 1
     // because local_scope[0] is reserved for value 'me'
@@ -1074,7 +1074,7 @@ After that, register the built-in function's name(in nasal) and the function's p
 struct func
 {
     const char* name;
-    nasal_ref (*func)(std::vector<nasal_ref>&,nasal_gc&);
+    nasal_ref (*func)(nasal_ref*,nasal_gc&);
 } builtin_func[]=
 {
     {"__builtin_print",builtin_print},
@@ -1119,7 +1119,7 @@ this is a fatal error.
 So use `builtin_alloc` in builtin functions like this:
 
 ```C++
-nasal_ref builtin_keys(std::vector<nasal_ref>& local,nasal_gc& gc)
+nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
