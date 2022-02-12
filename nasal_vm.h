@@ -6,10 +6,10 @@ class nasal_vm
 protected:
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
-    uint32_t                 offset;   // used to load default parameters to a new function
     const double*            num_table;// const numbers, ref from nasal_codegen
     const std::string*       str_table;// const symbols, ref from nasal_codegen
-    std::stack<nasal_func*>  func_stk; // stack to store function, used to get upvalues
+    std::stack<nasal_func*>  fstk;     // stack to store function, used to get upvalues
+    std::stack<uint32_t>     local_stk;
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     /* garbage collector */
@@ -18,6 +18,8 @@ protected:
     size_t                   files_size;
     const std::string*       files;    // ref from nasal_import
     const opcode*            bytecode; // ref from nasal_codegen
+    /* canary to avoid stackoverflow */
+    nasal_ref*               canary;
 
     void init(
         const std::vector<std::string>&,
@@ -247,13 +249,13 @@ void nasal_vm::local_state()
 }
 void nasal_vm::upval_state()
 {
-    if(func_stk.empty() || func_stk.top()->upvalue.empty())
+    if(fstk.empty() || fstk.top()->upvalue.empty())
     {
         printf("no upvalue exists\n");
         return;
     }
     printf("upvalue:\n");
-    auto& upval=func_stk.top()->upvalue;
+    auto& upval=fstk.top()->upvalue;
     for(uint32_t i=0;i<upval.size();++i)
     {
         auto& vec=upval[i].vec()->elems;
@@ -325,6 +327,7 @@ inline void nasal_vm::opr_intg()
 inline void nasal_vm::opr_intl()
 {
     gc.top[0].func()->local.resize(imm[pc],nil);
+    gc.top[0].func()->lsize=imm[pc];
 }
 inline void nasal_vm::opr_loadg()
 {
@@ -336,7 +339,7 @@ inline void nasal_vm::opr_loadl()
 }
 inline void nasal_vm::opr_loadu()
 {
-    func_stk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff]=(gc.top--)[0];
+    fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_pnum()
 {
@@ -367,13 +370,14 @@ inline void nasal_vm::opr_newh()
 }
 inline void nasal_vm::opr_newf()
 {
-    offset=1;
     (++gc.top)[0]=gc.alloc(vm_func);
-    gc.top[0].func()->entry=imm[pc];
+    nasal_func* func=gc.top[0].func();
+    func->entry=imm[pc];
+    func->psize=1;
     if(!gc.local.empty())
     {
-        gc.top[0].func()->upvalue=func_stk.top()->upvalue;
-        gc.top[0].func()->upvalue.push_back(gc.local.back());
+        func->upvalue=fstk.top()->upvalue;
+        func->upvalue.push_back(gc.local.back());
     }
 }
 inline void nasal_vm::opr_happ()
@@ -384,17 +388,15 @@ inline void nasal_vm::opr_happ()
 inline void nasal_vm::opr_para()
 {
     nasal_func* func=gc.top[0].func();
-    size_t size=func->keys.size();
-    func->keys[str_table[imm[pc]]]=size;
-    func->local[offset++]={vm_none};
+    func->keys[str_table[imm[pc]]]=func->psize;// func->size has 1 place reserved for "me"
+    func->local[func->psize++]={vm_none};
 }
 inline void nasal_vm::opr_defpara()
 {
     nasal_ref val=gc.top[0];
     nasal_func* func=(--gc.top)[0].func();
-    size_t size=func->keys.size();
-    func->keys[str_table[imm[pc]]]=size;
-    func->local[offset++]=val;
+    func->keys[str_table[imm[pc]]]=func->psize;// func->size has 1 place reserved for "me"
+    func->local[func->psize++]=val;
 }
 inline void nasal_vm::opr_dynpara()
 {
@@ -588,7 +590,7 @@ inline void nasal_vm::opr_calll()
 }
 inline void nasal_vm::opr_upval()
 {
-    (++gc.top)[0]=func_stk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
+    (++gc.top)[0]=fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
 }
 inline void nasal_vm::opr_callv()
 {
@@ -648,39 +650,42 @@ inline void nasal_vm::opr_callh()
 }
 inline void nasal_vm::opr_callfv()
 {
-    uint32_t args_size=imm[pc];
-    nasal_ref* args=gc.top-args_size+1;
+    uint32_t   argc=imm[pc];      // arguments counter
+    nasal_ref* args=gc.top-argc+1;// arguments begin place
     if(args[-1].type!=vm_func)
         die("callfv: must call a function");
-
-    func_stk.push(args[-1].func());// push called function into stack to provide upvalue
-    auto& func=*args[-1].func();
-    gc.local.push_back(gc.alloc(vm_vec));   // get new vector as local scope
-    gc.local.back().vec()->elems=func.local;// copy data from func.local to local scope
+    
+    nasal_func* func=args[-1].func();
+    if(gc.top+func->lsize>=canary)
+        die("stackoverflow");
+    fstk.push(func);// push called function into stack to provide upvalue
+    
+    gc.local.push_back(gc.alloc(vm_vec));    // get new vector as local scope
+    gc.local.back().vec()->elems=func->local;// copy data from func.local to local scope
     auto& local=gc.local.back().vec()->elems;
 
-    uint32_t para_size=func.keys.size();
+    uint32_t psize=func->psize-1;// parameter size is func->psize-1, 1 is reserved for "me"
     // load arguments
     // if the first default value is not vm_none,then values after it are not nullptr
     // args_size+1 is because the first space is reserved for 'me'
-    if(args_size<para_size && local[args_size+1].type==vm_none)
+    if(argc<psize && func->local[argc+1].type==vm_none)
         die("callfv: lack argument(s)");
     // if args_size>para_size,for 0 to args_size will cause corruption
-    uint32_t min_size=std::min(para_size,args_size);
+    uint32_t min_size=std::min(psize,argc);
     for(uint32_t i=0;i<min_size;++i)
         local[i+1]=args[i];
     // load dynamic argument if args_size>=para_size
-    if(func.dynpara>=0)
+    if(func->dynpara>=0)
     {
         nasal_ref vec=gc.alloc(vm_vec);
-        for(uint32_t i=para_size;i<args_size;++i)
+        for(uint32_t i=psize;i<argc;++i)
             vec.vec()->elems.push_back(args[i]);
-        local.back()=vec;
+        local[min_size+1]=vec;
     }
     
-    gc.top-=args_size; // pop arguments
+    gc.top-=argc; // pop arguments
     (++gc.top)[0]={vm_ret,pc};
-    pc=func.entry-1;
+    pc=func->entry-1;
 }
 inline void nasal_vm::opr_callfh()
 {
@@ -688,24 +693,27 @@ inline void nasal_vm::opr_callfh()
     if(gc.top[-1].type!=vm_func)
         die("callfh: must call a function");
     // push function and new local scope
-    func_stk.push(gc.top[-1].func());
-    auto& func=*gc.top[-1].func();
-    gc.local.push_back(gc.alloc(vm_vec));
-    gc.local.back().vec()->elems=func.local;
-    auto& local=gc.local.back().vec()->elems;
-    if(func.dynpara>=0)
+    nasal_func* func=gc.top[-1].func();
+    if(gc.top+func->lsize>=canary)
+        die("stackoverflow");
+    if(func->dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
+    fstk.push(func);
 
-    for(auto& i:func.keys)
+    gc.local.push_back(gc.alloc(vm_vec));
+    gc.local.back().vec()->elems=func->local;
+    auto& local=gc.local.back().vec()->elems;
+    
+    for(auto& i:func->keys)
     {
         if(hash.count(i.first))
-            local[i.second+1]=hash[i.first];
-        else if(local[i.second+1].type==vm_none)
+            local[i.second]=hash[i.first];
+        else if(local[i.second].type==vm_none)
             die("callfh: lack argument(s): \""+i.first+"\"");
     }
 
     gc.top[0]={vm_ret,(uint32_t)pc}; // rewrite top with vm_ret
-    pc=func.entry-1;
+    pc=func->entry-1;
 }
 inline void nasal_vm::opr_callb()
 {
@@ -779,7 +787,7 @@ inline void nasal_vm::opr_mcalll()
 }
 inline void nasal_vm::opr_mupval()
 {
-    mem_addr=&func_stk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
+    mem_addr=&fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
     (++gc.top)[0]=mem_addr[0];
 }
 inline void nasal_vm::opr_mcallv()
@@ -835,7 +843,7 @@ inline void nasal_vm::opr_ret()
     gc.top[-2]=gc.top[0]; // rewrite func with returned value
     gc.top-=2;
 
-    func_stk.pop();
+    fstk.pop();
     gc.local.pop_back();
 }
 void nasal_vm::run(
@@ -878,7 +886,7 @@ void nasal_vm::run(
     }
 
     // set canary and program counter
-    auto canary=gc.stack+STACK_MAX_DEPTH-1;
+    canary=gc.stack+STACK_MAX_DEPTH-1;
     pc=0;
     // goto the first operand
     goto *code[pc];

@@ -103,9 +103,11 @@ struct nasal_func
 {
     int32_t  dynpara;                            // dynamic parameter name index in hash.
     uint32_t entry;                              // pc will set to entry-1 to call this function
+    uint32_t psize;                              // used to load default parameters to a new function
+    uint32_t lsize;                              // used to expand memory space for local values on stack
     std::vector<nasal_ref> local;                // local scope with default value(nasal_ref)
     std::vector<nasal_ref> upvalue;              // closure
-    std::unordered_map<std::string,size_t> keys; // parameter name table
+    std::unordered_map<std::string,size_t> keys; // parameter name table, size_t begins from 1
 
     nasal_func():dynpara(-1){}
     void clear();

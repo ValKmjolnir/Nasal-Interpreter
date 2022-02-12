@@ -401,6 +401,8 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     for(auto& tmp:ast[0].child())
     {
         const std::string& str=tmp.str();
+        if(str=="me")
+            die("\"me\" should not be a parameter",tmp.line());
         regist_string(str);
         switch(tmp.type())
         {
