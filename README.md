@@ -14,6 +14,8 @@
 * [__Why Writing Nasal Interpreter__](#why-writing-nasal-interpreter)
 * [__Compile__](#how-to-compile)
 * [__Usage__](#how-to-use)
+* [__Release Notes__](#release-notes)
+  * [v8.0](#version-80-release)
 * [__Parser__](#parser)
   * [v1.0](#version-10-parser-last-update-20191014)
 * [__Abstract Syntax Tree__](#abstract-syntax-tree)
@@ -27,11 +29,13 @@
   * [v6.0](#version-60-vm-last-update-202161)
   * [v6.5](#version-65-vm-last-update-2021624)
   * [v7.0](#version-70-vm-last-update-2021108)
-  * [v8.0](#version-80-vm-latest)
+  * [v8.0](#version-80-vm-last-update-2022212)
+  * [v9.0](#version-90-vm-latest)
 * [__Benchmark__](#benchmark)
   * [v6.5 (i5-8250U windows 10)](#version-65-i5-8250u-windows10-2021619)
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
   * [v8.0 (R9-5900HX ubuntu-WSL)](#version-80-r9-5900hx-ubuntu-wsl-2022123)
+  * [v9.0 (R9-5900HX ubuntu-WSL)](#version-90-r9-5900hx-ubuntu-wsl-2022213)
 * [__Tutorial__](#tutorial)
   * [basic value type](#basic-value-type)
   * [operators](#operators)
@@ -59,9 +63,9 @@
 
 __Contact us if having great ideas to share!__
 
-* __E-mail__: lhk101lhk101@qq.com
+* __E-mail__: __lhk101lhk101@qq.com__
 
-* __QQ__: 896693328
+* __QQ__: __896693328__
 
 ## __Introduction__
 
@@ -100,12 +104,11 @@ this interpreter a useful tool in your own projects (such as a script in a game 
 ## __How to Compile__
 
 Better choose the latest update of the interpreter.
-Download the source code and build it!
-It's quite easy to build this interpreter.
+Download the source and build it! It's quite easy to build this interpreter.
 
-__MUST USE__ __`-O2/-O3`__ if want to optimize the interpreter!
+__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the __Release Notes__ below to make sure this release file has no fatal bugs. Also in __Release Notes__ there's tips to fix the release manually.
 
-Also remember to use g++ or clang++.(mingw-w64 in __`Windows`__)
+Also remember to use g++ or clang++.(`mingw-w64` in __`Windows`__)
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions
 
@@ -129,7 +132,7 @@ Use these commands to get version of interpreter:
    /  \/ / _` / __|/ _` | |    
   / /\  / (_| \__ \ (_| | |  
   \_\ \/ \__,_|___/\__,_|_|
-nasal interpreter ver 8.0
+nasal interpreter ver 9.0
 thanks to : https://github.com/andyross/nasal
 code repo : https://github.com/ValKmjolnir/Nasal-Interpreter   
 code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter    
@@ -145,7 +148,7 @@ Use these commands to get help(see more debug commands in help):
 nasal <option>
 option:
     -h, --help    | get help.
-    -v, --version | get version of nasal interpreter.
+    -v, --version | get version of nasal interpreter.  
 
 nasal <file>
 file:
@@ -154,12 +157,15 @@ file:
 nasal [options...] <file>
 option:
     -l,   --lex     | view token info.
-    -a,   --ast     | view abstract syntax tree.     
+    -a,   --ast     | view abstract syntax tree.       
     -c,   --code    | view bytecode.
+    -e,   --exec    | execute.
     -t,   --time    | execute and get the running time.
     -o,   --opcnt   | execute and count used operands.
     -d,   --detail  | execute and get detail crash info.
+                    | get garbage collector info if did not crash.
     -op,  --optimize| use optimizer(beta).
+                    | if want to use -op and run, please use -op -e/-t/-o/-d.
     -dbg, --debug   | debug mode (this will ignore -t -o -d).
 file:
     input file name to execute script file.
@@ -170,6 +176,21 @@ If your system is __`Windows`__ and you want to output unicode,please use this c
 > chcp 65001
 
 The interpreter's interactive mode will do this automatically,so you don't need to run this command if you use the interactive interpreter.
+
+## __Release Notes__
+
+### __version 8.0 release__
+
+I made a __big mistake__ in `v8.0` release:
+
+in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+this will cause incorrect `stackoverflow` error.
+please change it to:
+
+`canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`
 
 ## __Parser__
 
@@ -562,7 +583,7 @@ a=b=0;
 0x00000009: nop    0x00000000
 ```
 
-### version 8.0 vm (latest)
+### version 8.0 vm (last update 2022/2/12)
 
 2021/10/8 update:
 
@@ -626,6 +647,19 @@ The format of output information of bytecodes changes to this:
 
 Delete `op_pone` and `op_pzero`.
 Both of them are meaningless and will be replaced by `op_pnum`.
+
+### version 9.0 vm (latest)
+
+2022/2/12 update:
+
+Local values now are __stored on stack__.
+So function calling will be faster than before.
+Because in v8.0 when calling a function,
+new `vm_vec` will be allocated by `nasal_gc`, this makes gc doing mark-sweep too many times and spends a quite lot of time.
+In test file `test/bf.nas`, it takes too much time to test the file because this file has too many function calls(see test data below in table `version 8.0 (R9-5900HX ubuntu-WSL 2022/1/23)`).
+
+Upvalue now is generated when creating first new function in the local scope, using `vm_vec`.
+And after that when creating new functions, they share the same upvalue, and the upvalue will synchronize with the local scope each time creating a new function.
 
 ## Benchmark
 
@@ -702,8 +736,9 @@ running time:
 |bf.nas|1100.19s||
 |mandel.nas|28.98s||
 |life.nas|0.857s(windows) 0.56(ubuntu WSL)||
+|ycombinator.nas|0.64s||
 |fib.nas|0.28s||
-|bfs.nas|0.156s|changed test file|
+|bfs.nas|0.156s|random result|
 |pi.nas|0.0625s||
 |bigloop.nas|0.047s||
 |calc.nas|0.03125s|changed test file|
@@ -711,10 +746,30 @@ running time:
 |ascii-art.nas|0s||
 |quick_sort.nas|0s||
 
+### version 9.0 (R9-5900HX ubuntu-WSL 2022/2/13)
+
+running time:
+
+|file|total time|info|
+|:----|:----|:----|
+|bf.nas|276.55s|great improvement|
+|mandel.nas|28.16s||
+|ycombinator.nas|0.578s||
+|life.nas|0.649s(windows) 0.2(ubuntu WSL)||
+|fib.nas|0.234s|little improvement|
+|bfs.nas|0.14s|random result|
+|pi.nas|0.0625s||
+|bigloop.nas|0.047s||
+|calc.nas|0.0469s|changed test file|
+|quick_sort.nas|0.016s|changed test file:100->1e4|
+|mandelbrot.nas|0.0156s||
+|ascii-art.nas|0s||
+
 ## __Tutorial__
 
 Nasal is really __easy__ to learn.
 Reading this tutorial will not takes you over 15 minutes.
+__If you have learnt C/C++/Javascript before, this will take less time.__
 You could totally use it after reading this simple tutorial:
 
 ### __basic value type__
@@ -1515,4 +1570,35 @@ If want help, input `h` to get help.
         q,    exit      | exit debugger
 <option> <filename> <line>
         bk,   break     | set break point
+```
+
+When running the debugger, you could see what is on stack.
+This will help you debugging or learning how the vm works:
+
+```bash
+source code:
+        import("lib.nas");
+        var fib=func(x)
+        {
+-->             if(x<2) return x;
+                return fib(x-1)+fib(x-2);
+        }
+        for(var i=0;i<31;i+=1)
+                print(fib(i),'\n');
+next bytecode:
+        0x000002f0: para   0x3e ("x") (test/fib.nas:2)
+        0x000002f1: jmp    0x301 (test/fib.nas:2)
+        0x000002f2: calll  0x1 (test/fib.nas:4)
+-->     0x000002f3: lessc  0x2 (2) (test/fib.nas:4)
+        0x000002f4: jf     0x2f7 (test/fib.nas:4)
+        0x000002f5: calll  0x1 (test/fib.nas:4)
+        0x000002f6: ret    0x0 (test/fib.nas:4)
+        0x000002f7: callg  0x33 (test/fib.nas:5)
+vm stack(limit 5, total 6):
+        | num  | 0
+        | addr | pc:0x30a
+        | num  | 0
+        | nil  |
+        | func | <0xed92d0> entry:0x2f2
+>>
 ```

@@ -35,7 +35,7 @@ void help()
     <<"                    | get garbage collector info if didn't crash.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
     <<"                    | if want to use -op and run, please use -op -e/-t/-o/-d.\n"
-    <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d).\n"
+    <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d -e).\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n";
 }
