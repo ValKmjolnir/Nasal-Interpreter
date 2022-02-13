@@ -39,6 +39,7 @@ protected:
     void die(std::string);
     /* vm calculation functions*/
     bool condition(nasal_ref);
+    /* vm operands */
     void opr_nop();
     void opr_intg();
     void opr_intl();
@@ -132,6 +133,9 @@ void nasal_vm::init(
     str_table=strs.data();
     files=filenames.data();
     files_size=filenames.size();
+    /* set canary and program counter */
+    canary=gc.stack+STACK_MAX_DEPTH-1;
+    pc=0;
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
@@ -900,10 +904,6 @@ void nasal_vm::run(
         code.push_back(opr_table[i.op]);
         imm.push_back(i.num);
     }
-
-    // set canary and program counter
-    canary=gc.stack+STACK_MAX_DEPTH-1;
-    pc=0;
     // goto the first operand
     goto *code[pc];
 

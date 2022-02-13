@@ -87,7 +87,7 @@ var calc=func(codetype,files){
         semi+=semi_cnt;
     }
     println('total:                | ',line,' \tline | ',semi,' \tsemi');
-    println('bytes:                | ',bytes,'\tbytes| ',int(bytes/1024),' \tkb');
+    println('                      | ',bytes,'\tbytes| ',int(bytes/1024),' \tkb');
 }
 
 calc("source code:",source);
