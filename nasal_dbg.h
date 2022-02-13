@@ -180,7 +180,7 @@ void nasal_dbg::run(
     const nasal_import& linker)
 {
     detail_info=true;
-    init(gen.get_strs(),gen.get_nums(),linker.get_file());
+    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
     const void* opr_table[]=
     {
         &&nop,     &&intg,     &&intl,   &&loadg,
@@ -203,7 +203,6 @@ void nasal_dbg::run(
         &&slc2,    &&mcallg,   &&mcalll, &&mupval,
         &&mcallv,  &&mcallh,   &&ret,    &&vmexit
     };
-    bytecode=gen.get_code().data();
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
     {
