@@ -24,6 +24,7 @@ protected:
     void init(
         const std::vector<std::string>&,
         const std::vector<double>&,
+        const std::vector<opcode>&,
         const std::vector<std::string>&);
     /* debug functions */
     bool detail_info;
@@ -126,11 +127,13 @@ public:
 void nasal_vm::init(
     const std::vector<std::string>& strs,
     const std::vector<double>&      nums,
+    const std::vector<opcode>&      code,
     const std::vector<std::string>& filenames)
 {
     gc.init(strs);
     num_table=nums.data();
     str_table=strs.data();
+    bytecode=code.data();
     files=filenames.data();
     files_size=filenames.size();
     /* set canary and program counter */
@@ -339,11 +342,10 @@ inline void nasal_vm::opr_loadg()
 inline void nasal_vm::opr_loadl()
 {
     lstk.top()[imm[pc]]=(gc.top--)[0];
-    //gc.local.back().vec()->elems[imm[pc]]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_loadu()
 {
-    fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff]=(gc.top--)[0];
+    fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_pnum()
 {
@@ -383,12 +385,10 @@ inline void nasal_vm::opr_newf()
     if(!lstk.empty())
     {
         func->upvalue=fstk.top()->upvalue;
-        nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_vec):gc.upvalue.back();
+        nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_upval):gc.upvalue.back();
+        upval.upval().stk=lstk.top();
         func->upvalue.push_back(upval);
         gc.upvalue.back()=upval;
-        auto& vec=upval.vec()->elems;
-        for(uint32_t i=0;i<fstk.top()->lsize;++i)
-            vec.push_back(lstk.top()[i]);
     }
 }
 inline void nasal_vm::opr_happ()
@@ -601,7 +601,7 @@ inline void nasal_vm::opr_calll()
 }
 inline void nasal_vm::opr_upval()
 {
-    (++gc.top)[0]=fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
+    (++gc.top)[0]=fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff];
 }
 inline void nasal_vm::opr_callv()
 {
@@ -801,7 +801,7 @@ inline void nasal_vm::opr_mcalll()
 }
 inline void nasal_vm::opr_mupval()
 {
-    mem_addr=&fstk.top()->upvalue[(imm[pc]>>16)&0xffff].vec()->elems[imm[pc]&0xffff];
+    mem_addr=&(fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
     (++gc.top)[0]=mem_addr[0];
 }
 inline void nasal_vm::opr_mcallv()
@@ -852,17 +852,26 @@ inline void nasal_vm::opr_ret()
     // +-----------------+
     // | local scope     |
     // +-----------------+ <- local pointer stored in lstk
-    // | called function | <- funct is set on stack because gc may mark it
+    // | called function | <- func is stored on stack because gc may mark it
     // +-----------------+
     nasal_ref ret=gc.top[0];
     pc=gc.top[-1].ret();
 
     gc.top=lstk.top()-1;
-    lstk.pop();
 
     gc.top[0].func()->local[0]={vm_nil,nullptr}; // get func and set 'me' to nil
     gc.top[0]=ret; // rewrite func with returned value
 
+    if(gc.upvalue.back().type==vm_upval) // synchronize upvalue
+    {
+        auto& upval=gc.upvalue.back().upval();
+        auto local=lstk.top();
+        auto size=fstk.top()->lsize;
+        upval.onstk=false;
+        for(uint32_t i=0;i<size;++i)
+            upval.elems.push_back(local[i]);
+    }
+    lstk.pop();
     fstk.pop();
     gc.upvalue.pop_back();
 }
@@ -873,7 +882,7 @@ void nasal_vm::run(
     const bool detail)
 {
     detail_info=detail;
-    init(gen.get_strs(),gen.get_nums(),linker.get_file());
+    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
     uint64_t count[op_exit+1]={0};
     const void* opr_table[]=
     {
@@ -897,7 +906,6 @@ void nasal_vm::run(
         &&slc2,    &&mcallg,   &&mcalll, &&mupval,
         &&mcallv,  &&mcallh,   &&ret,    &&vmexit
     };
-    bytecode=gen.get_code().data();
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
     {
@@ -985,7 +993,7 @@ callv:   exec_opnodie(opr_callv   ,op_callv   ); // -0
 callvi:  exec_opnodie(opr_callvi  ,op_callvi  ); // -0
 callh:   exec_opnodie(opr_callh   ,op_callh   ); // -0
 callfv:  exec_opnodie(opr_callfv  ,op_callfv  ); // check in the function
-callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // -0 call this will push one hash
+callfh:  exec_opnodie(opr_callfh  ,op_callfh  ); // check in the function
 callb:   exec_opnodie(opr_callb   ,op_callb   ); // -0
 slcbegin:exec_operand(opr_slcbegin,op_slcbegin); // +1
 slcend:  exec_opnodie(opr_slcend  ,op_slcend  ); // -1

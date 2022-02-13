@@ -1,10 +1,10 @@
 # __Nasal Scripting Language__
 
 ```C++
-       __                _      
-    /\ \ \__ _ ___  __ _| |  
-   /  \/ / _` / __|/ _` | |    
-  / /\  / (_| \__ \ (_| | |  
+       __                _
+    /\ \ \__ _ ___  __ _| |
+   /  \/ / _` / __|/ _` | |
+  / /\  / (_| \__ \ (_| | |
   \_\ \/ \__,_|___/\__,_|_|
 ```
 
@@ -127,15 +127,15 @@ Use these commands to get version of interpreter:
 > ./nasal -v | --version
 
 ```bash
-       __                _      
-    /\ \ \__ _ ___  __ _| |  
-   /  \/ / _` / __|/ _` | |    
-  / /\  / (_| \__ \ (_| | |  
+       __                _
+    /\ \ \__ _ ___  __ _| |
+   /  \/ / _` / __|/ _` | |
+  / /\  / (_| \__ \ (_| | |
   \_\ \/ \__,_|___/\__,_|_|
 nasal interpreter ver 9.0
 thanks to : https://github.com/andyross/nasal
-code repo : https://github.com/ValKmjolnir/Nasal-Interpreter   
-code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter    
+code repo : https://github.com/ValKmjolnir/Nasal-Interpreter
+code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter
 lang info : http://wiki.flightgear.org/Nasal_scripting_language
 input <nasal -h> to get help .
 ```
@@ -148,7 +148,7 @@ Use these commands to get help(see more debug commands in help):
 nasal <option>
 option:
     -h, --help    | get help.
-    -v, --version | get version of nasal interpreter.  
+    -v, --version | get version of nasal interpreter.
 
 nasal <file>
 file:
@@ -157,7 +157,7 @@ file:
 nasal [options...] <file>
 option:
     -l,   --lex     | view token info.
-    -a,   --ast     | view abstract syntax tree.       
+    -a,   --ast     | view abstract syntax tree.
     -c,   --code    | view bytecode.
     -e,   --exec    | execute.
     -t,   --time    | execute and get the running time.
@@ -174,8 +174,6 @@ file:
 If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
 > chcp 65001
-
-The interpreter's interactive mode will do this automatically,so you don't need to run this command if you use the interactive interpreter.
 
 ## __Release Notes__
 
@@ -735,7 +733,7 @@ running time:
 |:----|:----|:----|
 |bf.nas|1100.19s||
 |mandel.nas|28.98s||
-|life.nas|0.857s(windows) 0.56(ubuntu WSL)||
+|life.nas|0.56s|0.857s(windows)|
 |ycombinator.nas|0.64s||
 |fib.nas|0.28s||
 |bfs.nas|0.156s|random result|
@@ -754,8 +752,8 @@ running time:
 |:----|:----|:----|
 |bf.nas|276.55s|great improvement|
 |mandel.nas|28.16s||
-|ycombinator.nas|0.578s||
-|life.nas|0.649s(windows) 0.2(ubuntu WSL)||
+|ycombinator.nas|0.59s||
+|life.nas|0.2s|0.649s(windows)|
 |fib.nas|0.234s|little improvement|
 |bfs.nas|0.14s|random result|
 |pi.nas|0.0625s||
