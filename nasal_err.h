@@ -45,6 +45,7 @@ class nasal_err:public file_line
 private:
     uint32_t error;
 public:
+    nasal_err():error(0){}
     void err(const char* stage,const std::string& info)
     {
         ++error;
