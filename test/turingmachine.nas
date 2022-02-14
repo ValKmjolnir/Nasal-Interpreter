@@ -26,6 +26,7 @@ var run=func(table,node,start,stop){
             node[action[0]]=nil;
         if(!contains(node,action[4]))
             node[action[4]]=nil;
+        print(action,'\n');
     }
     print("nodes: ",keys(node),'\n');
     if(!contains(node,start))

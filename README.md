@@ -11,7 +11,6 @@
 ## __Contents__
 
 * [__Introduction__](#introduction)
-* [__Why Writing Nasal Interpreter__](#why-writing-nasal-interpreter)
 * [__Compile__](#how-to-compile)
 * [__Usage__](#how-to-use)
 * [__Release Notes__](#release-notes)
@@ -82,8 +81,7 @@ Edit it if you want,
 use this project to learn or create more interesting things
 (But don't forget me XD).
 
-## __Why Writing Nasal Interpreter__
-
+__Why writing this nasal interpreter?__
 In 2019 summer holiday,
 members in __[FGPRC](https://www.fgprc.org/)__ told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
@@ -92,7 +90,7 @@ So i tried to write a new interpreter to help them checking syntax error and eve
 I wrote the lexer,
 parser and
 bytecode virtual machine(there was an ast-interpreter,
-but i deleted it after version4.0) to help checking errors.
+but deleted after v4.0) to help checking errors.
 We found it much easier to check syntax and runtime
 errors before copying nasal-codes in nasal-console in Flightgear to test.
 
@@ -106,7 +104,7 @@ this interpreter a useful tool in your own projects (such as a script in a game 
 Better choose the latest update of the interpreter.
 Download the source and build it! It's quite easy to build this interpreter.
 
-__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the __Release Notes__ below to make sure this release file has no fatal bugs. Also in __Release Notes__ there's tips to fix the release manually.
+__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](#release-notes) below to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
 
 Also remember to use g++ or clang++.(`mingw-w64` in __`Windows`__)
 
@@ -117,6 +115,9 @@ Or use this in __`linux/macOS/Unix`__
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
 ## __How to Use__
+
+First we should learn how to write a program using this language,
+click [__here__](#tutorial) to see the tutorial.
 
 Input this command to run scripts __directly__:
 
@@ -772,28 +773,29 @@ You could totally use it after reading this simple tutorial:
 
 ### __basic value type__
 
-`vm_none` is error type.
+__`vm_none`__ is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
 
-`vm_nil` is a null type. It means nothing.
+__`vm_nil`__ is a null type. It means nothing.
 
 ```javascript
 var spc=nil;
 ```
 
-`vm_num` has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
+__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
 
 ```javascript
-var n=1;
-var n=2.71828;
-var n=2.147e16;
-var n=1e-10;
-var n=0x7fffffff;
-var n=0xAA55;
-var n=0o170001;
+# this language use '#' to write notes
+var n=1;          # dec
+var n=2.71828;    # dec
+var n=2.147e16;   # dec
+var n=1e-10;      # dec
+var n=0x7fffffff; # hex
+var n=0xAA55;     # hex
+var n=0o170001;   # oct
 ```
 
-`vm_str` has 3 formats. The third one is used to declare a character.
+__`vm_str`__ has 3 formats. The third one is used to declare a character.
 
 ```javascript
 var s='str';
@@ -801,7 +803,7 @@ var s="another string";
 var s=`c`;
 ```
 
-`vm_vec` has unlimited length and can store all types of values.
+__`vm_vec`__ has unlimited length and can store all types of values.
 
 ```javascript
 var vec=[];
@@ -815,7 +817,7 @@ var vec=[
 append(vec,0,1,2);
 ```
 
-`vm_hash` is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
+__`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
 
 ```javascript
 var hash={
@@ -830,7 +832,7 @@ var hash={
 };
 ```
 
-`vm_func` is a function type (in fact it is lambda).
+__`vm_func`__ is a function type (in fact it is lambda).
 
 ```javascript
 var f=func(x,y,z){
@@ -850,7 +852,10 @@ var f=func(args...){
 }
 ```
 
-`vm_obj` is a special type that stores user data.
+__`vm_upval`__ is a special type that used to store upvalues.
+This type is only used in `nasal_vm` to make sure closure runs correctly.
+
+__`vm_obj`__ is a special type that stores user data.
 This means you could use other complex C/C++ data types in nasal.
 This type is used when you are trying to add a new data structure into nasal,
 so this type is often created by native-function that programmed in C/C++ by library developers.
