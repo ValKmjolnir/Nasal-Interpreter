@@ -13,6 +13,20 @@
 * [__Introduction__](#introduction)
 * [__Compile__](#how-to-compile)
 * [__Usage__](#how-to-use)
+* [__Tutorial__](#tutorial)
+  * [basic value type](#basic-value-type)
+  * [operators](#operators)
+  * [definition](#definition)
+  * [multi-assignment](#multi-assignment)
+  * [conditional expression](#conditional-expression)
+  * [loop](#loop)
+  * [subvec](#subvec)
+  * [special function call](#special-function-call)
+  * [lambda](#lambda)
+  * [closure](#closure)
+  * [trait](#trait)
+  * [native functions](#native-functions)
+  * [modules](#modulesfor-library-developers)
 * [__Release Notes__](#release-notes)
   * [v8.0](#version-80-release)
 * [__Parser__](#parser)
@@ -35,20 +49,6 @@
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
   * [v8.0 (R9-5900HX ubuntu-WSL)](#version-80-r9-5900hx-ubuntu-wsl-2022123)
   * [v9.0 (R9-5900HX ubuntu-WSL)](#version-90-r9-5900hx-ubuntu-wsl-2022213)
-* [__Tutorial__](#tutorial)
-  * [basic value type](#basic-value-type)
-  * [operators](#operators)
-  * [definition](#definition)
-  * [multi-assignment](#multi-assignment)
-  * [conditional expression](#conditional-expression)
-  * [loop](#loop)
-  * [subvec](#subvec)
-  * [special function call](#special-function-call)
-  * [lambda](#lambda)
-  * [closure](#closure)
-  * [trait](#trait)
-  * [native functions](#native-functions)
-  * [modules](#modulesfor-library-developers)
 * [__Difference__](#difference-between-andys-and-this-interpreter)
   * [strict definition](#1-must-use-var-to-define-variables)
   * [(outdated)use after definition](#2-now-supported-couldnt-use-variables-before-definitions)
@@ -117,7 +117,7 @@ Or use this in __`linux/macOS/Unix`__
 ## __How to Use__
 
 First we should learn how to write a program using this language,
-click [__here__](#tutorial) to see the tutorial.
+click to see the [__tutorial__](#tutorial).
 
 Input this command to run scripts __directly__:
 
@@ -175,6 +175,561 @@ file:
 If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
 > chcp 65001
+
+## __Tutorial__
+
+Nasal is really __easy__ to learn.
+Reading this tutorial will not takes you over 15 minutes.
+__If you have learnt C/C++/Javascript before, this will take less time.__
+You could totally use it after reading this simple tutorial:
+
+### __basic value type__
+
+__`vm_none`__ is error type.
+This type is used to interrupt the execution of virtual machine and will not be created by user program.
+
+__`vm_nil`__ is a null type. It means nothing.
+
+```javascript
+var spc=nil;
+```
+
+__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
+
+```javascript
+# this language use '#' to write notes
+var n=1;          # dec
+var n=2.71828;    # dec
+var n=2.147e16;   # dec
+var n=1e-10;      # dec
+var n=0x7fffffff; # hex
+var n=0xAA55;     # hex
+var n=0o170001;   # oct
+```
+
+__`vm_str`__ has 3 formats. The third one is used to declare a character.
+
+```javascript
+var s='str';
+var s="another string";
+var s=`c`;
+```
+
+__`vm_vec`__ has unlimited length and can store all types of values.
+
+```javascript
+var vec=[];
+var vec=[
+    0,
+    nil,
+    {},
+    [],
+    func(){return 0;}
+];
+append(vec,0,1,2);
+```
+
+__`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
+
+```javascript
+var hash={
+    member1:nil,
+    member2:'str',
+    'member3':'member\'s name can also be a string constant',
+    "member4":"also this",
+    function:func(){
+        var a=me.member2~me.member3;
+        return a;
+    }
+};
+```
+
+__`vm_func`__ is a function type (in fact it is lambda).
+
+```javascript
+var f=func(x,y,z){
+    return nil;
+}
+var f=func{
+    return 1024;
+}
+var f=func(x,y,z,default1=1,default2=2){
+    return x+y+z+default1+default2;
+}
+var f=func(args...){
+    var sum=0;
+    foreach(var i;args)
+        sum+=i;
+    return sum;
+}
+```
+
+__`vm_upval`__ is a special type that used to store upvalues.
+This type is only used in `nasal_vm` to make sure closure runs correctly.
+
+__`vm_obj`__ is a special type that stores user data.
+This means you could use other complex C/C++ data types in nasal.
+This type is used when you are trying to add a new data structure into nasal,
+so this type is often created by native-function that programmed in C/C++ by library developers.
+You could see how to write your own native-functions below.
+
+```javascript
+var my_new_obj=func(){
+    return __builtin_my_obj();
+}
+var obj=my_new_obj();
+```
+
+### __operators__
+
+Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
+
+```javascript
+1+2-1*2/1;
+'str1'~'str2';
+(1+2)*(3+4)
+```
+
+For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
+`and` `or` have the same function as C/C++ `&&` `||`, link comparations together.
+
+```javascript
+1+1 and 0;
+1<0 or 1>0;
+1<=0 and 1>=0;
+1==0 or 1!=0;
+```
+
+Unary operators `-` `!` have the same function as C/C++.
+
+```javascript
+-1;
+!0;
+```
+
+Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
+
+```javascript
+a=b=c=d=1;
+a+=1;
+a-=1;
+a*=1;
+a/=1;
+a~='string';
+```
+
+### __definition__
+
+```javascript
+var a=1;
+var (a,b,c)=[0,1,2];
+var (a,b,c)=(0,1,2);
+(var a,b,c)=[0,1,2];
+(var a,b,c)=(0,1,2);
+```
+
+### __multi-assignment__
+
+The last one is often used to swap two variables.
+
+```javascript
+(a,b[0],c.d)=[0,1,2];
+(a,b[1],c.e)=(0,1,2);
+(a,b)=(b,a);
+```
+
+### __conditional expression__
+
+In nasal there's a new key word `elsif`.
+It has the same functions as `else if`.
+
+```javascript
+if(1){
+    ;
+}elsif(2){
+    ;
+}else if(3){
+    ;
+}else{
+    ;
+}
+```
+
+### __loop__
+
+While loop and for loop is simalar to C/C++.
+
+```javascript
+while(condition)
+    continue;
+
+for(var i=0;i<10;i+=1)
+    break;
+```
+
+Nasal has another two kinds of loops that iterates through a vector:
+
+`forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
+
+```javascript
+forindex(var i;elem)
+    print(elem[i]);
+```
+
+`foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
+
+```javascript
+foreach(var i;elem)
+    print(i);
+```
+
+### __subvec__
+
+Use index to search one element in the string will get the __ascii number__ of this character.
+If you want to get the character, use built-in function chr().
+
+```javascript
+a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
+"hello world"[0];
+```
+
+### __special function call__
+
+This is of great use but is not very efficient
+(because hashmap use string as the key to compare).
+
+```javascript
+f(x:0,y:nil,z:[]);
+```
+
+### __lambda__
+
+Also functions have this kind of use:
+
+```javascript
+func(x,y){return x+y}(0,1);
+func(x){return 1/(1+math.exp(-x));}(0.5);
+```
+
+There's an interesting test file `y-combinator.nas`,
+try it for fun:
+
+```javascript
+var fib=func(f){
+    return f(f);
+}(
+    func(f){
+        return func(x){
+            if(x<2) return x;
+            return f(f)(x-1)+f(f)(x-2);
+        }
+    }
+);
+```
+
+### __closure__
+
+Closure means you could get the variable that is not in the local scope of a function that you called.
+Here is an example, result is `1`:
+
+```javascript
+var f=func(){
+    var a=1;
+    return func(){return a;};
+}
+print(f()());
+```
+
+Using closure makes it easier to OOP.
+
+```javascript
+var student=func(n,a){
+    var (name,age)=(n,a);
+    return {
+        print_info:func() {println(name,' ',age);},
+        set_age:   func(a){age=a;},
+        get_age:   func() {return age;},
+        set_name:  func(n){name=n;},
+        get_name:  func() {return name;}
+    };
+}
+```
+
+### __trait__
+
+Also there's another way to OOP, that is `trait`.
+
+When a hash has a member named `parents` and the value type is vector,
+then when you are trying to find a member that is not in this hash,
+virtual machine will search the member in `parents`.
+If there is a hash that has the member, you will get the member's value.
+
+Using this mechanism, we could OOP like this, the result is `114514`:
+
+```javascript
+var trait={
+    get:func{return me.val;},
+    set:func(x){me.val=x;}
+};
+
+var class={
+    new:func(){
+        return {
+            val:nil,
+            parents:[trait]
+        };
+    }
+};
+```
+
+First virtual machine cannot find member `set` in hash `a`, but in `a.parents` there's a hash `trait` has the member `set`, so we get the `set`.
+variable `me` points to hash `a`, so we change the `a.val`.
+And `get` has the same process.
+
+```javascript
+var a=class.new();
+a.set(114514);
+println(a.get());
+```
+
+### __native functions__
+
+You could add builtin functions of your own
+(written in C/C++) to help you calculate things more quickly.
+But you should add your own code into the source code of this interpreter and re-compile it.
+
+If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
+
+If you really want to change source code, check built-in functions in lib.nas and see the example below.
+
+Definition:
+
+```C++
+nasal_ref builtin_print(nasal_ref*,nasal_gc&);
+```
+
+Then complete this function using C++:
+
+```C++
+nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
+{
+    // find value with index begin from 1
+    // because local_scope[0] is reserved for value 'me'
+    nasal_ref vec=local[1];
+    // main process
+    // also check number of arguments and type here
+    // if get an error,use builtin_err
+    for(auto i:vec.vec()->elems)
+        switch(i.type)
+        {
+            case vm_none: std::cout<<"undefined";      break;
+            case vm_nil:  std::cout<<"nil";            break;
+            case vm_num:  std::cout<<i.num();          break;
+            case vm_str:  std::cout<<*i.str();         break;
+            case vm_vec:  i.vec()->print();            break;
+            case vm_hash: i.hash()->print();           break;
+            case vm_func: std::cout<<"func(...){...}"; break;
+            case vm_obj:  std::cout<<"<object>";       break;
+        }
+    std::cout<<std::flush;
+    // generate return value,use gc::alloc(type) to make a new value
+    // or use reserved reference nil/one/zero
+    return nil;
+}
+```
+
+After that, register the built-in function's name(in nasal) and the function's pointer in this table:
+
+```C++
+struct func
+{
+    const char* name;
+    nasal_ref (*func)(nasal_ref*,nasal_gc&);
+} builtin_func[]=
+{
+    {"__builtin_print",builtin_print},
+    {nullptr,          nullptr      }
+};
+```
+
+At last,warp the `__builtin_print` in a nasal file:
+
+```javascript
+var print=func(elems...){
+    return __builtin_print(elems);
+};
+```
+
+In fact the arguments that `__builtin_print` uses is not necessary.
+So writting it like this is also right:
+
+```javascript
+var print=func(elems...){
+    return __builtin_print;
+};
+```
+
+If you don't warp built-in function in a normal nasal function,
+this built-in function may cause a fault when searching arguments,
+which will cause __segmentation error__.
+
+Use `import("filename.nas")` to get the nasal file including your built-in functions,
+then you could use it.
+
+version 6.5 update:
+
+Use `gc::builtin_alloc` in builtin function if this function uses alloc more than one time.
+
+When running a builtin function,alloc will run more than one time,
+this may cause mark-sweep in `gc::alloc`.
+
+The value got before will be collected,but stil in use in this builtin function,
+this is a fatal error.
+
+So use `builtin_alloc` in builtin functions like this:
+
+```C++
+nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref hash=local[1];
+    if(hash.type!=vm_hash)
+    {
+        builtin_err("keys","\"hash\" must be hash");
+        return nasal_ref(vm_none);
+    }
+
+    // push vector into local scope to avoid being sweeped
+    local.push_back(gc.alloc(vm_vec));
+    std::vector<nasal_ref>& vec=local.back().vec()->elems;
+    for(auto& iter:hash.hash()->elems)
+    {
+        nasal_ref str=gc.builtin_alloc(vm_str);
+        *str.str()=iter.first;
+        vec.push_back(str);
+    }
+    return local.back();
+}
+```
+
+### __modules(for library developers)__
+
+If there is only one way to add your own functions into nasal,
+that is really inconvenient.
+
+Luckily, we have developed some useful native-functions to help you add modules that created by you.
+
+After 2021/12/3, there are some new functions added to `lib.nas`:
+
+```javascript
+var dylib=
+{
+    dlopen:  func(libname){return __builtin_dlopen;},
+    dlsym:   func(lib,sym){return __builtin_dlsym; },
+    dlclose: func(lib){return __builtin_dlclose;   },
+    dlcall:  func(funcptr,args...){return __builtin_dlcall}
+};
+```
+
+Aha, as you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
+Let's see how they work.
+
+First, write a cpp file that you want to generate the dynamic lib, take the `fib.cpp` as the example(example codes are in `./module`):
+
+```C++
+// add header file nasal.h to get api
+#include "nasal.h"
+double fibonaci(double x){
+    if(x<=2)
+        return x;
+    return fibonaci(x-1)+fibonaci(x-2);
+}
+// remember to use extern "C",
+// so you could search the symbol quickly
+extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
+    // the arguments are generated into a vm_vec: args
+    // get values from the vector that must be used here
+    nasal_ref num=args[0];
+    // if you want your function safer, try this
+    // builtin_err will print the error info on screen
+    // and return vm_null for runtime to interrupt
+    if(num.type!=vm_num)
+        return builtin_err("extern_fib","\"num\" must be number");
+    // ok, you must know that vm_num now is not managed by gc
+    // if want to return a gc object, use gc.alloc(type)
+    // usage of gc is the same as adding a native function
+    return {vm_num,fibonaci(num.to_number())};
+}
+```
+
+Next, compile this `fib.cpp` into dynamic lib.
+
+Linux(`.so`):
+
+`clang++ -c -O3 fib.cpp -fPIC -o fib.o`
+
+`clang++ -shared -o libfib.so fib.o`
+
+Mac(`.so` & `.dylib`): same as Linux.
+
+Windows(`.dll`):
+
+`g++ -c -O3 fib.cpp -fPIC -o fib.o`
+
+`g++ -shared -o libfib.dll fib.o`
+
+Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
+
+```javascript
+import("lib.nas");
+var dlhandle=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib=dylib.dlsym(dlhandle,"fib");
+for(var i=1;i<30;i+=1)
+    println(dylib.dlcall(fib,i));
+dylib.dlclose(dlhandle);
+```
+
+`dylib.dlopen` is used to load dynamic library.
+
+`dylib.dlsym` is used to get the function address.
+
+`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
+
+`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that gotten from it are invalid.
+
+If get this, Congratulations!
+
+```bash
+./nasal a.nas
+1
+2 
+3 
+5 
+8 
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+1597
+2584
+4181
+6765
+10946
+17711
+28657
+46368
+75025
+121393
+196418
+317811
+514229
+832040
+```
 
 ## __Release Notes__
 
@@ -763,561 +1318,6 @@ running time:
 |quick_sort.nas|0.016s|changed test file:100->1e4|
 |mandelbrot.nas|0.0156s||
 |ascii-art.nas|0s||
-
-## __Tutorial__
-
-Nasal is really __easy__ to learn.
-Reading this tutorial will not takes you over 15 minutes.
-__If you have learnt C/C++/Javascript before, this will take less time.__
-You could totally use it after reading this simple tutorial:
-
-### __basic value type__
-
-__`vm_none`__ is error type.
-This type is used to interrupt the execution of virtual machine and will not be created by user program.
-
-__`vm_nil`__ is a null type. It means nothing.
-
-```javascript
-var spc=nil;
-```
-
-__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
-
-```javascript
-# this language use '#' to write notes
-var n=1;          # dec
-var n=2.71828;    # dec
-var n=2.147e16;   # dec
-var n=1e-10;      # dec
-var n=0x7fffffff; # hex
-var n=0xAA55;     # hex
-var n=0o170001;   # oct
-```
-
-__`vm_str`__ has 3 formats. The third one is used to declare a character.
-
-```javascript
-var s='str';
-var s="another string";
-var s=`c`;
-```
-
-__`vm_vec`__ has unlimited length and can store all types of values.
-
-```javascript
-var vec=[];
-var vec=[
-    0,
-    nil,
-    {},
-    [],
-    func(){return 0;}
-];
-append(vec,0,1,2);
-```
-
-__`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
-
-```javascript
-var hash={
-    member1:nil,
-    member2:'str',
-    'member3':'member\'s name can also be a string constant',
-    "member4":"also this",
-    function:func(){
-        var a=me.member2~me.member3;
-        return a;
-    }
-};
-```
-
-__`vm_func`__ is a function type (in fact it is lambda).
-
-```javascript
-var f=func(x,y,z){
-    return nil;
-}
-var f=func{
-    return 1024;
-}
-var f=func(x,y,z,default1=1,default2=2){
-    return x+y+z+default1+default2;
-}
-var f=func(args...){
-    var sum=0;
-    foreach(var i;args)
-        sum+=i;
-    return sum;
-}
-```
-
-__`vm_upval`__ is a special type that used to store upvalues.
-This type is only used in `nasal_vm` to make sure closure runs correctly.
-
-__`vm_obj`__ is a special type that stores user data.
-This means you could use other complex C/C++ data types in nasal.
-This type is used when you are trying to add a new data structure into nasal,
-so this type is often created by native-function that programmed in C/C++ by library developers.
-You could see how to write your own native-functions below.
-
-```javascript
-var my_new_obj=func(){
-    return __builtin_my_obj();
-}
-var obj=my_new_obj();
-```
-
-### __operators__
-
-Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
-
-```javascript
-1+2-1*2/1;
-'str1'~'str2';
-(1+2)*(3+4)
-```
-
-For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
-`and` `or` have the same function as C/C++ `&&` `||`, link comparations together.
-
-```javascript
-1+1 and 0;
-1<0 or 1>0;
-1<=0 and 1>=0;
-1==0 or 1!=0;
-```
-
-Unary operators `-` `!` have the same function as C/C++.
-
-```javascript
--1;
-!0;
-```
-
-Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
-
-```javascript
-a=b=c=d=1;
-a+=1;
-a-=1;
-a*=1;
-a/=1;
-a~='string';
-```
-
-### __definition__
-
-```javascript
-var a=1;
-var (a,b,c)=[0,1,2];
-var (a,b,c)=(0,1,2);
-(var a,b,c)=[0,1,2];
-(var a,b,c)=(0,1,2);
-```
-
-### __multi-assignment__
-
-The last one is often used to swap two variables.
-
-```javascript
-(a,b[0],c.d)=[0,1,2];
-(a,b[1],c.e)=(0,1,2);
-(a,b)=(b,a);
-```
-
-### __conditional expression__
-
-In nasal there's a new key word `elsif`.
-It has the same functions as `else if`.
-
-```javascript
-if(1){
-    ;
-}elsif(2){
-    ;
-}else if(3){
-    ;
-}else{
-    ;
-}
-```
-
-### __loop__
-
-While loop and for loop is simalar to C/C++.
-
-```javascript
-while(condition)
-    continue;
-
-for(var i=0;i<10;i+=1)
-    break;
-```
-
-Nasal has another two kinds of loops that iterates through a vector:
-
-`forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
-
-```javascript
-forindex(var i;elem)
-    print(elem[i]);
-```
-
-`foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
-
-```javascript
-foreach(var i;elem)
-    print(i);
-```
-
-### __subvec__
-
-Use index to search one element in the string will get the __ascii number__ of this character.
-If you want to get the character, use built-in function chr().
-
-```javascript
-a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
-"hello world"[0];
-```
-
-### __special function call__
-
-This is of great use but is not very efficient
-(because hashmap use string as the key to compare).
-
-```javascript
-f(x:0,y:nil,z:[]);
-```
-
-### __lambda__
-
-Also functions have this kind of use:
-
-```javascript
-func(x,y){return x+y}(0,1);
-func(x){return 1/(1+math.exp(-x));}(0.5);
-```
-
-There's an interesting test file `y-combinator.nas`,
-try it for fun:
-
-```javascript
-var fib=func(f){
-    return f(f);
-}(
-    func(f){
-        return func(x){
-            if(x<2) return x;
-            return f(f)(x-1)+f(f)(x-2);
-        }
-    }
-);
-```
-
-### __closure__
-
-Closure means you could get the variable that is not in the local scope of a function that you called.
-Here is an example, result is `1`:
-
-```javascript
-var f=func(){
-    var a=1;
-    return func(){return a;};
-}
-print(f()());
-```
-
-Using closure makes it easier to OOP.
-
-```javascript
-var student=func(n,a){
-    var (name,age)=(n,a);
-    return {
-        print_info:func() {println(name,' ',age);},
-        set_age:   func(a){age=a;},
-        get_age:   func() {return age;},
-        set_name:  func(n){name=n;},
-        get_name:  func() {return name;}
-    };
-}
-```
-
-### __trait__
-
-Also there's another way to OOP, that is `trait`.
-
-When a hash has a member named `parents` and the value type is vector,
-then when you are trying to find a member that is not in this hash,
-virtual machine will search the member in `parents`.
-If there is a hash that has the member, you will get the member's value.
-
-Using this mechanism, we could OOP like this, the result is `114514`:
-
-```javascript
-var trait={
-    get:func{return me.val;},
-    set:func(x){me.val=x;}
-};
-
-var class={
-    new:func(){
-        return {
-            val:nil,
-            parents:[trait]
-        };
-    }
-};
-```
-
-First virtual machine cannot find member `set` in hash `a`, but in `a.parents` there's a hash `trait` has the member `set`, so we get the `set`.
-variable `me` points to hash `a`, so we change the `a.val`.
-And `get` has the same process.
-
-```javascript
-var a=class.new();
-a.set(114514);
-println(a.get());
-```
-
-### __native functions__
-
-You could add builtin functions of your own
-(written in C/C++) to help you calculate things more quickly.
-But you should add your own code into the source code of this interpreter and re-compile it.
-
-If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
-
-If you really want to change source code, check built-in functions in lib.nas and see the example below.
-
-Definition:
-
-```C++
-nasal_ref builtin_print(nasal_ref*,nasal_gc&);
-```
-
-Then complete this function using C++:
-
-```C++
-nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
-{
-    // find value with index begin from 1
-    // because local_scope[0] is reserved for value 'me'
-    nasal_ref vec=local[1];
-    // main process
-    // also check number of arguments and type here
-    // if get an error,use builtin_err
-    for(auto i:vec.vec()->elems)
-        switch(i.type)
-        {
-            case vm_none: std::cout<<"undefined";      break;
-            case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i.num();          break;
-            case vm_str:  std::cout<<*i.str();         break;
-            case vm_vec:  i.vec()->print();            break;
-            case vm_hash: i.hash()->print();           break;
-            case vm_func: std::cout<<"func(...){...}"; break;
-            case vm_obj:  std::cout<<"<object>";       break;
-        }
-    std::cout<<std::flush;
-    // generate return value,use gc::alloc(type) to make a new value
-    // or use reserved reference nil/one/zero
-    return nil;
-}
-```
-
-After that, register the built-in function's name(in nasal) and the function's pointer in this table:
-
-```C++
-struct func
-{
-    const char* name;
-    nasal_ref (*func)(nasal_ref*,nasal_gc&);
-} builtin_func[]=
-{
-    {"__builtin_print",builtin_print},
-    {nullptr,          nullptr      }
-};
-```
-
-At last,warp the `__builtin_print` in a nasal file:
-
-```javascript
-var print=func(elems...){
-    return __builtin_print(elems);
-};
-```
-
-In fact the arguments that `__builtin_print` uses is not necessary.
-So writting it like this is also right:
-
-```javascript
-var print=func(elems...){
-    return __builtin_print;
-};
-```
-
-If you don't warp built-in function in a normal nasal function,
-this built-in function may cause a fault when searching arguments,
-which will cause __segmentation error__.
-
-Use `import("filename.nas")` to get the nasal file including your built-in functions,
-then you could use it.
-
-version 6.5 update:
-
-Use `gc::builtin_alloc` in builtin function if this function uses alloc more than one time.
-
-When running a builtin function,alloc will run more than one time,
-this may cause mark-sweep in `gc::alloc`.
-
-The value got before will be collected,but stil in use in this builtin function,
-this is a fatal error.
-
-So use `builtin_alloc` in builtin functions like this:
-
-```C++
-nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
-{
-    nasal_ref hash=local[1];
-    if(hash.type!=vm_hash)
-    {
-        builtin_err("keys","\"hash\" must be hash");
-        return nasal_ref(vm_none);
-    }
-
-    // push vector into local scope to avoid being sweeped
-    local.push_back(gc.alloc(vm_vec));
-    std::vector<nasal_ref>& vec=local.back().vec()->elems;
-    for(auto& iter:hash.hash()->elems)
-    {
-        nasal_ref str=gc.builtin_alloc(vm_str);
-        *str.str()=iter.first;
-        vec.push_back(str);
-    }
-    return local.back();
-}
-```
-
-### __modules(for library developers)__
-
-If there is only one way to add your own functions into nasal,
-that is really inconvenient.
-
-Luckily, we have developed some useful native-functions to help you add modules that created by you.
-
-After 2021/12/3, there are some new functions added to `lib.nas`:
-
-```javascript
-var dylib=
-{
-    dlopen:  func(libname){return __builtin_dlopen;},
-    dlsym:   func(lib,sym){return __builtin_dlsym; },
-    dlclose: func(lib){return __builtin_dlclose;   },
-    dlcall:  func(funcptr,args...){return __builtin_dlcall}
-};
-```
-
-Aha, as you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
-Let's see how they work.
-
-First, write a cpp file that you want to generate the dynamic lib, take the `fib.cpp` as the example(example codes are in `./module`):
-
-```C++
-// add header file nasal.h to get api
-#include "nasal.h"
-double fibonaci(double x){
-    if(x<=2)
-        return x;
-    return fibonaci(x-1)+fibonaci(x-2);
-}
-// remember to use extern "C",
-// so you could search the symbol quickly
-extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
-    // the arguments are generated into a vm_vec: args
-    // get values from the vector that must be used here
-    nasal_ref num=args[0];
-    // if you want your function safer, try this
-    // builtin_err will print the error info on screen
-    // and return vm_null for runtime to interrupt
-    if(num.type!=vm_num)
-        return builtin_err("extern_fib","\"num\" must be number");
-    // ok, you must know that vm_num now is not managed by gc
-    // if want to return a gc object, use gc.alloc(type)
-    // usage of gc is the same as adding a native function
-    return {vm_num,fibonaci(num.to_number())};
-}
-```
-
-Next, compile this `fib.cpp` into dynamic lib.
-
-Linux(`.so`):
-
-`clang++ -c -O3 fib.cpp -fPIC -o fib.o`
-
-`clang++ -shared -o libfib.so fib.o`
-
-Mac(`.so` & `.dylib`): same as Linux.
-
-Windows(`.dll`):
-
-`g++ -c -O3 fib.cpp -fPIC -o fib.o`
-
-`g++ -shared -o libfib.dll fib.o`
-
-Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
-
-```javascript
-import("lib.nas");
-var dlhandle=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dylib.dlsym(dlhandle,"fib");
-for(var i=1;i<30;i+=1)
-    println(dylib.dlcall(fib,i));
-dylib.dlclose(dlhandle);
-```
-
-`dylib.dlopen` is used to load dynamic library.
-
-`dylib.dlsym` is used to get the function address.
-
-`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
-
-`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that gotten from it are invalid.
-
-If get this, Congratulations!
-
-```bash
-./nasal a.nas
-1
-2 
-3 
-5 
-8 
-13
-21
-34
-55
-89
-144
-233
-377
-610
-987
-1597
-2584
-4181
-6765
-10946
-17711
-28657
-46368
-75025
-121393
-196418
-317811
-514229
-832040
-```
 
 ## __Difference Between Andy's and This Interpreter__
 
