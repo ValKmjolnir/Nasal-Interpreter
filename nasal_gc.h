@@ -87,8 +87,10 @@ struct nasal_ref
 
 struct nasal_vec
 {
+    uint32_t depth;
     std::vector<nasal_ref> elems;
 
+    nasal_vec():depth(0){}
     void       print();
     nasal_ref  get_val(const int);
     nasal_ref* get_mem(const int);
@@ -96,8 +98,10 @@ struct nasal_vec
 
 struct nasal_hash
 {
+    uint32_t depth;
     std::unordered_map<std::string,nasal_ref> elems;
 
+    nasal_hash():depth(0){}
     void       print();
     nasal_ref  get_val(const std::string&);
     nasal_ref* get_mem(const std::string&);
@@ -174,8 +178,7 @@ nasal_ref* nasal_vec::get_mem(const int index)
 }
 void nasal_vec::print()
 {
-    static int depth=0;
-    if(!elems.size() || depth>8)
+    if(!elems.size() || depth>3)
     {
         std::cout<<(elems.size()?"[..]":"[]");
         return;
@@ -231,8 +234,7 @@ nasal_ref* nasal_hash::get_mem(const std::string& key)
 }
 void nasal_hash::print()
 {
-    static int depth=0;
-    if(!elems.size() || depth>8)
+    if(!elems.size() || depth>3)
     {
         std::cout<<(elems.size()?"{..}":"{}");
         return;

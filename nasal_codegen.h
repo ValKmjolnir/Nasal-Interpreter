@@ -3,7 +3,7 @@
 
 enum op_code
 {
-    op_nop,     // do nothing
+    op_exit,    // stop the virtual machine
     op_intg,    // global scope size
     op_intl,    // local scope size
     op_loadg,   // load global value
@@ -77,8 +77,7 @@ enum op_code
     op_mupval,  // get memory space of value in closure
     op_mcallv,  // get memory space of vec[index]
     op_mcallh,  // get memory space of hash.label
-    op_ret,     // return
-    op_exit     // stop the virtual machine
+    op_ret      // return
 };
 
 struct
@@ -87,7 +86,7 @@ struct
     const char* name;
 }code_table[]=
 {
-    {op_nop,     "nop   "},
+    {op_exit,    "exit  "},
     {op_intg,    "intg  "},
     {op_intl,    "intl  "},
     {op_loadg,   "loadg "},
@@ -162,7 +161,6 @@ struct
     {op_mcallv,  "mcallv"},
     {op_mcallh,  "mcallh"},
     {op_ret,     "ret   "},
-    {op_exit,    "exit  "},
     {-1,         nullptr },
 };
 
@@ -172,7 +170,7 @@ struct opcode
     uint16_t fidx;// source code file index
     uint32_t num; // imm num
     uint32_t line;// line of source code
-    opcode(uint8_t o=op_nop,uint16_t f=0,uint32_t n=0,uint32_t l=0):
+    opcode(uint8_t o=op_exit,uint16_t f=0,uint32_t n=0,uint32_t l=0):
         op(o),fidx(f),num(n),line(l){}
     opcode& operator=(const opcode& tmp)
     {
