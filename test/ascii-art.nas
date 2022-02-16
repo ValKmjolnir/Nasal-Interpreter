@@ -116,6 +116,7 @@ var curve4=func()
 }
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
+trans_ttf("just for fun");
 curve1();
 curve2();
 curve3();

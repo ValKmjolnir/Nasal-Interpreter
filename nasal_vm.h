@@ -41,7 +41,6 @@ protected:
     /* vm calculation functions*/
     bool condition(nasal_ref);
     /* vm operands */
-    void opr_nop();
     void opr_intg();
     void opr_intl();
     void opr_loadg();
@@ -322,7 +321,6 @@ inline bool nasal_vm::condition(nasal_ref val)
     }
     return false;
 }
-inline void nasal_vm::opr_nop(){}
 inline void nasal_vm::opr_intg()
 {
     // global values store on stack
@@ -883,10 +881,10 @@ void nasal_vm::run(
 {
     detail_info=detail;
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
-    uint64_t count[op_exit+1]={0};
+    uint64_t count[op_ret+1]={0};
     const void* opr_table[]=
     {
-        &&nop,     &&intg,     &&intl,   &&loadg,
+        &&vmexit,  &&intg,     &&intl,   &&loadg,
         &&loadl,   &&loadu,    &&pnum,   &&pnil,
         &&pstr,    &&newv,     &&newh,   &&newf,
         &&happ,    &&para,     &&defpara,&&dynpara,
@@ -904,7 +902,7 @@ void nasal_vm::run(
         &&callvi,  &&callh,    &&callfv, &&callfh,
         &&callb,   &&slcbegin, &&slcend, &&slc,
         &&slc2,    &&mcallg,   &&mcalll, &&mupval,
-        &&mcallv,  &&mcallh,   &&ret,    &&vmexit
+        &&mcallv,  &&mcallh,   &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
@@ -930,7 +928,6 @@ vmexit:
 // do not cause stackoverflow
 #define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 
-nop:     exec_opnodie(opr_nop     ,op_nop     ); // 0
 intg:    exec_opnodie(opr_intg    ,op_intg    ); // +imm[pc] (detected at codegen)
 intl:    exec_opnodie(opr_intl    ,op_intl    ); // -0
 loadg:   exec_opnodie(opr_loadg   ,op_loadg   ); // -1

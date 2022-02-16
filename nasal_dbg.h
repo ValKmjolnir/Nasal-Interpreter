@@ -105,7 +105,7 @@ void nasal_dbg::interact()
         <<"[debug] nasal debug mode\n"
         <<"input \'h\' to get help\n";
     }
-    else if(bytecode[pc].op==op_nop || bytecode[pc].op==op_exit)
+    else if(bytecode[pc].op==op_exit)
         return;
     
     if(
@@ -183,7 +183,7 @@ void nasal_dbg::run(
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
     const void* opr_table[]=
     {
-        &&nop,     &&intg,     &&intl,   &&loadg,
+        &&vmexit,  &&intg,     &&intl,   &&loadg,
         &&loadl,   &&loadu,    &&pnum,   &&pnil,
         &&pstr,    &&newv,     &&newh,   &&newf,
         &&happ,    &&para,     &&defpara,&&dynpara,
@@ -201,7 +201,7 @@ void nasal_dbg::run(
         &&callvi,  &&callh,    &&callfv, &&callfh,
         &&callb,   &&slcbegin, &&slcend, &&slc,
         &&slc2,    &&mcallg,   &&mcalll, &&mupval,
-        &&mcallv,  &&mcallh,   &&ret,    &&vmexit
+        &&mcallv,  &&mcallh,   &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
@@ -221,7 +221,6 @@ vmexit:
     return;
 #define dbg(op) {interact();op();if(gc.top<canary)goto *code[++pc];goto vmexit;}
 
-nop:     dbg(opr_nop     );
 intg:    dbg(opr_intg    );
 intl:    dbg(opr_intl    );
 loadg:   dbg(opr_loadg   );
