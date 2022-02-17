@@ -114,6 +114,28 @@ var curve4=func()
     }
     return;
 }
+var curve5=func(){
+    var a=[];
+    for(var i=0;i<10;i+=1)
+        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=30;i<38;i+=1)
+        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=40;i<48;i+=1)
+        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=90;i<98;i+=1)
+        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=100;i<108;i+=1)
+        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    var s=0;
+    foreach(var i;a){
+        print(i,s==3?"\n":"");
+        if(s==3)
+            s=0;
+        else
+            s+=1;
+    }
+    print('\n');
+}
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
 trans_ttf("just for fun");
@@ -121,3 +143,4 @@ curve1();
 curve2();
 curve3();
 curve4();
+curve5();
