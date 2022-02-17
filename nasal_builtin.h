@@ -267,9 +267,9 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     nasal_ref deli_val=local[1];
     nasal_ref str_val=local[2];
     if(deli_val.type!=vm_str)
-        return builtin_err("split","\"delimeter\" must be string");
+        return builtin_err("split","\"separator\" must be string");
     if(str_val.type!=vm_str)
-        return builtin_err("split","\"string\" must be string");
+        return builtin_err("split","\"str\" must be string");
     std::string& delimeter=*deli_val.str();
     std::string& source=*str_val.str();
     size_t delimeter_len=delimeter.length();
