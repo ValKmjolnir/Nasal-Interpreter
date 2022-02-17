@@ -34,11 +34,11 @@ var input=func(){
     return __builtin_input();
 }
 
-# split a string by delimiter for example:
+# split a string by separator for example:
 # split("ll","hello world") -> ["he","o world"]
 # this function will return a vector.
-var split=func(deli,str){
-    return __builtin_split(deli,str);
+var split=func(separator,str){
+    return __builtin_split(separator,str);
 }
 
 # rand has the same function as the rand in C
