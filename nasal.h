@@ -117,6 +117,7 @@ std::string rawstr(const std::string& str)
         {
             case '\a': ret+="\\a";break;
             case '\b': ret+="\\b";break;
+            case '\e': ret+="\\e";break;
             case '\f': ret+="\\f";break;
             case '\n': ret+="\\n";break;
             case '\r': ret+="\\r";break;

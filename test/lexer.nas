@@ -43,6 +43,7 @@ var lexer=func(file)
                     var c=chr(s[ptr]);
                     if   (c=='a' ) str~='\a';
                     elsif(c=='b' ) str~='\b';
+                    elsif(c=='e' ) str~='\e';
                     elsif(c=='f' ) str~='\f';
                     elsif(c=='n' ) str~='\n';
                     elsif(c=='r' ) str~='\r';
