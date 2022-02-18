@@ -1217,6 +1217,8 @@ And after that when creating new functions, they share the same upvalue, and the
 
 ## Benchmark
 
+![benchmark](./pic/benchmark.png)
+
 ### version 6.5 (i5-8250U windows10 2021/6/19)
 
 running time and gc time:
@@ -1318,6 +1320,13 @@ running time:
 |quick_sort.nas|0.016s|changed test file:100->1e4|
 |mandelbrot.nas|0.0156s||
 |ascii-art.nas|0s||
+
+`bf.nas` is a very interesting test file that there is a brainfuck interpreter written in nasal.
+And we use this bf interpreter to draw a mandelbrot set.
+
+In 2022/2/17 update we added `\e` into the lexer. And the `bfcolored.nas` uses this special ASCII code. Here is the result:
+
+![mandelbrot](./pic/mandelbrot.png)
 
 ## __Difference Between Andy's and This Interpreter__
 
