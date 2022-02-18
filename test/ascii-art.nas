@@ -115,26 +115,33 @@ var curve4=func()
     return;
 }
 var curve5=func(){
-    var a=[];
-    for(var i=0;i<10;i+=1)
-        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
-    for(var i=30;i<38;i+=1)
-        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
-    for(var i=40;i<48;i+=1)
-        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
-    for(var i=90;i<98;i+=1)
-        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
-    for(var i=100;i<108;i+=1)
-        append(a,"\e["~split(".",str(i))[0]~"mh \e[0m");
-    var s=0;
-    foreach(var i;a){
-        print(i,s==3?"\n":"");
-        if(s==3)
-            s=0;
-        else
-            s+=1;
+    for(var i=0;i<=9;i+=1)
+        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=30;i<=37;i+=1)
+        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=40;i<=47;i+=1)
+        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=90;i<=97;i+=1)
+        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+    for(var i=100;i<=107;i+=1)
+        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+}
+var curve6=func(){
+    var shadow=["m░\e[0m","m▒\e[0m","m▓\e[0m","m█\e[0m","m▀\e[0m","m▄\e[0m","m▐\e[0m","m▌\e[0m"];
+    var front=[
+        "30","31","32","33","34","35","36","37",
+        "90","91","92","93","94","95","96","97"
+    ];
+    var back=[
+        "40","41","42","43","44","45","46","47",
+        "100","101","102","103","104","105","106","107"
+    ];
+    rand(time(0));
+    for(var i=0;i<15;i+=1){
+        for(var j=0;j<45;j+=1)
+            print("\e["~front[16*rand()]~";"~back[16*rand()]~shadow[8*rand()]);
+        print('\n');
     }
-    print('\n');
 }
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
@@ -144,3 +151,4 @@ curve2();
 curve3();
 curve4();
 curve5();
+curve6();
