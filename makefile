@@ -4,6 +4,7 @@ nasal:main.cpp nasal_ast.h nasal_err.h nasal_builtin.h nasal_opt.h nasal_codegen
 test:nasal
 	./nasal -op -e test/ascii-art.nas
 	./nasal -op -c test/bf.nas
+	./nasal -op -c test/bfcolored.nas
 	./nasal -op -c test/bfconvertor.nas
 	./nasal -op -e -d test/bfs.nas
 	./nasal -op -t test/bigloop.nas
