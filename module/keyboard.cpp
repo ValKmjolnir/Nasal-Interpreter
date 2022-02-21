@@ -4,7 +4,7 @@
 #include <conio.h>
 #else
 #include <fcntl.h>
-#include <termio.h>
+#include <termios.h>
 #endif
 
 #ifndef _WIN32

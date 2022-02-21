@@ -9,7 +9,7 @@ libkey.so: keyboard.cpp
 	clang++ -c -O3 keyboard.cpp -fPIC -o keyboard.o
 	clang++ -shared -o libkey.so keyboard.o
 libkey.dll: keyboard.cpp
-	g++ -c -O3 keyboard.cpp -fPIC -o keyboard.o
-	g++ -shared -o libkey.dll keyboard.o
+	g++ -c -O3 keyboard.cpp -fPIC -o keyboard.o -static
+	g++ -shared -o libkey.dll keyboard.o -static
 clean:
 	rm *.o *.so *.dll *.dylib

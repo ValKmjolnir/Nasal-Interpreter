@@ -1,14 +1,18 @@
 import("lib.nas");
-import("module/libkey.nas");
+import("./module/libkey.nas");
 
+var color=[
+    "\e[31m","\e[32m","\e[33m","\e[34m","\e[35m","\e[36m",
+    "\e[91m","\e[92m","\e[93m","\e[94m","\e[95m","\e[96m",
+];
 var blocktype=[
-    [0,1,2,3],
-    [4,5,6,7],
+    [0,1,2,3  ],
+    [4,5,6,7  ],
     [8,9,10,11],
-    [12,13],
-    [14],
-    [15,16],
-    [17,18]
+    [12,13    ],
+    [14       ],
+    [15,16    ],
+    [17,18    ]
 ];
 var blockshape=[
     # [][]            []  [][][]
@@ -52,32 +56,45 @@ var blockshape=[
     [[0,0],[0,1],[1,1],[1,2]],
     [[0,0],[1,0],[0,1],[-1,1]]
 ];
+
+var stick_count=0; # make sure one stick in 10 tries
 var block={
     x:0,
     y:0,
     rotate:0,
     type:nil,
     shape:nil,
+    color:nil,
     new:func(x=0,y=0){
         (me.x,me.y)=(x,y);
         me.rotate=0;
-        me.type=blocktype[rand()*size(blocktype)];
+        var t=int(rand()*size(blocktype));
+        if(t!=3){
+            stick_count+=1;
+            if(stick_count==10)
+                (t,stick_count)=(3,0);
+        }else
+            stick_count=0;
+        me.type=blocktype[t];
         me.shape=blockshape[me.type[me.rotate]];
+        me.color=int(rand()*size(color));
         return {parents:[block]};
     }
 };
 
 var mapgen=func(mapx,mapy){
-    var score=0;
+    var (score,gameover)=(0,0);
     var (empty,unset,full)=(0,1,2);
 
     if(mapx<1 or mapy<1)
         die("map_x or map_y must be greater than 1");
+    
     # use in print
-    var table="\e[44m ";
+    var table="\e[32m+";
     for(var i=0;i<mapx;i+=1)
-        table~="  ";
-    table~=" \e[0m\n";
+        table~="--";
+    table~="+\e[0m\n";
+
     # generate new map
     var map=[];
     for(var y=0;y<mapy;y+=1){
@@ -90,29 +107,37 @@ var mapgen=func(mapx,mapy){
     var blk=nil;
     var new_block=func(){
         blk=block.new(int(mapx/2),0);
-        # check game end unfinished
+
+        # check if has enough place to place a new block
+        foreach(var i;blk.shape)
+            if(map[blk.y+i[1]][blk.x+i[0]]>=full){
+                gameover=1;
+                return;
+            }
+        # update map
         foreach(var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
     }
-    new_block();
+    new_block(); # initialize the first block
 
     # color print
-    var front=[
-        "31","32","33","34","35","36",
-        "91","92","93","94","95","96",
-    ];
     var map_print=func(){
-        print("\e[1;1Hscore: ",score,"\n");
-        var s=table;
+        var s="\e[1;1H"~table;
         for(var y=0;y<mapy;y+=1){
-            s~="\e[44m \e[0m";
+            s~="\e[32m|\e[0m";
             for(var x=0;x<mapx;x+=1){
-                s~=(map[y][x]!=empty)?"\e["~front[rand()*12]~"m██\e[0m":"  ";
+                var c=map[y][x];
+                if(c==empty)
+                    s~="  ";
+                elsif(c==unset)
+                    s~=color[blk.color]~"██\e[0m";
+                elsif(c>=full)
+                    s~=color[c-full]~"██\e[0m";
             }
-            s~="\e[44m \e[0m\n";
+            s~="\e[32m|\e[0m\n";
         }
         s~=table;
-        print(s);
+        print(s," score: ",score,'\n');
     }
 
     var moveleft=func(){
@@ -120,9 +145,10 @@ var mapgen=func(mapx,mapy){
         foreach(var i;blk.shape){
             if(x+i[0]<0)
                 return;
-            if(map[y+i[1]][x+i[0]]==full)
+            if(map[y+i[1]][x+i[0]]>=full)
                 return;
         }
+        # update block state and map
         foreach(var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.x=x;
@@ -136,9 +162,10 @@ var mapgen=func(mapx,mapy){
         foreach(var i;blk.shape){
             if(x+i[0]>=mapx)
                 return;
-            if(map[y+i[1]][x+i[0]]==full)
+            if(map[y+i[1]][x+i[0]]>=full)
                 return;
         }
+        # update block state and map
         foreach(var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.x=x;
@@ -154,9 +181,11 @@ var mapgen=func(mapx,mapy){
         foreach(var i;shape){
             if(x+i[0]>=mapx or x+i[0]<0 or y+i[1]>=mapy or y+i[1]<0)
                 return;
-            if(map[y+i[1]][x+i[0]]==full)
+            if(map[y+i[1]][x+i[0]]>=full)
                 return;
         }
+
+        # update block state and map
         foreach(var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.rotate=r;
@@ -168,21 +197,23 @@ var mapgen=func(mapx,mapy){
 
     var fall=func(){
         var (x,y)=(blk.x,blk.y+1);
+        # check if falls to the edge of other blocks or map
         var sethere=0;
-        foreach(var i;blk.shape){
-            if(y+i[1]>=mapy or map[y+i[1]][x+i[0]]==full){
+        foreach(var i;blk.shape)
+            if(y+i[1]>=mapy or map[y+i[1]][x+i[0]]>=full){
                 sethere=1;
                 break;
             }
-        }
+        # set block here and generate a new block
         if(sethere){
             foreach(var i;blk.shape)
-                map[blk.y+i[1]][blk.x+i[0]]=full;
+                map[blk.y+i[1]][blk.x+i[0]]=blk.color+full;
             checkmap();
             new_block();
             map_print();
             return;
         }
+        # update block state and map
         foreach(var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.y=y;
@@ -193,11 +224,17 @@ var mapgen=func(mapx,mapy){
 
     var checkmap=func(){
         for(var y=mapy-1;y>=0;y-=1){
-            for(var x=0;x<mapx;x+=1)
-                if(map[y][x]!=full)
+            # check if this line is full of blocks
+            var tmp=0;
+            for(var x=0;x<mapx;x+=1){
+                if(map[y][x]<full)
                     break;
+                tmp+=map[y][x];
+            }
+            # if is full, clear this line and
+            # all the lines above fall one block
             if(x==mapx){
-                score+=mapx;
+                score+=tmp;
                 for(var t=y;t>=1;t-=1)
                     for(var x=0;x<mapx;x+=1)
                         map[t][x]=map[t-1][x];
@@ -214,47 +251,74 @@ var mapgen=func(mapx,mapy){
         moveright:moveright,
         rotate:rotate,
         fall:fall,
-        checkmap:checkmap
+        checkmap:checkmap,
+        gameover:func(){return gameover;}
     };
 }
 
 var main=func(){
-    print("\ec");
+    # windows use chcp 65001 to output unicode
+    if(os.platform()=="windows")
+        system("chcp 65001");
+    print(
+        "\ec\e[1:1H",
+        "+-------------------------+\n",
+        "|         TETRIS          |\n",
+        "|  w:rotate, a:move left  |\n",
+        "|  s:fall,   d:move right |\n",
+        "|  p:pause,  q:quit       |\n",
+        "+-------------------------+\n",
+        "|press any key to start...|\n",
+        "+-------------------------+\n"
+    );
 
     rand(time(0));
-    var map=mapgen(mapx:15,mapy:15);
+    var map=mapgen(mapx:12,mapy:15);
 
     libkey.init();
+    libkey.getch();
+    print("\ec");
+
     while(1){
+        # nonblock input one character
         var ch=libkey.nonblock();
         if(ch){
             if(ch=='a'[0])     # move left
                 map.moveleft();
             elsif(ch=='d'[0])  # move right
                 map.moveright();
-            elsif(ch=='s'[0])  # rotate
+            elsif(ch=='w'[0])  # rotate
                 map.rotate();
-            elsif(ch==' '[0])  # move down
+            elsif(ch=='s'[0])  # move down
                 map.fall();
-            elsif(ch=='q'[0])
+            elsif(ch=='q'[0])  # quit the game
                 break;
-            if(ch=='p'[0]){
+            if(ch=='p'[0]){    # pause the game
                 print("\rpress any key to continue...");
                 libkey.getch();
                 print("\r                            ");
             }
             map.checkmap();
+            if(map.gameover())
+                break;
             unix.sleep(0.01);
         }
         else{
+            # automatically fall one block and check
             map.fall();
             map.checkmap();
-            unix.sleep(0.65);
+            if(map.gameover())
+                break;
+            unix.sleep(0.5);
         }
     }
     libkey.close();
 
-    print("\ec\e[31ms\e[32me\e[33me \e[34my\e[35mo\e[36mu \e[94m~\e[0m\n");
+    print(
+        map.gameover()?
+        "\e[31mg\e[32ma\e[33mm\e[34me \e[35mo\e[36mv\e[94me\e[31mr \e[32m~\e[0m\n":
+        "\e[31ms\e[32me\e[33me \e[34my\e[35mo\e[36mu \e[94m~\e[0m\n"
+    );
 };
 
 main();
