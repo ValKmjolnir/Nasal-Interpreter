@@ -108,7 +108,7 @@ __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter
 
 Also remember to use g++ or clang++.(`mingw-w64` in __`Windows`__)
 
-> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions
+> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
 Or use this in __`linux/macOS/Unix`__
 
