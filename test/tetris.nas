@@ -260,6 +260,8 @@ var main=func(){
     # windows use chcp 65001 to output unicode
     if(os.platform()=="windows")
         system("chcp 65001");
+    
+    libkey.init();
     print(
         "\ec\e[1:1H",
         "+-------------------------+\n",
@@ -275,7 +277,6 @@ var main=func(){
     rand(time(0));
     var map=mapgen(mapx:12,mapy:15);
 
-    libkey.init();
     libkey.getch();
     print("\ec");
 
@@ -313,12 +314,13 @@ var main=func(){
         }
     }
     libkey.close();
-
     print(
         map.gameover()?
         "\e[31mg\e[32ma\e[33mm\e[34me \e[35mo\e[36mv\e[94me\e[31mr \e[32m~\e[0m\n":
         "\e[31ms\e[32me\e[33me \e[34my\e[35mo\e[36mu \e[94m~\e[0m\n"
     );
+    print("enter anything to quit...\n");
+    input();
 };
 
 main();
