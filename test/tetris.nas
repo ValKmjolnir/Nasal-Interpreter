@@ -58,6 +58,20 @@ var blockshape=[
 ];
 
 var stick_count=0; # make sure one stick in 10 tries
+var color_count=0;
+var last_type=-1;
+var typechange=func(t){
+    if(t==last_type)
+        t=int(rand()*size(blocktype));
+    if(t!=3){
+        stick_count+=1;
+        if(stick_count==8)
+            (t,stick_count)=(3,0);
+    }else
+        stick_count=0;
+    last_type=t;
+    return t;
+}
 var block={
     x:0,
     y:0,
@@ -68,16 +82,16 @@ var block={
     new:func(x=0,y=0){
         (me.x,me.y)=(x,y);
         me.rotate=0;
-        var t=int(rand()*size(blocktype));
-        if(t!=3){
-            stick_count+=1;
-            if(stick_count==10)
-                (t,stick_count)=(3,0);
-        }else
-            stick_count=0;
+        var t=typechange(int(rand()*size(blocktype)));
+        
         me.type=blocktype[t];
         me.shape=blockshape[me.type[me.rotate]];
-        me.color=int(rand()*size(color));
+
+        me.color=color_count;
+        color_count+=1;
+        if(color_count>=size(color))
+            color_count=0;
+        
         return {parents:[block]};
     }
 };
@@ -90,10 +104,11 @@ var mapgen=func(mapx,mapy){
         die("map_x or map_y must be greater than 1");
     
     # use in print
-    var table="\e[32m+";
+    var line="";
     for(var i=0;i<mapx;i+=1)
-        table~="--";
-    table~="+\e[0m\n";
+        line~="══";
+    var head="\e[32m╔"~line~"╗\e[0m\n";
+    var tail="\e[32m╚"~line~"╝\e[0m\n";
 
     # generate new map
     var map=[];
@@ -122,9 +137,9 @@ var mapgen=func(mapx,mapy){
 
     # color print
     var map_print=func(){
-        var s="\e[1;1H"~table;
+        var s="\e[1;1H"~head;
         for(var y=0;y<mapy;y+=1){
-            s~="\e[32m|\e[0m";
+            s~="\e[32m║\e[0m";
             for(var x=0;x<mapx;x+=1){
                 var c=map[y][x];
                 if(c==empty)
@@ -134,10 +149,10 @@ var mapgen=func(mapx,mapy){
                 elsif(c>=full)
                     s~=color[c-full]~"██\e[0m";
             }
-            s~="\e[32m|\e[0m\n";
+            s~="\e[32m║\e[0m\n";
         }
-        s~=table;
-        print(s," score: ",score,'\n');
+        s~=tail;
+        print(s,"\e[31ms\e[32mc\e[33mo\e[34mr\e[35me\e[36m: \e[0m",score,'\n');
     }
 
     var moveleft=func(){
@@ -264,14 +279,15 @@ var main=func(){
     libkey.init();
     print(
         "\ec\e[1:1H",
-        "+-------------------------+\n",
-        "|         TETRIS          |\n",
-        "|  w:rotate, a:move left  |\n",
-        "|  s:fall,   d:move right |\n",
-        "|  p:pause,  q:quit       |\n",
-        "+-------------------------+\n",
-        "|press any key to start...|\n",
-        "+-------------------------+\n"
+        "╔═════════════════════════╗\n",
+        "║         TETRIS          ║\n",
+        "╠═════════════════════════╣\n",
+        "║  w:rotate, a:move left  ║\n",
+        "║  s:fall,   d:move right ║\n",
+        "║  p:pause,  q:quit       ║\n",
+        "╠═════════════════════════╣\n",
+        "║  press any key to start ║\n",
+        "╚═════════════════════════╝\n"
     );
 
     rand(time(0));
@@ -280,6 +296,7 @@ var main=func(){
     libkey.getch();
     print("\ec");
 
+    var interval=0.55;
     while(1){
         # nonblock input one character
         var ch=libkey.nonblock();
@@ -302,15 +319,15 @@ var main=func(){
             map.checkmap();
             if(map.gameover())
                 break;
-            unix.sleep(0.01);
-        }
-        else{
+            interval-=0.11;
+        }else{
             # automatically fall one block and check
             map.fall();
             map.checkmap();
             if(map.gameover())
                 break;
-            unix.sleep(0.5);
+            unix.sleep(interval);
+            interval=0.55;
         }
     }
     libkey.close();
@@ -319,7 +336,11 @@ var main=func(){
         "\e[31mg\e[32ma\e[33mm\e[34me \e[35mo\e[36mv\e[94me\e[31mr \e[32m~\e[0m\n":
         "\e[31ms\e[32me\e[33me \e[34my\e[35mo\e[36mu \e[94m~\e[0m\n"
     );
-    print("enter anything to quit...\n");
+    print(
+        "\e[31me\e[32mn\e[33mt\e[34me\e[35mr ",
+        "\e[36ma\e[94mn\e[95my\e[96mt\e[31mh\e[32mi\e[33mn\e[34mg ",
+        "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
+    );
     input();
 };
 
