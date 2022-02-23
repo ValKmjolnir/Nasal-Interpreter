@@ -282,7 +282,7 @@ void nasal_vm::opcallsort(const uint64_t* arr)
 {
     typedef std::pair<uint32_t,uint64_t> op;
     std::vector<op> opcall;
-    for(uint32_t i=0;i<=op_exit;++i)
+    for(uint32_t i=0;i<=op_ret;++i)
         opcall.push_back({i,arr[i]});
     std::sort(
         opcall.begin(),
