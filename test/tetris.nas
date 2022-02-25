@@ -319,8 +319,9 @@ var main=func(){
             map.checkmap();
             if(map.gameover())
                 break;
-            interval-=0.11;
-        }else{
+            interval-=0.05;
+        }
+        if(!ch or interval<0.1){
             # automatically fall one block and check
             map.fall();
             map.checkmap();
