@@ -949,7 +949,7 @@ nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
         return builtin_err("opendir","\"path\" must be string");
     DIR* p=opendir(path.str()->c_str());
     if(!p)
-        return builtin_err("opendir","cannot open dir <"+*path.str()+">");
+        return builtin_err("opendir","cannot open dir <"+*path.str()+"> errno "+std::to_string(errno));
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj()->type=obj_dir;
     ret.obj()->ptr=(void*)p;
@@ -1020,7 +1020,7 @@ nasal_ref builtin_dlopen(nasal_ref* local,nasal_gc& gc)
     void* ptr=dlopen(dlname.str()->c_str(),RTLD_LOCAL|RTLD_LAZY);
 #endif
     if(!ptr)
-        return builtin_err("dlopen","cannot open dynamic lib \""+*dlname.str()+"\"");
+        return builtin_err("dlopen","cannot open dynamic lib <"+*dlname.str()+">");
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj()->type=obj_dylib;
     ret.obj()->ptr=ptr;

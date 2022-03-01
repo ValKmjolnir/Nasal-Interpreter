@@ -213,6 +213,22 @@ __`vm_str`__ has 3 formats. The third one is used to declare a character.
 var s='str';
 var s="another string";
 var s=`c`;
+
+# some special characters is allowed in this language:
+
+'\a';
+'\b';
+'\e';
+'\f';
+'\n';
+'\r';
+'\t';
+'\v';
+'\0';
+'\\';
+'\?';
+'\'';
+'\"';
 ```
 
 __`vm_vec`__ has unlimited length and can store all types of values.
