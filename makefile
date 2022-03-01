@@ -31,5 +31,5 @@ test:nasal
 	./nasal -op -e test/scalar.nas
 	./nasal -op -e test/trait.nas
 	./nasal -op -t -d test/turingmachine.nas
-	./nasal -op -t -d test/ycombinator.nas
+	./nasal -op -t -d -o test/ycombinator.nas
 	
