@@ -222,7 +222,10 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     }
     printf("vm stack(limit %d, total %ld):\n",limit,top-bottom+1);
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
+    {
+        printf("0x%.8lx",top-gc.stack);
         valinfo(top[0]);
+    }
 }
 void nasal_vm::global_state()
 {
@@ -231,10 +234,10 @@ void nasal_vm::global_state()
         printf("no global value exists\n");
         return;
     }
-    printf("global:\n");
+    printf("global(base %p):\n",gc.stack);
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
-        printf("[0x%.8x]",i);
+        printf("0x%.8x",i);
         valinfo(gc.stack[i]);
     }
 }
@@ -245,10 +248,10 @@ void nasal_vm::local_state()
         printf("no local value exists\n");
         return;
     }
-    printf("local:\n");
+    printf("local(base %p):\n",lstk.top());
     for(uint32_t i=0;i<fstk.top()->lsize;++i)
     {
-        printf("[0x%.8x]",i);
+        printf("0x%.8x",i);
         valinfo(lstk.top()[i]);
     }
 }
@@ -263,17 +266,18 @@ void nasal_vm::upval_state()
     auto& upval=fstk.top()->upvalue;
     for(uint32_t i=0;i<upval.size();++i)
     {
-        auto& vec=upval[i].vec()->elems;
-        for(uint32_t j=0;j<vec.size();++j)
+        printf("-> upval[%u]:\n",i);
+        auto& uv=upval[i].upval();
+        for(uint32_t j=0;j<uv.size;++j)
         {
-            printf("[%.4x][%.4x]",i,j);
-            valinfo(vec[j]);
+            printf("   0x%.8x",j);
+            valinfo(uv[j]);
         }
     }
 }
 void nasal_vm::detail()
 {
-    printf("mcall address: 0x%lx\n",(uint64_t)mem_addr);
+    printf("maddr: 0x%lx\n",(uint64_t)mem_addr);
     global_state();
     local_state();
     upval_state();
@@ -384,6 +388,7 @@ inline void nasal_vm::opr_newf()
     {
         func->upvalue=fstk.top()->upvalue;
         nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_upval):gc.upvalue.back();
+        upval.upval().size=fstk.top()->lsize;
         upval.upval().stk=lstk.top();
         func->upvalue.push_back(upval);
         gc.upvalue.back()=upval;

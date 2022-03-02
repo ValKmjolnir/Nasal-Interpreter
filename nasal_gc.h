@@ -124,12 +124,13 @@ struct nasal_func
 struct nasal_upval
 {
     bool onstk;
+    uint32_t size;
     nasal_ref* stk;
     std::vector<nasal_ref> elems;
 
-    nasal_upval(){onstk=true;stk=nullptr;}
+    nasal_upval(){onstk=true;stk=nullptr;size=0;}
     nasal_ref& operator[](const int);
-    void clear(){onstk=true;elems.clear();}
+    void clear(){onstk=true;elems.clear();size=0;}
 };
 
 struct nasal_obj
@@ -341,6 +342,11 @@ struct nasal_gc
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
+    /* upvalue is a temporary space to store upvalues */
+    /* if no new functions generated in local scope   */
+    /* upvalue will pushback(nil)                     */
+    /* if new functions generated in local scope      */
+    /* they will share the same upvalue stored here   */
     std::vector<nasal_ref>  upvalue;
     uint64_t                size[vm_type_size];
     uint64_t                count[vm_type_size];
