@@ -137,6 +137,7 @@ void nasal_vm::init(
     files_size=filenames.size();
     /* set canary and program counter */
     canary=gc.stack+STACK_MAX_DEPTH-1;
+    mem_addr=nullptr;
     pc=0;
 }
 void nasal_vm::valinfo(nasal_ref& val)
@@ -215,12 +216,13 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
     nasal_ref* top=gc.top;
     nasal_ref* bottom=gc.stack+global_size;
+    printf("vm stack(0x%lx<sp+%u>, limit %d, total ",(uint64_t)bottom,global_size,limit);
     if(top<bottom)
     {
-        printf("vm stack(limit %d, total 0)\n",limit);
+        printf("0)\n");
         return;
     }
-    printf("vm stack(limit %d, total %ld):\n",limit,top-bottom+1);
+    printf("%ld):\n",top-bottom+1);
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
     {
         printf("0x%.8lx",top-gc.stack);
@@ -230,11 +232,8 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
 void nasal_vm::global_state()
 {
     if(!bytecode[0].num || gc.stack[0].type==vm_none) // bytecode[0].op is op_intg
-    {
-        printf("no global value exists\n");
         return;
-    }
-    printf("global(base %p):\n",gc.stack);
+    printf("global(0x%lx<sp+0>):\n",(uint64_t)gc.stack);
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
         printf("0x%.8x",i);
@@ -244,11 +243,8 @@ void nasal_vm::global_state()
 void nasal_vm::local_state()
 {
     if(lstk.empty() || !fstk.top()->lsize)
-    {
-        printf("no local value exists\n");
         return;
-    }
-    printf("local(base %p):\n",lstk.top());
+    printf("local(0x%lx<sp+%ld>):\n",(uint64_t)lstk.top(),lstk.top()-gc.stack);
     for(uint32_t i=0;i<fstk.top()->lsize;++i)
     {
         printf("0x%.8x",i);
@@ -258,10 +254,7 @@ void nasal_vm::local_state()
 void nasal_vm::upval_state()
 {
     if(fstk.empty() || fstk.top()->upvalue.empty())
-    {
-        printf("no upvalue exists\n");
         return;
-    }
     printf("upvalue:\n");
     auto& upval=fstk.top()->upvalue;
     for(uint32_t i=0;i<upval.size();++i)
@@ -277,7 +270,7 @@ void nasal_vm::upval_state()
 }
 void nasal_vm::detail()
 {
-    printf("maddr: 0x%lx\n",(uint64_t)mem_addr);
+    printf("maddr(0x%lx)\n",(uint64_t)mem_addr);
     global_state();
     local_state();
     upval_state();
@@ -472,7 +465,8 @@ inline void nasal_vm::opr_lnkc()
 
 #define op_calc_eq(type)\
     nasal_ref val(vm_num,mem_addr[0].to_number() type gc.top[-1].to_number());\
-    (--gc.top)[0]=mem_addr[0]=val;
+    (--gc.top)[0]=mem_addr[0]=val;\
+    mem_addr=nullptr;
 
 inline void nasal_vm::opr_addeq(){op_calc_eq(+);}
 inline void nasal_vm::opr_subeq(){op_calc_eq(-);}
@@ -483,11 +477,13 @@ inline void nasal_vm::opr_lnkeq()
     nasal_ref val=gc.alloc(vm_str);
     *val.str()=mem_addr[0].to_string()+gc.top[-1].to_string();
     (--gc.top)[0]=mem_addr[0]=val;
+    mem_addr=nullptr;
 }
 
 #define op_calc_eq_const(type)\
     nasal_ref val(vm_num,mem_addr[0].to_number() type num_table[imm[pc]]);\
-    gc.top[0]=mem_addr[0]=val;
+    gc.top[0]=mem_addr[0]=val;\
+    mem_addr=nullptr;
 
 inline void nasal_vm::opr_addeqc(){op_calc_eq_const(+);}
 inline void nasal_vm::opr_subeqc(){op_calc_eq_const(-);}
@@ -498,11 +494,13 @@ inline void nasal_vm::opr_lnkeqc()
     nasal_ref val=gc.alloc(vm_str);
     *val.str()=mem_addr[0].to_string()+str_table[imm[pc]];
     gc.top[0]=mem_addr[0]=val;
+    mem_addr=nullptr;
 }
 
 inline void nasal_vm::opr_meq()
 {
     mem_addr[0]=(--gc.top)[0];
+    mem_addr=nullptr;
 }
 inline void nasal_vm::opr_eq()
 {

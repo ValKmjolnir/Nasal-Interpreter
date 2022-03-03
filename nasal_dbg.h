@@ -136,11 +136,7 @@ void nasal_dbg::interact()
             else if(res[0]=="u" || res[0]=="upval")
                 upval_state();
             else if(res[0]=="a" || res[0]=="all")
-            {
-                global_state();
-                local_state();
-                upval_state();
-            }
+                detail();
             else if(res[0]=="n" || res[0]=="next")
             {
                 next_step=true;
