@@ -137,8 +137,16 @@ struct nasal_obj
 {
     uint32_t type;
     void* ptr;
-    nasal_obj():ptr(nullptr){}
-    void clear(){ptr=nullptr;}
+    void* destructor;
+    nasal_obj():ptr(nullptr),destructor(nullptr){}
+    ~nasal_obj(){clear();}
+    void clear()
+    {
+        typedef void (*func)(void*);
+        if(destructor)
+            (func(destructor))(ptr);
+        ptr=nullptr;
+    }
 };
 
 const uint8_t GC_UNCOLLECTED=0;   

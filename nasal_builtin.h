@@ -5,6 +5,7 @@
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
 #endif
+
 /*
     builtin functions must be called inside a function like this:
     var print=func(elems...){

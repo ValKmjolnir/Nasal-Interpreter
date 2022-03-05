@@ -284,6 +284,7 @@ var unix=
 };
 
 # dylib is the core hashmap for developers to load their own library.
+# for safe using dynamic library, you could use 'module' in stl/module.nas
 var dylib=
 {
     # open dynamic lib.
