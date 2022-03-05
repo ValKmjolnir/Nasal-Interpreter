@@ -77,6 +77,7 @@ nas_native(builtin_opendir);
 nas_native(builtin_readdir);
 nas_native(builtin_closedir);
 nas_native(builtin_chdir);
+nas_native(builtin_environ);
 nas_native(builtin_getcwd);
 nas_native(builtin_getenv);
 nas_native(builtin_dlopen);
@@ -160,6 +161,7 @@ struct
     {"__builtin_readdir", builtin_readdir },
     {"__builtin_closedir",builtin_closedir},
     {"__builtin_chdir",   builtin_chdir   },
+    {"__builtin_environ", builtin_environ },
     {"__builtin_getcwd",  builtin_getcwd  },
     {"__builtin_getenv",  builtin_getenv  },
     {"__builtin_dlopen",  builtin_dlopen  },
@@ -984,6 +986,21 @@ nasal_ref builtin_chdir(nasal_ref* local,nasal_gc& gc)
         return builtin_err("chdir","failed to execute chdir");
     return nil;
 }
+nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
+{
+    char** env=environ;
+    (++gc.top)[0]=gc.alloc(vm_vec);
+    auto& vec=gc.top[0].vec()->elems;
+    while(*env)
+    {
+        auto s=gc.alloc(vm_str);
+        *s.str()=*env;
+        vec.push_back(s);
+        ++env;
+    }
+    --gc.top;
+    return gc.top[1];
+}
 nasal_ref builtin_getcwd(nasal_ref* local,nasal_gc& gc)
 {
     char buf[1024];
@@ -1010,12 +1027,11 @@ nasal_ref builtin_dlopen(nasal_ref* local,nasal_gc& gc)
     if(dlname.type!=vm_str)
         return builtin_err("dlopen","\"libname\" must be string");
 #ifdef _WIN32
-    // wchar_t* str=new wchar_t[dlname.str()->size()+1];
-    // memset(str,0,sizeof(wchar_t)*dlname.str()->size()+1);
-    // mbstowcs(str,dlname.str()->c_str(),dlname.str()->size()+1);
-    // void* ptr=LoadLibrary(str);
-    // delete []str;
-    void* ptr=LoadLibrary(dlname.str()->c_str());
+    wchar_t* str=new wchar_t[dlname.str()->size()+1];
+    memset(str,0,sizeof(wchar_t)*dlname.str()->size()+1);
+    mbstowcs(str,dlname.str()->c_str(),dlname.str()->size()+1);
+    void* ptr=LoadLibraryW(str);
+    delete []str;
 #else
     void* ptr=dlopen(dlname.str()->c_str(),RTLD_LOCAL|RTLD_LAZY);
 #endif

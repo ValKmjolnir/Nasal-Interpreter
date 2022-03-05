@@ -278,7 +278,7 @@ var unix=
     time:     func(){return time(0);},
     sleep:    func(secs){return __builtin_sleep(secs);},
     chdir:    func(path){return __builtin_chdir(path);},
-    environ:  func(){die("not supported yet");},
+    environ:  func(){return __builtin_environ();},
     getcwd:   func(){return __builtin_getcwd();},
     getenv:   func(envvar){return __builtin_getenv(envvar);}
 };
