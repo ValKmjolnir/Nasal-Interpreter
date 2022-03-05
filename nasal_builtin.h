@@ -1,5 +1,10 @@
 #ifndef __NASAL_BUILTIN_H__
 #define __NASAL_BUILTIN_H__
+
+#if defined __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
 /*
     builtin functions must be called inside a function like this:
     var print=func(elems...){
