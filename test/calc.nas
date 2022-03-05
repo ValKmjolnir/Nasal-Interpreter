@@ -59,7 +59,10 @@ var testfile=[
 ];
 
 var module=[
-    "module/fib.cpp        "
+    "module/fib.cpp        ",
+    "module/keyboard.cpp   ",
+    "module/libfib.nas     ",
+    "module/libkey.nas     "
 ];
 
 var getname=func(s){
