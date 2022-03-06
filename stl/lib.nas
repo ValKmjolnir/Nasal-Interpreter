@@ -154,6 +154,13 @@ var chr=func(code){
     return __builtin_chr(code);
 }
 
+# mut is used to change unmutable strings to mutable.
+var mut=func(str){
+    if(typeof(str)!="str")
+        die("mut: \"str\" must be string.");
+    return str~"";
+}
+
 # println has the same function as print.
 # but it will output a '\n' after using print.
 var println=func(elems...){
@@ -176,6 +183,7 @@ var io=
     # same as C fclose. close file by FILE*.
     close: func(filehandle){return __builtin_close(filehandle);},
     # same as C fread. read file by FILE*.
+    # caution: buf must be a mutable string.use mut("") to get an empty mutable string.
     read:  func(filehandle,buf,len){return __builtin_read(filehandle,buf,len);},
     # same as C fwrite. write file by FILE*.
     write: func(filehandle,str){return __builtin_write(filehandle,str);},

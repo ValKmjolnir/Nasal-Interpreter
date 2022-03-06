@@ -710,7 +710,7 @@ dylib.dlclose(dlhandle);
 
 `dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
 
-`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that gotten from it are invalid.
+`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that got from it are invalid.
 
 If get this, Congratulations!
 
