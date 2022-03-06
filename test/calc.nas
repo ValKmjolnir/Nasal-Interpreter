@@ -16,8 +16,10 @@ var source=[
 ];
 
 var lib=[
+    "stl/file.nas          ",
     "stl/lib.nas           ",
     "stl/list.nas          ",
+    "stl/module.nas        ",
     "stl/queue.nas         ",
     "stl/result.nas        ",
     "stl/sort.nas          ",
@@ -28,6 +30,7 @@ var testfile=[
     "test/ascii-art.nas    ",
     "test/auto_crash.nas   ",
     "test/bf.nas           ",
+    "test/bfcolored.nas    ",
     "test/bfconvertor.nas  ",
     "test/bfs.nas          ",
     "test/bigloop.nas      ",
@@ -53,6 +56,7 @@ var testfile=[
     "test/props.nas        ",
     "test/quick_sort.nas   ",
     "test/scalar.nas       ",
+    "test/tetris.nas       ",
     "test/trait.nas        ",
     "test/turingmachine.nas",
     "test/ycombinator.nas  "

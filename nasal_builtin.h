@@ -757,6 +757,8 @@ nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)
         return builtin_err("read","not a correct filehandle");
     if(buf.type!=vm_str)
         return builtin_err("read","\"buf\" must be string");
+    if(buf.value.gcobj->unmut)
+        return builtin_err("read","\"buf\" is not a mutable string");
     if(len.type!=vm_num)
         return builtin_err("read","\"len\" must be number");
     if(len.num()<=0 || len.num()>=(1<<30))
