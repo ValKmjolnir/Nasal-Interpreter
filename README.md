@@ -811,7 +811,7 @@ Finally i learned `LL(1)` and `LL(k)` and wrote a parser for math formulas in ve
 
 In version 0.17(2019/9/15) 0.18(2019/9/18) 0.19(2019/10/1)i was playing the parser happily and after that i wrote version 1.0.
 
-__This project began at 2019/8/31__.
+__This project began at 2019/7/25__.
 
 ## __Abstract Syntax Tree__
 

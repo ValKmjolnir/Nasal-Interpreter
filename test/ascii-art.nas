@@ -116,15 +116,15 @@ var curve4=func()
 }
 var curve5=func(){
     for(var i=0;i<=9;i+=1)
-        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+        println(i,"\e["~i~"mh \e[0m");
     for(var i=30;i<=37;i+=1)
-        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+        println(i,"\e["~i~"mh \e[0m");
     for(var i=40;i<=47;i+=1)
-        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+        println(i,"\e["~i~"mh \e[0m");
     for(var i=90;i<=97;i+=1)
-        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+        println(i,"\e["~i~"mh \e[0m");
     for(var i=100;i<=107;i+=1)
-        println(i,"\e["~split(".",str(i))[0]~"mh \e[0m");
+        println(i,"\e["~i~"mh \e[0m");
 }
 var curve6=func(){
     var shadow=["m░\e[0m","m▒\e[0m","m▓\e[0m","m█\e[0m","m▀\e[0m","m▄\e[0m","m▐\e[0m","m▌\e[0m"];
