@@ -1,5 +1,8 @@
 import("lib.nas");
 
+var geodinfo=func(lat,lon){}
+var maketimer=func(t,f){}
+
 var props=
 {
     globals:nil,

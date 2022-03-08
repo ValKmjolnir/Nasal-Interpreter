@@ -6,6 +6,7 @@ enum nasal_type
     /* none-gc object */
     vm_none=0,
     vm_cnt,
+    vm_addr,
     vm_ret,
     vm_nil,
     vm_num,
@@ -26,6 +27,7 @@ const uint32_t increment[vm_type_size]=
     /* none-gc object */
     0,   // vm_none, error type
     0,   // vm_count, used in foreach/forindex
+    0,   // vm_addr, used to store local address pointers
     0,   // vm_ret, used to store call-return address
     0,   // vm_nil
     0,   // vm_num
@@ -53,14 +55,22 @@ struct nasal_ref
         uint32_t ret;
         int64_t  cnt;
         double   num;
+        nasal_ref* addr;
         nasal_val* gcobj;
     }value;
 
+    // vm_none/vm_nil
     nasal_ref(const uint8_t t=vm_none):type(t){}
+    // vm_ret
     nasal_ref(const uint8_t t,const uint32_t n):type(t){value.ret=n;}
+    // vm_cnt
     nasal_ref(const uint8_t t,const int64_t n):type(t){value.cnt=n;}
+    // vm_num
     nasal_ref(const uint8_t t,const double n):type(t){value.num=n;}
+    // vm_str/vm_func/vm_vec/vm_hash/vm_upval/vm_obj
     nasal_ref(const uint8_t t,nasal_val* n):type(t){value.gcobj=n;}
+    // vm_addr
+    nasal_ref(const uint8_t t,nasal_ref* n):type(t){value.addr=n;}
     nasal_ref(const nasal_ref& nr):type(nr.type),value(nr.value){}
     nasal_ref& operator=(const nasal_ref& nr)
     {
@@ -74,6 +84,7 @@ struct nasal_ref
     double      to_number();
     std::string to_string();
     void        print();
+    inline nasal_ref*   addr();
     inline uint32_t     ret ();
     inline int64_t&     cnt ();
     inline double&      num ();
@@ -334,6 +345,7 @@ void nasal_ref::print()
         case vm_obj:  std::cout<<"<object>";    break;
     }
 }
+inline nasal_ref*   nasal_ref::addr (){return value.addr;             }
 inline uint32_t     nasal_ref::ret  (){return value.ret;              }
 inline int64_t&     nasal_ref::cnt  (){return value.cnt;              }
 inline double&      nasal_ref::num  (){return value.num;              }
@@ -347,9 +359,10 @@ inline nasal_obj*   nasal_ref::obj  (){return value.gcobj->ptr.obj;   }
 const uint32_t STACK_MAX_DEPTH=8191;
 const nasal_ref zero={vm_num,(double)0};
 const nasal_ref one ={vm_num,(double)1};
-const nasal_ref nil ={vm_nil,nullptr};
+const nasal_ref nil ={vm_nil,(double)0};
 struct nasal_gc
 {
+    nasal_ref               funcr;                   // function register
     nasal_ref               stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
     nasal_ref*              top;                     // stack top
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
@@ -376,6 +389,7 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
+    bfs.push(funcr);
     for(auto& i:upvalue)
         bfs.push(i);
     for(nasal_ref* i=stack;i<=top;++i)
@@ -432,6 +446,8 @@ void nasal_gc::sweep()
 }
 void nasal_gc::init(const std::vector<std::string>& s)
 {
+    funcr=nil;
+
     for(uint8_t i=0;i<vm_type_size;++i)
         size[i]=count[i]=0;
     for(uint8_t i=vm_str;i<vm_type_size;++i)
@@ -467,10 +483,10 @@ void nasal_gc::clear()
 void nasal_gc::info()
 {
     const char* name[]={
-        "null ","cnt  ","ret  ",
-        "nil  ","num  ","str  ",
-        "func ","vec  ","hash ",
-        "upval","obj  "
+        "null ","cnt  ","addr ",
+        "ret  ","nil  ","num  ",
+        "str  ","func ","vec  ",
+        "hash ","upval","obj  "
     };
     std::cout<<"\ngarbage collector info:\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)

@@ -68,6 +68,7 @@ void nasal_dbg::help()
     <<"\th,    help      | get help\n"
     <<"\tbt,   backtrace | get function call trace\n"
     <<"\tc,    continue  | run program until break point or exit\n"
+    <<"\tf,    file      | see all the compiled files\n"
     <<"\tg,    global    | see global values\n"
     <<"\tl,    local     | see local values\n"
     <<"\tu,    upval     | see upvalue\n"
@@ -129,6 +130,9 @@ void nasal_dbg::interact()
                 traceback();
             else if(res[0]=="c" || res[0]=="continue")
                 return;
+            else if(res[0]=="f" || res[0]=="file")
+                for(size_t i=0;i<files_size;++i)
+                    printf("[%zu] %s\n",i,files[i].c_str());
             else if(res[0]=="g" || res[0]=="global")
                 global_state();
             else if(res[0]=="l" || res[0]=="local")

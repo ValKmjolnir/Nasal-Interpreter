@@ -1,6 +1,6 @@
 # Road check and auto pilot by ValKmjolnir
 import("lib.nas");
-import("props.nas");
+import("test/props_sim.nas");
 var dt=0.01;
 var intergral=0;
 var derivative=0;
