@@ -312,7 +312,12 @@ std::string nasal_ref::to_string()
     if(type==vm_str)
         return *str();
     else if(type==vm_num)
-        return std::to_string(num());
+    {
+        std::string tmp=std::to_string(num());
+        tmp.erase(tmp.find_last_not_of('0')+1,std::string::npos);
+        tmp.erase(tmp.find_last_not_of('.')+1,std::string::npos);
+        return tmp;
+    }
     return "";
 }
 void nasal_ref::print()

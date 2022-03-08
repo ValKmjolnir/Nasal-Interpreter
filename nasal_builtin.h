@@ -399,8 +399,11 @@ nasal_ref builtin_str(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     if(val.type!=vm_num)
         return builtin_err("str","\"number\" must be number");
+    std::string tmp=std::to_string(val.num());
+    tmp.erase(tmp.find_last_not_of('0')+1,std::string::npos);
+    tmp.erase(tmp.find_last_not_of('.')+1,std::string::npos);
     nasal_ref ret=gc.alloc(vm_str);
-    *ret.str()=std::to_string(val.num());
+    *ret.str()=tmp;
     return ret;
 }
 nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
