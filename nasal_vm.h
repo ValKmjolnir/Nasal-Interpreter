@@ -6,10 +6,9 @@ class nasal_vm
 protected:
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
+    nasal_ref*               localr;    // local scope register
     const double*            num_table;// const numbers, ref from nasal_codegen
     const std::string*       str_table;// const symbols, ref from nasal_codegen
-    std::stack<nasal_func*>  fstk;     // stack to store function, used to get upvalues
-    std::stack<nasal_ref*>   lstk;     // stack to store local scopes' begin address
     std::vector<uint32_t>    imm;      // immediate number
     nasal_ref*               mem_addr; // used for mem_call
     /* garbage collector */
@@ -139,6 +138,7 @@ void nasal_vm::init(
     canary=gc.stack+STACK_MAX_DEPTH-1;
     mem_addr=nullptr;
     pc=0;
+    localr=nullptr;
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
@@ -147,7 +147,8 @@ void nasal_vm::valinfo(nasal_ref& val)
     switch(val.type)
     {
         case vm_none: printf("| null |\n");break;
-        case vm_ret:  printf("| addr | pc:0x%x\n",val.ret());break;
+        case vm_ret:  printf("| pc   | 0x%x\n",val.ret());break;
+        case vm_addr: printf("| addr | 0x%lx\n",(uint64_t)val.addr());break;
         case vm_cnt:  printf("| cnt  | %ld\n",val.cnt());break;
         case vm_nil:  printf("| nil  |\n");break;
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
@@ -242,21 +243,22 @@ void nasal_vm::global_state()
 }
 void nasal_vm::local_state()
 {
-    if(lstk.empty() || !fstk.top()->lsize)
+    if(!localr || !gc.funcr.func()->lsize)
         return;
-    printf("local(0x%lx<sp+%ld>):\n",(uint64_t)lstk.top(),lstk.top()-gc.stack);
-    for(uint32_t i=0;i<fstk.top()->lsize;++i)
+    uint32_t lsize=gc.funcr.func()->lsize;
+    printf("local(0x%lx<sp+%ld>):\n",(uint64_t)localr,localr-gc.stack);
+    for(uint32_t i=0;i<lsize;++i)
     {
         printf("0x%.8x",i);
-        valinfo(lstk.top()[i]);
+        valinfo(localr[i]);
     }
 }
 void nasal_vm::upval_state()
 {
-    if(fstk.empty() || fstk.top()->upvalue.empty())
+    if(gc.funcr.type==vm_nil || gc.funcr.func()->upvalue.empty())
         return;
     printf("upvalue:\n");
-    auto& upval=fstk.top()->upvalue;
+    auto& upval=gc.funcr.func()->upvalue;
     for(uint32_t i=0;i<upval.size();++i)
     {
         printf("-> upval[%u]:\n",i);
@@ -271,6 +273,13 @@ void nasal_vm::upval_state()
 void nasal_vm::detail()
 {
     printf("maddr(0x%lx)\n",(uint64_t)mem_addr);
+    printf("localr(0x%lx)\n",(uint64_t)localr);
+    if(gc.funcr.type==vm_nil)
+        printf("funcr(nil)\n");
+    else
+        printf("funcr(<0x%lx> entry:0x%x)\n",
+            (uint64_t)gc.funcr.value.gcobj,
+            gc.funcr.func()->entry);
     global_state();
     local_state();
     upval_state();
@@ -336,11 +345,11 @@ inline void nasal_vm::opr_loadg()
 }
 inline void nasal_vm::opr_loadl()
 {
-    lstk.top()[imm[pc]]=(gc.top--)[0];
+    localr[imm[pc]]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_loadu()
 {
-    fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]=(gc.top--)[0];
+    gc.funcr.func()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]=(gc.top--)[0];
 }
 inline void nasal_vm::opr_pnum()
 {
@@ -348,7 +357,7 @@ inline void nasal_vm::opr_pnum()
 }
 inline void nasal_vm::opr_pnil()
 {
-    (++gc.top)[0]={vm_nil,(double)0};
+    (++gc.top)[0]=nil;
 }
 inline void nasal_vm::opr_pstr()
 {
@@ -377,12 +386,12 @@ inline void nasal_vm::opr_newf()
     func->psize=1;
 
     /* this means you create a new function in local scope */
-    if(!lstk.empty())
+    if(localr)
     {
-        func->upvalue=fstk.top()->upvalue;
+        func->upvalue=gc.funcr.func()->upvalue;
         nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_upval):gc.upvalue.back();
-        upval.upval().size=fstk.top()->lsize;
-        upval.upval().stk=lstk.top();
+        upval.upval().size=gc.funcr.func()->lsize;
+        upval.upval().stk=localr;
         func->upvalue.push_back(upval);
         gc.upvalue.back()=upval;
     }
@@ -598,11 +607,11 @@ inline void nasal_vm::opr_callg()
 }
 inline void nasal_vm::opr_calll()
 {
-    (++gc.top)[0]=lstk.top()[imm[pc]];
+    (++gc.top)[0]=localr[imm[pc]];
 }
 inline void nasal_vm::opr_upval()
 {
-    (++gc.top)[0]=fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff];
+    (++gc.top)[0]=gc.funcr.func()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff];
 }
 inline void nasal_vm::opr_callv()
 {
@@ -662,29 +671,29 @@ inline void nasal_vm::opr_callh()
 }
 inline void nasal_vm::opr_callfv()
 {
-    uint32_t   argc=imm[pc];      // arguments counter
-    nasal_ref* args=gc.top-argc+1;// arguments begin address
-    if(args[-1].type!=vm_func)
+    uint32_t   argc=imm[pc];       // arguments counter
+    nasal_ref* local=gc.top-argc+1;// arguments begin address
+    if(local[-1].type!=vm_func)
         die("callfv: must call a function");
     
-    nasal_func* func=args[-1].func();
-    if(gc.top-argc+func->lsize+1>=canary) // gc.top-argc+lsize(local) +1(pc)
+    nasal_func* func=local[-1].func();
+    nasal_ref tmp=local[-1];
+    local[-1]=gc.funcr;
+    gc.funcr=tmp;
+    if(gc.top-argc+func->lsize+2>=canary) // gc.top-argc+lsize(local) +1(old pc) +1(old localr)
         die("stack overflow");
-    fstk.push(func);          // push called function into stack to provide upvalue
-    lstk.push(gc.top-argc+1); // store begin of local scope
 
     uint32_t psize=func->psize-1; // parameter size is func->psize-1, 1 is reserved for "me"
     if(argc<psize && func->local[argc+1].type==vm_none)
         die("callfv: lack argument(s)");
 
-    nasal_ref* local=args;
-    nasal_ref  dynamic=nil;
+    nasal_ref dynamic=nil;
     gc.top=local+func->lsize;
     if(func->dynpara>=0)// load dynamic arguments
     {
         dynamic=gc.alloc(vm_vec);
         for(uint32_t i=psize;i<argc;++i)
-            dynamic.vec()->elems.push_back(args[i]);
+            dynamic.vec()->elems.push_back(local[i]);
     }
     uint32_t min_size=std::min(psize,argc);
     for(uint32_t i=min_size;i>=1;--i)// load arguments
@@ -695,8 +704,10 @@ inline void nasal_vm::opr_callfv()
     if(func->dynpara>=0)
         local[psize+1]=dynamic;
 
-    gc.top[0]={vm_ret,pc};
+    gc.top[0]={vm_addr,localr};
+    (++gc.top)[0]={vm_ret,pc};
     pc=func->entry-1;
+    localr=local;
     gc.upvalue.push_back(nil);
 }
 inline void nasal_vm::opr_callfh()
@@ -706,12 +717,13 @@ inline void nasal_vm::opr_callfh()
         die("callfh: must call a function");
 
     nasal_func* func=gc.top[-1].func();
-    if(gc.top+func->lsize>=canary) // gc.top -1(hash) +lsize(local) +1(pc)
+    nasal_ref tmp=gc.top[-1];
+    gc.top[-1]=gc.funcr;
+    gc.funcr=tmp;
+    if(gc.top+func->lsize+1>=canary) // gc.top -1(hash) +lsize(local) +1(old pc) +1(old localr)
         die("stack overflow");
     if(func->dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
-    fstk.push(func);   // push called function into stack to provide upvalue
-    lstk.push(gc.top); // store begin of local scope
 
     nasal_ref* local=gc.top;
     gc.top+=func->lsize;
@@ -726,18 +738,21 @@ inline void nasal_vm::opr_callfh()
             die("callfh: lack argument(s): \""+i.first+"\"");
     }
 
-    gc.top[0]={vm_ret,(uint32_t)pc}; // rewrite top with vm_ret
+    gc.top[0]={vm_addr,localr};
+    (++gc.top)[0]={vm_ret,pc}; // rewrite top with vm_ret
     pc=func->entry-1;
+    localr=local;
     gc.upvalue.push_back(nil);
 }
 inline void nasal_vm::opr_callb()
 {
-    (++gc.top)[0]=(*builtin[imm[pc]].func)(lstk.top(),gc);
+    (++gc.top)[0]=(*builtin[imm[pc]].func)(localr,gc);
     if(gc.top[0].type==vm_none)
         die("native function error.");
 }
 inline void nasal_vm::opr_slcbegin()
 {
+    // +--------------+
     // | slice_vector | <-- gc.top[0]
     // +--------------+
     // | resource_vec | <-- gc.top[-1]
@@ -797,12 +812,12 @@ inline void nasal_vm::opr_mcallg()
 }
 inline void nasal_vm::opr_mcalll()
 {
-    mem_addr=lstk.top()+imm[pc];
+    mem_addr=localr+imm[pc];
     (++gc.top)[0]=mem_addr[0];
 }
 inline void nasal_vm::opr_mupval()
 {
-    mem_addr=&(fstk.top()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
+    mem_addr=&(gc.funcr.func()->upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
     (++gc.top)[0]=mem_addr[0];
 }
 inline void nasal_vm::opr_mcallv()
@@ -824,7 +839,7 @@ inline void nasal_vm::opr_mcallv()
         mem_addr=ref.get_mem(str);
         if(!mem_addr)
         {
-            ref.elems[str]={vm_nil};
+            ref.elems[str]=nil;
             mem_addr=ref.get_mem(str);
         }
     }
@@ -841,39 +856,45 @@ inline void nasal_vm::opr_mcallh()
     mem_addr=ref.get_mem(str);
     if(!mem_addr) // create a new key
     {
-        ref.elems[str]={vm_nil};
+        ref.elems[str]=nil;
         mem_addr=ref.get_mem(str);
     }
 }
 inline void nasal_vm::opr_ret()
 {
+    // +-----------------+
     // | return value    | <- gc.top[0]
     // +-----------------+
-    // | return address  | <- gc.top[-1]
+    // | old pc          | <- gc.top[-1]
+    // +-----------------+
+    // | old localr      | <- gc.top[-2]
     // +-----------------+
     // | local scope     |
-    // +-----------------+ <- local pointer stored in lstk
-    // | called function | <- func is stored on stack because gc may mark it
+    // | ...             |
+    // +-----------------+ <- local pointer stored in localr
+    // | old funcr       | <- old function stored in gc.funcr
     // +-----------------+
-    nasal_ref ret=gc.top[0];
+    nasal_ref  ret=gc.top[0];
+    nasal_ref* local=localr;
+    nasal_ref  func=gc.funcr;
+
     pc=gc.top[-1].ret();
+    localr=gc.top[-2].addr();
 
-    gc.top=lstk.top()-1;
+    gc.top=local-1;
+    func.func()->local[0]=nil;// get func and set 'me' to nil
+    gc.funcr=gc.top[0];
 
-    gc.top[0].func()->local[0]={vm_nil,nullptr}; // get func and set 'me' to nil
     gc.top[0]=ret; // rewrite func with returned value
 
     if(gc.upvalue.back().type==vm_upval) // synchronize upvalue
     {
         auto& upval=gc.upvalue.back().upval();
-        auto local=lstk.top();
-        auto size=fstk.top()->lsize;
+        auto size=func.func()->lsize;
         upval.onstk=false;
         for(uint32_t i=0;i<size;++i)
             upval.elems.push_back(local[i]);
     }
-    lstk.pop();
-    fstk.pop();
     gc.upvalue.pop_back();
 }
 void nasal_vm::run(

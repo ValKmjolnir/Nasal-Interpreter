@@ -96,7 +96,7 @@ nas_native(builtin_gc);
 nasal_ref builtin_err(const char* func_name,std::string info)
 {
     std::cerr<<"[vm] "<<func_name<<": "<<info<<".\n";
-    return {vm_none,nullptr};
+    return {vm_none};
 }
 
 // register builtin function's name and it's address here in this table below

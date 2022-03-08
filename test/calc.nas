@@ -53,6 +53,7 @@ var testfile=[
     "test/nasal_test.nas   ",
     "test/pi.nas           ",
     "test/prime.nas        ",
+    "test/props_sim.nas    ",
     "test/props.nas        ",
     "test/quick_sort.nas   ",
     "test/scalar.nas       ",
