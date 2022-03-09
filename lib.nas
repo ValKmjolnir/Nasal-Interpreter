@@ -273,8 +273,8 @@ var math=
 
 var unix=
 {
-    pipe:     func(){die("not supported yet");},
-    fork:     func(){die("not supported yet");},
+    pipe:     func(){return __builtin_pipe;},
+    fork:     func(){return __builtin_fork;},
     dup2:     func(fd0,fd1){die("not supported yet");},
     exec:     func(filename,argv,envp){die("not supported yet");},
     waitpid:  func(pid,nohang=0){die("not supported yet");},
