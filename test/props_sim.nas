@@ -1,7 +1,28 @@
 import("lib.nas");
 
-var geodinfo=func(lat,lon){}
-var maketimer=func(t,f){}
+var geodinfo=func(lat,lon){
+    return {};
+}
+var maketimer=func(interval,function){
+    return {
+        isRunning:0,
+        start:func(){
+            me.isRunning=1;
+            while(1){
+                unix.sleep(interval);
+                function();
+            }
+        },
+        stop:func(){
+            me.isRunning=0;
+        },
+        restart:func(interval){
+
+        },
+        singleShot:0,
+        simulatedTime:0
+    };
+}
 
 var props=
 {

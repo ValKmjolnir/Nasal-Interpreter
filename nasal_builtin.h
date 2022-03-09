@@ -79,6 +79,8 @@ nas_native(builtin_sfld);
 nas_native(builtin_setfld);
 nas_native(builtin_buf);
 nas_native(builtin_sleep);
+nas_native(builtin_pipe);
+nas_native(builtin_fork);
 nas_native(builtin_opendir);
 nas_native(builtin_readdir);
 nas_native(builtin_closedir);
@@ -163,6 +165,8 @@ struct
     {"__builtin_setfld",  builtin_setfld  },
     {"__builtin_buf",     builtin_buf     },
     {"__builtin_sleep",   builtin_sleep   },
+    {"__builtin_pipe",    builtin_pipe    },
+    {"__builtin_fork",    builtin_fork    },
     {"__builtin_opendir", builtin_opendir },
     {"__builtin_readdir", builtin_readdir },
     {"__builtin_closedir",builtin_closedir},
@@ -954,6 +958,26 @@ nasal_ref builtin_sleep(nasal_ref* local,nasal_gc& gc)
         return builtin_err("sleep","\"duration\" must be number");
     usleep((useconds_t)(val.num()*1e6));
     return nil;
+}
+nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
+{
+    int fd[2];
+    nasal_ref res=gc.alloc(vm_vec);
+#ifndef _WIN32
+    if(pipe(fd)==-1)
+        return builtin_err("pipe","failed to create pipe");
+    res.vec()->elems.push_back({vm_num,(double)fd[0]});
+    res.vec()->elems.push_back({vm_num,(double)fd[1]});
+    return res;
+#endif
+    return builtin_err("pipe","not supported yet");
+}
+nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
+{
+#ifndef _WIN32
+    return {vm_num,(double)fork()};
+#endif
+    return builtin_err("fork","not supported yet");
 }
 nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
 {
