@@ -535,15 +535,15 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
     // main process
     // also check number of arguments and type here
     // if get an error,use builtin_err
-    for(auto i:vec.vec()->elems)
+    for(auto i:vec.vec().elems)
         switch(i.type)
         {
             case vm_none: std::cout<<"undefined";      break;
             case vm_nil:  std::cout<<"nil";            break;
             case vm_num:  std::cout<<i.num();          break;
-            case vm_str:  std::cout<<*i.str();         break;
-            case vm_vec:  i.vec()->print();            break;
-            case vm_hash: i.hash()->print();           break;
+            case vm_str:  std::cout<<i.str();          break;
+            case vm_vec:  i.vec().print();             break;
+            case vm_hash: i.hash().print();            break;
             case vm_func: std::cout<<"func(...){...}"; break;
             case vm_obj:  std::cout<<"<object>";       break;
         }
@@ -609,21 +609,20 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
-    {
-        builtin_err("keys","\"hash\" must be hash");
-        return nasal_ref(vm_none);
-    }
-
+        return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    local.push_back(gc.alloc(vm_vec));
-    std::vector<nasal_ref>& vec=local.back().vec()->elems;
-    for(auto& iter:hash.hash()->elems)
+    if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
+        builtin_err("keys","expand temporary space error:stackoverflow");
+    (++gc.top)[0]=gc.alloc(vm_vec);
+    auto& vec=gc.top[0].vec().elems;
+    for(auto& iter:hash.hash().elems)
     {
-        nasal_ref str=gc.builtin_alloc(vm_str);
-        *str.str()=iter.first;
+        nasal_ref str=gc.alloc(vm_str);
+        str.str()=iter.first;
         vec.push_back(str);
     }
-    return local.back();
+    --gc.top;
+    return gc.top[1];
 }
 ```
 
