@@ -37,6 +37,14 @@ void calc_const(nasal_ast& root)
     auto& vec=root.child();
     for(auto& i:vec)
         calc_const(i);
+    if(vec.size()==1 && root.type()==ast_neg && vec[0].type()==ast_num)
+    {
+        double res=-vec[0].num();
+        root.set_num(res);
+        root.child().clear();
+        root.set_type(ast_num);
+        return;
+    }
     if(vec.size()!=2)
         return;
     if(root.type()!=ast_add &&

@@ -417,10 +417,10 @@ nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
     double num;
     switch(val.type)
     {
-        case vm_num:  num=val.num();              break;
-        case vm_str:  num=val.str().length();     break;
-        case vm_vec:  num=val.vec().elems.size(); break;
-        case vm_hash: num=val.hash().elems.size();break;
+        case vm_num:  num=val.num();         break;
+        case vm_str:  num=val.str().length();break;
+        case vm_vec:  num=val.vec().size();  break;
+        case vm_hash: num=val.hash().size(); break;
     }
     return {vm_num,num};
 }

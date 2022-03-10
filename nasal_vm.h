@@ -154,8 +154,8 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
         case vm_str:  printf("| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(val.str()).c_str());break;
         case vm_func: printf("| func | <0x%lx> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
-        case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec().elems.size());break;
-        case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash().elems.size());break;
+        case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec().size());break;
+        case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash().size());break;
         case vm_obj:  printf("| obj  | <0x%lx> obj:0x%lx\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
         default:      printf("| err  | <0x%lx> unknown object\n",(uint64_t)p);break;
     }
@@ -582,7 +582,7 @@ inline void nasal_vm::opr_counter()
 }
 inline void nasal_vm::opr_findex()
 {
-    if(++gc.top[0].cnt()>=gc.top[-1].vec().elems.size())
+    if(++gc.top[0].cnt()>=gc.top[-1].vec().size())
     {
         pc=imm[pc]-1;
         return;
@@ -676,7 +676,7 @@ inline void nasal_vm::opr_callfv()
     if(local[-1].type!=vm_func)
         die("callfv: must call a function");
     
-    nasal_func& func=local[-1].func();
+    auto& func=local[-1].func();
     nasal_ref tmp=local[-1];
     local[-1]=gc.funcr;
     gc.funcr=tmp;
@@ -716,7 +716,7 @@ inline void nasal_vm::opr_callfh()
     if(gc.top[-1].type!=vm_func)
         die("callfh: must call a function");
 
-    nasal_func& func=gc.top[-1].func();
+    auto& func=gc.top[-1].func();
     nasal_ref tmp=gc.top[-1];
     gc.top[-1]=gc.funcr;
     gc.funcr=tmp;
