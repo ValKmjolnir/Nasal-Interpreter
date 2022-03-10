@@ -151,24 +151,19 @@ void nasal_dbg::interact()
             else
                 err();
         }
-        else if(res.size()==3)
+        else if(res.size()==3 && (res[0]=="bk" || res[0]=="break"))
         {
-            if(res[0]=="bk" || res[0]=="break")
+            bk_fidx=get_fileindex(res[1]);
+            if(bk_fidx==65535)
             {
-                bk_fidx=get_fileindex(res[1]);
-                if(bk_fidx==65535)
-                {
-                    printf("cannot find file named \"%s\"\n",res[1].c_str());
-                    bk_fidx=0;
-                }
-                int tmp=atoi(res[2].c_str());
-                if(tmp<=0)
-                    printf("incorrect line number \"%s\"\n",res[2].c_str());
-                else
-                    bk_line=tmp;
+                printf("cannot find file named \"%s\"\n",res[1].c_str());
+                bk_fidx=0;
             }
+            int tmp=atoi(res[2].c_str());
+            if(tmp<=0)
+                printf("incorrect line number \"%s\"\n",res[2].c_str());
             else
-                err();
+                bk_line=tmp;
         }
         else
             err();

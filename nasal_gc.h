@@ -98,22 +98,24 @@ struct nasal_ref
 
 struct nasal_vec
 {
-    uint32_t depth;
+    bool printed;
     std::vector<nasal_ref> elems;
 
-    nasal_vec():depth(0){}
+    nasal_vec():printed(false){}
     void       print();
+    size_t     size(){return elems.size();}
     nasal_ref  get_val(const int);
     nasal_ref* get_mem(const int);
 };
 
 struct nasal_hash
 {
-    uint32_t depth;
+    bool printed;
     std::unordered_map<std::string,nasal_ref> elems;
 
-    nasal_hash():depth(0){}
+    nasal_hash():printed(false){}
     void       print();
+    size_t     size(){return elems.size();}
     nasal_ref  get_val(const std::string&);
     nasal_ref* get_mem(const std::string&);
 };
@@ -140,7 +142,7 @@ struct nasal_upval
     std::vector<nasal_ref> elems;
 
     nasal_upval(){onstk=true;stk=nullptr;size=0;}
-    nasal_ref& operator[](const int);
+    nasal_ref& operator[](const int i){return onstk?stk[i]:elems[i];}
     void clear(){onstk=true;elems.clear();size=0;}
 };
 
@@ -198,12 +200,12 @@ nasal_ref* nasal_vec::get_mem(const int index)
 }
 void nasal_vec::print()
 {
-    if(!elems.size() || depth>3)
+    if(!elems.size() || printed)
     {
         std::cout<<(elems.size()?"[..]":"[]");
         return;
     }
-    ++depth;
+    printed=true;
     size_t iter=0;
     std::cout<<'[';
     for(auto& i:elems)
@@ -211,7 +213,7 @@ void nasal_vec::print()
         i.print();
         std::cout<<",]"[(++iter)==elems.size()];
     }
-    --depth;
+    printed=false;
 }
 
 nasal_ref nasal_hash::get_val(const std::string& key)
@@ -254,12 +256,12 @@ nasal_ref* nasal_hash::get_mem(const std::string& key)
 }
 void nasal_hash::print()
 {
-    if(!elems.size() || depth>3)
+    if(!elems.size() || printed)
     {
         std::cout<<(elems.size()?"{..}":"{}");
         return;
     }
-    ++depth;
+    printed=true;
     size_t iter=0;
     std::cout<<'{';
     for(auto& i:elems)
@@ -268,7 +270,7 @@ void nasal_hash::print()
         i.second.print();
         std::cout<<",}"[(++iter)==elems.size()];
     }
-    --depth;
+    printed=false;
 }
 
 void nasal_func::clear()
@@ -277,13 +279,6 @@ void nasal_func::clear()
     local.clear();
     upvalue.clear();
     keys.clear();
-}
-
-nasal_ref& nasal_upval::operator[](const int index)
-{
-    if(onstk)
-        return stk[index];
-    return elems[index];
 }
 
 nasal_val::nasal_val(uint8_t val_type)
