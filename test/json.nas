@@ -228,7 +228,10 @@ var JSON=func(){
     var member=func(hash)
     {
         var name=token.content;
-        match(j_id);
+        if(token.type==j_str)
+            match(j_str);
+        else
+            match(j_id);
         match(j_colon);
         if(token.type==j_lbrace)
             hash[name]=hash_gen();
@@ -244,6 +247,8 @@ var JSON=func(){
     return {
         parse:func(str)
         {
+            if(typeof(str)!="str")
+                die("JSON.parse: must use string");
             get(str);
             next();
 
@@ -261,6 +266,8 @@ var JSON=func(){
             return res;
         },
         stringify:func(hash){
+            if(typeof(hash)!="hash")
+                die("JSON.stringify: must use hashmap");
             var s="";
             var gen=func(elem){
                 var t=typeof(elem);
@@ -304,21 +311,14 @@ var JSON=func(){
 }();
 
 var ss=JSON.stringify({
-    vec:[
-        0,
-        1,
-        2
-    ],
+    vec:[0,1,2],
     hash:{
         m1:0,
         m2:"str",
         m3:[114514],
-        m4:{
-            year:1919,
-            month:8,
-            date:10
-        }
-    }
+        m4:{year:1919,month:8,date:10}
+    },
+    function:func(){}
 });
 println(ss);
 println(JSON.parse(ss));
