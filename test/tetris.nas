@@ -296,7 +296,7 @@ var main=func(){
     libkey.getch();
     print("\ec");
 
-    var interval=0.55;
+    var counter=15;
     while(1){
         # nonblock input one character
         var ch=libkey.nonblock();
@@ -319,17 +319,17 @@ var main=func(){
             map.checkmap();
             if(map.gameover())
                 break;
-            interval-=0.05;
         }
-        if(!ch or interval<0.1){
+        if(!counter){
             # automatically fall one block and check
             map.fall();
             map.checkmap();
             if(map.gameover())
                 break;
-            unix.sleep(interval);
-            interval=0.55;
+            counter=15;
         }
+        unix.sleep(0.04);
+        counter-=1;
     }
     libkey.close();
     print(
