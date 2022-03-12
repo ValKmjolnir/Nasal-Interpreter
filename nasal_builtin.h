@@ -735,19 +735,18 @@ nasal_ref builtin_chr(nasal_ref* local,nasal_gc& gc)
 void obj_file_destructor(void* ptr)
 {
     fclose((FILE*)ptr);
-    return;
 }
 nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filename=local[1];
+    nasal_ref name=local[1];
     nasal_ref mode=local[2];
-    if(filename.type!=vm_str)
+    if(name.type!=vm_str)
         return builtin_err("open","\"filename\" must be string");
     if(mode.type!=vm_str)
         return builtin_err("open","\"mode\" must be string");
-    FILE* res=fopen(filename.str().c_str(),mode.str().c_str());
+    FILE* res=fopen(name.str().c_str(),mode.str().c_str());
     if(!res)
-        return builtin_err("open","failed to open file <"+filename.str()+"> errno "+std::to_string(errno));
+        return builtin_err("open","failed to open file <"+name.str()+"> errno "+std::to_string(errno));
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=obj_file;
     ret.obj().ptr=(void*)res;
@@ -757,19 +756,19 @@ nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_close(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref fd=local[1];
-    if(fd.type!=vm_obj || fd.obj().type!=obj_file)
-        return builtin_err("close","not a correct filehandle");
+    if(!fd.objchk(obj_file))
+        return builtin_err("close","not a valid filehandle");
     fclose((FILE*)fd.obj().ptr);
     fd.obj().ptr=nullptr;
     return nil;
 }
 nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
+    nasal_ref fd=local[1];
     nasal_ref buf=local[2];
     nasal_ref len=local[3];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("read","not a correct filehandle");
+    if(!fd.objchk(obj_file))
+        return builtin_err("read","not a valid filehandle");
     if(buf.type!=vm_str)
         return builtin_err("read","\"buf\" must be string");
     if(buf.value.gcobj->unmut)
@@ -781,53 +780,53 @@ nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)
     char* buff=new char[(size_t)len.num()+1];
     if(!buff)
         return builtin_err("read","memory allocation error");
-    double res=fread(buff,1,len.num(),(FILE*)filehandle.obj().ptr);
+    double res=fread(buff,1,len.num(),(FILE*)fd.obj().ptr);
     buf.str()=buff;
     delete []buff;
     return {vm_num,res};
 }
 nasal_ref builtin_write(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
+    nasal_ref fd=local[1];
     nasal_ref str=local[2];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("write","not a correct filehandle");
+    if(!fd.objchk(obj_file))
+        return builtin_err("write","not a valid filehandle");
     if(str.type!=vm_str)
         return builtin_err("write","\"str\" must be string");
-    double res=(double)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)filehandle.obj().ptr);
+    double res=(double)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr);
     return {vm_num,res};
 }
 nasal_ref builtin_seek(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
-    nasal_ref position=local[2];
+    nasal_ref fd=local[1];
+    nasal_ref pos=local[2];
     nasal_ref whence=local[3];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("seek","not a correct filehandle");
-    if(position.type!=vm_num)
+    if(!fd.objchk(obj_file))
+        return builtin_err("seek","not a valid filehandle");
+    if(pos.type!=vm_num)
         return builtin_err("seek","\"pos\" must be number");
     if(whence.type!=vm_num || whence.num()<0 || whence.num()>2)
         return builtin_err("seek","\"whence\" must be number between 0 and 2");
-    double res=fseek((FILE*)filehandle.obj().ptr,position.num(),whence.num());
+    double res=fseek((FILE*)fd.obj().ptr,pos.num(),whence.num());
     return {vm_num,res};
 }
 nasal_ref builtin_tell(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("tell","not a correct filehandle");
-    double res=ftell((FILE*)filehandle.obj().ptr);
+    nasal_ref fd=local[1];
+    if(!fd.objchk(obj_file))
+        return builtin_err("tell","not a valid filehandle");
+    double res=ftell((FILE*)fd.obj().ptr);
     return {vm_num,res};
 }
 nasal_ref builtin_readln(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("readln","not a correct filehandle");
+    nasal_ref fd=local[1];
+    if(!fd.objchk(obj_file))
+        return builtin_err("readln","not a valid filehandle");
     nasal_ref str=gc.alloc(vm_str);
     auto& s=str.str();
     char c;
-    while((c=fgetc((FILE*)filehandle.obj().ptr))!=EOF)
+    while((c=fgetc((FILE*)fd.obj().ptr))!=EOF)
     {
         if(c=='\r')
             continue;
@@ -841,12 +840,12 @@ nasal_ref builtin_readln(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_stat(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filename=local[1];
-    if(filename.type!=vm_str)
+    nasal_ref name=local[1];
+    if(name.type!=vm_str)
         return builtin_err("stat","\"filename\" must be string");
     struct stat buf;
-    if(stat(filename.str().c_str(),&buf)<0)
-        return builtin_err("stat","failed to open file <"+filename.str()+">");
+    if(stat(name.str().c_str(),&buf)<0)
+        return builtin_err("stat","failed to open file <"+name.str()+">");
     nasal_ref ret=gc.alloc(vm_vec);
     ret.vec().elems={
         {vm_num,(double)buf.st_dev},
@@ -865,10 +864,10 @@ nasal_ref builtin_stat(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_eof(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
-        return builtin_err("readln","not a correct filehandle");
-    double res=feof((FILE*)filehandle.obj().ptr);
+    nasal_ref fd=local[1];
+    if(!fd.objchk(obj_file))
+        return builtin_err("readln","not a valid filehandle");
+    double res=feof((FILE*)fd.obj().ptr);
     return {vm_num,res};
 }
 nasal_ref builtin_fld(nasal_ref* local,nasal_gc& gc)
@@ -987,6 +986,10 @@ nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
 #endif
     return builtin_err("fork","not supported yet");
 }
+void obj_dir_destructor(void* ptr)
+{
+    closedir((DIR*)ptr);
+}
 nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref path=local[1];
@@ -998,13 +1001,14 @@ nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=obj_dir;
     ret.obj().ptr=(void*)p;
+    ret.obj().destructor=obj_dir_destructor;
     return ret;
 }
 nasal_ref builtin_readdir(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref handle=local[1];
-    if(handle.type!=vm_obj || handle.obj().type!=obj_dir)
-        return builtin_err("readdir","not a correct dir handle");
+    if(!handle.objchk(obj_dir))
+        return builtin_err("readdir","not a valid dir handle");
     dirent* p=readdir((DIR*)handle.obj().ptr);
     if(!p)
         return nil;
@@ -1015,9 +1019,10 @@ nasal_ref builtin_readdir(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_closedir(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref handle=local[1];
-    if(handle.type!=vm_obj || handle.obj().type!=obj_dir)
-        return builtin_err("closedir","not a correct dir handle");
+    if(!handle.objchk(obj_dir))
+        return builtin_err("closedir","not a valid dir handle");
     closedir((DIR*)handle.obj().ptr);
+    handle.obj().ptr=nullptr;
     return nil;
 }
 nasal_ref builtin_chdir(nasal_ref* local,nasal_gc& gc)
@@ -1066,6 +1071,14 @@ nasal_ref builtin_getenv(nasal_ref* local,nasal_gc& gc)
     str.str()=res;
     return str;
 }
+void obj_dylib_destructor(void* ptr)
+{
+#ifdef _WIN32
+    FreeLibrary((HMODULE)ptr);
+#else
+    dlclose(ptr);
+#endif
+}
 nasal_ref builtin_dlopen(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref dlname=local[1];
@@ -1085,14 +1098,15 @@ nasal_ref builtin_dlopen(nasal_ref* local,nasal_gc& gc)
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=obj_dylib;
     ret.obj().ptr=ptr;
+    ret.obj().destructor=obj_dylib_destructor;
     return ret;
 }
 nasal_ref builtin_dlsym(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref libptr=local[1];
     nasal_ref sym=local[2];
-    if(libptr.type!=vm_obj || libptr.obj().type!=obj_dylib)
-        return builtin_err("dlsym","\"lib\" is not a correct dynamic lib entry");
+    if(!libptr.objchk(obj_dylib))
+        return builtin_err("dlsym","\"lib\" is not a valid dynamic lib");
     if(sym.type!=vm_str)
         return builtin_err("dlsym","\"sym\" must be string");
 #ifdef _WIN32
@@ -1110,21 +1124,22 @@ nasal_ref builtin_dlsym(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_dlclose(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref libptr=local[1];
-    if(libptr.type!=vm_obj || libptr.obj().type!=obj_dylib)
-        return builtin_err("dlclose","\"lib\" is not a correct dynamic lib entry");
+    if(!libptr.objchk(obj_dylib))
+        return builtin_err("dlclose","\"lib\" is not a valid dynamic lib");
 #ifdef _WIN32
     FreeLibrary((HMODULE)libptr.obj().ptr);
 #else
     dlclose(libptr.obj().ptr);
 #endif
+    libptr.obj().ptr=nullptr;
     return nil;
 }
 nasal_ref builtin_dlcall(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref funcptr=local[1];
     nasal_ref args=local[2];
-    if(funcptr.type!=vm_obj || funcptr.obj().type!=obj_extern)
-        return builtin_err("dlcall","\"funcptr\" is not a correct function pointer");
+    if(!funcptr.objchk(obj_extern))
+        return builtin_err("dlcall","\"funcptr\" is not a valid function pointer");
     typedef nasal_ref (*extern_func)(std::vector<nasal_ref>&,nasal_gc&);
     extern_func func=(extern_func)funcptr.obj().ptr;
     return func(args.vec().elems,gc);
