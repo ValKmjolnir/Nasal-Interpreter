@@ -732,6 +732,11 @@ nasal_ref builtin_chr(nasal_ref* local,nasal_gc& gc)
         ret.str()=" ";
     return ret;
 }
+void obj_file_destructor(void* ptr)
+{
+    fclose((FILE*)ptr);
+    return;
+}
 nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref filename=local[1];
@@ -746,14 +751,16 @@ nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=obj_file;
     ret.obj().ptr=(void*)res;
+    ret.obj().destructor=obj_file_destructor;
     return ret;
 }
 nasal_ref builtin_close(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref filehandle=local[1];
-    if(filehandle.type!=vm_obj || filehandle.obj().type!=obj_file)
+    nasal_ref fd=local[1];
+    if(fd.type!=vm_obj || fd.obj().type!=obj_file)
         return builtin_err("close","not a correct filehandle");
-    fclose((FILE*)filehandle.obj().ptr);
+    fclose((FILE*)fd.obj().ptr);
+    fd.obj().ptr=nullptr;
     return nil;
 }
 nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)

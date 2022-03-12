@@ -238,6 +238,7 @@ var mapgen=func(mapx,mapy){
     }
 
     var checkmap=func(){
+        var lines=1;
         for(var y=mapy-1;y>=0;y-=1){
             # check if this line is full of blocks
             var tmp=0;
@@ -249,7 +250,8 @@ var mapgen=func(mapx,mapy){
             # if is full, clear this line and
             # all the lines above fall one block
             if(x==mapx){
-                score+=tmp;
+                score+=lines*tmp;
+                lines*=2;
                 for(var t=y;t>=1;t-=1)
                     for(var x=0;x<mapx;x+=1)
                         map[t][x]=map[t-1][x];
@@ -296,7 +298,7 @@ var main=func(){
     libkey.getch();
     print("\ec");
 
-    var counter=15;
+    var counter=30;
     while(1){
         # nonblock input one character
         var ch=libkey.nonblock();
@@ -326,9 +328,9 @@ var main=func(){
             map.checkmap();
             if(map.gameover())
                 break;
-            counter=15;
+            counter=30;
         }
-        unix.sleep(0.04);
+        unix.sleep(0.02);
         counter-=1;
     }
     libkey.close();
