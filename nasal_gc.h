@@ -84,6 +84,7 @@ struct nasal_ref
     double      to_number();
     std::string to_string();
     void        print();
+    bool        objchk(uint32_t);
     inline nasal_ref*   addr();
     inline uint32_t     ret ();
     inline int64_t&     cnt ();
@@ -154,15 +155,16 @@ struct nasal_obj
     void* ptr;
 
     /* RAII destroyer */
+    /* default destroyer does nothing */
     typedef void (*dest)(void*);
     dest destructor;
 
     nasal_obj():ptr(nullptr),destructor(nullptr){}
     ~nasal_obj(){clear();}
     void clear()
-    {   
+    {
         if(destructor && ptr)
-            destructor(ptr);
+            {destructor(ptr);}
         ptr=nullptr;
     }
 };
@@ -344,6 +346,10 @@ void nasal_ref::print()
         case vm_func: std::cout<<"func(..){..}";break;
         case vm_obj:  std::cout<<"<object>";    break;
     }
+}
+bool nasal_ref::objchk(uint32_t objtype)
+{
+    return type==vm_obj && obj().type==objtype && obj().ptr;
 }
 inline nasal_ref*   nasal_ref::addr (){return value.addr;             }
 inline uint32_t     nasal_ref::ret  (){return value.ret;              }
