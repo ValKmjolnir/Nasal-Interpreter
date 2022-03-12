@@ -148,16 +148,21 @@ struct nasal_upval
 
 struct nasal_obj
 {
+    /* RAII constructor */
+    /* new object is initialized when creating */
     uint32_t type;
     void* ptr;
-    void* destructor;
+
+    /* RAII destroyer */
+    typedef void (*dest)(void*);
+    dest destructor;
+
     nasal_obj():ptr(nullptr),destructor(nullptr){}
     ~nasal_obj(){clear();}
     void clear()
-    {
-        typedef void (*func)(void*);
-        if(destructor)
-            (func(destructor))(ptr);
+    {   
+        if(destructor && ptr)
+            destructor(ptr);
         ptr=nullptr;
     }
 };
