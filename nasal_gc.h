@@ -166,6 +166,7 @@ struct nasal_obj
         if(destructor && ptr)
             {destructor(ptr);}
         ptr=nullptr;
+        destructor=nullptr;
     }
 };
 
