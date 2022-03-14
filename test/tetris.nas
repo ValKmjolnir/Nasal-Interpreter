@@ -57,21 +57,16 @@ var blockshape=[
     [[0,0],[1,0],[0,1],[-1,1]]
 ];
 
-var stick_count=0; # make sure one stick in 10 tries
 var color_count=0;
-var last_type=-1;
-var typechange=func(t){
-    if(t==last_type)
-        t=int(rand()*size(blocktype));
-    if(t!=3){
-        stick_count+=1;
-        if(stick_count==8)
-            (t,stick_count)=(3,0);
-    }else
-        stick_count=0;
-    last_type=t;
-    return t;
+var counter=0;
+var package=[0,1,2,3,4,5,6];
+var exchange=func(){
+    for(var i=6;i>=0;i-=1){
+        var index=int(i*rand());
+        (package[i],package[index])=(package[index],package[i]);
+    }
 }
+
 var block={
     x:0,
     y:0,
@@ -82,9 +77,13 @@ var block={
     new:func(x=0,y=0){
         (me.x,me.y)=(x,y);
         me.rotate=0;
-        var t=typechange(int(rand()*size(blocktype)));
+        me.type=blocktype[package[counter]];
+        counter+=1;
+        if(counter==7){
+            exchange();
+            counter=0;
+        }
         
-        me.type=blocktype[t];
         me.shape=blockshape[me.type[me.rotate]];
 
         me.color=color_count;
@@ -293,7 +292,8 @@ var main=func(){
     );
 
     rand(time(0));
-    var map=mapgen(mapx:12,mapy:15);
+    exchange();
+    var map=mapgen(mapx:12,mapy:18);
 
     libkey.getch();
     print("\ec");

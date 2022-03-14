@@ -114,6 +114,14 @@ Or use this in __`linux/macOS/Unix`__
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
+Or using makefile,`mingw32-make` is __`Windows`__ platform's `make`:
+
+> mingw32-make nasal.exe
+
+in __`linux/macOS/Unix`__:
+
+> make nasal
+
 ## __How to Use__
 
 First we should learn how to write a program using this language,
@@ -1584,11 +1592,11 @@ vm stack(limit 5, total 0)
 If want help, input `h` to get help.
 
 ```bash
->> h
 <option>
         h,    help      | get help
         bt,   backtrace | get function call trace
         c,    continue  | run program until break point or exit
+        f,    file      | see all the compiled files
         g,    global    | see global values
         l,    local     | see local values
         u,    upval     | see upvalue
