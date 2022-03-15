@@ -149,6 +149,13 @@ struct nasal_upval
 
 struct nasal_obj
 {
+    enum obj_type
+    {
+        file=1,
+        dir,
+        dylib,
+        externfunc
+    };
     /* RAII constructor */
     /* new object is initialized when creating */
     uint32_t type;
