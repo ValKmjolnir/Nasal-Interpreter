@@ -426,7 +426,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     block_gen(block);
     in_iterloop.pop();
     code[local_label].num=local.back().size();
-    if(local.back().size()>65536)
+    if(local.back().size()>=STACK_MAX_DEPTH)
         die("too many local variants: "+std::to_string(local.back().size())+".",block.line());
     local.pop_back();
 

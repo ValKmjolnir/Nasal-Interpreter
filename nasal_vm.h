@@ -178,7 +178,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
             printf(" (\"%s\")",rawstr(str_table[c.num]).c_str());break;
-        case op_upval:case op_mupval:  case op_loadu:
+        case op_upval: case op_mupval: case op_loadu:
             printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
         default:break;
     }
@@ -214,10 +214,11 @@ void nasal_vm::traceback()
 }
 void nasal_vm::stackinfo(const uint32_t limit=10)
 {
-    uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
+    /* bytecode[0] is op_intg, the .num is the global size */
+    uint32_t   gsize=bytecode[0].num; 
     nasal_ref* top=gc.top;
-    nasal_ref* bottom=gc.stack+global_size;
-    printf("vm stack(0x%lx<sp+%u>, limit %d, total ",(uint64_t)bottom,global_size,limit);
+    nasal_ref* bottom=gc.stack+gsize;
+    printf("vm stack(0x%lx<sp+%u>, limit %d, total ",(uint64_t)bottom,gsize,limit);
     if(top<bottom)
     {
         printf("0)\n");
