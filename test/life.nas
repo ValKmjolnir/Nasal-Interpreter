@@ -23,22 +23,20 @@ var new_map=func()
 
 var prt=func()
 {
-    var s='';
+    var s='\e[0;0H';
     foreach(var line;map)
     {
         foreach(var elem;line)
             s~=elem~' ';
         s~='\n';
     }
-    if(os.platform()=="windows")
-        system("cls");
-    else
-        system("clear");
     print(s);
+    unix.sleep(1/144);
 }
 
 func()
 {
+    print("\ec");
     rand(time(0));
     map=new_map();
     forindex(var i;map)

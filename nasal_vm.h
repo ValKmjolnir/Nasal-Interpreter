@@ -6,7 +6,7 @@ class nasal_vm
 protected:
     /* values of nasal_vm */
     uint32_t                 pc;       // program counter
-    nasal_ref*               localr;    // local scope register
+    nasal_ref*               localr;   // local scope register
     const double*            num_table;// const numbers, ref from nasal_codegen
     const std::string*       str_table;// const symbols, ref from nasal_codegen
     std::vector<uint32_t>    imm;      // immediate number

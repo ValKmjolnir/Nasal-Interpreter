@@ -518,11 +518,11 @@ println(a.get());
 
 ### __native functions__
 
-You could add builtin functions of your own
-(written in C/C++) to help you calculate things more quickly.
-But you should add your own code into the source code of this interpreter and re-compile it.
+This part shows how we add native functions in this nasal interpreter.
+If you are interested in this part, this may help you.
+And...
 
-If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
+__CAUTION:__ If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
 
 If you really want to change source code, check built-in functions in lib.nas and see the example below.
 
@@ -530,6 +530,8 @@ Definition:
 
 ```C++
 nasal_ref builtin_print(nasal_ref*,nasal_gc&);
+// you could also use a macro to define one.
+nas_native(builtin_print);
 ```
 
 Then complete this function using C++:
@@ -538,12 +540,12 @@ Then complete this function using C++:
 nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
 {
     // find value with index begin from 1
-    // because local_scope[0] is reserved for value 'me'
+    // because local[0] is reserved for value 'me'
     nasal_ref vec=local[1];
     // main process
     // also check number of arguments and type here
     // if get an error,use builtin_err
-    for(auto i:vec.vec().elems)
+    for(auto& i:vec.vec().elems)
         switch(i.type)
         {
             case vm_none: std::cout<<"undefined";      break;
@@ -556,7 +558,8 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
             case vm_obj:  std::cout<<"<object>";       break;
         }
     std::cout<<std::flush;
-    // generate return value,use gc::alloc(type) to make a new value
+    // generate return value,
+    // use gc::alloc(type) to make a new value
     // or use reserved reference nil/one/zero
     return nil;
 }
@@ -569,7 +572,7 @@ struct func
 {
     const char* name;
     nasal_ref (*func)(nasal_ref*,nasal_gc&);
-} builtin_func[]=
+} builtin[]=
 {
     {"__builtin_print",builtin_print},
     {nullptr,          nullptr      }
@@ -584,7 +587,7 @@ var print=func(elems...){
 };
 ```
 
-In fact the arguments that `__builtin_print` uses is not necessary.
+In fact the arguments that `__builtin_print` uses are not necessary.
 So writting it like this is also right:
 
 ```javascript
@@ -610,7 +613,9 @@ this may cause mark-sweep in `gc::alloc`.
 The value got before will be collected,but stil in use in this builtin function,
 this is a fatal error.
 
-So use `builtin_alloc` in builtin functions like this:
+So use `gc::builtin_alloc` in builtin functions to allocate a new object.
+
+Or use `gc::alloc` like this to avoid sweeping objects incorrectly:
 
 ```C++
 nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
@@ -620,7 +625,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
     if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
-        builtin_err("keys","expand temporary space error:stackoverflow");
+        return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
     for(auto& iter:hash.hash().elems)
@@ -767,7 +772,15 @@ please change it to:
 
 `canary=gc.stack+STACK_MAX_DEPTH-1;`
 
-If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`
+If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`.
+
+Another bug is that in `nasal_err.h:class nasal_err`, we should add a constructor for this class:
+
+```C++
+    nasal_err():error(0){}
+```
+
+This bug is fixed in `v9.0`.
 
 ## __Parser__
 
