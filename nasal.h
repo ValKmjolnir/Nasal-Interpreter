@@ -27,6 +27,7 @@
 #include <windows.h>
 #else
 #include <dlfcn.h>
+#include <sys/wait.h>
 #endif
 
 inline double hex_to_double(const char* str)
