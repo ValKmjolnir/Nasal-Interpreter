@@ -14,11 +14,7 @@ for(var i=0;i<10;i+=1)
 
 var prt=func()
 {
-    if(os.platform()=="windows")
-        system("cls");
-    else
-        system("clear");
-    var s="+--------------------+\n";
+    var s="\e[0;0H+--------------------+\n";
     for(var i=0;i<10;i+=1)
     {
         s~="|";
@@ -28,6 +24,7 @@ var prt=func()
     }
     s~='+--------------------+\n';
     print(s);
+    unix.sleep(1/144);
 }
 
 var bfs=func(begin,end)
@@ -49,6 +46,7 @@ var bfs=func(begin,end)
             {
                 map[x][y]=3;
                 prt();
+                print("reached.\n");
                 return;
             }
             if(0<=x and x<10 and 0<=y and y<20 and map[x][y]==0)
@@ -63,4 +61,5 @@ var bfs=func(begin,end)
     return;
 }
 
+print("\ec");
 bfs([0,0],[9,19]);

@@ -171,7 +171,7 @@ struct nasal_obj
     void clear()
     {
         if(destructor && ptr)
-            {destructor(ptr);}
+            destructor(ptr);
         ptr=nullptr;
         destructor=nullptr;
     }

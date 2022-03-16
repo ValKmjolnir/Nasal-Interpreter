@@ -6,14 +6,6 @@
 #define environ (*_NSGetEnviron())
 #endif
 
-/*
-    builtin functions must be called inside a function like this:
-    var print=func(elems...){
-        return __builtin_print(elems);
-    }
-    builtin function __builtin_print is wrapped up by print
-*/
-
 // declaration of builtin functions
 // to add new builtin function, declare it here and write the definition below
 #define nas_native(name) nasal_ref name(nasal_ref*,nasal_gc&)
@@ -283,7 +275,7 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
 
     // push it to local scope to avoid being sweeped
     if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
-        builtin_err("split","expand temporary space error:stackoverflow");
+        return builtin_err("split","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
 
     std::vector<nasal_ref>& vec=gc.top[0].vec().elems;
@@ -575,7 +567,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
     if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
-        builtin_err("keys","expand temporary space error:stackoverflow");
+        return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
     for(auto& iter:hash.hash().elems)
@@ -1032,7 +1024,7 @@ nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
 {
     char** env=environ;
     if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
-        builtin_err("environ","expand temporary space error:stackoverflow");
+        return builtin_err("environ","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
     while(*env)
