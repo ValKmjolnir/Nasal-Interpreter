@@ -23,9 +23,7 @@ var extern={
     }
 };
 var module={
-    name:nil,
     new: func(name){
-        me.name=name;
         var lib=dylib.dlopen(name);
         var f={};
         return {

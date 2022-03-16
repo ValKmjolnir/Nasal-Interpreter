@@ -67,6 +67,7 @@ nas_native(builtin_buf);
 nas_native(builtin_sleep);
 nas_native(builtin_pipe);
 nas_native(builtin_fork);
+nas_native(builtin_waitpid);
 nas_native(builtin_opendir);
 nas_native(builtin_readdir);
 nas_native(builtin_closedir);
@@ -153,6 +154,7 @@ struct
     {"__builtin_sleep",   builtin_sleep   },
     {"__builtin_pipe",    builtin_pipe    },
     {"__builtin_fork",    builtin_fork    },
+    {"__builtin_waitpid", builtin_waitpid },
     {"__builtin_opendir", builtin_opendir },
     {"__builtin_readdir", builtin_readdir },
     {"__builtin_closedir",builtin_closedir},
@@ -963,14 +965,34 @@ nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
     res.vec().elems.push_back({vm_num,(double)fd[1]});
     return res;
 #endif
-    return builtin_err("pipe","not supported yet");
+    return builtin_err("pipe","not supported for windows platform");
 }
 nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
 {
 #ifndef _WIN32
-    return {vm_num,(double)fork()};
+    double res=fork();
+    if(res<0)
+        return builtin_err("fork","failed to fork a process");
+    return {vm_num,(double)res};
 #endif
-    return builtin_err("fork","not supported yet");
+    return builtin_err("fork","not supported for windows platform");
+}
+nasal_ref builtin_waitpid(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref pid=local[1];
+    nasal_ref nohang=local[2];
+    if(pid.type!=vm_num || nohang.type!=vm_num)
+        return builtin_err("waitpid","pid and nohang must be number");
+#ifndef _WIN32
+    int ret_pid;
+    int status;
+    ret_pid=waitpid(pid.num(),&status,nohang.num()==0?0:WNOHANG);
+    nasal_ref vec=gc.alloc(vm_vec);
+    vec.vec().elems.push_back({vm_num,(double)ret_pid});
+    vec.vec().elems.push_back({vm_num,(double)status});
+    return vec;
+#endif
+    return builtin_err("waitpid","not supported for windows platform");
 }
 void obj_dir_destructor(void* ptr)
 {
