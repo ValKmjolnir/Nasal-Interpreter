@@ -61,5 +61,7 @@ var bfs=func(begin,end)
     return;
 }
 
+if(os.platform()=="windows")
+    system("chcp 65001");
 print("\ec");
 bfs([0,0],[9,19]);

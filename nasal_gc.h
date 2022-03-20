@@ -57,7 +57,7 @@ struct nasal_ref
         double   num;
         nasal_ref* addr;
         nasal_val* gcobj;
-    }value;
+    } value;
 
     // vm_none/vm_nil
     nasal_ref(const uint8_t t=vm_none):type(t){}

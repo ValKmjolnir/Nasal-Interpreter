@@ -36,6 +36,8 @@ var prt=func()
 
 func()
 {
+    if(os.platform()=="windows")
+        system("chcp 65001");
     print("\ec");
     rand(time(0));
     map=new_map();

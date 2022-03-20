@@ -18,8 +18,8 @@ void help()
 #endif
     <<"nasal <option>\n"
     <<"option:\n"
-    <<"    -h, --help    | get help.\n"
-    <<"    -v, --version | get version of nasal interpreter.\n\n"
+    <<"    -h, --help      | get help.\n"
+    <<"    -v, --version   | get version of nasal interpreter.\n\n"
     <<"nasal <file>\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n\n"
@@ -114,9 +114,7 @@ void execute(const std::string& file,const uint32_t cmd)
 
 int main(int argc,const char* argv[])
 {
-    if(!argc)
-        return 0;
-    if(argc==1)
+    if(argc<=1)
     {
         logo();
         return 0;
@@ -134,28 +132,22 @@ int main(int argc,const char* argv[])
             err();
         return 0;
     }
+    std::unordered_map<std::string,uint32_t> cmdlst={
+        {"--lex",VM_LEXINFO},{"-l",VM_LEXINFO},
+        {"--ast",VM_ASTINFO},{"-a",VM_ASTINFO},
+        {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
+        {"--exec",VM_EXEC},{"-e",VM_EXEC},
+        {"--opcnt",VM_OPCALLNUM|VM_EXEC},{"-o",VM_OPCALLNUM|VM_EXEC},
+        {"--time",VM_EXECTIME},{"-t",VM_EXECTIME},
+        {"--detail",VM_DBGINFO|VM_EXEC},{"-d",VM_DBGINFO|VM_EXEC},
+        {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
+        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
+    };
     uint32_t cmd=0;
     for(int i=1;i<argc-1;++i)
     {
-        std::string s(argv[i]);
-        if(s=="--lex" || s=="-l")
-            cmd|=VM_LEXINFO;
-        else if(s=="--ast" || s=="-a")
-            cmd|=VM_ASTINFO;
-        else if(s=="--code" || s=="-c")
-            cmd|=VM_CODEINFO;
-        else if(s=="--exec" || s=="-e")
-            cmd|=VM_EXEC;
-        else if(s=="--opcnt" || s=="-o")
-            cmd|=VM_OPCALLNUM|VM_EXEC;
-        else if(s=="--time" || s=="-t")
-            cmd|=VM_EXECTIME;
-        else if(s=="--detail" || s=="-d")
-            cmd|=VM_DBGINFO|VM_EXEC;
-        else if(s=="--optimize" || s=="-op")
-            cmd|=VM_OPTIMIZE;
-        else if(s=="--debug" || s=="-dbg")
-            cmd|=VM_DEBUG;
+        if(cmdlst.count(argv[i]))
+            cmd|=cmdlst[argv[i]];
         else
             err();
     }

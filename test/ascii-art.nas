@@ -143,6 +143,8 @@ var curve6=func(){
         print('\n');
     }
 }
+if(os.platform()=="windows")
+    system("chcp 65001");
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
 trans_ttf("just for fun");
@@ -152,4 +154,3 @@ curve3();
 curve4();
 curve5();
 curve6();
-println("🟩🟥");
