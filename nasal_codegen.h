@@ -769,32 +769,18 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_null:break;
         case ast_def:def_gen(ast[0]);break;
         case ast_multi_assign:multi_assign_gen(ast[0]);break;
-        case ast_nil:
-        case ast_num:
-        case ast_str:
-        case ast_func:break;
-        case ast_vec:
-        case ast_hash:
+        case ast_nil:case ast_num:case ast_str:case ast_func:break;
+        case ast_vec:case ast_hash:
         case ast_call:
-        case ast_equal:
-        case ast_addeq:
-        case ast_subeq:
-        case ast_multeq:
-        case ast_diveq:
-        case ast_lnkeq:
-        case ast_neg:
-        case ast_not:
-        case ast_add:
-        case ast_sub:
-        case ast_mult:
-        case ast_div:
+        case ast_equal:case ast_addeq:case ast_subeq:
+        case ast_multeq:case ast_diveq:case ast_lnkeq:
+        case ast_neg:case ast_not:
+        case ast_add:case ast_sub:
+        case ast_mult:case ast_div:
         case ast_link:
-        case ast_cmpeq:
-        case ast_neq:
-        case ast_leq:
-        case ast_less:
-        case ast_geq:
-        case ast_grt:
+        case ast_cmpeq:case ast_neq:
+        case ast_leq:case ast_less:
+        case ast_geq:case ast_grt:
         case ast_trino:
             calc_gen(ast[0]);
             gen(op_pop,0,ast[0].line());
