@@ -114,6 +114,18 @@ std::string rawstr(const std::string& str)
 {
     std::string ret("");
     for(auto i:str)
+    {
+#ifdef _WIN32
+        // windows ps or cmd doesn't output unicode normally
+        // if 'chcp65001' is not enabled, so we output the hex
+        if(i<=0)
+        {
+            ret+="\\x";
+            ret+="0123456789abcdef"[(i>>4)&15];
+            ret+="0123456789abcdef"[i&15];
+            continue;
+        }
+#endif
         switch(i)
         {
             case '\a': ret+="\\a";break;
@@ -127,6 +139,7 @@ std::string rawstr(const std::string& str)
             case '\0': ret+="\\0";break;
             default:   ret+=i;    break;
         }
+    }
     return ret;
 }
 #include "nasal_err.h"
