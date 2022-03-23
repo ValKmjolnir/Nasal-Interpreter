@@ -78,6 +78,7 @@ var game=func(x,y){
     }
     edge0~="╗\n";
     edge1~="╝\n";
+
     var vec=[];
     setsize(vec,x);
     for(var i=0;i<x;i+=1){
@@ -117,7 +118,7 @@ var game=func(x,y){
                 }
                 s~='║\n';
             }
-            print('\e[0;0H'~edge0~s~edge1);
+            print('\e[1;1H'~edge0~s~edge1);
         },
         next:func(){
             var (fx,fy)=snake.front();
@@ -126,28 +127,28 @@ var game=func(x,y){
                 snake.push_front([fx,fy-1]);
                 if(vec[fx][fy-1]==1)
                     gameover=1;
-                else if(vec[fx][fy-1]==2)
+                elsif(vec[fx][fy-1]==2)
                     eat=1;
                 vec[fx][fy-1]=1;
-            }else if(move=='a' and fx-1>=0){
+            }elsif(move=='a' and fx-1>=0){
                 snake.push_front([fx-1,fy]);
                 if(vec[fx-1][fy]==1)
                     gameover=1;
-                else if(vec[fx-1][fy]==2)
+                elsif(vec[fx-1][fy]==2)
                     eat=1;
                 vec[fx-1][fy]=1;
-            }else if(move=='s' and fy+1<y){
+            }elsif(move=='s' and fy+1<y){
                 snake.push_front([fx,fy+1]);
                 if(vec[fx][fy+1]==1)
                     gameover=1;
-                else if(vec[fx][fy+1]==2)
+                elsif(vec[fx][fy+1]==2)
                     eat=1;
                 vec[fx][fy+1]=1;
-            }else if(move=='d' and fx+1<x){
+            }elsif(move=='d' and fx+1<x){
                 snake.push_front([fx+1,fy]);
                 if(vec[fx+1][fy]==1)
                     gameover=1;
-                else if(vec[fx+1][fy]==2)
+                elsif(vec[fx+1][fy]==2)
                     eat=1;
                 vec[fx+1][fy]=1;
             }else{
@@ -161,6 +162,8 @@ var game=func(x,y){
 
             if(eat and snake.length()!=x*y)
                 setapple();
+            elsif(snake.length()==x*y)
+                gameover=2;
         },
         move:func(c){
             if(c=='w' or c=='a' or c=='s' or c=='d')
@@ -188,14 +191,14 @@ var main=func(){
         if(ch!=nil){
             if(ch=='q'[0])
                 break;
-            else if(ch=='p'[0]){
+            elsif(ch=='p'[0]){
                 print("\rpress any key to continue...");
                 libkey.getch();
                 print("\r                            \r");
             }
             g.move(chr(ch));
         }
-        unix.sleep(os.platform()=="windows"?0.01:0.02);
+        unix.sleep(0.02);
         counter-=1;
         if(counter==0){
             counter=20;
@@ -206,7 +209,7 @@ var main=func(){
         }
     }
     libkey.close();
-    println("game over.");
+    println(g.gameover()<=1?"game over.":"you win!");
     println("enter anything to quit.");
     input();
 }
