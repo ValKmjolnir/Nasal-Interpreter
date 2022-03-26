@@ -1251,6 +1251,90 @@ In test file `test/bf.nas`, it takes too much time to test the file because this
 Upvalue now is generated when creating first new function in the local scope, using `vm_vec`.
 And after that when creating new functions, they share the same upvalue, and the upvalue will synchronize with the local scope each time creating a new function.
 
+2022/3/27 update:
+
+In this month's updates we change upvalue from `vm_vec` to `vm_upval`,
+a special gc-managed object,
+which has almost the same structure of that upvalue object in another programming language __`Lua`__.
+
+Today we change the output format of bytecode.
+New output format looks like `objdump`:
+
+```x86asm
+  0x0000029b:       0a 00 00 00 00        newh
+
+func <0x29c>:
+  0x0000029c:       0b 00 00 02 a0        newf    0x2a0
+  0x0000029d:       02 00 00 00 02        intl    0x2
+  0x0000029e:       0d 00 00 00 66        para    0x66 ("libname")
+  0x0000029f:       32 00 00 02 a2        jmp     0x2a2
+  0x000002a0:       40 00 00 00 42        callb   0x42 <__builtin_dlopen@0x41dc40>
+  0x000002a1:       4a 00 00 00 00        ret
+<0x29c>;
+
+  0x000002a2:       0c 00 00 00 67        happ    0x67 ("dlopen")
+
+func <0x2a3>:
+  0x000002a3:       0b 00 00 02 a8        newf    0x2a8
+  0x000002a4:       02 00 00 00 03        intl    0x3
+  0x000002a5:       0d 00 00 00 68        para    0x68 ("lib")
+  0x000002a6:       0d 00 00 00 69        para    0x69 ("sym")
+  0x000002a7:       32 00 00 02 aa        jmp     0x2aa
+  0x000002a8:       40 00 00 00 43        callb   0x43 <__builtin_dlsym@0x41df00>
+  0x000002a9:       4a 00 00 00 00        ret
+<0x2a3>;
+
+  0x000002aa:       0c 00 00 00 6a        happ    0x6a ("dlsym")
+
+func <0x2ab>:
+  0x000002ab:       0b 00 00 02 af        newf    0x2af
+  0x000002ac:       02 00 00 00 02        intl    0x2
+  0x000002ad:       0d 00 00 00 68        para    0x68 ("lib")
+  0x000002ae:       32 00 00 02 b1        jmp     0x2b1
+  0x000002af:       40 00 00 00 44        callb   0x44 <__builtin_dlclose@0x41e2a0>
+  0x000002b0:       4a 00 00 00 00        ret
+<0x2ab>;
+
+  0x000002b1:       0c 00 00 00 6b        happ    0x6b ("dlclose")
+
+func <0x2b2>:
+  0x000002b2:       0b 00 00 02 b7        newf    0x2b7
+  0x000002b3:       02 00 00 00 03        intl    0x3
+  0x000002b4:       0d 00 00 00 6c        para    0x6c ("funcptr")
+  0x000002b5:       0f 00 00 00 6d        dyn     0x6d ("args")
+  0x000002b6:       32 00 00 02 b9        jmp     0x2b9
+  0x000002b7:       40 00 00 00 45        callb   0x45 <__builtin_dlcall@0x41e3d0>
+  0x000002b8:       4a 00 00 00 00        ret
+<0x2b2>;
+
+  0x000002b9:       0c 00 00 00 6e        happ    0x6e ("dlcall")
+  0x000002ba:       03 00 00 00 21        loadg   0x21
+  0x000002bb:       0a 00 00 00 00        newh
+
+func <0x2bc>:
+  0x000002bc:       0b 00 00 02 bf        newf    0x2bf
+  0x000002bd:       02 00 00 00 01        intl    0x1
+  0x000002be:       32 00 00 02 c1        jmp     0x2c1
+  0x000002bf:       40 00 00 00 46        callb   0x46 <__builtin_platform@0x41e4f0>
+  0x000002c0:       4a 00 00 00 00        ret
+<0x2bc>;
+
+  0x000002c1:       0c 00 00 00 6f        happ    0x6f ("platform")
+  0x000002c2:       03 00 00 00 22        loadg   0x22
+  0x000002c3:       0a 00 00 00 00        newh
+
+func <0x2c4>:
+  0x000002c4:       0b 00 00 02 c7        newf    0x2c7
+  0x000002c5:       02 00 00 00 01        intl    0x1
+  0x000002c6:       32 00 00 02 c9        jmp     0x2c9
+  0x000002c7:       40 00 00 00 47        callb   0x47 <__builtin_gc@0x41e530>
+  0x000002c8:       4a 00 00 00 00        ret
+<0x2c4>;
+
+  0x000002c9:       0c 00 00 00 70        happ    0x70 ("gc")
+  0x000002ca:       03 00 00 00 23        loadg   0x23
+```
+
 ## Benchmark
 
 ![benchmark](./pic/benchmark.png)

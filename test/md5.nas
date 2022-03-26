@@ -33,7 +33,7 @@ var md5=func(s){
         6,10,15,21,
         6,10,15,21,
         6,10,15,21
-    ]
+    ];
     var l=func(num,cx){
         for(var i=0;i<cx;i+=1)
             num=bits.bitand(0xffffffff,num*2);
