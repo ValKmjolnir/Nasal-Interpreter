@@ -509,7 +509,7 @@ inline void nasal_vm::opr_lnkeqc()
 
 inline void nasal_vm::opr_meq()
 {
-    mem_addr[0]=(--gc.top)[0];
+    mem_addr[0]=(--gc.top)[0]; // pop old mem_addr[0] and replace it
     mem_addr=nullptr;
 }
 inline void nasal_vm::opr_eq()

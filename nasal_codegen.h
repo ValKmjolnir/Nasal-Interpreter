@@ -166,7 +166,7 @@ struct
 
 struct opcode
 {
-    uint16_t op;  // opcode
+    uint8_t op;  // opcode
     uint16_t fidx;// source code file index
     uint32_t num; // imm num
     uint32_t line;// line of source code
@@ -200,6 +200,11 @@ private:
     std::unordered_map<std::string,int> global;
     // local  : max 32768 upvalues 65536 values
     std::list<std::unordered_map<std::string,int>> local;
+
+    // func end stack, reserved for print
+    std::stack<uint32_t> fbstk;
+    std::stack<uint32_t> festk;
+    
     
     void die(std::string,const uint32_t);
     void regist_number(const double);
@@ -613,7 +618,7 @@ void nasal_codegen::multi_def(const nasal_ast& ast)
 {
     auto& ids=ast[0].child();
     int size=ids.size();
-    if(ast[1].type()==ast_multi_scalar)
+    if(ast[1].type()==ast_multi_scalar) // (var a,b,c)=(c,b,a);
     {
         auto& vals=ast[1].child();
         for(int i=0;i<size;++i)
@@ -625,7 +630,7 @@ void nasal_codegen::multi_def(const nasal_ast& ast)
                 gen(op_loadl,local_find(str),ids[i].line());
         }
     }
-    else
+    else // (var a,b,c)=[0,1,2];
     {
         calc_gen(ast[1]);
         for(int i=0;i<size;++i)
@@ -1138,7 +1143,32 @@ void nasal_codegen::print_op(uint32_t index)
 {
     // print opcode index,opcode name,opcode immediate number
     const opcode& c=code[index];
-    printf("0x%.8x: %s ",index,code_table[c.op].name);
+    if(!festk.empty() && index==festk.top())
+    {
+        printf("<0x%x>;\n\n",fbstk.top());
+        fbstk.pop();
+        festk.pop();
+    }
+    if(c.op==op_newf)
+    {
+        printf("\nfunc <0x%x>:\n",index);
+        for(uint32_t i=index;i<code.size();++i)
+            if(code[i].op==op_jmp)
+            {
+                fbstk.push(index);
+                festk.push(code[i].num);
+                break;
+            }
+    }
+    printf("  0x%.8x:       %.2x %.2x %.2x %.2x %.2x        %s  ",
+        index,
+        c.op,
+        uint8_t((c.num&0xff000000)>>24),
+        uint8_t((c.num&0x00ff0000)>>16),
+        uint8_t((c.num&0x0000ff00)>>8),
+        uint8_t(c.num&0x000000ff),
+        code_table[c.op].name
+    );
     // print detail info
     switch(c.op)
     {
@@ -1170,9 +1200,10 @@ void nasal_codegen::print_op(uint32_t index)
 void nasal_codegen::print()
 {
     for(auto& num:num_res)
-        std::cout<<".number "<<num<<'\n';
+        std::cout<<"  .number "<<num<<'\n';
     for(auto& str:str_res)
-        std::cout<<".symbol \""<<rawstr(str)<<"\"\n";
+        std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
+    std::cout<<"\n";
     for(uint32_t i=0;i<code.size();++i)
         print_op(i);
 }

@@ -30,8 +30,10 @@ test:nasal
 	@ ./nasal -op -t -d test/pi.nas
 	@ ./nasal -op -t -d test/prime.nas
 	@ ./nasal -op -t -d test/props_sim.nas
+	@ ./nasal -op -e test/qrcode.nas
 	@ ./nasal -op -t -d test/quick_sort.nas
 	@ ./nasal -op -e test/scalar.nas
+	-@ ./nasal -op -t test/snake.nas
 	@ ./nasal -op -e test/trait.nas
 	-@ ./nasal -op -t test/tetris.nas
 	@ ./nasal -op -t -d test/turingmachine.nas
