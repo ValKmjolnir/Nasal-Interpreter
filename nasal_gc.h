@@ -505,10 +505,10 @@ void nasal_gc::info()
     };
     std::cout<<"\ngarbage collector info:\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        std::cout<<name[i]<<" | "<<count[i]<<"\n";
+        std::cout<<"  "<<name[i]<<" | "<<count[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size):\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        std::cout<<name[i]<<" | "<<(size[i]+1)*increment[i]<<"(+"<<size[i]<<")\n";
+        std::cout<<"  "<<name[i]<<" | "<<(size[i]+1)*increment[i]<<"(+"<<size[i]<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {

@@ -1165,10 +1165,10 @@ void nasal_codegen::print_op(uint32_t index)
     printf("  0x%.8x:       %.2x %.2x %.2x %.2x %.2x        %s  ",
         index,
         c.op,
-        uint8_t((c.num&0xff000000)>>24),
-        uint8_t((c.num&0x00ff0000)>>16),
-        uint8_t((c.num&0x0000ff00)>>8),
-        uint8_t(c.num&0x000000ff),
+        uint8_t((c.num>>24)&0xff),
+        uint8_t((c.num>>16)&0xff),
+        uint8_t((c.num>>8)&0xff),
+        uint8_t(c.num&0xff),
         code_table[c.op].name
     );
     // print detail info

@@ -5,9 +5,9 @@ nasal.exe:main.cpp nasal_ast.h nasal_err.h nasal_builtin.h nasal_opt.h nasal_cod
 	g++ -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 test:nasal
 	@ ./nasal -op -e test/ascii-art.nas
-	@ ./nasal -op -c test/bf.nas
-	@ ./nasal -op -c test/bfcolored.nas
-	@ ./nasal -op -c test/bfconvertor.nas
+	@ ./nasal -op -a -c test/bf.nas
+	@ ./nasal -op -a -c test/bfcolored.nas
+	@ ./nasal -op -a -c test/bfconvertor.nas
 	@ ./nasal -op -e -d test/bfs.nas
 	@ ./nasal -op -t test/bigloop.nas
 	@ ./nasal -op -e test/bp.nas
@@ -33,9 +33,9 @@ test:nasal
 	@ ./nasal -op -e test/qrcode.nas
 	@ ./nasal -op -t -d test/quick_sort.nas
 	@ ./nasal -op -e test/scalar.nas
-	-@ ./nasal -op -t test/snake.nas
-	@ ./nasal -op -e test/trait.nas
-	-@ ./nasal -op -t test/tetris.nas
-	@ ./nasal -op -t -d test/turingmachine.nas
-	@ ./nasal -op -t -d -o test/ycombinator.nas
+	-@ ./nasal -op -c -t test/snake.nas
+	@ ./nasal -op -c -e test/trait.nas
+	-@ ./nasal -op -c -t test/tetris.nas
+	@ ./nasal -op -c -t -d test/turingmachine.nas
+	@ ./nasal -op -c -t -d -o test/ycombinator.nas
 	
