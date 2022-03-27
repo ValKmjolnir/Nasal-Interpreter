@@ -1145,7 +1145,9 @@ void nasal_codegen::print_op(uint32_t index)
     const opcode& c=code[index];
     if(!festk.empty() && index==festk.top())
     {
-        printf("<0x%x>;\n\n",fbstk.top());
+        printf("<0x%x>;\n",fbstk.top());
+        if(code[index].op!=op_newf) // avoid two empty lines
+            printf("\n");
         fbstk.pop();
         festk.pop();
     }
