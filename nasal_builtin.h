@@ -29,6 +29,7 @@ nas_native(builtin_and);
 nas_native(builtin_or);
 nas_native(builtin_nand);
 nas_native(builtin_not);
+nas_native(builtin_pow);
 nas_native(builtin_sin);
 nas_native(builtin_cos);
 nas_native(builtin_tan);
@@ -116,6 +117,7 @@ struct
     {"__builtin_or",      builtin_or      },
     {"__builtin_nand",    builtin_nand    },
     {"__builtin_not",     builtin_not     },
+    {"__builtin_pow",     builtin_pow     },
     {"__builtin_sin",     builtin_sin     },
     {"__builtin_cos",     builtin_cos     },
     {"__builtin_tan",     builtin_tan     },
@@ -467,6 +469,14 @@ nasal_ref builtin_not(nasal_ref* local,nasal_gc& gc)
         return builtin_err("not","\"a\" must be number");
     int number=(int)a.num();
     return {vm_num,(double)(~number)};
+}
+nasal_ref builtin_pow(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref x=local[1];
+    nasal_ref y=local[2];
+    if(x.type!=vm_num || y.type!=vm_num)
+        return builtin_err("pow","\"x\" or \"y\" must be number");
+    return {vm_num,std::pow(x.num(),y.num())};
 }
 nasal_ref builtin_sin(nasal_ref* local,nasal_gc& gc)
 {

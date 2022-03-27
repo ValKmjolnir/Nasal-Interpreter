@@ -138,7 +138,7 @@ int main(int argc,const char* argv[])
         {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
         {"--opcnt",VM_OPCALLNUM|VM_EXEC},{"-o",VM_OPCALLNUM|VM_EXEC},
-        {"--time",VM_EXECTIME},{"-t",VM_EXECTIME},
+        {"--time",VM_EXECTIME|VM_EXEC},{"-t",VM_EXECTIME|VM_EXEC},
         {"--detail",VM_DBGINFO|VM_EXEC},{"-d",VM_DBGINFO|VM_EXEC},
         {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
