@@ -227,7 +227,7 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     printf("%ld):\n",top-bottom+1);
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
     {
-        printf("0x%.8lx",top-gc.stack);
+        printf("  0x%.8lx",top-gc.stack);
         valinfo(top[0]);
     }
 }
@@ -238,7 +238,7 @@ void nasal_vm::global_state()
     printf("global(0x%lx<sp+0>):\n",(uint64_t)gc.stack);
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
-        printf("0x%.8x",i);
+        printf("  0x%.8x",i);
         valinfo(gc.stack[i]);
     }
 }
@@ -250,7 +250,7 @@ void nasal_vm::local_state()
     printf("local(0x%lx<sp+%ld>):\n",(uint64_t)localr,localr-gc.stack);
     for(uint32_t i=0;i<lsize;++i)
     {
-        printf("0x%.8x",i);
+        printf("  0x%.8x",i);
         valinfo(localr[i]);
     }
 }
@@ -262,23 +262,23 @@ void nasal_vm::upval_state()
     auto& upval=gc.funcr.func().upvalue;
     for(uint32_t i=0;i<upval.size();++i)
     {
-        printf("-> upval[%u]:\n",i);
+        printf("  -> upval[%u]:\n",i);
         auto& uv=upval[i].upval();
         for(uint32_t j=0;j<uv.size;++j)
         {
-            printf("   0x%.8x",j);
+            printf("     0x%.8x",j);
             valinfo(uv[j]);
         }
     }
 }
 void nasal_vm::detail()
 {
-    printf("maddr(0x%lx)\n",(uint64_t)mem_addr);
-    printf("localr(0x%lx)\n",(uint64_t)localr);
+    printf("maddr:\n  (0x%lx)\n",(uint64_t)mem_addr);
+    printf("localr:\n  (0x%lx)\n",(uint64_t)localr);
     if(gc.funcr.type==vm_nil)
-        printf("funcr(nil)\n");
+        printf("funcr:\n  (nil)\n");
     else
-        printf("funcr(<0x%lx> entry:0x%x)\n",
+        printf("funcr:\n  (<0x%lx> entry:0x%x)\n",
             (uint64_t)gc.funcr.value.gcobj,
             gc.funcr.func().entry);
     global_state();
