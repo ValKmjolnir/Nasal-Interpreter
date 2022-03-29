@@ -50,6 +50,7 @@ var testfile=[
     "test/mandel.nas       ",
     "test/mandelbrot.nas   ",
     "test/md5.nas          ",
+    "test/md5compare.nas   ",
     "test/module_test.nas  ",
     "test/nasal_test.nas   ",
     "test/pi.nas           ",
@@ -69,8 +70,10 @@ var testfile=[
 var module=[
     "module/fib.cpp        ",
     "module/keyboard.cpp   ",
+    "module/md5.cpp        ",
     "module/libfib.nas     ",
-    "module/libkey.nas     "
+    "module/libkey.nas     ",
+    "module/libmd5.nas     "
 ];
 
 var getname=func(s){

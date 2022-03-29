@@ -25,6 +25,8 @@ test:nasal
 	@ ./nasal -op -t test/loop.nas
 	@ ./nasal -op -t -d test/mandel.nas
 	@ ./nasal -op -t -d test/mandelbrot.nas
+	@ ./nasal -op -t -d -o test/md5.nas
+	-@ ./nasal -op -t -d -o test/md5compare.nas
 	-@ ./nasal -op -d test/module_test.nas
 	@ ./nasal -op -e test/nasal_test.nas
 	@ ./nasal -op -t -d test/pi.nas
