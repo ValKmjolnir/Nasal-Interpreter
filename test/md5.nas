@@ -4,7 +4,7 @@ import("lib.nas");
 var check=func(x){
     return x-int(x/0x100000000)*0x100000000;
 }
-var bits_and=func(x,y){
+var u32_bits_and=func(x,y){
     x=check(x);
     y=check(y);
     var (res,op)=(0,1);
@@ -17,7 +17,7 @@ var bits_and=func(x,y){
     }
     return res;
 }
-var bits_or=func(x,y){
+var u32_bits_or=func(x,y){
     x=check(x);
     y=check(y);
     var (res,op)=(0,1);
@@ -30,7 +30,7 @@ var bits_or=func(x,y){
     }
     return res;
 }
-var bits_xor=func(x,y){
+var u32_bits_xor=func(x,y){
     x=check(x);
     y=check(y);
     var (res,op)=(0,1);
@@ -43,7 +43,7 @@ var bits_xor=func(x,y){
     }
     return res;
 }
-var bits_not=func(x){
+var u32_bits_not=func(x){
     x=check(x);
     var (res,op)=(0,1);
     for(var i=0;i<32;i+=1){
@@ -60,14 +60,15 @@ var hex32str=func(num){
     for(var i=0;i<4;i+=1){
         var tmp="";
         for(var j=0;j<2;j+=1){
-            tmp=chr(ch[bits_and(num,0x0f)])~tmp;
+            tmp=chr(ch[u32_bits_and(num,0x0f)])~tmp;
             num=int(num/16);
         }
         res~=tmp;
     }
     return res;
 }
-var md5=func(s){
+
+var _md5=func(s){
 
     var K=[
         0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
@@ -107,31 +108,31 @@ var md5=func(s){
         return int(num);
     }
     var rol=func(num,cx){
-        return bits_or(l(num,cx),r(num,32-cx));
+        return u32_bits_or(l(num,cx),r(num,32-cx));
     }
     # round 1
     var F=func(x,y,z){
-        return bits_or(
-            bits_and(x,y),
-            bits_and(bits_not(x),z)
+        return u32_bits_or(
+            u32_bits_and(x,y),
+            u32_bits_and(u32_bits_not(x),z)
         );
     }
     # round 2
     var G=func(x,y,z){
-        return bits_or(
-            bits_and(x,z),
-            bits_and(y,bits_not(z))
+        return u32_bits_or(
+            u32_bits_and(x,z),
+            u32_bits_and(y,u32_bits_not(z))
         );
     }
     # round 3
     var H=func(x,y,z){
-        return bits_xor(bits_xor(x,y),z);
+        return u32_bits_xor(u32_bits_xor(x,y),z);
     }
     # round 4
     var I=func(x,y,z){
-        return bits_xor(
+        return u32_bits_xor(
             y,
-            bits_or(x,bits_not(z))
+            u32_bits_or(x,u32_bits_not(z))
         );
     }
 
@@ -166,10 +167,8 @@ var md5=func(s){
     }
     var (tmp,cnt,t)=([],0,0);
     foreach(var i;res){
-        if(!cnt)
-            t=i;
-        else
-            t=t*2+i;
+        if(!cnt) t=i;
+        else     t=t*2+i;
         cnt+=1;
         if(cnt==8){
             cnt=0;
@@ -210,55 +209,56 @@ var md5=func(s){
     for(var i=0;i<size(res);i+=16){
         var (f,a,b,c,d)=(0,A,B,C,D);
         for(var j=0;j<64;j+=1){
-            if(j<16){
-                f=F(b,c,d);
-            }elsif(j<32){
-                f=G(b,c,d);
-            }elsif(j<48){
-                f=H(b,c,d);
-            }else{
-                f=I(b,c,d);
-            }
-
-            var tmp=d;
-            d=c;
-            c=b;
-            b=check(b+rol(a+f+K[j]+res[idx[j]],S[j]));
-            a=tmp;
+            if(j<16)    f=F(b,c,d);
+            elsif(j<32) f=G(b,c,d);
+            elsif(j<48) f=H(b,c,d);
+            else        f=I(b,c,d);
+            (a,b,c,d)=(d,check(b+rol(a+f+K[j]+res[i+idx[j]],S[j])),b,c);
         }
-        A=check(a+A);
-        B=check(b+B);
-        C=check(c+C);
-        D=check(d+D);
+        (A,B,C,D)=(check(a+A),check(b+B),check(c+C),check(d+D));
     }
     return hex32str(A)~hex32str(B)~hex32str(C)~hex32str(D);
 }
 
-func(){
+# check if md5 runs correctly
+var md5check=func(){
     var test_set=[
+        "md5",
         "github.com",
         "helloworld",
         "abc",
         "https://www.github.com/ValKmjolnir/Nasal-Interpreter",
         "https://github.com/andyross/nasal",
         "var (lower32,higher32)=(check(len),check(len/math.pow(2,32)));",
-        "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+        "let the bass kick",
+        "f499377c9ae8454c6c8a21ddba7f00de5817fccdc611333ed004d826abb17f4efdacad297f72956e0619002cecffc8e3d18d9b03b082f3cb114bc29173954043",
+        "you are our last hope"
     ];
     var result=[
+        "1bc29b36f623ba82aaf6724fd3b16718",
         "99cd2175108d157588c04758296d1cfc",
         "fc5e038d38a57032085441e7fe7010b0",
         "900150983cd24fb0d6963f7d28e17f72",
         "6b3a7bbc2240046c4fb1b0b3a4ed8181",
         "14a6afca5f3a7b239c56b5a9678c428e",
         "f499377c9ae8454c6c8a21ddba7f00de",
-        "fdacad297f72956e0619002cecffc8e3"
+        "fdacad297f72956e0619002cecffc8e3",
+        "16eadccb9799dfb4c1ca512f40638bbb",
+        "a7916c5ce54e73b7ddf6a286b36d976d",
+        "ec6d5b197ba019db23c719112f3f70b7"
     ];
-    forindex(var i;test_set)
-        if(cmp(md5(test_set[i]),result[i]))
+    forindex(var i;test_set){
+        var res=_md5(test_set[i]);
+        if(cmp(res,result[i]))
             println(
                 "md5 cannot work:\n",
                 "    test \""~test_set[i]~"\"\n",
                 "    result \""~result[i]~"\"\n",
-                "    but get \""~md5(test_set[i])~"\"\n"
+                "    but get \""~res~"\"\n"
             );
-}();
+    }
+}
+
+# check when loading md5.nas
+md5check();
