@@ -55,12 +55,12 @@ var u32_bits_not=func(x){
 }
 
 var hex32str=func(num){
-    var ch="0123456789abcdef";
+    var ch=["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
     var res="";
     for(var i=0;i<4;i+=1){
         var tmp="";
         for(var j=0;j<2;j+=1){
-            tmp=chr(ch[u32_bits_and(num,0x0f)])~tmp;
+            tmp=ch[u32_bits_and(num,0x0f)]~tmp;
             num=int(num/16);
         }
         res~=tmp;
@@ -138,11 +138,12 @@ var _md5=func(s){
 
     var len=size(s)*8;
     var res=[];
+    setsize(res,len);
     var v=[128,64,32,16,8,4,2,1];
     for(var i=0;i<size(s);i+=1){
         var c=s[i];
-        foreach(var j;v){
-            append(res,bits.bitand(c,j)?1:0);
+        for(var j=0;j<8;j+=1){
+            res[i*8+j]=(bits.bitand(c,v[j])?1:0);
         }
     }
     # +------len------+--1~512--+--64--+
@@ -190,6 +191,8 @@ var _md5=func(s){
     res=tmp;
 
     # 1 block=>16 uint32=>64 byte=>512 bit
+    # because using double to discribe number
+    # this may only work when string's length is under 1<<51
     tmp=[];
     for(var i=0;i<size(res);i+=4){
         append(tmp,
