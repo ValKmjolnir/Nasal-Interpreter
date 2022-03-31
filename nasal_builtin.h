@@ -214,7 +214,7 @@ nasal_ref builtin_setsize(nasal_ref* local,nasal_gc& gc)
         return builtin_err("setsize","\"vector\" must be vector");
     if(size.type!=vm_num)
         return builtin_err("setsize","\"size\" is not a number");
-    int num=(int)size.num();
+    int64_t num=(int64_t)size.num();
     if(num<0)
         return builtin_err("setsize","\"size\" must be greater than -1");
     vec.vec().elems.resize(num,nil);

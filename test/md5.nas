@@ -194,13 +194,12 @@ var _md5=func(s){
     # because using double to discribe number
     # this may only work when string's length is under 1<<51
     tmp=[];
+    setsize(tmp,size(res)/4);
     for(var i=0;i<size(res);i+=4){
-        append(tmp,
-            res[i+3]*math.pow(2,24)+
+        tmp[i/4]=res[i+3]*math.pow(2,24)+
             res[i+2]*math.pow(2,16)+
             res[i+1]*math.pow(2,8)+
-            res[i]
-        );
+            res[i];
     }
     res=tmp;
 

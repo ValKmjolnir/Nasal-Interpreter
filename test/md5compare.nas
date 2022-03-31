@@ -14,7 +14,7 @@ var compare=func(total){
     for(var i=1;i<=total;i+=1){
         var s="";
         for(var j=0;j<i;j+=1){
-            s~=ch[int(rand()*size(ch))];
+            s~=ch[rand()*size(ch)];
         }
         if(cmp(md5(s),_md5(s))){
             die("error: "~str(i));
@@ -39,6 +39,14 @@ var filechecksum=func(){
         return substr(s,0,i);
     }
     var filewithoututf8=[
+        "./stl/file.nas          ",
+        "./stl/lib.nas           ",
+        "./stl/list.nas          ",
+        "./stl/module.nas        ",
+        "./stl/queue.nas         ",
+        "./stl/result.nas        ",
+        "./stl/sort.nas          ",
+        "./stl/stack.nas         ",
         "./test/auto_crash.nas   ",
         "./test/bf.nas           ",
         "./test/bfcolored.nas    ",
@@ -72,7 +80,24 @@ var filechecksum=func(){
         "./test/scalar.nas       ",
         "./test/trait.nas        ",
         "./test/turingmachine.nas",
-        "./test/ycombinator.nas  "
+        "./test/ycombinator.nas  ",
+        "LICENSE                 ",
+        "main.cpp                ",
+        "makefile                ",
+        #"nasal_ast.h             ",
+        #"nasal_builtin.h         ",
+        "nasal_codegen.h         ",
+        "nasal_dbg.h             ",
+        "nasal_err.h             ",
+        "nasal_gc.h              ",
+        "nasal_import.h          ",
+        "nasal_lexer.h           ",
+        "nasal_opt.h             ",
+        "nasal_parse.h           ",
+        "nasal_vm.h              ",
+        "nasal.ebnf              ",
+        "nasal.h                 ",
+        "README.md               "
     ];
     foreach(var i;filewithoututf8){
         var f=io.fin(getname(i));
@@ -82,13 +107,8 @@ var filechecksum=func(){
 }
 
 var randomchecksum=func(){
-    for(var i=0;i<8;i+=1)
-        compare(512);
-    for(var i=0;i<4;i+=1)
-        compare(1024);
-    for(var i=0;i<2;i+=1)
-        compare(2048);
-    compare(4096);
+    for(var i=128;i<8192;i*=2)
+        compare(i);
 }
 
 filechecksum();
