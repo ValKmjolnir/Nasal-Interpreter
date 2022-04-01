@@ -16,7 +16,8 @@ var compare=func(total){
         for(var j=0;j<i;j+=1){
             s~=ch[rand()*size(ch)];
         }
-        if(cmp(md5(s),_md5(s))){
+        var res=md5(s);
+        if(cmp(res,_md5(s))){
             die("error: "~str(i));
         }
         percent=int(i/total*100);
@@ -27,7 +28,7 @@ var compare=func(total){
         var tmp=prt;
         for(var spc=size(prt);spc<50;spc+=1)
             tmp~=" ";
-        print(" |",tmp,"| ",percent,"% (",i,"/",total,")\r");
+        print(" |",tmp,"| ",percent,"% (",i,"/",total,")\t",res,"    \r");
     }
     print('\n');
 }
