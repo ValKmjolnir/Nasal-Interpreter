@@ -4,34 +4,36 @@ import("test/md5.nas");
 
 rand(time(0));
 
-var compare=func(total){
+var compare=func(){
     var ch=[
         "0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f","+",
         "_","*","/","\'","\"",".",",",";",":","<",">","!","@","#","$","%",
         "^","&","*","(",")","-","=","\\","|","[","]","{","}","`"," ","\t","?"
     ];
-    var (prt,lastpercent,percent)=("",0,0);
-    for(var i=1;i<=total;i+=1){
-        var s="";
-        for(var j=0;j<i;j+=1){
-            s~=ch[rand()*size(ch)];
+    return func(total){
+        var (prt,lastpercent,percent)=("",0,0);
+        for(var i=1;i<=total;i+=1){
+            var s="";
+            for(var j=0;j<i;j+=1){
+                s~=ch[rand()*size(ch)];
+            }
+            var res=md5(s);
+            if(cmp(res,_md5(s))){
+                die("error: "~str(i));
+            }
+            percent=int(i/total*100);
+            if(percent-lastpercent>=2){
+                prt~="#";
+                lastpercent=percent;
+            }
+            var tmp=prt;
+            for(var spc=size(prt);spc<50;spc+=1)
+                tmp~=" ";
+            print(" |",tmp,"| ",percent,"% (",i,"/",total,")\t",res,"    \r");
         }
-        var res=md5(s);
-        if(cmp(res,_md5(s))){
-            die("error: "~str(i));
-        }
-        percent=int(i/total*100);
-        if(percent-lastpercent>=2){
-            prt~="#";
-            lastpercent=percent;
-        }
-        var tmp=prt;
-        for(var spc=size(prt);spc<50;spc+=1)
-            tmp~=" ";
-        print(" |",tmp,"| ",percent,"% (",i,"/",total,")\t",res,"    \r");
-    }
-    print('\n');
-}
+        print('\n');
+    };
+}();
 
 var filechecksum=func(){
     var getname=func(s){
