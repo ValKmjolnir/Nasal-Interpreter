@@ -124,7 +124,7 @@ in __`linux/macOS/Unix`__:
 
 ## __How to Use__
 
-First we should learn how to write a program using this language,
+First we should learn how to write and run a program using this language,
 click to see the [__tutorial__](#tutorial).
 
 Input this command to run scripts __directly__:
@@ -183,6 +183,13 @@ file:
 If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
 > chcp 65001
+
+or you could write this in your nasal code:
+
+```javascript
+if(os.platform()=="windows")
+    system("chcp 65001");
+```
 
 ## __Tutorial__
 
