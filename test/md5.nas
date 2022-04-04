@@ -3,15 +3,15 @@ import("lib.nas");
 var check=func(x){
     if(x<0x100000000)
         return x;
-    return x-int(x/0x100000000)*0x100000000;
+    return x-floor(x/0x100000000)*0x100000000;
 }
 var u32_bits_and=func(x,y){
     (x,y)=(check(x),check(y));
     var (res,op)=(0,1);
     for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-int(x/2)*2,y-int(y/2)*2);
+        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
         res+=op*(tmpx==1 and tmpy==1);
-        (x,y)=(int(x/2),int(y/2));
+        (x,y)=(floor(x/2),floor(y/2));
         op*=2;
     }
     return res;
@@ -20,9 +20,9 @@ var u32_bits_or=func(x,y){
     (x,y)=(check(x),check(y));
     var (res,op)=(0,1);
     for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-int(x/2)*2,y-int(y/2)*2);
+        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
         res+=op*(tmpx==1 or tmpy==1);
-        (x,y)=(int(x/2),int(y/2));
+        (x,y)=(floor(x/2),floor(y/2));
         op*=2;
     }
     return res;
@@ -31,9 +31,9 @@ var u32_bits_xor=func(x,y){
     (x,y)=(check(x),check(y));
     var (res,op)=(0,1);
     for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-int(x/2)*2,y-int(y/2)*2);
+        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
         res+=op*(tmpx!=tmpy);
-        (x,y)=(int(x/2),int(y/2));
+        (x,y)=(floor(x/2),floor(y/2));
         op*=2;
     }
     return res;
@@ -42,8 +42,8 @@ var u32_bits_not=func(x){
     x=check(x);
     var (res,op)=(0,1);
     for(var i=0;i<32;i+=1){
-        res+=op*((x-int(x/2)*2)==1?0:1);
-        x=int(x/2);
+        res+=op*((x-floor(x/2)*2)==1?0:1);
+        x=floor(x/2);
         op*=2;
     }
     return res;
@@ -61,7 +61,7 @@ var hex32str=func(){
         var res="";
         for(var i=0;i<4;i+=1){
             res~=tbl[u32_bits_and(num,0xff)];
-            num=int(num/256);
+            num=floor(num/256);
         }
         return res;
     };
@@ -103,7 +103,7 @@ var _md5=func(){
         for(var i=0;i<cx;i+=1){
             num=num/2;
         }
-        return int(num);
+        return floor(num);
     }
     var rol=func(num,cx){
         return u32_bits_or(l(num,cx),r(num,32-cx));
@@ -141,72 +141,43 @@ var _md5=func(){
     ];
 
     return func(s){
-        var len=size(s)*8;
-        var res=[];
-        setsize(res,len);
-        for(var i=0;i<size(s);i+=1){
-            var c=s[i];
-            var v=128;
-            for(var j=0;j<8;j+=1){
-                res[i*8+j]=(bits.bitand(c,v)?1:0);
-                v=int(v/2);
-            }
+        var (s_size,len,res)=(size(s),size(s)*8,[]);
+        setsize(res,s_size);
+        for(var i=0;i<s_size;i+=1){
+            res[i]=s[i];
         }
         # +------len------+--1~512--+--64--+
         # |      text     |  fill   | size |
-        # +---------------+---------+------+ N*512
-        var mod=size(res)-int(size(res)/512)*512;
-        if(mod==448){
-            var i=size(res);
-            setsize(res,i+512);
-            res[i]=1;
-            for(i+=1;i<size(res);i+=1)
-                res[i]=0;
-        }elsif(mod<448){
-            var i=size(res);
-            setsize(res,int(i/512)*512+448);
-            res[i]=1;
-            for(i+=1;i<size(res);i+=1)
-                res[i]=0;
-        }elsif(mod>448){
-            var i=size(res);
-            setsize(res,int(i/512)*512+960); # 512+448=960
-            res[i]=1;
-            for(i+=1;i<size(res);i+=1)
-                res[i]=0;
+        # +---------------+---------+------+ N*512 bit
+        var (mod,res_size)=(s_size-floor(s_size/64)*64,0);
+        if(mod==56){
+            res_size=s_size+64;
+        }elsif(mod<56){
+            res_size=floor(s_size/64)*64+56;
+        }elsif(mod>56){
+            res_size=floor(s_size/64)*64+120; # 512+448=960 960/8=120
         }
+        setsize(res,res_size);
+        res[s_size]=0x80;
+        for(var i=s_size+1;i<res_size;i+=1)
+            res[i]=0;
 
-        # translate bits to bytes and reserve 64bit space for string length
-        var (tmp,cnt,t,index)=([],0,0,0);
-        setsize(tmp,int(size(res)/8)+8);
-        foreach(var i;res){
-            if(!cnt) t=i;
-            else     t=t*2+i;
-            cnt+=1;
-            if(cnt==8){
-                tmp[index]=t;
-                index+=1;
-                cnt=0;
-            }
-        }
-
-        # little endian, this may have number overflow bug
-        # if the number is too large
-        var (tmp_size,lower32,higher32)=(size(tmp),check(len),check(len/math.pow(2,32)));
+        # little endian
+        setsize(res,size(res)+8);
+        var (s_size,lower32,higher32)=(size(res),check(len),check(len/math.pow(2,32)));
         for(var i=4;i>0;i-=1){
-            tmp[tmp_size-4-i]=int(lower32-int(lower32/256)*256);
-            lower32=int(lower32/256);
+            res[s_size-4-i]=floor(lower32-floor(lower32/256)*256);
+            lower32=floor(lower32/256);
         }
         for(var i=4;i>0;i-=1){
-            tmp[tmp_size-i]=int(higher32-int(higher32/256)*256);
-            higher32=int(higher32/256);
+            res[s_size-i]=floor(higher32-floor(higher32/256)*256);
+            higher32=floor(higher32/256);
         }
-        res=tmp;
 
         # 1 block=>16 uint32=>64 byte=>512 bit
         # because using double to discribe number
         # this may only work when string's length is under 1<<51
-        tmp=[];
+        var tmp=[];
         setsize(tmp,size(res)/4);
         for(var i=0;i<size(res);i+=4){
             tmp[i/4]=res[i+3]*math.pow(2,24)+
