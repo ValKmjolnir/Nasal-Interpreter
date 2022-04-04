@@ -60,6 +60,17 @@ var int=func(val){
     return __builtin_int(val);
 }
 
+# floor will get the integral number of input argument
+# which is less than or equal to this argument
+var floor=func(val){
+    return __builtin_floor(val);
+}
+
+# abs gets absolute number
+var abs=func(n){
+    return n>0?n:-n;
+}
+
 # num will change all the other types into number.
 # mostly used to change a numerable string.
 var num=func(val){
@@ -105,6 +116,9 @@ var keys=func(hash){
 var time=func(begin){
     return __builtin_time(begin);
 }
+var systime=func(){
+    return time(0);
+}
 
 # die is a special native function.
 # use it at where you want the program to crash immediately.
@@ -116,6 +130,11 @@ var die=func(str){
 # this function returns a string.
 var typeof=func(object){
     return __builtin_type(object);
+}
+
+# subvec is used to get part of a vector
+var subvec=func(vec,begin,length=nil){
+    return vec[begin:(length==nil?nil:begin+length-1)];
 }
 
 # substr will get the sub-string.
@@ -167,6 +186,45 @@ var println=func(elems...){
     __builtin_print(elems);
     elems=['\n'];
     return __builtin_print(elems);
+}
+
+var isfunc=func(f){
+    return typeof(f)=="func";
+}
+
+var isghost=func(g){
+    die("this runtime have no ghost object");
+    return 0;
+}
+
+var ishash=func(h){
+    return typeof(h)=="hash";
+}
+
+var isint=func(x){
+    return x==floor(x);
+}
+
+var isnum=func(x){
+    return typeof(x)=="num" or !math.isnan(num(x));
+}
+
+var isscalar=func(s){
+    var t=typeof(s);
+    return t=="num" or t=="str";
+}
+
+var isstr=func(s){
+    return typeof(s)=="str";
+}
+
+var isvec=func(v){
+    return typeof(v)=="vec";
+}
+
+var vecindex=func(vec,val){
+    # unfinished
+    return nil;
 }
 
 var io=

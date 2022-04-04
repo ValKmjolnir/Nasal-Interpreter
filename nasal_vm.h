@@ -797,8 +797,8 @@ inline void nasal_vm::opr_slc2()
     else if(type1!=vm_nil && type2==vm_nil)
         num2=num1<0? -1:size-1;
 
-    if(num1>=num2)
-        die("slc2: begin index must be less than end index");
+    if(num1>num2)
+        die("slc2: begin index must be less than or equal to end index");
     else if(num1<-size || num1>=size)
         die("slc2: begin index out of range: "+std::to_string(num1));
     else if(num2<-size || num2>=size)

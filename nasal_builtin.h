@@ -20,6 +20,7 @@ nas_native(builtin_split);
 nas_native(builtin_rand);
 nas_native(builtin_id);
 nas_native(builtin_int);
+nas_native(builtin_floor);
 nas_native(builtin_num);
 nas_native(builtin_pop);
 nas_native(builtin_str);
@@ -108,6 +109,7 @@ struct
     {"__builtin_rand",    builtin_rand    },
     {"__builtin_id",      builtin_id      },
     {"__builtin_int",     builtin_int     },
+    {"__builtin_floor",   builtin_floor   },
     {"__builtin_num",     builtin_num     },
     {"__builtin_pop",     builtin_pop     },
     {"__builtin_str",     builtin_str     },
@@ -362,6 +364,11 @@ nasal_ref builtin_int(nasal_ref* local,nasal_gc& gc)
         return nil;
     int number=(int)val.num();
     return {vm_num,(double)number};
+}
+nasal_ref builtin_floor(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref val=local[1];
+    return {vm_num,std::floor(val.num())};
 }
 nasal_ref builtin_num(nasal_ref* local,nasal_gc& gc)
 {
