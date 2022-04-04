@@ -521,7 +521,8 @@ inline void nasal_vm::opr_eq()
         gc.top[0]=one;
     else if(val1.type==vm_str && val2.type==vm_str)
         gc.top[0]=(val1.str()==val2.str())?one:zero;
-    else if(val1.type==vm_num || val2.type==vm_num)
+    else if((val1.type==vm_num || val2.type==vm_num)
+        && val1.type!=vm_nil && val2.type!=vm_nil)
         gc.top[0]=(val1.to_number()==val2.to_number())?one:zero;
     else
         gc.top[0]=(val1==val2)?one:zero;
@@ -534,7 +535,8 @@ inline void nasal_vm::opr_neq()
         gc.top[0]=zero;
     else if(val1.type==vm_str && val2.type==vm_str)
         gc.top[0]=(val1.str()!=val2.str())?one:zero;
-    else if(val1.type==vm_num || val2.type==vm_num)
+    else if((val1.type==vm_num || val2.type==vm_num)
+        && val1.type!=vm_nil && val2.type!=vm_nil)
         gc.top[0]=(val1.to_number()!=val2.to_number())?one:zero;
     else
         gc.top[0]=(val1!=val2)?one:zero;

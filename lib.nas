@@ -211,7 +211,7 @@ var isnum=func(x){
 
 var isscalar=func(s){
     var t=typeof(s);
-    return t=="num" or t=="str";
+    return (t=="num" or t=="str")?1:0;
 }
 
 var isstr=func(s){
@@ -223,7 +223,9 @@ var isvec=func(v){
 }
 
 var vecindex=func(vec,val){
-    # unfinished
+    forindex(var i;vec)
+        if(val==vec[i])
+            return i;
     return nil;
 }
 

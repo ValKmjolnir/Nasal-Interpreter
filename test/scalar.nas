@@ -150,3 +150,20 @@ f1() or f2();
 # this means that when using 'or' or 'and',
 # if the result is clear when calculating,
 # objects behind will not be calculated
+
+print(
+    subvec([0,1,2,3],2),'\n',
+    subvec([0,1,2,3],2,1),'\n',
+    abs(1),'\n',
+    abs(-1),'\n',
+    systime(),'\n',
+    isfunc(func{}),' ',isfunc([]),'\n',
+    ishash({}),' ',ishash([]),'\n',
+    isint(114.514),' ',isint(114514),'\n',
+    isnum("0xaa55"),' ',isnum("?"),'\n',
+    isscalar(0.618),' ',isscalar("hello"),' ',isscalar([]),'\n',
+    isstr("hello"),' ',isstr(func{}),'\n',
+    isvec([]),' ',isvec("[]"),'\n',
+    vecindex([0,1,2,3,4],1),'\n',
+    vecindex(["apple","banana"],"apple")!=nil,'\n'
+);
