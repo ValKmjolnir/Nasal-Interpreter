@@ -236,11 +236,23 @@ var isvec=func(v){
     return typeof(v)=="vec";
 }
 
+
+# get the index of val in the vec
 var vecindex=func(vec,val){
     forindex(var i;vec)
         if(val==vec[i])
             return i;
     return nil;
+}
+
+# check if the object is an instance of the class
+var isa=func(object,class){
+    if(!contains(object,"parents") or typeof(object.parents)!="vec")
+        return 0;
+    foreach(var elem;object.parents)
+        if(elem==class)
+            return 1;
+    return 0;
 }
 
 var io=
