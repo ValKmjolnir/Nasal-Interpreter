@@ -174,5 +174,22 @@ println(values({
     c:3
 }));
 println(find("cd", "abcdef")); # prints 2
-println(find("x", "abcdef")); # prints -1
+println(find("x", "abcdef"));  # prints -1
 println(find("cd", "abcdef")); # prints 2
+
+var a={
+    new: func(x=0){
+        return {
+            x:x,
+            parents:[a]
+        };
+    },
+    new2: func(x=0){
+        return {
+            x:x,
+            parents:a
+        };
+    }
+};
+println(isa(a.new(),a)); # 1
+println(isa(a.new2(),a));# 0
