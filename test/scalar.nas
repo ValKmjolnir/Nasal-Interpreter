@@ -167,3 +167,12 @@ print(
     vecindex([0,1,2,3,4],1),'\n',
     vecindex(["apple","banana"],"apple")!=nil,'\n'
 );
+
+println(values({
+    a:1,
+    b:2,
+    c:3
+}));
+println(find("cd", "abcdef")); # prints 2
+println(find("x", "abcdef")); # prints -1
+println(find("cd", "abcdef")); # prints 2
