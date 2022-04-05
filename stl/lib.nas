@@ -66,7 +66,7 @@ var floor=func(val){
     return __builtin_floor(val);
 }
 
-# abs gets absolute number
+# abs gets absolute number.
 var abs=func(n){
     return n>0?n:-n;
 }
@@ -126,6 +126,11 @@ var die=func(str){
     return __builtin_die(str);
 }
 
+# find will give the first position of the needle in haystack
+var find=func(needle,haystack){
+    return __builtin_find(needle,haystack);
+}
+
 # typeof is used to get the type of an object.
 # this function returns a string.
 var typeof=func(object){
@@ -175,9 +180,18 @@ var chr=func(code){
 
 # mut is used to change unmutable strings to mutable.
 var mut=func(str){
-    if(typeof(str)!="str")
-        die("mut: \"str\" must be string.");
     return str~"";
+}
+
+# srand wraps up rand, using time(0) as the seed.
+var srand=func(){
+    rand(time(0));
+    return 0;
+}
+
+# values() gets all values in a hash.
+var values=func(hash){
+    return __builtin_values(hash);
 }
 
 # println has the same function as print.
@@ -193,7 +207,7 @@ var isfunc=func(f){
 }
 
 var isghost=func(g){
-    die("this runtime have no ghost object");
+    die("this runtime has no ghost object");
     return 0;
 }
 

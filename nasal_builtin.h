@@ -46,6 +46,7 @@ nas_native(builtin_delete);
 nas_native(builtin_keys);
 nas_native(builtin_import);
 nas_native(builtin_die);
+nas_native(builtin_find);
 nas_native(builtin_type);
 nas_native(builtin_substr);
 nas_native(builtin_streq);
@@ -53,6 +54,7 @@ nas_native(builtin_left);
 nas_native(builtin_right);
 nas_native(builtin_cmp);
 nas_native(builtin_chr);
+nas_native(builtin_values);
 nas_native(builtin_open);
 nas_native(builtin_close);
 nas_native(builtin_read);
@@ -135,6 +137,7 @@ struct
     {"__builtin_keys",    builtin_keys    },
     {"__builtin_import",  builtin_import  },
     {"__builtin_die",     builtin_die     },
+    {"__builtin_find",    builtin_find    },
     {"__builtin_type",    builtin_type    },
     {"__builtin_substr",  builtin_substr  },
     {"__builtin_streq",   builtin_streq   },
@@ -142,6 +145,7 @@ struct
     {"__builtin_right",   builtin_right   },
     {"__builtin_cmp",     builtin_cmp     },
     {"__builtin_chr",     builtin_chr     },
+    {"__builtin_values",  builtin_values  },
     {"__builtin_open",    builtin_open    },
     {"__builtin_close",   builtin_close   },
     {"__builtin_read",    builtin_read    },
@@ -617,6 +621,19 @@ nasal_ref builtin_die(nasal_ref* local,nasal_gc& gc)
     std::cerr<<"[vm] error: "<<str.str()<<'\n';
     return nasal_ref(vm_none);
 }
+nasal_ref builtin_find(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref needle=local[1];
+    nasal_ref haystack=local[2];
+    if(needle.type!=vm_str)
+        return builtin_err("find","\"needle\" must be string");
+    if(haystack.type!=vm_str)
+        return builtin_err("find","\"haystack\" must be string");
+    size_t pos=haystack.str().find(needle.str());
+    if(pos==std::string::npos)
+        return {vm_num,(double)-1};
+    return {vm_num,(double)pos};
+}
 nasal_ref builtin_type(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
@@ -736,6 +753,17 @@ nasal_ref builtin_chr(nasal_ref* local,nasal_gc& gc)
     else
         ret.str()=" ";
     return ret;
+}
+nasal_ref builtin_values(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref hash=local[1];
+    if(hash.type!=vm_hash)
+        return builtin_err("values","\"hash\" must be a hashmap");
+    nasal_ref vec=gc.alloc(vm_vec);
+    auto& v=vec.vec().elems;
+    for(auto& i:hash.hash().elems)
+        v.push_back(i.second);
+    return vec;
 }
 void obj_file_destructor(void* ptr)
 {
