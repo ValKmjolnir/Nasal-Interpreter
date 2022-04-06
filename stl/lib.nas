@@ -66,6 +66,11 @@ var floor=func(val){
     return __builtin_floor(val);
 }
 
+# abort using std::abort
+var abort=func(){
+    __builtin_abort();
+}
+
 # abs gets absolute number.
 var abs=func(n){
     return n>0?n:-n;
@@ -255,6 +260,13 @@ var isa=func(object,class){
     return 0;
 }
 
+# assert aborts when condition is not true
+var assert=func(condition,message="assertion failed!"){
+    if(condition)
+        return 1;
+    die(message);
+}
+
 var io=
 {
     SEEK_SET:0,
@@ -425,3 +437,24 @@ var M2NM=0.00054;
 var MPS2KT=1.9438;
 var NM2M=1852;
 var R2D=180/math.pi;
+
+# functions that not supported in this runtime:
+var bind=func(function,locals,outer_scope={}){
+    die("this runtime does not support bind");
+}
+
+var call=func(function,args=[],_me=nil,locals={},error=[]){
+    die("this runtime does not support call");
+}
+
+var caller=func(level=1){
+    die("this runtime does not support caller");
+}
+
+var closure=func(function,level=1){
+    die("this runtime uses \"vm_upval\" instead of \"vm_hash\" as the closure");
+}
+
+var compile=func(code,filename="<compile>"){
+    die("this runtime uses static code generator");
+}

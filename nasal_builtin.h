@@ -10,6 +10,7 @@
 // to add new builtin function, declare it here and write the definition below
 #define nas_native(name) nasal_ref name(nasal_ref*,nasal_gc&)
 nas_native(builtin_print);
+nas_native(builtin_abort);
 nas_native(builtin_append);
 nas_native(builtin_setsize);
 nas_native(builtin_system);
@@ -101,6 +102,7 @@ struct
 } builtin[]=
 {
     {"__builtin_print",   builtin_print   },
+    {"__builtin_abort",   builtin_abort   },
     {"__builtin_append",  builtin_append  },
     {"__builtin_setsize", builtin_setsize },
     {"__builtin_system",  builtin_system  },
@@ -199,6 +201,11 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
         }
     std::cout<<std::flush;
     // generate return value
+    return nil;
+}
+nasal_ref builtin_abort(nasal_ref* local,nasal_gc& gc)
+{
+    std::abort();
     return nil;
 }
 nasal_ref builtin_append(nasal_ref* local,nasal_gc& gc)

@@ -84,12 +84,11 @@ void execute(const std::string& file,const uint32_t cmd)
     parse.compile(lexer);
     // linker gets parser's ast and load import files to this ast
     linker.link(parse,file);
-    if(cmd&VM_ASTINFO)
-        parse.print();
-    
     // optimizer does simple optimization on ast
     if(cmd&VM_OPTIMIZE)
         optimize(parse.ast());
+    if(cmd&VM_ASTINFO)
+        parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,linker);
