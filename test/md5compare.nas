@@ -9,9 +9,9 @@ var compare=func(){
         "_","*","/","\'","\"",".",",",";",":","<",">","!","@","#","$","%",
         "^","&","*","(",")","-","=","\\","|","[","]","{","}","`"," ","\t","?"
     ];
-    return func(total){
-        var (prt,lastpercent,percent)=("",0,0);
-        for(var i=1;i<=total;i+=1){
+    return func(begin,end){
+        var (total,prt,lastpercent,percent)=(end-begin,"",0,0);
+        for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){
                 s~=ch[rand()*size(ch)];
@@ -20,7 +20,7 @@ var compare=func(){
             if(cmp(res,_md5(s))){
                 die("error: "~str(i));
             }
-            percent=int(i/total*100);
+            percent=int((i-begin+1)/total*100);
             if(percent-lastpercent>=2){
                 prt~="#";
                 lastpercent=percent;
@@ -28,7 +28,7 @@ var compare=func(){
             var tmp=prt;
             for(var spc=size(prt);spc<50;spc+=1)
                 tmp~=" ";
-            print(" |",tmp,"| ",percent,"% (",i,"/",total,")\t",res,"    \r");
+            print(" |",tmp,"| ",percent,"% (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
         }
         print('\n');
     };
@@ -109,8 +109,8 @@ var filechecksum=func(){
 }
 
 var randomchecksum=func(){
-    for(var i=128;i<8192;i*=2)
-        compare(i);
+    for(var i=0;i<4096;i+=256)
+        compare(i,i+256);
 }
 
 filechecksum();
