@@ -1,5 +1,4 @@
 import("lib.nas");
-import("module/libmd5.nas");
 import("test/md5.nas");
 
 rand(time(0));

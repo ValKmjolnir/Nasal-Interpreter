@@ -15,17 +15,9 @@ libkey.dll: keyboard.cpp
 	g++ -c -O3 keyboard.cpp -fPIC -o keyboard.o -static
 	g++ -shared -o libkey.dll keyboard.o -static
 
-libmd5.so: md5.cpp
-	clang++ -c -O3 md5.cpp -fPIC -o md5.o
-	clang++ -shared -o libmd5.so md5.o
-	rm md5.o
-libmd5.dll: md5.cpp
-	g++ -c -O3 md5.cpp -fPIC -o md5.o -static
-	g++ -shared -o libmd5.dll md5.o -static
-
 clean:
 	rm *.o *.so *.dll *.dylib
-all: libfib.so libkey.so libmd5.so
+all: libfib.so libkey.so
 	@ echo "build done"
-mingw-all: libfib.dll libkey.dll libmd5.dll
+mingw-all: libfib.dll libkey.dll
 	@ echo "build done"
