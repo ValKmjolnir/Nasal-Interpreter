@@ -192,7 +192,8 @@ var _md5=func(){
         var C=0x98badcfe;
         var D=0x10325476;
 
-        for(var i=0;i<size(res);i+=16){
+        res_size=size(res);
+        for(var i=0;i<res_size;i+=16){
             var (f,a,b,c,d)=(0,A,B,C,D);
             for(var j=0;j<64;j+=1){
                 f=functions[j](b,c,d);
