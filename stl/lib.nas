@@ -267,6 +267,11 @@ var assert=func(condition,message="assertion failed!"){
     die(message);
 }
 
+# md5
+var md5=func(str){
+    return __builtin_md5(str);
+}
+
 var io=
 {
     SEEK_SET:0,
