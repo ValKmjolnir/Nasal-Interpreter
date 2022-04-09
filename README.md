@@ -631,7 +631,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
+    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
         return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;

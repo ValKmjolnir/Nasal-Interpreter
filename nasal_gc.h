@@ -370,14 +370,15 @@ inline nasal_func&  nasal_ref::func (){return *value.gcobj->ptr.func; }
 inline nasal_upval& nasal_ref::upval(){return *value.gcobj->ptr.upval;}
 inline nasal_obj&   nasal_ref::obj  (){return *value.gcobj->ptr.obj;  }
 
-const uint32_t STACK_MAX_DEPTH=8191;
 const nasal_ref zero={vm_num,(double)0};
 const nasal_ref one ={vm_num,(double)1};
 const nasal_ref nil ={vm_nil,(double)0};
+
 struct nasal_gc
 {
+    static const uint32_t   stack_depth=8192;        // depth of value stack
     nasal_ref               funcr;                   // function register
-    nasal_ref               stack[STACK_MAX_DEPTH+1];// 1 reserved to avoid stack overflow
+    nasal_ref               stack[stack_depth];      // the last one is reserved to avoid stack overflow
     nasal_ref*              top;                     // stack top
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory

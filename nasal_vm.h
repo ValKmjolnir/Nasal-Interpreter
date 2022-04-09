@@ -135,7 +135,7 @@ void nasal_vm::init(
     files=filenames.data();
     files_size=filenames.size();
     /* set canary and program counter */
-    canary=gc.stack+STACK_MAX_DEPTH-1;
+    canary=gc.stack+nasal_gc::stack_depth-1; // gc.stack[nasal_gc::stack_depth-1]
     mem_addr=nullptr;
     pc=0;
     localr=nullptr;
