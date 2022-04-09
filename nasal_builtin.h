@@ -293,14 +293,14 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     size_t source_len=source.length();
 
     // push it to local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
+    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
         return builtin_err("split","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
 
     std::vector<nasal_ref>& vec=gc.top[0].vec().elems;
     if(!delimeter_len)
     {
-        for(int i=0;i<source_len;++i)
+        for(size_t i=0;i<source_len;++i)
         {
             vec.push_back(gc.alloc(vm_str));
             vec.back().str()=source[i];
@@ -310,11 +310,11 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     }
 
     std::string tmp="";
-    for(int i=0;i<source_len;++i)
+    for(size_t i=0;i<source_len;++i)
     {
         bool check_delimeter=false;
         if(source[i]==delimeter[0])
-            for(int j=0;j<delimeter_len;++j)
+            for(size_t j=0;j<delimeter_len;++j)
             {
                 if(i+j>=source_len || source[i+j]!=delimeter[j])
                     break;
@@ -598,7 +598,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
+    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
         return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
@@ -1010,8 +1010,8 @@ nasal_ref builtin_sleep(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
 {
-    int fd[2];
 #ifndef _WIN32
+    int fd[2];
     nasal_ref res=gc.alloc(vm_vec);
     if(pipe(fd)==-1)
         return builtin_err("pipe","failed to create pipe");
@@ -1099,7 +1099,7 @@ nasal_ref builtin_chdir(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
 {
     char** env=environ;
-    if(gc.top+1>=gc.stack+STACK_MAX_DEPTH-1)
+    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
         return builtin_err("environ","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
