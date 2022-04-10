@@ -64,7 +64,8 @@ var testfile=[
     "test/tetris.nas       ",
     "test/trait.nas        ",
     "test/turingmachine.nas",
-    "test/ycombinator.nas  "
+    "test/ycombinator.nas  ",
+    "test/wavecollapse.nas "
 ];
 
 var module=[
