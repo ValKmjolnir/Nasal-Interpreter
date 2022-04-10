@@ -40,4 +40,5 @@ test:nasal
 	-@ ./nasal -op -c -t test/tetris.nas
 	@ ./nasal -op -c -t -d test/turingmachine.nas
 	@ ./nasal -op -c -t -d -o test/ycombinator.nas
+	@ ./nasal -op -e test/wavecollapse.nas
 	
