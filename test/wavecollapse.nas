@@ -3,7 +3,7 @@
 import("lib.nas");
 
 srand();
-
+var interval=1/60;
 var table=[
     # c ,w,a,s,d
     ["═",0,1,0,1],
@@ -14,23 +14,12 @@ var table=[
     ["╚",1,0,0,1],
     ["╝",1,1,0,0],
 
-    ["╔",0,0,1,1],
-    ["╗",0,1,1,0],
-    ["╚",1,0,0,1],
-    ["╝",1,1,0,0],
+    # ["╠",1,0,1,1],
+    # ["╣",1,1,1,0],
+    # ["╦",0,1,1,1],
+    # ["╩",1,1,0,1],
+    # ["╬",1,1,1,1],
 
-    ["╠",1,0,1,1],
-    ["╣",1,1,1,0],
-    ["╦",0,1,1,1],
-    ["╩",1,1,0,1],
-    ["╬",1,1,1,1],
-
-    [" ",0,0,0,0],
-    [" ",0,0,0,0],
-    [" ",0,0,0,0],
-    [" ",0,0,0,0],
-    [" ",0,0,0,0],
-    [" ",0,0,0,0],
     [" ",0,0,0,0],
     [" ",0,0,0,0],
     [" ",0,0,0,0],
@@ -40,68 +29,74 @@ var table=[
 ];
 
 var map=func(){
-    var vec=nil;
-    var (x,y)=(10,10);
-    var s=size(table);
-    var generator=func(i){
+    var (vec,x,s)=(nil,nil,size(table));
+    var generator=func(){
         var tmp=[];
         foreach(var elem;table)
-            if(elem[1]==vec[i-1][0][3])
+            if(elem[1]==vec[0][0][3] and elem[2]==0)
                 append(tmp,elem);
-        vec[i][0]=tmp[rand()*size(tmp)];
+        vec[1][0]=tmp[rand()*size(tmp)];
 
         for(var j=1;j<x;j+=1){
-            var tmp=[];
+            if(vec[0][j][3]==0 and vec[1][j-1][4]==0 and rand()>0.5){
+                vec[1][j]=table[-1];
+                continue;
+            }
+            
+            tmp=[];
             foreach(var elem;table)
-                if(elem[2]==vec[i][j-1][4] and elem[1]==vec[i-1][j][3])
-                    append(tmp,elem);
-            vec[i][j]=tmp[rand()*size(tmp)];
+                if(elem[2]==vec[1][j-1][4] and elem[1]==vec[0][j][3]){
+                    if((j==x-1 and elem[4]==0) or j<x-1)
+                        append(tmp,elem);
+                }
+            vec[1][j]=tmp[rand()*size(tmp)];
         }
     }
     return {
-        new:func(_x=10,_y=10){
-            (x,y)=(_x,_y);
-            vec=[];
-            setsize(vec,y);
-            for(var i=0;i<y;i+=1){
-                vec[i]=[];
+        new:func(_x=10){
+            x=_x;
+            vec=[[],[]];
+            for(var i=0;i<2;i+=1){
                 setsize(vec[i],x);
+                for(var j=0;j<x;j+=1)
+                    vec[i][j]=table[-1];
             }
-            vec[0][0]=table[rand()*s];
+
+            var tmp=[];
+            foreach(var elem;table)
+                if(elem[1]==0 and elem[2]==0)
+                    append(tmp,elem);
+            vec[0][0]=tmp[rand()*size(tmp)];
+
             for(var i=1;i<x;i+=1){
-                var tmp=[];
+                tmp=[];
                 foreach(var elem;table)
-                    if(elem[2]==vec[0][i-1][4])
-                        append(tmp,elem);
+                    if(elem[2]==vec[0][i-1][4] and elem[1]==0){
+                        if((i==x-1 and elem[4]==0) or i<x-1)
+                            append(tmp,elem);
+                    }
                 vec[0][i]=tmp[rand()*size(tmp)];
             }
-            for(var i=1;i<y;i+=1){
-                generator(i);
-            }
+            me.print(0);
+            generator();
         },
-        print:func(){
-            var str="\e[0;0H";
-            foreach(var _y;vec){
-                foreach(var _x;_y)
-                    str~=_x[0];
-                str~="\n";
-            }
+        print:func(index){
+            var str="";
+            foreach(var _x;vec[index])
+                str~=_x[0];
+            str~="\n";
             print(str);
         },
         next:func(){
-            var tmp=vec[0];
-            for(var i=0;i<y-1;i+=1)
-                vec[i]=vec[i+1];
-            vec[-1]=tmp;
-            generator(y-1);
+            (vec[0],vec[1])=(vec[1],vec[0]);
+            generator();
         }
     }
 }();
 
-print("\ec");
-map.new(100,20);
-for(var i=0;i<500;i+=1){
-    map.print();
+map.new(100);
+for(var iter=0;iter<400;iter+=1){
+    map.print(1);
     map.next();
-    unix.sleep(1/30);
+    unix.sleep(interval);
 }
