@@ -135,7 +135,7 @@ private:
     std::string _str;
     std::vector<nasal_ast> _child;
 public:
-    nasal_ast(const uint32_t l=0,const uint32_t t=ast_null):_line(l),_type(t){}
+    nasal_ast(const uint32_t l=0,const uint32_t t=ast_null):_line(l),_type(t),_num(0){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     void print(int,bool);
@@ -162,13 +162,12 @@ public:
     inline std::vector<nasal_ast>& child(){return _child;}
 };
 
-nasal_ast::nasal_ast(const nasal_ast& tmp)
+nasal_ast::nasal_ast(const nasal_ast& tmp):
+    _str(tmp._str),_child(tmp._child)
 {
     _line=tmp._line;
     _type=tmp._type;
     _num =tmp._num;
-    _str =tmp._str;
-    _child=tmp._child;
 }
 
 nasal_ast::nasal_ast(nasal_ast&& tmp)

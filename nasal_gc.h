@@ -131,7 +131,7 @@ struct nasal_func
     std::vector<nasal_ref> upvalue;              // closure
     std::unordered_map<std::string,size_t> keys; // parameter name table, size_t begins from 1
 
-    nasal_func():dynpara(-1){}
+    nasal_func():dynpara(-1),entry(0),psize(0),lsize(0){}
     void clear();
 };
 
@@ -151,6 +151,7 @@ struct nasal_obj
 {
     enum obj_type
     {
+        null,
         file=1,
         dir,
         dylib,
@@ -166,7 +167,7 @@ struct nasal_obj
     typedef void (*dest)(void*);
     dest destructor;
 
-    nasal_obj():ptr(nullptr),destructor(nullptr){}
+    nasal_obj():type(obj_type::null),ptr(nullptr),destructor(nullptr){}
     ~nasal_obj(){clear();}
     void clear()
     {
