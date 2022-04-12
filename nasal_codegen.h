@@ -247,7 +247,7 @@ private:
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
 public:
-    nasal_codegen(nasal_err& e):nerr(e){}
+    nasal_codegen(nasal_err& e):fileindex(0),nerr(e),file(nullptr){}
     void compile(const nasal_parse&,const nasal_import&);
     void print_op(uint32_t);
     void print();
