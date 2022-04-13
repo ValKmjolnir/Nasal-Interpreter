@@ -7,6 +7,8 @@ var interval=1/60;
 var table=[
     # c ,w,a,s,d
     ["═",0,1,0,1],
+    ["═",0,1,0,1],
+    ["═",0,1,0,1],
     ["║",1,0,1,0],
 
     ["╔",0,0,1,1],
@@ -94,8 +96,10 @@ var map=func(){
     }
 }();
 
-map.new(100);
-for(var iter=0;iter<400;iter+=1){
+if(os.platform()=="windows")
+    system("chcp 65001");
+map.new(80);
+for(var iter=0;iter<100;iter+=1){
     map.print(1);
     map.next();
     unix.sleep(interval);

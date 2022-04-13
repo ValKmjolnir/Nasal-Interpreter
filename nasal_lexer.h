@@ -93,7 +93,7 @@ struct token
     uint32_t column;
     uint32_t type;
     std::string str;
-    token(uint32_t l=0,uint32_t c=0,uint32_t t=tok_null,const std::string s=""):str(s)
+    token(uint32_t l=0,uint32_t c=0,uint32_t t=tok_null,const std::string& s=""):str(s)
     {
         line=l;
         column=c;
