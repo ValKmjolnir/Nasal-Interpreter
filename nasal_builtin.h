@@ -88,7 +88,7 @@ nas_native(builtin_platform);
 nas_native(builtin_gc);
 nas_native(builtin_md5);
 
-nasal_ref builtin_err(const char* func_name,const std::string info)
+nasal_ref builtin_err(const char* func_name,const std::string& info)
 {
     std::cerr<<"[vm] "<<func_name<<": "<<info<<".\n";
     return {vm_none};

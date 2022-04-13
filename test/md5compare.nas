@@ -109,8 +109,8 @@ var filechecksum=func(){
 }
 
 var randomchecksum=func(){
-    for(var i=0;i<4096;i+=256)
-        compare(i,i+256);
+    for(var i=0;i<4096;i+=512)
+        compare(i,i+512);
 }
 
 filechecksum();
