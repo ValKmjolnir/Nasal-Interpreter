@@ -548,6 +548,11 @@ void nasal_codegen::mcall(const nasal_ast& ast)
         mcall_id(ast);
         return;
     }
+    if(ast.size()==1) // foreach and forindex use call-id ast to get mcall
+    {
+        mcall_id(ast[0]);
+        return;
+    }
     calc_gen(ast[0]);
     for(size_t i=1;i<ast.size()-1;++i)
     {
@@ -774,10 +779,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_null:break;
         case ast_def:def_gen(ast[0]);break;
         case ast_multi_assign:multi_assign_gen(ast[0]);break;
-        case ast_nil:case ast_num:case ast_str:case ast_func:break;
-        case ast_vec:case ast_hash:
+        case ast_nil:case ast_num:case ast_str:break;
+        case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_equal:case ast_addeq:case ast_subeq:
+        case ast_addeq:case ast_subeq:
         case ast_multeq:case ast_diveq:case ast_lnkeq:
         case ast_neg:case ast_not:
         case ast_add:case ast_sub:
@@ -789,6 +794,25 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_trino:
             calc_gen(ast[0]);
             gen(op_pop,0,ast[0].line());
+            break;
+        case ast_equal:
+            if(ast[0][0].type()==ast_id)
+            {
+                calc_gen(ast[0][1]);
+                mcall_id(ast[0][0]);
+                // only the first mcall_id can use load
+                if(code.back().op==op_mcalll)
+                    code.back().op=op_loadl;
+                else if(code.back().op==op_mupval)
+                    code.back().op=op_loadu;
+                else
+                    code.back().op=op_loadg;
+            }
+            else
+            {
+                calc_gen(ast[0]);
+                gen(op_pop,0,ast[0].line());
+            }
             break;
     }
     int jmp_place=code.size();
@@ -806,10 +830,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_null:break;
         case ast_def:def_gen(ast[2]);break;
         case ast_multi_assign:multi_assign_gen(ast[2]);break;
-        case ast_nil:case ast_num:case ast_str:case ast_func:break;
-        case ast_vec:case ast_hash:
+        case ast_nil:case ast_num:case ast_str:break;
+        case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_equal:case ast_addeq:
+        case ast_addeq:
         case ast_subeq:case ast_multeq:
         case ast_diveq:case ast_lnkeq:
         case ast_neg:case ast_not:
@@ -820,6 +844,25 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_trino:
             calc_gen(ast[2]);
             gen(op_pop,0,ast[2].line());
+            break;
+        case ast_equal:
+            if(ast[2][0].type()==ast_id)
+            {
+                calc_gen(ast[2][1]);
+                mcall_id(ast[2][0]);
+                // only the first mcall_id can use load
+                if(code.back().op==op_mcalll)
+                    code.back().op=op_loadl;
+                else if(code.back().op==op_mupval)
+                    code.back().op=op_loadu;
+                else
+                    code.back().op=op_loadg;
+            }
+            else
+            {
+                calc_gen(ast[2]);
+                gen(op_pop,0,ast[2].line());
+            }
             break;
     }
     gen(op_jmp,jmp_place,ast[2].line());
@@ -843,8 +886,17 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
     else
     {
         mcall(ast[0]);
-        gen(op_meq,0,ast[0].line());
-        gen(op_pop,0,ast[0].line());
+        if(code.back().op==op_mcallg)
+            code.back().op=op_loadg;
+        else if(code.back().op==op_mcalll)
+            code.back().op=op_loadl;
+        else if(code.back().op==op_mupval)
+            code.back().op=op_loadu;
+        else
+        {
+            gen(op_meq,0,ast[0].line());
+            gen(op_pop,0,ast[0].line());
+        }
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
@@ -871,8 +923,17 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
     else
     {
         mcall(ast[0]);
-        gen(op_meq,0,ast[0].line());
-        gen(op_pop,0,ast[0].line());
+        if(code.back().op==op_mcallg)
+            code.back().op=op_loadg;
+        else if(code.back().op==op_mcalll)
+            code.back().op=op_loadl;
+        else if(code.back().op==op_mupval)
+            code.back().op=op_loadu;
+        else
+        {
+            gen(op_meq,0,ast[0].line());
+            gen(op_pop,0,ast[0].line());
+        }
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
@@ -1042,7 +1103,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
     for(auto& tmp:ast.child())
         switch(tmp.type())
         {
-            case ast_null:case ast_nil:case ast_num:case ast_str:case ast_func:break;
+            case ast_null:case ast_nil:case ast_num:case ast_str:break;
             case ast_file:fileindex=tmp.num();break; // special node type in main block
             case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
@@ -1081,6 +1142,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
             case ast_id:
             case ast_vec:
             case ast_hash:
+            case ast_func:
             case ast_call:
             case ast_addeq:
             case ast_subeq:

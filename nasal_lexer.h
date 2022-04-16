@@ -126,9 +126,16 @@ public:
 
 void nasal_lexer::open(const std::string& file)
 {
+    struct stat buffer;
+    if(stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode))
+    {
+        nerr.err("lexer","<"+file+"> is not a regular file.");
+        res="";
+        return;
+    }
     std::ifstream fin(file,std::ios::binary);
     if(fin.fail())
-        nerr.err("lexer","cannot open file <"+file+">.");
+        nerr.err("lexer","failed to open <"+file+">.");
     else
         nerr.load(file);
     std::stringstream ss;
