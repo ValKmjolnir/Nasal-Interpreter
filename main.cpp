@@ -14,7 +14,7 @@ void help()
 {
     std::cout
 #ifdef _WIN32
-    <<"use command \'chcp 65001\' if want to use unicode.\n"
+    <<"use command <chcp 65001> if want to use unicode.\n"
 #endif
     <<"nasal <option>\n"
     <<"option:\n"
@@ -48,7 +48,8 @@ void logo()
     <<"   /  \\/ / _` / __|/ _` | |    \n"
     <<"  / /\\  / (_| \\__ \\ (_| | |  \n"
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    <<"nasal interpreter ver 9.0\n"
+    <<"nasal ver : "<<__nasver<<"\n"
+    <<"c++ std   : "<<__cplusplus<<"\n"
     <<"thanks to : https://github.com/andyross/nasal\n"
     <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"

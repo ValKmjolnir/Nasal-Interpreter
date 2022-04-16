@@ -1,6 +1,8 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
 
+#define __nasver "9.0"
+
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
