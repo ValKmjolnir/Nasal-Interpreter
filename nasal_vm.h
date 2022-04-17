@@ -166,15 +166,20 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
     printf("%s0x%.8x: %s 0x%x",header,p,code_table[c.op].name,c.num);
     switch(c.op)
     {
-        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
+        case op_addeq: case op_subeq:  case op_muleq: case op_diveq: case op_lnkeq:
+            printf(" sp-%u",c.num);break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
+            std::cout<<" ("<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);break;
+        case op_lnkeqc:
+            printf(" (\"%s\") sp-%u",rawstr(str_table[c.num&0x7fffffff]).c_str(),c.num>>31);break;
+        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
             std::cout<<" ("<<num_table[c.num]<<")";break;
         case op_callb:
             printf(" <%s@0x%lx>",builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_happ:  case op_pstr:
-        case op_lnkc:  case op_lnkeqc:
+        case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
             printf(" (\"%s\")",rawstr(str_table[c.num]).c_str());break;
@@ -477,7 +482,8 @@ inline void nasal_vm::opr_lnkc()
 #define op_calc_eq(type)\
     nasal_ref val(vm_num,mem_addr[0].to_number() type gc.top[-1].to_number());\
     (--gc.top)[0]=mem_addr[0]=val;\
-    mem_addr=nullptr;
+    mem_addr=nullptr;\
+    gc.top-=imm[pc];
 
 inline void nasal_vm::opr_addeq(){op_calc_eq(+);}
 inline void nasal_vm::opr_subeq(){op_calc_eq(-);}
@@ -489,12 +495,14 @@ inline void nasal_vm::opr_lnkeq()
     val.str()=mem_addr[0].to_string()+gc.top[-1].to_string();
     (--gc.top)[0]=mem_addr[0]=val;
     mem_addr=nullptr;
+    gc.top-=imm[pc];
 }
 
 #define op_calc_eq_const(type)\
-    nasal_ref val(vm_num,mem_addr[0].to_number() type num_table[imm[pc]]);\
+    nasal_ref val(vm_num,mem_addr[0].to_number() type num_table[imm[pc]&0x7fffffff]);\
     gc.top[0]=mem_addr[0]=val;\
-    mem_addr=nullptr;
+    mem_addr=nullptr;\
+    gc.top-=(imm[pc]>>31);
 
 inline void nasal_vm::opr_addeqc(){op_calc_eq_const(+);}
 inline void nasal_vm::opr_subeqc(){op_calc_eq_const(-);}
@@ -503,17 +511,22 @@ inline void nasal_vm::opr_diveqc(){op_calc_eq_const(/);}
 inline void nasal_vm::opr_lnkeqc()
 {
     nasal_ref val=gc.alloc(vm_str);
-    val.str()=mem_addr[0].to_string()+str_table[imm[pc]];
+    val.str()=mem_addr[0].to_string()+str_table[imm[pc]&0x7fffffff];
     gc.top[0]=mem_addr[0]=val;
     mem_addr=nullptr;
+    gc.top-=(imm[pc]>>31);
 }
 
 inline void nasal_vm::opr_meq()
 {
-    mem_addr[0]=(--gc.top)[0]; // pop old mem_addr[0] and replace it
+    // pop old mem_addr[0] and replace it
+    // the reason why we should get mem_addr and push the old value on stack
+    // is that when lnkeq/lnkeqc is called, there will be
+    // a new gc object vm_str which is returned by gc::alloc
+    // this may cause gc, so we should temporarily put it on stack
+    mem_addr[0]=(--gc.top)[0];
     mem_addr=nullptr;
-    if(imm[pc])
-        --gc.top;
+    gc.top-=imm[pc];
 }
 inline void nasal_vm::opr_eq()
 {
@@ -815,16 +828,22 @@ inline void nasal_vm::opr_mcallg()
 {
     mem_addr=gc.stack+imm[pc];
     (++gc.top)[0]=mem_addr[0];
+    // push value in this memory space on stack
+    // to avoid being garbage collected
 }
 inline void nasal_vm::opr_mcalll()
 {
     mem_addr=localr+imm[pc];
     (++gc.top)[0]=mem_addr[0];
+    // push value in this memory space on stack
+    // to avoid being garbage collected
 }
 inline void nasal_vm::opr_mupval()
 {
     mem_addr=&(gc.funcr.func().upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
     (++gc.top)[0]=mem_addr[0];
+    // push value in this memory space on stack
+    // to avoid being garbage collected
 }
 inline void nasal_vm::opr_mcallv()
 {
