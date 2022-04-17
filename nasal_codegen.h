@@ -676,10 +676,7 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
             else if(code.back().op==op_mcallg)
                 code.back().op=op_loadg;
             else
-            {
-                gen(op_meq,0,ast[0][i].line());
-                gen(op_pop,0,ast[0][i].line());
-            }
+                gen(op_meq,1,ast[0][i].line());
         }
     }
     else
@@ -698,10 +695,7 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
             else if(code.back().op==op_mcallg)
                 code.back().op=op_loadg;
             else
-            {
-                gen(op_meq,0,ast[0][i].line());
-                gen(op_pop,0,ast[0][i].line());
-            }
+                gen(op_meq,1,ast[0][i].line());
         }
         gen(op_pop,0,ast.line());
     }
@@ -779,11 +773,19 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_null:break;
         case ast_def:def_gen(ast[0]);break;
         case ast_multi_assign:multi_assign_gen(ast[0]);break;
+        case ast_addeq:case ast_subeq:
+        case ast_multeq:case ast_diveq:case ast_lnkeq:
+            calc_gen(ast[0]);
+            if(op_addeq<=code.back().op && code.back().op<=op_lnkeq)
+                code.back().num=1;
+            else if(op_addeqc<=code.back().op && code.back().op<=op_lnkeqc)
+                code.back().num|=0x80000000;
+            else
+                gen(op_pop,0,ast[0].line());
+            break;
         case ast_nil:case ast_num:case ast_str:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_addeq:case ast_subeq:
-        case ast_multeq:case ast_diveq:case ast_lnkeq:
         case ast_neg:case ast_not:
         case ast_add:case ast_sub:
         case ast_mult:case ast_div:
@@ -793,7 +795,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_geq:case ast_grt:
         case ast_trino:
             calc_gen(ast[0]);
-            gen(op_pop,0,ast[0].line());
+            if(code.back().op==op_meq)
+                code.back().num=1;
+            else
+                gen(op_pop,0,ast[0].line());
             break;
         case ast_equal:
             if(ast[0][0].type()==ast_id)
@@ -811,7 +816,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
             else
             {
                 calc_gen(ast[0]);
-                gen(op_pop,0,ast[0].line());
+                if(code.back().op==op_meq)
+                    code.back().num=1;
+                else
+                    gen(op_pop,0,ast[0].line());
             }
             break;
     }
@@ -830,12 +838,19 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_null:break;
         case ast_def:def_gen(ast[2]);break;
         case ast_multi_assign:multi_assign_gen(ast[2]);break;
+        case ast_addeq:case ast_subeq:
+        case ast_multeq:case ast_diveq:case ast_lnkeq:
+            calc_gen(ast[2]);
+            if(op_addeq<=code.back().op && code.back().op<=op_lnkeq)
+                code.back().num=1;
+            else if(op_addeqc<=code.back().op && code.back().op<=op_lnkeqc)
+                code.back().num|=0x80000000;
+            else
+                gen(op_pop,0,ast[2].line());
+            break;
         case ast_nil:case ast_num:case ast_str:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_addeq:
-        case ast_subeq:case ast_multeq:
-        case ast_diveq:case ast_lnkeq:
         case ast_neg:case ast_not:
         case ast_add:case ast_sub:case ast_mult:
         case ast_div:case ast_link:
@@ -843,7 +858,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
         case ast_less:case ast_geq:case ast_grt:
         case ast_trino:
             calc_gen(ast[2]);
-            gen(op_pop,0,ast[2].line());
+            if(code.back().op==op_meq)
+                code.back().num=1;
+            else
+                gen(op_pop,0,ast[2].line());
             break;
         case ast_equal:
             if(ast[2][0].type()==ast_id)
@@ -861,7 +879,10 @@ void nasal_codegen::for_gen(const nasal_ast& ast)
             else
             {
                 calc_gen(ast[2]);
-                gen(op_pop,0,ast[2].line());
+                if(code.back().op==op_meq)
+                    code.back().num=1;
+                else
+                    gen(op_pop,0,ast[2].line());
             }
             break;
     }
@@ -893,10 +914,7 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
         else if(code.back().op==op_mupval)
             code.back().op=op_loadu;
         else
-        {
-            gen(op_meq,0,ast[0].line());
-            gen(op_pop,0,ast[0].line());
-        }
+            gen(op_meq,1,ast[0].line());
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
@@ -930,10 +948,7 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
         else if(code.back().op==op_mupval)
             code.back().op=op_loadu;
         else
-        {
-            gen(op_meq,0,ast[0].line());
-            gen(op_pop,0,ast[0].line());
-        }
+            gen(op_meq,1,ast[0].line());
     }
     ++in_iterloop.top();
     block_gen(ast[2]);
@@ -1136,19 +1151,27 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
                 else
                 {
                     calc_gen(tmp);
-                    gen(op_pop,0,tmp.line());
+                    if(code.back().op==op_meq)
+                        code.back().num=1;
+                    else
+                        gen(op_pop,0,tmp.line());
                 }
+                break;
+            case ast_addeq:case ast_subeq:
+            case ast_multeq:case ast_diveq:case ast_lnkeq:
+                calc_gen(tmp);
+                if(op_addeq<=code.back().op && code.back().op<=op_lnkeq)
+                    code.back().num=1;
+                else if(op_addeqc<=code.back().op && code.back().op<=op_lnkeqc)
+                    code.back().num|=0x80000000;
+                else
+                    gen(op_pop,0,tmp.line());
                 break;
             case ast_id:
             case ast_vec:
             case ast_hash:
             case ast_func:
             case ast_call:
-            case ast_addeq:
-            case ast_subeq:
-            case ast_multeq:
-            case ast_diveq:
-            case ast_lnkeq:
             case ast_neg:
             case ast_not:
             case ast_add:
@@ -1164,7 +1187,13 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
             case ast_grt:
             case ast_or:
             case ast_and:
-            case ast_trino:calc_gen(tmp);gen(op_pop,0,tmp.line());break;
+            case ast_trino:
+                calc_gen(tmp);
+                if(code.back().op==op_meq)
+                    code.back().num=1;
+                else
+                    gen(op_pop,0,tmp.line());
+                break;
             case ast_ret:ret_gen(tmp);break;
         }
 }
@@ -1236,8 +1265,15 @@ void nasal_codegen::print_op(uint32_t index)
     // print detail info
     switch(c.op)
     {
-        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
+        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:  case op_lnkeq:
+            printf("0x%x sp-%u\n",c.num,c.num);break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
+            printf("0x%x (",c.num&0x7fffffff);
+            std::cout<<num_res[c.num&0x7fffffff]<<") sp-"<<(c.num>>31)<<"\n";
+            break;
+        case op_lnkeqc:
+            printf("0x%x (\"%s\") sp-%u\n",c.num&0x7fffffff,rawstr(str_res[c.num&0x7fffffff]).c_str(),c.num>>31);break;
+        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
             printf("0x%x (",c.num);std::cout<<num_res[c.num]<<")\n";break;
@@ -1253,10 +1289,12 @@ void nasal_codegen::print_op(uint32_t index)
         case op_upval:case op_mupval:  case op_loadu:
             printf("0x%x[0x%x]\n",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
-        case op_lnkc:  case op_lnkeqc:
+        case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
             printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num]).c_str());break;
+        case op_meq:
+            printf("0x%x sp-%u\n",c.num,c.num);break;
         default:printf("\n");break;
     }
 }
