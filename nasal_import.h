@@ -66,6 +66,11 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     // avoid infinite loading loop
     if(check_exist(filename))
         return {0,ast_root};
+    if(access(filename.c_str(),F_OK)==-1)
+    {
+        nerr.err("link","cannot open file <"+filename+">");
+        return {0,ast_root};
+    }
     
     // start importing...
     lex.scan(filename);
@@ -86,17 +91,21 @@ nasal_ast nasal_import::lib_import()
         "stl/lib.nas"
     };
 
-    std::string filename;
+    std::string filename="";
     for(auto& i:libpath)
-    {
-        std::ifstream fin(i);
-        if(!fin.fail())
+        if(access(i.c_str(),F_OK)!=-1)
         {
             filename=i;
-            fin.close();
             break;
         }
-        fin.close();
+    if(!filename.length())
+    {
+        std::string paths="";
+        for(auto& i:libpath)
+            paths+="  "+i+"\n";
+        nerr.err("link","cannot find lib file in these paths:\n"+paths,' ');
+        nerr.chkerr();
+        return {0,ast_root};
     }
 
     // avoid infinite loading loop

@@ -46,10 +46,10 @@ private:
     uint32_t error;
 public:
     nasal_err():error(0){}
-    void err(const char* stage,const std::string& info)
+    void err(const char* stage,const std::string& info,const char end='\n')
     {
         ++error;
-        std::cerr<<"["<<stage<<"] "<<info<<'\n';
+        std::cerr<<"["<<stage<<"] "<<info<<end;
     }
     void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
     {
