@@ -4,15 +4,17 @@
 class nasal_import
 {
 private:
+    bool lib_loaded;
     nasal_err& nerr;
     std::vector<std::string> files;
     bool check_import(const nasal_ast&);
     bool check_exist(const std::string&);
     void linker(nasal_ast&,nasal_ast&&);
     nasal_ast file_import(nasal_ast&);
+    nasal_ast lib_import();
     nasal_ast load(nasal_ast&,uint16_t);
 public:
-    nasal_import(nasal_err& e):nerr(e){}
+    nasal_import(nasal_err& e):lib_loaded(false),nerr(e){}
     void link(nasal_parse&,const std::string&);
     const std::vector<std::string>& get_file() const {return files;}
 };
@@ -73,9 +75,50 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     return load(tmp,files.size()-1);
 }
 
+nasal_ast nasal_import::lib_import()
+{
+    nasal_lexer lex(nerr);
+    nasal_parse par(nerr);
+
+    const std::vector<std::string> libpath=
+    {
+        "lib.nas",
+        "stl/lib.nas"
+    };
+
+    std::string filename;
+    for(auto& i:libpath)
+    {
+        std::ifstream fin(i);
+        if(!fin.fail())
+        {
+            filename=i;
+            fin.close();
+            break;
+        }
+        fin.close();
+    }
+
+    // avoid infinite loading loop
+    if(check_exist(filename))
+        return {0,ast_root};
+    
+    // start importing...
+    lex.scan(filename);
+    par.compile(lex);
+    nasal_ast tmp=std::move(par.ast());
+    // check if tmp has 'import'
+    return load(tmp,files.size()-1);
+}
+
 nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
 {
     nasal_ast new_root(0,ast_root);
+    if(!lib_loaded)
+    {
+        linker(new_root,lib_import());
+        lib_loaded=true;
+    }
     for(auto& i:root.child())
         if(check_import(i))
             linker(new_root,file_import(i));
