@@ -1,4 +1,3 @@
-import("lib.nas");
 
 var trait={
     get:func{return me.val;},

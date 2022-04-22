@@ -1,7 +1,4 @@
 # Y combinator by ValKmjolnir
-
-import("lib.nas");
-
 var fib=func(f){
     return f(f);
 }(

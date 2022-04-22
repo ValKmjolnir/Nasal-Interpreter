@@ -1,4 +1,3 @@
-import("lib.nas");
 
 var table=[
     ['q0','0','1','R','q1'],

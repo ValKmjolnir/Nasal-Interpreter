@@ -1,4 +1,3 @@
-import("lib.nas");
 var sort=func(vec,left,right)
 {
     if(left>=right) return;

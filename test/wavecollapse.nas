@@ -1,7 +1,5 @@
 # wave collapse function 2022/4/10
 # by ValKmjolnir
-import("lib.nas");
-
 srand();
 var interval=1/60;
 var table=[
