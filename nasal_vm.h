@@ -163,29 +163,47 @@ void nasal_vm::valinfo(nasal_ref& val)
 void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 {
     const opcode& c=bytecode[p];
-    printf("%s0x%.8x: %s 0x%x",header,p,code_table[c.op].name,c.num);
+    printf("%s0x%.8x:     %.2x %.2x %.2x %.2x %.2x      %s ",
+        header,
+        p,
+        c.op,
+        uint8_t((c.num>>24)&0xff),
+        uint8_t((c.num>>16)&0xff),
+        uint8_t((c.num>>8)&0xff),
+        uint8_t(c.num&0xff),
+        code_table[c.op].name
+    );
     switch(c.op)
     {
-        case op_addeq: case op_subeq:  case op_muleq: case op_diveq: case op_lnkeq:
-            printf(" sp-%u",c.num);break;
+        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
+        case op_lnkeq: case op_meq:
+            printf("0x%x sp-%u",c.num,c.num);break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            std::cout<<" ("<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);break;
+            printf("0x%x (",c.num&0x7fffffff);
+            std::cout<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);
+            break;
         case op_lnkeqc:
-            printf(" (\"%s\") sp-%u",rawstr(str_table[c.num&0x7fffffff]).c_str(),c.num>>31);break;
+            printf("0x%x (\"%s\") sp-%u",c.num&0x7fffffff,rawstr(str_table[c.num&0x7fffffff]).c_str(),c.num>>31);break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
-            std::cout<<" ("<<num_table[c.num]<<")";break;
+            printf("0x%x (",c.num);std::cout<<num_table[c.num]<<")";break;
+        case op_callvi:case op_newv:   case op_callfv:
+        case op_intg:  case op_intl:
+        case op_newf:  case op_jmp:    case op_jt:    case op_jf:
+        case op_callg: case op_mcallg: case op_loadg:
+        case op_calll: case op_mcalll: case op_loadl:
+            printf("0x%x",c.num);break;
         case op_callb:
-            printf(" <%s@0x%lx>",builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+            printf("0x%x <%s@0x%lx>",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_happ:  case op_pstr:
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
-            printf(" (\"%s\")",rawstr(str_table[c.num]).c_str());break;
+            printf("0x%x (\"%s\")",c.num,rawstr(str_table[c.num]).c_str());break;
         case op_upval: case op_mupval: case op_loadu:
             printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
-        default:break;
+        default:printf("0x%x",c.num);break;
     }
     printf(" (%s:%d)\n",files[c.fidx].c_str(),c.line);
 }

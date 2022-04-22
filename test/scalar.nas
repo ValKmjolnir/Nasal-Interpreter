@@ -1,5 +1,4 @@
 # basic type
-import("lib.nas");
 nil;
 2147483647;
 0x7fffffff;

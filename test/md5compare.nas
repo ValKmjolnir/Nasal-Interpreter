@@ -1,4 +1,3 @@
-import("lib.nas");
 import("test/md5.nas");
 
 rand(time(0));

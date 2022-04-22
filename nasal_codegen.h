@@ -205,7 +205,6 @@ private:
     std::stack<uint32_t> fbstk;
     std::stack<uint32_t> festk;
     
-    
     void die(std::string,const uint32_t);
     void regist_number(const double);
     void regist_string(const std::string&);
@@ -1265,7 +1264,8 @@ void nasal_codegen::print_op(uint32_t index)
     // print detail info
     switch(c.op)
     {
-        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:  case op_lnkeq:
+        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
+        case op_lnkeq: case op_meq:
             printf("0x%x sp-%u\n",c.num,c.num);break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
             printf("0x%x (",c.num&0x7fffffff);
@@ -1280,12 +1280,11 @@ void nasal_codegen::print_op(uint32_t index)
         case op_callvi:case op_newv:   case op_callfv:
         case op_intg:  case op_intl:
         case op_newf:  case op_jmp:    case op_jt:    case op_jf:
-            printf("0x%x\n",c.num);break;
-        case op_callb:
-            printf("0x%x <%s@0x%lx>\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_callg: case op_mcallg: case op_loadg:
         case op_calll: case op_mcalll: case op_loadl:
             printf("0x%x\n",c.num);break;
+        case op_callb:
+            printf("0x%x <%s@0x%lx>\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_upval:case op_mupval:  case op_loadu:
             printf("0x%x[0x%x]\n",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
@@ -1293,8 +1292,6 @@ void nasal_codegen::print_op(uint32_t index)
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
             printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num]).c_str());break;
-        case op_meq:
-            printf("0x%x sp-%u\n",c.num,c.num);break;
         default:printf("\n");break;
     }
 }
