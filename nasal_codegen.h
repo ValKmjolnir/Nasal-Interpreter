@@ -201,7 +201,7 @@ private:
     // local  : max 32768 upvalues 65536 values
     std::list<std::unordered_map<std::string,int>> local;
 
-    // func end stack, reserved for print
+    // func end stack, reserved for code print
     std::stack<uint32_t> fbstk;
     std::stack<uint32_t> festk;
     
@@ -896,14 +896,14 @@ void nasal_codegen::forindex_gen(const nasal_ast& ast)
     gen(op_cnt,0,ast[1].line());
     int ptr=code.size();
     gen(op_findex,0,ast.line());
-    if(ast[0].type()==ast_iter)
+    if(ast[0].type()==ast_iter) // define a new iterator
     {
         const std::string& str=ast[0][0].str();
         local.empty()?
             gen(op_loadg,global_find(str),ast[0][0].line()):
             gen(op_loadl,local_find(str),ast[0][0].line());
     }
-    else
+    else // use exist variable as the iterator
     {
         mcall(ast[0]);
         if(code.back().op==op_mcallg)
@@ -930,14 +930,14 @@ void nasal_codegen::foreach_gen(const nasal_ast& ast)
     gen(op_cnt,0,ast.line());
     int ptr=code.size();
     gen(op_feach,0,ast.line());
-    if(ast[0].type()==ast_iter)
+    if(ast[0].type()==ast_iter) // define a new iterator
     {
         const std::string& str=ast[0][0].str();
         local.empty()?
             gen(op_loadg,global_find(str),ast[0][0].line()):
             gen(op_loadl,local_find(str),ast[0][0].line());
     }
-    else
+    else // use exist variable as the iterator
     {
         mcall(ast[0]);
         if(code.back().op==op_mcallg)

@@ -196,13 +196,13 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
             printf("0x%x",c.num);break;
         case op_callb:
             printf("0x%x <%s@0x%lx>",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+        case op_upval: case op_mupval: case op_loadu:
+            printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
             printf("0x%x (\"%s\")",c.num,rawstr(str_table[c.num]).c_str());break;
-        case op_upval: case op_mupval: case op_loadu:
-            printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
         default:printf("0x%x",c.num);break;
     }
     printf(" (%s:%d)\n",files[c.fidx].c_str(),c.line);
