@@ -424,7 +424,7 @@ nasal_ref builtin_str(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    double num;
+    double num=0;
     switch(val.type)
     {
         case vm_num:  num=val.num();         break;

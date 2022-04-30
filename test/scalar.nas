@@ -192,3 +192,9 @@ var a={
 };
 println(isa(a.new(),a)); # 1
 println(isa(a.new2(),a));# 0
+
+var a=[10,-10,0,1,2,3,nil,"string","hello",[],[0,1,2,3],{},{a:0,b:1,c:2},func{}];
+println("type\tsize\tnum\tsrc");
+foreach(var i;a){
+    println(typeof(i),'\t',size(i),'\t',num(i),'\t',i);
+}
