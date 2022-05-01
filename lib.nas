@@ -372,7 +372,9 @@ var math=
     ln:    func(x)  {return __builtin_ln(x);     },
     sqrt:  func(x)  {return __builtin_sqrt(x);   },
     atan2: func(x,y){return __builtin_atan2(x,y);},
-    isnan: func(x)  {return __builtin_isnan(x);  }
+    isnan: func(x)  {return __builtin_isnan(x);  },
+    max:   func(x,y){return x>y?x:y;             },
+    min:   func(x,y){return x<y?x:y;             }
 };
 
 var unix=
