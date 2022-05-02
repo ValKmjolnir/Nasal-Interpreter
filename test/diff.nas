@@ -5,27 +5,19 @@ var myers=func(src,dst,show_table=0){
     var (src_len,dst_len)=(size(src),size(dst));
 
     var mat=[];
-    setsize(mat,dst_len);
+    setsize(mat,dst_len*src_len);
     forindex(var i;mat){
-        var tmp=[];
-        setsize(tmp,src_len);
-        mat[i]=tmp;
-        forindex(var j;tmp)
-            tmp[j]=0;
+        mat[i]=0;
     }
     var visited=[];
-    setsize(visited,dst_len);
+    setsize(visited,dst_len*src_len);
     forindex(var i;visited){
-        var tmp=[];
-        setsize(tmp,src_len);
-        visited[i]=tmp;
-        forindex(var j;tmp)
-            tmp[j]=0;
+        visited[i]=0;
     }
 
     forindex(var y;dst)
         forindex(var x;src)
-            mat[y][x]=(src[x]==dst[y]);
+            mat[y*src_len+x]=(src[x]==dst[y]);
 
     if(show_table){
         var curve=[
@@ -39,7 +31,7 @@ var myers=func(src,dst,show_table=0){
         forindex(var y;dst){
             forindex(var t;curve[0]){
                 forindex(var x;src){
-                    s~=curve[mat[y][x]][t];
+                    s~=curve[mat[y*src_len+x]][t];
                 }
                 s~=["+","|"][t]~"\n";
             }
@@ -52,7 +44,7 @@ var myers=func(src,dst,show_table=0){
     var total=[];
     var path=[];
     var vec=[[0,0,-1]];
-    visited[0][0]=1;
+    visited[0]=1;
     while(size(vec)){
         append(total,vec);
         var tmp=[];
@@ -96,20 +88,20 @@ var myers=func(src,dst,show_table=0){
             }
 
             # do bfs
-            if(mat[y][x]==1){
-                if(x+1<src_len and y+1<dst_len and visited[y+1][x+1]==0){
+            if(mat[y*src_len+x]==1){
+                if(x+1<src_len and y+1<dst_len and visited[(y+1)*src_len+x+1]==0){
                     append(tmp,[y+1,x+1,i]);
-                    visited[y+1][x+1]=1;
+                    visited[(y+1)*src_len+x+1]=1;
                 }
             }
             else{
-                if(x+1<src_len and visited[y][x+1]==0){
+                if(x+1<src_len and visited[y*src_len+x+1]==0){
                     append(tmp,[y,x+1,i]);
-                    visited[y][x+1]=1;
+                    visited[y*src_len+x+1]=1;
                 }
-                if(y+1<dst_len and visited[y+1][x]==0){
+                if(y+1<dst_len and visited[(y+1)*src_len+x]==0){
                     append(tmp,[y+1,x,i]);
-                    visited[y+1][x]=1;
+                    visited[(y+1)*src_len+x]=1;
                 }
             }
         }
