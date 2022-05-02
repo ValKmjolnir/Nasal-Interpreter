@@ -152,7 +152,11 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_cnt:  printf("| cnt  | %ld\n",val.cnt());break;
         case vm_nil:  printf("| nil  |\n");break;
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
-        case vm_str:  printf("| str  | <0x%lx> %s\n",(uint64_t)p,rawstr(val.str()).c_str());break;
+        case vm_str:
+        {
+            std::string tmp=rawstr(val.str());
+            printf("| str  | <0x%lx> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
+        }break;
         case vm_func: printf("| func | <0x%lx> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
         case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec().size());break;
         case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash().size());break;
@@ -183,7 +187,10 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
             std::cout<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);
             break;
         case op_lnkeqc:
-            printf("0x%x (\"%s\") sp-%u",c.num&0x7fffffff,rawstr(str_table[c.num&0x7fffffff]).c_str(),c.num>>31);break;
+        {
+            std::string tmp=rawstr(str_table[c.num&0x7fffffff]);
+            printf("0x%x (\"%.16s%s\") sp-%u",c.num&0x7fffffff,tmp.c_str(),tmp.length()>16?"...":"",c.num>>31);
+        }break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
@@ -202,7 +209,10 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
-            printf("0x%x (\"%s\")",c.num,rawstr(str_table[c.num]).c_str());break;
+        {
+            std::string tmp=rawstr(str_table[c.num]);
+            printf("0x%x (\"%.16s%s\")",c.num,tmp.c_str(),tmp.length()>16?"...":"");
+        }break;
         default:printf("0x%x",c.num);break;
     }
     printf(" (%s:%d)\n",files[c.fidx].c_str(),c.line);

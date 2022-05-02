@@ -22,7 +22,7 @@ enum nasal_type
 
 // change parameters here to make your own efficient gc
 // better set bigger number on vm_vec
-const uint32_t increment[vm_type_size]=
+const uint32_t initialize[vm_type_size]=
 {
     /* none-gc object */
     0,   // vm_none, error type
@@ -38,6 +38,23 @@ const uint32_t increment[vm_type_size]=
     64,  // vm_hash
     512, // vm_upval
     16   // vm_obj
+};
+const uint32_t increment[vm_type_size]=
+{
+    /* none-gc object */
+    0,   // vm_none, error type
+    0,   // vm_count, used in foreach/forindex
+    0,   // vm_addr, used to store local address pointers
+    0,   // vm_ret, used to store call-return address
+    0,   // vm_nil
+    0,   // vm_num
+    /* gc object */
+    1024,// vm_str
+    512, // vm_func
+    8192,// vm_vec
+    1024,// vm_hash
+    128, // vm_upval
+    256  // vm_obj
 };
 
 struct nasal_vec;  // vector
@@ -468,7 +485,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
     for(uint8_t i=0;i<vm_type_size;++i)
         size[i]=count[i]=0;
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        for(uint32_t j=0;j<increment[i];++j)
+        for(uint32_t j=0;j<initialize[i];++j)
         {
             nasal_val* tmp=new nasal_val(i);
             memory.push_back(tmp);
@@ -510,7 +527,7 @@ void nasal_gc::info()
         std::cout<<"  "<<name[i]<<" | "<<count[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size):\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        std::cout<<"  "<<name[i]<<" | "<<(size[i]+1)*increment[i]<<"(+"<<size[i]<<")\n";
+        std::cout<<"  "<<name[i]<<" | "<<initialize[i]+size[i]*increment[i]<<"(+"<<size[i]<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
