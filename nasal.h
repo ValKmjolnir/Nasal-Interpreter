@@ -130,16 +130,19 @@ std::string rawstr(const std::string& str)
 #endif
         switch(i)
         {
-            case '\a': ret+="\\a";break;
-            case '\b': ret+="\\b";break;
-            case '\e': ret+="\\e";break;
-            case '\f': ret+="\\f";break;
-            case '\n': ret+="\\n";break;
-            case '\r': ret+="\\r";break;
-            case '\t': ret+="\\t";break;
-            case '\v': ret+="\\v";break;
-            case '\0': ret+="\\0";break;
-            default:   ret+=i;    break;
+            case '\0': ret+="\\0"; break;
+            case '\a': ret+="\\a"; break;
+            case '\b': ret+="\\b"; break;
+            case '\e': ret+="\\e"; break;
+            case '\t': ret+="\\t"; break;
+            case '\n': ret+="\\n"; break;
+            case '\v': ret+="\\v"; break;
+            case '\f': ret+="\\f"; break;
+            case '\r': ret+="\\r"; break;
+            case '\\': ret+="\\\\";break;
+            case '\'': ret+="\\\'";break;
+            case '\"': ret+="\\\"";break;
+            default:   ret+=i;     break;
         }
     }
     return ret;
