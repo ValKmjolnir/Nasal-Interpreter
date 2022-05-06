@@ -671,12 +671,14 @@ nasal_ref builtin_substr(nasal_ref* local,nasal_gc& gc)
         return builtin_err("substr","\"begin\" must be number");
     if(len.type!=vm_num)
         return builtin_err("substr","\"length\" must be number");
-    int begin=(int)beg.num();
-    int length=(int)len.num();
-    if(begin>=str.str().length() || begin+length-1>=str.str().length())
+    if(beg.num()<0)
+        return builtin_err("substr","\"begin\" should be greater than or equal to zero");
+    if(len.num()<0)
+        return builtin_err("substr","\"length\" should be greater than or equal to zero");
+    size_t begin=(size_t)beg.num();
+    size_t length=(size_t)len.num();
+    if(begin>=str.str().length() || begin+length>str.str().length())
         return builtin_err("susbtr","index out of range");
-    if(length<0)
-        length=0;
     nasal_ref ret=gc.alloc(vm_str);
     ret.str()=str.str().substr(begin,length);
     return ret;

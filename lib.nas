@@ -363,6 +363,8 @@ var math=
     pi:    3.14159265358979323846264338327950288,
     inf:   1/0,
     nan:   0/0,
+    abs:   func(x)  {return x>0?x:-x;            },
+    floor: func(x)  {return __builtin_floor(x);  },
     pow:   func(x,y){return __builtin_pow(x,y);  },
     sin:   func(x)  {return __builtin_sin(x);    },
     cos:   func(x)  {return __builtin_cos(x);    },
