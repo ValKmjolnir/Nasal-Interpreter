@@ -1118,7 +1118,8 @@ nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_getcwd(nasal_ref* local,nasal_gc& gc)
 {
     char buf[1024];
-    getcwd(buf,sizeof(buf));
+    if(!getcwd(buf,sizeof(buf)))
+        return builtin_err("getcwd","failed to call getcwd");
     nasal_ref str=gc.alloc(vm_str);
     str.str()=buf;
     return str;

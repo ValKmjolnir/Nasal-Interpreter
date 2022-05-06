@@ -158,8 +158,8 @@ void nasal_vm::valinfo(nasal_ref& val)
             printf("| str  | <0x%lx> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
         }break;
         case vm_func: printf("| func | <0x%lx> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
-        case vm_vec:  printf("| vec  | <0x%lx> [%lu val]\n",(uint64_t)p,val.vec().size());break;
-        case vm_hash: printf("| hash | <0x%lx> {%lu val}\n",(uint64_t)p,val.hash().size());break;
+        case vm_vec:  printf("| vec  | <0x%lx> [%zu val]\n",(uint64_t)p,val.vec().size());break;
+        case vm_hash: printf("| hash | <0x%lx> {%zu val}\n",(uint64_t)p,val.hash().size());break;
         case vm_obj:  printf("| obj  | <0x%lx> obj:0x%lx\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
         default:      printf("| err  | <0x%lx> unknown object\n",(uint64_t)p);break;
     }
