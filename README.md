@@ -141,7 +141,8 @@ Use these commands to get version of interpreter:
    /  \/ / _` / __|/ _` | |
   / /\  / (_| \__ \ (_| | |
   \_\ \/ \__,_|___/\__,_|_|
-nasal interpreter ver 9.0
+nasal ver : 9.0
+c++ std   : 201103
 thanks to : https://github.com/andyross/nasal
 code repo : https://github.com/ValKmjolnir/Nasal-Interpreter
 code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter

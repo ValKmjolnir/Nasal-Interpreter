@@ -1,14 +1,14 @@
 #include "nasal.h"
 
-const uint32_t VM_LEXINFO  =1;
-const uint32_t VM_ASTINFO  =2;
-const uint32_t VM_CODEINFO =4;
-const uint32_t VM_EXECTIME =8;
-const uint32_t VM_OPCALLNUM=16;
-const uint32_t VM_EXEC     =32;
-const uint32_t VM_DBGINFO  =64;
-const uint32_t VM_DEBUG    =128;
-const uint32_t VM_OPTIMIZE =256;
+const uint32_t VM_LEXINFO  =0x01;
+const uint32_t VM_ASTINFO  =0x02;
+const uint32_t VM_CODEINFO =0x04;
+const uint32_t VM_EXECTIME =0x08;
+const uint32_t VM_OPCALLNUM=0x10;
+const uint32_t VM_EXEC     =0x20;
+const uint32_t VM_DBGINFO  =0x40;
+const uint32_t VM_DEBUG    =0x80;
+const uint32_t VM_OPTIMIZE =0x100;
 
 void help()
 {
@@ -43,10 +43,10 @@ void help()
 void logo()
 {
     std::cout
-    <<"       __                _      \n"
-    <<"    /\\ \\ \\__ _ ___  __ _| |  \n"
-    <<"   /  \\/ / _` / __|/ _` | |    \n"
-    <<"  / /\\  / (_| \\__ \\ (_| | |  \n"
+    <<"       __                _\n"
+    <<"    /\\ \\ \\__ _ ___  __ _| |\n"
+    <<"   /  \\/ / _` / __|/ _` | |\n"
+    <<"  / /\\  / (_| \\__ \\ (_| | |\n"
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     <<"nasal ver : "<<__nasver<<"\n"
     <<"c++ std   : "<<__cplusplus<<"\n"

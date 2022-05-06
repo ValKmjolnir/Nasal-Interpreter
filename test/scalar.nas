@@ -198,3 +198,6 @@ println("type\tsize\tnum\tsrc");
 foreach(var i;a){
     println(typeof(i),'\t',size(i),'\t',num(i),'\t',i);
 }
+foreach(i;a){
+    ;
+}

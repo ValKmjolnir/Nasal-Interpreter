@@ -629,7 +629,7 @@ inline void nasal_vm::opr_counter()
 }
 inline void nasal_vm::opr_findex()
 {
-    if(++gc.top[0].cnt()>=gc.top[-1].vec().size())
+    if((size_t)(++gc.top[0].cnt())>=gc.top[-1].vec().size())
     {
         pc=imm[pc]-1;
         return;
@@ -640,7 +640,7 @@ inline void nasal_vm::opr_findex()
 inline void nasal_vm::opr_feach()
 {
     std::vector<nasal_ref>& ref=gc.top[-1].vec().elems;
-    if(++gc.top[0].cnt()>=ref.size())
+    if((size_t)(++gc.top[0].cnt())>=ref.size())
     {
         pc=imm[pc]-1;
         return;
