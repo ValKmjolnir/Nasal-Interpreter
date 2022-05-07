@@ -1,7 +1,7 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
-#define ID(c)      ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z'))
+#define ID(c)      ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||(c<0))
 #define HEX(c)     (('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F'))
 #define OCT(c)     ('0'<=c&&c<='7')
 #define DIGIT(c)   ('0'<=c&&c<='9')
@@ -114,6 +114,7 @@ private:
     uint32_t get_type(const std::string&);
     void die(std::string info){nerr.err("lexer",line,column,info);};
     void open(const std::string&);
+    std::string utf8_gen();
     std::string id_gen();
     std::string num_gen();
     std::string str_gen();
@@ -151,12 +152,43 @@ uint32_t nasal_lexer::get_type(const std::string& tk_str)
     return tok_null;
 }
 
+std::string nasal_lexer::utf8_gen()
+{
+    std::string str="";
+    while(ptr<res.size() && res[ptr]<0)
+    {
+        std::string tmp="";
+        uint32_t nbytes=utf8_hdchk(res[ptr]);
+        if(nbytes)
+        {
+            tmp+=res[ptr++];
+            for(uint32_t i=0;i<nbytes;++i,++ptr)
+                if(ptr<res.size() && (res[ptr]&0xc0)==0x80)
+                    tmp+=res[ptr];
+            if(tmp.length()!=1+nbytes)
+                die("invalid utf-8 character here");
+            str+=tmp;
+            ++column;
+        }
+        else
+            ++ptr;
+    }
+    return str;
+}
+
 std::string nasal_lexer::id_gen()
 {
     std::string str="";
     while(ptr<res.size() && (ID(res[ptr])||DIGIT(res[ptr])))
-        str+=res[ptr++];
-    column+=str.length();
+    {
+        if(res[ptr]<0) // utf-8
+            str+=utf8_gen();
+        else // ascii
+        {
+            str+=res[ptr++];
+            ++column;
+        }
+    }
     return str;
 }
 
@@ -283,7 +315,7 @@ void nasal_lexer::scan(const std::string& file)
     std::string str;
     while(ptr<res.size())
     {
-        while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]<0))
+        while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r'))// || res[ptr]<0))
         {
             // these characters will be ignored, and '\n' will cause ++line
             ++column;

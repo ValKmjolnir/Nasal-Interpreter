@@ -148,20 +148,20 @@ void nasal_vm::valinfo(nasal_ref& val)
     {
         case vm_none: printf("| null |\n");break;
         case vm_ret:  printf("| pc   | 0x%x\n",val.ret());break;
-        case vm_addr: printf("| addr | 0x%lx\n",(uint64_t)val.addr());break;
-        case vm_cnt:  printf("| cnt  | %ld\n",val.cnt());break;
+        case vm_addr: printf("| addr | " PRTHEX64 "\n",(uint64_t)val.addr());break;
+        case vm_cnt:  printf("| cnt  | " PRTINT64 "\n",val.cnt());break;
         case vm_nil:  printf("| nil  |\n");break;
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
         case vm_str:
         {
             std::string tmp=rawstr(val.str());
-            printf("| str  | <0x%lx> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
+            printf("| str  | <" PRTHEX64 "> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
         }break;
-        case vm_func: printf("| func | <0x%lx> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
-        case vm_vec:  printf("| vec  | <0x%lx> [%zu val]\n",(uint64_t)p,val.vec().size());break;
-        case vm_hash: printf("| hash | <0x%lx> {%zu val}\n",(uint64_t)p,val.hash().size());break;
-        case vm_obj:  printf("| obj  | <0x%lx> obj:0x%lx\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
-        default:      printf("| err  | <0x%lx> unknown object\n",(uint64_t)p);break;
+        case vm_func: printf("| func | <" PRTHEX64 "> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
+        case vm_vec:  printf("| vec  | <" PRTHEX64 "> [%zu val]\n",(uint64_t)p,val.vec().size());break;
+        case vm_hash: printf("| hash | <" PRTHEX64 "> {%zu val}\n",(uint64_t)p,val.hash().size());break;
+        case vm_obj:  printf("| obj  | <" PRTHEX64 "> obj:" PRTHEX64 "\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
+        default:      printf("| err  | <" PRTHEX64 "> unknown object\n",(uint64_t)p);break;
     }
 }
 void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
@@ -202,7 +202,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         case op_calll: case op_mcalll: case op_loadl:
             printf("0x%x",c.num);break;
         case op_callb:
-            printf("0x%x <%s@0x%lx>",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+            printf("0x%x <%s@" PRTHEX64 ">",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_upval: case op_mupval: case op_loadu:
             printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
@@ -251,16 +251,16 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     uint32_t   gsize=bytecode[0].num; 
     nasal_ref* top=gc.top;
     nasal_ref* bottom=gc.stack+gsize;
-    printf("vm stack(0x%lx<sp+%u>, limit %d, total ",(uint64_t)bottom,gsize,limit);
+    printf("vm stack(" PRTHEX64 "<sp+%u>, limit %d, total ",(uint64_t)bottom,gsize,limit);
     if(top<bottom)
     {
         printf("0)\n");
         return;
     }
-    printf("%ld):\n",top-bottom+1);
+    printf("" PRTINT64 "):\n",top-bottom+1);
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
     {
-        printf("  0x%.8lx",top-gc.stack);
+        printf("  " PRTHEX64_8 "",top-gc.stack);
         valinfo(top[0]);
     }
 }
@@ -268,7 +268,7 @@ void nasal_vm::global_state()
 {
     if(!bytecode[0].num || gc.stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
-    printf("global(0x%lx<sp+0>):\n",(uint64_t)gc.stack);
+    printf("global(" PRTHEX64 "<sp+0>):\n",(uint64_t)gc.stack);
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
         printf("  0x%.8x",i);
@@ -280,7 +280,7 @@ void nasal_vm::local_state()
     if(!localr || !gc.funcr.func().lsize)
         return;
     uint32_t lsize=gc.funcr.func().lsize;
-    printf("local(0x%lx<sp+%ld>):\n",(uint64_t)localr,localr-gc.stack);
+    printf("local(" PRTHEX64 "<sp+" PRTINT64 ">):\n",(uint64_t)localr,localr-gc.stack);
     for(uint32_t i=0;i<lsize;++i)
     {
         printf("  0x%.8x",i);
@@ -306,12 +306,12 @@ void nasal_vm::upval_state()
 }
 void nasal_vm::detail()
 {
-    printf("maddr:\n  (0x%lx)\n",(uint64_t)mem_addr);
-    printf("localr:\n  (0x%lx)\n",(uint64_t)localr);
+    printf("maddr:\n  (" PRTHEX64 ")\n",(uint64_t)mem_addr);
+    printf("localr:\n  (" PRTHEX64 ")\n",(uint64_t)localr);
     if(gc.funcr.type==vm_nil)
         printf("funcr:\n  (nil)\n");
     else
-        printf("funcr:\n  (<0x%lx> entry:0x%x)\n",
+        printf("funcr:\n  (<" PRTHEX64 "> entry:0x%x)\n",
             (uint64_t)gc.funcr.value.gcobj,
             gc.funcr.func().entry);
     global_state();
