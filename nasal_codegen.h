@@ -1287,7 +1287,7 @@ void nasal_codegen::print_op(uint32_t index)
         case op_calll: case op_mcalll: case op_loadl:
             printf("0x%x\n",c.num);break;
         case op_callb:
-            printf("0x%x <%s@0x%lx>\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
+            printf("0x%x <%s@" PRTHEX64 ">\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_upval:case op_mupval:  case op_loadu:
             printf("0x%x[0x%x]\n",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:

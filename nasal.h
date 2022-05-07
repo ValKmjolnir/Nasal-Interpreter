@@ -32,6 +32,16 @@
 #include <sys/wait.h>
 #endif
 
+#ifndef _WIN32
+#define PRTHEX64   "0x%lx"
+#define PRTHEX64_8 "0x%.8lx"
+#define PRTINT64   "%ld"
+#else
+#define PRTHEX64   "0x%llx"
+#define PRTHEX64_8 "0x%.8llx"
+#define PRTINT64   "%lld"
+#endif
+
 inline double hex_to_double(const char* str)
 {
     double ret=0;
@@ -110,6 +120,25 @@ double str2num(const char* str)
     else
         ret_num=dec_to_double(str);
     return is_negative?-ret_num:ret_num;
+}
+
+int utf8_hdchk(char head)
+{
+    uint8_t c=(uint8_t)head;
+    uint32_t nbytes=0;
+    if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
+        nbytes=1;
+    if((c>>4)==0x0e) // 1110 xxxx (10xx xxxx)^2
+        nbytes=2;
+    if((c>>3)==0x1e) // 1111 0xxx (10xx xxxx)^3
+        nbytes=3;
+    if((c>>2)==0x3e) // 1111 10xx (10xx xxxx)^4
+        nbytes=4;
+    if((c>>1)==0x7e) // 1111 110x (10xx xxxx)^5
+        nbytes=5;
+    if(c==0xfe)      // 1111 1110 (10xx xxxx)^6
+        nbytes=6;
+    return nbytes;
 }
 
 std::string rawstr(const std::string& str)
