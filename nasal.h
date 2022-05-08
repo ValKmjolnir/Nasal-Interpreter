@@ -33,12 +33,12 @@
 #endif
 
 #ifndef _WIN32
-#define PRTHEX64   "0x%lx"
-#define PRTHEX64_8 "0x%.8lx"
+#define PRTHEX64   "%lx"
+#define PRTHEX64_8 "%.8lx"
 #define PRTINT64   "%ld"
 #else
-#define PRTHEX64   "0x%llx"
-#define PRTHEX64_8 "0x%.8llx"
+#define PRTHEX64   "%llx"
+#define PRTHEX64_8 "%.8llx"
 #define PRTINT64   "%lld"
 #endif
 
@@ -124,6 +124,7 @@ double str2num(const char* str)
 
 int utf8_hdchk(char head)
 {
+    // RFC-2279 but in fact now we use RFC-3629 so nbytes is less than 4
     uint8_t c=(uint8_t)head;
     uint32_t nbytes=0;
     if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
@@ -132,6 +133,7 @@ int utf8_hdchk(char head)
         nbytes=2;
     if((c>>3)==0x1e) // 1111 0xxx (10xx xxxx)^3
         nbytes=3;
+    // these should not be true
     if((c>>2)==0x3e) // 1111 10xx (10xx xxxx)^4
         nbytes=4;
     if((c>>1)==0x7e) // 1111 110x (10xx xxxx)^5
