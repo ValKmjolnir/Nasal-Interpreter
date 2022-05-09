@@ -32,7 +32,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifndef _WIN32
+#ifdef __linux__
 #define PRTHEX64   "%lx"
 #define PRTHEX64_8 "%.8lx"
 #define PRTINT64   "%ld"

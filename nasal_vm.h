@@ -215,7 +215,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         }break;
         default:printf("0x%x",c.num);break;
     }
-    printf(" (%s:%d)\n",files[c.fidx].c_str(),c.line);
+    printf(" (%s:%u)\n",files[c.fidx].c_str(),c.line);
 }
 void nasal_vm::traceback()
 {
@@ -238,12 +238,12 @@ void nasal_vm::traceback()
             continue;
         }
         if(same)
-            printf("\t0x%.8x: %d same call(s)\n",last,same);
+            printf("\t0x%.8x: %u same call(s)\n",last,same);
         same=0;
         bytecodeinfo("\t",point);
     }
     if(same)
-        printf("\t0x%.8x: %d same call(s)\n",last,same);
+        printf("\t0x%.8x: %u same call(s)\n",last,same);
 }
 void nasal_vm::stackinfo(const uint32_t limit=10)
 {
@@ -251,7 +251,7 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     uint32_t   gsize=bytecode[0].num; 
     nasal_ref* top=gc.top;
     nasal_ref* bottom=gc.stack+gsize;
-    printf("vm stack(0x" PRTHEX64 "<sp+%u>, limit %d, total ",(uint64_t)bottom,gsize,limit);
+    printf("vm stack(0x" PRTHEX64 "<sp+%u>, limit %u, total ",(uint64_t)bottom,gsize,limit);
     if(top<bottom)
     {
         printf("0)\n");
