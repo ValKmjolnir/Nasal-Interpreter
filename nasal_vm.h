@@ -257,10 +257,10 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
         printf("0)\n");
         return;
     }
-    printf("" PRTINT64 "):\n",top-bottom+1);
+    printf("" PRTINT64 "):\n",(int64_t)(top-bottom+1));
     for(uint32_t i=0;i<limit && top>=bottom;++i,--top)
     {
-        printf("  0x" PRTHEX64_8 "",top-gc.stack);
+        printf("  0x" PRTHEX64_8 "",(uint64_t)(top-gc.stack));
         valinfo(top[0]);
     }
 }
@@ -280,7 +280,7 @@ void nasal_vm::local_state()
     if(!localr || !gc.funcr.func().lsize)
         return;
     uint32_t lsize=gc.funcr.func().lsize;
-    printf("local(0x" PRTHEX64 "<sp+" PRTINT64 ">):\n",(uint64_t)localr,localr-gc.stack);
+    printf("local(0x" PRTHEX64 "<sp+" PRTINT64 ">):\n",(uint64_t)localr,(int64_t)(localr-gc.stack));
     for(uint32_t i=0;i<lsize;++i)
     {
         printf("  0x%.8x",i);
