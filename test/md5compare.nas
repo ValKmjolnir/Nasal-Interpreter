@@ -1,6 +1,18 @@
 import("test/md5.nas");
 
-rand(time(0));
+srand();
+
+var progress_bar=func(){
+    var res=[];
+    setsize(res,51);
+    var (tmp,sp)=(" |","                                                  | ");
+    res[0]=tmp~sp;
+    for(var i=1;i<=50;i+=1){
+        tmp~="#";
+        res[i]=tmp~substr(sp,i,52-i);
+    }
+    return res;
+}();
 
 var compare=func(){
     var ch=[
@@ -9,7 +21,7 @@ var compare=func(){
         "^","&","*","(",")","-","=","\\","|","[","]","{","}","`"," ","\t","?"
     ];
     return func(begin,end){
-        var (total,prt,lastpercent,percent)=(end-begin,"",0,0);
+        var (total,prt_cnt,lastpercent,percent)=(end-begin,0,0,0);
         for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){
@@ -21,13 +33,10 @@ var compare=func(){
             }
             percent=int((i-begin+1)/total*100);
             if(percent-lastpercent>=2){
-                prt~="#";
+                prt_cnt+=1;
                 lastpercent=percent;
             }
-            var tmp=prt;
-            for(var spc=size(prt);spc<50;spc+=1)
-                tmp~=" ";
-            print(" |",tmp,"| ",percent,"% (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
+            print(progress_bar[prt_cnt],percent,"% (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
         }
         print('\n');
     };
@@ -39,7 +48,7 @@ var filechecksum=func(){
         for(var i=0;i<len and s[i]!=ch;i+=1);
         return substr(s,0,i);
     }
-    var filewithoututf8=[
+    var files=[
         "./stl/file.nas          ",
         "./stl/lib.nas           ",
         "./stl/list.nas          ",
@@ -48,6 +57,7 @@ var filechecksum=func(){
         "./stl/result.nas        ",
         "./stl/sort.nas          ",
         "./stl/stack.nas         ",
+        "./test/ascii-art.nas    ",
         "./test/auto_crash.nas   ",
         "./test/bf.nas           ",
         "./test/bfcolored.nas    ",
@@ -78,16 +88,21 @@ var filechecksum=func(){
         "./test/prime.nas        ",
         "./test/props_sim.nas    ",
         "./test/props.nas        ",
+        "./test/qrcode.nas       ",
         "./test/quick_sort.nas   ",
         "./test/scalar.nas       ",
+        "./test/snake.nas        ",
+        "./test/tetris.nas       ",
         "./test/trait.nas        ",
         "./test/turingmachine.nas",
+        "./test/utf8chk.nas      ",
+        "./test/wavecollapse.nas ",
         "./test/ycombinator.nas  ",
         "LICENSE                 ",
         "main.cpp                ",
         "makefile                ",
-        #"nasal_ast.h             ",
-        #"nasal_builtin.h         ",
+        "nasal_ast.h             ",
+        "nasal_builtin.h         ",
         "nasal_codegen.h         ",
         "nasal_dbg.h             ",
         "nasal_err.h             ",
@@ -101,7 +116,7 @@ var filechecksum=func(){
         "nasal.h                 ",
         "README.md               "
     ];
-    foreach(var i;filewithoututf8){
+    foreach(var i;files){
         var f=io.fin(getname(i));
         var (res0,res1)=(md5(f),_md5(f));
         println(i,'   ',res0,'   ',!cmp(res0,res1),'   ',size(f),' byte');

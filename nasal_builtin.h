@@ -1249,7 +1249,7 @@ std::string md5(std::string& source)
     uint32_t buffsize=num<<4;
     buff.resize(buffsize,0);
     for(uint32_t i=0;i<source.length();i++)
-        buff[i>>2]|=(source[i])<<((i&0x3)<<3);
+        buff[i>>2]|=((unsigned char)source[i])<<((i&0x3)<<3);
     buff[source.length()>>2]|=0x80<<(((source.length()%4))<<3);
     buff[buffsize-2]=(source.length()<<3)&0xffffffff;
     buff[buffsize-1]=((source.length()<<3)>>32)&0xffffffff;

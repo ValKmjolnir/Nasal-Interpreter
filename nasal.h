@@ -3,10 +3,12 @@
 
 #define __nasver "9.0"
 
-#include <stdint.h>
+
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#include <cstdint>
+#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <sstream>
