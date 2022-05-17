@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var student=func(n,a){
     return {
         print_info:func println(n,' ',a),

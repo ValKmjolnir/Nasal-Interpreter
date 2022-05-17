@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var fd=io.open("test/filesystem.nas");
 while((var line=io.readln(fd))!=nil)
     println(line);

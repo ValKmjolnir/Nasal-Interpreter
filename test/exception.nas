@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var ResultTrait={
     Ok:func(val){
         me.ok=val;

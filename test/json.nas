@@ -1,6 +1,4 @@
 #lib json.nas
-import("lib.nas");
-
 var JSON=func(){
 
     var (

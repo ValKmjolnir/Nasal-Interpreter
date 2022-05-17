@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var geodinfo=func(lat,lon){
     return {};
 }
