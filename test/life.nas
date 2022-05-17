@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var map=nil;
 
 var check=func(x,y)

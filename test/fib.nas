@@ -1,4 +1,3 @@
-import("lib.nas");
 var fib=func(x)
 {
 	if(x<2) return x;

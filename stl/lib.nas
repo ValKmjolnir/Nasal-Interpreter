@@ -448,11 +448,11 @@ var NM2M=1852;
 var R2D=180/math.pi;
 
 # functions that not supported in this runtime:
-var bind=func(function,locals,outer_scope={}){
+var bind=func(function,locals,outer_scope=nil){
     die("this runtime does not support bind");
 }
 
-var call=func(function,args=[],_me=nil,locals={},error=[]){
+var call=func(function,args=nil,_me=nil,locals=nil,error=nil){
     die("this runtime does not support call");
 }
 

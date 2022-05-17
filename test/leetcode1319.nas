@@ -1,4 +1,3 @@
-import("lib.nas");
 # union set
 var n=4;
 var input=[[0,1],[0,2],[1,2]];

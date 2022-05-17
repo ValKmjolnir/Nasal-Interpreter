@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var mandelbrot=
 "[A mandelbrot set fractal viewer in brainf*** written by Erik Bosman]
 +++++++++++++[->++>>>+++++>++>+<<<<<<]>>>>>++++++>--->>>>>>>>>>+++++++++++++++[[

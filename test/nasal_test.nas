@@ -1,6 +1,5 @@
 # This is written for Nasal Intepreter
 # Sidi Liang
-import("lib.nas");
 var w = 1;
 var x = "hello";
 var f = func(){

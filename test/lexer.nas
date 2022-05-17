@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var lexer=func(file)
 {
     var (ptr,token)=(0,[]);

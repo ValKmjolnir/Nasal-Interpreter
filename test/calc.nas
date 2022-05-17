@@ -1,4 +1,3 @@
-import("lib.nas");
 var source=[
     "main.cpp              ",
     "nasal_err.h           ",

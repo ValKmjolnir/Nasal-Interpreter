@@ -1,4 +1,3 @@
-import("lib.nas");
 import("./module/libkey.nas");
 var list=func(){
     var (begin,end,len)=(nil,nil,0);

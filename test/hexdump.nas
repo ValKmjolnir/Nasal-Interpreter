@@ -1,8 +1,6 @@
 # hexdump.nas by ValKmjolnir
 # 2021/8/13
 
-import("lib.nas");
-
 # init
 var hex_num=[
     '0','1','2','3',

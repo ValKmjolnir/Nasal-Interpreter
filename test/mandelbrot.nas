@@ -1,4 +1,3 @@
-import("lib.nas");
 var (yMin,yMax,xMin,xMax,line)=(-0.2,0.2,-1.5,-1.0,"");
 var (yDel,xDel)=(yMax-yMin,xMax-xMin);
 for(var yPixel=0;yPixel<24;yPixel+=1)

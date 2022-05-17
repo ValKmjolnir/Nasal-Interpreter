@@ -1,4 +1,3 @@
-import("lib.nas");
 import("./module/libfib.nas");
 
 println(libfib);

@@ -1,8 +1,6 @@
-import("stl/lib.nas");
 import("stl/queue.nas");
 
 rand(time(0));
-
 var pixel=[' ','#','.','*'];
 var map=[];
 for(var i=0;i<10;i+=1)

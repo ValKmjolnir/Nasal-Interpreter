@@ -1,6 +1,4 @@
-import("lib.nas");
 import("./module/libkey.nas");
-
 var color=[
     "\e[31m","\e[32m","\e[33m","\e[34m","\e[35m","\e[36m",
     "\e[91m","\e[92m","\e[93m","\e[94m","\e[95m","\e[96m",

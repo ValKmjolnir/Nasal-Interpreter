@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var check=func(x){
     if(x<0x100000000)
         return x;

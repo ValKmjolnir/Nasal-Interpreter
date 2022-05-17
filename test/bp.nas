@@ -1,5 +1,3 @@
-import("lib.nas");
-
 rand(time(0));
 
 var new_neuron=func()
