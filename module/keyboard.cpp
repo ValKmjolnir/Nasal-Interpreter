@@ -56,7 +56,7 @@ extern "C" nasal_ref nas_init(std::vector<nasal_ref>& args,nasal_gc& gc){
     tcflush(0,TCIOFLUSH);
     tcgetattr(0,&init_termios);
     new_termios=init_termios;
-    new_termios.c_lflag&=~(ICANON|ECHO|ECHONL);
+    new_termios.c_lflag&=~(ICANON|ECHO|ECHONL|ECHOE);
     // vmin=0 is nonblock input, but in wsl there is a bug that will block input
     // so we use fcntl to write the nonblock input
     new_termios.c_cc[VMIN]=1;
