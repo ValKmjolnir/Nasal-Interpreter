@@ -4,7 +4,6 @@
 # this provides safe usage of dylib
 # when dylib is closed,
 # all the invalid functions cannot be called
-import("lib.nas");
 
 var module_call_func=func(fptr,args){
     return __builtin_dlcall;
