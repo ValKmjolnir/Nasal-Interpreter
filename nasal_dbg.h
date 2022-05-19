@@ -94,7 +94,7 @@ void nasal_dbg::stepinfo()
     end=(1+(pc>>3))<<3;
     for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
         bytecodeinfo(i==pc?"-->\t":"   \t",i);
-    stackinfo(5);
+    stackinfo(10);
 }
 
 void nasal_dbg::interact()
@@ -135,8 +135,9 @@ void nasal_dbg::interact()
                     printf("[%zu] %s\n",i,files[i].c_str());
             else if(res[0]=="g" || res[0]=="global")
                 global_state();
-            else if(res[0]=="l" || res[0]=="local")
+            else if(res[0]=="l" || res[0]=="local"){
                 local_state();
+            }
             else if(res[0]=="u" || res[0]=="upval")
                 upval_state();
             else if(res[0]=="a" || res[0]=="all")
@@ -208,13 +209,13 @@ void nasal_dbg::run(
     goto *code[pc];
 
 vmexit:
-    if(gc.top>=canary)
+    if(top>=canary)
         die("stack overflow");
     gc.clear();
     imm.clear();
     printf("[debug] debugger exited\n");
     return;
-#define dbg(op) {interact();op();if(gc.top<canary)goto *code[++pc];goto vmexit;}
+#define dbg(op) {interact();op();if(top<canary)goto *code[++pc];goto vmexit;}
 
 intg:    dbg(opr_intg    );
 intl:    dbg(opr_intl    );

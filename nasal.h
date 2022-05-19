@@ -1,7 +1,7 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
 
-#define __nasver "9.0"
+#define __nasver "10.0"
 
 
 #include <unistd.h>
@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/timeb.h>
 
 #ifdef _WIN32
 #include <windows.h>

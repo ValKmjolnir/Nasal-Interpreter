@@ -68,6 +68,7 @@ var filechecksum=func(){
         "./test/calc.nas         ",
         "./test/choice.nas       ",
         "./test/class.nas        ",
+        "./test/coroutine.nas    ",
         "./test/diff.nas         ",
         "./test/exception.nas    ",
         "./test/fib.nas          ",

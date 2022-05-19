@@ -17,6 +17,7 @@ enum nasal_type
     vm_hash,
     vm_upval,
     vm_obj,
+    vm_co,
     vm_type_size
 };
 
@@ -37,7 +38,8 @@ const uint32_t initialize[vm_type_size]=
     128, // vm_vec
     64,  // vm_hash
     512, // vm_upval
-    16   // vm_obj
+    16,  // vm_obj
+    0    // vm_co
 };
 const uint32_t increment[vm_type_size]=
 {
@@ -54,7 +56,8 @@ const uint32_t increment[vm_type_size]=
     8192,// vm_vec
     1024,// vm_hash
     128, // vm_upval
-    256  // vm_obj
+    256, // vm_obj
+    16   // vm_co
 };
 
 struct nasal_vec;  // vector
@@ -62,7 +65,9 @@ struct nasal_hash; // hashmap(dict)
 struct nasal_func; // function(lambda)
 struct nasal_upval;// upvalue
 struct nasal_obj;  // special objects
+struct nasal_co;   // coroutine
 struct nasal_val;  // nasal_val includes gc-managed types
+
 
 struct nasal_ref
 {
@@ -112,6 +117,7 @@ struct nasal_ref
     inline nasal_func&  func();
     inline nasal_upval& upval();
     inline nasal_obj&   obj ();
+    inline nasal_co&    co  ();
 };
 
 struct nasal_vec
@@ -172,7 +178,7 @@ struct nasal_obj
         file=1,
         dir,
         dylib,
-        externfunc
+        faddr
     };
     /* RAII constructor */
     /* new object is initialized when creating */
@@ -195,6 +201,50 @@ struct nasal_obj
     }
 };
 
+struct nasal_co
+{
+    enum coroutine_stat
+    {
+        suspended,
+        running,
+        dead
+    };
+    static const uint32_t depth=1024;
+    nasal_ref  stack[depth];
+    
+    uint32_t   pc;
+    nasal_ref* top;
+    nasal_ref* canary;
+    nasal_ref* localr;
+    nasal_ref* memr;
+    nasal_ref  funcr;
+
+    uint32_t   status;
+    nasal_co():
+        pc(0),
+        top(stack),
+        canary(stack+depth-1),
+        localr(nullptr),
+        memr(nullptr),
+        funcr({vm_nil,(double)0}),
+        status(nasal_co::suspended)
+    {
+        for(uint32_t i=0;i<depth;++i)
+            stack[i]={vm_nil,(double)0};
+    }
+    void clear()
+    {
+        for(uint32_t i=0;i<depth;++i)
+            stack[i]={vm_nil,(double)0};
+        pc=0;
+        localr=nullptr;
+        memr=nullptr;
+        top=stack;
+        status=nasal_co::suspended;
+        funcr={vm_nil,(double)0};
+    }
+};
+
 const uint8_t GC_UNCOLLECTED=0;   
 const uint8_t GC_COLLECTED  =1;
 const uint8_t GC_FOUND      =2;
@@ -211,6 +261,7 @@ struct nasal_val
         nasal_func*  func;
         nasal_upval* upval;
         nasal_obj*   obj;
+        nasal_co*    co;
     }ptr;
 
     nasal_val(uint8_t);
@@ -327,6 +378,7 @@ nasal_val::nasal_val(uint8_t val_type)
         case vm_func: ptr.func=new nasal_func;  break;
         case vm_upval:ptr.upval=new nasal_upval;break;
         case vm_obj:  ptr.obj=new nasal_obj;    break;
+        case vm_co:   ptr.co=new nasal_co;      break;
     }
 }
 nasal_val::~nasal_val()
@@ -339,6 +391,7 @@ nasal_val::~nasal_val()
         case vm_func: delete ptr.func; break;
         case vm_upval:delete ptr.upval;break;
         case vm_obj:  delete ptr.obj;  break;
+        case vm_co:   delete ptr.co;   break;
     }
     type=vm_nil;
 }
@@ -371,6 +424,7 @@ void nasal_ref::print()
         case vm_hash: hash().print();           break;
         case vm_func: std::cout<<"func(..){..}";break;
         case vm_obj:  std::cout<<"<object>";    break;
+        case vm_co:   std::cout<<"<coroutine>"; break;
     }
 }
 bool nasal_ref::objchk(uint32_t objtype)
@@ -387,6 +441,7 @@ inline nasal_hash&  nasal_ref::hash (){return *value.gcobj->ptr.hash; }
 inline nasal_func&  nasal_ref::func (){return *value.gcobj->ptr.func; }
 inline nasal_upval& nasal_ref::upval(){return *value.gcobj->ptr.upval;}
 inline nasal_obj&   nasal_ref::obj  (){return *value.gcobj->ptr.obj;  }
+inline nasal_co&    nasal_ref::co   (){return *value.gcobj->ptr.co;   }
 
 const nasal_ref zero={vm_num,(double)0};
 const nasal_ref one ={vm_num,(double)1};
@@ -395,9 +450,29 @@ const nasal_ref nil ={vm_nil,(double)0};
 struct nasal_gc
 {
     static const uint32_t   stack_depth=8192;        // depth of value stack
-    nasal_ref               funcr;                   // function register
-    nasal_ref               stack[stack_depth];      // the last one is reserved to avoid stack overflow
+    struct
+    {
+        nasal_ref  stack[stack_depth];
+        uint32_t   pc;
+        nasal_ref* localr;
+        nasal_ref* memr;
+        nasal_ref* canary;
+        nasal_ref  funcr;
+        nasal_ref* top;
+    } main_ctx;
+    nasal_ref*              global;                  // global values pointer(this should not be changed)
+    
+    /* runtime context */
+    uint32_t                pc;                      // program counter
     nasal_ref*              top;                     // stack top
+    nasal_ref*              localr;                  // local scope register
+    nasal_ref*              memr;                    // used for mem_call
+    nasal_ref               funcr;                   // function register
+    nasal_ref*              canary;                  // avoid stackoverflow
+    nasal_ref*              stack;                   // stack pointer
+    nasal_co*               coroutine;               // running coroutin
+
+    /* constants and memory pool */
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
@@ -407,6 +482,8 @@ struct nasal_gc
     /* if new functions generated in local scope      */
     /* they will share the same upvalue stored here   */
     std::vector<nasal_ref>  upvalue;
+
+    /* values for analysis */
     uint64_t                size[vm_type_size];
     uint64_t                count[vm_type_size];
     void                    mark();
@@ -416,17 +493,30 @@ struct nasal_gc
     void                    info();
     nasal_ref               alloc(const uint8_t);
     nasal_ref               builtin_alloc(const uint8_t);
+    void                    ctxchg(nasal_co&);
+    void                    ctxreserve();
 };
 
 /* gc functions */
 void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
-    bfs.push(funcr);
+    
     for(auto& i:upvalue)
         bfs.push(i);
-    for(nasal_ref* i=stack;i<=top;++i)
-        bfs.push(*i);
+    if(!coroutine)
+    {
+        for(nasal_ref* i=stack;i<=top;++i)
+            bfs.push(*i);
+        bfs.push(funcr);
+    }
+    else
+    {
+        for(nasal_ref* i=main_ctx.stack;i<=main_ctx.top;++i)
+            bfs.push(*i);
+        bfs.push(main_ctx.funcr);
+    }
+    
     while(!bfs.empty())
     {
         nasal_ref tmp=bfs.front();
@@ -452,6 +542,12 @@ void nasal_gc::mark()
             case vm_upval:
                 for(auto& i:tmp.upval().elems)
                     bfs.push(i);
+                break;
+            case vm_co:
+                bfs.push(tmp.co().funcr);
+                for(nasal_ref* i=tmp.co().stack;i<=tmp.co().top;++i)
+                    bfs.push(*i);
+                break;
         }
     }
 }
@@ -469,6 +565,7 @@ void nasal_gc::sweep()
                 case vm_func: i->ptr.func->clear();      break;
                 case vm_upval:i->ptr.upval->clear();     break;
                 case vm_obj:  i->ptr.obj->clear();       break;
+                case vm_co:   i->ptr.co->clear();        break;
             }
             free_list[i->type].push(i);
             i->mark=GC_COLLECTED;
@@ -491,7 +588,10 @@ void nasal_gc::init(const std::vector<std::string>& s)
             memory.push_back(tmp);
             free_list[i].push(tmp);
         }
-    top=stack;
+    global=main_ctx.stack;    
+    stack=main_ctx.stack;
+    top=main_ctx.stack;
+    coroutine=nullptr;
     // init constant strings
     strs.resize(s.size());
     for(uint32_t i=0;i<strs.size();++i)
@@ -520,7 +620,8 @@ void nasal_gc::info()
         "null ","cnt  ","addr ",
         "ret  ","nil  ","num  ",
         "str  ","func ","vec  ",
-        "hash ","upval","obj  "
+        "hash ","upval","obj  ",
+        "co   "
     };
     std::cout<<"\ngarbage collector info:\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
@@ -572,5 +673,49 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     ret.value.gcobj->mark=GC_UNCOLLECTED;
     free_list[type].pop();
     return ret;
+}
+void nasal_gc::ctxchg(nasal_co& context)
+{
+    main_ctx.pc=pc;
+    main_ctx.top=top;
+    main_ctx.localr=localr;
+    main_ctx.memr=memr;
+    main_ctx.funcr=funcr;
+    main_ctx.canary=canary;
+
+    pc=context.pc;
+    top=context.top;
+    localr=context.localr;
+    memr=context.memr;
+    funcr=context.funcr;
+    canary=context.canary;
+    stack=context.stack;
+    coroutine=&context;
+
+    upvalue.push_back(nil);
+    coroutine->status=nasal_co::running;
+}
+void nasal_gc::ctxreserve()
+{
+    if(coroutine->status!=nasal_co::dead)
+        coroutine->status=nasal_co::suspended;
+    // pc=0 means this coroutine is finished, so we use entry to reset it
+    coroutine->pc=pc==0?coroutine->funcr.func().entry:pc;
+    coroutine->top=top;
+    coroutine->localr=localr;
+    coroutine->memr=memr;
+    coroutine->funcr=funcr;
+    coroutine->canary=canary;
+
+    pc=main_ctx.pc;
+    top=main_ctx.top;
+    localr=main_ctx.localr;
+    memr=main_ctx.memr;
+    funcr=main_ctx.funcr;
+    canary=main_ctx.canary;
+    stack=main_ctx.stack;
+    coroutine=nullptr;
+
+    upvalue.pop_back();
 }
 #endif
