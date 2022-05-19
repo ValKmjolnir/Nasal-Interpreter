@@ -267,6 +267,27 @@ var assert=func(condition,message="assertion failed!"){
     die(message);
 }
 
+# settimer alows infinite loop running a function with a time interval
+var settimer=func(f,interval,realtime=1){
+    while(1){
+        unix.sleep(interval);
+        f();
+    }
+}
+
+# get time stamp, this will return a timestamp object
+var maketimestamp=func(){
+    var t=0;
+    var millisec=func(){
+        return __builtin_millisec;
+    }
+    return {
+        stamp:func(){t=millisec();},
+        elapsedMSec:func(){return millisec()-t;},
+        elapsedUSec:func(){return (millisec()-t)*1000;}
+    };
+}
+
 # md5
 var md5=func(str){
     return __builtin_md5(str);
@@ -467,3 +488,11 @@ var closure=func(function,level=1){
 var compile=func(code,filename="<compile>"){
     die("this runtime uses static code generator");
 }
+
+var coroutine={
+    create: func(function){return __builtin_cocreate;},
+    resume: func(co)      {return __builtin_coresume;},
+    yield:  func(args...) {return __builtin_coyield; },
+    status: func(co)      {return __builtin_costatus;},
+    running:func()        {return __builtin_corun;   }
+};

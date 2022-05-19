@@ -87,6 +87,12 @@ nas_native(builtin_dlcall);
 nas_native(builtin_platform);
 nas_native(builtin_gc);
 nas_native(builtin_md5);
+nas_native(builtin_cocreate);
+nas_native(builtin_coresume);
+nas_native(builtin_coyield);
+nas_native(builtin_costatus);
+nas_native(builtin_corun);
+nas_native(builtin_millisec);
 
 nasal_ref builtin_err(const char* func_name,const std::string& info)
 {
@@ -180,6 +186,12 @@ struct
     {"__builtin_platform",builtin_platform},
     {"__builtin_gc",      builtin_gc      },
     {"__builtin_md5",     builtin_md5     },
+    {"__builtin_cocreate",builtin_cocreate},
+    {"__builtin_coresume",builtin_coresume},
+    {"__builtin_coyield", builtin_coyield },
+    {"__builtin_costatus",builtin_costatus},
+    {"__builtin_corun"   ,builtin_corun   },
+    {"__builtin_millisec",builtin_millisec},
     {nullptr,             nullptr         }
 };
 
@@ -200,6 +212,7 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
             case vm_hash: i.hash().print();            break;
             case vm_func: std::cout<<"func(...){...}"; break;
             case vm_obj:  std::cout<<"<object>";       break;
+            case vm_co:   std::cout<<"<coroutine>";    break;
         }
     std::cout<<std::flush;
     // generate return value
@@ -657,6 +670,7 @@ nasal_ref builtin_type(nasal_ref* local,nasal_gc& gc)
         case vm_hash: ret.str()="hash";     break;
         case vm_func: ret.str()="func";     break;
         case vm_obj:  ret.str()="obj";      break;
+        case vm_co:   ret.str()="coroutine";break;
     }
     return ret;
 }
@@ -1182,7 +1196,7 @@ nasal_ref builtin_dlsym(nasal_ref* local,nasal_gc& gc)
     if(!func)
         return builtin_err("dlsym","cannot find symbol \""+sym.str()+"\"");
     nasal_ref ret=gc.alloc(vm_obj);
-    ret.obj().type=nasal_obj::externfunc;
+    ret.obj().type=nasal_obj::faddr;
     ret.obj().ptr=func;
     return ret;
 }
@@ -1203,7 +1217,7 @@ nasal_ref builtin_dlcall(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref funcptr=local[1];
     nasal_ref args=local[2];
-    if(!funcptr.objchk(nasal_obj::externfunc))
+    if(!funcptr.objchk(nasal_obj::faddr))
         return builtin_err("dlcall","\"funcptr\" is not a valid function pointer");
     typedef nasal_ref (*extern_func)(std::vector<nasal_ref>&,nasal_gc&);
     extern_func func=(extern_func)funcptr.obj().ptr;
@@ -1320,5 +1334,87 @@ nasal_ref builtin_md5(nasal_ref* local,nasal_gc& gc)
     nasal_ref res=gc.alloc(vm_str);
     res.str()=md5(str.str());
     return res;
+}
+
+nasal_ref builtin_cocreate(nasal_ref* local,nasal_gc& gc)
+{
+    // +-----------------+
+    // | old pc          | <- top[0]
+    // +-----------------+
+    // | old localr      | <- top[-1]
+    // +-----------------+
+    // | local scope     |
+    // | ...             |
+    // +-----------------+ <- local pointer stored in localr
+    // | old funcr       | <- old function stored in funcr
+    // +-----------------+
+    nasal_ref func=local[1];
+    if(func.type!=vm_func)
+        return builtin_err("coroutine::create","must use a function to create coroutine");
+    if(gc.coroutine)
+        return builtin_err("coroutine::create","cannot create another coroutine in a coroutine");
+    nasal_ref co=gc.alloc(vm_co);
+    nasal_co& coroutine=co.co();
+    coroutine.pc=func.func().entry-1;
+
+    coroutine.top[0]=nil;
+    coroutine.localr=coroutine.top+1;
+    coroutine.top=coroutine.localr+func.func().lsize;
+    coroutine.localr[0]=func.func().local[0];
+    coroutine.top[0]={vm_addr,(nasal_ref*)nullptr};
+    coroutine.top++;
+    coroutine.top[0]={vm_ret,(uint32_t)0};
+
+    coroutine.funcr=func;
+    coroutine.status=nasal_co::suspended;
+    
+    return co;
+}
+nasal_ref builtin_coresume(nasal_ref* local,nasal_gc& gc)
+{
+    if(gc.coroutine)
+        return builtin_err("coroutine::resume","cannot start another coroutine when one is running");
+    nasal_ref co=local[1];
+    if(co.type!=vm_co)
+        return builtin_err("coroutine::resume","must use a coroutine object");
+    if(co.co().status==nasal_co::dead)
+        return nil;
+    gc.ctxchg(co.co());
+    return gc.top[0];
+}
+nasal_ref builtin_coyield(nasal_ref* local,nasal_gc& gc)
+{
+    if(!gc.coroutine)
+        return builtin_err("coroutine::yield","cannot yield, no coroutine is running");
+    gc.ctxreserve();
+    // this will set to main stack top
+    // then builtin_coresume will return it
+    return local[1];
+}
+nasal_ref builtin_costatus(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref co=local[1];
+    if(co.type!=vm_co)
+        return builtin_err("coroutine::status","must use a coroutine object");
+    nasal_ref res=gc.alloc(vm_str);
+    switch(co.co().status)
+    {
+        case nasal_co::suspended: res.str()="suspended";break;
+        case nasal_co::running:   res.str()="running";  break;
+        case nasal_co::dead:      res.str()="dead";     break;
+    }
+    return res;
+}
+nasal_ref builtin_corun(nasal_ref* local,nasal_gc& gc)
+{
+    if(gc.coroutine)
+        return one;
+    return zero;
+}
+nasal_ref builtin_millisec(nasal_ref* local,nasal_gc& gc)
+{
+    timeb now;
+    ftime(&now);
+    return {vm_num,(double)(now.time*1000+now.millitm)};
 }
 #endif

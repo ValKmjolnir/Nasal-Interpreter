@@ -43,7 +43,8 @@
   * [v6.5](#version-65-vm-last-update-2021624)
   * [v7.0](#version-70-vm-last-update-2021108)
   * [v8.0](#version-80-vm-last-update-2022212)
-  * [v9.0](#version-90-vm-latest)
+  * [v9.0](#version-90-vm-last-update-2022518)
+  * [v10.0](#version-100-vm-latest)
 * [__Benchmark__](#benchmark)
   * [v6.5 (i5-8250U windows 10)](#version-65-i5-8250u-windows10-2021619)
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
@@ -1246,7 +1247,7 @@ The format of output information of bytecodes changes to this:
 Delete `op_pone` and `op_pzero`.
 Both of them are meaningless and will be replaced by `op_pnum`.
 
-### version 9.0 vm (latest)
+### version 9.0 vm (last update 2022/5/18)
 
 2022/2/12 update:
 
@@ -1341,6 +1342,131 @@ func <0x2c4>:
 
   0x000002c9:       0c 00 00 00 70        happ    0x70 ("gc")
   0x000002ca:       03 00 00 00 23        loadg   0x23
+```
+
+### version 10.0 vm (latest)
+
+2022/5/19 update:
+
+Now we add coroutine in this runtime:
+
+```javascript
+var coroutine={
+    create: func(function){return __builtin_cocreate;},
+    resume: func(co)      {return __builtin_coresume;},
+    yield:  func(args...) {return __builtin_coyield; },
+    status: func(co)      {return __builtin_costatus;},
+    running:func()        {return __builtin_corun;   }
+};
+```
+
+`coroutine.create` is used to create a new coroutine object using a function.
+But this coroutine will not run immediately.
+
+`coroutine.resume` is used to continue running a coroutine.
+
+`coroutine.yield` is used to interrupt the running of a coroutine and throw some values.
+These values will be accepted and returned by `coroutine.resume`.
+And `coroutine.yield` it self returns `vm_nil` in the coroutine function.
+
+`coroutine.status` is used to see the status of a coroutine.
+There are 3 types of status:`suspended` means waiting for running,`running` means is running,`dead` means finished running.
+
+`coroutine.running` is used to judge if there is a coroutine running now.
+
+__CAUTION:__ coroutine should not be created or running inside another coroutine.
+
+__We will explain how resume and yield work here:__
+
+When `op_callb` is called, the stack frame is like this:
+
+```C++
++----------------------------+(main stack)
+| old pc(vm_ret)             | <- top[0]
++----------------------------+
+| old localr(vm_addr)        | <- top[-1]
++----------------------------+
+| local scope(nasal_ref)     |
+| ...                        |
++----------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)         | <- old function stored in funcr
++----------------------------+
+```
+
+In `op_callb`'s progress, next step the stack frame is:
+
+```C++
++----------------------------+(main stack)
+| nil(vm_nil)                | <- push nil
++----------------------------+
+| old pc(vm_ret)             |
++----------------------------+
+| old localr(vm_addr)        |
++----------------------------+
+| local scope(nasal_ref)     |
+| ...                        |
++----------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)         | <- old function stored in funcr
++----------------------------+
+```
+
+Then we call `resume`, this function will change stack.
+As we can see, coroutine stack already has some values on it,
+but if we first enter it, the stack top will be `vm_ret`, and the return `pc` is `0`.
+
+So for safe running, `resume` will return `gc.top[0]`.
+`op_callb` will do `top[0]=resume()`, so the value does not change.
+
+```C++
++----------------------------+(coroutine stack)
+| pc:0(vm_ret)               | <- now gc.top[0]
++----------------------------+
+```
+
+When we call `yield`, the function will do like this.
+And we find that `op_callb` has put the `nil` at the top.
+but where is the returned `local[1]` sent?
+
+```C++
++----------------------------+(coroutine stack)
+| nil(vm_nil)                | <- push nil
++----------------------------+
+| old pc(vm_ret)             |
++----------------------------+
+| old localr(vm_addr)        |
++----------------------------+
+| local scope(nasal_ref)     |
+| ...                        |
++----------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)         | <- old function stored in funcr
++----------------------------+
+```
+
+When `builtin_coyield` is finished, the stack is set to main stack,
+and the returned `local[1]` in fact is set to the top of the main stack by `op_callb`:
+
+```C++
++----------------------------+(main stack)
+| return_value(nasal_ref)    |
++----------------------------+
+| old pc(vm_ret)             |
++----------------------------+
+| old localr(vm_addr)        |
++----------------------------+
+| local scope(nasal_ref)     |
+| ...                        |
++----------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)         | <- old function stored in funcr
++----------------------------+
+```
+
+so the main progress feels the value on the top is the returned value of `resume`.
+but in fact the `resume`'s returned value is set on coroutine stack.
+so we conclude this:
+
+```C++
+resume (main->coroutine) return coroutine.top[0]. coroutine.top[0] = coroutine.top[0];
+yield  (coroutine->main) return a vector.         main.top[0]      = vector;
 ```
 
 ## Benchmark
