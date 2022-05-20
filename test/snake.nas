@@ -178,7 +178,7 @@ var main=func(){
     if(os.platform()=="windows")
         system("chcp 65001");
     print("\ec");
-    libkey.init();
+
     var g=game(15,10);
     g.print();
     print("\rpress any key to start...");
@@ -207,10 +207,10 @@ var main=func(){
             g.print();
         }
     }
-    libkey.close();
+
     println(g.gameover()<=1?"game over.":"you win!");
-    println("enter anything to quit.");
-    input();
+    println("press 'q' to quit.");
+    while(libkey.getch()!='q'[0]);
 }
 
 main();
