@@ -16,6 +16,7 @@ test:nasal
 	@ ./nasal -op -e -d test/calc.nas
 	@ ./nasal -op -e test/choice.nas
 	@ ./nasal -op -e test/class.nas
+	@ ./nasal -op -d -o test/coroutine.nas
 	@ ./nasal -op -e test/diff.nas
 	-@ ./nasal -op -d test/exception.nas
 	@ ./nasal -op -t -d test/fib.nas

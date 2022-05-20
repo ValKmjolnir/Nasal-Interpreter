@@ -1343,6 +1343,8 @@ nasal_ref builtin_cocreate(nasal_ref* local,nasal_gc& gc)
     // +-----------------+
     // | old localr      | <- top[-1]
     // +-----------------+
+    // | old upvalr      | <- top[-2]
+    // +-----------------+
     // | local scope     |
     // | ...             |
     // +-----------------+ <- local pointer stored in localr
@@ -1361,11 +1363,13 @@ nasal_ref builtin_cocreate(nasal_ref* local,nasal_gc& gc)
     coroutine.localr=coroutine.top+1;
     coroutine.top=coroutine.localr+func.func().lsize;
     coroutine.localr[0]=func.func().local[0];
-    coroutine.top[0]={vm_addr,(nasal_ref*)nullptr};
+    coroutine.top[0]=nil; // old upvalr
     coroutine.top++;
-    coroutine.top[0]={vm_ret,(uint32_t)0};
+    coroutine.top[0]={vm_addr,(nasal_ref*)nullptr}; // old localr
+    coroutine.top++;
+    coroutine.top[0]={vm_ret,(uint32_t)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
 
-    coroutine.funcr=func;
+    coroutine.funcr=func; // make sure the coroutine function can use correct upvalues
     coroutine.status=nasal_co::suspended;
     
     return co;

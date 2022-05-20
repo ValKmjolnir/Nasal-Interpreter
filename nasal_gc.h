@@ -218,6 +218,7 @@ struct nasal_co
     nasal_ref* localr;
     nasal_ref* memr;
     nasal_ref  funcr;
+    nasal_ref  upvalr;
 
     uint32_t   status;
     nasal_co():
@@ -227,6 +228,7 @@ struct nasal_co
         localr(nullptr),
         memr(nullptr),
         funcr({vm_nil,(double)0}),
+        upvalr({vm_nil,(double)0}),
         status(nasal_co::suspended)
     {
         for(uint32_t i=0;i<depth;++i)
@@ -454,13 +456,13 @@ struct nasal_gc
     {
         nasal_ref  stack[stack_depth];
         uint32_t   pc;
+        nasal_ref* top;
         nasal_ref* localr;
         nasal_ref* memr;
-        nasal_ref* canary;
         nasal_ref  funcr;
-        nasal_ref* top;
+        nasal_ref  upvalr;
+        nasal_ref* canary;
     } main_ctx;
-    nasal_ref*              global;                  // global values pointer(this should not be changed)
     
     /* runtime context */
     uint32_t                pc;                      // program counter
@@ -468,20 +470,15 @@ struct nasal_gc
     nasal_ref*              localr;                  // local scope register
     nasal_ref*              memr;                    // used for mem_call
     nasal_ref               funcr;                   // function register
+    nasal_ref               upvalr;                  // upvalue register
     nasal_ref*              canary;                  // avoid stackoverflow
     nasal_ref*              stack;                   // stack pointer
-    nasal_co*               coroutine;               // running coroutin
+    nasal_co*               coroutine;               // running coroutine
 
     /* constants and memory pool */
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
-    /* upvalue is a temporary space to store upvalues */
-    /* if no new functions generated in local scope   */
-    /* upvalue will pushback(nil)                     */
-    /* if new functions generated in local scope      */
-    /* they will share the same upvalue stored here   */
-    std::vector<nasal_ref>  upvalue;
 
     /* values for analysis */
     uint64_t                size[vm_type_size];
@@ -502,19 +499,19 @@ void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
     
-    for(auto& i:upvalue)
-        bfs.push(i);
     if(!coroutine)
     {
         for(nasal_ref* i=stack;i<=top;++i)
             bfs.push(*i);
         bfs.push(funcr);
+        bfs.push(upvalr);
     }
     else
     {
         for(nasal_ref* i=main_ctx.stack;i<=main_ctx.top;++i)
             bfs.push(*i);
         bfs.push(main_ctx.funcr);
+        bfs.push(main_ctx.upvalr);
     }
     
     while(!bfs.empty())
@@ -545,6 +542,7 @@ void nasal_gc::mark()
                 break;
             case vm_co:
                 bfs.push(tmp.co().funcr);
+                bfs.push(tmp.co().upvalr);
                 for(nasal_ref* i=tmp.co().stack;i<=tmp.co().top;++i)
                     bfs.push(*i);
                 break;
@@ -587,8 +585,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
             nasal_val* tmp=new nasal_val(i);
             memory.push_back(tmp);
             free_list[i].push(tmp);
-        }
-    global=main_ctx.stack;    
+        } 
     stack=main_ctx.stack;
     top=main_ctx.stack;
     coroutine=nullptr;
@@ -606,7 +603,6 @@ void nasal_gc::clear()
     for(auto i:memory)
         delete i;
     memory.clear();
-    upvalue.clear();
     for(uint8_t i=0;i<vm_type_size;++i)
         while(!free_list[i].empty())
             free_list[i].pop();
@@ -681,6 +677,7 @@ void nasal_gc::ctxchg(nasal_co& context)
     main_ctx.localr=localr;
     main_ctx.memr=memr;
     main_ctx.funcr=funcr;
+    main_ctx.upvalr=upvalr;
     main_ctx.canary=canary;
 
     pc=context.pc;
@@ -688,11 +685,11 @@ void nasal_gc::ctxchg(nasal_co& context)
     localr=context.localr;
     memr=context.memr;
     funcr=context.funcr;
+    upvalr=context.upvalr;
     canary=context.canary;
     stack=context.stack;
     coroutine=&context;
 
-    upvalue.push_back(nil);
     coroutine->status=nasal_co::running;
 }
 void nasal_gc::ctxreserve()
@@ -705,6 +702,7 @@ void nasal_gc::ctxreserve()
     coroutine->localr=localr;
     coroutine->memr=memr;
     coroutine->funcr=funcr;
+    coroutine->upvalr=upvalr;
     coroutine->canary=canary;
 
     pc=main_ctx.pc;
@@ -712,10 +710,9 @@ void nasal_gc::ctxreserve()
     localr=main_ctx.localr;
     memr=main_ctx.memr;
     funcr=main_ctx.funcr;
+    upvalr=main_ctx.upvalr;
     canary=main_ctx.canary;
     stack=main_ctx.stack;
     coroutine=nullptr;
-
-    upvalue.pop_back();
 }
 #endif
