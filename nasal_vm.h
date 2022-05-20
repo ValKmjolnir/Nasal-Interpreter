@@ -6,10 +6,11 @@ class nasal_vm
 protected:
     /* values of nasal_vm */
     uint32_t&                pc;       // program counter
-    nasal_ref*&              global;   // global scope register
+    nasal_ref*               global;   // global scope register
     nasal_ref*&              localr;   // local scope register
     nasal_ref*&              memr;     // used for mem_call
     nasal_ref&               funcr;    // function register
+    nasal_ref&               upvalr;   // upvalue register
     nasal_ref*&              canary;   // avoid stackoverflow
     nasal_ref*&              top;      // stack top
     /* constant */
@@ -120,10 +121,11 @@ protected:
 public:
     nasal_vm():
         pc(gc.pc),
-        global(gc.global),
+        global(gc.main_ctx.stack),
         localr(gc.localr),
         memr(gc.memr),
         funcr(gc.funcr),
+        upvalr(gc.upvalr),
         canary(gc.canary),
         top(gc.top){}
     void run(
@@ -147,9 +149,11 @@ void nasal_vm::init(
     files_size=filenames.size();
     /* set canary and program counter */
     canary=gc.stack+nasal_gc::stack_depth-1; // gc.stack[nasal_gc::stack_depth-1]
-    memr=nullptr;
-    localr=nullptr;
     pc=0;
+    localr=nullptr;
+    memr=nullptr;
+    funcr=nil;
+    upvalr=nil;
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
@@ -169,6 +173,7 @@ void nasal_vm::valinfo(nasal_ref& val)
             printf("| str  | <0x" PRTHEX64 "> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
         }break;
         case vm_func: printf("| func | <0x" PRTHEX64 "> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
+        case vm_upval:printf("| upval| <0x" PRTHEX64 "> [%u val]\n",(uint64_t)p,val.upval().size);break;
         case vm_vec:  printf("| vec  | <0x" PRTHEX64 "> [%zu val]\n",(uint64_t)p,val.vec().size());break;
         case vm_hash: printf("| hash | <0x" PRTHEX64 "> {%zu val}\n",(uint64_t)p,val.hash().size());break;
         case vm_obj:  printf("| obj  | <0x" PRTHEX64 "> obj:0x" PRTHEX64 "\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
@@ -216,7 +221,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         case op_callb:
             printf("0x%x <%s@0x" PRTHEX64 ">",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
         case op_upval: case op_mupval: case op_loadu:
-            printf(" (0x%x[0x%x])",(c.num>>16)&0xffff,c.num&0xffff);break;
+            printf("0x%x[0x%x]",(c.num>>16)&0xffff,c.num&0xffff);break;
         case op_happ:  case op_pstr:
         case op_lnkc:
         case op_callh: case op_mcallh:
@@ -318,14 +323,25 @@ void nasal_vm::upval_state()
 }
 void nasal_vm::detail()
 {
-    printf("maddr:\n  (0x" PRTHEX64 ")\n",(uint64_t)memr);
-    printf("localr:\n  (0x" PRTHEX64 ")\n",(uint64_t)localr);
+    printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
+    printf("  [ pc     ]    | pc   | 0x%.x\n",pc);
+    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)global);
+    printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
+    printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
     if(funcr.type==vm_nil)
-        printf("funcr:\n  (nil)\n");
+        printf("  [ funcr  ]    | nil  |\n");
     else
-        printf("funcr:\n  (<0x" PRTHEX64 "> entry:0x%x)\n",
+        printf("  [ funcr  ]    | func | <0x" PRTHEX64 "> entry:0x%x\n",
             (uint64_t)funcr.value.gcobj,
             funcr.func().entry);
+    if(upvalr.type==vm_nil)
+        printf("  [ upvalr ]    | nil  |\n");
+    else
+        printf("  [ upvalr ]    | upval| <0x" PRTHEX64 "> [%u val]\n",
+            (uint64_t)upvalr.value.gcobj,
+            upvalr.upval().size);
+    printf("  [ canary ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)canary);
+    printf("  [ top    ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)top);
     global_state();
     local_state();
     upval_state();
@@ -436,11 +452,11 @@ inline void nasal_vm::opr_newf()
     if(localr)
     {
         func.upvalue=funcr.func().upvalue;
-        nasal_ref upval=(gc.upvalue.back().type==vm_nil)?gc.alloc(vm_upval):gc.upvalue.back();
+        nasal_ref upval=(upvalr.type==vm_nil)?gc.alloc(vm_upval):upvalr;
         upval.upval().size=funcr.func().lsize;
         upval.upval().stk=localr;
         func.upvalue.push_back(upval);
-        gc.upvalue.back()=upval;
+        upvalr=upval;
     }
 }
 inline void nasal_vm::opr_happ()
@@ -739,7 +755,7 @@ inline void nasal_vm::opr_callfv()
     nasal_ref tmp=local[-1];
     local[-1]=funcr;
     funcr=tmp;
-    if(top-argc+func.lsize+2>=canary) // top-argc+lsize(local) +1(old pc) +1(old localr)
+    if(top-argc+func.lsize+3>=canary) // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
         die("stack overflow");
 
     uint32_t psize=func.psize-1; // parameter size is func->psize-1, 1 is reserved for "me"
@@ -763,11 +779,12 @@ inline void nasal_vm::opr_callfv()
     if(func.dynpara>=0)
         local[psize+1]=dynamic;
 
-    top[0]={vm_addr,localr};
+    top[0]=upvalr;
+    (++top)[0]={vm_addr,localr};
     (++top)[0]={vm_ret,pc};
     pc=func.entry-1;
     localr=local;
-    gc.upvalue.push_back(nil);
+    upvalr=nil;
 }
 inline void nasal_vm::opr_callfh()
 {
@@ -779,7 +796,7 @@ inline void nasal_vm::opr_callfh()
     nasal_ref tmp=top[-1];
     top[-1]=funcr;
     funcr=tmp;
-    if(top+func.lsize+1>=canary) // top -1(hash) +lsize(local) +1(old pc) +1(old localr)
+    if(top+func.lsize+2>=canary) // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
         die("stack overflow");
     if(func.dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
@@ -797,11 +814,12 @@ inline void nasal_vm::opr_callfh()
             die("callfh: lack argument(s): \""+i.first+"\"");
     }
 
-    top[0]={vm_addr,localr};
+    top[0]=upvalr;
+    (++top)[0]={vm_addr,localr};
     (++top)[0]={vm_ret,pc}; // rewrite top with vm_ret
     pc=func.entry-1;
     localr=local;
-    gc.upvalue.push_back(nil);
+    upvalr=nil;
 }
 inline void nasal_vm::opr_callb()
 {
@@ -939,6 +957,8 @@ inline void nasal_vm::opr_ret()
     // +-----------------+
     // | old localr      | <- top[-2]
     // +-----------------+
+    // | old upvalr      | <- top[-3]
+    // +-----------------+
     // | local scope     |
     // | ...             |
     // +-----------------+ <- local pointer stored in localr
@@ -947,9 +967,11 @@ inline void nasal_vm::opr_ret()
     nasal_ref  ret=top[0];
     nasal_ref* local=localr;
     nasal_ref  func=funcr;
+    nasal_ref  up=upvalr;
 
     pc=top[-1].ret();
     localr=top[-2].addr();
+    upvalr=top[-3];
 
     top=local-1;
     func.func().local[0]=nil;// get func and set 'me' to nil
@@ -957,21 +979,19 @@ inline void nasal_vm::opr_ret()
 
     top[0]=ret; // rewrite func with returned value
 
-    if(gc.upvalue.back().type==vm_upval) // synchronize upvalue
+    if(up.type==vm_upval) // synchronize upvalue
     {
-        auto& upval=gc.upvalue.back().upval();
+        auto& upval=up.upval();
         auto size=func.func().lsize;
         upval.onstk=false;
         for(uint32_t i=0;i<size;++i)
             upval.elems.push_back(local[i]);
     }
-    if(!pc)
+    if(!pc) // cannot use gc.coroutine to judge, because there maybe another function call inside
     {
         gc.coroutine->status=nasal_co::dead;
         gc.ctxreserve();
-        return;
     }
-    gc.upvalue.pop_back();
 }
 void nasal_vm::run(
     const nasal_codegen& gen,
@@ -1101,6 +1121,6 @@ mcalll:  exec_operand(opr_mcalll  ,op_mcalll  ); // +1
 mupval:  exec_operand(opr_mupval  ,op_mupval  ); // +1
 mcallv:  exec_opnodie(opr_mcallv  ,op_mcallv  ); // -0
 mcallh:  exec_opnodie(opr_mcallh  ,op_mcallh  ); // -0
-ret:     exec_opnodie(opr_ret     ,op_ret     ); // -1
+ret:     exec_opnodie(opr_ret     ,op_ret     ); // -2
 }
 #endif

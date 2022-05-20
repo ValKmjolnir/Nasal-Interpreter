@@ -1386,6 +1386,8 @@ When `op_callb` is called, the stack frame is like this:
 +----------------------------+
 | old localr(vm_addr)        | <- top[-1]
 +----------------------------+
+| old upvalr(vm_upval)       | <- top[-2]
++----------------------------+
 | local scope(nasal_ref)     |
 | ...                        |
 +----------------------------+ <- local pointer stored in localr
@@ -1402,6 +1404,8 @@ In `op_callb`'s progress, next step the stack frame is:
 | old pc(vm_ret)             |
 +----------------------------+
 | old localr(vm_addr)        |
++----------------------------+
+| old upvalr(vm_upval)       |
 +----------------------------+
 | local scope(nasal_ref)     |
 | ...                        |
@@ -1435,6 +1439,8 @@ but where is the returned `local[1]` sent?
 +----------------------------+
 | old localr(vm_addr)        |
 +----------------------------+
+| old upvalr(vm_upval)       |
++----------------------------+
 | local scope(nasal_ref)     |
 | ...                        |
 +----------------------------+ <- local pointer stored in localr
@@ -1452,6 +1458,8 @@ and the returned `local[1]` in fact is set to the top of the main stack by `op_c
 | old pc(vm_ret)             |
 +----------------------------+
 | old localr(vm_addr)        |
++----------------------------+
+| old upvalr(vm_upval)       |
 +----------------------------+
 | local scope(nasal_ref)     |
 | ...                        |
