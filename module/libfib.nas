@@ -1,5 +1,3 @@
-import("lib.nas");
-
 var libfib=func(){
     var dl=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
     var fib=dylib.dlsym(dl,"fib");

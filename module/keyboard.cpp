@@ -7,68 +7,77 @@
 #include <termios.h>
 #endif
 
+class noecho_input{
+private:
 #ifndef _WIN32
-static struct termios init_termios;
-static struct termios new_termios;
-static int peek_char=-1;
-
-int kbhit(){
-    unsigned char ch=0;
-    int nread=0;
-    if(peek_char!=-1)
-        return 1;
-    int flag=fcntl(0,F_GETFL);
-    fcntl(0,F_SETFL,flag|O_NONBLOCK);
-    nread=read(0,&ch,1);
-    fcntl(0,F_SETFL,flag);
-    if(nread==1){
-        peek_char=ch;
-        return 1;
-    }
-    return 0;
-}
-
-int getch(){
-    int ch=0;
-    if(peek_char!=-1){
-        ch=peek_char;
-        peek_char=-1;
-        return ch;
-    }
-    read(0,&ch,1);
-    return ch;
-}
+    struct termios init_termios;
+    struct termios new_termios;
+    int peek_char=-1;
 #endif
+public:
+    noecho_input(){
+#ifndef _WIN32
+        tcflush(0,TCIOFLUSH);
+        tcgetattr(0,&init_termios);
+        new_termios=init_termios;
+        new_termios.c_lflag&=~(ICANON|ECHO|ECHONL|ECHOE);
+        // vmin=0 is nonblock input, but in wsl there is a bug that will block input
+        // so we use fcntl to write the nonblock input
+        new_termios.c_cc[VMIN]=1;
+        new_termios.c_cc[VTIME]=0;
+        tcsetattr(0,TCSANOW,&new_termios);
+#endif
+    }
+    ~noecho_input(){
+#ifndef _WIN32
+        tcflush(0,TCIOFLUSH);
+        tcsetattr(0,TCSANOW,&init_termios);
+#endif
+    }
+    int noecho_kbhit(){
+#ifndef _WIN32
+        unsigned char ch=0;
+        int nread=0;
+        if(peek_char!=-1)
+            return 1;
+        int flag=fcntl(0,F_GETFL);
+        fcntl(0,F_SETFL,flag|O_NONBLOCK);
+        nread=read(0,&ch,1);
+        fcntl(0,F_SETFL,flag);
+        if(nread==1){
+            peek_char=ch;
+            return 1;
+        }
+        return 0;
+#else
+        return kbhit();
+#endif
+    }
+    int noecho_getch(){
+#ifndef _WIN32
+        int ch=0;
+        if(peek_char!=-1){
+            ch=peek_char;
+            peek_char=-1;
+            return ch;
+        }
+        read(0,&ch,1);
+        return ch;
+#else
+        return getch();
+#endif
+    }
+};
 
+noecho_input this_window;
 extern "C" nasal_ref nas_getch(std::vector<nasal_ref>& args,nasal_gc& gc){
-    return {vm_num,(double)getch()};
+    return {vm_num,(double)this_window.noecho_getch()};
 }
 extern "C" nasal_ref nas_kbhit(std::vector<nasal_ref>& args,nasal_gc& gc){
-    return {vm_num,(double)kbhit()};
+    return {vm_num,(double)this_window.noecho_kbhit()};
 }
 extern "C" nasal_ref nas_noblock(std::vector<nasal_ref>& args,nasal_gc& gc){
-    if(kbhit())
-        return {vm_num,(double)getch()};
-    return nil;
-}
-extern "C" nasal_ref nas_init(std::vector<nasal_ref>& args,nasal_gc& gc){
-#ifndef _WIN32
-    tcflush(0,TCIOFLUSH);
-    tcgetattr(0,&init_termios);
-    new_termios=init_termios;
-    new_termios.c_lflag&=~(ICANON|ECHO|ECHONL|ECHOE);
-    // vmin=0 is nonblock input, but in wsl there is a bug that will block input
-    // so we use fcntl to write the nonblock input
-    new_termios.c_cc[VMIN]=1;
-    new_termios.c_cc[VTIME]=0;
-    tcsetattr(0,TCSANOW,&new_termios);
-#endif
-    return nil;
-}
-extern "C" nasal_ref nas_close(std::vector<nasal_ref>& args,nasal_gc& gc){
-#ifndef _WIN32
-    tcflush(0,TCIOFLUSH);
-    tcsetattr(0,TCSANOW,&init_termios);
-#endif
+    if(this_window.noecho_kbhit())
+        return {vm_num,(double)this_window.noecho_getch()};
     return nil;
 }

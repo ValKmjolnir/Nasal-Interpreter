@@ -275,7 +275,6 @@ var main=func(){
     if(os.platform()=="windows")
         system("chcp 65001");
     
-    libkey.init();
     print(
         "\ec\e[1:1H",
         "╔═════════════════════════╗\n",
@@ -331,7 +330,7 @@ var main=func(){
         unix.sleep(0.02);
         counter-=1;
     }
-    libkey.close();
+
     print(
         map.gameover()?
         "\e[31mg\e[32ma\e[33mm\e[34me \e[35mo\e[36mv\e[94me\e[31mr \e[32m~\e[0m\n":
@@ -339,10 +338,10 @@ var main=func(){
     );
     print(
         "\e[31me\e[32mn\e[33mt\e[34me\e[35mr ",
-        "\e[36ma\e[94mn\e[95my\e[96mt\e[31mh\e[32mi\e[33mn\e[34mg ",
+        "\e[36m'\e[94mq\e[95m' ",
         "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
     );
-    input();
+    while(libkey.getch()!='q'[0]);
 };
 
 main();
