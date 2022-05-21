@@ -540,6 +540,14 @@ void nasal_codegen::call_func(const nasal_ast& ast)
     }
 }
 
+/* mcall should run after calc_gen because this operation may trigger gc.
+*  to avoid gc incorrectly collecting values that include the memory space(which will cause SIGSEGV),
+*  we must run ast[1] then we run ast[0] to get the memory space.
+*  at this time the value including the memory space can must be found alive.
+*  BUT in fact this method does not make much safety.
+*  so we use another way to avoid gc-caused SIGSEGV: reserve m-called value on stack.
+*  you could see the notes in `nasal_vm::opr_mcallv()`.
+*/
 void nasal_codegen::mcall(const nasal_ast& ast)
 {
     if(ast.type()==ast_id)

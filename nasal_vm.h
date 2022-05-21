@@ -35,6 +35,7 @@ protected:
     void bytecodeinfo(const char*,const uint32_t);
     void traceback();
     void stackinfo(const uint32_t);
+    void register_info();
     void global_state();
     void local_state();
     void upval_state();
@@ -281,6 +282,28 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
         valinfo(t[0]);
     }
 }
+void nasal_vm::register_info()
+{
+    printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
+    printf("  [ pc     ]    | pc   | 0x%.x\n",pc);
+    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)global);
+    printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
+    printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
+    if(funcr.type==vm_nil)
+        printf("  [ funcr  ]    | nil  |\n");
+    else
+        printf("  [ funcr  ]    | func | <0x" PRTHEX64 "> entry:0x%x\n",
+            (uint64_t)funcr.value.gcobj,
+            funcr.func().entry);
+    if(upvalr.type==vm_nil)
+        printf("  [ upvalr ]    | nil  |\n");
+    else
+        printf("  [ upvalr ]    | upval| <0x" PRTHEX64 "> [%u val]\n",
+            (uint64_t)upvalr.value.gcobj,
+            upvalr.upval().size);
+    printf("  [ canary ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)canary);
+    printf("  [ top    ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)top);
+}
 void nasal_vm::global_state()
 {
     if(!bytecode[0].num || gc.stack[0].type==vm_none) // bytecode[0].op is op_intg
@@ -323,25 +346,7 @@ void nasal_vm::upval_state()
 }
 void nasal_vm::detail()
 {
-    printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
-    printf("  [ pc     ]    | pc   | 0x%.x\n",pc);
-    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)global);
-    printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
-    printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
-    if(funcr.type==vm_nil)
-        printf("  [ funcr  ]    | nil  |\n");
-    else
-        printf("  [ funcr  ]    | func | <0x" PRTHEX64 "> entry:0x%x\n",
-            (uint64_t)funcr.value.gcobj,
-            funcr.func().entry);
-    if(upvalr.type==vm_nil)
-        printf("  [ upvalr ]    | nil  |\n");
-    else
-        printf("  [ upvalr ]    | upval| <0x" PRTHEX64 "> [%u val]\n",
-            (uint64_t)upvalr.value.gcobj,
-            upvalr.upval().size);
-    printf("  [ canary ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)canary);
-    printf("  [ top    ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)top);
+    register_info();
     global_state();
     local_state();
     upval_state();
@@ -910,15 +915,15 @@ inline void nasal_vm::opr_mupval()
 }
 inline void nasal_vm::opr_mcallv()
 {
-    nasal_ref val=top[0];
-    nasal_ref vec=(--top)[0];
+    nasal_ref val=top[0];     // index
+    nasal_ref vec=(--top)[0]; // mcall vector, reserved on stack to avoid gc
     if(vec.type==vm_vec)
     {
         memr=vec.vec().get_mem(val.to_number());
         if(!memr)
             die("mcallv: index out of range:"+std::to_string(val.to_number()));
     }
-    else if(vec.type==vm_hash)
+    else if(vec.type==vm_hash) // special call of hash, this do mcallh but use the mcallv way
     {
         if(val.type!=vm_str)
             die("mcallv: must use string as the key");
@@ -936,7 +941,7 @@ inline void nasal_vm::opr_mcallv()
 }
 inline void nasal_vm::opr_mcallh()
 {
-    nasal_ref hash=top[0];
+    nasal_ref hash=top[0]; // mcall hash, reserved on stack to avoid gc
     if(hash.type!=vm_hash)
         die("mcallh: must call a hash");
     nasal_hash& ref=hash.hash();
