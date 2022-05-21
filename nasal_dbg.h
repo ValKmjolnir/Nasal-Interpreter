@@ -65,18 +65,19 @@ void nasal_dbg::help()
 {
     std::cout
     <<"<option>\n"
-    <<"\th,    help      | get help\n"
-    <<"\tbt,   backtrace | get function call trace\n"
-    <<"\tc,    continue  | run program until break point or exit\n"
-    <<"\tf,    file      | see all the compiled files\n"
-    <<"\tg,    global    | see global values\n"
-    <<"\tl,    local     | see local values\n"
-    <<"\tu,    upval     | see upvalue\n"
-    <<"\ta,    all       | show global,local and upvalue\n"
-    <<"\tn,    next      | execute next bytecode\n"
-    <<"\tq,    exit      | exit debugger\n"
+    <<"\th,   help      | get help\n"
+    <<"\tbt,  backtrace | get function call trace\n"
+    <<"\tc,   continue  | run program until break point or exit\n"
+    <<"\tf,   file      | see all the compiled files\n"
+    <<"\tg,   global    | see global values\n"
+    <<"\tl,   local     | see local values\n"
+    <<"\tu,   upval     | see upvalue\n"
+    <<"\tr,   register  | show vm register detail\n"
+    <<"\ta,   all       | show global,local and upvalue\n"
+    <<"\tn,   next      | execute next bytecode\n"
+    <<"\tq,   exit      | exit debugger\n"
     <<"<option> <filename> <line>\n"
-    <<"\tbk,   break     | set break point\n";
+    <<"\tbk,  break     | set break point\n";
 }
 
 void nasal_dbg::stepinfo()
@@ -140,6 +141,8 @@ void nasal_dbg::interact()
             }
             else if(res[0]=="u" || res[0]=="upval")
                 upval_state();
+            else if(res[0]=="r" || res[0]=="register")
+                register_info();
             else if(res[0]=="a" || res[0]=="all")
                 detail();
             else if(res[0]=="n" || res[0]=="next")
