@@ -430,7 +430,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     block_gen(block);
     in_iterloop.pop();
     code[local_label].num=local.back().size();
-    if(local.back().size()>=nasal_gc::stack_depth)
+    if(local.back().size()>=STACK_DEPTH)
         die("too many local variants: "+std::to_string(local.back().size())+".",block.line());
     local.pop_back();
 
@@ -1232,7 +1232,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     gen(op_intg,global.size(),0);
     block_gen(parse.ast()); // generate main block
     gen(op_exit,0,0);
-    if(global.size()>=nasal_gc::stack_depth)
+    if(global.size()>=STACK_DEPTH)
         die("too many global variants: "+std::to_string(global.size())+".",0);
     nerr.chkerr();
 }

@@ -5,24 +5,28 @@ class nasal_vm
 {
 protected:
     /* values of nasal_vm */
-    uint32_t&                pc;       // program counter
-    nasal_ref*               global;   // global scope register
-    nasal_ref*&              localr;   // local scope register
-    nasal_ref*&              memr;     // used for mem_call
-    nasal_ref&               funcr;    // function register
-    nasal_ref&               upvalr;   // upvalue register
-    nasal_ref*&              canary;   // avoid stackoverflow
-    nasal_ref*&              top;      // stack top
+    nasal_ref             stack[STACK_DEPTH];
+    uint32_t              pc;       // program counter
+    nasal_ref*            global;   // global scope register
+    nasal_ref*            localr;   // local scope register
+    nasal_ref*            memr;     // used for mem_call
+    nasal_ref             funcr;    // function register
+    nasal_ref             upvalr;   // upvalue register
+    nasal_ref*            canary;   // avoid stackoverflow
+    nasal_ref*            top;      // stack top
+
     /* constant */
-    const double*            num_table;// const numbers, ref from nasal_codegen
-    const std::string*       str_table;// const symbols, ref from nasal_codegen
-    std::vector<uint32_t>    imm;      // immediate number
+    const double*         num_table;// const numbers, ref from nasal_codegen
+    const std::string*    str_table;// const symbols, ref from nasal_codegen
+    std::vector<uint32_t> imm;      // immediate number
+
     /* garbage collector */
-    nasal_gc                 gc;
+    nasal_gc              gc;
+
     /* values used for debug */
-    size_t                   files_size;
-    const std::string*       files;    // ref from nasal_import
-    const opcode*            bytecode; // ref from nasal_codegen
+    size_t                files_size;
+    const std::string*    files;    // ref from nasal_import
+    const opcode*         bytecode; // ref from nasal_codegen
 
     void init(
         const std::vector<std::string>&,
@@ -121,14 +125,8 @@ protected:
     void opr_ret();
 public:
     nasal_vm():
-        pc(gc.pc),
-        global(gc.main_ctx.stack),
-        localr(gc.localr),
-        memr(gc.memr),
-        funcr(gc.funcr),
-        upvalr(gc.upvalr),
-        canary(gc.canary),
-        top(gc.top){}
+        global(stack),
+        gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
     void run(
         const nasal_codegen&,
         const nasal_import&,
@@ -148,13 +146,16 @@ void nasal_vm::init(
     bytecode=code.data();
     files=filenames.data();
     files_size=filenames.size();
+
     /* set canary and program counter */
-    canary=gc.stack+nasal_gc::stack_depth-1; // gc.stack[nasal_gc::stack_depth-1]
     pc=0;
+    global=stack;
     localr=nullptr;
     memr=nullptr;
     funcr=nil;
     upvalr=nil;
+    canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
+    top=stack;
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
@@ -237,9 +238,9 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 }
 void nasal_vm::traceback()
 {
-    uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
+    uint32_t   global_size=bytecode[0].num; // bytecode[0] is op_intg
     nasal_ref* t=top;
-    nasal_ref* bottom=gc.stack+global_size;
+    nasal_ref* bottom=stack+global_size;
     std::stack<uint32_t> ret;
     for(nasal_ref* i=bottom;i<=t;++i)
         if(i->type==vm_ret)
@@ -266,7 +267,7 @@ void nasal_vm::traceback()
 void nasal_vm::stackinfo(const uint32_t limit=10)
 {
     /* bytecode[0] is op_intg, the .num is the global size */
-    uint32_t   gsize=gc.stack==gc.main_ctx.stack?bytecode[0].num:0;
+    uint32_t   gsize=gc.stack==stack?bytecode[0].num:0;
     nasal_ref* t=top;
     nasal_ref* bottom=gc.stack+gsize;
     printf("vm stack(0x" PRTHEX64 "<sp+%u>, limit %u, total ",(uint64_t)bottom,gsize,limit);
@@ -285,7 +286,7 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
 void nasal_vm::register_info()
 {
     printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
-    printf("  [ pc     ]    | pc   | 0x%.x\n",pc);
+    printf("  [ pc     ]    | pc   | 0x%x\n",pc);
     printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)global);
     printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
     printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
@@ -306,7 +307,7 @@ void nasal_vm::register_info()
 }
 void nasal_vm::global_state()
 {
-    if(!bytecode[0].num || gc.stack[0].type==vm_none) // bytecode[0].op is op_intg
+    if(!bytecode[0].num || stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
     printf("global(0x" PRTHEX64 "<sp+0>):\n",(uint64_t)global);
     for(uint32_t i=0;i<bytecode[0].num;++i)
@@ -955,26 +956,27 @@ inline void nasal_vm::opr_mcallh()
 }
 inline void nasal_vm::opr_ret()
 {
-    // +-----------------+
-    // | return value    | <- top[0]
-    // +-----------------+
-    // | old pc          | <- top[-1]
-    // +-----------------+
-    // | old localr      | <- top[-2]
-    // +-----------------+
-    // | old upvalr      | <- top[-3]
-    // +-----------------+
-    // | local scope     |
-    // | ...             |
-    // +-----------------+ <- local pointer stored in localr
-    // | old funcr       | <- old function stored in funcr
-    // +-----------------+
-    nasal_ref  ret=top[0];
+/*  +-----------------+
+*   | return value    | <- top[0]
+*   +-----------------+
+*   | old pc          | <- top[-1]
+*   +-----------------+
+*   | old localr      | <- top[-2]
+*   +-----------------+
+*   | old upvalr      | <- top[-3]
+*   +-----------------+
+*   | local scope     |
+*   | ...             |
+*   +-----------------+ <- local pointer stored in localr
+*   | old funcr       | <- old function stored in funcr
+*   +-----------------+
+*/
+    nasal_ref  ret  =top[0];
     nasal_ref* local=localr;
-    nasal_ref  func=funcr;
-    nasal_ref  up=upvalr;
+    nasal_ref  func =funcr;
+    nasal_ref  up   =upvalr;
 
-    pc=top[-1].ret();
+    pc    =top[-1].ret();
     localr=top[-2].addr();
     upvalr=top[-3];
 
@@ -992,11 +994,10 @@ inline void nasal_vm::opr_ret()
         for(uint32_t i=0;i<size;++i)
             upval.elems.push_back(local[i]);
     }
-    if(!pc) // cannot use gc.coroutine to judge, because there maybe another function call inside
-    {
-        gc.coroutine->status=nasal_co::dead;
+    // cannot use gc.coroutine to judge,
+    // because there maybe another function call inside
+    if(!pc)
         gc.ctxreserve();
-    }
 }
 void nasal_vm::run(
     const nasal_codegen& gen,
