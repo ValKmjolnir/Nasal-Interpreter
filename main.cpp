@@ -13,6 +13,9 @@ const uint32_t VM_OPTIMIZE =0x100;
 void help()
 {
     std::cout
+    <<"     ,--#-,\n"
+    <<"<3  / \\____\\  <3\n"
+    <<"    |_|__A_|\n"
 #ifdef _WIN32
     <<"use command <chcp 65001> if want to use unicode.\n"
 #endif

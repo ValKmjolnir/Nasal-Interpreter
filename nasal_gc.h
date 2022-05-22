@@ -175,7 +175,7 @@ struct nasal_obj
     enum obj_type
     {
         null,
-        file=1,
+        file,
         dir,
         dylib,
         faddr
@@ -209,8 +209,7 @@ struct nasal_co
         running,
         dead
     };
-    static const uint32_t depth=1024;
-    nasal_ref  stack[depth];
+    nasal_ref  stack[STACK_DEPTH];
     
     uint32_t   pc;
     nasal_ref* top;
@@ -224,19 +223,19 @@ struct nasal_co
     nasal_co():
         pc(0),
         top(stack),
-        canary(stack+depth-1),
+        canary(stack+STACK_DEPTH-1),
         localr(nullptr),
         memr(nullptr),
         funcr({vm_nil,(double)0}),
         upvalr({vm_nil,(double)0}),
         status(nasal_co::suspended)
     {
-        for(uint32_t i=0;i<depth;++i)
+        for(uint32_t i=0;i<STACK_DEPTH;++i)
             stack[i]={vm_nil,(double)0};
     }
     void clear()
     {
-        for(uint32_t i=0;i<depth;++i)
+        for(uint32_t i=0;i<STACK_DEPTH;++i)
             stack[i]={vm_nil,(double)0};
         pc=0;
         localr=nullptr;
@@ -451,10 +450,8 @@ const nasal_ref nil ={vm_nil,(double)0};
 
 struct nasal_gc
 {
-    static const uint32_t   stack_depth=8192;        // depth of value stack
     struct
     {
-        nasal_ref  stack[stack_depth];
         uint32_t   pc;
         nasal_ref* top;
         nasal_ref* localr;
@@ -462,16 +459,17 @@ struct nasal_gc
         nasal_ref  funcr;
         nasal_ref  upvalr;
         nasal_ref* canary;
+        nasal_ref* stack;
     } main_ctx;
     
     /* runtime context */
-    uint32_t                pc;                      // program counter
-    nasal_ref*              top;                     // stack top
-    nasal_ref*              localr;                  // local scope register
-    nasal_ref*              memr;                    // used for mem_call
-    nasal_ref               funcr;                   // function register
-    nasal_ref               upvalr;                  // upvalue register
-    nasal_ref*              canary;                  // avoid stackoverflow
+    uint32_t&               pc;                      // program counter
+    nasal_ref*&             localr;                  // local scope register
+    nasal_ref*&             memr;                    // used for mem_call
+    nasal_ref&              funcr;                   // function register
+    nasal_ref&              upvalr;                  // upvalue register
+    nasal_ref*&             canary;                  // avoid stackoverflow
+    nasal_ref*&             top;                     // stack top
     nasal_ref*              stack;                   // stack pointer
     nasal_co*               coroutine;               // running coroutine
 
@@ -483,6 +481,23 @@ struct nasal_gc
     /* values for analysis */
     uint64_t                size[vm_type_size];
     uint64_t                count[vm_type_size];
+    nasal_gc(
+        uint32_t& _pc,
+        nasal_ref*& _localr,
+        nasal_ref*& _memr,
+        nasal_ref& _funcr,
+        nasal_ref& _upvalr,
+        nasal_ref*& _canary,
+        nasal_ref*& _top,
+        nasal_ref* _stk):
+        pc(_pc),
+        localr(_localr),
+        memr(_memr),
+        funcr(_funcr),
+        upvalr(_upvalr),
+        canary(_canary),
+        top(_top),
+        stack(_stk){}
     void                    mark();
     void                    sweep();
     void                    init(const std::vector<std::string>&);
@@ -499,6 +514,7 @@ void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
     
+    // this make sure values on main stack can be scanned
     if(!coroutine)
     {
         for(nasal_ref* i=stack;i<=top;++i)
@@ -585,9 +601,7 @@ void nasal_gc::init(const std::vector<std::string>& s)
             nasal_val* tmp=new nasal_val(i);
             memory.push_back(tmp);
             free_list[i].push(tmp);
-        } 
-    stack=main_ctx.stack;
-    top=main_ctx.stack;
+        }
     coroutine=nullptr;
     // init constant strings
     strs.resize(s.size());
@@ -679,6 +693,7 @@ void nasal_gc::ctxchg(nasal_co& context)
     main_ctx.funcr=funcr;
     main_ctx.upvalr=upvalr;
     main_ctx.canary=canary;
+    main_ctx.stack=stack;
 
     pc=context.pc;
     top=context.top;
@@ -694,24 +709,23 @@ void nasal_gc::ctxchg(nasal_co& context)
 }
 void nasal_gc::ctxreserve()
 {
-    if(coroutine->status!=nasal_co::dead)
-        coroutine->status=nasal_co::suspended;
-    // pc=0 means this coroutine is finished, so we use entry to reset it
-    coroutine->pc=pc==0?coroutine->funcr.func().entry:pc;
-    coroutine->top=top;
+    // pc=0 means this coroutine is finished
+    coroutine->status=pc?nasal_co::suspended:nasal_co::dead;
+    coroutine->pc=pc;
     coroutine->localr=localr;
     coroutine->memr=memr;
     coroutine->funcr=funcr;
     coroutine->upvalr=upvalr;
     coroutine->canary=canary;
+    coroutine->top=top;
 
     pc=main_ctx.pc;
-    top=main_ctx.top;
     localr=main_ctx.localr;
     memr=main_ctx.memr;
     funcr=main_ctx.funcr;
     upvalr=main_ctx.upvalr;
     canary=main_ctx.canary;
+    top=main_ctx.top;
     stack=main_ctx.stack;
     coroutine=nullptr;
 }

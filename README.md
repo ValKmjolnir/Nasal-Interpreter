@@ -142,7 +142,7 @@ Use these commands to get version of interpreter:
    /  \/ / _` / __|/ _` | |
   / /\  / (_| \__ \ (_| | |
   \_\ \/ \__,_|___/\__,_|_|
-nasal ver : 9.0
+nasal ver : 10.0
 c++ std   : 201103
 thanks to : https://github.com/andyross/nasal
 code repo : https://github.com/ValKmjolnir/Nasal-Interpreter
@@ -156,6 +156,9 @@ Use these commands to get help(see more debug commands in help):
 > ./nasal -h | --help
 
 ```bash
+     ,--#-,
+<3  / \____\  <3
+    |_|__A_|
 nasal <option>
 option:
     -h, --help    | get help.
@@ -633,7 +636,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
+    if(gc.top+1>=gc.canary)
         return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;

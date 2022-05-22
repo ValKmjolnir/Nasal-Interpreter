@@ -306,7 +306,7 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     size_t source_len=source.length();
 
     // push it to local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
+    if(gc.top+1>=gc.canary)
         return builtin_err("split","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
 
@@ -611,7 +611,7 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
+    if(gc.top+1>=gc.canary)
         return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
@@ -1115,7 +1115,7 @@ nasal_ref builtin_chdir(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
 {
     char** env=environ;
-    if(gc.top+1>=gc.stack+nasal_gc::stack_depth-1)
+    if(gc.top+1>=gc.canary)
         return builtin_err("environ","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
     auto& vec=gc.top[0].vec().elems;
