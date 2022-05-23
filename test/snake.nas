@@ -165,14 +165,22 @@ var game=func(x,y){
                 gameover=2;
         },
         move:func(c){
-            if(c=='w' or c=='a' or c=='s' or c=='d')
-                move=c;
+            move=c;
         },
         gameover:func(){
             return gameover;
         }
     }
 }
+
+var co=coroutine.create(func(){
+    var t=maketimestamp();
+    while(1){
+        t.stamp();
+        while(t.elapsedMSec()<20);
+        coroutine.yield();
+    }
+});
 
 var main=func(){
     if(os.platform()=="windows")
@@ -184,7 +192,7 @@ var main=func(){
     print("\rpress any key to start...");
     libkey.getch();
     print("\r                         \r");
-    var counter=12;
+    var counter=20;
     while(1){
         var ch=libkey.nonblock();
         if(ch!=nil){
@@ -197,15 +205,15 @@ var main=func(){
             }
             g.move(chr(ch));
         }
-        unix.sleep(0.02);
         counter-=1;
-        if(counter==0){
+        if(!counter){
             counter=20;
             g.next();
             if(g.gameover())
                 break;
             g.print();
         }
+        coroutine.resume(co);
     }
 
     println(g.gameover()<=1?"game over.":"you win!");

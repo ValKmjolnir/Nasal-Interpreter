@@ -514,15 +514,15 @@ void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
     
-    // this make sure values on main stack can be scanned
-    if(!coroutine)
-    {
-        for(nasal_ref* i=stack;i<=top;++i)
-            bfs.push(*i);
-        bfs.push(funcr);
-        bfs.push(upvalr);
-    }
-    else
+    // scan coroutine process stack when coroutine ptr is not null
+    // scan main process stack when coroutine ptr is null
+    // this scan process must execute because when running coroutine,
+    // the nasal_co related to it will not update it's context until the coroutine suspends or exits.
+    for(nasal_ref* i=stack;i<=top;++i)
+        bfs.push(*i);
+    bfs.push(funcr);
+    bfs.push(upvalr);
+    if(coroutine) // scan main process stack
     {
         for(nasal_ref* i=main_ctx.stack;i<=main_ctx.top;++i)
             bfs.push(*i);

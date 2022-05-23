@@ -79,6 +79,7 @@ var filechecksum=func(){
         "./test/lexer.nas        ",
         "./test/life.nas         ",
         "./test/loop.nas         ",
+        "./test/maketimer_sim.nas",
         "./test/mandel.nas       ",
         "./test/mandelbrot.nas   ",
         "./test/md5.nas          ",
