@@ -1,22 +1,30 @@
 
-var process=nil;
 var task={};
 var event={};
 
 var add_event=func(name,interval,function){
     event[name]=coroutine.create(func{
-        unix.sleep(interval);
-        println("[event] ",name);
+        var timestamp=maketimestamp();
+        timestamp.stamp();
+        while(timestamp.elapsedMSec()<interval*1000)
+            coroutine.yield();
+        timestamp.stamp();
+        println("[\e[32m",name,"\e[0m]  type:\e[33mevent\e[0m  interval:\e[34m",interval,"\e[0m");
         function();
     });
 }
 
 var add_task=func(name,interval,function){
-    
     task[name]=coroutine.create(func{
+        var counter=0;
+        var timestamp=maketimestamp();
         while(1){
-            unix.sleep(interval);
-            println("[task] ",name);
+            counter+=1;
+            timestamp.stamp();
+            while(timestamp.elapsedMSec()<interval*1000)
+                coroutine.yield();
+            timestamp.stamp();
+            println("[\e[32m",name,"\e[0m]  type:\e[34mtask\e[0m  interval:\e[34m",interval,"\e[0m  invoke-time:\e[96m",counter,"\e[0m");
             function();
             coroutine.yield();
         }
@@ -84,4 +92,35 @@ var simulation=func(){
             }
         }
     }
+}
+
+
+var maketimer_multi_coroutine_test=func(coroutine_size){
+    var task_vec=[];
+    setsize(task_vec,coroutine_size);
+    forindex(var i;task_vec)
+        task_vec[i]=func{};
+    task_vec[coroutine_size-1]=func(){
+        println("\e[101m",coroutine_size," tasks invoked.\e[0m");
+    }
+    var event_vec=[];
+    setsize(event_vec,coroutine_size);
+    forindex(var i;event_vec)
+        event_vec[i]=func{};
+    event_vec[coroutine_size-1]=func(){
+        println("\e[101m",coroutine_size," events invoked.\e[0m");
+    }
+
+    var timer=[];
+    setsize(timer,coroutine_size*2);
+    forindex(var i;task_vec){
+        timer[i]=maketimer((i+1)/5,task_vec[i]);
+        timer[i].start();
+    }
+    forindex(var i;event_vec){
+        timer[i+coroutine_size-1]=maketimer((i+1)/5,event_vec[i]);
+        timer[i+coroutine_size-1].singleShot=1;
+        timer[i+coroutine_size-1].start();
+    }
+    simulation();
 }

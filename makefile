@@ -7,6 +7,7 @@ nasal.exe:main.cpp nasal_ast.h nasal_err.h nasal_builtin.h nasal_opt.h nasal_cod
 	g++ -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 test:nasal
 	@ ./nasal -op -e test/ascii-art.nas
+	@ ./nasal -op -c test/auto_crash.nas
 	@ ./nasal -op -a -c test/bf.nas
 	@ ./nasal -op -a -c test/bfcolored.nas
 	@ ./nasal -op -a -c test/bfconvertor.nas
@@ -27,6 +28,7 @@ test:nasal
 	@ ./nasal -op -e -d test/lexer.nas
 	@ ./nasal -op -e -d test/life.nas
 	@ ./nasal -op -t test/loop.nas
+	@ ./nasal -op -c test/maketimer_sim.nas
 	@ ./nasal -op -t -d test/mandel.nas
 	@ ./nasal -op -t -d test/mandelbrot.nas
 	@ ./nasal -op -t -d -o test/md5.nas
