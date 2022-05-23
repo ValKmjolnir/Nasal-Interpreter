@@ -1,25 +1,7 @@
 var geodinfo=func(lat,lon){
-    return {};
-}
-var maketimer=func(interval,function){
-    return {
-        isRunning:0,
-        start:func(){
-            me.isRunning=1;
-            while(1){
-                unix.sleep(interval);
-                function();
-            }
-        },
-        stop:func(){
-            me.isRunning=0;
-        },
-        restart:func(interval){
-
-        },
-        singleShot:0,
-        simulatedTime:0
-    };
+    return [nil,{
+        names:["Road","Freeway"]
+    }];
 }
 
 var props=
@@ -175,5 +157,20 @@ props.getNode('/test/in',0).setValue('/','true');
 props.getNode('/test/in',1).setValue('/','false');
 props.getNode('/test/in',2).setValue('/','welcome aboard,need help? use help->tutorial');
 props.getNode('/test/in',3).setValue('/',2147483648);
+
+props.getNode("/sim",1).addChild("messages");
+props.getNode("/sim/messages",1).addChild("copilot");
+props.getNode("/position",1).addChild("latitude-deg");
+props.getNode("/position",1).addChild("longitude-deg");
+props.getNode("/orientation",1).addChild("heading-deg");
+props.getNode("/controls",1).addChild("flight");
+props.getNode("/controls/flight",1).addChild("rudder");
+
+props.getNode("/sim/messages/copilot",1).setValue('/',"nothing");
+props.getNode("/position/latitude-deg",1).setValue('/',90);
+props.getNode("/position/longitude-deg",1).setValue('/',90);
+props.getNode("/orientation/heading-deg",1).setValue('/',90);
+props.getNode("/controls/flight/rudder",1).setValue('/',0.114);
 props.globals.debug();
-println(props.getNode('/test/in',3).getPath());
+
+println("-----------------------------------");

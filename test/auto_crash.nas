@@ -1,5 +1,7 @@
 # Road check and auto pilot by ValKmjolnir
-import("test/props_sim.nas");
+import("./test/maketimer_sim.nas");
+import("./test/props_sim.nas");
+
 var dt=0.01;
 var intergral=0;
 var derivative=0;
@@ -67,6 +69,12 @@ var road_check_func = func(){
             props.getNode("/", 1).setValue("/controls/flight/rudder",Kp*error*error+Ki*intergral+Kd*derivative);
         else
             props.getNode("/", 1).setValue("/controls/flight/rudder",0);
+        
+        # for simulation test, in fg these three lines are deleted
+        println(" rudder :",props.getNode("/controls/flight/rudder",1).getValue());
+        println(" dt :",dt,'\tintergral :',intergral,'\tderivative :',derivative);
+        println(" prev-err :",previous_error,'\terror :',error);
+
         previous_error=error;
     }
 };
@@ -77,11 +85,17 @@ var toggle_auto_pilot = func(){
     {
         intergral=0;
         road_check_timer.start();
-        props.getNode("/sim/messages/copilot",1).setValue("ze dong sheng teaan see tong yee tse yung. Auto Sheng Teaan System Activated!");
+        props.getNode("/sim/messages/copilot",1).setValue('/',"ze dong sheng teaan see tong yee tse yung. Auto Sheng Teaan System Activated!");
     }
     else
     {
         road_check_timer.stop();
-        props.getNode("/sim/messages/copilot",1).setValue("ze dong sheng teaan see tong yee guan bee. Auto Sheng Teaan System is off.");
+        props.getNode("/sim/messages/copilot",1).setValue('/',"ze dong sheng teaan see tong yee guan bee. Auto Sheng Teaan System is off.");
     }
 }
+
+# this is used to simulate the running process in fg
+# when using in fg, delete these lines below
+toggle_auto_pilot();
+road_check_timer.restart(1);
+simulation();
