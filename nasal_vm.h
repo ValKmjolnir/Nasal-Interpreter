@@ -257,12 +257,12 @@ void nasal_vm::traceback()
             continue;
         }
         if(same)
-            printf("\t0x%.8x: %u same call(s)\n",last,same);
+            printf("\t0x%.8x:     %u same call(s)\n",last,same);
         same=0;
         bytecodeinfo("\t",point);
     }
     if(same)
-        printf("\t0x%.8x: %u same call(s)\n",last,same);
+        printf("\t0x%.8x:     %u same call(s)\n",last,same);
 }
 void nasal_vm::stackinfo(const uint32_t limit=10)
 {
