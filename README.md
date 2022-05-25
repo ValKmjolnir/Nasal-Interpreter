@@ -1694,20 +1694,20 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x419c00> (lib.nas:131)
-        0x00000463:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x00000467:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7fffcdeb0210<sp+77>, limit 10, total 10):
-  0x00000056    | null |
-  0x00000055    | pc   | 0x463
-  0x00000054    | addr | 0x7fffcdeb0220
-  0x00000053    | str  | <0xf38370> error occurred this line
+        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x41afc0> (lib.nas:131)
+        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
+        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
+vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
+  0x0000005b    | null |
+  0x0000005a    | pc   | 0x4f6
+  0x00000059    | addr | 0x7fffcd21bc78
+  0x00000058    | nil  |
+  0x00000057    | str  | <0x138ff60> error occurred t...
+  0x00000056    | nil  |
+  0x00000055    | func | <0x13445b0> entry:0x4f0
+  0x00000054    | pc   | 0x4fa
+  0x00000053    | addr | 0x0
   0x00000052    | nil  |
-  0x00000051    | func | <0xef2d70> entry:0x45d
-  0x00000050    | pc   | 0x467
-  0x0000004f    | addr | 0x0
-  0x0000004e    | nil  |
-  0x0000004d    | nil  |
 ```
 
 ### 2. stack overflow crash info
@@ -1727,21 +1727,21 @@ func(f){
 ```javascript
 [vm] stack overflow
 trace back:
-        0x00000468:     3e 00 00 00 01      callfv 0x1 (a.nas:5)
-        0x00000468: 1620 same call(s)
-        0x00000460:     3e 00 00 00 01      callfv 0x1 (a.nas:2)
-        0x0000046c:     3e 00 00 00 01      callfv 0x1 (a.nas:3)
-vm stack(0x7ffffb444450<sp+77>, limit 10, total 8112):
-  0x00001ffc    | func | <0x11f3860> entry:0x466
-  0x00001ffb    | func | <0x11f3860> entry:0x466
-  0x00001ffa    | pc   | 0x468
-  0x00001ff9    | addr | 0x7ffffb463ea0
-  0x00001ff8    | func | <0x11f3860> entry:0x466
+        0x000004fb:     3e 00 00 00 01      callfv 0x1 (a.nas:5)
+        0x000004fb:     1349 same call(s)
+        0x000004f3:     3e 00 00 00 01      callfv 0x1 (a.nas:2)
+        0x000004ff:     3e 00 00 00 01      callfv 0x1 (a.nas:3)
+vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
+  0x00001ffb    | func | <0x15f8d90> entry:0x4f9
+  0x00001ffa    | func | <0x15f8d90> entry:0x4f9
+  0x00001ff9    | pc   | 0x4fb
+  0x00001ff8    | addr | 0x7fffd37a1748
   0x00001ff7    | nil  |
-  0x00001ff6    | func | <0x11f3860> entry:0x466
-  0x00001ff5    | pc   | 0x468
-  0x00001ff4    | addr | 0x7ffffb463e50
-  0x00001ff3    | func | <0x11f3860> entry:0x466
+  0x00001ff6    | func | <0x15f8d90> entry:0x4f9
+  0x00001ff5    | nil  |
+  0x00001ff4    | func | <0x15f8d90> entry:0x4f9
+  0x00001ff3    | pc   | 0x4fb
+  0x00001ff2    | addr | 0x7fffd37a16e8
 ```
 
 ### 3. normal vm error crash info
@@ -1757,9 +1757,9 @@ func(){
 ```javascript
 [vm] callv: must call a vector/hash/string
 trace back:
-        0x00000461:     3b 00 00 00 00      callv  0x0 (a.nas:3)
-vm stack(0x7fffecc93c50<sp+77>, limit 10, total 1):
-  0x0000004d    | num  | 0
+        0x000004f4:     3b 00 00 00 00      callv  0x0 (a.nas:3)
+vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
+  0x00000050    | num  | 0
 ```
 
 ### 4. detailed crash info
@@ -1771,107 +1771,113 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x419c00> (lib.nas:131)
-        0x00000463:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x00000467:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7ffff0019810<sp+77>, limit 10, total 10):
-  0x00000056    | null |
-  0x00000055    | pc   | 0x463
-  0x00000054    | addr | 0x7ffff0019820
-  0x00000053    | str  | <0x14a7890> error occurred this line
+        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x41afc0> (lib.nas:131)
+        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
+        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
+vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
+  0x0000005b    | null |
+  0x0000005a    | pc   | 0x4f6
+  0x00000059    | addr | 0x7ffff42f3d18
+  0x00000058    | nil  |
+  0x00000057    | str  | <0x1932480> error occurred t...
+  0x00000056    | nil  |
+  0x00000055    | func | <0x18e6ad0> entry:0x4f0
+  0x00000054    | pc   | 0x4fa
+  0x00000053    | addr | 0x0
   0x00000052    | nil  |
-  0x00000051    | func | <0x1462290> entry:0x45d
-  0x00000050    | pc   | 0x467
-  0x0000004f    | addr | 0x0
-  0x0000004e    | nil  |
-  0x0000004d    | nil  |
-maddr:
-  (0x0)
-localr:
-  (0x7ffff0019860)
-funcr:
-  (<0x1452d40> entry:0xac)
-global(0x7ffff0019340<sp+0>):
-  0x00000000    | func | <0x146faf0> entry:0x5
-  0x00000001    | func | <0x14528e0> entry:0xc
-  0x00000002    | func | <0x146fc10> entry:0x14
-  0x00000003    | func | <0x1445700> entry:0x1c
-  0x00000004    | func | <0x1452900> entry:0x23
-  0x00000005    | func | <0x14411c0> entry:0x29
-  0x00000006    | func | <0x1441260> entry:0x31
-  0x00000007    | func | <0x1441300> entry:0x39
-  0x00000008    | func | <0x14413a0> entry:0x40
-  0x00000009    | func | <0x1441440> entry:0x47
-  0x0000000a    | func | <0x14414e0> entry:0x4e
-  0x0000000b    | func | <0x145eea0> entry:0x54
-  0x0000000c    | func | <0x145ef40> entry:0x5d
-  0x0000000d    | func | <0x145efe0> entry:0x6a
-  0x0000000e    | func | <0x145f080> entry:0x71
-  0x0000000f    | func | <0x145f120> entry:0x78
-  0x00000010    | func | <0x145f1c0> entry:0x7f
-  0x00000011    | func | <0x14457a0> entry:0x87
-  0x00000012    | func | <0x14457c0> entry:0x8f
-  0x00000013    | func | <0x1452b60> entry:0x96
-  0x00000014    | func | <0x1452c00> entry:0x9d
-  0x00000015    | func | <0x1452ca0> entry:0xa3
-  0x00000016    | func | <0x1452d40> entry:0xac
-  0x00000017    | func | <0x1452de0> entry:0xb4
-  0x00000018    | func | <0x1452e80> entry:0xbb
-  0x00000019    | func | <0x1452ea0> entry:0xc5
-  0x0000001a    | func | <0x146cd70> entry:0xdc
-  0x0000001b    | func | <0x146ce10> entry:0xe4
-  0x0000001c    | func | <0x146ceb0> entry:0xec
-  0x0000001d    | func | <0x146cf50> entry:0xf4
-  0x0000001e    | func | <0x146cff0> entry:0xfc
-  0x0000001f    | func | <0x146d090> entry:0x103
-  0x00000020    | func | <0x14724c0> entry:0x10a
-  0x00000021    | func | <0x1472560> entry:0x111
-  0x00000022    | func | <0x1472600> entry:0x11e
-  0x00000023    | func | <0x14726a0> entry:0x125
-  0x00000024    | func | <0x1472740> entry:0x131
-  0x00000025    | func | <0x14727e0> entry:0x13c
-  0x00000026    | func | <0x1472880> entry:0x147
-  0x00000027    | func | <0x1472ee0> entry:0x152
-  0x00000028    | func | <0x1472f80> entry:0x15d
-  0x00000029    | func | <0x1473020> entry:0x174
-  0x0000002a    | func | <0x14730c0> entry:0x18d
-  0x0000002b    | func | <0x1473160> entry:0x198
-  0x0000002c    | func | <0x1473200> entry:0x1a4
-  0x0000002d    | func | <0x14732a0> entry:0x1bd
-  0x0000002e    | func | <0x146d0b0> entry:0x1e9
-  0x0000002f    | func | <0x146d0d0> entry:0x1f8
-  0x00000030    | hash | <0x1495130> {14 val}
-  0x00000031    | func | <0x145d1a0> entry:0x25c
-  0x00000032    | hash | <0x1495150> {9 val}
-  0x00000033    | hash | <0x1495170> {14 val}
-  0x00000034    | hash | <0x1495190> {16 val}
-  0x00000035    | hash | <0x14951b0> {4 val}
-  0x00000036    | hash | <0x14951d0> {1 val}
-  0x00000037    | hash | <0x14951f0> {1 val}
-  0x00000038    | num  | 0.0174533
-  0x00000039    | num  | 0.5925
-  0x0000003a    | num  | 0.3048
-  0x0000003b    | num  | 3.7854
-  0x0000003c    | num  | 0.0254
-  0x0000003d    | num  | 2.2046
-  0x0000003e    | num  | 1.6878
-  0x0000003f    | num  | 0.5144
-  0x00000040    | num  | 0.2642
-  0x00000041    | num  | 0.4536
-  0x00000042    | num  | 3.2808
-  0x00000043    | num  | 39.3701
-  0x00000044    | num  | 0.00054
-  0x00000045    | num  | 1.9438
-  0x00000046    | num  | 1852
-  0x00000047    | num  | 57.2958
-  0x00000048    | func | <0x1461f70> entry:0x41a
-  0x00000049    | func | <0x1462010> entry:0x42d
-  0x0000004a    | func | <0x14620b0> entry:0x439
-  0x0000004b    | func | <0x1462150> entry:0x446
-  0x0000004c    | func | <0x14621f0> entry:0x453
-local(0x7ffff0019860<sp+82>):
+registers(main):
+  [ pc     ]    | pc   | 0xac
+  [ global ]    | addr | 0x7ffff42f3808
+  [ localr ]    | addr | 0x7ffff42f3d68
+  [ memr   ]    | addr | 0x0
+  [ funcr  ]    | func | <0x18fbe50> entry:0xac
+  [ upvalr ]    | nil  |
+  [ canary ]    | addr | 0x7ffff43137f8
+  [ top    ]    | addr | 0x7ffff42f3db8
+global(0x7ffff42f3808<sp+0>):
+  0x00000000    | func | <0x18d62d0> entry:0x5
+  0x00000001    | func | <0x18d7e40> entry:0xc
+  0x00000002    | func | <0x18d63f0> entry:0x14
+  0x00000003    | func | <0x18d6490> entry:0x1c
+  0x00000004    | func | <0x18d6530> entry:0x23
+  0x00000005    | func | <0x18d65d0> entry:0x29
+  0x00000006    | func | <0x18d6670> entry:0x31
+  0x00000007    | func | <0x18d6710> entry:0x39
+  0x00000008    | func | <0x18d67b0> entry:0x40
+  0x00000009    | func | <0x18d6850> entry:0x47
+  0x0000000a    | func | <0x18d7e60> entry:0x4e
+  0x0000000b    | func | <0x18cb4e0> entry:0x54
+  0x0000000c    | func | <0x18cb580> entry:0x5d
+  0x0000000d    | func | <0x18cb620> entry:0x6a
+  0x0000000e    | func | <0x18cb6c0> entry:0x71
+  0x0000000f    | func | <0x18cb760> entry:0x78
+  0x00000010    | func | <0x18cb800> entry:0x7f
+  0x00000011    | func | <0x18cb8a0> entry:0x87
+  0x00000012    | func | <0x18cb940> entry:0x8f
+  0x00000013    | func | <0x18cb9e0> entry:0x96
+  0x00000014    | func | <0x18cba80> entry:0x9d
+  0x00000015    | func | <0x18fbdb0> entry:0xa3
+  0x00000016    | func | <0x18fbe50> entry:0xac
+  0x00000017    | func | <0x18fbef0> entry:0xb4
+  0x00000018    | func | <0x18fbf90> entry:0xbb
+  0x00000019    | func | <0x18fc030> entry:0xc5
+  0x0000001a    | func | <0x18fc0d0> entry:0xdc
+  0x0000001b    | func | <0x18fc170> entry:0xe4
+  0x0000001c    | func | <0x18fc210> entry:0xec
+  0x0000001d    | func | <0x18fc2b0> entry:0xf4
+  0x0000001e    | func | <0x18fc350> entry:0xfc
+  0x0000001f    | func | <0x18cbaa0> entry:0x103
+  0x00000020    | func | <0x18f3630> entry:0x10a
+  0x00000021    | func | <0x18f36d0> entry:0x111
+  0x00000022    | func | <0x18f3770> entry:0x11e
+  0x00000023    | func | <0x18f3810> entry:0x125
+  0x00000024    | func | <0x18f38b0> entry:0x131
+  0x00000025    | func | <0x18f3950> entry:0x13c
+  0x00000026    | func | <0x18f39f0> entry:0x147
+  0x00000027    | func | <0x18f3a90> entry:0x152
+  0x00000028    | func | <0x18f3b30> entry:0x15d
+  0x00000029    | func | <0x18f3bd0> entry:0x174
+  0x0000002a    | func | <0x18f3c70> entry:0x18d
+  0x0000002b    | func | <0x18f6710> entry:0x198
+  0x0000002c    | func | <0x18f67b0> entry:0x1a4
+  0x0000002d    | func | <0x18f6850> entry:0x1bd
+  0x0000002e    | func | <0x18f68f0> entry:0x1e9
+  0x0000002f    | func | <0x18f6990> entry:0x1fb
+  0x00000030    | func | <0x18f6a30> entry:0x20c
+  0x00000031    | func | <0x18f6ad0> entry:0x237
+  0x00000032    | hash | <0x191f780> {14 val}
+  0x00000033    | func | <0x18df660> entry:0x29b
+  0x00000034    | hash | <0x191f7a0> {9 val}
+  0x00000035    | hash | <0x191f7c0> {18 val}
+  0x00000036    | hash | <0x191f7e0> {16 val}
+  0x00000037    | hash | <0x191f800> {4 val}
+  0x00000038    | hash | <0x191f820> {1 val}
+  0x00000039    | hash | <0x191f840> {1 val}
+  0x0000003a    | num  | 0.0174533
+  0x0000003b    | num  | 0.5925
+  0x0000003c    | num  | 0.3048
+  0x0000003d    | num  | 3.7854
+  0x0000003e    | num  | 0.0254
+  0x0000003f    | num  | 2.2046
+  0x00000040    | num  | 1.6878
+  0x00000041    | num  | 0.5144
+  0x00000042    | num  | 0.2642
+  0x00000043    | num  | 0.4536
+  0x00000044    | num  | 3.2808
+  0x00000045    | num  | 39.3701
+  0x00000046    | num  | 0.00054
+  0x00000047    | num  | 1.9438
+  0x00000048    | num  | 1852
+  0x00000049    | num  | 57.2958
+  0x0000004a    | func | <0x18e6490> entry:0x489
+  0x0000004b    | func | <0x18e6530> entry:0x49c
+  0x0000004c    | func | <0x18e65d0> entry:0x4a8
+  0x0000004d    | func | <0x18e6670> entry:0x4b5
+  0x0000004e    | func | <0x18e6710> entry:0x4c2
+  0x0000004f    | hash | <0x191f8b0> {5 val}
+local(0x7ffff42f3d68<sp+86>):
   0x00000000    | nil  |
-  0x00000001    | str  | <0x14a7890> error occurred this line
+  0x00000001    | str  | <0x1932480> error occurred t...
 ```
 
 ## __Debugger__
@@ -1912,18 +1918,19 @@ If want help, input `h` to get help.
 
 ```bash
 <option>
-        h,    help      | get help
-        bt,   backtrace | get function call trace
-        c,    continue  | run program until break point or exit
-        f,    file      | see all the compiled files
-        g,    global    | see global values
-        l,    local     | see local values
-        u,    upval     | see upvalue
-        a,    all       | show global,local and upvalue
-        n,    next      | execute next bytecode
-        q,    exit      | exit debugger
+        h,   help      | get help
+        bt,  backtrace | get function call trace
+        c,   continue  | run program until break point or exit
+        f,   file      | see all the compiled files
+        g,   global    | see global values
+        l,   local     | see local values
+        u,   upval     | see upvalue
+        r,   register  | show vm register detail
+        a,   all       | show global,local and upvalue
+        n,   next      | execute next bytecode
+        q,   exit      | exit debugger
 <option> <filename> <line>
-        bk,   break     | set break point
+        bk,  break     | set break point
 ```
 
 When running the debugger, you could see what is on stack.
