@@ -11,6 +11,16 @@ var new_neuron=func()
     };
 }
 
+var tanh=func(x)
+{
+    var (a,b)=(math.exp(x),math.exp(-x));
+    return (a-b)/(a+b);
+}
+var difftanh=func(x)
+{
+    x=tanh(x);
+    return 1-x*x;
+}
 var sigmoid=func(x)
 {
     return 1/(1+math.exp(-x));
@@ -21,7 +31,7 @@ var diffsigmoid=func(x)
     return x*(1-x);
 }
 
-var (inum,hnum,onum,lr)=(2,4,1,0.1);
+var (inum,hnum,onum)=(2,4,1);
 var training_set=[[0,0],[0,1],[1,0],[1,1]];
 var expect=[0,1,1,0];
 
@@ -30,8 +40,8 @@ for(var i=0;i<hnum;i+=1)
 {
     append(hidden,new_neuron());
     for(var j=0;j<inum;j+=1)
-        append(hidden[i].w,2*rand());
-    hidden[i].bia=5*rand();
+        append(hidden[i].w,rand()>0.5?-2*rand():2*rand());
+    hidden[i].bia=rand()>0.5?-5*rand():5*rand();
 }
 
 var output=[];
@@ -39,8 +49,8 @@ for(var i=0;i<onum;i+=1)
 {
     append(output,new_neuron());
     for(var j=0;j<hnum;j+=1)
-        append(output[i].w,2*rand());
-    output[i].bia=5*rand();
+        append(output[i].w,rand()>0.5?-2*rand():2*rand());
+    output[i].bia=rand()>0.5?-5*rand():5*rand();
 }
 
 var forward=func(x)
@@ -51,7 +61,7 @@ var forward=func(x)
         hidden[i].in=hidden[i].bia;
         for(var j=0;j<inum;j+=1)
             hidden[i].in+=hidden[i].w[j]*input[j];
-        hidden[i].out=sigmoid(hidden[i].in);
+        hidden[i].out=tanh(hidden[i].in);
     }
     for(var i=0;i<onum;i+=1)
     {
@@ -70,7 +80,7 @@ var run=func(vec)
         hidden[i].in=hidden[i].bia;
         for(var j=0;j<inum;j+=1)
             hidden[i].in+=hidden[i].w[j]*input[j];
-        hidden[i].out=sigmoid(hidden[i].in);
+        hidden[i].out=tanh(hidden[i].in);
     }
     for(var i=0;i<onum;i+=1)
     {
@@ -94,7 +104,7 @@ var backward=func(x)
         hidden[i].diff=0;
         for(var j=0;j<onum;j+=1)
             hidden[i].diff+=output[j].w[i]*output[j].diff;
-        hidden[i].diff*=diffsigmoid(hidden[i].in);
+        hidden[i].diff*=difftanh(hidden[i].in);
     }
     for(var i=0;i<hnum;i+=1)
     {

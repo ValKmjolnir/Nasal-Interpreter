@@ -633,10 +633,10 @@ void nasal_gc::info()
         "hash ","upval","obj  ",
         "co   "
     };
-    std::cout<<"\ngarbage collector info:\n";
+    std::cout<<"\ngarbage collector info\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         std::cout<<"  "<<name[i]<<" | "<<count[i]<<"\n";
-    std::cout<<"\nmemory allocator info(max size):\n";
+    std::cout<<"\nmemory allocator info(max size)\n";
     for(uint8_t i=vm_str;i<vm_type_size;++i)
         std::cout<<"  "<<name[i]<<" | "<<initialize[i]+size[i]*increment[i]<<"(+"<<size[i]<<")\n";
 }
