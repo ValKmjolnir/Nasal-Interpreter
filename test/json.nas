@@ -226,6 +226,8 @@ var JSON=func(){
     var member=func(hash)
     {
         var name=token.content;
+        if(token.type==j_rbrace)
+            return;
         if(token.type==j_str)
             match(j_str);
         else
@@ -316,6 +318,10 @@ var ss=JSON.stringify({
         m3:[114514],
         m4:{year:1919,month:8,date:10}
     },
+    emptyhash:{},
+    emptyvec:[],
+    empty:[{}],
+    empty_an:[[[[[[{}]]]]]],
     function:func(){}
 });
 println(ss);

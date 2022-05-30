@@ -363,7 +363,7 @@ void nasal_vm::opcallsort(const uint64_t* arr)
         opcall.end(),
         [](op& a,op& b){return a.second>b.second;}
     );
-    std::cout<<"\noperands call info:";
+    std::cout<<"\noperands call info";
     uint64_t total=0;
     for(auto& i:opcall)
     {
@@ -386,7 +386,7 @@ void nasal_vm::die(std::string str)
 inline bool nasal_vm::condition(nasal_ref val)
 {
     if(val.type==vm_num)
-        return val.value.num;
+        return val.num();
     else if(val.type==vm_str)
     {
         double num=str2num(val.str().c_str());
