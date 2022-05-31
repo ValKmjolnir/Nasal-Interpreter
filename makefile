@@ -1,4 +1,4 @@
-.PHONY=test
+.PHONY:test
 nasal:main.cpp nasal_ast.h nasal_err.h nasal_builtin.h nasal_opt.h nasal_codegen.h\
       nasal_gc.h nasal_import.h nasal_lexer.h nasal_parse.h nasal_vm.h nasal_dbg.h nasal.h
 	clang++ -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
@@ -28,7 +28,6 @@ test:nasal
 	@ ./nasal -op -e -d test/lexer.nas
 	@ ./nasal -op -e -d test/life.nas
 	@ ./nasal -op -t test/loop.nas
-	@ ./nasal -op -c test/maketimer_sim.nas
 	@ ./nasal -op -t -d test/mandel.nas
 	@ ./nasal -op -t -d test/mandelbrot.nas
 	@ ./nasal -op -t -d -o test/md5.nas
@@ -37,7 +36,6 @@ test:nasal
 	@ ./nasal -op -e test/nasal_test.nas
 	@ ./nasal -op -t -d test/pi.nas
 	@ ./nasal -op -t -d test/prime.nas
-	@ ./nasal -op -t -d test/props_sim.nas
 	@ ./nasal -op -e test/qrcode.nas
 	@ ./nasal -op -t -d test/quick_sort.nas
 	@ ./nasal -op -e test/scalar.nas
