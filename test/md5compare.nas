@@ -49,6 +49,7 @@ var filechecksum=func(){
         return substr(s,0,i);
     }
     var files=[
+        "./stl/fg_env.nas        ",
         "./stl/file.nas          ",
         "./stl/lib.nas           ",
         "./stl/list.nas          ",
@@ -79,7 +80,6 @@ var filechecksum=func(){
         "./test/lexer.nas        ",
         "./test/life.nas         ",
         "./test/loop.nas         ",
-        "./test/maketimer_sim.nas",
         "./test/mandel.nas       ",
         "./test/mandelbrot.nas   ",
         "./test/md5.nas          ",
@@ -88,8 +88,6 @@ var filechecksum=func(){
         "./test/nasal_test.nas   ",
         "./test/pi.nas           ",
         "./test/prime.nas        ",
-        "./test/props_sim.nas    ",
-        "./test/props.nas        ",
         "./test/qrcode.nas       ",
         "./test/quick_sort.nas   ",
         "./test/scalar.nas       ",

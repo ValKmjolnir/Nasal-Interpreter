@@ -1,6 +1,5 @@
 # Road check and auto pilot by ValKmjolnir
-import("./test/maketimer_sim.nas");
-import("./test/props_sim.nas");
+import("stl/fg_env.nas");
 
 var dt=0.01;
 var intergral=0;
@@ -97,5 +96,5 @@ var toggle_auto_pilot = func(){
 # this is used to simulate the running process in fg
 # when using in fg, delete these lines below
 toggle_auto_pilot();
-road_check_timer.restart(1);
+road_check_timer.restart(0.5);
 simulation();
