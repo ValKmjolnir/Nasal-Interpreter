@@ -22,7 +22,6 @@ var add_event=func(name,interval,function){
         timestamp.stamp();
         while(timestamp.elapsedMSec()<interval*1000)
             coroutine.yield();
-        timestamp.stamp();
         println("[\e[32m",name,"\e[0m]  type:\e[33mevent\e[0m  interval:\e[34m",interval,"\e[0m");
         function();
     });
@@ -38,7 +37,6 @@ var add_task=func(name,interval,function){
             timestamp.stamp();
             while(timestamp.elapsedMSec()<interval*1000)
                 coroutine.yield();
-            timestamp.stamp();
             println("[\e[32m",name,"\e[0m]  type:\e[34mtask\e[0m  interval:\e[34m",interval,"\e[0m  invoke-time:\e[96m",counter,"\e[0m");
             function();
             coroutine.yield();
@@ -91,12 +89,24 @@ var maketimer=func(interval,function){
     return res;
 }
 
+println("[\e[32m settimer  \e[0m] new func settimer(function,interval,rt)");
+var settimer=func(){
+    var index=0;
+    return func(function,interval,realtime=1){
+        var name="nasal-settimer-"~index;
+        index+=1;
+        add_task(name,interval,function);
+    }
+}();
+
 println("[\e[32m maketimer \e[0m] test func simulation()");
 var simulation=func(){
     var running=1;
     while(running){
         running=0;
         foreach(var i;keys(fg_globals.task)){
+            if(!contains(fg_globals.task,i))
+                continue;
             if(coroutine.resume(fg_globals.task[i])!=nil){
                 running=1;
             }else{
@@ -104,6 +114,8 @@ var simulation=func(){
             }
         }
         foreach(var i;keys(fg_globals.event)){
+            if(!contains(fg_globals.event,i))
+                continue;
             if(coroutine.resume(fg_globals.event[i])!=nil){
                 running=1;
             }else{
@@ -115,32 +127,43 @@ var simulation=func(){
 
 println("[\e[32m maketimer \e[0m] test func maketimer_multi_coroutine_test(size)");
 var maketimer_multi_coroutine_test=func(coroutine_size){
+    if(coroutine_size<1)
+        return;
     var task_vec=[];
     setsize(task_vec,coroutine_size);
     forindex(var i;task_vec)
         task_vec[i]=func{};
-    task_vec[coroutine_size-1]=func(){
+    task_vec[coroutine_size-1]=func{
         println("\e[101m",coroutine_size," tasks invoked.\e[0m");
+        forindex(var i;task_vec)
+            task_vec[i].stop();
     }
     var event_vec=[];
     setsize(event_vec,coroutine_size);
     forindex(var i;event_vec)
         event_vec[i]=func{};
-    event_vec[coroutine_size-1]=func(){
+    event_vec[coroutine_size-1]=func{
         println("\e[101m",coroutine_size," events invoked.\e[0m");
     }
+    var set_vec=[];
+    setsize(set_vec,coroutine_size);
+    forindex(var i;set_vec)
+        set_vec[i]=func{};
+    set_vec[coroutine_size-1]=func{
+        println("\e[101m",coroutine_size," settimer invoked.\e[0m");
+    }
 
-    var timer=[];
-    setsize(timer,coroutine_size*2);
     forindex(var i;task_vec){
-        timer[i]=maketimer((i+1)/5,task_vec[i]);
-        timer[i].start();
+        task_vec[i]=maketimer((i+1)/10,task_vec[i]);
+        task_vec[i].start();
     }
     forindex(var i;event_vec){
-        timer[i+coroutine_size-1]=maketimer((i+1)/5,event_vec[i]);
-        timer[i+coroutine_size-1].singleShot=1;
-        timer[i+coroutine_size-1].start();
+        event_vec[i]=maketimer((i+1)/10,event_vec[i]);
+        event_vec[i].singleShot=1;
+        event_vec[i].start();
     }
+    #forindex(var i;set_vec)
+    #    settimer(set_vec[i],(i+1)/10);
     simulation();
 }
 

@@ -267,14 +267,6 @@ var assert=func(condition,message="assertion failed!"){
     die(message);
 }
 
-# settimer alows infinite loop running a function with a time interval
-var settimer=func(f,interval,realtime=1){
-    while(1){
-        unix.sleep(interval);
-        f();
-    }
-}
-
 # get time stamp, this will return a timestamp object
 var maketimestamp=func(){
     var t=0;
