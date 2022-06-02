@@ -107,9 +107,11 @@ void execute(const std::string& file,const uint32_t cmd)
     }
     else if(cmd&VM_EXECTIME)
     {
-        clock_t t=clock();
+        timeb begin,end;
+        ftime(&begin);
         vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
-        std::cout<<"process exited after "<<((double)(clock()-t))/CLOCKS_PER_SEC<<"s.\n";
+        ftime(&end);
+        std::cout<<"process exited after "<<((end.time-begin.time)*1.0+end.millitm/1000.0-begin.millitm/1000.0)<<"s.\n";
     }
     else if(cmd&VM_EXEC)
         vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);

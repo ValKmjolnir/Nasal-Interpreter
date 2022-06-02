@@ -24,3 +24,13 @@ var file={
         };
     }
 };
+
+var find_all_files=func(path){
+    var dd=unix.opendir(path);
+    var res=[];
+    while(var n=unix.readdir(dd))
+        if(unix.isfile(path~"/"~n))
+            append(res,n);
+    unix.closedir(dd);
+    return res;
+}
