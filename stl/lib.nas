@@ -338,16 +338,16 @@ var fstat=func(filename){
 # carefully use it, all the calculations are based on integer.
 var bits=
 {
-    # xor
-    bitxor:  func(a,b){return __builtin_i32xor(a,b); },
-    # and
-    bitand:  func(a,b){return __builtin_i32and(a,b); },
-    # or
-    bitor:   func(a,b){return __builtin_i32or(a,b);  },
-    # nand
-    bitnand: func(a,b){return __builtin_i32nand(a,b);},
-    # not
-    bitnot:  func(a)  {return __builtin_i32not(a);   },
+    # i32 xor
+    i32_xor: func(a,b){return __builtin_i32xor(a,b); },
+    # i32 and
+    i32_and: func(a,b){return __builtin_i32and(a,b); },
+    # i32 or
+    i32_or:  func(a,b){return __builtin_i32or(a,b);  },
+    # i32 nand
+    i32_nand:func(a,b){return __builtin_i32nand(a,b);},
+    # i32 not
+    i32_not: func(a)  {return __builtin_i32not(a);   },
     # u32 xor
     u32_xor: func(a,b){return __builtin_u32xor(a,b); },
     # u32 and
@@ -410,8 +410,8 @@ var unix=
     dup2:     func(fd0,fd1){die("not supported yet");},
     exec:     func(filename,argv,envp){die("not supported yet");},
     waitpid:  func(pid,nohang=0){return __builtin_waitpid;},
-    isdir:    func(path){return bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
-    isfile:   func(path){return bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
+    isdir:    func(path){return !!bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
+    isfile:   func(path){return !!bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
     opendir:  func(path){return __builtin_opendir;},
     readdir:  func(handle){return __builtin_readdir;},
     closedir: func(handle){return __builtin_closedir;},
