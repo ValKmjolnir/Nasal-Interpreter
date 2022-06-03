@@ -38,7 +38,7 @@ var transfer=func(s){
     var len=size(s);
     var vec=[0,0,0,0,0,0,0,0,0];
     for(var i=8;i>=0;i-=1){
-        vec[i]=bits.bitand(1,len);
+        vec[i]=bits.u32_and(1,len);
         len=int(len/2);
     }
     println(vec);
@@ -48,7 +48,7 @@ var transfer=func(s){
         var tmp=[0,0,0,0,0,0,0,0];
         var c=s[i];
         for(var j=7;j>=0;j-=1){
-            tmp[j]=bits.bitand(1,c);
+            tmp[j]=bits.u32_and(1,c);
             c=int(c/2);
         }
         foreach(var j;tmp)

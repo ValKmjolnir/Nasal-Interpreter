@@ -339,15 +339,26 @@ var fstat=func(filename){
 var bits=
 {
     # xor
-    bitxor:  func(a,b){return __builtin_xor(a,b); },
+    bitxor:  func(a,b){return __builtin_i32xor(a,b); },
     # and
-    bitand:  func(a,b){return __builtin_and(a,b); },
+    bitand:  func(a,b){return __builtin_i32and(a,b); },
     # or
-    bitor:   func(a,b){return __builtin_or(a,b);  },
+    bitor:   func(a,b){return __builtin_i32or(a,b);  },
     # nand
-    bitnand: func(a,b){return __builtin_nand(a,b);},
+    bitnand: func(a,b){return __builtin_i32nand(a,b);},
     # not
-    bitnot:  func(a)  {return __builtin_not(a);   },
+    bitnot:  func(a)  {return __builtin_i32not(a);   },
+    # u32 xor
+    u32_xor: func(a,b){return __builtin_u32xor(a,b); },
+    # u32 and
+    u32_and: func(a,b){return __builtin_u32and(a,b); },
+    # u32 or
+    u32_or:  func(a,b){return __builtin_u32or(a,b);  },
+    # u32 nand
+    u32_nand:func(a,b){return __builtin_u32nand(a,b);},
+    # u32 not
+    u32_not: func(a)  {return __builtin_u32not(a);   },
+
     # get bit data from a special string. for example:
     # bits.fld(s,0,3);
     # if s stores 10100010(162)
@@ -399,8 +410,8 @@ var unix=
     dup2:     func(fd0,fd1){die("not supported yet");},
     exec:     func(filename,argv,envp){die("not supported yet");},
     waitpid:  func(pid,nohang=0){return __builtin_waitpid;},
-    isdir:    func(path){return bits.bitand(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
-    isfile:   func(path){return bits.bitand(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
+    isdir:    func(path){return bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
+    isfile:   func(path){return bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
     opendir:  func(path){return __builtin_opendir;},
     readdir:  func(handle){return __builtin_readdir;},
     closedir: func(handle){return __builtin_closedir;},
