@@ -4,47 +4,16 @@ var check=func(x){
     return x-floor(x/0x100000000)*0x100000000;
 }
 var u32_bits_and=func(x,y){
-    (x,y)=(check(x),check(y));
-    var (res,op)=(0,1);
-    for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
-        res+=op*(tmpx==1 and tmpy==1);
-        (x,y)=(floor(x/2),floor(y/2));
-        op*=2;
-    }
-    return res;
+    return bits.u32_and(check(x),check(y));
 }
 var u32_bits_or=func(x,y){
-    (x,y)=(check(x),check(y));
-    var (res,op)=(0,1);
-    for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
-        res+=op*(tmpx==1 or tmpy==1);
-        (x,y)=(floor(x/2),floor(y/2));
-        op*=2;
-    }
-    return res;
+    return bits.u32_or(check(x),check(y));
 }
 var u32_bits_xor=func(x,y){
-    (x,y)=(check(x),check(y));
-    var (res,op)=(0,1);
-    for(var i=0;i<32;i+=1){
-        var (tmpx,tmpy)=(x-floor(x/2)*2,y-floor(y/2)*2);
-        res+=op*(tmpx!=tmpy);
-        (x,y)=(floor(x/2),floor(y/2));
-        op*=2;
-    }
-    return res;
+    return bits.u32_xor(check(x),check(y));
 }
 var u32_bits_not=func(x){
-    x=check(x);
-    var (res,op)=(0,1);
-    for(var i=0;i<32;i+=1){
-        res+=op*((x-floor(x/2)*2)==1?0:1);
-        x=floor(x/2);
-        op*=2;
-    }
-    return res;
+    return bits.u32_not(check(x));
 }
 
 var hex32str=func(){

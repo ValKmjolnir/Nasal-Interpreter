@@ -26,11 +26,16 @@ nas_native(builtin_num);
 nas_native(builtin_pop);
 nas_native(builtin_str);
 nas_native(builtin_size);
-nas_native(builtin_xor);
-nas_native(builtin_and);
-nas_native(builtin_or);
-nas_native(builtin_nand);
-nas_native(builtin_not);
+nas_native(builtin_i32xor);
+nas_native(builtin_i32and);
+nas_native(builtin_i32or);
+nas_native(builtin_i32nand);
+nas_native(builtin_i32not);
+nas_native(builtin_u32xor);
+nas_native(builtin_u32and);
+nas_native(builtin_u32or);
+nas_native(builtin_u32nand);
+nas_native(builtin_u32not);
 nas_native(builtin_pow);
 nas_native(builtin_sin);
 nas_native(builtin_cos);
@@ -125,11 +130,16 @@ struct
     {"__builtin_pop",     builtin_pop     },
     {"__builtin_str",     builtin_str     },
     {"__builtin_size",    builtin_size    },
-    {"__builtin_xor",     builtin_xor     },
-    {"__builtin_and",     builtin_and     },
-    {"__builtin_or",      builtin_or      },
-    {"__builtin_nand",    builtin_nand    },
-    {"__builtin_not",     builtin_not     },
+    {"__builtin_i32xor",  builtin_i32xor  },
+    {"__builtin_i32and",  builtin_i32and  },
+    {"__builtin_i32or",   builtin_i32or   },
+    {"__builtin_i32nand", builtin_i32nand },
+    {"__builtin_i32not",  builtin_i32not  },
+    {"__builtin_u32xor",  builtin_u32xor  },
+    {"__builtin_u32and",  builtin_u32and  },
+    {"__builtin_u32or",   builtin_u32or   },
+    {"__builtin_u32nand", builtin_u32nand },
+    {"__builtin_u32not",  builtin_u32not  },
     {"__builtin_pow",     builtin_pow     },
     {"__builtin_sin",     builtin_sin     },
     {"__builtin_cos",     builtin_cos     },
@@ -447,61 +457,63 @@ nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
     }
     return {vm_num,num};
 }
-nasal_ref builtin_xor(nasal_ref* local,nasal_gc& gc)
+nasal_ref builtin_i32xor(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref a=local[1];
-    nasal_ref b=local[2];
-    if(a.type!=vm_num)
-        return builtin_err("xor","\"a\" must be number");
-    if(b.type!=vm_num)
-        return builtin_err("xor","\"b\" must be number");
-    int number_a=(int)a.num();
-    int number_b=(int)b.num();
-    return {vm_num,(double)(number_a^number_b)};
+    int a=(int)local[1].num();
+    int b=(int)local[2].num();
+    return {vm_num,(double)(a^b)};
 }
-nasal_ref builtin_and(nasal_ref* local,nasal_gc& gc)
+nasal_ref builtin_i32and(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref a=local[1];
-    nasal_ref b=local[2];
-    if(a.type!=vm_num)
-        return builtin_err("and","\"a\" must be number");
-    if(b.type!=vm_num)
-        return builtin_err("and","\"b\" must be number");
-    int number_a=(int)a.num();
-    int number_b=(int)b.num();
-    return {vm_num,(double)(number_a&number_b)};
+    int a=(int)local[1].num();
+    int b=(int)local[2].num();
+    return {vm_num,(double)(a&b)};
 }
-nasal_ref builtin_or(nasal_ref* local,nasal_gc& gc)
+nasal_ref builtin_i32or(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref a=local[1];
-    nasal_ref b=local[2];
-    if(a.type!=vm_num)
-        return builtin_err("or","\"a\" must be number");
-    if(b.type!=vm_num)
-        return builtin_err("or","\"b\" must be number");
-    int number_a=(int)a.num();
-    int number_b=(int)b.num();
-    return {vm_num,(double)(number_a|number_b)};
+    int a=(int)local[1].num();
+    int b=(int)local[2].num();
+    return {vm_num,(double)(a|b)};
 }
-nasal_ref builtin_nand(nasal_ref* local,nasal_gc& gc)
+nasal_ref builtin_i32nand(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref a=local[1];
-    nasal_ref b=local[2];
-    if(a.type!=vm_num)
-        return builtin_err("nand","\"a\" must be number");
-    if(b.type!=vm_num)
-        return builtin_err("nand","\"b\" must be number");
-    int number_a=(int)a.num();
-    int number_b=(int)b.num();
-    return {vm_num,(double)(~(number_a&number_b))};
+    int a=(int)local[1].num();
+    int b=(int)local[2].num();
+    return {vm_num,(double)(~(a&b))};
 }
-nasal_ref builtin_not(nasal_ref* local,nasal_gc& gc)
+nasal_ref builtin_i32not(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref a=local[1];
-    if(a.type!=vm_num)
-        return builtin_err("not","\"a\" must be number");
-    int number=(int)a.num();
-    return {vm_num,(double)(~number)};
+    int n=(int)local[1].num();
+    return {vm_num,(double)(~n)};
+}
+nasal_ref builtin_u32xor(nasal_ref* local,nasal_gc& gc)
+{
+    uint32_t a=(uint32_t)local[1].num();
+    uint32_t b=(uint32_t)local[2].num();
+    return {vm_num,(double)(a^b)};
+}
+nasal_ref builtin_u32and(nasal_ref* local,nasal_gc& gc)
+{
+    uint32_t a=(uint32_t)local[1].num();
+    uint32_t b=(uint32_t)local[2].num();
+    return {vm_num,(double)(a&b)};
+}
+nasal_ref builtin_u32or(nasal_ref* local,nasal_gc& gc)
+{
+    uint32_t a=(uint32_t)local[1].num();
+    uint32_t b=(uint32_t)local[2].num();
+    return {vm_num,(double)(a|b)};
+}
+nasal_ref builtin_u32nand(nasal_ref* local,nasal_gc& gc)
+{
+    uint32_t a=(uint32_t)local[1].num();
+    uint32_t b=(uint32_t)local[2].num();
+    return {vm_num,(double)(~(a&b))};
+}
+nasal_ref builtin_u32not(nasal_ref* local,nasal_gc& gc)
+{
+    uint32_t n=(uint32_t)local[1].num();
+    return {vm_num,(double)(~n)};
 }
 nasal_ref builtin_pow(nasal_ref* local,nasal_gc& gc)
 {
