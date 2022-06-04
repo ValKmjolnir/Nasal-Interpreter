@@ -201,3 +201,4 @@ foreach(var i;a){
 foreach(i;a){
     ;
 }
+println(runtime.argv());

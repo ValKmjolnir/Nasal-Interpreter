@@ -32,6 +32,7 @@ protected:
         const std::vector<std::string>&,
         const std::vector<double>&,
         const std::vector<opcode>&,
+        const std::vector<std::string>&,
         const std::vector<std::string>&);
     /* debug functions */
     bool detail_info;
@@ -130,6 +131,7 @@ public:
     void run(
         const nasal_codegen&,
         const nasal_import&,
+        const std::vector<std::string>&,
         const bool,
         const bool);
 };
@@ -138,9 +140,10 @@ void nasal_vm::init(
     const std::vector<std::string>& strs,
     const std::vector<double>&      nums,
     const std::vector<opcode>&      code,
-    const std::vector<std::string>& filenames)
+    const std::vector<std::string>& filenames,
+    const std::vector<std::string>& argv)
 {
-    gc.init(strs);
+    gc.init(strs,argv);
     num_table=nums.data();
     str_table=strs.data();
     bytecode=code.data();
@@ -1002,11 +1005,12 @@ inline void nasal_vm::opr_ret()
 void nasal_vm::run(
     const nasal_codegen& gen,
     const nasal_import& linker,
+    const std::vector<std::string>& argv,
     const bool opcnt,
     const bool detail)
 {
     detail_info=detail;
-    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
+    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
     uint64_t count[op_ret+1]={0};
     const void* opr_table[]=
     {
