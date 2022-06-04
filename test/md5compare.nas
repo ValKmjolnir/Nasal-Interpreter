@@ -86,6 +86,7 @@ var filechecksum=func(){
         "./test/md5compare.nas   ",
         "./test/module_test.nas  ",
         "./test/nasal_test.nas   ",
+        "./test/occupation.nas   ",
         "./test/pi.nas           ",
         "./test/prime.nas        ",
         "./test/qrcode.nas       ",

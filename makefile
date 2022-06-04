@@ -34,6 +34,7 @@ test:nasal
 	-@ ./nasal -op -t -d -o test/md5compare.nas
 	-@ ./nasal -op -d test/module_test.nas
 	@ ./nasal -op -e test/nasal_test.nas
+	@ ./nasal -op -c test/occupation.nas
 	@ ./nasal -op -t -d test/pi.nas
 	@ ./nasal -op -t -d test/prime.nas
 	@ ./nasal -op -e test/qrcode.nas

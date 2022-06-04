@@ -1,16 +1,16 @@
 var source=[
     "main.cpp              ",
-    "nasal_err.h           ",
     "nasal_ast.h           ",
     "nasal_builtin.h       ",
     "nasal_codegen.h       ",
-    "nasal_opt.h           ",
+    "nasal_dbg.h           ",
+    "nasal_err.h           ",
     "nasal_gc.h            ",
     "nasal_import.h        ",
     "nasal_lexer.h         ",
+    "nasal_opt.h           ",
     "nasal_parse.h         ",
     "nasal_vm.h            ",
-    "nasal_dbg.h           ",
     "nasal.h               "
 ];
 
@@ -55,6 +55,7 @@ var testfile=[
     "test/md5compare.nas   ",
     "test/module_test.nas  ",
     "test/nasal_test.nas   ",
+    "test/occupation.nas   ",
     "test/pi.nas           ",
     "test/prime.nas        ",
     "test/qrcode.nas       ",

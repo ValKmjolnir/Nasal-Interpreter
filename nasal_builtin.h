@@ -10,6 +10,7 @@
 // to add new builtin function, declare it here and write the definition below
 #define nas_native(name) nasal_ref name(nasal_ref*,nasal_gc&)
 nas_native(builtin_print);
+nas_native(builtin_println);
 nas_native(builtin_abort);
 nas_native(builtin_append);
 nas_native(builtin_setsize);
@@ -114,6 +115,7 @@ struct
 } builtin[]=
 {
     {"__builtin_print",   builtin_print   },
+    {"__builtin_println", builtin_println },
     {"__builtin_abort",   builtin_abort   },
     {"__builtin_append",  builtin_append  },
     {"__builtin_setsize", builtin_setsize },
@@ -205,13 +207,9 @@ struct
     {nullptr,             nullptr         }
 };
 
-nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
+inline void print_core(std::vector<nasal_ref>& elems)
 {
-    // get arguments
-    // local[0] is reserved for 'me'
-    nasal_ref vec=local[1];
-    // main process
-    for(auto& i:vec.vec().elems)
+    for(auto& i:elems)
         switch(i.type)
         {
             case vm_none: std::cout<<"null";           break;
@@ -224,8 +222,23 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
             case vm_obj:  std::cout<<"<object>";       break;
             case vm_co:   std::cout<<"<coroutine>";    break;
         }
+}
+nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
+{
+    // get arguments
+    // local[0] is reserved for 'me'
+    nasal_ref vec=local[1];
+    // main process
+    print_core(vec.vec().elems);
     std::cout<<std::flush;
     // generate return value
+    return nil;
+}
+nasal_ref builtin_println(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref vec=local[1];
+    print_core(vec.vec().elems);
+    std::cout<<std::endl;
     return nil;
 }
 nasal_ref builtin_abort(nasal_ref* local,nasal_gc& gc)
