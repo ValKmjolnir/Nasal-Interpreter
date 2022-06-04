@@ -26,7 +26,7 @@ void help()
     <<"nasal <file>\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n\n"
-    <<"nasal [options...] <file>\n"
+    <<"nasal [option...] <file> [argv...]\n"
     <<"option:\n"
     <<"    -l,   --lex     | view token info.\n"
     <<"    -a,   --ast     | view abstract syntax tree.\n"
@@ -40,7 +40,9 @@ void help()
     <<"                    | if want to use -op and run, please use -op -e/-t/-o/-d.\n"
     <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d -e).\n"
     <<"file:\n"
-    <<"    input file name to execute script file.\n";
+    <<"    input file name to execute script file.\n"
+    <<"argv:\n"
+    <<"    command line arguments used in program.\n";
 }
 
 void logo()
@@ -68,7 +70,7 @@ void err()
     std::exit(1);
 }
 
-void execute(const std::string& file,const uint32_t cmd)
+void execute(const std::string& file,const std::vector<std::string>& argv,const uint32_t cmd)
 {
     // front end use the same error module
     nasal_err     nerr;
@@ -103,18 +105,18 @@ void execute(const std::string& file,const uint32_t cmd)
     if(cmd&VM_DEBUG)
     {
         nasal_dbg debugger;
-        debugger.run(gen,linker);
+        debugger.run(gen,linker,argv);
     }
     else if(cmd&VM_EXECTIME)
     {
         timeb begin,end;
         ftime(&begin);
-        vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
         ftime(&end);
         std::cout<<"process exited after "<<((end.time-begin.time)*1.0+end.millitm/1000.0-begin.millitm/1000.0)<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,linker,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
 }
 
 int main(int argc,const char* argv[])
@@ -132,7 +134,7 @@ int main(int argc,const char* argv[])
         else if(s=="-h" || s=="--help")
             help();
         else if(s[0]!='-')
-            execute(s,VM_EXEC);
+            execute(s,{},VM_EXEC);
         else
             err();
         return 0;
@@ -149,13 +151,25 @@ int main(int argc,const char* argv[])
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     uint32_t cmd=0;
-    for(int i=1;i<argc-1;++i)
+    bool recog_file=false;
+    std::string filename;
+    std::vector<std::string> vm_argv;
+    for(int i=1;i<argc;++i)
     {
         if(cmdlst.count(argv[i]))
             cmd|=cmdlst[argv[i]];
+        else if(!recog_file)
+        {
+            filename=argv[i];
+            recog_file=true;
+        }
         else
-            err();
+            vm_argv.push_back(argv[i]);
     }
-    execute(argv[argc-1],cmd);
+    if(!recog_file)
+        err();
+    if(!cmd)
+        cmd|=VM_EXEC;
+    execute(filename,vm_argv,cmd);
     return 0;
 }

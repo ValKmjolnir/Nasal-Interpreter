@@ -477,6 +477,7 @@ struct nasal_gc
     std::vector<nasal_ref>  strs;                    // reserved address for const vm_str
     std::vector<nasal_val*> memory;                  // gc memory
     std::queue<nasal_val*>  free_list[vm_type_size]; // gc free list
+    std::vector<nasal_ref>  env_argv;                // command line arguments
 
     /* values for analysis */
     uint64_t                size[vm_type_size];
@@ -500,7 +501,7 @@ struct nasal_gc
         stack(_stk){}
     void                    mark();
     void                    sweep();
-    void                    init(const std::vector<std::string>&);
+    void                    init(const std::vector<std::string>&,const std::vector<std::string>&);
     void                    clear();
     void                    info();
     nasal_ref               alloc(const uint8_t);
@@ -588,7 +589,7 @@ void nasal_gc::sweep()
             i->mark=GC_UNCOLLECTED;
     }
 }
-void nasal_gc::init(const std::vector<std::string>& s)
+void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::string>& argv)
 {
     // initiaize function register
     funcr=nil;
@@ -611,6 +612,14 @@ void nasal_gc::init(const std::vector<std::string>& s)
         strs[i].value.gcobj->unmut=1;
         strs[i].str()=s[i];
     }
+    // record arguments
+    env_argv.resize(argv.size());
+    for(size_t i=0;i<argv.size();++i)
+    {
+        env_argv[i]={vm_str,new nasal_val(vm_str)};
+        env_argv[i].value.gcobj->unmut=1;
+        env_argv[i].str()=argv[i];
+    }
 }
 void nasal_gc::clear()
 {
@@ -623,6 +632,7 @@ void nasal_gc::clear()
     for(auto& i:strs)
         delete i.value.gcobj;
     strs.clear();
+    env_argv.clear();
 }
 void nasal_gc::info()
 {

@@ -39,7 +39,7 @@ test:nasal
 	@ ./nasal -op -t -d test/prime.nas
 	@ ./nasal -op -e test/qrcode.nas
 	@ ./nasal -op -t -d test/quick_sort.nas
-	@ ./nasal -op -e test/scalar.nas
+	@ ./nasal -op -e test/scalar.nas hello world
 	-@ ./nasal -op -c -t test/snake.nas
 	@ ./nasal -op -c -e test/trait.nas
 	-@ ./nasal -op -c -t test/tetris.nas

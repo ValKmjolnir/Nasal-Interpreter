@@ -23,7 +23,8 @@ public:
         bk_fidx(0),bk_line(0){}
     void run(
         const nasal_codegen&,
-        const nasal_import&
+        const nasal_import&,
+        const std::vector<std::string>&
     );
 };
 
@@ -176,10 +177,11 @@ void nasal_dbg::interact()
 
 void nasal_dbg::run(
     const nasal_codegen& gen,
-    const nasal_import& linker)
+    const nasal_import& linker,
+    const std::vector<std::string>& argv)
 {
     detail_info=true;
-    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file());
+    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
     const void* opr_table[]=
     {
         &&vmexit,  &&intg,     &&intl,   &&loadg,

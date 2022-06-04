@@ -448,7 +448,10 @@ var runtime=
 {
     # do garbage collection manually.
     # carefully use it because using it frequently may make program running slower.
-    gc: func(){return __builtin_gc;}
+    gc:   func(){return __builtin_gc;},
+
+    # command line arguments
+    argv: func(){return __builtin_sysargv;}
 };
 
 # important global constants

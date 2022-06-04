@@ -99,6 +99,7 @@ nas_native(builtin_coyield);
 nas_native(builtin_costatus);
 nas_native(builtin_corun);
 nas_native(builtin_millisec);
+nas_native(builtin_sysargv);
 
 nasal_ref builtin_err(const char* func_name,const std::string& info)
 {
@@ -204,6 +205,7 @@ struct
     {"__builtin_costatus",builtin_costatus},
     {"__builtin_corun"   ,builtin_corun   },
     {"__builtin_millisec",builtin_millisec},
+    {"__builtin_sysargv", builtin_sysargv },
     {nullptr,             nullptr         }
 };
 
@@ -1445,5 +1447,11 @@ nasal_ref builtin_millisec(nasal_ref* local,nasal_gc& gc)
     timeb now;
     ftime(&now);
     return {vm_num,(double)(now.time*1000+now.millitm)};
+}
+nasal_ref builtin_sysargv(nasal_ref* local,nasal_gc& gc)
+{
+    nasal_ref res=gc.alloc(vm_vec);
+    res.vec().elems=gc.env_argv;
+    return res;
 }
 #endif
