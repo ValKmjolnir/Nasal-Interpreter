@@ -202,9 +202,7 @@ var values=func(hash){
 # println has the same function as print.
 # but it will output a '\n' after using print.
 var println=func(elems...){
-    __builtin_print(elems);
-    elems=['\n'];
-    return __builtin_print(elems);
+    return __builtin_println(elems);
 }
 
 var isfunc=func(f){
