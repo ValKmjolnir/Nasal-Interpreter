@@ -15,6 +15,14 @@ libkey.dll: keyboard.cpp
 	g++ -c -O3 keyboard.cpp -fPIC -o keyboard.o -static
 	g++ -shared -o libkey.dll keyboard.o -static
 
+libnasock.so: nasocket.cpp
+	clang++ -c -O3 nasocket.cpp -fPIC -o nasocket.o
+	clang++ -shared -o libnasock.so nasocket.o
+	rm nasocket.o
+libnasock.dll: nasocket.cpp
+	g++ -c -O3 nasocket.cpp -fPIC -o nasocket.o -lwsock32 -static
+	g++ -shared -o libnasock.dll nasocket.o -lwsock32 -static
+
 clean:
 	rm *.o *.so *.dll *.dylib
 all: libfib.so libkey.so
