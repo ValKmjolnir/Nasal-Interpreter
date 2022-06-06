@@ -151,22 +151,18 @@ int main(int argc,const char* argv[])
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     uint32_t cmd=0;
-    bool recog_file=false;
     std::string filename;
     std::vector<std::string> vm_argv;
     for(int i=1;i<argc;++i)
     {
         if(cmdlst.count(argv[i]))
             cmd|=cmdlst[argv[i]];
-        else if(!recog_file)
-        {
+        else if(!filename.length())
             filename=argv[i];
-            recog_file=true;
-        }
         else
             vm_argv.push_back(argv[i]);
     }
-    if(!recog_file)
+    if(!filename.length())
         err();
     if(!cmd)
         cmd|=VM_EXEC;
