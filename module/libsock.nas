@@ -2,6 +2,16 @@ var socket=func(){
     var lib=dylib.dlopen("./module/libnasock"~(os.platform()=="windows"?".dll":".so"));
     var sock=dylib.dlsym(lib,"nas_socket");
     var closesocket=dylib.dlsym(lib,"nas_closesocket");
+    var shutdown=dylib.dlsym(lib,"nas_shutdown");
+    var bind=dylib.dlsym(lib,"nas_bind");
+    var listen=dylib.dlsym(lib,"nas_listen");
+    var connect=dylib.dlsym(lib,"nas_connect");
+    var accept=dylib.dlsym(lib,"nas_accept");
+    var send=dylib.dlsym(lib,"nas_send");
+    var sendto=dylib.dlsym(lib,"nas_sendto");
+    var recv=dylib.dlsym(lib,"nas_recv");
+    var recvfrom=dylib.dlsym(lib,"nas_recvfrom");
+    var errno=dylib.dlsym(lib,"nas_errno");
     var call=dylib.dlcall;
     return {
         AF_UNSPEC:0,AF_UNIX:1,AF_INET:2,AF_IMPLINK:3,
@@ -27,11 +37,49 @@ var socket=func(){
         IPPORT_EFSSERVER:520,IPPORT_BIFFUDP:512,IPPORT_WHOSERVER:513,IPPORT_ROUTESERVER:520,
         IPPORT_RESERVED:1024,
 
+        SHUT_RD  :0x00,
+        SHUT_WR  :0x01,
+        SHUT_RDWR:0x02,
+
+        MSG_OOB:0x1,
+        MSG_PEEK:0x2,
+        MSG_DONTROUTE:0x4,
+
         socket:func(af,type,proto){
             return call(sock,af,type,proto);
         },
         closesocket:func(sd){
             return call(closesocket,sd);
+        },
+        shutdown: func(sd,how){
+            return call(shutdown,sd,how);
+        },
+        bind: func(sd,ip,port){
+            return call(bind,sd,ip,port);
+        },
+        listen: func(sd,backlog){
+            return call(listen,sd,backlog);
+        },
+        connect: func(sd,hostname,port){
+            return call(connect,sd,hostname,port);
+        },
+        accept: func(sd){
+            return call(accept,sd);
+        },
+        send: func(sd,buff,flags=0){
+            return call(send,sd,buff,flags);
+        },
+        sendto: func(sd,hostname,port,buff,flags=0){
+            return call(sendto,sd,hostname,port,buff,flags);
+        },
+        recv: func(sd,len,flags=0){
+            return call(recv,sd,len,flags);
+        },
+        recvfrom: func(sd,len,flags=0){
+            return call(recvfrom,sd,len,flags);
+        },
+        errno: func(){
+            return call(errno);
         }
     };
 }();

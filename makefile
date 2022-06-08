@@ -23,6 +23,7 @@ test:nasal
 	@ ./nasal -op -t -d test/fib.nas
 	@ ./nasal -op -e test/filesystem.nas
 	@ ./nasal -op -e -d test/hexdump.nas
+	@ ./nasal -op -c test/httptest.nas
 	@ ./nasal -op -e test/json.nas
 	@ ./nasal -op -e test/leetcode1319.nas
 	@ ./nasal -op -e -d test/lexer.nas
