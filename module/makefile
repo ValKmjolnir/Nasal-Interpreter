@@ -25,7 +25,7 @@ libnasock.dll: nasocket.cpp
 
 clean:
 	rm *.o *.so *.dll *.dylib
-all: libfib.so libkey.so
+all: libfib.so libkey.so libnasock.so
 	@ echo "build done"
-mingw-all: libfib.dll libkey.dll
+mingw-all: libfib.dll libkey.dll libnasock.dll
 	@ echo "build done"

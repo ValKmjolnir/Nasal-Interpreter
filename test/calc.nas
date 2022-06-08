@@ -44,6 +44,7 @@ var testfile=[
     "test/fib.nas          ",
     "test/filesystem.nas   ",
     "test/hexdump.nas      ",
+    "test/httptest.nas     ",
     "test/json.nas         ",
     "test/leetcode1319.nas ",
     "test/lexer.nas        ",
@@ -73,8 +74,10 @@ var testfile=[
 var module=[
     "module/fib.cpp        ",
     "module/keyboard.cpp   ",
+    "module/nasocket.cpp   ",
     "module/libfib.nas     ",
-    "module/libkey.nas     "
+    "module/libkey.nas     ",
+    "module/libsock.nas    "
 ];
 
 var getname=func(s){

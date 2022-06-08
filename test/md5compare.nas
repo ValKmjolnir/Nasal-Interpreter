@@ -75,6 +75,7 @@ var filechecksum=func(){
         "./test/fib.nas          ",
         "./test/filesystem.nas   ",
         "./test/hexdump.nas      ",
+        "./test/httptest.nas     ",
         "./test/json.nas         ",
         "./test/leetcode1319.nas ",
         "./test/lexer.nas        ",
