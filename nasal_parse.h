@@ -946,6 +946,7 @@ nasal_ast nasal_parse::iter_gen()
         match(tok_id);
         while(is_call(tokens[ptr].type))
             node.add(call_scalar());
+        check_memory_reachable(node);
     }
     return node;
 }
