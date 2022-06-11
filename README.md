@@ -8,6 +8,8 @@
   \_\ \/ \__,_|___/\__,_|_|
 ```
 
+![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)
+
 ## __Contents__
 
 * [__Introduction__](#introduction)
