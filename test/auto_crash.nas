@@ -96,5 +96,5 @@ var toggle_auto_pilot = func(){
 # this is used to simulate the running process in fg
 # when using in fg, delete these lines below
 toggle_auto_pilot();
-road_check_timer.restart(0.5);
+road_check_timer.restart(0.1);
 simulation();
