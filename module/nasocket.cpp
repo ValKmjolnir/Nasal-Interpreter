@@ -43,7 +43,6 @@ extern "C" nasal_ref nas_closesocket(std::vector<nasal_ref>& args,nasal_gc& gc){
 }
 
 extern "C" nasal_ref nas_shutdown(std::vector<nasal_ref>& args,nasal_gc& gc){
-    //shutdown();
     if(args[0].type!=vm_num)
         return builtin_err("shutdown","\"sd\" must be a number");
     if(args[1].type!=vm_num)
