@@ -241,12 +241,13 @@ var props=
 };
 
 println("[\e[32m props     \e[0m] [",fg_env_global_timestamp.elapsedMSec()/1000,"] init props.Node");
+
 props.Node=
 {
     new:func(values=nil)
     {
         var res={
-            parents:[props.Node],
+            parents:fg_env_props_node_traits,
             val:{},
             type:'GHOST',
             parent:nil
@@ -315,8 +316,7 @@ props.Node=
     getName:func()
     {
         var val=me.parent.val;
-        var key=keys(val);
-        foreach(var k;key)
+        foreach(var k;keys(val))
             if(val[k]==me)
                 return k;
         return '';
@@ -350,10 +350,11 @@ props.Node=
             println(s,'\e[91m}\e[0m');
         }
         else
-            println("\e[35m",me.val,"\e[0m\e[33m(\e[0m\e[96m",me.type,'\e[0m\e[33m)\e[0m');
+            println("\e[35m ",me.val,"\e[0m\e[33m(\e[0m\e[96m",me.type,'\e[0m\e[33m)\e[0m');
         return;
     }
 };
+var fg_env_props_node_traits=[props.Node];
 
 println("[\e[32m props     \e[0m] [",fg_env_global_timestamp.elapsedMSec()/1000,"] init props.globals");
 props.globals=props.Node.new();
@@ -559,6 +560,7 @@ props.getNode("/orientation/heading-deg",1).setValue('/',90);
 props.getNode("/controls/flight/rudder",1).setValue('/',0.114);
 
 func(){
+    srand();
     var tmp=nil;
     var vec=[props.globals];
     while(size(vec)){
@@ -566,7 +568,7 @@ func(){
         foreach(var i;vec){
             if(typeof(i.val)=="hash"){
                 if(size(i.val)==0){
-                    i.setDoubleValue(0);
+                    i.setDoubleValue(rand()*10);
                 }else{
                     foreach(var j;keys(i.val))
                         append(tmp,i.val[j]);
