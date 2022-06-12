@@ -117,9 +117,11 @@ Or use this in __`linux/macOS/Unix`__
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
-Or using makefile,`mingw32-make` is __`Windows`__ platform's `make`:
+Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
 
 > mingw32-make nasal.exe
+>
+> mingw32-make.exe nasal.exe
 
 in __`linux/macOS/Unix`__:
 

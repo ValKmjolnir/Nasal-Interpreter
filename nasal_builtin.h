@@ -100,6 +100,7 @@ nas_native(builtin_costatus);
 nas_native(builtin_corun);
 nas_native(builtin_millisec);
 nas_native(builtin_sysargv);
+nas_native(builtin_logtime);
 
 nasal_ref builtin_err(const char* func_name,const std::string& info)
 {
@@ -206,6 +207,7 @@ struct
     {"__builtin_corun"   ,builtin_corun   },
     {"__builtin_millisec",builtin_millisec},
     {"__builtin_sysargv", builtin_sysargv },
+    {"__builtin_logtime", builtin_logtime },
     {nullptr,             nullptr         }
 };
 
@@ -1452,6 +1454,16 @@ nasal_ref builtin_sysargv(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref res=gc.alloc(vm_vec);
     res.vec().elems=gc.env_argv;
+    return res;
+}
+nasal_ref builtin_logtime(nasal_ref* local,nasal_gc& gc)
+{
+    time_t t=time(nullptr);
+    tm* tm_t=localtime(&t);
+    char s[128];
+    sprintf(s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",tm_t->tm_year+1900,tm_t->tm_mon+1,tm_t->tm_mday,tm_t->tm_hour,tm_t->tm_min,tm_t->tm_sec);
+    nasal_ref res=gc.alloc(vm_str);
+    res.str()=s;
     return res;
 }
 #endif
