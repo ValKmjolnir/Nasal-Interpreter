@@ -440,7 +440,8 @@ var dylib=
 var os=
 {
     # get a string that tell which os it runs on.
-    platform: func(){return __builtin_platform;}
+    platform: func(){return __builtin_platform;},
+    time:     func(){return __builtin_logtime; }
 };
 
 # runtime gives us some functions that we could manage it manually.
