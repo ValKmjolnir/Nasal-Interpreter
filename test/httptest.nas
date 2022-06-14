@@ -51,12 +51,12 @@ while(1){
     var client=socket.accept(sd);
     var recieve_data=socket.recv(client.sd,1024);
     if(!recieve_data.size){
-        println("[",client.ip,"] request connection closed");
+        println("[",os.time(),"] ",client.ip," request connection closed");
         continue;
     }
     var first=split("\n",recieve_data.str)[0];
     var (type,path)=split(" ",first)[0,1];
-    println("[",client.ip,"] request ",type," [",path,"]");
+    println("[",os.time(),"] ",client.ip," request ",type," [",path,"]");
     if(path=="/")
         socket.send(client.sd,httpheader~index~httptail);
     elsif(path=="/favicon.ico")

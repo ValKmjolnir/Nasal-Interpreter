@@ -1,4 +1,4 @@
-# lib stack.nas
+# stack.nas
 # valkmjolnir 2021/3/31
 var stack=func()
 {

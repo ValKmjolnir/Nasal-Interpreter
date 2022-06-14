@@ -45,6 +45,6 @@ func(){
         println("CPU occupation(%)   : ",cpu_occ>90?"\e[91m":"\e[32m",cpu_occ,"\e[0m");
         println("Memory total(GB)    : \e[36m",mem.MemTotal/1024/1024,"\e[0m");
         println("Memory free(GB)     : \e[36m",mem.MemFree/1024/1024,"\e[0m");
-        println("Memory occupation(%): ",mem_occ>30?"\e[91m":"\e[32m",mem_occ,"\e[0m");
+        println("Memory occupation(%): ",mem_occ>60?"\e[91m":"\e[32m",mem_occ,"\e[0m");
     }
 }();

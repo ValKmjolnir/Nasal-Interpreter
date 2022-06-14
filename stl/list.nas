@@ -1,4 +1,4 @@
-# lib list.nas
+# list.nas
 # valkmjolnir 2021/3/31
 var list=func()
 {
