@@ -1,5 +1,6 @@
+# result.nas
+# ValKmjolnir 2021
 
-import("lib.nas");
 var ResultTrait={
     Ok:func(val){
         me.ok=val;

@@ -1,7 +1,5 @@
 # lib file.nas
 # ValKmjolnir 2022/3/6
-import("lib.nas");
-
 var file={
     SEEK_SET:io.SEEK_SET,
     SEEK_CUR:io.SEEK_CUR,

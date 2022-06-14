@@ -1,4 +1,4 @@
-# lib module.nas
+# module.nas
 # ValKmjolnir 2022/3/5
 
 # this provides safe usage of dylib
