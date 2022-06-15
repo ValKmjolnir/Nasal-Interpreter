@@ -10,7 +10,7 @@ var compare=func(){
     ];
     return func(begin,end){
         var total=end-begin;
-        var bar=process_bar.bar(front:"block",back:"point",sep:"line",length:50);
+        var bar=process_bar.bar(front:os.platform()=="windows"?"sharp":"block",back:"point",sep:"line",length:50);
         for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){

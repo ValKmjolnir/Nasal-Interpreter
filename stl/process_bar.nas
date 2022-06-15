@@ -200,49 +200,107 @@ process_bar.spinner=func(){
         }
     };
 }();
+process_bar.default_bar=func(name="classic",length=20){
+    if(typeof(name)!="str")
+        name="classic";
+    if(name=="classic")
+        return process_bar.bar("sharp","point","bracket",length);
+    elsif(name=="classic2")
+        return process_bar.bar("equal","point","bracket",length);
+    elsif(name=="classic3")
+        return process_bar.bar("sharp","point","line",length);
+    elsif(name=="classic4")
+        return process_bar.bar("equal","point","line",length);
+    elsif(name=="triangle")
+        return process_bar.bar("solid_triangle_right","hollow_triangle_right","angle_bracket",length);
+    elsif(name=="dots")
+        return process_bar.bar("solid_circle","hollow_circle","curve",length);
+    elsif(name=="ticks")
+        return process_bar.bar("tick","space","line",length);
+    elsif(name=="deep_shadow")
+        return process_bar.bar("deep_shadow","light_shadow","line",length);
+    elsif(name=="block")
+        return process_bar.bar("block","light_shadow","line",length);
+    else
+        return process_bar.bar("sharp","point","bracket",length);
+}
+process_bar.default_spinner=func(name="classic",repeat=1){
+    if(typeof(name)!="str")
+        name="classic";
+    if(name=="rise")
+        return process_bar.spinner("rise",repeat);
+    elsif(name=="vertical")
+        return process_bar.spinner("vertical",repeat);
+    elsif(name=="dot")
+        return process_bar.spinner("dot",repeat);
+    elsif(name=="dots")
+        return process_bar.spinner("dots",repeat);
+    elsif(name=="arrow")
+        return process_bar.spinner("arrow",repeat);
+    elsif(name=="classic")
+        return process_bar.spinner("classic",repeat);
+    elsif(name=="balls")
+        return process_bar.spinner("balls",repeat);
+    elsif(name=="dots_wave")
+        return process_bar.spinner("dots_wave",repeat);
+    elsif(name=="pulse")
+        return process_bar.spinner("pulse",repeat);
+    elsif(name=="wave")
+        return process_bar.spinner("wave",repeat);
+    elsif(name=="short_wave")
+        return process_bar.spinner("short_wave",repeat);
+    elsif(name=="fish")
+        return process_bar.spinner("fish",repeat);
+    elsif(name=="happy")
+        return process_bar.spinner("happy",repeat);
+    elsif(name=="wait")
+        return process_bar.spinner("wait",repeat);
+    elsif(name=="stars")
+        return process_bar.spinner("stars",repeat);
+    else
+        return process_bar.spinner("classic",repeat);
+}
 
 var show=func(){
     print("\ec");
     var bars={
-        "classic    ":process_bar.bar(front:"sharp",back:"point",sep:"bracket",length:40),
-        "classic2   ":process_bar.bar(front:"equal",back:"point",sep:"bracket",length:40),
-        "triangle   ":process_bar.bar(front:"solid_triangle_right",back:"hollow_triangle_right",sep:"angle_bracket",length:40),
-        "dots       ":process_bar.bar(front:"solid_circle",back:"hollow_circle",sep:"curve",length:40),
-        "ticks      ":process_bar.bar(front:"tick",back:"space",sep:"line",length:40),
-        "deep_shadow":process_bar.bar(front:"deep_shadow",back:"light_shadow",sep:"line",length:40),
-        "block      ":process_bar.bar(front:"block",back:"light_shadow",sep:"line",length:40)
+        "classic    ":process_bar.default_bar("classic",40),
+        "classic2   ":process_bar.default_bar("classic2",40),
+        "classic3   ":process_bar.default_bar("classic3",40),
+        "classic4   ":process_bar.default_bar("classic4",40),
+        "triangle   ":process_bar.default_bar("triangle",40),
+        "dots       ":process_bar.default_bar("dots",40),
+        "ticks      ":process_bar.default_bar("ticks",40),
+        "deep_shadow":process_bar.default_bar("deep_shadow",40),
+        "block      ":process_bar.default_bar("block",40)
     };
-    var key=keys(bars);
+    var spinners={
+        "rise       ":process_bar.default_spinner("rise",16),
+        "vertical   ":process_bar.default_spinner("vertical",16),
+        "dot        ":process_bar.default_spinner("dot",16),
+        "dots       ":process_bar.default_spinner("dots",16),
+        "arrow      ":process_bar.default_spinner("arrow",16),
+        "classic    ":process_bar.default_spinner("classic",16),
+        "balls      ":process_bar.default_spinner("balls",4),
+        "dots_wave  ":process_bar.default_spinner("dots_wave",2),
+        "pulse      ":process_bar.default_spinner("pulse",1),
+        "wave       ":process_bar.default_spinner("wave",2),
+        "short_wave ":process_bar.default_spinner("short_wave",4),
+        "fish       ":process_bar.default_spinner("fish",1),
+        "happy      ":process_bar.default_spinner("happy",1),
+        "wait       ":process_bar.default_spinner("wait",1),
+        "stars      ":process_bar.default_spinner("stars",1)
+    };
+    var bar_key=keys(bars);
+    var spin_key=keys(spinners);
     for(var i=0;i<40;i+=1){
-        forindex(var j;key){
-            var k=key[j];
+        forindex(var j;bar_key){
+            var k=bar_key[j];
             print("\e["~(j+1)~";1H["~k~"] "~bars[k].bar((i+1)/40));
         }
-        unix.sleep(1/25);
-    }
-    var spinners={
-        "rise       ":process_bar.spinner(type:"rise",repeat:16),
-        "vertical   ":process_bar.spinner(type:"vertical",repeat:16),
-        "dot        ":process_bar.spinner(type:"dot",repeat:16),
-        "dots       ":process_bar.spinner(type:"dots",repeat:16),
-        "arrow      ":process_bar.spinner(type:"arrow",repeat:16),
-        "classic    ":process_bar.spinner(type:"classic",repeat:16),
-        "balls      ":process_bar.spinner(type:"balls",repeat:4),
-        "dots_wave  ":process_bar.spinner(type:"dots_wave",repeat:2),
-        "pulse      ":process_bar.spinner(type:"pulse",repeat:1),
-        "wave       ":process_bar.spinner(type:"wave",repeat:2),
-        "short_wave ":process_bar.spinner(type:"short_wave",repeat:4),
-        "fish       ":process_bar.spinner(type:"fish",repeat:1),
-        "happy      ":process_bar.spinner(type:"happy",repeat:1),
-        "wait       ":process_bar.spinner(type:"wait",repeat:1),
-        "stars      ":process_bar.spinner(type:"stars",repeat:1)
-    };
-    var key=keys(spinners);
-    for(var i=0;i<80;i+=1){
-        forindex(var j;key){
-            var k=key[j];
-            var tmp=spinners[k];
-            print("\e["~(j+1+size(bars))~";1H["~k~"] |"~tmp.next()~"|");
+        forindex(var j;spin_key){
+            var k=spin_key[j];
+            print("\e["~(j+1+size(bars))~";1H["~k~"] |"~spinners[k].next()~"|");
         }
         unix.sleep(1/20);
     }
