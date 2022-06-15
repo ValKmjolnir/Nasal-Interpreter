@@ -1,18 +1,6 @@
 import("test/md5.nas");
-
+import("stl/process_bar.nas");
 srand();
-
-var progress_bar=func(){
-    var res=[];
-    setsize(res,51);
-    var (tmp,sp)=(" |","                                                  | ");
-    res[0]=tmp~sp;
-    for(var i=1;i<=50;i+=1){
-        tmp~="#";
-        res[i]=tmp~substr(sp,i,52-i);
-    }
-    return res;
-}();
 
 var compare=func(){
     var ch=[
@@ -21,7 +9,8 @@ var compare=func(){
         "^","&","*","(",")","-","=","\\","|","[","]","{","}","`"," ","\t","?"
     ];
     return func(begin,end){
-        var (total,prt_cnt,lastpercent,percent)=(end-begin,0,0,0);
+        var total=end-begin;
+        var bar=process_bar.bar(front:"block",back:"point",sep:"line",length:50);
         for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){
@@ -31,12 +20,7 @@ var compare=func(){
             if(cmp(res,_md5(s))){
                 die("error: "~str(i));
             }
-            percent=int((i-begin+1)/total*100);
-            if(percent-lastpercent>=2){
-                prt_cnt+=1;
-                lastpercent=percent;
-            }
-            print(progress_bar[prt_cnt],percent,"% (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
+            print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
         }
         print('\n');
     };
