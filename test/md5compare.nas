@@ -22,7 +22,7 @@ var compare=func(){
             }
             print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," max byte: ",end-1,"    \r");
         }
-        print('\n');
+        print("\n");
     };
 }();
 
@@ -104,11 +104,19 @@ var filechecksum=func(){
         "nasal.h                 ",
         "README.md               "
     ];
-    foreach(var i;files){
-        var f=io.fin(getname(i));
-        var (res0,res1)=(md5(f),_md5(f));
-        println(i,'   ',res0,'   ',!cmp(res0,res1),'   ',size(f),' byte');
+    var byte=0;
+    var total=size(files);
+    var bar=process_bar.bar(front:os.platform()=="windows"?"sharp":"block",back:"point",sep:"line",length:50);
+    forindex(var i;files){
+        var f=io.fin(getname(files[i]));
+        var res=md5(f);
+        byte+=size(f);
+        if(cmp(res,_md5(f))){
+            die("error: "~files[i]);
+        }
+        print(" ",bar.bar((i+1)/total)," (",i+1,"/",total,")\t",res,"     byte: ",byte,"    \r");
     }
+    print("\n");
 }
 
 var randomchecksum=func(){

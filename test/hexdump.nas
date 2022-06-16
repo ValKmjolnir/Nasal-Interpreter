@@ -16,16 +16,23 @@ foreach(var i;hex_num)
 # read file
 var s=func(){
     var filename=[
-        "nasal.h",
+        "LICENSE",
         "main.cpp",
+        "makefile",
         "nasal_ast.h",
         "nasal_builtin.h",
         "nasal_codegen.h",
+        "nasal_dbg.h",
+        "nasal_err.h",
         "nasal_gc.h",
         "nasal_import.h",
         "nasal_lexer.h",
+        "nasal_opt.h",
         "nasal_parse.h",
         "nasal_vm.h",
+        "nasal.ebnf",
+        "nasal.h",
+        "README.md"
     ];
     var ret="";
     foreach(var elem;filename)
@@ -42,8 +49,12 @@ var hex_index=[0,0,0,0];
 # print binary in text format
 var textprint=func(index){
     var info='';
-    for(var i=index-cnt;i<index;i+=1)
-        info~=(0<=s[i] and s[i]<32)?'.':chr(s[i]);
+    if(os.platform()=="windows")
+        for(var i=index-cnt;i<index;i+=1)
+            info~=(s[i]<32 or s[i]>=128)?'.':chr(s[i]);
+    else
+        for(var i=index-cnt;i<index;i+=1)
+            info~=(0<=s[i] and s[i]<32)?'.':chr(s[i]);
     for(var i=cnt;i<16;i+=1)
         info~='.';
     return ' |'~info~'|\n';
