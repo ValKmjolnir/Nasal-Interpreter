@@ -1,4 +1,4 @@
-# __Nasal Scripting Language__
+# __Nasal 脚本语言__
 
 ```C++
        __                _
@@ -11,39 +11,39 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github)
-[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](./LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](../LICENSE)
 
-> This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
+> 这篇文档包含多种语言版本: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
 
-## __Contents__
+## __目录__
 
-* [__Introduction__](#introduction)
-* [__Compile__](#how-to-compile)
-* [__Usage__](#how-to-use)
-* [__Tutorial__](#tutorial)
-  * [basic value type](#basic-value-type)
-  * [operators](#operators)
-  * [definition](#definition)
-  * [multi-assignment](#multi-assignment)
-  * [conditional expression](#conditional-expression)
-  * [loop](#loop)
+* [__简介__](#简介)
+* [__编译__](#编译方式)
+* [__使用方法__](#使用方法)
+* [__教程__](#教程)
+  * [基本类型](#基本类型)
+  * [运算符](#operators)
+  * [定义变量](#definition)
+  * [多变量赋值](#multi-assignment)
+  * [条件语句](#conditional-expression)
+  * [循环语句](#loop)
   * [subvec](#subvec)
-  * [special function call](#special-function-call)
-  * [lambda](#lambda)
-  * [closure](#closure)
-  * [trait](#trait)
-  * [native functions](#native-functions)
-  * [modules](#modulesfor-library-developers)
-* [__Release Notes__](#release-notes)
+  * [特殊函数调用方式](#special-function-call)
+  * [lambda表达式](#lambda)
+  * [闭包](#closure)
+  * [trait(特性)](#trait)
+  * [内置函数](#native-functions)
+  * [模块](#modulesfor-library-developers)
+* [__发行版日志__](#release-notes)
   * [v8.0](#version-80-release)
-* [__Parser__](#parser)
+* [__语法分析器__](#parser)
   * [v1.0](#version-10-parser-last-update-20191014)
-* [__Abstract Syntax Tree__](#abstract-syntax-tree)
+* [__抽象语法树__](#abstract-syntax-tree)
   * [v1.2](#version-12-ast-last-update-20191031)
   * [v2.0](#version-20-ast-last-update-2020831)
   * [v3.0](#version-30-ast-last-update-20201023)
   * [v5.0](#version-50-ast-last-update-202137)
-* [__Bytecode VM__](#bytecode-virtual-machine)
+* [__字节码虚拟机__](#bytecode-virtual-machine)
   * [v4.0](#version-40-vm-last-update-20201217)
   * [v5.0](#version-50-vm-last-update-202137)
   * [v6.0](#version-60-vm-last-update-202161)
@@ -52,109 +52,93 @@
   * [v8.0](#version-80-vm-last-update-2022212)
   * [v9.0](#version-90-vm-last-update-2022518)
   * [v10.0](#version-100-vm-latest)
-* [__Benchmark__](#benchmark)
+* [__测试数据__](#benchmark)
   * [v6.5 (i5-8250U windows 10)](#version-65-i5-8250u-windows10-2021619)
   * [v6.5 (i5-8250U ubuntu-WSL)](#version-70-i5-8250u-ubuntu-wsl-on-windows10-2021629)
   * [v8.0 (R9-5900HX ubuntu-WSL)](#version-80-r9-5900hx-ubuntu-wsl-2022123)
   * [v9.0 (R9-5900HX ubuntu-WSL)](#version-90-r9-5900hx-ubuntu-wsl-2022213)
-* [__Difference__](#difference-between-andys-and-this-interpreter)
-  * [strict definition](#1-must-use-var-to-define-variables)
-  * [(outdated)use after definition](#2-now-supported-couldnt-use-variables-before-definitions)
-  * [default dynamic arguments](#3-default-dynamic-arguments-not-supported)
-* [__Trace Back Info__](#trace-back-info)
-  * [native function 'die'](#1-native-function-die)
-  * [stack overflow](#2-stack-overflow-crash-info)
-  * [runtime error](#3-normal-vm-error-crash-info)
-  * [detailed crash info](#4-detailed-crash-info)
-* [__Debugger__](#debugger)
+* [__特性__](#difference-between-andys-and-this-interpreter)
+  * [严格的定义要求](#1-must-use-var-to-define-variables)
+  * [(已过时)在定义后调用变量](#2-now-supported-couldnt-use-variables-before-definitions)
+  * [缺省(默认)参数](#3-default-dynamic-arguments-not-supported)
+* [__堆栈追踪信息__](#trace-back-info)
+  * [内置函数 'die'](#1-native-function-die)
+  * [栈溢出](#2-stack-overflow-crash-info)
+  * [运行时错误](#3-normal-vm-error-crash-info)
+  * [详细的崩溃信息](#4-detailed-crash-info)
+* [__调试器__](#debugger)
 
-__Contact us if having great ideas to share!__
+__如果有好的意见或建议，欢迎联系我们!__
 
 * __E-mail__: __lhk101lhk101@qq.com__
 
 * __QQ__: __896693328__
 
-## __Introduction__
+## __简介__
 
 __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
-is an ECMAscript-like programming language that used in __[FlightGear](https://www.flightgear.org/)__.
-This language is designed by __[Andy Ross](https://github.com/andyross)__.
+是一个与ECMAscript标准语法设计相似的编程语言，并且作为运行脚本语言被著名的开源飞行模拟器 __[FlightGear](https://www.flightgear.org/)__ 所依赖。
+该语言的设计者和初版解释器实现者为 __[Andy Ross](https://github.com/andyross)__。
 
-The interpreter is totally rewritten by __[ValKmjolnir](https://github.com/ValKmjolnir)__ using `C++`(`-std=c++11`)
-without reusing the code in __[Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>)__.
-But we really appreciate that Andy created this amazing programming language and his interpreter project.
+这个解释器项目则由 __[ValKmjolnir](https://github.com/ValKmjolnir)__ 完全使用 `C++`(`-std=c++11`)重新实现，没有复用 __[Andy Ross的nasal解释器](<https://github.com/andyross/nasal>)__ 中的任何一行代码。尽管没有任何的参考代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
 
-Now this project uses __MIT license__ (2021/5/4).
-Edit it if you want,
-use this project to learn or create more interesting things
-(But don't forget me XD).
+现在这个项目已经使用 __MIT 协议__ 开源 (2021/5/4)。根据该协议的内容，你们可以根据自己的需求进行修改，使用它来学习或者创造更多有趣的东西(不过可别忘了，如果要开源必须要附带本项目拥有者的相关信息)。
 
-__Why writing this nasal interpreter?__
-In 2019 summer holiday,
-members in __[FGPRC](https://www.fgprc.org/)__ told me that it is hard to debug with nasal-console in Flightgear,
-especially when checking syntax errors.
-So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
+__我们为什么想要重新写一个nasal解释器?__
+这是个很偶然的想法。2019年暑假，__[FGPRC](https://www.fgprc.org/)__ 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试实在是太费劲了，有时候只是想检查语法错误，也得花费时间打开这个软件等待加载进去之后进行调试。所以我就想，也许可以写一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
 
-I wrote the lexer,
-parser and
-bytecode virtual machine(there was an ast-interpreter,
-but deleted after v4.0) to help checking errors.
-We found it much easier to check syntax and runtime
-errors before copying nasal-codes in nasal-console in Flightgear to test.
+我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机(曾经我们使用ast解释器来直接在抽象语法树中执行，然而在v4.0之后这个解释器已经淘汰)，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误非常快捷，远比每次都需要复制nasal代码到Flightgear的nasal控制台中去查看要方便，且错误信息清晰直观。
 
-Also, you could use this language to write some
-interesting programs and run them without the lib of Flightgear.
-You could add your own modules to make
-this interpreter a useful tool in your own projects (such as a script in a game just as Flightgear does).
+当然，你也可以使用这个语言来写一些与Flightgear运行环境无关的其他有趣的程序(它毕竟就是个脚本语言)，并用这个解释器来执行，让这个语言脱离Flightgear的环境，去别的地方大展身手。你也可以编写你自己的模块，让nasal来调用，使得这个语言成为你的项目中一个非常有用的工具。
 
-## __How to Compile__
+## __编译方式__
 
 ![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
 ![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
 
-Better choose the latest update of the interpreter.
-Download the source and build it! It's quite easy to build this interpreter.
+我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧因此你可以非常快速地将它编译出来。
 
-__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](#release-notes) below to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
+__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之后请阅读下文中对应发行版本的[__发行日志__](#release-notes)以保证这个发行版的文件中不包含非常严重的bug(有的严重bug都是在发行之后才发现，非常搞心态)。在发行版日志中我们会告知如何在代码中手动修复这个严重的bug。
 
-[![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/ "PLEASE USE MINGW ON WINDOWS!")
+[![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/ "Windows用户请一定要使用MinGW编译！")
 
-__PLEASE USE MINGW ON WINDOWS!__
+__Windows用户请一定一定一定要使用MinGW编译！__
 
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 
-Use g++ on __`Windows`__(`MinGW-w64`) platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/). (otherwise don't blame me for not reminding YOU 👿 )
+__`Windows`__(`MinGW-w64`)用户使用g++编译器并使用以下命令来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(编译不出来别怪我没说哦👿)
 
 > g++ -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
-Or use g++/clang++ on __`linux/macOS/Unix`__ platform.
+__`linux/macOS/Unix`__ 用户可以使用g++或者clang++替代下面命令中中括号的部分来进行编译。
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
-Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
+当然也可以使用makefile，`mingw32-make`是 __`Windows(MinGW-w64)`__ 平台的`make`:
 
 > mingw32-make nasal.exe
 >
 > mingw32-make.exe nasal.exe
 
-on __`linux/macOS/Unix`__:
+__`linux/macOS/Unix`__ 平台直接使用make即可:
 
 > make nasal
 
-## __How to Use__
+## __使用方法__
 
-First we should learn how to write and run a program using this language,
-click to see the [__tutorial__](#tutorial).
+首先我们要通过[__教程__](#教程)知道这个语言的语法以及如何使用这个解释器来运行nasal程序。
 
-Input this command to run scripts __directly__:
+输入下面的命令来 __直接__ 执行:
 
 > ./nasal filename
 
-Use these commands to get version of interpreter:
+下面两个命令可以用于查看解释器的版本:
 
-> ./nasal -v | --version
+> ./nasal -v
+>
+> ./nasal --version
 
 ```bash
        __                _
@@ -171,9 +155,11 @@ lang info : http://wiki.flightgear.org/Nasal_scripting_language
 input <nasal -h> to get help .
 ```
 
-Use these commands to get help(see more debug commands in help):
+下面两个命令可以用于查看帮助(调试器的使用方法可以进入调试模式之后根据提示来查询):
 
-> ./nasal -h | --help
+> ./nasal -h
+>
+> ./nasal --help
 
 ```bash
      ,--#-,
@@ -205,25 +191,23 @@ file:
     input file name to execute script file.
 ```
 
-If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
+如果你的操作系统是 __`Windows`__ 并且你想输出unicode，请保证你的控制台程序的代码页支持utf-8，若不支持，使用下面这个命令启用代码页:
 
 > chcp 65001
 
-or you could write this in your nasal code:
+或者你可以直接在nasal代码里写这个来开启:
 
 ```javascript
 if(os.platform()=="windows")
     system("chcp 65001");
 ```
 
-## __Tutorial__
+## __教程__
 
-Nasal is really __easy__ to learn.
-Reading this tutorial will not takes you over 15 minutes.
-__If you have learnt C/C++/Javascript before, this will take less time.__
-You could totally use it after reading this simple tutorial:
+nasal是非常容易上手的，你甚至可以在15分钟之内看完这里的基本教程并且直接开始编写你想要的程序。
+__如果你先前已经是C/C++,javascript选手，那么这个教程几乎可以不用看了……__ 在看完该教程之后，基本上你就完全掌握了这个语言:
 
-### __basic value type__
+### __基本类型__
 
 __`vm_none`__ is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
