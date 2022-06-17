@@ -22,15 +22,15 @@
 * [__使用方法__](#使用方法)
 * [__教程__](#教程)
   * [基本类型](#基本类型)
-  * [运算符](#operators)
-  * [定义变量](#definition)
-  * [多变量赋值](#multi-assignment)
-  * [条件语句](#conditional-expression)
-  * [循环语句](#loop)
-  * [subvec](#subvec)
-  * [特殊函数调用方式](#special-function-call)
-  * [lambda表达式](#lambda)
-  * [闭包](#closure)
+  * [运算符](#运算符)
+  * [定义变量](#定义变量)
+  * [多变量赋值](#多变量赋值)
+  * [条件语句](#条件语句)
+  * [循环语句](#循环语句)
+  * [生成子列表](#生成子列表)
+  * [特殊函数调用语法](#特殊函数调用语法)
+  * [lambda表达式](#lambda表达式)
+  * [闭包](#闭包)
   * [trait(特性)](#trait)
   * [内置函数](#native-functions)
   * [模块](#modulesfor-library-developers)
@@ -209,16 +209,15 @@ __如果你先前已经是C/C++,javascript选手，那么这个教程几乎可�
 
 ### __基本类型__
 
-__`vm_none`__ is error type.
-This type is used to interrupt the execution of virtual machine and will not be created by user program.
+__`vm_none`__ 是特殊的错误类型。这个类型用于终止虚拟机的执行，用户是无法申请到这个类型的，该类型只能由字节码虚拟机自己在抛出错误时产生。
 
-__`vm_nil`__ is a null type. It means nothing.
+__`vm_nil`__ 是空类型。类似于null。
 
 ```javascript
 var spc=nil;
 ```
 
-__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
+__`vm_num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数double格式来存储。
 
 ```javascript
 # this language use '#' to write notes
@@ -231,14 +230,14 @@ var n=0xAA55;     # hex
 var n=0o170001;   # oct
 ```
 
-__`vm_str`__ has 3 formats. The third one is used to declare a character.
+__`vm_str`__ 也有三种不同的格式。第三种只允许包含一个的字符。
 
 ```javascript
 var s='str';
 var s="another string";
 var s=`c`;
 
-# some special characters is allowed in this language:
+# 该语言也支持一些特别的转义字符:
 
 '\a';
 '\b';
@@ -255,7 +254,7 @@ var s=`c`;
 '\"';
 ```
 
-__`vm_vec`__ has unlimited length and can store all types of values.
+__`vm_vec`__ 有不受限制的长度并且可以存储所有类型的数据。(当然不能超过可分配内存空间的长度)
 
 ```javascript
 var vec=[];
@@ -269,7 +268,7 @@ var vec=[
 append(vec,0,1,2);
 ```
 
-__`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
+__`vm_hash`__ 使用哈希表(类似于`python`中的字典)，通过键值对来存储数据。key可以是一个字符串，也可以是一个标识符。
 
 ```javascript
 var hash={
@@ -284,7 +283,7 @@ var hash={
 };
 ```
 
-__`vm_func`__ is a function type (in fact it is lambda).
+__`vm_func`__ 函数类型。(实际上在这个语言里函数也是一种lambda表达式)
 
 ```javascript
 var f=func(x,y,z){
@@ -304,14 +303,9 @@ var f=func(args...){
 }
 ```
 
-__`vm_upval`__ is a special type that used to store upvalues.
-This type is only used in `nasal_vm` to make sure closure runs correctly.
+__`vm_upval`__ 是用于存储闭包数据的特殊类型。这种类型只在`nasal_vm`中使用，用于确保闭包是可以正确使用的。
 
-__`vm_obj`__ is a special type that stores user data.
-This means you could use other complex C/C++ data types in nasal.
-This type is used when you are trying to add a new data structure into nasal,
-so this type is often created by native-function that programmed in C/C++ by library developers.
-You could see how to write your own native-functions below.
+__`vm_obj`__ 是一种用来存储用户自定义数据的特别类型。这意味着你可以在nasal中使用C/C++的一些复杂数据结构。如果你想为nasal添加一种新的数据结构，那么就可以使用这个类型的数据。这种类型的数据一般由内置函数或者库开发者提供的模块函数生成。
 
 ```javascript
 var my_new_obj=func(){
@@ -320,9 +314,9 @@ var my_new_obj=func(){
 var obj=my_new_obj();
 ```
 
-### __operators__
+### __运算符__
 
-Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
+nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的运算符 `~`，这个运算符用于拼接两个字符串。
 
 ```javascript
 1+2-1*2/1;
@@ -330,8 +324,7 @@ Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that l
 (1+2)*(3+4)
 ```
 
-For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
-`and` `or` have the same function as C/C++ `&&` `||`, link comparations together.
+对于条件语句，可以使用`==` `!=` `<` `>` `<=` `>=`来比较两个数据。`and` `or` 有着与C/C++中 `&&` `||`运算符相同的功能，用于连接两个不同的条件语句。
 
 ```javascript
 1+1 and 0;
@@ -340,14 +333,14 @@ For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to c
 1==0 or 1!=0;
 ```
 
-Unary operators `-` `!` have the same function as C/C++.
+单目运算符`-` `!`与C/C++中的运算符功能类似.
 
 ```javascript
 -1;
 !0;
 ```
 
-Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
+赋值运算符`=` `+=` `-=` `*=` `/=` `~=`正如其名，用于进行赋值。
 
 ```javascript
 a=b=c=d=1;
@@ -358,7 +351,7 @@ a/=1;
 a~='string';
 ```
 
-### __definition__
+### __定义变量__
 
 ```javascript
 var a=1;
@@ -368,9 +361,9 @@ var (a,b,c)=(0,1,2);
 (var a,b,c)=(0,1,2);
 ```
 
-### __multi-assignment__
+### __多变量赋值__
 
-The last one is often used to swap two variables.
+最后这个语句通常用于交换两个变量的数据，类似于Python中的操作。
 
 ```javascript
 (a,b[0],c.d)=[0,1,2];
@@ -378,10 +371,9 @@ The last one is often used to swap two variables.
 (a,b)=(b,a);
 ```
 
-### __conditional expression__
+### __条件语句__
 
-In nasal there's a new key word `elsif`.
-It has the same functions as `else if`.
+nasal在提供`else if`的同时还有另外一个关键字`elsif`。该关键字与`else if`有相同的功能。
 
 ```javascript
 if(1){
@@ -395,9 +387,9 @@ if(1){
 }
 ```
 
-### __loop__
+### __循环语句__
 
-While loop and for loop is simalar to C/C++.
+while循环和for循环大体上与C/C++是一致的。
 
 ```javascript
 while(condition)
@@ -407,52 +399,49 @@ for(var i=0;i<10;i+=1)
     break;
 ```
 
-Nasal has another two kinds of loops that iterates through a vector:
+同时，nasal还有另外两种直接遍历列表的循环方式:
 
-`forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
+`forindex` 会获取列表的下标，依次递增. 下标会从`0`递增到`size(elem)-1`结束。
 
 ```javascript
 forindex(var i;elem)
     print(elem[i]);
 ```
 
-`foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
+`foreach`会依次直接获取列表中的数据. 这些数据会从`elem[0]`依次获取到`elem[size(elem)-1]`.
 
 ```javascript
 foreach(var i;elem)
     print(i);
 ```
 
-### __subvec__
+### __生成子列表__
 
-Use index to search one element in the string will get the __ascii number__ of this character.
-If you want to get the character, use built-in function chr().
+nasal提供了下面第一句的类似语法来从列表中随机或者按照一个区间获取数据，并且拼接生成一个新的列表。当然如果中括号内只有一个下标的话，你会直接获得这个下标对应的数据而不是一个子列表。如果直接对string使用下标来获取内容的话，会得到对应字符的 __ascii值__。如果你想进一步获得这个字符串，可以尝试使用内置函数`chr()`。
 
 ```javascript
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 "hello world"[0];
 ```
 
-### __special function call__
+### __特殊函数调用语法__
 
-This is of great use but is not very efficient
-(because hashmap use string as the key to compare).
+这种特别的调用方式有时非常有用，但是切记这种调用方式不是很高效，因为哈希表会使用字符串比对来找到数据存放的位置。
 
 ```javascript
 f(x:0,y:nil,z:[]);
 ```
 
-### __lambda__
+### __lambda表达式__
 
-Also functions have this kind of use:
+正如上文所述，函数有这样一种直接编写函数体并且直接调用的方式:
 
 ```javascript
 func(x,y){return x+y}(0,1);
 func(x){return 1/(1+math.exp(-x));}(0.5);
 ```
 
-There's an interesting test file `y-combinator.nas`,
-try it for fun:
+测试文件中有一个非常有趣的文件`y-combinator.nas`，也就是y组合子，可以试一试，非常有趣:
 
 ```javascript
 var fib=func(f){
@@ -467,7 +456,7 @@ var fib=func(f){
 );
 ```
 
-### __closure__
+### __闭包__
 
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
