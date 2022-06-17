@@ -9,6 +9,9 @@
 ```
 
 ![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)
+![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
+![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
+![c++11](https://img.shields.io/badge/C++-11-00599C?style=flat-square&logo=Cplusplus)
 
 ## __Contents__
 
@@ -109,11 +112,20 @@ Download the source and build it! It's quite easy to build this interpreter.
 
 __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](#release-notes) below to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
 
-Also remember to use g++ or clang++.(`mingw-w64` in __`Windows`__)
+[![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/)
 
-> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
+__PLEASE USE MINGW ON WINDOWS!__
 
-Or use this in __`linux/macOS/Unix`__
+![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
+
+Use g++ on __`Windows`__(`MinGW-w64`) platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/). (otherwise don't blame me for not reminding YOU 👿 )
+
+> g++ -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
+
+![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
+![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
+
+Or use g++/clang++ on __`linux/macOS/Unix`__ platform.
 
 > [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
@@ -123,7 +135,7 @@ Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
 >
 > mingw32-make.exe nasal.exe
 
-in __`linux/macOS/Unix`__:
+on __`linux/macOS/Unix`__:
 
 > make nasal
 
