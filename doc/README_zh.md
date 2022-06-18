@@ -13,7 +13,7 @@
 ![in dev](https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](../LICENSE)
 
-> 这篇文档包含多种语言版本: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
+> 这篇文档包含多种语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
 ## __目录__
 
@@ -31,19 +31,19 @@
   * [特殊函数调用语法](#特殊函数调用语法)
   * [lambda表达式](#lambda表达式)
   * [闭包](#闭包)
-  * [trait(特性)](#trait)
-  * [内置函数](#native-functions)
-  * [模块](#modulesfor-library-developers)
-* [__发行版日志__](#release-notes)
+  * [trait(特性)](#特性)
+  * [内置函数](#内置函数)
+  * [模块](#模块开发者教程)
+* [__发行日志__](#发行日志)
   * [v8.0](#version-80-release)
-* [__语法分析器__](#parser)
+* [__语法分析__](#语法分析)
   * [v1.0](#version-10-parser-last-update-20191014)
-* [__抽象语法树__](#abstract-syntax-tree)
+* [__抽象语法树__](#抽象语法树)
   * [v1.2](#version-12-ast-last-update-20191031)
   * [v2.0](#version-20-ast-last-update-2020831)
   * [v3.0](#version-30-ast-last-update-20201023)
   * [v5.0](#version-50-ast-last-update-202137)
-* [__字节码虚拟机__](#bytecode-virtual-machine)
+* [__字节码虚拟机__](#字节码虚拟机)
   * [v4.0](#version-40-vm-last-update-20201217)
   * [v5.0](#version-50-vm-last-update-202137)
   * [v6.0](#version-60-vm-last-update-202161)
@@ -99,7 +99,7 @@ __我们为什么想要重新写一个nasal解释器?__
 
 我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧因此你可以非常快速地将它编译出来。
 
-__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之后请阅读下文中对应发行版本的[__发行日志__](#release-notes)以保证这个发行版的文件中不包含非常严重的bug(有的严重bug都是在发行之后才发现，非常搞心态)。在发行版日志中我们会告知如何在代码中手动修复这个严重的bug。
+__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之后请阅读下文中对应发行版本的[__发行日志__](#发行日志)以保证这个发行版的文件中不包含非常严重的bug(有的严重bug都是在发行之后才发现，非常搞心态)。在发行版日志中我们会告知如何在代码中手动修复这个严重的bug。
 
 [![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/ "Windows用户请一定要使用MinGW编译！")
 
@@ -420,6 +420,7 @@ foreach(var i;elem)
 nasal提供了下面第一句的类似语法来从列表中随机或者按照一个区间获取数据，并且拼接生成一个新的列表。当然如果中括号内只有一个下标的话，你会直接获得这个下标对应的数据而不是一个子列表。如果直接对string使用下标来获取内容的话，会得到对应字符的 __ascii值__。如果你想进一步获得这个字符串，可以尝试使用内置函数`chr()`。
 
 ```javascript
+a[0];
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 "hello world"[0];
 ```
@@ -458,8 +459,7 @@ var fib=func(f){
 
 ### __闭包__
 
-Closure means you could get the variable that is not in the local scope of a function that you called.
-Here is an example, result is `1`:
+闭包是一种特别的作用域，你可以从这个作用域中获取其保存的所有变量，而这些变量原本不是你当前运行的函数的局部作用域中的。下面这个例子里，结果是`1`:
 
 ```javascript
 var f=func(){
@@ -469,7 +469,7 @@ var f=func(){
 print(f()());
 ```
 
-Using closure makes it easier to OOP.
+如果善用闭包，你可以使用它来进行面向对象编程。
 
 ```javascript
 var student=func(n,a){
@@ -484,16 +484,14 @@ var student=func(n,a){
 }
 ```
 
-### __trait__
+### __特性__
 
-Also there's another way to OOP, that is `trait`.
+当然，也有另外一种办法来面向对象编程，那就是利用`trait`。
 
-When a hash has a member named `parents` and the value type is vector,
-then when you are trying to find a member that is not in this hash,
-virtual machine will search the member in `parents`.
-If there is a hash that has the member, you will get the member's value.
+当一个hash类型中，有一个成员的key是`parents`，并且该成员是一个数组的话，那么当你试图从这个hash中寻找一个它自己没有的成员名时，虚拟机会进一步搜索`parents`数组。
+如果该数组中有一个hash类型，有一个成员的key与当前你搜索的成员名一致，那么你会得到这个成员对应的值。
 
-Using this mechanism, we could OOP like this, the result is `114514`:
+使用这个机制，我们可以进行面向对象编程，下面样例的结果是`114514`:
 
 ```javascript
 var trait={
@@ -509,47 +507,71 @@ var class={
         };
     }
 };
-```
-
-First virtual machine cannot find member `set` in hash `a`, but in `a.parents` there's a hash `trait` has the member `set`, so we get the `set`.
-variable `me` points to hash `a`, so we change the `a.val`.
-And `get` has the same process.
-
-```javascript
 var a=class.new();
 a.set(114514);
 println(a.get());
 ```
 
-### __native functions__
+首先虚拟机会发现在`a`中找不到成员`set`，但是在`a.parents`中有个hash类型`trait`存在该成员，所以返回了这个成员的值。
+成员`me`指向的是`a`自身，类似于一些语言中的`this`，所以我们通过这个函数，实际上修改了`a.val`。`get`函数的调用实际上也经过了相同的过程。
 
-This part shows how we add native functions in this nasal interpreter.
-If you are interested in this part, this may help you.
-And...
+不过我们必须提醒你一点，如果你在这个地方使用该优化来减少hash的搜索开销:
 
-__CAUTION:__ If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
+```javascript
+var b=a.get;
+println(b());
+println(b());
+```
 
-If you really want to change source code, check built-in functions in lib.nas and see the example below.
+那么你会发现虚拟机崩溃了:
 
-Definition:
+```bash
+114514
+114514
+[vm] callh: must call a hash
+trace back:
+        0x0000050f:     3d 00 00 00 08      callh  0x8 ("val") (a.nas:2)
+        0x00000544:     3e 00 00 00 00      callfv 0x0 (a.nas:19)       
+vm stack(0x7fffd1b38250<sp+83>, limit 10, total 7):
+  0x00000059    | nil  |
+  0x00000058    | pc   | 0x544
+  0x00000057    | addr | 0x0
+  0x00000056    | nil  |
+  0x00000055    | nil  |
+  0x00000054    | nil  |
+  0x00000053    | func | <0x1a3b250> entry:0x125
+```
+
+因为执行`a.get`时在`trait.get`函数的属性中进行了`me=a`的操作。所以接下来第一次运行的时候它确实成功运行了。但是当函数返回时，`me`会被自动设置为`nil`以保证安全，所以第二次调用的时候，`me`不再是个hash类型，故虚拟机抛出了错误。这不意味着这种优化方法是不可行的，只要你理解了它的运行机制，这种优化方式仍然可以使用。
+
+### __内置函数__
+
+这个部分对于纯粹的使用者来说是不需要了解的，它将告诉你我们是如何为这个解释器添加新的内置函数的。如果你对于添加自己私人订制的内置函数很感兴趣，那么这个部分可能会帮到你，并且……
+
+__警告:__ 如果你 __不想__ 通过直接修改解释器源码来添加你自定义的函数，那么你应该看下一个部分 __`模块`__ 的内容，而不是这个部分的内容。
+
+如果你确实是想修改源码来搞一个自己私人订制的解释器，那么你可以说：“我他妈就是想自己私人订制，你们他妈的管得着吗”，然后看看源码中关于内置函数的部分，以及`lib.nas`中是如何包装这些函数的，还有下面的样例:
+
+定义新的内置函数:
 
 ```C++
 nasal_ref builtin_print(nasal_ref*,nasal_gc&);
-// you could also use a macro to define one.
+// 你可以使用这个宏来直接定义一个新的内置函数
 nas_native(builtin_print);
 ```
 
-Then complete this function using C++:
+然后用C++完成这个函数的函数体:
 
 ```C++
 nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
 {
-    // find value with index begin from 1
-    // because local[0] is reserved for value 'me'
+    // 局部变量的下标其实是从1开始的
+    // 因为local[0]是保留给'me'的空间
     nasal_ref vec=local[1];
-    // main process
-    // also check number of arguments and type here
-    // if get an error,use builtin_err
+    // 主要部分
+    // 一些必要的类型检查和输入合法性检测也要在这里写出
+    // 如果检测到问题，用builtin_err函数来返回vm_null
+    // 并且狠狠地骂那些不好好写代码的混蛋(玩笑)
     for(auto& i:vec.vec().elems)
         switch(i.type)
         {
@@ -563,14 +585,14 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
             case vm_obj:  std::cout<<"<object>";       break;
         }
     std::cout<<std::flush;
-    // generate return value,
-    // use gc::alloc(type) to make a new value
-    // or use reserved reference nil/one/zero
+    // 最后一定要记得生成返回值,返回值必须是一个内置的类型，
+    // 可以使用gc::alloc(type)来申请一个需要内存管理的复杂数据结构
+    // 或者用我们已经定义好的nil/one/zero，这些可以直接使用
     return nil;
 }
 ```
 
-After that, register the built-in function's name(in nasal) and the function's pointer in this table:
+这些工作都完成之后，在内置函数注册表中填写它在nasal中的别名，并且在表中填对这个函数的函数指针:
 
 ```C++
 struct func
@@ -584,7 +606,7 @@ struct func
 };
 ```
 
-At last,warp the `__builtin_print` in a nasal file:
+最后，将其包装起来扔到nasal文件中:
 
 ```javascript
 var print=func(elems...){
@@ -592,8 +614,7 @@ var print=func(elems...){
 };
 ```
 
-In fact the arguments that `__builtin_print` uses are not necessary.
-So writting it like this is also right:
+事实上`__builtin_print`后面跟着的传参列表不是必须要写的。所以这样写也对:
 
 ```javascript
 var print=func(elems...){
@@ -601,26 +622,21 @@ var print=func(elems...){
 };
 ```
 
-If you don't warp built-in function in a normal nasal function,
-this built-in function may cause a fault when searching arguments,
-which will cause __segmentation error__.
+一定要注意，如果你不把内置函数包装到一个普通的nasal函数中，那么直接调用这个内置函数会在参数传入阶段出现严重的错误，这个错误会导致 __segmentation error__。也就是大家的老朋友段错误。
 
-Use `import("filename.nas")` to get the nasal file including your built-in functions,
-then you could use it.
+在nasal文件中使用`import("文件名.nas")`可以导入该文件中你包装的所有内置函数，接下来你就可以使用他们了。
 
-version 6.5 update:
+v6.5 更新:
 
-Use `gc::builtin_alloc` in builtin function if this function uses alloc more than one time.
+在内置函数中使用`gc::builtin_alloc`来避免在内置函数中多次申请需要内存管理的数据类型时可能出现的垃圾收集器的问题。
 
-When running a builtin function,alloc will run more than one time,
-this may cause mark-sweep in `gc::alloc`.
+当运行内置函数的时候，内存分配器如果运行超过一次，那么会有更大可能性多次触发垃圾收集器的mark-sweep。这个操作会在`gc::alloc`中触发。
 
-The value got before will be collected,but stil in use in this builtin function,
-this is a fatal error.
+如果先前获取的数值没有被正确存到可以被垃圾收集器索引到的地方，那么它会被错误地回收，这会导致严重的错误。
 
-So use `gc::builtin_alloc` in builtin functions to allocate a new object.
+所以如果不放心，那就在内置函数中用`gc::builtin_alloc`来申请新的数据。
 
-Or use `gc::alloc` like this to avoid sweeping objects incorrectly:
+或者你也可以这样使用`gc::alloc`来规避错误的垃圾回收，目前我们大多使用这种方式，因为`gc::builtin_alloc`没那么靠谱:
 
 ```C++
 nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
@@ -628,7 +644,8 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
-    // push vector into local scope to avoid being sweeped
+    // 把数组提前push到操作数栈上来避免被收集
+    // 但是一定要检查会不会栈溢出
     if(gc.top+1>=gc.canary)
         return builtin_err("keys","expand temporary space error:stackoverflow");
     (++gc.top)[0]=gc.alloc(vm_vec);
@@ -644,14 +661,11 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
 }
 ```
 
-### __modules(for library developers)__
+### __模块(开发者教程)__
 
-If there is only one way to add your own functions into nasal,
-that is really inconvenient.
+如果只有上文中那种方式来添加你自定义的函数到nasal中，这肯定是非常麻烦的。因此，我们实现了一组实用的内置函数来帮助你添加你自己创建的模块。
 
-Luckily, we have developed some useful native-functions to help you add modules that created by you.
-
-After 2021/12/3, there are some new functions added to `lib.nas`:
+在2021/12/3更新后，我们给`lib.nas`添加了下面的这一批函数:
 
 ```javascript
 var dylib=
@@ -663,38 +677,34 @@ var dylib=
 };
 ```
 
-Aha, as you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
-Let's see how they work.
+看名字就大概能猜出来，这些函数就是用来加载动态库的，这样nasal解释器可以根据用户需求灵活加载动态库来执行。让我们看看这些函数该如何使用。
 
-First, write a cpp file that you want to generate the dynamic lib, take the `fib.cpp` as the example(example codes are in `./module`):
+首先，用C++写个项目，并且编译成动态库。我们就拿`fib.cpp`作为例子来说明(样例代码可以在`./module`中找到):
 
 ```C++
-// add header file nasal.h to get api
+// 这个头文件得加上，因为我们需要拿到nasal的api
 #include "nasal.h"
 double fibonaci(double x){
     if(x<=2)
         return x;
     return fibonaci(x-1)+fibonaci(x-2);
 }
-// remember to use extern "C",
-// so you could search the symbol quickly
+// 记得用extern "C"
+// 这样找符号会更加快速便捷，不要在意编译时的warning
 extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
-    // the arguments are generated into a vm_vec: args
-    // get values from the vector that must be used here
+    // 传参会被送到一个vm_vec类型中送过来，而不是上文中那种指针直接指向局部作用域
     nasal_ref num=args[0];
-    // if you want your function safer, try this
-    // builtin_err will print the error info on screen
-    // and return vm_null for runtime to interrupt
+    // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
+    // builtin_err会输出错误信息并返回错误类型让虚拟机终止执行
     if(num.type!=vm_num)
         return builtin_err("extern_fib","\"num\" must be number");
-    // ok, you must know that vm_num now is not managed by gc
-    // if want to return a gc object, use gc.alloc(type)
-    // usage of gc is the same as adding a native function
+    // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
+    // 如果需要返回内存管理的对象，请使用gc.alloc(type)
     return {vm_num,fibonaci(num.to_number())};
 }
 ```
 
-Next, compile this `fib.cpp` into dynamic lib.
+接着我们把`fib.cpp`编译成动态库。
 
 Linux(`.so`):
 
@@ -702,7 +712,7 @@ Linux(`.so`):
 
 `clang++ -shared -o libfib.so fib.o`
 
-Mac(`.so` & `.dylib`): same as Linux.
+Mac(`.so` & `.dylib`): 和Linux下操作相同。
 
 Windows(`.dll`):
 
@@ -710,7 +720,7 @@ Windows(`.dll`):
 
 `g++ -shared -o libfib.dll fib.o`
 
-Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
+好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了。下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样我们可以对不同系统进行适配:
 
 ```javascript
 import("lib.nas");
@@ -721,15 +731,15 @@ for(var i=1;i<30;i+=1)
 dylib.dlclose(dlhandle);
 ```
 
-`dylib.dlopen` is used to load dynamic library.
+`dylib.dlopen`用于加载动态库。
 
-`dylib.dlsym` is used to get the function address.
+`dylib.dlsym`通过符号从动态库中获得函数地址。
 
-`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
+`dylib.dlcall`用于调用函数，第一个参数是动态库函数的地址，这是个特殊类型，一定要保证这个参数是vm_obj类型并且type=obj_extern。
 
-`dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that got from it are invalid.
+`dylib.dlclose`用于卸载动态库，当然，在这个函数调用之后，所有从该库中获取的函数都作废。
 
-If get this, Congratulations!
+如果接下来你看到了这个运行结果，恭喜你！
 
 ```bash
 ./nasal a.nas
@@ -764,121 +774,107 @@ If get this, Congratulations!
 832040
 ```
 
-## __Release Notes__
+## __发行日志__
 
 ### __version 8.0 release__
 
-I made a __big mistake__ in `v8.0` release:
+这个版本的发行版有个 __严重的问题__:
 
 in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
 
-this will cause incorrect `stackoverflow` error.
-please change it to:
+这个会导致不正确的`stackoverflow`报错。因为它覆盖了原有的变量。
+请修改为:
 
 `canary=gc.stack+STACK_MAX_DEPTH-1;`
 
-If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`.
+如果不修改这一行，调试器运行肯定是不正常的。在`v9.0`第一个commit中我们修复了这个问题。
 
-Another bug is that in `nasal_err.h:class nasal_err`, we should add a constructor for this class:
+另外一个bug在 `nasal_err.h:class nasal_err`这边，要给这个类添加一个构造函数来进行初始化，否则会出问题:
 
 ```C++
     nasal_err():error(0){}
 ```
 
-This bug is fixed in `v9.0`.
+同样这个也在`v9.0`中修复了。
 
-## __Parser__
+## __语法分析__
 
-`LL(k)` parser.
+有特殊语法检查的`LL(1)`语法分析器。
 
 ```javascript
 (var a,b,c)=[{b:nil},[1,2],func return 0;];
 (a.b,b[0],c)=(1,2,3);
 ```
 
-These two expressions have the same first set,so `LL(1)` is useless for this language.
+这两个表达式有同一个first集，所以纯粹的`LL(1)`很难实现这个语言的语法分析。所以我们为其添加了特殊语法检查机制。本质上还是`LL(1)`的内核。
 
-Maybe in the future i can refactor it to `LL(1)` with special checks.
-
-Problems mentioned above have been solved for a long time, but recently i found a new problem here:
+上面这个问题已经解决很久了，不过我最近发现了一个新的语法问题:
 
 ```javascript
 var f=func(x,y,z){return x+y+z}
 (a,b,c)=(0,1,2);
 ```
 
-This will be recognized as this:
+这种写法会被错误识别合并成下面这种:
 
 ```javascript
 var f=func(x,y,z){return x+y+z}(a,b,c)
 =(0,1,2);
 ```
 
-and causes fatal syntax error.
-And i tried this program in flightgear nasal console.
-It also found this is a syntax error.
-I think this is a serious design fault.
-To avoid this syntax error, change program like this, just add a semicolon:
+语法分析器会认为这是个严重的语法错误。我在Flightgear中也测试了这个代码，它内置的语法分析器也认为这是错误语法。当然我认为这是语法设计中的一个比较严重的缺漏。为了避免这个语法问题，只需要添加一个分号就可以了:
 
 ```javascript
 var f=func(x,y,z){return x+y+z};
-                               ^ here
+                               ^ 就是这里
 (a,b,c)=(0,1,2);
 ```
 
 ### version 1.0 parser (last update 2019/10/14)
 
-First fully functional version of nasal_parser.
+第一版功能完备的nasal语法分析器完成了。
 
-Before version 1.0,i tried many times to create a correct parser.
+在version 1.0之前，我多次尝试构建一个正确的语法分析器但是总存在一些问题。
 
-Finally i learned `LL(1)` and `LL(k)` and wrote a parser for math formulas in version 0.16(last update 2019/9/14).
+最终我学习了`LL(1)`和`LL(k)`文法并且在version 0.16(last update 2019/9/14)中完成了一个能识别数学算式的语法分析器。
 
-In version 0.17(2019/9/15) 0.18(2019/9/18) 0.19(2019/10/1)i was playing the parser happily and after that i wrote version 1.0.
+在version 0.17(2019/9/15) 0.18(2019/9/18) 0.19(2019/10/1)中我只是抱着玩的心态在测试语法分析器，不过在那之后我还是完成了version 1.0的语法分析器。
 
-__This project began at 2019/7/25__.
+__该项目于2019/7/25正式开始__。
 
-## __Abstract Syntax Tree__
+## __抽象语法树__
 
 ### version 1.2 ast (last update 2019/10/31)
 
-The ast has been completed in this version.
+抽象语法树在这个版本初步完成。
 
 ### version 2.0 ast (last update 2020/8/31)
 
-A completed ast-interpreter with unfinished lib functions.
+在这个版本我们基于抽象语法树实现了一个树解释器，并且完成了部分内置函数。
 
 ### version 3.0 ast (last update 2020/10/23)
 
-The ast is refactored and is now easier to read and maintain.
+我们重构了抽象语法树的代码，现在可以更容易地读懂代码并进行维护。
 
-Ast-interpreter uses new techniques so it can run codes more efficiently.
+这个版本的树解释器用了新的优化方式，所以可以更高效地执行代码。
 
-Now you can add your own functions as builtin-functions in this interpreter!
+在这个版本用户已经可以自行添加内置函数。
 
-I decide to save the ast interpreter after releasing v4.0. Because it took me a long time to think and write...
+我想在v4.0发布之后仍然保留这个树解释器，毕竟花了很长时间才写完这坨屎。
 
 ### version 5.0 ast (last update 2021/3/7)
 
-I change my mind.
-AST interpreter leaves me too much things to do.
+我改变想法了，树解释器给维护带来了太大的麻烦。如果想继续保留这个解释器，那么为了兼容性，字节码虚拟机的优化工作会更难推进。
 
-If i continue saving this interpreter,
-it will be harder for me to make the bytecode vm become more efficient.
-
-## __Bytecode Virtual Machine__
+## __字节码虚拟机__
 
 ### version 4.0 vm (last update 2020/12/17)
 
-I have just finished the first version of bytecode-interpreter.
+我在这个版本实现了第一版字节码虚拟机。不过这个虚拟机仍然在测试中，在这次测试结束之后，我会发布v4.0发行版。
 
-This interpreter is still in test.
-After this test, i will release version 4.0!
+现在我在找一些隐藏很深的bug。如果有人想帮忙的话，非常欢迎！:)
 
-Now i am trying to search hidden bugs in this interpreter.
-Hope you could help me! :)
-
-There's an example of byte code below:
+下面是生成的字节码的样例:
 
 ```javascript
 for(var i=0;i<4000000;i+=1);
@@ -905,31 +901,29 @@ for(var i=0;i<4000000;i+=1);
 
 ### version 5.0 vm (last update 2021/3/7)
 
-I decide to optimize bytecode vm in this version.
+从这个版本起，我决定持续优化字节码虚拟机。
 
-Because it takes more than 1.5s to count i from `0` to `4000000-1`.This is not efficient at all!
+毕竟现在这玩意从`0`数到`4000000-1`要花费1.5秒。这效率完全不能忍。
 
-2021/1/23 update: Now it can count from `0` to `4000000-1` in 1.5s.
+2021/1/23 update: 现在它确实可以在1.5秒内从`0`数到`4000000-1`了。
 
 ### version 6.0 vm (last update 2021/6/1)
 
-Use `loadg`/`loadl`/`callg`/`calll`/`mcallg`/`mcalll` to avoid branches.
+使用`loadg`/`loadl`/`callg`/`calll`/`mcallg`/`mcalll`指令来减少分支语句的调用。
 
-Delete type `vm_scop`.
+删除了`vm_scop`类型。
 
-Use const `vm_num` to avoid frequently new & delete.
+添加作为常量的`vm_num`来减少内存分配的开销。
 
-Change garbage collector from reference-counting to mark-sweep.
+将垃圾收集器从引用计数改为了标记清理。
 
-`vapp` and `newf` operand use .num to reduce the size of `exec_code`.
+`vapp`和`newf`开始使用先前未被使用的.num段来压缩字节码生成数量，减少生成的`exec_code`的大小。
 
-2021/4/3 update: Now it can count from `0` to `4e6-1` in 0.8s.
+2021/4/3 update: 从`0`数到`4e6-1`只需要不到0.8秒了。
 
-2021/4/19 update: Now it can count from `0` to `4e6-1` in 0.4s.
+2021/4/19 update: 从`0`数到`4e6-1`只需要不到0.4秒了。
 
-In this update i changed global and local scope from `unordered_map` to `vector`.
-
-So the bytecode generator changed a lot.
+在这次的更新中，我把全局变量和局部变量的存储结构从`unordered_map`变为了`vector`，从而提升执行效率。所以现在生成的字节码大变样了。
 
 ```javascript
 for(var i=0;i<4000000;i+=1);
@@ -1475,7 +1469,7 @@ yield  (coroutine->main) return a vector.         main.top[0]      = vector;
 
 ## Benchmark
 
-![benchmark](./pic/benchmark.png)
+![benchmark](../pic/benchmark.png)
 
 ### version 6.5 (i5-8250U windows10 2021/6/19)
 
@@ -1584,7 +1578,7 @@ And we use this bf interpreter to draw a mandelbrot set.
 
 In 2022/2/17 update we added `\e` into the lexer. And the `bfcolored.nas` uses this special ASCII code. Here is the result:
 
-![mandelbrot](./pic/mandelbrot.png)
+![mandelbrot](../pic/mandelbrot.png)
 
 ## __Difference Between Andy's and This Interpreter__
 

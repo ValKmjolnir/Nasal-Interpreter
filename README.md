@@ -441,10 +441,13 @@ foreach(var i;elem)
 
 ### __subvec__
 
+Nasal provides this special syntax to help user generate a new vector by getting values by one index or getting values by indexes in a range from an old vector.
+If there's only one index in the bracket, then we will get the value directly.
 Use index to search one element in the string will get the __ascii number__ of this character.
-If you want to get the character, use built-in function chr().
+If you want to get the character, use built-in function `chr()`.
 
 ```javascript
+a[0];
 a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 "hello world"[0];
 ```
@@ -536,17 +539,43 @@ var class={
         };
     }
 };
+var a=class.new();
+a.set(114514);
+println(a.get());
 ```
 
 First virtual machine cannot find member `set` in hash `a`, but in `a.parents` there's a hash `trait` has the member `set`, so we get the `set`.
 variable `me` points to hash `a`, so we change the `a.val`.
 And `get` has the same process.
 
+And we must remind you that if you do this:
+
 ```javascript
-var a=class.new();
-a.set(114514);
-println(a.get());
+var b=a.get;
+println(b());
+println(b());
 ```
+
+You will find the vm crashes:
+
+```bash
+114514
+114514
+[vm] callh: must call a hash
+trace back:
+        0x0000050f:     3d 00 00 00 08      callh  0x8 ("val") (a.nas:2)
+        0x00000544:     3e 00 00 00 00      callfv 0x0 (a.nas:19)       
+vm stack(0x7fffd1b38250<sp+83>, limit 10, total 7):
+  0x00000059    | nil  |
+  0x00000058    | pc   | 0x544
+  0x00000057    | addr | 0x0
+  0x00000056    | nil  |
+  0x00000055    | nil  |
+  0x00000054    | nil  |
+  0x00000053    | func | <0x1a3b250> entry:0x125
+```
+
+Because `a.get` will set `me=a` in the `trait.get`. First time we running it, it works. But when the function returns, `me` is set to `nil`, so the second time, we failed to call the function.
 
 ### __native functions__
 
@@ -556,7 +585,7 @@ And...
 
 __CAUTION:__ If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
 
-If you really want to change source code, check built-in functions in lib.nas and see the example below.
+If you really want to change source code, check built-in functions in `lib.nas` and see the example below.
 
 Definition:
 
@@ -816,16 +845,14 @@ This bug is fixed in `v9.0`.
 
 ## __Parser__
 
-`LL(k)` parser.
+`LL(1)` parser with special check.
 
 ```javascript
 (var a,b,c)=[{b:nil},[1,2],func return 0;];
 (a.b,b[0],c)=(1,2,3);
 ```
 
-These two expressions have the same first set,so `LL(1)` is useless for this language.
-
-Maybe in the future i can refactor it to `LL(1)` with special checks.
+These two expressions have the same first set,so `LL(1)` is useless for this language. We add some special checks in it.
 
 Problems mentioned above have been solved for a long time, but recently i found a new problem here:
 
