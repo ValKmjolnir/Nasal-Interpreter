@@ -3,41 +3,58 @@ import("module/libsock.nas");
 var sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
 socket.bind(sd,"127.0.0.1",8080);
 socket.listen(sd,1);
-var httpheader="Http/1.1 200 OK\n\n";
-var httptail="\n";
-var index="<html>
-    <head>
-        <title> nasal-http-test-web </title>
-    </head>
-    <body>
-        <img src=\"/nasal.png\" width=\"100\" height=\"40\"><br /></img>
-        <text>
-            Hello, this is a simple HTML document just for test. This simple http server is written in nasal.<br />
-            Nasal is an ECMAscript-like programming language that used in Flightgear designed by Andy Ross.<br /><br />
-            The interpreter is totally rewritten by ValKmjolnir using C++(-std=c++11) without reusing the code in Andy Ross's nasal interpreter.<br />
-            But we really appreciate that Andy created this amazing programming language and his interpreter project.<br /><br />
-            Now this project uses MIT license(2021/5/4). Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).<br/>
-        </text>
-        <img src=\"/benchmark.png\" width=\"400\" height=\"300\"></img>
-        <img src=\"/mandelbrot.png\" width=\"400\" height=\"300\"><br /></img>
-        <text>
-            Here is the benchmark of different versions of nasal interpreter(left).<br />
-            Look at this beautiful picture(right).<br />
-            Nasal can run this test file(test/bfcolored.nas) in about 220 seconds.<br />
-            In fact this test file cost over 2200 seconds before ver 8.0 .<br />
-        </text>
-    </body>
-</html>";
-var notfound="<html>
-    <head>
-        <title> nasal-http-test-web </title>
-    </head>
-    <body>
-        <text>
-            404 NOT FOUND!
-        </text>
-    </body>
-</html>";
+
+# var filter={
+#     " ":"&nbsp;",
+#     "&":"&amp;",
+#     "<":"&lt;",
+#     ">":"&gt;",
+#     "\"":"&quot;",
+#     "'":"&qpos;"
+# };
+# var html_read_file=func(filename){
+#     var fd=io.open(filename,"rb");
+#     var content="";
+#     while(1){
+#         var s=mut(" ");
+#         if(io.read(fd,s,1)==0)
+#             break;
+#         if(contains(filter,chr(s[0])))
+#             content~=filter[chr(s[0])];
+#         else
+#             content~=s;
+#     }
+#     io.close(fd);
+#     return content;
+# }
+
+var respond={
+    ok:func(html){
+        return "Http/1.1 200 OK\n\n"~html~"\n";
+    },
+    not_found:"Http/1.1 404 NOT FOUND\n\n<!DOCTYPE html>
+        <head>
+            <title> 404 not found </title>
+            <meta charset=\"utf-8\">
+        </head>
+        <body>
+            <text>
+                404 NOT FOUND!
+            </text>
+        </body>
+    </html>\n",
+    teapot:"Http/1.1 418 I'm a teapot\n\n<!DOCTYPE html>
+        <head>
+            <title> I'm a teapot </title>
+            <meta charset=\"utf-8\">
+        </head>
+        <body>
+            <text>
+                This server cannot brew coffee because it is a teapot.
+            </text>
+        </body>
+    </html>\n"
+};
 
 var files=func(){
     var res={};
@@ -57,22 +74,24 @@ while(1){
     var first=split("\n",recieve_data.str)[0];
     var (type,path)=split(" ",first)[0,1];
     println("[",os.time(),"] ",client.ip," request ",type," [",path,"]");
-    if(path=="/")
-        socket.send(client.sd,httpheader~index~httptail);
+    if(path=="/" or path=="/index")
+        socket.send(client.sd,respond.ok(io.fin("./doc/nasal-http-test-web.html")));
     elsif(path=="/favicon.ico")
-        socket.send(client.sd,httpheader~io.fin("./pic/favicon.ico")~httptail);
-    elsif(path=="/nasal.png")
-        socket.send(client.sd,httpheader~io.fin("./pic/nasal.png")~httptail);
-    elsif(path=="/benchmark.png")
-        socket.send(client.sd,httpheader~io.fin("./pic/benchmark.png")~httptail);
-    elsif(path=="/mandelbrot.png")
-        socket.send(client.sd,httpheader~io.fin("./pic/mandelbrot.png")~httptail);
+        socket.send(client.sd,respond.ok(io.fin("./pic/favicon.ico")));
+    elsif(path=="/pic/nasal.png" or path=="/pic/benchmark.png" or path=="/pic/mandelbrot.png")
+        socket.send(client.sd,respond.ok(io.fin("."~path)));
     else{
         var filename=substr(path,1,size(path)-1);
-        if(contains(files,filename))
-            socket.send(client.sd,httpheader~io.fin("./test/"~filename)~httptail)
+        if(contains(files,filename)){
+            # var page="<head><title> "~filename~" </title><meta charset=\"utf-8\"></head>\n<body><pre>\n";
+            # var page_back="</pre>\n</body>\n";
+            # socket.send(client.sd,respond.ok(page~io.fin("./test/"~filename)~page_back));
+            socket.send(client.sd,respond.ok(io.fin("./test/"~filename)));
+        }
+        elsif(filename=="teapot")
+            socket.send(client.sd,respond.teapot);
         else
-            socket.send(client.sd,httpheader~notfound~httptail);
+            socket.send(client.sd,respond.not_found);
     }
     socket.closesocket(client.sd);
 }

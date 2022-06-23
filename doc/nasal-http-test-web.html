@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+    <head>
+        <title> nasal-http-test-web </title>
+        <meta charset="utf-8">
+        <meta author="ValKmjolnir">
+        <style>
+            body{
+                background: white
+            }
+            pre{
+                background: #303030;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: small;
+                color: #d4d4d4;
+            }
+            code{
+                color: white;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: small;
+                text-align: left;
+            }
+            code.key{color: #fc9999;}
+            code.id{color: #8abef0;}
+            code.opr{color: #f895e7;}
+            code.brace{color: #eafd70;}
+            code.str{color: #7cebb2;}
+        </style>
+    </head>
+    <body>
+        <img src="/pic/nasal.png" width="100" height="40"><br /></img>
+        <img src="https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img>
+        <img src="https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img>
+        <img src="https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github"></img>
+        <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github"><br/></img>
+        <text>
+            Hello, this is a simple HTML document just for test. This simple http server is written in nasal.<br />
+            Nasal is an ECMAscript-like programming language that used in Flightgear designed by Andy Ross.<br />
+            这是个用于测试的简易HTML文档。该http服务器是用nasal编写的。<br />
+            Nasal是类似ECMAscript的一款编程语言，用于飞行模拟器Flightgear。该语言由Andy Ross设计完成。<br /><br />
+            The interpreter is totally rewritten by ValKmjolnir using C++(-std=c++11) without reusing the code in Andy Ross's nasal interpreter.<br />
+            But we really appreciate that Andy created this amazing programming language and his interpreter project.<br /><br />
+            Now this project uses MIT license(2021/5/4). Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).<br/>
+        </text>
+        <img src="/pic/benchmark.png" width="500" height="400"></img>
+        <img src="/pic/mandelbrot.png" width="500" height="400"><br /></img>
+        <text>
+            Here is the benchmark of different versions of nasal interpreter(left).<br />
+            Look at this beautiful picture(right).<br />
+            Nasal can run this test file(test/bfcolored.nas) in about 220 seconds.<br />
+            In fact this test file cost over 2200 seconds before ver 8.0 .<br />
+        </text>
+        <pre>
+            1    <code class="key">var</code> <code class="id">nasal</code><code class="opr">=</code><code class="key">func</code><code class="brace">(</code><code class="id">lexical</code><code class="opr">,</code><code class="id">syntax</code><code class="brace">)</code><code class="brace">{</code>
+            2    <code>    </code><code class="key">return</code> <code class="brace">{</code>
+            3    <code>        </code><code class="id">print  </code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="id">println</code><code class="brace">(</code><code class="str">"hello world"</code><code class="brace">)</code><code class="brace">}</code><code class="opr">,</code>
+            4    <code>        </code><code class="id">set_lex</code><code class="opr">:</code> <code class="key">func</code><code class="brace">(</code><code class="id">lex</code><code class="brace">)</code><code class="brace">{</code><code class="id">lexical</code><code class="opr">=</code><code class="id">lex</code><code class="brace">}</code>,</code>
+            5    <code>        </code><code class="id">get_lex</code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="key">return</code> <code class="id">lexical</code><code class="brace">}</code><code class="opr">,</code>
+            6    <code>        </code><code class="id">set_syn</code><code class="opr">:</code> <code class="key">func</code><code class="brace">(</code><code class="id">syn</code><code class="brace">)</code><code class="brace">{</code><code class="id">syntax</code><code class="opr">=</code><code class="id">syn</code><code class="brace">}</code><code class="opr">,</code>
+            7    <code>        </code><code class="id">get_syn</code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="key">return</code> <code class="id">syntax</code><code class="brace">}</code>
+            8    <code>    </code><code class="brace">}</code><code class="opr">;</code>
+            9    <code class="brace">}</code>
+        </pre>
+    </body>
+</html>
