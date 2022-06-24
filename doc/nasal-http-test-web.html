@@ -5,7 +5,8 @@
         <meta author="ValKmjolnir">
         <style>
             body{
-                background: white
+                background: white;
+                width: 60%;
             }
             pre{
                 background: #303030;
@@ -13,52 +14,149 @@
                 font-size: small;
                 color: #d4d4d4;
             }
-            code{
+            h1,h2,h3{
+                padding: 5px;
+                background-color: #555588;
+                font-family: Arial, Helvetica, sans-serif;
                 color: white;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: small;
-                text-align: left;
             }
-            code.key{color: #fc9999;}
-            code.id{color: #8abef0;}
-            code.opr{color: #f895e7;}
-            code.brace{color: #eafd70;}
-            code.str{color: #7cebb2;}
+            p{
+                margin-left: 15px;
+            }
+            div.badges{
+                text-align: center;
+            }
+            tr{
+                vertical-align: top;
+            }
         </style>
     </head>
     <body>
-        <img src="/pic/nasal.png" width="100" height="40"><br /></img>
-        <img src="https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img>
-        <img src="https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img>
-        <img src="https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github"></img>
-        <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github"><br/></img>
+        <h1>&nbsp;Nasal | Not another scripting language!</h1>
+        <div class="badges">
+            <a href="https://github.com/ValKmjolnir/Nasal-Interpreter"><img src="https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img></a>
+            <a href="https://github.com/ValKmjolnir/Nasal-Interpreter"><img src="https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github"></img></a>
+            <a href="https://github.com/ValKmjolnir/Nasal-Interpreter"><img src="https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github"></img></a>
+            <a href="https://github.com/ValKmjolnir/Nasal-Interpreter"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github"><br/></img></a>
+        </div>
+        <h2>&nbsp;Introduction | 介绍</h2>
         <text>
-            Hello, this is a simple HTML document just for test. This simple http server is written in nasal.<br />
-            Nasal is an ECMAscript-like programming language that used in Flightgear designed by Andy Ross.<br />
-            这是个用于测试的简易HTML文档。该http服务器是用nasal编写的。<br />
-            Nasal是类似ECMAscript的一款编程语言，用于飞行模拟器Flightgear。该语言由Andy Ross设计完成。<br /><br />
-            The interpreter is totally rewritten by ValKmjolnir using C++(-std=c++11) without reusing the code in Andy Ross's nasal interpreter.<br />
-            But we really appreciate that Andy created this amazing programming language and his interpreter project.<br /><br />
-            Now this project uses MIT license(2021/5/4). Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).<br/>
+            <p>
+                Hello, this is a simple HTML document just for test. This simple http server is written in nasal.
+                Nasal is an ECMAscript-like programming language that used in Flightgear designed by Andy Ross.<br/>
+            </p>
+            <p>
+                这是个用于测试的简易HTML文档。该http服务器是用nasal编写的。Nasal是一款用于飞行模拟器Flightgear的、类似ECMAscript的编程语言。该语言由Andy Ross设计完成。
+            </p>
+            <p>
+                The interpreter is totally rewritten by <a href="https://github.com/ValKmjolnir">ValKmjolnir</a> using C++(-std=c++11) without reusing the code in Andy Ross's nasal interpreter.
+                But we really appreciate that Andy created this amazing programming language and his interpreter project.
+                Now this project uses <a href="/license">MIT license</a> (2021/5/4). Edit it if you want, use this project to learn or create more interesting things(But don't forget me XD).<br/>
+            </p>
+            <p>
+                这个解释器是由<a href="https://github.com/ValKmjolnir">ValKmjolnir</a>用C++11编写的，完全没有复用Andy Ross版解释器的代码。但是我们仍然非常感谢Andy为我们带来了这么一款有趣的编程语言。
+                现在这个项目使用<a href="/license">MIT协议</a>开源 (2021/5/4)。
+                如果你有需求，可以自行修改，用这个解释器项目来学习或者创造更有意思的东西吧！(不过别忘了在项目协议中留下原作者名字哦)
+            </p>
         </text>
-        <img src="/pic/benchmark.png" width="500" height="400"></img>
-        <img src="/pic/mandelbrot.png" width="500" height="400"><br /></img>
+        <h2>&nbsp;Benchmark | 执行效率</h2>
+        <img src="/pic/benchmark.png" width="450" height="350"></img>
+        <img src="/pic/mandelbrot.png" width="450" height="350"><br /></img>
         <text>
-            Here is the benchmark of different versions of nasal interpreter(left).<br />
-            Look at this beautiful picture(right).<br />
-            Nasal can run this test file(test/bfcolored.nas) in about 220 seconds.<br />
-            In fact this test file cost over 2200 seconds before ver 8.0 .<br />
+            <p>
+                Benchmark of different versions of nasal interpreter(left).
+                Beautiful picture generated by brainfuck interpreter written in nasal(right).
+            </p>
+            <p>
+                不同版本的nasal解释器执行效率图(左)。
+                nasal运行brainfuck绘制的曼德勃罗集合(右)。
+            </p>
+            <p>
+                Nasal can run this test file(test/bfcolored.nas) to draw this picture in about 220 seconds.
+                In fact this test file cost over 2200 seconds before ver 8.0 .
+            </p>
+            <p>
+                Nasal现在可以在220秒内运行该文件(test/bfcolored.nas)并绘制出这张图。
+                在8.0版本中这个解释器需要跑超过2200秒来绘制这张图。
+            </p>
         </text>
-        <pre>
-            1    <code class="key">var</code> <code class="id">nasal</code><code class="opr">=</code><code class="key">func</code><code class="brace">(</code><code class="id">lexical</code><code class="opr">,</code><code class="id">syntax</code><code class="brace">)</code><code class="brace">{</code>
-            2    <code>    </code><code class="key">return</code> <code class="brace">{</code>
-            3    <code>        </code><code class="id">print  </code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="id">println</code><code class="brace">(</code><code class="str">"hello world"</code><code class="brace">)</code><code class="brace">}</code><code class="opr">,</code>
-            4    <code>        </code><code class="id">set_lex</code><code class="opr">:</code> <code class="key">func</code><code class="brace">(</code><code class="id">lex</code><code class="brace">)</code><code class="brace">{</code><code class="id">lexical</code><code class="opr">=</code><code class="id">lex</code><code class="brace">}</code>,</code>
-            5    <code>        </code><code class="id">get_lex</code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="key">return</code> <code class="id">lexical</code><code class="brace">}</code><code class="opr">,</code>
-            6    <code>        </code><code class="id">set_syn</code><code class="opr">:</code> <code class="key">func</code><code class="brace">(</code><code class="id">syn</code><code class="brace">)</code><code class="brace">{</code><code class="id">syntax</code><code class="opr">=</code><code class="id">syn</code><code class="brace">}</code><code class="opr">,</code>
-            7    <code>        </code><code class="id">get_syn</code><code class="opr">:</code> <code class="key">func</code><code class="brace">{</code><code class="key">return</code> <code class="id">syntax</code><code class="brace">}</code>
-            8    <code>    </code><code class="brace">}</code><code class="opr">;</code>
-            9    <code class="brace">}</code>
-        </pre>
+        <h2>&nbsp;Example | 样例代码</h2>
+        <form method="get">
+            <text style="margin-left: 15px;"> </text>
+            <input type="text" name="filename" value="ascii-art.nas">
+            <input type="submit" value="search">
+        </form>
+        <table>
+            <tr>
+                <td>
+                    <ul>
+                        <li><a href="/ascii-art.nas">ascii-art.nas</a></li>
+                        <li><a href="/auto_crash.nas">auto_crash.nas</a></li>
+                        <li><a href="/bf.nas">bf.nas</a></li>
+                        <li><a href="/bfcolored.nas">bfcolored.nas</a></li>
+                        <li><a href="/bfconvertor.nas">bfconvertor.nas</a></li>
+                        <li><a href="/bfs.nas">bfs.nas</a></li>
+                        <li><a href="/bigloop.nas">bigloop.nas</a></li>
+                        <li><a href="/bp.nas">bp.nas</a></li>
+                        <li><a href="/calc.nas">calc.nas</a></li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li><a href="/choice.nas">choice.nas</a></li>
+                        <li><a href="/class.nas">class.nas</a></li>
+                        <li><a href="/coroutine.nas">coroutine.nas</a></li>
+                        <li><a href="/diff.nas">diff.nas</a></li>
+                        <li><a href="/exception.nas">exception.nas</a></li>
+                        <li><a href="/fib.nas">fib.nas</a></li>
+                        <li><a href="/filesystem.nas">filesystem.nas</a></li>
+                        <li><a href="/hexdump.nas">hexdump.nas</a></li>
+                        <li><a href="/httptest.nas">httptest.nas</a></li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li><a href="/json.nas">json.nas</a></li>
+                        <li><a href="/leetcode1319.nas">leetcode1319.nas</a></li>
+                        <li><a href="/lexer.nas">lexer.nas</a></li>
+                        <li><a href="/life.nas">life.nas</a></li>
+                        <li><a href="/loop.nas">loop.nas</a></li>
+                        <li><a href="/mandel.nas">mandel.nas</a></li>
+                        <li><a href="/mandelbrot.nas">mandelbrot.nas</a></li>
+                        <li><a href="/md5.nas">md5.nas</a></li>
+                        <li><a href="/md5compare.nas">md5compare.nas</a></li>
+                        
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li><a href="/module_test.nas">module_test.nas</a></li>
+                        <li><a href="/nasal_test.nas">nasal_test.nas</a></li>
+                        <li><a href="/occupation.nas">occupation.nas</a></li>
+                        <li><a href="/pi.nas">pi.nas</a></li>
+                        <li><a href="/prime.nas">prime.nas</a></li>
+                        <li><a href="/qrcode.nas">qrcode.nas</a></li>
+                        <li><a href="/quick_sort.nas">quick_sort.nas</a></li>
+                        <li><a href="/scalar.nas">scalar.nas</a></li>
+                        <li><a href="/snake.nas">snake.nas</a></li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li><a href="/tetris.nas">tetris.nas</a></li>
+                        <li><a href="/trait.nas">trait.nas</a></li>
+                        <li><a href="/turingmachine.nas">turingmachine.nas</a></li>
+                        <li><a href="/utf8chk.nas">utf8chk.nas</a></li>
+                        <li><a href="/wavecollapse.nas">wavecollapse.nas</a></li>
+                        <li><a href="/ycombinator.nas">ycombinator.nas</a></li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
     </body>
+    <h2>&nbsp;Shutdown | 关闭服务器</h2>
+    <text>
+        <p>Click <a href="/shutdown">here</a> to shutdown http server.</p>
+        <p>Don't click <a href="/teapot">me</a> besauce i am just a teapot.</p>
+    </text>
 </html>
