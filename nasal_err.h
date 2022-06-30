@@ -46,31 +46,24 @@ private:
     uint32_t error;
 public:
     nasal_err():error(0){}
-    void err(const char* stage,const std::string& info,const char end='\n')
+    void err(const char* stage,const std::string& info)
     {
         ++error;
-        std::cerr<<"["<<stage<<"] "<<info<<end;
+        std::cerr<<"["<<stage<<"] "<<info<<"\n";
     }
     void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
     {
         ++error;
-        if(!line)
-        {
-            std::cerr<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
-            return;
-        }
-        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<res[line-1]<<'\n';
+        const std::string& code=res[line-1];
+        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<code<<"\n";
         for(int i=0;i<(int)column-1;++i)
-            std::cerr<<char(" \t"[res[line-1][i]=='\t']);
+            std::cerr<<char(" \t"[code[i]=='\t']);
         std::cerr<<"^\n";
     }
     void err(const char* stage,uint32_t line,const std::string& info)
     {
         ++error;
-        if(!line)
-            std::cerr<<"["<<stage<<"] "<<file<<": "<<info<<'\n';
-        else
-            std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
+        std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
     }
     void chkerr(){if(error)std::exit(1);}
 };
