@@ -15,11 +15,14 @@
 
 enum token_type
 {
-    tok_null=0,// null token default token type
-    tok_num,   // number     basic token type
-    tok_str,   // string     basic token type
-    tok_id,    // identifier basic token type
-    tok_for,tok_forindex,tok_foreach,tok_while,
+    tok_null=0,  // null token (default token type)
+    tok_num,     // number     basic token type
+    tok_str,     // string     basic token type
+    tok_id,      // identifier basic token type
+    tok_for,     // loop keyword for
+    tok_forindex,// loop keyword forindex
+    tok_foreach, // loop keyword foreach
+    tok_while,   // loop keyword while
     tok_var,tok_func,tok_break,tok_continue,
     tok_ret,tok_if,tok_elsif,tok_else,tok_nil,
     tok_lcurve,tok_rcurve,
@@ -106,20 +109,24 @@ class nasal_lexer
 private:
     uint32_t    line;
     uint32_t    column;
-    uint32_t    ptr;
+    size_t      ptr;
     nasal_err&  nerr;
     std::string res;
     std::vector<token> tokens;
 
     uint32_t get_type(const std::string&);
-    void die(std::string info){nerr.err("lexer",line,column,info);};
+    void die(const std::string& info){nerr.err("lexer",line,column,info);}
     void open(const std::string&);
     std::string utf8_gen();
     std::string id_gen();
     std::string num_gen();
     std::string str_gen();
 public:
-    nasal_lexer(nasal_err& e):line(0),column(0),ptr(0),nerr(e){}
+    nasal_lexer(nasal_err& e):
+        line(1),
+        column(0),
+        ptr(0),
+        nerr(e){}
     void scan(const std::string&);
     void print();
     const std::vector<token>& get_tokens() const {return tokens;}
@@ -162,16 +169,25 @@ std::string nasal_lexer::utf8_gen()
         if(nbytes)
         {
             tmp+=res[ptr++];
-            for(uint32_t i=0;i<nbytes;++i,++ptr)
+            ++column;
+            for(uint32_t i=0;i<nbytes;++i,++ptr,++column)
                 if(ptr<res.size() && (res[ptr]&0xc0)==0x80)
                     tmp+=res[ptr];
             if(tmp.length()!=1+nbytes)
-                die("invalid utf-8 character here");
+            {
+                std::string utf_info="0x"+chrhex(tmp[0]);
+                for(uint32_t i=1;i<tmp.size();++i)
+                    utf_info+=" 0x"+chrhex(tmp[i]);
+                die("invalid utf-8 character `"+utf_info+"`, make sure this is a text file.");
+                std::exit(1);
+            }
             str+=tmp;
-            ++column;
         }
         else
+        {
             ++ptr;
+            ++column;
+        }
     }
     return str;
 }
@@ -203,7 +219,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0x"
-            die("invalid number:"+str);
+            die("invalid number `"+str+"`.");
         return str;
     }
     // generate oct number
@@ -215,7 +231,7 @@ std::string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0o"
-            die("invalid number:"+str);
+            die("invalid number `"+str+"`.");
         return str;
     }
     // generate dec number
@@ -232,7 +248,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='.')
         {
             column+=str.length();
-            die("invalid number:"+str);
+            die("invalid number `"+str+"`.");
             return "0";
         }
     }
@@ -247,7 +263,7 @@ std::string nasal_lexer::num_gen()
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
         {
             column+=str.length();
-            die("invalid number:"+str);
+            die("invalid number `"+str+"`.");
             return "0";
         }
     }
@@ -315,7 +331,7 @@ void nasal_lexer::scan(const std::string& file)
     std::string str;
     while(ptr<res.size())
     {
-        while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r'))// || res[ptr]<0))
+        while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]==0))
         {
             // these characters will be ignored, and '\n' will cause ++line
             ++column;
@@ -348,7 +364,7 @@ void nasal_lexer::scan(const std::string& file)
             ++column;
             uint32_t type=get_type(str);
             if(!type)
-                die("invalid operator:"+str);
+                die("invalid operator `"+str+"`.");
             tokens.push_back({line,column,type,str});
             ++ptr;
         }
@@ -375,8 +391,8 @@ void nasal_lexer::scan(const std::string& file)
         else
         {
             ++column;
-            ++ptr;
-            die("unknown character.");
+            char c=res[ptr++];
+            die("invalid character 0x"+chrhex(c)+".");
         }
     }
     tokens.push_back({line,column,tok_eof,"eof"});

@@ -148,6 +148,14 @@ int utf8_hdchk(char head)
     return nbytes;
 }
 
+std::string chrhex(const char c)
+{
+    std::string res="";
+    res+="0123456789abcdef"[(c&0xf0)>>4];
+    res+="0123456789abcdef"[c&0x0f];
+    return res;
+}
+
 std::string rawstr(const std::string& str)
 {
     std::string ret("");
@@ -159,8 +167,7 @@ std::string rawstr(const std::string& str)
         if(i<=0)
         {
             ret+="\\x";
-            ret+="0123456789abcdef"[(i>>4)&15];
-            ret+="0123456789abcdef"[i&15];
+            ret+=chrhex(i);
             continue;
         }
 #endif

@@ -87,10 +87,14 @@ nasal_ast nasal_import::lib_import()
 
     const std::vector<std::string> libpath=
     {
-        "lib.nas",
-        "stl/lib.nas"
+#ifdef __WIN32
+        ".\\lib.nas",
+        ".\\stl\\lib.nas"
+#else
+        "./lib.nas",
+        "./stl/lib.nas"
+#endif
     };
-
     std::string filename="";
     for(auto& i:libpath)
         if(access(i.c_str(),F_OK)!=-1)
@@ -103,7 +107,7 @@ nasal_ast nasal_import::lib_import()
         std::string paths="";
         for(auto& i:libpath)
             paths+="  "+i+"\n";
-        nerr.err("link","cannot find lib file in these paths:\n"+paths,' ');
+        nerr.err("link","cannot find lib file in these paths:\n"+paths);
         nerr.chkerr();
         return {0,ast_root};
     }
