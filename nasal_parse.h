@@ -123,13 +123,13 @@ void nasal_parse::compile(const nasal_lexer& lexer)
 }
 void nasal_parse::die(uint32_t line,std::string info,bool report_prev=false)
 {
-    int col=(int)tokens[ptr].column-(int)tokens[ptr].str.length();
+    int col=(int)tokens[ptr].col-(int)tokens[ptr].str.length();
     if(tokens[ptr].type==tok_str)
         col-=2; // tok_str's str has no \"
     if(report_prev && ptr-1>=0) // used to report lack of ',' ';'
     {
         line=tokens[ptr-1].line;
-        col=tokens[ptr-1].column+1;
+        col=tokens[ptr-1].col+1;
     }
     nerr.err("parse",line,col<0?0:col,info);
 }
