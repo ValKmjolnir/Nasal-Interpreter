@@ -13,8 +13,7 @@
 #define CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
 #define NOTE(c)            (c=='#')
 
-enum token_type
-{
+enum tok:std::uint32_t{
     tok_null=0,  // null token (default token type)
     tok_num,     // number     basic token type
     tok_str,     // string     basic token type
@@ -36,12 +35,10 @@ enum token_type
     tok_eof    // end of token list
 };
 
-struct
-{
+struct{
     const char* str;
     const uint32_t tok_type;
-}token_table[]=
-{
+}token_table[]={
     {"for"     ,tok_for      },
     {"forindex",tok_forindex },
     {"foreach" ,tok_foreach  },
@@ -93,13 +90,13 @@ struct
 struct token
 {
     uint32_t line;
-    uint32_t column;
+    uint32_t col;
     uint32_t type;
     std::string str;
     token(uint32_t l=0,uint32_t c=0,uint32_t t=tok_null,const std::string& s=""):str(s)
     {
         line=l;
-        column=c;
+        col=c;
         type=t;
     }
 };
