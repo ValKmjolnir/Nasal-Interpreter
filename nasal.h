@@ -1,8 +1,6 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
-
 #define __nasver "10.0"
-
 
 #include <unistd.h>
 
@@ -150,10 +148,7 @@ int utf8_hdchk(char head)
 
 std::string chrhex(const char c)
 {
-    std::string res="";
-    res+="0123456789abcdef"[(c&0xf0)>>4];
-    res+="0123456789abcdef"[c&0x0f];
-    return res;
+    return {"0123456789abcdef"[(c&0xf0)>>4],"0123456789abcdef"[c&0x0f]};
 }
 
 std::string rawstr(const std::string& str)

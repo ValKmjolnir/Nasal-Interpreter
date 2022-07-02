@@ -1,11 +1,9 @@
 # sort.nas
 # valkmjolnir 2021/4/2
-var sort=func(vec,left,right,cmp=func(a,b){return a<=b;})
-{
+var sort=func(vec,left,right,cmp=func(a,b){return a<=b;}){
     if(left>=right) return nil;
     var (L,R,tmp)=(left,right,vec[left]);
-    while(left<right)
-    {
+    while(left<right){
         while(left<right and cmp(tmp,vec[right]))
             right-=1;
         while(left<right and cmp(vec[left],tmp))

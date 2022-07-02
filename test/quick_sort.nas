@@ -1,9 +1,7 @@
-var sort=func(vec,left,right)
-{
+var sort=func(vec,left,right){
     if(left>=right) return;
     var (L,R,tmp)=(left,right,vec[left]);
-    while(left<right)
-    {
+    while(left<right){
         while(left<right and tmp<=vec[right])
             right-=1;
         while(left<right and tmp>=vec[left])
