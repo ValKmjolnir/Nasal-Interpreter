@@ -235,30 +235,37 @@ var html_read_file=func(filename){
 
 var respond={
     ok:func(html){
+        println("[",os.time(),"] 200 OK");
         return "Http/1.1 200 OK\n\n"~html~"\n";
     },
-    not_found:"Http/1.1 404 NOT FOUND\n\n<!DOCTYPE html>
-        <head>
-            <title> 404 not found </title>
-            <meta charset=\"utf-8\">
-        </head>
-        <body>
-            <text>
-                404 NOT FOUND!
-            </text>
-        </body>
-    </html>\n",
-    teapot:"Http/1.1 418 I'm a teapot\n\n<!DOCTYPE html>
-        <head>
-            <title> I'm a teapot </title>
-            <meta charset=\"utf-8\">
-        </head>
-        <body>
-            <text>
-                This server cannot brew coffee because it is a teapot.
-            </text>
-        </body>
-    </html>\n"
+    not_found:func(){
+        println("[",os.time(),"] 404 NOT FOUND");
+        return "Http/1.1 404 NOT FOUND\n\n<!DOCTYPE html>
+            <head>
+                <title> 404 not found </title>
+                <meta charset=\"utf-8\">
+            </head>
+            <body>
+                <text>
+                    404 NOT FOUND!
+                </text>
+            </body>
+        </html>\n";
+    },
+    teapot:func(){
+        println("[",os.time(),"] 418 I'm a teapot");
+        return "Http/1.1 418 I'm a teapot\n\n<!DOCTYPE html>
+            <head>
+                <title> I'm a teapot </title>
+                <meta charset=\"utf-8\">
+            </head>
+            <body>
+                <text>
+                    This server cannot brew coffee because it is a teapot.
+                </text>
+            </body>
+        </html>\n";
+    }
 };
 
 var files=func(){
@@ -314,9 +321,9 @@ while(1){
                 http.send(client,respond.ok(page~html_read_file("./test/"~filename)~page_back));
             }
             elsif(filename=="teapot")
-                http.send(client,respond.teapot);
+                http.send(client,respond.teapot());
             else
-                http.send(client,respond.not_found);
+                http.send(client,respond.not_found());
         }
     }elsif(data.type=="POST"){
         http.send(client,respond.not_found);

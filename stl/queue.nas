@@ -1,7 +1,6 @@
 # queue.nas
 # valkmjolnir 2021/3/31
-var queue=func()
-{
+var queue=func(){
     var (begin,end)=(nil,nil);
     return{
         push:func(elem){

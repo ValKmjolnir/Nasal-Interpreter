@@ -215,19 +215,16 @@ var geodinfo=func(lat,lon){
 }
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init props");
-var props=
-{
+var props={
     globals:nil,
     Node:nil,
-    getNode:func(path,index)
-    {
+    getNode:func(path,index){
         path=split('/',path);
         var tmp=me.globals;
         var path_size=size(path);
         for(var i=0;i<path_size-1;i+=1)
             tmp=tmp.val[path[i]];
-        if(path_size>0)
-        {
+        if(path_size>0){
             if(contains(tmp.val,path[i]~'['~index~']'))
                 return tmp.val[path[i]~'['~index~']'];
             else
@@ -239,10 +236,8 @@ var props=
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init props.Node");
 
-props.Node=
-{
-    new:func(values=nil)
-    {
+props.Node={
+    new:func(values=nil){
         var res={
             parents:fg_env_props_node_traits,
             val:{},
@@ -253,35 +248,29 @@ props.Node=
             res.val=values;
         return res;
     },
-    addChild:func(name)
-    {
-        if(!contains(me.val,name))
-        {
+    addChild:func(name){
+        if(!contains(me.val,name)){
             me.val[name]=props.Node.new();
             me.val[name].parent=me;
             return 1;
         }
         return 0;
     },
-    addChildren:func(name,cnt=0)
-    {
-        for(var i=0;i<cnt;i+=1)
-        {
+    addChildren:func(name,cnt=0){
+        for(var i=0;i<cnt;i+=1){
             var label=name~'['~i~']';
             me.val[label]=props.Node.new();
             me.val[label].parent=me;
         }
         return;
     },
-    setValue:func(path,val)
-    {
+    setValue:func(path,val){
         path=split('/',path);
         var tmp=me;
         foreach(var label;path)
             tmp=tmp.val[label];
         tmp.val=val;
-        if(typeof(val)=='str')
-        {
+        if(typeof(val)=='str'){
             if(val=='true' or val=='false')
                 tmp.type='BOOL';
             else
@@ -291,56 +280,46 @@ props.Node=
             tmp.type='DOUBLE';
         return;
     },
-    setIntValue:func(num)
-    {
+    setIntValue:func(num){
         me.val=num;
         me.type='INT';
         return;
     },
-    setBoolValue:func(state)
-    {
+    setBoolValue:func(state){
         me.val=state;
         me.type='BOOL';
         return;
     },
-    setDoubleValue:func(num)
-    {
+    setDoubleValue:func(num){
         me.val=num;
         me.type='DOUBLE';
         return;
     },
     getValue:func(){return me.val;},
-    getName:func()
-    {
+    getName:func(){
         var val=me.parent.val;
         foreach(var k;keys(val))
             if(val[k]==me)
                 return k;
         return '';
     },
-    getParent:func()
-    {
+    getParent:func(){
         return me.parent;
     },
-    getPath:func()
-    {
+    getPath:func(){
         if(me.parent==nil) return '';
         return me.parent.getPath()~'/'~me.getName();
     },
     equals:func(node){return me==node;},
-    debug:func(s='')
-    {
-        if(typeof(me.val)=='hash')
-        {
+    debug:func(s=''){
+        if(typeof(me.val)=='hash'){
             var key=keys(me.val);
-            if(!size(key))
-            {
+            if(!size(key)){
                 println("\e[91m{}\e[0m");
                 return;
             }
             println('\e[91m{\e[0m');
-            foreach(var k;key)
-            {
+            foreach(var k;key){
                 print(s~"   ","\e[34m",k,"\e[0m\e[95m:\e[0m");
                 me.val[k].debug(s~"   ");
             }

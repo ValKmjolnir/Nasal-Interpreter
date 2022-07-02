@@ -3,8 +3,7 @@ var libfib=func(){
     var fib=dylib.dlsym(dl,"fib");
     var qfib=dylib.dlsym(dl,"quick_fib");
     var call=dylib.dlcall;
-    return
-    {
+    return {
         fib: func(x){return call(fib,x)},
         qfib:func(x){return call(qfib,x)}
     };

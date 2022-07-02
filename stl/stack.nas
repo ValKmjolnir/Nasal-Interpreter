@@ -1,7 +1,6 @@
 # stack.nas
 # valkmjolnir 2021/3/31
-var stack=func()
-{
+var stack=func(){
     var next=nil;
     return{
         push:func(elem){
