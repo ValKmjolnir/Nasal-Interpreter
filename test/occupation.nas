@@ -1,3 +1,6 @@
+import("stl/process_bar.nas");
+import("module/libkey.nas");
+
 var cpu_stat=func(){
     var cpu=split("\n",io.fin("/proc/stat"))[0];
     cpu=split(" ",cpu);
@@ -38,13 +41,19 @@ func(){
         println("haven't supported yet.");
         return;
     }
+    print("\ec");
     while(1){
         var mem=mem_occupation();
         var mem_occ=(mem.MemTotal-mem.MemFree)/mem.MemTotal*100;
         var cpu_occ=cpu_occupation();
-        println("CPU occupation(%)   : ",cpu_occ>90?"\e[91m":"\e[32m",cpu_occ,"\e[0m");
-        println("Memory total(GB)    : \e[36m",mem.MemTotal/1024/1024,"\e[0m");
-        println("Memory free(GB)     : \e[36m",mem.MemFree/1024/1024,"\e[0m");
-        println("Memory occupation(%): ",mem_occ>60?"\e[91m":"\e[32m",mem_occ,"\e[0m");
+        var key=libkey.nonblock();
+        var bar=process_bar.bar("block","point","line",25);
+        if(key!=nil and chr(key)=="q")
+            break;
+        println("\e[1;1H Memory total(GB)    : \e[36m",mem.MemTotal/1024/1024,"\e[0m");
+        println("\e[2;1H Memory free(GB)     : \e[36m",mem.MemFree/1024/1024,"\e[0m");
+        println("\e[3;1H Memory occupation(%): ",mem_occ>60?"\e[91m":"\e[32m",bar.bar(mem_occ/100)~" ",mem_occ,"\e[0m         ");
+        println("\e[4;1H CPU occupation(%)   : ",cpu_occ>90?"\e[91m":"\e[32m",bar.bar(cpu_occ/100)~" ",cpu_occ,"\e[0m         ");
+        println("\e[5;1H Press 'q' to quit.");
     }
 }();

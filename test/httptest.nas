@@ -235,11 +235,11 @@ var html_read_file=func(filename){
 
 var respond={
     ok:func(html){
-        println("[",os.time(),"] 200 OK");
+        println("[",os.time(),"] respond 200 OK");
         return "Http/1.1 200 OK\n\n"~html~"\n";
     },
     not_found:func(){
-        println("[",os.time(),"] 404 NOT FOUND");
+        println("[",os.time(),"] respond 404 NOT FOUND");
         return "Http/1.1 404 NOT FOUND\n\n<!DOCTYPE html>
             <head>
                 <title> 404 not found </title>
@@ -253,7 +253,7 @@ var respond={
         </html>\n";
     },
     teapot:func(){
-        println("[",os.time(),"] 418 I'm a teapot");
+        println("[",os.time(),"] respond 418 I'm a teapot");
         return "Http/1.1 418 I'm a teapot\n\n<!DOCTYPE html>
             <head>
                 <title> I'm a teapot </title>
