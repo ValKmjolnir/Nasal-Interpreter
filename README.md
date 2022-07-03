@@ -551,31 +551,48 @@ And `get` has the same process.
 And we must remind you that if you do this:
 
 ```javascript
-var b=a.get;
-println(b());
-println(b());
+var trait={
+    get:func{return me.val;},
+    set:func(x){me.val=x;}
+};
+
+var class={
+    new:func(){
+        return {
+            val:nil,
+            parents:[trait]
+        };
+    }
+};
+var a=class.new();
+var b=class.new();
+a.set(114);
+b.set(514);
+println(a.get());
+println(b.get());
+
+var c=a.get;
+var d=b.get;
+
+println(c());
+println(c());
+println(d());
+println(d());
 ```
 
-You will find the vm crashes:
+You will get this result now:
 
 ```bash
-114514
-114514
-[vm] callh: must call a hash
-trace back:
-        0x0000050f:     3d 00 00 00 08      callh  0x8 ("val") (a.nas:2)
-        0x00000544:     3e 00 00 00 00      callfv 0x0 (a.nas:19)       
-vm stack(0x7fffd1b38250<sp+83>, limit 10, total 7):
-  0x00000059    | nil  |
-  0x00000058    | pc   | 0x544
-  0x00000057    | addr | 0x0
-  0x00000056    | nil  |
-  0x00000055    | nil  |
-  0x00000054    | nil  |
-  0x00000053    | func | <0x1a3b250> entry:0x125
+114
+514
+514
+514
+514
+514
 ```
 
-Because `a.get` will set `me=a` in the `trait.get`. First time we running it, it works. But when the function returns, `me` is set to `nil`, so the second time, we failed to call the function.
+Because `a.get` will set `me=a` in the `trait.get`. Then `b.get` do the `me=b`. So in fact c is `b.get` too after running `var d=b.get`.
+If you want to use this trick to make the program running more efficiently, you must know this special mechanism.
 
 ### __native functions__
 

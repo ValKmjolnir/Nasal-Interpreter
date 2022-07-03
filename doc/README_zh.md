@@ -518,31 +518,48 @@ println(a.get());
 不过我们必须提醒你一点，如果你在这个地方使用该优化来减少hash的搜索开销:
 
 ```javascript
-var b=a.get;
-println(b());
-println(b());
+var trait={
+    get:func{return me.val;},
+    set:func(x){me.val=x;}
+};
+
+var class={
+    new:func(){
+        return {
+            val:nil,
+            parents:[trait]
+        };
+    }
+};
+var a=class.new();
+var b=class.new();
+a.set(114);
+b.set(514);
+println(a.get());
+println(b.get());
+
+var c=a.get;
+var d=b.get;
+
+println(c());
+println(c());
+println(d());
+println(d());
 ```
 
-那么你会发现虚拟机崩溃了:
+那么你会发现现在虚拟机会输出这个结果:
 
 ```bash
-114514
-114514
-[vm] callh: must call a hash
-trace back:
-        0x0000050f:     3d 00 00 00 08      callh  0x8 ("val") (a.nas:2)
-        0x00000544:     3e 00 00 00 00      callfv 0x0 (a.nas:19)       
-vm stack(0x7fffd1b38250<sp+83>, limit 10, total 7):
-  0x00000059    | nil  |
-  0x00000058    | pc   | 0x544
-  0x00000057    | addr | 0x0
-  0x00000056    | nil  |
-  0x00000055    | nil  |
-  0x00000054    | nil  |
-  0x00000053    | func | <0x1a3b250> entry:0x125
+114
+514
+514
+514
+514
+514
 ```
 
-因为执行`a.get`时在`trait.get`函数的属性中进行了`me=a`的操作。所以接下来第一次运行的时候它确实成功运行了。但是当函数返回时，`me`会被自动设置为`nil`以保证安全，所以第二次调用的时候，`me`不再是个hash类型，故虚拟机抛出了错误。这不意味着这种优化方法是不可行的，只要你理解了它的运行机制，这种优化方式仍然可以使用。
+因为执行`a.get`时在`trait.get`函数的属性中进行了`me=a`的操作。而`b.get`则执行了`me=b`的操作。所以在运行`var d=b.get`后实际上c也变成`b.get`了。
+如果你想要用这种小技巧来让程序运行更高效的话，最好是要知道这里存在这样一个机制。
 
 ### __内置函数__
 

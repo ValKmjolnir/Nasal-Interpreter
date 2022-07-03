@@ -624,8 +624,8 @@ void nasal_gc::info()
     const char* name[]={"str  ","func ","vec  ","hash ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info\n";
     for(uint8_t i=0;i<gc_obj_size;++i)
-        std::cout<<"  "<<name[i]<<" | mark-sweep | "<<count[i]<<"\n"
-                 <<"        | mem-alloc  | "<<allocc[i]<<"\n";
+        std::cout<<"  "<<name[i]<<" | gc  | "<<count[i]<<"\n"
+                 <<"        | new | "<<allocc[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(uint8_t i=0;i<gc_obj_size;++i)
         std::cout<<"  "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
