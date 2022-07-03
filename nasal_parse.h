@@ -106,7 +106,7 @@ public:
 };
 void nasal_parse::compile(const nasal_lexer& lexer)
 {
-    tokens=lexer.get_tokens().data();
+    tokens=lexer.result().data();
     ptr=in_func=in_loop=0;
 
     root={1,ast_root};
@@ -147,7 +147,7 @@ void nasal_parse::match(uint32_t type,const char* info)
             case tok_num:die(error_line,"expected number");    break;
             case tok_str:die(error_line,"expected string");    break;
             case tok_id: die(error_line,"expected identifier");break;
-            default:     die(error_line,"expected \'"+std::string(token_table[type-tok_for].str)+"\'"); break;
+            default:     die(error_line,"expected \'"+std::string(tok_table[type-tok_for].str)+"\'"); break;
         }
         return;
     }
@@ -437,12 +437,12 @@ nasal_ast nasal_parse::lcurve_expr()
 }
 nasal_ast nasal_parse::expr()
 {
-    uint32_t tok_type=tokens[ptr].type;
-    if((tok_type==tok_break || tok_type==tok_continue) && !in_loop)
+    uint32_t type=tokens[ptr].type;
+    if((type==tok_break || type==tok_continue) && !in_loop)
         die(error_line,"should use break/continue in loops");
-    if(tok_type==tok_ret && !in_func)
+    if(type==tok_ret && !in_func)
         die(error_line,"should use return in functions");
-    switch(tok_type)
+    switch(type)
     {
         case tok_nil:
         case tok_num:

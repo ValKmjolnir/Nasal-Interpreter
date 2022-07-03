@@ -37,8 +37,8 @@ enum tok:std::uint32_t{
 
 struct{
     const char* str;
-    const uint32_t tok_type;
-}token_table[]={
+    const uint32_t type;
+}tok_table[]={
     {"for"     ,tok_for      },
     {"forindex",tok_forindex },
     {"foreach" ,tok_foreach  },
@@ -123,10 +123,11 @@ public:
         line(1),
         column(0),
         ptr(0),
-        nerr(e){}
+        nerr(e),
+        res(""){}
     void scan(const std::string&);
     void print();
-    const std::vector<token>& get_tokens() const {return tokens;}
+    const std::vector<token>& result() const {return tokens;}
 };
 
 void nasal_lexer::open(const std::string& file)
@@ -135,8 +136,7 @@ void nasal_lexer::open(const std::string& file)
     if(stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode))
     {
         nerr.err("lexer","<"+file+"> is not a regular file.");
-        res="";
-        return;
+        nerr.chkerr();
     }
     std::ifstream fin(file,std::ios::binary);
     if(fin.fail())
@@ -148,11 +148,11 @@ void nasal_lexer::open(const std::string& file)
     res=ss.str();
 }
 
-uint32_t nasal_lexer::get_type(const std::string& tk_str)
+uint32_t nasal_lexer::get_type(const std::string& str)
 {
-    for(int i=0;token_table[i].str;++i)
-        if(tk_str==token_table[i].str)
-            return token_table[i].tok_type;
+    for(uint32_t i=0;tok_table[i].str;++i)
+        if(str==tok_table[i].str)
+            return tok_table[i].type;
     return tok_null;
 }
 
@@ -166,19 +166,20 @@ std::string nasal_lexer::utf8_gen()
         if(nbytes)
         {
             tmp+=res[ptr++];
-            ++column;
-            for(uint32_t i=0;i<nbytes;++i,++ptr,++column)
+            for(uint32_t i=0;i<nbytes;++i,++ptr)
                 if(ptr<res.size() && (res[ptr]&0xc0)==0x80)
                     tmp+=res[ptr];
             if(tmp.length()!=1+nbytes)
             {
+                ++column;
                 std::string utf_info="0x"+chrhex(tmp[0]);
                 for(uint32_t i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
-                die("invalid utf-8 character `"+utf_info+"`, make sure this is a text file.");
+                die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file.");
                 std::exit(1);
             }
             str+=tmp;
+            column+=2; // may have some problems because not all the unicode takes 2 space
         }
         else
         {
@@ -271,7 +272,7 @@ std::string nasal_lexer::num_gen()
 std::string nasal_lexer::str_gen()
 {
     std::string str="";
-    char begin=res[ptr];
+    const char begin=res[ptr];
     ++column;
     while(++ptr<res.size() && res[ptr]!=begin)
     {

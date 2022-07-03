@@ -147,8 +147,11 @@ var mandelbrot=
 
 var paper=[];
 var (ptr,pc)=(0,0);
-var (code,inum,stack)=([],[],[]);
+var (code,inum,stack,char)=([],[],[],[]);
 var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
+setsize(char,256);
+forindex(var i;char)
+    char[i]=chr(i);
 
 var funcs=[
     func{paper[ptr]+=inum[pc];},
@@ -156,7 +159,7 @@ var funcs=[
     func{if(paper[ptr])pc=inum[pc];},
     func{if(!paper[ptr])pc=inum[pc];},
     func{paper[ptr]=input()[0];},
-    func{print(chr(paper[ptr]));}
+    func{print(char[paper[ptr]]);}
 ];
 
 var bf=func(program){
