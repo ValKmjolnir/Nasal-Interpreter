@@ -182,7 +182,7 @@ void nasal_dbg::run(
 {
     detail_info=true;
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
-    const void* opr_table[]=
+    const void* oprs[]=
     {
         &&vmexit,  &&intg,     &&intl,   &&loadg,
         &&loadl,   &&loadu,    &&pnum,   &&pnil,
@@ -207,7 +207,7 @@ void nasal_dbg::run(
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
     {
-        code.push_back(opr_table[i.op]);
+        code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
     // goto the first operand

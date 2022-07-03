@@ -4,22 +4,19 @@
 class nasal_vm
 {
 protected:
-    /* values of nasal_vm */
-    nasal_ref             stack[STACK_DEPTH];
+    /* registers and constants of nasal_vm */
     uint32_t              pc;       // program counter
-    nasal_ref*            global;   // global scope register
     nasal_ref*            localr;   // local scope register
     nasal_ref*            memr;     // used for mem_call
     nasal_ref             funcr;    // function register
     nasal_ref             upvalr;   // upvalue register
     nasal_ref*            canary;   // avoid stackoverflow
     nasal_ref*            top;      // stack top
-
-    /* constant */
     const double*         num_table;// const numbers, ref from nasal_codegen
     const std::string*    str_table;// const symbols, ref from nasal_codegen
     std::vector<uint32_t> imm;      // immediate number
-
+    /* main stack */
+    nasal_ref             stack[STACK_DEPTH];
     /* garbage collector */
     nasal_gc              gc;
 
@@ -125,9 +122,7 @@ protected:
     void opr_mcallh();
     void opr_ret();
 public:
-    nasal_vm():
-        global(stack),
-        gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
+    nasal_vm():gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
     void run(
         const nasal_codegen&,
         const nasal_import&,
@@ -152,7 +147,6 @@ void nasal_vm::init(
 
     /* set canary and program counter */
     pc=0;
-    global=stack;
     localr=nullptr;
     memr=nullptr;
     funcr=nil;
@@ -290,7 +284,7 @@ void nasal_vm::register_info()
 {
     printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
     printf("  [ pc     ]    | pc   | 0x%x\n",pc);
-    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)global);
+    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)stack);
     printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
     printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
     if(funcr.type==vm_nil)
@@ -312,11 +306,11 @@ void nasal_vm::global_state()
 {
     if(!bytecode[0].num || stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
-    printf("global(0x" PRTHEX64 "<sp+0>):\n",(uint64_t)global);
+    printf("global(0x" PRTHEX64 "<sp+0>):\n",(uint64_t)stack);
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
         printf("  0x%.8x",i);
-        valinfo(global[i]);
+        valinfo(stack[i]);
     }
 }
 void nasal_vm::local_state()
@@ -413,7 +407,7 @@ inline void nasal_vm::opr_intl()
 }
 inline void nasal_vm::opr_loadg()
 {
-    global[imm[pc]]=(top--)[0];
+    stack[imm[pc]]=(top--)[0];
 }
 inline void nasal_vm::opr_loadl()
 {
@@ -687,7 +681,7 @@ inline void nasal_vm::opr_feach()
 }
 inline void nasal_vm::opr_callg()
 {
-    (++top)[0]=global[imm[pc]];
+    (++top)[0]=stack[imm[pc]];
 }
 inline void nasal_vm::opr_calll()
 {
@@ -898,7 +892,7 @@ inline void nasal_vm::opr_slc2()
 }
 inline void nasal_vm::opr_mcallg()
 {
-    memr=global+imm[pc];
+    memr=stack+imm[pc];
     (++top)[0]=memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
@@ -984,7 +978,6 @@ inline void nasal_vm::opr_ret()
     upvalr=top[-3];
 
     top=local-1;
-    func.func().local[0]=nil;// get func and set 'me' to nil
     funcr=top[0];
 
     top[0]=ret; // rewrite func with returned value
@@ -1012,7 +1005,7 @@ void nasal_vm::run(
     detail_info=detail;
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
     uint64_t count[op_ret+1]={0};
-    const void* opr_table[]=
+    const void* oprs[]=
     {
         &&vmexit,  &&intg,     &&intl,   &&loadg,
         &&loadl,   &&loadu,    &&pnum,   &&pnil,
@@ -1037,7 +1030,7 @@ void nasal_vm::run(
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
     {
-        code.push_back(opr_table[i.op]);
+        code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
     // goto the first operand
@@ -1048,7 +1041,7 @@ vmexit:
         die("stack overflow");
     if(opcnt)
         opcallsort(count);
-    if(detail_info)
+    if(detail)
         gc.info();
     gc.clear();
     imm.clear();
