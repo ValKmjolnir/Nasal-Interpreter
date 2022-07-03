@@ -22,7 +22,7 @@ enum vm_type:std::uint32_t{
 const uint32_t gc_obj_size=vm_type_size-vm_str;
 // change parameters here to make your own efficient gc
 // better set bigger number on vm_vec
-const uint32_t initialize[gc_obj_size]=
+const uint32_t ini[gc_obj_size]=
 {
     128, // vm_str
     512, // vm_func
@@ -32,7 +32,7 @@ const uint32_t initialize[gc_obj_size]=
     0,   // vm_obj
     0    // vm_co
 };
-const uint32_t increment[gc_obj_size]=
+const uint32_t incr[gc_obj_size]=
 {
     256, // vm_str
     512, // vm_func
@@ -274,11 +274,12 @@ void nasal_vec::print()
     }
     printed=true;
     size_t iter=0;
+    size_t size=elems.size();
     std::cout<<'[';
     for(auto& i:elems)
     {
         i.print();
-        std::cout<<",]"[(++iter)==elems.size()];
+        std::cout<<",]"[(++iter)==size];
     }
     printed=false;
 }
@@ -330,12 +331,13 @@ void nasal_hash::print()
     }
     printed=true;
     size_t iter=0;
+    size_t size=elems.size();
     std::cout<<'{';
     for(auto& i:elems)
     {
         std::cout<<i.first<<':';
         i.second.print();
-        std::cout<<",}"[(++iter)==elems.size()];
+        std::cout<<",}"[(++iter)==size];
     }
     printed=false;
 }
@@ -464,6 +466,7 @@ struct nasal_gc
     /* values for analysis */
     uint64_t                size[gc_obj_size];
     uint64_t                count[gc_obj_size];
+    uint64_t                allocc[gc_obj_size];
     nasal_gc(
         uint32_t& _pc,
         nasal_ref*& _localr,
@@ -577,9 +580,9 @@ void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::str
     funcr=nil;
 
     for(uint8_t i=0;i<gc_obj_size;++i)
-        size[i]=count[i]=0;
+        size[i]=count[i]=allocc[i]=0;
     for(uint8_t i=vm_str;i<vm_type_size;++i)
-        for(uint32_t j=0;j<initialize[i-vm_str];++j)
+        for(uint32_t j=0;j<ini[i-vm_str];++j)
         {
             nasal_val* tmp=new nasal_val(i);
             memory.push_back(tmp);
@@ -618,20 +621,18 @@ void nasal_gc::clear()
 }
 void nasal_gc::info()
 {
-    const char* name[]={
-        "str  ","func ","vec  ",
-        "hash ","upval","obj  ",
-        "co   "
-    };
+    const char* name[]={"str  ","func ","vec  ","hash ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info\n";
     for(uint8_t i=0;i<gc_obj_size;++i)
-        std::cout<<"  "<<name[i]<<" | "<<count[i]<<"\n";
+        std::cout<<"  "<<name[i]<<" | mark-sweep | "<<count[i]<<"\n"
+                 <<"        | mem-alloc  | "<<allocc[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(uint8_t i=0;i<gc_obj_size;++i)
-        std::cout<<"  "<<name[i]<<" | "<<initialize[i]+size[i]*increment[i]<<"(+"<<size[i]<<")\n";
+        std::cout<<"  "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
+    ++allocc[type-vm_str];
     if(free_list[type].empty())
     {
         ++count[type-vm_str];
@@ -641,7 +642,7 @@ nasal_ref nasal_gc::alloc(uint8_t type)
     if(free_list[type].empty())
     {
         ++size[type-vm_str];
-        for(uint32_t i=0;i<increment[type-vm_str];++i)
+        for(uint32_t i=0;i<incr[type-vm_str];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
@@ -659,10 +660,11 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     // this may cause mark-sweep in gc::alloc
     // and the value got before will be collected,this is a fatal error
     // so use builtin_alloc in builtin functions if this function uses alloc more then one time
+    ++allocc[type-vm_str];
     if(free_list[type].empty())
     {
         ++size[type-vm_str];
-        for(uint32_t i=0;i<increment[type-vm_str];++i)
+        for(uint32_t i=0;i<incr[type-vm_str];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
