@@ -11,9 +11,9 @@ enum vm_type:std::uint32_t{
     vm_num,
     /* gc object */
     vm_str,
-    vm_func,
     vm_vec,
     vm_hash,
+    vm_func,
     vm_upval,
     vm_obj,
     vm_co,
@@ -25,9 +25,9 @@ const uint32_t gc_tsize=vm_tsize-vm_str;
 const uint32_t ini[gc_tsize]=
 {
     128, // vm_str
-    512, // vm_func
     128, // vm_vec
     32,  // vm_hash
+    512, // vm_func
     512, // vm_upval
     0,   // vm_obj
     0    // vm_co
@@ -35,9 +35,9 @@ const uint32_t ini[gc_tsize]=
 const uint32_t incr[gc_tsize]=
 {
     256, // vm_str
-    512, // vm_func
     512, // vm_vec
     512, // vm_hash
+    512, // vm_func
     128, // vm_upval
     128, // vm_obj
     16   // vm_co
@@ -447,21 +447,21 @@ struct nasal_gc
     } main_ctx;
     
     /* runtime context */
-    uint32_t&               pc;                  // program counter
-    nasal_ref*&             localr;              // local scope register
-    nasal_ref*&             memr;                // used for mem_call
-    nasal_ref&              funcr;               // function register
-    nasal_ref&              upvalr;              // upvalue register
-    nasal_ref*&             canary;              // avoid stackoverflow
-    nasal_ref*&             top;                 // stack top
-    nasal_ref*              stack;               // stack pointer
-    nasal_co*               coroutine;           // running coroutine
+    uint32_t&               pc;               // program counter
+    nasal_ref*&             localr;           // local scope register
+    nasal_ref*&             memr;             // used for mem_call
+    nasal_ref&              funcr;            // function register
+    nasal_ref&              upvalr;           // upvalue register
+    nasal_ref*&             canary;           // avoid stackoverflow
+    nasal_ref*&             top;              // stack top
+    nasal_ref*              stack;            // stack pointer
+    nasal_co*               coroutine;        // running coroutine
 
     /* constants and memory pool */
-    std::vector<nasal_ref>  strs;                // reserved address for const vm_str
-    std::vector<nasal_val*> memory;              // gc memory
-    std::queue<nasal_val*>  free_list[gc_tsize]; // gc free list
-    std::vector<nasal_ref>  env_argv;            // command line arguments
+    std::vector<nasal_ref>  strs;             // reserved address for const vm_str
+    std::vector<nasal_ref>  env_argv;         // command line arguments
+    std::vector<nasal_val*> memory;           // gc memory
+    std::queue<nasal_val*>  unused[gc_tsize]; // gc free list
 
     /* values for analysis */
     uint64_t                size[gc_tsize];
@@ -567,7 +567,7 @@ void nasal_gc::sweep()
                 case vm_obj:  i->ptr.obj->clear();       break;
                 case vm_co:   i->ptr.co->clear();        break;
             }
-            free_list[i->type-vm_str].push(i);
+            unused[i->type-vm_str].push(i);
             i->mark=GC_COLLECTED;
         }
         else if(i->mark==GC_FOUND)
@@ -586,7 +586,7 @@ void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::str
         {
             nasal_val* tmp=new nasal_val(i+vm_str);
             memory.push_back(tmp);
-            free_list[i].push(tmp);
+            unused[i].push(tmp);
         }
     coroutine=nullptr;
     // init constant strings
@@ -612,8 +612,8 @@ void nasal_gc::clear()
         delete i;
     memory.clear();
     for(uint8_t i=0;i<gc_tsize;++i)
-        while(!free_list[i].empty())
-            free_list[i].pop();
+        while(!unused[i].empty())
+            unused[i].pop();
     for(auto& i:strs)
         delete i.value.gcobj;
     strs.clear();
@@ -621,7 +621,7 @@ void nasal_gc::clear()
 }
 void nasal_gc::info()
 {
-    const char* name[]={"str  ","func ","vec  ","hash ","upval","obj  ","co   "};
+    const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info\n";
     for(uint8_t i=0;i<gc_tsize;++i)
         std::cout<<"  "<<name[i]<<" | gc  | "<<count[i]<<"\n"
@@ -632,26 +632,27 @@ void nasal_gc::info()
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
-    ++allocc[type-vm_str];
-    if(free_list[type-vm_str].empty())
+    const uint8_t index=type-vm_str;
+    ++allocc[index];
+    if(unused[index].empty())
     {
-        ++count[type-vm_str];
+        ++count[index];
         mark();
         sweep();
     }
-    if(free_list[type-vm_str].empty())
+    if(unused[index].empty())
     {
-        ++size[type-vm_str];
-        for(uint32_t i=0;i<incr[type-vm_str];++i)
+        ++size[index];
+        for(uint32_t i=0;i<incr[index];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
-            free_list[type-vm_str].push(tmp);
+            unused[index].push(tmp);
         }
     }
-    nasal_ref ret={type,free_list[type-vm_str].front()};
+    nasal_ref ret={type,unused[index].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
-    free_list[type-vm_str].pop();
+    unused[index].pop();
     return ret;
 }
 nasal_ref nasal_gc::builtin_alloc(uint8_t type)
@@ -660,20 +661,21 @@ nasal_ref nasal_gc::builtin_alloc(uint8_t type)
     // this may cause mark-sweep in gc::alloc
     // and the value got before will be collected,this is a fatal error
     // so use builtin_alloc in builtin functions if this function uses alloc more then one time
-    ++allocc[type-vm_str];
-    if(free_list[type-vm_str].empty())
+    const uint8_t index=type-vm_str;
+    ++allocc[index];
+    if(unused[index].empty())
     {
-        ++size[type-vm_str];
-        for(uint32_t i=0;i<incr[type-vm_str];++i)
+        ++size[index];
+        for(uint32_t i=0;i<incr[index];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);
-            free_list[type-vm_str].push(tmp);
+            unused[index].push(tmp);
         }
     }
-    nasal_ref ret={type,free_list[type-vm_str].front()};
+    nasal_ref ret={type,unused[index].front()};
     ret.value.gcobj->mark=GC_UNCOLLECTED;
-    free_list[type-vm_str].pop();
+    unused[index].pop();
     return ret;
 }
 void nasal_gc::ctxchg(nasal_co& context)

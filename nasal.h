@@ -43,7 +43,7 @@
 #define PRTINT64   "%lld"
 #endif
 
-const uint32_t STACK_DEPTH=4096;
+const uint32_t STACK_DEPTH=2048;
 
 inline double hex_to_double(const char* str)
 {

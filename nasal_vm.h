@@ -15,10 +15,11 @@ protected:
     const double*         num_table;// const numbers, ref from nasal_codegen
     const std::string*    str_table;// const symbols, ref from nasal_codegen
     std::vector<uint32_t> imm;      // immediate number
-    /* main stack */
-    nasal_ref             stack[STACK_DEPTH];
+    
     /* garbage collector */
     nasal_gc              gc;
+    /* main stack */
+    nasal_ref             stack[STACK_DEPTH];
 
     /* values used for debug */
     size_t                files_size;
