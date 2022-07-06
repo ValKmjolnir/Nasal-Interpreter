@@ -5,7 +5,7 @@
 #include <fstream>
 #include <cstring>
 
-class file_line
+class fstreamline
 {
 protected:
     std::string file;
@@ -40,7 +40,7 @@ public:
     size_t size(){return res.size();}
 };
 
-class nasal_err:public file_line
+class nasal_err:public fstreamline
 {
 private:
     uint32_t error;

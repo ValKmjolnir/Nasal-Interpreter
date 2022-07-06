@@ -21,7 +21,7 @@ protected:
     /* main stack */
     nasal_ref             stack[STACK_DEPTH];
 
-    /* values used for debug */
+    /* values used for debugger */
     size_t                files_size;
     const std::string*    files;    // ref from nasal_import
     const opcode*         bytecode; // ref from nasal_codegen
@@ -355,7 +355,8 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     typedef std::pair<uint32_t,uint64_t> op;
     std::vector<op> opcall;
     for(uint32_t i=0;i<=op_ret;++i)
-        opcall.push_back({i,arr[i]});
+        if(arr[i])
+            opcall.push_back({i,arr[i]});
     std::sort(
         opcall.begin(),
         opcall.end(),
@@ -364,13 +365,19 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     std::cout<<"\noperands call info";
     uint64_t total=0;
     for(auto& i:opcall)
-    {
-        if(!i.second)
-            break;
         total+=i.second;
-        std::cout<<"\n  "<<code_table[i.first].name<<" : "<<i.second;
+    for(auto& i:opcall)
+    {
+        uint64_t rate=i.second*100/total;
+        if(rate>0)
+            std::cout<<"\n "<<code_table[i.first].name<<" : "<<i.second<<" ("<<rate<<"%)";
+        else
+        {
+            std::cout<<"\n ...";
+            break;
+        }
     }
-    std::cout<<"\n  total  : "<<total<<'\n';
+    std::cout<<"\n total  : "<<total<<'\n';
 }
 void nasal_vm::die(std::string str)
 {
