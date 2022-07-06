@@ -1,5 +1,5 @@
-import("stl/process_bar.nas");
-import("module/libkey.nas");
+import.stl.process_bar;
+import.module.libkey;
 
 var cpu_stat=func(){
     var cpu=split("\n",io.fin("/proc/stat"))[0];

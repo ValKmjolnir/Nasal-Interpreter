@@ -1,6 +1,7 @@
 # coroutine.nas by ValKmjolnir
 # 2022/5/19
-import("stl/process_bar.nas");
+import.stl.process_bar;
+
 var fib=func(){
     var (a,b)=(1,1);
     coroutine.yield(a);

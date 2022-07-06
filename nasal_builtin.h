@@ -51,7 +51,6 @@ nas_native(builtin_time);
 nas_native(builtin_contains);
 nas_native(builtin_delete);
 nas_native(builtin_keys);
-nas_native(builtin_import);
 nas_native(builtin_die);
 nas_native(builtin_find);
 nas_native(builtin_type);
@@ -158,7 +157,6 @@ struct
     {"__builtin_contains",builtin_contains},
     {"__builtin_delete",  builtin_delete  },
     {"__builtin_keys",    builtin_keys    },
-    {"__builtin_import",  builtin_import  },
     {"__builtin_die",     builtin_die     },
     {"__builtin_find",    builtin_find    },
     {"__builtin_type",    builtin_type    },
@@ -653,24 +651,13 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     --gc.top;
     return gc.top[1];
 }
-nasal_ref builtin_import(nasal_ref* local,nasal_gc& gc)
-{
-    // this function is used in preprocessing.
-    // this function will return nothing when running.
-    return builtin_err(
-        "import",
-        "\n\tthis function is used to link files together. "
-        "\n\tmake sure it is used in global scope. "
-        "\n\tmake sure it has correct argument(only one arg allowed)"
-    );
-}
 nasal_ref builtin_die(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref str=local[1];
     if(str.type!=vm_str)
         return builtin_err("die","\"str\" must be string");
     std::cerr<<"[vm] error: "<<str.str()<<'\n';
-    return nasal_ref(vm_none);
+    return {vm_none};
 }
 nasal_ref builtin_find(nasal_ref* local,nasal_gc& gc)
 {

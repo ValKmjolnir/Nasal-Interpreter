@@ -1,5 +1,5 @@
 # Road check and auto pilot by ValKmjolnir
-import("stl/fg_env.nas");
+import.stl.fg_env;
 
 var dt=0.01;
 var intergral=0;
