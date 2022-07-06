@@ -430,7 +430,7 @@ nasal_ref builtin_num(nasal_ref* local,nasal_gc& gc)
         return val;
     if(val.type!=vm_str)
         return nil;
-    double res=val.to_number();
+    double res=val.tonum();
     if(std::isnan(res))
         return nil;
     return {vm_num,res};
@@ -1418,7 +1418,7 @@ nasal_ref builtin_coresume(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_coyield(nasal_ref* local,nasal_gc& gc)
 {
     if(!gc.coroutine)
-        return builtin_err("coroutine::yield","cannot yield, no coroutine is running");
+        return builtin_err("coroutine::yield","no coroutine is running");
     gc.ctxreserve();
     // this will set to main stack top
     // then builtin_coresume will return it

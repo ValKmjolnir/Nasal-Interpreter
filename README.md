@@ -763,7 +763,7 @@ extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
     // ok, you must know that vm_num now is not managed by gc
     // if want to return a gc object, use gc.alloc(type)
     // usage of gc is the same as adding a native function
-    return {vm_num,fibonaci(num.to_number())};
+    return {vm_num,fibonaci(num.tonum())};
 }
 ```
 

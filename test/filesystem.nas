@@ -4,11 +4,6 @@ while((var line=io.readln(fd))!=nil)
 io.close(fd);
 println(io.stat("test/filesystem.nas"));
 
-var dd=unix.opendir("test");
-while(var name=unix.readdir(dd))
-    println(name);
-unix.closedir(dd);
-
 var files=func(dir){
     var dd=unix.opendir(dir);
     var res=[];
@@ -18,17 +13,26 @@ var files=func(dir){
     return res;
 }
 var prt=func(s,path){
-    foreach(var i;files(path)){
-        print(s,i);
-        if(unix.isdir(path~'/'~i)){
-            print(' <dir>\n');
-            if(i!='.' and i!='..')
-                prt(s~' |',path~'/'~i);
+    var vec=files(path);
+    var last=size(vec)-1;
+    forindex(var i;vec){
+        var f=vec[i];
+        if(f=="." or f=="..")
+            continue;
+        foreach(var j;s)
+            print("\e[34m",j,"\e[0m");
+        if(unix.isdir(path~"/"~f)){
+            println("\e[34m",i==last?"└─":"├─","\e[0m\e[36m",f," >\e[0m");
+            append(s,i==last?"  ":"│ ");
+            prt(s,path~"/"~f);
+            pop(s);
+        }elsif(unix.isfile(path~"/"~f)){
+            println("\e[34m",i==last?"└─":"├─","\e[0m\e[32m",f,"\e[0m");
+        }else{
+            println("\e[34m",i==last?"└─":"├─","\e[0m\e[91m",f,"\e[0m");
         }
-        elsif(unix.isfile(path~'/'~i))
-            print(" <file>\n");
-        else
-            print(' <unknown>\n');
     }
 }
-prt('',".");
+
+println("\e[36mNasal-Interpreter >\e[0m");
+prt([""],".");

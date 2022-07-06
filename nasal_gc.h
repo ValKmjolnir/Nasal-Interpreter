@@ -85,8 +85,8 @@ struct nasal_ref
     bool operator==(const nasal_ref& nr){return type==nr.type && value.gcobj==nr.value.gcobj;}
     bool operator!=(const nasal_ref& nr){return type!=nr.type || value.gcobj!=nr.value.gcobj;}
     // number and string can be translated to each other
-    double      to_number();
-    std::string to_string();
+    double      tonum();
+    std::string tostr();
     void        print();
     bool        objchk(uint32_t);
     inline nasal_ref*   addr();
@@ -380,11 +380,11 @@ nasal_val::~nasal_val()
     }
     type=vm_nil;
 }
-double nasal_ref::to_number()
+double nasal_ref::tonum()
 {
     return type!=vm_str?value.num:str2num(str().c_str());
 }
-std::string nasal_ref::to_string()
+std::string nasal_ref::tostr()
 {
     if(type==vm_str)
         return str();

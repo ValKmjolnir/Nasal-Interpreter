@@ -717,7 +717,7 @@ extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
         return builtin_err("extern_fib","\"num\" must be number");
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
     // 如果需要返回内存管理的对象，请使用gc.alloc(type)
-    return {vm_num,fibonaci(num.to_number())};
+    return {vm_num,fibonaci(num.tonum())};
 }
 ```
 
