@@ -9,7 +9,7 @@ private:
     bool next_step;
     uint16_t bk_fidx;
     uint32_t bk_line;
-    file_line src;
+    fstreamline src;
 
     std::vector<std::string> parse(const std::string&);
     uint16_t get_fileindex(const std::string&);

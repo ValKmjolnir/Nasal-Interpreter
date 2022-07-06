@@ -447,15 +447,15 @@ struct nasal_gc
     } main_ctx;
     
     /* runtime context */
-    uint32_t&               pc;               // program counter
-    nasal_ref*&             localr;           // local scope register
-    nasal_ref*&             memr;             // used for mem_call
-    nasal_ref&              funcr;            // function register
-    nasal_ref&              upvalr;           // upvalue register
-    nasal_ref*&             canary;           // avoid stackoverflow
-    nasal_ref*&             top;              // stack top
-    nasal_ref*              stack;            // stack pointer
-    nasal_co*               coroutine;        // running coroutine
+    uint32_t&   pc;        // program counter
+    nasal_ref*& localr;    // local scope register
+    nasal_ref*& memr;      // used for mem_call
+    nasal_ref&  funcr;     // function register
+    nasal_ref&  upvalr;    // upvalue register
+    nasal_ref*& canary;    // avoid stackoverflow
+    nasal_ref*& top;       // stack top
+    nasal_ref*  stack;     // stack pointer
+    nasal_co*   coroutine; // running coroutine
 
     /* constants and memory pool */
     std::vector<nasal_ref>  strs;             // reserved address for const vm_str
@@ -464,9 +464,9 @@ struct nasal_gc
     std::queue<nasal_val*>  unused[gc_tsize]; // gc free list
 
     /* values for analysis */
-    uint64_t                size[gc_tsize];
-    uint64_t                count[gc_tsize];
-    uint64_t                allocc[gc_tsize];
+    uint64_t size[gc_tsize];
+    uint64_t count[gc_tsize];
+    uint64_t allocc[gc_tsize];
     nasal_gc(
         uint32_t& _pc,
         nasal_ref*& _localr,
@@ -499,11 +499,10 @@ struct nasal_gc
 void nasal_gc::mark()
 {
     std::queue<nasal_ref> bfs;
-    
     // scan coroutine process stack when coroutine ptr is not null
     // scan main process stack when coroutine ptr is null
     // this scan process must execute because when running coroutine,
-    // the nasal_co related to it will not update it's context until the coroutine suspends or exits.
+    // the nasal_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
     for(nasal_ref* i=stack;i<=top;++i)
         bfs.push(*i);
     bfs.push(funcr);
@@ -622,13 +621,13 @@ void nasal_gc::clear()
 void nasal_gc::info()
 {
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
-    std::cout<<"\ngarbage collector info\n";
+    std::cout<<"\ngarbage collector info(gc/alloc)\n";
     for(uint8_t i=0;i<gc_tsize;++i)
-        std::cout<<"  "<<name[i]<<" | gc  | "<<count[i]<<"\n"
-                 <<"        | new | "<<allocc[i]<<"\n";
+        if(count[i] || allocc[i])
+            std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<allocc[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(uint8_t i=0;i<gc_tsize;++i)
-        std::cout<<"  "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+        std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
 }
 nasal_ref nasal_gc::alloc(uint8_t type)
 {
