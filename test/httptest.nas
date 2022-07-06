@@ -1,4 +1,4 @@
-import("module/libsock.nas");
+import.module.libsock;
 
 var http=func(){
     var sd=nil;

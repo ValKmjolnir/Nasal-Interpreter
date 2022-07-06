@@ -1,4 +1,4 @@
-import("stl/queue.nas");
+import.stl.queue;
 
 rand(time(0));
 var pixel=[' ','#','.','*'];

@@ -1,5 +1,5 @@
-import("test/md5.nas");
-import("stl/process_bar.nas");
+import.test.md5;
+import.stl.process_bar;
 srand();
 
 var compare=func(){

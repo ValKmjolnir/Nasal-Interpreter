@@ -7,11 +7,12 @@ private:
     bool lib_loaded;
     nasal_err& nerr;
     std::vector<std::string> files;
-    bool check_import(const nasal_ast&);
-    bool check_exist(const std::string&);
+    bool imptchk(const nasal_ast&);
+    bool exist(const std::string&);
     void linker(nasal_ast&,nasal_ast&&);
-    nasal_ast file_import(nasal_ast&);
-    nasal_ast lib_import();
+    std::string path(const nasal_ast&);
+    nasal_ast fimpt(nasal_ast&);
+    nasal_ast libimpt();
     nasal_ast load(nasal_ast&,uint16_t);
 public:
     nasal_import(nasal_err& e):lib_loaded(false),nerr(e){}
@@ -19,10 +20,38 @@ public:
     const std::vector<std::string>& get_file() const {return files;}
 };
 
-bool nasal_import::check_import(const nasal_ast& node)
+std::string nasal_import::path(const nasal_ast& node)
 {
+    if(node[1].type()==ast_callf)
+        return node[1][0].str();
+    std::string fpath=".";
+    for(size_t i=1;i<node.size();++i)
+#ifndef _WIN32
+        fpath+="/"+node[i].str();
+#else
+        fpath+="\\"+node[i].str();
+#endif
+    fpath+=".nas";
+    return fpath;
+}
+
+bool nasal_import::imptchk(const nasal_ast& node)
+{
+// only these two kinds of node can be recognized as 'import':
 /*
-only this kind of node can be recognized as 'import':
+    call
+    |_id:import
+    |_callh:stl
+    |_callh:file
+*/
+    if(node.type()==ast_call && node.size()>=2 && node[0].str()=="import" && node[1].type()==ast_callh)
+    {
+        for(size_t i=1;i<node.size();++i)
+            if(node[i].type()!=ast_callh)
+                return false;
+        return true;
+    }
+/*
     call
     |_id:import
     |_call_func
@@ -38,7 +67,7 @@ only this kind of node can be recognized as 'import':
     );
 }
 
-bool nasal_import::check_exist(const std::string& file)
+bool nasal_import::exist(const std::string& file)
 {
     // avoid importing the same file
     for(auto& fname:files)
@@ -55,16 +84,16 @@ void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
         root.add(std::move(i));
 }
 
-nasal_ast nasal_import::file_import(nasal_ast& node)
+nasal_ast nasal_import::fimpt(nasal_ast& node)
 {
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
     // get filename and set node to ast_null
-    std::string filename=node[1][0].str();
+    std::string filename=path(node);
     node.clear();
 
     // avoid infinite loading loop
-    if(check_exist(filename))
+    if(exist(filename))
         return {0,ast_root};
     if(access(filename.c_str(),F_OK)==-1)
     {
@@ -80,7 +109,7 @@ nasal_ast nasal_import::file_import(nasal_ast& node)
     return load(tmp,files.size()-1);
 }
 
-nasal_ast nasal_import::lib_import()
+nasal_ast nasal_import::libimpt()
 {
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
@@ -113,7 +142,7 @@ nasal_ast nasal_import::lib_import()
     }
 
     // avoid infinite loading loop
-    if(check_exist(filename))
+    if(exist(filename))
         return {0,ast_root};
     
     // start importing...
@@ -129,12 +158,12 @@ nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
     nasal_ast new_root(0,ast_root);
     if(!lib_loaded)
     {
-        linker(new_root,lib_import());
+        linker(new_root,libimpt());
         lib_loaded=true;
     }
     for(auto& i:root.child())
-        if(check_import(i))
-            linker(new_root,file_import(i));
+        if(imptchk(i))
+            linker(new_root,fimpt(i));
     // add root to the back of new_root
     nasal_ast file_head(0,ast_file);
     file_head.set_num(fileindex);

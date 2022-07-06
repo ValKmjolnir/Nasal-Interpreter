@@ -1,11 +1,5 @@
 # lib.nas
 
-# import is used to link another file, this lib function will do nothing.
-# because nasal_import will recognize this and link files before generating bytecode.
-var import=func(filename){
-    return __builtin_import(filename);
-}
-
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout/printf to output logs.
 var print=func(elems...){
