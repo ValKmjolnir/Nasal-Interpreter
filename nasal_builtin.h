@@ -317,57 +317,33 @@ nasal_ref builtin_fout(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref deli_val=local[1];
-    nasal_ref str_val=local[2];
-    if(deli_val.type!=vm_str)
+    nasal_ref delimeter=local[1];
+    nasal_ref str=local[2];
+    if(delimeter.type!=vm_str)
         return builtin_err("split","\"separator\" must be string");
-    if(str_val.type!=vm_str)
+    if(str.type!=vm_str)
         return builtin_err("split","\"str\" must be string");
-    std::string& delimeter=deli_val.str();
-    std::string& source=str_val.str();
-    size_t delimeter_len=delimeter.length();
-    size_t source_len=source.length();
+    std::string& deli=delimeter.str();
+    std::string& s=str.str();
 
     // avoid being sweeped
     nasal_ref res=gc.temp=gc.alloc(vm_vec);
     std::vector<nasal_ref>& vec=res.vec().elems;
 
-    if(!delimeter_len)
+    if(!deli.length())
     {
-        for(size_t i=0;i<source_len;++i)
-            vec.push_back(gc.newstr(source[i]));
+        for(auto i:s)
+            vec.push_back(gc.newstr(i));
         gc.temp=nil;
         return res;
     }
-
-    std::string tmp="";
-    for(size_t i=0;i<source_len;++i)
+    std::string::size_type last=s.find_first_not_of(deli,0);
+    std::string::size_type pos=s.find_first_of(deli,last);
+    while(pos!=std::string::npos || last!=std::string::npos)
     {
-        bool check_delimeter=false;
-        if(source[i]==delimeter[0])
-            for(size_t j=0;j<delimeter_len;++j)
-            {
-                if(i+j>=source_len || source[i+j]!=delimeter[j])
-                    break;
-                if(j==delimeter_len-1)
-                    check_delimeter=true;
-            }
-        if(check_delimeter)
-        {
-            if(tmp.length())
-            {
-                vec.push_back(gc.newstr(tmp));
-                tmp="";
-            }
-            i+=delimeter_len-1;
-        }
-        else
-            tmp+=source[i];
-    }
-    if(tmp.length())
-    {
-        vec.push_back(gc.newstr(tmp));
-        tmp="";
+        vec.push_back(gc.newstr(s.substr(last,pos-last)));
+        last=s.find_first_not_of(deli,pos);
+        pos=s.find_first_of(deli,last);
     }
     gc.temp=nil;
     return res;
