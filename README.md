@@ -678,22 +678,18 @@ If you don't warp built-in function in a normal nasal function,
 this built-in function may cause a fault when searching arguments,
 which will cause __segmentation error__.
 
-Use `import("filename.nas")` to get the nasal file including your built-in functions,
-then you could use it.
+Use `import("filename.nas")` to get the nasal file including your built-in functions, then you could use it.
+Also there's another way of importing nasal files, the two way of importing have the same function:
 
-version 6.5 update:
+```javascript
+import.dirname.dirname.filename;
+import("./dirname/dirname/filename.nas");
+```
 
-Use `gc::builtin_alloc` in builtin function if this function uses alloc more than one time.
+When running a builtin function, alloc will run more than one time, this may cause mark-sweep in `gc::alloc`.
+The value got before will be collected, but stil in use in this builtin function, this will cause a fatal error.
 
-When running a builtin function,alloc will run more than one time,
-this may cause mark-sweep in `gc::alloc`.
-
-The value got before will be collected,but stil in use in this builtin function,
-this is a fatal error.
-
-So use `gc::builtin_alloc` in builtin functions to allocate a new object.
-
-Or use `gc::alloc` like this to avoid sweeping objects incorrectly:
+So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
 
 ```C++
 nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
@@ -701,19 +697,13 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
-    // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.canary)
-        return builtin_err("keys","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_vec);
-    auto& vec=gc.top[0].vec().elems;
+    // avoid being sweeped
+    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
-    {
-        nasal_ref str=gc.alloc(vm_str);
-        str.str()=iter.first;
-        vec.push_back(str);
-    }
-    --gc.top;
-    return gc.top[1];
+        vec.push_back(gc.newstr(iter.first));
+    gc.temp=nil;
+    return res;
 }
 ```
 

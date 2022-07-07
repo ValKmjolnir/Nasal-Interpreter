@@ -642,18 +642,17 @@ var print=func(elems...){
 一定要注意，如果你不把内置函数包装到一个普通的nasal函数中，那么直接调用这个内置函数会在参数传入阶段出现严重的错误，这个错误会导致 __segmentation error__。也就是大家的老朋友段错误。
 
 在nasal文件中使用`import("文件名.nas")`可以导入该文件中你包装的所有内置函数，接下来你就可以使用他们了。
+当然也有另外一种办法来导入这些nasal文件，下面两种导入方式的效果是一样的：
 
-v6.5 更新:
-
-在内置函数中使用`gc::builtin_alloc`来避免在内置函数中多次申请需要内存管理的数据类型时可能出现的垃圾收集器的问题。
+```javascript
+import.dirname.dirname.filename;
+import("./dirname/dirname/filename.nas");
+```
 
 当运行内置函数的时候，内存分配器如果运行超过一次，那么会有更大可能性多次触发垃圾收集器的mark-sweep。这个操作会在`gc::alloc`中触发。
-
 如果先前获取的数值没有被正确存到可以被垃圾收集器索引到的地方，那么它会被错误地回收，这会导致严重的错误。
 
-所以如果不放心，那就在内置函数中用`gc::builtin_alloc`来申请新的数据。
-
-或者你也可以这样使用`gc::alloc`来规避错误的垃圾回收，目前我们大多使用这种方式，因为`gc::builtin_alloc`没那么靠谱:
+所以请使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
 
 ```C++
 nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
@@ -661,20 +660,13 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
-    // 把数组提前push到操作数栈上来避免被收集
-    // 但是一定要检查会不会栈溢出
-    if(gc.top+1>=gc.canary)
-        return builtin_err("keys","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_vec);
-    auto& vec=gc.top[0].vec().elems;
+    // 使用gc.temp来存储gc管理的变量，防止错误的回收
+    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
-    {
-        nasal_ref str=gc.alloc(vm_str);
-        str.str()=iter.first;
-        vec.push_back(str);
-    }
-    --gc.top;
-    return gc.top[1];
+        vec.push_back(gc.newstr(iter.first));
+    gc.temp=nil;
+    return res;
 }
 ```
 

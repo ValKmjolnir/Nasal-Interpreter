@@ -456,6 +456,7 @@ struct nasal_gc
     nasal_ref*& top;       // stack top
     nasal_ref*  stack;     // stack pointer
     nasal_co*   coroutine; // running coroutine
+    nasal_ref   temp;      // temporary place used in builtin/module functions
 
     /* constants and memory pool */
     std::vector<nasal_ref>  strs;             // reserved address for const vm_str
@@ -483,14 +484,17 @@ struct nasal_gc
         upvalr(_upvalr),
         canary(_canary),
         top(_top),
-        stack(_stk){}
+        stack(_stk),
+        temp(nil){}
     void                    mark();
     void                    sweep();
     void                    init(const std::vector<std::string>&,const std::vector<std::string>&);
     void                    clear();
     void                    info();
     nasal_ref               alloc(const uint8_t);
-    nasal_ref               builtin_alloc(const uint8_t);
+    nasal_ref               newstr(char);
+    nasal_ref               newstr(const char*);
+    nasal_ref               newstr(const std::string&);
     void                    ctxchg(nasal_co&);
     void                    ctxreserve();
 };
@@ -507,6 +511,7 @@ void nasal_gc::mark()
         bfs.push(*i);
     bfs.push(funcr);
     bfs.push(upvalr);
+    bfs.push(temp);
     if(coroutine) // scan main process stack
     {
         for(nasal_ref* i=main_ctx.stack;i<=main_ctx.top;++i)
@@ -654,28 +659,23 @@ nasal_ref nasal_gc::alloc(uint8_t type)
     unused[index].pop();
     return ret;
 }
-nasal_ref nasal_gc::builtin_alloc(uint8_t type)
+nasal_ref nasal_gc::newstr(char c)
 {
-    // when running a builtin function,alloc will run more than one time
-    // this may cause mark-sweep in gc::alloc
-    // and the value got before will be collected,this is a fatal error
-    // so use builtin_alloc in builtin functions if this function uses alloc more then one time
-    const uint8_t index=type-vm_str;
-    ++allocc[index];
-    if(unused[index].empty())
-    {
-        ++size[index];
-        for(uint32_t i=0;i<incr[index];++i)
-        {
-            nasal_val* tmp=new nasal_val(type);
-            memory.push_back(tmp);
-            unused[index].push(tmp);
-        }
-    }
-    nasal_ref ret={type,unused[index].front()};
-    ret.value.gcobj->mark=GC_UNCOLLECTED;
-    unused[index].pop();
-    return ret;
+    nasal_ref s=alloc(vm_str);
+    s.str()=c;
+    return s;
+}
+nasal_ref nasal_gc::newstr(const char* buff)
+{
+    nasal_ref s=alloc(vm_str);
+    s.str()=buff;
+    return s;
+}
+nasal_ref nasal_gc::newstr(const std::string& buff)
+{
+    nasal_ref s=alloc(vm_str);
+    s.str()=buff;
+    return s;
 }
 void nasal_gc::ctxchg(nasal_co& context)
 {

@@ -109,11 +109,10 @@ void execute(const std::string& file,const std::vector<std::string>& argv,const 
     }
     else if(cmd&VM_EXECTIME)
     {
-        timeb begin,end;
-        ftime(&begin);
+        auto start=std::chrono::high_resolution_clock::now();
         vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
-        ftime(&end);
-        std::cout<<"process exited after "<<((end.time-begin.time)*1.0+end.millitm/1000.0-begin.millitm/1000.0)<<"s.\n";
+        auto end=std::chrono::high_resolution_clock::now();
+        std::cout<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
         vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
