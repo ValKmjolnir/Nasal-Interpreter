@@ -129,7 +129,7 @@ double str2num(const char* str)
 
 int utf8_hdchk(char head)
 {
-    // RFC-2279 but in fact now we use RFC-3629 so nbytes is less than 4
+    // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
     uint8_t c=(uint8_t)head;
     uint32_t nbytes=0;
     if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
@@ -138,13 +138,6 @@ int utf8_hdchk(char head)
         nbytes=2;
     if((c>>3)==0x1e) // 1111 0xxx (10xx xxxx)^3
         nbytes=3;
-    // these should not be true
-    if((c>>2)==0x3e) // 1111 10xx (10xx xxxx)^4
-        nbytes=4;
-    if((c>>1)==0x7e) // 1111 110x (10xx xxxx)^5
-        nbytes=5;
-    if(c==0xfe)      // 1111 1110 (10xx xxxx)^6
-        nbytes=6;
     return nbytes;
 }
 
@@ -153,7 +146,7 @@ std::string chrhex(const char c)
     return {"0123456789abcdef"[(c&0xf0)>>4],"0123456789abcdef"[c&0x0f]};
 }
 
-std::string rawstr(const std::string& str)
+std::string rawstr(const std::string& str,const size_t maxlen=0)
 {
     std::string ret("");
     for(auto i:str)
@@ -163,8 +156,7 @@ std::string rawstr(const std::string& str)
         // if 'chcp65001' is not enabled, we output the hex
         if(i<=0)
         {
-            ret+="\\x";
-            ret+=chrhex(i);
+            ret+="\\x"+chrhex(i);
             continue;
         }
 #endif
@@ -185,6 +177,8 @@ std::string rawstr(const std::string& str)
             default:   ret+=i;     break;
         }
     }
+    if(maxlen && ret.length()>maxlen)
+        ret=ret.substr(0,maxlen)+"...";
     return ret;
 }
 #include "nasal_err.h"

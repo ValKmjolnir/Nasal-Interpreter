@@ -1280,10 +1280,8 @@ void nasal_codegen::print_op(uint32_t index)
             std::cout<<num_res[c.num&0x7fffffff]<<") sp-"<<(c.num>>31)<<"\n";
             break;
         case op_lnkeqc:
-        {
-            std::string tmp=rawstr(str_res[c.num&0x7fffffff]);
-            printf("0x%x (\"%.16s%s\") sp-%u\n",c.num&0x7fffffff,tmp.c_str(),tmp.length()>16?"...":"",c.num>>31);
-        }break;
+            printf("0x%x (\"%s\") sp-%u\n",c.num&0x7fffffff,rawstr(str_res[c.num&0x7fffffff],16).c_str(),c.num>>31);
+            break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
@@ -1302,10 +1300,7 @@ void nasal_codegen::print_op(uint32_t index)
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
-        {
-            std::string tmp=rawstr(str_res[c.num]);
-            printf("0x%x (\"%.16s%s\")\n",c.num,tmp.c_str(),tmp.length()>16?"...":"");
-        }break;
+            printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num],16).c_str());break;
         default:printf("\n");break;
     }
 }

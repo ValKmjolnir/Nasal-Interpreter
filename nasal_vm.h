@@ -148,10 +148,8 @@ void nasal_vm::init(
 
     /* set canary and program counter */
     pc=0;
-    localr=nullptr;
-    memr=nullptr;
-    funcr=nil;
-    upvalr=nil;
+    localr=memr=nullptr;
+    funcr=upvalr=nil;
     canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
     top=stack;
 }
@@ -167,11 +165,7 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_cnt:  printf("| cnt  | " PRTINT64 "\n",val.cnt());break;
         case vm_nil:  printf("| nil  |\n");break;
         case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
-        case vm_str:
-        {
-            std::string tmp=rawstr(val.str());
-            printf("| str  | <0x" PRTHEX64 "> %.16s%s\n",(uint64_t)p,tmp.c_str(),tmp.length()>16?"...":"");
-        }break;
+        case vm_str:  printf("| str  | <0x" PRTHEX64 "> %s\n",(uint64_t)p,rawstr(val.str(),16).c_str());break;
         case vm_func: printf("| func | <0x" PRTHEX64 "> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
         case vm_upval:printf("| upval| <0x" PRTHEX64 "> [%u val]\n",(uint64_t)p,val.upval().size);break;
         case vm_vec:  printf("| vec  | <0x" PRTHEX64 "> [%zu val]\n",(uint64_t)p,val.vec().size());break;
@@ -204,10 +198,8 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
             std::cout<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);
             break;
         case op_lnkeqc:
-        {
-            std::string tmp=rawstr(str_table[c.num&0x7fffffff]);
-            printf("0x%x (\"%.16s%s\") sp-%u",c.num&0x7fffffff,tmp.c_str(),tmp.length()>16?"...":"",c.num>>31);
-        }break;
+            printf("0x%x (\"%s\") sp-%u",c.num&0x7fffffff,rawstr(str_table[c.num&0x7fffffff],16).c_str(),c.num>>31);
+            break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
@@ -226,10 +218,8 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_defpara:case op_dynpara:
-        {
-            std::string tmp=rawstr(str_table[c.num]);
-            printf("0x%x (\"%.16s%s\")",c.num,tmp.c_str(),tmp.length()>16?"...":"");
-        }break;
+            printf("0x%x (\"%s\")",c.num,rawstr(str_table[c.num],16).c_str());
+            break;
         default:printf("0x%x",c.num);break;
     }
     printf(" (%s:%u)\n",files[c.fidx].c_str(),c.line);
