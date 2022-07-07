@@ -99,15 +99,12 @@ extern "C" nasal_ref nas_accept(std::vector<nasal_ref>& args,nasal_gc& gc){
 #else
     int client_sd=accept(args[0].num(),(sockaddr*)&client,(socklen_t*)&socklen);
 #endif
-    if(gc.top+1>=gc.canary)
-        return builtin_err("accept","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_hash);
-    auto& hash=gc.top[0].hash().elems;
+    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    auto& hash=res.hash().elems;
     hash["sd"]={vm_num,(double)client_sd};
-    hash["ip"]=gc.alloc(vm_str);
-    hash["ip"].str()=inet_ntoa(client.sin_addr);
-    --gc.top;
-    return gc.top[1];
+    hash["ip"]=gc.newstr(inet_ntoa(client.sin_addr));
+    gc.temp=nil;
+    return res;
 }
 
 extern "C" nasal_ref nas_send(std::vector<nasal_ref>& args,nasal_gc& gc){
@@ -149,17 +146,14 @@ extern "C" nasal_ref nas_recv(std::vector<nasal_ref>& args,nasal_gc& gc){
         return builtin_err("recv","\"len\" out of range");
     if(args[2].type!=vm_num)
         return builtin_err("recv","\"flags\" muse be a number");
-    if(gc.top+1>=gc.canary)
-        return builtin_err("recv","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_hash);
-    auto& hash=gc.top[0].hash().elems;
-    hash["str"]=gc.alloc(vm_str);
+    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()];
     hash["size"]={vm_num,(double)recv(args[0].num(),buf,args[1].num(),args[2].num())};
-    hash["str"].str()=buf;
+    hash["str"]=gc.newstr(buf);
     delete[] buf;
-    --gc.top;
-    return gc.top[1];
+    gc.temp=nil;
+    return res;
 }
 
 extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
@@ -171,13 +165,10 @@ extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
         return builtin_err("recvfrom","\"len\" out of range");
     if(args[2].type!=vm_num)
         return builtin_err("recvfrom","\"flags\" muse be a number");
-    if(gc.top+1>=gc.canary)
-        return builtin_err("recvfrom","expand temporary space error:stackoverflow");
     sockaddr_in addr;
     int socklen=sizeof(sockaddr_in);
-    (++gc.top)[0]=gc.alloc(vm_hash);
-    auto& hash=gc.top[0].hash().elems;
-    hash["str"]=gc.alloc(vm_str);
+    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()+1];
 #ifdef _WIN32
     hash["size"]={vm_num,(double)recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,&socklen)};
@@ -185,16 +176,13 @@ extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
     hash["size"]={vm_num,(double)recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,(socklen_t*)&socklen)};
 #endif
     buf[(int)hash["size"].num()]=0;
-    hash["str"].str()=buf;
+    hash["str"]=gc.newstr(buf);
     delete[] buf;
-    hash["fromip"]=gc.alloc(vm_str);
-    hash["fromip"].str()=inet_ntoa(addr.sin_addr);
-    --gc.top;
-    return gc.top[1];
+    hash["fromip"]=gc.newstr(inet_ntoa(addr.sin_addr));
+    gc.temp=nil;
+    return res;
 }
 
 extern "C" nasal_ref nas_errno(std::vector<nasal_ref>& args,nasal_gc& gc){
-    nasal_ref res=gc.alloc(vm_str);
-    res.str()=strerror(errno);
-    return res;
+    return gc.newstr(strerror(errno));
 }

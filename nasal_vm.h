@@ -526,8 +526,7 @@ inline void nasal_vm::opr_mul(){op_calc(*);}
 inline void nasal_vm::opr_div(){op_calc(/);}
 inline void nasal_vm::opr_lnk()
 {
-    nasal_ref val=gc.alloc(vm_str);
-    val.str()=top[-1].tostr()+top[0].tostr();
+    nasal_ref val=gc.newstr(top[-1].tostr()+top[0].tostr());
     (--top)[0]=val;
 }
 
@@ -541,8 +540,7 @@ inline void nasal_vm::opr_mulc(){op_calc_const(*);}
 inline void nasal_vm::opr_divc(){op_calc_const(/);}
 inline void nasal_vm::opr_lnkc()
 {
-    nasal_ref val=gc.alloc(vm_str);
-    val.str()=top[0].tostr()+str_table[imm[pc]];
+    nasal_ref val=gc.newstr(top[0].tostr()+str_table[imm[pc]]);
     top[0]=val;
 }
 
@@ -558,8 +556,7 @@ inline void nasal_vm::opr_muleq(){op_calc_eq(*);}
 inline void nasal_vm::opr_diveq(){op_calc_eq(/);}
 inline void nasal_vm::opr_lnkeq()
 {
-    nasal_ref val=gc.alloc(vm_str);
-    val.str()=memr[0].tostr()+top[-1].tostr();
+    nasal_ref val=gc.newstr(memr[0].tostr()+top[-1].tostr());
     (--top)[0]=memr[0]=val;
     memr=nullptr;
     top-=imm[pc];
@@ -577,8 +574,7 @@ inline void nasal_vm::opr_muleqc(){op_calc_eq_const(*);}
 inline void nasal_vm::opr_diveqc(){op_calc_eq_const(/);}
 inline void nasal_vm::opr_lnkeqc()
 {
-    nasal_ref val=gc.alloc(vm_str);
-    val.str()=memr[0].tostr()+str_table[imm[pc]&0x7fffffff];
+    nasal_ref val=gc.newstr(memr[0].tostr()+str_table[imm[pc]&0x7fffffff]);
     top[0]=memr[0]=val;
     memr=nullptr;
     top-=(imm[pc]>>31);

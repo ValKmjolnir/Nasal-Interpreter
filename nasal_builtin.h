@@ -295,11 +295,9 @@ nasal_ref builtin_fin(nasal_ref* local,nasal_gc& gc)
     std::ifstream fin(filename);
     if(!fin.fail())
     {
-        nasal_ref ret=gc.alloc(vm_str);
         std::stringstream rd;
         rd<<fin.rdbuf();
-        ret.str()=rd.str();
-        return ret;
+        return gc.newstr(rd.str());
     }
     return builtin_err("io.fin","cannot open \""+filename+"\"");
 }
@@ -330,21 +328,16 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     size_t delimeter_len=delimeter.length();
     size_t source_len=source.length();
 
-    // push it to local scope to avoid being sweeped
-    if(gc.top+1>=gc.canary)
-        return builtin_err("split","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_vec);
+    // avoid being sweeped
+    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    std::vector<nasal_ref>& vec=res.vec().elems;
 
-    std::vector<nasal_ref>& vec=gc.top[0].vec().elems;
     if(!delimeter_len)
     {
         for(size_t i=0;i<source_len;++i)
-        {
-            vec.push_back(gc.alloc(vm_str));
-            vec.back().str()=source[i];
-        }
-        --gc.top;
-        return gc.top[1];
+            vec.push_back(gc.newstr(source[i]));
+        gc.temp=nil;
+        return res;
     }
 
     std::string tmp="";
@@ -363,8 +356,7 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
         {
             if(tmp.length())
             {
-                vec.push_back(gc.alloc(vm_str));
-                vec.back().str()=tmp;
+                vec.push_back(gc.newstr(tmp));
                 tmp="";
             }
             i+=delimeter_len-1;
@@ -374,12 +366,11 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     }
     if(tmp.length())
     {
-        vec.push_back(gc.alloc(vm_str));
-        vec.back().str()=tmp;
+        vec.push_back(gc.newstr(tmp));
         tmp="";
     }
-    --gc.top;
-    return gc.top[1];
+    gc.temp=nil;
+    return res;
 }
 nasal_ref builtin_rand(nasal_ref* local,nasal_gc& gc)
 {
@@ -399,14 +390,12 @@ nasal_ref builtin_rand(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_id(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    nasal_ref ret=gc.alloc(vm_str);
     char buf[32];
     if(val.type>vm_num)
         sprintf(buf,"%p",val.value.gcobj);
     else
         sprintf(buf,"0");
-    ret.str()=buf;
-    return ret;
+    return gc.newstr(buf);
 }
 nasal_ref builtin_int(nasal_ref* local,nasal_gc& gc)
 {
@@ -455,9 +444,7 @@ nasal_ref builtin_str(nasal_ref* local,nasal_gc& gc)
     std::string tmp=std::to_string(val.num());
     tmp.erase(tmp.find_last_not_of('0')+1,std::string::npos);
     tmp.erase(tmp.find_last_not_of('.')+1,std::string::npos);
-    nasal_ref ret=gc.alloc(vm_str);
-    ret.str()=tmp;
-    return ret;
+    return gc.newstr(tmp);
 }
 nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
 {
@@ -637,19 +624,13 @@ nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
     nasal_ref hash=local[1];
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
-    // push vector into local scope to avoid being sweeped
-    if(gc.top+1>=gc.canary)
-        return builtin_err("keys","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_vec);
-    auto& vec=gc.top[0].vec().elems;
+    // avoid being sweeped
+    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
-    {
-        nasal_ref str=gc.alloc(vm_str);
-        str.str()=iter.first;
-        vec.push_back(str);
-    }
-    --gc.top;
-    return gc.top[1];
+        vec.push_back(gc.newstr(iter.first));
+    gc.temp=nil;
+    return res;
 }
 nasal_ref builtin_die(nasal_ref* local,nasal_gc& gc)
 {
@@ -674,21 +655,19 @@ nasal_ref builtin_find(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_type(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref val=local[1];
-    nasal_ref ret=gc.alloc(vm_str);
-    switch(val.type)
+    switch(local[1].type)
     {
-        case vm_none: ret.str()="undefined";break;
-        case vm_nil:  ret.str()="nil";      break;
-        case vm_num:  ret.str()="num";      break;
-        case vm_str:  ret.str()="str";      break;
-        case vm_vec:  ret.str()="vec";      break;
-        case vm_hash: ret.str()="hash";     break;
-        case vm_func: ret.str()="func";     break;
-        case vm_obj:  ret.str()="obj";      break;
-        case vm_co:   ret.str()="coroutine";break;
+        case vm_none: return gc.newstr("undefined");break;
+        case vm_nil:  return gc.newstr("nil");      break;
+        case vm_num:  return gc.newstr("num");      break;
+        case vm_str:  return gc.newstr("str");      break;
+        case vm_vec:  return gc.newstr("vec");      break;
+        case vm_hash: return gc.newstr("hash");     break;
+        case vm_func: return gc.newstr("func");     break;
+        case vm_obj:  return gc.newstr("obj");      break;
+        case vm_co:   return gc.newstr("coroutine");break;
     }
-    return ret;
+    return nil;
 }
 nasal_ref builtin_substr(nasal_ref* local,nasal_gc& gc)
 {
@@ -709,9 +688,7 @@ nasal_ref builtin_substr(nasal_ref* local,nasal_gc& gc)
     size_t length=(size_t)len.num();
     if(begin>=str.str().length() || begin+length>str.str().length())
         return builtin_err("susbtr","index out of range");
-    nasal_ref ret=gc.alloc(vm_str);
-    ret.str()=str.str().substr(begin,length);
-    return ret;
+    return gc.newstr(str.str().substr(begin,length));
 }
 nasal_ref builtin_streq(nasal_ref* local,nasal_gc& gc)
 {
@@ -730,9 +707,7 @@ nasal_ref builtin_left(nasal_ref* local,nasal_gc& gc)
     int length=(int)len.num();
     if(length<0)
         length=0;
-    nasal_ref ret=gc.alloc(vm_str);
-    ret.str()=str.str().substr(0,length);
-    return ret;
+    return gc.newstr(str.str().substr(0,length));
 }
 nasal_ref builtin_right(nasal_ref* local,nasal_gc& gc)
 {
@@ -748,9 +723,7 @@ nasal_ref builtin_right(nasal_ref* local,nasal_gc& gc)
         length=srclen;
     if(length<0)
         length=0;
-    nasal_ref ret=gc.alloc(vm_str);
-    ret.str()=str.str().substr(srclen-length, srclen);
-    return ret;
+    return gc.newstr(str.str().substr(srclen-length, srclen));
 }
 nasal_ref builtin_cmp(nasal_ref* local,nasal_gc& gc)
 {
@@ -785,15 +758,12 @@ nasal_ref builtin_chr(nasal_ref* local,nasal_gc& gc)
     nasal_ref code=local[1];
     if(code.type!=vm_num)
         return builtin_err("chr","\"code\" must be number");
-    nasal_ref ret=gc.alloc(vm_str);
     int num=code.num();
     if(0<=num && num<128)
-        ret.str()=(char)num;
+        return gc.newstr((char)num);
     else if(128<=num && num<256)
-        ret.str()=extend[num-128];
-    else
-        ret.str()=" ";
-    return ret;
+        return gc.newstr(extend[num-128]);
+    return gc.newstr(" ");
 }
 nasal_ref builtin_values(nasal_ref* local,nasal_gc& gc)
 {
@@ -1106,9 +1076,7 @@ nasal_ref builtin_readdir(nasal_ref* local,nasal_gc& gc)
     dirent* p=readdir((DIR*)handle.obj().ptr);
     if(!p)
         return nil;
-    nasal_ref ret=gc.alloc(vm_str);
-    ret.str()=p->d_name;
-    return ret;
+    return gc.newstr(p->d_name);
 }
 nasal_ref builtin_closedir(nasal_ref* local,nasal_gc& gc)
 {
@@ -1131,28 +1099,22 @@ nasal_ref builtin_chdir(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_environ(nasal_ref* local,nasal_gc& gc)
 {
     char** env=environ;
-    if(gc.top+1>=gc.canary)
-        return builtin_err("environ","expand temporary space error:stackoverflow");
-    (++gc.top)[0]=gc.alloc(vm_vec);
-    auto& vec=gc.top[0].vec().elems;
+    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    auto& vec=res.vec().elems;
     while(*env)
     {
-        auto s=gc.alloc(vm_str);
-        s.str()=*env;
-        vec.push_back(s);
+        vec.push_back(gc.newstr(*env));
         ++env;
     }
-    --gc.top;
-    return gc.top[1];
+    gc.temp=nil;
+    return res;
 }
 nasal_ref builtin_getcwd(nasal_ref* local,nasal_gc& gc)
 {
     char buf[1024];
     if(!getcwd(buf,sizeof(buf)))
         return builtin_err("getcwd","failed to call getcwd");
-    nasal_ref str=gc.alloc(vm_str);
-    str.str()=buf;
-    return str;
+    return gc.newstr(buf);
 }
 nasal_ref builtin_getenv(nasal_ref* local,nasal_gc& gc)
 {
@@ -1162,9 +1124,7 @@ nasal_ref builtin_getenv(nasal_ref* local,nasal_gc& gc)
     char* res=getenv(envvar.str().c_str());
     if(!res)
         return nil;
-    nasal_ref str=gc.alloc(vm_str);
-    str.str()=res;
-    return str;
+    return gc.newstr(res);
 }
 void obj_dylib_destructor(void* ptr)
 {
@@ -1241,15 +1201,14 @@ nasal_ref builtin_dlcall(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_platform(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref ret=gc.alloc(vm_str);
 #if defined _WIN32 || defined _WIN64
-    ret.str()="windows";
+    return gc.newstr("windows");
 #elif defined __linux__
-    ret.str()="linux";
+    return gc.newstr("linux");
 #elif defined __APPLE__
-    ret.str()="macOS";
+    return gc.newstr("macOS");
 #endif
-    return ret;
+    return gc.newstr("unknown");
 }
 nasal_ref builtin_gc(nasal_ref* local,nasal_gc& gc)
 {
@@ -1347,9 +1306,7 @@ nasal_ref builtin_md5(nasal_ref* local,nasal_gc& gc)
     nasal_ref str=local[1];
     if(str.type!=vm_str)
         return builtin_err("md5","\"str\" must be a string");
-    nasal_ref res=gc.alloc(vm_str);
-    res.str()=md5(str.str());
-    return res;
+    return gc.newstr(md5(str.str()));
 }
 
 nasal_ref builtin_cocreate(nasal_ref* local,nasal_gc& gc)
@@ -1416,14 +1373,13 @@ nasal_ref builtin_costatus(nasal_ref* local,nasal_gc& gc)
     nasal_ref co=local[1];
     if(co.type!=vm_co)
         return builtin_err("coroutine::status","must use a coroutine object");
-    nasal_ref res=gc.alloc(vm_str);
     switch(co.co().status)
     {
-        case nasal_co::suspended: res.str()="suspended";break;
-        case nasal_co::running:   res.str()="running";  break;
-        case nasal_co::dead:      res.str()="dead";     break;
+        case nasal_co::suspended: return gc.newstr("suspended");break;
+        case nasal_co::running:   return gc.newstr("running");  break;
+        case nasal_co::dead:      return gc.newstr("dead");     break;
     }
-    return res;
+    return nil;
 }
 nasal_ref builtin_corun(nasal_ref* local,nasal_gc& gc)
 {
@@ -1449,8 +1405,6 @@ nasal_ref builtin_logtime(nasal_ref* local,nasal_gc& gc)
     tm* tm_t=localtime(&t);
     char s[128];
     sprintf(s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",tm_t->tm_year+1900,tm_t->tm_mon+1,tm_t->tm_mday,tm_t->tm_hour,tm_t->tm_min,tm_t->tm_sec);
-    nasal_ref res=gc.alloc(vm_str);
-    res.str()=s;
-    return res;
+    return gc.newstr(s);
 }
 #endif
