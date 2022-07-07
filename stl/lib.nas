@@ -412,7 +412,8 @@ var unix=
     chdir:    func(path){return __builtin_chdir(path);},
     environ:  func(){return __builtin_environ();},
     getcwd:   func(){return __builtin_getcwd();},
-    getenv:   func(envvar){return __builtin_getenv(envvar);}
+    getenv:   func(envvar){return __builtin_getenv(envvar);},
+    getpath:  func(){return split(os.platform()=="windows"?";":":",unix.getenv("PATH"));}
 };
 
 # dylib is the core hashmap for developers to load their own library.

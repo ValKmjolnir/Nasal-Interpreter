@@ -7,6 +7,7 @@ private:
     bool lib_loaded;
     nasal_err& nerr;
     std::vector<std::string> files;
+    std::vector<std::string> envpath;
     bool imptchk(const nasal_ast&);
     bool exist(const std::string&);
     void linker(nasal_ast&,nasal_ast&&);
@@ -15,10 +16,31 @@ private:
     nasal_ast libimpt();
     nasal_ast load(nasal_ast&,uint16_t);
 public:
-    nasal_import(nasal_err& e):lib_loaded(false),nerr(e){}
+    nasal_import(nasal_err&);
     void link(nasal_parse&,const std::string&);
     const std::vector<std::string>& get_file() const {return files;}
 };
+
+nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
+#ifdef _WIN32
+    char sep=';';
+#else
+    char sep=':';
+#endif
+    std::string PATH=getenv("PATH");
+    size_t last=0;
+    size_t pos=PATH.find(sep,last);
+    while(pos!=std::string::npos)
+    {
+        std::string dirpath=PATH.substr(last,pos-last);
+        if(dirpath.length())
+            envpath.push_back(dirpath);
+        last=pos+1;
+        pos=PATH.find(sep,last);
+    }
+    if(last!=PATH.length())
+        envpath.push_back(PATH.substr(last,pos-last));
+}
 
 std::string nasal_import::path(const nasal_ast& node)
 {
@@ -31,8 +53,7 @@ std::string nasal_import::path(const nasal_ast& node)
 #else
         fpath+="\\"+node[i].str();
 #endif
-    fpath+=".nas";
-    return fpath;
+    return fpath+".nas";
 }
 
 bool nasal_import::imptchk(const nasal_ast& node)
@@ -44,7 +65,7 @@ bool nasal_import::imptchk(const nasal_ast& node)
     |_callh:stl
     |_callh:file
 */
-    if(node.type()==ast_call && node.size()>=2 && node[0].str()=="import" && node[1].type()==ast_callh)
+    if(node.type()==ast_call && node[0].str()=="import" && node.size()>=2 && node[1].type()==ast_callh)
     {
         for(size_t i=1;i<node.size();++i)
             if(node[i].type()!=ast_callh)
@@ -59,8 +80,8 @@ bool nasal_import::imptchk(const nasal_ast& node)
 */
     return (
         node.type()==ast_call &&
-        node.size()==2 &&
         node[0].str()=="import" &&
+        node.size()==2 &&
         node[1].type()==ast_callf &&
         node[1].size()==1 &&
         node[1][0].type()==ast_str
@@ -111,19 +132,26 @@ nasal_ast nasal_import::fimpt(nasal_ast& node)
 
 nasal_ast nasal_import::libimpt()
 {
+#ifdef _WIN32
+#define nalib ".\\lib.nas"
+#define nastllib ".\\stl\\lib.nas"
+#define path_nalib "\\lib.nas"
+#define path_stllib "\\stl\\lib.nas"
+#else
+#define nalib "./lib.nas"
+#define nastllib "./stl/lib.nas"
+#define path_nalib "/lib.nas"
+#define path_stllib "/stl/lib.nas"
+#endif
+    std::vector<std::string> libpath={nalib,nastllib};
+    for(auto& p:envpath)
+    {
+        libpath.push_back(p+path_nalib);
+        libpath.push_back(p+path_stllib);
+    }
+
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
-
-    const std::vector<std::string> libpath=
-    {
-#ifdef __WIN32
-        ".\\lib.nas",
-        ".\\stl\\lib.nas"
-#else
-        "./lib.nas",
-        "./stl/lib.nas"
-#endif
-    };
     std::string filename="";
     for(auto& i:libpath)
         if(access(i.c_str(),F_OK)!=-1)

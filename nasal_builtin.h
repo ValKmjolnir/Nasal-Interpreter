@@ -341,7 +341,8 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
     size_t pos=s.find(deli,last);
     while(pos!=std::string::npos)
     {
-        vec.push_back(gc.newstr(s.substr(last,pos-last)));
+        if(pos>last)
+            vec.push_back(gc.newstr(s.substr(last,pos-last)));
         last=pos+deli.length();
         pos=s.find(deli,last);
     }
@@ -1209,7 +1210,7 @@ std::string tohex(uint32_t num)
     }
     return str;
 }
-std::string md5(std::string& source)
+std::string md5(const std::string& source)
 {
     std::vector<uint32_t> buff;
     uint32_t num=((source.length()+8)>>6)+1;
@@ -1367,9 +1368,8 @@ nasal_ref builtin_corun(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_millisec(nasal_ref* local,nasal_gc& gc)
 {
-    timeb now;
-    ftime(&now);
-    return {vm_num,(double)(now.time*1000+now.millitm)};
+    double res=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    return {vm_num,res};
 }
 nasal_ref builtin_sysargv(nasal_ref* local,nasal_gc& gc)
 {
