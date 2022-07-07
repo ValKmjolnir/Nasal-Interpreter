@@ -1037,7 +1037,7 @@ nasal_ref builtin_sleep(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     if(val.type!=vm_num)
         return builtin_err("sleep","\"duration\" must be number");
-    usleep((useconds_t)(val.num()*1e6));
+    std::this_thread::sleep_for(std::chrono::microseconds(int64_t(val.num()*1e6)));
     return nil;
 }
 nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
