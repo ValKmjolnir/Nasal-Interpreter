@@ -323,8 +323,8 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
         return builtin_err("split","\"separator\" must be string");
     if(str.type!=vm_str)
         return builtin_err("split","\"str\" must be string");
-    std::string& deli=delimeter.str();
-    std::string& s=str.str();
+    const std::string& deli=delimeter.str();
+    const std::string& s=str.str();
 
     // avoid being sweeped
     nasal_ref res=gc.temp=gc.alloc(vm_vec);
@@ -337,14 +337,16 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
         gc.temp=nil;
         return res;
     }
-    std::string::size_type last=s.find_first_not_of(deli,0);
-    std::string::size_type pos=s.find_first_of(deli,last);
-    while(pos!=std::string::npos || last!=std::string::npos)
+    size_t last=0;
+    size_t pos=s.find(deli,last);
+    while(pos!=std::string::npos)
     {
         vec.push_back(gc.newstr(s.substr(last,pos-last)));
-        last=s.find_first_not_of(deli,pos);
-        pos=s.find_first_of(deli,last);
+        last=pos+deli.length();
+        pos=s.find(deli,last);
     }
+    if(last!=s.length())
+        vec.push_back(gc.newstr(s.substr(last,s.length()-1)));
     gc.temp=nil;
     return res;
 }
