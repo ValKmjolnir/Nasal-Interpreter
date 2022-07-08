@@ -184,25 +184,25 @@ void nasal_dbg::run(
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
     const void* oprs[]=
     {
-        &&vmexit,  &&intg,     &&intl,   &&loadg,
-        &&loadl,   &&loadu,    &&pnum,   &&pnil,
-        &&pstr,    &&newv,     &&newh,   &&newf,
-        &&happ,    &&para,     &&defpara,&&dynpara,
-        &&unot,    &&usub,     &&add,    &&sub,
-        &&mul,     &&div,      &&lnk,    &&addc,
-        &&subc,    &&mulc,     &&divc,   &&lnkc,
-        &&addeq,   &&subeq,    &&muleq,  &&diveq,
-        &&lnkeq,   &&addeqc,   &&subeqc, &&muleqc,
-        &&diveqc,  &&lnkeqc,   &&meq,    &&eq,
-        &&neq,     &&less,     &&leq,    &&grt,
-        &&geq,     &&lessc,    &&leqc,   &&grtc,
-        &&geqc,    &&pop,      &&jmp,    &&jt,
-        &&jf,      &&counter,  &&findex, &&feach,
-        &&callg,   &&calll,    &&upval,  &&callv,
-        &&callvi,  &&callh,    &&callfv, &&callfh,
-        &&callb,   &&slcbegin, &&slcend, &&slc,
-        &&slc2,    &&mcallg,   &&mcalll, &&mupval,
-        &&mcallv,  &&mcallh,   &&ret
+        &&vmexit, &&intg,   &&intl,   &&loadg,
+        &&loadl,  &&loadu,  &&pnum,   &&pnil,
+        &&pstr,   &&newv,   &&newh,   &&newf,
+        &&happ,   &&para,   &&deft,   &&dyn,
+        &&unot,   &&usub,   &&add,    &&sub,
+        &&mul,    &&div,    &&lnk,    &&addc,
+        &&subc,   &&mulc,   &&divc,   &&lnkc,
+        &&addeq,  &&subeq,  &&muleq,  &&diveq,
+        &&lnkeq,  &&addeqc, &&subeqc, &&muleqc,
+        &&diveqc, &&lnkeqc, &&meq,    &&eq,
+        &&neq,    &&less,   &&leq,    &&grt,
+        &&geq,    &&lessc,  &&leqc,   &&grtc,
+        &&geqc,   &&pop,    &&jmp,    &&jt,
+        &&jf,     &&cnt,    &&findex, &&feach,
+        &&callg,  &&calll,  &&upval,  &&callv,
+        &&callvi, &&callh,  &&callfv, &&callfh,
+        &&callb,  &&slcbeg, &&slcend, &&slc,
+        &&slc2,   &&mcallg, &&mcalll, &&mupval,
+        &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
@@ -222,80 +222,80 @@ vmexit:
     return;
 #define dbg(op) {interact();op();if(top<canary)goto *code[++pc];goto vmexit;}
 
-intg:    dbg(opr_intg    );
-intl:    dbg(opr_intl    );
-loadg:   dbg(opr_loadg   );
-loadl:   dbg(opr_loadl   );
-loadu:   dbg(opr_loadu   );
-pnum:    dbg(opr_pnum    );
-pnil:    dbg(opr_pnil    );
-pstr:    dbg(opr_pstr    );
-newv:    dbg(opr_newv    );
-newh:    dbg(opr_newh    );
-newf:    dbg(opr_newf    );
-happ:    dbg(opr_happ    );
-para:    dbg(opr_para    );
-defpara: dbg(opr_defpara );
-dynpara: dbg(opr_dynpara );
-unot:    dbg(opr_unot    );
-usub:    dbg(opr_usub    );
-add:     dbg(opr_add     );
-sub:     dbg(opr_sub     );
-mul:     dbg(opr_mul     );
-div:     dbg(opr_div     );
-lnk:     dbg(opr_lnk     );
-addc:    dbg(opr_addc    );
-subc:    dbg(opr_subc    );
-mulc:    dbg(opr_mulc    );
-divc:    dbg(opr_divc    );
-lnkc:    dbg(opr_lnkc    );
-addeq:   dbg(opr_addeq   );
-subeq:   dbg(opr_subeq   );
-muleq:   dbg(opr_muleq   );
-diveq:   dbg(opr_diveq   );
-lnkeq:   dbg(opr_lnkeq   );
-addeqc:  dbg(opr_addeqc  );
-subeqc:  dbg(opr_subeqc  );
-muleqc:  dbg(opr_muleqc  );
-diveqc:  dbg(opr_diveqc  );
-lnkeqc:  dbg(opr_lnkeqc  );
-meq:     dbg(opr_meq     );
-eq:      dbg(opr_eq      );
-neq:     dbg(opr_neq     );
-less:    dbg(opr_less    );
-leq:     dbg(opr_leq     );
-grt:     dbg(opr_grt     );
-geq:     dbg(opr_geq     );
-lessc:   dbg(opr_lessc   );
-leqc:    dbg(opr_leqc    );
-grtc:    dbg(opr_grtc    );
-geqc:    dbg(opr_geqc    );
-pop:     dbg(opr_pop     );
-jmp:     dbg(opr_jmp     );
-jt:      dbg(opr_jt      );
-jf:      dbg(opr_jf      );
-counter: dbg(opr_counter );
-findex:  dbg(opr_findex  );
-feach:   dbg(opr_feach   );
-callg:   dbg(opr_callg   );
-calll:   dbg(opr_calll   );
-upval:   dbg(opr_upval   );
-callv:   dbg(opr_callv   );
-callvi:  dbg(opr_callvi  );
-callh:   dbg(opr_callh   );
-callfv:  dbg(opr_callfv  );
-callfh:  dbg(opr_callfh  );
-callb:   dbg(opr_callb   );
-slcbegin:dbg(opr_slcbegin);
-slcend:  dbg(opr_slcend  );
-slc:     dbg(opr_slc     );
-slc2:    dbg(opr_slc2    );
-mcallg:  dbg(opr_mcallg  );
-mcalll:  dbg(opr_mcalll  );
-mupval:  dbg(opr_mupval  );
-mcallv:  dbg(opr_mcallv  );
-mcallh:  dbg(opr_mcallh  );
-ret:     dbg(opr_ret     );
+intg:   dbg(opr_intg  );
+intl:   dbg(opr_intl  );
+loadg:  dbg(opr_loadg );
+loadl:  dbg(opr_loadl );
+loadu:  dbg(opr_loadu );
+pnum:   dbg(opr_pnum  );
+pnil:   dbg(opr_pnil  );
+pstr:   dbg(opr_pstr  );
+newv:   dbg(opr_newv  );
+newh:   dbg(opr_newh  );
+newf:   dbg(opr_newf  );
+happ:   dbg(opr_happ  );
+para:   dbg(opr_para  );
+deft:   dbg(opr_deft  );
+dyn:    dbg(opr_dyn   );
+unot:   dbg(opr_unot  );
+usub:   dbg(opr_usub  );
+add:    dbg(opr_add   );
+sub:    dbg(opr_sub   );
+mul:    dbg(opr_mul   );
+div:    dbg(opr_div   );
+lnk:    dbg(opr_lnk   );
+addc:   dbg(opr_addc  );
+subc:   dbg(opr_subc  );
+mulc:   dbg(opr_mulc  );
+divc:   dbg(opr_divc  );
+lnkc:   dbg(opr_lnkc  );
+addeq:  dbg(opr_addeq );
+subeq:  dbg(opr_subeq );
+muleq:  dbg(opr_muleq );
+diveq:  dbg(opr_diveq );
+lnkeq:  dbg(opr_lnkeq );
+addeqc: dbg(opr_addeqc);
+subeqc: dbg(opr_subeqc);
+muleqc: dbg(opr_muleqc);
+diveqc: dbg(opr_diveqc);
+lnkeqc: dbg(opr_lnkeqc);
+meq:    dbg(opr_meq   );
+eq:     dbg(opr_eq    );
+neq:    dbg(opr_neq   );
+less:   dbg(opr_less  );
+leq:    dbg(opr_leq   );
+grt:    dbg(opr_grt   );
+geq:    dbg(opr_geq   );
+lessc:  dbg(opr_lessc );
+leqc:   dbg(opr_leqc  );
+grtc:   dbg(opr_grtc  );
+geqc:   dbg(opr_geqc  );
+pop:    dbg(opr_pop   );
+jmp:    dbg(opr_jmp   );
+jt:     dbg(opr_jt    );
+jf:     dbg(opr_jf    );
+cnt:    dbg(opr_cnt   );
+findex: dbg(opr_findex);
+feach:  dbg(opr_feach );
+callg:  dbg(opr_callg );
+calll:  dbg(opr_calll );
+upval:  dbg(opr_upval );
+callv:  dbg(opr_callv );
+callvi: dbg(opr_callvi);
+callh:  dbg(opr_callh );
+callfv: dbg(opr_callfv);
+callfh: dbg(opr_callfh);
+callb:  dbg(opr_callb );
+slcbeg: dbg(opr_slcbeg);
+slcend: dbg(opr_slcend);
+slc:    dbg(opr_slc   );
+slc2:   dbg(opr_slc2  );
+mcallg: dbg(opr_mcallg);
+mcalll: dbg(opr_mcalll);
+mupval: dbg(opr_mupval);
+mcallv: dbg(opr_mcallv);
+mcallh: dbg(opr_mcallh);
+ret:    dbg(opr_ret   );
 }
 
 #endif
