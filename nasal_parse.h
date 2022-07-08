@@ -210,8 +210,7 @@ bool nasal_parse::check_func_end(const nasal_ast& node)
 }
 bool nasal_parse::check_special_call()
 {
-    // special call means like this:
-    // function_name(a:1,b:2,c:3);
+    // special call means like this: function_name(a:1,b:2,c:3);
     uint32_t check_ptr=ptr,curve=1,bracket=0,brace=0;
     while(tokens[++check_ptr].type!=tok_eof && curve)
     {

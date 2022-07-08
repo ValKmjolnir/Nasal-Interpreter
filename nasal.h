@@ -112,19 +112,19 @@ inline double dec_to_double(const char* str)
 }
 double str2num(const char* str)
 {
-    bool is_negative=false;
-    double ret_num=0;
+    bool negative=false;
+    double res=0;
     if(*str=='-' || *str=='+')
-        is_negative=(*str++=='-');
+        negative=(*str++=='-');
     if(!*str)
         return nan("");
     if(str[0]=='0' && str[1]=='x')
-        ret_num=hex_to_double(str+2);
+        res=hex_to_double(str+2);
     else if(str[0]=='0' && str[1]=='o')
-        ret_num=oct_to_double(str+2);
+        res=oct_to_double(str+2);
     else
-        ret_num=dec_to_double(str);
-    return is_negative?-ret_num:ret_num;
+        res=dec_to_double(str);
+    return negative?-res:res;
 }
 
 int utf8_hdchk(const char head)

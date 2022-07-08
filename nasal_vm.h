@@ -222,7 +222,7 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 }
 void nasal_vm::traceback()
 {
-    uint32_t   global_size=bytecode[0].num; // bytecode[0] is op_intg
+    const uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
     nasal_ref* t=top;
     nasal_ref* bottom=stack+global_size;
     std::stack<uint32_t> ret;
@@ -304,7 +304,7 @@ void nasal_vm::local_state()
 {
     if(!localr || !funcr.func().lsize)
         return;
-    uint32_t lsize=funcr.func().lsize;
+    const uint32_t lsize=funcr.func().lsize;
     printf("local(0x" PRTHEX64 "<sp+" PRTINT64 ">):\n",(uint64_t)localr,(int64_t)(localr-gc.stack));
     for(uint32_t i=0;i<lsize;++i)
     {
@@ -355,7 +355,7 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     for(auto& i:opcall)
     {
         uint64_t rate=i.second*100/total;
-        if(rate>0)
+        if(rate)
             std::cout<<"\n "<<code_table[i.first].name<<" : "<<i.second<<" ("<<rate<<"%)";
         else
         {
@@ -380,7 +380,7 @@ inline bool nasal_vm::condition(nasal_ref val)
         return val.num();
     else if(val.type==vm_str)
     {
-        double num=str2num(val.str().c_str());
+        const double num=str2num(val.str().c_str());
         if(std::isnan(num))
             return !val.str().empty();
         return num;
@@ -487,13 +487,12 @@ inline void nasal_vm::opr_unot()
         case vm_num:top[0]=val.num()?zero:one;break;
         case vm_str:
         {
-            double num=str2num(val.str().c_str());
+            const double num=str2num(val.str().c_str());
             if(std::isnan(num))
                 top[0]={vm_num,(double)val.str().empty()};
             else
                 top[0]=num?zero:one;
-        }
-        break;
+        }break;
         default:die("unot: incorrect value type");break;
     }
 }
@@ -503,8 +502,8 @@ inline void nasal_vm::opr_usub()
 }
 
 #define op_calc(type)\
-    nasal_ref val(vm_num,top[-1].tonum() type top[0].tonum());\
-    (--top)[0]=val;
+    top[-1]={vm_num,top[-1].tonum() type top[0].tonum()};\
+    --top;
 
 inline void nasal_vm::opr_add(){op_calc(+);}
 inline void nasal_vm::opr_sub(){op_calc(-);}
@@ -512,13 +511,12 @@ inline void nasal_vm::opr_mul(){op_calc(*);}
 inline void nasal_vm::opr_div(){op_calc(/);}
 inline void nasal_vm::opr_lnk()
 {
-    nasal_ref val=gc.newstr(top[-1].tostr()+top[0].tostr());
-    (--top)[0]=val;
+    top[-1]=gc.newstr(top[-1].tostr()+top[0].tostr());
+    --top;
 }
 
 #define op_calc_const(type)\
-    nasal_ref val(vm_num,top[0].tonum() type num_table[imm[pc]]);\
-    top[0]=val;
+    top[0]={vm_num,top[0].tonum() type num_table[imm[pc]]};
 
 inline void nasal_vm::opr_addc(){op_calc_const(+);}
 inline void nasal_vm::opr_subc(){op_calc_const(-);}
@@ -526,15 +524,13 @@ inline void nasal_vm::opr_mulc(){op_calc_const(*);}
 inline void nasal_vm::opr_divc(){op_calc_const(/);}
 inline void nasal_vm::opr_lnkc()
 {
-    nasal_ref val=gc.newstr(top[0].tostr()+str_table[imm[pc]]);
-    top[0]=val;
+    top[0]=gc.newstr(top[0].tostr()+str_table[imm[pc]]);
 }
 
 #define op_calc_eq(type)\
-    nasal_ref val(vm_num,memr[0].tonum() type top[-1].tonum());\
-    (--top)[0]=memr[0]=val;\
+    top[-1]=memr[0]={vm_num,memr[0].tonum() type top[-1].tonum()};\
     memr=nullptr;\
-    top-=imm[pc];
+    top-=imm[pc]+1;
 
 inline void nasal_vm::opr_addeq(){op_calc_eq(+);}
 inline void nasal_vm::opr_subeq(){op_calc_eq(-);}
@@ -542,15 +538,13 @@ inline void nasal_vm::opr_muleq(){op_calc_eq(*);}
 inline void nasal_vm::opr_diveq(){op_calc_eq(/);}
 inline void nasal_vm::opr_lnkeq()
 {
-    nasal_ref val=gc.newstr(memr[0].tostr()+top[-1].tostr());
-    (--top)[0]=memr[0]=val;
+    top[-1]=memr[0]=gc.newstr(memr[0].tostr()+top[-1].tostr());
     memr=nullptr;
-    top-=imm[pc];
+    top-=imm[pc]+1;
 }
 
 #define op_calc_eq_const(type)\
-    nasal_ref val(vm_num,memr[0].tonum() type num_table[imm[pc]&0x7fffffff]);\
-    top[0]=memr[0]=val;\
+    top[0]=memr[0]={vm_num,memr[0].tonum() type num_table[imm[pc]&0x7fffffff]};\
     memr=nullptr;\
     top-=(imm[pc]>>31);
 
@@ -560,8 +554,7 @@ inline void nasal_vm::opr_muleqc(){op_calc_eq_const(*);}
 inline void nasal_vm::opr_diveqc(){op_calc_eq_const(/);}
 inline void nasal_vm::opr_lnkeqc()
 {
-    nasal_ref val=gc.newstr(memr[0].tostr()+str_table[imm[pc]&0x7fffffff]);
-    top[0]=memr[0]=val;
+    top[0]=memr[0]=gc.newstr(memr[0].tostr()+str_table[imm[pc]&0x7fffffff]);
     memr=nullptr;
     top-=(imm[pc]>>31);
 }
@@ -573,9 +566,9 @@ inline void nasal_vm::opr_meq()
     // is that when lnkeq/lnkeqc is called, there will be
     // a new gc object vm_str which is returned by gc::alloc
     // this may cause gc, so we should temporarily put it on stack
-    memr[0]=(--top)[0];
+    memr[0]=top[-1];
     memr=nullptr;
-    top-=imm[pc];
+    top-=imm[pc]+1;
 }
 inline void nasal_vm::opr_eq()
 {
@@ -1037,9 +1030,9 @@ vmexit:
     imm.clear();
     return;
 // may cause stackoverflow
-#define exec_operand(op,num) {++count[num];op();if(top<canary)goto *code[++pc];goto vmexit;}
+#define exec_operand(op,num) {op();++count[num];if(top<canary)goto *code[++pc];goto vmexit;}
 // do not cause stackoverflow
-#define exec_opnodie(op,num) {++count[num];op();goto *code[++pc];}
+#define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 
 intg:   exec_opnodie(opr_intg  ,op_intg  ); // +imm[pc] (detected at codegen)
 intl:   exec_opnodie(opr_intl  ,op_intl  ); // -0
