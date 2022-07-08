@@ -1174,8 +1174,8 @@ nasal_ref builtin_dlcall(nasal_ref* local,nasal_gc& gc)
     nasal_ref args=local[2];
     if(!funcptr.objchk(nasal_obj::faddr))
         return builtin_err("dlcall","\"funcptr\" is not a valid function pointer");
-    typedef nasal_ref (*extern_func)(std::vector<nasal_ref>&,nasal_gc&);
-    extern_func func=(extern_func)funcptr.obj().ptr;
+    typedef nasal_ref (*externs)(std::vector<nasal_ref>&,nasal_gc&);
+    externs func=(externs)funcptr.obj().ptr;
     return func(args.vec().elems,gc);
 }
 nasal_ref builtin_platform(nasal_ref* local,nasal_gc& gc)

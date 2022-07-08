@@ -86,82 +86,82 @@ struct
     const char* name;
 }code_table[]=
 {
-    {op_exit,   "exit  "},
-    {op_intg,   "intg  "},
-    {op_intl,   "intl  "},
-    {op_loadg,  "loadg "},
-    {op_loadl,  "loadl "},
-    {op_loadu,  "loadu "},
-    {op_pnum,   "pnum  "},
-    {op_pnil,   "pnil  "},
-    {op_pstr,   "pstr  "},
-    {op_newv,   "newv  "},
-    {op_newh,   "newh  "},
-    {op_newf,   "newf  "},
-    {op_happ,   "happ  "},
-    {op_para,   "para  "},
-    {op_deft,   "def   "},
-    {op_dyn,    "dyn   "},
-    {op_unot,   "not   "},
-    {op_usub,   "usub  "},
-    {op_add,    "add   "},
-    {op_sub,    "sub   "},
-    {op_mul,    "mult  "},
-    {op_div,    "div   "},
-    {op_lnk,    "lnk   "},
-    {op_addc,   "addc  "},
-    {op_subc,   "subc  "},
-    {op_mulc,   "multc "},
-    {op_divc,   "divc  "},
-    {op_lnkc,   "lnkc  "},
-    {op_addeq,  "addeq "},
-    {op_subeq,  "subeq "},
-    {op_muleq,  "muleq "},
-    {op_diveq,  "diveq "},
-    {op_lnkeq,  "lnkeq "},
-    {op_addeqc, "addeqc"},
-    {op_subeqc, "subeqc"},
-    {op_muleqc, "muleqc"},
-    {op_diveqc, "diveqc"},
-    {op_lnkeqc, "lnkeqc"},
-    {op_meq,    "meq   "},
-    {op_eq,     "eq    "},
-    {op_neq,    "neq   "},
-    {op_less,   "less  "},
-    {op_leq,    "leq   "},
-    {op_grt,    "grt   "},
-    {op_geq,    "geq   "},
-    {op_lessc,  "lessc "},
-    {op_leqc,   "leqc  "},
-    {op_grtc,   "grtc  "},
-    {op_geqc,   "geqc  "},
-    {op_pop,    "pop   "},
-    {op_jmp,    "jmp   "},
-    {op_jt,     "jt    "},
-    {op_jf,     "jf    "},
-    {op_cnt,    "cnt   "},
-    {op_findex, "findx "},
-    {op_feach,  "feach "},
-    {op_callg,  "callg "},
-    {op_calll,  "calll "},
-    {op_upval,  "upval "},
-    {op_callv,  "callv "},
-    {op_callvi, "callvi"},
-    {op_callh,  "callh "},
-    {op_callfv, "callfv"},
-    {op_callfh, "callfh"},
-    {op_callb,  "callb "},
-    {op_slcbeg, "slcbeg"},
-    {op_slcend, "slcend"},
-    {op_slc,    "slc   "},
-    {op_slc2,   "slc2  "},
-    {op_mcallg, "mcallg"},
-    {op_mcalll, "mcalll"},
-    {op_mupval, "mupval"},
-    {op_mcallv, "mcallv"},
-    {op_mcallh, "mcallh"},
-    {op_ret,    "ret   "},
-    {-1,        nullptr },
+    {op_exit,  "exit  "},
+    {op_intg,  "intg  "},
+    {op_intl,  "intl  "},
+    {op_loadg, "loadg "},
+    {op_loadl, "loadl "},
+    {op_loadu, "loadu "},
+    {op_pnum,  "pnum  "},
+    {op_pnil,  "pnil  "},
+    {op_pstr,  "pstr  "},
+    {op_newv,  "newv  "},
+    {op_newh,  "newh  "},
+    {op_newf,  "newf  "},
+    {op_happ,  "happ  "},
+    {op_para,  "para  "},
+    {op_deft,  "def   "},
+    {op_dyn,   "dyn   "},
+    {op_unot,  "not   "},
+    {op_usub,  "usub  "},
+    {op_add,   "add   "},
+    {op_sub,   "sub   "},
+    {op_mul,   "mult  "},
+    {op_div,   "div   "},
+    {op_lnk,   "lnk   "},
+    {op_addc,  "addc  "},
+    {op_subc,  "subc  "},
+    {op_mulc,  "multc "},
+    {op_divc,  "divc  "},
+    {op_lnkc,  "lnkc  "},
+    {op_addeq, "addeq "},
+    {op_subeq, "subeq "},
+    {op_muleq, "muleq "},
+    {op_diveq, "diveq "},
+    {op_lnkeq, "lnkeq "},
+    {op_addeqc,"addeqc"},
+    {op_subeqc,"subeqc"},
+    {op_muleqc,"muleqc"},
+    {op_diveqc,"diveqc"},
+    {op_lnkeqc,"lnkeqc"},
+    {op_meq,   "meq   "},
+    {op_eq,    "eq    "},
+    {op_neq,   "neq   "},
+    {op_less,  "less  "},
+    {op_leq,   "leq   "},
+    {op_grt,   "grt   "},
+    {op_geq,   "geq   "},
+    {op_lessc, "lessc "},
+    {op_leqc,  "leqc  "},
+    {op_grtc,  "grtc  "},
+    {op_geqc,  "geqc  "},
+    {op_pop,   "pop   "},
+    {op_jmp,   "jmp   "},
+    {op_jt,    "jt    "},
+    {op_jf,    "jf    "},
+    {op_cnt,   "cnt   "},
+    {op_findex,"findx "},
+    {op_feach, "feach "},
+    {op_callg, "callg "},
+    {op_calll, "calll "},
+    {op_upval, "upval "},
+    {op_callv, "callv "},
+    {op_callvi,"callvi"},
+    {op_callh, "callh "},
+    {op_callfv,"callfv"},
+    {op_callfh,"callfh"},
+    {op_callb, "callb "},
+    {op_slcbeg,"slcbeg"},
+    {op_slcend,"slcend"},
+    {op_slc,   "slc   "},
+    {op_slc2,  "slc2  "},
+    {op_mcallg,"mcallg"},
+    {op_mcalll,"mcalll"},
+    {op_mupval,"mupval"},
+    {op_mcallv,"mcallv"},
+    {op_mcallh,"mcallh"},
+    {op_ret,   "ret   "},
+    {-1,       nullptr },
 };
 
 struct opcode
@@ -205,7 +205,7 @@ private:
     std::stack<uint32_t> fbstk;
     std::stack<uint32_t> festk;
     
-    void die(std::string,const uint32_t);
+    void die(const std::string&,const uint32_t);
     void regist_num(const double);
     void regist_str(const std::string&);
     void find_symbol(const nasal_ast&);
@@ -248,14 +248,14 @@ private:
 public:
     nasal_codegen(nasal_err& e):fileindex(0),nerr(e),file(nullptr){}
     void compile(const nasal_parse&,const nasal_import&);
-    void print_op(uint32_t);
+    void print_op(const uint32_t);
     void print();
     const std::vector<std::string>& get_strs() const {return str_res;}
     const std::vector<double>&      get_nums() const {return num_res;}
     const std::vector<opcode>&      get_code() const {return code;}
 };
 
-void nasal_codegen::die(std::string info,const uint32_t line)
+void nasal_codegen::die(const std::string& info,const uint32_t line)
 {
     nerr.load(file[fileindex]);
     nerr.err("code",line,info);
@@ -1237,7 +1237,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     nerr.chkerr();
 }
 
-void nasal_codegen::print_op(uint32_t index)
+void nasal_codegen::print_op(const uint32_t index)
 {
     // print opcode index,opcode name,opcode immediate number
     const opcode& c=code[index];
@@ -1261,12 +1261,9 @@ void nasal_codegen::print_op(uint32_t index)
             }
     }
     printf("  0x%.8x:       %.2x %.2x %.2x %.2x %.2x        %s  ",
-        index,
-        c.op,
-        uint8_t((c.num>>24)&0xff),
-        uint8_t((c.num>>16)&0xff),
-        uint8_t((c.num>>8)&0xff),
-        uint8_t(c.num&0xff),
+        index,c.op,
+        uint8_t((c.num>>24)&0xff),uint8_t((c.num>>16)&0xff),
+        uint8_t((c.num>>8)&0xff),uint8_t(c.num&0xff),
         code_table[c.op].name
     );
     // print detail info
@@ -1312,7 +1309,7 @@ void nasal_codegen::print()
     for(auto& str:str_res)
         std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
     std::cout<<"\n";
-    for(size_t i=0;i<code.size();++i)
+    for(uint32_t i=0;i<code.size();++i)
         print_op(i);
 }
 
