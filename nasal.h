@@ -127,18 +127,17 @@ double str2num(const char* str)
     return is_negative?-ret_num:ret_num;
 }
 
-int utf8_hdchk(char head)
+int utf8_hdchk(const char head)
 {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
-    uint8_t c=(uint8_t)head;
-    uint32_t nbytes=0;
+    const uint8_t c=(uint8_t)head;
     if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
-        nbytes=1;
+        return 1;
     if((c>>4)==0x0e) // 1110 xxxx (10xx xxxx)^2
-        nbytes=2;
+        return 2;
     if((c>>3)==0x1e) // 1111 0xxx (10xx xxxx)^3
-        nbytes=3;
-    return nbytes;
+        return 3;
+    return 0;
 }
 
 std::string chrhex(const char c)

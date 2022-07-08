@@ -3,81 +3,81 @@
 
 enum op_code
 {
-    op_exit,    // stop the virtual machine
-    op_intg,    // global scope size
-    op_intl,    // local scope size
-    op_loadg,   // load global value
-    op_loadl,   // load local value
-    op_loadu,   // load upvalue
-    op_pnum,    // push constant number to the stack
-    op_pnil,    // push constant nil to the stack
-    op_pstr,    // push constant string to the stack
-    op_newv,    // push new vector with initial values from stack
-    op_newh,    // push new hash to the stack
-    op_newf,    // push new function to the stack
-    op_happ,    // hash append
-    op_para,    // normal  parameter
-    op_defpara, // default parameter
-    op_dynpara, // dynamic parameter
-    op_unot,    // !
-    op_usub,    // -
-    op_add,     // +
-    op_sub,     // -
-    op_mul,     // *
-    op_div,     // /
-    op_lnk,     // ~
-    op_addc,    // + const
-    op_subc,    // - const
-    op_mulc,    // * const
-    op_divc,    // / const
-    op_lnkc,    // ~ const
-    op_addeq,   // +=
-    op_subeq,   // -=
-    op_muleq,   // *=
-    op_diveq,   // /=
-    op_lnkeq,   // ~=
-    op_addeqc,  // += const
-    op_subeqc,  // -= const
-    op_muleqc,  // *= const
-    op_diveqc,  // /= const
-    op_lnkeqc,  // ~= const
-    op_meq,     // =
-    op_eq,      // ==
-    op_neq,     // !=
-    op_less,    // <
-    op_leq,     // <=
-    op_grt,     // >
-    op_geq,     // >=
-    op_lessc,   // < const
-    op_leqc,    // <= const
-    op_grtc,    // > const
-    op_geqc,    // >= const
-    op_pop,     // pop a value from stack
-    op_jmp,     // jump with no condition
-    op_jt,      // used in operator and/or,jmp when condition is true and DO NOT POP
-    op_jf,      // used in conditional/loop,jmp when condition is false and POP STACK
-    op_cnt,     // add counter for forindex/foreach
-    op_findex,  // index counter on the top of forindex_stack plus 1
-    op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
-    op_callg,   // get value in global scope
-    op_calll,   // get value in local scope
-    op_upval,   // get upvalue in closure
-    op_callv,   // call vec[index]
-    op_callvi,  // call vec[immediate] (used in multi-assign/multi-define)
-    op_callh,   // call hash.label
-    op_callfv,  // call function(vector as parameters)
-    op_callfh,  // call function(hash as parameters)
-    op_callb,   // call builtin-function
-    op_slcbegin,// begin of slice like: vec[1,2,3:6,0,-1]
-    op_slcend,  // end of slice
-    op_slc,     // slice like vec[1]
-    op_slc2,    // slice like vec[nil:10]
-    op_mcallg,  // get memory space of value in global scope
-    op_mcalll,  // get memory space of value in local scope
-    op_mupval,  // get memory space of value in closure
-    op_mcallv,  // get memory space of vec[index]
-    op_mcallh,  // get memory space of hash.label
-    op_ret      // return
+    op_exit,   // stop the virtual machine
+    op_intg,   // global scope size
+    op_intl,   // local scope size
+    op_loadg,  // load global value
+    op_loadl,  // load local value
+    op_loadu,  // load upvalue
+    op_pnum,   // push constant number to the stack
+    op_pnil,   // push constant nil to the stack
+    op_pstr,   // push constant string to the stack
+    op_newv,   // push new vector with initial values from stack
+    op_newh,   // push new hash to the stack
+    op_newf,   // push new function to the stack
+    op_happ,   // hash append
+    op_para,   // normal  parameter
+    op_deft,   // default parameter
+    op_dyn,    // dynamic parameter
+    op_unot,   // !
+    op_usub,   // -
+    op_add,    // +
+    op_sub,    // -
+    op_mul,    // *
+    op_div,    // /
+    op_lnk,    // ~
+    op_addc,   // + const
+    op_subc,   // - const
+    op_mulc,   // * const
+    op_divc,   // / const
+    op_lnkc,   // ~ const
+    op_addeq,  // +=
+    op_subeq,  // -=
+    op_muleq,  // *=
+    op_diveq,  // /=
+    op_lnkeq,  // ~=
+    op_addeqc, // += const
+    op_subeqc, // -= const
+    op_muleqc, // *= const
+    op_diveqc, // /= const
+    op_lnkeqc, // ~= const
+    op_meq,    // =
+    op_eq,     // ==
+    op_neq,    // !=
+    op_less,   // <
+    op_leq,    // <=
+    op_grt,    // >
+    op_geq,    // >=
+    op_lessc,  // < const
+    op_leqc,   // <= const
+    op_grtc,   // > const
+    op_geqc,   // >= const
+    op_pop,    // pop a value from stack
+    op_jmp,    // jump with no condition
+    op_jt,     // used in operator and/or,jmp when condition is true and DO NOT POP
+    op_jf,     // used in conditional/loop,jmp when condition is false and POP STACK
+    op_cnt,    // add counter for forindex/foreach
+    op_findex, // index counter on the top of forindex_stack plus 1
+    op_feach,  // index counter on the top of forindex_stack plus 1 and get the value in vector
+    op_callg,  // get value in global scope
+    op_calll,  // get value in local scope
+    op_upval,  // get upvalue in closure
+    op_callv,  // call vec[index]
+    op_callvi, // call vec[immediate] (used in multi-assign/multi-define)
+    op_callh,  // call hash.label
+    op_callfv, // call function(vector as parameters)
+    op_callfh, // call function(hash as parameters)
+    op_callb,  // call builtin-function
+    op_slcbeg, // begin of slice like: vec[1,2,3:6,0,-1]
+    op_slcend, // end of slice
+    op_slc,    // slice like vec[1]
+    op_slc2,   // slice like vec[nil:10]
+    op_mcallg, // get memory space of value in global scope
+    op_mcalll, // get memory space of value in local scope
+    op_mupval, // get memory space of value in closure
+    op_mcallv, // get memory space of vec[index]
+    op_mcallh, // get memory space of hash.label
+    op_ret     // return
 };
 
 struct
@@ -86,82 +86,82 @@ struct
     const char* name;
 }code_table[]=
 {
-    {op_exit,    "exit  "},
-    {op_intg,    "intg  "},
-    {op_intl,    "intl  "},
-    {op_loadg,   "loadg "},
-    {op_loadl,   "loadl "},
-    {op_loadu,   "loadu "},
-    {op_pnum,    "pnum  "},
-    {op_pnil,    "pnil  "},
-    {op_pstr,    "pstr  "},
-    {op_newv,    "newv  "},
-    {op_newh,    "newh  "},
-    {op_newf,    "newf  "},
-    {op_happ,    "happ  "},
-    {op_para,    "para  "},
-    {op_defpara, "def   "},
-    {op_dynpara, "dyn   "},
-    {op_unot,    "not   "},
-    {op_usub,    "usub  "},
-    {op_add,     "add   "},
-    {op_sub,     "sub   "},
-    {op_mul,     "mult  "},
-    {op_div,     "div   "},
-    {op_lnk,     "lnk   "},
-    {op_addc,    "addc  "},
-    {op_subc,    "subc  "},
-    {op_mulc,    "multc "},
-    {op_divc,    "divc  "},
-    {op_lnkc,    "lnkc  "},
-    {op_addeq,   "addeq "},
-    {op_subeq,   "subeq "},
-    {op_muleq,   "muleq "},
-    {op_diveq,   "diveq "},
-    {op_lnkeq,   "lnkeq "},
-    {op_addeqc,  "addeqc"},
-    {op_subeqc,  "subeqc"},
-    {op_muleqc,  "muleqc"},
-    {op_diveqc,  "diveqc"},
-    {op_lnkeqc,  "lnkeqc"},
-    {op_meq,     "meq   "},
-    {op_eq,      "eq    "},
-    {op_neq,     "neq   "},
-    {op_less,    "less  "},
-    {op_leq,     "leq   "},
-    {op_grt,     "grt   "},
-    {op_geq,     "geq   "},
-    {op_lessc,   "lessc "},
-    {op_leqc,    "leqc  "},
-    {op_grtc,    "grtc  "},
-    {op_geqc,    "geqc  "},
-    {op_pop,     "pop   "},
-    {op_jmp,     "jmp   "},
-    {op_jt,      "jt    "},
-    {op_jf,      "jf    "},
-    {op_cnt,     "cnt   "},
-    {op_findex,  "findx "},
-    {op_feach,   "feach "},
-    {op_callg,   "callg "},
-    {op_calll,   "calll "},
-    {op_upval,   "upval "},
-    {op_callv,   "callv "},
-    {op_callvi,  "callvi"},
-    {op_callh,   "callh "},
-    {op_callfv,  "callfv"},
-    {op_callfh,  "callfh"},
-    {op_callb,   "callb "},
-    {op_slcbegin,"slcbeg"},
-    {op_slcend,  "slcend"},
-    {op_slc,     "slc   "},
-    {op_slc2,    "slc2  "},
-    {op_mcallg,  "mcallg"},
-    {op_mcalll,  "mcalll"},
-    {op_mupval,  "mupval"},
-    {op_mcallv,  "mcallv"},
-    {op_mcallh,  "mcallh"},
-    {op_ret,     "ret   "},
-    {-1,         nullptr },
+    {op_exit,   "exit  "},
+    {op_intg,   "intg  "},
+    {op_intl,   "intl  "},
+    {op_loadg,  "loadg "},
+    {op_loadl,  "loadl "},
+    {op_loadu,  "loadu "},
+    {op_pnum,   "pnum  "},
+    {op_pnil,   "pnil  "},
+    {op_pstr,   "pstr  "},
+    {op_newv,   "newv  "},
+    {op_newh,   "newh  "},
+    {op_newf,   "newf  "},
+    {op_happ,   "happ  "},
+    {op_para,   "para  "},
+    {op_deft,   "def   "},
+    {op_dyn,    "dyn   "},
+    {op_unot,   "not   "},
+    {op_usub,   "usub  "},
+    {op_add,    "add   "},
+    {op_sub,    "sub   "},
+    {op_mul,    "mult  "},
+    {op_div,    "div   "},
+    {op_lnk,    "lnk   "},
+    {op_addc,   "addc  "},
+    {op_subc,   "subc  "},
+    {op_mulc,   "multc "},
+    {op_divc,   "divc  "},
+    {op_lnkc,   "lnkc  "},
+    {op_addeq,  "addeq "},
+    {op_subeq,  "subeq "},
+    {op_muleq,  "muleq "},
+    {op_diveq,  "diveq "},
+    {op_lnkeq,  "lnkeq "},
+    {op_addeqc, "addeqc"},
+    {op_subeqc, "subeqc"},
+    {op_muleqc, "muleqc"},
+    {op_diveqc, "diveqc"},
+    {op_lnkeqc, "lnkeqc"},
+    {op_meq,    "meq   "},
+    {op_eq,     "eq    "},
+    {op_neq,    "neq   "},
+    {op_less,   "less  "},
+    {op_leq,    "leq   "},
+    {op_grt,    "grt   "},
+    {op_geq,    "geq   "},
+    {op_lessc,  "lessc "},
+    {op_leqc,   "leqc  "},
+    {op_grtc,   "grtc  "},
+    {op_geqc,   "geqc  "},
+    {op_pop,    "pop   "},
+    {op_jmp,    "jmp   "},
+    {op_jt,     "jt    "},
+    {op_jf,     "jf    "},
+    {op_cnt,    "cnt   "},
+    {op_findex, "findx "},
+    {op_feach,  "feach "},
+    {op_callg,  "callg "},
+    {op_calll,  "calll "},
+    {op_upval,  "upval "},
+    {op_callv,  "callv "},
+    {op_callvi, "callvi"},
+    {op_callh,  "callh "},
+    {op_callfv, "callfv"},
+    {op_callfh, "callfh"},
+    {op_callb,  "callb "},
+    {op_slcbeg, "slcbeg"},
+    {op_slcend, "slcend"},
+    {op_slc,    "slc   "},
+    {op_slc2,   "slc2  "},
+    {op_mcallg, "mcallg"},
+    {op_mcalll, "mcalll"},
+    {op_mupval, "mupval"},
+    {op_mcallv, "mcallv"},
+    {op_mcallh, "mcallh"},
+    {op_ret,    "ret   "},
+    {-1,        nullptr },
 };
 
 struct opcode
@@ -189,13 +189,13 @@ private:
     nasal_err& nerr;
     const std::string* file;
     std::stack<uint32_t> in_iterloop;
-    std::unordered_map<double,int>      num_table;
-    std::unordered_map<std::string,int> str_table;
-    std::vector<double>                 num_res;
-    std::vector<std::string>            str_res;
-    std::vector<opcode>                 code;
-    std::list<std::vector<int>>         continue_ptr;
-    std::list<std::vector<int>>         break_ptr;
+    std::unordered_map<double,uint32_t> num_table;
+    std::unordered_map<std::string,uint32_t> str_table;
+    std::vector<double> num_res;
+    std::vector<std::string> str_res;
+    std::vector<opcode> code;
+    std::list<std::vector<int>> continue_ptr;
+    std::list<std::vector<int>> break_ptr;
     // global : max 4095 values
     std::unordered_map<std::string,int> global;
     // local  : max 32768 upvalues 65536 values
@@ -206,8 +206,8 @@ private:
     std::stack<uint32_t> festk;
     
     void die(std::string,const uint32_t);
-    void regist_number(const double);
-    void regist_string(const std::string&);
+    void regist_num(const double);
+    void regist_str(const std::string&);
     void find_symbol(const nasal_ast&);
     void add_sym(const std::string&);
     int  local_find(const std::string&);
@@ -261,21 +261,21 @@ void nasal_codegen::die(std::string info,const uint32_t line)
     nerr.err("code",line,info);
 }
 
-void nasal_codegen::regist_number(const double num)
+void nasal_codegen::regist_num(const double num)
 {
-    int size=num_table.size();
     if(!num_table.count(num))
     {
+        uint32_t size=num_table.size();
         num_table[num]=size;
         num_res.push_back(num);
     }
 }
 
-void nasal_codegen::regist_string(const std::string& str)
+void nasal_codegen::regist_str(const std::string& str)
 {
-    int size=str_table.size();
     if(!str_table.count(str))
     {
+        uint32_t size=str_table.size();
         str_table[str]=size;
         str_res.push_back(str);
     }
@@ -356,13 +356,13 @@ void nasal_codegen::gen(uint8_t op,uint32_t num,uint32_t line)
 void nasal_codegen::num_gen(const nasal_ast& ast)
 {
     double num=ast.num();
-    regist_number(num);
+    regist_num(num);
     gen(op_pnum,num_table[num],ast.line());
 }
 
 void nasal_codegen::str_gen(const nasal_ast& ast)
 {
-    regist_string(ast.str());
+    regist_str(ast.str());
     gen(op_pstr,str_table[ast.str()],ast.line());
 }
 
@@ -380,7 +380,7 @@ void nasal_codegen::hash_gen(const nasal_ast& ast)
     {
         calc_gen(node[1]);
         const std::string& str=node[0].str();
-        regist_string(str);
+        regist_str(str);
         gen(op_happ,str_table[str],node.line());
     }
 }
@@ -405,15 +405,15 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
         const std::string& str=tmp.str();
         if(str=="me")
             die("\"me\" should not be a parameter",tmp.line());
-        regist_string(str);
+        regist_str(str);
         switch(tmp.type())
         {
             case ast_id:gen(op_para,str_table[str],tmp.line());break;
             case ast_default:
                 calc_gen(tmp[0]);
-                gen(op_defpara,str_table[str],tmp.line());
+                gen(op_deft,str_table[str],tmp.line());
                 break;
-            case ast_dynamic:gen(op_dynpara,str_table[str],tmp.line());break;
+            case ast_dynamic:gen(op_dyn,str_table[str],tmp.line());break;
         }
         add_sym(str);
     }
@@ -492,7 +492,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
 
 void nasal_codegen::call_hash(const nasal_ast& ast)
 {
-    regist_string(ast.str());
+    regist_str(ast.str());
     gen(op_callh,str_table[ast.str()],ast.line());
 }
 
@@ -505,7 +505,7 @@ void nasal_codegen::call_vec(const nasal_ast& ast)
         gen(op_callv,0,ast[0].line());
         return;
     }
-    gen(op_slcbegin,0,ast.line());
+    gen(op_slcbeg,0,ast.line());
     for(auto& tmp:ast.child())
     {
         if(tmp.type()!=ast_subvec)
@@ -614,7 +614,7 @@ void nasal_codegen::mcall_vec(const nasal_ast& ast)
 
 void nasal_codegen::mcall_hash(const nasal_ast& ast)
 {
-    regist_string(ast.str());
+    regist_str(ast.str());
     gen(op_mcallh,str_table[ast.str()],ast.line());
 }
 
@@ -1041,7 +1041,7 @@ void nasal_codegen::calc_gen(const nasal_ast& ast)
                 gen(ast.type()-ast_addeq+op_addeq,0,ast.line());
             else
             {
-                regist_number(ast[1].num());
+                regist_num(ast[1].num());
                 gen(ast.type()-ast_addeq+op_addeqc,num_table[ast[1].num()],ast.line());
             }
             break;
@@ -1049,7 +1049,7 @@ void nasal_codegen::calc_gen(const nasal_ast& ast)
             if(ast[1].type()!=ast_str)
                 calc_gen(ast[1]);
             else
-                regist_string(ast[1].str());
+                regist_str(ast[1].str());
             mcall(ast[0]);
             if(ast[1].type()!=ast_str)
                 gen(op_lnkeq,0,ast.line());
@@ -1068,7 +1068,7 @@ void nasal_codegen::calc_gen(const nasal_ast& ast)
             }
             else
             {
-                regist_number(ast[1].num());
+                regist_num(ast[1].num());
                 gen(ast.type()-ast_add+op_addc,num_table[ast[1].num()],ast.line());
             }
             break;
@@ -1081,7 +1081,7 @@ void nasal_codegen::calc_gen(const nasal_ast& ast)
             }
             else
             {
-                regist_string(ast[1].str());
+                regist_str(ast[1].str());
                 gen(op_lnkc,str_table[ast[1].str()],ast.line());
             }
             break;
@@ -1100,7 +1100,7 @@ void nasal_codegen::calc_gen(const nasal_ast& ast)
             }
             else
             {
-                regist_number(ast[1].num());
+                regist_num(ast[1].num());
                 gen(ast.type()-ast_less+op_lessc,num_table[ast[1].num()],ast.line());
             }
             break;
@@ -1225,8 +1225,8 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     file=import.get_file().data();
     in_iterloop.push(0);
 
-    regist_number(0);
-    regist_number(1);
+    regist_num(0);
+    regist_num(1);
 
     find_symbol(parse.ast()); // search symbols first
     gen(op_intg,global.size(),0);
@@ -1299,7 +1299,7 @@ void nasal_codegen::print_op(uint32_t index)
         case op_happ:  case op_pstr:
         case op_lnkc:
         case op_callh: case op_mcallh:
-        case op_para:  case op_defpara:case op_dynpara:
+        case op_para:  case op_deft:   case op_dyn:
             printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num],16).c_str());break;
         default:printf("\n");break;
     }
@@ -1308,11 +1308,11 @@ void nasal_codegen::print_op(uint32_t index)
 void nasal_codegen::print()
 {
     for(auto& num:num_res)
-        std::cout<<"  .number "<<num<<'\n';
+        std::cout<<"  .number "<<num<<"\n";
     for(auto& str:str_res)
         std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
     std::cout<<"\n";
-    for(uint32_t i=0;i<code.size();++i)
+    for(size_t i=0;i<code.size();++i)
         print_op(i);
 }
 
