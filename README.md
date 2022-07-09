@@ -331,7 +331,7 @@ You could see how to write your own native-functions below.
 
 ```javascript
 var my_new_obj=func(){
-    return __builtin_my_obj();
+    return __my_obj();
 }
 var obj=my_new_obj();
 ```
@@ -652,25 +652,25 @@ struct func
     nasal_ref (*func)(nasal_ref*,nasal_gc&);
 } builtin[]=
 {
-    {"__builtin_print",builtin_print},
+    {"__print",builtin_print},
     {nullptr,          nullptr      }
 };
 ```
 
-At last,warp the `__builtin_print` in a nasal file:
+At last,warp the `__print` in a nasal file:
 
 ```javascript
 var print=func(elems...){
-    return __builtin_print(elems);
+    return __print(elems);
 };
 ```
 
-In fact the arguments that `__builtin_print` uses are not necessary.
+In fact the arguments that `__print` uses are not necessary.
 So writting it like this is also right:
 
 ```javascript
 var print=func(elems...){
-    return __builtin_print;
+    return __print;
 };
 ```
 
@@ -719,10 +719,10 @@ After 2021/12/3, there are some new functions added to `lib.nas`:
 ```javascript
 var dylib=
 {
-    dlopen:  func(libname){return __builtin_dlopen;},
-    dlsym:   func(lib,sym){return __builtin_dlsym; },
-    dlclose: func(lib){return __builtin_dlclose;   },
-    dlcall:  func(funcptr,args...){return __builtin_dlcall}
+    dlopen:  func(libname){return __dlopen;},
+    dlsym:   func(lib,sym){return __dlsym; },
+    dlclose: func(lib){return __dlclose;   },
+    dlcall:  func(funcptr,args...){return __dlcall}
 };
 ```
 
@@ -1334,7 +1334,7 @@ func <0x29c>:
   0x0000029d:       02 00 00 00 02        intl    0x2
   0x0000029e:       0d 00 00 00 66        para    0x66 ("libname")
   0x0000029f:       32 00 00 02 a2        jmp     0x2a2
-  0x000002a0:       40 00 00 00 42        callb   0x42 <__builtin_dlopen@0x41dc40>
+  0x000002a0:       40 00 00 00 42        callb   0x42 <__dlopen@0x41dc40>
   0x000002a1:       4a 00 00 00 00        ret
 <0x29c>;
 
@@ -1346,7 +1346,7 @@ func <0x2a3>:
   0x000002a5:       0d 00 00 00 68        para    0x68 ("lib")
   0x000002a6:       0d 00 00 00 69        para    0x69 ("sym")
   0x000002a7:       32 00 00 02 aa        jmp     0x2aa
-  0x000002a8:       40 00 00 00 43        callb   0x43 <__builtin_dlsym@0x41df00>
+  0x000002a8:       40 00 00 00 43        callb   0x43 <__dlsym@0x41df00>
   0x000002a9:       4a 00 00 00 00        ret
 <0x2a3>;
 
@@ -1357,7 +1357,7 @@ func <0x2ab>:
   0x000002ac:       02 00 00 00 02        intl    0x2
   0x000002ad:       0d 00 00 00 68        para    0x68 ("lib")
   0x000002ae:       32 00 00 02 b1        jmp     0x2b1
-  0x000002af:       40 00 00 00 44        callb   0x44 <__builtin_dlclose@0x41e2a0>
+  0x000002af:       40 00 00 00 44        callb   0x44 <__dlclose@0x41e2a0>
   0x000002b0:       4a 00 00 00 00        ret
 <0x2ab>;
 
@@ -1369,7 +1369,7 @@ func <0x2b2>:
   0x000002b4:       0d 00 00 00 6c        para    0x6c ("funcptr")
   0x000002b5:       0f 00 00 00 6d        dyn     0x6d ("args")
   0x000002b6:       32 00 00 02 b9        jmp     0x2b9
-  0x000002b7:       40 00 00 00 45        callb   0x45 <__builtin_dlcall@0x41e3d0>
+  0x000002b7:       40 00 00 00 45        callb   0x45 <__dlcall@0x41e3d0>
   0x000002b8:       4a 00 00 00 00        ret
 <0x2b2>;
 
@@ -1381,7 +1381,7 @@ func <0x2bc>:
   0x000002bc:       0b 00 00 02 bf        newf    0x2bf
   0x000002bd:       02 00 00 00 01        intl    0x1
   0x000002be:       32 00 00 02 c1        jmp     0x2c1
-  0x000002bf:       40 00 00 00 46        callb   0x46 <__builtin_platform@0x41e4f0>
+  0x000002bf:       40 00 00 00 46        callb   0x46 <__platform@0x41e4f0>
   0x000002c0:       4a 00 00 00 00        ret
 <0x2bc>;
 
@@ -1393,7 +1393,7 @@ func <0x2c4>:
   0x000002c4:       0b 00 00 02 c7        newf    0x2c7
   0x000002c5:       02 00 00 00 01        intl    0x1
   0x000002c6:       32 00 00 02 c9        jmp     0x2c9
-  0x000002c7:       40 00 00 00 47        callb   0x47 <__builtin_gc@0x41e530>
+  0x000002c7:       40 00 00 00 47        callb   0x47 <__gc@0x41e530>
   0x000002c8:       4a 00 00 00 00        ret
 <0x2c4>;
 
@@ -1409,11 +1409,11 @@ Now we add coroutine in this runtime:
 
 ```javascript
 var coroutine={
-    create: func(function){return __builtin_cocreate;},
-    resume: func(co)      {return __builtin_coresume;},
-    yield:  func(args...) {return __builtin_coyield; },
-    status: func(co)      {return __builtin_costatus;},
-    running:func()        {return __builtin_corun;   }
+    create: func(function){return __cocreate;},
+    resume: func(co)      {return __coresume;},
+    yield:  func(args...) {return __coyield; },
+    status: func(co)      {return __costatus;},
+    running:func()        {return __corun;   }
 };
 ```
 
@@ -1748,7 +1748,7 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x41afc0> (lib.nas:131)
+        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
         0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
         0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
 vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
@@ -1825,7 +1825,7 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__builtin_die@0x41afc0> (lib.nas:131)
+        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
         0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
         0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
 vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
@@ -1961,7 +1961,7 @@ next bytecode:
         0x00000002:     02 00 00 00 02      intl   0x2 (lib.nas:5)
         0x00000003:     0d 00 00 00 00      para   0x0 ("filename") (lib.nas:5)
         0x00000004:     32 00 00 00 07      jmp    0x7 (lib.nas:5)
-        0x00000005:     40 00 00 00 24      callb  0x24 <__builtin_import@0x419b20> (lib.nas:6)
+        0x00000005:     40 00 00 00 24      callb  0x24 <__import@0x419b20> (lib.nas:6)
         0x00000006:     4a 00 00 00 00      ret    0x0 (lib.nas:6)
         0x00000007:     03 00 00 00 00      loadg  0x0 (lib.nas:5)
 vm stack(0x7fffe05e3190<sp+79>, limit 5, total 0)

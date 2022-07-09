@@ -3,66 +3,66 @@
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout/printf to output logs.
 var print=func(elems...){
-    return __builtin_print(elems);
+    return __print(elems);
 }
 
 # append is used to add values into a vector.
 var append=func(vec,elems...){
-    return __builtin_append(vec,elems);
+    return __append(vec,elems);
 }
 
 # setsize is used to change the size of vector.
 # if the size is larger than before,
 # this function will fill vm_nil into uninitialized space.
 var setsize=func(vec,size){
-    return __builtin_setsize(vec,size);
+    return __setsize(vec,size);
 }
 
 # system has the same use in C.
 var system=func(str){
-    return __builtin_system(str);
+    return __system(str);
 }
 
 # input uses std::cin and returns what we input.
 var input=func(){
-    return __builtin_input();
+    return __input();
 }
 
 # split a string by separator for example:
 # split("ll","hello world") -> ["he","o world"]
 # this function will return a vector.
 var split=func(separator,str){
-    return __builtin_split(separator,str);
+    return __split(separator,str);
 }
 
 # rand has the same function as the rand in C
 # if seed is nil, it will return the random number.
 # if seed is not nil, it will be initialized by this seed.
 var rand=func(seed=nil){
-    return __builtin_rand(seed);
+    return __rand(seed);
 }
 
 # id will return the pointer of an gc-object.
 # if this object is not managed by gc, it will return 0.
 var id=func(object){
-    return __builtin_id(object);
+    return __id(object);
 }
 
 # int will get the integer of input number.
 # but carefully use it, because int has range between -2147483648~2147483647
 var int=func(val){
-    return __builtin_int(val);
+    return __int(val);
 }
 
 # floor will get the integral number of input argument
 # which is less than or equal to this argument
 var floor=func(val){
-    return __builtin_floor(val);
+    return __floor(val);
 }
 
 # abort using std::abort
 var abort=func(){
-    __builtin_abort();
+    __abort();
 }
 
 # abs gets absolute number.
@@ -73,47 +73,47 @@ var abs=func(n){
 # num will change all the other types into number.
 # mostly used to change a numerable string.
 var num=func(val){
-    return __builtin_num(val);
+    return __num(val);
 }
 
 # pop used to pop the last element in a vector.
 # this function will return the value that poped if vector has element(s).
 # if the vector is empty, it will return nil.
 var pop=func(vec){
-    return __builtin_pop(vec);
+    return __pop(vec);
 }
 
 # str is used to change number into string.
 var str=func(num){
-    return __builtin_str(num);
+    return __str(num);
 }
 
 # size can get the size of a string/vector/hashmap.
 # in fact it can also get the size of number, and the result is the number itself.
 # so don't do useless things, though it really works.
 var size=func(object){
-    return __builtin_size(object);
+    return __size(object);
 }
 
 # contains is used to check if a key exists in a hashmap/dict.
 var contains=func(hash,key){
-    return __builtin_contains(hash,key);
+    return __contains(hash,key);
 }
 
 # delete is used to delete a pair in a hashmap/dict by key.
 var delete=func(hash,key){
-    return __builtin_delete(hash,key);
+    return __delete(hash,key);
 }
 
 # keys is used to get all keys in a hashmap/dict.
 # this function will return a vector.
 var keys=func(hash){
-    return __builtin_keys(hash);
+    return __keys(hash);
 }
 
 # time has the same function in C.
 var time=func(begin){
-    return __builtin_time(begin);
+    return __time(begin);
 }
 var systime=func(){
     return time(0);
@@ -122,18 +122,18 @@ var systime=func(){
 # die is a special native function.
 # use it at where you want the program to crash immediately.
 var die=func(str){
-    return __builtin_die(str);
+    return __die(str);
 }
 
 # find will give the first position of the needle in haystack
 var find=func(needle,haystack){
-    return __builtin_find(needle,haystack);
+    return __find(needle,haystack);
 }
 
 # typeof is used to get the type of an object.
 # this function returns a string.
 var typeof=func(object){
-    return __builtin_type(object);
+    return __type(object);
 }
 
 # subvec is used to get part of a vector
@@ -144,37 +144,37 @@ var subvec=func(vec,begin,length=nil){
 # substr will get the sub-string.
 # it gets the string, the begin index and sub-string's length as arguments.
 var substr=func(str,begin,len){
-    return __builtin_substr(str,begin,len);
+    return __substr(str,begin,len);
 }
 
 # streq is used to compare if two strings are the same.
 var streq=func(a,b){
-    return __builtin_streq(a,b);
+    return __streq(a,b);
 }
 
 # left is used to get the sub-string like substr.
 # but the begin index is 0.
 var left=func(str,len){
-    return __builtin_left(str,len);
+    return __left(str,len);
 }
 
 # right i used to get the sub-string like substr.
 # but the begin index is strlen-len.
 var right=func(str,len){
-    return __builtin_right(str,len);
+    return __right(str,len);
 }
 
 # cmp is used to compare two strings.
 # normal string will not be correctly compared by operators < > <= >=
 # because these operators will turn strings into numbers then compare.
 var cmp=func(a,b){
-    return __builtin_cmp(a,b);
+    return __cmp(a,b);
 }
 
 # chr is used to get the character by ascii-number.
 # for example chr(65) -> 'A'
 var chr=func(code){
-    return __builtin_chr(code);
+    return __chr(code);
 }
 
 # mut is used to change unmutable strings to mutable.
@@ -190,13 +190,13 @@ var srand=func(){
 
 # values() gets all values in a hash.
 var values=func(hash){
-    return __builtin_values(hash);
+    return __values(hash);
 }
 
 # println has the same function as print.
 # but it will output a '\n' after using print.
 var println=func(elems...){
-    return __builtin_println(elems);
+    return __println(elems);
 }
 
 var isfunc=func(f){
@@ -263,7 +263,7 @@ var assert=func(condition,message="assertion failed!"){
 var maketimestamp=func(){
     var t=0;
     var millisec=func(){
-        return __builtin_millisec;
+        return __millisec;
     }
     return {
         stamp:func(){t=millisec();},
@@ -274,7 +274,7 @@ var maketimestamp=func(){
 
 # md5
 var md5=func(str){
-    return __builtin_md5(str);
+    return __md5(str);
 }
 
 var io=
@@ -283,29 +283,29 @@ var io=
     SEEK_CUR:1,
     SEEK_END:2,
     # get content of a file by filename. returns a string.
-    fin:   func(filename){return __builtin_fin(filename);},
+    fin:   func(filename){return __fin(filename);},
     # input a string as the content of a file.
-    fout:  func(filename,str){return __builtin_fout(filename,str);},
+    fout:  func(filename,str){return __fout(filename,str);},
     # same as C fopen. open file and get the FILE*.
-    open:  func(filename,mode="r"){return __builtin_open(filename,mode);},
+    open:  func(filename,mode="r"){return __open(filename,mode);},
     # same as C fclose. close file by FILE*.
-    close: func(filehandle){return __builtin_close(filehandle);},
+    close: func(filehandle){return __close(filehandle);},
     # same as C fread. read file by FILE*.
     # caution: buf must be a mutable string.use mut("") to get an empty mutable string.
-    read:  func(filehandle,buf,len){return __builtin_read(filehandle,buf,len);},
+    read:  func(filehandle,buf,len){return __read(filehandle,buf,len);},
     # same as C fwrite. write file by FILE*.
-    write: func(filehandle,str){return __builtin_write(filehandle,str);},
+    write: func(filehandle,str){return __write(filehandle,str);},
     # same as C fseek. seek place by FILE*.
-    seek:  func(filehandle,pos,whence){return __builtin_seek(filehandle,pos,whence);},
+    seek:  func(filehandle,pos,whence){return __seek(filehandle,pos,whence);},
     # same as C ftell.
-    tell:  func(filehandle){return __builtin_tell(filehandle);},
+    tell:  func(filehandle){return __tell(filehandle);},
     # read file by lines. use FILE*.
     # get nil if EOF
-    readln:func(filehandle){return __builtin_readln(filehandle);},
+    readln:func(filehandle){return __readln(filehandle);},
     # same as C stat.
-    stat:  func(filename){return __builtin_stat(filename);},
+    stat:  func(filename){return __stat(filename);},
     # same as C feof. check if FILE* gets the end of file(EOF).
-    eof:   func(filehandle){return __builtin_eof(filehandle);}
+    eof:   func(filehandle){return __eof(filehandle);}
 };
 
 # get file status. using data from io.stat
@@ -331,45 +331,45 @@ var fstat=func(filename){
 var bits=
 {
     # i32 xor
-    i32_xor: func(a,b){return __builtin_i32xor(a,b); },
+    i32_xor: func(a,b){return __i32xor(a,b); },
     # i32 and
-    i32_and: func(a,b){return __builtin_i32and(a,b); },
+    i32_and: func(a,b){return __i32and(a,b); },
     # i32 or
-    i32_or:  func(a,b){return __builtin_i32or(a,b);  },
+    i32_or:  func(a,b){return __i32or(a,b);  },
     # i32 nand
-    i32_nand:func(a,b){return __builtin_i32nand(a,b);},
+    i32_nand:func(a,b){return __i32nand(a,b);},
     # i32 not
-    i32_not: func(a)  {return __builtin_i32not(a);   },
+    i32_not: func(a)  {return __i32not(a);   },
     # u32 xor
-    u32_xor: func(a,b){return __builtin_u32xor(a,b); },
+    u32_xor: func(a,b){return __u32xor(a,b); },
     # u32 and
-    u32_and: func(a,b){return __builtin_u32and(a,b); },
+    u32_and: func(a,b){return __u32and(a,b); },
     # u32 or
-    u32_or:  func(a,b){return __builtin_u32or(a,b);  },
+    u32_or:  func(a,b){return __u32or(a,b);  },
     # u32 nand
-    u32_nand:func(a,b){return __builtin_u32nand(a,b);},
+    u32_nand:func(a,b){return __u32nand(a,b);},
     # u32 not
-    u32_not: func(a)  {return __builtin_u32not(a);   },
+    u32_not: func(a)  {return __u32not(a);   },
 
     # get bit data from a special string. for example:
     # bits.fld(s,0,3);
     # if s stores 10100010(162)
     # will get 101(5).
-    fld:     func(str,startbit,len){return __builtin_fld;},
+    fld:     func(str,startbit,len){return __fld;},
     # get sign-extended data from a special string. for example:
     # bits.sfld(s,0,3);
     # if s stores 10100010(162)
     # will get 101(5) then this will be signed extended to
     # 11111101(-3).
-    sfld:    func(str,startbit,len){return __builtin_sfld;},
+    sfld:    func(str,startbit,len){return __sfld;},
     # set value into a special string to store it. little-endian, for example:
     # bits.setfld(s,0,8,69);
     # set 01000101(69) to string will get this:
     # 10100010(162)
     # so s[0]=162.
-    setfld:  func(str,startbit,len,val){return __builtin_setfld;},
+    setfld:  func(str,startbit,len,val){return __setfld;},
     # get a special string filled by '\0' to use in setfld.
-    buf:     func(len){return __builtin_buf;}
+    buf:     func(len){return __buf;}
 };
 
 # mostly used math functions and special constants, you know.
@@ -380,39 +380,39 @@ var math=
     inf:   1/0,
     nan:   0/0,
     abs:   func(x)  {return x>0?x:-x;            },
-    floor: func(x)  {return __builtin_floor(x);  },
-    pow:   func(x,y){return __builtin_pow(x,y);  },
-    sin:   func(x)  {return __builtin_sin(x);    },
-    cos:   func(x)  {return __builtin_cos(x);    },
-    tan:   func(x)  {return __builtin_tan(x);    },
-    exp:   func(x)  {return __builtin_exp(x);    },
-    lg:    func(x)  {return __builtin_lg(x);     },
-    ln:    func(x)  {return __builtin_ln(x);     },
-    sqrt:  func(x)  {return __builtin_sqrt(x);   },
-    atan2: func(x,y){return __builtin_atan2(x,y);},
-    isnan: func(x)  {return __builtin_isnan(x);  },
+    floor: func(x)  {return __floor(x);  },
+    pow:   func(x,y){return __pow(x,y);  },
+    sin:   func(x)  {return __sin(x);    },
+    cos:   func(x)  {return __cos(x);    },
+    tan:   func(x)  {return __tan(x);    },
+    exp:   func(x)  {return __exp(x);    },
+    lg:    func(x)  {return __lg(x);     },
+    ln:    func(x)  {return __ln(x);     },
+    sqrt:  func(x)  {return __sqrt(x);   },
+    atan2: func(x,y){return __atan2(x,y);},
+    isnan: func(x)  {return __isnan(x);  },
     max:   func(x,y){return x>y?x:y;             },
     min:   func(x,y){return x<y?x:y;             }
 };
 
 var unix=
 {
-    pipe:     func(){return __builtin_pipe;},
-    fork:     func(){return __builtin_fork;},
+    pipe:     func(){return __pipe;},
+    fork:     func(){return __fork;},
     dup2:     func(fd0,fd1){die("not supported yet");},
     exec:     func(filename,argv,envp){die("not supported yet");},
-    waitpid:  func(pid,nohang=0){return __builtin_waitpid;},
+    waitpid:  func(pid,nohang=0){return __waitpid;},
     isdir:    func(path){return !!bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
     isfile:   func(path){return !!bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
-    opendir:  func(path){return __builtin_opendir;},
-    readdir:  func(handle){return __builtin_readdir;},
-    closedir: func(handle){return __builtin_closedir;},
+    opendir:  func(path){return __opendir;},
+    readdir:  func(handle){return __readdir;},
+    closedir: func(handle){return __closedir;},
     time:     func(){return time(0);},
-    sleep:    func(secs){return __builtin_sleep(secs);},
-    chdir:    func(path){return __builtin_chdir(path);},
-    environ:  func(){return __builtin_environ();},
-    getcwd:   func(){return __builtin_getcwd();},
-    getenv:   func(envvar){return __builtin_getenv(envvar);},
+    sleep:    func(secs){return __sleep(secs);},
+    chdir:    func(path){return __chdir(path);},
+    environ:  func(){return __environ();},
+    getcwd:   func(){return __getcwd();},
+    getenv:   func(envvar){return __getenv(envvar);},
     getpath:  func(){return split(os.platform()=="windows"?";":":",unix.getenv("PATH"));}
 };
 
@@ -421,13 +421,13 @@ var unix=
 var dylib=
 {
     # open dynamic lib.
-    dlopen:  func(libname){return __builtin_dlopen;},
+    dlopen:  func(libname){return __dlopen;},
     # load symbol from an open dynamic lib.
-    dlsym:   func(lib,sym){return __builtin_dlsym; },
+    dlsym:   func(lib,sym){return __dlsym; },
     # close dynamic lib, this operation will make all the symbols loaded from it invalid.
-    dlclose: func(lib){return __builtin_dlclose;   },
+    dlclose: func(lib){return __dlclose;   },
     # call the loaded symbol.
-    dlcall:  func(funcptr,args...){return __builtin_dlcall}
+    dlcall:  func(funcptr,args...){return __dlcall}
 };
 
 # os is used to use or get some os-related info/functions.
@@ -435,8 +435,8 @@ var dylib=
 var os=
 {
     # get a string that tell which os it runs on.
-    platform: func(){return __builtin_platform;},
-    time:     func(){return __builtin_logtime; }
+    platform: func(){return __platform;},
+    time:     func(){return __logtime; }
 };
 
 # runtime gives us some functions that we could manage it manually.
@@ -444,10 +444,10 @@ var runtime=
 {
     # do garbage collection manually.
     # carefully use it because using it frequently may make program running slower.
-    gc:   func(){return __builtin_gc;},
+    gc:   func(){return __gc;},
 
     # command line arguments
-    argv: func(){return __builtin_sysargv;}
+    argv: func(){return __sysargv;}
 };
 
 # important global constants
@@ -490,9 +490,9 @@ var compile=func(code,filename="<compile>"){
 }
 
 var coroutine={
-    create: func(function){return __builtin_cocreate;},
-    resume: func(co)      {return __builtin_coresume;},
-    yield:  func(args...) {return __builtin_coyield; },
-    status: func(co)      {return __builtin_costatus;},
-    running:func()        {return __builtin_corun;   }
+    create: func(function){return __cocreate;},
+    resume: func(co)      {return __coresume;},
+    yield:  func(args...) {return __coyield; },
+    status: func(co)      {return __costatus;},
+    running:func()        {return __corun;   }
 };

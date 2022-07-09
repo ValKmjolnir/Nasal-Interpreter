@@ -7,12 +7,13 @@ class nasal_dbg:public nasal_vm
 {
 private:
     bool next_step;
+    size_t fsize;
     uint16_t bk_fidx;
     uint32_t bk_line;
     fstreamline src;
 
     std::vector<std::string> parse(const std::string&);
-    uint16_t get_fileindex(const std::string&);
+    uint16_t fileindex(const std::string&);
     void err();
     void help();
     void stepinfo();
@@ -31,25 +32,22 @@ public:
 std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
 {
     std::vector<std::string> res;
-    std::string tmp="";
-    for(uint32_t i=0;i<cmd.length();++i)
+    size_t last=0,pos=cmd.find(" ",0);
+    while(pos!=std::string::npos)
     {
-        if(cmd[i]==' ' && tmp.length())
-        {
-            res.push_back(tmp);
-            tmp="";
-            continue;
-        }
-        tmp+=cmd[i];
+        if(pos>last)
+            res.push_back(cmd.substr(last,pos-last));
+        last=pos+1;
+        pos=cmd.find(" ",last);
     }
-    if(tmp.length())
-        res.push_back(tmp);
+    if(last<cmd.length())
+        res.push_back(cmd.substr(last));
     return res;
 }
 
-uint16_t nasal_dbg::get_fileindex(const std::string& filename)
+uint16_t nasal_dbg::fileindex(const std::string& filename)
 {
-    for(uint16_t i=0;i<files_size;++i)
+    for(uint16_t i=0;i<fsize;++i)
         if(filename==files[i])
             return i;
     return 65535;
@@ -133,7 +131,7 @@ void nasal_dbg::interact()
             else if(res[0]=="c" || res[0]=="continue")
                 return;
             else if(res[0]=="f" || res[0]=="file")
-                for(size_t i=0;i<files_size;++i)
+                for(size_t i=0;i<fsize;++i)
                     printf("[%zu] %s\n",i,files[i].c_str());
             else if(res[0]=="g" || res[0]=="global")
                 global_state();
@@ -158,7 +156,7 @@ void nasal_dbg::interact()
         }
         else if(res.size()==3 && (res[0]=="bk" || res[0]=="break"))
         {
-            bk_fidx=get_fileindex(res[1]);
+            bk_fidx=fileindex(res[1]);
             if(bk_fidx==65535)
             {
                 printf("cannot find file named \"%s\"\n",res[1].c_str());
@@ -181,6 +179,7 @@ void nasal_dbg::run(
     const std::vector<std::string>& argv)
 {
     detail_info=true;
+    fsize=linker.get_file().size();
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
     const void* oprs[]=
     {

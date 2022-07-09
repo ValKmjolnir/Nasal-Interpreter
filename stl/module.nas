@@ -6,7 +6,7 @@
 # all the invalid functions cannot be called
 
 var module_call_func=func(fptr,args){
-    return __builtin_dlcall;
+    return __dlcall;
 }
 var extern={
     new: func(fptr){

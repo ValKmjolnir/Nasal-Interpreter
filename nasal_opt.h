@@ -47,19 +47,17 @@ void calc_const(nasal_ast& root)
     }
     if(vec.size()!=2)
         return;
-    if(root.type()!=ast_add &&
-        root.type()!=ast_sub &&
-        root.type()!=ast_mult &&
-        root.type()!=ast_div &&
-        root.type()!=ast_link &&
-        root.type()!=ast_less &&
-        root.type()!=ast_leq &&
-        root.type()!=ast_grt &&
-        root.type()!=ast_geq)
+    if(root.type()!=ast_add && root.type()!=ast_sub &&
+       root.type()!=ast_mult && root.type()!=ast_div &&
+       root.type()!=ast_link && root.type()!=ast_less &&
+       root.type()!=ast_leq && root.type()!=ast_grt &&
+       root.type()!=ast_geq)
         return;
-    if(root.type()==ast_link && vec[0].type()==ast_str && vec[1].type()==ast_str)
+    if(root.type()==ast_link &&
+       vec[0].type()==ast_str && vec[1].type()==ast_str)
         const_str(root);
-    else if(root.type()!=ast_link && vec[0].type()==ast_num && vec[1].type()==ast_num)
+    else if(root.type()!=ast_link &&
+            vec[0].type()==ast_num && vec[1].type()==ast_num)
         const_num(root);
 }
 void optimize(nasal_ast& root)
