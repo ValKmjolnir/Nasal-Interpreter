@@ -1,7 +1,7 @@
 # lib.nas
 
 # print is used to print all things in nasal, try and see how it works.
-# this function uses std::cout/printf to output logs.
+# this function uses std::cout to output logs.
 var print=func(elems...){
     return __print(elems);
 }
