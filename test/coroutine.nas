@@ -37,7 +37,7 @@ var productor=func(){
     for(var i=0;;i+=1)
         coroutine.yield(i);
 }
-var total=10000; # ms
+var total=4000; # ms
 var co=coroutine.create(productor);
 var tm=maketimestamp();
 
@@ -54,4 +54,4 @@ var consumer=func(){
 tm.stamp();
 while(tm.elapsedMSec()<total)
     consumer();
-println("\nexecute ",counter," tasks during ",total," ms, avg ",counter/(total)," tasks/ms.")
+println("\nexecute ",counter," tasks during ",total," ms, avg ",counter/total," tasks/ms.")

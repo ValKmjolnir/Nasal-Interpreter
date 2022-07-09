@@ -39,7 +39,7 @@ nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
         pos=PATH.find(sep,last);
     }
     if(last!=PATH.length())
-        envpath.push_back(PATH.substr(last,pos-last));
+        envpath.push_back(PATH.substr(last));
 }
 
 std::string nasal_import::path(const nasal_ast& node)

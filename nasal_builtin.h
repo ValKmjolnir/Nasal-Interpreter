@@ -7,103 +7,102 @@
 #endif
 
 // declaration of builtin functions
-// to add new builtin function, declare it here and write the definition below
-#define nas_native(name) nasal_ref name(nasal_ref*,nasal_gc&)
-nas_native(builtin_print);
-nas_native(builtin_println);
-nas_native(builtin_abort);
-nas_native(builtin_append);
-nas_native(builtin_setsize);
-nas_native(builtin_system);
-nas_native(builtin_input);
-nas_native(builtin_fin);
-nas_native(builtin_fout);
-nas_native(builtin_split);
-nas_native(builtin_rand);
-nas_native(builtin_id);
-nas_native(builtin_int);
-nas_native(builtin_floor);
-nas_native(builtin_num);
-nas_native(builtin_pop);
-nas_native(builtin_str);
-nas_native(builtin_size);
-nas_native(builtin_i32xor);
-nas_native(builtin_i32and);
-nas_native(builtin_i32or);
-nas_native(builtin_i32nand);
-nas_native(builtin_i32not);
-nas_native(builtin_u32xor);
-nas_native(builtin_u32and);
-nas_native(builtin_u32or);
-nas_native(builtin_u32nand);
-nas_native(builtin_u32not);
-nas_native(builtin_pow);
-nas_native(builtin_sin);
-nas_native(builtin_cos);
-nas_native(builtin_tan);
-nas_native(builtin_exp);
-nas_native(builtin_lg);
-nas_native(builtin_ln);
-nas_native(builtin_sqrt);
-nas_native(builtin_atan2);
-nas_native(builtin_isnan);
-nas_native(builtin_time);
-nas_native(builtin_contains);
-nas_native(builtin_delete);
-nas_native(builtin_keys);
-nas_native(builtin_die);
-nas_native(builtin_find);
-nas_native(builtin_type);
-nas_native(builtin_substr);
-nas_native(builtin_streq);
-nas_native(builtin_left);
-nas_native(builtin_right);
-nas_native(builtin_cmp);
-nas_native(builtin_chr);
-nas_native(builtin_values);
-nas_native(builtin_open);
-nas_native(builtin_close);
-nas_native(builtin_read);
-nas_native(builtin_write);
-nas_native(builtin_seek);
-nas_native(builtin_tell);
-nas_native(builtin_readln);
-nas_native(builtin_stat);
-nas_native(builtin_eof);
-nas_native(builtin_fld);
-nas_native(builtin_sfld);
-nas_native(builtin_setfld);
-nas_native(builtin_buf);
-nas_native(builtin_sleep);
-nas_native(builtin_pipe);
-nas_native(builtin_fork);
-nas_native(builtin_waitpid);
-nas_native(builtin_opendir);
-nas_native(builtin_readdir);
-nas_native(builtin_closedir);
-nas_native(builtin_chdir);
-nas_native(builtin_environ);
-nas_native(builtin_getcwd);
-nas_native(builtin_getenv);
-nas_native(builtin_dlopen);
-nas_native(builtin_dlsym);
-nas_native(builtin_dlclose);
-nas_native(builtin_dlcall);
-nas_native(builtin_platform);
-nas_native(builtin_gc);
-nas_native(builtin_md5);
-nas_native(builtin_cocreate);
-nas_native(builtin_coresume);
-nas_native(builtin_coyield);
-nas_native(builtin_costatus);
-nas_native(builtin_corun);
-nas_native(builtin_millisec);
-nas_native(builtin_sysargv);
-nas_native(builtin_logtime);
+#define native(name) nasal_ref name(nasal_ref*,nasal_gc&)
+native(builtin_print);
+native(builtin_println);
+native(builtin_abort);
+native(builtin_append);
+native(builtin_setsize);
+native(builtin_system);
+native(builtin_input);
+native(builtin_fin);
+native(builtin_fout);
+native(builtin_split);
+native(builtin_rand);
+native(builtin_id);
+native(builtin_int);
+native(builtin_floor);
+native(builtin_num);
+native(builtin_pop);
+native(builtin_str);
+native(builtin_size);
+native(builtin_i32xor);
+native(builtin_i32and);
+native(builtin_i32or);
+native(builtin_i32nand);
+native(builtin_i32not);
+native(builtin_u32xor);
+native(builtin_u32and);
+native(builtin_u32or);
+native(builtin_u32nand);
+native(builtin_u32not);
+native(builtin_pow);
+native(builtin_sin);
+native(builtin_cos);
+native(builtin_tan);
+native(builtin_exp);
+native(builtin_lg);
+native(builtin_ln);
+native(builtin_sqrt);
+native(builtin_atan2);
+native(builtin_isnan);
+native(builtin_time);
+native(builtin_contains);
+native(builtin_delete);
+native(builtin_keys);
+native(builtin_die);
+native(builtin_find);
+native(builtin_type);
+native(builtin_substr);
+native(builtin_streq);
+native(builtin_left);
+native(builtin_right);
+native(builtin_cmp);
+native(builtin_chr);
+native(builtin_values);
+native(builtin_open);
+native(builtin_close);
+native(builtin_read);
+native(builtin_write);
+native(builtin_seek);
+native(builtin_tell);
+native(builtin_readln);
+native(builtin_stat);
+native(builtin_eof);
+native(builtin_fld);
+native(builtin_sfld);
+native(builtin_setfld);
+native(builtin_buf);
+native(builtin_sleep);
+native(builtin_pipe);
+native(builtin_fork);
+native(builtin_waitpid);
+native(builtin_opendir);
+native(builtin_readdir);
+native(builtin_closedir);
+native(builtin_chdir);
+native(builtin_environ);
+native(builtin_getcwd);
+native(builtin_getenv);
+native(builtin_dlopen);
+native(builtin_dlsym);
+native(builtin_dlclose);
+native(builtin_dlcall);
+native(builtin_platform);
+native(builtin_gc);
+native(builtin_md5);
+native(builtin_cocreate);
+native(builtin_coresume);
+native(builtin_coyield);
+native(builtin_costatus);
+native(builtin_corun);
+native(builtin_millisec);
+native(builtin_sysargv);
+native(builtin_logtime);
 
-nasal_ref builtin_err(const char* func_name,const std::string& info)
+nasal_ref builtin_err(const std::string& errfunc,const std::string& info)
 {
-    std::cerr<<"[vm] "<<func_name<<": "<<info<<".\n";
+    std::cerr<<"[vm] "<<errfunc<<": "<<info<<".\n";
     return {vm_none};
 }
 
@@ -115,98 +114,98 @@ struct
     nasal_ref (*func)(nasal_ref*,nasal_gc&);
 } builtin[]=
 {
-    {"__builtin_print",   builtin_print   },
-    {"__builtin_println", builtin_println },
-    {"__builtin_abort",   builtin_abort   },
-    {"__builtin_append",  builtin_append  },
-    {"__builtin_setsize", builtin_setsize },
-    {"__builtin_system",  builtin_system  },
-    {"__builtin_input",   builtin_input   },
-    {"__builtin_fin",     builtin_fin     },
-    {"__builtin_fout",    builtin_fout    },
-    {"__builtin_split",   builtin_split   },
-    {"__builtin_rand",    builtin_rand    },
-    {"__builtin_id",      builtin_id      },
-    {"__builtin_int",     builtin_int     },
-    {"__builtin_floor",   builtin_floor   },
-    {"__builtin_num",     builtin_num     },
-    {"__builtin_pop",     builtin_pop     },
-    {"__builtin_str",     builtin_str     },
-    {"__builtin_size",    builtin_size    },
-    {"__builtin_i32xor",  builtin_i32xor  },
-    {"__builtin_i32and",  builtin_i32and  },
-    {"__builtin_i32or",   builtin_i32or   },
-    {"__builtin_i32nand", builtin_i32nand },
-    {"__builtin_i32not",  builtin_i32not  },
-    {"__builtin_u32xor",  builtin_u32xor  },
-    {"__builtin_u32and",  builtin_u32and  },
-    {"__builtin_u32or",   builtin_u32or   },
-    {"__builtin_u32nand", builtin_u32nand },
-    {"__builtin_u32not",  builtin_u32not  },
-    {"__builtin_pow",     builtin_pow     },
-    {"__builtin_sin",     builtin_sin     },
-    {"__builtin_cos",     builtin_cos     },
-    {"__builtin_tan",     builtin_tan     },
-    {"__builtin_exp",     builtin_exp     },
-    {"__builtin_lg",      builtin_lg      },
-    {"__builtin_ln",      builtin_ln      },
-    {"__builtin_sqrt",    builtin_sqrt    },
-    {"__builtin_atan2",   builtin_atan2   },
-    {"__builtin_isnan",   builtin_isnan   },
-    {"__builtin_time",    builtin_time    },
-    {"__builtin_contains",builtin_contains},
-    {"__builtin_delete",  builtin_delete  },
-    {"__builtin_keys",    builtin_keys    },
-    {"__builtin_die",     builtin_die     },
-    {"__builtin_find",    builtin_find    },
-    {"__builtin_type",    builtin_type    },
-    {"__builtin_substr",  builtin_substr  },
-    {"__builtin_streq",   builtin_streq   },
-    {"__builtin_left",    builtin_left    },
-    {"__builtin_right",   builtin_right   },
-    {"__builtin_cmp",     builtin_cmp     },
-    {"__builtin_chr",     builtin_chr     },
-    {"__builtin_values",  builtin_values  },
-    {"__builtin_open",    builtin_open    },
-    {"__builtin_close",   builtin_close   },
-    {"__builtin_read",    builtin_read    },
-    {"__builtin_write",   builtin_write   },
-    {"__builtin_seek",    builtin_seek    },
-    {"__builtin_tell",    builtin_tell    },
-    {"__builtin_readln",  builtin_readln  },
-    {"__builtin_stat",    builtin_stat    },
-    {"__builtin_eof",     builtin_eof     },
-    {"__builtin_fld",     builtin_fld     },
-    {"__builtin_sfld",    builtin_sfld    },
-    {"__builtin_setfld",  builtin_setfld  },
-    {"__builtin_buf",     builtin_buf     },
-    {"__builtin_sleep",   builtin_sleep   },
-    {"__builtin_pipe",    builtin_pipe    },
-    {"__builtin_fork",    builtin_fork    },
-    {"__builtin_waitpid", builtin_waitpid },
-    {"__builtin_opendir", builtin_opendir },
-    {"__builtin_readdir", builtin_readdir },
-    {"__builtin_closedir",builtin_closedir},
-    {"__builtin_chdir",   builtin_chdir   },
-    {"__builtin_environ", builtin_environ },
-    {"__builtin_getcwd",  builtin_getcwd  },
-    {"__builtin_getenv",  builtin_getenv  },
-    {"__builtin_dlopen",  builtin_dlopen  },
-    {"__builtin_dlsym",   builtin_dlsym   },
-    {"__builtin_dlclose", builtin_dlclose },
-    {"__builtin_dlcall",  builtin_dlcall  },
-    {"__builtin_platform",builtin_platform},
-    {"__builtin_gc",      builtin_gc      },
-    {"__builtin_md5",     builtin_md5     },
-    {"__builtin_cocreate",builtin_cocreate},
-    {"__builtin_coresume",builtin_coresume},
-    {"__builtin_coyield", builtin_coyield },
-    {"__builtin_costatus",builtin_costatus},
-    {"__builtin_corun"   ,builtin_corun   },
-    {"__builtin_millisec",builtin_millisec},
-    {"__builtin_sysargv", builtin_sysargv },
-    {"__builtin_logtime", builtin_logtime },
-    {nullptr,             nullptr         }
+    {"__print",   builtin_print   },
+    {"__println", builtin_println },
+    {"__abort",   builtin_abort   },
+    {"__append",  builtin_append  },
+    {"__setsize", builtin_setsize },
+    {"__system",  builtin_system  },
+    {"__input",   builtin_input   },
+    {"__fin",     builtin_fin     },
+    {"__fout",    builtin_fout    },
+    {"__split",   builtin_split   },
+    {"__rand",    builtin_rand    },
+    {"__id",      builtin_id      },
+    {"__int",     builtin_int     },
+    {"__floor",   builtin_floor   },
+    {"__num",     builtin_num     },
+    {"__pop",     builtin_pop     },
+    {"__str",     builtin_str     },
+    {"__size",    builtin_size    },
+    {"__i32xor",  builtin_i32xor  },
+    {"__i32and",  builtin_i32and  },
+    {"__i32or",   builtin_i32or   },
+    {"__i32nand", builtin_i32nand },
+    {"__i32not",  builtin_i32not  },
+    {"__u32xor",  builtin_u32xor  },
+    {"__u32and",  builtin_u32and  },
+    {"__u32or",   builtin_u32or   },
+    {"__u32nand", builtin_u32nand },
+    {"__u32not",  builtin_u32not  },
+    {"__pow",     builtin_pow     },
+    {"__sin",     builtin_sin     },
+    {"__cos",     builtin_cos     },
+    {"__tan",     builtin_tan     },
+    {"__exp",     builtin_exp     },
+    {"__lg",      builtin_lg      },
+    {"__ln",      builtin_ln      },
+    {"__sqrt",    builtin_sqrt    },
+    {"__atan2",   builtin_atan2   },
+    {"__isnan",   builtin_isnan   },
+    {"__time",    builtin_time    },
+    {"__contains",builtin_contains},
+    {"__delete",  builtin_delete  },
+    {"__keys",    builtin_keys    },
+    {"__die",     builtin_die     },
+    {"__find",    builtin_find    },
+    {"__type",    builtin_type    },
+    {"__substr",  builtin_substr  },
+    {"__streq",   builtin_streq   },
+    {"__left",    builtin_left    },
+    {"__right",   builtin_right   },
+    {"__cmp",     builtin_cmp     },
+    {"__chr",     builtin_chr     },
+    {"__values",  builtin_values  },
+    {"__open",    builtin_open    },
+    {"__close",   builtin_close   },
+    {"__read",    builtin_read    },
+    {"__write",   builtin_write   },
+    {"__seek",    builtin_seek    },
+    {"__tell",    builtin_tell    },
+    {"__readln",  builtin_readln  },
+    {"__stat",    builtin_stat    },
+    {"__eof",     builtin_eof     },
+    {"__fld",     builtin_fld     },
+    {"__sfld",    builtin_sfld    },
+    {"__setfld",  builtin_setfld  },
+    {"__buf",     builtin_buf     },
+    {"__sleep",   builtin_sleep   },
+    {"__pipe",    builtin_pipe    },
+    {"__fork",    builtin_fork    },
+    {"__waitpid", builtin_waitpid },
+    {"__opendir", builtin_opendir },
+    {"__readdir", builtin_readdir },
+    {"__closedir",builtin_closedir},
+    {"__chdir",   builtin_chdir   },
+    {"__environ", builtin_environ },
+    {"__getcwd",  builtin_getcwd  },
+    {"__getenv",  builtin_getenv  },
+    {"__dlopen",  builtin_dlopen  },
+    {"__dlsym",   builtin_dlsym   },
+    {"__dlclose", builtin_dlclose },
+    {"__dlcall",  builtin_dlcall  },
+    {"__platform",builtin_platform},
+    {"__gc",      builtin_gc      },
+    {"__md5",     builtin_md5     },
+    {"__cocreate",builtin_cocreate},
+    {"__coresume",builtin_coresume},
+    {"__coyield", builtin_coyield },
+    {"__costatus",builtin_costatus},
+    {"__corun"   ,builtin_corun   },
+    {"__millisec",builtin_millisec},
+    {"__sysargv", builtin_sysargv },
+    {"__logtime", builtin_logtime },
+    {nullptr,     nullptr         }
 };
 
 inline void print_core(std::vector<nasal_ref>& elems)
@@ -347,7 +346,7 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
         pos=s.find(deli,last);
     }
     if(last!=s.length())
-        vec.push_back(gc.newstr(s.substr(last,s.length()-1)));
+        vec.push_back(gc.newstr(s.substr(last)));
     gc.temp=nil;
     return res;
 }
