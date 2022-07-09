@@ -6,6 +6,7 @@ libfib.so: fib.cpp
 libfib.dll: fib.cpp
 	g++ -c -O3 fib.cpp -fPIC -o fib.o
 	g++ -shared -o libfib.dll fib.o
+	del fib.o
 
 libkey.so: keyboard.cpp
 	clang++ -c -O3 keyboard.cpp -fPIC -o keyboard.o
@@ -14,6 +15,7 @@ libkey.so: keyboard.cpp
 libkey.dll: keyboard.cpp
 	g++ -c -O3 keyboard.cpp -fPIC -o keyboard.o -static
 	g++ -shared -o libkey.dll keyboard.o -static
+	del keyboard.o
 
 libnasock.so: nasocket.cpp
 	clang++ -c -O3 nasocket.cpp -fPIC -o nasocket.o
@@ -22,9 +24,10 @@ libnasock.so: nasocket.cpp
 libnasock.dll: nasocket.cpp
 	g++ -c -O3 nasocket.cpp -fPIC -o nasocket.o -lwsock32 -static
 	g++ -shared -o libnasock.dll nasocket.o -lwsock32 -static
+	del nasocket.o
 
 clean:
-	rm *.o *.so *.dll *.dylib
+	rm *.so *.dll *.dylib
 all: libfib.so libkey.so libnasock.so
 	@ echo "build done"
 mingw-all: libfib.dll libkey.dll libnasock.dll

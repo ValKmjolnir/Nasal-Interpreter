@@ -43,7 +43,7 @@ protected:
     void upval_state();
     void detail();
     void opcallsort(const uint64_t*);
-    void die(std::string);
+    void die(const std::string&);
     /* vm calculation functions*/
     bool condition(nasal_ref);
     /* vm operands */
@@ -154,69 +154,41 @@ void nasal_vm::init(
 void nasal_vm::valinfo(nasal_ref& val)
 {
     const nasal_val* p=val.value.gcobj;
-    printf("\t");
+    std::cout<<"\t";
     switch(val.type)
     {
-        case vm_none: printf("| null |\n");break;
-        case vm_ret:  printf("| pc   | 0x%x\n",val.ret());break;
-        case vm_addr: printf("| addr | 0x" PRTHEX64 "\n",(uint64_t)val.addr());break;
-        case vm_cnt:  printf("| cnt  | " PRTINT64 "\n",val.cnt());break;
-        case vm_nil:  printf("| nil  |\n");break;
-        case vm_num:  printf("| num  | ");std::cout<<val.num()<<'\n';break;
-        case vm_str:  printf("| str  | <0x" PRTHEX64 "> %s\n",(uint64_t)p,rawstr(val.str(),16).c_str());break;
-        case vm_func: printf("| func | <0x" PRTHEX64 "> entry:0x%x\n",(uint64_t)p,val.func().entry);break;
-        case vm_upval:printf("| upval| <0x" PRTHEX64 "> [%u val]\n",(uint64_t)p,val.upval().size);break;
-        case vm_vec:  printf("| vec  | <0x" PRTHEX64 "> [%zu val]\n",(uint64_t)p,val.vec().size());break;
-        case vm_hash: printf("| hash | <0x" PRTHEX64 "> {%zu val}\n",(uint64_t)p,val.hash().size());break;
-        case vm_obj:  printf("| obj  | <0x" PRTHEX64 "> obj:0x" PRTHEX64 "\n",(uint64_t)p,(uint64_t)val.obj().ptr);break;
-        case vm_co:   printf("| co   | <0x" PRTHEX64 "> coroutine\n",(uint64_t)p);break;
-        default:      printf("| err  | <0x" PRTHEX64 "> unknown object\n",(uint64_t)p);break;
+        case vm_none: std::cout<<"| null |";break;
+        case vm_ret:  std::cout<<"| pc   | 0x"<<std::hex
+                               <<val.ret()<<std::dec;break;
+        case vm_addr: std::cout<<"| addr | "<<std::hex
+                               <<(void*)val.addr()<<std::dec;break;
+        case vm_cnt:  std::cout<<"| cnt  | "<<val.cnt();break;
+        case vm_nil:  std::cout<<"| nil  |";break;
+        case vm_num:  std::cout<<"| num  | "<<val.num();break;
+        case vm_str:  std::cout<<"| str  | <"<<std::hex<<p<<"> "
+                               <<rawstr(val.str(),16)<<std::dec;break;
+        case vm_func: std::cout<<"| func | <"<<std::hex<<p<<"> entry:0x"
+                               <<val.func().entry<<std::dec;break;
+        case vm_upval:std::cout<<"| upval| <"<<std::hex<<p<<std::dec<<"> ["
+                               <<val.upval().size<<" val]";break;
+        case vm_vec:  std::cout<<"| vec  | <"<<std::hex<<p<<std::dec<<"> ["
+                               <<val.vec().size()<<" val]";break;
+        case vm_hash: std::cout<<"| hash | <"<<std::hex<<p<<std::dec<<"> {"
+                               <<val.hash().size()<<" val}";break;
+        case vm_obj:  std::cout<<"| obj  | <"<<std::hex<<p<<"> obj:0x"
+                               <<(uint64_t)val.obj().ptr<<std::dec;break;
+        case vm_co:   std::cout<<"| co   | <"<<std::hex<<p<<std::dec
+                               <<"> coroutine";break;
+        default:      std::cout<<"| err  | <"<<std::hex<<p<<std::dec
+                               <<"> unknown object";break;
     }
+    std::cout<<"\n";
 }
 void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 {
     const opcode& c=bytecode[p];
-    printf("%s0x%.8x:     %.2x %.2x %.2x %.2x %.2x      %s ",
-        header,p,c.op,
-        uint8_t((c.num>>24)&0xff),uint8_t((c.num>>16)&0xff),
-        uint8_t((c.num>>8)&0xff),uint8_t(c.num&0xff),
-        code_table[c.op].name
-    );
-    switch(c.op)
-    {
-        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
-        case op_lnkeq: case op_meq:
-            printf("0x%x sp-%u",c.num,c.num);break;
-        case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            printf("0x%x (",c.num&0x7fffffff);
-            std::cout<<num_table[c.num&0x7fffffff]<<") sp-"<<(c.num>>31);
-            break;
-        case op_lnkeqc:
-            printf("0x%x (\"%s\") sp-%u",c.num&0x7fffffff,rawstr(str_table[c.num&0x7fffffff],16).c_str(),c.num>>31);
-            break;
-        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
-        case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
-        case op_pnum:
-            printf("0x%x (",c.num);std::cout<<num_table[c.num]<<")";break;
-        case op_callvi:case op_newv:   case op_callfv:
-        case op_intg:  case op_intl:
-        case op_newf:  case op_jmp:    case op_jt:    case op_jf:
-        case op_callg: case op_mcallg: case op_loadg:
-        case op_calll: case op_mcalll: case op_loadl:
-            printf("0x%x",c.num);break;
-        case op_callb:
-            printf("0x%x <%s@0x" PRTHEX64 ">",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
-        case op_upval: case op_mupval: case op_loadu:
-            printf("0x%x[0x%x]",(c.num>>16)&0xffff,c.num&0xffff);break;
-        case op_happ:  case op_pstr:
-        case op_lnkc:
-        case op_callh: case op_mcallh:
-        case op_para:  case op_deft:   case op_dyn:
-            printf("0x%x (\"%s\")",c.num,rawstr(str_table[c.num],16).c_str());
-            break;
-        default:printf("0x%x",c.num);break;
-    }
-    printf(" (%s:%u)\n",files[c.fidx].c_str(),c.line);
+    c.print(header,num_table,str_table,p,true);
+    std::cout<<" ("<<files[c.fidx]<<":"<<c.line<<")\n";
 }
 void nasal_vm::traceback()
 {
@@ -229,7 +201,7 @@ void nasal_vm::traceback()
             ret.push(i->ret());
     // push pc to ret stack to store the position program crashed
     ret.push(pc);
-    printf("trace back:\n");
+    std::cout<<"trace back:\n";
     uint32_t same=0,last=0xffffffff;
     for(uint32_t point=0;!ret.empty();last=point,ret.pop())
     {
@@ -239,12 +211,14 @@ void nasal_vm::traceback()
             continue;
         }
         if(same)
-            printf("\t0x%.8x:     %u same call(s)\n",last,same);
+            std::cout<<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
+                     <<last<<std::dec<<":       "<<same<<" same call(s)\n";
         same=0;
-        bytecodeinfo("\t",point);
+        bytecodeinfo("  ",point);
     }
     if(same)
-        printf("\t0x%.8x:     %u same call(s)\n",last,same);
+        std::cout<<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
+                 <<last<<std::dec<<":       "<<same<<" same call(s)\n";
 }
 void nasal_vm::stackinfo(const uint32_t limit=10)
 {
@@ -252,49 +226,41 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     uint32_t   gsize=gc.stack==stack?bytecode[0].num:0;
     nasal_ref* t=top;
     nasal_ref* bottom=gc.stack+gsize;
-    printf("vm stack(0x" PRTHEX64 "<sp+%u>, limit %u, total ",(uint64_t)bottom,gsize,limit);
+    std::cout<<"vm stack(0x"<<std::hex<<(uint64_t)bottom<<std::dec
+             <<"<sp+"<<gsize<<">, limit "<<limit<<", total "
+             <<(t<bottom? 0:(int64_t)(t-bottom+1))<<")\n";
     if(t<bottom)
-    {
-        printf("0)\n");
         return;
-    }
-    printf("" PRTINT64 "):\n",(int64_t)(t-bottom+1));
     for(uint32_t i=0;i<limit && t>=bottom;++i,--t)
     {
-        printf("  0x" PRTHEX64_8 "",(uint64_t)(t-gc.stack));
+        std::cout<<"  0x"<<std::hex
+                 <<std::setw(8)<<std::setfill('0')
+                 <<(uint64_t)(t-gc.stack)<<std::dec;
         valinfo(t[0]);
     }
 }
 void nasal_vm::register_info()
 {
-    printf("registers(%s):\n",gc.coroutine?"coroutine":"main");
-    printf("  [ pc     ]    | pc   | 0x%x\n",pc);
-    printf("  [ global ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)stack);
-    printf("  [ localr ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)localr);
-    printf("  [ memr   ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)memr);
-    if(funcr.type==vm_nil)
-        printf("  [ funcr  ]    | nil  |\n");
-    else
-        printf("  [ funcr  ]    | func | <0x" PRTHEX64 "> entry:0x%x\n",
-            (uint64_t)funcr.value.gcobj,
-            funcr.func().entry);
-    if(upvalr.type==vm_nil)
-        printf("  [ upvalr ]    | nil  |\n");
-    else
-        printf("  [ upvalr ]    | upval| <0x" PRTHEX64 "> [%u val]\n",
-            (uint64_t)upvalr.value.gcobj,
-            upvalr.upval().size);
-    printf("  [ canary ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)canary);
-    printf("  [ top    ]    | addr | 0x" PRTHEX64 "\n",(uint64_t)top);
+    std::cout<<"registers("<<(gc.coroutine?"coroutine":"main")<<")\n"<<std::hex
+             <<"  [ pc     ]    | pc   | 0x"<<pc<<"\n"
+             <<"  [ global ]    | addr | "<<stack<<"\n"
+             <<"  [ localr ]    | addr | "<<localr<<"\n"
+             <<"  [ memr   ]    | addr | "<<memr<<"\n"
+             <<"  [ canary ]    | addr | "<<canary<<"\n"
+             <<"  [ top    ]    | addr | "<<top<<"\n"
+             <<std::dec;
+    std::cout<<"  [ funcr  ]";valinfo(funcr);
+    std::cout<<"  [ upvalr ]";valinfo(upvalr);
 }
 void nasal_vm::global_state()
 {
     if(!bytecode[0].num || stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
-    printf("global(0x" PRTHEX64 "<sp+0>):\n",(uint64_t)stack);
+    std::cout<<"global(0x"<<std::hex<<(uint64_t)stack<<"<sp+0>)\n"<<std::dec;
     for(uint32_t i=0;i<bytecode[0].num;++i)
     {
-        printf("  0x%.8x",i);
+        std::cout<<"  0x"<<std::hex<<std::setw(8)
+                 <<std::setfill('0')<<i<<std::dec;
         valinfo(stack[i]);
     }
 }
@@ -303,10 +269,12 @@ void nasal_vm::local_state()
     if(!localr || !funcr.func().lsize)
         return;
     const uint32_t lsize=funcr.func().lsize;
-    printf("local(0x" PRTHEX64 "<sp+" PRTINT64 ">):\n",(uint64_t)localr,(int64_t)(localr-gc.stack));
+    std::cout<<"local(0x"<<std::hex<<(uint64_t)localr
+             <<"<sp+"<<(uint64_t)(localr-gc.stack)<<">)\n"<<std::dec;
     for(uint32_t i=0;i<lsize;++i)
     {
-        printf("  0x%.8x",i);
+        std::cout<<"  0x"<<std::hex<<std::setw(8)
+                 <<std::setfill('0')<<i<<std::dec;
         valinfo(localr[i]);
     }
 }
@@ -314,15 +282,16 @@ void nasal_vm::upval_state()
 {
     if(funcr.type==vm_nil || funcr.func().upvalue.empty())
         return;
-    printf("upvalue:\n");
+    std::cout<<"upvalue\n";
     auto& upval=funcr.func().upvalue;
     for(uint32_t i=0;i<upval.size();++i)
     {
-        printf("  -> upval[%u]:\n",i);
+        std::cout<<"  -> upval["<<i<<"]:\n";
         auto& uv=upval[i].upval();
         for(uint32_t j=0;j<uv.size;++j)
         {
-            printf("     0x%.8x",j);
+            std::cout<<"     0x"<<std::hex<<std::setw(8)
+                     <<std::setfill('0')<<j<<std::dec;
             valinfo(uv[j]);
         }
     }
@@ -353,7 +322,8 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     {
         uint64_t rate=i.second*100/total;
         if(rate)
-            std::cout<<"\n "<<code_table[i.first].name<<" : "<<i.second<<" ("<<rate<<"%)";
+            std::cout<<"\n "<<code_table[i.first].name
+                     <<" : "<<i.second<<" ("<<rate<<"%)";
         else
         {
             std::cout<<"\n ...";
@@ -362,9 +332,9 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     }
     std::cout<<"\n total  : "<<total<<'\n';
 }
-void nasal_vm::die(std::string str)
+void nasal_vm::die(const std::string& str)
 {
-    printf("[vm] %s\n",str.c_str());
+    std::cout<<"[vm] "<<str<<"\n";
     traceback();
     stackinfo();
     if(detail_info)
@@ -406,7 +376,8 @@ inline void nasal_vm::opr_loadl()
 }
 inline void nasal_vm::opr_loadu()
 {
-    funcr.func().upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]=(top--)[0];
+    funcr.func().upvalue[(imm[pc]>>16)&0xffff]
+         .upval()[imm[pc]&0xffff]=(top--)[0];
 }
 inline void nasal_vm::opr_pnum()
 {
@@ -461,14 +432,16 @@ inline void nasal_vm::opr_happ()
 inline void nasal_vm::opr_para()
 {
     nasal_func& func=top[0].func();
-    func.keys[str_table[imm[pc]]]=func.psize;// func->size has 1 place reserved for "me"
+    // func->size has 1 place reserved for "me"
+    func.keys[str_table[imm[pc]]]=func.psize;
     func.local[func.psize++]={vm_none};
 }
 inline void nasal_vm::opr_deft()
 {
     nasal_ref val=top[0];
     nasal_func& func=(--top)[0].func();
-    func.keys[str_table[imm[pc]]]=func.psize;// func->size has 1 place reserved for "me"
+    // func->size has 1 place reserved for "me"
+    func.keys[str_table[imm[pc]]]=func.psize;
     func.local[func.psize++]=val;
 }
 inline void nasal_vm::opr_dyn()
@@ -669,7 +642,8 @@ inline void nasal_vm::opr_calll()
 }
 inline void nasal_vm::opr_upval()
 {
-    (++top)[0]=funcr.func().upvalue[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff];
+    (++top)[0]=funcr.func().upvalue[(imm[pc]>>16)&0xffff]
+                    .upval()[imm[pc]&0xffff];
 }
 inline void nasal_vm::opr_callv()
 {
@@ -738,10 +712,11 @@ inline void nasal_vm::opr_callfv()
     nasal_ref tmp=local[-1];
     local[-1]=funcr;
     funcr=tmp;
-    if(top-argc+func.lsize+3>=canary) // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
+    // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
+    if(top-argc+func.lsize+3>=canary)
         die("stack overflow");
-
-    uint32_t psize=func.psize-1; // parameter size is func->psize-1, 1 is reserved for "me"
+    // parameter size is func->psize-1, 1 is reserved for "me"
+    uint32_t psize=func.psize-1;
     if(argc<psize && func.local[argc+1].type==vm_none)
         die("callfv: lack argument(s)");
 
@@ -779,7 +754,8 @@ inline void nasal_vm::opr_callfh()
     nasal_ref tmp=top[-1];
     top[-1]=funcr;
     funcr=tmp;
-    if(top+func.lsize+2>=canary) // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
+    // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
+    if(top+func.lsize+2>=canary)
         die("stack overflow");
     if(func.dynpara>=0)
         die("callfh: special call cannot use dynamic argument");
@@ -901,7 +877,7 @@ inline void nasal_vm::opr_mcallv()
         if(!memr)
             die("mcallv: index out of range:"+std::to_string(val.tonum()));
     }
-    else if(vec.type==vm_hash) // special call of hash, this do mcallh but use the mcallv way
+    else if(vec.type==vm_hash) // do mcallh but use the mcallv way
     {
         if(val.type!=vm_str)
             die("mcallv: must use string as the key");
@@ -1027,7 +1003,13 @@ vmexit:
     imm.clear();
     return;
 // may cause stackoverflow
-#define exec_operand(op,num) {op();++count[num];if(top<canary)goto *code[++pc];goto vmexit;}
+#define exec_operand(op,num) {\
+        op();\
+        ++count[num];\
+        if(top<canary)\
+            goto *code[++pc];\
+        goto vmexit;\
+    }
 // do not cause stackoverflow
 #define exec_opnodie(op,num) {op();++count[num];goto *code[++pc];}
 

@@ -84,16 +84,16 @@ void nasal_dbg::stepinfo()
     uint32_t begin,end;
     uint32_t line=bytecode[pc].line==0?0:bytecode[pc].line-1;
     src.load(files[bytecode[pc].fidx]);
-    printf("\nsource code:\n");
+    std::cout<<"\nsource code:\n";
     begin=(line>>3)==0?0:((line>>3)<<3);
     end=(1+(line>>3))<<3;
     for(uint32_t i=begin;i<end && i<src.size();++i)
-        printf("%s\t%s\n",i==line?"-->":"   ",src[i].c_str());
-    printf("next bytecode:\n");
+        std::cout<<(i==line?"-->  ":"     ")<<src[i]<<"\n";
+    std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
     for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
-        bytecodeinfo(i==pc?"-->\t":"   \t",i);
+        bytecodeinfo(i==pc?"-->  ":"     ",i);
     stackinfo(10);
 }
 
@@ -119,7 +119,7 @@ void nasal_dbg::interact()
     stepinfo();
     while(1)
     {
-        printf(">> ");
+        std::cout<<">> ";
         std::getline(std::cin,cmd);
         auto res=parse(cmd);
         if(res.size()==1)
@@ -132,7 +132,7 @@ void nasal_dbg::interact()
                 return;
             else if(res[0]=="f" || res[0]=="file")
                 for(size_t i=0;i<fsize;++i)
-                    printf("[%zu] %s\n",i,files[i].c_str());
+                    std::cout<<"["<<i<<"] "<<files[i]<<"\n";
             else if(res[0]=="g" || res[0]=="global")
                 global_state();
             else if(res[0]=="l" || res[0]=="local"){
@@ -159,12 +159,12 @@ void nasal_dbg::interact()
             bk_fidx=fileindex(res[1]);
             if(bk_fidx==65535)
             {
-                printf("cannot find file named \"%s\"\n",res[1].c_str());
+                std::cout<<"cannot find file named `"<<res[1]<<"`\n";
                 bk_fidx=0;
             }
             int tmp=atoi(res[2].c_str());
             if(tmp<=0)
-                printf("incorrect line number \"%s\"\n",res[2].c_str());
+                std::cout<<"incorrect line number `"<<res[2]<<"`\n";
             else
                 bk_line=tmp;
         }
@@ -217,7 +217,7 @@ vmexit:
         die("stack overflow");
     gc.clear();
     imm.clear();
-    printf("[debug] debugger exited\n");
+    std::cout<<"[debug] debugger exited\n";
     return;
 #define dbg(op) {interact();op();if(top<canary)goto *code[++pc];goto vmexit;}
 

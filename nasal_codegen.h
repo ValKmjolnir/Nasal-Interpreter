@@ -180,7 +180,66 @@ struct opcode
         line=tmp.line;
         return *this;
     }
+    void print(const char*,
+               const double*,
+               const std::string*,
+               const uint32_t,bool) const;
 };
+
+void opcode::print(const char* header,
+                   const double* constnum,
+                   const std::string* conststr,
+                   const uint32_t index,
+                   bool deftnum=false) const
+{
+    std::cout<<header<<std::hex<<"0x"
+             <<std::setw(8)<<std::setfill('0')<<index<<":       "
+             <<std::setw(2)<<std::setfill('0')<<(uint32_t)op<<" "
+             <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
+             <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
+             <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
+             <<std::setw(2)<<std::setfill('0')<<(num&0xff)
+             <<"        "<<code_table[op].name<<"  "<<std::dec;
+    switch(op)
+    {
+        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
+        case op_lnkeq: case op_meq:
+            std::cout<<std::hex<<"0x"<<num<<std::dec
+                     <<" sp-"<<num;break;
+        case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
+            std::cout<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec
+                     <<" ("<<constnum[num&0x7fffffff]<<") sp-"
+                     <<(num>>31);break;
+        case op_lnkeqc:
+            std::cout<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec<<" (\""
+                     <<rawstr(conststr[num&0x7fffffff],16)<<"\") sp-"
+                     <<(num>>31);break;
+        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
+        case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
+        case op_pnum:
+            std::cout<<std::hex<<"0x"<<num<<std::dec<<" ("
+                     <<constnum[num]<<")";break;
+        case op_callvi:case op_newv:   case op_callfv:
+        case op_intg:  case op_intl:
+        case op_newf:  case op_jmp:    case op_jt:    case op_jf:
+        case op_callg: case op_mcallg: case op_loadg:
+        case op_calll: case op_mcalll: case op_loadl:
+            std::cout<<std::hex<<"0x"<<num<<std::dec;break;
+        case op_callb:
+            std::cout<<std::hex<<"0x"<<num<<" <"<<builtin[num].name
+                     <<"@"<<(void*)builtin[num].func<<std::dec<<">";break;
+        case op_upval: case op_mupval: case op_loadu:
+            std::cout<<std::hex<<"0x"<<((num>>16)&0xffff)
+                     <<"[0x"<<(num&0xffff)<<"]"<<std::dec;break;
+        case op_happ:  case op_pstr:
+        case op_lnkc:
+        case op_callh: case op_mcallh:
+        case op_para:  case op_deft:   case op_dyn:
+            std::cout<<std::hex<<"0x"<<num<<std::dec
+                     <<" (\""<<rawstr(conststr[num],16)<<"\")";break;
+        default:if(deftnum)std::cout<<std::hex<<"0x"<<num<<std::dec;break;
+    }
+}
 
 class nasal_codegen
 {
@@ -245,10 +304,11 @@ private:
     void calc_gen(const nasal_ast&);
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
+
+    void singleop(const uint32_t);
 public:
     nasal_codegen(nasal_err& e):fileindex(0),nerr(e),file(nullptr){}
     void compile(const nasal_parse&,const nasal_import&);
-    void print_op(const uint32_t);
     void print();
     const std::vector<std::string>& get_strs() const {return str_res;}
     const std::vector<double>&      get_nums() const {return num_res;}
@@ -1237,21 +1297,21 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     nerr.chkerr();
 }
 
-void nasal_codegen::print_op(const uint32_t index)
+void nasal_codegen::singleop(const uint32_t index)
 {
     // print opcode index,opcode name,opcode immediate number
     const opcode& c=code[index];
     if(!festk.empty() && index==festk.top())
     {
-        printf("<0x%x>;\n",fbstk.top());
+        std::cout<<std::hex<<"<0x"<<fbstk.top()<<std::dec<<">;\n";
         if(code[index].op!=op_newf) // avoid two empty lines
-            printf("\n");
+            std::cout<<"\n";
         fbstk.pop();
         festk.pop();
     }
     if(c.op==op_newf)
     {
-        printf("\nfunc <0x%x>:\n",index);
+        std::cout<<std::hex<<"\nfunc <0x"<<index<<std::dec<<">:\n";
         for(uint32_t i=index;i<code.size();++i)
             if(code[i].op==op_jmp)
             {
@@ -1260,46 +1320,8 @@ void nasal_codegen::print_op(const uint32_t index)
                 break;
             }
     }
-    printf("  0x%.8x:       %.2x %.2x %.2x %.2x %.2x        %s  ",
-        index,c.op,
-        uint8_t((c.num>>24)&0xff),uint8_t((c.num>>16)&0xff),
-        uint8_t((c.num>>8)&0xff),uint8_t(c.num&0xff),
-        code_table[c.op].name
-    );
-    // print detail info
-    switch(c.op)
-    {
-        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
-        case op_lnkeq: case op_meq:
-            printf("0x%x sp-%u\n",c.num,c.num);break;
-        case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            printf("0x%x (",c.num&0x7fffffff);
-            std::cout<<num_res[c.num&0x7fffffff]<<") sp-"<<(c.num>>31)<<"\n";
-            break;
-        case op_lnkeqc:
-            printf("0x%x (\"%s\") sp-%u\n",c.num&0x7fffffff,rawstr(str_res[c.num&0x7fffffff],16).c_str(),c.num>>31);
-            break;
-        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
-        case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
-        case op_pnum:
-            printf("0x%x (",c.num);std::cout<<num_res[c.num]<<")\n";break;
-        case op_callvi:case op_newv:   case op_callfv:
-        case op_intg:  case op_intl:
-        case op_newf:  case op_jmp:    case op_jt:    case op_jf:
-        case op_callg: case op_mcallg: case op_loadg:
-        case op_calll: case op_mcalll: case op_loadl:
-            printf("0x%x\n",c.num);break;
-        case op_callb:
-            printf("0x%x <%s@0x" PRTHEX64 ">\n",c.num,builtin[c.num].name,(uint64_t)builtin[c.num].func);break;
-        case op_upval:case op_mupval:  case op_loadu:
-            printf("0x%x[0x%x]\n",(c.num>>16)&0xffff,c.num&0xffff);break;
-        case op_happ:  case op_pstr:
-        case op_lnkc:
-        case op_callh: case op_mcallh:
-        case op_para:  case op_deft:   case op_dyn:
-            printf("0x%x (\"%s\")\n",c.num,rawstr(str_res[c.num],16).c_str());break;
-        default:printf("\n");break;
-    }
+    c.print("  ",num_res.data(),str_res.data(),index);
+    std::cout<<"\n";
 }
 
 void nasal_codegen::print()
@@ -1310,7 +1332,7 @@ void nasal_codegen::print()
         std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
     std::cout<<"\n";
     for(uint32_t i=0;i<code.size();++i)
-        print_op(i);
+        singleop(i);
 }
 
 #endif

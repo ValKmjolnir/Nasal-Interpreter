@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -33,16 +34,6 @@
 #else
 #include <dlfcn.h>
 #include <sys/wait.h>
-#endif
-
-#ifdef __linux__
-#define PRTHEX64   "%lx"
-#define PRTHEX64_8 "%.8lx"
-#define PRTINT64   "%ld"
-#else
-#define PRTHEX64   "%llx"
-#define PRTHEX64_8 "%.8llx"
-#define PRTINT64   "%lld"
 #endif
 
 const uint32_t STACK_DEPTH=2048;
