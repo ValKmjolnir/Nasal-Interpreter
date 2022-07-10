@@ -126,7 +126,7 @@ void nasal_parse::die(uint32_t line,std::string info,bool report_prev=false)
     int col=(int)tokens[ptr].col-(int)tokens[ptr].str.length();
     if(tokens[ptr].type==tok_str)
         col-=2; // tok_str's str has no \"
-    if(report_prev && ptr-1>=0) // used to report lack of ',' ';'
+    if(report_prev && ptr) // used to report lack of ',' ';'
     {
         line=tokens[ptr-1].line;
         col=tokens[ptr-1].col+1;

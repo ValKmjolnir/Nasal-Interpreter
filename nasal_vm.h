@@ -122,7 +122,10 @@ protected:
     void opr_mcallh();
     void opr_ret();
 public:
-    nasal_vm():gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
+    nasal_vm():pc(0),localr(nullptr),memr(nullptr),funcr(nil),
+               upvalr(nil),canary(nullptr),top(stack),
+               num_table(nullptr),str_table(nullptr),
+               gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
     void run(
         const nasal_codegen&,
         const nasal_import&,
