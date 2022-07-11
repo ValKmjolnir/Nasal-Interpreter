@@ -477,15 +477,8 @@ struct nasal_gc
         nasal_ref*& _canary,
         nasal_ref*& _top,
         nasal_ref* _stk):
-        pc(_pc),
-        localr(_localr),
-        memr(_memr),
-        funcr(_funcr),
-        upvalr(_upvalr),
-        canary(_canary),
-        top(_top),
-        stack(_stk),
-        temp(nil){}
+        pc(_pc),localr(_localr),memr(_memr),funcr(_funcr),upvalr(_upvalr),
+        canary(_canary),top(_top),stack(_stk),coroutine(nullptr),temp(nil){}
     void                    mark();
     void                    sweep();
     void                    init(const std::vector<std::string>&,const std::vector<std::string>&);

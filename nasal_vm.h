@@ -125,7 +125,8 @@ public:
     nasal_vm():pc(0),localr(nullptr),memr(nullptr),funcr(nil),
                upvalr(nil),canary(nullptr),top(stack),
                num_table(nullptr),str_table(nullptr),
-               gc(pc,localr,memr,funcr,upvalr,canary,top,stack){}
+               gc(pc,localr,memr,funcr,upvalr,canary,top,stack),
+               files(nullptr),bytecode(nullptr),detail_info(false){}
     void run(
         const nasal_codegen&,
         const nasal_import&,
@@ -785,11 +786,12 @@ inline void nasal_vm::opr_callfh()
 }
 inline void nasal_vm::opr_callb()
 {
-    // reserve place for builtin function return, in fact this code is changed because of coroutine
+    // reserve place for builtin function return,
+    // in fact this code is changed because of coroutine
     (++top)[0]=nil;
     // this ++top should not be used like: (++top)[0] here
     // because if running a builtin function about coroutine
-    // this (top) will be set to another context.top, instead of main_context.top
+    // (top) will be set to another context.top, instead of main_context.top
     top[0]=(*builtin[imm[pc]].func)(localr,gc);
     if(top[0].type==vm_none)
         die("native function error.");

@@ -20,7 +20,7 @@ private:
     void interact();
 public:
     nasal_dbg():
-        next_step(false),
+        next_step(false),fsize(0),
         bk_fidx(0),bk_line(0){}
     void run(
         const nasal_codegen&,
