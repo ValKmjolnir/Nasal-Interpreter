@@ -1367,7 +1367,9 @@ nasal_ref builtin_corun(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_millisec(nasal_ref* local,nasal_gc& gc)
 {
-    double res=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    double res=std::chrono::duration_cast<std::chrono::milliseconds>
+               (std::chrono::high_resolution_clock::now().time_since_epoch())
+               .count();
     return {vm_num,res};
 }
 nasal_ref builtin_sysargv(nasal_ref* local,nasal_gc& gc)
