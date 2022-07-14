@@ -21,11 +21,8 @@ var myers=func(src,dst,show_table=0){
 
     if(show_table){
         var curve=[
-            ["+---",
-            "|   "],
-            [
-            "+---",
-            "| \\ "]
+            ["+---","|   "],
+            ["+---","| \\ "]
         ];
         var s="";
         forindex(var y;dst){
@@ -41,9 +38,7 @@ var myers=func(src,dst,show_table=0){
         print(s~"+\n");
     }
 
-    var total=[];
-    var path=[];
-    var vec=[[0,0,-1]];
+    var (total,path,vec)=([],[],[[0,0,-1]]);
     visited[0]=1;
     while(size(vec)){
         append(total,vec);

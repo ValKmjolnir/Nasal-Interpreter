@@ -379,7 +379,7 @@ var math=
     pi:    3.14159265358979323846264338327950288,
     inf:   1/0,
     nan:   0/0,
-    abs:   func(x)  {return x>0?x:-x;            },
+    abs:   func(x)  {return x>0?x:-x;    },
     floor: func(x)  {return __floor(x);  },
     pow:   func(x,y){return __pow(x,y);  },
     sin:   func(x)  {return __sin(x);    },
@@ -391,8 +391,8 @@ var math=
     sqrt:  func(x)  {return __sqrt(x);   },
     atan2: func(x,y){return __atan2(x,y);},
     isnan: func(x)  {return __isnan(x);  },
-    max:   func(x,y){return x>y?x:y;             },
-    min:   func(x,y){return x<y?x:y;             }
+    max:   func(x,y){return x>y?x:y;     },
+    min:   func(x,y){return x<y?x:y;     }
 };
 
 var unix=
