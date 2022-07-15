@@ -291,7 +291,11 @@ std::string nasal_lexer::str_gen()
                 case '0': str+='\0';    break;
                 case 'a': str+='\a';    break;
                 case 'b': str+='\b';    break;
+#ifdef _MSC_VER
+                case 'e': str+='\033';  break;
+#else
                 case 'e': str+='\e';    break;
+#endif
                 case 't': str+='\t';    break;
                 case 'n': str+='\n';    break;
                 case 'v': str+='\v';    break;

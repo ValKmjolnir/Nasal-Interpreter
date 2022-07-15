@@ -2,7 +2,10 @@
 #define __NASAL_H__
 #define __nasver "10.0"
 
+#ifndef _MSC_VER
 #include <unistd.h>
+#include <dirent.h>
+#endif
 
 #include <cstdint>
 #include <cstdlib>
@@ -26,7 +29,6 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <sys/timeb.h>
 
 #ifdef _WIN32
@@ -160,7 +162,11 @@ std::string rawstr(const std::string& str,const size_t maxlen=0)
             case '\v': ret+="\\v"; break;
             case '\f': ret+="\\f"; break;
             case '\r': ret+="\\r"; break;
+#ifdef _MSC_VER
+            case '\033':ret+="\\e";break;
+#else
             case '\e': ret+="\\e"; break;
+#endif
             case '\"': ret+="\\\"";break;
             case '\'': ret+="\\\'";break;
             case '\\': ret+="\\\\";break;

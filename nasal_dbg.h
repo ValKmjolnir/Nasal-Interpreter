@@ -181,6 +181,7 @@ void nasal_dbg::run(
     detail_info=true;
     fsize=linker.get_file().size();
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
+#ifndef _MSC_VER
     const void* oprs[]=
     {
         &&vmexit, &&intg,   &&intl,   &&loadg,
@@ -211,6 +212,63 @@ void nasal_dbg::run(
     }
     // goto the first operand
     goto *code[pc];
+#else
+    typedef void (nasal_dbg::*nafunc)();
+    const nafunc oprs[]=
+    {
+        nullptr,                &nasal_dbg::opr_intg,
+        &nasal_dbg::opr_intl,   &nasal_dbg::opr_loadg,
+        &nasal_dbg::opr_loadl,  &nasal_dbg::opr_loadu,
+        &nasal_dbg::opr_pnum,   &nasal_dbg::opr_pnil,
+        &nasal_dbg::opr_pstr,   &nasal_dbg::opr_newv,
+        &nasal_dbg::opr_newh,   &nasal_dbg::opr_newf,
+        &nasal_dbg::opr_happ,   &nasal_dbg::opr_para,
+        &nasal_dbg::opr_deft,   &nasal_dbg::opr_dyn,
+        &nasal_dbg::opr_unot,   &nasal_dbg::opr_usub,
+        &nasal_dbg::opr_add,    &nasal_dbg::opr_sub,
+        &nasal_dbg::opr_mul,    &nasal_dbg::opr_div,
+        &nasal_dbg::opr_lnk,    &nasal_dbg::opr_addc,
+        &nasal_dbg::opr_subc,   &nasal_dbg::opr_mulc,
+        &nasal_dbg::opr_divc,   &nasal_dbg::opr_lnkc,
+        &nasal_dbg::opr_addeq,  &nasal_dbg::opr_subeq,
+        &nasal_dbg::opr_muleq,  &nasal_dbg::opr_diveq,
+        &nasal_dbg::opr_lnkeq,  &nasal_dbg::opr_addeqc,
+        &nasal_dbg::opr_subeqc, &nasal_dbg::opr_muleqc,
+        &nasal_dbg::opr_diveqc, &nasal_dbg::opr_lnkeqc,
+        &nasal_dbg::opr_meq,    &nasal_dbg::opr_eq,
+        &nasal_dbg::opr_neq,    &nasal_dbg::opr_less,
+        &nasal_dbg::opr_leq,    &nasal_dbg::opr_grt,
+        &nasal_dbg::opr_geq,    &nasal_dbg::opr_lessc,
+        &nasal_dbg::opr_leqc,   &nasal_dbg::opr_grtc,
+        &nasal_dbg::opr_geqc,   &nasal_dbg::opr_pop,
+        &nasal_dbg::opr_jmp,    &nasal_dbg::opr_jt,
+        &nasal_dbg::opr_jf,     &nasal_dbg::opr_cnt,
+        &nasal_dbg::opr_findex, &nasal_dbg::opr_feach,
+        &nasal_dbg::opr_callg,  &nasal_dbg::opr_calll,
+        &nasal_dbg::opr_upval,  &nasal_dbg::opr_callv,
+        &nasal_dbg::opr_callvi, &nasal_dbg::opr_callh,
+        &nasal_dbg::opr_callfv, &nasal_dbg::opr_callfh,
+        &nasal_dbg::opr_callb,  &nasal_dbg::opr_slcbeg,
+        &nasal_dbg::opr_slcend, &nasal_dbg::opr_slc,
+        &nasal_dbg::opr_slc2,   &nasal_dbg::opr_mcallg,
+        &nasal_dbg::opr_mcalll, &nasal_dbg::opr_mupval,
+        &nasal_dbg::opr_mcallv, &nasal_dbg::opr_mcallh,
+        &nasal_dbg::opr_ret
+    };
+    std::vector<const nafunc> code;
+    for(auto& i:gen.get_code())
+    {
+        code.push_back(oprs[i.op]);
+        imm.push_back(i.num);
+    }
+    while(code[pc]){
+        interact();
+        (this->*code[pc])();
+        if(top>=canary)
+            break;
+        ++pc;
+    }
+#endif
 
 vmexit:
     if(top>=canary)
@@ -219,6 +277,7 @@ vmexit:
     imm.clear();
     std::cout<<"[debug] debugger exited\n";
     return;
+#ifndef _MSC_VER
 #define dbg(op) {interact();op();if(top<canary)goto *code[++pc];goto vmexit;}
 
 intg:   dbg(opr_intg  );
@@ -295,6 +354,7 @@ mupval: dbg(opr_mupval);
 mcallv: dbg(opr_mcallv);
 mcallh: dbg(opr_mcallh);
 ret:    dbg(opr_ret   );
+#endif
 }
 
 #endif
