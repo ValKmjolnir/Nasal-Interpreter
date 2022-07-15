@@ -965,6 +965,8 @@ void nasal_vm::run(
 {
     detail_info=detail;
     init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
+    uint64_t count[op_ret+1]={0};
+#ifndef _MSC_VER
     const void* oprs[]=
     {
         &&vmexit, &&intg,   &&intl,   &&loadg,
@@ -987,7 +989,6 @@ void nasal_vm::run(
         &&slc2,   &&mcallg, &&mcalll, &&mupval,
         &&mcallv, &&mcallh, &&ret
     };
-    uint64_t count[op_ret+1]={0};
     std::vector<const void*> code;
     for(auto& i:gen.get_code())
     {
@@ -996,6 +997,63 @@ void nasal_vm::run(
     }
     // goto the first operand
     goto *code[pc];
+#else
+    typedef void (nasal_vm::*nafunc)();
+    const nafunc oprs[]=
+    {
+        nullptr,               &nasal_vm::opr_intg,
+        &nasal_vm::opr_intl,   &nasal_vm::opr_loadg,
+        &nasal_vm::opr_loadl,  &nasal_vm::opr_loadu,
+        &nasal_vm::opr_pnum,   &nasal_vm::opr_pnil,
+        &nasal_vm::opr_pstr,   &nasal_vm::opr_newv,
+        &nasal_vm::opr_newh,   &nasal_vm::opr_newf,
+        &nasal_vm::opr_happ,   &nasal_vm::opr_para,
+        &nasal_vm::opr_deft,   &nasal_vm::opr_dyn,
+        &nasal_vm::opr_unot,   &nasal_vm::opr_usub,
+        &nasal_vm::opr_add,    &nasal_vm::opr_sub,
+        &nasal_vm::opr_mul,    &nasal_vm::opr_div,
+        &nasal_vm::opr_lnk,    &nasal_vm::opr_addc,
+        &nasal_vm::opr_subc,   &nasal_vm::opr_mulc,
+        &nasal_vm::opr_divc,   &nasal_vm::opr_lnkc,
+        &nasal_vm::opr_addeq,  &nasal_vm::opr_subeq,
+        &nasal_vm::opr_muleq,  &nasal_vm::opr_diveq,
+        &nasal_vm::opr_lnkeq,  &nasal_vm::opr_addeqc,
+        &nasal_vm::opr_subeqc, &nasal_vm::opr_muleqc,
+        &nasal_vm::opr_diveqc, &nasal_vm::opr_lnkeqc,
+        &nasal_vm::opr_meq,    &nasal_vm::opr_eq,
+        &nasal_vm::opr_neq,    &nasal_vm::opr_less,
+        &nasal_vm::opr_leq,    &nasal_vm::opr_grt,
+        &nasal_vm::opr_geq,    &nasal_vm::opr_lessc,
+        &nasal_vm::opr_leqc,   &nasal_vm::opr_grtc,
+        &nasal_vm::opr_geqc,   &nasal_vm::opr_pop,
+        &nasal_vm::opr_jmp,    &nasal_vm::opr_jt,
+        &nasal_vm::opr_jf,     &nasal_vm::opr_cnt,
+        &nasal_vm::opr_findex, &nasal_vm::opr_feach,
+        &nasal_vm::opr_callg,  &nasal_vm::opr_calll,
+        &nasal_vm::opr_upval,  &nasal_vm::opr_callv,
+        &nasal_vm::opr_callvi, &nasal_vm::opr_callh,
+        &nasal_vm::opr_callfv, &nasal_vm::opr_callfh,
+        &nasal_vm::opr_callb,  &nasal_vm::opr_slcbeg,
+        &nasal_vm::opr_slcend, &nasal_vm::opr_slc,
+        &nasal_vm::opr_slc2,   &nasal_vm::opr_mcallg,
+        &nasal_vm::opr_mcalll, &nasal_vm::opr_mupval,
+        &nasal_vm::opr_mcallv, &nasal_vm::opr_mcallh,
+        &nasal_vm::opr_ret
+    };
+    std::vector<const nafunc> code;
+    for(auto& i:gen.get_code())
+    {
+        code.push_back(oprs[i.op]);
+        imm.push_back(i.num);
+    }
+    while(code[pc]){
+        (this->*code[pc])();
+        ++count[num];
+        if(top>=canary)
+            break;
+        ++pc;
+    }
+#endif
 
 vmexit:
     if(top>=canary)
@@ -1007,6 +1065,8 @@ vmexit:
     gc.clear();
     imm.clear();
     return;
+
+#ifndef _MSC_VER
 // may cause stackoverflow
 #define exec_operand(op,num) {\
         op();\
@@ -1092,5 +1152,6 @@ mupval: exec_operand(opr_mupval,op_mupval); // +1
 mcallv: exec_opnodie(opr_mcallv,op_mcallv); // -0
 mcallh: exec_opnodie(opr_mcallh,op_mcallh); // -0
 ret:    exec_opnodie(opr_ret   ,op_ret   ); // -2
+#endif
 }
 #endif
