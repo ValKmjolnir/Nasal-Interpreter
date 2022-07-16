@@ -101,14 +101,11 @@ __我们为什么想要重新写一个nasal解释器?__
 
 __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之后请阅读下文中对应发行版本的[__发行日志__](#发行日志)以保证这个发行版的文件中不包含非常严重的bug(有的严重bug都是在发行之后才发现，非常搞心态)。在发行版日志中我们会告知如何在代码中手动修复这个严重的bug。
 
-[![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/ "Windows用户请一定要使用MinGW编译！")
-
-__Windows用户请一定一定一定要使用MinGW编译！__
-
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
+![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-__`Windows`__(`MinGW-w64`)用户使用g++编译器并使用以下命令来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(编译不出来别怪我没说哦👿)
+__`Windows`__用户通过g++(`MinGW-w64`)使用以下命令或者使用MSVC(`Visual Studio`)来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(VS同样也有MinGW-w64)
 
 > $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
@@ -139,8 +136,6 @@ __`linux/macOS/Unix`__ 平台直接使用make即可:
 > make stable-release
 >
 > mingw32-make stable-release-mingw
-
-我们现在还在尝试将项目移植到MSVC下，敬请期待。
 
 ## __使用方法__
 

@@ -118,14 +118,11 @@ Download the source and build it! It's quite easy to build this interpreter.
 
 __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](#release-notes) below to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
 
-[![please use MinGW](https://www.mingw-w64.org/header.svg)](https://www.mingw-w64.org/ "PLEASE USE MINGW ON WINDOWS!")
-
-__PLEASE USE MINGW ON WINDOWS!__
-
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
+![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Use g++ on __`Windows`__(`MinGW-w64`) platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/). (otherwise don't blame me for not reminding YOU 👿 )
+Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on __`Windows`__ platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/)(Visual Studio also has this).
 
 > $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
@@ -156,8 +153,6 @@ If you think `-O3` isn't that safe and stable, you could choose:
 > make stable-release
 >
 > mingw32-make stable-release-mingw
-
-We are trying to make this project compilable on MSVC, let's wait and see.
 
 ## __How to Use__
 
