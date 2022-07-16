@@ -768,7 +768,7 @@ nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
         return builtin_err("open","\"mode\" must be string");
     FILE* res=fopen(name.str().c_str(),mode.str().c_str());
     if(!res)
-        return builtin_err("open","failed to open file <"+name.str()+"> errno "+std::to_string(errno));
+        return builtin_err("open","failed to open file <"+name.str()+">");
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=nasal_obj::file;
     ret.obj().ptr=(void*)res;
@@ -1044,13 +1044,13 @@ nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
 #ifdef _MSC_VER
     WIN32_FIND_DATA data;
     HANDLE p;
-    p=FindFirstFile(path.str().c_str(),&data);
+    p=FindFirstFile((path.str()+"\\*.*").c_str(),&data);
     if(p==INVALID_HANDLE_VALUE)
-        return builtin_err("opendir","cannot open dir <"+path.str()+"> errno "+std::to_string(errno));
+        return builtin_err("opendir","cannot open dir <"+path.str()+">");
 #else
     DIR* p=opendir(path.str().c_str());
     if(!p)
-        return builtin_err("opendir","cannot open dir <"+path.str()+"> errno "+std::to_string(errno));
+        return builtin_err("opendir","cannot open dir <"+path.str()+">");
 #endif
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=nasal_obj::dir;
