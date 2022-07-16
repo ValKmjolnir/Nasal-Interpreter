@@ -255,7 +255,7 @@ void nasal_dbg::run(
         &nasal_dbg::opr_mcallv, &nasal_dbg::opr_mcallh,
         &nasal_dbg::opr_ret
     };
-    std::vector<const nafunc> code;
+    std::vector<nafunc> code;
     for(auto& i:gen.get_code())
     {
         code.push_back(oprs[i.op]);

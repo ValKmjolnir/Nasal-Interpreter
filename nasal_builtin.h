@@ -1,4 +1,4 @@
-#ifndef __NASAL_BUILTIN_H__
+﻿#ifndef __NASAL_BUILTIN_H__
 #define __NASAL_BUILTIN_H__
 
 #if defined __APPLE__
@@ -1030,16 +1030,28 @@ nasal_ref builtin_waitpid(nasal_ref* local,nasal_gc& gc)
 }
 void obj_dir_destructor(void* ptr)
 {
+#ifndef _MSC_VER
     closedir((DIR*)ptr);
+#else
+    FindClose(ptr);
+#endif
 }
 nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref path=local[1];
     if(path.type!=vm_str)
         return builtin_err("opendir","\"path\" must be string");
+#ifdef _MSC_VER
+    WIN32_FIND_DATA data;
+    HANDLE p;
+    p=FindFirstFile(path.str().c_str(),&data);
+    if(p==INVALID_HANDLE_VALUE)
+        return builtin_err("opendir","cannot open dir <"+path.str()+"> errno "+std::to_string(errno));
+#else
     DIR* p=opendir(path.str().c_str());
     if(!p)
         return builtin_err("opendir","cannot open dir <"+path.str()+"> errno "+std::to_string(errno));
+#endif
     nasal_ref ret=gc.alloc(vm_obj);
     ret.obj().type=nasal_obj::dir;
     ret.obj().ptr=(void*)p;
@@ -1051,17 +1063,28 @@ nasal_ref builtin_readdir(nasal_ref* local,nasal_gc& gc)
     nasal_ref handle=local[1];
     if(!handle.objchk(nasal_obj::dir))
         return builtin_err("readdir","not a valid dir handle");
+#ifdef _MSC_VER
+    WIN32_FIND_DATA data;
+    if(!FindNextFile(handle.obj().ptr,&data))
+        return nil;
+    return gc.newstr(data.cFileName);
+#else
     dirent* p=readdir((DIR*)handle.obj().ptr);
     if(!p)
         return nil;
     return gc.newstr(p->d_name);
+#endif
 }
 nasal_ref builtin_closedir(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref handle=local[1];
     if(!handle.objchk(nasal_obj::dir))
         return builtin_err("closedir","not a valid dir handle");
+#ifndef _MSC_VER
     closedir((DIR*)handle.obj().ptr);
+#else
+    FindClose(handle.obj().ptr);
+#endif
     handle.obj().ptr=nullptr;
     return nil;
 }

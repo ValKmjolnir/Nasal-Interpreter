@@ -127,11 +127,11 @@ __PLEASE USE MINGW ON WINDOWS!__
 
 Use g++ on __`Windows`__(`MinGW-w64`) platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/). (otherwise don't blame me for not reminding YOU 👿 )
 
-> g++ -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
+> $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
-Or use g++/clang++ on __`linux/macOS/Unix`__ platform.
+Or use g++/clang++ on __`linux/macOS/Unix`__ platform (we suggest clang).
 
-> [cpp compiler] -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
+> $(CXX) -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
 
 Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
 
@@ -142,6 +142,22 @@ Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
 on __`linux/macOS/Unix`__:
 
 > make nasal
+
+You could choose which compiler you want to use by add this after the command:
+
+> CXX=clang++
+>
+> CXX=g++
+>
+> CXX=...
+
+If you think `-O3` isn't that safe and stable, you could choose:
+
+> make stable-release
+>
+> mingw32-make stable-release-mingw
+
+We are trying to make this project compilable on MSVC, let's wait and see.
 
 ## __How to Use__
 

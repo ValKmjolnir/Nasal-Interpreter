@@ -1,4 +1,4 @@
-#ifndef __NASAL_AST_H__
+﻿#ifndef __NASAL_AST_H__
 #define __NASAL_AST_H__
 
 enum ast_node

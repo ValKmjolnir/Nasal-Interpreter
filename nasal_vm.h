@@ -732,7 +732,11 @@ inline void nasal_vm::opr_callfv()
         for(uint32_t i=psize;i<argc;++i)
             dynamic.vec().elems.push_back(local[i]);
     }
+#ifdef _MSC_VER
+    uint32_t min_size=(std::min)(psize,argc);
+#else
     uint32_t min_size=std::min(psize,argc);
+#endif
     for(uint32_t i=min_size;i>=1;--i)// load arguments
         local[i]=local[i-1];
     local[0]=func.local[0];// load "me"
@@ -1040,15 +1044,16 @@ void nasal_vm::run(
         &nasal_vm::opr_mcallv, &nasal_vm::opr_mcallh,
         &nasal_vm::opr_ret
     };
-    std::vector<const nafunc> code;
+    typedef struct{nafunc ptr;uint32_t type;} naf;
+    std::vector<naf> code;
     for(auto& i:gen.get_code())
     {
-        code.push_back(oprs[i.op]);
+        code.push_back({oprs[i.op],i.op});
         imm.push_back(i.num);
     }
-    while(code[pc]){
-        (this->*code[pc])();
-        ++count[num];
+    while(code[pc].ptr){
+        ++count[code[pc].type];
+        (this->*code[pc].ptr)();
         if(top>=canary)
             break;
         ++pc;
