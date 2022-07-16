@@ -368,12 +368,12 @@ nasal_ref builtin_rand(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_id(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    char buf[32];
+    std::stringstream ss;
     if(val.type>vm_num)
-        sprintf(buf,"%p",val.value.gcobj);
+        ss<<"0x"<<std::hex<<(uint64_t)val.value.gcobj<<std::dec;
     else
-        sprintf(buf,"0");
-    return gc.newstr(buf);
+        ss<<"0";
+    return gc.newstr(ss.str());
 }
 nasal_ref builtin_int(nasal_ref* local,nasal_gc& gc)
 {

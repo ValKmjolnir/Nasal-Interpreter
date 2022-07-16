@@ -164,27 +164,32 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_none: std::cout<<"| null |";break;
         case vm_ret:  std::cout<<"| pc   | 0x"<<std::hex
                                <<val.ret()<<std::dec;break;
-        case vm_addr: std::cout<<"| addr | "<<std::hex
-                               <<(void*)val.addr()<<std::dec;break;
+        case vm_addr: std::cout<<"| addr | 0x"<<std::hex
+                               <<(uint64_t)val.addr()<<std::dec;break;
         case vm_cnt:  std::cout<<"| cnt  | "<<val.cnt();break;
         case vm_nil:  std::cout<<"| nil  |";break;
         case vm_num:  std::cout<<"| num  | "<<val.num();break;
-        case vm_str:  std::cout<<"| str  | <"<<std::hex<<p<<"> "
-                               <<rawstr(val.str(),16)<<std::dec;break;
-        case vm_func: std::cout<<"| func | <"<<std::hex<<p<<"> entry:0x"
-                               <<val.func().entry<<std::dec;break;
-        case vm_upval:std::cout<<"| upval| <"<<std::hex<<p<<std::dec<<"> ["
-                               <<val.upval().size<<" val]";break;
-        case vm_vec:  std::cout<<"| vec  | <"<<std::hex<<p<<std::dec<<"> ["
-                               <<val.vec().size()<<" val]";break;
-        case vm_hash: std::cout<<"| hash | <"<<std::hex<<p<<std::dec<<"> {"
-                               <<val.hash().size()<<" val}";break;
-        case vm_obj:  std::cout<<"| obj  | <"<<std::hex<<p<<"> obj:0x"
-                               <<(uint64_t)val.obj().ptr<<std::dec;break;
-        case vm_co:   std::cout<<"| co   | <"<<std::hex<<p<<std::dec
-                               <<"> coroutine";break;
-        default:      std::cout<<"| err  | <"<<std::hex<<p<<std::dec
-                               <<"> unknown object";break;
+        case vm_str:  std::cout<<"| str  | <0x"<<std::hex<<(uint64_t)p
+                               <<"> "<<rawstr(val.str(),16)<<std::dec;break;
+        case vm_func: std::cout<<"| func | <0x"<<std::hex<<(uint64_t)p
+                               <<"> entry:0x"<<val.func().entry
+                               <<std::dec;break;
+        case vm_upval:std::cout<<"| upval| <0x"<<std::hex<<(uint64_t)p
+                               <<std::dec<<"> ["<<val.upval().size
+                               <<" val]";break;
+        case vm_vec:  std::cout<<"| vec  | <0x"<<std::hex<<(uint64_t)p
+                               <<std::dec<<"> ["<<val.vec().size()
+                               <<" val]";break;
+        case vm_hash: std::cout<<"| hash | <0x"<<std::hex<<(uint64_t)p
+                               <<std::dec<<"> {"<<val.hash().size()
+                               <<" val}";break;
+        case vm_obj:  std::cout<<"| obj  | <0x"<<std::hex<<(uint64_t)p
+                               <<"> obj:0x"<<(uint64_t)val.obj().ptr
+                               <<std::dec;break;
+        case vm_co:   std::cout<<"| co   | <0x"<<std::hex<<(uint64_t)p
+                               <<std::dec<<"> coroutine";break;
+        default:      std::cout<<"| err  | <0x"<<std::hex<<(uint64_t)p
+                               <<std::dec<<"> unknown object";break;
     }
     std::cout<<"\n";
 }
@@ -247,11 +252,11 @@ void nasal_vm::register_info()
 {
     std::cout<<"registers("<<(gc.coroutine?"coroutine":"main")<<")\n"<<std::hex
              <<"  [ pc     ]    | pc   | 0x"<<pc<<"\n"
-             <<"  [ global ]    | addr | "<<stack<<"\n"
-             <<"  [ localr ]    | addr | "<<localr<<"\n"
-             <<"  [ memr   ]    | addr | "<<memr<<"\n"
-             <<"  [ canary ]    | addr | "<<canary<<"\n"
-             <<"  [ top    ]    | addr | "<<top<<"\n"
+             <<"  [ global ]    | addr | 0x"<<(uint64_t)stack<<"\n"
+             <<"  [ localr ]    | addr | 0x"<<(uint64_t)localr<<"\n"
+             <<"  [ memr   ]    | addr | 0x"<<(uint64_t)memr<<"\n"
+             <<"  [ canary ]    | addr | 0x"<<(uint64_t)canary<<"\n"
+             <<"  [ top    ]    | addr | 0x"<<(uint64_t)top<<"\n"
              <<std::dec;
     std::cout<<"  [ funcr  ]";valinfo(funcr);
     std::cout<<"  [ upvalr ]";valinfo(upvalr);
