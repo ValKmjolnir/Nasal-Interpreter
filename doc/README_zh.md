@@ -105,7 +105,7 @@ __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构�
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-__`Windows`__用户通过g++(`MinGW-w64`)使用以下命令或者使用MSVC(`Visual Studio`)来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(VS同样也有MinGW-w64)
+__`Windows`__ 用户通过g++(`MinGW-w64`)使用以下命令或者使用MSVC(`Visual Studio`)来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(VS同样也有MinGW-w64)
 
 > $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
 
