@@ -1,6 +1,10 @@
 #ifndef __NASAL_IMPORT_H__
 #define __NASAL_IMPORT_H__
 
+#ifdef _MSC_VER
+#define F_OK 0
+#endif
+
 class nasal_import
 {
 private:

@@ -7,6 +7,11 @@
 #include <dirent.h>
 #endif
 
+#ifdef _MSC_VER
+#include <io.h>
+#include <direct.h>
+#endif
+
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>

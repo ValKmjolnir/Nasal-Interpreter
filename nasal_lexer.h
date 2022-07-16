@@ -1,6 +1,10 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
+#ifdef _MSC_VER
+#define S_ISREG(m) (((m)&0xF000)==0x8000)
+#endif
+
 #define ID(c)      ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||(c<0))
 #define HEX(c)     (('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F'))
 #define OCT(c)     ('0'<=c&&c<='7')
