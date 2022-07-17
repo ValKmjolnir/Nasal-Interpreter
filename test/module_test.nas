@@ -3,7 +3,7 @@ var libfib=func(){
     return {
         open:func(){
             if(dd==nil){
-                dd=dylib.dlopen("./module/libfib.so");
+                dd=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
                 fib=dylib.dlsym(dd,"fib");
                 qfib=dylib.dlsym(dd,"quick_fib");
             }else{
