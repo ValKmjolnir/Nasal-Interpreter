@@ -22,7 +22,7 @@ private:
 public:
     nasal_import(nasal_err&);
     void link(nasal_parse&,const std::string&);
-    const std::vector<std::string>& get_file() const {return files;}
+    const std::vector<std::string>& filelist() const {return files;}
 };
 
 nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){

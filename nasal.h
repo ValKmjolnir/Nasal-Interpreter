@@ -5,9 +5,7 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #include <dirent.h>
-#endif
-
-#ifdef _MSC_VER
+#else
 #include <io.h>
 #include <direct.h>
 #endif
@@ -34,7 +32,6 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/timeb.h>
 
 #ifdef _WIN32
 #include <windows.h>

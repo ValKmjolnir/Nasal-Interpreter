@@ -678,10 +678,10 @@ inline void nasal_vm::opr_callv()
     {
         std::string& str=vec.str();
         int num=val.tonum();
-        int str_size=str.length();
-        if(num<-str_size || num>=str_size)
+        int len=str.length();
+        if(num<-len || num>=len)
             die("callv: index out of range:"+std::to_string(val.tonum()));
-        top[0]={vm_num,double((uint8_t)str[num>=0? num:num+str_size])};
+        top[0]={vm_num,double((uint8_t)str[num>=0? num:num+len])};
     }
     else
         die("callv: must call a vector/hash/string");
@@ -745,7 +745,8 @@ inline void nasal_vm::opr_callfv()
     for(uint32_t i=min_size;i>=1;--i)// load arguments
         local[i]=local[i-1];
     local[0]=func.local[0];// load "me"
-    for(uint32_t i=min_size+1;i<func.lsize;++i)// load local scope & default arguments
+    // load local scope & default arguments
+    for(uint32_t i=min_size+1;i<func.lsize;++i)
         local[i]=func.local[i];
     if(func.dynpara>=0)
         local[psize+1]=dynamic;
@@ -803,7 +804,7 @@ inline void nasal_vm::opr_callb()
     // (top) will be set to another context.top, instead of main_context.top
     top[0]=(*builtin[imm[pc]].func)(localr,gc);
     if(top[0].type==vm_none)
-        die("native function error.");
+        die("native function error");
 }
 inline void nasal_vm::opr_slcbeg()
 {
@@ -814,7 +815,7 @@ inline void nasal_vm::opr_slcbeg()
     // +--------------+
     (++top)[0]=gc.alloc(vm_vec);
     if(top[-1].type!=vm_vec)
-        die("slcbegin: must slice a vector");
+        die("slcbeg: must slice a vector");
 }
 inline void nasal_vm::opr_slcend()
 {
@@ -973,7 +974,7 @@ void nasal_vm::run(
     const bool detail)
 {
     detail_info=detail;
-    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
+    init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
     uint64_t count[op_ret+1]={0};
 #ifndef _MSC_VER
     const void* oprs[]=
@@ -999,7 +1000,7 @@ void nasal_vm::run(
         &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
-    for(auto& i:gen.get_code())
+    for(auto& i:gen.codes())
     {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
@@ -1049,16 +1050,15 @@ void nasal_vm::run(
         &nasal_vm::opr_mcallv, &nasal_vm::opr_mcallh,
         &nasal_vm::opr_ret
     };
-    typedef struct{nafunc ptr;uint32_t type;} naf;
-    std::vector<naf> code;
-    for(auto& i:gen.get_code())
+    std::vector<uint32_t> code;
+    for(auto& i:gen.codes())
     {
-        code.push_back({oprs[i.op],i.op});
+        code.push_back(i.op);
         imm.push_back(i.num);
     }
-    while(code[pc].ptr){
-        ++count[code[pc].type];
-        (this->*code[pc].ptr)();
+    while(oprs[code[pc]]){
+        ++count[code[pc]];
+        (this->*oprs[code[pc]])();
         if(top>=canary)
             break;
         ++pc;
