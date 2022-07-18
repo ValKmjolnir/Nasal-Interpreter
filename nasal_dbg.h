@@ -179,8 +179,8 @@ void nasal_dbg::run(
     const std::vector<std::string>& argv)
 {
     detail_info=true;
-    fsize=linker.get_file().size();
-    init(gen.get_strs(),gen.get_nums(),gen.get_code(),linker.get_file(),argv);
+    fsize=linker.filelist().size();
+    init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
 #ifndef _MSC_VER
     const void* oprs[]=
     {
@@ -205,7 +205,7 @@ void nasal_dbg::run(
         &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
-    for(auto& i:gen.get_code())
+    for(auto& i:gen.codes())
     {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
@@ -256,7 +256,7 @@ void nasal_dbg::run(
         &nasal_dbg::opr_ret
     };
     std::vector<nafunc> code;
-    for(auto& i:gen.get_code())
+    for(auto& i:gen.codes())
     {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);

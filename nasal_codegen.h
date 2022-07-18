@@ -310,9 +310,9 @@ public:
     nasal_codegen(nasal_err& e):fileindex(0),nerr(e),file(nullptr){}
     void compile(const nasal_parse&,const nasal_import&);
     void print();
-    const std::vector<std::string>& get_strs() const {return str_res;}
-    const std::vector<double>&      get_nums() const {return num_res;}
-    const std::vector<opcode>&      get_code() const {return code;}
+    const std::vector<std::string>& strs() const {return str_res;}
+    const std::vector<double>&      nums() const {return num_res;}
+    const std::vector<opcode>&      codes() const {return code;}
 };
 
 void nasal_codegen::die(const std::string& info,const uint32_t line)
@@ -1282,7 +1282,7 @@ void nasal_codegen::ret_gen(const nasal_ast& ast)
 void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
 {
     fileindex=0;
-    file=import.get_file().data();
+    file=import.filelist().data();
     in_iterloop.push(0);
 
     regist_num(0);
