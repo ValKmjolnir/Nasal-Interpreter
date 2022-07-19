@@ -157,7 +157,7 @@ void nasal_vm::init(
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
-    const nasal_val* p=val.value.gcobj;
+    const nasal_val* p=val.val.gcobj;
     std::cout<<"\t";
     switch(val.type)
     {
@@ -670,7 +670,7 @@ inline void nasal_vm::opr_callv()
             die("callv: must use string as the key");
         top[0]=vec.hash().get_val(val.str());
         if(top[0].type==vm_none)
-            die("callv: cannot find member \""+val.str()+"\" of this hash");
+            die("callv: cannot find member \""+val.str()+"\"");
         if(top[0].type==vm_func)
             top[0].func().local[0]=val;// 'me'
     }
@@ -958,8 +958,9 @@ inline void nasal_vm::opr_ret()
         auto& upval=up.upval();
         auto size=func.func().lsize;
         upval.onstk=false;
+        upval.elems.resize(size);
         for(uint32_t i=0;i<size;++i)
-            upval.elems.push_back(local[i]);
+            upval.elems[i]=local[i];
     }
     // cannot use gc.coroutine to judge,
     // because there maybe another function call inside

@@ -193,7 +193,7 @@ var bf=func(program)
         }elsif(c==','){
             for(var j=0;j<size(stack);j+=1)
                 f~='\t';
-            f~="paper[ptr]=input();\n";
+            f~="paper[ptr]=input()[0];\n";
         }elsif(c=='.'){
             for(var j=0;j<size(stack);j+=1)
                 f~='\t';
