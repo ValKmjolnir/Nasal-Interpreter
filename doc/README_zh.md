@@ -815,7 +815,7 @@ in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
     nasal_err():error(0){}
 ```
 
-同样这个也在`v9.0`中修复了。
+同样这个也在`v9.0`中修复了。所以我们建议不要使用`v8.0`。
 
 ## __语法分析__
 
@@ -1175,18 +1175,6 @@ a=b=0;
 字节码信息输出格式修改为如下形式:
 
 ```x86asm
-0x000002e6: newf   0x2ea
-0x000002e7: intl   0x2
-0x000002e8: para   0x6e ("f")
-0x000002e9: jmp    0x2ee
-0x000002ea: calll  0x1
-0x000002eb: calll  0x1
-0x000002ec: callfv 0x1
-0x000002ed: ret
-0x000002ee: newf   0x2f2
-0x000002ef: intl   0x2
-0x000002f0: para   0x6e ("f")
-0x000002f1: jmp    0x30a
 0x000002f2: newf   0x2f6
 0x000002f3: intl   0x2
 0x000002f4: para   0x3e ("x")
@@ -1263,54 +1251,6 @@ func <0x2a3>:
 <0x2a3>;
 
   0x000002aa:       0c 00 00 00 6a        happ    0x6a ("dlsym")
-
-func <0x2ab>:
-  0x000002ab:       0b 00 00 02 af        newf    0x2af
-  0x000002ac:       02 00 00 00 02        intl    0x2
-  0x000002ad:       0d 00 00 00 68        para    0x68 ("lib")
-  0x000002ae:       32 00 00 02 b1        jmp     0x2b1
-  0x000002af:       40 00 00 00 44        callb   0x44 <__dlclose@0x41e2a0>
-  0x000002b0:       4a 00 00 00 00        ret
-<0x2ab>;
-
-  0x000002b1:       0c 00 00 00 6b        happ    0x6b ("dlclose")
-
-func <0x2b2>:
-  0x000002b2:       0b 00 00 02 b7        newf    0x2b7
-  0x000002b3:       02 00 00 00 03        intl    0x3
-  0x000002b4:       0d 00 00 00 6c        para    0x6c ("funcptr")
-  0x000002b5:       0f 00 00 00 6d        dyn     0x6d ("args")
-  0x000002b6:       32 00 00 02 b9        jmp     0x2b9
-  0x000002b7:       40 00 00 00 45        callb   0x45 <__dlcall@0x41e3d0>
-  0x000002b8:       4a 00 00 00 00        ret
-<0x2b2>;
-
-  0x000002b9:       0c 00 00 00 6e        happ    0x6e ("dlcall")
-  0x000002ba:       03 00 00 00 21        loadg   0x21
-  0x000002bb:       0a 00 00 00 00        newh
-
-func <0x2bc>:
-  0x000002bc:       0b 00 00 02 bf        newf    0x2bf
-  0x000002bd:       02 00 00 00 01        intl    0x1
-  0x000002be:       32 00 00 02 c1        jmp     0x2c1
-  0x000002bf:       40 00 00 00 46        callb   0x46 <__platform@0x41e4f0>
-  0x000002c0:       4a 00 00 00 00        ret
-<0x2bc>;
-
-  0x000002c1:       0c 00 00 00 6f        happ    0x6f ("platform")
-  0x000002c2:       03 00 00 00 22        loadg   0x22
-  0x000002c3:       0a 00 00 00 00        newh
-
-func <0x2c4>:
-  0x000002c4:       0b 00 00 02 c7        newf    0x2c7
-  0x000002c5:       02 00 00 00 01        intl    0x1
-  0x000002c6:       32 00 00 02 c9        jmp     0x2c9
-  0x000002c7:       40 00 00 00 47        callb   0x47 <__gc@0x41e530>
-  0x000002c8:       4a 00 00 00 00        ret
-<0x2c4>;
-
-  0x000002c9:       0c 00 00 00 70        happ    0x70 ("gc")
-  0x000002ca:       03 00 00 00 23        loadg   0x23
 ```
 
 ### version 10.0 vm (latest)
@@ -1723,77 +1663,16 @@ registers(main):
 global(0x7ffff42f3808<sp+0>):
   0x00000000    | func | <0x18d62d0> entry:0x5
   0x00000001    | func | <0x18d7e40> entry:0xc
-  0x00000002    | func | <0x18d63f0> entry:0x14
-  0x00000003    | func | <0x18d6490> entry:0x1c
-  0x00000004    | func | <0x18d6530> entry:0x23
-  0x00000005    | func | <0x18d65d0> entry:0x29
-  0x00000006    | func | <0x18d6670> entry:0x31
-  0x00000007    | func | <0x18d6710> entry:0x39
-  0x00000008    | func | <0x18d67b0> entry:0x40
-  0x00000009    | func | <0x18d6850> entry:0x47
-  0x0000000a    | func | <0x18d7e60> entry:0x4e
-  0x0000000b    | func | <0x18cb4e0> entry:0x54
-  0x0000000c    | func | <0x18cb580> entry:0x5d
-  0x0000000d    | func | <0x18cb620> entry:0x6a
-  0x0000000e    | func | <0x18cb6c0> entry:0x71
-  0x0000000f    | func | <0x18cb760> entry:0x78
-  0x00000010    | func | <0x18cb800> entry:0x7f
-  0x00000011    | func | <0x18cb8a0> entry:0x87
-  0x00000012    | func | <0x18cb940> entry:0x8f
-  0x00000013    | func | <0x18cb9e0> entry:0x96
-  0x00000014    | func | <0x18cba80> entry:0x9d
-  0x00000015    | func | <0x18fbdb0> entry:0xa3
-  0x00000016    | func | <0x18fbe50> entry:0xac
-  0x00000017    | func | <0x18fbef0> entry:0xb4
-  0x00000018    | func | <0x18fbf90> entry:0xbb
-  0x00000019    | func | <0x18fc030> entry:0xc5
-  0x0000001a    | func | <0x18fc0d0> entry:0xdc
-  0x0000001b    | func | <0x18fc170> entry:0xe4
-  0x0000001c    | func | <0x18fc210> entry:0xec
-  0x0000001d    | func | <0x18fc2b0> entry:0xf4
-  0x0000001e    | func | <0x18fc350> entry:0xfc
-  0x0000001f    | func | <0x18cbaa0> entry:0x103
-  0x00000020    | func | <0x18f3630> entry:0x10a
-  0x00000021    | func | <0x18f36d0> entry:0x111
-  0x00000022    | func | <0x18f3770> entry:0x11e
-  0x00000023    | func | <0x18f3810> entry:0x125
-  0x00000024    | func | <0x18f38b0> entry:0x131
-  0x00000025    | func | <0x18f3950> entry:0x13c
-  0x00000026    | func | <0x18f39f0> entry:0x147
-  0x00000027    | func | <0x18f3a90> entry:0x152
-  0x00000028    | func | <0x18f3b30> entry:0x15d
-  0x00000029    | func | <0x18f3bd0> entry:0x174
-  0x0000002a    | func | <0x18f3c70> entry:0x18d
-  0x0000002b    | func | <0x18f6710> entry:0x198
-  0x0000002c    | func | <0x18f67b0> entry:0x1a4
-  0x0000002d    | func | <0x18f6850> entry:0x1bd
-  0x0000002e    | func | <0x18f68f0> entry:0x1e9
-  0x0000002f    | func | <0x18f6990> entry:0x1fb
-  0x00000030    | func | <0x18f6a30> entry:0x20c
+  ...
   0x00000031    | func | <0x18f6ad0> entry:0x237
   0x00000032    | hash | <0x191f780> {14 val}
   0x00000033    | func | <0x18df660> entry:0x29b
   0x00000034    | hash | <0x191f7a0> {9 val}
   0x00000035    | hash | <0x191f7c0> {18 val}
-  0x00000036    | hash | <0x191f7e0> {16 val}
-  0x00000037    | hash | <0x191f800> {4 val}
-  0x00000038    | hash | <0x191f820> {1 val}
+  ...
   0x00000039    | hash | <0x191f840> {1 val}
   0x0000003a    | num  | 0.0174533
-  0x0000003b    | num  | 0.5925
-  0x0000003c    | num  | 0.3048
-  0x0000003d    | num  | 3.7854
-  0x0000003e    | num  | 0.0254
-  0x0000003f    | num  | 2.2046
-  0x00000040    | num  | 1.6878
-  0x00000041    | num  | 0.5144
-  0x00000042    | num  | 0.2642
-  0x00000043    | num  | 0.4536
-  0x00000044    | num  | 3.2808
-  0x00000045    | num  | 39.3701
-  0x00000046    | num  | 0.00054
-  0x00000047    | num  | 1.9438
-  0x00000048    | num  | 1852
+  ...
   0x00000049    | num  | 57.2958
   0x0000004a    | func | <0x18e6490> entry:0x489
   0x0000004b    | func | <0x18e6530> entry:0x49c
