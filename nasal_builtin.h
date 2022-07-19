@@ -102,7 +102,7 @@ native(builtin_logtime);
 
 nasal_ref builtin_err(const std::string& errfunc,const std::string& info)
 {
-    std::cerr<<"[vm] "<<errfunc<<": "<<info<<".\n";
+    std::cerr<<"[vm] "<<errfunc<<": "<<info<<"\n";
     return {vm_none};
 }
 
@@ -213,15 +213,15 @@ inline void print_core(std::vector<nasal_ref>& elems)
     for(auto& i:elems)
         switch(i.type)
         {
-            case vm_none: std::cout<<"null";           break;
-            case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i.num();          break;
-            case vm_str:  std::cout<<i.str();          break;
-            case vm_vec:  i.vec().print();             break;
-            case vm_hash: i.hash().print();            break;
-            case vm_func: std::cout<<"func(...){...}"; break;
-            case vm_obj:  std::cout<<"<object>";       break;
-            case vm_co:   std::cout<<"<coroutine>";    break;
+            case vm_none: std::cout<<"null";        break;
+            case vm_nil:  std::cout<<"nil";         break;
+            case vm_num:  std::cout<<i.num();       break;
+            case vm_str:  std::cout<<i.str();       break;
+            case vm_vec:  i.vec().print();          break;
+            case vm_hash: i.hash().print();         break;
+            case vm_func: std::cout<<"func(..){..}";break;
+            case vm_obj:  std::cout<<"<object>";    break;
+            case vm_co:   std::cout<<"<coroutine>"; break;
         }
 }
 nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
@@ -290,15 +290,14 @@ nasal_ref builtin_fin(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     if(val.type!=vm_str)
         return builtin_err("io.fin","\"filename\" must be string");
-    std::string&  filename=val.str();
-    std::ifstream fin(filename);
+    std::ifstream fin(val.str());
     if(!fin.fail())
     {
         std::stringstream rd;
         rd<<fin.rdbuf();
         return gc.newstr(rd.str());
     }
-    return builtin_err("io.fin","cannot open \""+filename+"\"");
+    return builtin_err("io.fin","cannot open <"+val.str()+">");
 }
 nasal_ref builtin_fout(nasal_ref* local,nasal_gc& gc)
 {
@@ -310,7 +309,7 @@ nasal_ref builtin_fout(nasal_ref* local,nasal_gc& gc)
         return builtin_err("io.fout","\"str\" must be string");
     std::ofstream fout(val.str());
     if(fout.fail())
-        return builtin_err("io.fout","cannot open \""+val.str()+"\"");
+        return builtin_err("io.fout","cannot open <"+val.str()+">");
     fout<<str.str();
     return nil;
 }
@@ -370,7 +369,7 @@ nasal_ref builtin_id(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     std::stringstream ss;
     if(val.type>vm_num)
-        ss<<"0x"<<std::hex<<(uint64_t)val.value.gcobj<<std::dec;
+        ss<<"0x"<<std::hex<<(uint64_t)val.val.gcobj<<std::dec;
     else
         ss<<"0";
     return gc.newstr(ss.str());
@@ -754,7 +753,7 @@ nasal_ref builtin_values(nasal_ref* local,nasal_gc& gc)
         v.push_back(i.second);
     return vec;
 }
-void obj_file_destructor(void* ptr)
+void obj_file_dtor(void* ptr)
 {
     fclose((FILE*)ptr);
 }
@@ -770,9 +769,7 @@ nasal_ref builtin_open(nasal_ref* local,nasal_gc& gc)
     if(!res)
         return builtin_err("open","failed to open file <"+name.str()+">");
     nasal_ref ret=gc.alloc(vm_obj);
-    ret.obj().type=nasal_obj::file;
-    ret.obj().ptr=(void*)res;
-    ret.obj().destructor=obj_file_destructor;
+    ret.obj().set(nasal_obj::file,res,obj_file_dtor);
     return ret;
 }
 nasal_ref builtin_close(nasal_ref* local,nasal_gc& gc)
@@ -793,7 +790,7 @@ nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)
         return builtin_err("read","not a valid filehandle");
     if(buf.type!=vm_str)
         return builtin_err("read","\"buf\" must be string");
-    if(buf.value.gcobj->unmut)
+    if(buf.val.gcobj->unmut)
         return builtin_err("read","\"buf\" is not a mutable string");
     if(len.type!=vm_num)
         return builtin_err("read","\"len\" must be number");
@@ -889,8 +886,7 @@ nasal_ref builtin_eof(nasal_ref* local,nasal_gc& gc)
     nasal_ref fd=local[1];
     if(!fd.objchk(nasal_obj::file))
         return builtin_err("readln","not a valid filehandle");
-    double res=feof((FILE*)fd.obj().ptr);
-    return {vm_num,res};
+    return {vm_num,(double)feof((FILE*)fd.obj().ptr)};
 }
 nasal_ref builtin_fld(nasal_ref* local,nasal_gc& gc)
 {
@@ -900,7 +896,7 @@ nasal_ref builtin_fld(nasal_ref* local,nasal_gc& gc)
     nasal_ref str=local[1];
     nasal_ref startbit=local[2];
     nasal_ref length=local[3];
-    if(str.type!=vm_str || str.value.gcobj->unmut)
+    if(str.type!=vm_str || str.val.gcobj->unmut)
         return builtin_err("fld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num)
         return builtin_err("fld","\"startbit\",\"len\" must be number");
@@ -924,7 +920,7 @@ nasal_ref builtin_sfld(nasal_ref* local,nasal_gc& gc)
     nasal_ref str=local[1];
     nasal_ref startbit=local[2];
     nasal_ref length=local[3];
-    if(str.type!=vm_str || str.value.gcobj->unmut)
+    if(str.type!=vm_str || str.val.gcobj->unmut)
         return builtin_err("sfld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num)
         return builtin_err("sfld","\"startbit\",\"len\" must be number");
@@ -951,7 +947,7 @@ nasal_ref builtin_setfld(nasal_ref* local,nasal_gc& gc)
     nasal_ref startbit=local[2];
     nasal_ref length=local[3];
     nasal_ref value=local[4];
-    if(str.type!=vm_str  || str.value.gcobj->unmut)
+    if(str.type!=vm_str || str.val.gcobj->unmut)
         return builtin_err("setfld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num)
         return builtin_err("setfld","\"startbit\",\"len\",\"val\" must be number");
@@ -974,7 +970,7 @@ nasal_ref builtin_buf(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref length=local[1];
     if(length.type!=vm_num || length.num()<=0)
-        return builtin_err("buf","\"len\" must be a number greater than 9");
+        return builtin_err("buf","\"len\" must be a number greater than 0");
     nasal_ref str=gc.alloc(vm_str);
     auto& s=str.str();
     s.resize(length.num(),'\0');
@@ -999,7 +995,7 @@ nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
     res.vec().elems.push_back({vm_num,(double)fd[1]});
     return res;
 #endif
-    return builtin_err("pipe","not supported for windows platform");
+    return builtin_err("pipe","not supported for windows");
 }
 nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
 {
@@ -1009,7 +1005,7 @@ nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
         return builtin_err("fork","failed to fork a process");
     return {vm_num,(double)res};
 #endif
-    return builtin_err("fork","not supported for windows platform");
+    return builtin_err("fork","not supported for windows");
 }
 nasal_ref builtin_waitpid(nasal_ref* local,nasal_gc& gc)
 {
@@ -1026,9 +1022,9 @@ nasal_ref builtin_waitpid(nasal_ref* local,nasal_gc& gc)
     vec.vec().elems.push_back({vm_num,(double)status});
     return vec;
 #endif
-    return builtin_err("waitpid","not supported for windows platform");
+    return builtin_err("waitpid","not supported for windows");
 }
-void obj_dir_destructor(void* ptr)
+void obj_dir_dtor(void* ptr)
 {
 #ifndef _MSC_VER
     closedir((DIR*)ptr);
@@ -1053,9 +1049,7 @@ nasal_ref builtin_opendir(nasal_ref* local,nasal_gc& gc)
         return builtin_err("opendir","cannot open dir <"+path.str()+">");
 #endif
     nasal_ref ret=gc.alloc(vm_obj);
-    ret.obj().type=nasal_obj::dir;
-    ret.obj().ptr=(void*)p;
-    ret.obj().destructor=obj_dir_destructor;
+    ret.obj().set(nasal_obj::dir,p,obj_dir_dtor);
     return ret;
 }
 nasal_ref builtin_readdir(nasal_ref* local,nasal_gc& gc)
@@ -1127,7 +1121,7 @@ nasal_ref builtin_getenv(nasal_ref* local,nasal_gc& gc)
         return nil;
     return gc.newstr(res);
 }
-void obj_dylib_destructor(void* ptr)
+void obj_dylib_dtor(void* ptr)
 {
 #ifdef _WIN32
     FreeLibrary((HMODULE)ptr);
@@ -1152,29 +1146,26 @@ nasal_ref builtin_dlopen(nasal_ref* local,nasal_gc& gc)
     if(!ptr)
         return builtin_err("dlopen","cannot open dynamic lib <"+dlname.str()+">");
     nasal_ref ret=gc.alloc(vm_obj);
-    ret.obj().type=nasal_obj::dylib;
-    ret.obj().ptr=ptr;
-    ret.obj().destructor=obj_dylib_destructor;
+    ret.obj().set(nasal_obj::dylib,ptr,obj_dylib_dtor);
     return ret;
 }
 nasal_ref builtin_dlsym(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref libptr=local[1];
+    nasal_ref lib=local[1];
     nasal_ref sym=local[2];
-    if(!libptr.objchk(nasal_obj::dylib))
+    if(!lib.objchk(nasal_obj::dylib))
         return builtin_err("dlsym","\"lib\" is not a valid dynamic lib");
     if(sym.type!=vm_str)
         return builtin_err("dlsym","\"sym\" must be string");
 #ifdef _WIN32
-    void* func=(void*)GetProcAddress((HMODULE)libptr.obj().ptr,sym.str().c_str());
+    void* func=(void*)GetProcAddress((HMODULE)lib.obj().ptr,sym.str().c_str());
 #else
-    void* func=dlsym(libptr.obj().ptr,sym.str().c_str());
+    void* func=dlsym(lib.obj().ptr,sym.str().c_str());
 #endif
     if(!func)
         return builtin_err("dlsym","cannot find symbol \""+sym.str()+"\"");
     nasal_ref ret=gc.alloc(vm_obj);
-    ret.obj().type=nasal_obj::faddr;
-    ret.obj().ptr=func;
+    ret.obj().set(nasal_obj::faddr,func);
     return ret;
 }
 nasal_ref builtin_dlclose(nasal_ref* local,nasal_gc& gc)

@@ -637,14 +637,14 @@ nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
     for(auto& i:vec.vec().elems)
         switch(i.type)
         {
-            case vm_none: std::cout<<"undefined";      break;
-            case vm_nil:  std::cout<<"nil";            break;
-            case vm_num:  std::cout<<i.num();          break;
-            case vm_str:  std::cout<<i.str();          break;
-            case vm_vec:  i.vec().print();             break;
-            case vm_hash: i.hash().print();            break;
-            case vm_func: std::cout<<"func(...){...}"; break;
-            case vm_obj:  std::cout<<"<object>";       break;
+            case vm_none: std::cout<<"undefined";   break;
+            case vm_nil:  std::cout<<"nil";         break;
+            case vm_num:  std::cout<<i.num();       break;
+            case vm_str:  std::cout<<i.str();       break;
+            case vm_vec:  i.vec().print();          break;
+            case vm_hash: i.hash().print();         break;
+            case vm_func: std::cout<<"func(..){..}";break;
+            case vm_obj:  std::cout<<"<object>";    break;
         }
     std::cout<<std::flush;
     // generate return value,

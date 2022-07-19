@@ -7,7 +7,7 @@ SRC=\
 	nasal_builtin.h\
 	nasal_opt.h\
 	nasal_codegen.h\
-    nasal_gc.h\
+	nasal_gc.h\
 	nasal_import.h\
 	nasal_lexer.h\
 	nasal_parse.h\
