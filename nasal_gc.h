@@ -408,7 +408,7 @@ void nasal_ref::print()
     {
         case vm_none: std::cout<<"undefined";   break;
         case vm_nil:  std::cout<<"nil";         break;
-        case vm_num:  std::cout<<val.num;     break;
+        case vm_num:  std::cout<<val.num;       break;
         case vm_str:  std::cout<<str();         break;
         case vm_vec:  vec().print();            break;
         case vm_hash: hash().print();           break;
