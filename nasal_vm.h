@@ -320,8 +320,7 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     for(uint32_t i=0;i<op_ret+1;++i)
     {
         total+=arr[i];
-        if(arr[i])
-            opcall.push_back({i,arr[i]});
+        opcall.push_back({i,arr[i]});
     }
     std::sort(opcall.begin(),opcall.end(),
         [](const op& a,const op& b){return a.second>b.second;}
@@ -958,9 +957,8 @@ inline void nasal_vm::opr_ret()
         auto& upval=up.upval();
         auto size=func.func().lsize;
         upval.onstk=false;
-        upval.elems.resize(size);
         for(uint32_t i=0;i<size;++i)
-            upval.elems[i]=local[i];
+            upval.elems.push_back(local[i]);
     }
     // cannot use gc.coroutine to judge,
     // because there maybe another function call inside

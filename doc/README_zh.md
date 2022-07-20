@@ -106,14 +106,11 @@ __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构�
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
 __`Windows`__ 用户通过g++(`MinGW-w64`)使用以下命令或者使用MSVC(`Visual Studio`)来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(VS同样也有MinGW-w64)
+__`linux/macOS/Unix`__ 用户可以使用g++或者clang++替代下面命令中中括号的部分来进行编译(我们建议您使用`clang`)。
 
-> $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
+使用makefile我们就可以编译这个解释器。
 
-__`linux/macOS/Unix`__ 用户可以使用g++或者clang++替代下面命令中中括号的部分来进行编译(我们建议您使用clang)。
-
-> $(CXX) -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
-
-当然也可以使用makefile，`mingw32-make`是 __`Windows(MinGW-w64)`__ 平台的`make`:
+`mingw32-make`是 __`Windows(MinGW-w64)`__ 平台的`make`:
 
 > mingw32-make nasal.exe
 >
@@ -123,13 +120,13 @@ __`linux/macOS/Unix`__ 平台直接使用make即可:
 
 > make nasal
 
-你也可以通过在命令后面添加如下的其中一行来指定你想要使用的编译器：
+你也可以通过如下的其中一行命令来指定你想要使用的编译器：
 
-> CXX=clang++
+> make nasal CXX=clang++
 >
-> CXX=g++
+> make nasal CXX=g++
 >
-> CXX=...
+> make nasal CXX=...
 
 如果你觉得`-O3`编译的版本不是那么安全和稳定，你也可以选择生成稳定的版本：
 
@@ -151,56 +148,11 @@ __`linux/macOS/Unix`__ 平台直接使用make即可:
 >
 > ./nasal --version
 
-```bash
-       __                _
-    /\ \ \__ _ ___  __ _| |
-   /  \/ / _` / __|/ _` | |
-  / /\  / (_| \__ \ (_| | |
-  \_\ \/ \__,_|___/\__,_|_|
-nasal ver : 10.0
-c++ std   : 201103
-thanks to : https://github.com/andyross/nasal
-code repo : https://github.com/ValKmjolnir/Nasal-Interpreter
-code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter
-lang info : http://wiki.flightgear.org/Nasal_scripting_language
-input <nasal -h> to get help .
-```
-
 下面两个命令可以用于查看帮助(调试器的使用方法可以进入调试模式之后根据提示来查询):
 
 > ./nasal -h
 >
 > ./nasal --help
-
-```bash
-     ,--#-,
-<3  / \____\  <3
-    |_|__A_|
-nasal <option>
-option:
-    -h, --help    | get help.
-    -v, --version | get version of nasal interpreter.
-
-nasal <file>
-file:
-    input file name to execute script file.
-
-nasal [options...] <file>
-option:
-    -l,   --lex     | view token info.
-    -a,   --ast     | view abstract syntax tree.
-    -c,   --code    | view bytecode.
-    -e,   --exec    | execute.
-    -t,   --time    | execute and get the running time.
-    -o,   --opcnt   | execute and count used operands.
-    -d,   --detail  | execute and get detail crash info.
-                    | get garbage collector info if did not crash.
-    -op,  --optimize| use optimizer(beta).
-                    | if want to use -op and run, please use -op -e/-t/-o/-d.
-    -dbg, --debug   | debug mode (this will ignore -t -o -d).
-file:
-    input file name to execute script file.
-```
 
 如果你的操作系统是 __`Windows`__ 并且你想输出unicode，请保证你的控制台程序的代码页支持utf-8，若不支持，使用下面这个命令启用代码页:
 
@@ -250,18 +202,9 @@ var s=`c`;
 
 # 该语言也支持一些特别的转义字符:
 
-'\a';
-'\b';
-'\e';
-'\f';
-'\n';
-'\r';
-'\t';
-'\v';
-'\0';
-'\\';
-'\?';
-'\'';
+'\a'; '\b'; '\e'; '\f';
+'\n'; '\r'; '\t'; '\v';
+'\0'; '\\'; '\?'; '\'';
 '\"';
 ```
 
@@ -284,9 +227,8 @@ __`vm_hash`__ 使用哈希表(类似于`python`中的字典)，通过键值对�
 ```javascript
 var hash={
     member1:nil,
-    member2:'str',
+    member2:"str",
     'member3':'member\'s name can also be a string constant',
-    "member4":"also this",
     function:func(){
         var a=me.member2~me.member3;
         return a;
@@ -319,10 +261,10 @@ __`vm_upval`__ 是用于存储闭包数据的特殊类型。这种类型只在`n
 __`vm_obj`__ 是一种用来存储用户自定义数据的特别类型。这意味着你可以在nasal中使用C/C++的一些复杂数据结构。如果你想为nasal添加一种新的数据结构，那么就可以使用这个类型的数据。这种类型的数据一般由内置函数或者库开发者提供的模块函数生成。
 
 ```javascript
-var my_new_obj=func(){
+var new_obj=func(){
     return __my_obj();
 }
-var obj=my_new_obj();
+var obj=new_obj();
 ```
 
 ### __运算符__
@@ -630,7 +572,7 @@ struct func
 } builtin[]=
 {
     {"__print",builtin_print},
-    {nullptr,          nullptr      }
+    {nullptr,  nullptr      }
 };
 ```
 
@@ -1675,9 +1617,7 @@ global(0x7ffff42f3808<sp+0>):
   ...
   0x00000049    | num  | 57.2958
   0x0000004a    | func | <0x18e6490> entry:0x489
-  0x0000004b    | func | <0x18e6530> entry:0x49c
-  0x0000004c    | func | <0x18e65d0> entry:0x4a8
-  0x0000004d    | func | <0x18e6670> entry:0x4b5
+  ...
   0x0000004e    | func | <0x18e6710> entry:0x4c2
   0x0000004f    | hash | <0x191f8b0> {5 val}
 local(0x7ffff42f3d68<sp+86>):
@@ -1687,7 +1627,7 @@ local(0x7ffff42f3d68<sp+86>):
 
 ## __调试器__
 
-在v8.0版本中我们为nasal添加了调试器。现在我们可以在测试程序的时候同时看到源代码和生成的字节码并且单步执行。
+在`v8.0`版本中我们为nasal添加了调试器。现在我们可以在测试程序的时候同时看到源代码和生成的字节码并且单步执行。
 
 使用这个命令`./nasal -dbg xxx.nas`来启用调试器，接下来调试器会打开文件并输出以下内容:
 
@@ -1720,20 +1660,7 @@ vm stack(0x7fffe05e3190<sp+79>, limit 5, total 0)
 如果需要查看命令的使用方法，可以输入`h`获取帮助信息。
 
 ```bash
-<option>
-        h,   help      | get help
-        bt,  backtrace | get function call trace
-        c,   continue  | run program until break point or exit
-        f,   file      | see all the compiled files
-        g,   global    | see global values
-        l,   local     | see local values
-        u,   upval     | see upvalue
-        r,   register  | show vm register detail
-        a,   all       | show global,local and upvalue
-        n,   next      | execute next bytecode
-        q,   exit      | exit debugger
-<option> <filename> <line>
-        bk,  break     | set break point
+>> h
 ```
 
 当运行调试器的时候，你可以看到现在的操作数栈上到底有些什么数据。

@@ -226,19 +226,15 @@ inline void print_core(std::vector<nasal_ref>& elems)
 }
 nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
 {
-    // get arguments
-    // local[0] is reserved for 'me'
-    nasal_ref vec=local[1];
-    // main process
-    print_core(vec.vec().elems);
+    // get arguments,local[0] is reserved for 'me'
+    print_core(local[1].vec().elems);
     std::cout<<std::flush;
     // generate return value
     return nil;
 }
 nasal_ref builtin_println(nasal_ref* local,nasal_gc& gc)
 {
-    nasal_ref vec=local[1];
-    print_core(vec.vec().elems);
+    print_core(local[1].vec().elems);
     std::cout<<std::endl;
     return nil;
 }
