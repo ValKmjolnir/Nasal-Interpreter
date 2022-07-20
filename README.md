@@ -122,15 +122,11 @@ __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on __`Windows`__ platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/)(Visual Studio also has this).
+Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on __`Windows`__ platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/)(Visual Studio also has this), and use g++/clang++ on __`linux/macOS/Unix`__ platform (we suggest `clang`).
 
-> $(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -static
+We could build the interpreter using `makefile`.
 
-Or use g++/clang++ on __`linux/macOS/Unix`__ platform (we suggest clang).
-
-> $(CXX) -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl
-
-Or using makefile,`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
+`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
 
 > mingw32-make nasal.exe
 >
@@ -140,13 +136,13 @@ on __`linux/macOS/Unix`__:
 
 > make nasal
 
-You could choose which compiler you want to use by add this after the command:
+You could choose which compiler you want to use:
 
-> CXX=clang++
+> make nasal CXX=clang++
 >
-> CXX=g++
+> make nasal CXX=g++
 >
-> CXX=...
+> make nasal CXX=...
 
 If you think `-O3` isn't that safe and stable, you could choose:
 
@@ -167,54 +163,9 @@ Use these commands to get version of interpreter:
 
 > ./nasal -v | --version
 
-```bash
-       __                _
-    /\ \ \__ _ ___  __ _| |
-   /  \/ / _` / __|/ _` | |
-  / /\  / (_| \__ \ (_| | |
-  \_\ \/ \__,_|___/\__,_|_|
-nasal ver : 10.0
-c++ std   : 201103
-thanks to : https://github.com/andyross/nasal
-code repo : https://github.com/ValKmjolnir/Nasal-Interpreter
-code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter
-lang info : http://wiki.flightgear.org/Nasal_scripting_language
-input <nasal -h> to get help .
-```
-
 Use these commands to get help(see more debug commands in help):
 
 > ./nasal -h | --help
-
-```bash
-     ,--#-,
-<3  / \____\  <3
-    |_|__A_|
-nasal <option>
-option:
-    -h, --help    | get help.
-    -v, --version | get version of nasal interpreter.
-
-nasal <file>
-file:
-    input file name to execute script file.
-
-nasal [options...] <file>
-option:
-    -l,   --lex     | view token info.
-    -a,   --ast     | view abstract syntax tree.
-    -c,   --code    | view bytecode.
-    -e,   --exec    | execute.
-    -t,   --time    | execute and get the running time.
-    -o,   --opcnt   | execute and count used operands.
-    -d,   --detail  | execute and get detail crash info.
-                    | get garbage collector info if did not crash.
-    -op,  --optimize| use optimizer(beta).
-                    | if want to use -op and run, please use -op -e/-t/-o/-d.
-    -dbg, --debug   | debug mode (this will ignore -t -o -d).
-file:
-    input file name to execute script file.
-```
 
 If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
@@ -267,18 +218,9 @@ var s=`c`;
 
 # some special characters is allowed in this language:
 
-'\a';
-'\b';
-'\e';
-'\f';
-'\n';
-'\r';
-'\t';
-'\v';
-'\0';
-'\\';
-'\?';
-'\'';
+'\a'; '\b'; '\e'; '\f';
+'\n'; '\r'; '\t'; '\v';
+'\0'; '\\'; '\?'; '\'';
 '\"';
 ```
 
@@ -301,9 +243,8 @@ __`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with s
 ```javascript
 var hash={
     member1:nil,
-    member2:'str',
+    member2:"str",
     'member3':'member\'s name can also be a string constant',
-    "member4":"also this",
     function:func(){
         var a=me.member2~me.member3;
         return a;
@@ -341,10 +282,10 @@ so this type is often created by native-function that programmed in C/C++ by lib
 You could see how to write your own native-functions below.
 
 ```javascript
-var my_new_obj=func(){
+var new_obj=func(){
     return __my_obj();
 }
-var obj=my_new_obj();
+var obj=new_obj();
 ```
 
 ### __operators__
@@ -664,7 +605,7 @@ struct func
 } builtin[]=
 {
     {"__print",builtin_print},
-    {nullptr,          nullptr      }
+    {nullptr,  nullptr      }
 };
 ```
 
@@ -1814,9 +1755,7 @@ global(0x7ffff42f3808<sp+0>):
   ...
   0x00000049    | num  | 57.2958
   0x0000004a    | func | <0x18e6490> entry:0x489
-  0x0000004b    | func | <0x18e6530> entry:0x49c
-  0x0000004c    | func | <0x18e65d0> entry:0x4a8
-  0x0000004d    | func | <0x18e6670> entry:0x4b5
+  ...
   0x0000004e    | func | <0x18e6710> entry:0x4c2
   0x0000004f    | hash | <0x191f8b0> {5 val}
 local(0x7ffff42f3d68<sp+86>):
@@ -1826,7 +1765,7 @@ local(0x7ffff42f3d68<sp+86>):
 
 ## __Debugger__
 
-In nasal v8.0 we added a debugger.
+In nasal `v8.0` we added a debugger.
 Now we could see both source code and bytecode when testing program.
 
 Use command `./nasal -dbg xxx.nas` to use the debugger,
@@ -1861,20 +1800,7 @@ vm stack(0x7fffe05e3190<sp+79>, limit 5, total 0)
 If want help, input `h` to get help.
 
 ```bash
-<option>
-        h,   help      | get help
-        bt,  backtrace | get function call trace
-        c,   continue  | run program until break point or exit
-        f,   file      | see all the compiled files
-        g,   global    | see global values
-        l,   local     | see local values
-        u,   upval     | see upvalue
-        r,   register  | show vm register detail
-        a,   all       | show global,local and upvalue
-        n,   next      | execute next bytecode
-        q,   exit      | exit debugger
-<option> <filename> <line>
-        bk,  break     | set break point
+>> h
 ```
 
 When running the debugger, you could see what is on stack.
