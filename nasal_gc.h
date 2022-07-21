@@ -1,7 +1,7 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
-enum vm_type:std::uint32_t{
+enum vm_type:std::uint8_t{
     /* none-gc object */
     vm_none=0,
     vm_cnt,
@@ -76,12 +76,6 @@ struct nasal_ref
     // vm_addr
     nasal_ref(const uint8_t t,nasal_ref* n):type(t){val.addr=n;}
     nasal_ref(const nasal_ref& nr):type(nr.type),val(nr.val){}
-    nasal_ref& operator=(const nasal_ref& nr)
-    {
-        type=nr.type;
-        val=nr.val;
-        return *this;
-    }
     bool operator==(const nasal_ref& nr){return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const nasal_ref& nr){return type!=nr.type || val.gcobj!=nr.val.gcobj;}
     // number and string can be translated to each other

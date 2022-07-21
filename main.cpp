@@ -12,7 +12,7 @@ const uint32_t VM_OPTIMIZE =0x100;
 
 void help()
 {
-    std::cout
+    std::clog
     <<"     ,--#-,\n"
     <<"<3  / \\____\\  <3\n"
     <<"    |_|__A_|\n"
@@ -47,7 +47,7 @@ void help()
 
 void logo()
 {
-    std::cout
+    std::clog
     <<"       __                _\n"
     <<"    /\\ \\ \\__ _ ___  __ _| |\n"
     <<"   /  \\/ / _` / __|/ _` | |\n"
@@ -64,7 +64,7 @@ void logo()
 
 void err()
 {
-    std::cout
+    std::cerr
     <<"invalid argument(s).\n"
     <<"use <nasal -h> to get help.\n";
     std::exit(1);
@@ -112,7 +112,7 @@ void execute(const std::string& file,const std::vector<std::string>& argv,const 
         auto start=std::chrono::high_resolution_clock::now();
         vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
         auto end=std::chrono::high_resolution_clock::now();
-        std::cout<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
+        std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
         vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
