@@ -154,6 +154,10 @@ void nasal_vm::init(
     funcr=upvalr=nil;
     canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
     top=stack;
+
+    /* clear main stack */
+    for(uint32_t i=0;i<STACK_DEPTH;++i)
+        stack[i]=nil;
 }
 void nasal_vm::valinfo(nasal_ref& val)
 {
@@ -325,20 +329,20 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     std::sort(opcall.begin(),opcall.end(),
         [](const op& a,const op& b){return a.second>b.second;}
     );
-    std::cout<<"\noperands call info";
+    std::clog<<"\noperands call info";
     for(auto& i:opcall)
     {
         uint64_t rate=i.second*100/total;
         if(rate)
-            std::cout<<"\n "<<code_table[i.first].name
+            std::clog<<"\n "<<code_table[i.first].name
                      <<" : "<<i.second<<" ("<<rate<<"%)";
         else
         {
-            std::cout<<"\n ...";
+            std::clog<<"\n ...";
             break;
         }
     }
-    std::cout<<"\n total  : "<<total<<'\n';
+    std::clog<<"\n total  : "<<total<<'\n';
 }
 void nasal_vm::die(const std::string& str)
 {
@@ -365,8 +369,7 @@ inline bool nasal_vm::condition(nasal_ref val)
 inline void nasal_vm::opr_intg()
 {
     // global values store on stack
-    for(uint32_t i=0;i<imm[pc];++i)
-        (top++)[0].type=vm_nil;
+    top+=imm[pc];
     --top;// point to the top
 }
 inline void nasal_vm::opr_intl()
