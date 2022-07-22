@@ -242,8 +242,6 @@ void nasal_vm::stackinfo(const uint32_t limit=10)
     std::cout<<"vm stack(0x"<<std::hex<<(uint64_t)bottom<<std::dec
              <<"<sp+"<<gsize<<">, limit "<<limit<<", total "
              <<(t<bottom? 0:(int64_t)(t-bottom+1))<<")\n";
-    if(t<bottom)
-        return;
     for(uint32_t i=0;i<limit && t>=bottom;++i,--t)
     {
         std::cout<<"  0x"<<std::hex
@@ -360,9 +358,7 @@ inline bool nasal_vm::condition(nasal_ref val)
     else if(val.type==vm_str)
     {
         const double num=str2num(val.str().c_str());
-        if(std::isnan(num))
-            return !val.str().empty();
-        return num;
+        return std::isnan(num)?!val.str().empty():num;
     }
     return false;
 }
@@ -618,9 +614,9 @@ inline void nasal_vm::opr_jf()
 }
 inline void nasal_vm::opr_cnt()
 {
-    (++top)[0]={vm_cnt,(int64_t)-1};
-    if(top[-1].type!=vm_vec)
+    if(top[0].type!=vm_vec)
         die("cnt: must use vector in forindex/foreach");
+    (++top)[0]={vm_cnt,(int64_t)-1};
 }
 inline void nasal_vm::opr_findex()
 {
