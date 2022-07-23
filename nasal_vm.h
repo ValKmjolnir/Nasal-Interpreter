@@ -893,20 +893,20 @@ inline void nasal_vm::o_mcallh()
 }
 inline void nasal_vm::o_ret()
 {
-/*  +-----------------+
-*   | return value    | <- top[0]
-*   +-----------------+
-*   | old pc          | <- top[-1]
-*   +-----------------+
-*   | old localr      | <- top[-2]
-*   +-----------------+
-*   | old upvalr      | <- top[-3]
-*   +-----------------+
-*   | local scope     |
-*   | ...             |
-*   +-----------------+ <- local pointer stored in localr
-*   | old funcr       | <- old function stored in funcr
-*   +-----------------+
+/*  +-------------+
+*   | return value| <- top[0]
+*   +-------------+
+*   | old pc      | <- top[-1]
+*   +-------------+
+*   | old localr  | <- top[-2]
+*   +-------------+
+*   | old upvalr  | <- top[-3]
+*   +-------------+
+*   | local scope |
+*   | ...         |
+*   +-------------+ <- local pointer stored in localr
+*   | old funcr   | <- old function stored in funcr
+*   +-------------+
 */
     nas_ref  ret  =top[0];
     nas_ref* local=localr;
@@ -930,7 +930,7 @@ inline void nasal_vm::o_ret()
         for(u32 i=0;i<size;++i)
             upval.elems.push_back(local[i]);
     }
-    // cannot use gc.coroutine to judge,
+    // cannot use gc.cort to judge,
     // because there maybe another function call inside
     if(!pc)
         gc.ctxreserve();
