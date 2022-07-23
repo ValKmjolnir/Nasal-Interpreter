@@ -96,8 +96,8 @@ struct token
     u32 line;
     u32 col;
     u32 type;
-    std::string str;
-    token(u32 l=0,u32 c=0,u32 t=tok_null,const std::string& s=""):str(s)
+    string str;
+    token(u32 l=0,u32 c=0,u32 t=tok_null,const string& s=""):str(s)
     {
         line=l;
         col=c;
@@ -108,33 +108,33 @@ struct token
 class nasal_lexer
 {
 private:
-    u32         line;
-    u32         column;
-    usize       ptr;
-    nasal_err&  nerr;
-    std::string res;
+    u32    line;
+    u32    column;
+    usize  ptr;
+    string res;
+    nasal_err& nerr;
     std::vector<token> tokens;
 
-    u32 get_type(const std::string&);
-    void die(const std::string& info){nerr.err("lexer",line,column,info);}
-    void open(const std::string&);
-    std::string utf8_gen();
-    std::string id_gen();
-    std::string num_gen();
-    std::string str_gen();
+    u32 get_type(const string&);
+    void die(const string& info){nerr.err("lexer",line,column,info);}
+    void open(const string&);
+    string utf8_gen();
+    string id_gen();
+    string num_gen();
+    string str_gen();
 public:
     nasal_lexer(nasal_err& e):
         line(1),
         column(0),
         ptr(0),
-        nerr(e),
-        res(""){}
-    void scan(const std::string&);
+        res(""),
+        nerr(e){}
+    void scan(const string&);
     void print();
     const std::vector<token>& result() const {return tokens;}
 };
 
-void nasal_lexer::open(const std::string& file)
+void nasal_lexer::open(const string& file)
 {
     struct stat buffer;
     if(stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode))
@@ -152,7 +152,7 @@ void nasal_lexer::open(const std::string& file)
     res=ss.str();
 }
 
-u32 nasal_lexer::get_type(const std::string& str)
+u32 nasal_lexer::get_type(const string& str)
 {
     for(u32 i=0;tok_table[i].str;++i)
         if(str==tok_table[i].str)
@@ -160,12 +160,12 @@ u32 nasal_lexer::get_type(const std::string& str)
     return tok_null;
 }
 
-std::string nasal_lexer::utf8_gen()
+string nasal_lexer::utf8_gen()
 {
-    std::string str="";
+    string str="";
     while(ptr<res.size() && res[ptr]<0)
     {
-        std::string tmp="";
+        string tmp="";
         u32 nbytes=utf8_hdchk(res[ptr]);
         if(nbytes)
         {
@@ -176,7 +176,7 @@ std::string nasal_lexer::utf8_gen()
             if(tmp.length()!=1+nbytes)
             {
                 ++column;
-                std::string utf_info="0x"+chrhex(tmp[0]);
+                string utf_info="0x"+chrhex(tmp[0]);
                 for(u32 i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
                 die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file.");
@@ -194,9 +194,9 @@ std::string nasal_lexer::utf8_gen()
     return str;
 }
 
-std::string nasal_lexer::id_gen()
+string nasal_lexer::id_gen()
 {
-    std::string str="";
+    string str="";
     while(ptr<res.size() && (ID(res[ptr])||DIGIT(res[ptr])))
     {
         if(res[ptr]<0) // utf-8
@@ -210,12 +210,12 @@ std::string nasal_lexer::id_gen()
     return str;
 }
 
-std::string nasal_lexer::num_gen()
+string nasal_lexer::num_gen()
 {
     // generate hex number
     if(ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x')
     {
-        std::string str="0x";
+        string str="0x";
         ptr+=2;
         while(ptr<res.size() && HEX(res[ptr]))
             str+=res[ptr++];
@@ -227,7 +227,7 @@ std::string nasal_lexer::num_gen()
     // generate oct number
     else if(ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o')
     {
-        std::string str="0o";
+        string str="0o";
         ptr+=2;
         while(ptr<res.size() && OCT(res[ptr]))
             str+=res[ptr++];
@@ -238,7 +238,7 @@ std::string nasal_lexer::num_gen()
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
-    std::string str="";
+    string str="";
     while(ptr<res.size() && DIGIT(res[ptr]))
         str+=res[ptr++];
     if(ptr<res.size() && res[ptr]=='.')
@@ -273,9 +273,9 @@ std::string nasal_lexer::num_gen()
     return str;
 }
 
-std::string nasal_lexer::str_gen()
+string nasal_lexer::str_gen()
 {
-    std::string str="";
+    string str="";
     const char begin=res[ptr];
     ++column;
     while(++ptr<res.size() && res[ptr]!=begin)
@@ -327,14 +327,14 @@ std::string nasal_lexer::str_gen()
     return str;
 }
 
-void nasal_lexer::scan(const std::string& file)
+void nasal_lexer::scan(const string& file)
 {
     line=1;
     column=0;
     ptr=0;
     open(file);
 
-    std::string str;
+    string str;
     while(ptr<res.size())
     {
         while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]==0))

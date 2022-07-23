@@ -34,6 +34,7 @@ void help()
     <<"    -e,   --exec    | execute.\n"
     <<"    -t,   --time    | execute and get the running time.\n"
     <<"    -o,   --opcnt   | execute and count used operands.\n"
+    <<"                    | this options is available in debug mode.\n"
     <<"    -d,   --detail  | execute and get detail crash info.\n"
     <<"                    | get garbage collector info if didn't crash.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
@@ -70,7 +71,7 @@ void err()
     std::exit(1);
 }
 
-void execute(const std::string& file,const std::vector<std::string>& argv,const u32 cmd)
+void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 {
     // front end use the same error module
     nasal_err     nerr;
@@ -104,18 +105,18 @@ void execute(const std::string& file,const std::vector<std::string>& argv,const 
     // run bytecode
     if(cmd&VM_DEBUG)
     {
-        nasal_dbg debugger;
-        debugger.run(gen,linker,argv);
+        nasal_dbg debugger(nerr);
+        debugger.run(gen,linker,argv,cmd&VM_OPCALLNUM);
     }
     else if(cmd&VM_EXECTIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
-        vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_DBGINFO);
         auto end=std::chrono::high_resolution_clock::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,linker,argv,cmd&VM_OPCALLNUM,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_DBGINFO);
 }
 
 int main(int argc,const char* argv[])
@@ -127,7 +128,7 @@ int main(int argc,const char* argv[])
     }
     if(argc==2)
     {
-        std::string s(argv[1]);
+        string s(argv[1]);
         if(s=="-v" || s=="--version")
             logo();
         else if(s=="-h" || s=="--help")
@@ -138,7 +139,7 @@ int main(int argc,const char* argv[])
             err();
         return 0;
     }
-    std::unordered_map<std::string,u32> cmdlst={
+    std::unordered_map<string,u32> cmdlst={
         {"--lex",VM_LEXINFO},{"-l",VM_LEXINFO},
         {"--ast",VM_ASTINFO},{"-a",VM_ASTINFO},
         {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
@@ -150,8 +151,8 @@ int main(int argc,const char* argv[])
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     u32 cmd=0;
-    std::string filename;
-    std::vector<std::string> vm_argv;
+    string filename;
+    std::vector<string> vm_argv;
     for(int i=1;i<argc;++i)
     {
         if(cmdlst.count(argv[i]))

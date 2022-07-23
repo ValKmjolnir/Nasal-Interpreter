@@ -8,10 +8,10 @@
 class fstreamline
 {
 protected:
-    std::string file;
-    std::vector<std::string> res;
+    string file;
+    std::vector<string> res;
 public:
-    void load(const std::string& f)
+    void load(const string& f)
     {
         if(file==f) // don't need to load a loaded file
             return;
@@ -23,7 +23,7 @@ public:
             std::cerr<<"[src] cannot open file <"<<f<<">\n";
             std::exit(1);
         }
-        std::string line;
+        string line;
         while(!fin.eof())
         {
             std::getline(fin,line);
@@ -32,11 +32,11 @@ public:
     }
     void clear()
     {
-        std::vector<std::string> tmp;
+        std::vector<string> tmp;
         res.swap(tmp);
     }
-    const std::string& operator[](const u32 line){return res[line];}
-    const std::string& name(){return file;}
+    const string& operator[](const u32 line){return res[line];}
+    const string& name(){return file;}
     usize size(){return res.size();}
 };
 
@@ -46,21 +46,21 @@ private:
     u32 error;
 public:
     nasal_err():error(0){}
-    void err(const char* stage,const std::string& info)
+    void err(const char* stage,const string& info)
     {
         ++error;
         std::cerr<<"["<<stage<<"] "<<info<<"\n";
     }
-    void err(const char* stage,u32 line,u32 column,const std::string& info)
+    void err(const char* stage,u32 line,u32 column,const string& info)
     {
         ++error;
-        const std::string& code=res[line-1];
+        const string& code=res[line-1];
         std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<code<<"\n";
         for(int i=0;i<(int)column-1;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
         std::cerr<<"^\n";
     }
-    void err(const char* stage,u32 line,const std::string& info)
+    void err(const char* stage,u32 line,const string& info)
     {
         ++error;
         std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';
