@@ -6,34 +6,37 @@
 class nasal_dbg:public nasal_vm
 {
 private:
-    bool next_step;
+    bool  next;
     usize fsize;
-    u16 bk_fidx;
-    u32 bk_line;
-    fstreamline src;
+    u16   bk_fidx;
+    u32   bk_line;
+    nasal_err& src;
 
-    std::vector<std::string> parse(const std::string&);
-    u16 fileindex(const std::string&);
+    std::vector<string> parse(const string&);
+    u16 fileindex(const string&);
     void err();
     void help();
+    void opcallsort(const u64*);
     void stepinfo();
     void interact();
 public:
-    nasal_dbg():
-        next_step(false),fsize(0),
-        bk_fidx(0),bk_line(0){}
+    nasal_dbg(nasal_err& nerr):
+        next(false),fsize(0),
+        bk_fidx(0),bk_line(0),
+        src(nerr){}
     void run(
         const nasal_codegen&,
         const nasal_import&,
-        const std::vector<std::string>&
+        const std::vector<string>&,
+        bool
     );
 };
 
-std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
+std::vector<string> nasal_dbg::parse(const string& cmd)
 {
-    std::vector<std::string> res;
+    std::vector<string> res;
     usize last=0,pos=cmd.find(" ",0);
-    while(pos!=std::string::npos)
+    while(pos!=string::npos)
     {
         if(pos>last)
             res.push_back(cmd.substr(last,pos-last));
@@ -45,7 +48,7 @@ std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
     return res;
 }
 
-u16 nasal_dbg::fileindex(const std::string& filename)
+u16 nasal_dbg::fileindex(const string& filename)
 {
     for(u16 i=0;i<fsize;++i)
         if(filename==files[i])
@@ -77,6 +80,34 @@ void nasal_dbg::help()
     <<"\tq,   exit      | exit debugger\n"
     <<"<option> <filename> <line>\n"
     <<"\tbk,  break     | set break point\n";
+}
+
+void nasal_dbg::opcallsort(const u64* arr)
+{
+    typedef std::pair<u32,u64> op;
+    std::vector<op> opcall;
+    u64 total=0;
+    for(u32 i=0;i<op_ret+1;++i)
+    {
+        total+=arr[i];
+        opcall.push_back({i,arr[i]});
+    }
+    std::sort(opcall.begin(),opcall.end(),
+        [](const op& a,const op& b){return a.second>b.second;}
+    );
+    std::clog<<"\noperands call info";
+    for(auto& i:opcall)
+    {
+        u64 rate=i.second*100/total;
+        if(!rate)
+        {
+            std::clog<<"\n ...";
+            break;
+        }
+        std::clog<<"\n "<<code_table[i.first].name
+                 <<" : "<<i.second<<" ("<<rate<<"%)";
+    }
+    std::clog<<"\n total  : "<<total<<'\n';
 }
 
 void nasal_dbg::stepinfo()
@@ -111,11 +142,11 @@ void nasal_dbg::interact()
     
     if(
         (bytecode[pc].fidx!=bk_fidx || bytecode[pc].line!=bk_line) && // break point
-        !next_step // next step
+        !next // next step
     )return;
 
-    next_step=false;
-    std::string cmd;
+    next=false;
+    string cmd;
     stepinfo();
     while(1)
     {
@@ -134,19 +165,18 @@ void nasal_dbg::interact()
                 for(usize i=0;i<fsize;++i)
                     std::cout<<"["<<i<<"] "<<files[i]<<"\n";
             else if(res[0]=="g" || res[0]=="global")
-                global_state();
-            else if(res[0]=="l" || res[0]=="local"){
-                local_state();
-            }
+                gstate();
+            else if(res[0]=="l" || res[0]=="local")
+                lstate();
             else if(res[0]=="u" || res[0]=="upval")
-                upval_state();
+                ustate();
             else if(res[0]=="r" || res[0]=="register")
-                register_info();
+                reginfo();
             else if(res[0]=="a" || res[0]=="all")
                 detail();
             else if(res[0]=="n" || res[0]=="next")
             {
-                next_step=true;
+                next=true;
                 return;
             }
             else if(res[0]=="q" || res[0]=="exit")
@@ -176,11 +206,13 @@ void nasal_dbg::interact()
 void nasal_dbg::run(
     const nasal_codegen& gen,
     const nasal_import& linker,
-    const std::vector<std::string>& argv)
+    const std::vector<string>& argv,
+    bool  opcnt)
 {
     detail_info=true;
     fsize=linker.filelist().size();
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
+    u64 count[op_ret+1]={0};
 #ifndef _MSC_VER
     const void* oprs[]=
     {
@@ -216,54 +248,55 @@ void nasal_dbg::run(
     typedef void (nasal_dbg::*nafunc)();
     const nafunc oprs[]=
     {
-        nullptr,                &nasal_dbg::opr_intg,
-        &nasal_dbg::opr_intl,   &nasal_dbg::opr_loadg,
-        &nasal_dbg::opr_loadl,  &nasal_dbg::opr_loadu,
-        &nasal_dbg::opr_pnum,   &nasal_dbg::opr_pnil,
-        &nasal_dbg::opr_pstr,   &nasal_dbg::opr_newv,
-        &nasal_dbg::opr_newh,   &nasal_dbg::opr_newf,
-        &nasal_dbg::opr_happ,   &nasal_dbg::opr_para,
-        &nasal_dbg::opr_deft,   &nasal_dbg::opr_dyn,
-        &nasal_dbg::opr_unot,   &nasal_dbg::opr_usub,
-        &nasal_dbg::opr_add,    &nasal_dbg::opr_sub,
-        &nasal_dbg::opr_mul,    &nasal_dbg::opr_div,
-        &nasal_dbg::opr_lnk,    &nasal_dbg::opr_addc,
-        &nasal_dbg::opr_subc,   &nasal_dbg::opr_mulc,
-        &nasal_dbg::opr_divc,   &nasal_dbg::opr_lnkc,
-        &nasal_dbg::opr_addeq,  &nasal_dbg::opr_subeq,
-        &nasal_dbg::opr_muleq,  &nasal_dbg::opr_diveq,
-        &nasal_dbg::opr_lnkeq,  &nasal_dbg::opr_addeqc,
-        &nasal_dbg::opr_subeqc, &nasal_dbg::opr_muleqc,
-        &nasal_dbg::opr_diveqc, &nasal_dbg::opr_lnkeqc,
-        &nasal_dbg::opr_meq,    &nasal_dbg::opr_eq,
-        &nasal_dbg::opr_neq,    &nasal_dbg::opr_less,
-        &nasal_dbg::opr_leq,    &nasal_dbg::opr_grt,
-        &nasal_dbg::opr_geq,    &nasal_dbg::opr_lessc,
-        &nasal_dbg::opr_leqc,   &nasal_dbg::opr_grtc,
-        &nasal_dbg::opr_geqc,   &nasal_dbg::opr_pop,
-        &nasal_dbg::opr_jmp,    &nasal_dbg::opr_jt,
-        &nasal_dbg::opr_jf,     &nasal_dbg::opr_cnt,
-        &nasal_dbg::opr_findex, &nasal_dbg::opr_feach,
-        &nasal_dbg::opr_callg,  &nasal_dbg::opr_calll,
-        &nasal_dbg::opr_upval,  &nasal_dbg::opr_callv,
-        &nasal_dbg::opr_callvi, &nasal_dbg::opr_callh,
-        &nasal_dbg::opr_callfv, &nasal_dbg::opr_callfh,
-        &nasal_dbg::opr_callb,  &nasal_dbg::opr_slcbeg,
-        &nasal_dbg::opr_slcend, &nasal_dbg::opr_slc,
-        &nasal_dbg::opr_slc2,   &nasal_dbg::opr_mcallg,
-        &nasal_dbg::opr_mcalll, &nasal_dbg::opr_mupval,
-        &nasal_dbg::opr_mcallv, &nasal_dbg::opr_mcallh,
-        &nasal_dbg::opr_ret
+        nullptr,                &nasal_dbg::o_intg,
+        &nasal_dbg::o_intl,   &nasal_dbg::o_loadg,
+        &nasal_dbg::o_loadl,  &nasal_dbg::o_loadu,
+        &nasal_dbg::o_pnum,   &nasal_dbg::o_pnil,
+        &nasal_dbg::o_pstr,   &nasal_dbg::o_newv,
+        &nasal_dbg::o_newh,   &nasal_dbg::o_newf,
+        &nasal_dbg::o_happ,   &nasal_dbg::o_para,
+        &nasal_dbg::o_deft,   &nasal_dbg::o_dyn,
+        &nasal_dbg::o_unot,   &nasal_dbg::o_usub,
+        &nasal_dbg::o_add,    &nasal_dbg::o_sub,
+        &nasal_dbg::o_mul,    &nasal_dbg::o_div,
+        &nasal_dbg::o_lnk,    &nasal_dbg::o_addc,
+        &nasal_dbg::o_subc,   &nasal_dbg::o_mulc,
+        &nasal_dbg::o_divc,   &nasal_dbg::o_lnkc,
+        &nasal_dbg::o_addeq,  &nasal_dbg::o_subeq,
+        &nasal_dbg::o_muleq,  &nasal_dbg::o_diveq,
+        &nasal_dbg::o_lnkeq,  &nasal_dbg::o_addeqc,
+        &nasal_dbg::o_subeqc, &nasal_dbg::o_muleqc,
+        &nasal_dbg::o_diveqc, &nasal_dbg::o_lnkeqc,
+        &nasal_dbg::o_meq,    &nasal_dbg::o_eq,
+        &nasal_dbg::o_neq,    &nasal_dbg::o_less,
+        &nasal_dbg::o_leq,    &nasal_dbg::o_grt,
+        &nasal_dbg::o_geq,    &nasal_dbg::o_lessc,
+        &nasal_dbg::o_leqc,   &nasal_dbg::o_grtc,
+        &nasal_dbg::o_geqc,   &nasal_dbg::o_pop,
+        &nasal_dbg::o_jmp,    &nasal_dbg::o_jt,
+        &nasal_dbg::o_jf,     &nasal_dbg::o_cnt,
+        &nasal_dbg::o_findex, &nasal_dbg::o_feach,
+        &nasal_dbg::o_callg,  &nasal_dbg::o_calll,
+        &nasal_dbg::o_upval,  &nasal_dbg::o_callv,
+        &nasal_dbg::o_callvi, &nasal_dbg::o_callh,
+        &nasal_dbg::o_callfv, &nasal_dbg::o_callfh,
+        &nasal_dbg::o_callb,  &nasal_dbg::o_slcbeg,
+        &nasal_dbg::o_slcend, &nasal_dbg::o_slc,
+        &nasal_dbg::o_slc2,   &nasal_dbg::o_mcallg,
+        &nasal_dbg::o_mcalll, &nasal_dbg::o_mupval,
+        &nasal_dbg::o_mcallv, &nasal_dbg::o_mcallh,
+        &nasal_dbg::o_ret
     };
-    std::vector<nafunc> code;
+    std::vector<u32> code;
     for(auto& i:gen.codes())
     {
-        code.push_back(oprs[i.op]);
+        code.push_back(i.op);
         imm.push_back(i.num);
     }
-    while(code[pc]){
+    while(oprs[code[pc]]){
         interact();
-        (this->*code[pc])();
+        ++count[code[pc]];
+        (this->*oprs[code[pc]])();
         if(top>=canary)
             break;
         ++pc;
@@ -273,87 +306,95 @@ void nasal_dbg::run(
 vmexit:
     if(top>=canary)
         die("stack overflow");
+    if(opcnt)
+        opcallsort(count);
     gc.clear();
     imm.clear();
     std::cout<<"[debug] debugger exited\n";
     return;
 #ifndef _MSC_VER
-#define dbg(op) {interact();op();if(top<canary)goto *code[++pc];goto vmexit;}
+#define dbg(op,num) {\
+    interact();\
+    op();\
+    ++count[num];\
+    if(top<canary)\
+        goto *code[++pc];\
+    goto vmexit;}
 
-intg:   dbg(opr_intg  );
-intl:   dbg(opr_intl  );
-loadg:  dbg(opr_loadg );
-loadl:  dbg(opr_loadl );
-loadu:  dbg(opr_loadu );
-pnum:   dbg(opr_pnum  );
-pnil:   dbg(opr_pnil  );
-pstr:   dbg(opr_pstr  );
-newv:   dbg(opr_newv  );
-newh:   dbg(opr_newh  );
-newf:   dbg(opr_newf  );
-happ:   dbg(opr_happ  );
-para:   dbg(opr_para  );
-deft:   dbg(opr_deft  );
-dyn:    dbg(opr_dyn   );
-unot:   dbg(opr_unot  );
-usub:   dbg(opr_usub  );
-add:    dbg(opr_add   );
-sub:    dbg(opr_sub   );
-mul:    dbg(opr_mul   );
-div:    dbg(opr_div   );
-lnk:    dbg(opr_lnk   );
-addc:   dbg(opr_addc  );
-subc:   dbg(opr_subc  );
-mulc:   dbg(opr_mulc  );
-divc:   dbg(opr_divc  );
-lnkc:   dbg(opr_lnkc  );
-addeq:  dbg(opr_addeq );
-subeq:  dbg(opr_subeq );
-muleq:  dbg(opr_muleq );
-diveq:  dbg(opr_diveq );
-lnkeq:  dbg(opr_lnkeq );
-addeqc: dbg(opr_addeqc);
-subeqc: dbg(opr_subeqc);
-muleqc: dbg(opr_muleqc);
-diveqc: dbg(opr_diveqc);
-lnkeqc: dbg(opr_lnkeqc);
-meq:    dbg(opr_meq   );
-eq:     dbg(opr_eq    );
-neq:    dbg(opr_neq   );
-less:   dbg(opr_less  );
-leq:    dbg(opr_leq   );
-grt:    dbg(opr_grt   );
-geq:    dbg(opr_geq   );
-lessc:  dbg(opr_lessc );
-leqc:   dbg(opr_leqc  );
-grtc:   dbg(opr_grtc  );
-geqc:   dbg(opr_geqc  );
-pop:    dbg(opr_pop   );
-jmp:    dbg(opr_jmp   );
-jt:     dbg(opr_jt    );
-jf:     dbg(opr_jf    );
-cnt:    dbg(opr_cnt   );
-findex: dbg(opr_findex);
-feach:  dbg(opr_feach );
-callg:  dbg(opr_callg );
-calll:  dbg(opr_calll );
-upval:  dbg(opr_upval );
-callv:  dbg(opr_callv );
-callvi: dbg(opr_callvi);
-callh:  dbg(opr_callh );
-callfv: dbg(opr_callfv);
-callfh: dbg(opr_callfh);
-callb:  dbg(opr_callb );
-slcbeg: dbg(opr_slcbeg);
-slcend: dbg(opr_slcend);
-slc:    dbg(opr_slc   );
-slc2:   dbg(opr_slc2  );
-mcallg: dbg(opr_mcallg);
-mcalll: dbg(opr_mcalll);
-mupval: dbg(opr_mupval);
-mcallv: dbg(opr_mcallv);
-mcallh: dbg(opr_mcallh);
-ret:    dbg(opr_ret   );
+intg:   dbg(o_intg  ,op_intg  );
+intl:   dbg(o_intl  ,op_intl  );
+loadg:  dbg(o_loadg ,op_loadg );
+loadl:  dbg(o_loadl ,op_loadl );
+loadu:  dbg(o_loadu ,op_loadu );
+pnum:   dbg(o_pnum  ,op_pnum  );
+pnil:   dbg(o_pnil  ,op_pnil  );
+pstr:   dbg(o_pstr  ,op_pstr  );
+newv:   dbg(o_newv  ,op_newv  );
+newh:   dbg(o_newh  ,op_newh  );
+newf:   dbg(o_newf  ,op_newf  );
+happ:   dbg(o_happ  ,op_happ  );
+para:   dbg(o_para  ,op_para  );
+deft:   dbg(o_deft  ,op_deft  );
+dyn:    dbg(o_dyn   ,op_dyn   );
+unot:   dbg(o_unot  ,op_unot  );
+usub:   dbg(o_usub  ,op_usub  );
+add:    dbg(o_add   ,op_add   );
+sub:    dbg(o_sub   ,op_sub   );
+mul:    dbg(o_mul   ,op_mul   );
+div:    dbg(o_div   ,op_div   );
+lnk:    dbg(o_lnk   ,op_lnk   );
+addc:   dbg(o_addc  ,op_addc  );
+subc:   dbg(o_subc  ,op_subc  );
+mulc:   dbg(o_mulc  ,op_mulc  );
+divc:   dbg(o_divc  ,op_divc  );
+lnkc:   dbg(o_lnkc  ,op_lnkc  );
+addeq:  dbg(o_addeq ,op_addeq );
+subeq:  dbg(o_subeq ,op_subeq );
+muleq:  dbg(o_muleq ,op_muleq );
+diveq:  dbg(o_diveq ,op_diveq );
+lnkeq:  dbg(o_lnkeq ,op_lnkeq );
+addeqc: dbg(o_addeqc,op_addeqc);
+subeqc: dbg(o_subeqc,op_subeqc);
+muleqc: dbg(o_muleqc,op_muleqc);
+diveqc: dbg(o_diveqc,op_diveqc);
+lnkeqc: dbg(o_lnkeqc,op_lnkeqc);
+meq:    dbg(o_meq   ,op_meq   );
+eq:     dbg(o_eq    ,op_eq    );
+neq:    dbg(o_neq   ,op_neq   );
+less:   dbg(o_less  ,op_less  );
+leq:    dbg(o_leq   ,op_leq   );
+grt:    dbg(o_grt   ,op_grt   );
+geq:    dbg(o_geq   ,op_geq   );
+lessc:  dbg(o_lessc ,op_lessc );
+leqc:   dbg(o_leqc  ,op_leqc  );
+grtc:   dbg(o_grtc  ,op_grtc  );
+geqc:   dbg(o_geqc  ,op_geqc  );
+pop:    dbg(o_pop   ,op_pop   );
+jmp:    dbg(o_jmp   ,op_jmp   );
+jt:     dbg(o_jt    ,op_jt    );
+jf:     dbg(o_jf    ,op_jf    );
+cnt:    dbg(o_cnt   ,op_cnt   );
+findex: dbg(o_findex,op_findex);
+feach:  dbg(o_feach ,op_feach );
+callg:  dbg(o_callg ,op_callg );
+calll:  dbg(o_calll ,op_calll );
+upval:  dbg(o_upval ,op_upval );
+callv:  dbg(o_callv ,op_callv );
+callvi: dbg(o_callvi,op_callvi);
+callh:  dbg(o_callh ,op_callh );
+callfv: dbg(o_callfv,op_callfv);
+callfh: dbg(o_callfh,op_callfh);
+callb:  dbg(o_callb ,op_callb );
+slcbeg: dbg(o_slcbeg,op_slcbeg);
+slcend: dbg(o_slcend,op_slcend);
+slc:    dbg(o_slc   ,op_slc   );
+slc2:   dbg(o_slc2  ,op_slc2  );
+mcallg: dbg(o_mcallg,op_mcallg);
+mcalll: dbg(o_mcalll,op_mcalll);
+mupval: dbg(o_mupval,op_mupval);
+mcallv: dbg(o_mcallv,op_mcallv);
+mcallh: dbg(o_mcallh,op_mcallh);
+ret:    dbg(o_ret   ,op_ret   );
 #endif
 }
 

@@ -1,7 +1,7 @@
 ﻿#ifndef __NASAL_AST_H__
 #define __NASAL_AST_H__
 
-enum ast_node
+enum ast_node:u32
 {
     ast_null=0,      // null node
     ast_root,        // mark the root node of ast
@@ -132,7 +132,7 @@ private:
     u32 _line;
     u32 _type;
     f64 _num;
-    std::string _str;
+    string _str;
     std::vector<nasal_ast> _child;
 public:
     nasal_ast(const u32 l=0,const u32 t=ast_null):_line(l),_type(t),_num(0){}
@@ -151,13 +151,13 @@ public:
     void add(const nasal_ast& ast){_child.push_back(ast);}
     void set_line(const u32 l){_line=l;}
     void set_type(const u32 t){_type=t;}
-    void set_str(const std::string& s){_str=s;}
+    void set_str(const string& s){_str=s;}
     void set_num(const f64 n){_num=n;}
 
     inline u32 line() const {return _line;}
     inline u32 type() const {return _type;}
     inline f64 num()  const {return _num;}
-    inline const std::string& str() const {return _str;}
+    inline const string& str() const {return _str;}
     inline const std::vector<nasal_ast>& child() const {return _child;}
     inline std::vector<nasal_ast>& child(){return _child;}
 };
@@ -210,7 +210,7 @@ void nasal_ast::clear()
 
 void nasal_ast::print(int depth,bool last=false)
 {
-    static std::vector<std::string> intentation={};
+    static std::vector<string> intentation={};
     for(auto& i:intentation)
         std::cout<<i;
     std::cout<<ast_name[_type];

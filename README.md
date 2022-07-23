@@ -559,7 +559,7 @@ If you really want to change source code, check built-in functions in `lib.nas` 
 Definition:
 
 ```C++
-nasal_ref builtin_print(nasal_ref*,nasal_gc&);
+nas_ref builtin_print(nas_ref*,nasal_gc&);
 // you could also use a macro to define one.
 nas_native(builtin_print);
 ```
@@ -567,11 +567,11 @@ nas_native(builtin_print);
 Then complete this function using C++:
 
 ```C++
-nasal_ref builtin_print(nasal_ref* local,nasal_gc& gc)
+nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 {
     // find value with index begin from 1
     // because local[0] is reserved for value 'me'
-    nasal_ref vec=local[1];
+    nas_ref vec=local[1];
     // main process
     // also check number of arguments and type here
     // if get an error,use builtin_err
@@ -601,7 +601,7 @@ After that, register the built-in function's name(in nasal) and the function's p
 struct func
 {
     const char* name;
-    nasal_ref (*func)(nasal_ref*,nasal_gc&);
+    nas_ref (*func)(nas_ref*,nasal_gc&);
 } builtin[]=
 {
     {"__print",builtin_print},
@@ -644,13 +644,13 @@ The value got before will be collected, but stil in use in this builtin function
 So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
 
 ```C++
-nasal_ref builtin_keys(nasal_ref* local,nasal_gc& gc)
+nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 {
-    nasal_ref hash=local[1];
+    nas_ref hash=local[1];
     if(hash.type!=vm_hash)
         return builtin_err("keys","\"hash\" must be hash");
     // avoid being sweeped
-    nasal_ref res=gc.temp=gc.alloc(vm_vec);
+    nas_ref res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
         vec.push_back(gc.newstr(iter.first));
@@ -693,10 +693,10 @@ double fibonaci(double x){
 }
 // remember to use extern "C",
 // so you could search the symbol quickly
-extern "C" nasal_ref fib(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref fib(std::vector<nas_ref>& args,nasal_gc& gc){
     // the arguments are generated into a vm_vec: args
     // get values from the vector that must be used here
-    nasal_ref num=args[0];
+    nas_ref num=args[0];
     // if you want your function safer, try this
     // builtin_err will print the error info on screen
     // and return vm_null for runtime to interrupt
@@ -1330,37 +1330,37 @@ __We will explain how resume and yield work here:__
 When `op_callb` is called, the stack frame is like this:
 
 ```C++
-+----------------------------+(main stack)
-| old pc(vm_ret)             | <- top[0]
-+----------------------------+
-| old localr(vm_addr)        | <- top[-1]
-+----------------------------+
-| old upvalr(vm_upval)       | <- top[-2]
-+----------------------------+
-| local scope(nasal_ref)     |
-| ...                        |
-+----------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)         | <- old function stored in funcr
-+----------------------------+
++--------------------------+(main stack)
+| old pc(vm_ret)           | <- top[0]
++--------------------------+
+| old localr(vm_addr)      | <- top[-1]
++--------------------------+
+| old upvalr(vm_upval)     | <- top[-2]
++--------------------------+
+| local scope(nas_ref)     |
+| ...                      |
++--------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)       | <- old function stored in funcr
++--------------------------+
 ```
 
 In `op_callb`'s progress, next step the stack frame is:
 
 ```C++
-+----------------------------+(main stack)
-| nil(vm_nil)                | <- push nil
-+----------------------------+
-| old pc(vm_ret)             |
-+----------------------------+
-| old localr(vm_addr)        |
-+----------------------------+
-| old upvalr(vm_upval)       |
-+----------------------------+
-| local scope(nasal_ref)     |
-| ...                        |
-+----------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)         | <- old function stored in funcr
-+----------------------------+
++--------------------------+(main stack)
+| nil(vm_nil)              | <- push nil
++--------------------------+
+| old pc(vm_ret)           |
++--------------------------+
+| old localr(vm_addr)      |
++--------------------------+
+| old upvalr(vm_upval)     |
++--------------------------+
+| local scope(nas_ref)     |
+| ...                      |
++--------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)       | <- old function stored in funcr
++--------------------------+
 ```
 
 Then we call `resume`, this function will change stack.
@@ -1371,9 +1371,9 @@ So for safe running, `resume` will return `gc.top[0]`.
 `op_callb` will do `top[0]=resume()`, so the value does not change.
 
 ```C++
-+----------------------------+(coroutine stack)
-| pc:0(vm_ret)               | <- now gc.top[0]
-+----------------------------+
++--------------------------+(coroutine stack)
+| pc:0(vm_ret)             | <- now gc.top[0]
++--------------------------+
 ```
 
 When we call `yield`, the function will do like this.
@@ -1381,40 +1381,40 @@ And we find that `op_callb` has put the `nil` at the top.
 but where is the returned `local[1]` sent?
 
 ```C++
-+----------------------------+(coroutine stack)
-| nil(vm_nil)                | <- push nil
-+----------------------------+
-| old pc(vm_ret)             |
-+----------------------------+
-| old localr(vm_addr)        |
-+----------------------------+
-| old upvalr(vm_upval)       |
-+----------------------------+
-| local scope(nasal_ref)     |
-| ...                        |
-+----------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)         | <- old function stored in funcr
-+----------------------------+
++--------------------------+(coroutine stack)
+| nil(vm_nil)              | <- push nil
++--------------------------+
+| old pc(vm_ret)           |
++--------------------------+
+| old localr(vm_addr)      |
++--------------------------+
+| old upvalr(vm_upval)     |
++--------------------------+
+| local scope(nas_ref)     |
+| ...                      |
++--------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)       | <- old function stored in funcr
++--------------------------+
 ```
 
 When `builtin_coyield` is finished, the stack is set to main stack,
 and the returned `local[1]` in fact is set to the top of the main stack by `op_callb`:
 
 ```C++
-+----------------------------+(main stack)
-| return_value(nasal_ref)    |
-+----------------------------+
-| old pc(vm_ret)             |
-+----------------------------+
-| old localr(vm_addr)        |
-+----------------------------+
-| old upvalr(vm_upval)       |
-+----------------------------+
-| local scope(nasal_ref)     |
-| ...                        |
-+----------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)         | <- old function stored in funcr
-+----------------------------+
++--------------------------+(main stack)
+| return_value(nas_ref)    |
++--------------------------+
+| old pc(vm_ret)           |
++--------------------------+
+| old localr(vm_addr)      |
++--------------------------+
+| old upvalr(vm_upval)     |
++--------------------------+
+| local scope(nas_ref)     |
+| ...                      |
++--------------------------+ <- local pointer stored in localr
+| old funcr(vm_func)       | <- old function stored in funcr
++--------------------------+
 ```
 
 so the main progress feels the value on the top is the returned value of `resume`.

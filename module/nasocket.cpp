@@ -24,14 +24,14 @@ static WSAmanager win;
 #include <netinet/in.h>
 #endif
 
-extern "C" nasal_ref nas_socket(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_socket(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
         return builtin_err("socket","\"af\", \"type\", \"protocol\" should be number");
     int sd=socket(args[0].num(),args[1].num(),args[2].num());
     return {vm_num,(double)sd};
 }
 
-extern "C" nasal_ref nas_closesocket(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_closesocket(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("closesocket","\"\" should be number");
 #ifdef _WIN32
@@ -41,7 +41,7 @@ extern "C" nasal_ref nas_closesocket(std::vector<nasal_ref>& args,nasal_gc& gc){
 #endif
 }
 
-extern "C" nasal_ref nas_shutdown(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_shutdown(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("shutdown","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -49,7 +49,7 @@ extern "C" nasal_ref nas_shutdown(std::vector<nasal_ref>& args,nasal_gc& gc){
     return {vm_num,(double)shutdown(args[0].num(),args[1].num())};
 }
 
-extern "C" nasal_ref nas_bind(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_bind(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("bind","\"sd\" muse be a number");
     if(args[1].type!=vm_str)
@@ -64,7 +64,7 @@ extern "C" nasal_ref nas_bind(std::vector<nasal_ref>& args,nasal_gc& gc){
     return {vm_num,(double)bind(args[0].num(),(sockaddr*)&server,sizeof(server))};
 }
 
-extern "C" nasal_ref nas_listen(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_listen(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("listen","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -72,7 +72,7 @@ extern "C" nasal_ref nas_listen(std::vector<nasal_ref>& args,nasal_gc& gc){
     return{vm_num,(double)listen(args[0].num(),args[1].num())};
 }
 
-extern "C" nasal_ref nas_connect(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_connect(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("connect","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -88,7 +88,7 @@ extern "C" nasal_ref nas_connect(std::vector<nasal_ref>& args,nasal_gc& gc){
     return {vm_num,(double)connect(args[0].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-extern "C" nasal_ref nas_accept(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_accept(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("accept","\"sd\" must be a number");
     sockaddr_in client;
@@ -98,7 +98,7 @@ extern "C" nasal_ref nas_accept(std::vector<nasal_ref>& args,nasal_gc& gc){
 #else
     int client_sd=accept(args[0].num(),(sockaddr*)&client,(socklen_t*)&socklen);
 #endif
-    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    nas_ref res=gc.temp=gc.alloc(vm_hash);
     auto& hash=res.hash().elems;
     hash["sd"]={vm_num,(double)client_sd};
     hash["ip"]=gc.newstr(inet_ntoa(client.sin_addr));
@@ -106,7 +106,7 @@ extern "C" nasal_ref nas_accept(std::vector<nasal_ref>& args,nasal_gc& gc){
     return res;
 }
 
-extern "C" nasal_ref nas_send(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_send(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("send","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -116,7 +116,7 @@ extern "C" nasal_ref nas_send(std::vector<nasal_ref>& args,nasal_gc& gc){
     return {vm_num,(double)send(args[0].num(),args[1].str().c_str(),args[1].str().length(),args[2].num())};
 }
 
-extern "C" nasal_ref nas_sendto(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_sendto(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("sendto","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -136,7 +136,7 @@ extern "C" nasal_ref nas_sendto(std::vector<nasal_ref>& args,nasal_gc& gc){
     return {vm_num,(double)sendto(args[0].num(),args[3].str().c_str(),args[3].str().length(),args[4].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-extern "C" nasal_ref nas_recv(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_recv(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("recv","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -145,7 +145,7 @@ extern "C" nasal_ref nas_recv(std::vector<nasal_ref>& args,nasal_gc& gc){
         return builtin_err("recv","\"len\" out of range");
     if(args[2].type!=vm_num)
         return builtin_err("recv","\"flags\" muse be a number");
-    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    nas_ref res=gc.temp=gc.alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()];
     hash["size"]={vm_num,(double)recv(args[0].num(),buf,args[1].num(),args[2].num())};
@@ -155,7 +155,7 @@ extern "C" nasal_ref nas_recv(std::vector<nasal_ref>& args,nasal_gc& gc){
     return res;
 }
 
-extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_recvfrom(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
         return builtin_err("recvfrom","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -166,7 +166,7 @@ extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
         return builtin_err("recvfrom","\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen=sizeof(sockaddr_in);
-    nasal_ref res=gc.temp=gc.alloc(vm_hash);
+    nas_ref res=gc.temp=gc.alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()+1];
 #ifdef _WIN32
@@ -182,6 +182,6 @@ extern "C" nasal_ref nas_recvfrom(std::vector<nasal_ref>& args,nasal_gc& gc){
     return res;
 }
 
-extern "C" nasal_ref nas_errno(std::vector<nasal_ref>& args,nasal_gc& gc){
+extern "C" nas_ref nas_errno(std::vector<nas_ref>& args,nasal_gc& gc){
     return gc.newstr(strerror(errno));
 }

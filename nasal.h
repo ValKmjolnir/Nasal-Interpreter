@@ -42,13 +42,13 @@
 
 using i32=std::int32_t;
 using i64=std::int64_t;
-using u8 =std::uint8_t;
+using u8=std::uint8_t;
 using u16=std::uint16_t;
 using u32=std::uint32_t;
 using u64=std::uint64_t;
 using usize=std::size_t;
 using f64=double;
-
+using std::string;
 
 const u32 STACK_DEPTH=2048;
 
@@ -145,14 +145,15 @@ int utf8_hdchk(const char head)
     return 0;
 }
 
-std::string chrhex(const char c)
+string chrhex(const char c)
 {
-    return {"0123456789abcdef"[(c&0xf0)>>4],"0123456789abcdef"[c&0x0f]};
+    const char hextbl[]="0123456789abcdef";
+    return {hextbl[(c&0xf0)>>4],hextbl[c&0x0f]};
 }
 
-std::string rawstr(const std::string& str,const usize maxlen=0)
+string rawstr(const string& str,const usize maxlen=0)
 {
-    std::string ret("");
+    string ret("");
     for(auto i:str)
     {
 #ifdef _WIN32

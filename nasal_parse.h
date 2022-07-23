@@ -48,7 +48,7 @@ private:
     nasal_ast root;
     nasal_err& nerr;
 
-    void die(u32,std::string,bool);
+    void die(u32,string,bool);
     void match(u32 type,const char* info=nullptr);
     bool check_comma(const u32*);
     bool check_multi_scalar();
@@ -121,7 +121,7 @@ void nasal_parse::compile(const nasal_lexer& lexer)
     }
     nerr.chkerr();
 }
-void nasal_parse::die(u32 line,std::string info,bool report_prev=false)
+void nasal_parse::die(u32 line,string info,bool report_prev=false)
 {
     int col=(int)tokens[ptr].col-(int)tokens[ptr].str.length();
     if(tokens[ptr].type==tok_str)
@@ -147,7 +147,7 @@ void nasal_parse::match(u32 type,const char* info)
             case tok_num:die(error_line,"expected number");    break;
             case tok_str:die(error_line,"expected string");    break;
             case tok_id: die(error_line,"expected identifier");break;
-            default:     die(error_line,"expected \'"+std::string(tok_table[type-tok_for].str)+"\'"); break;
+            default:     die(error_line,"expected \'"+string(tok_table[type-tok_for].str)+"\'"); break;
         }
         return;
     }
@@ -387,7 +387,7 @@ nasal_ast nasal_parse::args()
     }
     match(tok_rcurve,"expected \')\' after parameter list");
 
-    std::string format="func(";
+    string format="func(";
     for(auto& tmp:node.child())
     {
         format+=tmp.str();
@@ -411,10 +411,10 @@ nasal_ast nasal_parse::args()
         if(checked_dynamic && &tmp!=&node.child().back())
             die(tmp.line(),"dynamic para must be the end: "+format);
     }
-    std::unordered_map<std::string,bool> argname;
+    std::unordered_map<string,bool> argname;
     for(auto& tmp:node.child())
     {
-        std::string name;
+        string name;
         switch(tmp.type())
         {
             case ast_dynamic:

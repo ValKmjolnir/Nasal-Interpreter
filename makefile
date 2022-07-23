@@ -37,7 +37,7 @@ test:nasal
 	@ ./nasal -op -e -d test/calc.nas
 	@ ./nasal -op -e test/choice.nas
 	@ ./nasal -op -e test/class.nas
-	@ ./nasal -op -d -o test/coroutine.nas
+	@ ./nasal -op -d test/coroutine.nas
 	@ ./nasal -op -e test/diff.nas
 	-@ ./nasal -op -d test/exception.nas
 	@ ./nasal -op -t -d test/fib.nas
@@ -51,8 +51,8 @@ test:nasal
 	@ ./nasal -op -t test/loop.nas
 	@ ./nasal -op -t -d test/mandel.nas
 	@ ./nasal -op -t -d test/mandelbrot.nas
-	@ ./nasal -op -t -d -o test/md5.nas
-	-@ ./nasal -op -t -d -o test/md5compare.nas
+	@ ./nasal -op -t -d test/md5.nas
+	-@ ./nasal -op -t -d test/md5compare.nas
 	-@ ./nasal -op -d test/module_test.nas
 	@ ./nasal -op -e test/nasal_test.nas
 	@ ./nasal -op -c test/occupation.nas
@@ -65,6 +65,6 @@ test:nasal
 	@ ./nasal -op -c -e test/trait.nas
 	-@ ./nasal -op -c -t test/tetris.nas
 	@ ./nasal -op -c -t -d test/turingmachine.nas
-	@ ./nasal -op -c -t -d -o test/ycombinator.nas
-	@ ./nasal -op -d -o test/wavecollapse.nas
+	@ ./nasal -op -c -t -d test/ycombinator.nas
+	@ ./nasal -op -d test/wavecollapse.nas
 	
