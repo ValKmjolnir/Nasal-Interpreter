@@ -248,7 +248,7 @@ void nasal_dbg::run(
     typedef void (nasal_dbg::*nafunc)();
     const nafunc oprs[]=
     {
-        nullptr,                &nasal_dbg::o_intg,
+        nullptr,              &nasal_dbg::o_intg,
         &nasal_dbg::o_intl,   &nasal_dbg::o_loadg,
         &nasal_dbg::o_loadl,  &nasal_dbg::o_loadu,
         &nasal_dbg::o_pnum,   &nasal_dbg::o_pnil,

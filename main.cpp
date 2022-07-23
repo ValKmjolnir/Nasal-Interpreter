@@ -21,7 +21,7 @@ void help()
 #endif
     <<"nasal <option>\n"
     <<"option:\n"
-    <<"    -h, --help      | get help.\n"
+    <<"    -h, --help      | get this help.\n"
     <<"    -v, --version   | get version of nasal interpreter.\n\n"
     <<"nasal <file>\n"
     <<"file:\n"
@@ -102,12 +102,9 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     if(cmd&VM_CODEINFO)
         gen.print();
     
-    // run bytecode
+    // run
     if(cmd&VM_DEBUG)
-    {
-        nasal_dbg debugger(nerr);
-        debugger.run(gen,linker,argv,cmd&VM_OPCALLNUM);
-    }
+        nasal_dbg(nerr).run(gen,linker,argv,cmd&VM_OPCALLNUM);
     else if(cmd&VM_EXECTIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
