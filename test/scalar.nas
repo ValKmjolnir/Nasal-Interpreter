@@ -202,3 +202,6 @@ foreach(i;a){
     ;
 }
 println(runtime.argv());
+func(a,b,c,d="只有红茶可以吗"){
+    println(a,' ',b,' ',c,' ',d);
+}(c:1919810,b:514,a:114);
