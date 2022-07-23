@@ -1,7 +1,7 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
-enum vm_type:std::uint8_t{
+enum vm_type:u8{
     /* none-gc object */
     vm_none=0,
     vm_cnt,
@@ -19,10 +19,10 @@ enum vm_type:std::uint8_t{
     vm_co,
     vm_tsize
 };
-const uint32_t gc_tsize=vm_tsize-vm_str;
+const u32 gc_tsize=vm_tsize-vm_str;
 // change parameters here to make your own efficient gc
 // better set bigger number on vm_vec
-const uint32_t ini[gc_tsize]=
+const u32 ini[gc_tsize]=
 {
     128, // vm_str
     128, // vm_vec
@@ -32,7 +32,7 @@ const uint32_t ini[gc_tsize]=
     0,   // vm_obj
     0    // vm_co
 };
-const uint32_t incr[gc_tsize]=
+const u32 incr[gc_tsize]=
 {
     256, // vm_str
     512, // vm_vec
@@ -53,40 +53,40 @@ struct nasal_val;  // nasal_val includes gc-managed types
 
 struct nasal_ref
 {
-    uint8_t type;
+    u8 type;
     union
     {
-        uint32_t ret;
-        int64_t  cnt;
-        double   num;
+        u32 ret;
+        i64 cnt;
+        f64 num;
         nasal_ref* addr;
         nasal_val* gcobj;
     } val;
 
     // vm_none/vm_nil
-    nasal_ref(const uint8_t t=vm_none):type(t){}
+    nasal_ref(const u8 t=vm_none):type(t){}
     // vm_ret
-    nasal_ref(const uint8_t t,const uint32_t n):type(t){val.ret=n;}
+    nasal_ref(const u8 t,const u32 n):type(t){val.ret=n;}
     // vm_cnt
-    nasal_ref(const uint8_t t,const int64_t n):type(t){val.cnt=n;}
+    nasal_ref(const u8 t,const i64 n):type(t){val.cnt=n;}
     // vm_num
-    nasal_ref(const uint8_t t,const double n):type(t){val.num=n;}
+    nasal_ref(const u8 t,const f64 n):type(t){val.num=n;}
     // vm_str/vm_func/vm_vec/vm_hash/vm_upval/vm_obj
-    nasal_ref(const uint8_t t,nasal_val* n):type(t){val.gcobj=n;}
+    nasal_ref(const u8 t,nasal_val* n):type(t){val.gcobj=n;}
     // vm_addr
-    nasal_ref(const uint8_t t,nasal_ref* n):type(t){val.addr=n;}
+    nasal_ref(const u8 t,nasal_ref* n):type(t){val.addr=n;}
     nasal_ref(const nasal_ref& nr):type(nr.type),val(nr.val){}
     bool operator==(const nasal_ref& nr){return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const nasal_ref& nr){return type!=nr.type || val.gcobj!=nr.val.gcobj;}
     // number and string can be translated to each other
-    double      tonum();
+    f64         tonum();
     std::string tostr();
     void        print();
-    bool        objchk(uint32_t);
+    bool        objchk(u32);
     inline nasal_ref*   addr();
-    inline uint32_t     ret ();
-    inline int64_t&     cnt ();
-    inline double       num ();
+    inline u32          ret ();
+    inline i64&         cnt ();
+    inline f64          num ();
     inline std::string& str ();
     inline nasal_vec&   vec ();
     inline nasal_hash&  hash();
@@ -103,7 +103,7 @@ struct nasal_vec
 
     nasal_vec():printed(false){}
     void       print();
-    size_t     size(){return elems.size();}
+    usize      size(){return elems.size();}
     nasal_ref  get_val(const int);
     nasal_ref* get_mem(const int);
 };
@@ -115,20 +115,20 @@ struct nasal_hash
 
     nasal_hash():printed(false){}
     void       print();
-    size_t     size(){return elems.size();}
+    usize      size(){return elems.size();}
     nasal_ref  get_val(const std::string&);
     nasal_ref* get_mem(const std::string&);
 };
 
 struct nasal_func
 {
-    int32_t  dynpara;                           // dynamic parameter name index in hash.
-    uint32_t entry;                             // pc will set to entry-1 to call this function
-    uint32_t psize;                             // used to load default parameters to a new function
-    uint32_t lsize;                             // used to expand memory space for local values on stack
-    std::vector<nasal_ref> local;               // local scope with default value(nasal_ref)
-    std::vector<nasal_ref> upvalue;             // closure
-    std::unordered_map<uint32_t,uint32_t> keys; // parameter name table, size_t begins from 1
+    i32 dynpara; // dynamic parameter name index in hash.
+    u32 entry;   // pc will set to entry-1 to call this function
+    u32 psize;   // used to load default parameters to a new function
+    u32 lsize;   // used to expand memory space for local values on stack
+    std::vector<nasal_ref> local;     // local scope with default value(nasal_ref)
+    std::vector<nasal_ref> upvalue;   // closure
+    std::unordered_map<u32,u32> keys; // parameter name table, u32 begins from 1
 
     nasal_func():dynpara(-1),entry(0),psize(0),lsize(0){}
     void clear();
@@ -137,7 +137,7 @@ struct nasal_func
 struct nasal_upval
 {
     bool onstk;
-    uint32_t size;
+    u32 size;
     nasal_ref* stk;
     std::vector<nasal_ref> elems;
 
@@ -148,7 +148,7 @@ struct nasal_upval
 
 struct nasal_obj
 {
-    enum obj_t:std::uint32_t
+    enum obj_t:u32
     {
         null,
         file,
@@ -158,7 +158,7 @@ struct nasal_obj
     };
     /* RAII constructor */
     /* new object is initialized when creating */
-    uint32_t type;
+    u32 type;
     void* ptr;
     /* RAII destroyer */
     /* default destroyer does nothing */
@@ -167,7 +167,7 @@ struct nasal_obj
 
     nasal_obj():type(obj_t::null),ptr(nullptr),dtor(nullptr){}
     ~nasal_obj(){clear();}
-    void set(uint32_t t=obj_t::null,void* p=nullptr,dest d=nullptr)
+    void set(u32 t=obj_t::null,void* p=nullptr,dest d=nullptr)
     {
         type=t;
         ptr=p;
@@ -192,7 +192,7 @@ struct nasal_co
     };
     nasal_ref  stack[STACK_DEPTH];
     
-    uint32_t   pc;
+    u32        pc;
     nasal_ref* top;
     nasal_ref* canary;
     nasal_ref* localr;
@@ -200,41 +200,41 @@ struct nasal_co
     nasal_ref  funcr;
     nasal_ref  upvalr;
 
-    uint32_t   status;
+    u32 status;
     nasal_co():
         pc(0),
         top(stack),
         canary(stack+STACK_DEPTH-1),
         localr(nullptr),
         memr(nullptr),
-        funcr({vm_nil,(double)0}),
-        upvalr({vm_nil,(double)0}),
+        funcr({vm_nil,(f64)0}),
+        upvalr({vm_nil,(f64)0}),
         status(nasal_co::suspended)
     {
-        for(uint32_t i=0;i<STACK_DEPTH;++i)
-            stack[i]={vm_nil,(double)0};
+        for(u32 i=0;i<STACK_DEPTH;++i)
+            stack[i]={vm_nil,(f64)0};
     }
     void clear()
     {
-        for(uint32_t i=0;i<STACK_DEPTH;++i)
-            stack[i]={vm_nil,(double)0};
+        for(u32 i=0;i<STACK_DEPTH;++i)
+            stack[i]={vm_nil,(f64)0};
         pc=0;
         localr=nullptr;
         memr=nullptr;
         top=stack;
         status=nasal_co::suspended;
-        funcr={vm_nil,(double)0};
+        funcr={vm_nil,(f64)0};
     }
 };
 
-const uint8_t GC_UNCOLLECTED=0;   
-const uint8_t GC_COLLECTED  =1;
-const uint8_t GC_FOUND      =2;
+const u8 GC_UNCOLLECTED=0;   
+const u8 GC_COLLECTED  =1;
+const u8 GC_FOUND      =2;
 struct nasal_val
 {
-    uint8_t mark;
-    uint8_t type;
-    uint8_t unmut; // used to mark if a string is unmutable
+    u8 mark;
+    u8 type;
+    u8 unmut; // used to mark if a string is unmutable
     union 
     {
         std::string* str;
@@ -246,7 +246,7 @@ struct nasal_val
         nasal_co*    co;
     }ptr;
 
-    nasal_val(uint8_t);
+    nasal_val(u8);
     ~nasal_val();
 };
 
@@ -272,8 +272,8 @@ void nasal_vec::print()
         return;
     }
     printed=true;
-    size_t iter=0;
-    size_t size=elems.size();
+    usize iter=0;
+    usize size=elems.size();
     std::cout<<'[';
     for(auto& i:elems)
     {
@@ -329,8 +329,8 @@ void nasal_hash::print()
         return;
     }
     printed=true;
-    size_t iter=0;
-    size_t size=elems.size();
+    usize iter=0;
+    usize size=elems.size();
     std::cout<<'{';
     for(auto& i:elems)
     {
@@ -349,7 +349,7 @@ void nasal_func::clear()
     keys.clear();
 }
 
-nasal_val::nasal_val(uint8_t val_type)
+nasal_val::nasal_val(u8 val_type)
 {
     mark=GC_COLLECTED;
     type=val_type;
@@ -379,7 +379,7 @@ nasal_val::~nasal_val()
     }
     type=vm_nil;
 }
-double nasal_ref::tonum()
+f64 nasal_ref::tonum()
 {
     return type!=vm_str?val.num:str2num(str().c_str());
 }
@@ -411,14 +411,14 @@ void nasal_ref::print()
         case vm_co:   std::cout<<"<coroutine>"; break;
     }
 }
-bool nasal_ref::objchk(uint32_t objtype)
+bool nasal_ref::objchk(u32 objtype)
 {
     return type==vm_obj && obj().type==objtype && obj().ptr;
 }
 inline nasal_ref*   nasal_ref::addr (){return val.addr;             }
-inline uint32_t     nasal_ref::ret  (){return val.ret;              }
-inline int64_t&     nasal_ref::cnt  (){return val.cnt;              }
-inline double       nasal_ref::num  (){return val.num;              }
+inline u32          nasal_ref::ret  (){return val.ret;              }
+inline i64&         nasal_ref::cnt  (){return val.cnt;              }
+inline f64          nasal_ref::num  (){return val.num;              }
 inline std::string& nasal_ref::str  (){return *val.gcobj->ptr.str;  }
 inline nasal_vec&   nasal_ref::vec  (){return *val.gcobj->ptr.vec;  }
 inline nasal_hash&  nasal_ref::hash (){return *val.gcobj->ptr.hash; }
@@ -427,15 +427,15 @@ inline nasal_upval& nasal_ref::upval(){return *val.gcobj->ptr.upval;}
 inline nasal_obj&   nasal_ref::obj  (){return *val.gcobj->ptr.obj;  }
 inline nasal_co&    nasal_ref::co   (){return *val.gcobj->ptr.co;   }
 
-const nasal_ref zero={vm_num,(double)0};
-const nasal_ref one ={vm_num,(double)1};
-const nasal_ref nil ={vm_nil,(double)0};
+const nasal_ref zero={vm_num,(f64)0};
+const nasal_ref one ={vm_num,(f64)1};
+const nasal_ref nil ={vm_nil,(f64)0};
 
 struct nasal_gc
 {
     struct
     {
-        uint32_t   pc;
+        u32        pc;
         nasal_ref* top;
         nasal_ref* localr;
         nasal_ref* memr;
@@ -446,7 +446,7 @@ struct nasal_gc
     } main_ctx;
     
     /* runtime context */
-    uint32_t&   pc;        // program counter
+    u32&        pc;        // program counter
     nasal_ref*& localr;    // local scope register
     nasal_ref*& memr;      // used for mem_call
     nasal_ref&  funcr;     // function register
@@ -464,11 +464,11 @@ struct nasal_gc
     std::queue<nasal_val*>  unused[gc_tsize]; // gc free list
 
     /* values for analysis */
-    uint64_t size[gc_tsize];
-    uint64_t count[gc_tsize];
-    uint64_t allocc[gc_tsize];
+    u64 size[gc_tsize];
+    u64 count[gc_tsize];
+    u64 allocc[gc_tsize];
     nasal_gc(
-        uint32_t& _pc,
+        u32& _pc,
         nasal_ref*& _localr,
         nasal_ref*& _memr,
         nasal_ref& _funcr,
@@ -483,7 +483,7 @@ struct nasal_gc
     void                    init(const std::vector<std::string>&,const std::vector<std::string>&);
     void                    clear();
     void                    info();
-    nasal_ref               alloc(const uint8_t);
+    nasal_ref               alloc(const u8);
     nasal_ref               newstr(char);
     nasal_ref               newstr(const char*);
     nasal_ref               newstr(const std::string&);
@@ -575,10 +575,10 @@ void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::str
     // initiaize function register
     funcr=nil;
 
-    for(uint8_t i=0;i<gc_tsize;++i)
+    for(u8 i=0;i<gc_tsize;++i)
         size[i]=count[i]=allocc[i]=0;
-    for(uint8_t i=0;i<gc_tsize;++i)
-        for(uint32_t j=0;j<ini[i];++j)
+    for(u8 i=0;i<gc_tsize;++i)
+        for(u32 j=0;j<ini[i];++j)
         {
             nasal_val* tmp=new nasal_val(i+vm_str);
             memory.push_back(tmp);
@@ -587,7 +587,7 @@ void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::str
     coroutine=nullptr;
     // init constant strings
     strs.resize(s.size());
-    for(uint32_t i=0;i<strs.size();++i)
+    for(u32 i=0;i<strs.size();++i)
     {
         strs[i]={vm_str,new nasal_val(vm_str)};
         strs[i].val.gcobj->unmut=1;
@@ -595,7 +595,7 @@ void nasal_gc::init(const std::vector<std::string>& s,const std::vector<std::str
     }
     // record arguments
     env_argv.resize(argv.size());
-    for(size_t i=0;i<argv.size();++i)
+    for(usize i=0;i<argv.size();++i)
     {
         env_argv[i]={vm_str,new nasal_val(vm_str)};
         env_argv[i].val.gcobj->unmut=1;
@@ -607,7 +607,7 @@ void nasal_gc::clear()
     for(auto i:memory)
         delete i;
     memory.clear();
-    for(uint8_t i=0;i<gc_tsize;++i)
+    for(u8 i=0;i<gc_tsize;++i)
         while(!unused[i].empty())
             unused[i].pop();
     for(auto& i:strs)
@@ -619,16 +619,16 @@ void nasal_gc::info()
 {
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info(gc/alloc)\n";
-    for(uint8_t i=0;i<gc_tsize;++i)
+    for(u8 i=0;i<gc_tsize;++i)
         if(count[i] || allocc[i])
             std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<allocc[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
-    for(uint8_t i=0;i<gc_tsize;++i)
+    for(u8 i=0;i<gc_tsize;++i)
         std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
 }
-nasal_ref nasal_gc::alloc(uint8_t type)
+nasal_ref nasal_gc::alloc(u8 type)
 {
-    const uint8_t index=type-vm_str;
+    const u8 index=type-vm_str;
     ++allocc[index];
     if(unused[index].empty())
     {
@@ -639,7 +639,7 @@ nasal_ref nasal_gc::alloc(uint8_t type)
     if(unused[index].empty())
     {
         ++size[index];
-        for(uint32_t i=0;i<incr[index];++i)
+        for(u32 i=0;i<incr[index];++i)
         {
             nasal_val* tmp=new nasal_val(type);
             memory.push_back(tmp);

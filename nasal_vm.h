@@ -5,16 +5,16 @@ class nasal_vm
 {
 protected:
     /* registers and constants of nasal_vm */
-    uint32_t              pc;       // program counter
-    nasal_ref*            localr;   // local scope register
-    nasal_ref*            memr;     // used for mem_call
-    nasal_ref             funcr;    // function register
-    nasal_ref             upvalr;   // upvalue register
-    nasal_ref*            canary;   // avoid stackoverflow
-    nasal_ref*            top;      // stack top
-    const double*         num_table;// const numbers, ref from nasal_codegen
-    const std::string*    str_table;// const symbols, ref from nasal_codegen
-    std::vector<uint32_t> imm;      // immediate number
+    u32                pc;       // program counter
+    nasal_ref*         localr;   // local scope register
+    nasal_ref*         memr;     // used for mem_call
+    nasal_ref          funcr;    // function register
+    nasal_ref          upvalr;   // upvalue register
+    nasal_ref*         canary;   // avoid stackoverflow
+    nasal_ref*         top;      // stack top
+    const f64*         num_table;// const numbers, ref from nasal_codegen
+    const std::string* str_table;// const symbols, ref from nasal_codegen
+    std::vector<u32>   imm;      // immediate number
     
     /* garbage collector */
     nasal_gc              gc;
@@ -27,22 +27,22 @@ protected:
 
     void init(
         const std::vector<std::string>&,
-        const std::vector<double>&,
+        const std::vector<f64>&,
         const std::vector<opcode>&,
         const std::vector<std::string>&,
         const std::vector<std::string>&);
     /* debug functions */
     bool detail_info;
     void valinfo(nasal_ref&);
-    void bytecodeinfo(const char*,const uint32_t);
+    void bytecodeinfo(const char*,const u32);
     void traceback();
-    void stackinfo(const uint32_t);
+    void stackinfo(const u32);
     void register_info();
     void global_state();
     void local_state();
     void upval_state();
     void detail();
-    void opcallsort(const uint64_t*);
+    void opcallsort(const u64*);
     void die(const std::string&);
     /* vm calculation functions*/
     bool condition(nasal_ref);
@@ -137,7 +137,7 @@ public:
 
 void nasal_vm::init(
     const std::vector<std::string>& strs,
-    const std::vector<double>&      nums,
+    const std::vector<f64>&         nums,
     const std::vector<opcode>&      code,
     const std::vector<std::string>& filenames,
     const std::vector<std::string>& argv)
@@ -156,7 +156,7 @@ void nasal_vm::init(
     top=stack;
 
     /* clear main stack */
-    for(uint32_t i=0;i<STACK_DEPTH;++i)
+    for(u32 i=0;i<STACK_DEPTH;++i)
         stack[i]=nil;
 }
 void nasal_vm::valinfo(nasal_ref& val)
@@ -169,35 +169,35 @@ void nasal_vm::valinfo(nasal_ref& val)
         case vm_ret:  std::cout<<"| pc   | 0x"<<std::hex
                                <<val.ret()<<std::dec;break;
         case vm_addr: std::cout<<"| addr | 0x"<<std::hex
-                               <<(uint64_t)val.addr()<<std::dec;break;
+                               <<(u64)val.addr()<<std::dec;break;
         case vm_cnt:  std::cout<<"| cnt  | "<<val.cnt();break;
         case vm_nil:  std::cout<<"| nil  |";break;
         case vm_num:  std::cout<<"| num  | "<<val.num();break;
-        case vm_str:  std::cout<<"| str  | <0x"<<std::hex<<(uint64_t)p
+        case vm_str:  std::cout<<"| str  | <0x"<<std::hex<<(u64)p
                                <<"> "<<rawstr(val.str(),16)<<std::dec;break;
-        case vm_func: std::cout<<"| func | <0x"<<std::hex<<(uint64_t)p
+        case vm_func: std::cout<<"| func | <0x"<<std::hex<<(u64)p
                                <<"> entry:0x"<<val.func().entry
                                <<std::dec;break;
-        case vm_upval:std::cout<<"| upval| <0x"<<std::hex<<(uint64_t)p
+        case vm_upval:std::cout<<"| upval| <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> ["<<val.upval().size
                                <<" val]";break;
-        case vm_vec:  std::cout<<"| vec  | <0x"<<std::hex<<(uint64_t)p
+        case vm_vec:  std::cout<<"| vec  | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> ["<<val.vec().size()
                                <<" val]";break;
-        case vm_hash: std::cout<<"| hash | <0x"<<std::hex<<(uint64_t)p
+        case vm_hash: std::cout<<"| hash | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> {"<<val.hash().size()
                                <<" val}";break;
-        case vm_obj:  std::cout<<"| obj  | <0x"<<std::hex<<(uint64_t)p
-                               <<"> obj:0x"<<(uint64_t)val.obj().ptr
+        case vm_obj:  std::cout<<"| obj  | <0x"<<std::hex<<(u64)p
+                               <<"> obj:0x"<<(u64)val.obj().ptr
                                <<std::dec;break;
-        case vm_co:   std::cout<<"| co   | <0x"<<std::hex<<(uint64_t)p
+        case vm_co:   std::cout<<"| co   | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> coroutine";break;
-        default:      std::cout<<"| err  | <0x"<<std::hex<<(uint64_t)p
+        default:      std::cout<<"| err  | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> unknown object";break;
     }
     std::cout<<"\n";
 }
-void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
+void nasal_vm::bytecodeinfo(const char* header,const u32 p)
 {
     const opcode& c=bytecode[p];
     c.print(header,num_table,str_table,p,true);
@@ -205,18 +205,18 @@ void nasal_vm::bytecodeinfo(const char* header,const uint32_t p)
 }
 void nasal_vm::traceback()
 {
-    const uint32_t global_size=bytecode[0].num; // bytecode[0] is op_intg
+    const u32 global_size=bytecode[0].num; // bytecode[0] is op_intg
     nasal_ref* t=top;
     nasal_ref* bottom=stack+global_size;
-    std::stack<uint32_t> ret;
+    std::stack<u32> ret;
     for(nasal_ref* i=bottom;i<=t;++i)
         if(i->type==vm_ret)
             ret.push(i->ret());
     // push pc to ret stack to store the position program crashed
     ret.push(pc);
     std::cout<<"trace back:\n";
-    uint32_t same=0,last=0xffffffff;
-    for(uint32_t point=0;!ret.empty();last=point,ret.pop())
+    u32 same=0,last=0xffffffff;
+    for(u32 point=0;!ret.empty();last=point,ret.pop())
     {
         if((point=ret.top())==last)
         {
@@ -233,20 +233,20 @@ void nasal_vm::traceback()
         std::cout<<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
                  <<last<<std::dec<<":       "<<same<<" same call(s)\n";
 }
-void nasal_vm::stackinfo(const uint32_t limit=10)
+void nasal_vm::stackinfo(const u32 limit=10)
 {
     /* bytecode[0] is op_intg, the .num is the global size */
-    uint32_t   gsize=gc.stack==stack?bytecode[0].num:0;
+    u32        gsize=gc.stack==stack?bytecode[0].num:0;
     nasal_ref* t=top;
     nasal_ref* bottom=gc.stack+gsize;
-    std::cout<<"vm stack(0x"<<std::hex<<(uint64_t)bottom<<std::dec
+    std::cout<<"vm stack(0x"<<std::hex<<(u64)bottom<<std::dec
              <<"<sp+"<<gsize<<">, limit "<<limit<<", total "
-             <<(t<bottom? 0:(int64_t)(t-bottom+1))<<")\n";
-    for(uint32_t i=0;i<limit && t>=bottom;++i,--t)
+             <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
+    for(u32 i=0;i<limit && t>=bottom;++i,--t)
     {
         std::cout<<"  0x"<<std::hex
                  <<std::setw(8)<<std::setfill('0')
-                 <<(uint64_t)(t-gc.stack)<<std::dec;
+                 <<(u64)(t-gc.stack)<<std::dec;
         valinfo(t[0]);
     }
 }
@@ -254,11 +254,11 @@ void nasal_vm::register_info()
 {
     std::cout<<"registers("<<(gc.coroutine?"coroutine":"main")<<")\n"<<std::hex
              <<"  [ pc     ]    | pc   | 0x"<<pc<<"\n"
-             <<"  [ global ]    | addr | 0x"<<(uint64_t)stack<<"\n"
-             <<"  [ localr ]    | addr | 0x"<<(uint64_t)localr<<"\n"
-             <<"  [ memr   ]    | addr | 0x"<<(uint64_t)memr<<"\n"
-             <<"  [ canary ]    | addr | 0x"<<(uint64_t)canary<<"\n"
-             <<"  [ top    ]    | addr | 0x"<<(uint64_t)top<<"\n"
+             <<"  [ global ]    | addr | 0x"<<(u64)stack<<"\n"
+             <<"  [ localr ]    | addr | 0x"<<(u64)localr<<"\n"
+             <<"  [ memr   ]    | addr | 0x"<<(u64)memr<<"\n"
+             <<"  [ canary ]    | addr | 0x"<<(u64)canary<<"\n"
+             <<"  [ top    ]    | addr | 0x"<<(u64)top<<"\n"
              <<std::dec;
     std::cout<<"  [ funcr  ]";valinfo(funcr);
     std::cout<<"  [ upvalr ]";valinfo(upvalr);
@@ -267,8 +267,8 @@ void nasal_vm::global_state()
 {
     if(!bytecode[0].num || stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
-    std::cout<<"global(0x"<<std::hex<<(uint64_t)stack<<"<sp+0>)\n"<<std::dec;
-    for(uint32_t i=0;i<bytecode[0].num;++i)
+    std::cout<<"global(0x"<<std::hex<<(u64)stack<<"<sp+0>)\n"<<std::dec;
+    for(u32 i=0;i<bytecode[0].num;++i)
     {
         std::cout<<"  0x"<<std::hex<<std::setw(8)
                  <<std::setfill('0')<<i<<std::dec;
@@ -279,10 +279,10 @@ void nasal_vm::local_state()
 {
     if(!localr || !funcr.func().lsize)
         return;
-    const uint32_t lsize=funcr.func().lsize;
-    std::cout<<"local(0x"<<std::hex<<(uint64_t)localr
-             <<"<sp+"<<(uint64_t)(localr-gc.stack)<<">)\n"<<std::dec;
-    for(uint32_t i=0;i<lsize;++i)
+    const u32 lsize=funcr.func().lsize;
+    std::cout<<"local(0x"<<std::hex<<(u64)localr
+             <<"<sp+"<<(u64)(localr-gc.stack)<<">)\n"<<std::dec;
+    for(u32 i=0;i<lsize;++i)
     {
         std::cout<<"  0x"<<std::hex<<std::setw(8)
                  <<std::setfill('0')<<i<<std::dec;
@@ -295,11 +295,11 @@ void nasal_vm::upval_state()
         return;
     std::cout<<"upvalue\n";
     auto& upval=funcr.func().upvalue;
-    for(uint32_t i=0;i<upval.size();++i)
+    for(u32 i=0;i<upval.size();++i)
     {
         std::cout<<"  -> upval["<<i<<"]:\n";
         auto& uv=upval[i].upval();
-        for(uint32_t j=0;j<uv.size;++j)
+        for(u32 j=0;j<uv.size;++j)
         {
             std::cout<<"     0x"<<std::hex<<std::setw(8)
                      <<std::setfill('0')<<j<<std::dec;
@@ -314,12 +314,12 @@ void nasal_vm::detail()
     local_state();
     upval_state();
 }
-void nasal_vm::opcallsort(const uint64_t* arr)
+void nasal_vm::opcallsort(const u64* arr)
 {
-    typedef std::pair<uint32_t,uint64_t> op;
+    typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
-    uint64_t total=0;
-    for(uint32_t i=0;i<op_ret+1;++i)
+    u64 total=0;
+    for(u32 i=0;i<op_ret+1;++i)
     {
         total+=arr[i];
         opcall.push_back({i,arr[i]});
@@ -330,7 +330,7 @@ void nasal_vm::opcallsort(const uint64_t* arr)
     std::clog<<"\noperands call info";
     for(auto& i:opcall)
     {
-        uint64_t rate=i.second*100/total;
+        u64 rate=i.second*100/total;
         if(rate)
             std::clog<<"\n "<<code_table[i.first].name
                      <<" : "<<i.second<<" ("<<rate<<"%)";
@@ -357,7 +357,7 @@ inline bool nasal_vm::condition(nasal_ref val)
         return val.num();
     else if(val.type==vm_str)
     {
-        const double num=str2num(val.str().c_str());
+        const f64 num=str2num(val.str().c_str());
         return std::isnan(num)?!val.str().empty():num;
     }
     return false;
@@ -405,7 +405,7 @@ inline void nasal_vm::opr_newv()
     vec.resize(imm[pc]);
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
     top=top-imm[pc]+1;
-    for(uint32_t i=0;i<imm[pc];++i)
+    for(u32 i=0;i<imm[pc];++i)
         vec[i]=top[i];
     top[0]=newv;
 }
@@ -464,9 +464,9 @@ inline void nasal_vm::opr_unot()
         case vm_num:top[0]=val.num()?zero:one;break;
         case vm_str:
         {
-            const double num=str2num(val.str().c_str());
+            const f64 num=str2num(val.str().c_str());
             if(std::isnan(num))
-                top[0]={vm_num,(double)val.str().empty()};
+                top[0]={vm_num,(f64)val.str().empty()};
             else
                 top[0]=num?zero:one;
         }break;
@@ -616,22 +616,22 @@ inline void nasal_vm::opr_cnt()
 {
     if(top[0].type!=vm_vec)
         die("cnt: must use vector in forindex/foreach");
-    (++top)[0]={vm_cnt,(int64_t)-1};
+    (++top)[0]={vm_cnt,(i64)-1};
 }
 inline void nasal_vm::opr_findex()
 {
-    if((size_t)(++top[0].cnt())>=top[-1].vec().size())
+    if((usize)(++top[0].cnt())>=top[-1].vec().size())
     {
         pc=imm[pc]-1;
         return;
     }
-    top[1]={vm_num,(double)top[0].cnt()};
+    top[1]={vm_num,(f64)top[0].cnt()};
     ++top;
 }
 inline void nasal_vm::opr_feach()
 {
     std::vector<nasal_ref>& ref=top[-1].vec().elems;
-    if((size_t)(++top[0].cnt())>=ref.size())
+    if((usize)(++top[0].cnt())>=ref.size())
     {
         pc=imm[pc]-1;
         return;
@@ -679,7 +679,7 @@ inline void nasal_vm::opr_callv()
         int len=str.length();
         if(num<-len || num>=len)
             die("callv: index out of range:"+std::to_string(val.tonum()));
-        top[0]={vm_num,double((uint8_t)str[num>=0? num:num+len])};
+        top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
     }
     else
         die("callv: must call a vector/hash/string");
@@ -710,8 +710,8 @@ inline void nasal_vm::opr_callh()
 }
 inline void nasal_vm::opr_callfv()
 {
-    uint32_t   argc=imm[pc];    // arguments counter
-    nasal_ref* local=top-argc+1;// arguments begin address
+    u32 argc=imm[pc]; // arguments counter
+    nasal_ref* local=top-argc+1; // arguments begin address
     if(local[-1].type!=vm_func)
         die("callfv: must call a function");
     
@@ -723,7 +723,7 @@ inline void nasal_vm::opr_callfv()
     if(top-argc+func.lsize+3>=canary)
         die("stack overflow");
     // parameter size is func->psize-1, 1 is reserved for "me"
-    uint32_t psize=func.psize-1;
+    u32 psize=func.psize-1;
     if(argc<psize && func.local[argc+1].type==vm_none)
         die("callfv: lack argument(s)");
 
@@ -732,19 +732,19 @@ inline void nasal_vm::opr_callfv()
     if(func.dynpara>=0)// load dynamic arguments
     {
         dynamic=gc.alloc(vm_vec);
-        for(uint32_t i=psize;i<argc;++i)
+        for(u32 i=psize;i<argc;++i)
             dynamic.vec().elems.push_back(local[i]);
     }
 #ifdef _MSC_VER
-    uint32_t min_size=(std::min)(psize,argc);
+    u32 min_size=(std::min)(psize,argc);
 #else
-    uint32_t min_size=std::min(psize,argc);
+    u32 min_size=std::min(psize,argc);
 #endif
-    for(uint32_t i=min_size;i>=1;--i)// load arguments
+    for(u32 i=min_size;i>=1;--i)// load arguments
         local[i]=local[i-1];
     local[0]=func.local[0];// load "me"
     // load local scope & default arguments
-    for(uint32_t i=min_size+1;i<func.lsize;++i)
+    for(u32 i=min_size+1;i<func.lsize;++i)
         local[i]=func.local[i];
     if(func.dynpara>=0)
         local[psize+1]=dynamic;
@@ -774,7 +774,7 @@ inline void nasal_vm::opr_callfh()
 
     nasal_ref* local=top;
     top+=func.lsize;
-    for(uint32_t i=0;i<func.lsize;++i)
+    for(u32 i=0;i<func.lsize;++i)
         local[i]=func.local[i];
     
     for(auto& i:func.keys)
@@ -836,7 +836,7 @@ inline void nasal_vm::opr_slc2()
     std::vector<nasal_ref>& ref=top[-1].vec().elems;
     std::vector<nasal_ref>& aim=top[0].vec().elems;
 
-    uint8_t type1=val1.type,type2=val2.type;
+    u8 type1=val1.type,type2=val2.type;
     int num1=val1.tonum();
     int num2=val2.tonum();
     int size=ref.size();
@@ -957,7 +957,7 @@ inline void nasal_vm::opr_ret()
         auto& upval=up.upval();
         auto size=func.func().lsize;
         upval.onstk=false;
-        for(uint32_t i=0;i<size;++i)
+        for(u32 i=0;i<size;++i)
             upval.elems.push_back(local[i]);
     }
     // cannot use gc.coroutine to judge,
@@ -974,7 +974,7 @@ void nasal_vm::run(
 {
     detail_info=detail;
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
-    uint64_t count[op_ret+1]={0};
+    u64 count[op_ret+1]={0};
 #ifndef _MSC_VER
     const void* oprs[]=
     {
@@ -1049,7 +1049,7 @@ void nasal_vm::run(
         &nasal_vm::opr_mcallv, &nasal_vm::opr_mcallh,
         &nasal_vm::opr_ret
     };
-    std::vector<uint32_t> code;
+    std::vector<u32> code;
     for(auto& i:gen.codes())
     {
         code.push_back(i.op);

@@ -35,15 +35,15 @@ public:
         std::vector<std::string> tmp;
         res.swap(tmp);
     }
-    const std::string& operator[](const uint32_t line){return res[line];}
+    const std::string& operator[](const u32 line){return res[line];}
     const std::string& name(){return file;}
-    size_t size(){return res.size();}
+    usize size(){return res.size();}
 };
 
 class nasal_err:public fstreamline
 {
 private:
-    uint32_t error;
+    u32 error;
 public:
     nasal_err():error(0){}
     void err(const char* stage,const std::string& info)
@@ -51,7 +51,7 @@ public:
         ++error;
         std::cerr<<"["<<stage<<"] "<<info<<"\n";
     }
-    void err(const char* stage,uint32_t line,uint32_t column,const std::string& info)
+    void err(const char* stage,u32 line,u32 column,const std::string& info)
     {
         ++error;
         const std::string& code=res[line-1];
@@ -60,7 +60,7 @@ public:
             std::cerr<<char(" \t"[code[i]=='\t']);
         std::cerr<<"^\n";
     }
-    void err(const char* stage,uint32_t line,const std::string& info)
+    void err(const char* stage,u32 line,const std::string& info)
     {
         ++error;
         std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<" "<<info<<"\n"<<res[line-1]<<'\n';

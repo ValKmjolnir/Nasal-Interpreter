@@ -7,13 +7,13 @@ class nasal_dbg:public nasal_vm
 {
 private:
     bool next_step;
-    size_t fsize;
-    uint16_t bk_fidx;
-    uint32_t bk_line;
+    usize fsize;
+    u16 bk_fidx;
+    u32 bk_line;
     fstreamline src;
 
     std::vector<std::string> parse(const std::string&);
-    uint16_t fileindex(const std::string&);
+    u16 fileindex(const std::string&);
     void err();
     void help();
     void stepinfo();
@@ -32,7 +32,7 @@ public:
 std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
 {
     std::vector<std::string> res;
-    size_t last=0,pos=cmd.find(" ",0);
+    usize last=0,pos=cmd.find(" ",0);
     while(pos!=std::string::npos)
     {
         if(pos>last)
@@ -45,9 +45,9 @@ std::vector<std::string> nasal_dbg::parse(const std::string& cmd)
     return res;
 }
 
-uint16_t nasal_dbg::fileindex(const std::string& filename)
+u16 nasal_dbg::fileindex(const std::string& filename)
 {
-    for(uint16_t i=0;i<fsize;++i)
+    for(u16 i=0;i<fsize;++i)
         if(filename==files[i])
             return i;
     return 65535;
@@ -81,18 +81,18 @@ void nasal_dbg::help()
 
 void nasal_dbg::stepinfo()
 {
-    uint32_t begin,end;
-    uint32_t line=bytecode[pc].line==0?0:bytecode[pc].line-1;
+    u32 begin,end;
+    u32 line=bytecode[pc].line==0?0:bytecode[pc].line-1;
     src.load(files[bytecode[pc].fidx]);
     std::cout<<"\nsource code:\n";
     begin=(line>>3)==0?0:((line>>3)<<3);
     end=(1+(line>>3))<<3;
-    for(uint32_t i=begin;i<end && i<src.size();++i)
+    for(u32 i=begin;i<end && i<src.size();++i)
         std::cout<<(i==line?"-->  ":"     ")<<src[i]<<"\n";
     std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
-    for(uint32_t i=begin;i<end && bytecode[i].op!=op_exit;++i)
+    for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i)
         bytecodeinfo(i==pc?"-->  ":"     ",i);
     stackinfo(10);
 }
@@ -131,7 +131,7 @@ void nasal_dbg::interact()
             else if(res[0]=="c" || res[0]=="continue")
                 return;
             else if(res[0]=="f" || res[0]=="file")
-                for(size_t i=0;i<fsize;++i)
+                for(usize i=0;i<fsize;++i)
                     std::cout<<"["<<i<<"] "<<files[i]<<"\n";
             else if(res[0]=="g" || res[0]=="global")
                 global_state();

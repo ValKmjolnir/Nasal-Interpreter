@@ -196,7 +196,7 @@ __`vm_nil`__ is a null type. It means nothing.
 var spc=nil;
 ```
 
-__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 double to store.
+__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 `double` to store.
 
 ```javascript
 # this language use '#' to write notes

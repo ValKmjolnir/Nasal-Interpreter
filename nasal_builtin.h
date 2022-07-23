@@ -262,7 +262,7 @@ nasal_ref builtin_setsize(nasal_ref* local,nasal_gc& gc)
         return builtin_err("setsize","\"vector\" must be vector");
     if(size.type!=vm_num)
         return builtin_err("setsize","\"size\" is not a number");
-    int64_t num=(int64_t)size.num();
+    i64 num=(i64)size.num();
     if(num<0)
         return builtin_err("setsize","\"size\" must be greater than -1");
     vec.vec().elems.resize(num,nil);
@@ -273,7 +273,7 @@ nasal_ref builtin_system(nasal_ref* local,nasal_gc& gc)
     nasal_ref str=local[1];
     if(str.type!=vm_str)
         return builtin_err("system","\"str\" must be string");
-    return {vm_num,(double)system(str.str().c_str())};
+    return {vm_num,(f64)system(str.str().c_str())};
 }
 nasal_ref builtin_input(nasal_ref* local,nasal_gc& gc)
 {
@@ -331,8 +331,8 @@ nasal_ref builtin_split(nasal_ref* local,nasal_gc& gc)
         gc.temp=nil;
         return res;
     }
-    size_t last=0;
-    size_t pos=s.find(deli,last);
+    usize last=0;
+    usize pos=s.find(deli,last);
     while(pos!=std::string::npos)
     {
         if(pos>last)
@@ -355,7 +355,7 @@ nasal_ref builtin_rand(nasal_ref* local,nasal_gc& gc)
         srand((unsigned int)val.num());
         return nil;
     }
-    double num=0;
+    f64 num=0;
     for(int i=0;i<5;++i)
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
     return {vm_num,num};
@@ -365,7 +365,7 @@ nasal_ref builtin_id(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     std::stringstream ss;
     if(val.type>vm_num)
-        ss<<"0x"<<std::hex<<(uint64_t)val.val.gcobj<<std::dec;
+        ss<<"0x"<<std::hex<<(u64)val.val.gcobj<<std::dec;
     else
         ss<<"0";
     return gc.newstr(ss.str());
@@ -376,7 +376,7 @@ nasal_ref builtin_int(nasal_ref* local,nasal_gc& gc)
     if(val.type!=vm_num)
         return nil;
     int number=(int)val.num();
-    return {vm_num,(double)number};
+    return {vm_num,(f64)number};
 }
 nasal_ref builtin_floor(nasal_ref* local,nasal_gc& gc)
 {
@@ -390,7 +390,7 @@ nasal_ref builtin_num(nasal_ref* local,nasal_gc& gc)
         return val;
     if(val.type!=vm_str)
         return nil;
-    double res=val.tonum();
+    f64 res=val.tonum();
     if(std::isnan(res))
         return nil;
     return {vm_num,res};
@@ -422,7 +422,7 @@ nasal_ref builtin_str(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_size(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref val=local[1];
-    double num=0;
+    f64 num=0;
     switch(val.type)
     {
         case vm_num:  num=val.num();         break;
@@ -436,59 +436,59 @@ nasal_ref builtin_i32xor(nasal_ref* local,nasal_gc& gc)
 {
     int a=(int)local[1].num();
     int b=(int)local[2].num();
-    return {vm_num,(double)(a^b)};
+    return {vm_num,(f64)(a^b)};
 }
 nasal_ref builtin_i32and(nasal_ref* local,nasal_gc& gc)
 {
     int a=(int)local[1].num();
     int b=(int)local[2].num();
-    return {vm_num,(double)(a&b)};
+    return {vm_num,(f64)(a&b)};
 }
 nasal_ref builtin_i32or(nasal_ref* local,nasal_gc& gc)
 {
     int a=(int)local[1].num();
     int b=(int)local[2].num();
-    return {vm_num,(double)(a|b)};
+    return {vm_num,(f64)(a|b)};
 }
 nasal_ref builtin_i32nand(nasal_ref* local,nasal_gc& gc)
 {
     int a=(int)local[1].num();
     int b=(int)local[2].num();
-    return {vm_num,(double)(~(a&b))};
+    return {vm_num,(f64)(~(a&b))};
 }
 nasal_ref builtin_i32not(nasal_ref* local,nasal_gc& gc)
 {
     int n=(int)local[1].num();
-    return {vm_num,(double)(~n)};
+    return {vm_num,(f64)(~n)};
 }
 nasal_ref builtin_u32xor(nasal_ref* local,nasal_gc& gc)
 {
-    uint32_t a=(uint32_t)local[1].num();
-    uint32_t b=(uint32_t)local[2].num();
-    return {vm_num,(double)(a^b)};
+    u32 a=(u32)local[1].num();
+    u32 b=(u32)local[2].num();
+    return {vm_num,(f64)(a^b)};
 }
 nasal_ref builtin_u32and(nasal_ref* local,nasal_gc& gc)
 {
-    uint32_t a=(uint32_t)local[1].num();
-    uint32_t b=(uint32_t)local[2].num();
-    return {vm_num,(double)(a&b)};
+    u32 a=(u32)local[1].num();
+    u32 b=(u32)local[2].num();
+    return {vm_num,(f64)(a&b)};
 }
 nasal_ref builtin_u32or(nasal_ref* local,nasal_gc& gc)
 {
-    uint32_t a=(uint32_t)local[1].num();
-    uint32_t b=(uint32_t)local[2].num();
-    return {vm_num,(double)(a|b)};
+    u32 a=(u32)local[1].num();
+    u32 b=(u32)local[2].num();
+    return {vm_num,(f64)(a|b)};
 }
 nasal_ref builtin_u32nand(nasal_ref* local,nasal_gc& gc)
 {
-    uint32_t a=(uint32_t)local[1].num();
-    uint32_t b=(uint32_t)local[2].num();
-    return {vm_num,(double)(~(a&b))};
+    u32 a=(u32)local[1].num();
+    u32 b=(u32)local[2].num();
+    return {vm_num,(f64)(~(a&b))};
 }
 nasal_ref builtin_u32not(nasal_ref* local,nasal_gc& gc)
 {
-    uint32_t n=(uint32_t)local[1].num();
-    return {vm_num,(double)(~n)};
+    u32 n=(u32)local[1].num();
+    return {vm_num,(f64)(~n)};
 }
 nasal_ref builtin_pow(nasal_ref* local,nasal_gc& gc)
 {
@@ -568,7 +568,7 @@ nasal_ref builtin_time(nasal_ref* local,nasal_gc& gc)
     if(val.type!=vm_num)
         return builtin_err("time","\"begin_time\" must be number");
     time_t begin_time=(time_t)val.num();
-    return {vm_num,(double)time(&begin_time)};
+    return {vm_num,(f64)time(&begin_time)};
 }
 nasal_ref builtin_contains(nasal_ref* local,nasal_gc& gc)
 {
@@ -621,10 +621,10 @@ nasal_ref builtin_find(nasal_ref* local,nasal_gc& gc)
         return builtin_err("find","\"needle\" must be string");
     if(haystack.type!=vm_str)
         return builtin_err("find","\"haystack\" must be string");
-    size_t pos=haystack.str().find(needle.str());
+    usize pos=haystack.str().find(needle.str());
     if(pos==std::string::npos)
-        return {vm_num,(double)-1};
-    return {vm_num,(double)pos};
+        return {vm_num,(f64)-1};
+    return {vm_num,(f64)pos};
 }
 nasal_ref builtin_type(nasal_ref* local,nasal_gc& gc)
 {
@@ -657,8 +657,8 @@ nasal_ref builtin_substr(nasal_ref* local,nasal_gc& gc)
         return builtin_err("substr","\"begin\" should be greater than or equal to zero");
     if(len.num()<0)
         return builtin_err("substr","\"length\" should be greater than or equal to zero");
-    size_t begin=(size_t)beg.num();
-    size_t length=(size_t)len.num();
+    usize begin=(usize)beg.num();
+    usize length=(usize)len.num();
     if(begin>=str.str().length() || begin+length>str.str().length())
         return builtin_err("susbtr","index out of range");
     return gc.newstr(str.str().substr(begin,length));
@@ -667,7 +667,7 @@ nasal_ref builtin_streq(nasal_ref* local,nasal_gc& gc)
 {
     nasal_ref a=local[1];
     nasal_ref b=local[2];
-    return {vm_num,double((a.type!=vm_str || b.type!=vm_str)?0:(a.str()==b.str()))};
+    return {vm_num,f64((a.type!=vm_str || b.type!=vm_str)?0:(a.str()==b.str()))};
 }
 nasal_ref builtin_left(nasal_ref* local,nasal_gc& gc)
 {
@@ -706,7 +706,7 @@ nasal_ref builtin_cmp(nasal_ref* local,nasal_gc& gc)
         return builtin_err("cmp","\"a\" must be string");
     if(b.type!=vm_str)
         return builtin_err("cmp","\"b\" must be string");
-    return {vm_num,(double)strcmp(a.str().c_str(),b.str().c_str())};
+    return {vm_num,(f64)strcmp(a.str().c_str(),b.str().c_str())};
 }
 nasal_ref builtin_chr(nasal_ref* local,nasal_gc& gc)
 {
@@ -792,10 +792,10 @@ nasal_ref builtin_read(nasal_ref* local,nasal_gc& gc)
         return builtin_err("read","\"len\" must be number");
     if(len.num()<=0 || len.num()>=(1<<30))
         return builtin_err("read","\"len\" less than 1 or too large");
-    char* buff=new char[(size_t)len.num()+1];
+    char* buff=new char[(usize)len.num()+1];
     if(!buff)
         return builtin_err("read","memory allocation error");
-    double res=fread(buff,1,len.num(),(FILE*)fd.obj().ptr);
+    f64 res=fread(buff,1,len.num(),(FILE*)fd.obj().ptr);
     buf.str()=buff;
     delete []buff;
     return {vm_num,res};
@@ -808,7 +808,7 @@ nasal_ref builtin_write(nasal_ref* local,nasal_gc& gc)
         return builtin_err("write","not a valid filehandle");
     if(str.type!=vm_str)
         return builtin_err("write","\"str\" must be string");
-    double res=(double)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr);
+    f64 res=(f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr);
     return {vm_num,res};
 }
 nasal_ref builtin_seek(nasal_ref* local,nasal_gc& gc)
@@ -822,7 +822,7 @@ nasal_ref builtin_seek(nasal_ref* local,nasal_gc& gc)
         return builtin_err("seek","\"pos\" must be number");
     if(whence.type!=vm_num || whence.num()<0 || whence.num()>2)
         return builtin_err("seek","\"whence\" must be number between 0 and 2");
-    double res=fseek((FILE*)fd.obj().ptr,pos.num(),whence.num());
+    f64 res=fseek((FILE*)fd.obj().ptr,pos.num(),whence.num());
     return {vm_num,res};
 }
 nasal_ref builtin_tell(nasal_ref* local,nasal_gc& gc)
@@ -830,7 +830,7 @@ nasal_ref builtin_tell(nasal_ref* local,nasal_gc& gc)
     nasal_ref fd=local[1];
     if(!fd.objchk(nasal_obj::file))
         return builtin_err("tell","not a valid filehandle");
-    double res=ftell((FILE*)fd.obj().ptr);
+    f64 res=ftell((FILE*)fd.obj().ptr);
     return {vm_num,res};
 }
 nasal_ref builtin_readln(nasal_ref* local,nasal_gc& gc)
@@ -863,17 +863,17 @@ nasal_ref builtin_stat(nasal_ref* local,nasal_gc& gc)
         return builtin_err("stat","failed to open file <"+name.str()+">");
     nasal_ref ret=gc.alloc(vm_vec);
     ret.vec().elems={
-        {vm_num,(double)buf.st_dev},
-        {vm_num,(double)buf.st_ino},
-        {vm_num,(double)buf.st_mode},
-        {vm_num,(double)buf.st_nlink},
-        {vm_num,(double)buf.st_uid},
-        {vm_num,(double)buf.st_gid},
-        {vm_num,(double)buf.st_rdev},
-        {vm_num,(double)buf.st_size},
-        {vm_num,(double)buf.st_atime},
-        {vm_num,(double)buf.st_mtime},
-        {vm_num,(double)buf.st_ctime}
+        {vm_num,(f64)buf.st_dev},
+        {vm_num,(f64)buf.st_ino},
+        {vm_num,(f64)buf.st_mode},
+        {vm_num,(f64)buf.st_nlink},
+        {vm_num,(f64)buf.st_uid},
+        {vm_num,(f64)buf.st_gid},
+        {vm_num,(f64)buf.st_rdev},
+        {vm_num,(f64)buf.st_size},
+        {vm_num,(f64)buf.st_atime},
+        {vm_num,(f64)buf.st_mtime},
+        {vm_num,(f64)buf.st_ctime}
     };
     return ret;
 }
@@ -882,7 +882,7 @@ nasal_ref builtin_eof(nasal_ref* local,nasal_gc& gc)
     nasal_ref fd=local[1];
     if(!fd.objchk(nasal_obj::file))
         return builtin_err("readln","not a valid filehandle");
-    return {vm_num,(double)feof((FILE*)fd.obj().ptr)};
+    return {vm_num,(f64)feof((FILE*)fd.obj().ptr)};
 }
 nasal_ref builtin_fld(nasal_ref* local,nasal_gc& gc)
 {
@@ -896,16 +896,16 @@ nasal_ref builtin_fld(nasal_ref* local,nasal_gc& gc)
         return builtin_err("fld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num)
         return builtin_err("fld","\"startbit\",\"len\" must be number");
-    uint32_t bit=(uint32_t)startbit.num();
-    uint32_t len=(uint32_t)length.num();
+    u32 bit=(u32)startbit.num();
+    u32 len=(u32)length.num();
     if(bit+len>8*str.str().length())
         return builtin_err("fld","bitfield out of bounds");
-    uint32_t res=0;
+    u32 res=0;
     auto& s=str.str();
-    for(uint32_t i=bit;i<bit+len;++i)
+    for(u32 i=bit;i<bit+len;++i)
         if(s[i>>3]&(1<<(7-(i&7))))
             res|=1<<(bit+len-i-1);
-    return {vm_num,(double)res};
+    return {vm_num,(f64)res};
 }
 nasal_ref builtin_sfld(nasal_ref* local,nasal_gc& gc)
 {
@@ -920,18 +920,18 @@ nasal_ref builtin_sfld(nasal_ref* local,nasal_gc& gc)
         return builtin_err("sfld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num)
         return builtin_err("sfld","\"startbit\",\"len\" must be number");
-    uint32_t bit=(uint32_t)startbit.num();
-    uint32_t len=(uint32_t)length.num();
+    u32 bit=(u32)startbit.num();
+    u32 len=(u32)length.num();
     if(bit+len>8*str.str().length())
         return builtin_err("sfld","bitfield out of bounds");
-    uint32_t res=0;
+    u32 res=0;
     auto& s=str.str();
-    for(uint32_t i=bit;i<bit+len;++i)
+    for(u32 i=bit;i<bit+len;++i)
         if(s[i>>3]&(1<<(7-(i&7))))
             res|=1<<(bit+len-i-1);
     if(res&(1<<(len-1)))
         res|=~((1<<len)-1);
-    return {vm_num,(double)((int32_t)res)};
+    return {vm_num,(f64)((i32)res)};
 }
 nasal_ref builtin_setfld(nasal_ref* local,nasal_gc& gc)
 {
@@ -947,13 +947,13 @@ nasal_ref builtin_setfld(nasal_ref* local,nasal_gc& gc)
         return builtin_err("setfld","\"str\" must be mutable string");
     if(startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num)
         return builtin_err("setfld","\"startbit\",\"len\",\"val\" must be number");
-    uint32_t bit=(uint32_t)startbit.num();
-    uint32_t len=(uint32_t)length.num();
-    uint64_t val=(uint64_t)value.num();
+    u32 bit=(u32)startbit.num();
+    u32 len=(u32)length.num();
+    u64 val=(u64)value.num();
     if(bit+len>8*str.str().length())
         return builtin_err("setfld","bitfield out of bounds");
     auto& s=str.str();
-    for(uint32_t i=bit;i<bit+len;++i)
+    for(u32 i=bit;i<bit+len;++i)
     {
         if(val&(1<<(i-bit)))
             s[i>>3]|=(1<<(7-(i&7)));
@@ -977,7 +977,7 @@ nasal_ref builtin_sleep(nasal_ref* local,nasal_gc& gc)
     nasal_ref val=local[1];
     if(val.type!=vm_num)
         return builtin_err("sleep","\"duration\" must be number");
-    std::this_thread::sleep_for(std::chrono::microseconds(int64_t(val.num()*1e6)));
+    std::this_thread::sleep_for(std::chrono::microseconds(i64(val.num()*1e6)));
     return nil;
 }
 nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
@@ -987,8 +987,8 @@ nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
     nasal_ref res=gc.alloc(vm_vec);
     if(pipe(fd)==-1)
         return builtin_err("pipe","failed to create pipe");
-    res.vec().elems.push_back({vm_num,(double)fd[0]});
-    res.vec().elems.push_back({vm_num,(double)fd[1]});
+    res.vec().elems.push_back({vm_num,(f64)fd[0]});
+    res.vec().elems.push_back({vm_num,(f64)fd[1]});
     return res;
 #endif
     return builtin_err("pipe","not supported for windows");
@@ -996,10 +996,10 @@ nasal_ref builtin_pipe(nasal_ref* local,nasal_gc& gc)
 nasal_ref builtin_fork(nasal_ref* local,nasal_gc& gc)
 {
 #ifndef _WIN32
-    double res=fork();
+    f64 res=fork();
     if(res<0)
         return builtin_err("fork","failed to fork a process");
-    return {vm_num,(double)res};
+    return {vm_num,(f64)res};
 #endif
     return builtin_err("fork","not supported for windows");
 }
@@ -1014,8 +1014,8 @@ nasal_ref builtin_waitpid(nasal_ref* local,nasal_gc& gc)
     int status;
     ret_pid=waitpid(pid.num(),&status,nohang.num()==0?0:WNOHANG);
     nasal_ref vec=gc.alloc(vm_vec);
-    vec.vec().elems.push_back({vm_num,(double)ret_pid});
-    vec.vec().elems.push_back({vm_num,(double)status});
+    vec.vec().elems.push_back({vm_num,(f64)ret_pid});
+    vec.vec().elems.push_back({vm_num,(f64)status});
     return vec;
 #endif
     return builtin_err("waitpid","not supported for windows");
@@ -1206,14 +1206,14 @@ nasal_ref builtin_gc(nasal_ref* local,nasal_gc& gc)
 }
 
 // md5 related functions
-std::string tohex(uint32_t num)
+std::string tohex(u32 num)
 {
     const char str16[]="0123456789abcdef";
     std::string str="";
-    for(uint32_t i=0;i<4;i++,num>>=8)
+    for(u32 i=0;i<4;i++,num>>=8)
     {
         std::string tmp="";
-        for(uint32_t j=0,b=num&0xff;j<2;j++,b>>=4)
+        for(u32 j=0,b=num&0xff;j<2;j++,b>>=4)
             tmp.insert(0,1,str16[b&0xf]);
         str+=tmp;
     }
@@ -1221,18 +1221,18 @@ std::string tohex(uint32_t num)
 }
 std::string md5(const std::string& source)
 {
-    std::vector<uint32_t> buff;
-    uint32_t num=((source.length()+8)>>6)+1;
-    uint32_t buffsize=num<<4;
+    std::vector<u32> buff;
+    u32 num=((source.length()+8)>>6)+1;
+    u32 buffsize=num<<4;
     buff.resize(buffsize,0);
-    for(uint32_t i=0;i<source.length();i++)
+    for(u32 i=0;i<source.length();i++)
         buff[i>>2]|=((unsigned char)source[i])<<((i&0x3)<<3);
     buff[source.length()>>2]|=0x80<<(((source.length()%4))<<3);
     buff[buffsize-2]=(source.length()<<3)&0xffffffff;
     buff[buffsize-1]=((source.length()<<3)>>32)&0xffffffff;
 
-    // uint32_t(abs(sin(i+1))*(2pow32))
-    const uint32_t k[]={
+    // u32(abs(sin(i+1))*(2pow32))
+    const u32 k[]={
         0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
         0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
         0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
@@ -1244,7 +1244,7 @@ std::string md5(const std::string& source)
     };
 
     // left shift bits
-    const uint32_t s[]={
+    const u32 s[]={
         7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
         5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
         4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
@@ -1252,7 +1252,7 @@ std::string md5(const std::string& source)
     };
 
     // index
-    const uint32_t idx[]={
+    const u32 idx[]={
         0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, // g=i
         1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12, // g=(5*i+1)%16;
         5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2, // g=(3*i+5)%16;
@@ -1265,18 +1265,18 @@ std::string md5(const std::string& source)
 #define md5h(x,y,z) ((x)^(y)^(z))
 #define md5i(x,y,z) ((y)^((x)|(~z)))
     
-    uint32_t atmp=0x67452301,btmp=0xefcdab89;
-    uint32_t ctmp=0x98badcfe,dtmp=0x10325476;
-    for(uint32_t i=0;i<buffsize;i+=16)
+    u32 atmp=0x67452301,btmp=0xefcdab89;
+    u32 ctmp=0x98badcfe,dtmp=0x10325476;
+    for(u32 i=0;i<buffsize;i+=16)
     {
-        uint32_t f,a=atmp,b=btmp,c=ctmp,d=dtmp;
-        for(uint32_t j=0;j<64;j++)
+        u32 f,a=atmp,b=btmp,c=ctmp,d=dtmp;
+        for(u32 j=0;j<64;j++)
         {
             if(j<16)      f=md5f(b,c,d);
             else if(j<32) f=md5g(b,c,d);
             else if(j<48) f=md5h(b,c,d);
             else          f=md5i(b,c,d);
-            uint32_t tmp=d;
+            u32 tmp=d;
             d=c;
             c=b;
             b=b+shift((a+f+k[j]+buff[i+idx[j]]),s[j]);
@@ -1328,7 +1328,7 @@ nasal_ref builtin_cocreate(nasal_ref* local,nasal_gc& gc)
     coroutine.top++;
     coroutine.top[0]={vm_addr,(nasal_ref*)nullptr}; // old localr
     coroutine.top++;
-    coroutine.top[0]={vm_ret,(uint32_t)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
+    coroutine.top[0]={vm_ret,(u32)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
 
     coroutine.funcr=func; // make sure the coroutine function can use correct upvalues
     coroutine.status=nasal_co::suspended;
@@ -1377,9 +1377,9 @@ nasal_ref builtin_corun(nasal_ref* local,nasal_gc& gc)
 }
 nasal_ref builtin_millisec(nasal_ref* local,nasal_gc& gc)
 {
-    double res=std::chrono::duration_cast<std::chrono::milliseconds>
-               (std::chrono::high_resolution_clock::now().time_since_epoch())
-               .count();
+    f64 res=std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::high_resolution_clock::now().time_since_epoch())
+            .count();
     return {vm_num,res};
 }
 nasal_ref builtin_sysargv(nasal_ref* local,nasal_gc& gc)

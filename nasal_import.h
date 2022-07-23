@@ -18,7 +18,7 @@ private:
     std::string path(const nasal_ast&);
     nasal_ast fimpt(nasal_ast&);
     nasal_ast libimpt();
-    nasal_ast load(nasal_ast&,uint16_t);
+    nasal_ast load(nasal_ast&,u16);
 public:
     nasal_import(nasal_err&);
     void link(nasal_parse&,const std::string&);
@@ -32,8 +32,8 @@ nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
     char sep=':';
 #endif
     std::string PATH=getenv("PATH");
-    size_t last=0;
-    size_t pos=PATH.find(sep,last);
+    usize last=0;
+    usize pos=PATH.find(sep,last);
     while(pos!=std::string::npos)
     {
         std::string dirpath=PATH.substr(last,pos-last);
@@ -51,7 +51,7 @@ std::string nasal_import::path(const nasal_ast& node)
     if(node[1].type()==ast_callf)
         return node[1][0].str();
     std::string fpath=".";
-    for(size_t i=1;i<node.size();++i)
+    for(usize i=1;i<node.size();++i)
 #ifndef _WIN32
         fpath+="/"+node[i].str();
 #else
@@ -71,7 +71,7 @@ bool nasal_import::imptchk(const nasal_ast& node)
 */
     if(node.type()==ast_call && node[0].str()=="import" && node.size()>=2 && node[1].type()==ast_callh)
     {
-        for(size_t i=1;i<node.size();++i)
+        for(usize i=1;i<node.size();++i)
             if(node[i].type()!=ast_callh)
                 return false;
         return true;
@@ -185,7 +185,7 @@ nasal_ast nasal_import::libimpt()
     return load(tmp,files.size()-1);
 }
 
-nasal_ast nasal_import::load(nasal_ast& root,uint16_t fileindex)
+nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
 {
     nasal_ast new_root(0,ast_root);
     if(!lib_loaded)

@@ -1,14 +1,14 @@
 #include "nasal.h"
 
-const uint32_t VM_LEXINFO  =0x01;
-const uint32_t VM_ASTINFO  =0x02;
-const uint32_t VM_CODEINFO =0x04;
-const uint32_t VM_EXECTIME =0x08;
-const uint32_t VM_OPCALLNUM=0x10;
-const uint32_t VM_EXEC     =0x20;
-const uint32_t VM_DBGINFO  =0x40;
-const uint32_t VM_DEBUG    =0x80;
-const uint32_t VM_OPTIMIZE =0x100;
+const u32 VM_LEXINFO  =0x01;
+const u32 VM_ASTINFO  =0x02;
+const u32 VM_CODEINFO =0x04;
+const u32 VM_EXECTIME =0x08;
+const u32 VM_OPCALLNUM=0x10;
+const u32 VM_EXEC     =0x20;
+const u32 VM_DBGINFO  =0x40;
+const u32 VM_DEBUG    =0x80;
+const u32 VM_OPTIMIZE =0x100;
 
 void help()
 {
@@ -70,7 +70,7 @@ void err()
     std::exit(1);
 }
 
-void execute(const std::string& file,const std::vector<std::string>& argv,const uint32_t cmd)
+void execute(const std::string& file,const std::vector<std::string>& argv,const u32 cmd)
 {
     // front end use the same error module
     nasal_err     nerr;
@@ -138,7 +138,7 @@ int main(int argc,const char* argv[])
             err();
         return 0;
     }
-    std::unordered_map<std::string,uint32_t> cmdlst={
+    std::unordered_map<std::string,u32> cmdlst={
         {"--lex",VM_LEXINFO},{"-l",VM_LEXINFO},
         {"--ast",VM_ASTINFO},{"-a",VM_ASTINFO},
         {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
@@ -149,7 +149,7 @@ int main(int argc,const char* argv[])
         {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
-    uint32_t cmd=0;
+    u32 cmd=0;
     std::string filename;
     std::vector<std::string> vm_argv;
     for(int i=1;i<argc;++i)

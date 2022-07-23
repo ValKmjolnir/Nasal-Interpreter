@@ -40,11 +40,21 @@
 #include <sys/wait.h>
 #endif
 
-const uint32_t STACK_DEPTH=2048;
+using i32=std::int32_t;
+using i64=std::int64_t;
+using u8 =std::uint8_t;
+using u16=std::uint16_t;
+using u32=std::uint32_t;
+using u64=std::uint64_t;
+using usize=std::size_t;
+using f64=double;
 
-inline double hex_to_double(const char* str)
+
+const u32 STACK_DEPTH=2048;
+
+inline f64 hex_to_double(const char* str)
 {
-    double ret=0;
+    f64 ret=0;
     for(;*str;++str)
     {
         ret*=16;
@@ -59,9 +69,9 @@ inline double hex_to_double(const char* str)
     }
     return ret;
 }
-inline double oct_to_double(const char* str)
+inline f64 oct_to_double(const char* str)
 {
-    double ret=0;
+    f64 ret=0;
     for(;*str;++str)
     {
         ret*=8;
@@ -72,9 +82,9 @@ inline double oct_to_double(const char* str)
     }
     return ret;
 }
-inline double dec_to_double(const char* str)
+inline f64 dec_to_double(const char* str)
 {
-    double ret=0,negative=1,num_pow=0;
+    f64 ret=0,negative=1,num_pow=0;
     while('0'<=*str && *str<='9')
         ret=ret*10+(*str++-'0');
     if(!*str) return ret;
@@ -105,10 +115,10 @@ inline double dec_to_double(const char* str)
     }
     return ret*std::pow(10,negative*num_pow);
 }
-double str2num(const char* str)
+f64 str2num(const char* str)
 {
     bool negative=false;
-    double res=0;
+    f64 res=0;
     if(*str=='-' || *str=='+')
         negative=(*str++=='-');
     if(!*str)
@@ -125,7 +135,7 @@ double str2num(const char* str)
 int utf8_hdchk(const char head)
 {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
-    const uint8_t c=(uint8_t)head;
+    const u8 c=(u8)head;
     if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
         return 1;
     if((c>>4)==0x0e) // 1110 xxxx (10xx xxxx)^2
@@ -140,7 +150,7 @@ std::string chrhex(const char c)
     return {"0123456789abcdef"[(c&0xf0)>>4],"0123456789abcdef"[c&0x0f]};
 }
 
-std::string rawstr(const std::string& str,const size_t maxlen=0)
+std::string rawstr(const std::string& str,const usize maxlen=0)
 {
     std::string ret("");
     for(auto i:str)

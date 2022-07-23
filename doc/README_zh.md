@@ -180,7 +180,7 @@ __`vm_nil`__ 是空类型。类似于null。
 var spc=nil;
 ```
 
-__`vm_num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数double格式来存储。
+__`vm_num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数`double`格式来存储。
 
 ```javascript
 # this language use '#' to write notes
