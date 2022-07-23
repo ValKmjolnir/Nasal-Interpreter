@@ -52,8 +52,6 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 * __E-mail__: __lhk101lhk101@qq.com__
 
-* __QQ__: __896693328__
-
 ## __简介__
 
 __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
@@ -65,11 +63,11 @@ __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
 现在这个项目已经使用 __MIT 协议__ 开源 (2021/5/4)。根据该协议的内容，你们可以根据自己的需求进行修改，使用它来学习或者创造更多有趣的东西(不过可别忘了，如果要开源必须要附带本项目拥有者的相关信息)。
 
 __我们为什么想要重新写一个nasal解释器?__
-这是个很偶然的想法。2019年暑假，[FGPRC](https://www.fgprc.org/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试实在是太费劲了，有时候只是想检查语法错误，也得花费时间打开这个软件等待加载进去之后进行调试。所以我就想，也许可以写一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
+这是个很偶然的想法。2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试实在是太费劲了，有时候只是想检查语法错误，也得花费时间打开这个软件等待加载进去之后进行调试。所以我就想，也许可以写一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
 
 我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机(曾经我们使用ast解释器来直接在抽象语法树中执行，然而在v4.0之后这个解释器已经淘汰)，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误非常快捷，远比每次都需要复制nasal代码到Flightgear的nasal控制台中去查看要方便，且错误信息清晰直观。
 
-当然，你也可以使用这个语言来写一些与Flightgear运行环境无关的其他有趣的程序(它毕竟就是个脚本语言)，并用这个解释器来执行，让这个语言脱离Flightgear的环境，去别的地方大展身手。你也可以编写你自己的模块，让nasal来调用，使得这个语言成为你的项目中一个非常有用的工具。
+当然，你也可以使用这个语言来写一些与Flightgear运行环境无关的其他有趣的程序，并用这个解释器来执行，让这个语言脱离Flightgear的环境，去别的地方大展身手。你也可以编写你自己的模块，让nasal来调用，使得这个语言成为你的项目中一个非常有用的工具。
 
 ## __编译__
 
@@ -795,14 +793,9 @@ trace back:
         0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
 vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
   0x0000005b    | null |
-  0x0000005a    | pc   | 0x4f6
-  0x00000059    | addr | 0x7fffcd21bc78
-  0x00000058    | nil  |
+  ...
   0x00000057    | str  | <0x138ff60> error occurred t...
-  0x00000056    | nil  |
-  0x00000055    | func | <0x13445b0> entry:0x4f0
-  0x00000054    | pc   | 0x4fa
-  0x00000053    | addr | 0x0
+  ...
   0x00000052    | nil  |
 ```
 
@@ -831,12 +824,7 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
   0x00001ffb    | func | <0x15f8d90> entry:0x4f9
   0x00001ffa    | func | <0x15f8d90> entry:0x4f9
   0x00001ff9    | pc   | 0x4fb
-  0x00001ff8    | addr | 0x7fffd37a1748
-  0x00001ff7    | nil  |
-  0x00001ff6    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff5    | nil  |
-  0x00001ff4    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff3    | pc   | 0x4fb
+  ...
   0x00001ff2    | addr | 0x7fffd37a16e8
 ```
 
@@ -874,12 +862,7 @@ vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
   0x0000005b    | null |
   0x0000005a    | pc   | 0x4f6
   0x00000059    | addr | 0x7ffff42f3d18
-  0x00000058    | nil  |
-  0x00000057    | str  | <0x1932480> error occurred t...
-  0x00000056    | nil  |
-  0x00000055    | func | <0x18e6ad0> entry:0x4f0
-  0x00000054    | pc   | 0x4fa
-  0x00000053    | addr | 0x0
+  ...
   0x00000052    | nil  |
 registers(main):
   [ pc     ]    | pc   | 0xac
@@ -894,18 +877,6 @@ global(0x7ffff42f3808<sp+0>):
   0x00000000    | func | <0x18d62d0> entry:0x5
   0x00000001    | func | <0x18d7e40> entry:0xc
   ...
-  0x00000031    | func | <0x18f6ad0> entry:0x237
-  0x00000032    | hash | <0x191f780> {14 val}
-  0x00000033    | func | <0x18df660> entry:0x29b
-  0x00000034    | hash | <0x191f7a0> {9 val}
-  0x00000035    | hash | <0x191f7c0> {18 val}
-  ...
-  0x00000039    | hash | <0x191f840> {1 val}
-  0x0000003a    | num  | 0.0174533
-  ...
-  0x00000049    | num  | 57.2958
-  0x0000004a    | func | <0x18e6490> entry:0x489
-  ...
   0x0000004e    | func | <0x18e6710> entry:0x4c2
   0x0000004f    | hash | <0x191f8b0> {5 val}
 local(0x7ffff42f3d68<sp+86>):
@@ -915,8 +886,7 @@ local(0x7ffff42f3d68<sp+86>):
 
 ## __调试器__
 
-在`v8.0`版本中我们为nasal添加了调试器。现在我们可以在测试程序的时候同时看到源代码和生成的字节码并且单步执行。
-
+在`v8.0`版本中我们添加了调试器。
 使用这个命令`./nasal -dbg xxx.nas`来启用调试器，接下来调试器会打开文件并输出以下内容:
 
 ```javascript
@@ -924,60 +894,57 @@ local(0x7ffff42f3d68<sp+86>):
 input 'h' to get help
 
 source code:
--->     import("lib.nas");
-        var fib=func(x)
-        {
-                if(x<2) return x;
-                return fib(x-1)+fib(x-2);
-        }
-        for(var i=0;i<31;i+=1)
-                print(fib(i),'\n');
+-->  var fib=func(x)
+     {
+        if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+     }
+     for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
+
 next bytecode:
--->     0x00000000:     01 00 00 00 4f      intg   0x4f (a.nas:0)
-        0x00000001:     0b 00 00 00 05      newf   0x5 (lib.nas:5)
-        0x00000002:     02 00 00 00 02      intl   0x2 (lib.nas:5)
-        0x00000003:     0d 00 00 00 00      para   0x0 ("filename") (lib.nas:5)
-        0x00000004:     32 00 00 00 07      jmp    0x7 (lib.nas:5)
-        0x00000005:     40 00 00 00 24      callb  0x24 <__import@0x419b20> (lib.nas:6)
-        0x00000006:     4a 00 00 00 00      ret    0x0 (lib.nas:6)
-        0x00000007:     03 00 00 00 00      loadg  0x0 (lib.nas:5)
-vm stack(0x7fffe05e3190<sp+79>, limit 5, total 0)
+-->  0x00000000:       01 00 00 00 50        intg    0x50 (test/fib.nas:0)
+     0x00000001:       0b 00 00 00 05        newf    0x5 (./lib.nas:5)
+     0x00000002:       02 00 00 00 02        intl    0x2 (./lib.nas:5)
+     0x00000003:       0f 00 00 00 00        dyn     0x0 ("elems") (./lib.nas:5)
+     0x00000004:       32 00 00 00 07        jmp     0x7 (./lib.nas:5)
+     0x00000005:       40 00 00 00 00        callb   0x0 <__print@0x419400> (./lib.nas:6)
+     0x00000006:       4a 00 00 00 00        ret     0x0 (./lib.nas:6)
+     0x00000007:       03 00 00 00 00        loadg   0x0 (./lib.nas:5)
+vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 0)
 >>
 ```
 
 如果需要查看命令的使用方法，可以输入`h`获取帮助信息。
-
-```bash
->> h
-```
 
 当运行调试器的时候，你可以看到现在的操作数栈上到底有些什么数据。
 这些信息可以帮助你调试，同时也可以帮助你理解这个虚拟机是如何工作的:
 
 ```javascript
 source code:
-        import("lib.nas");
-        var fib=func(x)
-        {
--->             if(x<2) return x;
-                return fib(x-1)+fib(x-2);
-        }
-        for(var i=0;i<31;i+=1)
-                print(fib(i),'\n');
+     var fib=func(x)
+     {
+-->     if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+     }
+     for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
+
 next bytecode:
-        0x00000458:     4a 00 00 00 00      ret    0x0 (lib.nas:463)
-        0x00000459:     03 00 00 00 4c      loadg  0x4c (lib.nas:463)
-        0x0000045a:     0b 00 00 04 5e      newf   0x45e (a.nas:2)
-        0x0000045b:     02 00 00 00 02      intl   0x2 (a.nas:2)
-        0x0000045c:     0d 00 00 00 1c      para   0x1c ("x") (a.nas:2)
-        0x0000045d:     32 00 00 04 6d      jmp    0x46d (a.nas:2)
--->     0x0000045e:     39 00 00 00 01      calll  0x1 (a.nas:4)
-        0x0000045f:     2d 00 00 00 02      lessc  0x2 (2) (a.nas:4)
-vm stack(0x7fffe05e3190<sp+79>, limit 5, total 6):
-  0x00000054    | pc   | 0x476
-  0x00000053    | addr | 0x0
-  0x00000052    | num  | 0
+     0x00000518:       02 00 00 00 02        intl    0x2 (test/fib.nas:1)
+     0x00000519:       0d 00 00 00 1a        para    0x1a ("x") (test/fib.nas:1)
+     0x0000051a:       32 00 00 05 2a        jmp     0x52a (test/fib.nas:1)
+-->  0x0000051b:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
+     0x0000051c:       2d 00 00 00 03        lessc   0x3 (2) (test/fib.nas:3)
+     0x0000051d:       34 00 00 05 20        jf      0x520 (test/fib.nas:3)
+     0x0000051e:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
+     0x0000051f:       4a 00 00 00 00        ret     0x0 (test/fib.nas:3)
+vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 7)
+  0x00000056    | pc   | 0x533
+  0x00000055    | addr | 0x0
+  0x00000054    | nil  |
+  0x00000053    | num  | 0
+  0x00000052    | nil  |
   0x00000051    | nil  |
-  0x00000050    | nil  |
->>
+  0x00000050    | func | <0x166e000> entry:0x5
 ```

@@ -1,4 +1,5 @@
 # lib.nas
+# 2019 ValKmjolnir
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.

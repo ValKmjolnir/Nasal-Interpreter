@@ -52,8 +52,6 @@ __Contact us if having great ideas to share!__
 
 * __E-mail__: __lhk101lhk101@qq.com__
 
-* __QQ__: __896693328__
-
 ## __Introduction__
 
 __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
@@ -64,10 +62,8 @@ The interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjo
 without reusing the code in [Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>).
 But we really appreciate that Andy created this amazing programming language and his interpreter project.
 
-Now this project uses __MIT license__ (2021/5/4).
-Edit it if you want,
-use this project to learn or create more interesting things
-(But don't forget me XD).
+Now this project uses __MIT license__ (2021/5/4). Edit it if you want,
+use this project to learn or create more interesting things (But don't forget me XD).
 
 __Why writing this nasal interpreter?__
 In 2019 summer holiday,
@@ -75,8 +71,7 @@ members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with
 especially when checking syntax errors.
 So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
 
-I wrote the lexer,
-parser and
+I wrote the lexer, parser and
 bytecode virtual machine(there was an ast-interpreter,
 but deleted after v4.0) to help checking errors.
 We found it much easier to check syntax and runtime
@@ -850,14 +845,9 @@ trace back:
         0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
 vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
   0x0000005b    | null |
-  0x0000005a    | pc   | 0x4f6
-  0x00000059    | addr | 0x7fffcd21bc78
-  0x00000058    | nil  |
+  ...
   0x00000057    | str  | <0x138ff60> error occurred t...
-  0x00000056    | nil  |
-  0x00000055    | func | <0x13445b0> entry:0x4f0
-  0x00000054    | pc   | 0x4fa
-  0x00000053    | addr | 0x0
+  ...
   0x00000052    | nil  |
 ```
 
@@ -886,12 +876,7 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
   0x00001ffb    | func | <0x15f8d90> entry:0x4f9
   0x00001ffa    | func | <0x15f8d90> entry:0x4f9
   0x00001ff9    | pc   | 0x4fb
-  0x00001ff8    | addr | 0x7fffd37a1748
-  0x00001ff7    | nil  |
-  0x00001ff6    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff5    | nil  |
-  0x00001ff4    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff3    | pc   | 0x4fb
+  ...
   0x00001ff2    | addr | 0x7fffd37a16e8
 ```
 
@@ -929,12 +914,7 @@ vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
   0x0000005b    | null |
   0x0000005a    | pc   | 0x4f6
   0x00000059    | addr | 0x7ffff42f3d18
-  0x00000058    | nil  |
-  0x00000057    | str  | <0x1932480> error occurred t...
-  0x00000056    | nil  |
-  0x00000055    | func | <0x18e6ad0> entry:0x4f0
-  0x00000054    | pc   | 0x4fa
-  0x00000053    | addr | 0x0
+  ...
   0x00000052    | nil  |
 registers(main):
   [ pc     ]    | pc   | 0xac
@@ -949,18 +929,6 @@ global(0x7ffff42f3808<sp+0>):
   0x00000000    | func | <0x18d62d0> entry:0x5
   0x00000001    | func | <0x18d7e40> entry:0xc
   ...
-  0x00000031    | func | <0x18f6ad0> entry:0x237
-  0x00000032    | hash | <0x191f780> {14 val}
-  0x00000033    | func | <0x18df660> entry:0x29b
-  0x00000034    | hash | <0x191f7a0> {9 val}
-  0x00000035    | hash | <0x191f7c0> {18 val}
-  ...
-  0x00000039    | hash | <0x191f840> {1 val}
-  0x0000003a    | num  | 0.0174533
-  ...
-  0x00000049    | num  | 57.2958
-  0x0000004a    | func | <0x18e6490> entry:0x489
-  ...
   0x0000004e    | func | <0x18e6710> entry:0x4c2
   0x0000004f    | hash | <0x191f8b0> {5 val}
 local(0x7ffff42f3d68<sp+86>):
@@ -970,9 +938,7 @@ local(0x7ffff42f3d68<sp+86>):
 
 ## __Debugger__
 
-In nasal `v8.0` we added a debugger.
-Now we could see both source code and bytecode when testing program.
-
+We added a debugger in `v8.0`.
 Use command `./nasal -dbg xxx.nas` to use the debugger,
 and the debugger will print this:
 
@@ -981,60 +947,57 @@ and the debugger will print this:
 input 'h' to get help
 
 source code:
--->     import("lib.nas");
-        var fib=func(x)
-        {
-                if(x<2) return x;
-                return fib(x-1)+fib(x-2);
-        }
-        for(var i=0;i<31;i+=1)
-                print(fib(i),'\n');
+-->  var fib=func(x)
+     {
+        if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+     }
+     for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
+
 next bytecode:
--->     0x00000000:     01 00 00 00 4f      intg   0x4f (a.nas:0)
-        0x00000001:     0b 00 00 00 05      newf   0x5 (lib.nas:5)
-        0x00000002:     02 00 00 00 02      intl   0x2 (lib.nas:5)
-        0x00000003:     0d 00 00 00 00      para   0x0 ("filename") (lib.nas:5)
-        0x00000004:     32 00 00 00 07      jmp    0x7 (lib.nas:5)
-        0x00000005:     40 00 00 00 24      callb  0x24 <__import@0x419b20> (lib.nas:6)
-        0x00000006:     4a 00 00 00 00      ret    0x0 (lib.nas:6)
-        0x00000007:     03 00 00 00 00      loadg  0x0 (lib.nas:5)
-vm stack(0x7fffe05e3190<sp+79>, limit 5, total 0)
+-->  0x00000000:       01 00 00 00 50        intg    0x50 (test/fib.nas:0)
+     0x00000001:       0b 00 00 00 05        newf    0x5 (./lib.nas:5)
+     0x00000002:       02 00 00 00 02        intl    0x2 (./lib.nas:5)
+     0x00000003:       0f 00 00 00 00        dyn     0x0 ("elems") (./lib.nas:5)
+     0x00000004:       32 00 00 00 07        jmp     0x7 (./lib.nas:5)
+     0x00000005:       40 00 00 00 00        callb   0x0 <__print@0x419400> (./lib.nas:6)
+     0x00000006:       4a 00 00 00 00        ret     0x0 (./lib.nas:6)
+     0x00000007:       03 00 00 00 00        loadg   0x0 (./lib.nas:5)
+vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 0)
 >>
 ```
 
 If want help, input `h` to get help.
-
-```bash
->> h
-```
 
 When running the debugger, you could see what is on stack.
 This will help you debugging or learning how the vm works:
 
 ```javascript
 source code:
-        import("lib.nas");
-        var fib=func(x)
-        {
--->             if(x<2) return x;
-                return fib(x-1)+fib(x-2);
-        }
-        for(var i=0;i<31;i+=1)
-                print(fib(i),'\n');
+     var fib=func(x)
+     {
+-->     if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+     }
+     for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
+
 next bytecode:
-        0x00000458:     4a 00 00 00 00      ret    0x0 (lib.nas:463)
-        0x00000459:     03 00 00 00 4c      loadg  0x4c (lib.nas:463)
-        0x0000045a:     0b 00 00 04 5e      newf   0x45e (a.nas:2)
-        0x0000045b:     02 00 00 00 02      intl   0x2 (a.nas:2)
-        0x0000045c:     0d 00 00 00 1c      para   0x1c ("x") (a.nas:2)
-        0x0000045d:     32 00 00 04 6d      jmp    0x46d (a.nas:2)
--->     0x0000045e:     39 00 00 00 01      calll  0x1 (a.nas:4)
-        0x0000045f:     2d 00 00 00 02      lessc  0x2 (2) (a.nas:4)
-vm stack(0x7fffe05e3190<sp+79>, limit 5, total 6):
-  0x00000054    | pc   | 0x476
-  0x00000053    | addr | 0x0
-  0x00000052    | num  | 0
+     0x00000518:       02 00 00 00 02        intl    0x2 (test/fib.nas:1)
+     0x00000519:       0d 00 00 00 1a        para    0x1a ("x") (test/fib.nas:1)
+     0x0000051a:       32 00 00 05 2a        jmp     0x52a (test/fib.nas:1)
+-->  0x0000051b:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
+     0x0000051c:       2d 00 00 00 03        lessc   0x3 (2) (test/fib.nas:3)
+     0x0000051d:       34 00 00 05 20        jf      0x520 (test/fib.nas:3)
+     0x0000051e:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
+     0x0000051f:       4a 00 00 00 00        ret     0x0 (test/fib.nas:3)
+vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 7)
+  0x00000056    | pc   | 0x533
+  0x00000055    | addr | 0x0
+  0x00000054    | nil  |
+  0x00000053    | num  | 0
+  0x00000052    | nil  |
   0x00000051    | nil  |
-  0x00000050    | nil  |
->>
+  0x00000050    | func | <0x166e000> entry:0x5
 ```
