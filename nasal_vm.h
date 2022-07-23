@@ -440,7 +440,7 @@ inline void nasal_vm::opr_para()
 {
     nasal_func& func=top[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[str_table[imm[pc]]]=func.psize;
+    func.keys[imm[pc]]=func.psize;
     func.local[func.psize++]={vm_none};
 }
 inline void nasal_vm::opr_deft()
@@ -448,7 +448,7 @@ inline void nasal_vm::opr_deft()
     nasal_ref val=top[0];
     nasal_func& func=(--top)[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[str_table[imm[pc]]]=func.psize;
+    func.keys[imm[pc]]=func.psize;
     func.local[func.psize++]=val;
 }
 inline void nasal_vm::opr_dyn()
@@ -779,10 +779,11 @@ inline void nasal_vm::opr_callfh()
     
     for(auto& i:func.keys)
     {
-        if(hash.count(i.first))
-            local[i.second]=hash[i.first];
+        const std::string& key=str_table[i.first];
+        if(hash.count(key))
+            local[i.second]=hash[key];
         else if(local[i.second].type==vm_none)
-            die("callfh: lack argument(s): \""+i.first+"\"");
+            die("callfh: lack argument(s): \""+key+"\"");
     }
 
     top[0]=upvalr;
