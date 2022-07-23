@@ -166,11 +166,11 @@ struct
 
 struct opcode
 {
-    uint8_t op;  // opcode
-    uint16_t fidx;// source code file index
-    uint32_t num; // imm num
-    uint32_t line;// line of source code
-    opcode(uint8_t o=op_exit,uint16_t f=0,uint32_t n=0,uint32_t l=0):
+    u8  op;  // opcode
+    u16 fidx;// source code file index
+    u32 num; // imm num
+    u32 line;// line of source code
+    opcode(u8 o=op_exit,u16 f=0,u32 n=0,u32 l=0):
         op(o),fidx(f),num(n),line(l){}
     opcode& operator=(const opcode& tmp)
     {
@@ -181,20 +181,20 @@ struct opcode
         return *this;
     }
     void print(const char*,
-               const double*,
+               const f64*,
                const std::string*,
-               const uint32_t,bool) const;
+               const u32,bool) const;
 };
 
 void opcode::print(const char* header,
-                   const double* constnum,
+                   const f64* constnum,
                    const std::string* conststr,
-                   const uint32_t index,
+                   const u32 index,
                    bool deftnum=false) const
 {
     std::cout<<header<<std::hex<<"0x"
              <<std::setw(8)<<std::setfill('0')<<index<<":       "
-             <<std::setw(2)<<std::setfill('0')<<(uint32_t)op<<" "
+             <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
              <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
              <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
              <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
@@ -244,13 +244,13 @@ void opcode::print(const char* header,
 class nasal_codegen
 {
 private:
-    uint16_t fileindex;
+    u16 fileindex;
     nasal_err& nerr;
     const std::string* file;
-    std::stack<uint32_t> in_iterloop;
-    std::unordered_map<double,uint32_t> num_table;
-    std::unordered_map<std::string,uint32_t> str_table;
-    std::vector<double> num_res;
+    std::stack<u32> in_iterloop;
+    std::unordered_map<f64,u32> num_table;
+    std::unordered_map<std::string,u32> str_table;
+    std::vector<f64> num_res;
     std::vector<std::string> str_res;
     std::vector<opcode> code;
     std::list<std::vector<int>> continue_ptr;
@@ -261,18 +261,18 @@ private:
     std::list<std::unordered_map<std::string,int>> local;
 
     // func end stack, reserved for code print
-    std::stack<uint32_t> fbstk;
-    std::stack<uint32_t> festk;
+    std::stack<u32> fbstk;
+    std::stack<u32> festk;
     
-    void die(const std::string&,const uint32_t);
-    void regist_num(const double);
+    void die(const std::string&,const u32);
+    void regist_num(const f64);
     void regist_str(const std::string&);
     void find_symbol(const nasal_ast&);
     void add_sym(const std::string&);
     int  local_find(const std::string&);
     int  global_find(const std::string&);
     int  upvalue_find(const std::string&);
-    void gen(uint8_t,uint32_t,uint32_t);
+    void gen(u8,u32,u32);
     void num_gen(const nasal_ast&);
     void str_gen(const nasal_ast&);
     void vec_gen(const nasal_ast&);
@@ -305,27 +305,27 @@ private:
     void block_gen(const nasal_ast&);
     void ret_gen(const nasal_ast&);
 
-    void singleop(const uint32_t);
+    void singleop(const u32);
 public:
     nasal_codegen(nasal_err& e):fileindex(0),nerr(e),file(nullptr){}
     void compile(const nasal_parse&,const nasal_import&);
     void print();
     const std::vector<std::string>& strs() const {return str_res;}
-    const std::vector<double>&      nums() const {return num_res;}
+    const std::vector<f64>&         nums() const {return num_res;}
     const std::vector<opcode>&      codes() const {return code;}
 };
 
-void nasal_codegen::die(const std::string& info,const uint32_t line)
+void nasal_codegen::die(const std::string& info,const u32 line)
 {
     nerr.load(file[fileindex]);
     nerr.err("code",line,info);
 }
 
-void nasal_codegen::regist_num(const double num)
+void nasal_codegen::regist_num(const f64 num)
 {
     if(!num_table.count(num))
     {
-        uint32_t size=num_table.size();
+        u32 size=num_table.size();
         num_table[num]=size;
         num_res.push_back(num);
     }
@@ -335,7 +335,7 @@ void nasal_codegen::regist_str(const std::string& str)
 {
     if(!str_table.count(str))
     {
-        uint32_t size=str_table.size();
+        u32 size=str_table.size();
         str_table[str]=size;
         str_res.push_back(str);
     }
@@ -398,24 +398,24 @@ int nasal_codegen::upvalue_find(const std::string& name)
 {
     // 32768 level 65536 upvalues
     int index=-1;
-    size_t size=local.size();
+    usize size=local.size();
     if(size<=1)
         return -1;
     auto iter=local.begin();
-    for(uint32_t i=0;i<size-1;++i,++iter)
+    for(u32 i=0;i<size-1;++i,++iter)
         if(iter->count(name))
             index=((i<<16)|(*iter)[name]);
     return index;
 }
 
-void nasal_codegen::gen(uint8_t op,uint32_t num,uint32_t line)
+void nasal_codegen::gen(u8 op,u32 num,u32 line)
 {
     code.push_back({op,fileindex,num,line});
 }
 
 void nasal_codegen::num_gen(const nasal_ast& ast)
 {
-    double num=ast.num();
+    f64 num=ast.num();
     regist_num(num);
     gen(op_pnum,num_table[num],ast.line());
 }
@@ -523,7 +523,7 @@ void nasal_codegen::call_gen(const nasal_ast& ast)
 void nasal_codegen::call_id(const nasal_ast& ast)
 {
     const std::string& str=ast.str();
-    for(uint32_t i=0;builtin[i].name;++i)
+    for(u32 i=0;builtin[i].name;++i)
         if(builtin[i].name==str)
         {
             gen(op_callb,i,ast.line());
@@ -621,7 +621,7 @@ void nasal_codegen::mcall(const nasal_ast& ast)
         return;
     }
     calc_gen(ast[0]);
-    for(size_t i=1;i<ast.size()-1;++i)
+    for(usize i=1;i<ast.size()-1;++i)
     {
         const nasal_ast& tmp=ast[i];
         switch(tmp.type())
@@ -641,7 +641,7 @@ void nasal_codegen::mcall(const nasal_ast& ast)
 void nasal_codegen::mcall_id(const nasal_ast& ast)
 {
     const std::string& str=ast.str();
-    for(uint32_t i=0;builtin[i].name;++i)
+    for(u32 i=0;builtin[i].name;++i)
         if(builtin[i].name==str)
         {
             die("cannot change builtin function.",ast.line());
@@ -1267,7 +1267,7 @@ void nasal_codegen::block_gen(const nasal_ast& ast)
 
 void nasal_codegen::ret_gen(const nasal_ast& ast)
 {
-    for(uint32_t i=0;i<in_iterloop.top();++i)
+    for(u32 i=0;i<in_iterloop.top();++i)
     {
         gen(op_pop,0,ast.line());
         gen(op_pop,0,ast.line());
@@ -1297,7 +1297,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     nerr.chkerr();
 }
 
-void nasal_codegen::singleop(const uint32_t index)
+void nasal_codegen::singleop(const u32 index)
 {
     // print opcode index,opcode name,opcode immediate number
     const opcode& c=code[index];
@@ -1312,7 +1312,7 @@ void nasal_codegen::singleop(const uint32_t index)
     if(c.op==op_newf)
     {
         std::cout<<std::hex<<"\nfunc <0x"<<index<<std::dec<<">:\n";
-        for(uint32_t i=index;i<code.size();++i)
+        for(u32 i=index;i<code.size();++i)
             if(code[i].op==op_jmp)
             {
                 fbstk.push(index);
@@ -1331,7 +1331,7 @@ void nasal_codegen::print()
     for(auto& str:str_res)
         std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
     std::cout<<"\n";
-    for(uint32_t i=0;i<code.size();++i)
+    for(u32 i=0;i<code.size();++i)
         singleop(i);
 }
 

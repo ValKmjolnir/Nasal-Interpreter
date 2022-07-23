@@ -41,16 +41,16 @@ class nasal_parse
 #define error_line (tokens[ptr].line)
 #define is_call(type) ((type)==tok_lcurve || (type)==tok_lbracket || (type)==tok_dot)
 private:
-    uint32_t ptr;
-    uint32_t in_func; // count function block
-    uint32_t in_loop; // count loop block
+    u32 ptr;
+    u32 in_func; // count function block
+    u32 in_loop; // count loop block
     const token* tokens;// ref from nasal_lexer
     nasal_ast root;
     nasal_err& nerr;
 
-    void die(uint32_t,std::string,bool);
-    void match(uint32_t type,const char* info=nullptr);
-    bool check_comma(const uint32_t*);
+    void die(u32,std::string,bool);
+    void match(u32 type,const char* info=nullptr);
+    bool check_comma(const u32*);
     bool check_multi_scalar();
     bool check_func_end(const nasal_ast&);
     bool check_special_call();
@@ -121,7 +121,7 @@ void nasal_parse::compile(const nasal_lexer& lexer)
     }
     nerr.chkerr();
 }
-void nasal_parse::die(uint32_t line,std::string info,bool report_prev=false)
+void nasal_parse::die(u32 line,std::string info,bool report_prev=false)
 {
     int col=(int)tokens[ptr].col-(int)tokens[ptr].str.length();
     if(tokens[ptr].type==tok_str)
@@ -133,7 +133,7 @@ void nasal_parse::die(uint32_t line,std::string info,bool report_prev=false)
     }
     nerr.err("parse",line,col<0?0:col,info);
 }
-void nasal_parse::match(uint32_t type,const char* info)
+void nasal_parse::match(u32 type,const char* info)
 {
     if(tokens[ptr].type!=type)
     {
@@ -155,9 +155,9 @@ void nasal_parse::match(uint32_t type,const char* info)
         return;
     ++ptr;
 }
-bool nasal_parse::check_comma(const uint32_t* panic_set)
+bool nasal_parse::check_comma(const u32* panic_set)
 {
-    for(uint32_t i=0;panic_set[i];++i)
+    for(u32 i=0;panic_set[i];++i)
         if(tokens[ptr].type==panic_set[i])
         {
             die(error_line,"expected \',\' between scalars",true);
@@ -167,7 +167,7 @@ bool nasal_parse::check_comma(const uint32_t* panic_set)
 }
 bool nasal_parse::check_multi_scalar()
 {
-    uint32_t check_ptr=ptr,curve=1,bracket=0,brace=0;
+    u32 check_ptr=ptr,curve=1,bracket=0,brace=0;
     while(tokens[++check_ptr].type!=tok_eof && curve)
     {
         switch(tokens[check_ptr].type)
@@ -186,7 +186,7 @@ bool nasal_parse::check_multi_scalar()
 }
 bool nasal_parse::check_func_end(const nasal_ast& node)
 {
-    uint32_t type=node.type();
+    u32 type=node.type();
     if(type==ast_func)
         return true;
     else if(type==ast_num || type==ast_id || type==ast_str || type==ast_nil || type==ast_vec || type==ast_hash)
@@ -211,7 +211,7 @@ bool nasal_parse::check_func_end(const nasal_ast& node)
 bool nasal_parse::check_special_call()
 {
     // special call means like this: function_name(a:1,b:2,c:3);
-    uint32_t check_ptr=ptr,curve=1,bracket=0,brace=0;
+    u32 check_ptr=ptr,curve=1,bracket=0,brace=0;
     while(tokens[++check_ptr].type!=tok_eof && curve)
     {
         switch(tokens[check_ptr].type)
@@ -233,7 +233,7 @@ bool nasal_parse::check_special_call()
 }
 bool nasal_parse::need_semi_check(const nasal_ast& node)
 {
-    uint32_t type=node.type();
+    u32 type=node.type();
     if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_conditional)
         return false;
     return !check_func_end(node);
@@ -282,7 +282,7 @@ nasal_ast nasal_parse::vec()
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok_null=0
-    const uint32_t panic_set[]={
+    const u32 panic_set[]={
         tok_id,tok_str,tok_num,
         tok_not,tok_sub,tok_nil,
         tok_func,tok_var,tok_lcurve,
@@ -436,7 +436,7 @@ nasal_ast nasal_parse::lcurve_expr()
 }
 nasal_ast nasal_parse::expr()
 {
-    uint32_t type=tokens[ptr].type;
+    u32 type=tokens[ptr].type;
     if((type==tok_break || type==tok_continue) && !in_loop)
         die(error_line,"should use break/continue in loops");
     if(type==tok_ret && !in_func)
@@ -681,7 +681,7 @@ nasal_ast nasal_parse::callv()
     // panic set for this token is not ','
     // this is the FIRST set of subvec
     // array end with tok_null=0
-    const uint32_t panic_set[]={
+    const u32 panic_set[]={
         tok_id,tok_str,tok_num,
         tok_not,tok_sub,tok_nil,
         tok_func,tok_var,tok_lcurve,
@@ -708,7 +708,7 @@ nasal_ast nasal_parse::callf()
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
     // array end with tok_null=0
-    const uint32_t panic_set[]={
+    const u32 panic_set[]={
         tok_id,tok_str,tok_num,
         tok_not,tok_sub,tok_nil,
         tok_func,tok_var,tok_lcurve,
@@ -809,7 +809,7 @@ nasal_ast nasal_parse::multi_id()
 nasal_ast nasal_parse::multi_scalar(bool check_call_memory)
 {
     // if check_call_memory is true,we will check if value called here can reach a memory space
-    const uint32_t panic_set[]={
+    const u32 panic_set[]={
         tok_id,tok_str,tok_num,
         tok_not,tok_sub,tok_nil,
         tok_func,tok_var,tok_lcurve,
@@ -999,7 +999,7 @@ nasal_ast nasal_parse::ret_expr()
 {
     nasal_ast node(tokens[ptr].line,ast_ret);
     match(tok_ret);
-    uint32_t type=tokens[ptr].type;
+    u32 type=tokens[ptr].type;
     if(
         type==tok_nil ||
         type==tok_num ||

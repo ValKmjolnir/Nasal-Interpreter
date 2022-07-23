@@ -12,7 +12,7 @@ void const_str(nasal_ast& root)
 void const_num(nasal_ast& root)
 {
     auto& vec=root.child();
-    double res;
+    f64 res;
     switch(root.type())
     {
         case ast_add: res=vec[0].num()+vec[1].num(); break;
@@ -39,7 +39,7 @@ void calc_const(nasal_ast& root)
         calc_const(i);
     if(vec.size()==1 && root.type()==ast_neg && vec[0].type()==ast_num)
     {
-        double res=-vec[0].num();
+        f64 res=-vec[0].num();
         root.set_num(res);
         root.child().clear();
         root.set_type(ast_num);

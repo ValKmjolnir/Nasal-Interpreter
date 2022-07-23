@@ -129,13 +129,13 @@ const char* ast_name[]=
 class nasal_ast
 {
 private:
-    uint32_t    _line;
-    uint32_t    _type;
-    double      _num;
+    u32 _line;
+    u32 _type;
+    f64 _num;
     std::string _str;
     std::vector<nasal_ast> _child;
 public:
-    nasal_ast(const uint32_t l=0,const uint32_t t=ast_null):_line(l),_type(t),_num(0){}
+    nasal_ast(const u32 l=0,const u32 t=ast_null):_line(l),_type(t),_num(0){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     void print(int,bool);
@@ -145,18 +145,18 @@ public:
     nasal_ast& operator=(nasal_ast&&);
     nasal_ast& operator[](const int index){return _child[index];}
     const nasal_ast& operator[](const int index) const {return _child[index];}
-    size_t size() const {return _child.size();}
+    usize size() const {return _child.size();}
     
     void add(nasal_ast&& ast){_child.push_back(std::move(ast));}
     void add(const nasal_ast& ast){_child.push_back(ast);}
-    void set_line(const uint32_t l){_line=l;}
-    void set_type(const uint32_t t){_type=t;}
+    void set_line(const u32 l){_line=l;}
+    void set_type(const u32 t){_type=t;}
     void set_str(const std::string& s){_str=s;}
-    void set_num(const double n){_num=n;}
+    void set_num(const f64 n){_num=n;}
 
-    inline uint32_t line() const {return _line;}
-    inline uint32_t type() const {return _type;}
-    inline double   num()  const {return _num;}
+    inline u32 line() const {return _line;}
+    inline u32 type() const {return _type;}
+    inline f64 num()  const {return _num;}
     inline const std::string& str() const {return _str;}
     inline const std::vector<nasal_ast>& child() const {return _child;}
     inline std::vector<nasal_ast>& child(){return _child;}
@@ -232,7 +232,7 @@ void nasal_ast::print(int depth,bool last=false)
 #else
         intentation.back()="│ ";
 #endif
-    for(uint32_t i=0;i<_child.size();++i)
+    for(u32 i=0;i<_child.size();++i)
     {
 #ifdef _WIN32
         intentation.push_back(i==_child.size()-1?"`-":"|-");

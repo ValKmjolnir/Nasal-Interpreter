@@ -17,7 +17,7 @@
 #define CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
 #define NOTE(c)            (c=='#')
 
-enum tok:std::uint32_t{
+enum tok:u32{
     tok_null=0,  // null token (default token type)
     tok_num,     // number     basic token type
     tok_str,     // string     basic token type
@@ -41,7 +41,7 @@ enum tok:std::uint32_t{
 
 struct{
     const char* str;
-    const uint32_t type;
+    const u32 type;
 }tok_table[]={
     {"for"     ,tok_for      },
     {"forindex",tok_forindex },
@@ -93,11 +93,11 @@ struct{
 
 struct token
 {
-    uint32_t line;
-    uint32_t col;
-    uint32_t type;
+    u32 line;
+    u32 col;
+    u32 type;
     std::string str;
-    token(uint32_t l=0,uint32_t c=0,uint32_t t=tok_null,const std::string& s=""):str(s)
+    token(u32 l=0,u32 c=0,u32 t=tok_null,const std::string& s=""):str(s)
     {
         line=l;
         col=c;
@@ -108,14 +108,14 @@ struct token
 class nasal_lexer
 {
 private:
-    uint32_t    line;
-    uint32_t    column;
-    size_t      ptr;
+    u32         line;
+    u32         column;
+    usize       ptr;
     nasal_err&  nerr;
     std::string res;
     std::vector<token> tokens;
 
-    uint32_t get_type(const std::string&);
+    u32 get_type(const std::string&);
     void die(const std::string& info){nerr.err("lexer",line,column,info);}
     void open(const std::string&);
     std::string utf8_gen();
@@ -152,9 +152,9 @@ void nasal_lexer::open(const std::string& file)
     res=ss.str();
 }
 
-uint32_t nasal_lexer::get_type(const std::string& str)
+u32 nasal_lexer::get_type(const std::string& str)
 {
-    for(uint32_t i=0;tok_table[i].str;++i)
+    for(u32 i=0;tok_table[i].str;++i)
         if(str==tok_table[i].str)
             return tok_table[i].type;
     return tok_null;
@@ -166,18 +166,18 @@ std::string nasal_lexer::utf8_gen()
     while(ptr<res.size() && res[ptr]<0)
     {
         std::string tmp="";
-        uint32_t nbytes=utf8_hdchk(res[ptr]);
+        u32 nbytes=utf8_hdchk(res[ptr]);
         if(nbytes)
         {
             tmp+=res[ptr++];
-            for(uint32_t i=0;i<nbytes;++i,++ptr)
+            for(u32 i=0;i<nbytes;++i,++ptr)
                 if(ptr<res.size() && (res[ptr]&0xc0)==0x80)
                     tmp+=res[ptr];
             if(tmp.length()!=1+nbytes)
             {
                 ++column;
                 std::string utf_info="0x"+chrhex(tmp[0]);
-                for(uint32_t i=1;i<tmp.size();++i)
+                for(u32 i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
                 die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file.");
                 std::exit(1);
@@ -351,7 +351,7 @@ void nasal_lexer::scan(const std::string& file)
         if(ID(res[ptr]))
         {
             str=id_gen();
-            uint32_t type=get_type(str);
+            u32 type=get_type(str);
             tokens.push_back({line,column,type?type:tok_id,str});
         }
         else if(DIGIT(res[ptr]))
@@ -368,7 +368,7 @@ void nasal_lexer::scan(const std::string& file)
         {
             str=res[ptr];
             ++column;
-            uint32_t type=get_type(str);
+            u32 type=get_type(str);
             if(!type)
                 die("invalid operator `"+str+"`.");
             tokens.push_back({line,column,type,str});
