@@ -203,14 +203,12 @@ void nasal_vm::bytecodeinfo(const char* header,const u32 p)
 }
 void nasal_vm::traceback()
 {
-    const u32 global_size=bytecode[0].num; // bytecode[0] is op_intg
-    nas_ref* t=top;
-    nas_ref* bottom=stack+global_size;
+    nas_ref* bottom=stack+bytecode[0].num; // bytecode[0] is op_intg
     std::stack<u32> ret;
-    for(nas_ref* i=bottom;i<=t;++i)
+    for(nas_ref* i=bottom;i<=top;++i)
         if(i->type==vm_ret)
             ret.push(i->ret());
-    // push pc to ret stack to store the position program crashed
+    // push pc to stack to store the position program crashed
     ret.push(pc);
     std::cout<<"trace back:\n";
     u32 same=0,last=0xffffffff;
@@ -222,14 +220,13 @@ void nasal_vm::traceback()
             continue;
         }
         if(same)
-            std::cout<<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
-                     <<last<<std::dec<<":       "<<same<<" same call(s)\n";
+            std::cout
+            <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
+            <<last<<std::dec<<":       "<<same<<" same call(s)\n";
         same=0;
         bytecodeinfo("  ",point);
     }
-    if(same)
-        std::cout<<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
-                 <<last<<std::dec<<":       "<<same<<" same call(s)\n";
+    // same must be zero here
 }
 void nasal_vm::stackinfo(const u32 limit=10)
 {
@@ -919,7 +916,6 @@ inline void nasal_vm::o_ret()
 
     top=local-1;
     funcr=top[0];
-
     top[0]=ret; // rewrite func with returned value
 
     if(up.type==vm_upval) // synchronize upvalue
