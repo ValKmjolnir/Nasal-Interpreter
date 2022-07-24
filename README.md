@@ -762,7 +762,7 @@ foreach(i;[0,1,2,3])
     print(i)
 ```
 
-## 2. default dynamic arguments not supported
+### 2. default dynamic arguments not supported
 
 In this new interpreter,
 function doesn't put dynamic arguments into vector `arg` automatically.
