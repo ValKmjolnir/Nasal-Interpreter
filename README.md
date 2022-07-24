@@ -8,8 +8,8 @@
   \_\ \/ \__,_|___/\__,_|_|
 ```
 
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](./LICENSE)
 
@@ -20,20 +20,7 @@
 * [__Introduction__](#introduction)
 * [__Compile__](#how-to-compile)
 * [__Usage__](#how-to-use)
-* [__Tutorial__](#tutorial)<details><summary>more</summary>
-  * [basic value type](#basic-value-type)
-  * [operators](#operators)
-  * [definition](#definition)
-  * [multi-assignment](#multi-assignment)
-  * [conditional expression](#conditional-expression)
-  * [loop](#loop)
-  * [subvec](#subvec)
-  * [special function call](#special-function-call)
-  * [lambda](#lambda)
-  * [closure](#closure)
-  * [trait](#trait)
-  * [native functions](#native-functions)
-  * [modules](#modulesfor-library-developers)</summary>
+* [__Tutorial__](#tutorial)
 * [__Release Notes__](./doc/dev.md#release-notes)
 * [__Development History__](./doc/dev.md)
 * [__Benchmark__](./doc/benchmark.md)
@@ -49,9 +36,9 @@ __Contact us if having great ideas to share!__
 
 __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
 is an ECMAscript-like language that used in [FlightGear](https://www.flightgear.org/).
-This language is designed by [Andy Ross](https://github.com/andyross).
+The designer is [Andy Ross](https://github.com/andyross).
 
-The interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++11`)
+This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++11`)
 without reusing the code in [Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>).
 But we really appreciate that Andy created this amazing programming language and his interpreter project.
 
@@ -153,7 +140,7 @@ Reading this tutorial will not takes you over 15 minutes.
 __If you have learnt C/C++/Javascript before, this will take less time.__
 You could totally use it after reading this simple tutorial:
 
-### __basic value type__
+<details><summary><text style="font-weight:700;font-size:medium"> basic value type </text></summary>
 
 __`vm_none`__ is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
@@ -168,11 +155,9 @@ __`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 `double` to st
 
 ```javascript
 # this language use '#' to write notes
-var n=1;          # dec
 var n=2.71828;    # dec
 var n=2.147e16;   # dec
 var n=1e-10;      # dec
-var n=0x7fffffff; # hex
 var n=0xAA55;     # hex
 var n=0o170001;   # oct
 ```
@@ -183,9 +168,7 @@ __`vm_str`__ has 3 formats. The third one is used to declare a character.
 var s='str';
 var s="another string";
 var s=`c`;
-
 # some special characters is allowed in this language:
-
 '\a'; '\b'; '\e'; '\f';
 '\n'; '\r'; '\t'; '\v';
 '\0'; '\\'; '\?'; '\'';
@@ -196,13 +179,7 @@ __`vm_vec`__ has unlimited length and can store all types of values.
 
 ```javascript
 var vec=[];
-var vec=[
-    0,
-    nil,
-    {},
-    [],
-    func(){return 0;}
-];
+var vec=[0,nil,{},[],func(){return 0}];
 append(vec,0,1,2);
 ```
 
@@ -212,10 +189,9 @@ __`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with s
 var hash={
     member1:nil,
     member2:"str",
-    'member3':'member\'s name can also be a string constant',
-    function:func(){
-        var a=me.member2~me.member3;
-        return a;
+    "member3":"member\'s name can also be a string constant",
+    funct:func(){
+        return me.member2~me.member3;
     }
 };
 ```
@@ -223,14 +199,10 @@ var hash={
 __`vm_func`__ is a function type (in fact it is lambda).
 
 ```javascript
-var f=func(x,y,z){
-    return nil;
-}
-var f=func{
-    return 1024;
-}
-var f=func(x,y,z,default1=1,default2=2){
-    return x+y+z+default1+default2;
+var f=func(x,y,z){return nil;}
+var f=func{return 114514;}
+var f=func(x,y,z,deft=1){
+    return x+y+z+deft;
 }
 var f=func(args...){
     var sum=0;
@@ -240,30 +212,20 @@ var f=func(args...){
 }
 ```
 
-__`vm_upval`__ is a special type that used to store upvalues.
-This type is only used in `nasal_vm` to make sure closure runs correctly.
+__`vm_upval`__ is used to store upvalues, used in __`nasal_vm`__ to make sure closure runs correctly.
 
-__`vm_obj`__ is a special type that stores user data.
-This means you could use other complex C/C++ data types in nasal.
-This type is used when you are trying to add a new data structure into nasal,
-so this type is often created by native-function that programmed in C/C++ by library developers.
-You could see how to write your own native-functions below.
+__`vm_obj`__ is used to store other complex C/C++ data types.
+This type is often created by native-function of nasal. If want to define your own data type, see how to add native-functions by editing this project.
 
-```javascript
-var new_obj=func(){
-    return __my_obj();
-}
-var obj=new_obj();
-```
+</details>
 
-### __operators__
+<details><summary><text style="font-weight:700;font-size:medium"> operators </text></summary>
 
 Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
 
 ```javascript
-1+2-1*2/1;
+1+2-(1+3)*(2+4)/(16-9);
 'str1'~'str2';
-(1+2)*(3+4)
 ```
 
 For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
@@ -287,14 +249,13 @@ Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
 
 ```javascript
 a=b=c=d=1;
-a+=1;
-a-=1;
-a*=1;
-a/=1;
+a+=1; a-=1; a*=1; a/=1;
 a~='string';
 ```
 
-### __definition__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> definition </text></summary>
 
 ```javascript
 var a=1;
@@ -304,7 +265,9 @@ var (a,b,c)=(0,1,2);
 (var a,b,c)=(0,1,2);
 ```
 
-### __multi-assignment__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> multi-assignment </text></summary>
 
 The last one is often used to swap two variables.
 
@@ -314,7 +277,9 @@ The last one is often used to swap two variables.
 (a,b)=(b,a);
 ```
 
-### __conditional expression__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> conditional expression </text></summary>
 
 In nasal there's a new key word `elsif`.
 It has the same functions as `else if`.
@@ -331,14 +296,15 @@ if(1){
 }
 ```
 
-### __loop__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> loop </text></summary>
 
 While loop and for loop is simalar to C/C++.
 
 ```javascript
 while(condition)
     continue;
-
 for(var i=0;i<10;i+=1)
     break;
 ```
@@ -359,7 +325,9 @@ foreach(var i;elem)
     print(i);
 ```
 
-### __subvec__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> subvec </text></summary>
 
 Nasal provides this special syntax to help user generate a new vector by getting values by one index or getting values by indexes in a range from an old vector.
 If there's only one index in the bracket, then we will get the value directly.
@@ -372,7 +340,9 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 "hello world"[0];
 ```
 
-### __special function call__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> special function call </text></summary>
 
 This is of great use but is not very efficient
 (because hashmap use string as the key to compare).
@@ -381,7 +351,9 @@ This is of great use but is not very efficient
 f(x:0,y:nil,z:[]);
 ```
 
-### __lambda__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> lambda </text></summary>
 
 Also functions have this kind of use:
 
@@ -406,7 +378,9 @@ var fib=func(f){
 );
 ```
 
-### __closure__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> closure </text></summary>
 
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
@@ -434,7 +408,9 @@ var student=func(n,a){
 }
 ```
 
-### __trait__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> trait </text></summary>
 
 Also there's another way to OOP, that is `trait`.
 
@@ -514,7 +490,9 @@ You will get this result now:
 Because `a.get` will set `me=a` in the `trait.get`. Then `b.get` do the `me=b`. So in fact c is `b.get` too after running `var d=b.get`.
 If you want to use this trick to make the program running more efficiently, you must know this special mechanism.
 
-### __native functions__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> native functions and module import </text></summary>
 
 This part shows how we add native functions in this nasal interpreter.
 If you are interested in this part, this may help you.
@@ -627,7 +605,9 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 }
 ```
 
-### __modules(for library developers)__
+</details>
+
+<details><summary><text style="font-weight:700;font-size:medium"> modules(for lib developers) </text></summary>
 
 If there is only one way to add your own functions into nasal,
 that is really inconvenient.
@@ -746,6 +726,8 @@ If get this, Congratulations!
 514229
 832040
 ```
+
+</details>
 
 ## __Difference Between Andy's and This Interpreter__
 
@@ -872,6 +854,8 @@ vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
 
 Use command __`-d`__ or __`--detail`__ the trace back info will show more details:
 
+<details><summary>show trace back info</summary>
+
 ```javascript
 hello
 [vm] error: error occurred this line
@@ -905,6 +889,8 @@ local(0x7ffff42f3d68<sp+86>):
   0x00000000    | nil  |
   0x00000001    | str  | <0x1932480> error occurred t...
 ```
+
+</details>
 
 ## __Debugger__
 
@@ -945,23 +931,10 @@ This will help you debugging or learning how the vm works:
 
 ```javascript
 source code:
-     var fib=func(x)
-     {
--->     if(x<2) return x;
-        return fib(x-1)+fib(x-2);
-     }
-     for(var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+     ...
 
 next bytecode:
-     0x00000518:       02 00 00 00 02        intl    0x2 (test/fib.nas:1)
-     0x00000519:       0d 00 00 00 1a        para    0x1a ("x") (test/fib.nas:1)
-     0x0000051a:       32 00 00 05 2a        jmp     0x52a (test/fib.nas:1)
--->  0x0000051b:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
-     0x0000051c:       2d 00 00 00 03        lessc   0x3 (2) (test/fib.nas:3)
-     0x0000051d:       34 00 00 05 20        jf      0x520 (test/fib.nas:3)
-     0x0000051e:       39 00 00 00 01        calll   0x1 (test/fib.nas:3)
-     0x0000051f:       4a 00 00 00 00        ret     0x0 (test/fib.nas:3)
+     ...
 vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 7)
   0x00000056    | pc   | 0x533
   0x00000055    | addr | 0x0
