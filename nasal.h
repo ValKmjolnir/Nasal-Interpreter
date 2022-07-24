@@ -50,7 +50,7 @@ using usize=std::size_t;
 using f64=double;
 using std::string;
 
-const u32 STACK_DEPTH=2048;
+const u32 STACK_DEPTH=1024;
 
 inline f64 hex_to_double(const char* str)
 {
