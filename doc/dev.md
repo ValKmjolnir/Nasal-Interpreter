@@ -18,6 +18,7 @@
   * [v8.0](#version-80-vm-last-update-2022212)
   * [v9.0](#version-90-vm-last-update-2022518)
   * [v10.0](#version-100-vm-latest)
+* [__Release Notes__](#release-notes)
 
 ## __Parser__
 
@@ -642,3 +643,26 @@ so we conclude this:
 resume (main->coroutine) return coroutine.top[0]. coroutine.top[0] = coroutine.top[0];
 yield  (coroutine->main) return a vector.         main.top[0]      = vector;
 ```
+
+## __Release Notes__
+
+### __version 8.0 release__
+
+I made a __big mistake__ in `v8.0` release:
+
+in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+this will cause incorrect `stackoverflow` error.
+please change it to:
+
+`canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`.
+
+Another bug is that in `nasal_err.h:class nasal_err`, we should add a constructor for this class:
+
+```C++
+    nasal_err():error(0){}
+```
+
+This bug is fixed in `v9.0`. So we suggest that do not use `v8.0`.
