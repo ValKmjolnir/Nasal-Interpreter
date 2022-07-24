@@ -20,7 +20,7 @@
 * [__Introduction__](#introduction)
 * [__Compile__](#how-to-compile)
 * [__Usage__](#how-to-use)
-* [__Tutorial__](#tutorial)
+* [__Tutorial__](#tutorial)<details><summary>more</summary>
   * [basic value type](#basic-value-type)
   * [operators](#operators)
   * [definition](#definition)
@@ -33,19 +33,12 @@
   * [closure](#closure)
   * [trait](#trait)
   * [native functions](#native-functions)
-  * [modules](#modulesfor-library-developers)
-* [__Release Notes__](#release-notes)
-  * [v8.0](#version-80-release)
+  * [modules](#modulesfor-library-developers)</summary>
+* [__Release Notes__](./doc/dev.md#release-notes)
 * [__Development History__](./doc/dev.md)
 * [__Benchmark__](./doc/benchmark.md)
 * [__Difference__](#difference-between-andys-and-this-interpreter)
-  * [strict definition](#1-must-use-var-to-define-variables)
-  * [default dynamic arguments](#2-default-dynamic-arguments-not-supported)
 * [__Trace Back Info__](#trace-back-info)
-  * [native function 'die'](#1-native-function-die)
-  * [stack overflow](#2-stack-overflow-crash-info)
-  * [runtime error](#3-normal-vm-error-crash-info)
-  * [detailed crash info](#4-detailed-crash-info)
 * [__Debugger__](#debugger)
 
 __Contact us if having great ideas to share!__
@@ -55,7 +48,7 @@ __Contact us if having great ideas to share!__
 ## __Introduction__
 
 __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
-is an ECMAscript-like programming language that used in [FlightGear](https://www.flightgear.org/).
+is an ECMAscript-like language that used in [FlightGear](https://www.flightgear.org/).
 This language is designed by [Andy Ross](https://github.com/andyross).
 
 The interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++11`)
@@ -95,7 +88,7 @@ this interpreter a useful tool in your own projects (such as a script in a game 
 Better choose the latest update of the interpreter.
 Download the source and build it! It's quite easy to build this interpreter.
 
-__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](#release-notes) below to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
+__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
 
 Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on __`Windows`__ platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/)(Visual Studio also has this), and use g++/clang++ on __`linux/macOS/Unix`__ platform (we suggest `clang`).
 
@@ -753,29 +746,6 @@ If get this, Congratulations!
 514229
 832040
 ```
-
-## __Release Notes__
-
-### __version 8.0 release__
-
-I made a __big mistake__ in `v8.0` release:
-
-in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
-
-this will cause incorrect `stackoverflow` error.
-please change it to:
-
-`canary=gc.stack+STACK_MAX_DEPTH-1;`
-
-If do not change this line, only the debugger runs abnormally. this bug is fixed in `v9.0`.
-
-Another bug is that in `nasal_err.h:class nasal_err`, we should add a constructor for this class:
-
-```C++
-    nasal_err():error(0){}
-```
-
-This bug is fixed in `v9.0`. So we suggest that do not use `v8.0`.
 
 ## __Difference Between Andy's and This Interpreter__
 

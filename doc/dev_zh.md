@@ -18,6 +18,7 @@
   * [v8.0](#version-80-vm-last-update-2022212)
   * [v9.0](#version-90-vm-last-update-2022518)
   * [v10.0](#version-100-vm-latest)
+* [__发行日志__](#发行日志)
 
 ## __语法分析__
 
@@ -575,3 +576,26 @@ __接下来我们解释这个协程的运行原理:__
 resume (main->coroutine) return coroutine.top[0]. coroutine.top[0] = coroutine.top[0];
 yield  (coroutine->main) return a vector.         main.top[0]      = vector;
 ```
+
+## __发行日志__
+
+### __version 8.0 release__
+
+这个版本的发行版有个 __严重的问题__:
+
+in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+这个会导致不正确的`stackoverflow`报错。因为它覆盖了原有的变量。
+请修改为:
+
+`canary=gc.stack+STACK_MAX_DEPTH-1;`
+
+如果不修改这一行，调试器运行肯定是不正常的。在`v9.0`第一个commit中我们修复了这个问题。
+
+另外一个bug在 `nasal_err.h:class nasal_err`这边，要给这个类添加一个构造函数来进行初始化，否则会出问题:
+
+```C++
+    nasal_err():error(0){}
+```
+
+同样这个也在`v9.0`中修复了。所以我们建议不要使用`v8.0`。
