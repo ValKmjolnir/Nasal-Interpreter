@@ -24,7 +24,8 @@ process_bar.bar=func(){
         square:"√",
         equal:"=",
         space:" ",
-        point:"."
+        point:".",
+        line:"━"
     };
     var separator={
         angle_bracket:["<",">"],
@@ -220,6 +221,8 @@ process_bar.default_bar=func(name="classic",length=20){
         return process_bar.bar("deep_shadow","light_shadow","line",length);
     elsif(name=="block")
         return process_bar.bar("block","light_shadow","line",length);
+    elsif(name=="oneline")
+        return process_bar.bar("line","space","space",length);
     else
         return process_bar.bar("sharp","point","bracket",length);
 }
@@ -271,7 +274,8 @@ var show=func(){
         "dots       ":process_bar.default_bar("dots",40),
         "ticks      ":process_bar.default_bar("ticks",40),
         "deep_shadow":process_bar.default_bar("deep_shadow",40),
-        "block      ":process_bar.default_bar("block",40)
+        "block      ":process_bar.default_bar("block",40),
+        "oneline    ":process_bar.default_bar("oneline",40)
     };
     var spinners={
         "rise       ":process_bar.default_spinner("rise",16),
