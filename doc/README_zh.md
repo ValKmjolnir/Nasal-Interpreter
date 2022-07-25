@@ -128,7 +128,7 @@ if(os.platform()=="windows")
 Nasal是非常容易上手的，你甚至可以在15分钟之内看完这里的基本教程并且直接开始编写你想要的程序。
 __如果你先前已经是C/C++,javascript选手，那么这个教程几乎可以不用看了……__ 在看完该教程之后，基本上你就完全掌握了这个语言:
 
-<details><summary><text style="font-weight:700">基本类型</text></summary>
+<details><summary>基本类型</summary>
 
 __`vm_none`__ 是特殊的错误类型。这个类型用于终止虚拟机的执行，用户是无法申请到这个类型的，该类型只能由字节码虚拟机自己在抛出错误时产生。
 
@@ -205,7 +205,7 @@ __`vm_obj`__ 是用来存储C/C++的一些复杂数据结构。这种类型的�
 
 </details>
 
-<details><summary><text style="font-weight:700">运算符</text></summary>
+<details><summary>运算符</summary>
 
 Nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的运算符 `~`，这个运算符用于拼接两个字符串。
 
@@ -240,7 +240,7 @@ a~='string';
 
 </details>
 
-<details><summary><text style="font-weight:700">定义变量</text></summary>
+<details><summary>定义变量</summary>
 
 ```javascript
 var a=1;
@@ -252,7 +252,7 @@ var (a,b,c)=(0,1,2);
 
 </details>
 
-<details><summary><text style="font-weight:700">多变量赋值</text></summary>
+<details><summary>多变量赋值</summary>
 
 最后这个语句通常用于交换两个变量的数据，类似于Python中的操作。
 
@@ -264,7 +264,7 @@ var (a,b,c)=(0,1,2);
 
 </details>
 
-<details><summary><text style="font-weight:700">条件语句</text></summary>
+<details><summary>条件语句</summary>
 
 nasal在提供`else if`的同时还有另外一个关键字`elsif`。该关键字与`else if`有相同的功能。
 
@@ -282,7 +282,7 @@ if(1){
 
 </details>
 
-<details><summary><text style="font-weight:700">循环语句</text></summary>
+<details><summary>循环语句</summary>
 
 while循环和for循环大体上与C/C++是一致的。
 
@@ -311,7 +311,7 @@ foreach(var i;elem)
 
 </details>
 
-<details><summary><text style="font-weight:700">生成子列表(subvec)</text></summary>
+<details><summary>生成子列表(subvec)</summary>
 
 nasal提供了下面第一句的类似语法来从列表中随机或者按照一个区间获取数据，并且拼接生成一个新的列表。当然如果中括号内只有一个下标的话，你会直接获得这个下标对应的数据而不是一个子列表。如果直接对string使用下标来获取内容的话，会得到对应字符的 __ascii值__。如果你想进一步获得这个字符串，可以尝试使用内置函数`chr()`。
 
@@ -323,7 +323,7 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 </details>
 
-<details><summary><text style="font-weight:700">特殊函数调用语法</text></summary>
+<details><summary>特殊函数调用语法</summary>
 
 这种特别的调用方式有时非常有用，但是切记这种调用方式不是很高效，因为哈希表会使用字符串比对来找到数据存放的位置。
 
@@ -333,7 +333,7 @@ f(x:0,y:nil,z:[]);
 
 </details>
 
-<details><summary><text style="font-weight:700">lambda表达式</text></summary>
+<details><summary>lambda表达式</summary>
 
 正如上文所述，函数有这样一种直接编写函数体并且直接调用的方式:
 
@@ -359,7 +359,7 @@ var fib=func(f){
 
 </details>
 
-<details><summary><text style="font-weight:700">闭包</text></summary>
+<details><summary>闭包</summary>
 
 闭包是一种特别的作用域，你可以从这个作用域中获取其保存的所有变量，而这些变量原本不是你当前运行的函数的局部作用域中的。下面这个例子里，结果是`1`:
 
@@ -388,7 +388,7 @@ var student=func(n,a){
 
 </details>
 
-<details><summary><text style="font-weight:700">特性与继承</text></summary>
+<details><summary>特性与继承</summary>
 
 当然，也有另外一种办法来面向对象编程，那就是利用`trait`。
 
@@ -467,7 +467,7 @@ println(d());
 
 </details>
 
-<details><summary><text style="font-weight:700">原生内置函数以及模块导入(import)语法</text></summary>
+<details><summary>原生内置函数以及模块导入(import)语法</summary>
 
 这个部分对于纯粹的使用者来说是不需要了解的，它将告诉你我们是如何为这个解释器添加新的内置函数的。如果你对于添加自己私人订制的内置函数很感兴趣，那么这个部分可能会帮到你，并且……
 
@@ -578,7 +578,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 
 </details>
 
-<details><summary><text style="font-weight:700">模块(开发者教程)</text></summary>
+<details><summary>模块(开发者教程)</summary>
 
 如果只有上文中那种方式来添加你自定义的函数到nasal中，这肯定是非常麻烦的。因此，我们实现了一组实用的内置函数来帮助你添加你自己创建的模块。
 
@@ -707,9 +707,9 @@ foreach(i;[0,1,2,3])
     print(i)
 ```
 
-这个程序会正常输出`0 1 2 3`。然而这个`i`标识符实际上在这里是被第一次定义，而且没有使用`var`。我认为这样的设计很容易让使用者迷惑。很有可能很多使用者都没有发现这里实际上是第一次定义`i`的地方。没有使用`var`的定义会让程序员认为这个`i`也许是在别的地方定义的。
+这个程序可以正常运行。然而这个`i`标识符实际上在这里是被第一次定义，而且没有使用`var`。我认为这样的设计很容易让使用者迷惑。他们可能都没有发现这里实际上是第一次定义`i`的地方。没有使用`var`的定义会让程序员认为这个`i`也许是在别的地方定义的。
 
-所以在这个新的解释器中，我直接使用严格的语法检查方法来强行要求用户必须要使用`var`来定义新的变量或者迭代器。如果你忘了加这个关键字，并且你没有在别的地方声明过这个变量，那么你就会得到这个:
+所以在这个解释器中，我直接使用严格的语法检查方法来强行要求用户必须要使用`var`来定义新的变量或者迭代器。如果你忘了加这个关键字，那么你就会得到这个:
 
 ```javascript
 [code] test.nas:2 undefined symbol "i".
@@ -726,7 +726,7 @@ foreach(i;[0,1,2,3])
 
 当解释器崩溃时,它会反馈错误产生过程的堆栈追踪信息:
 
-### 1. 内置函数`die`
+<details><summary>1. 内置函数die</summary>
 
 `die`函数用于直接抛出错误并终止执行。
 
@@ -755,7 +755,9 @@ vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
   0x00000052    | nil  |
 ```
 
-### 2. 栈溢出信息
+</details>
+
+<details><summary>2. 栈溢出</summary>
 
 这是一个会导致栈溢出的例子:
 
@@ -784,7 +786,9 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
   0x00001ff2    | addr | 0x7fffd37a16e8
 ```
 
-### 3. 运行时错误
+</details>
+
+<details><summary>3. 运行时错误</summary>
 
 如果在执行的时候出现错误，程序会直接终止执行:
 
@@ -802,11 +806,11 @@ vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
   0x00000050    | num  | 0
 ```
 
-### 4. 详细的崩溃信息
+</details>
+
+<details><summary>4. 详细的崩溃信息</summary>
 
 使用命令 __`-d`__ 或 __`--detail`__ 后，trace back信息会包含更多的细节内容:
-
-<details><summary>展开堆栈错误信息</summary>
 
 ```javascript
 hello
