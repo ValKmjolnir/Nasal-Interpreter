@@ -140,7 +140,7 @@ Reading this tutorial will not takes you over 15 minutes.
 __If you have learnt C/C++/Javascript before, this will take less time.__
 You could totally use it after reading this simple tutorial:
 
-<details><summary><text style="font-weight:700;font-size:medium"> basic value type </text></summary>
+<details><summary> basic value type </summary>
 
 __`vm_none`__ is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
@@ -219,7 +219,7 @@ This type is often created by native-function of nasal. If want to define your o
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> operators </text></summary>
+<details><summary> operators </summary>
 
 Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
 
@@ -255,7 +255,7 @@ a~='string';
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> definition </text></summary>
+<details><summary> definition </summary>
 
 ```javascript
 var a=1;
@@ -267,7 +267,7 @@ var (a,b,c)=(0,1,2);
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> multi-assignment </text></summary>
+<details><summary> multi-assignment </summary>
 
 The last one is often used to swap two variables.
 
@@ -279,7 +279,7 @@ The last one is often used to swap two variables.
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> conditional expression </text></summary>
+<details><summary> conditional expression </summary>
 
 In nasal there's a new key word `elsif`.
 It has the same functions as `else if`.
@@ -298,7 +298,7 @@ if(1){
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> loop </text></summary>
+<details><summary> loop </summary>
 
 While loop and for loop is simalar to C/C++.
 
@@ -327,7 +327,7 @@ foreach(var i;elem)
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> subvec </text></summary>
+<details><summary> subvec </summary>
 
 Nasal provides this special syntax to help user generate a new vector by getting values by one index or getting values by indexes in a range from an old vector.
 If there's only one index in the bracket, then we will get the value directly.
@@ -342,7 +342,7 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> special function call </text></summary>
+<details><summary> special function call </summary>
 
 This is of great use but is not very efficient
 (because hashmap use string as the key to compare).
@@ -353,7 +353,7 @@ f(x:0,y:nil,z:[]);
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> lambda </text></summary>
+<details><summary> lambda </summary>
 
 Also functions have this kind of use:
 
@@ -380,7 +380,7 @@ var fib=func(f){
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> closure </text></summary>
+<details><summary> closure </summary>
 
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
@@ -410,7 +410,7 @@ var student=func(n,a){
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> trait </text></summary>
+<details><summary> trait </summary>
 
 Also there's another way to OOP, that is `trait`.
 
@@ -492,7 +492,7 @@ If you want to use this trick to make the program running more efficiently, you 
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> native functions and module import </text></summary>
+<details><summary> native functions and module import </summary>
 
 This part shows how we add native functions in this nasal interpreter.
 If you are interested in this part, this may help you.
@@ -607,7 +607,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 
 </details>
 
-<details><summary><text style="font-weight:700;font-size:medium"> modules(for lib developers) </text></summary>
+<details><summary> modules(for lib developers) </summary>
 
 If there is only one way to add your own functions into nasal,
 that is really inconvenient.
@@ -743,17 +743,14 @@ foreach(i;[0,1,2,3])
     print(i)
 ```
 
-This program can run normally with output 0 1 2 3.
-But take a look at the iterator 'i',
-this symbol is defined in foreach without using keyword 'var'.
-I think this design will make programmers filling confused.
-This is ambiguous that programmers maybe difficult to find the 'i' is defined here.
-Without 'var', programmers may think this 'i' is defined anywhere else.
+This program can run normally.
+But take a look at the iterator `i`,
+it is defined in foreach without using keyword `var`.
+I think this design will make programmers feeling confused that they maybe hard to find the `i` is defined here.
+Without `var`, they may think this `i` is defined anywhere else.
 
-So in this new interpreter i use a more strict syntax to force users to use 'var' to define iterator of forindex and foreach.
-If you forget to add the keyword 'var',
-and you haven't defined this symbol before,
-you will get this:
+So in this interpreter i use a more strict syntax to force users to use `var` to define iterator of forindex and foreach.
+If you forget to add the keyword `var`, you will get this:
 
 ```javascript
 [code] test.nas:2 undefined symbol "i".
@@ -764,17 +761,17 @@ foreach(i;[0,1,2,3])
 
 ### 2. default dynamic arguments not supported
 
-In this new interpreter,
-function doesn't put dynamic arguments into vector `arg` automatically.
+In this interpreter,
+function doesn't put dynamic args into vector `arg` by default.
 So if you use `arg` without definition,
 you'll get an error of `undefined symbol`.
 
 ## __Trace Back Info__
 
-When the interpreter crashes,
+When interpreter crashes,
 it will print trace back information:
 
-### 1. native function `die`
+<details><summary>1. native function [die]</summary>
 
 Function `die` is used to throw error and crash immediately.
 
@@ -803,7 +800,9 @@ vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
   0x00000052    | nil  |
 ```
 
-### 2. stack overflow crash info
+</details>
+
+<details><summary>2. stack overflow crash info</summary>
 
 Here is an example of stack overflow:
 
@@ -832,7 +831,9 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
   0x00001ff2    | addr | 0x7fffd37a16e8
 ```
 
-### 3. normal vm error crash info
+</details>
+
+<details><summary>3. normal vm error crash info</summary>
 
 Error will be thrown if there's a fatal error when executing:
 
@@ -850,11 +851,11 @@ vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
   0x00000050    | num  | 0
 ```
 
-### 4. detailed crash info
+</details>
+
+<details><summary>4. detailed crash info</summary>
 
 Use command __`-d`__ or __`--detail`__ the trace back info will show more details:
-
-<details><summary>show trace back info</summary>
 
 ```javascript
 hello
