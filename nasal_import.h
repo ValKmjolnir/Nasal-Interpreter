@@ -194,8 +194,12 @@ nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
         lib_loaded=true;
     }
     for(auto& i:root.child())
+    {
         if(imptchk(i))
             linker(new_root,fimpt(i));
+        else
+            break;
+    }
     // add root to the back of new_root
     nasal_ast file_head(0,ast_file);
     file_head.set_num(fileindex);
