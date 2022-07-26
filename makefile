@@ -52,7 +52,7 @@ test:nasal
 	@ ./nasal -op -t -d test/mandel.nas
 	@ ./nasal -op -t -d test/mandelbrot.nas
 	@ ./nasal -op -t -d test/md5.nas
-	-@ ./nasal -op -t -d test/md5compare.nas
+	@ ./nasal -op -t -d test/md5compare.nas
 	-@ ./nasal -op -d test/module_test.nas
 	@ ./nasal -op -e test/nasal_test.nas
 	@ ./nasal -op -c test/occupation.nas
@@ -67,4 +67,3 @@ test:nasal
 	@ ./nasal -op -c -t -d test/turingmachine.nas
 	@ ./nasal -op -c -t -d test/ycombinator.nas
 	@ ./nasal -op -d test/wavecollapse.nas
-	
