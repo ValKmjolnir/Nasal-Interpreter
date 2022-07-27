@@ -92,6 +92,8 @@ __`linux/macOS/Unix`__ 平台直接使用make即可:
 >
 > mingw32-make stable-release-mingw
 
+你可以在`Visual Studio`中用这种方式来创建项目：[点击跳转](../doc/vs.md)。
+
 ## __使用方法__
 
 首先我们要通过[__教程__](#教程)知道这个语言的语法以及如何使用这个解释器来运行nasal程序。
