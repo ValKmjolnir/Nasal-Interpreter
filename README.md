@@ -105,6 +105,8 @@ If you think `-O3` isn't that safe and stable, you could choose:
 >
 > mingw32-make stable-release-mingw
 
+You could create project in `Visual Studio` by this way: [CLICK](./doc/vs.md).
+
 ## __How to Use__
 
 First we should learn how to write and run a program using this language,
