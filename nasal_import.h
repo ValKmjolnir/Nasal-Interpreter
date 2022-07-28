@@ -8,6 +8,7 @@
 class nasal_import
 {
 private:
+    bool show_path;
     bool lib_loaded;
     nasal_err& nerr;
     std::vector<string> files;
@@ -16,12 +17,13 @@ private:
     bool exist(const string&);
     void linker(nasal_ast&,nasal_ast&&);
     string path(const nasal_ast&);
+    string findf(const string&);
     nasal_ast fimpt(nasal_ast&);
     nasal_ast libimpt();
     nasal_ast load(nasal_ast&,u16);
 public:
     nasal_import(nasal_err&);
-    void link(nasal_parse&,const string&);
+    void link(nasal_parse&,const string&,bool);
     const std::vector<string>& filelist() const {return files;}
 };
 
@@ -58,6 +60,38 @@ string nasal_import::path(const nasal_ast& node)
         fpath+="\\"+node[i].str();
 #endif
     return fpath+".nas";
+}
+
+string nasal_import::findf(const string& fname)
+{
+#ifdef _WIN32
+    std::vector<string> filepath={fname,"stl\\"+fname};
+#else
+    std::vector<string> filepath={fname,"stl/"+fname};
+#endif
+    for(auto&p:envpath)
+    {
+#ifdef _WIN32
+        filepath.push_back(p+"\\"+fname);
+        filepath.push_back(p+"\\stl\\"+fname);
+#else
+        filepath.push_back(p+"/"+fname);
+        filepath.push_back(p+"/stl/"+fname);
+#endif
+    }
+    for(auto& i:filepath)
+        if(access(i.c_str(),F_OK)!=-1)
+            return i;
+    if(!show_path)
+    {
+        nerr.err("link","cannot find file <"+fname+">");
+        return "";
+    }
+    string paths="";
+    for(auto& i:filepath)
+        paths+="  "+i+"\n";
+    nerr.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
+    return "";
 }
 
 bool nasal_import::imptchk(const nasal_ast& node)
@@ -118,13 +152,9 @@ nasal_ast nasal_import::fimpt(nasal_ast& node)
     node.clear();
 
     // avoid infinite loading loop
-    if(exist(filename))
+    filename=findf(filename);
+    if(!filename.length() || exist(filename))
         return {0,ast_root};
-    if(access(filename.c_str(),F_OK)==-1)
-    {
-        nerr.err("link","cannot open file <"+filename+">");
-        return {0,ast_root};
-    }
     
     // start importing...
     lex.scan(filename);
@@ -136,42 +166,11 @@ nasal_ast nasal_import::fimpt(nasal_ast& node)
 
 nasal_ast nasal_import::libimpt()
 {
-#ifdef _WIN32
-#define nalib ".\\lib.nas"
-#define nastllib ".\\stl\\lib.nas"
-#define path_nalib "\\lib.nas"
-#define path_stllib "\\stl\\lib.nas"
-#else
-#define nalib "./lib.nas"
-#define nastllib "./stl/lib.nas"
-#define path_nalib "/lib.nas"
-#define path_stllib "/stl/lib.nas"
-#endif
-    std::vector<string> libpath={nalib,nastllib};
-    for(auto& p:envpath)
-    {
-        libpath.push_back(p+path_nalib);
-        libpath.push_back(p+path_stllib);
-    }
-
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
-    string filename="";
-    for(auto& i:libpath)
-        if(access(i.c_str(),F_OK)!=-1)
-        {
-            filename=i;
-            break;
-        }
+    string filename=findf("lib.nas");
     if(!filename.length())
-    {
-        string paths="";
-        for(auto& i:libpath)
-            paths+="  "+i+"\n";
-        nerr.err("link","cannot find lib file in these paths:\n"+paths);
-        nerr.chkerr();
         return {0,ast_root};
-    }
 
     // avoid infinite loading loop
     if(exist(filename))
@@ -208,13 +207,15 @@ nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
     return new_root;
 }
 
-void nasal_import::link(nasal_parse& parse,const string& self)
+void nasal_import::link(nasal_parse& parse,const string& self,bool spath=false)
 {
+    show_path=spath;
     // initializing
     files={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
     parse.ast()=load(parse.ast(),0);
+    nerr.chkerr();
 }
 
 #endif

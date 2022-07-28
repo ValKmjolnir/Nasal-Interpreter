@@ -60,6 +60,7 @@ native(builtin_right);
 native(builtin_cmp);
 native(builtin_chr);
 native(builtin_values);
+native(builtin_exists);
 native(builtin_open);
 native(builtin_close);
 native(builtin_read);
@@ -89,7 +90,6 @@ native(builtin_dlsym);
 native(builtin_dlclose);
 native(builtin_dlcall);
 native(builtin_platform);
-native(builtin_gc);
 native(builtin_md5);
 native(builtin_cocreate);
 native(builtin_coresume);
@@ -166,6 +166,7 @@ struct
     {"__cmp",     builtin_cmp     },
     {"__chr",     builtin_chr     },
     {"__values",  builtin_values  },
+    {"__exists",  builtin_exists  },
     {"__open",    builtin_open    },
     {"__close",   builtin_close   },
     {"__read",    builtin_read    },
@@ -195,7 +196,6 @@ struct
     {"__dlclose", builtin_dlclose },
     {"__dlcall",  builtin_dlcall  },
     {"__platform",builtin_platform},
-    {"__gc",      builtin_gc      },
     {"__md5",     builtin_md5     },
     {"__cocreate",builtin_cocreate},
     {"__coresume",builtin_coresume},
@@ -749,6 +749,12 @@ nas_ref builtin_values(nas_ref* local,nasal_gc& gc)
         v.push_back(i.second);
     return vec;
 }
+nas_ref builtin_exists(nas_ref* local,nasal_gc& gc)
+{
+    if(local[1].type!=vm_str)
+        return zero;
+    return access(local[1].str().c_str(),F_OK)!=-1?one:zero;
+}
 void obj_file_dtor(void* ptr)
 {
     fclose((FILE*)ptr);
@@ -1197,12 +1203,6 @@ nas_ref builtin_platform(nas_ref* local,nasal_gc& gc)
     return gc.newstr("macOS");
 #endif
     return gc.newstr("unknown");
-}
-nas_ref builtin_gc(nas_ref* local,nasal_gc& gc)
-{
-    gc.mark();
-    gc.sweep();
-    return nil;
 }
 
 // md5 related functions

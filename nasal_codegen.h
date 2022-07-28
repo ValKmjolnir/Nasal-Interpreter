@@ -692,7 +692,7 @@ void nasal_codegen::multi_def(const nasal_ast& ast)
     if(ast[1].type()==ast_multi_scalar) // (var a,b,c)=(c,b,a);
     {
         auto& vals=ast[1].child();
-        for(int i=0;i<size;++i)
+        for(usize i=0;i<size;++i)
         {
             calc_gen(vals[i]);
             const string& str=ids[i].str();
@@ -704,7 +704,7 @@ void nasal_codegen::multi_def(const nasal_ast& ast)
     else // (var a,b,c)=[0,1,2];
     {
         calc_gen(ast[1]);
-        for(int i=0;i<size;++i)
+        for(usize i=0;i<size;++i)
         {
             gen(op_callvi,i,ast[1].line());
             const string& str=ids[i].str();

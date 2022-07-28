@@ -9,6 +9,7 @@ const u32 VM_EXEC     =0x20;
 const u32 VM_DBGINFO  =0x40;
 const u32 VM_DEBUG    =0x80;
 const u32 VM_OPTIMIZE =0x100;
+const u32 VM_SHOWPATH =0x200;
 
 void help()
 {
@@ -38,8 +39,9 @@ void help()
     <<"    -d,   --detail  | execute and get detail crash info.\n"
     <<"                    | get garbage collector info if didn't crash.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
-    <<"                    | if want to use -op and run, please use -op -e/-t/-o/-d.\n"
-    <<"    -dbg, --debug   | debug mode (this will ignore -t -o -d -e).\n"
+    <<"                    | if want to use -op and run, please use -op -e/-t/-d.\n"
+    <<"    -dbg, --debug   | debug mode (this will ignore -t -d).\n"
+    <<"    -cp,  --chkpath | show path if linker cannot find files.\n"
     <<"file:\n"
     <<"    input file name to execute script file.\n"
     <<"argv:\n"
@@ -90,7 +92,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     // parser gets lexer's token list to compile
     parse.compile(lexer);
     // linker gets parser's ast and load import files to this ast
-    linker.link(parse,file);
+    linker.link(parse,file,cmd&VM_SHOWPATH);
     // optimizer does simple optimization on ast
     if(cmd&VM_OPTIMIZE)
         optimize(parse.ast());
@@ -145,7 +147,8 @@ int main(int argc,const char* argv[])
         {"--time",VM_EXECTIME|VM_EXEC},{"-t",VM_EXECTIME|VM_EXEC},
         {"--detail",VM_DBGINFO|VM_EXEC},{"-d",VM_DBGINFO|VM_EXEC},
         {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
-        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
+        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG},
+        {"--chkpath",VM_SHOWPATH|VM_EXEC},{"-cp",VM_SHOWPATH|VM_EXEC}
     };
     u32 cmd=0;
     string filename;
