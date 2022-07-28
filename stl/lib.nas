@@ -287,6 +287,8 @@ var io=
     fin:   func(filename){return __fin(filename);},
     # input a string as the content of a file.
     fout:  func(filename,str){return __fout(filename,str);},
+    # use C access
+    exists:func(filename){return __exists(filename);},
     # same as C fopen. open file and get the FILE*.
     open:  func(filename,mode="r"){return __open(filename,mode);},
     # same as C fclose. close file by FILE*.
@@ -378,6 +380,8 @@ var math=
 {
     e:     2.7182818284590452354,
     pi:    3.14159265358979323846264338327950288,
+    D2R:   2.7182818284590452354/180,
+    R2D:   180/2.7182818284590452354,
     inf:   1/0,
     nan:   0/0,
     abs:   func(x)  {return x>0?x:-x;    },
@@ -422,7 +426,22 @@ var unix=
 var dylib=
 {
     # open dynamic lib.
-    dlopen:  func(libname){return __dlopen;},
+    dlopen:  func(libname){
+        var envpath=split(os.platform()=="windows"?";":":",unix.getenv("PATH"));
+        var path=os.platform()=="windows"?["\\","\\module\\"]:["/","/module/"];
+        foreach(var p;envpath){
+            p=[p~path[0]~libname,p~path[1]~libname];
+            if(io.exists(p[0])){
+                libname=p[0];
+                break;
+            }
+            if(io.exists(p[1])){
+                libname=p[1];
+                break;
+            }
+        }
+        return __dlopen(libname);
+    },
     # load symbol from an open dynamic lib.
     dlsym:   func(lib,sym){return __dlsym; },
     # close dynamic lib, this operation will make all the symbols loaded from it invalid.
@@ -443,31 +462,9 @@ var os=
 # runtime gives us some functions that we could manage it manually.
 var runtime=
 {
-    # do garbage collection manually.
-    # carefully use it because using it frequently may make program running slower.
-    gc:   func(){return __gc;},
-
     # command line arguments
     argv: func(){return __sysargv;}
 };
-
-# important global constants
-var D2R=math.pi/180;
-var FPS2KT=0.5925;
-var FT2M=0.3048;
-var GAL2L=3.7854;
-var IN2M=0.0254;
-var KG2LB=2.2046;
-var KT2FPS=1.6878;
-var KT2MPS=0.5144;
-var L2GAL=0.2642;
-var LB2KG=0.4536;
-var M2FT=3.2808;
-var M2IN=39.3701;
-var M2NM=0.00054;
-var MPS2KT=1.9438;
-var NM2M=1852;
-var R2D=180/math.pi;
 
 # functions that not supported in this runtime:
 var bind=func(function,locals,outer_scope=nil){
