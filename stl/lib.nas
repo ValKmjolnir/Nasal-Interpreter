@@ -25,8 +25,8 @@ var system=func(str){
 }
 
 # input uses std::cin and returns what we input.
-var input=func(){
-    return __input();
+var input=func(end=nil){
+    return __input(end);
 }
 
 # split a string by separator for example:
