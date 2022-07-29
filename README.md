@@ -105,7 +105,7 @@ If you think `-O3` isn't that safe and stable, you could choose:
 >
 > mingw32-make stable-release-mingw
 
-You could create project in `Visual Studio` by this way: [CLICK](./doc/vs.md).
+You could create project in `Visual Studio` by this way: [__CLICK__](./doc/vs.md).
 
 ## __How to Use__
 
@@ -679,7 +679,7 @@ Then we write a test nasal file to run this fib function, using `os.platform()` 
 
 ```javascript
 import("lib.nas");
-var dlhandle=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
+var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib=dylib.dlsym(dlhandle,"fib");
 for(var i=1;i<30;i+=1)
     println(dylib.dlcall(fib,i));

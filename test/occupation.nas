@@ -18,7 +18,7 @@ var cpu_stat=func(){
 }
 var cpu_occupation=func(){
     var cpu0=cpu_stat();
-    unix.sleep(1);
+    unix.sleep(0.5);
     var cpu1=cpu_stat();
     var t0=cpu0.user+cpu0.nice+cpu0.system+cpu0.idle+cpu0.iowait+cpu0.irq+cpu0.softirq;
     var t1=cpu1.user+cpu1.nice+cpu1.system+cpu1.idle+cpu1.iowait+cpu1.irq+cpu1.softirq;
