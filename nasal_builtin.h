@@ -277,8 +277,12 @@ nas_ref builtin_system(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_input(nas_ref* local,nasal_gc& gc)
 {
+    nas_ref end=local[1];
     nas_ref ret=gc.alloc(vm_str);
-    std::cin>>ret.str();
+    if(end.type!=vm_str || end.str().length()>1)
+        std::cin>>ret.str();
+    else
+        std::getline(std::cin,ret.str(),end.str()[0]);
     return ret;
 }
 nas_ref builtin_fin(nas_ref* local,nasal_gc& gc)
