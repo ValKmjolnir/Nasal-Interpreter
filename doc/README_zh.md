@@ -92,7 +92,7 @@ __`linux/macOS/Unix`__ 平台直接使用make即可:
 >
 > mingw32-make stable-release-mingw
 
-你可以在`Visual Studio`中用这种方式来创建项目：[点击跳转](../doc/vs.md)。
+你可以在`Visual Studio`中用这种方式来创建项目：[__点击跳转__](../doc/vs.md)。
 
 ## __使用方法__
 
@@ -643,7 +643,7 @@ Windows(`.dll`):
 
 ```javascript
 import("lib.nas");
-var dlhandle=dylib.dlopen("./module/libfib."~(os.platform()=="windows"?"dll":"so"));
+var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib=dylib.dlsym(dlhandle,"fib");
 for(var i=1;i<30;i+=1)
     println(dylib.dlcall(fib,i));

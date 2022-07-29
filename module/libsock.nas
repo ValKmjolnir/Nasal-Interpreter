@@ -1,5 +1,5 @@
 var socket=func(){
-    var lib=dylib.dlopen("./module/libnasock"~(os.platform()=="windows"?".dll":".so"));
+    var lib=dylib.dlopen("libnasock"~(os.platform()=="windows"?".dll":".so"));
     var sock=dylib.dlsym(lib,"nas_socket");
     var closesocket=dylib.dlsym(lib,"nas_closesocket");
     var shutdown=dylib.dlsym(lib,"nas_shutdown");

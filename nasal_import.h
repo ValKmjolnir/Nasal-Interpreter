@@ -64,24 +64,24 @@ string nasal_import::path(const nasal_ast& node)
 
 string nasal_import::findf(const string& fname)
 {
-#ifdef _WIN32
-    std::vector<string> filepath={fname,"stl\\"+fname};
-#else
-    std::vector<string> filepath={fname,"stl/"+fname};
-#endif
+    std::vector<string> filepath={fname};
     for(auto&p:envpath)
     {
 #ifdef _WIN32
         filepath.push_back(p+"\\"+fname);
-        filepath.push_back(p+"\\stl\\"+fname);
 #else
         filepath.push_back(p+"/"+fname);
-        filepath.push_back(p+"/stl/"+fname);
 #endif
     }
     for(auto& i:filepath)
         if(access(i.c_str(),F_OK)!=-1)
             return i;
+    if(fname=="lib.nas")
+#ifdef _WIN32
+        return findf("stl\\lib.nas");
+#else
+        return findf("stl/lib.nas");
+#endif
     if(!show_path)
     {
         nerr.err("link","cannot find file <"+fname+">");

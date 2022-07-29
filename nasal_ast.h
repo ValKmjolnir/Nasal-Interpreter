@@ -214,12 +214,9 @@ void nasal_ast::print(int depth,bool last=false)
     for(auto& i:intentation)
         std::cout<<i;
     std::cout<<ast_name[_type];
-    if(
-        _type==ast_str ||
-        _type==ast_id ||
-        _type==ast_default ||
-        _type==ast_dynamic ||
-        _type==ast_callh)
+    if(_type==ast_str || _type==ast_id ||
+       _type==ast_default || _type==ast_dynamic ||
+       _type==ast_callh)
         std::cout<<":"<<rawstr(_str);
     else if(_type==ast_num || _type==ast_file)
         std::cout<<":"<<_num;

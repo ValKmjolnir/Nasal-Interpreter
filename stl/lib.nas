@@ -427,16 +427,18 @@ var dylib=
 {
     # open dynamic lib.
     dlopen:  func(libname){
+        # find dynamic lib from local dir first
+        if(io.exists(libname))
+            return __dlopen(libname);
+        # find dynamic lib through PATH
         var envpath=split(os.platform()=="windows"?";":":",unix.getenv("PATH"));
-        var path=os.platform()=="windows"?["\\","\\module\\"]:["/","/module/"];
+        # first find ./module
+        append(envpath,".");
+        var path=os.platform()=="windows"?"\\module\\":"/module/";
         foreach(var p;envpath){
-            p=[p~path[0]~libname,p~path[1]~libname];
-            if(io.exists(p[0])){
-                libname=p[0];
-                break;
-            }
-            if(io.exists(p[1])){
-                libname=p[1];
+            p~=path~libname;
+            if(io.exists(p)){
+                libname=p;
                 break;
             }
         }
