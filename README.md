@@ -112,13 +112,13 @@ You could create project in `Visual Studio` by this way: [__CLICK__](./doc/vs.md
 First we should learn how to write and run a program using this language,
 click to see the [__tutorial__](#tutorial).
 
+Use this get version of interpreter:
+
+> ./nasal
+
 Input this command to run scripts __directly__:
 
 > ./nasal filename
-
-Use these commands to get version of interpreter:
-
-> ./nasal -v | --version
 
 Use these commands to get help(see more debug commands in help):
 

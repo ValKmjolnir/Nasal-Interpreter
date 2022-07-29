@@ -428,6 +428,7 @@ var dylib=
     # open dynamic lib.
     dlopen:  func(libname){
         # find dynamic lib from local dir first
+        libname=(os.platform()=="windows"?".\\":"./")~libname;
         if(io.exists(libname))
             return __dlopen(libname);
         # find dynamic lib through PATH
