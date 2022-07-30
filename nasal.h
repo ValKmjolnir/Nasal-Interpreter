@@ -132,7 +132,7 @@ f64 str2num(const char* str)
     return negative?-res:res;
 }
 
-int utf8_hdchk(const char head)
+i32 utf8_hdchk(const char head)
 {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
     const u8 c=(u8)head;

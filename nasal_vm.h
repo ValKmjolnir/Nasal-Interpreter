@@ -640,8 +640,8 @@ inline void nasal_vm::o_callv()
     else if(vec.type==vm_str)
     {
         string& str=vec.str();
-        int num=val.tonum();
-        int len=str.length();
+        i32 num=val.tonum();
+        i32 len=str.length();
         if(num<-len || num>=len)
             die("callv: index out of range:"+std::to_string(val.tonum()));
         top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
@@ -802,9 +802,9 @@ inline void nasal_vm::o_slc2()
     std::vector<nas_ref>& aim=top[0].vec().elems;
 
     u8 type1=val1.type,type2=val2.type;
-    int num1=val1.tonum();
-    int num2=val2.tonum();
-    int size=ref.size();
+    i32 num1=val1.tonum();
+    i32 num2=val2.tonum();
+    i32 size=ref.size();
     if(type1==vm_nil && type2==vm_nil)
     {
         num1=0;
@@ -822,7 +822,7 @@ inline void nasal_vm::o_slc2()
     else if(num2<-size || num2>=size)
         die("slc2: end index out of range: "+std::to_string(num2));
     else
-        for(int i=num1;i<=num2;++i)
+        for(i32 i=num1;i<=num2;++i)
             aim.push_back(i>=0?ref[i]:ref[i+size]);
 }
 inline void nasal_vm::o_mcallg()

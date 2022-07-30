@@ -1,7 +1,7 @@
 #ifndef __NASAL_CODEGEN_H__
 #define __NASAL_CODEGEN_H__
 
-enum op_code
+enum op_code:u8
 {
     op_exit,   // stop the virtual machine
     op_intg,   // global scope size
@@ -82,7 +82,7 @@ enum op_code
 
 struct
 {
-    int type;
+    u8 type;
     const char* name;
 }code_table[]=
 {
@@ -160,8 +160,7 @@ struct
     {op_mupval,"mupval"},
     {op_mcallv,"mcallv"},
     {op_mcallh,"mcallh"},
-    {op_ret,   "ret   "},
-    {-1,       nullptr },
+    {op_ret,   "ret   "}
 };
 
 struct opcode
@@ -253,12 +252,12 @@ private:
     std::vector<f64> num_res;
     std::vector<string> str_res;
     std::vector<opcode> code;
-    std::list<std::vector<int>> continue_ptr;
-    std::list<std::vector<int>> break_ptr;
+    std::list<std::vector<i32>> continue_ptr;
+    std::list<std::vector<i32>> break_ptr;
     // global : max 4095 values
-    std::unordered_map<string,int> global;
+    std::unordered_map<string,i32> global;
     // local  : max 32768 upvalues 65536 values
-    std::list<std::unordered_map<string,int>> local;
+    std::list<std::unordered_map<string,i32>> local;
 
     // func end stack, reserved for code print
     std::stack<u32> fbstk;
@@ -269,9 +268,9 @@ private:
     void regist_str(const string&);
     void find_symbol(const nasal_ast&);
     void add_sym(const string&);
-    int  local_find(const string&);
-    int  global_find(const string&);
-    int  upvalue_find(const string&);
+    i32  local_find(const string&);
+    i32  global_find(const string&);
+    i32  upvalue_find(const string&);
     void gen(u8,u32,u32);
     void num_gen(const nasal_ast&);
     void str_gen(const nasal_ast&);
@@ -293,7 +292,7 @@ private:
     void multi_assign_gen(const nasal_ast&);
     void conditional_gen(const nasal_ast&);
     void loop_gen(const nasal_ast&);
-    void load_continue_break(int,int);
+    void load_continue_break(i32,i32);
     void while_gen(const nasal_ast&);
     void for_gen(const nasal_ast&);
     void forindex_gen(const nasal_ast&);
@@ -372,32 +371,32 @@ void nasal_codegen::add_sym(const string& name)
     {
         if(global.count(name))
             return;
-        int index=global.size();
+        i32 index=global.size();
         global[name]=index;
         return;
     }
     if(local.back().count(name))
         return;
-    int index=local.back().size();
+    i32 index=local.back().size();
     local.back()[name]=index;
 }
 
-int nasal_codegen::local_find(const string& name)
+i32 nasal_codegen::local_find(const string& name)
 {
     if(local.empty())
         return -1;
     return local.back().count(name)?local.back()[name]:-1;
 }
 
-int nasal_codegen::global_find(const string& name)
+i32 nasal_codegen::global_find(const string& name)
 {
     return global.count(name)?global[name]:-1;
 }
 
-int nasal_codegen::upvalue_find(const string& name)
+i32 nasal_codegen::upvalue_find(const string& name)
 {
     // 32768 level 65536 upvalues
-    int index=-1;
+    i32 index=-1;
     usize size=local.size();
     if(size<=1)
         return -1;
@@ -530,7 +529,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
                 die("builtin functions work in a local scope.",ast.line());
             return;
         }
-    int index;
+    i32 index;
     if((index=local_find(str))>=0)
     {
         gen(op_calll,index,ast.line());
@@ -646,7 +645,7 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
             die("cannot change builtin function.",ast.line());
             return;
         }
-    int index;
+    i32 index;
     if((index=local_find(str))>=0)
     {
         gen(op_mcalll,index,ast.line());
@@ -723,12 +722,12 @@ void nasal_codegen::def_gen(const nasal_ast& ast)
 
 void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
 {
-    int size=ast[0].size();
+    i32 size=ast[0].size();
     if(ast[1].type()==ast_multi_scalar)
     {
-        for(int i=size-1;i>=0;--i)
+        for(i32 i=size-1;i>=0;--i)
             calc_gen(ast[1][i]);
-        for(int i=0;i<size;++i)
+        for(i32 i=0;i<size;++i)
         {
             mcall(ast[0][i]);
             // multi assign user loadl and loadg to avoid meq's stack--
@@ -746,7 +745,7 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
     else
     {
         calc_gen(ast[1]);
-        for(int i=0;i<size;++i)
+        for(i32 i=0;i<size;++i)
         {
             gen(op_callvi,i,ast[1].line());
             // multi assign user loadl and loadg to avoid meq's stack--
@@ -767,7 +766,7 @@ void nasal_codegen::multi_assign_gen(const nasal_ast& ast)
 
 void nasal_codegen::conditional_gen(const nasal_ast& ast)
 {
-    std::vector<int> jmp_label;
+    std::vector<usize> jmp_label;
     for(auto& tmp:ast.child())
     {
         if(tmp.type()==ast_if || tmp.type()==ast_elsif)
@@ -796,8 +795,8 @@ void nasal_codegen::conditional_gen(const nasal_ast& ast)
 
 void nasal_codegen::loop_gen(const nasal_ast& ast)
 {
-    continue_ptr.push_front(std::vector<int>());
-    break_ptr.push_front(std::vector<int>());
+    continue_ptr.push_front(std::vector<i32>());
+    break_ptr.push_front(std::vector<i32>());
     switch(ast.type())
     {
         case ast_while:   while_gen(ast);   break;
@@ -807,7 +806,7 @@ void nasal_codegen::loop_gen(const nasal_ast& ast)
     }
 }
 
-void nasal_codegen::load_continue_break(int continue_place,int break_place)
+void nasal_codegen::load_continue_break(i32 continue_place,i32 break_place)
 {
     for(auto i:continue_ptr.front())
         code[i].num=continue_place;

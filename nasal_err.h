@@ -56,7 +56,7 @@ public:
         ++error;
         const string& code=res[line-1];
         std::cerr<<"["<<stage<<"] "<<file<<":"<<line<<":"<<column<<" "<<info<<"\n"<<code<<"\n";
-        for(int i=0;i<(int)column-1;++i)
+        for(i32 i=0;i<(i32)column-1;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
         std::cerr<<"^\n";
     }

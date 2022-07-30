@@ -192,7 +192,7 @@ void nasal_dbg::interact()
                 std::cout<<"cannot find file named `"<<res[1]<<"`\n";
                 bk_fidx=0;
             }
-            int tmp=atoi(res[2].c_str());
+            i32 tmp=atoi(res[2].c_str());
             if(tmp<=0)
                 std::cout<<"incorrect line number `"<<res[2]<<"`\n";
             else
