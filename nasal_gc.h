@@ -142,7 +142,7 @@ struct nas_upval
     std::vector<nas_ref> elems;
 
     nas_upval(){onstk=true;stk=nullptr;size=0;}
-    nas_ref& operator[](const int i){return onstk?stk[i]:elems[i];}
+    nas_ref& operator[](usize n){return onstk?stk[n]:elems[n];}
     void clear(){onstk=true;elems.clear();size=0;}
 };
 
