@@ -104,8 +104,8 @@ struct nas_vec
     nas_vec():printed(false){}
     void     print();
     usize    size(){return elems.size();}
-    nas_ref  get_val(const int);
-    nas_ref* get_mem(const int);
+    nas_ref  get_val(const i32);
+    nas_ref* get_mem(const i32);
 };
 
 struct nas_hash
@@ -249,19 +249,19 @@ struct nas_val
     ~nas_val();
 };
 
-nas_ref nas_vec::get_val(const int index)
+nas_ref nas_vec::get_val(const i32 n)
 {
-    int size=elems.size();
-    if(index<-size || index>=size)
+    i32 size=elems.size();
+    if(n<-size || n>=size)
         return {vm_none};
-    return elems[index>=0?index:index+size];
+    return elems[n>=0?n:n+size];
 }
-nas_ref* nas_vec::get_mem(const int index)
+nas_ref* nas_vec::get_mem(const i32 n)
 {
-    int size=elems.size();
-    if(index<-size || index>=size)
+    i32 size=elems.size();
+    if(n<-size || n>=size)
         return nullptr;
-    return &elems[index>=0?index:index+size];
+    return &elems[n>=0?n:n+size];
 }
 void nas_vec::print()
 {

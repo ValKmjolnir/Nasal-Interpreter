@@ -356,7 +356,7 @@ nas_ref builtin_rand(nas_ref* local,nasal_gc& gc)
         return builtin_err("rand","\"seed\" must be nil or number");
     if(val.type==vm_num)
     {
-        srand((unsigned int)val.num());
+        srand((u32)val.num());
         return nil;
     }
     f64 num=0;
@@ -662,10 +662,9 @@ nas_ref builtin_left(nas_ref* local,nasal_gc& gc)
         return builtin_err("left","\"string\" must be string");
     if(len.type!=vm_num)
         return builtin_err("left","\"length\" must be number");
-    int length=(int)len.num();
-    if(length<0)
-        length=0;
-    return gc.newstr(str.str().substr(0,length));
+    if(len.num()<0)
+        return gc.newstr("");
+    return gc.newstr(str.str().substr(0,len.num()));
 }
 nas_ref builtin_right(nas_ref* local,nasal_gc& gc)
 {
@@ -675,13 +674,13 @@ nas_ref builtin_right(nas_ref* local,nasal_gc& gc)
         return builtin_err("right","\"string\" must be string");
     if(len.type!=vm_num)
         return builtin_err("right","\"length\" must be number");
-    int length=(int)len.num();
-    int srclen=str.str().length();
+    i32 length=(i32)len.num();
+    i32 srclen=str.str().length();
     if(length>srclen)
         length=srclen;
     if(length<0)
         length=0;
-    return gc.newstr(str.str().substr(srclen-length, srclen));
+    return gc.newstr(str.str().substr(srclen-length,srclen));
 }
 nas_ref builtin_cmp(nas_ref* local,nasal_gc& gc)
 {
@@ -716,7 +715,7 @@ nas_ref builtin_chr(nas_ref* local,nasal_gc& gc)
     nas_ref code=local[1];
     if(code.type!=vm_num)
         return builtin_err("chr","\"code\" must be number");
-    int num=code.num();
+    i32 num=code.num();
     if(0<=num && num<128)
         return gc.newstr((char)num);
     else if(128<=num && num<256)
@@ -974,7 +973,7 @@ nas_ref builtin_sleep(nas_ref* local,nasal_gc& gc)
 nas_ref builtin_pipe(nas_ref* local,nasal_gc& gc)
 {
 #ifndef _WIN32
-    int fd[2];
+    i32 fd[2];
     nas_ref res=gc.alloc(vm_vec);
     if(pipe(fd)==-1)
         return builtin_err("pipe","failed to create pipe");
@@ -1001,8 +1000,8 @@ nas_ref builtin_waitpid(nas_ref* local,nasal_gc& gc)
     if(pid.type!=vm_num || nohang.type!=vm_num)
         return builtin_err("waitpid","pid and nohang must be number");
 #ifndef _WIN32
-    int ret_pid;
-    int status;
+    i32 ret_pid;
+    i32 status;
     ret_pid=waitpid(pid.num(),&status,nohang.num()==0?0:WNOHANG);
     nas_ref vec=gc.alloc(vm_vec);
     vec.vec().elems.push_back({vm_num,(f64)ret_pid});
