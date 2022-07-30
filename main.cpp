@@ -115,7 +115,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
         vm.run(gen,linker,argv,cmd&VM_DBGINFO);
 }
 
-int main(int argc,const char* argv[])
+i32 main(i32 argc,const char* argv[])
 {
     if(argc<=1)
     {
@@ -150,7 +150,7 @@ int main(int argc,const char* argv[])
     u32 cmd=0;
     string filename;
     std::vector<string> vm_argv;
-    for(int i=1;i<argc;++i)
+    for(i32 i=1;i<argc;++i)
     {
         if(cmdlst.count(argv[i]))
             cmd|=cmdlst[argv[i]];

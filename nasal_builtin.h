@@ -279,7 +279,7 @@ nas_ref builtin_input(nas_ref* local,nasal_gc& gc)
 {
     nas_ref end=local[1];
     nas_ref ret=gc.alloc(vm_str);
-    if(end.type!=vm_str || end.str().length()>1)
+    if(end.type!=vm_str || end.str().length()>1 || !end.str().length())
         std::cin>>ret.str();
     else
         std::getline(std::cin,ret.str(),end.str()[0]);
@@ -360,7 +360,7 @@ nas_ref builtin_rand(nas_ref* local,nasal_gc& gc)
         return nil;
     }
     f64 num=0;
-    for(int i=0;i<5;++i)
+    for(u32 i=0;i<5;++i)
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
     return {vm_num,num};
 }
@@ -379,8 +379,7 @@ nas_ref builtin_int(nas_ref* local,nasal_gc& gc)
     nas_ref val=local[1];
     if(val.type!=vm_num)
         return nil;
-    int number=(int)val.num();
-    return {vm_num,(f64)number};
+    return {vm_num,f64((i32)val.num())};
 }
 nas_ref builtin_floor(nas_ref* local,nasal_gc& gc)
 {
@@ -438,61 +437,43 @@ nas_ref builtin_size(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_i32xor(nas_ref* local,nasal_gc& gc)
 {
-    int a=(int)local[1].num();
-    int b=(int)local[2].num();
-    return {vm_num,(f64)(a^b)};
+    return {vm_num,(f64)(i32(local[1].num())^i32(local[2].num()))};
 }
 nas_ref builtin_i32and(nas_ref* local,nasal_gc& gc)
 {
-    int a=(int)local[1].num();
-    int b=(int)local[2].num();
-    return {vm_num,(f64)(a&b)};
+    return {vm_num,(f64)(i32(local[1].num())&i32(local[2].num()))};
 }
 nas_ref builtin_i32or(nas_ref* local,nasal_gc& gc)
 {
-    int a=(int)local[1].num();
-    int b=(int)local[2].num();
-    return {vm_num,(f64)(a|b)};
+    return {vm_num,(f64)(i32(local[1].num())|i32(local[2].num()))};
 }
 nas_ref builtin_i32nand(nas_ref* local,nasal_gc& gc)
 {
-    int a=(int)local[1].num();
-    int b=(int)local[2].num();
-    return {vm_num,(f64)(~(a&b))};
+    return {vm_num,(f64)(~(i32(local[1].num())&i32(local[2].num())))};
 }
 nas_ref builtin_i32not(nas_ref* local,nasal_gc& gc)
 {
-    int n=(int)local[1].num();
-    return {vm_num,(f64)(~n)};
+    return {vm_num,(f64)(~i32(local[1].num()))};
 }
 nas_ref builtin_u32xor(nas_ref* local,nasal_gc& gc)
 {
-    u32 a=(u32)local[1].num();
-    u32 b=(u32)local[2].num();
-    return {vm_num,(f64)(a^b)};
+    return {vm_num,(f64)(u32(local[1].num())^u32(local[2].num()))};
 }
 nas_ref builtin_u32and(nas_ref* local,nasal_gc& gc)
 {
-    u32 a=(u32)local[1].num();
-    u32 b=(u32)local[2].num();
-    return {vm_num,(f64)(a&b)};
+    return {vm_num,(f64)(u32(local[1].num())&u32(local[2].num()))};
 }
 nas_ref builtin_u32or(nas_ref* local,nasal_gc& gc)
 {
-    u32 a=(u32)local[1].num();
-    u32 b=(u32)local[2].num();
-    return {vm_num,(f64)(a|b)};
+    return {vm_num,(f64)(u32(local[1].num())|u32(local[2].num()))};
 }
 nas_ref builtin_u32nand(nas_ref* local,nasal_gc& gc)
 {
-    u32 a=(u32)local[1].num();
-    u32 b=(u32)local[2].num();
-    return {vm_num,(f64)(~(a&b))};
+    return {vm_num,(f64)(~(u32(local[1].num())&u32(local[2].num())))};
 }
 nas_ref builtin_u32not(nas_ref* local,nasal_gc& gc)
 {
-    u32 n=(u32)local[1].num();
-    return {vm_num,(f64)(~n)};
+    return {vm_num,(f64)(~u32(local[1].num()))};
 }
 nas_ref builtin_pow(nas_ref* local,nasal_gc& gc)
 {
@@ -1093,9 +1074,7 @@ nas_ref builtin_chdir(nas_ref* local,nasal_gc& gc)
     nas_ref path=local[1];
     if(path.type!=vm_str)
         return builtin_err("chdir","\"path\" must be string");
-    if(chdir(path.str().c_str())<0)
-        return builtin_err("chdir","failed to execute chdir");
-    return nil;
+    return {vm_num,(f64)chdir(path.str().c_str())};
 }
 nas_ref builtin_environ(nas_ref* local,nasal_gc& gc)
 {

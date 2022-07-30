@@ -138,13 +138,13 @@ public:
     nasal_ast(const u32 l=0,const u32 t=ast_null):_line(l),_type(t),_num(0){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
-    void print(int,bool);
+    void print(u32,bool);
     void clear();
     
     nasal_ast& operator=(const nasal_ast&);
     nasal_ast& operator=(nasal_ast&&);
-    nasal_ast& operator[](const int index){return _child[index];}
-    const nasal_ast& operator[](const int index) const {return _child[index];}
+    nasal_ast& operator[](usize n){return _child[n];}
+    const nasal_ast& operator[](usize n) const {return _child[n];}
     usize size() const {return _child.size();}
     
     void add(nasal_ast&& ast){_child.push_back(std::move(ast));}
@@ -208,7 +208,7 @@ void nasal_ast::clear()
     _child.clear();
 }
 
-void nasal_ast::print(int depth,bool last=false)
+void nasal_ast::print(u32 depth,bool last=false)
 {
     static std::vector<string> intentation={};
     for(auto& i:intentation)

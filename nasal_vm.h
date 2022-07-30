@@ -208,13 +208,11 @@ void nasal_vm::traceback()
     for(nas_ref* i=bottom;i<=top;++i)
         if(i->type==vm_ret)
             ret.push(i->ret());
-    // push pc to stack to store the position program crashed
-    ret.push(pc);
+    ret.push(pc); // store the position program crashed
     std::cout<<"trace back:\n";
-    u32 same=0,last=0xffffffff;
-    for(u32 point=0;!ret.empty();last=point,ret.pop())
+    for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop())
     {
-        if((point=ret.top())==last)
+        if((p=ret.top())==prev)
         {
             ++same;
             continue;
@@ -222,15 +220,15 @@ void nasal_vm::traceback()
         if(same)
             std::cout
             <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
-            <<last<<std::dec<<":       "<<same<<" same call(s)\n";
+            <<prev<<std::dec<<":       "<<same<<" same call(s)\n";
         same=0;
-        bytecodeinfo("  ",point);
+        bytecodeinfo("  ",p);
     }
-    // same must be zero here
+    // the first called place has no same calls
 }
 void nasal_vm::stackinfo(const u32 limit=10)
 {
-    /* bytecode[0] is op_intg, the .num is the global size */
+    /* bytecode[0].num is the global size */
     u32      gsize=gc.stack==stack?bytecode[0].num:0;
     nas_ref* t=top;
     nas_ref* bottom=gc.stack+gsize;

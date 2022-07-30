@@ -35,7 +35,7 @@ public:
         std::vector<string> tmp;
         res.swap(tmp);
     }
-    const string& operator[](const u32 line){return res[line];}
+    const string& operator[](usize n){return res[n];}
     const string& name(){return file;}
     usize size(){return res.size();}
 };
