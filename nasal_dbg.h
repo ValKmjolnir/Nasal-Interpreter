@@ -104,7 +104,7 @@ void nasal_dbg::opcallsort(const u64* arr)
             std::clog<<"\n ...";
             break;
         }
-        std::clog<<"\n "<<code_table[i.first].name
+        std::clog<<"\n "<<code_table[i.first]
                  <<" : "<<i.second<<" ("<<rate<<"%)";
     }
     std::clog<<"\n total  : "<<total<<'\n';
