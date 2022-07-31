@@ -122,8 +122,7 @@ const char* ast_name[]=
     "multi-assign",
     "continue",
     "break",
-    "return",
-    nullptr
+    "return"
 };
 
 class nasal_ast

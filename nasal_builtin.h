@@ -774,17 +774,15 @@ nas_ref builtin_read(nas_ref* local,nasal_gc& gc)
     nas_ref len=local[3];
     if(!fd.objchk(nas_obj::file))
         return builtin_err("read","not a valid filehandle");
-    if(buf.type!=vm_str)
-        return builtin_err("read","\"buf\" must be string");
-    if(buf.val.gcobj->unmut)
-        return builtin_err("read","\"buf\" is not a mutable string");
+    if(buf.type!=vm_str || buf.val.gcobj->unmut)
+        return builtin_err("read","\"buf\" must be mutable string");
     if(len.type!=vm_num)
         return builtin_err("read","\"len\" must be number");
     if(len.num()<=0 || len.num()>=(1<<30))
         return builtin_err("read","\"len\" less than 1 or too large");
     char* buff=new char[(usize)len.num()+1];
     if(!buff)
-        return builtin_err("read","memory allocation error");
+        return builtin_err("read","malloc failed");
     f64 res=fread(buff,1,len.num(),(FILE*)fd.obj().ptr);
     buf.str()=buff;
     delete []buff;
@@ -1120,6 +1118,8 @@ nas_ref builtin_dlopen(nas_ref* local,nasal_gc& gc)
         return builtin_err("dlopen","\"libname\" must be string");
 #ifdef _WIN32
     wchar_t* str=new wchar_t[dlname.str().size()+1];
+    if(!str)
+        return builtin_err("dlopen","malloc failed");
     memset(str,0,sizeof(wchar_t)*dlname.str().size()+1);
     mbstowcs(str,dlname.str().c_str(),dlname.str().size()+1);
     void* ptr=LoadLibraryW(str);
@@ -1201,17 +1201,17 @@ string tohex(u32 num)
     }
     return str;
 }
-string md5(const string& source)
+string md5(const string& src)
 {
     std::vector<u32> buff;
-    u32 num=((source.length()+8)>>6)+1;
-    u32 buffsize=num<<4;
+    usize num=((src.length()+8)>>6)+1;
+    usize buffsize=num<<4;
     buff.resize(buffsize,0);
-    for(u32 i=0;i<source.length();i++)
-        buff[i>>2]|=((unsigned char)source[i])<<((i&0x3)<<3);
-    buff[source.length()>>2]|=0x80<<(((source.length()%4))<<3);
-    buff[buffsize-2]=(source.length()<<3)&0xffffffff;
-    buff[buffsize-1]=((source.length()<<3)>>32)&0xffffffff;
+    for(usize i=0;i<src.length();i++)
+        buff[i>>2]|=((u8)src[i])<<((i&0x3)<<3);
+    buff[src.length()>>2]|=0x80<<(((src.length()%4))<<3);
+    buff[buffsize-2]=(src.length()<<3)&0xffffffff;
+    buff[buffsize-1]=((src.length()<<3)>>32)&0xffffffff;
 
     // u32(abs(sin(i+1))*(2pow32))
     const u32 k[]={
