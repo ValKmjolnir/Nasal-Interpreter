@@ -827,7 +827,6 @@ nas_ref builtin_readln(nas_ref* local,nasal_gc& gc)
     if(!fd.objchk(nas_obj::file))
         return builtin_err("readln","not a valid filehandle");
     nas_ref str=gc.alloc(vm_str);
-    auto& s=str.str();
     char c;
     while((c=fgetc((FILE*)fd.obj().ptr))!=EOF)
     {
@@ -835,9 +834,9 @@ nas_ref builtin_readln(nas_ref* local,nasal_gc& gc)
             continue;
         if(c=='\n')
             return str;
-        s+=c;
+        str.str()+=c;
     }
-    if(s.length())
+    if(str.str().length())
         return str;
     return nil;
 }
@@ -998,8 +997,7 @@ nas_ref builtin_waitpid(nas_ref* local,nasal_gc& gc)
     if(pid.type!=vm_num || nohang.type!=vm_num)
         return builtin_err("waitpid","pid and nohang must be number");
 #ifndef _WIN32
-    i32 ret_pid;
-    i32 status;
+    i32 ret_pid,status;
     ret_pid=waitpid(pid.num(),&status,nohang.num()==0?0:WNOHANG);
     nas_ref vec=gc.alloc(vm_vec);
     vec.vec().elems.push_back({vm_num,(f64)ret_pid});
@@ -1075,14 +1073,10 @@ nas_ref builtin_chdir(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_environ(nas_ref* local,nasal_gc& gc)
 {
-    char** env=environ;
     nas_ref res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
-    while(*env)
-    {
+    for(char** env=environ;*env;++env)
         vec.push_back(gc.newstr(*env));
-        ++env;
-    }
     gc.temp=nil;
     return res;
 }
@@ -1167,12 +1161,12 @@ nas_ref builtin_dlclose(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_dlcall(nas_ref* local,nasal_gc& gc)
 {
-    nas_ref funcptr=local[1];
+    nas_ref fp=local[1];
     nas_ref args=local[2];
-    if(!funcptr.objchk(nas_obj::faddr))
+    if(!fp.objchk(nas_obj::faddr))
         return builtin_err("dlcall","\"funcptr\" is not a valid function pointer");
     typedef nas_ref (*externs)(std::vector<nas_ref>&,nasal_gc&);
-    externs func=(externs)funcptr.obj().ptr;
+    externs func=(externs)fp.obj().ptr;
     return func(args.vec().elems,gc);
 }
 nas_ref builtin_platform(nas_ref* local,nasal_gc& gc)
@@ -1353,9 +1347,7 @@ nas_ref builtin_costatus(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_corun(nas_ref* local,nasal_gc& gc)
 {
-    if(gc.cort)
-        return one;
-    return zero;
+    return gc.cort?one:zero;
 }
 nas_ref builtin_millisec(nas_ref* local,nasal_gc& gc)
 {
