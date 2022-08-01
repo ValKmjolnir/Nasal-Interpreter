@@ -76,7 +76,7 @@ const char* ast_name[]=
     "func",
     "hash",
     "vec",
-    "hashmember",
+    "pair",
     "call",
     "callh",
     "callv",
