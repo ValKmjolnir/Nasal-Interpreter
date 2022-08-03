@@ -597,8 +597,7 @@ nas_ref builtin_write(nas_ref* local,nasal_gc& gc)
         return nas_err("write","not a valid filehandle");
     if(str.type!=vm_str)
         return nas_err("write","\"str\" must be string");
-    f64 res=(f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr);
-    return {vm_num,res};
+    return {vm_num,(f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr)};
 }
 nas_ref builtin_seek(nas_ref* local,nasal_gc& gc)
 {
@@ -611,16 +610,14 @@ nas_ref builtin_seek(nas_ref* local,nasal_gc& gc)
         return nas_err("seek","\"pos\" must be number");
     if(whence.type!=vm_num || whence.num()<0 || whence.num()>2)
         return nas_err("seek","\"whence\" must be number between 0 and 2");
-    f64 res=fseek((FILE*)fd.obj().ptr,pos.num(),whence.num());
-    return {vm_num,res};
+    return {vm_num,(f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num())};
 }
 nas_ref builtin_tell(nas_ref* local,nasal_gc& gc)
 {
     nas_ref fd=local[1];
     if(!fd.objchk(nas_obj::file))
         return nas_err("tell","not a valid filehandle");
-    f64 res=ftell((FILE*)fd.obj().ptr);
-    return {vm_num,res};
+    return {vm_num,(f64)ftell((FILE*)fd.obj().ptr)};
 }
 nas_ref builtin_readln(nas_ref* local,nasal_gc& gc)
 {
