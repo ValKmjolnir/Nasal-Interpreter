@@ -563,7 +563,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 {
     nas_ref hash=local[1];
     if(hash.type!=vm_hash)
-        return builtin_err("keys","\"hash\" must be hash");
+        return nas_err("keys","\"hash\" must be hash");
     // 使用gc.temp来存储gc管理的变量，防止错误的回收
     nas_ref res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
@@ -612,7 +612,7 @@ extern "C" nas_ref fib(std::vector<nas_ref>& args,nasal_gc& gc){
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
     // builtin_err会输出错误信息并返回错误类型让虚拟机终止执行
     if(num.type!=vm_num)
-        return builtin_err("extern_fib","\"num\" must be number");
+        return nas_err("extern_fib","\"num\" must be number");
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
     // 如果需要返回内存管理的对象，请使用gc.alloc(type)
     return {vm_num,fibonaci(num.tonum())};
