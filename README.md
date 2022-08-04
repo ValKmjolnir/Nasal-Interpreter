@@ -522,7 +522,7 @@ nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
     nas_ref vec=local[1];
     // main process
     // also check number of arguments and type here
-    // if get an error,use builtin_err
+    // if get an error,use nas_err
     for(auto& i:vec.vec().elems)
         switch(i.type)
         {
@@ -596,7 +596,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 {
     nas_ref hash=local[1];
     if(hash.type!=vm_hash)
-        return builtin_err("keys","\"hash\" must be hash");
+        return nas_err("keys","\"hash\" must be hash");
     // avoid being sweeped
     nas_ref res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
@@ -648,10 +648,10 @@ extern "C" nas_ref fib(std::vector<nas_ref>& args,nasal_gc& gc){
     // get values from the vector that must be used here
     nas_ref num=args[0];
     // if you want your function safer, try this
-    // builtin_err will print the error info on screen
+    // nas_err will print the error info on screen
     // and return vm_null for runtime to interrupt
     if(num.type!=vm_num)
-        return builtin_err("extern_fib","\"num\" must be number");
+        return nas_err("extern_fib","\"num\" must be number");
     // ok, you must know that vm_num now is not managed by gc
     // if want to return a gc object, use gc.alloc(type)
     // usage of gc is the same as adding a native function

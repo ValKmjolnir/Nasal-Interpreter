@@ -26,14 +26,14 @@ static WSAmanager win;
 
 extern "C" nas_ref nas_socket(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
-        return builtin_err("socket","\"af\", \"type\", \"protocol\" should be number");
+        return nas_err("socket","\"af\", \"type\", \"protocol\" should be number");
     int sd=socket(args[0].num(),args[1].num(),args[2].num());
     return {vm_num,(double)sd};
 }
 
 extern "C" nas_ref nas_closesocket(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("closesocket","\"\" should be number");
+        return nas_err("closesocket","\"\" should be number");
 #ifdef _WIN32
     return {vm_num,(double)closesocket(args[0].num())};
 #else
@@ -43,19 +43,19 @@ extern "C" nas_ref nas_closesocket(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_shutdown(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("shutdown","\"sd\" must be a number");
+        return nas_err("shutdown","\"sd\" must be a number");
     if(args[1].type!=vm_num)
-        return builtin_err("shutdown","\"how\" must be a number");
+        return nas_err("shutdown","\"how\" must be a number");
     return {vm_num,(double)shutdown(args[0].num(),args[1].num())};
 }
 
 extern "C" nas_ref nas_bind(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("bind","\"sd\" muse be a number");
+        return nas_err("bind","\"sd\" muse be a number");
     if(args[1].type!=vm_str)
-        return builtin_err("bind","\"ip\" should be a string including an ip with correct format");
+        return nas_err("bind","\"ip\" should be a string including an ip with correct format");
     if(args[2].type!=vm_num)
-        return builtin_err("bind","\"port\" must be a number");
+        return nas_err("bind","\"port\" must be a number");
     sockaddr_in server;
     memset(&server,0,sizeof(sockaddr_in));
     server.sin_family=AF_INET;
@@ -66,19 +66,19 @@ extern "C" nas_ref nas_bind(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_listen(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("listen","\"sd\" must be a number");
+        return nas_err("listen","\"sd\" must be a number");
     if(args[1].type!=vm_num)
-        return builtin_err("listen","\"backlog\" must be a number");
+        return nas_err("listen","\"backlog\" must be a number");
     return{vm_num,(double)listen(args[0].num(),args[1].num())};
 }
 
 extern "C" nas_ref nas_connect(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("connect","\"sd\" must be a number");
+        return nas_err("connect","\"sd\" must be a number");
     if(args[1].type!=vm_str)
-        return builtin_err("connect","\"hostname\" must be a string");
+        return nas_err("connect","\"hostname\" must be a string");
     if(args[2].type!=vm_num)
-        return builtin_err("connect","\"port\" must be a number");
+        return nas_err("connect","\"port\" must be a number");
     sockaddr_in addr;
     memset(&addr,0,sizeof(sockaddr_in));
     addr.sin_family=AF_INET;
@@ -90,7 +90,7 @@ extern "C" nas_ref nas_connect(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_accept(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("accept","\"sd\" must be a number");
+        return nas_err("accept","\"sd\" must be a number");
     sockaddr_in client;
     int socklen=sizeof(sockaddr_in);
 #ifdef _WIN32
@@ -108,25 +108,25 @@ extern "C" nas_ref nas_accept(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_send(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("send","\"sd\" must be a number");
+        return nas_err("send","\"sd\" must be a number");
     if(args[1].type!=vm_str)
-        return builtin_err("send","\"buff\" must be a string");
+        return nas_err("send","\"buff\" must be a string");
     if(args[2].type!=vm_num)
-        return builtin_err("send","\"flags\" muse be a number");
+        return nas_err("send","\"flags\" muse be a number");
     return {vm_num,(double)send(args[0].num(),args[1].str().c_str(),args[1].str().length(),args[2].num())};
 }
 
 extern "C" nas_ref nas_sendto(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("sendto","\"sd\" must be a number");
+        return nas_err("sendto","\"sd\" must be a number");
     if(args[1].type!=vm_str)
-        return builtin_err("sendto","\"hostname\" must be a string");
+        return nas_err("sendto","\"hostname\" must be a string");
     if(args[2].type!=vm_num)
-        return builtin_err("sendto","\"port\" must be a number");
+        return nas_err("sendto","\"port\" must be a number");
     if(args[3].type!=vm_str)
-        return builtin_err("sendto","\"buff\" must be a string");
+        return nas_err("sendto","\"buff\" must be a string");
     if(args[4].type!=vm_num)
-        return builtin_err("sendto","\"flags\" must be a number");
+        return nas_err("sendto","\"flags\" must be a number");
     sockaddr_in addr;
     memset(&addr,0,sizeof(sockaddr_in));
     addr.sin_family=AF_INET;
@@ -138,13 +138,13 @@ extern "C" nas_ref nas_sendto(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_recv(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("recv","\"sd\" must be a number");
+        return nas_err("recv","\"sd\" must be a number");
     if(args[1].type!=vm_num)
-        return builtin_err("recv","\"len\" must be a number");
+        return nas_err("recv","\"len\" must be a number");
     if(args[1].num()<=0 || args[1].num()>16*1024*1024)
-        return builtin_err("recv","\"len\" out of range");
+        return nas_err("recv","\"len\" out of range");
     if(args[2].type!=vm_num)
-        return builtin_err("recv","\"flags\" muse be a number");
+        return nas_err("recv","\"flags\" muse be a number");
     nas_ref res=gc.temp=gc.alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()];
@@ -157,13 +157,13 @@ extern "C" nas_ref nas_recv(std::vector<nas_ref>& args,nasal_gc& gc){
 
 extern "C" nas_ref nas_recvfrom(std::vector<nas_ref>& args,nasal_gc& gc){
     if(args[0].type!=vm_num)
-        return builtin_err("recvfrom","\"sd\" must be a number");
+        return nas_err("recvfrom","\"sd\" must be a number");
     if(args[1].type!=vm_num)
-        return builtin_err("recvfrom","\"len\" must be a number");
+        return nas_err("recvfrom","\"len\" must be a number");
     if(args[1].num()<=0 || args[1].num()>16*1024*1024)
-        return builtin_err("recvfrom","\"len\" out of range");
+        return nas_err("recvfrom","\"len\" out of range");
     if(args[2].type!=vm_num)
-        return builtin_err("recvfrom","\"flags\" muse be a number");
+        return nas_err("recvfrom","\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen=sizeof(sockaddr_in);
     nas_ref res=gc.temp=gc.alloc(vm_hash);
