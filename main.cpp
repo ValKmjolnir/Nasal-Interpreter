@@ -22,7 +22,7 @@ void help()
 #endif
     <<"nasal <option>\n"
     <<"option:\n"
-    <<"    -h, --help      | get this help.\n"
+    <<"    -h, --help      | get this help and exit.\n"
     <<"    -v, --version   | get version of nasal interpreter.\n\n"
     <<"nasal [option...] <file> [argv...]\n"
     <<"option:\n"
@@ -161,8 +161,6 @@ i32 main(i32 argc,const char* argv[])
     }
     if(!filename.length())
         err();
-    if(!cmd)
-        cmd|=VM_EXEC;
-    execute(filename,vm_argv,cmd);
+    execute(filename,vm_argv,cmd?cmd:cmd|VM_EXEC);
     return 0;
 }

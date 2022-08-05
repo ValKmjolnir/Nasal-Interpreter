@@ -12,20 +12,20 @@ nas_ref nas_err(const string& err_f,const string& info)
     return {vm_none};
 }
 
-inline void print_core(std::vector<nas_ref>& elems)
+void print_core(std::vector<nas_ref>& elems)
 {
     for(auto& i:elems)
         switch(i.type)
         {
-            case vm_none: std::cout<<"null";        break;
-            case vm_nil:  std::cout<<"nil";         break;
-            case vm_num:  std::cout<<i.num();       break;
-            case vm_str:  std::cout<<i.str();       break;
-            case vm_vec:  i.vec().print();          break;
-            case vm_hash: i.hash().print();         break;
-            case vm_func: std::cout<<"func(..){..}";break;
-            case vm_obj:  std::cout<<"<object>";    break;
-            case vm_co:   std::cout<<"<coroutine>"; break;
+            case vm_none:std::cout<<"null";        break;
+            case vm_nil: std::cout<<"nil";         break;
+            case vm_num: std::cout<<i.num();       break;
+            case vm_str: std::cout<<i.str();       break;
+            case vm_vec: i.vec().print();          break;
+            case vm_hash:i.hash().print();         break;
+            case vm_func:std::cout<<"func(..){..}";break;
+            case vm_obj: std::cout<<"<object>";    break;
+            case vm_co:  std::cout<<"<coroutine>"; break;
         }
 }
 nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
