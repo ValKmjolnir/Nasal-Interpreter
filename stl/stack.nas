@@ -1,24 +1,23 @@
 # stack.nas
 # valkmjolnir 2021/3/31
 var stack=func(){
-    var next=nil;
+    var vec=[];
     return{
         push:func(elem){
-            next={elem:elem,next:next};
+            append(vec,elem);
         },
         pop:func(){
-            if(next!=nil)
-                next=next.next;
+            return pop(vec);
         },
         top:func(){
-            if(next!=nil)
-                return next.elem;
+            if(size(vec)!=0)
+                return vec[-1];
         },
         clear:func(){
-            next=nil;
+            vec=[];
         },
         empty:func(){
-            return next==nil;
+            return size(vec)==0;
         }
     };
 }
