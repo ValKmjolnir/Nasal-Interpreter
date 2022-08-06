@@ -91,14 +91,11 @@ nas_ref builtin_fin(nas_ref* local,nasal_gc& gc)
     nas_ref val=local[1];
     if(val.type!=vm_str)
         return nas_err("io.fin","\"filename\" must be string");
-    std::ifstream fin(val.str());
+    std::ifstream fin(val.str(),std::ios::binary);
+    std::stringstream rd;
     if(!fin.fail())
-    {
-        std::stringstream rd;
         rd<<fin.rdbuf();
-        return gc.newstr(rd.str());
-    }
-    return nas_err("io.fin","cannot open <"+val.str()+">");
+    return gc.newstr(rd.str());
 }
 nas_ref builtin_fout(nas_ref* local,nasal_gc& gc)
 {

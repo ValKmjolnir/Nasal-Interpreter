@@ -89,9 +89,9 @@ var getname=func(s){
 }
 
 var count=func(s,c){
-    var (cnt,len,ch)=(0,size(s),c[0]);
-    for(var i=0;i<len;i+=1)
-        cnt+=(s[i]==ch);
+    var cnt=0;
+    foreach(var i;split(c,s))
+        cnt+=(size(i)!=0 and i!="\r")
     return cnt;
 }
 
