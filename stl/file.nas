@@ -5,6 +5,8 @@ var file={
     SEEK_CUR:io.SEEK_CUR,
     SEEK_END:io.SEEK_END,
     new: func(filename,mode="r"){
+        if(!io.exists(filename))
+            return nil;
         var fd=io.open(filename,mode);
         return {
             close:  func(){io.close(fd);},
@@ -24,6 +26,8 @@ var file={
 };
 
 var find_all_files=func(path){
+    if(!io.exists(path))
+        return [];
     var dd=unix.opendir(path);
     var res=[];
     while(var n=unix.readdir(dd))

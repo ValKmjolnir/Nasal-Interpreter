@@ -34,8 +34,7 @@ nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
     char sep=':';
 #endif
     string PATH=getenv("PATH");
-    usize last=0;
-    usize pos=PATH.find(sep,last);
+    usize last=0,pos=PATH.find(sep,0);
     while(pos!=string::npos)
     {
         string dirpath=PATH.substr(last,pos-last);
