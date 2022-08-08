@@ -133,8 +133,7 @@ nas_ref builtin_split(nas_ref* local,nasal_gc& gc)
         gc.temp=nil;
         return res;
     }
-    usize last=0;
-    usize pos=s.find(deli,last);
+    usize last=0,pos=s.find(deli,0);
     while(pos!=string::npos)
     {
         if(pos>last)
