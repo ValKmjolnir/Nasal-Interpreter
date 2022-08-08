@@ -283,51 +283,37 @@ nas_ref builtin_pow(nas_ref* local,nasal_gc& gc)
 nas_ref builtin_sin(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("sin","\"x\" must be number");
-    return {vm_num,sin(val.num())};
+    return {vm_num,val.type==vm_num?sin(val.num()):std::nan("")};
 }
 nas_ref builtin_cos(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("cos","\"x\" must be number");
-    return {vm_num,cos(val.num())};
+    return {vm_num,val.type==vm_num?cos(val.num()):std::nan("")};
 }
 nas_ref builtin_tan(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("tan","\"x\" must be number");
-    return {vm_num,tan(val.num())};
+    return {vm_num,val.type==vm_num?tan(val.num()):std::nan("")};
 }
 nas_ref builtin_exp(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("exp","\"x\" must be number");
-    return {vm_num,exp(val.num())};
+    return {vm_num,val.type==vm_num?exp(val.num()):std::nan("")};
 }
 nas_ref builtin_lg(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("ln","\"x\" must be number");
-    return {vm_num,log(val.num())/log(10.0)};
+    return {vm_num,val.type==vm_num?log(val.num())/log(10.0):std::nan("")};
 }
 nas_ref builtin_ln(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("ln","\"x\" must be number");
-    return {vm_num,log(val.num())};
+    return {vm_num,val.type==vm_num?log(val.num()):std::nan("")};
 }
 nas_ref builtin_sqrt(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("sqrt","\"x\" must be number");
-    return {vm_num,sqrt(val.num())};
+    return {vm_num,val.type==vm_num?sqrt(val.num()):std::nan("")};
 }
 nas_ref builtin_atan2(nas_ref* local,nasal_gc& gc)
 {
@@ -431,14 +417,10 @@ nas_ref builtin_substr(nas_ref* local,nasal_gc& gc)
     nas_ref len=local[3];
     if(str.type!=vm_str)
         return nas_err("substr","\"str\" must be string");
-    if(beg.type!=vm_num)
-        return nas_err("substr","\"begin\" must be number");
-    if(len.type!=vm_num)
-        return nas_err("substr","\"length\" must be number");
-    if(beg.num()<0)
-        return nas_err("substr","\"begin\" should be greater than or equal to zero");
-    if(len.num()<0)
-        return nas_err("substr","\"length\" should be greater than or equal to zero");
+    if(beg.type!=vm_num || beg.num()<0)
+        return nas_err("substr","\"begin\" should be number >= 0");
+    if(len.type!=vm_num || len.num()<0)
+        return nas_err("substr","\"length\" should be number >= 0");
     usize begin=(usize)beg.num();
     usize length=(usize)len.num();
     if(begin>=str.str().length() || begin+length>str.str().length())
