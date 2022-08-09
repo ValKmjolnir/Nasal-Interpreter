@@ -50,7 +50,7 @@ nas_ref builtin_append(nas_ref* local,nasal_gc& gc)
     nas_ref vec=local[1];
     nas_ref elem=local[2];
     if(vec.type!=vm_vec)
-        return nas_err("append","\"vector\" must be vector");
+        return nas_err("append","\"vec\" must be vector");
     auto& v=vec.vec().elems;
     for(auto& i:elem.vec().elems)
         v.push_back(i);
@@ -61,7 +61,7 @@ nas_ref builtin_setsize(nas_ref* local,nasal_gc& gc)
     nas_ref vec=local[1];
     nas_ref size=local[2];
     if(vec.type!=vm_vec)
-        return nas_err("setsize","\"vector\" must be vector");
+        return nas_err("setsize","\"vec\" must be vector");
     if(size.type!=vm_num)
         return nas_err("setsize","\"size\" is not a number");
     if(size.num()<0)
@@ -165,10 +165,9 @@ nas_ref builtin_id(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
     std::stringstream ss;
+    ss<<"0";
     if(val.type>vm_num)
-        ss<<"0x"<<std::hex<<(u64)val.val.gcobj<<std::dec;
-    else
-        ss<<"0";
+        ss<<"x"<<std::hex<<(u64)val.val.gcobj<<std::dec;
     return gc.newstr(ss.str());
 }
 nas_ref builtin_int(nas_ref* local,nasal_gc& gc)
@@ -199,7 +198,7 @@ nas_ref builtin_pop(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
     if(val.type!=vm_vec)
-        return nas_err("pop","\"vector\" must be vector");
+        return nas_err("pop","\"vec\" must be vector");
     auto& vec=val.vec().elems;
     if(vec.size())
     {
@@ -211,13 +210,7 @@ nas_ref builtin_pop(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_str(nas_ref* local,nasal_gc& gc)
 {
-    nas_ref val=local[1];
-    if(val.type!=vm_num)
-        return nas_err("str","\"number\" must be number");
-    string tmp=std::to_string(val.num());
-    tmp.erase(tmp.find_last_not_of('0')+1,string::npos);
-    tmp.erase(tmp.find_last_not_of('.')+1,string::npos);
-    return gc.newstr(tmp);
+    return gc.newstr(local[1].tostr());
 }
 nas_ref builtin_size(nas_ref* local,nasal_gc& gc)
 {
@@ -277,7 +270,7 @@ nas_ref builtin_pow(nas_ref* local,nasal_gc& gc)
     nas_ref x=local[1];
     nas_ref y=local[2];
     if(x.type!=vm_num || y.type!=vm_num)
-        return nas_err("pow","\"x\" or \"y\" must be number");
+        return {vm_num,std::nan("")};
     return {vm_num,std::pow(x.num(),y.num())};
 }
 nas_ref builtin_sin(nas_ref* local,nasal_gc& gc)
@@ -319,10 +312,8 @@ nas_ref builtin_atan2(nas_ref* local,nasal_gc& gc)
 {
     nas_ref x=local[1];
     nas_ref y=local[2];
-    if(x.type!=vm_num)
-        return nas_err("atan2","\"x\" must be number");
-    if(y.type!=vm_num)
-        return nas_err("atan2","\"y\" must be number");
+    if(x.type!=vm_num || y.type!=vm_num)
+        return {vm_num,std::nan("")};
     return {vm_num,atan2(y.num(),x.num())};
 }
 nas_ref builtin_isnan(nas_ref* local,nasal_gc& gc)
