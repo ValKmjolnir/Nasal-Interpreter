@@ -62,10 +62,8 @@ nas_ref builtin_setsize(nas_ref* local,nasal_gc& gc)
     nas_ref size=local[2];
     if(vec.type!=vm_vec)
         return nas_err("setsize","\"vec\" must be vector");
-    if(size.type!=vm_num)
-        return nas_err("setsize","\"size\" is not a number");
-    if(size.num()<0)
-        return nas_err("setsize","\"size\" must be greater than -1");
+    if(size.type!=vm_num || size.num()<0)
+        return nil;
     vec.vec().elems.resize((i64)size.num(),nil);
     return nil;
 }
@@ -336,7 +334,7 @@ nas_ref builtin_contains(nas_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return nas_err("contains","\"hash\" must be hash");
     if(key.type!=vm_str)
-        return nas_err("contains","\"key\" must be string");
+        return zero;
     return hash.hash().elems.count(key.str())?one:zero;
 }
 nas_ref builtin_delete(nas_ref* local,nasal_gc& gc)
@@ -346,7 +344,7 @@ nas_ref builtin_delete(nas_ref* local,nasal_gc& gc)
     if(hash.type!=vm_hash)
         return nas_err("delete","\"hash\" must be hash");
     if(key.type!=vm_str)
-        return nas_err("delete","\"key\" must be string");
+        return nil;
     if(hash.hash().elems.count(key.str()))
         hash.hash().elems.erase(key.str());
     return nil;
@@ -482,10 +480,7 @@ nas_ref builtin_chr(nas_ref* local,nasal_gc& gc)
         "ð","ñ","ò","ó","ô","õ","ö","÷",
         "ø","ù","ú","û","ü","ý","þ","ÿ"
     };
-    nas_ref code=local[1];
-    if(code.type!=vm_num)
-        return nas_err("chr","\"code\" must be number");
-    i32 num=code.num();
+    i32 num=local[1].num();
     if(0<=num && num<128)
         return gc.newstr((char)num);
     else if(128<=num && num<256)
@@ -496,7 +491,7 @@ nas_ref builtin_values(nas_ref* local,nasal_gc& gc)
 {
     nas_ref hash=local[1];
     if(hash.type!=vm_hash)
-        return nas_err("values","\"hash\" must be a hashmap");
+        return nas_err("values","\"hash\" must be hash");
     nas_ref vec=gc.alloc(vm_vec);
     auto& v=vec.vec().elems;
     for(auto& i:hash.hash().elems)
@@ -555,6 +550,7 @@ nas_ref builtin_read(nas_ref* local,nasal_gc& gc)
         return nas_err("read","malloc failed");
     f64 res=fread(buff,1,len.num(),(FILE*)fd.obj().ptr);
     buf.str()=buff;
+    buf.val.gcobj->unmut=true;
     delete []buff;
     return {vm_num,res};
 }
@@ -575,10 +571,6 @@ nas_ref builtin_seek(nas_ref* local,nasal_gc& gc)
     nas_ref whence=local[3];
     if(!fd.objchk(nas_obj::file))
         return nas_err("seek","not a valid filehandle");
-    if(pos.type!=vm_num)
-        return nas_err("seek","\"pos\" must be number");
-    if(whence.type!=vm_num || whence.num()<0 || whence.num()>2)
-        return nas_err("seek","\"whence\" must be number between 0 and 2");
     return {vm_num,(f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num())};
 }
 nas_ref builtin_tell(nas_ref* local,nasal_gc& gc)
@@ -720,7 +712,7 @@ nas_ref builtin_buf(nas_ref* local,nasal_gc& gc)
 {
     nas_ref length=local[1];
     if(length.type!=vm_num || length.num()<=0)
-        return nas_err("buf","\"len\" must be a number greater than 0");
+        return nas_err("buf","\"len\" must be number greater than 0");
     nas_ref str=gc.alloc(vm_str);
     auto& s=str.str();
     s.resize(length.num(),'\0');
@@ -833,7 +825,7 @@ nas_ref builtin_chdir(nas_ref* local,nasal_gc& gc)
 {
     nas_ref path=local[1];
     if(path.type!=vm_str)
-        return nas_err("chdir","\"path\" must be string");
+        return {vm_num,(f64)-1};
     return {vm_num,(f64)chdir(path.str().c_str())};
 }
 nas_ref builtin_environ(nas_ref* local,nasal_gc& gc)
@@ -1033,7 +1025,7 @@ nas_ref builtin_md5(nas_ref* local,nasal_gc& gc)
 {
     nas_ref str=local[1];
     if(str.type!=vm_str)
-        return nas_err("md5","\"str\" must be a string");
+        return nas_err("md5","\"str\" must be string");
     return gc.newstr(md5(str.str()));
 }
 
