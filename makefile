@@ -15,15 +15,17 @@ SRC=\
 	nasal_dbg.h\
 	nasal.h
 
+CPPSTANDARD=-std=c++11
+
 nasal:$(SRC)
-	$(CXX) -std=c++11 -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+	$(CXX) $(CPPSTANDARD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
 nasal.exe:$(SRC)
-	$(CXX) -std=c++11 -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
+	$(CXX) $(CPPSTANDARD) -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
 stable-release:$(SRC)
-	$(CXX) -std=c++11 -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+	$(CXX) $(CPPSTANDARD) -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
 stable-release-mingw:$(SRC)
-	$(CXX) -std=c++11 -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
+	$(CXX) $(CPPSTANDARD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
 test:nasal
 	@ ./nasal -op -e test/ascii-art.nas
