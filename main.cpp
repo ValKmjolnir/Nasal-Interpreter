@@ -62,6 +62,7 @@ void logo()
     <<"input <nasal -h> to get help .\n";
 }
 
+[[noreturn]]
 void err()
 {
     std::cerr

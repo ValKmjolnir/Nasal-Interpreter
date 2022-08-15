@@ -39,7 +39,10 @@
 .vs
 x64
 
-# misc
+# nasal executable
 nasal
+nasal.exe
+
+# misc
 .vscode
 dump
