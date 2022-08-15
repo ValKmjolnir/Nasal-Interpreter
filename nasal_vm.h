@@ -42,7 +42,7 @@ protected:
     void lstate();
     void ustate();
     void detail();
-    void die(const string&);
+    [[noreturn]] void die(const string&);
     /* vm calculation functions*/
     bool condition(nas_ref);
     /* vm operands */
@@ -307,6 +307,8 @@ void nasal_vm::detail()
     lstate();
     ustate();
 }
+
+[[noreturn]]
 void nasal_vm::die(const string& str)
 {
     std::cout<<"[vm] "<<str<<"\n";
