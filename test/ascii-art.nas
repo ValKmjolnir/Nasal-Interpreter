@@ -129,6 +129,16 @@ var curve6=func(){
         print('\n');
     }
 }
+var curve7=func(){
+    var vec=["▀▄─","▄▀─","▀─▄","▄─▀"];
+    for(var (y,p)=(0,0);y!=6;y+=1){
+        for(var x=0;x!=16;x+=1)
+            print(vec[p]);
+        print("\n");
+        p+=1;
+        p=p>=4?0:p;
+    }
+}
 if(os.platform()=="windows")
     system("chcp 65001");
 trans_ttf("just for test");
@@ -140,3 +150,4 @@ curve3();
 curve4();
 curve5();
 curve6();
+curve7();
