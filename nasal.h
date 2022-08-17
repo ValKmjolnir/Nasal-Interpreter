@@ -1,6 +1,6 @@
 #ifndef __NASAL_H__
 #define __NASAL_H__
-#define __nasver "10.0"
+#define __nasver "10.1"
 
 #ifndef _MSC_VER
 #include <unistd.h>

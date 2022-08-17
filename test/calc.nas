@@ -60,6 +60,7 @@ var testfile=[
     "nasal_test.nas   ",
     "occupation.nas   ",
     "pi.nas           ",
+    "ppmgen.nas       ",
     "prime.nas        ",
     "qrcode.nas       ",
     "quick_sort.nas   ",
