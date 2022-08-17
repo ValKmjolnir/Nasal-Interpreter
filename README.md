@@ -10,7 +10,7 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v10.0-blue?style=flat-square&logo=github)
+![in dev](https://img.shields.io/badge/dev-v10.1-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](./LICENSE)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)

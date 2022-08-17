@@ -59,6 +59,7 @@ test:nasal
 	@ ./nasal -op -e test/nasal_test.nas
 	@ ./nasal -op -c test/occupation.nas
 	@ ./nasal -op -t -d test/pi.nas
+	@ ./nasal -op -c test/ppmgen.nas
 	@ ./nasal -op -t -d test/prime.nas
 	@ ./nasal -op -e test/qrcode.nas
 	@ ./nasal -op -t -d test/quick_sort.nas
