@@ -49,7 +49,7 @@ struct nas_func; // function(lambda)
 struct nas_upval;// upvalue
 struct nas_obj;  // special objects
 struct nas_co;   // coroutine
-struct nas_val;  // nasal_val includes gc-managed types
+struct nas_val;  // nas_val includes gc-managed types
 
 struct nas_ref
 {
@@ -498,7 +498,7 @@ void nasal_gc::mark()
     // scan coroutine process stack when coroutine ptr is not null
     // scan main process stack when coroutine ptr is null
     // this scan process must execute because when running coroutine,
-    // the nasal_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
+    // the nas_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
     for(nas_ref* i=stack;i<=top;++i)
         bfs.push(*i);
     bfs.push(funcr);

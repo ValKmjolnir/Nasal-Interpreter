@@ -141,12 +141,12 @@ i32 main(i32 argc,const char* argv[])
         {"--ast",VM_ASTINFO},{"-a",VM_ASTINFO},
         {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
-        {"--opcnt",VM_OPCALLNUM|VM_EXEC},{"-o",VM_OPCALLNUM|VM_EXEC},
+        {"--opcnt",VM_OPCALLNUM},{"-o",VM_OPCALLNUM},
         {"--time",VM_EXECTIME|VM_EXEC},{"-t",VM_EXECTIME|VM_EXEC},
         {"--detail",VM_DBGINFO|VM_EXEC},{"-d",VM_DBGINFO|VM_EXEC},
         {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG},
-        {"--chkpath",VM_SHOWPATH|VM_EXEC},{"-cp",VM_SHOWPATH|VM_EXEC}
+        {"--chkpath",VM_SHOWPATH},{"-cp",VM_SHOWPATH} // this could be merged to -d
     };
     u32 cmd=0;
     string filename;
@@ -162,6 +162,6 @@ i32 main(i32 argc,const char* argv[])
     }
     if(!filename.length())
         err();
-    execute(filename,vm_argv,cmd?cmd:cmd|VM_EXEC);
+    execute(filename,vm_argv,cmd?cmd:VM_EXEC);
     return 0;
 }

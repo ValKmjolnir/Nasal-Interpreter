@@ -336,7 +336,7 @@ As you could see from the bytecode above,
 And because of the new structure of `mcall`,
 `addr_stack`, a stack used to store the memory address,
 is deleted from `nasal_vm`,
-and now `nasal_vm` use `nasal_val** mem_addr` to store the memory address.
+and now `nasal_vm` use `nas_val** mem_addr` to store the memory address.
 This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
 ### version 7.0 vm (last update 2021/10/8)
