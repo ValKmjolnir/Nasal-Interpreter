@@ -303,7 +303,7 @@ m(0)._=m(1)._=10;
 
 从上面这些字节码可以看出，`mcall`/`mcallv`/`mcallh`指令的使用频率比以前减小了一些，而`call`/`callv`/`callh`/`callfv`/`callfh`则相反。
 
-并且因为新的数据结构，`mcall`指令以及`addr_stack`，一个曾用来存储指针的栈，从`nasal_vm`中被移除。现在`nasal_vm`使用`nasal_val** mem_addr`来暂存获取的内存地址。这不会导致严重的问题，因为内存空间是 __获取即使用__ 的。
+并且因为新的数据结构，`mcall`指令以及`addr_stack`，一个曾用来存储指针的栈，从`nasal_vm`中被移除。现在`nasal_vm`使用`nas_val** mem_addr`来暂存获取的内存地址。这不会导致严重的问题，因为内存空间是 __获取即使用__ 的。
 
 ### version 7.0 vm (last update 2021/10/8)
 
