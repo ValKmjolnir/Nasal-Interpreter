@@ -6,10 +6,9 @@ const u32 VM_CODEINFO =0x04;
 const u32 VM_EXECTIME =0x08;
 const u32 VM_OPCALLNUM=0x10;
 const u32 VM_EXEC     =0x20;
-const u32 VM_DBGINFO  =0x40;
+const u32 VM_DETAIL   =0x40;
 const u32 VM_DEBUG    =0x80;
 const u32 VM_OPTIMIZE =0x100;
-const u32 VM_SHOWPATH =0x200;
 
 void help()
 {
@@ -33,12 +32,12 @@ void help()
     <<"    -t,   --time    | get the running time.\n"
     <<"    -o,   --opcnt   | count used operands.\n"
     <<"                    | available in debug mode.\n"
-    <<"    -d,   --detail  | get detail crash info.\n"
+    <<"    -d,   --detail  | get detail runtime crash info.\n"
+    <<"                    | get detail linker path-not-found info.\n"
     <<"                    | get garbage collector info if didn't crash.\n"
     <<"    -op,  --optimize| use optimizer(beta).\n"
     <<"                    | if want to use -op and run, please use -op -e/-t/-d.\n"
     <<"    -dbg, --debug   | debug mode (this will ignore -t -d).\n"
-    <<"    -cp,  --chkpath | show path if linker cannot find files.\n"
     <<"file:\n"
     <<"    input file name to execute.\n"
     <<"argv:\n"
@@ -90,7 +89,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     // parser gets lexer's token list to compile
     parse.compile(lexer);
     // linker gets parser's ast and load import files to this ast
-    linker.link(parse,file,cmd&VM_SHOWPATH);
+    linker.link(parse,file,cmd&VM_DETAIL);
     // optimizer does simple optimization on ast
     if(cmd&VM_OPTIMIZE)
         optimize(parse.ast());
@@ -108,12 +107,12 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     else if(cmd&VM_EXECTIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
-        vm.run(gen,linker,argv,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_DETAIL);
         auto end=std::chrono::high_resolution_clock::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,linker,argv,cmd&VM_DBGINFO);
+        vm.run(gen,linker,argv,cmd&VM_DETAIL);
 }
 
 i32 main(i32 argc,const char* argv[])
@@ -143,10 +142,9 @@ i32 main(i32 argc,const char* argv[])
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
         {"--opcnt",VM_OPCALLNUM},{"-o",VM_OPCALLNUM},
         {"--time",VM_EXECTIME|VM_EXEC},{"-t",VM_EXECTIME|VM_EXEC},
-        {"--detail",VM_DBGINFO|VM_EXEC},{"-d",VM_DBGINFO|VM_EXEC},
+        {"--detail",VM_DETAIL|VM_EXEC},{"-d",VM_DETAIL|VM_EXEC},
         {"--optimize",VM_OPTIMIZE},{"-op",VM_OPTIMIZE},
-        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG},
-        {"--chkpath",VM_SHOWPATH},{"-cp",VM_SHOWPATH} // this could be merged to -d
+        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     u32 cmd=0;
     string filename;
