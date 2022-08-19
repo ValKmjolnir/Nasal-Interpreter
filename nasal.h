@@ -52,7 +52,7 @@ using std::string;
 
 const u32 STACK_DEPTH=1024;
 
-inline f64 hex_to_double(const char* str)
+inline f64 hex2f(const char* str)
 {
     f64 ret=0;
     for(;*str;++str)
@@ -69,7 +69,7 @@ inline f64 hex_to_double(const char* str)
     }
     return ret;
 }
-inline f64 oct_to_double(const char* str)
+inline f64 oct2f(const char* str)
 {
     f64 ret=0;
     for(;*str;++str)
@@ -82,7 +82,10 @@ inline f64 oct_to_double(const char* str)
     }
     return ret;
 }
-inline f64 dec_to_double(const char* str)
+// we have the same reason not using atof here just as andy's interpreter does.
+// it is not platform independent, and may have strange output.
+// so we write a new function here to convert str to number manually.
+inline f64 dec2f(const char* str)
 {
     f64 ret=0,negative=1,num_pow=0;
     while('0'<=*str && *str<='9')
@@ -124,11 +127,11 @@ f64 str2num(const char* str)
     if(!*str)
         return nan("");
     if(str[0]=='0' && str[1]=='x')
-        res=hex_to_double(str+2);
+        res=hex2f(str+2);
     else if(str[0]=='0' && str[1]=='o')
-        res=oct_to_double(str+2);
+        res=oct2f(str+2);
     else
-        res=dec_to_double(str);
+        res=dec2f(str);
     return negative?-res:res;
 }
 
