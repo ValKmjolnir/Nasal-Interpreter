@@ -57,13 +57,12 @@ inline f64 hex2f(const char* str)
     f64 ret=0;
     for(;*str;++str)
     {
-        ret*=16;
         if('0'<=*str && *str<='9')
-            ret+=(*str-'0');
+            ret=ret*16+(*str-'0');
         else if('a'<=*str && *str<='f')
-            ret+=(*str-'a'+10);
+            ret=ret*16+(*str-'a'+10);
         else if('A'<=*str && *str<='F')
-            ret+=(*str-'A'+10);
+            ret=ret*16+(*str-'A'+10);
         else
             return nan("");
     }
@@ -72,19 +71,15 @@ inline f64 hex2f(const char* str)
 inline f64 oct2f(const char* str)
 {
     f64 ret=0;
-    for(;*str;++str)
-    {
-        ret*=8;
-        if('0'<=*str && *str<'8')
-            ret+=(*str-'0');
-        else
-            return nan("");
-    }
+    while('0'<=*str && *str<'8')
+        ret=ret*8+(*str++-'0');
+    if(*str) return nan("");
     return ret;
 }
 // we have the same reason not using atof here just as andy's interpreter does.
 // it is not platform independent, and may have strange output.
 // so we write a new function here to convert str to number manually.
+// but this also makes 0.1+0.2==0.3, not another result that you may get in other languages.
 inline f64 dec2f(const char* str)
 {
     f64 ret=0,negative=1,num_pow=0;
@@ -109,13 +104,9 @@ inline f64 dec2f(const char* str)
         negative=(*str++=='-'? -1:1);
     if(!*str) return nan("");
     num_pow=0;
-    for(;*str;++str)
-    {
-        if('0'<=*str && *str<='9')
-            num_pow=num_pow*10+(*str-'0');
-        else
-            return nan("");
-    }
+    while('0'<=*str && *str<='9')
+        num_pow=num_pow*10+(*str++-'0');
+    if(*str) return nan("");
     return ret*std::pow(10,negative*num_pow);
 }
 f64 str2num(const char* str)
