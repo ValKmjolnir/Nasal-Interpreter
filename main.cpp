@@ -52,7 +52,7 @@ void logo()
     <<"   /  \\/ / _` / __|/ _` | |\n"
     <<"  / /\\  / (_| \\__ \\ (_| | |\n"
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    <<"nasal ver : "<<__nasver<<" ("<<__DATE__<<")\n"
+    <<"nasal ver : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
     <<"c++ std   : "<<__cplusplus<<"\n"
     <<"thanks to : https://github.com/andyross/nasal\n"
     <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
