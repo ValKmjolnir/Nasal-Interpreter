@@ -137,7 +137,8 @@ public:
     nasal_ast(const u32 l=0,const u32 t=ast_null):_line(l),_type(t),_num(0){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
-    void print(u32,bool);
+    void tree();
+    void print(u32,bool,std::vector<string>&);
     void clear();
     
     nasal_ast& operator=(const nasal_ast&);
@@ -207,10 +208,15 @@ void nasal_ast::clear()
     _child.clear();
 }
 
-void nasal_ast::print(u32 depth,bool last=false)
+void nasal_ast::tree()
 {
-    static std::vector<string> intentation={};
-    for(auto& i:intentation)
+    std::vector<string> tmp;
+    print(0,false,tmp);
+}
+
+void nasal_ast::print(u32 depth,bool last,std::vector<string>& indent)
+{
+    for(auto& i:indent)
         std::cout<<i;
     std::cout<<ast_name[_type];
     if(_type==ast_str || _type==ast_id ||
@@ -221,22 +227,22 @@ void nasal_ast::print(u32 depth,bool last=false)
         std::cout<<":"<<_num;
     std::cout<<'\n';
     if(last && depth)
-        intentation.back()="  ";
+        indent.back()="  ";
     else if(!last && depth)
 #ifdef _WIN32
-        intentation.back()="| ";
+        indent.back()="| ";
 #else
-        intentation.back()="│ ";
+        indent.back()="│ ";
 #endif
     for(u32 i=0;i<_child.size();++i)
     {
 #ifdef _WIN32
-        intentation.push_back(i==_child.size()-1?"`-":"|-");
+        indent.push_back(i==_child.size()-1?"+-":"|-");
 #else
-        intentation.push_back(i==_child.size()-1?"└─":"├─");
+        indent.push_back(i==_child.size()-1?"└─":"├─");
 #endif
-        _child[i].print(depth+1,i==_child.size()-1);
-        intentation.pop_back();
+        _child[i].print(depth+1,i==_child.size()-1,indent);
+        indent.pop_back();
     }
 }
 
