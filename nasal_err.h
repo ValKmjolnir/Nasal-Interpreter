@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream> // MSVC need this to use std::getline
 #include <cstring>
 
 class fstreamline

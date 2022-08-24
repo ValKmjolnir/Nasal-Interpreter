@@ -2,43 +2,12 @@
 #define __NASAL_H__
 #define __nasver "10.1"
 
-#ifndef _MSC_VER
-#include <unistd.h>
-#include <dirent.h>
-#else
-#include <io.h>
-#include <direct.h>
-#endif
-
 #include <cstdint>
-#include <cstdlib>
-#include <cstdio>
 #include <iostream>
-#include <iomanip>
 #include <fstream>
-#include <sstream>
-#include <algorithm>
 #include <cstring>
-#include <cstdlib>
-#include <ctime>
 #include <cmath>
-#include <list>
-#include <stack>
-#include <queue>
 #include <vector>
-#include <unordered_map>
-#include <thread>
-#include <chrono>
-
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#include <sys/wait.h>
-#endif
 
 using i32=std::int32_t;
 using i64=std::int64_t;
@@ -184,16 +153,5 @@ string rawstr(const string& str,const usize maxlen=0)
         ret=ret.substr(0,maxlen)+"...";
     return ret;
 }
-#include "nasal_err.h"
-#include "nasal_lexer.h"
-#include "nasal_ast.h"
-#include "nasal_parse.h"
-#include "nasal_import.h"
-#include "nasal_opt.h"
-#include "nasal_gc.h"
-#include "nasal_builtin.h"
-#include "nasal_codegen.h"
-#include "nasal_vm.h"
-#include "nasal_dbg.h"
 
 #endif

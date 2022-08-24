@@ -1,6 +1,11 @@
 #ifndef __NASAL_CODEGEN_H__
 #define __NASAL_CODEGEN_H__
 
+#include <iomanip>
+#include <list>
+#include <stack>
+#include <unordered_map>
+
 enum op_code:u8
 {
     op_exit,   // stop the virtual machine

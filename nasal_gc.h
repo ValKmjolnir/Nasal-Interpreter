@@ -1,6 +1,9 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
+#include <queue>
+#include <unordered_map>
+
 enum vm_type:u8{
     /* none-gc object */
     vm_none=0,
@@ -713,5 +716,12 @@ void nasal_gc::ctxreserve()
     top=mctx.top;
     stack=mctx.stack;
     cort=nullptr;
+}
+
+// use to print error log and return error value
+nas_ref nas_err(const string& err_f,const string& info)
+{
+    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
+    return {vm_none};
 }
 #endif

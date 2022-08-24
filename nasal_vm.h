@@ -1,6 +1,9 @@
 #ifndef __NASAL_VM_H__
 #define __NASAL_VM_H__
 
+#include <iomanip>
+#include <stack>
+
 class nasal_vm
 {
 protected:

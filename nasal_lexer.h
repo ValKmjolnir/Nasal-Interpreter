@@ -1,6 +1,9 @@
 #ifndef __NASAL_LEXER_H__
 #define __NASAL_LEXER_H__
 
+#include <sstream>
+#include <sys/stat.h>
+
 #ifdef _MSC_VER
 #define S_ISREG(m) (((m)&0xF000)==0x8000)
 #endif

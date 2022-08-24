@@ -1,6 +1,8 @@
 #ifndef __NASAL_OPT_H__
 #define __NASAL_OPT_H__
 
+#include <cmath>
+
 void const_str(nasal_ast& root)
 {
     auto& vec=root.child();

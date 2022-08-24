@@ -1,4 +1,16 @@
 #include "nasal.h"
+#include "nasal_err.h"
+#include "nasal_lexer.h"
+#include "nasal_ast.h"
+#include "nasal_parse.h"
+#include "nasal_import.h"
+#include "nasal_opt.h"
+#include "nasal_gc.h"
+#include "nasal_builtin.h"
+#include "nasal_codegen.h"
+#include "nasal_vm.h"
+#include "nasal_dbg.h"
+#include <unordered_map>
 
 const u32 VM_LEXINFO  =0x01;
 const u32 VM_ASTINFO  =0x02;

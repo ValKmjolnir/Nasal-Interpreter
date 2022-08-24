@@ -1,6 +1,12 @@
 #ifndef __NASAL_IMPORT_H__
 #define __NASAL_IMPORT_H__
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #ifdef _MSC_VER
 #define F_OK 0
 #endif
