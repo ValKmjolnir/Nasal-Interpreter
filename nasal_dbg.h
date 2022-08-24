@@ -2,6 +2,7 @@
 #define __NASAL_DBG_H__
 
 #include "nasal_vm.h"
+#include <algorithm>
 
 class nasal_dbg:public nasal_vm
 {

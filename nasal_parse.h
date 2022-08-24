@@ -1,6 +1,8 @@
 #ifndef __NASAL_PARSE_H__
 #define __NASAL_PARSE_H__
 
+#include <unordered_map>
+
 /*
               _,,,_                                       
             .'     `'.                                    

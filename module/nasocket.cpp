@@ -1,4 +1,6 @@
 #include "../nasal.h"
+#include "../nasal_gc.h"
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <winsock.h>

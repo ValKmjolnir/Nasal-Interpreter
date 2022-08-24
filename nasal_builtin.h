@@ -1,16 +1,32 @@
 ﻿#ifndef __NASAL_BUILTIN_H__
 #define __NASAL_BUILTIN_H__
 
+#include "nasal_gc.h"
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#include <dirent.h>
+#else
+#include <io.h>
+#include <direct.h>
+#endif
+
+#include <sstream>
+#include <cmath>
+#include <thread>
+#include <sys/stat.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#include <sys/wait.h>
+#endif
+
 #if defined __APPLE__
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
 #endif
-
-nas_ref nas_err(const string& err_f,const string& info)
-{
-    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
-    return {vm_none};
-}
 
 void print_core(std::vector<nas_ref>& elems)
 {
