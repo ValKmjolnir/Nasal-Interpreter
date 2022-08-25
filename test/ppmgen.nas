@@ -17,7 +17,7 @@ var width=1280;
 var height=720;
 var bar=process_bar.bar(front:os.platform()=="windows"?"sharp":"block",back:"point",sep:"line",length:50);
 var f=func(i,j){
-    var (yMin,yMax,xMin,xMax)=(-0.9,0.9,-2.2,1);
+    var (yMin,yMax,xMin,xMax)=(-1.35,1.35,-3.3,1.5);
     var (yDel,xDel)=(yMax-yMin,xMax-xMin);
     var (y,x)=((i/height)*yDel+yMin,(j/width)*xDel+xMin);
     var (x0,y0)=(x,y);
@@ -30,7 +30,7 @@ var f=func(i,j){
     }
     var progress=(i*width+j+1)/(width*height);
     print(bar.bar(progress)," ",progress*100,"%          \r");
-    iter=int(iter/25*255);
+    iter=iter==25?255:int(iter/25*255);
     return iter~" "~iter~" "~iter~" ";
 }
 ppm("a.ppm",width,height,f);

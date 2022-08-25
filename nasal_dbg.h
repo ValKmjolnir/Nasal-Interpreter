@@ -17,7 +17,7 @@ private:
     u16 fileindex(const string&);
     void err();
     void help();
-    void opcallsort(const u64*);
+    void callsort(const u64*);
     void stepinfo();
     void interact();
 public:
@@ -28,8 +28,7 @@ public:
     void run(
         const nasal_codegen&,
         const nasal_import&,
-        const std::vector<string>&,
-        bool
+        const std::vector<string>&
     );
 };
 
@@ -83,7 +82,7 @@ void nasal_dbg::help()
     <<"\tbk,  break     | set break point\n";
 }
 
-void nasal_dbg::opcallsort(const u64* arr)
+void nasal_dbg::callsort(const u64* arr)
 {
     typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
@@ -207,8 +206,7 @@ void nasal_dbg::interact()
 void nasal_dbg::run(
     const nasal_codegen& gen,
     const nasal_import& linker,
-    const std::vector<string>& argv,
-    bool  opcnt)
+    const std::vector<string>& argv)
 {
     detail_info=true;
     fsize=linker.filelist().size();
@@ -307,8 +305,7 @@ void nasal_dbg::run(
 vmexit:
     if(top>=canary)
         die("stack overflow");
-    if(opcnt)
-        opcallsort(count);
+    callsort(count);
     gc.clear();
     imm.clear();
     std::cout<<"[debug] debugger exited\n";
