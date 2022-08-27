@@ -26,7 +26,7 @@ var diffsigmoid=func(x){
     return x*(1-x);
 }
 
-var (inum,hnum,onum)=(2,4,1);
+var (inum,hnum,onum)=(2,5,1);
 var training_set=[[0,0],[0,1],[1,0],[1,1]];
 var expect=[0,1,1,0];
 
@@ -112,8 +112,14 @@ while(error>0.0005){
         backward(i);
     }
     cnt+=1;
+    if(cnt>=3e5)
+        break;
 }
-print('finished after ',cnt,' epoch.\n');
+if(cnt>=3e5){
+    print("failed to train, ",cnt," epoch.\n");
+}else{
+    print('finished after ',cnt,' epoch.\n');
+}
 foreach(var v;training_set){
     run(v);
     print(v,': ',output[0].out,'\n');
