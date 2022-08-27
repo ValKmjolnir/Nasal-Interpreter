@@ -61,6 +61,11 @@ var floor=func(val){
     return __floor(val);
 }
 
+# exit using std::exit
+var exit=func(val=-1){
+    return __exit(val);
+}
+
 # abort using std::abort
 var abort=func(){
     __abort();

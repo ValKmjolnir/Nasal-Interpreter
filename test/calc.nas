@@ -70,6 +70,7 @@ var testfile=[
     "trait.nas        ",
     "turingmachine.nas",
     "utf8chk.nas      ",
+    "watchdog.nas     ",
     "wavecollapse.nas ",
     "ycombinator.nas  "
 ];

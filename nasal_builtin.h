@@ -56,6 +56,11 @@ nas_ref builtin_println(nas_ref* local,nasal_gc& gc)
     std::cout<<std::endl;
     return nil;
 }
+nas_ref builtin_exit(nas_ref* local,nasal_gc& gc)
+{
+    std::exit(local[1].num());
+    return nil;
+}
 nas_ref builtin_abort(nas_ref* local,nasal_gc& gc)
 {
     std::abort();
@@ -1153,6 +1158,7 @@ struct
 {
     {"__print",   builtin_print   },
     {"__println", builtin_println },
+    {"__exit",    builtin_exit    },
     {"__abort",   builtin_abort   },
     {"__append",  builtin_append  },
     {"__setsize", builtin_setsize },
