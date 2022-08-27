@@ -36,3 +36,25 @@ var find_all_files=func(path){
     unix.closedir(dd);
     return res;
 }
+
+var recursive_find_files=func(path){
+    if(!io.exists(path))
+        return nil;
+    var dd=unix.opendir(path);
+    var res={
+        dir:path,
+        files:[]
+    };
+    while(var n=unix.readdir(dd)){
+        if(unix.isfile(path~"/"~n)){
+            append(res.files,n);
+        }elsif(unix.isdir(path~"/"~n) and n!="." and n!=".."){
+            var tmp=recursive_find_files(path~"/"~n);
+            if(tmp!=nil)
+                append(res.files,tmp);
+        }
+
+    }
+    unix.closedir(dd);
+    return res;
+}
