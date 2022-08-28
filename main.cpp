@@ -12,14 +12,14 @@
 #include "nasal_dbg.h"
 #include <unordered_map>
 
-const u32 VM_LEXINFO =0x01;
-const u32 VM_ASTINFO =0x02;
-const u32 VM_CODEINFO=0x04;
-const u32 VM_EXECTIME=0x08;
-const u32 VM_EXEC    =0x10;
-const u32 VM_DETAIL  =0x20;
-const u32 VM_DEBUG   =0x40;
-const u32 VM_OPTIMIZE=0x80;
+const u32 VM_TOKEN =0x01;
+const u32 VM_AST   =0x02;
+const u32 VM_CODE  =0x04;
+const u32 VM_TIME  =0x08;
+const u32 VM_EXEC  =0x10;
+const u32 VM_DETAIL=0x20;
+const u32 VM_DEBUG =0x40;
+const u32 VM_OPT   =0x80;
 
 void help()
 {
@@ -92,7 +92,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 
     // lexer scans file to get tokens
     lexer.scan(file);
-    if(cmd&VM_LEXINFO)
+    if(cmd&VM_TOKEN)
         lexer.print();
     
     // parser gets lexer's token list to compile
@@ -100,20 +100,20 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     // linker gets parser's ast and load import files to this ast
     linker.link(parse,file,cmd&VM_DETAIL);
     // optimizer does simple optimization on ast
-    if(cmd&VM_OPTIMIZE)
+    if(cmd&VM_OPT)
         optimize(parse.ast());
-    if(cmd&VM_ASTINFO)
+    if(cmd&VM_AST)
         parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,linker);
-    if(cmd&VM_CODEINFO)
+    if(cmd&VM_CODE)
         gen.print();
     
     // run
     if(cmd&VM_DEBUG)
         nasal_dbg(nerr).run(gen,linker,argv);
-    else if(cmd&VM_EXECTIME)
+    else if(cmd&VM_TIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
         vm.run(gen,linker,argv,cmd&VM_DETAIL);
@@ -145,13 +145,13 @@ i32 main(i32 argc,const char* argv[])
         return 0;
     }
     std::unordered_map<string,u32> cmdlst={
-        {"--lex",VM_LEXINFO},{"-l",VM_LEXINFO},
-        {"--ast",VM_ASTINFO},{"-a",VM_ASTINFO},
-        {"--code",VM_CODEINFO},{"-c",VM_CODEINFO},
+        {"--lex",VM_TOKEN},{"-l",VM_TOKEN},
+        {"--ast",VM_AST},{"-a",VM_AST},
+        {"--code",VM_CODE},{"-c",VM_CODE},
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
-        {"--time",VM_EXECTIME|VM_EXEC},{"-t",VM_EXECTIME|VM_EXEC},
+        {"--time",VM_TIME|VM_EXEC},{"-t",VM_TIME|VM_EXEC},
         {"--detail",VM_DETAIL|VM_EXEC},{"-d",VM_DETAIL|VM_EXEC},
-        {"--optimize",VM_OPTIMIZE},{"-o",VM_OPTIMIZE},
+        {"--optimize",VM_OPT},{"-o",VM_OPT},
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     u32 cmd=0;

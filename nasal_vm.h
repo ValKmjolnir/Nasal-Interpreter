@@ -138,8 +138,8 @@ public:
 
 void nasal_vm::init(
     const std::vector<string>& strs,
-    const std::vector<f64>&         nums,
-    const std::vector<opcode>&      code,
+    const std::vector<f64>&    nums,
+    const std::vector<opcode>& code,
     const std::vector<string>& filenames,
     const std::vector<string>& argv)
 {
