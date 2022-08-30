@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
+#pragma warning (disable:4566) // i know i'm using utf-8, fuck you
 #include <io.h>
 #include <direct.h>
 #endif
