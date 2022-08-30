@@ -138,11 +138,7 @@ string rawstr(const string& str,const usize maxlen=0)
             case '\v': ret+="\\v"; break;
             case '\f': ret+="\\f"; break;
             case '\r': ret+="\\r"; break;
-#ifdef _MSC_VER
             case '\033':ret+="\\e";break;
-#else
-            case '\e': ret+="\\e"; break;
-#endif
             case '\"': ret+="\\\"";break;
             case '\'': ret+="\\\'";break;
             case '\\': ret+="\\\\";break;

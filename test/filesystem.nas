@@ -18,7 +18,7 @@ var prt=func(s,path){
         foreach(var j;s)
             print("\e[34m",j,"\e[0m");
         if(unix.isdir(path~"/"~f)){
-            println("\e[34m",i==last?" └─":" ├─","\e[0m\e[36m[",f,"]>\e[0m");
+            println("\e[34m",i==last?" └─":" ├─","\e[0m\e[33m[",f,"]\e[36m>\e[0m");
             append(s,i==last?"   ":" │ ");
             prt(s,path~"/"~f);
             pop(s);
@@ -32,5 +32,5 @@ var prt=func(s,path){
 
 if(os.platform()=="windows")
     system("chcp 65001");
-println("\e[36m[",unix.getcwd(),"]>\e[0m");
+println("\e[33m[",unix.getcwd(),"]\e[36m>\e[0m");
 prt([""],".");
