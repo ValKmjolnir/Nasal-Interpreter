@@ -38,7 +38,7 @@ std::ostream& bold_cyan(std::ostream& s)
 std::ostream& bold_orange(std::ostream& s)
 {
 #ifdef _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_ERROR_HANDLE),0x0e);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0e);
 #else
     s<<"\033[93;1m";
 #endif
@@ -47,7 +47,7 @@ std::ostream& bold_orange(std::ostream& s)
 std::ostream& bold_white(std::ostream& s)
 {
 #ifdef _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_ERROR_HANDLE),0x0f);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0f);
 #else
     s<<"\033[0m\033[1m";
 #endif
