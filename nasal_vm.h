@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <stack>
 
+#include "nasal_err.h"
+
 class nasal_vm
 {
 protected:
@@ -207,8 +209,9 @@ void nasal_vm::bytecodeinfo(const char* header,const u32 p)
 void nasal_vm::traceback()
 {
     nas_ref* bottom=stack+bytecode[0].num; // bytecode[0] is op_intg
+    nas_ref* main_ctx_top=gc.stack==stack?top:gc.mctx.top; // if error occurs in coroutine, this works
     std::stack<u32> ret;
-    for(nas_ref* i=bottom;i<=top;++i)
+    for(nas_ref* i=bottom;i<=main_ctx_top;++i)
         if(i->type==vm_ret)
             ret.push(i->ret());
     ret.push(pc); // store the position program crashed
@@ -314,7 +317,10 @@ void nasal_vm::detail()
 [[noreturn]]
 void nasal_vm::die(const string& str)
 {
-    std::cout<<"[vm] "<<str<<"\n";
+    std::cout<<bold_cyan<<"[vm] "
+             <<bold_red<<"error: "
+             <<bold_white<<str<<"\n"
+             <<reset;
     traceback();
     stackinfo();
     if(detail_info)

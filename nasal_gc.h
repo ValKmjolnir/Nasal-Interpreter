@@ -4,6 +4,8 @@
 #include <queue>
 #include <unordered_map>
 
+#include "nasal_err.h"
+
 enum vm_type:u8{
     /* none-gc object */
     vm_none=0,
@@ -721,7 +723,10 @@ void nasal_gc::ctxreserve()
 // use to print error log and return error value
 nas_ref nas_err(const string& err_f,const string& info)
 {
-    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
+    std::cerr<<bold_cyan<<"[vm] "
+             <<bold_red<<err_f<<": "
+             <<bold_white<<info<<"\n"
+             <<reset;
     return {vm_none};
 }
 #endif

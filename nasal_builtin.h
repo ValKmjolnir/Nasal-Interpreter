@@ -389,7 +389,10 @@ nas_ref builtin_die(nas_ref* local,nasal_gc& gc)
     nas_ref str=local[1];
     if(str.type!=vm_str)
         return nas_err("die","\"str\" must be string");
-    std::cerr<<"[vm] error: "<<str.str()<<'\n';
+    std::cerr<<bold_cyan<<"[vm] "
+             <<bold_red<<"error: "
+             <<bold_white<<str.str()<<'\n'
+             <<reset;
     return {vm_none};
 }
 nas_ref builtin_find(nas_ref* local,nasal_gc& gc)
