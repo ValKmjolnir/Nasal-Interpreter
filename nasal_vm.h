@@ -317,8 +317,7 @@ void nasal_vm::detail()
 [[noreturn]]
 void nasal_vm::die(const string& str)
 {
-    std::cout<<bold_cyan<<"[vm] "
-             <<bold_red<<"error: "
+    std::cout<<bold_red<<"[vm] error: "
              <<bold_white<<str<<"\n"
              <<reset;
     traceback();

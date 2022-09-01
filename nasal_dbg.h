@@ -1,6 +1,7 @@
 #ifndef __NASAL_DBG_H__
 #define __NASAL_DBG_H__
 
+#include "nasal_err.h"
 #include "nasal_vm.h"
 #include <algorithm>
 
@@ -119,7 +120,7 @@ void nasal_dbg::stepinfo()
     begin=(line>>3)==0?0:((line>>3)<<3);
     end=(1+(line>>3))<<3;
     for(u32 i=begin;i<end && i<src.size();++i)
-        std::cout<<(i==line?"-->  ":"     ")<<src[i]<<"\n";
+        std::cout<<bold_cyan<<(i==line?"-->  ":"     ")<<reset<<src[i]<<"\n";
     std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
@@ -134,7 +135,8 @@ void nasal_dbg::interact()
     if(bytecode[pc].op==op_intg)
     {
         std::cout
-        <<"[debug] nasal debug mode\n"
+        <<bold_cyan<<"[debug] "<<reset
+        <<"nasal debug mode\n"
         <<"input \'h\' to get help\n";
     }
     else if(bytecode[pc].op==op_exit)
@@ -308,7 +310,7 @@ vmexit:
     callsort(count);
     gc.clear();
     imm.clear();
-    std::cout<<"[debug] debugger exited\n";
+    std::cout<<bold_cyan<<"[debug] "<<reset<<"debugger exited\n";
     return;
 #ifndef _MSC_VER
 #define dbg(op,num) {\

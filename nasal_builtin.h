@@ -93,7 +93,7 @@ nas_ref builtin_system(nas_ref* local,nasal_gc& gc)
 {
     nas_ref str=local[1];
     if(str.type!=vm_str)
-        return nas_err("system","\"str\" must be string");
+        return {vm_num,(f64)-1};
     return {vm_num,(f64)system(str.str().c_str())};
 }
 nas_ref builtin_input(nas_ref* local,nasal_gc& gc)
@@ -110,7 +110,7 @@ nas_ref builtin_fin(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
     if(val.type!=vm_str)
-        return nas_err("io.fin","\"filename\" must be string");
+        return nas_err("io::fin","\"filename\" must be string");
     std::ifstream fin(val.str(),std::ios::binary);
     std::stringstream rd;
     if(!fin.fail())
@@ -122,12 +122,12 @@ nas_ref builtin_fout(nas_ref* local,nasal_gc& gc)
     nas_ref val=local[1];
     nas_ref str=local[2];
     if(val.type!=vm_str)
-        return nas_err("io.fout","\"filename\" must be string");
+        return nas_err("io::fout","\"filename\" must be string");
     if(str.type!=vm_str)
-        return nas_err("io.fout","\"str\" must be string");
+        return nas_err("io::fout","\"str\" must be string");
     std::ofstream fout(val.str());
     if(fout.fail())
-        return nas_err("io.fout","cannot open <"+val.str()+">");
+        return nas_err("io::fout","cannot open <"+val.str()+">");
     fout<<str.str();
     return nil;
 }
@@ -389,8 +389,7 @@ nas_ref builtin_die(nas_ref* local,nasal_gc& gc)
     nas_ref str=local[1];
     if(str.type!=vm_str)
         return nas_err("die","\"str\" must be string");
-    std::cerr<<bold_cyan<<"[vm] "
-             <<bold_red<<"error: "
+    std::cerr<<bold_red<<"[vm] error: "
              <<bold_white<<str.str()<<'\n'
              <<reset;
     return {vm_none};
@@ -399,11 +398,7 @@ nas_ref builtin_find(nas_ref* local,nasal_gc& gc)
 {
     nas_ref needle=local[1];
     nas_ref haystack=local[2];
-    if(needle.type!=vm_str)
-        return nas_err("find","\"needle\" must be string");
-    if(haystack.type!=vm_str)
-        return nas_err("find","\"haystack\" must be string");
-    usize pos=haystack.str().find(needle.str());
+    usize pos=haystack.tostr().find(needle.tostr());
     if(pos==string::npos)
         return {vm_num,(f64)-1};
     return {vm_num,(f64)pos};
@@ -479,10 +474,8 @@ nas_ref builtin_cmp(nas_ref* local,nasal_gc& gc)
 {
     nas_ref a=local[1];
     nas_ref b=local[2];
-    if(a.type!=vm_str)
-        return nas_err("cmp","\"a\" must be string");
-    if(b.type!=vm_str)
-        return nas_err("cmp","\"b\" must be string");
+    if(a.type!=vm_str || b.type!=vm_str)
+        return nas_err("cmp","\"a\" and \"b\" must be string");
     return {vm_num,(f64)strcmp(a.str().c_str(),b.str().c_str())};
 }
 nas_ref builtin_chr(nas_ref* local,nasal_gc& gc)
