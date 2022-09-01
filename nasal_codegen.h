@@ -1,6 +1,7 @@
 #ifndef __NASAL_CODEGEN_H__
 #define __NASAL_CODEGEN_H__
 
+#include "nasal_err.h"
 #include <iomanip>
 #include <list>
 #include <stack>
@@ -136,7 +137,7 @@ void opcode::print(const char* header,
                    const u32 index,
                    bool deftnum=false) const
 {
-    std::cout<<header<<std::hex<<"0x"
+    std::cout<<bold_cyan<<header<<reset<<std::hex<<"0x"
              <<std::setw(8)<<std::setfill('0')<<index<<":       "
              <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
              <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "

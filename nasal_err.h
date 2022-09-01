@@ -77,7 +77,7 @@ public:
         std::ifstream fin(f,std::ios::binary);
         if(fin.fail())
         {
-            std::cerr<<bold_cyan<<"[src] "<<reset<<"cannot open file <"<<f<<">\n";
+            std::cerr<<bold_red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
             std::exit(1);
         }
         string line;
@@ -101,30 +101,47 @@ class nasal_err:public fstreamline
 {
 private:
     u32 error;
+    string identation(usize len)
+    {
+        string tmp="";
+        tmp.resize(len,' ');
+        return tmp;
+    }
 public:
     nasal_err():error(0){}
     void err(const char* stage,const string& info)
     {
         ++error;
-        std::cerr<<bold_cyan<<"["<<stage<<"] "<<reset<<info<<"\n";
+        std::cerr<<bold_red<<stage<<": "
+                 <<bold_white<<info<<reset<<"\n\n";
     }
     void err(const char* stage,u32 line,u32 column,const string& info)
     {
         ++error;
         const string& code=res[line-1];
-        std::cerr<<bold_cyan<<"["<<stage<<"] "
-                 <<bold_orange<<file<<":"<<line<<":"<<column<<" "
-                 <<bold_white<<info<<reset<<"\n"<<code<<"\n";
+        const string ident=identation(std::to_string(line).length());
+        std::cerr<<bold_red<<stage<<": "
+                 <<bold_white<<info<<reset<<"\n"
+                 <<bold_cyan<<" --> "<<reset
+                 <<bold_orange<<file<<":"<<line<<":"<<column<<"\n"
+                 <<bold_cyan<<ident<<" | "<<reset<<"\n"
+                 <<bold_cyan<<line<<" | "<<reset<<code<<"\n"
+                 <<bold_cyan<<ident<<" | "<<reset;
         for(i32 i=0;i<(i32)column-1;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
-        std::cerr<<bold_red<<"^\n"<<reset;
+        std::cerr<<bold_red<<"^ "<<info<<reset<<"\n\n";
     }
     void err(const char* stage,u32 line,const string& info)
     {
         ++error;
-        std::cerr<<bold_cyan<<"["<<stage<<"] "
-                 <<bold_orange<<file<<":"<<line<<" "
-                 <<bold_white<<info<<reset<<"\n"<<res[line-1]<<'\n';
+        const string ident=identation(std::to_string(line).length());
+        std::cerr<<bold_red<<stage<<": "
+                 <<bold_white<<info<<reset<<"\n"
+                 <<bold_cyan<<" --> "<<reset
+                 <<bold_orange<<file<<":"<<line<<"\n"
+                 <<bold_cyan<<ident<<" | "<<reset<<"\n"
+                 <<bold_cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
+                 <<bold_cyan<<ident<<" | "<<reset<<"\n\n";
     }
     void chkerr(){if(error)std::exit(1);}
 };
