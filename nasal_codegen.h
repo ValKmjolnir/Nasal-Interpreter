@@ -209,7 +209,7 @@ private:
     std::stack<u32> fbstk;
     std::stack<u32> festk;
     
-    void die(const string&,const u32);
+    void die(const string&,const u32,const u32);
     void regist_num(const f64);
     void regist_str(const string&);
     void find_symbol(const nasal_ast&);
@@ -260,10 +260,13 @@ public:
     const std::vector<opcode>& codes() const {return code;}
 };
 
-void nasal_codegen::die(const string& info,const u32 line)
+void nasal_codegen::die(const string& info,const u32 line,const u32 col)
 {
     nerr.load(file[fileindex]);
-    nerr.err("code",line,info);
+    if(col)
+        nerr.err("code",line,col,info);
+    else
+        nerr.err("code",line,info);
 }
 
 void nasal_codegen::regist_num(const f64 num)
@@ -409,7 +412,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     {
         const string& str=tmp.str();
         if(str=="me")
-            die("\"me\" should not be a parameter",tmp.line());
+            die("\"me\" should not be a parameter",tmp.line(),tmp.col());
         regist_str(str);
         switch(tmp.type())
         {
@@ -436,7 +439,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     in_iterloop.pop();
     code[lsize].num=local.back().size();
     if(local.back().size()>=STACK_DEPTH)
-        die("too many local variants: "+std::to_string(local.back().size()),block.line());
+        die("too many local variants: "+std::to_string(local.back().size()),block.line(),0);
     local.pop_back();
 
     if(!block.size() || block.child().back().type()!=ast_ret)
@@ -472,7 +475,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
         {
             gen(op_callb,i,ast.line());
             if(local.empty())
-                die("should warp native functions in local scope",ast.line());
+                die("should warp native functions in local scope",ast.line(),ast.col());
             return;
         }
     i32 index;
@@ -491,7 +494,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
         gen(op_callg,index,ast.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",ast.line());
+    die("undefined symbol \""+str+"\"",ast.line(),ast.col());
 }
 
 void nasal_codegen::call_hash(const nasal_ast& ast)
@@ -588,7 +591,7 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
     for(u32 i=0;builtin[i].name;++i)
         if(builtin[i].name==str)
         {
-            die("cannot modify native function",ast.line());
+            die("cannot modify native function",ast.line(),ast.col());
             return;
         }
     i32 index;
@@ -607,7 +610,7 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
         gen(op_mcallg,index,ast.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",ast.line());
+    die("undefined symbol \""+str+"\"",ast.line(),ast.col());
 }
 
 void nasal_codegen::mcall_vec(const nasal_ast& ast)
@@ -1235,7 +1238,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     block_gen(parse.ast()); // generate main block
     gen(op_exit,0,0);
     if(global.size()>=STACK_DEPTH)
-        die("too many global variants: "+std::to_string(global.size()),0);
+        die("too many global variants: "+std::to_string(global.size()),0,0);
     nerr.chkerr();
 }
 

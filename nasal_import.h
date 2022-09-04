@@ -159,7 +159,7 @@ nasal_ast nasal_import::fimpt(nasal_ast& node)
     // avoid infinite loading loop
     filename=findf(filename);
     if(!filename.length() || exist(filename))
-        return {0,ast_root};
+        return {0,0,ast_root};
     
     // start importing...
     lex.scan(filename);
@@ -175,11 +175,11 @@ nasal_ast nasal_import::libimpt()
     nasal_parse par(nerr);
     string filename=findf("lib.nas");
     if(!filename.length())
-        return {0,ast_root};
+        return {0,0,ast_root};
 
     // avoid infinite loading loop
     if(exist(filename))
-        return {0,ast_root};
+        return {0,0,ast_root};
     
     // start importing...
     lex.scan(filename);
@@ -191,7 +191,7 @@ nasal_ast nasal_import::libimpt()
 
 nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
 {
-    nasal_ast new_root(0,ast_root);
+    nasal_ast new_root(0,0,ast_root);
     if(!lib_loaded)
     {
         linker(new_root,libimpt());
@@ -205,7 +205,7 @@ nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
             break;
     }
     // add root to the back of new_root
-    nasal_ast file_head(0,ast_file);
+    nasal_ast file_head(0,0,ast_file);
     file_head.set_num(fileindex);
     new_root.add(std::move(file_head));
     linker(new_root,std::move(root));

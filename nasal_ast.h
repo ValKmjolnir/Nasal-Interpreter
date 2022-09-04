@@ -129,12 +129,13 @@ class nasal_ast
 {
 private:
     u32 _line;
+    u32 _column;
     u32 _type;
     f64 _num;
     string _str;
     std::vector<nasal_ast> _child;
 public:
-    nasal_ast(const u32 l=0,const u32 t=ast_null):_line(l),_type(t),_num(0){}
+    nasal_ast(const u32 l,const u32 c,const u32 t):_line(l),_column(c),_type(t),_num(0){}
     nasal_ast(const nasal_ast&);
     nasal_ast(nasal_ast&&);
     void tree();
@@ -155,6 +156,7 @@ public:
     void set_num(const f64 n){_num=n;}
 
     inline u32 line() const {return _line;}
+    inline u32 col()  const {return _column;}
     inline u32 type() const {return _type;}
     inline f64 num()  const {return _num;}
     inline const string& str() const {return _str;}
@@ -166,6 +168,7 @@ nasal_ast::nasal_ast(const nasal_ast& tmp):
     _str(tmp._str),_child(tmp._child)
 {
     _line=tmp._line;
+    _column=tmp._column;
     _type=tmp._type;
     _num =tmp._num;
 }
@@ -173,6 +176,7 @@ nasal_ast::nasal_ast(const nasal_ast& tmp):
 nasal_ast::nasal_ast(nasal_ast&& tmp)
 {
     _line=tmp._line;
+    _column=tmp._column;
     _type=tmp._type;
     _num =tmp._num;
     _str.swap(tmp._str);
@@ -182,6 +186,7 @@ nasal_ast::nasal_ast(nasal_ast&& tmp)
 nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 {
     _line=tmp._line;
+    _column=tmp._column;
     _type=tmp._type;
     _num=tmp._num;
     _str=tmp._str;
@@ -192,6 +197,7 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
 nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
 {
     _line=tmp._line;
+    _column=tmp._column;
     _type=tmp._type;
     _num=tmp._num;
     _str.swap(tmp._str);
@@ -201,7 +207,7 @@ nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
 
 void nasal_ast::clear()
 {
-    _line=0;
+    _line=_column=0;
     _num=0;
     _str="";
     _type=ast_null;
