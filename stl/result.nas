@@ -1,29 +1,23 @@
 # result.nas
 # ValKmjolnir 2021
 
-var ResultTrait={
-    Ok:func(val){
-        me.ok=val;
-        me.flag=0;
-        return me;
-    },
-    Err:func(info){
-        me.err=info;
-        me.flag=1;
-        return me;
-    },
-    unwrap:func(){
-        if(me.flag)
-            die(me.err);
-        return me.ok;
-    }
-};
-
 var Result=func(){
+    var (ok,err,flag)=(nil,"",1);
     return{
-        ok:nil,
-        err:"",
-        flag:1,
-        parents:[ResultTrait]
+        Ok:func(val){
+            ok=val;
+            flag=0;
+            return me;
+        },
+        Err:func(info){
+            err=info;
+            flag=1;
+            return me;
+        },
+        unwrap:func(){
+            if(flag)
+                die(err);
+            return ok;
+        }
     };
 };
