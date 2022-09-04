@@ -249,7 +249,7 @@ void nasal_parse::check_memory_reachable(const nasal_ast& node)
         const nasal_ast& tmp=node.child().back();
         if(tmp.type()==ast_callf)
             die(tmp.line(),"bad left-value");
-        if(tmp.type()==ast_callv && (tmp.size()>1 || tmp[0].type()==ast_subvec))
+        if(tmp.type()==ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0].type()==ast_subvec))
             die(tmp.line(),"bad left-value");
     }
     else if(node.type()!=ast_id)
@@ -694,6 +694,8 @@ nasal_ast nasal_parse::callv()
         else if(tokens[ptr].type!=tok_rbracket && !check_comma(panic_set))
             break;
     }
+    if(node.size()==0)
+        die(node.line(),"expected index value");
     match(tok_rbracket,"expected ']' when calling vector");
     return node;
 }
