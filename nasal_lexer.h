@@ -142,12 +142,12 @@ void nasal_lexer::open(const string& file)
     struct stat buffer;
     if(stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode))
     {
-        nerr.err("lexer","<"+file+"> is not a regular file.");
+        nerr.err("lexer","<"+file+"> is not a regular file");
         nerr.chkerr();
     }
     std::ifstream fin(file,std::ios::binary);
     if(fin.fail())
-        nerr.err("lexer","failed to open <"+file+">.");
+        nerr.err("lexer","failed to open <"+file+">");
     else
         nerr.load(file);
     std::stringstream ss;
@@ -182,7 +182,7 @@ string nasal_lexer::utf8_gen()
                 string utf_info="0x"+chrhex(tmp[0]);
                 for(u32 i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
-                die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file.");
+                die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file");
                 std::exit(1);
             }
             str+=tmp;
@@ -224,7 +224,7 @@ string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0x"
-            die("invalid number `"+str+"`.");
+            die("invalid number `"+str+"`");
         return str;
     }
     // generate oct number
@@ -236,7 +236,7 @@ string nasal_lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0o"
-            die("invalid number `"+str+"`.");
+            die("invalid number `"+str+"`");
         return str;
     }
     // generate dec number
@@ -253,7 +253,7 @@ string nasal_lexer::num_gen()
         if(str.back()=='.')
         {
             column+=str.length();
-            die("invalid number `"+str+"`.");
+            die("invalid number `"+str+"`");
             return "0";
         }
     }
@@ -268,7 +268,7 @@ string nasal_lexer::num_gen()
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
         {
             column+=str.length();
-            die("invalid number `"+str+"`.");
+            die("invalid number `"+str+"`");
             return "0";
         }
     }
@@ -317,12 +317,12 @@ string nasal_lexer::str_gen()
     // check if this string ends with a " or '
     if(ptr++>=res.size())
     {
-        die("get EOF when generating string.");
+        die("get EOF when generating string");
         return str;
     }
     ++column;
     if(begin=='`' && str.length()!=1)
-        die("\'`\' is used for string that includes one character.");
+        die("\'`\' is used for string that includes one character");
     return str;
 }
 
@@ -369,7 +369,7 @@ void nasal_lexer::scan(const string& file)
             ++column;
             u32 type=get_type(str);
             if(!type)
-                die("invalid operator `"+str+"`.");
+                die("invalid operator `"+str+"`");
             tokens.push_back({line,column,type,str});
             ++ptr;
         }
@@ -397,7 +397,7 @@ void nasal_lexer::scan(const string& file)
         {
             ++column;
             char c=res[ptr++];
-            die("invalid character 0x"+chrhex(c)+".");
+            die("invalid character 0x"+chrhex(c));
         }
     }
     tokens.push_back({line,column,tok_eof,"eof"});

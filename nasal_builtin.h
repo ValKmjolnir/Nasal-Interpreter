@@ -279,11 +279,11 @@ nas_ref builtin_u32or(nas_ref* local,nasal_gc& gc)
 }
 nas_ref builtin_u32nand(nas_ref* local,nasal_gc& gc)
 {
-    return {vm_num,(f64)(~(u32(local[1].num())&u32(local[2].num())))};
+    return {vm_num,(f64)(u32)(~(u32(local[1].num())&u32(local[2].num())))};
 }
 nas_ref builtin_u32not(nas_ref* local,nasal_gc& gc)
 {
-    return {vm_num,(f64)(~u32(local[1].num()))};
+    return {vm_num,(f64)(u32)(~u32(local[1].num()))};
 }
 nas_ref builtin_pow(nas_ref* local,nasal_gc& gc)
 {

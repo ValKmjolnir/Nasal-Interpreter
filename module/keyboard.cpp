@@ -1,5 +1,4 @@
 #include "../nasal.h"
-#include "../nasal_gc.h"
 #include <unistd.h>
 #include <iostream>
 #ifdef _WIN32
@@ -63,7 +62,7 @@ public:
             peek_char=-1;
             return ch;
         }
-        read(0,&ch,1);
+        ssize_t tmp=read(0,&ch,1);
         return ch;
 #else
         return getch();

@@ -880,7 +880,7 @@ inline void nasal_vm::o_mcallv()
         }
     }
     else
-        die("cannot get memory space in other types");
+        die("cannot get memory space in this type");
 }
 inline void nasal_vm::o_mcallh()
 {

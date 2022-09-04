@@ -436,7 +436,7 @@ void nasal_codegen::func_gen(const nasal_ast& ast)
     in_iterloop.pop();
     code[lsize].num=local.back().size();
     if(local.back().size()>=STACK_DEPTH)
-        die("too many local variants: "+std::to_string(local.back().size())+".",block.line());
+        die("too many local variants: "+std::to_string(local.back().size()),block.line());
     local.pop_back();
 
     if(!block.size() || block.child().back().type()!=ast_ret)
@@ -472,7 +472,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
         {
             gen(op_callb,i,ast.line());
             if(local.empty())
-                die("builtin functions work in a local scope.",ast.line());
+                die("should warp native functions in local scope",ast.line());
             return;
         }
     i32 index;
@@ -491,7 +491,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
         gen(op_callg,index,ast.line());
         return;
     }
-    die("undefined symbol \""+str+"\".",ast.line());
+    die("undefined symbol \""+str+"\"",ast.line());
 }
 
 void nasal_codegen::call_hash(const nasal_ast& ast)
@@ -588,7 +588,7 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
     for(u32 i=0;builtin[i].name;++i)
         if(builtin[i].name==str)
         {
-            die("cannot change builtin function.",ast.line());
+            die("cannot modify native function",ast.line());
             return;
         }
     i32 index;
@@ -607,7 +607,7 @@ void nasal_codegen::mcall_id(const nasal_ast& ast)
         gen(op_mcallg,index,ast.line());
         return;
     }
-    die("undefined symbol \""+str+"\".",ast.line());
+    die("undefined symbol \""+str+"\"",ast.line());
 }
 
 void nasal_codegen::mcall_vec(const nasal_ast& ast)
@@ -1235,7 +1235,7 @@ void nasal_codegen::compile(const nasal_parse& parse,const nasal_import& import)
     block_gen(parse.ast()); // generate main block
     gen(op_exit,0,0);
     if(global.size()>=STACK_DEPTH)
-        die("too many global variants: "+std::to_string(global.size())+".",0);
+        die("too many global variants: "+std::to_string(global.size()),0);
     nerr.chkerr();
 }
 
