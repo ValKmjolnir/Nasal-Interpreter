@@ -50,10 +50,10 @@ func(){
         var bar=process_bar.bar("block","point","line",25);
         if(key!=nil and chr(key)=="q")
             break;
-        println("\e[1;1H Memory total(GB)    : \e[36m",mem.MemTotal/1024/1024,"\e[0m");
-        println("\e[2;1H Memory free(GB)     : \e[36m",mem.MemFree/1024/1024,"\e[0m");
-        println("\e[3;1H Memory occupation(%): ",mem_occ>60?"\e[91m":"\e[32m",bar.bar(mem_occ/100)~" ",mem_occ,"\e[0m         ");
-        println("\e[4;1H CPU occupation(%)   : ",cpu_occ>90?"\e[91m":"\e[32m",bar.bar(cpu_occ/100)~" ",cpu_occ,"\e[0m         ");
+        println("\e[1;1H\e[1m Memory total(GB)    : \e[0m\e[36m",mem.MemTotal/1024/1024,"\e[0m");
+        println("\e[2;1H\e[1m Memory free(GB)     : \e[0m\e[36m",mem.MemFree/1024/1024,"\e[0m");
+        println("\e[3;1H\e[1m Memory occupation(%): \e[0m",mem_occ>60?"\e[91m":"\e[32m",bar.bar(mem_occ/100)~" ",mem_occ,"\e[0m         ");
+        println("\e[4;1H\e[1m CPU occupation(%)   : \e[0m",cpu_occ>90?"\e[91m":"\e[32m",bar.bar(cpu_occ/100)~" ",cpu_occ,"\e[0m         ");
         println("\e[5;1H Press 'q' to quit.");
     }
 }();
