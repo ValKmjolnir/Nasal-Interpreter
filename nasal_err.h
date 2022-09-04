@@ -123,8 +123,13 @@ public:
         std::cerr<<bold_red<<stage<<": "
                  <<bold_white<<info<<reset<<"\n"
                  <<bold_cyan<<" --> "<<reset
-                 <<bold_orange<<file<<":"<<line<<":"<<column<<"\n"
-                 <<bold_cyan<<ident<<" | "<<reset<<"\n"
+                 <<bold_orange<<file<<":"<<line<<":"<<column<<"\n";
+        if(!line)
+        {
+            std::cerr<<"\n";
+            return;
+        }
+        std::cerr<<bold_cyan<<ident<<" | "<<reset<<"\n"
                  <<bold_cyan<<line<<" | "<<reset<<code<<"\n"
                  <<bold_cyan<<ident<<" | "<<reset;
         for(i32 i=0;i<(i32)column-1;++i)
@@ -138,8 +143,13 @@ public:
         std::cerr<<bold_red<<stage<<": "
                  <<bold_white<<info<<reset<<"\n"
                  <<bold_cyan<<" --> "<<reset
-                 <<bold_orange<<file<<":"<<line<<"\n"
-                 <<bold_cyan<<ident<<" | "<<reset<<"\n"
+                 <<bold_orange<<file<<":"<<line<<"\n";
+        if(!line)
+        {
+            std::cerr<<"\n";
+            return;
+        }
+        std::cerr<<bold_cyan<<ident<<" | "<<reset<<"\n"
                  <<bold_cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
                  <<bold_cyan<<ident<<" | "<<reset<<"\n\n";
     }
