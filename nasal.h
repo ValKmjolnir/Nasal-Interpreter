@@ -130,24 +130,26 @@ string rawstr(const string& str,const usize maxlen=0)
 #endif
         switch(i)
         {
-            case '\0': ret+="\\0"; break;
-            case '\a': ret+="\\a"; break;
-            case '\b': ret+="\\b"; break;
-            case '\t': ret+="\\t"; break;
-            case '\n': ret+="\\n"; break;
-            case '\v': ret+="\\v"; break;
-            case '\f': ret+="\\f"; break;
-            case '\r': ret+="\\r"; break;
-            case '\033':ret+="\\e";break;
-            case '\"': ret+="\\\"";break;
-            case '\'': ret+="\\\'";break;
-            case '\\': ret+="\\\\";break;
-            default:   ret+=i;     break;
+            case '\0':  ret+="\\0"; break;
+            case '\a':  ret+="\\a"; break;
+            case '\b':  ret+="\\b"; break;
+            case '\t':  ret+="\\t"; break;
+            case '\n':  ret+="\\n"; break;
+            case '\v':  ret+="\\v"; break;
+            case '\f':  ret+="\\f"; break;
+            case '\r':  ret+="\\r"; break;
+            case '\033':ret+="\\e"; break;
+            case '\"':  ret+="\\\"";break;
+            case '\'':  ret+="\\\'";break;
+            case '\\':  ret+="\\\\";break;
+            default:    ret+=i;     break;
         }
     }
     if(maxlen && ret.length()>maxlen)
         ret=ret.substr(0,maxlen)+"...";
     return ret;
 }
+
+#include "nasal_gc.h" // declarations of nas_ref and nasal_gc
 
 #endif

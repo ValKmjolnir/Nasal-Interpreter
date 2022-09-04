@@ -1,6 +1,5 @@
 #include <iostream>
 #include "../nasal.h"
-#include "../nasal_gc.h"
 
 double fibonaci(double x){
     if(x<=2)
