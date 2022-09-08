@@ -75,6 +75,7 @@ var testfile=[
     "utf8chk.nas",
     "watchdog.nas",
     "wavecollapse.nas",
+    "word_collector.nas",
     "ycombinator.nas"
 ];
 
@@ -94,6 +95,7 @@ var longest=func(vec...){
             len=size(f)>len?size(f):len;
     return len;
 }
+var padding_length=longest(source,lib,testfile,module);
 
 var getname=func(s){
     var (len,ch)=(size(s),' '[0]);
@@ -108,21 +110,29 @@ var count=func(s,c){
     return cnt;
 }
 
+var column=func(number){
+    number=number>=1000?int(number/1000)~'k':str(number);
+    return rightpad(number,6);
+}
+
 var calc=func(codetype,files,path=""){
     println(codetype);
     var (bytes,line,semi,line_cnt,semi_cnt)=(0,0,0,0,0);
-    var padding_length=longest(source,lib,testfile,module);
     forindex(var i;files){
         var s=io.fin(getname(path~files[i]));
         (line_cnt,semi_cnt)=(count(s,'\n'),count(s,';'));
-        println(rightpad(files[i],padding_length),
-            '| ',line_cnt,'\tline | ',semi_cnt,' \tsemi');
+        println(rightpad(files[i],padding_length),'| ',
+            column(line_cnt),'line | ',
+            column(semi_cnt),'semi | ',
+            rightpad(str(int(size(s)/1024)),6),'kb');
         bytes+=size(s);
         line+=line_cnt;
         semi+=semi_cnt;
     }
-    println('total:           | ',line,'\tline | ',semi,' \tsemi');
-    println('                 | ',int(bytes/1024),'\tkb');
+    println(rightpad("total:",padding_length),'| ',
+        column(line),'line | ',
+        column(semi),'semi | ',
+        rightpad(str(int(bytes/1024)),6),'kb');
     return int(bytes/1024);
 }
 
@@ -130,4 +140,4 @@ var all=calc("source code:",source)
     +calc("lib:",lib,"stl/")
     +calc("test file:",testfile,"test/")
     +calc("module:",module,"module/");
-println('\ntotal:           | ',all,'\tkb');
+println('\n',rightpad("total:",padding_length),'| ',rightpad(str(all),6),'kb');
