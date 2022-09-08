@@ -4,18 +4,18 @@ var os_time=func(){
 var err_hd=func(){
     return "[\e[91;1merror\e[0m] ";
 }
-var watching_hd=func(){
-    return "[\e[96;1mwatching\e[0m] ";
+var info_hd=func(){
+    return "[\e[96;1minfo\e[0m] ";
 }
 var modified_hd=func(){
     return "[\e[92;1mmodified\e[0m] ";
 }
 var usage=func(){
-    println(os_time(),"[\e[92;1musage\e[0m] \e[1mnasal watchdog.nas <filename>\e[0m");
+    println(os_time(),info_hd(),"\e[1musage: nasal watchdog.nas <filename> [\"argv\"]\e[0m");
 }
 
 var argv=runtime.argv();
-if(size(argv)!=1){
+if(size(argv)<1){
     println(os_time(),err_hd(),"\e[1mneed correct file path to watch\e[0m");
     usage();
     exit(-1);
@@ -27,8 +27,14 @@ if(!io.exists(filename)){
     exit(-1);
 }
 
+var args=[];
+if(size(argv)==2){
+    println(os_time(),info_hd(),"\e[1mwith argument(s) ",argv[1],"\e[0m");
+    args=split(" ",argv[1]);
+}
+
 var modified_time=fstat(filename).st_mtime;
-println(os_time(),watching_hd(),"\e[1m",filename," ..\e[0m");
+println(os_time(),info_hd(),"\e[1mwatching ",filename," ..\e[0m");
 while(1){
     unix.sleep(1);
     if(!io.exists(filename)){
@@ -39,9 +45,14 @@ while(1){
     if(latest_modified_time!=modified_time){
         modified_time=latest_modified_time;
         println(os_time(),modified_hd(),"\e[1m",filename,"\e[0m");
-        var ret=system((os.platform()=="windows"?"":"./")~"nasal "~filename);
+        var cmd=(os.platform()=="windows"?"":"./")~"nasal "~filename;
+        foreach(var i;args)
+            cmd~=" "~i;
+        var ret=system(cmd);
         if(ret!=0){
-            println(os_time(),err_hd(),"\e[1mprocess returned value ",ret,"\e[0m");
+            println(os_time(),err_hd(),"\e[1mprocess returned ",ret,"\e[0m");
+        }else{
+            println(os_time(),info_hd(),"\e[1mprocess returned ",ret,"\e[0m");
         }
     }
 }
