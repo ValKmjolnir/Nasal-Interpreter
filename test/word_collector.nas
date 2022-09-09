@@ -23,6 +23,7 @@ var to_lower=func(c){
         return c;
     elsif('A'[0]<=c[0] and c[0]<='Z'[0])
         return chr(c[0]-'A'[0]+'a'[0]);
+    return c;
 }
 
 var file_content="";
@@ -34,10 +35,11 @@ var s="";
 for(var i=0;i<len;i+=1){
     var n=file_content[i];
     var c=chr(n);
-    if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0]) or c=='\''[0] or c=='-'[0]){
+    if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0]) or n=='\''[0] or n=='-'[0]){
         s~=to_lower(c);
     }elsif(size(s)){
-        token[s]+=1;
+        if(s[0]!="-"[0] and s[0]!="'"[0] and s[-1]!="-"[0] and s[-1]!="'"[0])
+            token[s]+=1;
         s="";
     }
 }
