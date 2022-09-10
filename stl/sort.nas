@@ -1,18 +1,26 @@
 # sort.nas
 # valkmjolnir 2021/4/2
-var sort=func(vec,left,right,cmp=func(a,b){return a<=b;}){
-    if(left>=right) return nil;
-    var (L,R,tmp)=(left,right,vec[left]);
-    while(left<right){
-        while(left<right and cmp(tmp,vec[right]))
-            right-=1;
-        while(left<right and cmp(vec[left],tmp))
-            left+=1;
-        if(left!=right)
-            (vec[left],vec[right])=(vec[right],vec[left]);
+
+# please make sure the compare function has the function like <= or >=
+# only using < or > may cause infinite loop or the program may crash
+var sort=func(){
+    srand(); # be aware! this causes global changes
+    return func(vec,left,right,cmp=func(a,b){return a<=b;}){
+        if(left>=right) return nil;
+        var base=left+int(rand()*(right-left));
+        (vec[left],vec[base])=(vec[base],vec[left]);
+        var (i,j,tmp)=(left,right,vec[left]);
+        while(i!=j){
+            while(i<j and cmp(tmp,vec[j]))
+                j-=1;
+            vec[i]=vec[j];
+            while(i<j and cmp(vec[i],tmp))
+                i+=1;
+            vec[j]=vec[i];
+        }
+        vec[i]=tmp;
+        sort(vec,left,i-1,cmp);
+        sort(vec,i+1,right,cmp);
+        return nil;
     }
-    (vec[L],vec[left])=(vec[left],tmp);
-    sort(vec,L,left-1,cmp);
-    sort(vec,left+1,R,cmp);
-    return nil;
-}
+}();

@@ -117,22 +117,25 @@ var column=func(number){
 
 var calc=func(codetype,files,path=""){
     println(codetype);
-    var (bytes,line,semi,line_cnt,semi_cnt)=(0,0,0,0,0);
+    var (bytes,ctx,line,semi,line_cnt,semi_cnt)=(0,"",0,0,0,0);
     forindex(var i;files){
         var s=io.fin(getname(path~files[i]));
         (line_cnt,semi_cnt)=(count(s,'\n'),count(s,';'));
         println(rightpad(files[i],padding_length),'| ',
             column(line_cnt),'line | ',
             column(semi_cnt),'semi | ',
-            rightpad(str(int(size(s)/1024)),6),'kb');
+            rightpad(str(int(size(s)/1024)),6),'kb | ',
+            md5(s),' |');
         bytes+=size(s);
+        ctx~=s;
         line+=line_cnt;
         semi+=semi_cnt;
     }
     println(rightpad("total:",padding_length),'| ',
         column(line),'line | ',
         column(semi),'semi | ',
-        rightpad(str(int(bytes/1024)),6),'kb');
+        rightpad(str(int(bytes/1024)),6),'kb | ',
+        md5(ctx),' |\n');
     return int(bytes/1024);
 }
 
@@ -140,4 +143,4 @@ var all=calc("source code:",source)
     +calc("lib:",lib,"stl/")
     +calc("test file:",testfile,"test/")
     +calc("module:",module,"module/");
-println('\n',rightpad("total:",padding_length),'| ',rightpad(str(all),6),'kb');
+println(rightpad("total:",padding_length),'| ',rightpad(str(all),6),'kb');
