@@ -12,11 +12,11 @@ var fib=func(){
     }
     return;
 }
-# different coroutines don't share the same local scope
 var co=[coroutine.create(fib),coroutine.create(fib)];
 for(var i=0;i<45;i+=1){
     var res=[coroutine.resume(co[0]),coroutine.resume(co[1])];
-    println('co[0]: ',res[0]==nil?nil:res[0][0],'\nco[1]: ',res[1]==nil?nil:res[1][0]);
+    if(res[0]==nil or res[1]==nil or res[0][0]!=res[1][0])
+        die("different coroutines don't share the same local scope");
 }
 
 # test if coroutine can get upvalues
@@ -28,8 +28,11 @@ func(){
             x+=1;
         }
     });
-    for(var i=0;i<16;i+=1)
-        println(coroutine.resume(co));
+    for(var i=0;i<16;i+=1){
+        var res=coroutine.resume(co);
+        if(res==nil or res[0]!=x or res[1]!=i)
+            die("coroutine should have the ability to get upvalues");
+    }
 }();
 
 # pressure test
@@ -37,7 +40,7 @@ var productor=func(){
     for(var i=0;;i+=1)
         coroutine.yield(i);
 }
-var total=4000; # ms
+var total=1000; # ms
 var co=coroutine.create(productor);
 var tm=maketimestamp();
 
@@ -48,7 +51,7 @@ var consumer=func(){
     for(var i=0;i<5;i+=1)
         coroutine.resume(co);
     var rate=(tm.elapsedMSec()+1)/total;
-    print(bar.bar(rate)," ",rate*100,"%  \r");
+    print(bar.bar(rate)," ",rate*100,"%     \r");
 }
 
 tm.stamp();

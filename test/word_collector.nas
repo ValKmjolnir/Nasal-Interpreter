@@ -15,7 +15,7 @@ foreach(var f;argv){
 }
 
 if(!all_exists){
-    exit(-1);;
+    exit(-1);
 }
 
 var to_lower=func(c){
@@ -45,5 +45,5 @@ for(var i=0;i<len;i+=1){
 }
 
 var vec=keys(token);
-sort(vec,0,size(vec)-1,func(a,b){return cmp(a,b)<=0;});
+sort(vec,func(a,b){return cmp(a,b)<=0;});
 println(vec);
