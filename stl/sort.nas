@@ -5,7 +5,7 @@
 # only using < or > may cause infinite loop or the program may crash
 var sort=func(){
     srand(); # be aware! this causes global changes
-    return func(vec,left,right,cmp=func(a,b){return a<=b;}){
+    var quick_sort_core=func(vec,left,right,cmp){
         if(left>=right) return nil;
         var base=left+int(rand()*(right-left));
         (vec[left],vec[base])=(vec[base],vec[left]);
@@ -19,8 +19,12 @@ var sort=func(){
             vec[j]=vec[i];
         }
         vec[i]=tmp;
-        sort(vec,left,i-1,cmp);
-        sort(vec,i+1,right,cmp);
+        quick_sort_core(vec,left,i-1,cmp);
+        quick_sort_core(vec,i+1,right,cmp);
+        return nil;
+    }
+    return func(vec,cmp=func(a,b){return a<=b;}){
+        quick_sort_core(vec,0,size(vec)-1,cmp);
         return nil;
     }
 }();
