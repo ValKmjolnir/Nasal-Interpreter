@@ -125,66 +125,78 @@ struct opcode
         line=tmp.line;
         return *this;
     }
-    void print(const char*,
-               const f64*,
-               const string*,
-               const u32,bool) const;
 };
 
-void opcode::print(const char* header,
-                   const f64* constnum,
-                   const string* conststr,
-                   const u32 index,
-                   bool deftnum=false) const
+class codestream
 {
-    std::cout<<bold_cyan<<header<<reset<<std::hex<<"0x"
-             <<std::setw(8)<<std::setfill('0')<<index<<":       "
-             <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
-             <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
-             <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
-             <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
-             <<std::setw(2)<<std::setfill('0')<<(num&0xff)
-             <<"        "<<code_table[op]<<"  "<<std::dec;
-    switch(op)
+private:
+    opcode code;
+    const u32 index;
+    const f64* nums;
+    const string* strs;
+    const string* files;
+public:
+    codestream(const opcode& c,const u32 i,const f64* n,const string* s,const string* f=nullptr):
+        code(c.op,c.fidx,c.num,c.line),index(i),nums(n),strs(s),files(f){}
+    friend std::ostream& operator<<(std::ostream& out,const codestream& ins)
     {
-        case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
-        case op_lnkeq: case op_meq:
-            std::cout<<std::hex<<"0x"<<num<<std::dec
-                     <<" sp-"<<num;break;
-        case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            std::cout<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec
-                     <<" ("<<constnum[num&0x7fffffff]<<") sp-"
-                     <<(num>>31);break;
-        case op_lnkeqc:
-            std::cout<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec<<" (\""
-                     <<rawstr(conststr[num&0x7fffffff],16)<<"\") sp-"
-                     <<(num>>31);break;
-        case op_addc:  case op_subc:   case op_mulc:  case op_divc:
-        case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
-        case op_pnum:
-            std::cout<<std::hex<<"0x"<<num<<std::dec<<" ("
-                     <<constnum[num]<<")";break;
-        case op_callvi:case op_newv:   case op_callfv:
-        case op_intg:  case op_intl:
-        case op_newf:  case op_jmp:    case op_jt:    case op_jf:
-        case op_callg: case op_mcallg: case op_loadg:
-        case op_calll: case op_mcalll: case op_loadl:
-            std::cout<<std::hex<<"0x"<<num<<std::dec;break;
-        case op_callb:
-            std::cout<<std::hex<<"0x"<<num<<" <"<<builtin[num].name
-                     <<"@0x"<<(u64)builtin[num].func<<std::dec<<">";break;
-        case op_upval: case op_mupval: case op_loadu:
-            std::cout<<std::hex<<"0x"<<((num>>16)&0xffff)
-                     <<"[0x"<<(num&0xffff)<<"]"<<std::dec;break;
-        case op_happ:  case op_pstr:
-        case op_lnkc:
-        case op_callh: case op_mcallh:
-        case op_para:  case op_deft:   case op_dyn:
-            std::cout<<std::hex<<"0x"<<num<<std::dec
-                     <<" (\""<<rawstr(conststr[num],16)<<"\")";break;
-        default:if(deftnum)std::cout<<std::hex<<"0x"<<num<<std::dec;break;
+        u8  op=ins.code.op;
+        u32 num=ins.code.num;
+        out<<std::hex<<"0x"
+           <<std::setw(8)<<std::setfill('0')<<ins.index<<"      "
+           <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
+           <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
+           <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
+           <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
+           <<std::setw(2)<<std::setfill('0')<<(num&0xff)<<"      "
+           <<code_table[op]<<"  "<<std::dec;
+        switch(op)
+        {
+            case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
+            case op_lnkeq: case op_meq:
+                out<<std::hex<<"0x"<<num<<std::dec
+                   <<" sp-"<<num;break;
+            case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
+                out<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec
+                   <<" ("<<ins.nums[num&0x7fffffff]<<") sp-"
+                   <<(num>>31);break;
+            case op_lnkeqc:
+                out<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec<<" (\""
+                   <<rawstr(ins.strs[num&0x7fffffff],16)<<"\") sp-"
+                   <<(num>>31);break;
+            case op_addc:  case op_subc:   case op_mulc:  case op_divc:
+            case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
+            case op_pnum:
+                out<<std::hex<<"0x"<<num<<std::dec<<" ("
+                   <<ins.nums[num]<<")";break;
+            case op_callvi:case op_newv:   case op_callfv:
+            case op_intg:  case op_intl:
+            case op_newf:  case op_jmp:    case op_jt:    case op_jf:
+            case op_callg: case op_mcallg: case op_loadg:
+            case op_calll: case op_mcalll: case op_loadl:
+                out<<std::hex<<"0x"<<num<<std::dec;break;
+            case op_callb:
+                out<<std::hex<<"0x"<<num<<" <"<<builtin[num].name
+                   <<"@0x"<<(u64)builtin[num].func<<std::dec<<">";break;
+            case op_upval: case op_mupval: case op_loadu:
+                out<<std::hex<<"0x"<<((num>>16)&0xffff)
+                   <<"[0x"<<(num&0xffff)<<"]"<<std::dec;break;
+            case op_happ:  case op_pstr:
+            case op_lnkc:
+            case op_callh: case op_mcallh:
+            case op_para:  case op_deft:   case op_dyn:
+                out<<std::hex<<"0x"<<num<<std::dec
+                   <<" (\""<<rawstr(ins.strs[num],16)<<"\")";break;
+            default:
+                if(ins.files)
+                    out<<std::hex<<"0x"<<num<<std::dec;
+                break;
+        }
+        if(ins.files)
+            out<<" ("<<ins.files[ins.code.fidx]<<":"<<ins.code.line<<")";
+        return out;
     }
-}
+};
 
 class nasal_codegen
 {
@@ -1265,8 +1277,7 @@ void nasal_codegen::singleop(const u32 index)
                 break;
             }
     }
-    c.print("  ",num_res.data(),str_res.data(),index);
-    std::cout<<"\n";
+    std::cout<<"  "<<codestream(c,index,num_res.data(),str_res.data())<<"\n";
 }
 
 void nasal_codegen::print()

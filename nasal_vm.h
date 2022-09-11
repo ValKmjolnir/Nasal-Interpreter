@@ -3,8 +3,7 @@
 
 #include <iomanip>
 #include <stack>
-
-#include "nasal_err.h"
+#include "nasal_codegen.h"
 
 class nasal_vm
 {
@@ -39,7 +38,6 @@ protected:
     /* debug functions */
     bool detail_info;
     void valinfo(nas_ref&);
-    void bytecodeinfo(const char*,const u32);
     void traceback();
     void stackinfo(const u32);
     void reginfo();
@@ -200,22 +198,17 @@ void nasal_vm::valinfo(nas_ref& val)
     }
     std::cout<<"\n";
 }
-void nasal_vm::bytecodeinfo(const char* header,const u32 p)
-{
-    const opcode& c=bytecode[p];
-    c.print(header,num_table,str_table,p,true);
-    std::cout<<" ("<<files[c.fidx]<<":"<<c.line<<")\n";
-}
 void nasal_vm::traceback()
 {
-    nas_ref* bottom=stack+bytecode[0].num; // bytecode[0] is op_intg
-    nas_ref* main_ctx_top=gc.stack==stack?top:gc.mctx.top; // if error occurs in coroutine, this works
+    /* bytecode[0].num is the global size */
+    nas_ref* bottom=gc.stack==stack?stack+bytecode[0].num:gc.stack;
+    nas_ref* ctx_top=gc.stack==stack?top:gc.top;
     std::stack<u32> ret;
-    for(nas_ref* i=bottom;i<=main_ctx_top;++i)
-        if(i->type==vm_ret)
+    for(nas_ref* i=bottom;i<=ctx_top;++i)
+        if(i->type==vm_ret && i->ret()!=0)
             ret.push(i->ret());
     ret.push(pc); // store the position program crashed
-    std::cout<<"trace back:\n";
+    std::cout<<"trace back ("<<(gc.stack==stack?"main":"coroutine")<<")\n";
     for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop())
     {
         if((p=ret.top())==prev)
@@ -228,18 +221,18 @@ void nasal_vm::traceback()
             <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
             <<prev<<std::dec<<":       "<<same<<" same call(s)\n";
         same=0;
-        bytecodeinfo("  ",p);
+        std::cout<<"  "<<codestream(bytecode[p],p,num_table,str_table,files)<<"\n";
     }
     // the first called place has no same calls
 }
 void nasal_vm::stackinfo(const u32 limit=10)
 {
     /* bytecode[0].num is the global size */
-    u32      gsize=gc.stack==stack?bytecode[0].num:0;
-    nas_ref* t=top;
-    nas_ref* bottom=gc.stack+gsize;
-    std::cout<<"vm stack(0x"<<std::hex<<(u64)bottom<<std::dec
-             <<"<sp+"<<gsize<<">, limit "<<limit<<", total "
+    const u32 gsize=gc.stack==stack?bytecode[0].num:0;
+    nas_ref*  t=top;
+    nas_ref*  bottom=gc.stack+gsize;
+    std::cout<<"vm stack (0x"<<std::hex<<(u64)bottom<<std::dec
+             <<" <sp+"<<gsize<<">, limit "<<limit<<", total "
              <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
     for(u32 i=0;i<limit && t>=bottom;++i,--t)
     {
@@ -251,7 +244,7 @@ void nasal_vm::stackinfo(const u32 limit=10)
 }
 void nasal_vm::reginfo()
 {
-    std::cout<<"registers("<<(gc.cort?"coroutine":"main")<<")\n"<<std::hex
+    std::cout<<"registers ("<<(gc.cort?"coroutine":"main")<<")\n"<<std::hex
              <<"  [ pc     ]    | pc   | 0x"<<pc<<"\n"
              <<"  [ global ]    | addr | 0x"<<(u64)stack<<"\n"
              <<"  [ localr ]    | addr | 0x"<<(u64)localr<<"\n"
@@ -266,7 +259,7 @@ void nasal_vm::gstate()
 {
     if(!bytecode[0].num || stack[0].type==vm_none) // bytecode[0].op is op_intg
         return;
-    std::cout<<"global(0x"<<std::hex<<(u64)stack<<"<sp+0>)\n"<<std::dec;
+    std::cout<<"global (0x"<<std::hex<<(u64)stack<<" <sp+0>)\n"<<std::dec;
     for(u32 i=0;i<bytecode[0].num;++i)
     {
         std::cout<<"  0x"<<std::hex<<std::setw(8)
@@ -279,8 +272,8 @@ void nasal_vm::lstate()
     if(!localr || !funcr.func().lsize)
         return;
     const u32 lsize=funcr.func().lsize;
-    std::cout<<"local(0x"<<std::hex<<(u64)localr
-             <<"<sp+"<<(u64)(localr-gc.stack)<<">)\n"<<std::dec;
+    std::cout<<"local (0x"<<std::hex<<(u64)localr
+             <<" <sp+"<<(u64)(localr-gc.stack)<<">)\n"<<std::dec;
     for(u32 i=0;i<lsize;++i)
     {
         std::cout<<"  0x"<<std::hex<<std::setw(8)
@@ -317,9 +310,7 @@ void nasal_vm::detail()
 [[noreturn]]
 void nasal_vm::die(const string& str)
 {
-    std::cout<<bold_red<<"[vm] error: "
-             <<bold_white<<str<<"\n"
-             <<reset;
+    std::cout<<"[vm] error: "<<str<<"\n";
     traceback();
     stackinfo();
     if(detail_info)

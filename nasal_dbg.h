@@ -113,19 +113,21 @@ void nasal_dbg::callsort(const u64* arr)
 
 void nasal_dbg::stepinfo()
 {
-    u32 begin,end;
     u32 line=bytecode[pc].line==0?0:bytecode[pc].line-1;
+    u32 begin=(line>>3)==0?0:((line>>3)<<3);
+    u32 end=(1+(line>>3))<<3;
     src.load(files[bytecode[pc].fidx]);
     std::cout<<"\nsource code:\n";
-    begin=(line>>3)==0?0:((line>>3)<<3);
-    end=(1+(line>>3))<<3;
     for(u32 i=begin;i<end && i<src.size();++i)
-        std::cout<<bold_cyan<<(i==line?"-->  ":"     ")<<reset<<src[i]<<"\n";
+        std::cout<<(i==line?back_white:reset)<<(i==line?"--> ":"    ")<<src[i]<<reset<<"\n";
     std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i)
-        bytecodeinfo(i==pc?"-->  ":"     ",i);
+        std::cout
+        <<(i==pc?back_white:reset)<<(i==pc?"--> ":"    ")
+        <<codestream(bytecode[i],i,num_table,str_table,files)
+        <<reset<<"\n";
     stackinfo(10);
 }
 

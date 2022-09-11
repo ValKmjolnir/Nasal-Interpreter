@@ -723,9 +723,7 @@ void nasal_gc::ctxreserve()
 // use to print error log and return error value
 nas_ref nas_err(const string& err_f,const string& info)
 {
-    std::cerr<<bold_red<<"[vm] "<<err_f<<": "
-             <<bold_white<<info<<"\n"
-             <<reset;
+    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
     return {vm_none};
 }
 #endif
