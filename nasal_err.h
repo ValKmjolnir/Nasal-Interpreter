@@ -17,6 +17,15 @@ struct for_reset
 }reset_ter_color;
 #endif
 
+std::ostream& back_white(std::ostream& s)
+{
+#ifdef _WIN32
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0xf0);
+#else
+    s<<"\033[7m";
+#endif
+    return s;
+}
 std::ostream& bold_red(std::ostream& s)
 {
 #ifdef _WIN32
@@ -74,23 +83,18 @@ public:
         if(file==f) return; // don't need to load a loaded file
         file=f;
         res.clear();
-        std::ifstream fin(f,std::ios::binary);
-        if(fin.fail())
+        std::ifstream in(f,std::ios::binary);
+        if(in.fail())
         {
             std::cerr<<bold_red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
             std::exit(1);
         }
         string line;
-        while(!fin.eof())
+        while(!in.eof())
         {
-            std::getline(fin,line);
+            std::getline(in,line);
             res.push_back(line);
         }
-    }
-    void clear()
-    {
-        std::vector<string> tmp;
-        res.swap(tmp);
     }
     const string& operator[](usize n){return res[n];}
     const string& name(){return file;}
