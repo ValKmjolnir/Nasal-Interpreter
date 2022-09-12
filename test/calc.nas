@@ -57,6 +57,7 @@ var testfile=[
     "loop.nas",
     "mandel.nas",
     "mandelbrot.nas",
+    "mcpu.nas",
     "md5.nas",
     "md5compare.nas",
     "module_test.nas",
@@ -97,12 +98,6 @@ var longest=func(vec...){
 }
 var padding_length=longest(source,lib,testfile,module);
 
-var getname=func(s){
-    var (len,ch)=(size(s),' '[0]);
-    for(var i=0;i<len and s[i]!=ch;i+=1);
-    return substr(s,0,i);
-}
-
 var count=func(s,c){
     var cnt=0;
     foreach(var i;split(c,s))
@@ -119,7 +114,7 @@ var calc=func(codetype,files,path=""){
     println(codetype);
     var (bytes,ctx,line,semi,line_cnt,semi_cnt)=(0,"",0,0,0,0);
     forindex(var i;files){
-        var s=io.fin(getname(path~files[i]));
+        var s=io.exists(path~files[i])?io.fin(path~files[i]):"";
         (line_cnt,semi_cnt)=(count(s,'\n'),count(s,';'));
         println(rightpad(files[i],padding_length),'| ',
             column(line_cnt),'line | ',

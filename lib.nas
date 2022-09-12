@@ -49,7 +49,7 @@ var id=func(object){
     return __id(object);
 }
 
-# int will get the integer of input number.
+# int will get the integer of input number/string.
 # but carefully use it, because int has range between -2147483648~2147483647
 var int=func(val){
     return __int(val);
