@@ -51,6 +51,7 @@ var filechecksum=func(){
         "./test/leetcode1319.nas",  "./test/lexer.nas",
         "./test/life.nas",          "./test/loop.nas",
         "./test/mandel.nas",        "./test/mandelbrot.nas",
+        "./test/mcpu.nas",
         "./test/md5.nas",           "./test/md5compare.nas",
         "./test/module_test.nas",   "./test/nasal_test.nas",
         "./test/occupation.nas",    "./test/pi.nas",

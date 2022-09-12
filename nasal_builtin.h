@@ -193,9 +193,9 @@ nas_ref builtin_id(nas_ref* local,nasal_gc& gc)
 nas_ref builtin_int(nas_ref* local,nasal_gc& gc)
 {
     nas_ref val=local[1];
-    if(val.type!=vm_num)
+    if(val.type!=vm_num && val.type!=vm_str)
         return nil;
-    return {vm_num,f64((i32)val.num())};
+    return {vm_num,f64((i32)val.tonum())};
 }
 nas_ref builtin_floor(nas_ref* local,nasal_gc& gc)
 {
