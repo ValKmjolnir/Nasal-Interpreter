@@ -99,6 +99,8 @@ it will be harder for me to make the bytecode vm become more efficient.
 
 ## __Bytecode Virtual Machine__
 
+![op](../doc/gif/opcode.gif)
+
 ### version 4.0 vm (last update 2020/12/17)
 
 I have just finished the first version of bytecode-interpreter.
