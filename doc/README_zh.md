@@ -1,19 +1,11 @@
 # __Nasal 脚本语言__
 
-```C++
-       __                _
-    /\ \ \__ _ ___  __ _| |
-   /  \/ / _` / __|/ _` | |
-  / /\  / (_| \__ \ (_| | |
-  \_\ \/ \__,_|___/\__,_|_|
-```
-
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v10.1-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](../LICENSE)
 
-> 这篇文档包含多种语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
+> 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
 ## __目录__
 
@@ -38,16 +30,16 @@ __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
 是一个与ECMAscript标准语法设计相似的编程语言，并且作为运行脚本被著名的开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所依赖。
 该语言的设计者和初版解释器实现者为 [Andy Ross](https://github.com/andyross)。
 
-这个解释器项目则由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++11`)重新实现，没有复用 [Andy Ross的nasal解释器](<https://github.com/andyross/nasal>) 中的任何一行代码。尽管没有任何的参考代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
+这个解释器项目则由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有任何的参考代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
 
-现在这个项目已经使用 __MIT 协议__ 开源 (2021/5/4)。根据该协议的内容，你们可以根据自己的需求进行修改，使用它来学习或者创造更多有趣的东西(不过可别忘了，如果要开源必须要附带本项目拥有者的相关信息)。
+该项目已经使用 __MIT__ 协议开源 (2021/5/4)。
 
 __我们为什么想要重新写一个nasal解释器?__
-这是个很偶然的想法。2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试实在是太费劲了，有时候只是想检查语法错误，也得花费时间打开这个软件等待加载进去之后进行调试。所以我就想，也许可以写一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
+2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
 
-我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机(曾经我们使用ast解释器来直接在抽象语法树中执行，然而在v4.0之后这个解释器已经淘汰)，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误非常快捷，远比每次都需要复制nasal代码到Flightgear的nasal控制台中去查看要方便，且错误信息清晰直观。
+我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误提高了我们的工作效率。
 
-当然，你也可以使用这个语言来写一些与Flightgear运行环境无关的其他有趣的程序，并用这个解释器来执行，让这个语言脱离Flightgear的环境，去别的地方大展身手。你也可以编写你自己的模块，让nasal来调用，使得这个语言成为你的项目中一个非常有用的工具。
+你也可以使用这个语言来写一些与Flightgear运行环境无关的有趣的程序，并用这个解释器来执行。你也可以让解释器来调用你自己编写的模块，使它成为项目中一个非常有用的工具。
 
 ## __编译__
 
@@ -60,55 +52,37 @@ __我们为什么想要重新写一个nasal解释器?__
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
 我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧因此你可以非常快速地将它编译出来。
+__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之前请阅读[__发行日志__](../doc/dev_zh.md#发行日志)以保证这个发行版的文件中不包含非常严重的bug。
 
-__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之前请阅读[__发行日志__](../doc/dev_zh.md#发行日志)以保证这个发行版的文件中不包含非常严重的bug(有的严重bug都是在发行之后才发现，非常搞心态)。在发行版日志中我们会告知如何在代码中手动修复这个严重的bug。
+`Windows` 用户通过 g++(`MinGW-w64`) 或者使用 MSVC(`Visual Studio`) 来进行编译。
 
-__`Windows`__ 用户通过g++(`MinGW-w64`)使用以下命令或者使用MSVC(`Visual Studio`)来进行编译. 没有编译环境的请在[__这里__](https://www.mingw-w64.org/downloads/)下载MinGW-w64。(VS同样也有MinGW-w64)
-__`linux/macOS/Unix`__ 用户可以使用g++或者clang++替代下面命令中中括号的部分来进行编译(我们建议您使用`clang`)。
+`Linux/macOS/Unix` 用户可以使用 g++ 或者 clang++ 来进行编译 (建议您使用 `clang`)。
 
-使用makefile我们就可以编译这个解释器。
-
-`mingw32-make`是 __`Windows(MinGW-w64)`__ 平台的`make`:
+`Windows` 平台(`MinGW-w64`):
 
 > mingw32-make nasal.exe
->
-> mingw32-make.exe nasal.exe
 
-__`linux/macOS/Unix`__ 平台直接使用make即可:
+你也可以在`Visual Studio`中用这种方式来创建项目：[__点击跳转__](../doc/vs.md)。
+
+`Linux/macOS/Unix` 平台:
 
 > make nasal
 
 你也可以通过如下的其中一行命令来指定你想要使用的编译器：
 
-> make nasal CXX=clang++
->
-> make nasal CXX=g++
->
 > make nasal CXX=...
 
 如果你觉得`-O3`编译的版本不是那么安全和稳定，你也可以选择生成稳定的版本：
 
 > make stable-release
->
-> mingw32-make stable-release-mingw
-
-你可以在`Visual Studio`中用这种方式来创建项目：[__点击跳转__](../doc/vs.md)。
 
 ## __使用方法__
 
 首先我们要通过[__教程__](#教程)知道这个语言的语法以及如何使用这个解释器来运行nasal程序。
 
-使用这个命令查看解释器的版本:
+下面这个命令可以用于查看使用方法:
 
-> ./nasal
-
-输入下面的命令来 __直接__ 执行:
-
-> ./nasal filename
-
-下面两个命令可以用于查看帮助(调试器的使用方法可以进入调试模式之后根据提示来查询):
-
-> ./nasal -h | --help
+> ./nasal -h
 
 如果你的操作系统是 __`Windows`__ 并且你想输出unicode，请保证你的控制台程序的代码页支持utf-8，若不支持，使用下面这个命令启用代码页:
 
@@ -638,7 +612,6 @@ Windows(`.dll`):
 好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了。下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样我们可以对不同系统进行适配:
 
 ```javascript
-import("lib.nas");
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib=dylib.dlsym(dlhandle,"fib");
 for(var i=1;i<30;i+=1)
@@ -693,14 +666,13 @@ dylib.dlclose(dlhandle);
 
 ## __与andy解释器的不同之处__
 
-### 1. 必须用`var`定义变量
+<details><summary>必须用 var 定义变量</summary>
 
 这个解释器使用了更加严格的语法检查来保证你可以更轻松地debug。这是非常有必要的严格，否则debug会非常痛苦。
 
 在Andy的解释器中:
 
 ```javascript
-import("lib.nas");
 foreach(i;[0,1,2,3])
     print(i)
 ```
@@ -710,21 +682,48 @@ foreach(i;[0,1,2,3])
 所以在这个解释器中，我直接使用严格的语法检查方法来强行要求用户必须要使用`var`来定义新的变量或者迭代器。如果你忘了加这个关键字，那么你就会得到这个:
 
 ```javascript
-[code] test.nas:2 undefined symbol "i".
-foreach(i;[0,1,2,3])
-[code] test.nas:3 undefined symbol "i".
-    print(i)
-```
+code: undefined symbol "i"
+ --> test.nas:1:9
+  | 
+1 | foreach(i;[0,1,2,3])
+  |         ^ undefined symbol "i"
 
-### 2. 默认不定长参数
+code: undefined symbol "i"
+ --> test.nas:2:11
+  | 
+2 |     print(i)
+  |           ^ undefined symbol "i"
+```
+</details>
+
+<details><summary>默认不定长参数</summary>
 
 这个解释器在运行时，函数不会将超出参数表的那部分不定长参数放到默认的`arg`中。所以你如果不定义`arg`就使用它，那你只会得到`undefined symbol`。
+
+```javascript
+var f=func(){
+    println(arg)
+}
+f(1,2,3);
+```
+
+编译结果:
+
+```javascript
+code: undefined symbol "arg"
+ --> test.nas:2:15
+  | 
+2 |     println(arg)
+  |               ^ undefined symbol "arg"
+```
+
+</details>
 
 ## __堆栈追踪信息__
 
 当解释器崩溃时,它会反馈错误产生过程的堆栈追踪信息:
 
-<details><summary>1. 内置函数die</summary>
+<details><summary>内置函数 die</summary>
 
 `die`函数用于直接抛出错误并终止执行。
 
@@ -742,10 +741,10 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
+  0x000000ac      40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
+  0x000004f6      3e 00 00 00 01      callfv 0x1 (a.nas:4)
+  0x000004fa      3e 00 00 00 00      callfv 0x0 (a.nas:6)
+vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
   0x0000005b    | null |
   ...
   0x00000057    | str  | <0x138ff60> error occurred t...
@@ -755,7 +754,7 @@ vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
 
 </details>
 
-<details><summary>2. 栈溢出</summary>
+<details><summary>栈溢出</summary>
 
 这是一个会导致栈溢出的例子:
 
@@ -772,11 +771,11 @@ func(f){
 ```javascript
 [vm] stack overflow
 trace back:
-        0x000004fb:     3e 00 00 00 01      callfv 0x1 (a.nas:5)
-        0x000004fb:     1349 same call(s)
-        0x000004f3:     3e 00 00 00 01      callfv 0x1 (a.nas:2)
-        0x000004ff:     3e 00 00 00 01      callfv 0x1 (a.nas:3)
-vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
+  0x000004fb      3e 00 00 00 01      callfv 0x1 (a.nas:5)
+  0x000004fb      1349 same call(s)
+  0x000004f3      3e 00 00 00 01      callfv 0x1 (a.nas:2)
+  0x000004ff      3e 00 00 00 01      callfv 0x1 (a.nas:3)
+vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
   0x00001ffb    | func | <0x15f8d90> entry:0x4f9
   0x00001ffa    | func | <0x15f8d90> entry:0x4f9
   0x00001ff9    | pc   | 0x4fb
@@ -786,7 +785,7 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
 
 </details>
 
-<details><summary>3. 运行时错误</summary>
+<details><summary>运行时错误</summary>
 
 如果在执行的时候出现错误，程序会直接终止执行:
 
@@ -799,49 +798,49 @@ func(){
 ```javascript
 [vm] callv: must call a vector/hash/string
 trace back:
-        0x000004f4:     3b 00 00 00 00      callv  0x0 (a.nas:3)
-vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
+  0x000004f4      3b 00 00 00 00      callv  0x0 (a.nas:3)
+vm stack (0x7fffff539c28 <sp+80>, limit 10, total 1):
   0x00000050    | num  | 0
 ```
 
 </details>
 
-<details><summary>4. 详细的崩溃信息</summary>
+<details><summary>详细的崩溃信息</summary>
 
 使用命令 __`-d`__ 或 __`--detail`__ 后，trace back信息会包含更多的细节内容:
 
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] native function error.
-trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
-  0x0000005b    | null |
-  0x0000005a    | pc   | 0x4f6
-  0x00000059    | addr | 0x7ffff42f3d18
+[vm] error: native function error
+trace back (main)
+  0x000000b0      40 00 00 00 2b      callb   0x2b <__die@0x41c380> (lib.nas:131)
+  0x00000553      3e 00 00 00 01      callfv  0x1 (test.nas:4)
+  0x00000557      3e 00 00 00 00      callfv  0x0 (test.nas:6)
+vm stack (0x7fffe0ffed90 <sp+63>, limit 10, total 12)
+  0x0000004a    | null |
+  0x00000049    | pc   | 0x553
+  0x00000048    | addr | 0x7fffe0ffeda0
   ...
-  0x00000052    | nil  |
-registers(main):
-  [ pc     ]    | pc   | 0xac
-  [ global ]    | addr | 0x7ffff42f3808
-  [ localr ]    | addr | 0x7ffff42f3d68
+  0x00000041    | nil  |
+registers (main)
+  [ pc     ]    | pc   | 0xb0
+  [ global ]    | addr | 0x7fffe0ffe9a0
+  [ localr ]    | addr | 0x7fffe0ffedf0
   [ memr   ]    | addr | 0x0
-  [ funcr  ]    | func | <0x18fbe50> entry:0xac
+  [ canary ]    | addr | 0x7fffe1002990
+  [ top    ]    | addr | 0x7fffe0ffee40
+  [ funcr  ]    | func | <0x677cd0> entry:0xb0
   [ upvalr ]    | nil  |
-  [ canary ]    | addr | 0x7ffff43137f8
-  [ top    ]    | addr | 0x7ffff42f3db8
-global(0x7ffff42f3808<sp+0>):
-  0x00000000    | func | <0x18d62d0> entry:0x5
-  0x00000001    | func | <0x18d7e40> entry:0xc
+global (0x7fffe0ffe9a0 <sp+0>)
+  0x00000000    | func | <0x65fb00> entry:0x5
+  0x00000001    | func | <0x65fb20> entry:0xd
   ...
-  0x0000004e    | func | <0x18e6710> entry:0x4c2
-  0x0000004f    | hash | <0x191f8b0> {5 val}
-local(0x7ffff42f3d68<sp+86>):
+  0x0000003d    | func | <0x66bf00> entry:0x51f
+  0x0000003e    | hash | <0x65ffa0> {5 val}
+local (0x7fffe0ffedf0 <sp+45>)
   0x00000000    | nil  |
-  0x00000001    | str  | <0x1932480> error occurred t...
+  0x00000001    | str  | <0x6cb630> error occurred t...
 ```
 
 </details>
@@ -851,49 +850,71 @@ local(0x7ffff42f3d68<sp+86>):
 在`v8.0`版本中我们添加了调试器。
 使用这个命令`./nasal -dbg xxx.nas`来启用调试器，接下来调试器会打开文件并输出以下内容:
 
+<details><summary>展开</summary>
+
 ```javascript
 [debug] nasal debug mode
 input 'h' to get help
 
 source code:
--->  var fib=func(x)
-     {
+--> var fib=func(x)
+    {
         if(x<2) return x;
         return fib(x-1)+fib(x-2);
-     }
-     for(var i=0;i<31;i+=1)
+    }
+    for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
 next bytecode:
--->  0x00000000:       01 00 00 00 50        intg    0x50 (test/fib.nas:0)
-     0x00000001:       0b 00 00 00 05        newf    0x5 (./lib.nas:5)
-     0x00000002:       02 00 00 00 02        intl    0x2 (./lib.nas:5)
-     0x00000003:       0f 00 00 00 00        dyn     0x0 ("elems") (./lib.nas:5)
-     0x00000004:       32 00 00 00 07        jmp     0x7 (./lib.nas:5)
-     0x00000005:       40 00 00 00 00        callb   0x0 <__print@0x419400> (./lib.nas:6)
-     0x00000006:       4a 00 00 00 00        ret     0x0 (./lib.nas:6)
-     0x00000007:       03 00 00 00 00        loadg   0x0 (./lib.nas:5)
-vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 0)
+--> 0x00000000      01 00 00 00 41      intg    0x41 (test/fib.nas:0)
+    0x00000001      0b 00 00 00 05      newf    0x5 (lib.nas:6)
+    0x00000002      02 00 00 00 02      intl    0x2 (lib.nas:6)
+    0x00000003      0f 00 00 00 00      dyn     0x0 ("elems") (lib.nas:6)
+    0x00000004      32 00 00 00 07      jmp     0x7 (lib.nas:6)
+    0x00000005      40 00 00 00 00      callb   0x0 <__print@0x419c80> (lib.nas:7)
+    0x00000006      4a 00 00 00 00      ret     0x0 (lib.nas:7)
+    0x00000007      03 00 00 00 00      loadg   0x0 (lib.nas:6)
+vm stack (0x7fffd0259138 <sp+65>, limit 10, total 0)
 >>
 ```
+
+</details>
 
 如果需要查看命令的使用方法，可以输入`h`获取帮助信息。
 
 当运行调试器的时候，你可以看到现在的操作数栈上到底有些什么数据。
 这些信息可以帮助你调试，同时也可以帮助你理解这个虚拟机是如何工作的:
 
+<details><summary>展开</summary>
+
 ```javascript
 source code:
-     ...
+    var fib=func(x)
+    {
+-->     if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+    }
+    for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
 
 next bytecode:
-     ...
-vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 7)
-  0x00000056    | pc   | 0x533
-  0x00000055    | addr | 0x0
-  0x00000054    | nil  |
-  0x00000053    | num  | 0
-  0x00000052    | nil  |
-  0x00000051    | nil  |
-  0x00000050    | func | <0x166e000> entry:0x5
+    0x00000548      0c 00 00 00 aa      happ    0xaa ("running") (lib.nas:503)
+    0x00000549      03 00 00 00 3e      loadg   0x3e (lib.nas:498)
+    0x0000054a      0b 00 00 05 4e      newf    0x54e (test/fib.nas:1)
+    0x0000054b      02 00 00 00 02      intl    0x2 (test/fib.nas:1)
+    0x0000054c      0d 00 00 00 1b      para    0x1b ("x") (test/fib.nas:1)
+    0x0000054d      32 00 00 05 5d      jmp     0x55d (test/fib.nas:1)
+--> 0x0000054e      39 00 00 00 01      calll   0x1 (test/fib.nas:3)
+    0x0000054f      2d 00 00 00 03      lessc   0x3 (2) (test/fib.nas:3)
+vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
+  0x00000047    | pc   | 0x566
+  0x00000046    | addr | 0x0
+  0x00000045    | nil  |
+  0x00000044    | num  | 0
+  0x00000043    | nil  |
+  0x00000042    | nil  |
+  0x00000041    | func | <0x88d2f0> entry:0x5
+>>
 ```
+
+</details>
