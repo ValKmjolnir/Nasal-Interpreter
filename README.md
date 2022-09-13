@@ -1,13 +1,5 @@
 # __Nasal Scripting Language__
 
-```C++
-       __                _
-    /\ \ \__ _ ___  __ _| |
-   /  \/ / _` / __|/ _` | |
-  / /\  / (_| \__ \ (_| | |
-  \_\ \/ \__,_|___/\__,_|_|
-```
-
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v10.1-blue?style=flat-square&logo=github)
@@ -38,29 +30,27 @@ __[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
 is an ECMAscript-like language that used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
-This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++11`)
-without reusing the code in [Andy Ross's nasal interpreter](<https://github.com/andyross/nasal>).
+This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++14`)
+without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 But we really appreciate that Andy created this amazing programming language and his interpreter project.
 
-Now this project uses __MIT license__ (2021/5/4). Edit it if you want,
-use this project to learn or create more interesting things (But don't forget me XD).
+This project uses __MIT license__ (2021/5/4).
 
 __Why writing this nasal interpreter?__
 In 2019 summer holiday,
 members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
-So i tried to write a new interpreter to help them checking syntax error and even, runtime error.
+So i wrote a new interpreter to help them checking syntax error and even, runtime error.
 
 I wrote the lexer, parser and
-bytecode virtual machine(there was an ast-interpreter,
-but deleted after v4.0) to help checking errors.
+bytecode virtual machine to help checking errors.
 We found it much easier to check syntax and runtime
-errors before copying nasal-codes in nasal-console in Flightgear to test.
+errors.
 
-Also, you could use this language to write some
+You could also use this language to write some
 interesting programs and run them without the lib of Flightgear.
 You could add your own modules to make
-this interpreter a useful tool in your own projects (such as a script in a game just as Flightgear does).
+the interpreter a useful tool in your own projects.
 
 ## __How to Compile__
 
@@ -72,57 +62,39 @@ this interpreter a useful tool in your own projects (such as a script in a game 
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Better choose the latest update of the interpreter.
-Download the source and build it! It's quite easy to build this interpreter.
+Better download the latest update source of the interpreter and build it! It's quite easy to build this interpreter.
+__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs.
 
-__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs. There are some tips to fix the release manually.
+Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on `Windows` .
 
-Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on __`Windows`__ platform. Download MinGW-w64 [__HERE__](https://www.mingw-w64.org/downloads/)(Visual Studio also has this), and use g++/clang++ on __`linux/macOS/Unix`__ platform (we suggest `clang`).
+Use g++/clang++ on `Linux/macOS/Unix` platform (we suggest `clang`).
 
-We could build the interpreter using `makefile`.
-
-`mingw32-make` is __`Windows(MinGW-w64)`__ platform's `make`:
+On `Windows (MinGW-w64)`:
 
 > mingw32-make nasal.exe
->
-> mingw32-make.exe nasal.exe
 
-on __`linux/macOS/Unix`__:
+You could create project in `Visual Studio` by this way: [__CLICK__](./doc/vs.md).
+
+On `Linux/macOS/Unix`:
 
 > make nasal
 
 You could choose which compiler you want to use:
 
-> make nasal CXX=clang++
->
-> make nasal CXX=g++
->
 > make nasal CXX=...
 
 If you think `-O3` isn't that safe and stable, you could choose:
 
 > make stable-release
->
-> mingw32-make stable-release-mingw
-
-You could create project in `Visual Studio` by this way: [__CLICK__](./doc/vs.md).
 
 ## __How to Use__
 
 First we should learn how to write and run a program using this language,
 click to see the [__tutorial__](#tutorial).
 
-Use this get version of interpreter:
+Use this command to get help:
 
-> ./nasal
-
-Input this command to run scripts __directly__:
-
-> ./nasal filename
-
-Use these commands to get help(see more debug commands in help):
-
-> ./nasal -h | --help
+> ./nasal -h
 
 If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
 
@@ -142,7 +114,7 @@ Reading this tutorial will not takes you over 15 minutes.
 __If you have learnt C/C++/Javascript before, this will take less time.__
 You could totally use it after reading this simple tutorial:
 
-<details><summary> basic value type </summary>
+<details><summary> Basic value type </summary>
 
 __`vm_none`__ is error type.
 This type is used to interrupt the execution of virtual machine and will not be created by user program.
@@ -221,7 +193,7 @@ This type is often created by native-function of nasal. If want to define your o
 
 </details>
 
-<details><summary> operators </summary>
+<details><summary> Operators </summary>
 
 Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
 
@@ -257,7 +229,7 @@ a~='string';
 
 </details>
 
-<details><summary> definition </summary>
+<details><summary> Definition </summary>
 
 ```javascript
 var a=1;
@@ -269,7 +241,7 @@ var (a,b,c)=(0,1,2);
 
 </details>
 
-<details><summary> multi-assignment </summary>
+<details><summary> Multi-assignment </summary>
 
 The last one is often used to swap two variables.
 
@@ -281,7 +253,7 @@ The last one is often used to swap two variables.
 
 </details>
 
-<details><summary> conditional expression </summary>
+<details><summary> Conditional expression </summary>
 
 In nasal there's a new key word `elsif`.
 It has the same functions as `else if`.
@@ -300,7 +272,7 @@ if(1){
 
 </details>
 
-<details><summary> loop </summary>
+<details><summary> Loop </summary>
 
 While loop and for loop is simalar to C/C++.
 
@@ -329,7 +301,7 @@ foreach(var i;elem)
 
 </details>
 
-<details><summary> subvec </summary>
+<details><summary> Subvec </summary>
 
 Nasal provides this special syntax to help user generate a new vector by getting values by one index or getting values by indexes in a range from an old vector.
 If there's only one index in the bracket, then we will get the value directly.
@@ -344,7 +316,7 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 </details>
 
-<details><summary> special function call </summary>
+<details><summary> Special function call </summary>
 
 This is of great use but is not very efficient
 (because hashmap use string as the key to compare).
@@ -355,7 +327,7 @@ f(x:0,y:nil,z:[]);
 
 </details>
 
-<details><summary> lambda </summary>
+<details><summary> Lambda </summary>
 
 Also functions have this kind of use:
 
@@ -382,7 +354,7 @@ var fib=func(f){
 
 </details>
 
-<details><summary> closure </summary>
+<details><summary> Closure </summary>
 
 Closure means you could get the variable that is not in the local scope of a function that you called.
 Here is an example, result is `1`:
@@ -412,7 +384,7 @@ var student=func(n,a){
 
 </details>
 
-<details><summary> trait </summary>
+<details><summary> Trait </summary>
 
 Also there's another way to OOP, that is `trait`.
 
@@ -494,7 +466,7 @@ If you want to use this trick to make the program running more efficiently, you 
 
 </details>
 
-<details><summary> native functions and module import </summary>
+<details><summary> Native functions and module import </summary>
 
 This part shows how we add native functions in this nasal interpreter.
 If you are interested in this part, this may help you.
@@ -609,7 +581,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 
 </details>
 
-<details><summary> modules(for lib developers) </summary>
+<details><summary> Modules(for lib developers) </summary>
 
 If there is only one way to add your own functions into nasal,
 that is really inconvenient.
@@ -678,7 +650,6 @@ Windows(`.dll`):
 Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
 
 ```javascript
-import("lib.nas");
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib=dylib.dlsym(dlhandle,"fib");
 for(var i=1;i<30;i+=1)
@@ -733,14 +704,13 @@ If get this, Congratulations!
 
 ## __Difference Between Andy's and This Interpreter__
 
-### 1. must use `var` to define variables
+<details><summary>Must use `var` to define variables</summary> 
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
 
 In Andy's interpreter:
 
 ```javascript
-import("lib.nas");
 foreach(i;[0,1,2,3])
     print(i)
 ```
@@ -755,25 +725,53 @@ So in this interpreter i use a more strict syntax to force users to use `var` to
 If you forget to add the keyword `var`, you will get this:
 
 ```javascript
-[code] test.nas:2 undefined symbol "i".
-foreach(i;[0,1,2,3])
-[code] test.nas:3 undefined symbol "i".
-    print(i)
+code: undefined symbol "i"
+ --> test.nas:1:9
+  | 
+1 | foreach(i;[0,1,2,3])
+  |         ^ undefined symbol "i"
+
+code: undefined symbol "i"
+ --> test.nas:2:11
+  | 
+2 |     print(i)
+  |           ^ undefined symbol "i"
 ```
 
-### 2. default dynamic arguments not supported
+</details>
+
+<details><summary>Default dynamic arguments not supported</summary>
 
 In this interpreter,
 function doesn't put dynamic args into vector `arg` by default.
 So if you use `arg` without definition,
 you'll get an error of `undefined symbol`.
 
+```javascript
+var f=func(){
+    println(arg)
+}
+f(1,2,3);
+```
+
+Compilation result:
+
+```javascript
+code: undefined symbol "arg"
+ --> test.nas:2:15
+  | 
+2 |     println(arg)
+  |               ^ undefined symbol "arg"
+```
+
+</details>
+
 ## __Trace Back Info__
 
 When interpreter crashes,
 it will print trace back information:
 
-<details><summary>1. native function [die]</summary>
+<details><summary>Native function `die`</summary>
 
 Function `die` is used to throw error and crash immediately.
 
@@ -791,10 +789,10 @@ hello
 [vm] error: error occurred this line
 [vm] native function error.
 trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
+  0x000000ac      40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
+  0x000004f6      3e 00 00 00 01      callfv 0x1 (a.nas:4)
+  0x000004fa      3e 00 00 00 00      callfv 0x0 (a.nas:6)
+vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
   0x0000005b    | null |
   ...
   0x00000057    | str  | <0x138ff60> error occurred t...
@@ -804,7 +802,7 @@ vm stack(0x7fffcd21bc68<sp+80>, limit 10, total 12):
 
 </details>
 
-<details><summary>2. stack overflow crash info</summary>
+<details><summary>Stack overflow crash info</summary>
 
 Here is an example of stack overflow:
 
@@ -821,11 +819,11 @@ func(f){
 ```javascript
 [vm] stack overflow
 trace back:
-        0x000004fb:     3e 00 00 00 01      callfv 0x1 (a.nas:5)
-        0x000004fb:     1349 same call(s)
-        0x000004f3:     3e 00 00 00 01      callfv 0x1 (a.nas:2)
-        0x000004ff:     3e 00 00 00 01      callfv 0x1 (a.nas:3)
-vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
+  0x000004fb      3e 00 00 00 01      callfv 0x1 (a.nas:5)
+  0x000004fb      1349 same call(s)
+  0x000004f3      3e 00 00 00 01      callfv 0x1 (a.nas:2)
+  0x000004ff      3e 00 00 00 01      callfv 0x1 (a.nas:3)
+vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
   0x00001ffb    | func | <0x15f8d90> entry:0x4f9
   0x00001ffa    | func | <0x15f8d90> entry:0x4f9
   0x00001ff9    | pc   | 0x4fb
@@ -835,7 +833,7 @@ vm stack(0x7fffd3781d58<sp+80>, limit 10, total 8108):
 
 </details>
 
-<details><summary>3. normal vm error crash info</summary>
+<details><summary>Normal vm error crash info</summary>
 
 Error will be thrown if there's a fatal error when executing:
 
@@ -848,49 +846,49 @@ func(){
 ```javascript
 [vm] callv: must call a vector/hash/string
 trace back:
-        0x000004f4:     3b 00 00 00 00      callv  0x0 (a.nas:3)
-vm stack(0x7fffff539c28<sp+80>, limit 10, total 1):
+  0x000004f4      3b 00 00 00 00      callv  0x0 (a.nas:3)
+vm stack (0x7fffff539c28 <sp+80>, limit 10, total 1):
   0x00000050    | num  | 0
 ```
 
 </details>
 
-<details><summary>4. detailed crash info</summary>
+<details><summary>Detailed crash info</summary>
 
 Use command __`-d`__ or __`--detail`__ the trace back info will show more details:
 
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] native function error.
-trace back:
-        0x000000ac:     40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-        0x000004f6:     3e 00 00 00 01      callfv 0x1 (a.nas:4)
-        0x000004fa:     3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack(0x7ffff42f3d08<sp+80>, limit 10, total 12):
-  0x0000005b    | null |
-  0x0000005a    | pc   | 0x4f6
-  0x00000059    | addr | 0x7ffff42f3d18
+[vm] error: native function error
+trace back (main)
+  0x000000b0      40 00 00 00 2b      callb   0x2b <__die@0x41c380> (lib.nas:131)
+  0x00000553      3e 00 00 00 01      callfv  0x1 (test.nas:4)
+  0x00000557      3e 00 00 00 00      callfv  0x0 (test.nas:6)
+vm stack (0x7fffe0ffed90 <sp+63>, limit 10, total 12)
+  0x0000004a    | null |
+  0x00000049    | pc   | 0x553
+  0x00000048    | addr | 0x7fffe0ffeda0
   ...
-  0x00000052    | nil  |
-registers(main):
-  [ pc     ]    | pc   | 0xac
-  [ global ]    | addr | 0x7ffff42f3808
-  [ localr ]    | addr | 0x7ffff42f3d68
+  0x00000041    | nil  |
+registers (main)
+  [ pc     ]    | pc   | 0xb0
+  [ global ]    | addr | 0x7fffe0ffe9a0
+  [ localr ]    | addr | 0x7fffe0ffedf0
   [ memr   ]    | addr | 0x0
-  [ funcr  ]    | func | <0x18fbe50> entry:0xac
+  [ canary ]    | addr | 0x7fffe1002990
+  [ top    ]    | addr | 0x7fffe0ffee40
+  [ funcr  ]    | func | <0x677cd0> entry:0xb0
   [ upvalr ]    | nil  |
-  [ canary ]    | addr | 0x7ffff43137f8
-  [ top    ]    | addr | 0x7ffff42f3db8
-global(0x7ffff42f3808<sp+0>):
-  0x00000000    | func | <0x18d62d0> entry:0x5
-  0x00000001    | func | <0x18d7e40> entry:0xc
+global (0x7fffe0ffe9a0 <sp+0>)
+  0x00000000    | func | <0x65fb00> entry:0x5
+  0x00000001    | func | <0x65fb20> entry:0xd
   ...
-  0x0000004e    | func | <0x18e6710> entry:0x4c2
-  0x0000004f    | hash | <0x191f8b0> {5 val}
-local(0x7ffff42f3d68<sp+86>):
+  0x0000003d    | func | <0x66bf00> entry:0x51f
+  0x0000003e    | hash | <0x65ffa0> {5 val}
+local (0x7fffe0ffedf0 <sp+45>)
   0x00000000    | nil  |
-  0x00000001    | str  | <0x1932480> error occurred t...
+  0x00000001    | str  | <0x6cb630> error occurred t...
 ```
 
 </details>
@@ -901,49 +899,71 @@ We added a debugger in `v8.0`.
 Use command `./nasal -dbg xxx.nas` to use the debugger,
 and the debugger will print this:
 
+<details><summary>Click to unfold</summary>
+
 ```javascript
 [debug] nasal debug mode
 input 'h' to get help
 
 source code:
--->  var fib=func(x)
-     {
+--> var fib=func(x)
+    {
         if(x<2) return x;
         return fib(x-1)+fib(x-2);
-     }
-     for(var i=0;i<31;i+=1)
+    }
+    for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
 next bytecode:
--->  0x00000000:       01 00 00 00 50        intg    0x50 (test/fib.nas:0)
-     0x00000001:       0b 00 00 00 05        newf    0x5 (./lib.nas:5)
-     0x00000002:       02 00 00 00 02        intl    0x2 (./lib.nas:5)
-     0x00000003:       0f 00 00 00 00        dyn     0x0 ("elems") (./lib.nas:5)
-     0x00000004:       32 00 00 00 07        jmp     0x7 (./lib.nas:5)
-     0x00000005:       40 00 00 00 00        callb   0x0 <__print@0x419400> (./lib.nas:6)
-     0x00000006:       4a 00 00 00 00        ret     0x0 (./lib.nas:6)
-     0x00000007:       03 00 00 00 00        loadg   0x0 (./lib.nas:5)
-vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 0)
+--> 0x00000000      01 00 00 00 41      intg    0x41 (test/fib.nas:0)
+    0x00000001      0b 00 00 00 05      newf    0x5 (lib.nas:6)
+    0x00000002      02 00 00 00 02      intl    0x2 (lib.nas:6)
+    0x00000003      0f 00 00 00 00      dyn     0x0 ("elems") (lib.nas:6)
+    0x00000004      32 00 00 00 07      jmp     0x7 (lib.nas:6)
+    0x00000005      40 00 00 00 00      callb   0x0 <__print@0x419c80> (lib.nas:7)
+    0x00000006      4a 00 00 00 00      ret     0x0 (lib.nas:7)
+    0x00000007      03 00 00 00 00      loadg   0x0 (lib.nas:6)
+vm stack (0x7fffd0259138 <sp+65>, limit 10, total 0)
 >>
 ```
+
+</details>
 
 If want help, input `h` to get help.
 
 When running the debugger, you could see what is on stack.
 This will help you debugging or learning how the vm works:
 
+<details><summary>Click to unfold</summary>
+
 ```javascript
 source code:
-     ...
+    var fib=func(x)
+    {
+-->     if(x<2) return x;
+        return fib(x-1)+fib(x-2);
+    }
+    for(var i=0;i<31;i+=1)
+        print(fib(i),'\n');
 
 next bytecode:
-     ...
-vm stack(0x7fffce09e6e8<sp+80>, limit 10, total 7)
-  0x00000056    | pc   | 0x533
-  0x00000055    | addr | 0x0
-  0x00000054    | nil  |
-  0x00000053    | num  | 0
-  0x00000052    | nil  |
-  0x00000051    | nil  |
-  0x00000050    | func | <0x166e000> entry:0x5
+    0x00000548      0c 00 00 00 aa      happ    0xaa ("running") (lib.nas:503)
+    0x00000549      03 00 00 00 3e      loadg   0x3e (lib.nas:498)
+    0x0000054a      0b 00 00 05 4e      newf    0x54e (test/fib.nas:1)
+    0x0000054b      02 00 00 00 02      intl    0x2 (test/fib.nas:1)
+    0x0000054c      0d 00 00 00 1b      para    0x1b ("x") (test/fib.nas:1)
+    0x0000054d      32 00 00 05 5d      jmp     0x55d (test/fib.nas:1)
+--> 0x0000054e      39 00 00 00 01      calll   0x1 (test/fib.nas:3)
+    0x0000054f      2d 00 00 00 03      lessc   0x3 (2) (test/fib.nas:3)
+vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
+  0x00000047    | pc   | 0x566
+  0x00000046    | addr | 0x0
+  0x00000045    | nil  |
+  0x00000044    | num  | 0
+  0x00000043    | nil  |
+  0x00000042    | nil  |
+  0x00000041    | func | <0x88d2f0> entry:0x5
+>>
 ```
+
+</details>
