@@ -219,7 +219,7 @@ void nasal_vm::traceback()
         if(same)
             std::cout
             <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
-            <<prev<<std::dec<<":       "<<same<<" same call(s)\n";
+            <<prev<<std::dec<<"      "<<same<<" same call(s)\n";
         same=0;
         std::cout<<"  "<<codestream(bytecode[p],p,num_table,str_table,files)<<"\n";
     }

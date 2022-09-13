@@ -26,7 +26,7 @@ __Contact us if having great ideas to share!__
 
 ## __Introduction__
 
-__[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
+[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 is an ECMAscript-like language that used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
@@ -89,18 +89,13 @@ If you think `-O3` isn't that safe and stable, you could choose:
 
 ## __How to Use__
 
-First we should learn how to write and run a program using this language,
-click to see the [__tutorial__](#tutorial).
+![usage](./doc/gif/help.gif)
 
-Use this command to get help:
-
-> ./nasal -h
-
-If your system is __`Windows`__ and you want to output unicode,please use this command before running nasal interpreter:
+If your system is `Windows` and you want to output unicode,please use this command before running nasal:
 
 > chcp 65001
 
-or you could write this in your nasal code:
+or you could write this in nasal code:
 
 ```javascript
 if(os.platform()=="windows")
@@ -704,6 +699,8 @@ If get this, Congratulations!
 
 ## __Difference Between Andy's and This Interpreter__
 
+![error](./doc/gif/error.gif)
+
 <details><summary>Must use `var` to define variables</summary> 
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
@@ -768,6 +765,8 @@ code: undefined symbol "arg"
 
 ## __Trace Back Info__
 
+![stackoverflow](./doc/gif/stackoverflow.gif)
+
 When interpreter crashes,
 it will print trace back information:
 
@@ -802,7 +801,7 @@ vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
 
 </details>
 
-<details><summary>Stack overflow crash info</summary>
+<details><summary>Stack overflow</summary>
 
 Here is an example of stack overflow:
 
@@ -894,6 +893,8 @@ local (0x7fffe0ffedf0 <sp+45>)
 </details>
 
 ## __Debugger__
+
+![dbg](./doc/gif/dbg.gif)
 
 We added a debugger in `v8.0`.
 Use command `./nasal -dbg xxx.nas` to use the debugger,

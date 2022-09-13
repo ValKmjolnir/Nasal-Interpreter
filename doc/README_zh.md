@@ -26,13 +26,13 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 ## __简介__
 
-__[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)__
+[Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 是一个与ECMAscript标准语法设计相似的编程语言，并且作为运行脚本被著名的开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所依赖。
-该语言的设计者和初版解释器实现者为 [Andy Ross](https://github.com/andyross)。
+该语言的设计者为 [Andy Ross](https://github.com/andyross)。
 
-这个解释器项目则由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有任何的参考代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
+该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有任何的参考代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
 
-该项目已经使用 __MIT__ 协议开源 (2021/5/4)。
+该项目已使用 __MIT__ 协议开源 (2021/5/4)。
 
 __我们为什么想要重新写一个nasal解释器?__
 2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
@@ -78,17 +78,13 @@ __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构�
 
 ## __使用方法__
 
-首先我们要通过[__教程__](#教程)知道这个语言的语法以及如何使用这个解释器来运行nasal程序。
+![usage](../doc/gif/help.gif)
 
-下面这个命令可以用于查看使用方法:
-
-> ./nasal -h
-
-如果你的操作系统是 __`Windows`__ 并且你想输出unicode，请保证你的控制台程序的代码页支持utf-8，若不支持，使用下面这个命令启用代码页:
+如果你的操作系统是 `Windows` 且想输出unicode，请保证控制台代码页支持utf-8，使用下面这个命令启用代码页:
 
 > chcp 65001
 
-或者你可以直接在nasal代码里写这个来开启:
+或者直接在nasal代码里写这个来开启:
 
 ```javascript
 if(os.platform()=="windows")
@@ -666,6 +662,8 @@ dylib.dlclose(dlhandle);
 
 ## __与andy解释器的不同之处__
 
+![error](../doc/gif/error.gif)
+
 <details><summary>必须用 var 定义变量</summary>
 
 这个解释器使用了更加严格的语法检查来保证你可以更轻松地debug。这是非常有必要的严格，否则debug会非常痛苦。
@@ -720,6 +718,8 @@ code: undefined symbol "arg"
 </details>
 
 ## __堆栈追踪信息__
+
+![stackoverflow](../doc/gif/stackoverflow.gif)
 
 当解释器崩溃时,它会反馈错误产生过程的堆栈追踪信息:
 
@@ -846,6 +846,8 @@ local (0x7fffe0ffedf0 <sp+45>)
 </details>
 
 ## __调试器__
+
+![dbg](../doc/gif/dbg.gif)
 
 在`v8.0`版本中我们添加了调试器。
 使用这个命令`./nasal -dbg xxx.nas`来启用调试器，接下来调试器会打开文件并输出以下内容:
