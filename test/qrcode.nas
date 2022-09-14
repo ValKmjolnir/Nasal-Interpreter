@@ -22,6 +22,7 @@ var code=[
     [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 ];
 
+# enable unicode
 if(os.platform()=="windows")
     system("chcp 65001");
 var texture=["  ","██"];

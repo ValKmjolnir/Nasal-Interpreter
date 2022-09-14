@@ -139,6 +139,8 @@ var curve7=func(){
         p=p>=4?0:p;
     }
 }
+
+# enable unicode
 if(os.platform()=="windows")
     system("chcp 65001");
 trans_ttf("just for test");

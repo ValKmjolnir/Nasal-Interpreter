@@ -29,8 +29,9 @@ var prt=func()
 }
 
 func(){
+    # enable ANSI escape sequence
     if(os.platform()=="windows")
-        system("chcp 65001");
+        system("color");
     print("\ec");
     rand(time(0));
     map=new_map();

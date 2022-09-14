@@ -183,6 +183,7 @@ var co=coroutine.create(func(){
 });
 
 var main=func(){
+    # enable unicode
     if(os.platform()=="windows")
         system("chcp 65001");
     print("\ec");
