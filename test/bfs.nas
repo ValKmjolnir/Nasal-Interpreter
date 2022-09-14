@@ -53,7 +53,8 @@ var bfs=func(begin,end){
     return;
 }
 
+# enable ANSI escape sequence
 if(os.platform()=="windows")
-    system("chcp 65001");
+    system("color");
 print("\ec");
 bfs([0,0],[9,19]);

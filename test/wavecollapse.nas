@@ -94,6 +94,7 @@ var map=func(){
     }
 }();
 
+# enable unicode
 if(os.platform()=="windows")
     system("chcp 65001");
 map.new(80);
