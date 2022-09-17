@@ -73,7 +73,7 @@ On `Windows (MinGW-w64)`:
 
 > mingw32-make nasal.exe
 
-You could create project in `Visual Studio` by this way: [__CLICK__](./doc/vs.md).
+You could create project in `Visual Studio` by this way: [__Click__](./doc/vs.md).
 
 On `Linux/macOS/Unix`:
 
@@ -109,18 +109,18 @@ Reading this tutorial will not takes you over 15 minutes.
 __If you have learnt C/C++/Javascript before, this will take less time.__
 You could totally use it after reading this simple tutorial:
 
-<details><summary> Basic value type </summary>
+<details><summary> Basic type </summary>
 
-__`vm_none`__ is error type.
-This type is used to interrupt the execution of virtual machine and will not be created by user program.
+__`none`__ is error type used to interrupt the execution.
+This type is not created by user program.
 
-__`vm_nil`__ is a null type. It means nothing.
+__`nil`__ is a null type. Just like `null`.
 
 ```javascript
 var spc=nil;
 ```
 
-__`vm_num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 `double` to store.
+__`num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 `double` to store.
 
 ```javascript
 # this language use '#' to write notes
@@ -131,7 +131,7 @@ var n=0xAA55;     # hex
 var n=0o170001;   # oct
 ```
 
-__`vm_str`__ has 3 formats. The third one is used to declare a character.
+__`str`__ has 3 formats. The third one is used to declare a character.
 
 ```javascript
 var s='str';
@@ -144,7 +144,7 @@ var s=`c`;
 '\"';
 ```
 
-__`vm_vec`__ has unlimited length and can store all types of values.
+__`vec`__ has unlimited length and can store all types of values.
 
 ```javascript
 var vec=[];
@@ -152,7 +152,7 @@ var vec=[0,nil,{},[],func(){return 0}];
 append(vec,0,1,2);
 ```
 
-__`vm_hash`__ is a hashmap(or like a dict in `python`) that stores values with strings/identifiers as the key.
+__`hash`__ is a hashmap (or like a `dict` in `python`) that stores values with strings/identifiers as the key.
 
 ```javascript
 var hash={
@@ -165,11 +165,16 @@ var hash={
 };
 ```
 
-__`vm_func`__ is a function type (in fact it is lambda).
+__`func`__ is a function type (in fact it is `lambda`).
 
 ```javascript
-var f=func(x,y,z){return nil;}
-var f=func{return 114514;}
+var f=func(x,y,z){
+    return nil;
+}
+# function could be declared without parameters and `(`, `)`
+var f=func{
+    return 114514;
+}
 var f=func(x,y,z,deft=1){
     return x+y+z+deft;
 }
@@ -181,28 +186,27 @@ var f=func(args...){
 }
 ```
 
-__`vm_upval`__ is used to store upvalues, used in __`nasal_vm`__ to make sure closure runs correctly.
+__`upval`__ is used to store upvalues, used in __`nasal_vm`__ to make sure closure runs correctly.
 
-__`vm_obj`__ is used to store other complex C/C++ data types.
-This type is often created by native-function of nasal. If want to define your own data type, see how to add native-functions by editing this project.
+__`obj`__ is used to store other complex `C/C++` data types.
+This type is created by native-function of nasal. If want to define a new data type, see how to add native-functions by editing code.
 
 </details>
 
 <details><summary> Operators </summary>
 
-Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that links two strings together.
+Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that joints strings.
 
 ```javascript
 1+2-(1+3)*(2+4)/(16-9);
-'str1'~'str2';
+"str1"~"str2";
 ```
 
 For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
-`and` `or` have the same function as C/C++ `&&` `||`, link comparations together.
+`and` `or` have the same function as C/C++ `&&` `||`.
 
 ```javascript
-1+1 and 0;
-1<0 or 1>0;
+1+1 and (1<0 or 1>0);
 1<=0 and 1>=0;
 1==0 or 1!=0;
 ```
@@ -218,20 +222,23 @@ Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
 
 ```javascript
 a=b=c=d=1;
-a+=1; a-=1; a*=1; a/=1;
-a~='string';
+a+=1;
+a-=1;
+a*=1;
+a/=1;
+a~="string";
 ```
 
 </details>
 
 <details><summary> Definition </summary>
 
+As follows.
+
 ```javascript
-var a=1;
-var (a,b,c)=[0,1,2];
-var (a,b,c)=(0,1,2);
-(var a,b,c)=[0,1,2];
-(var a,b,c)=(0,1,2);
+var a=1;             # define single variable
+var (a,b,c)=[0,1,2]; # define multiple variables from a vector
+var (a,b,c)=(0,1,2); # define multiple variables from a tuple
 ```
 
 </details>
@@ -313,8 +320,10 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 <details><summary> Special function call </summary>
 
-This is of great use but is not very efficient
-(because hashmap use string as the key to compare).
+This is not very efficient,
+because hashmap use string as the key to compare.
+
+But if it really useful, the efficientcy may not be so important...
 
 ```javascript
 f(x:0,y:nil,z:[]);
@@ -327,8 +336,12 @@ f(x:0,y:nil,z:[]);
 Also functions have this kind of use:
 
 ```javascript
-func(x,y){return x+y}(0,1);
-func(x){return 1/(1+math.exp(-x));}(0.5);
+func(x,y){
+    return x+y
+}(0,1);
+func(x){
+    return 1/(1+math.exp(-x));
+}(0.5);
 ```
 
 There's an interesting test file `y-combinator.nas`,
@@ -463,18 +476,17 @@ If you want to use this trick to make the program running more efficiently, you 
 
 <details><summary> Native functions and module import </summary>
 
-This part shows how we add native functions in this nasal interpreter.
+This part shows how we add native functions in this interpreter.
 If you are interested in this part, this may help you.
 And...
 
-__CAUTION:__ If you want to add your own functions __without__ changing the source code of the interpreter, see the __`module`__ after this part.
+__CAUTION:__ If you want to add your own functions __without__ changing the source code, see the __`module`__ after this part.
 
 If you really want to change source code, check built-in functions in `lib.nas` and see the example below.
 
 Definition:
 
 ```C++
-nas_ref builtin_print(nas_ref*,nasal_gc&);
 // you could also use a macro to define one.
 nas_native(builtin_print);
 ```
@@ -510,6 +522,27 @@ nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 }
 ```
 
+When running a builtin function, alloc will run more than one time, this may cause mark-sweep in `gc::alloc`.
+The value got before will be collected, but stil in use in this builtin function, this will cause a fatal error.
+
+So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
+
+```C++
+nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
+{
+    nas_ref hash=local[1];
+    if(hash.type!=vm_hash)
+        return nas_err("keys","\"hash\" must be hash");
+    // use gc.temp to store the gc-managed-value, to avoid being sweeped
+    nas_ref res=gc.temp=gc.alloc(vm_vec);
+    auto& vec=res.vec().elems;
+    for(auto& iter:hash.hash().elems)
+        vec.push_back(gc.newstr(iter.first));
+    gc.temp=nil;
+    return res;
+}
+```
+
 After that, register the built-in function's name(in nasal) and the function's pointer in this table:
 
 ```C++
@@ -542,8 +575,7 @@ var print=func(elems...){
 ```
 
 If you don't warp built-in function in a normal nasal function,
-this built-in function may cause a fault when searching arguments,
-which will cause __segmentation error__.
+this native function may cause __segmentation fault__ when searching arguments.
 
 Use `import("filename.nas")` to get the nasal file including your built-in functions, then you could use it.
 Also there's another way of importing nasal files, the two way of importing have the same function:
@@ -551,27 +583,6 @@ Also there's another way of importing nasal files, the two way of importing have
 ```javascript
 import.dirname.dirname.filename;
 import("./dirname/dirname/filename.nas");
-```
-
-When running a builtin function, alloc will run more than one time, this may cause mark-sweep in `gc::alloc`.
-The value got before will be collected, but stil in use in this builtin function, this will cause a fatal error.
-
-So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
-
-```C++
-nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
-{
-    nas_ref hash=local[1];
-    if(hash.type!=vm_hash)
-        return nas_err("keys","\"hash\" must be hash");
-    // avoid being sweeped
-    nas_ref res=gc.temp=gc.alloc(vm_vec);
-    auto& vec=res.vec().elems;
-    for(auto& iter:hash.hash().elems)
-        vec.push_back(gc.newstr(iter.first));
-    gc.temp=nil;
-    return res;
-}
 ```
 
 </details>
@@ -591,7 +602,7 @@ var dylib=
     dlopen:  func(libname){return __dlopen;},
     dlsym:   func(lib,sym){return __dlsym; },
     dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(funcptr,args...){return __dlcall}
+    dlcall:  func(funcptr,args...){return __dlcall;}
 };
 ```
 
@@ -642,7 +653,7 @@ Windows(`.dll`):
 
 `g++ -shared -o libfib.dll fib.o`
 
-Then we write a test nasal file to run this fib function, using `os.platform()` we could write a program that runs on three different OS:
+Then we write a test nasal file to run this fib function, using `os.platform()` we could write a cross-platform program:
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
