@@ -98,15 +98,15 @@ __如果你先前已经是C/C++,javascript选手，那么这个教程几乎可�
 
 <details><summary>基本类型</summary>
 
-__`vm_none`__ 是特殊的错误类型。这个类型用于终止虚拟机的执行，用户是无法申请到这个类型的，该类型只能由字节码虚拟机自己在抛出错误时产生。
+__`none`__ 是特殊的错误类型。这个类型用于终止虚拟机的执行，该类型只能由虚拟机在抛出错误时产生。
 
-__`vm_nil`__ 是空类型。类似于null。
+__`nil`__ 是空类型。类似于null。
 
 ```javascript
 var spc=nil;
 ```
 
-__`vm_num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数`double`格式来存储。
+__`num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数`double`格式来存储。
 
 ```javascript
 # this language use '#' to write notes
@@ -117,7 +117,7 @@ var n=0xAA55;     # hex
 var n=0o170001;   # oct
 ```
 
-__`vm_str`__ 也有三种不同的格式。第三种只允许包含一个的字符。
+__`str`__ 也有三种不同的格式。第三种只允许包含一个的字符。
 
 ```javascript
 var s='str';
@@ -130,7 +130,7 @@ var s=`c`;
 '\"';
 ```
 
-__`vm_vec`__ 有不受限制的长度并且可以存储所有类型的数据。(当然不能超过可分配内存空间的长度)
+__`vec`__ 有不受限制的长度并且可以存储所有类型的数据。(当然不能超过可分配内存空间的长度)
 
 ```javascript
 var vec=[];
@@ -138,7 +138,7 @@ var vec=[0,nil,{},[],func(){return 0}];
 append(vec,0,1,2);
 ```
 
-__`vm_hash`__ 使用哈希表(类似于`python`中的字典)，通过键值对来存储数据。key可以是一个字符串，也可以是一个标识符。
+__`hash`__ 使用哈希表 (类似于`python`中的`dict`)，通过键值对来存储数据。key可以是一个字符串，也可以是一个标识符。
 
 ```javascript
 var hash={
@@ -151,11 +151,16 @@ var hash={
 };
 ```
 
-__`vm_func`__ 函数类型。(实际上在这个语言里函数也是一种lambda表达式)
+__`func`__ 函数类型。(实际上在这个语言里函数是一种`lambda`表达式)
 
 ```javascript
-var f=func(x,y,z){return nil;}
-var f=func{return 114514;}
+var f=func(x,y,z){
+    return nil;
+}
+# 函数声明可以没有参数列表以及 `(`, `)`
+var f=func{
+    return 114514;
+}
 var f=func(x,y,z,deft=1){
     return x+y+z+deft;
 }
@@ -167,26 +172,25 @@ var f=func(args...){
 }
 ```
 
-__`vm_upval`__ 是存储闭包数据的特殊类型, 在 __`nasal_vm`__ 中使用，用于确保闭包功能正常。
+__`upval`__ 是存储闭包数据的特殊类型, 在 __`nasal_vm`__ 中使用，以确保闭包功能正常。
 
-__`vm_obj`__ 是用来存储C/C++的一些复杂数据结构。这种类型的数据一般由内置函数或者库开发者提供的模块函数生成。如果你想为nasal添加一种新的数据结构, 可以看下文如何通过修改本项目来添加自己的内置函数。
+__`obj`__ 是用来存储`C/C++`的一些复杂数据结构。这种类型的数据由内置函数生成。如果想为nasal添加新的数据结构, 可以看下文如何通过修改本项目来添加内置函数。
 
 </details>
 
 <details><summary>运算符</summary>
 
-Nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的运算符 `~`，这个运算符用于拼接两个字符串。
+Nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的运算符 `~`，用于拼接字符串。
 
 ```javascript
 1+2-(1+3)*(2+4)/(16-9);
-'str1'~'str2';
+"str1"~"str2";
 ```
 
-对于条件语句，可以使用`==` `!=` `<` `>` `<=` `>=`来比较两个数据。`and` `or` 有着与C/C++中 `&&` `||`运算符相同的功能，用于连接两个不同的条件语句。
+对于条件语句，可以使用`==` `!=` `<` `>` `<=` `>=`来比较数据。`and` `or` 与C/C++中 `&&` `||`运算符一致。
 
 ```javascript
-1+1 and 0;
-1<0 or 1>0;
+1+1 and (1<0 or 1>0);
 1<=0 and 1>=0;
 1==0 or 1!=0;
 ```
@@ -202,20 +206,23 @@ Nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的�
 
 ```javascript
 a=b=c=d=1;
-a+=1; a-=1; a*=1; a/=1;
-a~='string';
+a+=1;
+a-=1;
+a*=1;
+a/=1;
+a~="string";
 ```
 
 </details>
 
 <details><summary>定义变量</summary>
 
+如下所示。
+
 ```javascript
-var a=1;
-var (a,b,c)=[0,1,2];
-var (a,b,c)=(0,1,2);
-(var a,b,c)=[0,1,2];
-(var a,b,c)=(0,1,2);
+var a=1;             # 定义单个变量
+var (a,b,c)=[0,1,2]; # 从数组中初始化多个变量
+var (a,b,c)=(0,1,2); # 从元组中初始化多个变量
 ```
 
 </details>
@@ -293,7 +300,9 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 
 <details><summary>特殊函数调用语法</summary>
 
-这种特别的调用方式有时非常有用，但是切记这种调用方式不是很高效，因为哈希表会使用字符串比对来找到数据存放的位置。
+这种调用方式不是很高效，因为哈希表会使用字符串比对来找到数据存放的位置。
+
+然而如果它用起来非常舒适，那效率也显得不是非常重要了……
 
 ```javascript
 f(x:0,y:nil,z:[]);
@@ -303,14 +312,18 @@ f(x:0,y:nil,z:[]);
 
 <details><summary>lambda表达式</summary>
 
-正如上文所述，函数有这样一种直接编写函数体并且直接调用的方式:
+函数有这样一种直接编写函数体并且立即调用的方式:
 
 ```javascript
-func(x,y){return x+y}(0,1);
-func(x){return 1/(1+math.exp(-x));}(0.5);
+func(x,y){
+    return x+y;
+}(0,1);
+func(x){
+    return 1/(1+math.exp(-x));
+}(0.5);
 ```
 
-测试文件中有一个非常有趣的文件`y-combinator.nas`，也就是y组合子，可以试一试，非常有趣:
+测试文件中有一个非常有趣的文件`y-combinator.nas`，可以试一试:
 
 ```javascript
 var fib=func(f){
@@ -329,7 +342,9 @@ var fib=func(f){
 
 <details><summary>闭包</summary>
 
-闭包是一种特别的作用域，你可以从这个作用域中获取其保存的所有变量，而这些变量原本不是你当前运行的函数的局部作用域中的。下面这个例子里，结果是`1`:
+闭包是一种特别的作用域，你可以从这个作用域中获取其保存的所有变量，
+而这些变量原本不是你当前运行的函数的局部作用域中的。
+下面这个例子里，结果是`1`:
 
 ```javascript
 var f=func(){
@@ -360,8 +375,10 @@ var student=func(n,a){
 
 当然，也有另外一种办法来面向对象编程，那就是利用`trait`。
 
-当一个hash类型中，有一个成员的key是`parents`，并且该成员是一个数组的话，那么当你试图从这个hash中寻找一个它自己没有的成员名时，虚拟机会进一步搜索`parents`数组。
-如果该数组中有一个hash类型，有一个成员的key与当前你搜索的成员名一致，那么你会得到这个成员对应的值。
+当一个hash类型中，有一个成员的key是`parents`，并且该成员是一个数组的话，
+那么当你试图从这个hash中寻找一个它自己没有的成员名时，虚拟机会进一步搜索`parents`数组。
+如果该数组中有一个hash类型，有一个成员的key与当前你搜索的成员名一致，
+那么你会得到这个成员对应的值。
 
 使用这个机制，我们可以进行面向对象编程，下面样例的结果是`114514`:
 
@@ -437,16 +454,18 @@ println(d());
 
 <details><summary>原生内置函数以及模块导入(import)语法</summary>
 
-这个部分对于纯粹的使用者来说是不需要了解的，它将告诉你我们是如何为这个解释器添加新的内置函数的。如果你对于添加自己私人订制的内置函数很感兴趣，那么这个部分可能会帮到你，并且……
+这个部分对于纯粹的使用者来说是不需要了解的，
+它将告诉你我们是如何为解释器添加新的内置函数的。
+如果你对此很感兴趣，那么这个部分可能会帮到你，并且……
 
-__警告:__ 如果你 __不想__ 通过直接修改解释器源码来添加你自定义的函数，那么你应该看下一个部分 __`模块`__ 的内容，而不是这个部分的内容。
+__警告:__ 如果你 __不想__ 通过直接修改解释器源码来添加你自定义的函数，那么你应该看下一个节 __`模块`__ 的内容。
 
-如果你确实是想修改源码来搞一个自己私人订制的解释器，那么你可以说：“我他妈就是想自己私人订制，你们他妈的管得着吗”，然后看看源码中关于内置函数的部分，以及`lib.nas`中是如何包装这些函数的，还有下面的样例:
+如果你确实是想修改源码来搞一个自己私人订制的解释器，那么你可以说：“我他妈就是想自己私人订制，你们他妈的管得着吗”，
+然后看看源码中关于内置函数的部分，以及`lib.nas`中是如何包装这些函数的，还有下面的样例:
 
 定义新的内置函数:
 
 ```C++
-nas_ref builtin_print(nas_ref*,nasal_gc&);
 // 你可以使用这个宏来直接定义一个新的内置函数
 nas_native(builtin_print);
 ```
@@ -483,50 +502,10 @@ nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 }
 ```
 
-这些工作都完成之后，在内置函数注册表中填写它在nasal中的别名，并且在表中填对这个函数的函数指针:
-
-```C++
-struct func
-{
-    const char* name;
-    nas_ref (*func)(nas_ref*,nasal_gc&);
-} builtin[]=
-{
-    {"__print",builtin_print},
-    {nullptr,  nullptr      }
-};
-```
-
-最后，将其包装起来扔到nasal文件中:
-
-```javascript
-var print=func(elems...){
-    return __print(elems);
-};
-```
-
-事实上`__print`后面跟着的传参列表不是必须要写的。所以这样写也对:
-
-```javascript
-var print=func(elems...){
-    return __print;
-};
-```
-
-一定要注意，如果你不把内置函数包装到一个普通的nasal函数中，那么直接调用这个内置函数会在参数传入阶段出现严重的错误，这个错误会导致 __segmentation error__。也就是大家的老朋友段错误。
-
-在nasal文件中使用`import("文件名.nas")`可以导入该文件中你包装的所有内置函数，接下来你就可以使用他们了。
-当然也有另外一种办法来导入这些nasal文件，下面两种导入方式的效果是一样的：
-
-```javascript
-import.dirname.dirname.filename;
-import("./dirname/dirname/filename.nas");
-```
-
 当运行内置函数的时候，内存分配器如果运行超过一次，那么会有更大可能性多次触发垃圾收集器的mark-sweep。这个操作会在`gc::alloc`中触发。
 如果先前获取的数值没有被正确存到可以被垃圾收集器索引到的地方，那么它会被错误地回收，这会导致严重的错误。
 
-所以请使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
+可以使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
 
 ```C++
 nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
@@ -544,11 +523,52 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 }
 ```
 
+这些工作都完成之后，在内置函数注册表中填写它在nasal中的别名，并且在表中填对这个函数的函数指针:
+
+```C++
+struct func
+{
+    const char* name;
+    nas_ref (*func)(nas_ref*,nasal_gc&);
+} builtin[]=
+{
+    {"__print",builtin_print},
+    {nullptr,  nullptr      }
+};
+```
+
+最后，将其包装到nasal文件中:
+
+```javascript
+var print=func(elems...){
+    return __print(elems);
+};
+```
+
+事实上`__print`后面跟着的传参列表不是必须要写的。所以这样写也对:
+
+```javascript
+var print=func(elems...){
+    return __print;
+};
+```
+
+如果你不把内置函数包装到一个普通的nasal函数中，那么直接调用这个内置函数会在参数传入阶段出现 __segmentation fault(段错误)__。
+
+在nasal文件中使用`import("文件名.nas")`可以导入该文件中你包装的所有内置函数，接下来你就可以使用他们了。
+当然也有另外一种办法来导入这些nasal文件，下面两种导入方式的效果是一样的：
+
+```javascript
+import.dirname.dirname.filename;
+import("./dirname/dirname/filename.nas");
+```
+
 </details>
 
 <details><summary>模块(开发者教程)</summary>
 
-如果只有上文中那种方式来添加你自定义的函数到nasal中，这肯定是非常麻烦的。因此，我们实现了一组实用的内置函数来帮助你添加你自己创建的模块。
+如果只有上文中那种方式来添加你自定义的函数到nasal中，这肯定是非常麻烦的。
+因此，我们实现了一组实用的内置函数来帮助你添加你自己创建的模块。
 
 在2021/12/3更新后，我们给`lib.nas`添加了下面的这一批函数:
 
@@ -558,7 +578,7 @@ var dylib=
     dlopen:  func(libname){return __dlopen;},
     dlsym:   func(lib,sym){return __dlsym; },
     dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(funcptr,args...){return __dlcall}
+    dlcall:  func(funcptr,args...){return __dlcall;}
 };
 ```
 
@@ -605,7 +625,8 @@ Windows(`.dll`):
 
 `g++ -shared -o libfib.dll fib.o`
 
-好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了。下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样我们可以对不同系统进行适配:
+好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了。
+下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样可以实现跨平台:
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
