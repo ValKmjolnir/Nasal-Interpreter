@@ -308,10 +308,10 @@ while(1){
             break;
         }
         elsif(path=="/favicon.ico")
-            http.send(client,respond.ok(io.fin("./pic/favicon.ico")));
+            http.send(client,respond.ok(io.fin("./doc/pic/favicon.ico")));
         elsif(path=="/license")
             http.send(client,respond.ok(io.fin("./LICENSE")));
-        elsif(path=="/pic/nasal.png" or path=="/pic/benchmark.png" or path=="/pic/mandelbrot.png")
+        elsif(path=="/doc/pic/nasal.png" or path=="/doc/pic/benchmark.png" or path=="/doc/pic/mandelbrot.png")
             http.send(client,respond.ok(io.fin("."~path)));
         else{
             var filename=substr(path,1,size(path)-1);

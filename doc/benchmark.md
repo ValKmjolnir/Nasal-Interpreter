@@ -1,6 +1,6 @@
 # __Benchmark__
 
-![benchmark](../pic/benchmark.png)
+![benchmark](../doc/pic/benchmark.png)
 
 ## version 6.5 (i5-8250U windows10 2021/6/19)
 
@@ -109,4 +109,4 @@ And we use this bf interpreter to draw a mandelbrot set.
 
 In 2022/2/17 update we added `\e` into the lexer. And the `bfcolored.nas` uses this special ASCII code. Here is the result:
 
-![mandelbrot](../pic/mandelbrot.png)
+![mandelbrot](../doc/pic/mandelbrot.png)

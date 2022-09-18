@@ -7,7 +7,7 @@
 #include <stack>
 #include <unordered_map>
 
-enum op_code:u8
+enum op_code_type:u8
 {
     op_exit,   // stop the virtual machine
     op_intg,   // global scope size
@@ -487,7 +487,7 @@ void nasal_codegen::call_id(const nasal_ast& ast)
         {
             gen(op_callb,i,ast.line());
             if(local.empty())
-                die("should warp native functions in local scope",ast.line(),ast.col());
+                die("should warp native function in local scope",ast.line(),ast.col());
             return;
         }
     i32 index;
