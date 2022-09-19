@@ -1,3 +1,5 @@
+import.stl.padding;
+
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],
     ["    ████╗","   ██╔██║","  ██╔╝██║"," ███████║","██╔═══██║","╚═╝   ╚═╝"],
@@ -45,49 +47,38 @@ var trans_ttf=func(string){
         println(i);
     return;
 }
-var curve1=func(){
-    var shadow=["░","▒","▓","█","▀","▄","▐","▌"];
-    rand(100);
-    var s="";
-    for(var i=0;i<10;i+=1){
-        for(var j=0;j<40;j+=1)
-            s~=shadow[int(8*rand())];
-        s~='\n';
-    }
-    print(s);
-}
-var curve2=func(){
+var curve1=func(line=6){
     var table=["╚","═","╝","╔","║","╗"];
     rand(100);
     var s="";
-    for(var i=0;i<10;i+=1){
-        for(var j=0;j<40;j+=1)
+    for(var i=0;i<line;i+=1){
+        for(var j=0;j<45;j+=1)
             s~=table[int(6*rand())];
         s~='\n';
     }
     print(s);
 }
-var curve3=func(){
-    var s=["","","","","",""];
-    var cnt=0;
-    foreach(var char;char_ttf){
-        cnt+=1;
-        forindex(var i;char)
-            s[i]~=char[i];
-        if(cnt==9){
-            forindex(var i;s){
-                println(s[i]);
-                s[i]='';
-            }
-            cnt=0;
-        }
+var curve2=func(line=3){
+    var shadow=["░","▒","▓","█","▀","▄","▐","▌"];
+    rand(100);
+    var s="";
+    for(var i=0;i<line;i+=1){
+        for(var j=0;j<45;j+=1)
+            s~=shadow[int(8*rand())];
+        s~='\n';
     }
-    return;
+    print(s);
 }
-var curve4=func(){
-    var arr=[0,1,2,3,4,5,6,7,8,0,1,2,3,4,5,6,7,8,0,1,2,3,4,5,6,7,8];
-    for(var loop=0;loop<10;loop+=1){
-        for(var i=26;i>=0;i-=1){
+var curve3=func(line=3){
+    var arr=[
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8
+    ];
+    for(var loop=0;loop<line;loop+=1){
+        for(var i=size(arr)-1;i>=0;i-=1){
             var rand_index=int(i*rand());
             (arr[i],arr[rand_index])=(arr[rand_index],arr[i]);
         }
@@ -100,19 +91,7 @@ var curve4=func(){
     }
     return;
 }
-var curve5=func(){
-    for(var i=0;i<=9;i+=1)
-        println(i,"\e["~i~"mh \e[0m");
-    for(var i=30;i<=37;i+=1)
-        println(i,"\e["~i~"mh \e[0m");
-    for(var i=40;i<=47;i+=1)
-        println(i,"\e["~i~"mh \e[0m");
-    for(var i=90;i<=97;i+=1)
-        println(i,"\e["~i~"mh \e[0m");
-    for(var i=100;i<=107;i+=1)
-        println(i,"\e["~i~"mh \e[0m");
-}
-var curve6=func(){
+var curve4=func(line=6){
     var shadow=["m░\e[0m","m▒\e[0m","m▓\e[0m","m█\e[0m","m▀\e[0m","m▄\e[0m","m▐\e[0m","m▌\e[0m"];
     var front=[
         "30","31","32","33","34","35","36","37",
@@ -123,21 +102,38 @@ var curve6=func(){
         "100","101","102","103","104","105","106","107"
     ];
     rand(time(0));
-    for(var i=0;i<15;i+=1){
+    for(var i=0;i<line;i+=1){
         for(var j=0;j<45;j+=1)
             print("\e["~front[16*rand()]~";"~back[16*rand()]~shadow[8*rand()]);
         print('\n');
     }
 }
-var curve7=func(){
+var curve5=func(line=6){
     var vec=["▀▄─","▄▀─","▀─▄","▄─▀"];
-    for(var (y,p)=(0,0);y!=6;y+=1){
-        for(var x=0;x!=16;x+=1)
+    for(var (y,p)=(0,0);y!=line;y+=1){
+        for(var x=0;x!=15;x+=1)
             print(vec[p]);
         print("\n");
         p+=1;
         p=p>=4?0:p;
     }
+}
+var ansi_escape_sequence=func(){
+    for(var i=0;i<=9;i+=1)
+        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    print("\n");
+    for(var i=30;i<=37;i+=1)
+        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    print("\n");
+    for(var i=40;i<=47;i+=1)
+        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    print("\n");
+    for(var i=90;i<=97;i+=1)
+        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    print("\n");
+    for(var i=100;i<=107;i+=1)
+        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    print("\n");
 }
 
 # enable unicode
@@ -145,11 +141,9 @@ if(os.platform()=="windows")
     system("chcp 65001");
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
-trans_ttf("just for fun");
 curve1();
 curve2();
 curve3();
 curve4();
 curve5();
-curve6();
-curve7();
+ansi_escape_sequence();

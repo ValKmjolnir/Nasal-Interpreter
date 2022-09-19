@@ -1,16 +1,20 @@
 # padding.nas
 # ValKmjolnir 2022/9/4
 
-var leftpad=func(str,len,char=" "){
-    var strlen=size(str);
+var leftpad=func(s,len,char=" "){
+    if(typeof(s)=="num")
+        s=str(s);
+    var strlen=size(s);
     for(var i=strlen;i<len;i+=1)
-        str=char~str;
-    return str;
+        s=char~s;
+    return s;
 }
 
-var rightpad=func(str,len,char=" "){
-    var strlen=size(str);
+var rightpad=func(s,len,char=" "){
+    if(typeof(s)=="num")
+        s=str(s);
+    var strlen=size(s);
     for(var i=strlen;i<len;i+=1)
-        str~=char;
-    return str;
+        s~=char;
+    return s;
 }
