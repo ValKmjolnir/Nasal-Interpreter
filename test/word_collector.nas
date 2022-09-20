@@ -1,49 +1,56 @@
 import.stl.sort;
-var argv=runtime.argv();
 
-if(size(argv)<1){
-    println("no input files.");
-    exit(-1);
-}
-
-var all_exists=1;
-foreach(var f;argv){
-    if(!io.exists(f)){
-        println("cannot open file <",f,">");
-        all_exists=0;
+var to_lower=func(s){
+    var tmp="";
+    for(var i=0;i<size(s);i+=1){
+        var c=s[i];
+        if('a'[0]<=c and c<='z'[0])
+            tmp~=chr(c);
+        elsif('A'[0]<=c and c<='Z'[0])
+            tmp~=chr(c-'A'[0]+'a'[0]);
+        else
+            tmp~=chr(c);
     }
+    return tmp;
 }
 
-if(!all_exists){
-    exit(-1);
-}
-
-var to_lower=func(c){
-    if('a'[0]<=c[0] and c[0]<='z'[0])
-        return c;
-    elsif('A'[0]<=c[0] and c[0]<='Z'[0])
-        return chr(c[0]-'A'[0]+'a'[0]);
-    return c;
-}
-
-var file_content="";
-foreach(var f;argv)
-    file_content~=io.fin(f)~" ";
-var token={};
-var len=size(file_content);
-var s="";
-for(var i=0;i<len;i+=1){
-    var n=file_content[i];
-    var c=chr(n);
-    if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0]) or n=='\''[0] or n=='-'[0]){
-        s~=to_lower(c);
-    }elsif(size(s)){
-        if(s[0]!="-"[0] and s[0]!="'"[0] and s[-1]!="-"[0] and s[-1]!="'"[0])
-            token[s]+=1;
-        s="";
+var spliter=func(content){
+    var token={};
+    var len=size(content);
+    var s="";
+    for(var i=0;i<len;i+=1){
+        var n=content[i];
+        var c=chr(n);
+        if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0]) or n=='\''[0] or n=='-'[0]){
+            s~=c;
+        }elsif(size(s)){
+            if(s[0]!="-"[0] and s[0]!="'"[0] and s[-1]!="-"[0] and s[-1]!="'"[0])
+                token[to_lower(s)]+=1;
+            s="";
+        }
     }
+    return token;
 }
 
-var vec=keys(token);
-sort(vec,func(a,b){return cmp(a,b)<=0;});
-println(vec);
+func(argv){
+    if(size(argv)<1){
+        println("no input files.");
+        exit(-1);
+    }
+    var all_exists=1;
+    foreach(var f;argv){
+        if(!io.exists(f)){
+            println("cannot open file <",f,">");
+            all_exists=0;
+        }
+    }
+    if(!all_exists){
+        exit(-1);
+    }
+    var file_content="";
+    foreach(var f;argv)
+        file_content~=io.fin(f)~" ";
+    var vec=keys(spliter(file_content));
+    sort(vec,func(a,b){return cmp(a,b)<=0;});
+    println(vec);
+}(runtime.argv());
