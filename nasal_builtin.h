@@ -32,18 +32,7 @@
 void print_core(std::vector<nas_ref>& elems)
 {
     for(auto& i:elems)
-        switch(i.type)
-        {
-            case vm_none:std::cout<<"null";        break;
-            case vm_nil: std::cout<<"nil";         break;
-            case vm_num: std::cout<<i.num();       break;
-            case vm_str: std::cout<<i.str();       break;
-            case vm_vec: i.vec().print();          break;
-            case vm_hash:i.hash().print();         break;
-            case vm_func:std::cout<<"func(..){..}";break;
-            case vm_obj: std::cout<<"<object>";    break;
-            case vm_co:  std::cout<<"<coroutine>"; break;
-        }
+        i.print();
 }
 nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 {
@@ -811,8 +800,8 @@ nas_ref builtin_readdir(nas_ref* local,nasal_gc& gc)
     if(!handle.objchk(nas_obj::dir))
         return nas_err("readdir","not a valid dir handle");
 #ifdef _MSC_VER
-    WIN32_FIND_DATA data;
-    if(!FindNextFile(handle.obj().ptr,&data))
+    WIN32_FIND_DATAA data;
+    if(!FindNextFileA(handle.obj().ptr,&data))
         return nil;
     return gc.newstr(data.cFileName);
 #else
