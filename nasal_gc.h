@@ -86,7 +86,7 @@ struct nas_ref
     // number and string can be translated to each other
     f64    tonum();
     string tostr();
-    void   print();
+    friend std::ostream& operator<<(std::ostream&,nas_ref&);
     bool   objchk(u32);
     inline nas_ref*   addr();
     inline u32        ret ();
@@ -107,7 +107,7 @@ struct nas_vec
     std::vector<nas_ref> elems;
 
     nas_vec():printed(false){}
-    void     print();
+    friend   std::ostream& operator<<(std::ostream&,nas_vec&);
     usize    size(){return elems.size();}
     nas_ref  get_val(const i32);
     nas_ref* get_mem(const i32);
@@ -119,7 +119,7 @@ struct nas_hash
     std::unordered_map<string,nas_ref> elems;
 
     nas_hash():printed(false){}
-    void     print();
+    friend   std::ostream& operator<<(std::ostream&,nas_hash&);
     usize    size(){return elems.size();}
     nas_ref  get_val(const string&);
     nas_ref* get_mem(const string&);
@@ -268,23 +268,21 @@ nas_ref* nas_vec::get_mem(const i32 n)
         return nullptr;
     return &elems[n>=0?n:n+size];
 }
-void nas_vec::print()
+std::ostream& operator<<(std::ostream& out,nas_vec& vec)
 {
-    if(!elems.size() || printed)
+    if(!vec.elems.size() || vec.printed)
     {
-        std::cout<<(elems.size()?"[..]":"[]");
-        return;
+        out<<(vec.elems.size()?"[..]":"[]");
+        return out;
     }
-    printed=true;
+    vec.printed=true;
     usize iter=0;
-    usize size=elems.size();
-    std::cout<<'[';
-    for(auto& i:elems)
-    {
-        i.print();
-        std::cout<<",]"[(++iter)==size];
-    }
-    printed=false;
+    usize size=vec.elems.size();
+    out<<'[';
+    for(auto& i:vec.elems)
+        out<<i<<",]"[(++iter)==size];
+    vec.printed=false;
+    return out;
 }
 
 nas_ref nas_hash::get_val(const string& key)
@@ -325,24 +323,21 @@ nas_ref* nas_hash::get_mem(const string& key)
     }
     return nullptr;
 }
-void nas_hash::print()
+std::ostream& operator<<(std::ostream& out,nas_hash& hash)
 {
-    if(!elems.size() || printed)
+    if(!hash.elems.size() || hash.printed)
     {
-        std::cout<<(elems.size()?"{..}":"{}");
-        return;
+        out<<(hash.elems.size()?"{..}":"{}");
+        return out;
     }
-    printed=true;
+    hash.printed=true;
     usize iter=0;
-    usize size=elems.size();
-    std::cout<<'{';
-    for(auto& i:elems)
-    {
-        std::cout<<i.first<<':';
-        i.second.print();
-        std::cout<<",}"[(++iter)==size];
-    }
-    printed=false;
+    usize size=hash.elems.size();
+    out<<'{';
+    for(auto& i:hash.elems)
+        out<<i.first<<':'<<i.second<<",}"[(++iter)==size];
+    hash.printed=false;
+    return out;
 }
 
 void nas_func::clear()
@@ -400,20 +395,21 @@ string nas_ref::tostr()
     }
     return "";
 }
-void nas_ref::print()
+std::ostream& operator<<(std::ostream& out,nas_ref& ref)
 {
-    switch(type)
+    switch(ref.type)
     {
-        case vm_none: std::cout<<"undefined";   break;
-        case vm_nil:  std::cout<<"nil";         break;
-        case vm_num:  std::cout<<val.num;       break;
-        case vm_str:  std::cout<<str();         break;
-        case vm_vec:  vec().print();            break;
-        case vm_hash: hash().print();           break;
-        case vm_func: std::cout<<"func(..){..}";break;
-        case vm_obj:  std::cout<<"<object>";    break;
-        case vm_co:   std::cout<<"<coroutine>"; break;
+        case vm_none: out<<"undefined";   break;
+        case vm_nil:  out<<"nil";         break;
+        case vm_num:  out<<ref.val.num;   break;
+        case vm_str:  out<<ref.str();     break;
+        case vm_vec:  out<<ref.vec();     break;
+        case vm_hash: out<<ref.hash();    break;
+        case vm_func: out<<"func(..){..}";break;
+        case vm_obj:  out<<"<object>";    break;
+        case vm_co:   out<<"<coroutine>"; break;
     }
+    return out;
 }
 bool nas_ref::objchk(u32 objtype)
 {

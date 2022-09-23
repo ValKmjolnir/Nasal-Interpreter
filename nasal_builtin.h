@@ -8,6 +8,8 @@
 #include <dirent.h>
 #else
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
 #include <io.h>
 #include <direct.h>
 #endif
@@ -29,20 +31,17 @@
 #define environ (*_NSGetEnviron())
 #endif
 
-void print_core(std::vector<nas_ref>& elems)
-{
-    for(auto& i:elems)
-        i.print();
-}
 nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 {
-    print_core(local[1].vec().elems);
+    for(auto& i:local[1].vec().elems)
+        std::cout<<i;
     std::cout<<std::flush;
     return nil;
 }
 nas_ref builtin_println(nas_ref* local,nasal_gc& gc)
 {
-    print_core(local[1].vec().elems);
+    for(auto& i:local[1].vec().elems)
+        std::cout<<i;
     std::cout<<std::endl;
     return nil;
 }
@@ -112,12 +111,10 @@ nas_ref builtin_fout(nas_ref* local,nasal_gc& gc)
     nas_ref str=local[2];
     if(val.type!=vm_str)
         return nas_err("io::fout","\"filename\" must be string");
-    if(str.type!=vm_str)
-        return nas_err("io::fout","\"str\" must be string");
     std::ofstream fout(val.str());
     if(fout.fail())
         return nas_err("io::fout","cannot open <"+val.str()+">");
-    fout<<str.str();
+    fout<<str;
     return nil;
 }
 nas_ref builtin_split(nas_ref* local,nasal_gc& gc)
@@ -780,9 +777,9 @@ nas_ref builtin_opendir(nas_ref* local,nasal_gc& gc)
     if(path.type!=vm_str)
         return nas_err("opendir","\"path\" must be string");
 #ifdef _MSC_VER
-    WIN32_FIND_DATA data;
+    WIN32_FIND_DATAA data;
     HANDLE p;
-    p=FindFirstFile((path.str()+"\\*.*").c_str(),&data);
+    p=FindFirstFileA((path.str()+"\\*.*").c_str(),&data);
     if(p==INVALID_HANDLE_VALUE)
         return nas_err("opendir","cannot open dir <"+path.str()+">");
 #else

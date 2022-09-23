@@ -509,8 +509,8 @@ nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
             case vm_nil:  std::cout<<"nil";         break;
             case vm_num:  std::cout<<i.num();       break;
             case vm_str:  std::cout<<i.str();       break;
-            case vm_vec:  i.vec().print();          break;
-            case vm_hash: i.hash().print();         break;
+            case vm_vec:  std::cout<<i.vec();       break;
+            case vm_hash: std::cout<<i.hash();      break;
             case vm_func: std::cout<<"func(..){..}";break;
             case vm_obj:  std::cout<<"<object>";    break;
         }
