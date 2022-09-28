@@ -13,7 +13,7 @@ var compare=func(){
         var total=end-begin;
         var timestamp=maketimestamp();
         timestamp.stamp();
-        var bar=process_bar.bar(front:os.platform()=="windows"?"sharp":"block",back:"point",sep:"line",length:50);
+        var bar=process_bar.high_resolution_bar(50);
         for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){
@@ -76,7 +76,7 @@ var filechecksum=func(){
     var total=size(files);
     var timestamp=maketimestamp();
     timestamp.stamp();
-    var bar=process_bar.bar(front:os.platform()=="windows"?"sharp":"block",back:"point",sep:"line",length:50);
+    var bar=process_bar.high_resolution_bar(50);
     forindex(var i;files){
         var f=io.fin(files[i]);
         var res=md5(f);
@@ -94,5 +94,7 @@ var randomchecksum=func(){
         compare(i,i+512);
 }
 
+if(os.platform()=="windows")
+    system("chcp 65001");
 filechecksum();
 randomchecksum();

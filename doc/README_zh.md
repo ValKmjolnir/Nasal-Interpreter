@@ -80,11 +80,7 @@ __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构�
 
 ![usage](../doc/gif/help.gif)
 
-如果你的操作系统是 `Windows` 且想输出unicode，请保证控制台代码页支持utf-8，使用下面这个命令启用代码页:
-
-> chcp 65001
-
-或者直接在nasal代码里写这个来开启:
+如果你是 `Windows` 用户且想正常输出unicode，在nasal代码里写这个来开启unicode代码页:
 
 ```javascript
 if(os.platform()=="windows")

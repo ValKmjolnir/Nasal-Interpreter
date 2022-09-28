@@ -44,8 +44,10 @@ var total=1000; # ms
 var co=coroutine.create(productor);
 var tm=maketimestamp();
 
+if(os.platform()=="windows")
+    system("chcp 65001");
 var counter=0;
-var bar=process_bar.bar("block","point","line",40);
+var bar=process_bar.high_resolution_bar(40);
 var consumer=func(){
     counter+=1;
     for(var i=0;i<5;i+=1)
