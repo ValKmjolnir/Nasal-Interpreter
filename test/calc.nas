@@ -106,7 +106,7 @@ var count=func(s,c){
 }
 
 var column=func(number){
-    number=number>=1000?int(number/1000)~'k':str(number);
+    number=number>=1000?substr(str(number/1000),0,3)~'k':str(number);
     return rightpad(number,6);
 }
 

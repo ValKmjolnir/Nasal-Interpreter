@@ -276,8 +276,7 @@ std::ostream& operator<<(std::ostream& out,nas_vec& vec)
         return out;
     }
     vec.printed=true;
-    usize iter=0;
-    usize size=vec.elems.size();
+    usize iter=0,size=vec.elems.size();
     out<<'[';
     for(auto& i:vec.elems)
         out<<i<<",]"[(++iter)==size];
@@ -331,8 +330,7 @@ std::ostream& operator<<(std::ostream& out,nas_hash& hash)
         return out;
     }
     hash.printed=true;
-    usize iter=0;
-    usize size=hash.elems.size();
+    usize iter=0,size=hash.elems.size();
     out<<'{';
     for(auto& i:hash.elems)
         out<<i.first<<':'<<i.second<<",}"[(++iter)==size];

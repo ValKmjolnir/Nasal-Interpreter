@@ -91,11 +91,7 @@ If you think `-O3` isn't that safe and stable, you could choose:
 
 ![usage](./doc/gif/help.gif)
 
-If your system is `Windows` and you want to output unicode,please use this command before running nasal:
-
-> chcp 65001
-
-or you could write this in nasal code:
+If your system is `Windows` and you want to output unicode, you could write this in nasal code:
 
 ```javascript
 if(os.platform()=="windows")

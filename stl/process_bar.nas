@@ -4,8 +4,10 @@
 
 var process_bar={
     bar:nil,
+    high_resolution_bar:nil,
     spinner:nil
 };
+
 process_bar.bar=func(){
     var bar={
         solid_triangle_right:"▶",
@@ -62,6 +64,45 @@ process_bar.bar=func(){
         };
     };
 }();
+
+# return a high resolution progress bar
+# example:
+# var bar=process_bar.high_resolution_bar(40);
+# for(var i=0;i<=1;i+=0.001){
+#     print(bar.bar(i,40),'\r');
+#     unix.sleep(0.001);
+# }
+# println();
+process_bar.high_resolution_bar=func(){
+    var block=["▏","▎","▍","▌","▋","▊","▉","█"];
+    return func(length){
+        return {
+            bar: func(number){
+                if(number>1)
+                    number=1;
+                if(number<0)
+                    number=0;
+                var block_len=number*length;
+                var complete_block=int(block_len);
+                var decimal=block_len-complete_block;
+                var progress=complete_block+(decimal!=0);
+                var s="|";
+                for(var i=0;i<complete_block;i+=1){
+                    s~="█";
+                }
+                if(decimal!=0){
+                    s~=block[int(decimal*10)/10*size(block)];
+                }
+                for(var i=0;i<length-progress;i+=1){
+                    s~=" ";
+                }
+                s~="|";
+                return s;
+            }
+        };
+    };
+}();
+
 process_bar.spinner=func(){
     var generate_scrolling_spinner=func(s){
         if(typeof(s)!="str")

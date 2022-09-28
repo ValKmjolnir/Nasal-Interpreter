@@ -47,7 +47,7 @@ func(){
         var mem_occ=(mem.MemTotal-mem.MemFree)/mem.MemTotal*100;
         var cpu_occ=cpu_occupation();
         var key=libkey.nonblock();
-        var bar=process_bar.bar("block","point","line",25);
+        var bar=process_bar.high_resolution_bar(25);
         if(key!=nil and chr(key)=="q")
             break;
         println("\e[1;1H\e[1m Memory total(GB)    : \e[0m\e[36m",mem.MemTotal/1024/1024,"\e[0m");
