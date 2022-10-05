@@ -623,7 +623,8 @@ void nasal_gc::info()
             std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<allocc[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(u8 i=0;i<gc_tsize;++i)
-        std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+        if(ini[i] || size[i])
+            std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
 }
 nas_ref nasal_gc::alloc(u8 type)
 {
