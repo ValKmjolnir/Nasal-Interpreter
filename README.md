@@ -32,7 +32,7 @@ The designer is [Andy Ross](https://github.com/andyross).
 
 This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++14`)
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
-But we really appreciate that Andy created this amazing programming language and his interpreter project.
+But we really appreciate that Andy created this amazing programming language and his interpreter.
 
 This project uses __MIT license__ (2021/5/4).
 

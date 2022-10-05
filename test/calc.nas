@@ -28,14 +28,14 @@ var lib=[
     "queue.nas",
     "result.nas",
     "sort.nas",
-    "stack.nas"
+    "stack.nas",
+    "string.nas"
 ];
 
 var testfile=[
     "ascii-art.nas",
     "auto_crash.nas",
     "bf.nas",
-    "bfcolored.nas",
     "bfconvertor.nas",
     "bfs.nas",
     "bigloop.nas",

@@ -150,8 +150,20 @@ var (ptr,pc)=(0,0);
 var (code,inum,stack,char)=([],[],[],[]);
 var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
 setsize(char,256);
-forindex(var i;char)
-    char[i]=chr(i);
+
+var color=[
+    "\e[31m","\e[32m","\e[33m","\e[34m","\e[35m","\e[36m",
+    "\e[90m","\e[91m","\e[92m","\e[93m","\e[94m","\e[95m","\e[96m"
+];
+func(){
+    var cnt=0;
+    forindex(var i;char){
+        char[i]=color[cnt]~chr(i)~"\e[0m";
+        cnt+=1;
+        if(cnt>12)
+            cnt=0;
+    }
+}();
 
 var funcs=[
     func{paper[ptr]+=inum[pc];},
@@ -221,6 +233,10 @@ var bf=func(program){
         die("lack ]");
         return;
     }
+
+    # enable ANSI escape sequence
+    if(os.platform()=="windows")
+        system("color");
     len=size(code);
     for(pc=0;pc<len;pc+=1)
         funcs[code[pc]]();
