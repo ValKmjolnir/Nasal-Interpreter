@@ -45,7 +45,8 @@ protected:
     void lstate();
     void ustate();
     void detail();
-    [[noreturn]] void die(const string&);
+    void die(const string&);
+#define vm_error(info) {die(info);return;}
     /* vm calculation functions*/
     bool condition(nas_ref);
     /* vm operands */
@@ -306,8 +307,6 @@ void nasal_vm::detail()
     lstate();
     ustate();
 }
-
-[[noreturn]]
 void nasal_vm::die(const string& str)
 {
     std::cout<<"[vm] error: "<<str<<"\n";
@@ -315,7 +314,13 @@ void nasal_vm::die(const string& str)
     stackinfo();
     if(detail_info)
         detail();
-    std::exit(1);
+    if(gc.stack==stack){
+        std::exit(1);
+    }else{
+        pc=0; // mark coroutine 'dead'
+        gc.ctxreserve();
+        top[0]=nil;
+    }
 }
 inline bool nasal_vm::condition(nas_ref val)
 {
@@ -436,7 +441,7 @@ inline void nasal_vm::o_unot()
             else
                 top[0]=num?zero:one;
         }break;
-        default:die("incorrect value type");break;
+        default:vm_error("incorrect value type");break;
     }
 }
 inline void nasal_vm::o_usub()
@@ -581,7 +586,7 @@ inline void nasal_vm::o_jf()
 inline void nasal_vm::o_cnt()
 {
     if(top[0].type!=vm_vec)
-        die("must use vector in forindex/foreach");
+        vm_error("must use vector in forindex/foreach");
     (++top)[0]={vm_cnt,(i64)-1};
 }
 inline void nasal_vm::o_findex()
@@ -626,15 +631,15 @@ inline void nasal_vm::o_callv()
     {
         top[0]=vec.vec().get_val(val.tonum());
         if(top[0].type==vm_none)
-            die("index out of range:"+std::to_string(val.tonum()));
+            vm_error("index out of range:"+std::to_string(val.tonum()));
     }
     else if(vec.type==vm_hash)
     {
         if(val.type!=vm_str)
-            die("must use string as the key");
+            vm_error("must use string as the key");
         top[0]=vec.hash().get_val(val.str());
         if(top[0].type==vm_none)
-            die("cannot find member \""+val.str()+"\"");
+            vm_error("cannot find member \""+val.str()+"\"");
         if(top[0].type==vm_func)
             top[0].func().local[0]=val;// 'me'
     }
@@ -644,33 +649,30 @@ inline void nasal_vm::o_callv()
         i32 num=val.tonum();
         i32 len=str.length();
         if(num<-len || num>=len)
-            die("index out of range:"+std::to_string(val.tonum()));
+            vm_error("index out of range:"+std::to_string(val.tonum()));
         top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
     }
     else
-        die("must call a vector/hash/string");
+        vm_error("must call a vector/hash/string");
 }
 inline void nasal_vm::o_callvi()
 {
     nas_ref val=top[0];
     if(val.type!=vm_vec)
-        die("must use a vector");
-
+        vm_error("must use a vector");
     // cannot use operator[],because this may cause overflow
     (++top)[0]=val.vec().get_val(imm[pc]);
     if(top[0].type==vm_none)
-        die("index out of range:"+std::to_string(imm[pc]));
+        vm_error("index out of range:"+std::to_string(imm[pc]));
 }
 inline void nasal_vm::o_callh()
 {
     nas_ref val=top[0];
     if(val.type!=vm_hash)
-        die("must call a hash");
-
+        vm_error("must call a hash");
     top[0]=val.hash().get_val(str_table[imm[pc]]);
     if(top[0].type==vm_none)
-        die("member \""+str_table[imm[pc]]+"\" does not exist");
-
+        vm_error("member \""+str_table[imm[pc]]+"\" does not exist");
     if(top[0].type==vm_func)
         top[0].func().local[0]=val;// 'me'
 }
@@ -679,19 +681,18 @@ inline void nasal_vm::o_callfv()
     u32 argc=imm[pc]; // arguments counter
     nas_ref* local=top-argc+1; // arguments begin address
     if(local[-1].type!=vm_func)
-        die("must call a function");
-    
+        vm_error("must call a function");
     auto& func=local[-1].func();
     nas_ref tmp=local[-1];
     local[-1]=funcr;
     funcr=tmp;
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if(top-argc+func.lsize+3>=canary)
-        die("stack overflow");
+        vm_error("stack overflow");
     // parameter size is func->psize-1, 1 is reserved for "me"
     u32 psize=func.psize-1;
     if(argc<psize && func.local[argc+1].type==vm_none)
-        die("lack argument(s)");
+        vm_error("lack argument(s)");
 
     nas_ref dynamic=nil;
     top=local+func.lsize;
@@ -726,17 +727,16 @@ inline void nasal_vm::o_callfh()
 {
     auto& hash=top[0].hash().elems;
     if(top[-1].type!=vm_func)
-        die("must call a function");
-
+        vm_error("must call a function");
     auto& func=top[-1].func();
     nas_ref tmp=top[-1];
     top[-1]=funcr;
     funcr=tmp;
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if(top+func.lsize+2>=canary)
-        die("stack overflow");
+        vm_error("stack overflow");
     if(func.dpara>=0)
-        die("special call cannot use dynamic argument");
+        vm_error("special call cannot use dynamic argument");
 
     nas_ref* local=top;
     top+=func.lsize;
@@ -749,7 +749,7 @@ inline void nasal_vm::o_callfh()
         if(hash.count(key))
             local[i.second]=hash[key];
         else if(local[i.second].type==vm_none)
-            die("lack argument(s): \""+key+"\"");
+            vm_error("lack argument(s): \""+key+"\"");
     }
 
     top[0]=upvalr;
@@ -769,7 +769,7 @@ inline void nasal_vm::o_callb()
     // (top) will be set to another context.top, instead of main_context.top
     top[0]=(*builtin[imm[pc]].func)(localr,gc);
     if(top[0].type==vm_none)
-        die("native function error");
+        vm_error("native function error");
 }
 inline void nasal_vm::o_slcbeg()
 {
@@ -780,7 +780,7 @@ inline void nasal_vm::o_slcbeg()
     // +--------------+
     (++top)[0]=gc.alloc(vm_vec);
     if(top[-1].type!=vm_vec)
-        die("must slice a vector");
+        vm_error("must slice a vector");
 }
 inline void nasal_vm::o_slcend()
 {
@@ -792,7 +792,7 @@ inline void nasal_vm::o_slc()
     nas_ref val=(top--)[0];
     nas_ref res=top[-1].vec().get_val(val.tonum());
     if(res.type==vm_none)
-        die("index out of range:"+std::to_string(val.tonum()));
+        vm_error("index out of range:"+std::to_string(val.tonum()));
     top[0].vec().elems.push_back(res);
 }
 inline void nasal_vm::o_slc2()
@@ -816,15 +816,12 @@ inline void nasal_vm::o_slc2()
     else if(type1!=vm_nil && type2==vm_nil)
         num2=num1<0? -1:size-1;
 
-    if(num1>num2)
-        die("begin index must be less than or equal to end index");
-    else if(num1<-size || num1>=size)
-        die("begin index out of range: "+std::to_string(num1));
-    else if(num2<-size || num2>=size)
-        die("end index out of range: "+std::to_string(num2));
-    else
+    if(num1<-size || num1>=size || num2<-size || num2>=size){
+        vm_error("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range.");
+    }else if(num1<=num2){
         for(i32 i=num1;i<=num2;++i)
             aim.push_back(i>=0?ref[i]:ref[i+size]);
+    }
 }
 inline void nasal_vm::o_mcallg()
 {
@@ -855,12 +852,11 @@ inline void nasal_vm::o_mcallv()
     {
         memr=vec.vec().get_mem(val.tonum());
         if(!memr)
-            die("index out of range:"+std::to_string(val.tonum()));
-    }
-    else if(vec.type==vm_hash) // do mcallh but use the mcallv way
+            vm_error("index out of range:"+std::to_string(val.tonum()));
+    }else if(vec.type==vm_hash) // do mcallh but use the mcallv way
     {
         if(val.type!=vm_str)
-            die("must use string as the key");
+            vm_error("must use string as the key");
         nas_hash& ref=vec.hash();
         string& str=val.str();
         memr=ref.get_mem(str);
@@ -869,15 +865,14 @@ inline void nasal_vm::o_mcallv()
             ref.elems[str]=nil;
             memr=ref.get_mem(str);
         }
-    }
-    else
-        die("cannot get memory space in this type");
+    }else
+        vm_error("cannot get memory space in this type");
 }
 inline void nasal_vm::o_mcallh()
 {
     nas_ref hash=top[0]; // mcall hash, reserved on stack to avoid gc
     if(hash.type!=vm_hash)
-        die("must call a hash");
+        vm_error("must call a hash");
     nas_hash& ref=hash.hash();
     const string& str=str_table[imm[pc]];
     memr=ref.get_mem(str);
@@ -1021,14 +1016,12 @@ void nasal_vm::run(
     while(code[pc]){
         (this->*code[pc])();
         if(top>=canary)
-            break;
+            die("stack overflow");
         ++pc;
     }
 #endif
 
 vmexit:
-    if(top>=canary)
-        die("stack overflow");
     if(detail)
         gc.info();
     gc.clear();
@@ -1041,7 +1034,7 @@ vmexit:
         op();\
         if(top<canary)\
             goto *code[++pc];\
-        goto vmexit;\
+        die("stack overflow");\
     }
 // do not cause stackoverflow
 #define exec_nodie(op) {op();goto *code[++pc];}

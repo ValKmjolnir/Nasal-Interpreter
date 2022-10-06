@@ -1047,21 +1047,21 @@ nas_ref builtin_cocreate(nas_ref* local,nasal_gc& gc)
     if(gc.cort)
         return nas_err("coroutine::create","cannot create another coroutine in a coroutine");
     nas_ref co=gc.alloc(vm_co);
-    nas_co& coroutine=co.co();
-    coroutine.pc=func.func().entry-1;
+    nas_co& cort=co.co();
+    cort.pc=func.func().entry-1;
 
-    coroutine.top[0]=nil;
-    coroutine.localr=coroutine.top+1;
-    coroutine.top=coroutine.localr+func.func().lsize;
-    coroutine.localr[0]=func.func().local[0];
-    coroutine.top[0]=nil; // old upvalr
-    coroutine.top++;
-    coroutine.top[0]={vm_addr,(nas_ref*)nullptr}; // old localr
-    coroutine.top++;
-    coroutine.top[0]={vm_ret,(u32)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
+    cort.top[0]=nil;
+    cort.localr=cort.top+1;
+    cort.top=cort.localr+func.func().lsize;
+    cort.localr[0]=func.func().local[0];
+    cort.top[0]=nil; // old upvalr
+    cort.top++;
+    cort.top[0]={vm_addr,(nas_ref*)nullptr}; // old localr
+    cort.top++;
+    cort.top[0]={vm_ret,(u32)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
 
-    coroutine.funcr=func; // make sure the coroutine function can use correct upvalues
-    coroutine.status=nas_co::suspended;
+    cort.funcr=func; // make sure the coroutine function can use correct upvalues
+    cort.status=nas_co::suspended;
     
     return co;
 }
