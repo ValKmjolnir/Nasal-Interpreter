@@ -29,7 +29,7 @@ jobs:
         # GitHub auth token
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         # Name of Release to add file to
-        title: Nightly builds
+        title: macOS Nightly build
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next
         # File to release
@@ -55,7 +55,7 @@ jobs:
         # GitHub auth token
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         # Name of Release to add file to
-        title: Nightly build
+        title: Linux Nightly build
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next
         # File to release
