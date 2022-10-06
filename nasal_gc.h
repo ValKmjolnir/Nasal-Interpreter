@@ -32,20 +32,20 @@ const u32 ini[gc_tsize]=
     128, // vm_str
     128, // vm_vec
     32,  // vm_hash
-    512, // vm_func
-    512, // vm_upval
+    128, // vm_func
+    0,   // vm_upval
     0,   // vm_obj
     0    // vm_co
 };
 const u32 incr[gc_tsize]=
 {
     256, // vm_str
-    512, // vm_vec
-    512, // vm_hash
-    512, // vm_func
+    256, // vm_vec
+    256, // vm_hash
+    128, // vm_func
     128, // vm_upval
     128, // vm_obj
-    16   // vm_co
+    32   // vm_co
 };
 
 struct nas_vec;  // vector

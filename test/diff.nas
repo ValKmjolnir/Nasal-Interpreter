@@ -119,6 +119,6 @@ func(diff){
     print("\n");
     diff(
         io.fin("test/bf.nas"),
-        io.fin("test/bfcolored.nas")
+        io.fin("test/bfconvertor.nas")
     );
 }(myers);
