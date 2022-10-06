@@ -46,7 +46,7 @@ jobs:
           make all
           cd ..
           touch nasal-linux-x86_64-nightly.tgz
-          tar -czf --exclude=nasal-linux-x86_64-nightly.tgz nasal-linux-x86_64-nightly.tgz . 
+          tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz . 
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
