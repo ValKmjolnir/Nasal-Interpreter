@@ -17,7 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make
-      run: make
+      run: |
+          make
+          cd module
+          make all
+          cd ..
+          tar -czf nasal-mac-nightly.tgz .
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
@@ -30,5 +35,5 @@ jobs:
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next
         # File to release
-        files: nasal
+        files: nasal-mac-nightly.tgz
    
