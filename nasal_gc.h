@@ -76,10 +76,11 @@ struct nas_ref
     nas_ref(const u8 t,const i64 n):type(t){val.cnt=n;}
     // vm_num
     nas_ref(const u8 t,const f64 n):type(t){val.num=n;}
-    // vm_str/vm_func/vm_vec/vm_hash/vm_upval/vm_obj
+    // nas_val
     nas_ref(const u8 t,nas_val* n):type(t){val.gcobj=n;}
     // vm_addr
     nas_ref(const u8 t,nas_ref* n):type(t){val.addr=n;}
+    // copy
     nas_ref(const nas_ref& nr):type(nr.type),val(nr.val){}
     bool operator==(const nas_ref& nr){return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const nas_ref& nr){return type!=nr.type || val.gcobj!=nr.val.gcobj;}
