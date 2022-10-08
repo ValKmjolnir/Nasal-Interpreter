@@ -35,6 +35,38 @@ func(){
     }
 }();
 
+# test crash in coroutines
+var co=coroutine.create(func{
+    var b=func(){b()}
+    coroutine.yield(b);
+    b();
+    coroutine.yield(0);
+});
+
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[32m ",coroutine.status(co),"\e[0m");
+println("coroutine error: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+
+var co=coroutine.create(func{
+    var a=1;
+    var b=func(){
+        b();
+    }
+    coroutine.yield(b);
+    coroutine.yield(b());
+});
+
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[32m ",coroutine.status(co),"\e[0m");
+println("coroutine error: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("ok");
+
 # pressure test
 var productor=func(){
     for(var i=0;;i+=1)
@@ -62,17 +94,3 @@ tm.stamp();
 while(tm.elapsedMSec()<total)
     consumer();
 println("\nexecute ",counter," tasks during ",total," ms, avg ",counter/total," tasks/ms.");
-
-var co=coroutine.create(func{
-    var b=func(){b()}
-    coroutine.yield(b);
-    b();
-    coroutine.yield(0);
-});
-
-println("coroutine yield: ",coroutine.resume(co));
-println("coroutine state:\e[32m ",coroutine.status(co),"\e[0m");
-println("coroutine error: ",coroutine.resume(co));
-println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
-println("coroutine yield: ",coroutine.resume(co));
-println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");

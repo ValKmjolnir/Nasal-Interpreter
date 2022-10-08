@@ -301,14 +301,12 @@ void nasal_dbg::run(
         ++count[code[pc]];
         (this->*oprs[code[pc]])();
         if(top>=canary)
-            break;
+            die("stack overflow");
         ++pc;
     }
 #endif
 
 vmexit:
-    if(top>=canary)
-        die("stack overflow");
     callsort(count);
     gc.clear();
     imm.clear();
@@ -316,12 +314,14 @@ vmexit:
     return;
 #ifndef _MSC_VER
 #define dbg(op,num) {\
-    interact();\
-    op();\
-    ++count[num];\
-    if(top<canary)\
+        interact();\
+        op();\
+        ++count[num];\
+        if(top<canary)\
+            goto *code[++pc];\
+        die("stack overflow");\
         goto *code[++pc];\
-    goto vmexit;}
+    }
 
 intg:   dbg(o_intg  ,op_intg  );
 intl:   dbg(o_intl  ,op_intl  );

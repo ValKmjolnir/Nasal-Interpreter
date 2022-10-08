@@ -1035,6 +1035,7 @@ vmexit:
         if(top<canary)\
             goto *code[++pc];\
         die("stack overflow");\
+        goto *code[++pc];\
     }
 // do not cause stackoverflow
 #define exec_nodie(op) {op();goto *code[++pc];}
