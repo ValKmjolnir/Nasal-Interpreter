@@ -21,10 +21,9 @@ enum vm_type:u8{
     vm_func,
     vm_upval,
     vm_obj,
-    vm_co,
-    vm_tsize
+    vm_co
 };
-const u32 gc_tsize=vm_tsize-vm_str;
+const u32 gc_tsize=vm_co-vm_str+1;
 // change parameters here to make your own efficient gc
 // better set bigger number on vm_vec
 const u32 ini[gc_tsize]=
@@ -39,11 +38,11 @@ const u32 ini[gc_tsize]=
 };
 const u32 incr[gc_tsize]=
 {
-    256, // vm_str
-    256, // vm_vec
-    256, // vm_hash
-    128, // vm_func
-    128, // vm_upval
+    1024,// vm_str
+    512, // vm_vec
+    512, // vm_hash
+    512, // vm_func
+    512, // vm_upval
     128, // vm_obj
     32   // vm_co
 };

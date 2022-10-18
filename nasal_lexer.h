@@ -22,15 +22,22 @@
 
 enum tok:u32{
     tok_null=0,  // null token (default token type)
-    tok_num,     // number     basic token type
-    tok_str,     // string     basic token type
-    tok_id,      // identifier basic token type
+    tok_num,     // number literal
+    tok_str,     // string literal
+    tok_id,      // identifier
     tok_for,     // loop keyword for
     tok_forindex,// loop keyword forindex
     tok_foreach, // loop keyword foreach
     tok_while,   // loop keyword while
-    tok_var,tok_func,tok_break,tok_continue,
-    tok_ret,tok_if,tok_elsif,tok_else,tok_nil,
+    tok_var,     // keyword for definition
+    tok_func,    // keyword for definition of function
+    tok_break,   // loop keyword break
+    tok_continue,// loop keyword continue
+    tok_ret,     // function keyword return
+    tok_if,      // condition expression keyword if
+    tok_elsif,   // condition expression keyword elsif
+    tok_else,    // condition expression keyword else
+    tok_nil,     // nil literal
     tok_lcurve,tok_rcurve,
     tok_lbracket,tok_rbracket,
     tok_lbrace,tok_rbrace,

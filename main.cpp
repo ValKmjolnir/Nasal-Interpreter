@@ -83,45 +83,45 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 {
     // front end use the same error module
     nasal_err     nerr;
-    nasal_lexer   lexer(nerr);
+    nasal_lexer   lex(nerr);
     nasal_parse   parse(nerr);
-    nasal_import  linker(nerr);
+    nasal_import  ld(nerr);
     nasal_codegen gen(nerr);
     // back end
     nasal_vm      vm;
 
     // lexer scans file to get tokens
-    lexer.scan(file);
+    lex.scan(file);
     if(cmd&VM_TOKEN)
-        lexer.print();
+        lex.print();
     
     // parser gets lexer's token list to compile
-    parse.compile(lexer);
+    parse.compile(lex);
     // linker gets parser's ast and load import files to this ast
-    linker.link(parse,file,cmd&VM_DETAIL);
+    ld.link(parse,file,cmd&VM_DETAIL);
     // optimizer does simple optimization on ast
     if(cmd&VM_OPT)
-        optimize(parse.ast());
+        optimize(parse.tree());
     if(cmd&VM_AST)
         parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
-    gen.compile(parse,linker);
+    gen.compile(parse,ld);
     if(cmd&VM_CODE)
         gen.print();
     
     // run
     if(cmd&VM_DEBUG)
-        nasal_dbg(nerr).run(gen,linker,argv);
+        nasal_dbg(nerr).run(gen,ld,argv);
     else if(cmd&VM_TIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
-        vm.run(gen,linker,argv,cmd&VM_DETAIL);
+        vm.run(gen,ld,argv,cmd&VM_DETAIL);
         auto end=std::chrono::high_resolution_clock::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,linker,argv,cmd&VM_DETAIL);
+        vm.run(gen,ld,argv,cmd&VM_DETAIL);
 }
 
 i32 main(i32 argc,const char* argv[])
