@@ -21,14 +21,14 @@ private:
     nasal_err& nerr;
     std::vector<string> files;
     std::vector<string> envpath;
-    bool imptchk(const nasal_ast&);
+    bool imptchk(const ast&);
     bool exist(const string&);
-    void linker(nasal_ast&,nasal_ast&&);
-    string path(const nasal_ast&);
+    void linker(ast&,ast&&);
+    string path(const ast&);
     string findf(const string&);
-    nasal_ast fimpt(nasal_ast&);
-    nasal_ast libimpt();
-    nasal_ast load(nasal_ast&,u16);
+    ast fimpt(ast&);
+    ast libimpt();
+    ast load(ast&,u16);
 public:
     nasal_import(nasal_err&);
     void link(nasal_parse&,const string&,bool);
@@ -55,7 +55,7 @@ nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
         envpath.push_back(PATH.substr(last));
 }
 
-string nasal_import::path(const nasal_ast& node)
+string nasal_import::path(const ast& node)
 {
     if(node[1].type()==ast_callf)
         return node[1][0].str();
@@ -101,7 +101,7 @@ string nasal_import::findf(const string& fname)
     return "";
 }
 
-bool nasal_import::imptchk(const nasal_ast& node)
+bool nasal_import::imptchk(const ast& node)
 {
 // only these two kinds of node can be recognized as 'import':
 /*
@@ -143,14 +143,14 @@ bool nasal_import::exist(const string& file)
     return false;
 }
 
-void nasal_import::linker(nasal_ast& root,nasal_ast&& add_root)
+void nasal_import::linker(ast& root,ast&& add_root)
 {
     // add children of add_root to the back of root
     for(auto& i:add_root.child())
         root.add(std::move(i));
 }
 
-nasal_ast nasal_import::fimpt(nasal_ast& node)
+ast nasal_import::fimpt(ast& node)
 {
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
@@ -166,12 +166,12 @@ nasal_ast nasal_import::fimpt(nasal_ast& node)
     // start importing...
     lex.scan(filename);
     par.compile(lex);
-    nasal_ast tmp=std::move(par.ast());
+    ast tmp=std::move(par.tree());
     // check if tmp has 'import'
     return load(tmp,files.size()-1);
 }
 
-nasal_ast nasal_import::libimpt()
+ast nasal_import::libimpt()
 {
     nasal_lexer lex(nerr);
     nasal_parse par(nerr);
@@ -186,14 +186,14 @@ nasal_ast nasal_import::libimpt()
     // start importing...
     lex.scan(filename);
     par.compile(lex);
-    nasal_ast tmp=std::move(par.ast());
+    ast tmp=std::move(par.tree());
     // check if tmp has 'import'
     return load(tmp,files.size()-1);
 }
 
-nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
+ast nasal_import::load(ast& root,u16 fileindex)
 {
-    nasal_ast new_root(0,0,ast_root);
+    ast new_root(0,0,ast_root);
     if(!lib_loaded)
     {
         linker(new_root,libimpt());
@@ -207,7 +207,7 @@ nasal_ast nasal_import::load(nasal_ast& root,u16 fileindex)
             break;
     }
     // add root to the back of new_root
-    nasal_ast file_head(0,0,ast_file);
+    ast file_head(0,0,ast_file);
     file_head.set_num(fileindex);
     new_root.add(std::move(file_head));
     linker(new_root,std::move(root));
@@ -221,7 +221,7 @@ void nasal_import::link(nasal_parse& parse,const string& self,bool spath=false)
     files={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
-    parse.ast()=load(parse.ast(),0);
+    parse.tree()=load(parse.tree(),0);
     nerr.chkerr();
 }
 

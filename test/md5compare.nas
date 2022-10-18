@@ -13,7 +13,7 @@ var compare=func(){
         var total=end-begin;
         var timestamp=maketimestamp();
         timestamp.stamp();
-        var bar=process_bar.high_resolution_bar(50);
+        var bar=process_bar.high_resolution_bar(40);
         for(var i=begin;i<end;i+=1){
             var s="";
             for(var j=0;j<i;j+=1){
@@ -24,7 +24,7 @@ var compare=func(){
             if(cmp(res,_md5(s))){
                 die("error: "~str(i));
             }
-            print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," byte: ",byte," elapsed time: ",timestamp.elapsedMSec(),"    \r");
+            print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," byte: ",byte," time: ",timestamp.elapsedMSec(),"    \r");
         }
         print("\n");
     };
@@ -77,7 +77,7 @@ var filechecksum=func(){
     var total=size(files);
     var timestamp=maketimestamp();
     timestamp.stamp();
-    var bar=process_bar.high_resolution_bar(50);
+    var bar=process_bar.high_resolution_bar(40);
     forindex(var i;files){
         var f=io.fin(files[i]);
         var res=md5(f);
@@ -85,7 +85,7 @@ var filechecksum=func(){
         if(cmp(res,_md5(f))){
             die("error: "~files[i]);
         }
-        print(" ",bar.bar((i+1)/total)," (",i+1,"/",total,")\t",res," byte: ",byte," elapsed time: ",timestamp.elapsedMSec(),"    \r");
+        print(" ",bar.bar((i+1)/total)," (",i+1,"/",total,")\t",res," byte: ",byte," time: ",timestamp.elapsedMSec(),"    \r");
     }
     print("\n");
 }
