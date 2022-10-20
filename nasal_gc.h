@@ -55,7 +55,7 @@ struct nas_obj;  // special objects
 struct nas_co;   // coroutine
 struct nas_val;  // nas_val includes gc-managed types
 
-struct nas_ref
+struct var
 {
     u8 type;
     union
@@ -63,32 +63,32 @@ struct nas_ref
         u32 ret;
         i64 cnt;
         f64 num;
-        nas_ref* addr;
+        var* addr;
         nas_val* gcobj;
     } val;
 
     // vm_none/vm_nil
-    nas_ref(const u8 t=vm_none):type(t){}
+    var(const u8 t=vm_none):type(t){}
     // vm_ret
-    nas_ref(const u8 t,const u32 n):type(t){val.ret=n;}
+    var(const u8 t,const u32 n):type(t){val.ret=n;}
     // vm_cnt
-    nas_ref(const u8 t,const i64 n):type(t){val.cnt=n;}
+    var(const u8 t,const i64 n):type(t){val.cnt=n;}
     // vm_num
-    nas_ref(const u8 t,const f64 n):type(t){val.num=n;}
+    var(const u8 t,const f64 n):type(t){val.num=n;}
     // nas_val
-    nas_ref(const u8 t,nas_val* n):type(t){val.gcobj=n;}
+    var(const u8 t,nas_val* n):type(t){val.gcobj=n;}
     // vm_addr
-    nas_ref(const u8 t,nas_ref* n):type(t){val.addr=n;}
+    var(const u8 t,var* n):type(t){val.addr=n;}
     // copy
-    nas_ref(const nas_ref& nr):type(nr.type),val(nr.val){}
-    bool operator==(const nas_ref& nr){return type==nr.type && val.gcobj==nr.val.gcobj;}
-    bool operator!=(const nas_ref& nr){return type!=nr.type || val.gcobj!=nr.val.gcobj;}
+    var(const var& nr):type(nr.type),val(nr.val){}
+    bool operator==(const var& nr){return type==nr.type && val.gcobj==nr.val.gcobj;}
+    bool operator!=(const var& nr){return type!=nr.type || val.gcobj!=nr.val.gcobj;}
     // number and string can be translated to each other
     f64    tonum();
     string tostr();
-    friend std::ostream& operator<<(std::ostream&,nas_ref&);
+    friend std::ostream& operator<<(std::ostream&,var&);
     bool   objchk(u32);
-    inline nas_ref*   addr();
+    inline var*       addr();
     inline u32        ret ();
     inline i64&       cnt ();
     inline f64        num ();
@@ -104,25 +104,25 @@ struct nas_ref
 struct nas_vec
 {
     bool printed;
-    std::vector<nas_ref> elems;
+    std::vector<var> elems;
 
     nas_vec():printed(false){}
-    friend   std::ostream& operator<<(std::ostream&,nas_vec&);
-    usize    size(){return elems.size();}
-    nas_ref  get_val(const i32);
-    nas_ref* get_mem(const i32);
+    friend std::ostream& operator<<(std::ostream&,nas_vec&);
+    usize  size(){return elems.size();}
+    var    get_val(const i32);
+    var*   get_mem(const i32);
 };
 
 struct nas_hash
 {
     bool printed;
-    std::unordered_map<string,nas_ref> elems;
+    std::unordered_map<string,var> elems;
 
     nas_hash():printed(false){}
-    friend   std::ostream& operator<<(std::ostream&,nas_hash&);
-    usize    size(){return elems.size();}
-    nas_ref  get_val(const string&);
-    nas_ref* get_mem(const string&);
+    friend std::ostream& operator<<(std::ostream&,nas_hash&);
+    usize  size(){return elems.size();}
+    var    get_val(const string&);
+    var*   get_mem(const string&);
 };
 
 struct nas_func
@@ -131,8 +131,8 @@ struct nas_func
     u32 entry; // pc will set to entry-1 to call this function
     u32 psize; // used to load default parameters to a new function
     u32 lsize; // used to expand memory space for local values on stack
-    std::vector<nas_ref> local;   // local scope with default value(nas_ref)
-    std::vector<nas_ref> upval; // closure
+    std::vector<var> local; // local scope with default value(var)
+    std::vector<var> upval; // closure
     std::unordered_map<u32,u32> keys; // parameter table, u32 begins from 1
 
     nas_func():dpara(-1),entry(0),psize(0),lsize(0){}
@@ -142,12 +142,12 @@ struct nas_func
 struct nas_upval
 {
     bool onstk;
-    u32 size;
-    nas_ref* stk;
-    std::vector<nas_ref> elems;
+    u32  size;
+    var* stk;
+    std::vector<var> elems;
 
     nas_upval(){onstk=true;stk=nullptr;size=0;}
-    nas_ref& operator[](usize n){return onstk?stk[n]:elems[n];}
+    var& operator[](usize n){return onstk?stk[n]:elems[n];}
     void clear(){onstk=true;elems.clear();size=0;}
 };
 
@@ -195,15 +195,15 @@ struct nas_co
         running,
         dead
     };
-    nas_ref  stack[STACK_DEPTH];
+    var  stack[STACK_DEPTH];
     
-    u32      pc;
-    nas_ref* top;
-    nas_ref* canary;
-    nas_ref* localr;
-    nas_ref* memr;
-    nas_ref  funcr;
-    nas_ref  upvalr;
+    u32  pc;
+    var* top;
+    var* canary;
+    var* localr;
+    var* memr;
+    var  funcr;
+    var  upvalr;
 
     u32 status;
     nas_co():
@@ -248,20 +248,20 @@ struct nas_val
         nas_upval* upval;
         nas_obj*   obj;
         nas_co*    co;
-    }ptr;
+    } ptr;
 
     nas_val(u8);
     ~nas_val();
 };
 
-nas_ref nas_vec::get_val(const i32 n)
+var nas_vec::get_val(const i32 n)
 {
     i32 size=elems.size();
     if(n<-size || n>=size)
         return {vm_none};
     return elems[n>=0?n:n+size];
 }
-nas_ref* nas_vec::get_mem(const i32 n)
+var* nas_vec::get_mem(const i32 n)
 {
     i32 size=elems.size();
     if(n<-size || n>=size)
@@ -284,14 +284,14 @@ std::ostream& operator<<(std::ostream& out,nas_vec& vec)
     return out;
 }
 
-nas_ref nas_hash::get_val(const string& key)
+var nas_hash::get_val(const string& key)
 {
     if(elems.count(key))
         return elems[key];
     else if(elems.count("parents"))
     {
-        nas_ref ret(vm_none);
-        nas_ref val=elems["parents"];
+        var ret(vm_none);
+        var val=elems["parents"];
         if(val.type==vm_vec)
             for(auto& i:val.vec().elems)
             {
@@ -303,14 +303,14 @@ nas_ref nas_hash::get_val(const string& key)
     }
     return {vm_none};
 }
-nas_ref* nas_hash::get_mem(const string& key)
+var* nas_hash::get_mem(const string& key)
 {
     if(elems.count(key))
         return &elems[key];
     else if(elems.count("parents"))
     {
-        nas_ref* addr=nullptr;
-        nas_ref val=elems["parents"];
+        var* addr=nullptr;
+        var val=elems["parents"];
         if(val.type==vm_vec)
             for(auto& i:val.vec().elems)
             {
@@ -376,11 +376,11 @@ nas_val::~nas_val()
     }
     type=vm_nil;
 }
-f64 nas_ref::tonum()
+f64 var::tonum()
 {
     return type!=vm_str?val.num:str2num(str().c_str());
 }
-string nas_ref::tostr()
+string var::tostr()
 {
     if(type==vm_str)
         return str();
@@ -393,7 +393,7 @@ string nas_ref::tostr()
     }
     return "";
 }
-std::ostream& operator<<(std::ostream& out,nas_ref& ref)
+std::ostream& operator<<(std::ostream& out,var& ref)
 {
     switch(ref.type)
     {
@@ -409,56 +409,56 @@ std::ostream& operator<<(std::ostream& out,nas_ref& ref)
     }
     return out;
 }
-bool nas_ref::objchk(u32 objtype)
+bool var::objchk(u32 objtype)
 {
     return type==vm_obj && obj().type==objtype && obj().ptr;
 }
-inline nas_ref*   nas_ref::addr (){return val.addr;             }
-inline u32        nas_ref::ret  (){return val.ret;              }
-inline i64&       nas_ref::cnt  (){return val.cnt;              }
-inline f64        nas_ref::num  (){return val.num;              }
-inline string&    nas_ref::str  (){return *val.gcobj->ptr.str;  }
-inline nas_vec&   nas_ref::vec  (){return *val.gcobj->ptr.vec;  }
-inline nas_hash&  nas_ref::hash (){return *val.gcobj->ptr.hash; }
-inline nas_func&  nas_ref::func (){return *val.gcobj->ptr.func; }
-inline nas_upval& nas_ref::upval(){return *val.gcobj->ptr.upval;}
-inline nas_obj&   nas_ref::obj  (){return *val.gcobj->ptr.obj;  }
-inline nas_co&    nas_ref::co   (){return *val.gcobj->ptr.co;   }
+inline var*       var::addr (){return val.addr;             }
+inline u32        var::ret  (){return val.ret;              }
+inline i64&       var::cnt  (){return val.cnt;              }
+inline f64        var::num  (){return val.num;              }
+inline string&    var::str  (){return *val.gcobj->ptr.str;  }
+inline nas_vec&   var::vec  (){return *val.gcobj->ptr.vec;  }
+inline nas_hash&  var::hash (){return *val.gcobj->ptr.hash; }
+inline nas_func&  var::func (){return *val.gcobj->ptr.func; }
+inline nas_upval& var::upval(){return *val.gcobj->ptr.upval;}
+inline nas_obj&   var::obj  (){return *val.gcobj->ptr.obj;  }
+inline nas_co&    var::co   (){return *val.gcobj->ptr.co;   }
 
-const nas_ref zero={vm_num,(f64)0};
-const nas_ref one ={vm_num,(f64)1};
-const nas_ref nil ={vm_nil,(f64)0};
+const var zero={vm_num,(f64)0};
+const var one ={vm_num,(f64)1};
+const var nil ={vm_nil,(f64)0};
 
-struct nasal_gc
+struct gc
 {
     /* main context */
     struct
     {
-        u32      pc;
-        nas_ref* top;
-        nas_ref* localr;
-        nas_ref* memr;
-        nas_ref  funcr;
-        nas_ref  upvalr;
-        nas_ref* canary;
-        nas_ref* stack;
+        u32  pc;
+        var* top;
+        var* localr;
+        var* memr;
+        var  funcr;
+        var  upvalr;
+        var* canary;
+        var* stack;
     } mctx;
     
     /* runtime context */
-    u32&      pc;    // program counter
-    nas_ref*& localr;// local scope register
-    nas_ref*& memr;  // used for mem_call
-    nas_ref&  funcr; // function register
-    nas_ref&  upvalr;// upvalue register
-    nas_ref*& canary;// avoid stackoverflow
-    nas_ref*& top;   // stack top
-    nas_ref*  stack; // stack pointer
-    nas_co*   cort;  // running coroutine
-    nas_ref   temp;  // temporary place used in builtin/module functions
+    u32&  pc;    // program counter
+    var*& localr;// local scope register
+    var*& memr;  // used for mem_call
+    var&  funcr; // function register
+    var&  upvalr;// upvalue register
+    var*& canary;// avoid stackoverflow
+    var*& top;   // stack top
+    var*  stack; // stack pointer
+    nas_co* cort;// running coroutine
+    var   temp;  // temporary place used in builtin/module functions
 
     /* constants and memory pool */
-    std::vector<nas_ref>  strs;             // reserved address for const vm_str
-    std::vector<nas_ref>  env_argv;         // command line arguments
+    std::vector<var>  strs;     // reserved address for const vm_str
+    std::vector<var>  env_argv; // command line arguments
     std::vector<nas_val*> memory;           // gc memory
     std::queue<nas_val*>  unused[gc_tsize]; // gc free list
 
@@ -466,46 +466,42 @@ struct nasal_gc
     u64 size[gc_tsize];
     u64 count[gc_tsize];
     u64 allocc[gc_tsize];
-    nasal_gc(
-        u32& _pc,
-        nas_ref*& _localr,
-        nas_ref*& _memr,
-        nas_ref& _funcr,
-        nas_ref& _upvalr,
-        nas_ref*& _canary,
-        nas_ref*& _top,
-        nas_ref* _stk):
+    gc(
+        u32& _pc, var*& _localr,
+        var*& _memr, var& _funcr,
+        var& _upvalr, var*& _canary,
+        var*& _top, var* _stk):
         pc(_pc),localr(_localr),memr(_memr),funcr(_funcr),upvalr(_upvalr),
         canary(_canary),top(_top),stack(_stk),cort(nullptr),temp(nil){}
-    void    mark();
-    void    sweep();
-    void    init(const std::vector<string>&,const std::vector<string>&);
-    void    clear();
-    void    info();
-    nas_ref alloc(const u8);
-    nas_ref newstr(char);
-    nas_ref newstr(const char*);
-    nas_ref newstr(const string&);
-    void    ctxchg(nas_co&);
-    void    ctxreserve();
+    void mark();
+    void sweep();
+    void init(const std::vector<string>&,const std::vector<string>&);
+    void clear();
+    void info();
+    var  alloc(const u8);
+    var  newstr(char);
+    var  newstr(const char*);
+    var  newstr(const string&);
+    void ctxchg(nas_co&);
+    void ctxreserve();
 };
 
 /* gc functions */
-void nasal_gc::mark()
+void gc::mark()
 {
-    std::queue<nas_ref> bfs;
+    std::queue<var> bfs;
     // scan coroutine process stack when coroutine ptr is not null
     // scan main process stack when coroutine ptr is null
     // this scan process must execute because when running coroutine,
     // the nas_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
-    for(nas_ref* i=stack;i<=top;++i)
+    for(var* i=stack;i<=top;++i)
         bfs.push(*i);
     bfs.push(funcr);
     bfs.push(upvalr);
     bfs.push(temp);
     if(cort) // scan main process stack
     {
-        for(nas_ref* i=mctx.stack;i<=mctx.top;++i)
+        for(var* i=mctx.stack;i<=mctx.top;++i)
             bfs.push(*i);
         bfs.push(mctx.funcr);
         bfs.push(mctx.upvalr);
@@ -513,7 +509,7 @@ void nasal_gc::mark()
     
     while(!bfs.empty())
     {
-        nas_ref tmp=bfs.front();
+        var tmp=bfs.front();
         bfs.pop();
         if(tmp.type<=vm_num || tmp.val.gcobj->mark) continue;
         tmp.val.gcobj->mark=GC_FOUND;
@@ -540,13 +536,13 @@ void nasal_gc::mark()
             case vm_co:
                 bfs.push(tmp.co().funcr);
                 bfs.push(tmp.co().upvalr);
-                for(nas_ref* i=tmp.co().stack;i<=tmp.co().top;++i)
+                for(var* i=tmp.co().stack;i<=tmp.co().top;++i)
                     bfs.push(*i);
                 break;
         }
     }
 }
-void nasal_gc::sweep()
+void gc::sweep()
 {
     for(auto i:memory)
     {
@@ -569,7 +565,7 @@ void nasal_gc::sweep()
             i->mark=GC_UNCOLLECTED;
     }
 }
-void nasal_gc::init(const std::vector<string>& s,const std::vector<string>& argv)
+void gc::init(const std::vector<string>& s,const std::vector<string>& argv)
 {
     // initiaize function register
     funcr=nil;
@@ -601,7 +597,7 @@ void nasal_gc::init(const std::vector<string>& s,const std::vector<string>& argv
         env_argv[i].str()=argv[i];
     }
 }
-void nasal_gc::clear()
+void gc::clear()
 {
     for(auto i:memory)
         delete i;
@@ -614,7 +610,7 @@ void nasal_gc::clear()
     strs.clear();
     env_argv.clear();
 }
-void nasal_gc::info()
+void gc::info()
 {
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info(gc/alloc)\n";
@@ -626,7 +622,7 @@ void nasal_gc::info()
         if(ini[i] || size[i])
             std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
 }
-nas_ref nasal_gc::alloc(u8 type)
+var gc::alloc(u8 type)
 {
     const u8 index=type-vm_str;
     ++allocc[index];
@@ -646,30 +642,30 @@ nas_ref nasal_gc::alloc(u8 type)
             unused[index].push(tmp);
         }
     }
-    nas_ref ret={type,unused[index].front()};
+    var ret={type,unused[index].front()};
     ret.val.gcobj->mark=GC_UNCOLLECTED;
     unused[index].pop();
     return ret;
 }
-nas_ref nasal_gc::newstr(char c)
+var gc::newstr(char c)
 {
-    nas_ref s=alloc(vm_str);
+    var s=alloc(vm_str);
     s.str()=c;
     return s;
 }
-nas_ref nasal_gc::newstr(const char* buff)
+var gc::newstr(const char* buff)
 {
-    nas_ref s=alloc(vm_str);
+    var s=alloc(vm_str);
     s.str()=buff;
     return s;
 }
-nas_ref nasal_gc::newstr(const string& buff)
+var gc::newstr(const string& buff)
 {
-    nas_ref s=alloc(vm_str);
+    var s=alloc(vm_str);
     s.str()=buff;
     return s;
 }
-void nasal_gc::ctxchg(nas_co& ctx)
+void gc::ctxchg(nas_co& ctx)
 {
     mctx.pc=pc;
     mctx.top=top;
@@ -692,7 +688,7 @@ void nasal_gc::ctxchg(nas_co& ctx)
 
     cort->status=nas_co::running;
 }
-void nasal_gc::ctxreserve()
+void gc::ctxreserve()
 {
     // pc=0 means this coroutine is finished
     cort->status=pc?nas_co::suspended:nas_co::dead;
@@ -716,7 +712,7 @@ void nasal_gc::ctxreserve()
 }
 
 // use to print error log and return error value
-nas_ref nas_err(const string& err_f,const string& info)
+var nas_err(const string& err_f,const string& info)
 {
     std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
     return {vm_none};

@@ -337,8 +337,8 @@ As you could see from the bytecode above,
 
 And because of the new structure of `mcall`,
 `addr_stack`, a stack used to store the memory address,
-is deleted from `nasal_vm`,
-and now `nasal_vm` use `nas_val** mem_addr` to store the memory address.
+is deleted from `vm`,
+and now `vm` use `nas_val** mem_addr` to store the memory address.
 This will not cause fatal errors because the memory address is used __immediately__ after getting it.
 
 ### version 7.0 vm (last update 2021/10/8)
@@ -347,7 +347,7 @@ This will not cause fatal errors because the memory address is used __immediatel
 
 Instruction dispatch is changed from call-threading to computed-goto(with inline function).
 After changing the way of instruction dispatch,
-there is a great improvement in nasal_vm.
+there is a great improvement in `vm`.
 Now vm can run test/bigloop and test/pi in 0.2s!
 And vm runs test/fib in 0.8s on linux.
 You could see the time use data below,
@@ -550,37 +550,37 @@ __We will explain how resume and yield work here:__
 When `op_callb` is called, the stack frame is like this:
 
 ```C++
-+--------------------------+(main stack)
-| old pc(vm_ret)           | <- top[0]
-+--------------------------+
-| old localr(vm_addr)      | <- top[-1]
-+--------------------------+
-| old upvalr(vm_upval)     | <- top[-2]
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(main stack)
+| old pc(vm_ret)       | <- top[0]
++----------------------+
+| old localr(vm_addr)  | <- top[-1]
++----------------------+
+| old upvalr(vm_upval) | <- top[-2]
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 In `op_callb`'s progress, next step the stack frame is:
 
 ```C++
-+--------------------------+(main stack)
-| nil(vm_nil)              | <- push nil
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(main stack)
+| nil(vm_nil)          | <- push nil
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 Then we call `resume`, this function will change stack.
@@ -591,9 +591,9 @@ So for safe running, `resume` will return `gc.top[0]`.
 `op_callb` will do `top[0]=resume()`, so the value does not change.
 
 ```C++
-+--------------------------+(coroutine stack)
-| pc:0(vm_ret)             | <- now gc.top[0]
-+--------------------------+
++----------------------+(coroutine stack)
+| pc:0(vm_ret)         | <- now gc.top[0]
++----------------------+
 ```
 
 When we call `yield`, the function will do like this.
@@ -601,40 +601,40 @@ And we find that `op_callb` has put the `nil` at the top.
 but where is the returned `local[1]` sent?
 
 ```C++
-+--------------------------+(coroutine stack)
-| nil(vm_nil)              | <- push nil
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(coroutine stack)
+| nil(vm_nil)          | <- push nil
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 When `builtin_coyield` is finished, the stack is set to main stack,
 and the returned `local[1]` in fact is set to the top of the main stack by `op_callb`:
 
 ```C++
-+--------------------------+(main stack)
-| return_value(nas_ref)    |
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(main stack)
+| return_value(var)    |
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 so the main progress feels the value on the top is the returned value of `resume`.

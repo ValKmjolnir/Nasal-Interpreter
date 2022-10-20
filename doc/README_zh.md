@@ -168,7 +168,7 @@ var f=func(args...){
 }
 ```
 
-__`upval`__ 是存储闭包数据的特殊类型, 在 __`nasal_vm`__ 中使用，以确保闭包功能正常。
+__`upval`__ 是存储闭包数据的特殊类型, 在 __`vm`__ 中使用，以确保闭包功能正常。
 
 __`obj`__ 是用来存储`C/C++`的一些复杂数据结构。这种类型的数据由内置函数生成。如果想为nasal添加新的数据结构, 可以看下文如何通过修改本项目来添加内置函数。
 
@@ -469,11 +469,11 @@ nas_native(builtin_print);
 然后用C++完成这个函数的函数体:
 
 ```C++
-nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
+var builtin_print(var* local,nasal_gc& gc)
 {
     // 局部变量的下标其实是从1开始的
     // 因为local[0]是保留给'me'的空间
-    nas_ref vec=local[1];
+    var vec=local[1];
     // 主要部分
     // 一些必要的类型检查和输入合法性检测也要在这里写出
     // 如果检测到问题，用builtin_err函数来返回vm_null
@@ -504,13 +504,13 @@ nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
 可以使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
 
 ```C++
-nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
+var builtin_keys(var* local,nasal_gc& gc)
 {
-    nas_ref hash=local[1];
+    var hash=local[1];
     if(hash.type!=vm_hash)
         return nas_err("keys","\"hash\" must be hash");
     // 使用gc.temp来存储gc管理的变量，防止错误的回收
-    nas_ref res=gc.temp=gc.alloc(vm_vec);
+    var res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
         vec.push_back(gc.newstr(iter.first));
@@ -525,7 +525,7 @@ nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
 struct func
 {
     const char* name;
-    nas_ref (*func)(nas_ref*,nasal_gc&);
+    var (*func)(var*,nasal_gc&);
 } builtin[]=
 {
     {"__print",builtin_print},
@@ -592,9 +592,9 @@ double fibonaci(double x){
 }
 // 记得用extern "C"
 // 这样找符号会更加快速便捷，不要在意编译时的warning
-extern "C" nas_ref fib(std::vector<nas_ref>& args,nasal_gc& gc){
+extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
     // 传参会被送到一个vm_vec类型中送过来，而不是上文中那种指针直接指向局部作用域
-    nas_ref num=args[0];
+    var num=args[0];
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
     // builtin_err会输出错误信息并返回错误类型让虚拟机终止执行
     if(num.type!=vm_num)

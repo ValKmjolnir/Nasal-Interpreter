@@ -13,29 +13,29 @@
 #define F_OK 0
 #endif
 
-class nasal_import
+class linker
 {
 private:
     bool show_path;
     bool lib_loaded;
-    nasal_err& nerr;
+    error& err;
     std::vector<string> files;
     std::vector<string> envpath;
     bool imptchk(const ast&);
     bool exist(const string&);
-    void linker(ast&,ast&&);
+    void link(ast&,ast&&);
     string path(const ast&);
     string findf(const string&);
     ast fimpt(ast&);
     ast libimpt();
     ast load(ast&,u16);
 public:
-    nasal_import(nasal_err&);
-    void link(nasal_parse&,const string&,bool);
+    linker(error&);
+    void link(parse&,const string&,bool);
     const std::vector<string>& filelist() const {return files;}
 };
 
-nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
+linker::linker(error& e):lib_loaded(false),err(e){
 #ifdef _WIN32
     char sep=';';
 #else
@@ -55,7 +55,7 @@ nasal_import::nasal_import(nasal_err& e):lib_loaded(false),nerr(e){
         envpath.push_back(PATH.substr(last));
 }
 
-string nasal_import::path(const ast& node)
+string linker::path(const ast& node)
 {
     if(node[1].type()==ast_callf)
         return node[1][0].str();
@@ -69,7 +69,7 @@ string nasal_import::path(const ast& node)
     return fpath+".nas";
 }
 
-string nasal_import::findf(const string& fname)
+string linker::findf(const string& fname)
 {
     std::vector<string> filepath={fname};
     for(auto&p:envpath)
@@ -91,17 +91,17 @@ string nasal_import::findf(const string& fname)
 #endif
     if(!show_path)
     {
-        nerr.err("link","cannot find file <"+fname+">");
+        err.err("link","cannot find file <"+fname+">");
         return "";
     }
     string paths="";
     for(auto& i:filepath)
         paths+="  "+i+"\n";
-    nerr.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
+    err.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
     return "";
 }
 
-bool nasal_import::imptchk(const ast& node)
+bool linker::imptchk(const ast& node)
 {
 // only these two kinds of node can be recognized as 'import':
 /*
@@ -133,7 +133,7 @@ bool nasal_import::imptchk(const ast& node)
     );
 }
 
-bool nasal_import::exist(const string& file)
+bool linker::exist(const string& file)
 {
     // avoid importing the same file
     for(auto& fname:files)
@@ -143,17 +143,17 @@ bool nasal_import::exist(const string& file)
     return false;
 }
 
-void nasal_import::linker(ast& root,ast&& add_root)
+void linker::link(ast& root,ast&& add_root)
 {
     // add children of add_root to the back of root
     for(auto& i:add_root.child())
         root.add(std::move(i));
 }
 
-ast nasal_import::fimpt(ast& node)
+ast linker::fimpt(ast& node)
 {
-    nasal_lexer lex(nerr);
-    nasal_parse par(nerr);
+    lexer lex(err);
+    parse par(err);
     // get filename and set node to ast_null
     string filename=path(node);
     node.clear();
@@ -171,10 +171,10 @@ ast nasal_import::fimpt(ast& node)
     return load(tmp,files.size()-1);
 }
 
-ast nasal_import::libimpt()
+ast linker::libimpt()
 {
-    nasal_lexer lex(nerr);
-    nasal_parse par(nerr);
+    lexer lex(err);
+    parse par(err);
     string filename=findf("lib.nas");
     if(!filename.length())
         return {0,0,ast_root};
@@ -191,18 +191,18 @@ ast nasal_import::libimpt()
     return load(tmp,files.size()-1);
 }
 
-ast nasal_import::load(ast& root,u16 fileindex)
+ast linker::load(ast& root,u16 fileindex)
 {
     ast new_root(0,0,ast_root);
     if(!lib_loaded)
     {
-        linker(new_root,libimpt());
+        link(new_root,libimpt());
         lib_loaded=true;
     }
     for(auto& i:root.child())
     {
         if(imptchk(i))
-            linker(new_root,fimpt(i));
+            link(new_root,fimpt(i));
         else
             break;
     }
@@ -210,11 +210,11 @@ ast nasal_import::load(ast& root,u16 fileindex)
     ast file_head(0,0,ast_file);
     file_head.set_num(fileindex);
     new_root.add(std::move(file_head));
-    linker(new_root,std::move(root));
+    link(new_root,std::move(root));
     return new_root;
 }
 
-void nasal_import::link(nasal_parse& parse,const string& self,bool spath=false)
+void linker::link(parse& parse,const string& self,bool spath=false)
 {
     show_path=spath;
     // initializing
@@ -222,7 +222,7 @@ void nasal_import::link(nasal_parse& parse,const string& self,bool spath=false)
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
     parse.tree()=load(parse.tree(),0);
-    nerr.chkerr();
+    err.chkerr();
 }
 
 #endif

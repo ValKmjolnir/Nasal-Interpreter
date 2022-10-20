@@ -10,6 +10,7 @@
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
+
 #include <unordered_map>
 
 const u32 VM_TOKEN =0x01;
@@ -82,13 +83,13 @@ void err()
 void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 {
     // front end use the same error module
-    nasal_err     nerr;
-    nasal_lexer   lex(nerr);
-    nasal_parse   parse(nerr);
-    nasal_import  ld(nerr);
-    nasal_codegen gen(nerr);
+    error   err;
+    lexer   lex(err);
+    parse   parse(err);
+    linker  ld(err);
+    codegen gen(err);
     // back end
-    nasal_vm      vm;
+    vm      rt;
 
     // lexer scans file to get tokens
     lex.scan(file);
@@ -112,16 +113,16 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     
     // run
     if(cmd&VM_DEBUG)
-        nasal_dbg(nerr).run(gen,ld,argv);
+        debugger(err).run(gen,ld,argv);
     else if(cmd&VM_TIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
-        vm.run(gen,ld,argv,cmd&VM_DETAIL);
+        rt.run(gen,ld,argv,cmd&VM_DETAIL);
         auto end=std::chrono::high_resolution_clock::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        vm.run(gen,ld,argv,cmd&VM_DETAIL);
+        rt.run(gen,ld,argv,cmd&VM_DETAIL);
 }
 
 i32 main(i32 argc,const char* argv[])

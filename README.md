@@ -182,7 +182,7 @@ var f=func(args...){
 }
 ```
 
-__`upval`__ is used to store upvalues, used in __`nasal_vm`__ to make sure closure runs correctly.
+__`upval`__ is used to store upvalues, used in __`vm`__ to make sure closure runs correctly.
 
 __`obj`__ is used to store other complex `C/C++` data types.
 This type is created by native-function of nasal. If want to define a new data type, see how to add native-functions by editing code.
@@ -490,11 +490,11 @@ nas_native(builtin_print);
 Then complete this function using C++:
 
 ```C++
-nas_ref builtin_print(nas_ref* local,nasal_gc& gc)
+var builtin_print(var* local,nasal_gc& gc)
 {
     // find value with index begin from 1
     // because local[0] is reserved for value 'me'
-    nas_ref vec=local[1];
+    var vec=local[1];
     // main process
     // also check number of arguments and type here
     // if get an error,use nas_err
@@ -524,13 +524,13 @@ The value got before will be collected, but stil in use in this builtin function
 So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
 
 ```C++
-nas_ref builtin_keys(nas_ref* local,nasal_gc& gc)
+var builtin_keys(var* local,nasal_gc& gc)
 {
-    nas_ref hash=local[1];
+    var hash=local[1];
     if(hash.type!=vm_hash)
         return nas_err("keys","\"hash\" must be hash");
     // use gc.temp to store the gc-managed-value, to avoid being sweeped
-    nas_ref res=gc.temp=gc.alloc(vm_vec);
+    var res=gc.temp=gc.alloc(vm_vec);
     auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
         vec.push_back(gc.newstr(iter.first));
@@ -545,7 +545,7 @@ After that, register the built-in function's name(in nasal) and the function's p
 struct func
 {
     const char* name;
-    nas_ref (*func)(nas_ref*,nasal_gc&);
+    var (*func)(var*,nasal_gc&);
 } builtin[]=
 {
     {"__print",builtin_print},
@@ -617,10 +617,10 @@ double fibonaci(double x){
 }
 // remember to use extern "C",
 // so you could search the symbol quickly
-extern "C" nas_ref fib(std::vector<nas_ref>& args,nasal_gc& gc){
+extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
     // the arguments are generated into a vm_vec: args
     // get values from the vector that must be used here
-    nas_ref num=args[0];
+    var num=args[0];
     // if you want your function safer, try this
     // nas_err will print the error info on screen
     // and return vm_null for runtime to interrupt

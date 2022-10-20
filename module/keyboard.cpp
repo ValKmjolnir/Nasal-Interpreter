@@ -71,13 +71,13 @@ public:
 };
 
 noecho_input this_window;
-extern "C" nas_ref nas_getch(std::vector<nas_ref>& args,nasal_gc& gc){
+extern "C" var nas_getch(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)this_window.noecho_getch()};
 }
-extern "C" nas_ref nas_kbhit(std::vector<nas_ref>& args,nasal_gc& gc){
+extern "C" var nas_kbhit(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)this_window.noecho_kbhit()};
 }
-extern "C" nas_ref nas_noblock(std::vector<nas_ref>& args,nasal_gc& gc){
+extern "C" var nas_noblock(std::vector<var>& args,gc& ngc){
     if(this_window.noecho_kbhit())
         return {vm_num,(double)this_window.noecho_getch()};
     return nil;
