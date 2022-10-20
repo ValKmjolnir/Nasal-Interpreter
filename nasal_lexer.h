@@ -115,54 +115,52 @@ struct token
     }
 };
 
-class nasal_lexer
+class lexer
 {
 private:
     u32    line;
     u32    column;
     usize  ptr;
     string res;
-    nasal_err& nerr;
+    error& err;
     std::vector<token> tokens;
 
     u32 get_type(const string&);
-    void die(const string& info){nerr.err("lexer",line,column,info);}
+    void die(const string& info){err.err("lexer",line,column,info);}
     void open(const string&);
     string utf8_gen();
     string id_gen();
     string num_gen();
     string str_gen();
 public:
-    nasal_lexer(nasal_err& e):
-        line(1),
-        column(0),
-        ptr(0),
-        res(""),
-        nerr(e){}
+    lexer(error& e):
+        line(1),column(0),
+        ptr(0),res(""),
+        err(e){}
     void scan(const string&);
     void print();
     const std::vector<token>& result() const {return tokens;}
 };
 
-void nasal_lexer::open(const string& file)
+void lexer::open(const string& file)
 {
     struct stat buffer;
     if(stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode))
     {
-        nerr.err("lexer","<"+file+"> is not a regular file");
-        nerr.chkerr();
+        err.err("lexer","<"+file+"> is not a regular file");
+        err.chkerr();
     }
     std::ifstream fin(file,std::ios::binary);
     if(fin.fail())
-        nerr.err("lexer","failed to open <"+file+">");
+        err.err("lexer","failed to open <"+file+">");
     else
-        nerr.load(file);
+        err.load(file);
     std::stringstream ss;
     ss<<fin.rdbuf();
     res=ss.str();
 }
 
-u32 nasal_lexer::get_type(const string& str)
+u32 lexer::get_type(const string& str)
 {
     for(u32 i=0;tok_table[i].str;++i)
         if(str==tok_table[i].str)
@@ -170,7 +168,7 @@ u32 nasal_lexer::get_type(const string& str)
     return tok_null;
 }
 
-string nasal_lexer::utf8_gen()
+string lexer::utf8_gen()
 {
     string str="";
     while(ptr<res.size() && res[ptr]<0)
@@ -204,7 +202,7 @@ string nasal_lexer::utf8_gen()
     return str;
 }
 
-string nasal_lexer::id_gen()
+string lexer::id_gen()
 {
     string str="";
     while(ptr<res.size() && (ID(res[ptr])||DIGIT(res[ptr])))
@@ -220,7 +218,7 @@ string nasal_lexer::id_gen()
     return str;
 }
 
-string nasal_lexer::num_gen()
+string lexer::num_gen()
 {
     // generate hex number
     if(ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x')
@@ -283,7 +281,7 @@ string nasal_lexer::num_gen()
     return str;
 }
 
-string nasal_lexer::str_gen()
+string lexer::str_gen()
 {
     string str="";
     const char begin=res[ptr];
@@ -333,7 +331,7 @@ string nasal_lexer::str_gen()
     return str;
 }
 
-void nasal_lexer::scan(const string& file)
+void lexer::scan(const string& file)
 {
     line=1;
     column=0;
@@ -409,10 +407,10 @@ void nasal_lexer::scan(const string& file)
     }
     tokens.push_back({line,column,tok_eof,"eof"});
     res="";
-    nerr.chkerr();
+    err.chkerr();
 }
 
-void nasal_lexer::print()
+void lexer::print()
 {
     for(auto& tok:tokens)
         std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str,128)<<")\n";

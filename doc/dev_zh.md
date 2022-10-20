@@ -305,7 +305,7 @@ m(0)._=m(1)._=10;
 
 从上面这些字节码可以看出，`mcall`/`mcallv`/`mcallh`指令的使用频率比以前减小了一些，而`call`/`callv`/`callh`/`callfv`/`callfh`则相反。
 
-并且因为新的数据结构，`mcall`指令以及`addr_stack`，一个曾用来存储指针的栈，从`nasal_vm`中被移除。现在`nasal_vm`使用`nas_val** mem_addr`来暂存获取的内存地址。这不会导致严重的问题，因为内存空间是 __获取即使用__ 的。
+并且因为新的数据结构，`mcall`指令以及`addr_stack`，一个曾用来存储指针的栈，从`vm`中被移除。现在`vm`使用`nas_val** mem_addr`来暂存获取的内存地址。这不会导致严重的问题，因为内存空间是 __获取即使用__ 的。
 
 ### version 7.0 vm (last update 2021/10/8)
 
@@ -491,37 +491,37 @@ __接下来我们解释这个协程的运行原理:__
 当`op_callb`被执行时，栈帧如下所示:
 
 ```C++
-+--------------------------+(主操作数栈)
-| old pc(vm_ret)           | <- top[0]
-+--------------------------+
-| old localr(vm_addr)      | <- top[-1]
-+--------------------------+
-| old upvalr(vm_upval)     | <- top[-2]
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(主操作数栈)
+| old pc(vm_ret)       | <- top[0]
++----------------------+
+| old localr(vm_addr)  | <- top[-1]
++----------------------+
+| old upvalr(vm_upval) | <- top[-2]
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 在`op_callb`执行过程中，下一步的栈帧如下:
 
 ```C++
-+--------------------------+(主操作数栈)
-| nil(vm_nil)              | <- push nil
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(主操作数栈)
+| nil(vm_nil)          | <- push nil
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 接着我们调用`resume`，这个函数会替换操作数栈。我们会看到，协程的操作数栈上已经保存了一些数据，但是我们首次进入协程执行时，这个操作数栈的栈顶将会是`vm_ret`，并且返回的`pc`值是`0`。
@@ -529,47 +529,47 @@ __接下来我们解释这个协程的运行原理:__
 为了保证栈顶的数据不会被破坏，`resume`会返回`gc.top[0]`。`op_callb`将会执行`top[0]=resume()`，所以栈顶的数据虽然被覆盖了一次，但是实际上还是原来的数据。
 
 ```C++
-+--------------------------+(协程操作数栈)
-| pc:0(vm_ret)             | <- now gc.top[0]
-+--------------------------+
++----------------------+(协程操作数栈)
+| pc:0(vm_ret)         | <- now gc.top[0]
++----------------------+
 ```
 
 当我们调用`yield`的时候，该函数会执行出这个情况，我们发现`op_callb` 已经把`nil`放在的栈顶。但是应该返回的`local[1]`到底发送到哪里去了？
 
 ```C++
-+--------------------------+(协程操作数栈)
-| nil(vm_nil)              | <- push nil
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(协程操作数栈)
+| nil(vm_nil)          | <- push nil
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 当`builtin_coyield`执行完毕之后，栈又切换到了主操作数栈上，这时可以看到返回的`local[1]`实际上被`op_callb`放在了这里的栈顶:
 
 ```C++
-+--------------------------+(主操作数栈)
-| return_value(nas_ref)    |
-+--------------------------+
-| old pc(vm_ret)           |
-+--------------------------+
-| old localr(vm_addr)      |
-+--------------------------+
-| old upvalr(vm_upval)     |
-+--------------------------+
-| local scope(nas_ref)     |
-| ...                      |
-+--------------------------+ <- local pointer stored in localr
-| old funcr(vm_func)       | <- old function stored in funcr
-+--------------------------+
++----------------------+(主操作数栈)
+| return_value(var)    |
++----------------------+
+| old pc(vm_ret)       |
++----------------------+
+| old localr(vm_addr)  |
++----------------------+
+| old upvalr(vm_upval) |
++----------------------+
+| local scope(var)     |
+| ...                  |
++----------------------+ <- local pointer stored in localr
+| old funcr(vm_func)   | <- old function stored in funcr
++----------------------+
 ```
 
 所以主程序会认为顶部这个返回值好像是`resume`返回的。而实际上`resume`的返回值在协程的操作数栈顶。综上所述:

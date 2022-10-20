@@ -30,7 +30,8 @@ libnasock.dll: nasocket.cpp
 	del nasocket.o
 
 clean:
-	rm *.so *.dll *.dylib
+	-@ rm *.so *.dll *.dylib
+	@ echo "done"
 all: libfib.so libkey.so libnasock.so
 	@ echo "build done"
 mingw-all: libfib.dll libkey.dll libnasock.dll
