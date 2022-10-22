@@ -490,7 +490,7 @@ nas_native(builtin_print);
 Then complete this function using C++:
 
 ```C++
-var builtin_print(var* local,nasal_gc& gc)
+var builtin_print(var* local,gc& ngc)
 {
     // find value with index begin from 1
     // because local[0] is reserved for value 'me'
@@ -512,7 +512,7 @@ var builtin_print(var* local,nasal_gc& gc)
         }
     std::cout<<std::flush;
     // generate return value,
-    // use gc::alloc(type) to make a new value
+    // use ngc::alloc(type) to make a new value
     // or use reserved reference nil/one/zero
     return nil;
 }
@@ -524,17 +524,17 @@ The value got before will be collected, but stil in use in this builtin function
 So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
 
 ```C++
-var builtin_keys(var* local,nasal_gc& gc)
+var builtin_keys(var* local,gc& ngc)
 {
     var hash=local[1];
     if(hash.type!=vm_hash)
         return nas_err("keys","\"hash\" must be hash");
     // use gc.temp to store the gc-managed-value, to avoid being sweeped
-    var res=gc.temp=gc.alloc(vm_vec);
+    var res=ngc.temp=ngc.alloc(vm_vec);
     auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
-        vec.push_back(gc.newstr(iter.first));
-    gc.temp=nil;
+        vec.push_back(ngc.newstr(iter.first));
+    ngc.temp=nil;
     return res;
 }
 ```
@@ -545,7 +545,7 @@ After that, register the built-in function's name(in nasal) and the function's p
 struct func
 {
     const char* name;
-    var (*func)(var*,nasal_gc&);
+    var (*func)(var*,gc&);
 } builtin[]=
 {
     {"__print",builtin_print},
@@ -617,7 +617,7 @@ double fibonaci(double x){
 }
 // remember to use extern "C",
 // so you could search the symbol quickly
-extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
+extern "C" var fib(std::vector<var>& args,gc& ngc){
     // the arguments are generated into a vm_vec: args
     // get values from the vector that must be used here
     var num=args[0];
@@ -627,7 +627,7 @@ extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
     if(num.type!=vm_num)
         return nas_err("extern_fib","\"num\" must be number");
     // ok, you must know that vm_num now is not managed by gc
-    // if want to return a gc object, use gc.alloc(type)
+    // if want to return a gc object, use ngc.alloc(type)
     // usage of gc is the same as adding a native function
     return {vm_num,fibonaci(num.tonum())};
 }

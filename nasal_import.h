@@ -35,7 +35,7 @@ public:
     const std::vector<string>& filelist() const {return files;}
 };
 
-linker::linker(error& e):lib_loaded(false),err(e){
+linker::linker(error& e):show_path(false),lib_loaded(false),err(e){
 #ifdef _WIN32
     char sep=';';
 #else

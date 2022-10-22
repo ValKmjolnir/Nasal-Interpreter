@@ -469,7 +469,7 @@ nas_native(builtin_print);
 然后用C++完成这个函数的函数体:
 
 ```C++
-var builtin_print(var* local,nasal_gc& gc)
+var builtin_print(var* local,gc& ngc)
 {
     // 局部变量的下标其实是从1开始的
     // 因为local[0]是保留给'me'的空间
@@ -492,7 +492,7 @@ var builtin_print(var* local,nasal_gc& gc)
         }
     std::cout<<std::flush;
     // 最后一定要记得生成返回值,返回值必须是一个内置的类型，
-    // 可以使用gc::alloc(type)来申请一个需要内存管理的复杂数据结构
+    // 可以使用ngc::alloc(type)来申请一个需要内存管理的复杂数据结构
     // 或者用我们已经定义好的nil/one/zero，这些可以直接使用
     return nil;
 }
@@ -504,17 +504,17 @@ var builtin_print(var* local,nasal_gc& gc)
 可以使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
 
 ```C++
-var builtin_keys(var* local,nasal_gc& gc)
+var builtin_keys(var* local,gc& ngc)
 {
     var hash=local[1];
     if(hash.type!=vm_hash)
         return nas_err("keys","\"hash\" must be hash");
     // 使用gc.temp来存储gc管理的变量，防止错误的回收
-    var res=gc.temp=gc.alloc(vm_vec);
+    var res=ngc.temp=ngc.alloc(vm_vec);
     auto& vec=res.vec().elems;
     for(auto& iter:hash.hash().elems)
-        vec.push_back(gc.newstr(iter.first));
-    gc.temp=nil;
+        vec.push_back(ngc.newstr(iter.first));
+    ngc.temp=nil;
     return res;
 }
 ```
@@ -525,7 +525,7 @@ var builtin_keys(var* local,nasal_gc& gc)
 struct func
 {
     const char* name;
-    var (*func)(var*,nasal_gc&);
+    var (*func)(var*,gc&);
 } builtin[]=
 {
     {"__print",builtin_print},
@@ -592,7 +592,7 @@ double fibonaci(double x){
 }
 // 记得用extern "C"
 // 这样找符号会更加快速便捷，不要在意编译时的warning
-extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
+extern "C" var fib(std::vector<var>& args,gc& ngc){
     // 传参会被送到一个vm_vec类型中送过来，而不是上文中那种指针直接指向局部作用域
     var num=args[0];
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
@@ -600,7 +600,7 @@ extern "C" var fib(std::vector<var>& args,nasal_gc& gc){
     if(num.type!=vm_num)
         return nas_err("extern_fib","\"num\" must be number");
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
-    // 如果需要返回内存管理的对象，请使用gc.alloc(type)
+    // 如果需要返回内存管理的对象，请使用ngc.alloc(type)
     return {vm_num,fibonaci(num.tonum())};
 }
 ```
