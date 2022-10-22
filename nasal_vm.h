@@ -125,11 +125,12 @@ protected:
     void o_mcallh();
     void o_ret();
 public:
-    vm():pc(0),localr(nullptr),memr(nullptr),funcr(nil),
-               upvalr(nil),canary(nullptr),top(stack),
-               num_table(nullptr),str_table(nullptr),
-               ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
-               files(nullptr),bytecode(nullptr),detail_info(false){}
+    vm():
+        pc(0),localr(nullptr),memr(nullptr),funcr(nil),
+        upvalr(nil),canary(nullptr),top(stack),
+        num_table(nullptr),str_table(nullptr),
+        ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
+        files(nullptr),bytecode(nullptr),detail_info(false){}
     void run(
         const codegen&,
         const linker&,

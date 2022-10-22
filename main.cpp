@@ -82,14 +82,12 @@ void err()
 
 void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 {
-    // front end use the same error module
     error   err;
     lexer   lex(err);
     parse   parse(err);
     linker  ld(err);
     codegen gen(err);
-    // back end
-    vm      rt;
+    vm      ctx;
 
     // lexer scans file to get tokens
     lex.scan(file);
@@ -117,12 +115,12 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     else if(cmd&VM_TIME)
     {
         auto start=std::chrono::high_resolution_clock::now();
-        rt.run(gen,ld,argv,cmd&VM_DETAIL);
+        ctx.run(gen,ld,argv,cmd&VM_DETAIL);
         auto end=std::chrono::high_resolution_clock::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/std::chrono::high_resolution_clock::duration::period::den<<"s.\n";
     }
     else if(cmd&VM_EXEC)
-        rt.run(gen,ld,argv,cmd&VM_DETAIL);
+        ctx.run(gen,ld,argv,cmd&VM_DETAIL);
 }
 
 i32 main(i32 argc,const char* argv[])

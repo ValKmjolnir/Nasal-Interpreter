@@ -1,6 +1,7 @@
 #ifndef __NASAL_GC_H__
 #define __NASAL_GC_H__
 
+#include <vector>
 #include <queue>
 #include <unordered_map>
 
@@ -252,6 +253,7 @@ struct nas_val
 
     nas_val(u8);
     ~nas_val();
+    void clear();
 };
 
 var nas_vec::get_val(const i32 n)
@@ -376,6 +378,19 @@ nas_val::~nas_val()
     }
     type=vm_nil;
 }
+void nas_val::clear()
+{
+    switch(type)
+    {
+        case vm_str:  ptr.str->clear();       break;
+        case vm_vec:  ptr.vec->elems.clear(); break;
+        case vm_hash: ptr.hash->elems.clear();break;
+        case vm_func: ptr.func->clear();      break;
+        case vm_upval:ptr.upval->clear();     break;
+        case vm_obj:  ptr.obj->clear();       break;
+        case vm_co:   ptr.co->clear();        break;
+    }
+}
 f64 var::tonum()
 {
     return type!=vm_str?val.num:str2num(str().c_str());
@@ -457,20 +472,17 @@ struct gc
     var   temp;  // temporary place used in builtin/module functions
 
     /* constants and memory pool */
-    std::vector<var>  strs;     // reserved address for const vm_str
-    std::vector<var>  env_argv; // command line arguments
-    std::vector<nas_val*> memory;           // gc memory
-    std::queue<nas_val*>  unused[gc_tsize]; // gc free list
+    std::vector<var> strs;        // reserved address for const vm_str
+    std::vector<var> env_argv;    // command line arguments
+    std::vector<nas_val*> memory; // gc memory
+    std::queue<nas_val*> unused[gc_tsize]; // gc free list
 
     /* values for analysis */
     u64 size[gc_tsize];
     u64 count[gc_tsize];
-    u64 allocc[gc_tsize];
-    gc(
-        u32& _pc, var*& _localr,
-        var*& _memr, var& _funcr,
-        var& _upvalr, var*& _canary,
-        var*& _top, var* _stk):
+    u64 acnt[gc_tsize];
+    gc(u32& _pc, var*& _localr, var*& _memr, var& _funcr,
+       var& _upvalr, var*& _canary, var*& _top, var* _stk):
         pc(_pc),localr(_localr),memr(_memr),funcr(_funcr),upvalr(_upvalr),
         canary(_canary),top(_top),stack(_stk),cort(nullptr),temp(nil){}
     void mark();
@@ -548,16 +560,7 @@ void gc::sweep()
     {
         if(i->mark==GC_UNCOLLECTED)
         {
-            switch(i->type)
-            {
-                case vm_str:  i->ptr.str->clear();       break;
-                case vm_vec:  i->ptr.vec->elems.clear(); break;
-                case vm_hash: i->ptr.hash->elems.clear();break;
-                case vm_func: i->ptr.func->clear();      break;
-                case vm_upval:i->ptr.upval->clear();     break;
-                case vm_obj:  i->ptr.obj->clear();       break;
-                case vm_co:   i->ptr.co->clear();        break;
-            }
+            i->clear();
             unused[i->type-vm_str].push(i);
             i->mark=GC_COLLECTED;
         }
@@ -571,7 +574,7 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv)
     funcr=nil;
 
     for(u8 i=0;i<gc_tsize;++i)
-        size[i]=count[i]=allocc[i]=0;
+        size[i]=count[i]=acnt[i]=0;
     for(u8 i=0;i<gc_tsize;++i)
         for(u32 j=0;j<ini[i];++j)
         {
@@ -615,8 +618,8 @@ void gc::info()
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
     std::cout<<"\ngarbage collector info(gc/alloc)\n";
     for(u8 i=0;i<gc_tsize;++i)
-        if(count[i] || allocc[i])
-            std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<allocc[i]<<"\n";
+        if(count[i] || acnt[i])
+            std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<acnt[i]<<"\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(u8 i=0;i<gc_tsize;++i)
         if(ini[i] || size[i])
@@ -625,7 +628,7 @@ void gc::info()
 var gc::alloc(u8 type)
 {
     const u8 index=type-vm_str;
-    ++allocc[index];
+    ++acnt[index];
     if(unused[index].empty())
     {
         ++count[index];
