@@ -31,7 +31,7 @@ jobs:
         # Name of Release to add file to
         title: macOS Nightly build
         # Name of the tag for the release (will be associated with current branch)
-        automatic_release_tag: next
+        automatic_release_tag: next_macOS
         # File to release
         files: nasal-mac-nightly.tgz
     
@@ -57,7 +57,7 @@ jobs:
         # Name of Release to add file to
         title: Linux Nightly build
         # Name of the tag for the release (will be associated with current branch)
-        automatic_release_tag: next
+        automatic_release_tag: next_linux_x86_64
         # File to release
         files: nasal-linux-x86_64-nightly.tgz
 
