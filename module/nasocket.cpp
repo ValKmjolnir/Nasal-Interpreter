@@ -25,14 +25,14 @@ static WSAmanager win;
 #include <netinet/in.h>
 #endif
 
-extern "C" var nas_socket(std::vector<var>& args,gc& ngc){
+var nas_socket(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
         return nas_err("socket","\"af\", \"type\", \"protocol\" should be number");
     int sd=socket(args[0].num(),args[1].num(),args[2].num());
     return {vm_num,(double)sd};
 }
 
-extern "C" var nas_closesocket(std::vector<var>& args,gc& ngc){
+var nas_closesocket(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("closesocket","\"\" should be number");
 #ifdef _WIN32
@@ -42,7 +42,7 @@ extern "C" var nas_closesocket(std::vector<var>& args,gc& ngc){
 #endif
 }
 
-extern "C" var nas_shutdown(std::vector<var>& args,gc& ngc){
+var nas_shutdown(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("shutdown","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -50,7 +50,7 @@ extern "C" var nas_shutdown(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)shutdown(args[0].num(),args[1].num())};
 }
 
-extern "C" var nas_bind(std::vector<var>& args,gc& ngc){
+var nas_bind(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("bind","\"sd\" muse be a number");
     if(args[1].type!=vm_str)
@@ -65,7 +65,7 @@ extern "C" var nas_bind(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)bind(args[0].num(),(sockaddr*)&server,sizeof(server))};
 }
 
-extern "C" var nas_listen(std::vector<var>& args,gc& ngc){
+var nas_listen(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("listen","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -73,7 +73,7 @@ extern "C" var nas_listen(std::vector<var>& args,gc& ngc){
     return{vm_num,(double)listen(args[0].num(),args[1].num())};
 }
 
-extern "C" var nas_connect(std::vector<var>& args,gc& ngc){
+var nas_connect(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("connect","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -89,7 +89,7 @@ extern "C" var nas_connect(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)connect(args[0].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-extern "C" var nas_accept(std::vector<var>& args,gc& ngc){
+var nas_accept(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("accept","\"sd\" must be a number");
     sockaddr_in client;
@@ -99,15 +99,15 @@ extern "C" var nas_accept(std::vector<var>& args,gc& ngc){
 #else
     int client_sd=accept(args[0].num(),(sockaddr*)&client,(socklen_t*)&socklen);
 #endif
-    var res=ngc.temp=ngc.alloc(vm_hash);
+    var res=ngc->temp=ngc->alloc(vm_hash);
     auto& hash=res.hash().elems;
     hash["sd"]={vm_num,(double)client_sd};
-    hash["ip"]=ngc.newstr(inet_ntoa(client.sin_addr));
-    ngc.temp=nil;
+    hash["ip"]=ngc->newstr(inet_ntoa(client.sin_addr));
+    ngc->temp=nil;
     return res;
 }
 
-extern "C" var nas_send(std::vector<var>& args,gc& ngc){
+var nas_send(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("send","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -117,7 +117,7 @@ extern "C" var nas_send(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)send(args[0].num(),args[1].str().c_str(),args[1].str().length(),args[2].num())};
 }
 
-extern "C" var nas_sendto(std::vector<var>& args,gc& ngc){
+var nas_sendto(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("sendto","\"sd\" must be a number");
     if(args[1].type!=vm_str)
@@ -137,7 +137,7 @@ extern "C" var nas_sendto(std::vector<var>& args,gc& ngc){
     return {vm_num,(double)sendto(args[0].num(),args[3].str().c_str(),args[3].str().length(),args[4].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-extern "C" var nas_recv(std::vector<var>& args,gc& ngc){
+var nas_recv(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("recv","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -146,17 +146,17 @@ extern "C" var nas_recv(std::vector<var>& args,gc& ngc){
         return nas_err("recv","\"len\" out of range");
     if(args[2].type!=vm_num)
         return nas_err("recv","\"flags\" muse be a number");
-    var res=ngc.temp=ngc.alloc(vm_hash);
+    var res=ngc->temp=ngc->alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()];
     hash["size"]={vm_num,(double)recv(args[0].num(),buf,args[1].num(),args[2].num())};
-    hash["str"]=ngc.newstr(buf);
+    hash["str"]=ngc->newstr(buf);
     delete[] buf;
-    ngc.temp=nil;
+    ngc->temp=nil;
     return res;
 }
 
-extern "C" var nas_recvfrom(std::vector<var>& args,gc& ngc){
+var nas_recvfrom(var* args,usize size,gc* ngc){
     if(args[0].type!=vm_num)
         return nas_err("recvfrom","\"sd\" must be a number");
     if(args[1].type!=vm_num)
@@ -167,7 +167,7 @@ extern "C" var nas_recvfrom(std::vector<var>& args,gc& ngc){
         return nas_err("recvfrom","\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen=sizeof(sockaddr_in);
-    var res=ngc.temp=ngc.alloc(vm_hash);
+    var res=ngc->temp=ngc->alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()+1];
 #ifdef _WIN32
@@ -176,13 +176,42 @@ extern "C" var nas_recvfrom(std::vector<var>& args,gc& ngc){
     hash["size"]={vm_num,(double)recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,(socklen_t*)&socklen)};
 #endif
     buf[(int)hash["size"].num()]=0;
-    hash["str"]=ngc.newstr(buf);
+    hash["str"]=ngc->newstr(buf);
     delete[] buf;
-    hash["fromip"]=ngc.newstr(inet_ntoa(addr.sin_addr));
-    ngc.temp=nil;
+    hash["fromip"]=ngc->newstr(inet_ntoa(addr.sin_addr));
+    ngc->temp=nil;
     return res;
 }
 
-extern "C" var nas_errno(std::vector<var>& args,gc& ngc){
-    return ngc.newstr(strerror(errno));
+var nas_errno(var* args,usize size,gc* ngc){
+    return ngc->newstr(strerror(errno));
+}
+
+extern "C" mod get(const char* n){
+    string name=n;
+    if(name=="nas_socket")
+        return nas_socket;
+    else if(name=="nas_closesocket")
+        return nas_closesocket;
+    else if(name=="nas_shutdown")
+        return nas_shutdown;
+    else if(name=="nas_bind")
+        return nas_bind;
+    else if(name=="nas_listen")
+        return nas_listen;
+    else if(name=="nas_connect")
+        return nas_connect;
+    else if(name=="nas_accept")
+        return nas_accept;
+    else if(name=="nas_send")
+        return nas_send;
+    else if(name=="nas_sendto")
+        return nas_sendto;
+    else if(name=="nas_recv")
+        return nas_recv;
+    else if(name=="nas_recvfrom")
+        return nas_recvfrom;
+    else if(name=="nas_errno")
+        return nas_errno;
+    return nullptr;
 }

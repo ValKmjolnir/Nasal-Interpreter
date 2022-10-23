@@ -602,7 +602,7 @@ inline void vm::o_findex()
 }
 inline void vm::o_feach()
 {
-    std::vector<var>& ref=top[-1].vec().elems;
+    auto& ref=top[-1].vec().elems;
     if((usize)(++top[0].cnt())>=ref.size())
     {
         pc=imm[pc]-1;
@@ -800,8 +800,8 @@ inline void vm::o_slc2()
 {
     var val2=(top--)[0];
     var val1=(top--)[0];
-    std::vector<var>& ref=top[-1].vec().elems;
-    std::vector<var>& aim=top[0].vec().elems;
+    auto& ref=top[-1].vec().elems;
+    auto& aim=top[0].vec().elems;
 
     u8 type1=val1.type,type2=val2.type;
     i32 num1=val1.tonum();

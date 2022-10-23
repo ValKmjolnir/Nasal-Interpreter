@@ -615,9 +615,8 @@ double fibonaci(double x){
         return x;
     return fibonaci(x-1)+fibonaci(x-2);
 }
-// remember to use extern "C",
-// so you could search the symbol quickly
-extern "C" var fib(std::vector<var>& args,gc& ngc){
+// module functions' parameter list example
+var fib(var* args,usize size,gc* ngc){
     // the arguments are generated into a vm_vec: args
     // get values from the vector that must be used here
     var num=args[0];
@@ -627,9 +626,21 @@ extern "C" var fib(std::vector<var>& args,gc& ngc){
     if(num.type!=vm_num)
         return nas_err("extern_fib","\"num\" must be number");
     // ok, you must know that vm_num now is not managed by gc
-    // if want to return a gc object, use ngc.alloc(type)
+    // if want to return a gc object, use ngc->alloc(type)
     // usage of gc is the same as adding a native function
     return {vm_num,fibonaci(num.tonum())};
+}
+
+// must write this function, this will help nasal to
+// get the function pointer by name
+// the reason why using this way to get function pointer
+// is because `var` has constructors, which is not compatiable in C
+// so "extern "C" var fib" may get compilation warnings
+extern "C" mod get(const char* n){
+    string name=n;
+    if(name=="fib")
+        return fib;
+    return nullptr;
 }
 ```
 

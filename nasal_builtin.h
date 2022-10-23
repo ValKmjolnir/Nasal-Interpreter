@@ -130,7 +130,7 @@ var builtin_split(var* local,gc& ngc)
 
     // avoid being sweeped
     var res=ngc.temp=ngc.alloc(vm_vec);
-    std::vector<var>& vec=res.vec().elems;
+    auto& vec=res.vec().elems;
 
     if(!deli.length())
     {
@@ -850,7 +850,7 @@ var builtin_getenv(var* local,gc& ngc)
     char* res=getenv(envvar.str().c_str());
     return res?ngc.newstr(res):nil;
 }
-void obj_dylib_dtor(void* ptr)
+void dylib_dtor(void* ptr)
 {
 #ifdef _WIN32
     FreeLibrary((HMODULE)ptr);
@@ -869,7 +869,7 @@ var builtin_dlopen(var* local,gc& ngc)
         return nas_err("dlopen","malloc failed");
     memset(str,0,sizeof(wchar_t)*dlname.str().size()+1);
     mbstowcs(str,dlname.str().c_str(),dlname.str().size()+1);
-    void* ptr=LoadLibraryW(str);
+    void* ptr=LoadLibraryA(dlname.str().c_str());
     delete []str;
 #else
     void* ptr=dlopen(dlname.str().c_str(),RTLD_LOCAL|RTLD_LAZY);
@@ -877,7 +877,7 @@ var builtin_dlopen(var* local,gc& ngc)
     if(!ptr)
         return nas_err("dlopen","cannot open dynamic lib <"+dlname.str()+">");
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::dylib,ptr,obj_dylib_dtor);
+    ret.obj().set(nas_obj::dylib,ptr,dylib_dtor);
     return ret;
 }
 var builtin_dlsym(var* local,gc& ngc)
@@ -888,15 +888,20 @@ var builtin_dlsym(var* local,gc& ngc)
         return nas_err("dlsym","\"lib\" is not a valid dynamic lib");
     if(sym.type!=vm_str)
         return nas_err("dlsym","\"sym\" must be string");
+    // "get" function
 #ifdef _WIN32
-    void* func=(void*)GetProcAddress((HMODULE)lib.obj().ptr,sym.str().c_str());
+    void* func=(void*)GetProcAddress((HMODULE)lib.obj().ptr,"get");
 #else
-    void* func=dlsym(lib.obj().ptr,sym.str().c_str());
+    void* func=dlsym(lib.obj().ptr,"get");
 #endif
     if(!func)
-        return nas_err("dlsym","cannot find symbol \""+sym.str()+"\"");
+        return nas_err("dlsym","cannot find get function");
+    // get function pointer by name
+    void* ptr=(void*)((getptr)func)(sym.str().c_str());
+    if(!ptr)
+        return nas_err("dlsym","cannot find function <"+sym.str()+">");
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::faddr,func);
+    ret.obj().set(nas_obj::faddr,ptr);
     return ret;
 }
 var builtin_dlclose(var* local,gc& ngc)
@@ -918,9 +923,8 @@ var builtin_dlcall(var* local,gc& ngc)
     var args=local[2];
     if(!fp.objchk(nas_obj::faddr))
         return nas_err("dlcall","\"funcptr\" is not a valid function pointer");
-    typedef var (*externs)(std::vector<var>&,gc&);
-    externs func=(externs)fp.obj().ptr;
-    return func(args.vec().elems,ngc);
+    auto& vec=args.vec().elems;
+    return ((mod)fp.obj().ptr)(vec.data(),vec.size(),&ngc);
 }
 
 var builtin_platform(var* local,gc& ngc)
