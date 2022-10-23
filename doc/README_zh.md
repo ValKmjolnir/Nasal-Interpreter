@@ -590,18 +590,29 @@ double fibonaci(double x){
         return x;
     return fibonaci(x-1)+fibonaci(x-2);
 }
-// 记得用extern "C"
-// 这样找符号会更加快速便捷，不要在意编译时的warning
-extern "C" var fib(std::vector<var>& args,gc& ngc){
-    // 传参会被送到一个vm_vec类型中送过来，而不是上文中那种指针直接指向局部作用域
+
+// 模块函数的参数列表一律以这个为准
+var fib(var* args,usize size,gc* ngc){
+    // 传参会给予一个var指针，指向一个vm_vec的data()
     var num=args[0];
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
-    // builtin_err会输出错误信息并返回错误类型让虚拟机终止执行
+    // nas_err会输出错误信息并返回错误类型让虚拟机终止执行
     if(num.type!=vm_num)
         return nas_err("extern_fib","\"num\" must be number");
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
-    // 如果需要返回内存管理的对象，请使用ngc.alloc(type)
+    // 如果需要返回内存管理的对象，请使用ngc->alloc(type)
     return {vm_num,fibonaci(num.tonum())};
+}
+
+// 必须实现这个函数, 这样nasal可以通过字符串名字获得函数指针
+// 之所以用这种方式来获取函数指针, 是因为`var`是有构造函数的
+// 有构造函数的类型作为返回值, 和C是不兼容的, 这导致
+// 类似 "extern "C" var fib" 的写法会得到编译错误
+extern "C" mod get(const char* n){
+    string name=n;
+    if(name=="fib")
+        return fib;
+    return nullptr;
 }
 ```
 

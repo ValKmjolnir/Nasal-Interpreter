@@ -6,18 +6,20 @@ double fibonaci(double x){
         return x;
     return fibonaci(x-1)+fibonaci(x-2);
 }
-extern "C" var fib(std::vector<var>& args,gc& ngc){
+
+var fib(var* args,usize size,gc* ngc){
     std::cout<<"[mod] this is the first test module of nasal\n";
-    if(!args.size())
+    if(!size)
         return nas_err("fib","lack arguments");
     var num=args[0];
     if(num.type!=vm_num)
         return nas_err("extern_fib","\"num\" must be number");
     return {vm_num,fibonaci(num.tonum())};
 }
-extern "C" var quick_fib(std::vector<var>& args,gc& ngc){
+
+var quick_fib(var* args,usize size,gc* ngc){
     std::cout<<"[mod] this is the first test module of nasal\n";
-    if(!args.size())
+    if(!size)
         return nas_err("fib","lack arguments");
     var num=args[0];
     if(num.type!=vm_num)
@@ -31,4 +33,13 @@ extern "C" var quick_fib(std::vector<var>& args,gc& ngc){
         b=res;
     }
     return {vm_num,res};
+}
+
+extern "C" mod get(const char* n){
+    string name=n;
+    if(name=="fib")
+        return fib;
+    else if(name=="quick_fib")
+        return quick_fib;
+    return nullptr;
 }

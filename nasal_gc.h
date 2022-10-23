@@ -460,16 +460,18 @@ struct gc
     } mctx;
     
     /* runtime context */
-    u32&  pc;    // program counter
-    var*& localr;// local scope register
-    var*& memr;  // used for mem_call
-    var&  funcr; // function register
-    var&  upvalr;// upvalue register
-    var*& canary;// avoid stackoverflow
-    var*& top;   // stack top
-    var*  stack; // stack pointer
-    nas_co* cort;// running coroutine
-    var   temp;  // temporary place used in builtin/module functions
+    u32&  pc;     // program counter
+    var*& localr; // local scope register
+    var*& memr;   // used for mem_call
+    var&  funcr;  // function register
+    var&  upvalr; // upvalue register
+    var*& canary; // avoid stackoverflow
+    var*& top;    // stack top
+    var*  stack;  // stack pointer
+    nas_co* cort; // running coroutine
+
+    /* native function used */
+    var temp; // temporary place used in builtin/module functions
 
     /* constants and memory pool */
     std::vector<var> strs;        // reserved address for const vm_str
@@ -720,4 +722,8 @@ var nas_err(const string& err_f,const string& info)
     std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
     return {vm_none};
 }
+
+typedef var (*mod)(var*,usize,gc*); // module function type
+typedef mod (*getptr)(const char*); // module function "get" type
+
 #endif
