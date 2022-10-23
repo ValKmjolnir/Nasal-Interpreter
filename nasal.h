@@ -150,6 +150,6 @@ string rawstr(const string& str,const usize maxlen=0)
     return ret;
 }
 
-#include "nasal_gc.h" // declarations of nas_ref and nasal_gc
+#include "nasal_gc.h" // declarations of var and nasal_gc
 
 #endif

@@ -31,7 +31,6 @@ test:nasal
 	@ ./nasal -o -e test/ascii-art.nas
 	@ ./nasal -o -c test/auto_crash.nas
 	@ ./nasal -o -a -c test/bf.nas
-	@ ./nasal -o -a -c test/bfcolored.nas
 	@ ./nasal -o -a -c test/bfconvertor.nas
 	@ ./nasal -o -e -d test/bfs.nas
 	@ ./nasal -o -t test/bigloop.nas

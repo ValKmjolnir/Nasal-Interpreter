@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-void const_str(nasal_ast& root)
+void const_str(ast& root)
 {
     auto& vec=root.child();
     root.set_str(vec[0].str()+vec[1].str());
@@ -11,7 +11,7 @@ void const_str(nasal_ast& root)
     root.set_type(ast_str);
 }
 
-void const_num(nasal_ast& root)
+void const_num(ast& root)
 {
     auto& vec=root.child();
     f64 res;
@@ -34,7 +34,7 @@ void const_num(nasal_ast& root)
     root.set_type(ast_num);
 }
 
-void calc_const(nasal_ast& root)
+void calc_const(ast& root)
 {
     auto& vec=root.child();
     for(auto& i:vec)
@@ -62,7 +62,7 @@ void calc_const(nasal_ast& root)
             vec[0].type()==ast_num && vec[1].type()==ast_num)
         const_num(root);
 }
-void optimize(nasal_ast& root)
+void optimize(ast& root)
 {
     for(auto& i:root.child())
         calc_const(i);
