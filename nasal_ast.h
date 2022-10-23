@@ -128,7 +128,7 @@ const char* ast_name[]=
     "return"
 };
 
-class nasal_ast
+class ast
 {
 private:
     u32 node_line;
@@ -136,24 +136,24 @@ private:
     u32 node_type;
     f64 node_num;
     string node_str;
-    std::vector<nasal_ast> node_child;
+    std::vector<ast> node_child;
 public:
-    nasal_ast(const u32 l,const u32 c,const u32 t):
+    ast(const u32 l,const u32 c,const u32 t):
         node_line(l),node_col(c),node_type(t),node_num(0){}
-    nasal_ast(const nasal_ast&);
-    nasal_ast(nasal_ast&&);
-    void tree();
+    ast(const ast&);
+    ast(ast&&);
+    void print_tree();
     void print(u32,bool,std::vector<string>&);
     void clear();
     
-    nasal_ast& operator=(const nasal_ast&);
-    nasal_ast& operator=(nasal_ast&&);
-    nasal_ast& operator[](usize n){return node_child[n];}
-    const nasal_ast& operator[](usize n) const {return node_child[n];}
+    ast& operator=(const ast&);
+    ast& operator=(ast&&);
+    ast& operator[](usize n){return node_child[n];}
+    const ast& operator[](usize n) const {return node_child[n];}
     usize size() const {return node_child.size();}
     
-    void add(nasal_ast&& ast){node_child.push_back(std::move(ast));}
-    void add(const nasal_ast& ast){node_child.push_back(ast);}
+    void add(ast&& node){node_child.push_back(std::move(node));}
+    void add(const ast& node){node_child.push_back(node);}
     void set_line(const u32 l){node_line=l;}
     void set_type(const u32 t){node_type=t;}
     void set_str(const string& s){node_str=s;}
@@ -164,11 +164,11 @@ public:
     inline u32 type() const {return node_type;}
     inline f64 num()  const {return node_num;}
     inline const string& str() const {return node_str;}
-    inline const std::vector<nasal_ast>& child() const {return node_child;}
-    inline std::vector<nasal_ast>& child(){return node_child;}
+    inline const std::vector<ast>& child() const {return node_child;}
+    inline std::vector<ast>& child(){return node_child;}
 };
 
-nasal_ast::nasal_ast(const nasal_ast& tmp):
+ast::ast(const ast& tmp):
     node_str(tmp.node_str),node_child(tmp.node_child)
 {
     node_line=tmp.node_line;
@@ -177,7 +177,7 @@ nasal_ast::nasal_ast(const nasal_ast& tmp):
     node_num =tmp.node_num;
 }
 
-nasal_ast::nasal_ast(nasal_ast&& tmp)
+ast::ast(ast&& tmp)
 {
     node_line=tmp.node_line;
     node_col=tmp.node_col;
@@ -187,7 +187,7 @@ nasal_ast::nasal_ast(nasal_ast&& tmp)
     node_child.swap(tmp.node_child);
 }
 
-nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
+ast& ast::operator=(const ast& tmp)
 {
     node_line=tmp.node_line;
     node_col=tmp.node_col;
@@ -198,7 +198,7 @@ nasal_ast& nasal_ast::operator=(const nasal_ast& tmp)
     return *this;
 }
 
-nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
+ast& ast::operator=(ast&& tmp)
 {
     node_line=tmp.node_line;
     node_col=tmp.node_col;
@@ -209,7 +209,7 @@ nasal_ast& nasal_ast::operator=(nasal_ast&& tmp)
     return *this;
 }
 
-void nasal_ast::clear()
+void ast::clear()
 {
     node_line=node_col=0;
     node_num=0;
@@ -218,13 +218,13 @@ void nasal_ast::clear()
     node_child.clear();
 }
 
-void nasal_ast::tree()
+void ast::print_tree()
 {
     std::vector<string> tmp;
     print(0,false,tmp);
 }
 
-void nasal_ast::print(u32 depth,bool last,std::vector<string>& indent)
+void ast::print(u32 depth,bool last,std::vector<string>& indent)
 {
     for(auto& i:indent)
         std::cout<<i;

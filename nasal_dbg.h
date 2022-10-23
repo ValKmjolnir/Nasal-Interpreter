@@ -5,14 +5,14 @@
 #include "nasal_vm.h"
 #include <algorithm>
 
-class nasal_dbg:public nasal_vm
+class debugger:public vm
 {
 private:
     bool  next;
     usize fsize;
     u16   bk_fidx;
     u32   bk_line;
-    nasal_err& src;
+    error& src;
 
     std::vector<string> parse(const string&);
     u16 fileindex(const string&);
@@ -22,18 +22,18 @@ private:
     void stepinfo();
     void interact();
 public:
-    nasal_dbg(nasal_err& nerr):
+    debugger(error& err):
         next(false),fsize(0),
         bk_fidx(0),bk_line(0),
-        src(nerr){}
+        src(err){}
     void run(
-        const nasal_codegen&,
-        const nasal_import&,
+        const codegen&,
+        const linker&,
         const std::vector<string>&
     );
 };
 
-std::vector<string> nasal_dbg::parse(const string& cmd)
+std::vector<string> debugger::parse(const string& cmd)
 {
     std::vector<string> res;
     usize last=0,pos=cmd.find(" ",0);
@@ -49,7 +49,7 @@ std::vector<string> nasal_dbg::parse(const string& cmd)
     return res;
 }
 
-u16 nasal_dbg::fileindex(const string& filename)
+u16 debugger::fileindex(const string& filename)
 {
     for(u16 i=0;i<fsize;++i)
         if(filename==files[i])
@@ -57,14 +57,14 @@ u16 nasal_dbg::fileindex(const string& filename)
     return 65535;
 }
 
-void nasal_dbg::err()
+void debugger::err()
 {
     std::cerr
     <<"incorrect command\n"
     <<"input \'h\' to get help\n";
 }
 
-void nasal_dbg::help()
+void debugger::help()
 {
     std::cout
     <<"<option>\n"
@@ -83,7 +83,7 @@ void nasal_dbg::help()
     <<"\tbk,  break     | set break point\n";
 }
 
-void nasal_dbg::callsort(const u64* arr)
+void debugger::callsort(const u64* arr)
 {
     typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
@@ -111,7 +111,7 @@ void nasal_dbg::callsort(const u64* arr)
     std::clog<<"\n total  : "<<total<<'\n';
 }
 
-void nasal_dbg::stepinfo()
+void debugger::stepinfo()
 {
     u32 line=bytecode[pc].line==0?0:bytecode[pc].line-1;
     u32 begin=(line>>3)==0?0:((line>>3)<<3);
@@ -131,7 +131,7 @@ void nasal_dbg::stepinfo()
     stackinfo(10);
 }
 
-void nasal_dbg::interact()
+void debugger::interact()
 {
     // special operand
     if(bytecode[pc].op==op_intg)
@@ -207,9 +207,9 @@ void nasal_dbg::interact()
     }
 }
 
-void nasal_dbg::run(
-    const nasal_codegen& gen,
-    const nasal_import& linker,
+void debugger::run(
+    const codegen& gen,
+    const linker& linker,
     const std::vector<string>& argv)
 {
     detail_info=true;
@@ -248,47 +248,47 @@ void nasal_dbg::run(
     // goto the first operand
     goto *code[pc];
 #else
-    typedef void (nasal_dbg::*nafunc)();
+    typedef void (debugger::*nafunc)();
     const nafunc oprs[]=
     {
-        nullptr,              &nasal_dbg::o_intg,
-        &nasal_dbg::o_intl,   &nasal_dbg::o_loadg,
-        &nasal_dbg::o_loadl,  &nasal_dbg::o_loadu,
-        &nasal_dbg::o_pnum,   &nasal_dbg::o_pnil,
-        &nasal_dbg::o_pstr,   &nasal_dbg::o_newv,
-        &nasal_dbg::o_newh,   &nasal_dbg::o_newf,
-        &nasal_dbg::o_happ,   &nasal_dbg::o_para,
-        &nasal_dbg::o_deft,   &nasal_dbg::o_dyn,
-        &nasal_dbg::o_unot,   &nasal_dbg::o_usub,
-        &nasal_dbg::o_add,    &nasal_dbg::o_sub,
-        &nasal_dbg::o_mul,    &nasal_dbg::o_div,
-        &nasal_dbg::o_lnk,    &nasal_dbg::o_addc,
-        &nasal_dbg::o_subc,   &nasal_dbg::o_mulc,
-        &nasal_dbg::o_divc,   &nasal_dbg::o_lnkc,
-        &nasal_dbg::o_addeq,  &nasal_dbg::o_subeq,
-        &nasal_dbg::o_muleq,  &nasal_dbg::o_diveq,
-        &nasal_dbg::o_lnkeq,  &nasal_dbg::o_addeqc,
-        &nasal_dbg::o_subeqc, &nasal_dbg::o_muleqc,
-        &nasal_dbg::o_diveqc, &nasal_dbg::o_lnkeqc,
-        &nasal_dbg::o_meq,    &nasal_dbg::o_eq,
-        &nasal_dbg::o_neq,    &nasal_dbg::o_less,
-        &nasal_dbg::o_leq,    &nasal_dbg::o_grt,
-        &nasal_dbg::o_geq,    &nasal_dbg::o_lessc,
-        &nasal_dbg::o_leqc,   &nasal_dbg::o_grtc,
-        &nasal_dbg::o_geqc,   &nasal_dbg::o_pop,
-        &nasal_dbg::o_jmp,    &nasal_dbg::o_jt,
-        &nasal_dbg::o_jf,     &nasal_dbg::o_cnt,
-        &nasal_dbg::o_findex, &nasal_dbg::o_feach,
-        &nasal_dbg::o_callg,  &nasal_dbg::o_calll,
-        &nasal_dbg::o_upval,  &nasal_dbg::o_callv,
-        &nasal_dbg::o_callvi, &nasal_dbg::o_callh,
-        &nasal_dbg::o_callfv, &nasal_dbg::o_callfh,
-        &nasal_dbg::o_callb,  &nasal_dbg::o_slcbeg,
-        &nasal_dbg::o_slcend, &nasal_dbg::o_slc,
-        &nasal_dbg::o_slc2,   &nasal_dbg::o_mcallg,
-        &nasal_dbg::o_mcalll, &nasal_dbg::o_mupval,
-        &nasal_dbg::o_mcallv, &nasal_dbg::o_mcallh,
-        &nasal_dbg::o_ret
+        nullptr,             &debugger::o_intg,
+        &debugger::o_intl,   &debugger::o_loadg,
+        &debugger::o_loadl,  &debugger::o_loadu,
+        &debugger::o_pnum,   &debugger::o_pnil,
+        &debugger::o_pstr,   &debugger::o_newv,
+        &debugger::o_newh,   &debugger::o_newf,
+        &debugger::o_happ,   &debugger::o_para,
+        &debugger::o_deft,   &debugger::o_dyn,
+        &debugger::o_unot,   &debugger::o_usub,
+        &debugger::o_add,    &debugger::o_sub,
+        &debugger::o_mul,    &debugger::o_div,
+        &debugger::o_lnk,    &debugger::o_addc,
+        &debugger::o_subc,   &debugger::o_mulc,
+        &debugger::o_divc,   &debugger::o_lnkc,
+        &debugger::o_addeq,  &debugger::o_subeq,
+        &debugger::o_muleq,  &debugger::o_diveq,
+        &debugger::o_lnkeq,  &debugger::o_addeqc,
+        &debugger::o_subeqc, &debugger::o_muleqc,
+        &debugger::o_diveqc, &debugger::o_lnkeqc,
+        &debugger::o_meq,    &debugger::o_eq,
+        &debugger::o_neq,    &debugger::o_less,
+        &debugger::o_leq,    &debugger::o_grt,
+        &debugger::o_geq,    &debugger::o_lessc,
+        &debugger::o_leqc,   &debugger::o_grtc,
+        &debugger::o_geqc,   &debugger::o_pop,
+        &debugger::o_jmp,    &debugger::o_jt,
+        &debugger::o_jf,     &debugger::o_cnt,
+        &debugger::o_findex, &debugger::o_feach,
+        &debugger::o_callg,  &debugger::o_calll,
+        &debugger::o_upval,  &debugger::o_callv,
+        &debugger::o_callvi, &debugger::o_callh,
+        &debugger::o_callfv, &debugger::o_callfh,
+        &debugger::o_callb,  &debugger::o_slcbeg,
+        &debugger::o_slcend, &debugger::o_slc,
+        &debugger::o_slc2,   &debugger::o_mcallg,
+        &debugger::o_mcalll, &debugger::o_mupval,
+        &debugger::o_mcallv, &debugger::o_mcallh,
+        &debugger::o_ret
     };
     std::vector<u32> code;
     for(auto& i:gen.codes())
@@ -301,27 +301,27 @@ void nasal_dbg::run(
         ++count[code[pc]];
         (this->*oprs[code[pc]])();
         if(top>=canary)
-            break;
+            die("stack overflow");
         ++pc;
     }
 #endif
 
 vmexit:
-    if(top>=canary)
-        die("stack overflow");
     callsort(count);
-    gc.clear();
+    ngc.clear();
     imm.clear();
     std::cout<<bold_cyan<<"[debug] "<<reset<<"debugger exited\n";
     return;
 #ifndef _MSC_VER
 #define dbg(op,num) {\
-    interact();\
-    op();\
-    ++count[num];\
-    if(top<canary)\
+        interact();\
+        op();\
+        ++count[num];\
+        if(top<canary)\
+            goto *code[++pc];\
+        die("stack overflow");\
         goto *code[++pc];\
-    goto vmexit;}
+    }
 
 intg:   dbg(o_intg  ,op_intg  );
 intl:   dbg(o_intl  ,op_intl  );

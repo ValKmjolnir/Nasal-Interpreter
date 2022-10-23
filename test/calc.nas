@@ -19,6 +19,7 @@ var source=[
 var lib=[
     "fg_env.nas",
     "file.nas",
+    "json.nas",
     "lib.nas",
     "list.nas",
     "log.nas",

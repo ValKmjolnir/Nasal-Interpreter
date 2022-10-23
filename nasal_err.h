@@ -101,10 +101,10 @@ public:
     usize size(){return res.size();}
 };
 
-class nasal_err:public fstreamline
+class error:public fstreamline
 {
 private:
-    u32 error;
+    u32 cnt;
     string identation(usize len)
     {
         string tmp="";
@@ -112,16 +112,16 @@ private:
         return tmp;
     }
 public:
-    nasal_err():error(0){}
+    error():cnt(0){}
     void err(const char* stage,const string& info)
     {
-        ++error;
+        ++cnt;
         std::cerr<<bold_red<<stage<<": "
                  <<bold_white<<info<<reset<<"\n\n";
     }
     void err(const char* stage,u32 line,u32 column,const string& info)
     {
-        ++error;
+        ++cnt;
         const string& code=res[line-1];
         const string ident=identation(std::to_string(line).length());
         std::cerr<<bold_red<<stage<<": "
@@ -142,7 +142,7 @@ public:
     }
     void err(const char* stage,u32 line,const string& info)
     {
-        ++error;
+        ++cnt;
         const string ident=identation(std::to_string(line).length());
         std::cerr<<bold_red<<stage<<": "
                  <<bold_white<<info<<reset<<"\n"
@@ -157,7 +157,7 @@ public:
                  <<bold_cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
                  <<bold_cyan<<ident<<" | "<<reset<<"\n\n";
     }
-    void chkerr(){if(error)std::exit(1);}
+    void chkerr(){if(cnt)std::exit(1);}
 };
 
 #endif

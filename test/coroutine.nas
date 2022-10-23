@@ -35,6 +35,38 @@ func(){
     }
 }();
 
+# test crash in coroutines
+var co=coroutine.create(func{
+    var b=func(){b()}
+    coroutine.yield(b);
+    b();
+    coroutine.yield(0);
+});
+
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[32m ",coroutine.status(co),"\e[0m");
+println("coroutine error: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+
+var co=coroutine.create(func{
+    var a=1;
+    var b=func(){
+        b();
+    }
+    coroutine.yield(b);
+    coroutine.yield(b());
+});
+
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[32m ",coroutine.status(co),"\e[0m");
+println("coroutine error: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("coroutine yield: ",coroutine.resume(co));
+println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
+println("ok");
+
 # pressure test
 var productor=func(){
     for(var i=0;;i+=1)
@@ -44,8 +76,10 @@ var total=1000; # ms
 var co=coroutine.create(productor);
 var tm=maketimestamp();
 
-if(os.platform()=="windows")
+if(os.platform()=="windows"){
     system("chcp 65001");
+    system("color");
+}
 var counter=0;
 var bar=process_bar.high_resolution_bar(40);
 var consumer=func(){
@@ -59,4 +93,4 @@ var consumer=func(){
 tm.stamp();
 while(tm.elapsedMSec()<total)
     consumer();
-println("\nexecute ",counter," tasks during ",total," ms, avg ",counter/total," tasks/ms.")
+println("\nexecute ",counter," tasks during ",total," ms, avg ",counter/total," tasks/ms.");

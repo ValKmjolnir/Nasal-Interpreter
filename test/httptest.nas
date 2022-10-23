@@ -5,7 +5,10 @@ var http=func(){
     return {
         establish:func(ip,port){
             sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
-            socket.bind(sd,ip,port);
+            if(socket.bind(sd,ip,port)<0){
+                println("failed to bind socket "~sd~" at IP: "~ip~" port: "~port~".");
+                return;
+            }
             socket.listen(sd,1);
             println("[",os.time(),"] start server at [",ip,":",port,"]");
         },
@@ -39,7 +42,6 @@ var http=func(){
     };
 }();
 http.establish("127.0.0.1",8080);
-
 
 var highlight_style="
 <style>
