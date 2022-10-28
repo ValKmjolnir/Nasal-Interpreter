@@ -1,5 +1,4 @@
-#ifndef __NASAL_CODEGEN_H__
-#define __NASAL_CODEGEN_H__
+#pragma once
 
 #include "nasal_err.h"
 #include <iomanip>
@@ -248,7 +247,7 @@ private:
     void single_def(const ast&);
     void def_gen(const ast&);
     void multi_assign_gen(const ast&);
-    void conditional_gen(const ast&);
+    void cond_gen(const ast&);
     void loop_gen(const ast&);
     void load_continue_break(i32,i32);
     void while_gen(const ast&);
@@ -649,7 +648,7 @@ void codegen::multi_def(const ast& node)
 {
     auto& ids=node[0].child();
     usize size=ids.size();
-    if(node[1].type()==ast_multi_scalar) // (var a,b,c)=(c,b,a);
+    if(node[1].type()==ast_tuple) // (var a,b,c)=(c,b,a);
     {
         auto& vals=node[1].child();
         for(usize i=0;i<size;++i)
@@ -684,7 +683,7 @@ void codegen::def_gen(const ast& node)
 void codegen::multi_assign_gen(const ast& node)
 {
     i32 size=node[0].size();
-    if(node[1].type()==ast_multi_scalar)
+    if(node[1].type()==ast_tuple)
     {
         for(i32 i=size-1;i>=0;--i)
             calc_gen(node[1][i]);
@@ -725,7 +724,7 @@ void codegen::multi_assign_gen(const ast& node)
     }
 }
 
-void codegen::conditional_gen(const ast& node)
+void codegen::cond_gen(const ast& node)
 {
     std::vector<usize> jmp_label;
     for(auto& tmp:node.child())
@@ -1146,7 +1145,7 @@ void codegen::block_gen(const ast& node)
             case ast_file:fileindex=tmp.num();break; // special node type in main block
             case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;
-            case ast_conditional:conditional_gen(tmp);break;
+            case ast_cond:cond_gen(tmp);break;
             case ast_continue:
                 continue_ptr.front().push_back(code.size());
                 gen(op_jmp,0,tmp.line());
@@ -1288,5 +1287,3 @@ void codegen::print()
     for(u32 i=0;i<code.size();++i)
         singleop(i);
 }
-
-#endif

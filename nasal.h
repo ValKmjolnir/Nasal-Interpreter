@@ -1,6 +1,8 @@
-#ifndef __NASAL_H__
-#define __NASAL_H__
+#pragma once
+
+#ifndef __nasver
 #define __nasver "10.1"
+#endif
 
 #include <cstdint>
 #include <iostream>
@@ -151,5 +153,3 @@ string rawstr(const string& str,const usize maxlen=0)
 }
 
 #include "nasal_gc.h" // declarations of var and nasal_gc
-
-#endif

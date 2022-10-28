@@ -1,5 +1,4 @@
-#ifndef __NASAL_OPT_H__
-#define __NASAL_OPT_H__
+#pragma once
 
 #include <cmath>
 
@@ -67,4 +66,3 @@ void optimize(ast& root)
     for(auto& i:root.child())
         calc_const(i);
 }
-#endif

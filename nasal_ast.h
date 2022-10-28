@@ -1,5 +1,4 @@
-﻿#ifndef __NASAL_AST_H__
-#define __NASAL_AST_H__
+﻿#pragma once
 
 #include <vector>
 #include <cstring>
@@ -53,12 +52,12 @@ enum ast_node:u32
     ast_foreach,     // foreach keyword
     ast_while,       // while
     ast_iter,        // iterator, used in forindex/foreach
-    ast_conditional, // mark a sub-tree of conditional expression
+    ast_cond,        // mark a sub-tree of conditional expression
     ast_if,          // if keyword
     ast_elsif,       // elsif keyword
     ast_else,        // else keyword
     ast_multi_id,    // multi identifiers sub-tree
-    ast_multi_scalar,// multi value sub-tree
+    ast_tuple,       // tuple, only used in multiple assignment
     ast_def,         // definition
     ast_multi_assign,// multi assignment sub-tree
     ast_continue,    // continue keyword, only used in loop
@@ -107,20 +106,20 @@ const char* ast_name[]=
     "*",
     "/",
     "~",
-    "unary-",
-    "unary!",
+    "neg",
+    "!",
     "trino",
     "for",
     "forindex",
     "foreach",
     "while",
     "iter",
-    "conditional",
+    "cond",
     "if",
     "elsif",
     "else",
     "multi-id",
-    "multi-scalar",
+    "tuple",
     "def",
     "multi-assign",
     "continue",
@@ -131,15 +130,15 @@ const char* ast_name[]=
 class ast
 {
 private:
-    u32 node_line;
-    u32 node_col;
-    u32 node_type;
-    f64 node_num;
-    string node_str;
-    std::vector<ast> node_child;
+    u32 nd_line;
+    u32 nd_col;
+    u32 nd_type;
+    f64 nd_num;
+    string nd_str;
+    std::vector<ast> nd_child;
 public:
     ast(const u32 l,const u32 c,const u32 t):
-        node_line(l),node_col(c),node_type(t),node_num(0){}
+        nd_line(l),nd_col(c),nd_type(t),nd_num(0){}
     ast(const ast&);
     ast(ast&&);
     void print_tree();
@@ -148,74 +147,74 @@ public:
     
     ast& operator=(const ast&);
     ast& operator=(ast&&);
-    ast& operator[](usize n){return node_child[n];}
-    const ast& operator[](usize n) const {return node_child[n];}
-    usize size() const {return node_child.size();}
+    ast& operator[](usize n){return nd_child[n];}
+    const ast& operator[](usize n) const {return nd_child[n];}
+    usize size() const {return nd_child.size();}
     
-    void add(ast&& node){node_child.push_back(std::move(node));}
-    void add(const ast& node){node_child.push_back(node);}
-    void set_line(const u32 l){node_line=l;}
-    void set_type(const u32 t){node_type=t;}
-    void set_str(const string& s){node_str=s;}
-    void set_num(const f64 n){node_num=n;}
+    void add(ast&& node){nd_child.push_back(std::move(node));}
+    void add(const ast& node){nd_child.push_back(node);}
+    void set_line(const u32 l){nd_line=l;}
+    void set_type(const u32 t){nd_type=t;}
+    void set_str(const string& s){nd_str=s;}
+    void set_num(const f64 n){nd_num=n;}
 
-    inline u32 line() const {return node_line;}
-    inline u32 col()  const {return node_col;}
-    inline u32 type() const {return node_type;}
-    inline f64 num()  const {return node_num;}
-    inline const string& str() const {return node_str;}
-    inline const std::vector<ast>& child() const {return node_child;}
-    inline std::vector<ast>& child(){return node_child;}
+    inline u32 line() const {return nd_line;}
+    inline u32 col()  const {return nd_col;}
+    inline u32 type() const {return nd_type;}
+    inline f64 num()  const {return nd_num;}
+    inline const string& str() const {return nd_str;}
+    inline const std::vector<ast>& child() const {return nd_child;}
+    inline std::vector<ast>& child(){return nd_child;}
 };
 
 ast::ast(const ast& tmp):
-    node_str(tmp.node_str),node_child(tmp.node_child)
+    nd_str(tmp.nd_str),nd_child(tmp.nd_child)
 {
-    node_line=tmp.node_line;
-    node_col=tmp.node_col;
-    node_type=tmp.node_type;
-    node_num =tmp.node_num;
+    nd_line=tmp.nd_line;
+    nd_col=tmp.nd_col;
+    nd_type=tmp.nd_type;
+    nd_num =tmp.nd_num;
 }
 
 ast::ast(ast&& tmp)
 {
-    node_line=tmp.node_line;
-    node_col=tmp.node_col;
-    node_type=tmp.node_type;
-    node_num =tmp.node_num;
-    node_str.swap(tmp.node_str);
-    node_child.swap(tmp.node_child);
+    nd_line=tmp.nd_line;
+    nd_col=tmp.nd_col;
+    nd_type=tmp.nd_type;
+    nd_num =tmp.nd_num;
+    nd_str.swap(tmp.nd_str);
+    nd_child.swap(tmp.nd_child);
 }
 
 ast& ast::operator=(const ast& tmp)
 {
-    node_line=tmp.node_line;
-    node_col=tmp.node_col;
-    node_type=tmp.node_type;
-    node_num=tmp.node_num;
-    node_str=tmp.node_str;
-    node_child=tmp.node_child;
+    nd_line=tmp.nd_line;
+    nd_col=tmp.nd_col;
+    nd_type=tmp.nd_type;
+    nd_num=tmp.nd_num;
+    nd_str=tmp.nd_str;
+    nd_child=tmp.nd_child;
     return *this;
 }
 
 ast& ast::operator=(ast&& tmp)
 {
-    node_line=tmp.node_line;
-    node_col=tmp.node_col;
-    node_type=tmp.node_type;
-    node_num=tmp.node_num;
-    node_str.swap(tmp.node_str);
-    node_child.swap(tmp.node_child);
+    nd_line=tmp.nd_line;
+    nd_col=tmp.nd_col;
+    nd_type=tmp.nd_type;
+    nd_num=tmp.nd_num;
+    nd_str.swap(tmp.nd_str);
+    nd_child.swap(tmp.nd_child);
     return *this;
 }
 
 void ast::clear()
 {
-    node_line=node_col=0;
-    node_num=0;
-    node_str.clear();
-    node_type=ast_null;
-    node_child.clear();
+    nd_line=nd_col=0;
+    nd_num=0;
+    nd_str.clear();
+    nd_type=ast_null;
+    nd_child.clear();
 }
 
 void ast::print_tree()
@@ -228,15 +227,13 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent)
 {
     for(auto& i:indent)
         std::cout<<i;
-    std::cout<<ast_name[node_type];
-    if(node_type==ast_str ||
-       node_type==ast_id ||
-       node_type==ast_default ||
-       node_type==ast_dynamic ||
-       node_type==ast_callh)
-        std::cout<<":"<<rawstr(node_str);
-    else if(node_type==ast_num || node_type==ast_file)
-        std::cout<<":"<<node_num;
+    std::cout<<ast_name[nd_type];
+    if(nd_type==ast_str || nd_type==ast_id ||
+       nd_type==ast_default || nd_type==ast_dynamic ||
+       nd_type==ast_callh)
+        std::cout<<":"<<rawstr(nd_str);
+    else if(nd_type==ast_num || nd_type==ast_file)
+        std::cout<<":"<<nd_num;
     std::cout<<"\n";
     if(last && depth)
         indent.back()="  ";
@@ -246,16 +243,14 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent)
 #else
         indent.back()="│ ";
 #endif
-    for(u32 i=0;i<node_child.size();++i)
+    for(u32 i=0;i<nd_child.size();++i)
     {
 #ifdef _WIN32
-        indent.push_back(i==node_child.size()-1?"+-":"|-");
+        indent.push_back(i==nd_child.size()-1?"+-":"|-");
 #else
-        indent.push_back(i==node_child.size()-1?"└─":"├─");
+        indent.push_back(i==nd_child.size()-1?"└─":"├─");
 #endif
-        node_child[i].print(depth+1,i==node_child.size()-1,indent);
+        nd_child[i].print(depth+1,i==nd_child.size()-1,indent);
         indent.pop_back();
     }
 }
-
-#endif

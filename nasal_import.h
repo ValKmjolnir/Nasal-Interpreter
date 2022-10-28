@@ -1,5 +1,4 @@
-#ifndef __NASAL_IMPORT_H__
-#define __NASAL_IMPORT_H__
+#pragma once
 
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -224,5 +223,3 @@ void linker::link(parse& parse,const string& self,bool spath=false)
     parse.tree()=load(parse.tree(),0);
     err.chkerr();
 }
-
-#endif

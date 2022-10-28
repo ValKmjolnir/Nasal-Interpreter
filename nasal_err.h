@@ -1,5 +1,4 @@
-#ifndef __NASAL_ERR_H__
-#define __NASAL_ERR_H__
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -159,5 +158,3 @@ public:
     }
     void chkerr(){if(cnt)std::exit(1);}
 };
-
-#endif

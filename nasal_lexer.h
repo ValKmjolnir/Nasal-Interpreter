@@ -1,5 +1,4 @@
-#ifndef __NASAL_LEXER_H__
-#define __NASAL_LEXER_H__
+#pragma once
 
 #include <sstream>
 #include <sys/stat.h>
@@ -7,18 +6,6 @@
 #ifdef _MSC_VER
 #define S_ISREG(m) (((m)&0xF000)==0x8000)
 #endif
-
-#define ID(c)      ((c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||(c<0))
-#define HEX(c)     (('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F'))
-#define OCT(c)     ('0'<=c&&c<='7')
-#define DIGIT(c)   ('0'<=c&&c<='9')
-#define STR(c)     (c=='\''||c=='\"'||c=='`')
-// single operators have only one character
-#define SINGLE_OPERATOR(c) (c=='('||c==')'||c=='['||c==']'||c=='{'||c=='}'||c==','||c==';'||c=='|'||c==':'||\
-                               c=='?'||c=='`'||c=='&'||c=='@'||c=='%'||c=='$'||c=='^'||c=='\\')
-// calculation operators may have two chars, for example: += -= *= /= ~= != == >= <=
-#define CALC_OPERATOR(c)   (c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~')
-#define NOTE(c)            (c=='#')
 
 enum tok:u32{
     tok_null=0,  // null token (default token type)
@@ -38,15 +25,39 @@ enum tok:u32{
     tok_elsif,   // condition expression keyword elsif
     tok_else,    // condition expression keyword else
     tok_nil,     // nil literal
-    tok_lcurve,tok_rcurve,
-    tok_lbracket,tok_rbracket,
-    tok_lbrace,tok_rbrace,
-    tok_semi,tok_and,tok_or,tok_comma,tok_dot,tok_ellipsis,tok_quesmark,
-    tok_colon,tok_add,tok_sub,tok_mult,tok_div,tok_link,tok_not,
-    tok_eq,
-    tok_addeq,tok_subeq,tok_multeq,tok_diveq,tok_lnkeq,
-    tok_cmpeq,tok_neq,tok_less,tok_leq,tok_grt,tok_geq,
-    tok_eof    // end of token list
+    tok_lcurve,  // (
+    tok_rcurve,  // )
+    tok_lbracket,// [
+    tok_rbracket,// ]
+    tok_lbrace,  // {
+    tok_rbrace,  // }
+    tok_semi,    // ;
+    tok_and,     // operator and
+    tok_or,      // operator or
+    tok_comma,   // ,
+    tok_dot,     // .
+    tok_ellipsis,// ...
+    tok_quesmark,// ?
+    tok_colon,   // :
+    tok_add,     // operator +
+    tok_sub,     // operator -
+    tok_mult,    // operator *
+    tok_div,     // operator /
+    tok_link,    // operator ~
+    tok_not,     // operator !
+    tok_eq,      // operator =
+    tok_addeq,   // operator +=
+    tok_subeq,   // operator -=
+    tok_multeq,  // operator *=
+    tok_diveq,   // operator /=
+    tok_lnkeq,   // operator ~=
+    tok_cmpeq,   // operator ==
+    tok_neq,     // operator !=
+    tok_less,    // operator <
+    tok_leq,     // operator <=
+    tok_grt,     // operator >
+    tok_geq,     // operator >=
+    tok_eof      // <eof> end of token list
 };
 
 struct{
@@ -126,6 +137,13 @@ private:
     std::vector<token> tokens;
 
     u32 get_type(const string&);
+    bool is_id(char);
+    bool is_hex(char);
+    bool is_oct(char);
+    bool is_dec(char);
+    bool is_str(char);
+    bool is_single_opr(char);
+    bool is_calc_opr(char);
     void die(const string& info){err.err("lexer",line,column,info);}
     void open(const string&);
     string utf8_gen();
@@ -141,6 +159,47 @@ public:
     void print();
     const std::vector<token>& result() const {return tokens;}
 };
+
+bool lexer::is_id(char c)
+{
+    return (c=='_')||('a'<=c && c<='z')||('A'<=c&&c<='Z')||(c<0);   
+}
+
+bool lexer::is_hex(char c)
+{
+    return ('0'<=c&&c<='9')||('a'<=c&&c<='f')||('A'<=c && c<='F');
+}
+
+bool lexer::is_oct(char c)
+{
+    return '0'<=c&&c<='7';
+}
+
+bool lexer::is_dec(char c)
+{
+    return '0'<=c&&c<='9';
+}
+
+bool lexer::is_str(char c)
+{
+    return c=='\''||c=='\"'||c=='`';
+}
+
+bool lexer::is_single_opr(char c)
+{
+    return (
+        c=='('||c==')'||c=='['||c==']'||
+        c=='{'||c=='}'||c==','||c==';'||
+        c=='|'||c==':'||c=='?'||c=='`'||
+        c=='&'||c=='@'||c=='%'||c=='$'||
+        c=='^'||c=='\\'
+    );
+}
+
+bool lexer::is_calc_opr(char c)
+{
+    return c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~';
+}
 
 void lexer::open(const string& file)
 {
@@ -205,7 +264,7 @@ string lexer::utf8_gen()
 string lexer::id_gen()
 {
     string str="";
-    while(ptr<res.size() && (ID(res[ptr])||DIGIT(res[ptr])))
+    while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr])))
     {
         if(res[ptr]<0) // utf-8
             str+=utf8_gen();
@@ -225,7 +284,7 @@ string lexer::num_gen()
     {
         string str="0x";
         ptr+=2;
-        while(ptr<res.size() && HEX(res[ptr]))
+        while(ptr<res.size() && is_hex(res[ptr]))
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0x"
@@ -237,7 +296,7 @@ string lexer::num_gen()
     {
         string str="0o";
         ptr+=2;
-        while(ptr<res.size() && OCT(res[ptr]))
+        while(ptr<res.size() && is_oct(res[ptr]))
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0o"
@@ -247,12 +306,12 @@ string lexer::num_gen()
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
     string str="";
-    while(ptr<res.size() && DIGIT(res[ptr]))
+    while(ptr<res.size() && is_dec(res[ptr]))
         str+=res[ptr++];
     if(ptr<res.size() && res[ptr]=='.')
     {
         str+=res[ptr++];
-        while(ptr<res.size() && DIGIT(res[ptr]))
+        while(ptr<res.size() && is_dec(res[ptr]))
             str+=res[ptr++];
         // "xxxx." is not a correct number
         if(str.back()=='.')
@@ -267,7 +326,7 @@ string lexer::num_gen()
         str+=res[ptr++];
         if(ptr<res.size() && (res[ptr]=='-' || res[ptr]=='+'))
             str+=res[ptr++];
-        while(ptr<res.size() && DIGIT(res[ptr]))
+        while(ptr<res.size() && is_dec(res[ptr]))
             str+=res[ptr++];
         // "xxxe(-|+)" is not a correct number
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
@@ -352,23 +411,23 @@ void lexer::scan(const string& file)
             }
         }
         if(ptr>=res.size()) break;
-        if(ID(res[ptr]))
+        if(is_id(res[ptr]))
         {
             str=id_gen();
             u32 type=get_type(str);
             tokens.push_back({line,column,type?type:tok_id,str});
         }
-        else if(DIGIT(res[ptr]))
+        else if(is_dec(res[ptr]))
         {
             str=num_gen(); // make sure column is correct
             tokens.push_back({line,column,tok_num,str});
         }
-        else if(STR(res[ptr]))
+        else if(is_str(res[ptr]))
         {
             str=str_gen(); // make sure column is correct
             tokens.push_back({line,column,tok_str,str});
         }
-        else if(SINGLE_OPERATOR(res[ptr]))
+        else if(is_single_opr(res[ptr]))
         {
             str=res[ptr];
             ++column;
@@ -387,7 +446,7 @@ void lexer::scan(const string& file)
             column+=str.length();
             tokens.push_back({line,column,get_type(str),str});
         }
-        else if(CALC_OPERATOR(res[ptr]))
+        else if(is_calc_opr(res[ptr]))
         {
             // get calculation operator
             str=res[ptr++];
@@ -396,7 +455,7 @@ void lexer::scan(const string& file)
             column+=str.length();
             tokens.push_back({line,column,get_type(str),str});
         }
-        else if(NOTE(res[ptr]))// avoid note, after this process ptr will point to a '\n', so next loop line counter+1
+        else if(res[ptr]=='#')// avoid note, after this process ptr will point to a '\n', so next loop line counter+1
             while(++ptr<res.size() && res[ptr]!='\n');
         else
         {
@@ -405,7 +464,7 @@ void lexer::scan(const string& file)
             die("invalid character 0x"+chrhex(c));
         }
     }
-    tokens.push_back({line,column,tok_eof,"eof"});
+    tokens.push_back({line,column,tok_eof,"<eof>"});
     res="";
     err.chkerr();
 }
@@ -415,5 +474,3 @@ void lexer::print()
     for(auto& tok:tokens)
         std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str,128)<<")\n";
 }
-
-#endif

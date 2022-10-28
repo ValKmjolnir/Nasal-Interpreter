@@ -1,5 +1,4 @@
-#ifndef __NASAL_GC_H__
-#define __NASAL_GC_H__
+#pragma once
 
 #include <vector>
 #include <queue>
@@ -725,5 +724,3 @@ var nas_err(const string& err_f,const string& info)
 
 typedef var (*mod)(var*,usize,gc*); // module function type
 typedef mod (*getptr)(const char*); // module function "get" type
-
-#endif

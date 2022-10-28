@@ -1,5 +1,4 @@
-#ifndef __NASAL_DBG_H__
-#define __NASAL_DBG_H__
+#pragma once
 
 #include "nasal_err.h"
 #include "nasal_vm.h"
@@ -126,7 +125,7 @@ void debugger::stepinfo()
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i)
         std::cout
         <<(i==pc?back_white:reset)<<(i==pc?"--> ":"    ")
-        <<codestream(bytecode[i],i,num_table,str_table,files)
+        <<codestream(bytecode[i],i,cnum,cstr,files)
         <<reset<<"\n";
     stackinfo(10);
 }
@@ -399,5 +398,3 @@ mcallh: dbg(o_mcallh,op_mcallh);
 ret:    dbg(o_ret   ,op_ret   );
 #endif
 }
-
-#endif
