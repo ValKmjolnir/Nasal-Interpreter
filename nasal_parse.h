@@ -1,5 +1,4 @@
-#ifndef __NASAL_PARSE_H__
-#define __NASAL_PARSE_H__
+#pragma once
 
 #include <unordered_map>
 
@@ -96,7 +95,7 @@ private:
     ast for_loop();
     ast forei_loop();
     ast iter_gen();
-    ast conditional();
+    ast cond();
     ast continue_expr();
     ast break_expr();
     ast ret_expr();
@@ -244,7 +243,7 @@ bool parse::check_special_call()
 bool parse::need_semi_check(const ast& node)
 {
     u32 type=node.type();
-    if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_conditional)
+    if(type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_cond)
         return false;
     return !check_func_end(node);
 }
@@ -466,7 +465,7 @@ ast parse::expr()
         case tok_forindex:
         case tok_foreach:
         case tok_while:    return loop();          break;
-        case tok_if:       return conditional();   break;
+        case tok_if:       return cond();          break;
         case tok_continue: return continue_expr(); break;
         case tok_break:    return break_expr();    break;
         case tok_ret:      return ret_expr();      break;
@@ -765,9 +764,9 @@ ast parse::definition()
         node.add(check_multi_scalar()?multi_scalar(false):calc());
     else
         node.add(calc());
-    if(node[0].type()==ast_id && node[1].type()==ast_multi_scalar)
+    if(node[0].type()==ast_id && node[1].type()==ast_tuple)
         die(node[1].line(),"one variable cannot accept too many values");
-    else if(node[0].type()==ast_multi_id && node[1].type()==ast_multi_scalar && node[0].size()!=node[1].size())
+    else if(node[0].type()==ast_multi_id && node[1].type()==ast_tuple && node[0].size()!=node[1].size())
         die(node[0].line(),"too much or lack values in multi-definition");
     return node;
 }
@@ -815,7 +814,7 @@ ast parse::multi_scalar(bool check_call_memory)
         tok_func,tok_var,tok_lcurve,
         tok_lbrace,tok_lbracket,tok_null
     };
-    ast node(tokens[ptr].line,tokens[ptr].col,ast_multi_scalar);
+    ast node(tokens[ptr].line,tokens[ptr].col,ast_tuple);
     match(tok_lcurve);
     while(!lookahead(tok_rcurve))
     {
@@ -846,7 +845,7 @@ ast parse::multi_assgin()
         node.add(check_multi_scalar()?multi_scalar(false):calc());
     else
         node.add(calc());
-    if(node[1].type()==ast_multi_scalar
+    if(node[1].type()==ast_tuple
         && node[0].size()!=node[1].size())
         die(node[0].line(),"too much or lack values in multi-assignment");
     return node;
@@ -952,9 +951,9 @@ ast parse::iter_gen()
     }
     return node;
 }
-ast parse::conditional()
+ast parse::cond()
 {
-    ast node(tokens[ptr].line,tokens[ptr].col,ast_conditional);
+    ast node(tokens[ptr].line,tokens[ptr].col,ast_cond);
     ast ifnode(tokens[ptr].line,tokens[ptr].col,ast_if);
     match(tok_if);
     match(tok_lcurve);
@@ -1006,4 +1005,3 @@ ast parse::ret_expr()
         node.add(calc());
     return node;
 }
-#endif

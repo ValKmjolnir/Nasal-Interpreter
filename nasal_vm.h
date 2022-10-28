@@ -1,5 +1,4 @@
-#ifndef __NASAL_VM_H__
-#define __NASAL_VM_H__
+#pragma once
 
 #include <iomanip>
 #include <stack>
@@ -16,9 +15,11 @@ protected:
     var  upvalr;   // upvalue register
     var* canary;   // avoid stackoverflow
     var* top;      // stack top
-    const f64*    num_table;// const numbers, ref from codegen
-    const string* str_table;// const symbols, ref from codegen
-    std::vector<u32> imm;   // immediate number
+
+    /* constants */
+    const f64*    cnum;   // const numbers
+    const string* cstr;   // const symbols
+    std::vector<u32> imm; // immediate number
     
     /* garbage collector */
     gc  ngc;
@@ -26,8 +27,8 @@ protected:
     var stack[STACK_DEPTH];
 
     /* values used for debugger */
-    const string* files;    // ref from linker
-    const opcode* bytecode; // ref from codegen
+    const string* files;
+    const opcode* bytecode;
 
     void init(
         const std::vector<string>&,
@@ -128,7 +129,7 @@ public:
     vm():
         pc(0),localr(nullptr),memr(nullptr),funcr(nil),
         upvalr(nil),canary(nullptr),top(stack),
-        num_table(nullptr),str_table(nullptr),
+        cnum(nullptr),cstr(nullptr),
         ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
         files(nullptr),bytecode(nullptr),detail_info(false){}
     void run(
@@ -146,8 +147,8 @@ void vm::init(
     const std::vector<string>& argv)
 {
     ngc.init(strs,argv);
-    num_table=nums.data();
-    str_table=strs.data();
+    cnum=nums.data();
+    cstr=strs.data();
     bytecode=code.data();
     files=filenames.data();
 
@@ -223,7 +224,7 @@ void vm::traceback()
             <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
             <<prev<<std::dec<<"      "<<same<<" same call(s)\n";
         same=0;
-        std::cout<<"  "<<codestream(bytecode[p],p,num_table,str_table,files)<<"\n";
+        std::cout<<"  "<<codestream(bytecode[p],p,cnum,cstr,files)<<"\n";
     }
     // the first called place has no same calls
 }
@@ -360,7 +361,7 @@ inline void vm::o_loadu()
 }
 inline void vm::o_pnum()
 {
-    (++top)[0]={vm_num,num_table[imm[pc]]};
+    (++top)[0]={vm_num,cnum[imm[pc]]};
 }
 inline void vm::o_pnil()
 {
@@ -396,6 +397,8 @@ inline void vm::o_newf()
     if(localr)
     {
         func.upval=funcr.func().upval;
+        // function created in the same local scope shares one closure
+        // so this size & stk setting has no problem
         var upval=(upvalr.type==vm_nil)?ngc.alloc(vm_upval):upvalr;
         upval.upval().size=funcr.func().lsize;
         upval.upval().stk=localr;
@@ -405,7 +408,7 @@ inline void vm::o_newf()
 }
 inline void vm::o_happ()
 {
-    top[-1].hash().elems[str_table[imm[pc]]]=top[0];
+    top[-1].hash().elems[cstr[imm[pc]]]=top[0];
     --top;
 }
 inline void vm::o_para()
@@ -465,7 +468,7 @@ inline void vm::o_lnk()
 }
 
 #define op_calc_const(type)\
-    top[0]={vm_num,top[0].tonum() type num_table[imm[pc]]};
+    top[0]={vm_num,top[0].tonum() type cnum[imm[pc]]};
 
 inline void vm::o_addc(){op_calc_const(+);}
 inline void vm::o_subc(){op_calc_const(-);}
@@ -473,7 +476,7 @@ inline void vm::o_mulc(){op_calc_const(*);}
 inline void vm::o_divc(){op_calc_const(/);}
 inline void vm::o_lnkc()
 {
-    top[0]=ngc.newstr(top[0].tostr()+str_table[imm[pc]]);
+    top[0]=ngc.newstr(top[0].tostr()+cstr[imm[pc]]);
 }
 
 #define op_calc_eq(type)\
@@ -493,7 +496,7 @@ inline void vm::o_lnkeq()
 }
 
 #define op_calc_eq_const(type)\
-    top[0]=memr[0]={vm_num,memr[0].tonum() type num_table[imm[pc]&0x7fffffff]};\
+    top[0]=memr[0]={vm_num,memr[0].tonum() type cnum[imm[pc]&0x7fffffff]};\
     memr=nullptr;\
     top-=(imm[pc]>>31);
 
@@ -503,7 +506,7 @@ inline void vm::o_muleqc(){op_calc_eq_const(*);}
 inline void vm::o_diveqc(){op_calc_eq_const(/);}
 inline void vm::o_lnkeqc()
 {
-    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+str_table[imm[pc]&0x7fffffff]);
+    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]&0x7fffffff]);
     memr=nullptr;
     top-=(imm[pc]>>31);
 }
@@ -558,7 +561,7 @@ inline void vm::o_grt(){op_cmp(>);}
 inline void vm::o_geq(){op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    top[0]=(top[0].tonum() type num_table[imm[pc]])?one:zero;
+    top[0]=(top[0].tonum() type cnum[imm[pc]])?one:zero;
 
 inline void vm::o_lessc(){op_cmp_const(<);}
 inline void vm::o_leqc(){op_cmp_const(<=);}
@@ -671,9 +674,9 @@ inline void vm::o_callh()
     var val=top[0];
     if(val.type!=vm_hash)
         vm_error("must call a hash");
-    top[0]=val.hash().get_val(str_table[imm[pc]]);
+    top[0]=val.hash().get_val(cstr[imm[pc]]);
     if(top[0].type==vm_none)
-        vm_error("member \""+str_table[imm[pc]]+"\" does not exist");
+        vm_error("member \""+cstr[imm[pc]]+"\" does not exist");
     if(top[0].type==vm_func)
         top[0].func().local[0]=val;// 'me'
 }
@@ -746,7 +749,7 @@ inline void vm::o_callfh()
     
     for(auto& i:func.keys)
     {
-        const string& key=str_table[i.first];
+        auto& key=cstr[i.first];
         if(hash.count(key))
             local[i.second]=hash[key];
         else if(local[i.second].type==vm_none)
@@ -874,8 +877,8 @@ inline void vm::o_mcallh()
     var hash=top[0]; // mcall hash, reserved on stack to avoid gc
     if(hash.type!=vm_hash)
         vm_error("must call a hash");
-    nas_hash& ref=hash.hash();
-    const string& str=str_table[imm[pc]];
+    auto& ref=hash.hash();
+    auto& str=cstr[imm[pc]];
     memr=ref.get_mem(str);
     if(!memr) // create a new key
     {
@@ -1117,4 +1120,3 @@ mcallh: exec_nodie(o_mcallh); // -0
 ret:    exec_nodie(o_ret   ); // -2
 #endif
 }
-#endif

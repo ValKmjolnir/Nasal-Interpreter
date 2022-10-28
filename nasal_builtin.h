@@ -1,5 +1,4 @@
-﻿#ifndef __NASAL_BUILTIN_H__
-#define __NASAL_BUILTIN_H__
+﻿#pragma once
 
 #include "nasal_gc.h"
 
@@ -1231,4 +1230,3 @@ struct
     {"__logtime", builtin_logtime },
     {nullptr,     nullptr         }
 };
-#endif
