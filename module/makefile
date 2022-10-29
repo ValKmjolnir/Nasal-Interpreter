@@ -1,5 +1,8 @@
 .PHONY=clean all mingw-all
 
+dynamic_libs=libfib.so libkey.so libnasock.so
+dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll
+
 STD=14
 
 libfib.so: fib.cpp
@@ -36,7 +39,11 @@ libnasock.dll: nasocket.cpp
 	@ del nasocket.o
 
 clean:
-	-@ rm *.so *.dll *.dylib
+	@ echo "[clean] so"
+	-@ rm $(dynamic_libs)
+	@ echo "[clean] dll"
+	-@ rm $(dynamic_libs_dll)
+
 all: libfib.so libkey.so libnasock.so
 	@ echo "[build] done"
 mingw-all: libfib.dll libkey.dll libnasock.dll

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <unordered_map>
 #include <sys/stat.h>
 
 #ifdef _MSC_VER
@@ -60,58 +61,6 @@ enum tok:u32{
     tok_eof      // <eof> end of token list
 };
 
-struct{
-    const char* str;
-    const u32 type;
-}tok_table[]={
-    {"for"     ,tok_for      },
-    {"forindex",tok_forindex },
-    {"foreach" ,tok_foreach  },
-    {"while"   ,tok_while    },
-    {"var"     ,tok_var      },
-    {"func"    ,tok_func     },
-    {"break"   ,tok_break    },
-    {"continue",tok_continue },
-    {"return"  ,tok_ret      },
-    {"if"      ,tok_if       },
-    {"elsif"   ,tok_elsif    },
-    {"else"    ,tok_else     },
-    {"nil"     ,tok_nil      },
-    {"("       ,tok_lcurve   },
-    {")"       ,tok_rcurve   },
-    {"["       ,tok_lbracket },
-    {"]"       ,tok_rbracket },
-    {"{"       ,tok_lbrace   },
-    {"}"       ,tok_rbrace   },
-    {";"       ,tok_semi     },
-    {"and"     ,tok_and      },
-    {"or"      ,tok_or       },
-    {","       ,tok_comma    },
-    {"."       ,tok_dot      },
-    {"..."     ,tok_ellipsis },
-    {"?"       ,tok_quesmark },
-    {":"       ,tok_colon    },
-    {"+"       ,tok_add      },
-    {"-"       ,tok_sub      },
-    {"*"       ,tok_mult     },
-    {"/"       ,tok_div      },
-    {"~"       ,tok_link     },
-    {"!"       ,tok_not      },
-    {"="       ,tok_eq       },
-    {"+="      ,tok_addeq    },
-    {"-="      ,tok_subeq    },
-    {"*="      ,tok_multeq   },
-    {"/="      ,tok_diveq    },
-    {"~="      ,tok_lnkeq    },
-    {"=="      ,tok_cmpeq    },
-    {"!="      ,tok_neq      },
-    {"<"       ,tok_less     },
-    {"<="      ,tok_leq      },
-    {">"       ,tok_grt      },
-    {">="      ,tok_geq      },
-    {nullptr   ,0            }
-};
-
 struct token
 {
     u32 line;
@@ -134,7 +83,54 @@ private:
     usize  ptr;
     string res;
     error& err;
-    std::vector<token> tokens;
+    std::vector<token> toks;
+    std::unordered_map<string,u32> typetbl {
+        {"for"     ,tok_for      },
+        {"forindex",tok_forindex },
+        {"foreach" ,tok_foreach  },
+        {"while"   ,tok_while    },
+        {"var"     ,tok_var      },
+        {"func"    ,tok_func     },
+        {"break"   ,tok_break    },
+        {"continue",tok_continue },
+        {"return"  ,tok_ret      },
+        {"if"      ,tok_if       },
+        {"elsif"   ,tok_elsif    },
+        {"else"    ,tok_else     },
+        {"nil"     ,tok_nil      },
+        {"("       ,tok_lcurve   },
+        {")"       ,tok_rcurve   },
+        {"["       ,tok_lbracket },
+        {"]"       ,tok_rbracket },
+        {"{"       ,tok_lbrace   },
+        {"}"       ,tok_rbrace   },
+        {";"       ,tok_semi     },
+        {"and"     ,tok_and      },
+        {"or"      ,tok_or       },
+        {","       ,tok_comma    },
+        {"."       ,tok_dot      },
+        {"..."     ,tok_ellipsis },
+        {"?"       ,tok_quesmark },
+        {":"       ,tok_colon    },
+        {"+"       ,tok_add      },
+        {"-"       ,tok_sub      },
+        {"*"       ,tok_mult     },
+        {"/"       ,tok_div      },
+        {"~"       ,tok_link     },
+        {"!"       ,tok_not      },
+        {"="       ,tok_eq       },
+        {"+="      ,tok_addeq    },
+        {"-="      ,tok_subeq    },
+        {"*="      ,tok_multeq   },
+        {"/="      ,tok_diveq    },
+        {"~="      ,tok_lnkeq    },
+        {"=="      ,tok_cmpeq    },
+        {"!="      ,tok_neq      },
+        {"<"       ,tok_less     },
+        {"<="      ,tok_leq      },
+        {">"       ,tok_grt      },
+        {">="      ,tok_geq      }
+    };
 
     u32 get_type(const string&);
     bool is_id(char);
@@ -157,7 +153,7 @@ public:
         err(e){}
     void scan(const string&);
     void print();
-    const std::vector<token>& result() const {return tokens;}
+    const std::vector<token>& result() const {return toks;}
 };
 
 bool lexer::is_id(char c)
@@ -221,9 +217,8 @@ void lexer::open(const string& file)
 
 u32 lexer::get_type(const string& str)
 {
-    for(u32 i=0;tok_table[i].str;++i)
-        if(str==tok_table[i].str)
-            return tok_table[i].type;
+    if(typetbl.count(str))
+        return typetbl.at(str);
     return tok_null;
 }
 
@@ -415,17 +410,17 @@ void lexer::scan(const string& file)
         {
             str=id_gen();
             u32 type=get_type(str);
-            tokens.push_back({line,column,type?type:tok_id,str});
+            toks.push_back({line,column,type?type:tok_id,str});
         }
         else if(is_dec(res[ptr]))
         {
             str=num_gen(); // make sure column is correct
-            tokens.push_back({line,column,tok_num,str});
+            toks.push_back({line,column,tok_num,str});
         }
         else if(is_str(res[ptr]))
         {
             str=str_gen(); // make sure column is correct
-            tokens.push_back({line,column,tok_str,str});
+            toks.push_back({line,column,tok_str,str});
         }
         else if(is_single_opr(res[ptr]))
         {
@@ -434,7 +429,7 @@ void lexer::scan(const string& file)
             u32 type=get_type(str);
             if(!type)
                 die("invalid operator `"+str+"`");
-            tokens.push_back({line,column,type,str});
+            toks.push_back({line,column,type,str});
             ++ptr;
         }
         else if(res[ptr]=='.')
@@ -444,7 +439,7 @@ void lexer::scan(const string& file)
                 str+="..";
             ptr+=str.length();
             column+=str.length();
-            tokens.push_back({line,column,get_type(str),str});
+            toks.push_back({line,column,get_type(str),str});
         }
         else if(is_calc_opr(res[ptr]))
         {
@@ -453,7 +448,7 @@ void lexer::scan(const string& file)
             if(ptr<res.size() && res[ptr]=='=')
                 str+=res[ptr++];
             column+=str.length();
-            tokens.push_back({line,column,get_type(str),str});
+            toks.push_back({line,column,get_type(str),str});
         }
         else if(res[ptr]=='#')// avoid note, after this process ptr will point to a '\n', so next loop line counter+1
             while(++ptr<res.size() && res[ptr]!='\n');
@@ -464,13 +459,13 @@ void lexer::scan(const string& file)
             die("invalid character 0x"+chrhex(c));
         }
     }
-    tokens.push_back({line,column,tok_eof,"<eof>"});
+    toks.push_back({line,column,tok_eof,"<eof>"});
     res="";
     err.chkerr();
 }
 
 void lexer::print()
 {
-    for(auto& tok:tokens)
-        std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str,128)<<")\n";
+    for(auto& tok:toks)
+        std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str,32)<<")\n";
 }

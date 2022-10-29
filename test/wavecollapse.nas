@@ -1,7 +1,7 @@
 # wave collapse function 2022/4/10
 # by ValKmjolnir
 srand();
-var interval=1/120;
+var interval=1/160;
 var table=[
     # c ,w,a,s,d
     ["═",0,1,0,1],

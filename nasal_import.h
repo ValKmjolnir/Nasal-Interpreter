@@ -70,16 +70,16 @@ string linker::path(const ast& node)
 
 string linker::findf(const string& fname)
 {
-    std::vector<string> filepath={fname};
+    std::vector<string> fpath={fname};
     for(auto&p:envpath)
     {
 #ifdef _WIN32
-        filepath.push_back(p+"\\"+fname);
+        fpath.push_back(p+"\\"+fname);
 #else
-        filepath.push_back(p+"/"+fname);
+        fpath.push_back(p+"/"+fname);
 #endif
     }
-    for(auto& i:filepath)
+    for(auto& i:fpath)
         if(access(i.c_str(),F_OK)!=-1)
             return i;
     if(fname=="lib.nas")
@@ -94,7 +94,7 @@ string linker::findf(const string& fname)
         return "";
     }
     string paths="";
-    for(auto& i:filepath)
+    for(auto& i:fpath)
         paths+="  "+i+"\n";
     err.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
     return "";
@@ -192,25 +192,25 @@ ast linker::libimpt()
 
 ast linker::load(ast& root,u16 fileindex)
 {
-    ast new_root(0,0,ast_root);
+    ast tree(0,0,ast_root);
     if(!lib_loaded)
     {
-        link(new_root,libimpt());
+        link(tree,libimpt());
         lib_loaded=true;
     }
     for(auto& i:root.child())
     {
         if(imptchk(i))
-            link(new_root,fimpt(i));
+            link(tree,fimpt(i));
         else
             break;
     }
-    // add root to the back of new_root
+    // add root to the back of tree
     ast file_head(0,0,ast_file);
     file_head.set_num(fileindex);
-    new_root.add(std::move(file_head));
-    link(new_root,std::move(root));
-    return new_root;
+    tree.add(std::move(file_head));
+    link(tree,std::move(root));
+    return tree;
 }
 
 void linker::link(parse& parse,const string& self,bool spath=false)
