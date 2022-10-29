@@ -1123,7 +1123,7 @@ var builtin_logtime(var* local,gc& ngc)
 {
     time_t t=time(nullptr);
     tm* tm_t=localtime(&t);
-    char s[32];
+    char s[128];
     sprintf(s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",tm_t->tm_year+1900,tm_t->tm_mon+1,tm_t->tm_mday,tm_t->tm_hour,tm_t->tm_min,tm_t->tm_sec);
     return ngc.newstr(s);
 }
