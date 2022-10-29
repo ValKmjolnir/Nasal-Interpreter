@@ -13,7 +13,7 @@ void const_str(ast& root)
 void const_num(ast& root)
 {
     auto& vec=root.child();
-    f64 res;
+    f64 res=0;
     switch(root.type())
     {
         case ast_add: res=vec[0].num()+vec[1].num(); break;
