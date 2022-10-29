@@ -46,6 +46,7 @@ var testfile=[
     "class.nas",
     "coroutine.nas",
     "diff.nas",
+    "donuts.nas",
     "exception.nas",
     "fib.nas",
     "filesystem.nas",

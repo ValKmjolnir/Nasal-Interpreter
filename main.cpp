@@ -15,50 +15,48 @@
 
 using ch_clk=std::chrono::high_resolution_clock;
 
-const u32 VM_TOKEN =0x01;
-const u32 VM_AST   =0x02;
-const u32 VM_CODE  =0x04;
-const u32 VM_TIME  =0x08;
-const u32 VM_EXEC  =0x10;
-const u32 VM_DETAIL=0x20;
-const u32 VM_DEBUG =0x40;
-const u32 VM_OPT   =0x80;
+const u32 VM_AST   =0x01;
+const u32 VM_CODE  =0x02;
+const u32 VM_TIME  =0x04;
+const u32 VM_EXEC  =0x08;
+const u32 VM_DETAIL=0x10;
+const u32 VM_DEBUG =0x20;
+const u32 VM_OPT   =0x40;
 
-void help()
+std::ostream& help(std::ostream& out)
 {
-    std::clog
+    out
     <<"     ,--#-,\n"
     <<"<3  / \\____\\  <3\n"
     <<"    |_|__A_|\n"
 #ifdef _WIN32
-    <<"use command <chcp 65001> if want to use unicode.\n"
+    <<"use command <chcp 65001> to use unicode.\n"
 #endif
-    <<"nasal <option>\n"
+    <<"\nnasal <option>\n"
     <<"option:\n"
-    <<"   -h,   --help     | get this help and exit.\n"
-    <<"   -v,   --version  | get version of nasal interpreter.\n\n"
-    <<"nasal [option...] <file> [argv...]\n"
+    <<"   -h, --help     | get help.\n"
+    <<"\nnasal [option] <file> [argv]\n"
     <<"option:\n"
-    <<"   -l,   --lex      | view token info.\n"
-    <<"   -a,   --ast      | view abstract syntax tree.\n"
-    <<"   -c,   --code     | view bytecode.\n"
-    <<"   -e,   --exec     | execute.\n"
-    <<"   -t,   --time     | get the running time.\n"
-    <<"   -d,   --detail   | get detail runtime crash info.\n"
-    <<"                    | get detail linker path-not-found info.\n"
-    <<"                    | get garbage collector info if didn't crash.\n"
-    <<"   -o,   --optimize | use optimizer(beta).\n"
-    <<"                    | if want to use -op and run, please use -op -e/-t/-d.\n"
-    <<"   -dbg, --debug    | debug mode (this will ignore -t -d).\n"
+    <<"   -a, --ast      | view abstract syntax tree.\n"
+    <<"   -c, --code     | view bytecode.\n"
+    <<"   -e, --exec     | execute.\n"
+    <<"   -t, --time     | show execute time.\n"
+    <<"   -d, --detail   | get detail crash info.\n"
+    <<"                  | get detail path-not-found info.\n"
+    <<"                  | get detail gc info.\n"
+    <<"   -o, --optimize | use optimizer (beta).\n"
+    <<"                  | use <-o -e> to run optimized code.\n"
+    <<"   -dbg, --debug  | debug mode (ignore -t -d).\n"
     <<"file:\n"
-    <<"    input file name to execute.\n"
+    <<"   <filename>     | execute file.\n"
     <<"argv:\n"
-    <<"    command line arguments used in program.\n";
+    <<"   <args>         | cmd arguments used in program.\n";
+    return out;
 }
 
-void logo()
+std::ostream& logo(std::ostream& out)
 {
-    std::clog
+    out
     <<"       __                _\n"
     <<"    /\\ \\ \\__ _ ___  __ _| |\n"
     <<"   /  \\/ / _` / __|/ _` | |\n"
@@ -66,11 +64,11 @@ void logo()
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     <<"version   : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
     <<"c++ std   : "<<__cplusplus<<"\n"
-    <<"thanks to : https://github.com/andyross/nasal\n"
     <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
-    <<"lang info : http://wiki.flightgear.org/Nasal_scripting_language\n"
+    <<"lang wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
     <<"input <nasal -h> to get help .\n";
+    return out;
 }
 
 [[noreturn]]
@@ -93,8 +91,6 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
 
     // lexer scans file to get tokens
     lex.scan(file);
-    if(cmd&VM_TOKEN)
-        lex.print();
     
     // parser gets lexer's token list to compile
     parse.compile(lex);
@@ -129,16 +125,14 @@ i32 main(i32 argc,const char* argv[])
 {
     if(argc<=1)
     {
-        logo();
+        std::clog<<logo;
         return 0;
     }
     if(argc==2)
     {
         string s(argv[1]);
-        if(s=="-v" || s=="--version")
-            std::clog<<"nasal "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n";
-        else if(s=="-h" || s=="--help")
-            help();
+        if(s=="-h" || s=="--help")
+            std::clog<<help;
         else if(s[0]!='-')
             execute(s,{},VM_EXEC);
         else
@@ -146,7 +140,6 @@ i32 main(i32 argc,const char* argv[])
         return 0;
     }
     std::unordered_map<string,u32> cmdlst={
-        {"--lex",VM_TOKEN},{"-l",VM_TOKEN},
         {"--ast",VM_AST},{"-a",VM_AST},
         {"--code",VM_CODE},{"-c",VM_CODE},
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
@@ -156,7 +149,7 @@ i32 main(i32 argc,const char* argv[])
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     u32 cmd=0;
-    string filename;
+    string filename="";
     std::vector<string> vm_argv;
     for(i32 i=1;i<argc;++i)
     {

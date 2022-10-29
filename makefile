@@ -1,4 +1,4 @@
-.PHONY:test
+.PHONY:test clean
 
 SRC=\
 	main.cpp\
@@ -27,28 +27,33 @@ stable-release:$(SRC)
 stable-release-mingw:$(SRC)
 	$(CXX) -std=c++$(STD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
+clean:
+	-@ rm ./nasal
+	-@ rm ./nasal.exe
+
 test:nasal
 	@ ./nasal -o -e test/ascii-art.nas
 	@ ./nasal -o -c test/auto_crash.nas
 	@ ./nasal -o -a -c test/bf.nas
 	@ ./nasal -o -a -c test/bfconvertor.nas
-	@ ./nasal -o -e -d test/bfs.nas
+	@ ./nasal -o -d test/bfs.nas
 	@ ./nasal -o -t test/bigloop.nas
 	@ ./nasal -o -e test/bp.nas
-	@ ./nasal -o -e -d test/calc.nas
+	@ ./nasal -o -d test/calc.nas
 	@ ./nasal -o -e test/choice.nas
 	@ ./nasal -o -e test/class.nas
-	@ ./nasal -o -d test/coroutine.nas
+	@ ./nasal -o -e test/coroutine.nas
 	@ ./nasal -o -e test/diff.nas
+	@ ./nasal -o -e test/donuts.nas
 	-@ ./nasal -o -d test/exception.nas
 	@ ./nasal -o -t -d test/fib.nas
 	@ ./nasal -o -e test/filesystem.nas
-	@ ./nasal -o -e -d test/hexdump.nas
+	@ ./nasal -o -d test/hexdump.nas
 	@ ./nasal -o -c test/httptest.nas
 	@ ./nasal -o -e test/json.nas
 	@ ./nasal -o -e test/leetcode1319.nas
-	@ ./nasal -o -e -d test/lexer.nas
-	@ ./nasal -o -e -d test/life.nas
+	@ ./nasal -o -d test/lexer.nas
+	@ ./nasal -o -d test/life.nas
 	@ ./nasal -o -t test/loop.nas
 	@ ./nasal -o -t -d test/mandel.nas
 	@ ./nasal -o -t -d test/mandelbrot.nas

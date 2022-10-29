@@ -104,7 +104,7 @@ void debugger::callsort(const u64* arr)
             std::clog<<"\n ...";
             break;
         }
-        std::clog<<"\n "<<code_table[i.first]
+        std::clog<<"\n "<<opname[i.first]
                  <<" : "<<i.second<<" ("<<rate<<"%)";
     }
     std::clog<<"\n total  : "<<total<<'\n';
@@ -136,7 +136,7 @@ void debugger::interact()
     if(bytecode[pc].op==op_intg)
     {
         std::cout
-        <<bold_cyan<<"[debug] "<<reset
+        <<cyan<<"[debug] "<<reset
         <<"nasal debug mode\n"
         <<"input \'h\' to get help\n";
     }
@@ -309,7 +309,7 @@ vmexit:
     callsort(count);
     ngc.clear();
     imm.clear();
-    std::cout<<bold_cyan<<"[debug] "<<reset<<"debugger exited\n";
+    std::cout<<cyan<<"[debug] "<<reset<<"debugger exited\n";
     return;
 #ifndef _MSC_VER
 #define dbg(op,num) {\

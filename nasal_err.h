@@ -25,7 +25,7 @@ std::ostream& back_white(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& bold_red(std::ostream& s)
+std::ostream& red(std::ostream& s)
 {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0c);
@@ -34,7 +34,7 @@ std::ostream& bold_red(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& bold_cyan(std::ostream& s)
+std::ostream& cyan(std::ostream& s)
 {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x03);
@@ -43,7 +43,7 @@ std::ostream& bold_cyan(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& bold_orange(std::ostream& s)
+std::ostream& orange(std::ostream& s)
 {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0e);
@@ -52,7 +52,7 @@ std::ostream& bold_orange(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& bold_white(std::ostream& s)
+std::ostream& white(std::ostream& s)
 {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0f);
@@ -85,7 +85,7 @@ public:
         std::ifstream in(f,std::ios::binary);
         if(in.fail())
         {
-            std::cerr<<bold_red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
+            std::cerr<<red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
             std::exit(1);
         }
         string line;
@@ -112,49 +112,49 @@ private:
     }
 public:
     error():cnt(0){}
-    void err(const char* stage,const string& info)
+    void err(const string& stage,const string& info)
     {
         ++cnt;
-        std::cerr<<bold_red<<stage<<": "
-                 <<bold_white<<info<<reset<<"\n\n";
+        std::cerr<<red<<stage<<": "
+                 <<white<<info<<reset<<"\n\n";
     }
-    void err(const char* stage,u32 line,u32 column,const string& info)
+    void err(const string& stage,u32 line,u32 col,const string& info)
     {
         ++cnt;
         const string& code=res[line-1];
-        const string ident=identation(std::to_string(line).length());
-        std::cerr<<bold_red<<stage<<": "
-                 <<bold_white<<info<<reset<<"\n"
-                 <<bold_cyan<<" --> "<<reset
-                 <<bold_orange<<file<<":"<<line<<":"<<column<<"\n";
+        const string iden=identation(std::to_string(line).length());
+        std::cerr<<red<<stage<<": "
+                 <<white<<info<<reset<<"\n"
+                 <<cyan<<" --> "<<reset
+                 <<orange<<file<<":"<<line<<":"<<col<<"\n";
         if(!line)
         {
             std::cerr<<"\n";
             return;
         }
-        std::cerr<<bold_cyan<<ident<<" | "<<reset<<"\n"
-                 <<bold_cyan<<line<<" | "<<reset<<code<<"\n"
-                 <<bold_cyan<<ident<<" | "<<reset;
-        for(i32 i=0;i<(i32)column-1;++i)
+        std::cerr<<cyan<<iden<<" | "<<reset<<"\n"
+                 <<cyan<<line<<" | "<<reset<<code<<"\n"
+                 <<cyan<<iden<<" | "<<reset;
+        for(i32 i=0;i<(i32)col-1;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
-        std::cerr<<bold_red<<"^ "<<info<<reset<<"\n\n";
+        std::cerr<<red<<"^ "<<info<<reset<<"\n\n";
     }
-    void err(const char* stage,u32 line,const string& info)
+    void err(const string& stage,u32 line,const string& info)
     {
         ++cnt;
-        const string ident=identation(std::to_string(line).length());
-        std::cerr<<bold_red<<stage<<": "
-                 <<bold_white<<info<<reset<<"\n"
-                 <<bold_cyan<<" --> "<<reset
-                 <<bold_orange<<file<<":"<<line<<"\n";
+        const string iden=identation(std::to_string(line).length());
+        std::cerr<<red<<stage<<": "
+                 <<white<<info<<reset<<"\n"
+                 <<cyan<<" --> "<<reset
+                 <<orange<<file<<":"<<line<<"\n";
         if(!line)
         {
             std::cerr<<"\n";
             return;
         }
-        std::cerr<<bold_cyan<<ident<<" | "<<reset<<"\n"
-                 <<bold_cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
-                 <<bold_cyan<<ident<<" | "<<reset<<"\n\n";
+        std::cerr<<cyan<<iden<<" | "<<reset<<"\n"
+                 <<cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
+                 <<cyan<<iden<<" | "<<reset<<"\n\n";
     }
-    void chkerr(){if(cnt)std::exit(1);}
+    void chkerr() const {if(cnt)std::exit(1);}
 };

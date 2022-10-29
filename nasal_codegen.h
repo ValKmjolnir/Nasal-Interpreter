@@ -85,7 +85,7 @@ enum op_code_type:u8
     op_ret     // return
 };
 
-const char* code_table[]=
+const char* opname[]=
 {
     "exit  ","intg  ","intl  ","loadg ",
     "loadl ","loadu ","pnum  ","pnil  ",
@@ -148,7 +148,7 @@ public:
            <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
            <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
            <<std::setw(2)<<std::setfill('0')<<(num&0xff)<<"      "
-           <<code_table[op]<<"  "<<std::dec;
+           <<opname[op]<<"  "<<std::dec;
         switch(op)
         {
             case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
