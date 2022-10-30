@@ -67,12 +67,8 @@ struct token
     u32 col;
     u32 type;
     string str;
-    token(u32 l=0,u32 c=0,u32 t=tok_null,const string& s=""):str(s)
-    {
-        line=l;
-        col=c;
-        type=t;
-    }
+    token(u32 l=0,u32 c=0,u32 t=tok_null,const string& s="")
+        :line(l),col(c),type(t),str(s){}
 };
 
 class lexer
@@ -85,54 +81,55 @@ private:
     error& err;
     std::vector<token> toks;
     std::unordered_map<string,u32> typetbl {
-        {"for"     ,tok_for      },
-        {"forindex",tok_forindex },
-        {"foreach" ,tok_foreach  },
-        {"while"   ,tok_while    },
-        {"var"     ,tok_var      },
-        {"func"    ,tok_func     },
-        {"break"   ,tok_break    },
-        {"continue",tok_continue },
-        {"return"  ,tok_ret      },
-        {"if"      ,tok_if       },
-        {"elsif"   ,tok_elsif    },
-        {"else"    ,tok_else     },
-        {"nil"     ,tok_nil      },
-        {"("       ,tok_lcurve   },
-        {")"       ,tok_rcurve   },
-        {"["       ,tok_lbracket },
-        {"]"       ,tok_rbracket },
-        {"{"       ,tok_lbrace   },
-        {"}"       ,tok_rbrace   },
-        {";"       ,tok_semi     },
-        {"and"     ,tok_and      },
-        {"or"      ,tok_or       },
-        {","       ,tok_comma    },
-        {"."       ,tok_dot      },
-        {"..."     ,tok_ellipsis },
-        {"?"       ,tok_quesmark },
-        {":"       ,tok_colon    },
-        {"+"       ,tok_add      },
-        {"-"       ,tok_sub      },
-        {"*"       ,tok_mult     },
-        {"/"       ,tok_div      },
-        {"~"       ,tok_link     },
-        {"!"       ,tok_not      },
-        {"="       ,tok_eq       },
-        {"+="      ,tok_addeq    },
-        {"-="      ,tok_subeq    },
-        {"*="      ,tok_multeq   },
-        {"/="      ,tok_diveq    },
-        {"~="      ,tok_lnkeq    },
-        {"=="      ,tok_cmpeq    },
-        {"!="      ,tok_neq      },
-        {"<"       ,tok_less     },
-        {"<="      ,tok_leq      },
-        {">"       ,tok_grt      },
-        {">="      ,tok_geq      }
+        {"for"     ,tok_for     },
+        {"forindex",tok_forindex},
+        {"foreach" ,tok_foreach },
+        {"while"   ,tok_while   },
+        {"var"     ,tok_var     },
+        {"func"    ,tok_func    },
+        {"break"   ,tok_break   },
+        {"continue",tok_continue},
+        {"return"  ,tok_ret     },
+        {"if"      ,tok_if      },
+        {"elsif"   ,tok_elsif   },
+        {"else"    ,tok_else    },
+        {"nil"     ,tok_nil     },
+        {"("       ,tok_lcurve  },
+        {")"       ,tok_rcurve  },
+        {"["       ,tok_lbracket},
+        {"]"       ,tok_rbracket},
+        {"{"       ,tok_lbrace  },
+        {"}"       ,tok_rbrace  },
+        {";"       ,tok_semi    },
+        {"and"     ,tok_and     },
+        {"or"      ,tok_or      },
+        {","       ,tok_comma   },
+        {"."       ,tok_dot     },
+        {"..."     ,tok_ellipsis},
+        {"?"       ,tok_quesmark},
+        {":"       ,tok_colon   },
+        {"+"       ,tok_add     },
+        {"-"       ,tok_sub     },
+        {"*"       ,tok_mult    },
+        {"/"       ,tok_div     },
+        {"~"       ,tok_link    },
+        {"!"       ,tok_not     },
+        {"="       ,tok_eq      },
+        {"+="      ,tok_addeq   },
+        {"-="      ,tok_subeq   },
+        {"*="      ,tok_multeq  },
+        {"/="      ,tok_diveq   },
+        {"~="      ,tok_lnkeq   },
+        {"=="      ,tok_cmpeq   },
+        {"!="      ,tok_neq     },
+        {"<"       ,tok_less    },
+        {"<="      ,tok_leq     },
+        {">"       ,tok_grt     },
+        {">="      ,tok_geq     }
     };
 
     u32 get_type(const string&);
+    bool skip(char);
     bool is_id(char);
     bool is_hex(char);
     bool is_oct(char);
@@ -140,21 +137,22 @@ private:
     bool is_str(char);
     bool is_single_opr(char);
     bool is_calc_opr(char);
-    void die(const string& info){err.err("lexer",line,column,info);}
+    void die(const string&);
     void open(const string&);
     string utf8_gen();
     string id_gen();
     string num_gen();
     string str_gen();
 public:
-    lexer(error& e):
-        line(1),column(0),
-        ptr(0),res(""),
-        err(e){}
-    void scan(const string&);
-    void print();
+    lexer(error& e):line(1),column(0),ptr(0),res(""),err(e){}
+    const error& scan(const string&);
     const std::vector<token>& result() const {return toks;}
 };
+
+bool lexer::skip(char c)
+{
+    return c==' '||c=='\n'||c=='\t'||c=='\r'||c==0;
+}
 
 bool lexer::is_id(char c)
 {
@@ -194,7 +192,16 @@ bool lexer::is_single_opr(char c)
 
 bool lexer::is_calc_opr(char c)
 {
-    return c=='='||c=='+'||c=='-'||c=='*'||c=='!'||c=='/'||c=='<'||c=='>'||c=='~';
+    return (
+        c=='='||c=='+'||c=='-'||c=='*'||
+        c=='!'||c=='/'||c=='<'||c=='>'||
+        c=='~'
+    );
+}
+
+void lexer::die(const string& info)
+{
+    err.err("lexer",line,column,info);
 }
 
 void lexer::open(const string& file)
@@ -205,21 +212,19 @@ void lexer::open(const string& file)
         err.err("lexer","<"+file+"> is not a regular file");
         err.chkerr();
     }
-    std::ifstream fin(file,std::ios::binary);
-    if(fin.fail())
+    std::ifstream in(file,std::ios::binary);
+    if(in.fail())
         err.err("lexer","failed to open <"+file+">");
     else
         err.load(file);
     std::stringstream ss;
-    ss<<fin.rdbuf();
+    ss<<in.rdbuf();
     res=ss.str();
 }
 
 u32 lexer::get_type(const string& str)
 {
-    if(typetbl.count(str))
-        return typetbl.at(str);
-    return tok_null;
+    return typetbl.count(str)?typetbl.at(str):tok_null;
 }
 
 string lexer::utf8_gen()
@@ -241,7 +246,8 @@ string lexer::utf8_gen()
                 string utf_info="0x"+chrhex(tmp[0]);
                 for(u32 i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
-                die("invalid utf-8 character `"+utf_info+"`, make sure it is utf8-text file");
+                die("invalid utf-8 <"+utf_info+">");
+                err.err("lexer","fatal error occurred, stop");
                 std::exit(1);
             }
             str+=tmp;
@@ -385,7 +391,7 @@ string lexer::str_gen()
     return str;
 }
 
-void lexer::scan(const string& file)
+const error& lexer::scan(const string& file)
 {
     line=1;
     column=0;
@@ -395,7 +401,7 @@ void lexer::scan(const string& file)
     string str;
     while(ptr<res.size())
     {
-        while(ptr<res.size() && (res[ptr]==' ' || res[ptr]=='\n' || res[ptr]=='\t' || res[ptr]=='\r' || res[ptr]==0))
+        while(ptr<res.size() && skip(res[ptr]))
         {
             // these characters will be ignored, and '\n' will cause ++line
             ++column;
@@ -461,11 +467,5 @@ void lexer::scan(const string& file)
     }
     toks.push_back({line,column,tok_eof,"<eof>"});
     res="";
-    err.chkerr();
-}
-
-void lexer::print()
-{
-    for(auto& tok:toks)
-        std::cout<<"("<<tok.line<<" | "<<rawstr(tok.str,32)<<")\n";
+    return err;
 }

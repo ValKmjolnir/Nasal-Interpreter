@@ -108,9 +108,9 @@ struct nas_vec
 
     nas_vec():printed(false){}
     friend std::ostream& operator<<(std::ostream&,nas_vec&);
-    usize  size(){return elems.size();}
-    var    get_val(const i32);
-    var*   get_mem(const i32);
+    usize size(){return elems.size();}
+    var  get_val(const i32);
+    var* get_mem(const i32);
 };
 
 struct nas_hash
@@ -120,9 +120,9 @@ struct nas_hash
 
     nas_hash():printed(false){}
     friend std::ostream& operator<<(std::ostream&,nas_hash&);
-    usize  size(){return elems.size();}
-    var    get_val(const string&);
-    var*   get_mem(const string&);
+    usize size(){return elems.size();}
+    var  get_val(const string&);
+    var* get_mem(const string&);
 };
 
 struct nas_func

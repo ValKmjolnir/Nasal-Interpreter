@@ -67,20 +67,20 @@ enum ast_node:u32
 
 const char* ast_name[]=
 {
-    "null",    "root",   "block",        "file",
-    "nil",     "num",    "str",          "id",
-    "func",    "hash",   "vec",          "pair",
-    "call",    "callh",  "callv",        "callf",
-    "subvec",  "args",   "default",      "dynamic",
-    "and",     "or",     "=",            "+=",
-    "-=",      "*=",     "/="            "~=",
-    "==",      "!=",     "<",            "<=",
-    ">",       ">=",     "+",            "-",
-    "*",       "/",      "~",            "neg",
-    "!",       "trino",  "for",          "forindex",
-    "foreach", "while",  "iter",         "cond",
-    "if",      "elsif",  "else",         "multi-id",
-    "tuple",   "def",    "multi-assign", "continue",
+    "null",    "root",   "block",   "file",
+    "nil",     "num",    "str",     "id",
+    "func",    "hash",   "vec",     "pair",
+    "call",    "callh",  "callv",   "callf",
+    "subvec",  "args",   "default", "dynamic",
+    "and",     "or",     "=",       "+=",
+    "-=",      "*=",     "/=",      "~=",
+    "==",      "!=",     "<",       "<=",
+    ">",       ">=",     "+",       "-",
+    "*",       "/",      "~",       "neg",
+    "!",       "trino",  "for",     "forindex",
+    "foreach", "while",  "iter",    "cond",
+    "if",      "elsif",  "else",    "ltuple",
+    "tuple",   "def",    "massign", "continue",
     "break",   "return"
 };
 

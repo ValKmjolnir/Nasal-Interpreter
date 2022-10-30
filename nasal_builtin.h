@@ -98,10 +98,10 @@ var builtin_fin(var* local,gc& ngc)
     var val=local[1];
     if(val.type!=vm_str)
         return nas_err("io::fin","\"filename\" must be string");
-    std::ifstream fin(val.str(),std::ios::binary);
+    std::ifstream in(val.str(),std::ios::binary);
     std::stringstream rd;
-    if(!fin.fail())
-        rd<<fin.rdbuf();
+    if(!in.fail())
+        rd<<in.rdbuf();
     return ngc.newstr(rd.str());
 }
 var builtin_fout(var* local,gc& ngc)
@@ -110,10 +110,10 @@ var builtin_fout(var* local,gc& ngc)
     var str=local[2];
     if(val.type!=vm_str)
         return nas_err("io::fout","\"filename\" must be string");
-    std::ofstream fout(val.str());
-    if(fout.fail())
+    std::ofstream out(val.str());
+    if(out.fail())
         return nas_err("io::fout","cannot open <"+val.str()+">");
-    fout<<str;
+    out<<str;
     return nil;
 }
 var builtin_split(var* local,gc& ngc)
@@ -330,17 +330,15 @@ var builtin_time(var* local,gc& ngc)
 {
     var val=local[1];
     if(val.type!=vm_num)
-        return nas_err("time","\"begin_time\" must be number");
-    time_t begin_time=(time_t)val.num();
-    return {vm_num,(f64)time(&begin_time)};
+        return nas_err("time","\"begin\" must be number");
+    time_t begin=(time_t)val.num();
+    return {vm_num,(f64)time(&begin)};
 }
 var builtin_contains(var* local,gc& ngc)
 {
     var hash=local[1];
     var key=local[2];
-    if(hash.type!=vm_hash)
-        return nas_err("contains","\"hash\" must be hash");
-    if(key.type!=vm_str)
+    if(hash.type!=vm_hash || key.type!=vm_str)
         return zero;
     return hash.hash().elems.count(key.str())?one:zero;
 }
@@ -734,7 +732,7 @@ var builtin_pipe(var* local,gc& ngc)
     res.vec().elems.push_back({vm_num,(f64)fd[1]});
     return res;
 #endif
-    return nas_err("pipe","not supported for windows");
+    return nas_err("pipe","not supported");
 }
 var builtin_fork(var* local,gc& ngc)
 {
@@ -744,7 +742,7 @@ var builtin_fork(var* local,gc& ngc)
         return nas_err("fork","failed to fork a process");
     return {vm_num,(f64)res};
 #endif
-    return nas_err("fork","not supported for windows");
+    return nas_err("fork","not supported");
 }
 var builtin_waitpid(var* local,gc& ngc)
 {
@@ -760,7 +758,7 @@ var builtin_waitpid(var* local,gc& ngc)
     vec.vec().elems.push_back({vm_num,(f64)status});
     return vec;
 #endif
-    return nas_err("waitpid","not supported for windows");
+    return nas_err("waitpid","not supported");
 }
 void obj_dir_dtor(void* ptr)
 {
@@ -1032,18 +1030,18 @@ var builtin_md5(var* local,gc& ngc)
 
 var builtin_cocreate(var* local,gc& ngc)
 {
-    // +-----------------+
-    // | old pc          | <- top[0]
-    // +-----------------+
-    // | old localr      | <- top[-1]
-    // +-----------------+
-    // | old upvalr      | <- top[-2]
-    // +-----------------+
-    // | local scope     |
-    // | ...             |
-    // +-----------------+ <- local pointer stored in localr
-    // | old funcr       | <- old function stored in funcr
-    // +-----------------+
+    // +-------------+
+    // | old pc      | <- top[0]
+    // +-------------+
+    // | old localr  | <- top[-1]
+    // +-------------+
+    // | old upvalr  | <- top[-2]
+    // +-------------+
+    // | local scope |
+    // | ...         |
+    // +-------------+ <- local pointer stored in localr
+    // | old funcr   | <- old function stored in funcr
+    // +-------------+
     var func=local[1];
     if(func.type!=vm_func)
         return nas_err("coroutine::create","must use a function to create coroutine");
@@ -1124,7 +1122,15 @@ var builtin_logtime(var* local,gc& ngc)
     time_t t=time(nullptr);
     tm* tm_t=localtime(&t);
     char s[128];
-    sprintf(s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",tm_t->tm_year+1900,tm_t->tm_mon+1,tm_t->tm_mday,tm_t->tm_hour,tm_t->tm_min,tm_t->tm_sec);
+    sprintf(
+        s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",
+        tm_t->tm_year+1900,
+        tm_t->tm_mon+1,
+        tm_t->tm_mday,
+        tm_t->tm_hour,
+        tm_t->tm_min,
+        tm_t->tm_sec
+    );
     return ngc.newstr(s);
 }
 

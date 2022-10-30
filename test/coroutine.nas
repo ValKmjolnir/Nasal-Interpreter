@@ -2,6 +2,11 @@
 # 2022/5/19
 import.stl.process_bar;
 
+if(os.platform()=="windows"){
+    system("chcp 65001");
+    system("color");
+}
+
 var fib=func(){
     var (a,b)=(1,1);
     coroutine.yield(a);
@@ -76,10 +81,6 @@ var total=1000; # ms
 var co=coroutine.create(productor);
 var tm=maketimestamp();
 
-if(os.platform()=="windows"){
-    system("chcp 65001");
-    system("color");
-}
 var counter=0;
 var bar=process_bar.high_resolution_bar(40);
 var consumer=func(){

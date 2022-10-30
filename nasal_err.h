@@ -71,7 +71,7 @@ std::ostream& reset(std::ostream& s)
     return s;
 }
 
-class fstreamline
+class flstream
 {
 protected:
     string file;
@@ -100,7 +100,7 @@ public:
     usize size(){return res.size();}
 };
 
-class error:public fstreamline
+class error:public flstream
 {
 private:
     u32 cnt;
@@ -115,26 +115,29 @@ public:
     void err(const string& stage,const string& info)
     {
         ++cnt;
-        std::cerr<<red<<stage<<": "
-                 <<white<<info<<reset<<"\n\n";
+        std::cerr
+        <<red<<stage<<": "
+        <<white<<info<<reset<<"\n\n";
     }
     void err(const string& stage,u32 line,u32 col,const string& info)
     {
         ++cnt;
         const string& code=res[line-1];
         const string iden=identation(std::to_string(line).length());
-        std::cerr<<red<<stage<<": "
-                 <<white<<info<<reset<<"\n"
-                 <<cyan<<" --> "<<reset
-                 <<orange<<file<<":"<<line<<":"<<col<<"\n";
+        std::cerr
+        <<red<<stage<<": "
+        <<white<<info<<reset<<"\n"
+        <<cyan<<" --> "<<reset
+        <<orange<<file<<":"<<line<<":"<<col<<"\n";
         if(!line)
         {
             std::cerr<<"\n";
             return;
         }
-        std::cerr<<cyan<<iden<<" | "<<reset<<"\n"
-                 <<cyan<<line<<" | "<<reset<<code<<"\n"
-                 <<cyan<<iden<<" | "<<reset;
+        std::cerr
+        <<cyan<<iden<<" | "<<reset<<"\n"
+        <<cyan<<line<<" | "<<reset<<code<<"\n"
+        <<cyan<<iden<<" | "<<reset;
         for(i32 i=0;i<(i32)col-1;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
         std::cerr<<red<<"^ "<<info<<reset<<"\n\n";
@@ -143,18 +146,20 @@ public:
     {
         ++cnt;
         const string iden=identation(std::to_string(line).length());
-        std::cerr<<red<<stage<<": "
-                 <<white<<info<<reset<<"\n"
-                 <<cyan<<" --> "<<reset
-                 <<orange<<file<<":"<<line<<"\n";
+        std::cerr
+        <<red<<stage<<": "
+        <<white<<info<<reset<<"\n"
+        <<cyan<<" --> "<<reset
+        <<orange<<file<<":"<<line<<"\n";
         if(!line)
         {
             std::cerr<<"\n";
             return;
         }
-        std::cerr<<cyan<<iden<<" | "<<reset<<"\n"
-                 <<cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
-                 <<cyan<<iden<<" | "<<reset<<"\n\n";
+        std::cerr
+        <<cyan<<iden<<" | "<<reset<<"\n"
+        <<cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
+        <<cyan<<iden<<" | "<<reset<<"\n\n";
     }
     void chkerr() const {if(cnt)std::exit(1);}
 };
