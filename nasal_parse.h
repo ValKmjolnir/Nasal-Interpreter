@@ -40,7 +40,6 @@
 class parse
 {
 #define err_line (toks[ptr].line)
-#define is_call(type) ((type)==tok_lcurve || (type)==tok_lbracket || (type)==tok_dot)
 private:
     u32 ptr;
     u32 in_func; // count function block
@@ -97,10 +96,12 @@ private:
     };
 
     void die(u32,string,bool);
+    void next() {++ptr;};
     void match(u32 type,const char* info=nullptr);
-    bool lookahead(u32 type);
+    bool lookahead(u32);
+    bool is_call(u32);
     bool check_comma(const u32*);
-    bool check_multi_scalar();
+    bool check_tuple();
     bool check_func_end(const ast&);
     bool check_special_call();
     bool need_semi_check(const ast&);
@@ -152,11 +153,11 @@ public:
         toks(nullptr),root(0,0,ast_root),
         err(e){}
     void print(){root.print_tree();}
-    void compile(const lexer&);
+    const error& compile(const lexer&);
     ast& tree(){return root;}
     const ast& tree() const {return root;}
 };
-void parse::compile(const lexer& lexer)
+const error& parse::compile(const lexer& lexer)
 {
     toks=lexer.result().data();
     ptr=in_func=in_loop=0;
@@ -171,7 +172,7 @@ void parse::compile(const lexer& lexer)
         else if(need_semi_check(root.child().back()) && !lookahead(tok_eof))
             die(err_line,"expected \";\"",true);
     }
-    err.chkerr();
+    return err;
 }
 void parse::die(u32 line,string info,bool report_prev=false)
 {
@@ -205,11 +206,15 @@ void parse::match(u32 type,const char* info)
     }
     if(lookahead(tok_eof))
         return;
-    ++ptr;
+    next();
 }
 bool parse::lookahead(u32 type)
 {
     return toks[ptr].type==type;
+}
+bool parse::is_call(u32 type)
+{
+    return type==tok_lcurve || type==tok_lbracket || type==tok_dot;
 }
 bool parse::check_comma(const u32* panic_set)
 {
@@ -221,7 +226,7 @@ bool parse::check_comma(const u32* panic_set)
         }
     return false;
 }
-bool parse::check_multi_scalar()
+bool parse::check_tuple()
 {
     u32 check_ptr=ptr,curve=1,bracket=0,brace=0;
     while(toks[++check_ptr].type!=tok_eof && curve)
@@ -486,7 +491,7 @@ ast parse::lcurve_expr()
 {
     if(toks[ptr+1].type==tok_var)
         return definition();
-    return check_multi_scalar()?multi_assgin():calc();
+    return check_tuple()?multi_assgin():calc();
 }
 ast parse::expr()
 {
@@ -519,7 +524,7 @@ ast parse::expr()
         case tok_semi:                             break;
         default:
             die(err_line,"incorrect token <"+toks[ptr].str+">");
-            ++ptr;
+            next();
             break;
     }
     return {toks[ptr].line,toks[ptr].col,ast_null};
@@ -808,7 +813,7 @@ ast parse::definition()
         node.add(incurve_def());
     match(tok_eq);
     if(lookahead(tok_lcurve))
-        node.add(check_multi_scalar()?multi_scalar(false):calc());
+        node.add(check_tuple()?multi_scalar(false):calc());
     else
         node.add(calc());
     if(node[0].type()==ast_id && node[1].type()==ast_tuple)
@@ -889,7 +894,7 @@ ast parse::multi_assgin()
         return node;
     }
     if(lookahead(tok_lcurve))
-        node.add(check_multi_scalar()?multi_scalar(false):calc());
+        node.add(check_tuple()?multi_scalar(false):calc());
     else
         node.add(calc());
     if(node[1].type()==ast_tuple

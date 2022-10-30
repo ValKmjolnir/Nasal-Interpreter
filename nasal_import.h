@@ -30,7 +30,7 @@ private:
     ast load(ast&,u16);
 public:
     linker(error&);
-    void link(parse&,const string&,bool);
+    const error& link(parse&,const string&,bool);
     const std::vector<string>& filelist() const {return files;}
 };
 
@@ -213,7 +213,7 @@ ast linker::load(ast& root,u16 fileindex)
     return tree;
 }
 
-void linker::link(parse& parse,const string& self,bool spath=false)
+const error& linker::link(parse& parse,const string& self,bool spath=false)
 {
     show_path=spath;
     // initializing
@@ -221,5 +221,5 @@ void linker::link(parse& parse,const string& self,bool spath=false)
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
     parse.tree()=load(parse.tree(),0);
-    err.chkerr();
+    return err;
 }

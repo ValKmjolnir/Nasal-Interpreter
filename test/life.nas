@@ -25,7 +25,7 @@ var prt=func()
         s~='\n';
     }
     print(s);
-    unix.sleep(1/144);
+    unix.sleep(1/160);
 }
 
 func(){

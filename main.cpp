@@ -90,12 +90,11 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     vm      ctx;
 
     // lexer scans file to get tokens
-    lex.scan(file);
-    
+    lex.scan(file).chkerr();
     // parser gets lexer's token list to compile
-    parse.compile(lex);
+    parse.compile(lex).chkerr();
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse,file,cmd&VM_DETAIL);
+    ld.link(parse,file,cmd&VM_DETAIL).chkerr();
     // optimizer does simple optimization on ast
     if(cmd&VM_OPT)
         optimize(parse.tree());
@@ -103,7 +102,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
         parse.print();
     
     // code generator gets parser's ast and linker's import file list to generate code
-    gen.compile(parse,ld);
+    gen.compile(parse,ld).chkerr();
     if(cmd&VM_CODE)
         gen.print();
     

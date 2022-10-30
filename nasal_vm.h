@@ -49,7 +49,7 @@ protected:
     void die(const string&);
 #define vm_error(info) {die(info);return;}
     /* vm calculation functions*/
-    bool condition(var);
+    bool cond(var&);
     /* vm operands */
     void o_intg();
     void o_intl();
@@ -232,8 +232,8 @@ void vm::stackinfo(const u32 limit=10)
 {
     /* bytecode[0].num is the global size */
     const u32 gsize=ngc.stack==stack?bytecode[0].num:0;
-    var*  t=top;
-    var*  bottom=ngc.stack+gsize;
+    var* t=top;
+    var* bottom=ngc.stack+gsize;
     std::cout<<"vm stack (0x"<<std::hex<<(u64)bottom<<std::dec
              <<" <sp+"<<gsize<<">, limit "<<limit<<", total "
              <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
@@ -324,7 +324,7 @@ void vm::die(const string& str)
         top[0]=nil;
     }
 }
-inline bool vm::condition(var val)
+inline bool vm::cond(var& val)
 {
     if(val.type==vm_num)
         return val.num();
@@ -578,12 +578,12 @@ inline void vm::o_jmp()
 }
 inline void vm::o_jt()
 {
-    if(condition(top[0]))
+    if(cond(top[0]))
         pc=imm[pc]-1;
 }
 inline void vm::o_jf()
 {
-    if(!condition(top[0]))
+    if(!cond(top[0]))
         pc=imm[pc]-1;
     --top;
 }
@@ -635,7 +635,7 @@ inline void vm::o_callv()
     {
         top[0]=vec.vec().get_val(val.tonum());
         if(top[0].type==vm_none)
-            vm_error("index out of range:"+std::to_string(val.tonum()));
+            vm_error("out of range:"+std::to_string(val.tonum()));
     }
     else if(vec.type==vm_hash)
     {
@@ -653,7 +653,7 @@ inline void vm::o_callv()
         i32 num=val.tonum();
         i32 len=str.length();
         if(num<-len || num>=len)
-            vm_error("index out of range:"+std::to_string(val.tonum()));
+            vm_error("out of range:"+std::to_string(val.tonum()));
         top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
     }
     else
@@ -667,7 +667,7 @@ inline void vm::o_callvi()
     // cannot use operator[],because this may cause overflow
     (++top)[0]=val.vec().get_val(imm[pc]);
     if(top[0].type==vm_none)
-        vm_error("index out of range:"+std::to_string(imm[pc]));
+        vm_error("out of range:"+std::to_string(imm[pc]));
 }
 inline void vm::o_callh()
 {
@@ -796,7 +796,7 @@ inline void vm::o_slc()
     var val=(top--)[0];
     var res=top[-1].vec().get_val(val.tonum());
     if(res.type==vm_none)
-        vm_error("index out of range:"+std::to_string(val.tonum()));
+        vm_error("out of range:"+std::to_string(val.tonum()));
     top[0].vec().elems.push_back(res);
 }
 inline void vm::o_slc2()
@@ -856,7 +856,7 @@ inline void vm::o_mcallv()
     {
         memr=vec.vec().get_mem(val.tonum());
         if(!memr)
-            vm_error("index out of range:"+std::to_string(val.tonum()));
+            vm_error("out of range:"+std::to_string(val.tonum()));
     }else if(vec.type==vm_hash) // do mcallh but use the mcallv way
     {
         if(val.type!=vm_str)
