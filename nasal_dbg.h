@@ -211,7 +211,7 @@ void debugger::run(
     const linker& linker,
     const std::vector<string>& argv)
 {
-    detail_info=true;
+    verbose=true;
     fsize=linker.filelist().size();
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
     u64 count[op_ret+1]={0};

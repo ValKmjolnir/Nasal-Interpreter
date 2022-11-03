@@ -4,6 +4,7 @@ var mod=func(n,a){
 
 var main=func(run_time){
     var (sin,cos)=(math.sin,math.cos);
+    var chars=split("",".,-~:;=!*#$@");
 
     var (A,B)=(0,0);
     var (z,b)=([],[]);
@@ -12,10 +13,10 @@ var main=func(run_time){
 
     print("\e[2J");
     for(var run=0;run<run_time;run+=1){
-        forindex(var i;b)
-            b[i]=32;
-        forindex(var i;z)
+        forindex(var i;b){
+            b[i]=" ";
             z[i]=0;
+        }
         for(var j=0;j<6.28;j+=0.07){
             for(var i=0;i<6.28;i+=0.02){
                 var (c,d,e,f,g)=(sin(i),cos(j),sin(A),sin(j),cos(A));
@@ -29,14 +30,14 @@ var main=func(run_time){
                 var N=int(8*((f*e-c*d*g)*m-c*d*e-f*g-l*d*n));
                 if(22>y and y>0 and x>0 and 80>x and D>z[o]){
                     z[o]=D;
-                    b[o]=".,-~:;=!*#$@"[N>0?N:0];
+                    b[o]=chars[N>0?N:0];
                 }
             }
         }
         print("\e[H");
         var screen="";
         for(var k=0;k<1761;k+=1) {
-            screen~=(mod(k,80)?chr(b[k]):chr(10));
+            screen~=(mod(k,80)?b[k]:"\n");
             A+=0.00004;
             B+=0.00002;
         }

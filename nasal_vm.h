@@ -37,7 +37,7 @@ protected:
         const std::vector<string>&,
         const std::vector<string>&);
     /* debug functions */
-    bool detail_info;
+    bool verbose;
     void valinfo(var&);
     void traceback();
     void stackinfo(const u32);
@@ -131,7 +131,7 @@ public:
         upvalr(nil),canary(nullptr),top(stack),
         cnum(nullptr),cstr(nullptr),
         ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
-        files(nullptr),bytecode(nullptr),detail_info(false){}
+        files(nullptr),bytecode(nullptr),verbose(false){}
     void run(
         const codegen&,
         const linker&,
@@ -314,7 +314,7 @@ void vm::die(const string& str)
     std::cout<<"[vm] error: "<<str<<"\n";
     traceback();
     stackinfo();
-    if(detail_info)
+    if(verbose)
         detail();
     if(ngc.stack==stack){
         std::exit(1);
@@ -935,7 +935,7 @@ void vm::run(
     const std::vector<string>& argv,
     const bool detail)
 {
-    detail_info=detail;
+    verbose=detail;
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
 #ifndef _MSC_VER
     const void* oprs[]=
