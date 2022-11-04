@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <chrono>
 
 #include "nasal_err.h"
 
@@ -482,10 +483,13 @@ struct gc
     u64 size[gc_tsize];
     u64 count[gc_tsize];
     u64 acnt[gc_tsize];
+    i64 worktime;
+
     gc(u32& _pc, var*& _localr, var*& _memr, var& _funcr,
        var& _upvalr, var*& _canary, var*& _top, var* _stk):
         pc(_pc),localr(_localr),memr(_memr),funcr(_funcr),upvalr(_upvalr),
-        canary(_canary),top(_top),stack(_stk),cort(nullptr),temp(nil){}
+        canary(_canary),top(_top),stack(_stk),cort(nullptr),temp(nil),
+        worktime(0){}
     void mark();
     void sweep();
     void init(const std::vector<string>&,const std::vector<string>&);
@@ -573,6 +577,7 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv)
 {
     // initiaize function register
     funcr=nil;
+    worktime=0;
 
     for(u8 i=0;i<gc_tsize;++i)
         size[i]=count[i]=acnt[i]=0;
@@ -616,11 +621,12 @@ void gc::clear()
 }
 void gc::info()
 {
-    const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
+    const char* name[]={"  str","  vec"," hash"," func","upval","  obj","   co"};
     std::cout<<"\ngarbage collector info(gc/alloc)\n";
     for(u8 i=0;i<gc_tsize;++i)
         if(count[i] || acnt[i])
             std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<acnt[i]<<"\n";
+    std::cout<<"  time | "<<(worktime*1.0/1000000000)<<"s\n";
     std::cout<<"\nmemory allocator info(max size)\n";
     for(u8 i=0;i<gc_tsize;++i)
         if(ini[i] || size[i])
@@ -633,8 +639,10 @@ var gc::alloc(u8 type)
     if(unused[index].empty())
     {
         ++count[index];
+        auto begin=std::chrono::high_resolution_clock::now();
         mark();
         sweep();
+        worktime+=(std::chrono::high_resolution_clock::now()-begin).count();
     }
     if(unused[index].empty())
     {

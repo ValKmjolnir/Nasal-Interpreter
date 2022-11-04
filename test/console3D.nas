@@ -22,48 +22,53 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-var t=[];
-for(var i=0;i<8192;i+=1)
-    append(t,{});
-t=[];
+func(){
+    # allocate more spaces
+    var t=[];
+    for(var i=0;i<2048;i+=1)
+        append(t,[],[],[],str(i));
+    t=[];
+}();
+
+var (max,min,sqrt,sin,cos,abs)=(math.max,math.min,math.sqrt,math.sin,math.cos,math.abs);
 
 var vec2=func(x,y){
-    return {x:x,y:y};
+    return [x,y];
 }
 var vec2add=func(v1,v2){
-    return vec2(v1.x+v2.x,v1.y+v2.y);
+    return [v1[0]+v2[0],v1[1]+v2[1]];
 }
 var vec2sub=func(v1,v2){
-    return vec2(v1.x-v2.x,v1.y-v2.y);
+    return [v1[0]-v2[0],v1[1]-v2[1]];
 }
 var vec2mul=func(v1,v2){
-    return vec2(v1.x*v2.x,v1.y*v2.y);
+    return [v1[0]*v2[0],v1[1]*v2[1]];
 }
 var vec2div=func(v1,v2){
-    return vec2(v1.x/v2.x,v1.y/v2.y);
+    return [v1[0]/v2[0],v1[1]/v2[1]];
 }
 
 var vec3=func(x,y,z){
-    return {x:x,y:y,z:z};
+    return [x,y,z];
 }
 var vec3add=func(v1,v2){
-    return vec3(v1.x+v2.x,v1.y+v2.y,v1.z+v2.z);
+    return [v1[0]+v2[0],v1[1]+v2[1],v1[2]+v2[2]];
 }
 var vec3sub=func(v1,v2){
-    return vec3(v1.x-v2.x,v1.y-v2.y,v1.z-v2.z);
+    return [v1[0]-v2[0],v1[1]-v2[1],v1[2]-v2[2]];
 }
 var vec3mul=func(v1,v2){
-    return vec3(v1.x*v2.x,v1.y*v2.y,v1.z*v2.z);
+    return [v1[0]*v2[0],v1[1]*v2[1],v1[2]*v2[2]];
 }
 var vec3div=func(v1,v2){
-    return vec3(v1.x/v2.x,v1.y/v2.y,v1.z/v2.z);
+    return [v1[0]/v2[0],v1[1]/v2[1],v1[2]/v2[2]];
 }
 var vec3neg=func(v){
-    return vec3(-v.x,-v.y,-v.z);
+    return [-v[0],-v[1],-v[2]];
 }
 
 var clamp=func(value,_min,_max){
-    return math.max(math.min(value,_max),_min);
+    return max(min(value,_max),_min);
 }
 var sign=func(a){
     return (0<a)-(a<0);
@@ -72,81 +77,84 @@ var step=func(edge,x){
     return x>edge;
 }
 var vec2len=func(v){
-    return math.sqrt(v.x*v.x+v.y*v.y);
+    return sqrt(v[0]*v[0]+v[1]*v[1]);
 }
 var vec3len=func(v){
-    return math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z);
+    return sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 }
 
 var vec3norm=func(v){
     var t=vec3len(v);
-    return vec3div(v,vec3(t,t,t));
+    return vec3div(v,[t,t,t]);
 }
 var vec3dot=func(a,b){
-    return a.x*b.x+a.y*b.y+a.z*b.z;
+    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 }
 var vec3abs=func(v){
-    return vec3(math.abs(v.x),math.abs(v.y),math.abs(v.z));
+    return [abs(v[0]),abs(v[1]),abs(v[2])];
 }
 var vec3sign=func(v){
-    return vec3(sign(v.x),sign(v.y),sign(v.z));
+    return [sign(v[0]),sign(v[1]),sign(v[2])];
 }
 var vec3step=func(edge,v){
-    return vec3(step(edge.x,v.x),step(edge.y,v.y),step(edge.z,v.z));
+    return [step(edge[0],v[0]),step(edge[1],v[1]),step(edge[2],v[2])];
 }
 var vec3reflect=func(rd,n){
     var d=vec3dot(n,rd);
-    return vec3sub(rd,vec3mul(n,vec3mul(vec3(2,2,2),vec3(d,d,d))));
+    return vec3sub(rd,vec3mul(n,vec3mul([2,2,2],[d,d,d])));
 }
 
 var rotateX=func(a,angle){
-    var b=vec3(a.x,a.y,a.z);
-    b.z=a.z*math.cos(angle)-a.y*math.sin(angle);
-    b.y=a.z*math.sin(angle)+a.y*math.cos(angle);
-    return b;
+    return [
+        a[0],
+        a[2]*sin(angle)+a[1]*cos(angle),
+        a[2]*cos(angle)-a[1]*sin(angle)
+    ];
 }
 
 var rotateY=func(a,angle)
 {
-    var b=vec3(a.x,a.y,a.z);
-    b.x=a.x*math.cos(angle)-a.z*math.sin(angle);
-    b.z=a.x*math.sin(angle)+a.z*math.cos(angle);
-    return b;
+    return [
+        a[0]*cos(angle)-a[2]*sin(angle),
+        a[1],
+        a[0]*sin(angle)+a[2]*cos(angle)
+    ];
 }
 
 var rotateZ=func(a,angle)
 {
-    var b=vec3(a.x,a.y,a.z);
-    b.x=a.x*math.cos(angle)-a.y*math.sin(angle);
-    b.y=a.x*math.sin(angle)+a.y*math.cos(angle);
-    return b;
+    return [
+        a[0]*cos(angle)-a[1]*sin(angle),
+        a[0]*sin(angle)+a[1]*cos(angle),
+        a[2]
+    ];
 }
 
 var sphere=func(ro,rd,r) {
     var b=vec3dot(ro,rd);
     var c=vec3dot(ro,ro)-r*r;
     var h=b*b-c;
-    if(h<0.0) return vec2(-1.0,-1.0);
-    h=math.sqrt(h);
-    return vec2(-b-h,-b+h);
+    if(h<0.0) return [-1.0,-1.0];
+    h=sqrt(h);
+    return [-b-h,-b+h];
 }
 
 var box=func(ro,rd,boxSize,outNormal) {
-    var m=vec3div(vec3(1.0,1.0,1.0),rd);
+    var m=vec3div([1.0,1.0,1.0],rd);
     var n=vec3mul(m,ro);
     var k=vec3mul(vec3abs(m),boxSize);
     var t1=vec3sub(vec3neg(n),k);
     var t2=vec3add(vec3neg(n),k);
-    var tN=math.max(math.max(t1.x,t1.y),t1.z);
-    var tF=math.min(math.min(t2.x,t2.y),t2.z);
-    if (tN>tF or tF<0.0) return vec2(-1.0,-1.0);
-    var yzx=vec3(t1.y,t1.z,t1.x);
-    var zxy=vec3(t1.z,t1.x,t1.y);
-    var tmp=vec3mul(vec3mul(vec3neg(vec3sign(rd)), vec3step(yzx,t1)),vec3step(zxy, t1));
-    outNormal.x=tmp.x;
-    outNormal.y=tmp.y;
-    outNormal.z=tmp.z;
-    return vec2(tN, tF);
+    var tN=max(max(t1[0],t1[1]),t1[2]);
+    var tF=min(min(t2[0],t2[1]),t2[2]);
+    if (tN>tF or tF<0.0) return [-1.0,-1.0];
+    var yzx=[t1[1],t1[2],t1[0]];
+    var zxy=[t1[2],t1[0],t1[1]];
+    var tmp=vec3mul(vec3mul(vec3neg(vec3sign(rd)), vec3step(yzx,t1)),vec3step(zxy,t1));
+    outNormal[0]=tmp[0];
+    outNormal[1]=tmp[1];
+    outNormal[2]=tmp[2];
+    return [tN, tF];
 }
 
 var plane=func(ro,rd,p,w) {
@@ -154,80 +162,80 @@ var plane=func(ro,rd,p,w) {
 }
 
 var main=func() {
-	var width=68*2;
-	var height=17*2;
 
-	var aspect=width/height;
-	var pixelAspect=11.0/24.0;
+    var height=15*2;
+    var width=int(height*1600/900)*2;
 
-	var gradient=split(""," .:!/r(l1Z4H9W8$@");
-	var gradientSize=size(gradient)-2;
+    var aspect=width/height;
+    var pixelAspect=11.0/24.0;
+
+    var gradient=split(""," .:!/r(l1Z4H9W8$");
+    var gradientSize=size(gradient)-1;
 
     var screen=[];
     setsize(screen,width*height);
 
     print("\e[2J");
     var stamp=maketimestamp();
-	for(var t=0;t<10000;t+=1){
+    for(var t=0;t<1e3;t+=1){
         stamp.stamp();
-		var light=vec3norm(vec3(-0.5,0.5,-1.0));
-		var spherePos=vec3(0,3,0);
-		for(var i=0;i<width;i+=1){
-			for(var j=0;j<height;j+=1){
-				var uv=vec2sub(vec2mul(vec2div(vec2(i,j),vec2(width,height)),vec2(2.0,2.0)),vec2(1.0,1.0));
-				uv.x*=aspect*pixelAspect;
-				var ro=vec3(-6,0,0);
-				var rd=vec3norm(vec3(2,uv.x,uv.y));
-				ro=rotateY(ro,0.25);
-				rd=rotateY(rd,0.25);
-				ro=rotateZ(ro,t*0.025);
-				rd=rotateZ(rd,t*0.025);
-				var diff = 1;
-				for (var k=0;k<5;k+=1){
-					var minIt=99999;
-					var intersection=sphere(vec3sub(ro,spherePos),rd,1);
-					var n=vec3(0,0,0);
-					var albedo=1;
-					if(intersection.x>0){
-						var itPoint=vec3add(vec3sub(ro,spherePos),vec3mul(rd,vec3(intersection.x,intersection.x,intersection.x)));
-						minIt= intersection.x;
-						n=vec3norm(itPoint);
-					}
-					var boxN=vec3(0,0,0);
-					intersection=box(ro,rd,vec3(1,1,1),boxN);
-					if(intersection.x>0 and intersection.x<minIt){
-						minIt=intersection.x;
-						n=boxN;
-					}
-                    var tmp=plane(ro,rd,vec3(0,0,-1),1);
-					intersection=vec2(tmp,tmp);
-					if(intersection.x>0 and intersection.x<minIt){
-						minIt=intersection.x;
-						n=vec3(0,0,-1);
-						albedo=0.5;
-					}
-					if(minIt<99999){
-						diff*=(vec3dot(n,light)*0.5+0.5)*albedo;
-						ro=vec3add(ro,vec3mul(rd,vec3(minIt-0.01,minIt-0.01,minIt-0.01)));
-						rd=vec3reflect(rd, n);
-					}
-					else break;
-				}
-				var color=int(diff*20);
-				color=clamp(color,0,gradientSize);
-				screen[i+j*width]=gradient[color];
-			}
-		}
-		var s="";
+        var light=vec3norm([-0.5,0.5,-1.0]);
+        var spherePos=[0,3,0];
+        for(var i=0;i<width;i+=1){
+            for(var j=0;j<height;j+=1){
+                var uv=vec2sub(vec2mul(vec2div([i,j],[width,height]),[2.0,2.0]),[1.0,1.0]);
+                uv[0]*=aspect*pixelAspect;
+                var ro=[-6,0,0];
+                var rd=vec3norm([2,uv[0],uv[1]]);
+                ro=rotateY(ro,0.25);
+                rd=rotateY(rd,0.25);
+                ro=rotateZ(ro,t*0.025);
+                rd=rotateZ(rd,t*0.025);
+                var diff=1;
+                for (var k=0;k<5;k+=1){
+                    var minIt=99999;
+                    var intersection=sphere(vec3sub(ro,spherePos),rd,1);
+                    var n=[0,0,0];
+                    var albedo=1;
+                    if(intersection[0]>0){
+                        var itPoint=vec3add(vec3sub(ro,spherePos),vec3mul(rd,[intersection[0],intersection[0],intersection[0]]));
+                        minIt= intersection[0];
+                        n=vec3norm(itPoint);
+                    }
+                    var boxN=[0,0,0];
+                    intersection=box(ro,rd,[1,1,1],boxN);
+                    if(intersection[0]>0 and intersection[0]<minIt){
+                        minIt=intersection[0];
+                        n=boxN;
+                    }
+                    var tmp=plane(ro,rd,[0,0,-1],1);
+                    intersection=[tmp,tmp];
+                    if(intersection[0]>0 and intersection[0]<minIt){
+                        minIt=intersection[0];
+                        n=[0,0,-1];
+                        albedo=0.5;
+                    }
+                    if(minIt<99999){
+                        diff*=(vec3dot(n,light)*0.5+0.5)*albedo;
+                        ro=vec3add(ro,vec3mul(rd,[minIt-0.01,minIt-0.01,minIt-0.01]));
+                        rd=vec3reflect(rd,n);
+                    }
+                    else break;
+                }
+                var color=int(diff*20);
+                color=clamp(color,0,gradientSize);
+                screen[i+j*width]=gradient[color];
+            }
+        }
+        var s="";
         forindex(var index;screen){
             s~=screen[index];
             if(index+1-int((index+1)/width)*width==0)
                 s~="\n";
         }
         var elt=stamp.elapsedMSec()/1000;
-        println("\e[H",1/elt," fps\n",s);
-        
-	}
+        print("\e[H",int(1/elt)," fps  \n",s);
+    }
 }
 
 main();
