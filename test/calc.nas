@@ -86,9 +86,11 @@ var testfile=[
 var module=[
     "fib.cpp",
     "keyboard.cpp",
+    "matrix.cpp",
     "nasocket.cpp",
     "libfib.nas",
     "libkey.nas",
+    "libmat.nas",
     "libsock.nas"
 ];
 

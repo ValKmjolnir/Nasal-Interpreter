@@ -972,7 +972,7 @@ void vm::run(
     typedef void (vm::*nafunc)();
     const nafunc oprs[]=
     {
-        nullptr,             &vm::o_intg,
+        nullptr,       &vm::o_intg,
         &vm::o_intl,   &vm::o_loadg,
         &vm::o_loadl,  &vm::o_loadu,
         &vm::o_pnum,   &vm::o_pnil,
