@@ -37,6 +37,7 @@ var builtin_print(var* local,gc& ngc)
     std::cout<<std::flush;
     return nil;
 }
+
 var builtin_println(var* local,gc& ngc)
 {
     for(auto& i:local[1].vec().elems)
@@ -44,16 +45,19 @@ var builtin_println(var* local,gc& ngc)
     std::cout<<std::endl;
     return nil;
 }
+
 var builtin_exit(var* local,gc& ngc)
 {
     std::exit(local[1].num());
     return nil;
 }
+
 var builtin_abort(var* local,gc& ngc)
 {
     std::abort();
     return nil;
 }
+
 var builtin_append(var* local,gc& ngc)
 {
     var vec=local[1];
@@ -65,6 +69,7 @@ var builtin_append(var* local,gc& ngc)
         v.push_back(i);
     return nil;
 }
+
 var builtin_setsize(var* local,gc& ngc)
 {
     var vec=local[1];
@@ -76,6 +81,7 @@ var builtin_setsize(var* local,gc& ngc)
     vec.vec().elems.resize((i64)size.num(),nil);
     return nil;
 }
+
 var builtin_system(var* local,gc& ngc)
 {
     var str=local[1];
@@ -83,6 +89,7 @@ var builtin_system(var* local,gc& ngc)
         return {vm_num,(f64)-1};
     return {vm_num,(f64)system(str.str().c_str())};
 }
+
 var builtin_input(var* local,gc& ngc)
 {
     var end=local[1];
@@ -93,6 +100,7 @@ var builtin_input(var* local,gc& ngc)
         std::getline(std::cin,ret.str(),end.str()[0]);
     return ret;
 }
+
 var builtin_fin(var* local,gc& ngc)
 {
     var val=local[1];
@@ -104,6 +112,7 @@ var builtin_fin(var* local,gc& ngc)
         rd<<in.rdbuf();
     return ngc.newstr(rd.str());
 }
+
 var builtin_fout(var* local,gc& ngc)
 {
     var val=local[1];
@@ -116,6 +125,7 @@ var builtin_fout(var* local,gc& ngc)
     out<<str;
     return nil;
 }
+
 var builtin_split(var* local,gc& ngc)
 {
     var delimeter=local[1];
@@ -151,6 +161,7 @@ var builtin_split(var* local,gc& ngc)
     ngc.temp=nil;
     return res;
 }
+
 var builtin_rand(var* local,gc& ngc)
 {
     var val=local[1];
@@ -166,6 +177,7 @@ var builtin_rand(var* local,gc& ngc)
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
     return {vm_num,num};
 }
+
 var builtin_id(var* local,gc& ngc)
 {
     var val=local[1];
@@ -175,6 +187,7 @@ var builtin_id(var* local,gc& ngc)
         ss<<"x"<<std::hex<<(u64)val.val.gcobj<<std::dec;
     return ngc.newstr(ss.str());
 }
+
 var builtin_int(var* local,gc& ngc)
 {
     var val=local[1];
@@ -182,11 +195,13 @@ var builtin_int(var* local,gc& ngc)
         return nil;
     return {vm_num,f64((i32)val.tonum())};
 }
+
 var builtin_floor(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,std::floor(val.num())};
 }
+
 var builtin_num(var* local,gc& ngc)
 {
     var val=local[1];
@@ -199,6 +214,7 @@ var builtin_num(var* local,gc& ngc)
         return nil;
     return {vm_num,res};
 }
+
 var builtin_pop(var* local,gc& ngc)
 {
     var val=local[1];
@@ -213,10 +229,12 @@ var builtin_pop(var* local,gc& ngc)
     }
     return nil;
 }
+
 var builtin_str(var* local,gc& ngc)
 {
     return ngc.newstr(local[1].tostr());
 }
+
 var builtin_size(var* local,gc& ngc)
 {
     var val=local[1];
@@ -230,46 +248,57 @@ var builtin_size(var* local,gc& ngc)
     }
     return {vm_num,num};
 }
+
 var builtin_i32xor(var* local,gc& ngc)
 {
     return {vm_num,(f64)(i32(local[1].num())^i32(local[2].num()))};
 }
+
 var builtin_i32and(var* local,gc& ngc)
 {
     return {vm_num,(f64)(i32(local[1].num())&i32(local[2].num()))};
 }
+
 var builtin_i32or(var* local,gc& ngc)
 {
     return {vm_num,(f64)(i32(local[1].num())|i32(local[2].num()))};
 }
+
 var builtin_i32nand(var* local,gc& ngc)
 {
     return {vm_num,(f64)(~(i32(local[1].num())&i32(local[2].num())))};
 }
+
 var builtin_i32not(var* local,gc& ngc)
 {
     return {vm_num,(f64)(~i32(local[1].num()))};
 }
+
 var builtin_u32xor(var* local,gc& ngc)
 {
     return {vm_num,(f64)(u32(local[1].num())^u32(local[2].num()))};
 }
+
 var builtin_u32and(var* local,gc& ngc)
 {
     return {vm_num,(f64)(u32(local[1].num())&u32(local[2].num()))};
 }
+
 var builtin_u32or(var* local,gc& ngc)
 {
     return {vm_num,(f64)(u32(local[1].num())|u32(local[2].num()))};
 }
+
 var builtin_u32nand(var* local,gc& ngc)
 {
     return {vm_num,(f64)(u32)(~(u32(local[1].num())&u32(local[2].num())))};
 }
+
 var builtin_u32not(var* local,gc& ngc)
 {
     return {vm_num,(f64)(u32)(~u32(local[1].num()))};
 }
+
 var builtin_pow(var* local,gc& ngc)
 {
     var x=local[1];
@@ -278,41 +307,49 @@ var builtin_pow(var* local,gc& ngc)
         return {vm_num,std::nan("")};
     return {vm_num,std::pow(x.num(),y.num())};
 }
+
 var builtin_sin(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?sin(val.num()):std::nan("")};
 }
+
 var builtin_cos(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?cos(val.num()):std::nan("")};
 }
+
 var builtin_tan(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?tan(val.num()):std::nan("")};
 }
+
 var builtin_exp(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?exp(val.num()):std::nan("")};
 }
+
 var builtin_lg(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?log(val.num())/log(10.0):std::nan("")};
 }
+
 var builtin_ln(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?log(val.num()):std::nan("")};
 }
+
 var builtin_sqrt(var* local,gc& ngc)
 {
     var val=local[1];
     return {vm_num,val.type==vm_num?sqrt(val.num()):std::nan("")};
 }
+
 var builtin_atan2(var* local,gc& ngc)
 {
     var x=local[1];
@@ -321,11 +358,13 @@ var builtin_atan2(var* local,gc& ngc)
         return {vm_num,std::nan("")};
     return {vm_num,atan2(y.num(),x.num())};
 }
+
 var builtin_isnan(var* local,gc& ngc)
 {
     var x=local[1];
     return (x.type==vm_num && std::isnan(x.num()))?one:zero;
 }
+
 var builtin_time(var* local,gc& ngc)
 {
     var val=local[1];
@@ -334,6 +373,7 @@ var builtin_time(var* local,gc& ngc)
     time_t begin=(time_t)val.num();
     return {vm_num,(f64)time(&begin)};
 }
+
 var builtin_contains(var* local,gc& ngc)
 {
     var hash=local[1];
@@ -342,6 +382,7 @@ var builtin_contains(var* local,gc& ngc)
         return zero;
     return hash.hash().elems.count(key.str())?one:zero;
 }
+
 var builtin_delete(var* local,gc& ngc)
 {
     var hash=local[1];
@@ -354,6 +395,7 @@ var builtin_delete(var* local,gc& ngc)
         hash.hash().elems.erase(key.str());
     return nil;
 }
+
 var builtin_keys(var* local,gc& ngc)
 {
     var hash=local[1];
@@ -367,10 +409,12 @@ var builtin_keys(var* local,gc& ngc)
     ngc.temp=nil;
     return res;
 }
+
 var builtin_die(var* local,gc& ngc)
 {
     return nas_err("error",local[1].tostr());
 }
+
 var builtin_find(var* local,gc& ngc)
 {
     var needle=local[1];
@@ -380,6 +424,7 @@ var builtin_find(var* local,gc& ngc)
         return {vm_num,(f64)-1};
     return {vm_num,(f64)pos};
 }
+
 var builtin_type(var* local,gc& ngc)
 {
     switch(local[1].type)
@@ -396,6 +441,7 @@ var builtin_type(var* local,gc& ngc)
     }
     return nil;
 }
+
 var builtin_substr(var* local,gc& ngc)
 {
     var str=local[1];
@@ -413,12 +459,14 @@ var builtin_substr(var* local,gc& ngc)
         return nas_err("susbtr","index out of range");
     return ngc.newstr(str.str().substr(begin,length));
 }
+
 var builtin_streq(var* local,gc& ngc)
 {
     var a=local[1];
     var b=local[2];
     return {vm_num,f64((a.type!=vm_str || b.type!=vm_str)?0:(a.str()==b.str()))};
 }
+
 var builtin_left(var* local,gc& ngc)
 {
     var str=local[1];
@@ -431,6 +479,7 @@ var builtin_left(var* local,gc& ngc)
         return ngc.newstr("");
     return ngc.newstr(str.str().substr(0,len.num()));
 }
+
 var builtin_right(var* local,gc& ngc)
 {
     var str=local[1];
@@ -447,6 +496,7 @@ var builtin_right(var* local,gc& ngc)
         length=0;
     return ngc.newstr(str.str().substr(srclen-length,srclen));
 }
+
 var builtin_cmp(var* local,gc& ngc)
 {
     var a=local[1];
@@ -455,6 +505,7 @@ var builtin_cmp(var* local,gc& ngc)
         return nas_err("cmp","\"a\" and \"b\" must be string");
     return {vm_num,(f64)strcmp(a.str().c_str(),b.str().c_str())};
 }
+
 var builtin_chr(var* local,gc& ngc)
 {
     const char* extend[]={
@@ -482,6 +533,7 @@ var builtin_chr(var* local,gc& ngc)
         return ngc.newstr(extend[num-128]);
     return ngc.newstr(" ");
 }
+
 var builtin_values(var* local,gc& ngc)
 {
     var hash=local[1];
@@ -493,16 +545,14 @@ var builtin_values(var* local,gc& ngc)
         v.push_back(i.second);
     return vec;
 }
+
 var builtin_exists(var* local,gc& ngc)
 {
     if(local[1].type!=vm_str)
         return zero;
     return access(local[1].str().c_str(),F_OK)!=-1?one:zero;
 }
-void obj_file_dtor(void* ptr)
-{
-    fclose((FILE*)ptr);
-}
+
 var builtin_open(var* local,gc& ngc)
 {
     var name=local[1];
@@ -515,18 +565,19 @@ var builtin_open(var* local,gc& ngc)
     if(!res)
         return nas_err("open","failed to open file <"+name.str()+">");
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::file,res,obj_file_dtor);
+    ret.obj().set(nas_obj::file,res);
     return ret;
 }
+
 var builtin_close(var* local,gc& ngc)
 {
     var fd=local[1];
     if(!fd.objchk(nas_obj::file))
         return nas_err("close","not a valid filehandle");
-    fclose((FILE*)fd.obj().ptr);
-    fd.obj().ptr=nullptr;
+    fd.obj().clear();
     return nil;
 }
+
 var builtin_read(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -549,6 +600,7 @@ var builtin_read(var* local,gc& ngc)
     delete []buff;
     return {vm_num,res};
 }
+
 var builtin_write(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -559,6 +611,7 @@ var builtin_write(var* local,gc& ngc)
         return nas_err("write","\"str\" must be string");
     return {vm_num,(f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr)};
 }
+
 var builtin_seek(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -568,6 +621,7 @@ var builtin_seek(var* local,gc& ngc)
         return nas_err("seek","not a valid filehandle");
     return {vm_num,(f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num())};
 }
+
 var builtin_tell(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -575,6 +629,7 @@ var builtin_tell(var* local,gc& ngc)
         return nas_err("tell","not a valid filehandle");
     return {vm_num,(f64)ftell((FILE*)fd.obj().ptr)};
 }
+
 var builtin_readln(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -594,6 +649,7 @@ var builtin_readln(var* local,gc& ngc)
         return str;
     return nil;
 }
+
 var builtin_stat(var* local,gc& ngc)
 {
     var name=local[1];
@@ -618,6 +674,7 @@ var builtin_stat(var* local,gc& ngc)
     };
     return ret;
 }
+
 var builtin_eof(var* local,gc& ngc)
 {
     var fd=local[1];
@@ -625,6 +682,7 @@ var builtin_eof(var* local,gc& ngc)
         return nas_err("readln","not a valid filehandle");
     return {vm_num,(f64)feof((FILE*)fd.obj().ptr)};
 }
+
 var builtin_fld(var* local,gc& ngc)
 {
     // bits.fld(s,0,3);
@@ -648,6 +706,7 @@ var builtin_fld(var* local,gc& ngc)
             res|=1<<(bit+len-i-1);
     return {vm_num,(f64)res};
 }
+
 var builtin_sfld(var* local,gc& ngc)
 {
     // bits.sfld(s,0,3);
@@ -674,6 +733,7 @@ var builtin_sfld(var* local,gc& ngc)
         res|=~((1<<len)-1);
     return {vm_num,(f64)((i32)res)};
 }
+
 var builtin_setfld(var* local,gc& ngc)
 {
     // bits.setfld(s,0,8,69);
@@ -703,6 +763,7 @@ var builtin_setfld(var* local,gc& ngc)
     }
     return nil;
 }
+
 var builtin_buf(var* local,gc& ngc)
 {
     var length=local[1];
@@ -713,14 +774,16 @@ var builtin_buf(var* local,gc& ngc)
     s.resize(length.num(),'\0');
     return str;
 }
+
 var builtin_sleep(var* local,gc& ngc)
 {
     var val=local[1];
     if(val.type!=vm_num)
-        return nas_err("sleep","\"duration\" must be number");
+        return nil;
     std::this_thread::sleep_for(std::chrono::microseconds(i64(val.num()*1e6)));
     return nil;
 }
+
 var builtin_pipe(var* local,gc& ngc)
 {
 #ifndef _WIN32
@@ -734,6 +797,7 @@ var builtin_pipe(var* local,gc& ngc)
 #endif
     return nas_err("pipe","not supported");
 }
+
 var builtin_fork(var* local,gc& ngc)
 {
 #ifndef _WIN32
@@ -744,6 +808,7 @@ var builtin_fork(var* local,gc& ngc)
 #endif
     return nas_err("fork","not supported");
 }
+
 var builtin_waitpid(var* local,gc& ngc)
 {
     var pid=local[1];
@@ -760,14 +825,7 @@ var builtin_waitpid(var* local,gc& ngc)
 #endif
     return nas_err("waitpid","not supported");
 }
-void obj_dir_dtor(void* ptr)
-{
-#ifndef _MSC_VER
-    closedir((DIR*)ptr);
-#else
-    FindClose(ptr);
-#endif
-}
+
 var builtin_opendir(var* local,gc& ngc)
 {
     var path=local[1];
@@ -785,9 +843,10 @@ var builtin_opendir(var* local,gc& ngc)
         return nas_err("opendir","cannot open dir <"+path.str()+">");
 #endif
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::dir,p,obj_dir_dtor);
+    ret.obj().set(nas_obj::dir,p);
     return ret;
 }
+
 var builtin_readdir(var* local,gc& ngc)
 {
     var handle=local[1];
@@ -803,19 +862,16 @@ var builtin_readdir(var* local,gc& ngc)
     return p?ngc.newstr(p->d_name):nil;
 #endif
 }
+
 var builtin_closedir(var* local,gc& ngc)
 {
     var handle=local[1];
     if(!handle.objchk(nas_obj::dir))
         return nas_err("closedir","not a valid dir handle");
-#ifndef _MSC_VER
-    closedir((DIR*)handle.obj().ptr);
-#else
-    FindClose(handle.obj().ptr);
-#endif
-    handle.obj().ptr=nullptr;
+    handle.obj().clear();
     return nil;
 }
+
 var builtin_chdir(var* local,gc& ngc)
 {
     var path=local[1];
@@ -823,6 +879,7 @@ var builtin_chdir(var* local,gc& ngc)
         return {vm_num,(f64)-1};
     return {vm_num,(f64)chdir(path.str().c_str())};
 }
+
 var builtin_environ(var* local,gc& ngc)
 {
     var res=ngc.temp=ngc.alloc(vm_vec);
@@ -832,6 +889,7 @@ var builtin_environ(var* local,gc& ngc)
     ngc.temp=nil;
     return res;
 }
+
 var builtin_getcwd(var* local,gc& ngc)
 {
     char buf[1024];
@@ -839,6 +897,7 @@ var builtin_getcwd(var* local,gc& ngc)
         return nil;
     return ngc.newstr(buf);
 }
+
 var builtin_getenv(var* local,gc& ngc)
 {
     var envvar=local[1];
@@ -847,14 +906,7 @@ var builtin_getenv(var* local,gc& ngc)
     char* res=getenv(envvar.str().c_str());
     return res?ngc.newstr(res):nil;
 }
-void dylib_dtor(void* ptr)
-{
-#ifdef _WIN32
-    FreeLibrary((HMODULE)ptr);
-#else
-    dlclose(ptr);
-#endif
-}
+
 var builtin_dlopen(var* local,gc& ngc)
 {
     var dlname=local[1];
@@ -874,9 +926,10 @@ var builtin_dlopen(var* local,gc& ngc)
     if(!ptr)
         return nas_err("dlopen","cannot open dynamic lib <"+dlname.str()+">");
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::dylib,ptr,dylib_dtor);
+    ret.obj().set(nas_obj::dylib,ptr);
     return ret;
 }
+
 var builtin_dlsym(var* local,gc& ngc)
 {
     var lib=local[1];
@@ -901,25 +954,22 @@ var builtin_dlsym(var* local,gc& ngc)
     ret.obj().set(nas_obj::faddr,ptr);
     return ret;
 }
+
 var builtin_dlclose(var* local,gc& ngc)
 {
     var libptr=local[1];
     if(!libptr.objchk(nas_obj::dylib))
         return nas_err("dlclose","\"lib\" is not a valid dynamic lib");
-#ifdef _WIN32
-    FreeLibrary((HMODULE)libptr.obj().ptr);
-#else
-    dlclose(libptr.obj().ptr);
-#endif
-    libptr.obj().ptr=nullptr;
+    libptr.obj().clear();
     return nil;
 }
+
 var builtin_dlcall(var* local,gc& ngc)
 {
     var fp=local[1];
     var args=local[2];
     if(!fp.objchk(nas_obj::faddr))
-        return nas_err("dlcall","\"funcptr\" is not a valid function pointer");
+        return nas_err("dlcall","\"ptr\" is not a valid function pointer");
     auto& vec=args.vec().elems;
     return ((mod)fp.obj().ptr)(vec.data(),vec.size(),&ngc);
 }
@@ -950,6 +1000,7 @@ string tohex(u32 num)
     }
     return str;
 }
+
 string md5(const string& src)
 {
     std::vector<u32> buff;
@@ -1020,6 +1071,7 @@ string md5(const string& src)
     }
     return tohex(atmp)+tohex(btmp)+tohex(ctmp)+tohex(dtmp);
 }
+
 var builtin_md5(var* local,gc& ngc)
 {
     var str=local[1];
@@ -1066,6 +1118,7 @@ var builtin_cocreate(var* local,gc& ngc)
     
     return co;
 }
+
 var builtin_coresume(var* local,gc& ngc)
 {
     if(ngc.cort)
@@ -1078,6 +1131,7 @@ var builtin_coresume(var* local,gc& ngc)
     ngc.ctxchg(co.co());
     return ngc.top[0];
 }
+
 var builtin_coyield(var* local,gc& ngc)
 {
     if(!ngc.cort)
@@ -1087,6 +1141,7 @@ var builtin_coyield(var* local,gc& ngc)
     // then builtin_coresume will return it
     return local[1];
 }
+
 var builtin_costatus(var* local,gc& ngc)
 {
     var co=local[1];
@@ -1100,10 +1155,12 @@ var builtin_costatus(var* local,gc& ngc)
     }
     return nil;
 }
+
 var builtin_corun(var* local,gc& ngc)
 {
     return ngc.cort?one:zero;
 }
+
 var builtin_millisec(var* local,gc& ngc)
 {
     f64 res=std::chrono::duration_cast<std::chrono::milliseconds>
@@ -1111,12 +1168,14 @@ var builtin_millisec(var* local,gc& ngc)
             .count();
     return {vm_num,res};
 }
+
 var builtin_sysargv(var* local,gc& ngc)
 {
     var res=ngc.alloc(vm_vec);
     res.vec().elems=ngc.env_argv;
     return res;
 }
+
 var builtin_logtime(var* local,gc& ngc)
 {
     time_t t=time(nullptr);

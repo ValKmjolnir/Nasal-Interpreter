@@ -268,13 +268,10 @@ var assert=func(condition,message="assertion failed!"){
 # get time stamp, this will return a timestamp object
 var maketimestamp=func(){
     var t=0;
-    var millisec=func(){
-        return __millisec;
-    }
     return {
-        stamp:func(){t=millisec();},
-        elapsedMSec:func(){return millisec()-t;},
-        elapsedUSec:func(){return (millisec()-t)*1000;}
+        stamp:func(){t=__millisec();},
+        elapsedMSec:func(){return __millisec()-t;},
+        elapsedUSec:func(){return (__millisec()-t)*1000;}
     };
 }
 
@@ -455,7 +452,7 @@ var dylib=
     # close dynamic lib, this operation will make all the symbols loaded from it invalid.
     dlclose: func(lib){return __dlclose;   },
     # call the loaded symbol.
-    dlcall:  func(funcptr,args...){return __dlcall}
+    dlcall:  func(ptr,args...){return __dlcall}
 };
 
 # os is used to use or get some os-related info/functions.

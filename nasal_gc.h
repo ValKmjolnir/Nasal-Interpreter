@@ -1,5 +1,20 @@
 #pragma once
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#include <dirent.h>
+#else
+#include <io.h>
+#include <direct.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+#include <iomanip>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -156,8 +171,7 @@ struct nas_obj
 {
     enum obj_t:u32
     {
-        null,
-        file,
+        file=1,
         dir,
         dylib,
         faddr
@@ -166,25 +180,47 @@ struct nas_obj
     /* new object is initialized when creating */
     u32 type;
     void* ptr;
-    /* RAII destroyer */
-    /* default destroyer does nothing */
-    typedef void (*dest)(void*);
-    dest dtor;
-
-    nas_obj():type(obj_t::null),ptr(nullptr),dtor(nullptr){}
+private:
+    void obj_file_dtor()
+    {
+        fclose((FILE*)ptr);
+    }
+    void obj_dir_dtor()
+    {
+#ifndef _MSC_VER
+        closedir((DIR*)ptr);
+#else
+        FindClose(ptr);
+#endif
+    }
+    void dylib_dtor()
+    {
+#ifdef _WIN32
+        FreeLibrary((HMODULE)ptr);
+#else
+        dlclose(ptr);
+#endif
+    }
+public:
+    nas_obj():type(0),ptr(nullptr){}
     ~nas_obj(){clear();}
-    void set(u32 t=obj_t::null,void* p=nullptr,dest d=nullptr)
+    void set(u32 t=0,void* p=nullptr)
     {
         type=t;
         ptr=p;
-        dtor=d;
     }
     void clear()
     {
-        if(dtor && ptr)
-            dtor(ptr);
+        if(!ptr)
+            return;
+        switch(type)
+        {
+            case obj_t::file:  obj_file_dtor();break;
+            case obj_t::dir:   obj_dir_dtor(); break;
+            case obj_t::dylib: dylib_dtor();   break;
+            default: break;
+        }
         ptr=nullptr;
-        dtor=nullptr;
     }
 };
 
@@ -481,7 +517,7 @@ struct gc
 
     /* values for analysis */
     u64 size[gc_tsize];
-    u64 count[gc_tsize];
+    u64 gcnt[gc_tsize];
     u64 acnt[gc_tsize];
     i64 worktime;
 
@@ -580,7 +616,7 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv)
     worktime=0;
 
     for(u8 i=0;i<gc_tsize;++i)
-        size[i]=count[i]=acnt[i]=0;
+        size[i]=gcnt[i]=acnt[i]=0;
     for(u8 i=0;i<gc_tsize;++i)
         for(u32 j=0;j<ini[i];++j)
         {
@@ -621,16 +657,27 @@ void gc::clear()
 }
 void gc::info()
 {
-    const char* name[]={"  str","  vec"," hash"," func","upval","  obj","   co"};
-    std::cout<<"\ngarbage collector info(gc/alloc)\n";
+    const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
+    std::cout<<"\ngarbage collector info (gc count|alloc count|memory size)\n";
+    u32 maxlen=0;
     for(u8 i=0;i<gc_tsize;++i)
-        if(count[i] || acnt[i])
-            std::cout<<" "<<name[i]<<" | "<<count[i]<<","<<acnt[i]<<"\n";
-    std::cout<<"  time | "<<(worktime*1.0/1000000000)<<"s\n";
-    std::cout<<"\nmemory allocator info(max size)\n";
+    {
+        u32 len=std::to_string(gcnt[i]).length();
+        maxlen=maxlen<len?len:maxlen;
+        len=std::to_string(acnt[i]).length();
+        maxlen=maxlen<len?len:maxlen;
+        len=std::to_string(ini[i]+size[i]*incr[i]).length();
+        maxlen=maxlen<len?len:maxlen;
+    }
     for(u8 i=0;i<gc_tsize;++i)
-        if(ini[i] || size[i])
-            std::cout<<" "<<name[i]<<" | "<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+        if(gcnt[i] || acnt[i] || ini[i] || size[i])
+        {
+            std::cout<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
+            std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
+            std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+        }
+    double t=worktime*1.0/1000000000;
+    std::cout<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? "ms\n":"s\n");
 }
 var gc::alloc(u8 type)
 {
@@ -638,7 +685,7 @@ var gc::alloc(u8 type)
     ++acnt[index];
     if(unused[index].empty())
     {
-        ++count[index];
+        ++gcnt[index];
         auto begin=std::chrono::high_resolution_clock::now();
         mark();
         sweep();

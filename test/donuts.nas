@@ -3,6 +3,8 @@ var mod=func(n,a){
 }
 
 var main=func(run_time){
+    var ts=maketimestamp();
+
     var (sin,cos)=(math.sin,math.cos);
     var chars=split("",".,-~:;=!*#$@");
 
@@ -13,6 +15,7 @@ var main=func(run_time){
 
     print("\e[2J");
     for(var run=0;run<run_time;run+=1){
+        ts.stamp();
         forindex(var i;b){
             b[i]=" ";
             z[i]=0;
@@ -41,12 +44,9 @@ var main=func(run_time){
             A+=0.00004;
             B+=0.00002;
         }
+        println(" ",int(1/(ts.elapsedMSec()/1000))," fps  ");
         print(screen);
     }
 }
 
-var frames=5e2;
-var ts=maketimestamp();
-ts.stamp();
-main(frames);
-println(int(frames/(ts.elapsedMSec()/1000))," fps");
+main(5e2);

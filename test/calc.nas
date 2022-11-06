@@ -44,6 +44,7 @@ var testfile=[
     "calc.nas",
     "choice.nas",
     "class.nas",
+    "console3D.nas",
     "coroutine.nas",
     "diff.nas",
     "donuts.nas",

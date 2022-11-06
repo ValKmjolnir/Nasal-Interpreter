@@ -1,7 +1,6 @@
 # wave collapse function 2022/4/10
 # by ValKmjolnir
 srand();
-var interval=1/160;
 var table=[
     # c ,w,a,s,d
     ["═",0,1,0,1],
@@ -98,6 +97,7 @@ var map=func(){
 if(os.platform()=="windows")
     system("chcp 65001");
 map.new(80);
+var interval=1/160;
 for(var iter=0;iter<100;iter+=1){
     map.print(1);
     map.next();
