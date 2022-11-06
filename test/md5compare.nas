@@ -45,6 +45,7 @@ var filechecksum=func(){
         "./test/bfs.nas",           "./test/bigloop.nas",
         "./test/bp.nas",            "./test/calc.nas",
         "./test/choice.nas",        "./test/class.nas",
+        "./test/console3D.nas",
         "./test/coroutine.nas",     "./test/diff.nas",
         "./test/donuts.nas",
         "./test/exception.nas",     "./test/fib.nas",

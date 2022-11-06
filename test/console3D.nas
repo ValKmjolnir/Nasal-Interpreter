@@ -189,8 +189,8 @@ var main=func() {
                 var rd=vec3norm([2,uv[0],uv[1]]);
                 ro=rotateY(ro,0.25);
                 rd=rotateY(rd,0.25);
-                ro=rotateZ(ro,t*0.025);
-                rd=rotateZ(rd,t*0.025);
+                ro=rotateZ(ro,t*0.03);
+                rd=rotateZ(rd,t*0.03);
                 var diff=1;
                 for (var k=0;k<5;k+=1){
                     var minIt=99999;

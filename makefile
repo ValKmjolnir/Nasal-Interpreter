@@ -15,17 +15,17 @@ SRC=\
 	nasal_dbg.h\
 	nasal.h
 
-STD=14
+STD=c++14
 
 nasal:$(SRC)
-	$(CXX) -std=c++$(STD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+	$(CXX) -std=$(STD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
 nasal.exe:$(SRC)
-	$(CXX) -std=c++$(STD) -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
+	$(CXX) -std=$(STD) -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
 stable-release:$(SRC)
-	$(CXX) -std=c++$(STD) -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+	$(CXX) -std=$(STD) -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
 stable-release-mingw:$(SRC)
-	$(CXX) -std=c++$(STD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
+	$(CXX) -std=$(STD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
 clean:
 	-@ rm ./nasal
@@ -42,6 +42,7 @@ test:nasal
 	@ ./nasal -o -d test/calc.nas
 	@ ./nasal -o -e test/choice.nas
 	@ ./nasal -o -e test/class.nas
+	@ ./nasal -o -t -d test/console3D.nas
 	@ ./nasal -o -e test/coroutine.nas
 	@ ./nasal -o -e test/diff.nas
 	@ ./nasal -o -e test/donuts.nas

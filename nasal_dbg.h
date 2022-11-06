@@ -95,19 +95,15 @@ void debugger::callsort(const u64* arr)
     std::sort(opcall.begin(),opcall.end(),
         [](const op& a,const op& b){return a.second>b.second;}
     );
-    std::clog<<"\noperands call info";
+    std::clog<<"\noperands call info (<1% ignored)\n";
     for(auto& i:opcall)
     {
         u64 rate=i.second*100/total;
         if(!rate)
-        {
-            std::clog<<"\n ...";
             break;
-        }
-        std::clog<<"\n "<<opname[i.first]
-                 <<" : "<<i.second<<" ("<<rate<<"%)";
+        std::clog<<" "<<opname[i.first]<<" : "<<i.second<<" ("<<rate<<"%)\n";
     }
-    std::clog<<"\n total  : "<<total<<'\n';
+    std::clog<<" total  : "<<total<<'\n';
 }
 
 void debugger::stepinfo()
