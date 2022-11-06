@@ -21,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import.module.libmat;
 
 func(){
     # allocate more spaces
@@ -32,39 +33,49 @@ func(){
 
 var (max,min,sqrt,sin,cos,abs)=(math.max,math.min,math.sqrt,math.sin,math.cos,math.abs);
 
-var vec2=func(x,y){
-    return [x,y];
-}
-var vec2add=func(v1,v2){
-    return [v1[0]+v2[0],v1[1]+v2[1]];
-}
-var vec2sub=func(v1,v2){
-    return [v1[0]-v2[0],v1[1]-v2[1]];
-}
-var vec2mul=func(v1,v2){
-    return [v1[0]*v2[0],v1[1]*v2[1]];
-}
-var vec2div=func(v1,v2){
-    return [v1[0]/v2[0],v1[1]/v2[1]];
-}
+var (vec2,vec3)=(libmat.vec2.new,libmat.vec3.new);
+var (vec2add,vec2sub,vec2mul,vec2div,vec2len)=(
+    libmat.vec2.add,
+    libmat.vec2.sub,
+    libmat.vec2.mul,
+    libmat.vec2.div,
+    libmat.vec2.len
+);
+var (vec3add,vec3sub,vec3mul,vec3div,vec3neg,vec3norm,vec3len,vec3dot)=(
+    libmat.vec3.add,
+    libmat.vec3.sub,
+    libmat.vec3.mul,
+    libmat.vec3.div,
+    libmat.vec3.neg,
+    libmat.vec3.norm,
+    libmat.vec3.len,
+    libmat.vec3.dot
+);
+var (rotateX,rotateY,rotateZ)=(
+    libmat.vec3.rx,
+    libmat.vec3.ry,
+    libmat.vec3.rz,
+);
 
-var vec3=func(x,y,z){
-    return [x,y,z];
-}
-var vec3add=func(v1,v2){
-    return [v1[0]+v2[0],v1[1]+v2[1],v1[2]+v2[2]];
-}
-var vec3sub=func(v1,v2){
-    return [v1[0]-v2[0],v1[1]-v2[1],v1[2]-v2[2]];
-}
-var vec3mul=func(v1,v2){
-    return [v1[0]*v2[0],v1[1]*v2[1],v1[2]*v2[2]];
-}
-var vec3div=func(v1,v2){
-    return [v1[0]/v2[0],v1[1]/v2[1],v1[2]/v2[2]];
-}
-var vec3neg=func(v){
-    return [-v[0],-v[1],-v[2]];
+var use_raw=func(){
+    vec2=func(x,y){return [x,y];}
+    vec2add=func(v1,v2){return [v1[0]+v2[0],v1[1]+v2[1]];}
+    vec2sub=func(v1,v2){return [v1[0]-v2[0],v1[1]-v2[1]];}
+    vec2mul=func(v1,v2){return [v1[0]*v2[0],v1[1]*v2[1]];}
+    vec2div=func(v1,v2){return [v1[0]/v2[0],v1[1]/v2[1]];}
+    vec3=func(x,y,z){return [x,y,z];}
+    vec3add=func(v1,v2){return [v1[0]+v2[0],v1[1]+v2[1],v1[2]+v2[2]];}
+    vec3sub=func(v1,v2){return [v1[0]-v2[0],v1[1]-v2[1],v1[2]-v2[2]];}
+    vec3mul=func(v1,v2){return [v1[0]*v2[0],v1[1]*v2[1],v1[2]*v2[2]];}
+    vec3div=func(v1,v2){return [v1[0]/v2[0],v1[1]/v2[1],v1[2]/v2[2]];}
+    vec3neg=func(v){return [-v[0],-v[1],-v[2]];}
+    vec2len=func(v){var (x,y)=(v[0],v[1]); return sqrt(x*x+y*y);}
+    vec3len=func(v){var (x,y,z)=(v[0],v[1],v[2]); return sqrt(x*x+y*y+z*z);}
+    vec3norm=func(v){var t=vec3len(v); return vec3div(v,[t,t,t]);}
+    vec3dot=func(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+    rotateX=func(a,angle){return [a[0],a[2]*sin(angle)+a[1]*cos(angle),a[2]*cos(angle)-a[1]*sin(angle)];}
+    rotateY=func(a,angle){return [a[0]*cos(angle)-a[2]*sin(angle),a[1],a[0]*sin(angle)+a[2]*cos(angle)];}
+    rotateZ=func(a,angle){return [a[0]*cos(angle)-a[1]*sin(angle),a[0]*sin(angle)+a[1]*cos(angle),a[2]];}
 }
 
 var clamp=func(value,_min,_max){
@@ -76,20 +87,7 @@ var sign=func(a){
 var step=func(edge,x){
     return x>edge;
 }
-var vec2len=func(v){
-    return sqrt(v[0]*v[0]+v[1]*v[1]);
-}
-var vec3len=func(v){
-    return sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-}
 
-var vec3norm=func(v){
-    var t=vec3len(v);
-    return vec3div(v,[t,t,t]);
-}
-var vec3dot=func(a,b){
-    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-}
 var vec3abs=func(v){
     return [abs(v[0]),abs(v[1]),abs(v[2])];
 }
@@ -102,32 +100,6 @@ var vec3step=func(edge,v){
 var vec3reflect=func(rd,n){
     var d=vec3dot(n,rd);
     return vec3sub(rd,vec3mul(n,vec3mul([2,2,2],[d,d,d])));
-}
-
-var rotateX=func(a,angle){
-    return [
-        a[0],
-        a[2]*sin(angle)+a[1]*cos(angle),
-        a[2]*cos(angle)-a[1]*sin(angle)
-    ];
-}
-
-var rotateY=func(a,angle)
-{
-    return [
-        a[0]*cos(angle)-a[2]*sin(angle),
-        a[1],
-        a[0]*sin(angle)+a[2]*cos(angle)
-    ];
-}
-
-var rotateZ=func(a,angle)
-{
-    return [
-        a[0]*cos(angle)-a[1]*sin(angle),
-        a[0]*sin(angle)+a[1]*cos(angle),
-        a[2]
-    ];
 }
 
 var sphere=func(ro,rd,r) {
@@ -161,7 +133,7 @@ var plane=func(ro,rd,p,w) {
     return -(vec3dot(ro,p)+w)/vec3dot(rd,p);
 }
 
-var main=func() {
+var main=func(frame) {
 
     var height=15*2;
     var width=int(height*1600/900)*2;
@@ -177,7 +149,7 @@ var main=func() {
 
     print("\e[2J");
     var stamp=maketimestamp();
-    for(var t=0;t<1e3;t+=1){
+    for(var t=0;t<frame;t+=1){
         stamp.stamp();
         var light=vec3norm([-0.5,0.5,-1.0]);
         var spherePos=[0,3,0];
@@ -238,4 +210,22 @@ var main=func() {
     }
 }
 
-main();
+var st=maketimestamp();
+var run=[0,0];
+var frame=1e3;
+if(size(runtime.argv())!=0){
+    var n=num(runtime.argv()[0]);
+    if(!math.isnan(n)){
+        frame=n;
+    }
+}
+st.stamp();
+main(frame);
+run[0]=st.elapsedMSec();
+use_raw();
+st.stamp();
+main(frame);
+run[1]=st.elapsedMSec();
+
+println("test 0: ",run[0]/1000,"s ",frame*1000/run[0]," fps");
+println("test 1: ",run[1]/1000,"s ",frame*1000/run[1]," fps");

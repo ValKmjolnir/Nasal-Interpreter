@@ -1,7 +1,7 @@
 .PHONY=clean all mingw-all
 
-dynamic_libs=libfib.so libkey.so libnasock.so
-dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll
+dynamic_libs_so=libfib.so libkey.so libnasock.so libmat.so
+dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll libmat.dll
 
 STD=c++14
 
@@ -38,13 +38,24 @@ libnasock.dll: nasocket.cpp
 	@ $(CXX) -shared -o libnasock.dll nasocket.o -lwsock32 -static
 	@ del nasocket.o
 
+libmat.so: matrix.cpp
+	@ echo "[Compiling] libmat.so"
+	@ $(CXX) -std=$(STD) -c -O3 matrix.cpp -fPIC -o matrix.o
+	@ $(CXX) -shared -o libmat.so matrix.o
+	@ rm matrix.o
+libmat.dll: matrix.cpp
+	@ echo [Compiling] libmat.dll
+	@ $(CXX) -std=$(STD) -c -O3 matrix.cpp -fPIC -o matrix.o -static
+	@ $(CXX) -shared -o libmat.dll matrix.o -static
+	@ del matrix.o
+
 clean:
 	@ echo "[clean] so"
-	-@ rm $(dynamic_libs)
+	-@ rm $(dynamic_libs_so)
 	@ echo "[clean] dll"
 	-@ rm $(dynamic_libs_dll)
 
-all: libfib.so libkey.so libnasock.so
+all: $(dynamic_libs_so)
 	@ echo "[Compiling] done"
-winall: libfib.dll libkey.dll libnasock.dll
+winall: $(dynamic_libs_dll)
 	@ echo [Compiling] done
