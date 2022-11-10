@@ -136,7 +136,7 @@ var plane=func(ro,rd,p,w) {
 var main=func(frame) {
 
     var height=15*2;
-    var width=int(height*1600/900)*2;
+    var width=int(height*1/0.618)*2;
 
     var aspect=width/height;
     var pixelAspect=11.0/24.0;
@@ -147,15 +147,21 @@ var main=func(frame) {
     var screen=[];
     setsize(screen,width*height);
 
+    var light=vec3norm([-0.5,0.5,-1.0]);
+    var spherePos=[0,3,0];
+    var vec2_2_2=[2,2];
+    var vec2_1_1=[1,1];
+    var vec3_000=[0,0,0];
+    var vec3_00n1=[0,0,-1];
+    var vec3_111=[1,1,1];
+
     print("\e[2J");
     var stamp=maketimestamp();
     for(var t=0;t<frame;t+=1){
         stamp.stamp();
-        var light=vec3norm([-0.5,0.5,-1.0]);
-        var spherePos=[0,3,0];
         for(var i=0;i<width;i+=1){
             for(var j=0;j<height;j+=1){
-                var uv=vec2sub(vec2mul(vec2div([i,j],[width,height]),[2.0,2.0]),[1.0,1.0]);
+                var uv=vec2sub(vec2mul(vec2div([i,j],[width,height]),vec2_2_2),vec2_1_1);
                 uv[0]*=aspect*pixelAspect;
                 var ro=[-6,0,0];
                 var rd=vec3norm([2,uv[0],uv[1]]);
@@ -167,24 +173,24 @@ var main=func(frame) {
                 for (var k=0;k<5;k+=1){
                     var minIt=99999;
                     var intersection=sphere(vec3sub(ro,spherePos),rd,1);
-                    var n=[0,0,0];
+                    var n=vec3_000;
                     var albedo=1;
                     if(intersection[0]>0){
                         var itPoint=vec3add(vec3sub(ro,spherePos),vec3mul(rd,[intersection[0],intersection[0],intersection[0]]));
-                        minIt= intersection[0];
+                        minIt=intersection[0];
                         n=vec3norm(itPoint);
                     }
                     var boxN=[0,0,0];
-                    intersection=box(ro,rd,[1,1,1],boxN);
+                    intersection=box(ro,rd,vec3_111,boxN);
                     if(intersection[0]>0 and intersection[0]<minIt){
                         minIt=intersection[0];
                         n=boxN;
                     }
-                    var tmp=plane(ro,rd,[0,0,-1],1);
+                    var tmp=plane(ro,rd,vec3_00n1,1);
                     intersection=[tmp,tmp];
                     if(intersection[0]>0 and intersection[0]<minIt){
                         minIt=intersection[0];
-                        n=[0,0,-1];
+                        n=vec3_00n1;
                         albedo=0.5;
                     }
                     if(minIt<99999){
