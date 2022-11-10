@@ -3,7 +3,7 @@ var libkey=func(){
     var kb=dylib.dlsym(lib,"nas_kbhit");
     var gt=dylib.dlsym(lib,"nas_getch");
     var nb=dylib.dlsym(lib,"nas_noblock");
-    var call=dylib.dlcall;
+    var call=dylib.limitcall(0);
     return {
         kbhit:func(){return call(kb);},
         getch:func(){return call(gt);},

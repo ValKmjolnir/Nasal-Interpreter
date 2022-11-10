@@ -964,7 +964,7 @@ var builtin_dlclose(var* local,gc& ngc)
     return nil;
 }
 
-var builtin_dlcall(var* local,gc& ngc)
+var builtin_dlcallv(var* local,gc& ngc)
 {
     var fp=local[1];
     var args=local[2];
@@ -972,6 +972,15 @@ var builtin_dlcall(var* local,gc& ngc)
         return nas_err("dlcall","\"ptr\" is not a valid function pointer");
     auto& vec=args.vec().elems;
     return ((mod)fp.obj().ptr)(vec.data(),vec.size(),&ngc);
+}
+
+var builtin_dlcall(var* local,gc& ngc)
+{
+    var fp=local[1];
+    if(!fp.objchk(nas_obj::faddr))
+        return nas_err("dlcall","\"ptr\" is not a valid function pointer");
+    // arguments' stored place begins at local +2
+    return ((mod)fp.obj().ptr)(local+2,ngc.top-local-2,&ngc);
 }
 
 var builtin_platform(var* local,gc& ngc)
@@ -1282,6 +1291,7 @@ struct
     {"__dlopen",  builtin_dlopen  },
     {"__dlsym",   builtin_dlsym   },
     {"__dlclose", builtin_dlclose },
+    {"__dlcallv", builtin_dlcallv },
     {"__dlcall",  builtin_dlcall  },
     {"__platform",builtin_platform},
     {"__md5",     builtin_md5     },
