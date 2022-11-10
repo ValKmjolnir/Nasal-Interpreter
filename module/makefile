@@ -5,6 +5,11 @@ dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll libmat.dll
 
 STD=c++14
 
+all: $(dynamic_libs_so)
+	@ echo "[Compiling] done"
+winall: $(dynamic_libs_dll)
+	@ echo [Compiling] done
+
 libfib.so: fib.cpp
 	@ echo "[Compiling] libfib.so"
 	@ $(CXX) -std=$(STD) -c -O3 fib.cpp -fPIC -o fib.o
@@ -54,8 +59,3 @@ clean:
 	-@ rm $(dynamic_libs_so)
 	@ echo "[clean] dll"
 	-@ rm $(dynamic_libs_dll)
-
-all: $(dynamic_libs_so)
-	@ echo "[Compiling] done"
-winall: $(dynamic_libs_dll)
-	@ echo [Compiling] done

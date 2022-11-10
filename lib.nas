@@ -280,8 +280,7 @@ var md5=func(str){
     return __md5(str);
 }
 
-var io=
-{
+var io={
     SEEK_SET:0,
     SEEK_CUR:1,
     SEEK_END:2,
@@ -333,8 +332,7 @@ var fstat=func(filename){
 
 # functions that do bitwise calculation.
 # carefully use it, all the calculations are based on integer.
-var bits=
-{
+var bits={
     # i32 xor
     i32_xor: func(a,b){return __i32xor(a,b); },
     # i32 and
@@ -378,8 +376,7 @@ var bits=
 };
 
 # mostly used math functions and special constants, you know.
-var math=
-{
+var math={
     e:     2.7182818284590452354,
     pi:    3.14159265358979323846264338327950288,
     D2R:   2.7182818284590452354/180,
@@ -402,8 +399,7 @@ var math=
     min:   func(x,y){return x<y?x:y;     }
 };
 
-var unix=
-{
+var unix={
     pipe:     func(){return __pipe;},
     fork:     func(){return __fork;},
     dup2:     func(fd0,fd1){die("not supported yet");},
@@ -425,8 +421,7 @@ var unix=
 
 # dylib is the core hashmap for developers to load their own library.
 # for safe using dynamic library, you could use 'module' in stl/module.nas
-var dylib=
-{
+var dylib={
     # open dynamic lib.
     dlopen:  func(libname){
         # find dynamic lib from local dir first
@@ -451,22 +446,34 @@ var dylib=
     dlsym:   func(lib,sym){return __dlsym; },
     # close dynamic lib, this operation will make all the symbols loaded from it invalid.
     dlclose: func(lib){return __dlclose;   },
-    # call the loaded symbol.
-    dlcall:  func(ptr,args...){return __dlcall}
+    # call the loaded symbol, with infinite parameters:
+    # Caution: this may cause garbage collection process, be aware of the performance.
+    dlcall:  func(ptr,args...){return __dlcallv},
+    # get dlcall function with limited parameter list
+    limitcall: func(arg_size=0){
+        if(arg_size==0){return func(ptr){return __dlcall};}
+        else if(arg_size==1){return func(ptr,_0){return __dlcall};}
+        else if(arg_size==2){return func(ptr,_0,_1){return __dlcall};}
+        else if(arg_size==3){return func(ptr,_0,_1,_2){return __dlcall};}
+        else if(arg_size==4){return func(ptr,_0,_1,_2,_3){return __dlcall};}
+        else if(arg_size==5){return func(ptr,_0,_1,_2,_3,_4){return __dlcall};}
+        else if(arg_size==6){return func(ptr,_0,_1,_2,_3,_4,_5){return __dlcall};}
+        else if(arg_size==7){return func(ptr,_0,_1,_2,_3,_4,_5,_6){return __dlcall};}
+        else if(arg_size==8){return func(ptr,_0,_1,_2,_3,_4,_5,_6,_7){return __dlcall};}
+        else{return func(ptr,args...){return __dlcallv};}
+    }
 };
 
 # os is used to use or get some os-related info/functions.
 # windows/macOS/linux are supported.
-var os=
-{
+var os={
     # get a string that tell which os it runs on.
     platform: func(){return __platform;},
     time:     func(){return __logtime; }
 };
 
 # runtime gives us some functions that we could manage it manually.
-var runtime=
-{
+var runtime={
     # command line arguments
     argv: func(){return __sysargv;}
 };

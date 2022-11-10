@@ -6,7 +6,7 @@
 # all the invalid functions cannot be called
 
 var module_call_func=func(fptr,args){
-    return __dlcall;
+    return __dlcallv;
 }
 var extern={
     new: func(fptr){
@@ -14,9 +14,7 @@ var extern={
         return {
             close:func(){isopen=0;},
             call:func(args...){
-                return (!isopen)?
-                    nil:
-                    module_call_func(fptr,args);
+                return isopen?module_call_func(fptr,args):nil;
             }
         };
     }

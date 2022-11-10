@@ -706,11 +706,8 @@ inline void vm::o_callfv()
         for(u32 i=psize;i<argc;++i)
             dynamic.vec().elems.push_back(local[i]);
     }
-#ifdef _MSC_VER
-    u32 min_size=(std::min)(psize,argc);
-#else
-    u32 min_size=std::min(psize,argc);
-#endif
+
+    u32 min_size=(std::min)(psize,argc); // avoid error in MSVC
     for(u32 i=min_size;i>=1;--i)// load arguments
         local[i]=local[i-1];
     local[0]=func.local[0];// load "me"

@@ -647,9 +647,20 @@ dylib.dlclose(dlhandle);
 
 `dylib.dlsym`通过符号从动态库中获得函数地址。
 
-`dylib.dlcall`用于调用函数，第一个参数是动态库函数的地址，这是个特殊类型，一定要保证这个参数是vm_obj类型并且type=obj_extern。
+`dylib.dlcall`用于调用函数，第一个参数是动态库函数的地址，这是个特殊类型，一定要保证这个参数是`vm_obj`类型并且`type=obj_extern`。
 
 `dylib.dlclose`用于卸载动态库，当然，在这个函数调用之后，所有从该库中获取的函数都作废。
+
+`dylib.limitcall`用于获取使用固定长度传参的 `dlcall` 函数，这种函数可以提高你的程序运行效率，因为它不需要用 `vm_vec` 来存储传入参数，而是使用局部作用域来直接存储，从而避免了频繁调用可能导致的频繁垃圾收集。所以上面展示的代码同样可以这样写：
+
+```javascript
+var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib=dylib.dlsym(dlhandle,"fib");
+var invoke=dylib.limitcall(1); # 这说明我们要调用的函数只有一个参数
+for(var i=1;i<30;i+=1)
+    println(invoke(fib,i));
+dylib.dlclose(dlhandle);
+```
 
 如果接下来你看到了这个运行结果，恭喜你！
 

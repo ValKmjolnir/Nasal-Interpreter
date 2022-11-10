@@ -674,9 +674,20 @@ dylib.dlclose(dlhandle);
 
 `dylib.dlsym` is used to get the function address.
 
-`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is vm_obj and type=obj_extern.
+`dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is `vm_obj` and `type=obj_extern`.
 
 `dylib.dlclose` is used to unload the library, at the moment that you call the function, all the function addresses that got from it are invalid.
+
+`dylib.limitcall` is used to get `dlcall` function that has limited parameter size, this function will prove the performance of your code because it does not use `vm_vec` to store the arguments, instead it uses local scope to store them, so this could avoid frequently garbage collecting. And the code above could also be written like this:
+
+```javascript
+var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib=dylib.dlsym(dlhandle,"fib");
+var invoke=dylib.limitcall(1); # this means the called function has only one parameter
+for(var i=1;i<30;i+=1)
+    println(invoke(fib,i));
+dylib.dlclose(dlhandle);
+```
 
 If get this, Congratulations!
 
