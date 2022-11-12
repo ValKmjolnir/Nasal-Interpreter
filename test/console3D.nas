@@ -26,7 +26,7 @@ import.module.libmat;
 func(){
     # allocate more spaces
     var t=[];
-    for(var i=0;i<2048;i+=1)
+    for(var i=0;i<16384;i+=1)
         append(t,[],[],[],str(i));
     t=[];
 }();

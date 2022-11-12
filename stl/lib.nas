@@ -183,6 +183,12 @@ var chr=func(code){
     return __chr(code);
 }
 
+# char will give you the real character of ascii-number
+# instead of extend-ascii when number between 128~256
+var char=func(code){
+    return __char(code);
+}
+
 # mut is used to change unmutable strings to mutable.
 var mut=func(str){
     return str~"";

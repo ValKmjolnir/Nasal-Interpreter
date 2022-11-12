@@ -534,6 +534,11 @@ var builtin_chr(var* local,gc& ngc)
     return ngc.newstr(" ");
 }
 
+var builtin_char(var* local,gc& ngc)
+{
+    return ngc.newstr((char)local[1].num());
+}
+
 var builtin_values(var* local,gc& ngc)
 {
     var hash=local[1];
@@ -1262,6 +1267,7 @@ struct
     {"__right",   builtin_right   },
     {"__cmp",     builtin_cmp     },
     {"__chr",     builtin_chr     },
+    {"__char",    builtin_char    },
     {"__values",  builtin_values  },
     {"__exists",  builtin_exists  },
     {"__open",    builtin_open    },
