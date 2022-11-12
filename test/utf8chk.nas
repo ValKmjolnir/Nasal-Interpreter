@@ -8,6 +8,7 @@ var unicode测试=func(){
     foreach(var 内容;测试成功)
         输出(内容~"\n");
 }
+
 var emoji测试=func(){
     var 💻=print;
     var 🎤="\n";
@@ -45,5 +46,27 @@ var emoji测试=func(){
     foreach(var 📄;keys(🗄️))
         💻(📄,🗄️[📄],🎤);
 }
+
+var dotsgen=func(){
+    var dots=[];
+    var s="⠀";
+    for(var i=0;i<256;i+=1){
+        var v0=s[0];
+        var v1=s[1]+int(i/64);
+        var v2=s[2]+i;
+        if(v2>191){
+            v2-=int(i/64)*64;
+        }
+        var tmp=char(v0)~char(v1)~char(v2);
+        append(dots,tmp);
+    }
+
+    forindex(var i;dots){
+        print(dots[i],(i+1-int((i+1)/32)*32==0)?"\n":"");
+    }
+    return dots;
+};
+
 unicode测试();
 emoji测试();
+dotsgen();
