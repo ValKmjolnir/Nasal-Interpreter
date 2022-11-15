@@ -631,16 +631,20 @@ var fib(var* args,usize size,gc* ngc){
     return {vm_num,fibonaci(num.tonum())};
 }
 
+// then put function name and address into this table
+// make sure the end of the table is {nullptr,nullptr}
+mod_func func_tbl[]={
+    {"fib",fib},
+    {nullptr,nullptr}
+};
+
 // must write this function, this will help nasal to
 // get the function pointer by name
 // the reason why using this way to get function pointer
 // is because `var` has constructors, which is not compatiable in C
 // so "extern "C" var fib" may get compilation warnings
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="fib")
-        return fib;
-    return nullptr;
+extern "C" mod_func get(){
+    return func_tbl;
 }
 ```
 
@@ -664,15 +668,13 @@ Then we write a test nasal file to run this fib function, using `os.platform()` 
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dylib.dlsym(dlhandle,"fib");
+var fib=dlhandle.fib;
 for(var i=1;i<30;i+=1)
     println(dylib.dlcall(fib,i));
-dylib.dlclose(dlhandle);
+dylib.dlclose(dlhandle.lib);
 ```
 
-`dylib.dlopen` is used to load dynamic library.
-
-`dylib.dlsym` is used to get the function address.
+`dylib.dlopen` is used to load dynamic library and get the function address.
 
 `dylib.dlcall` is used to call the function, the first argument is the function address, make sure this argument is `vm_obj` and `type=obj_extern`.
 
@@ -682,11 +684,11 @@ dylib.dlclose(dlhandle);
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dylib.dlsym(dlhandle,"fib");
+var fib=dlhandle.fib;
 var invoke=dylib.limitcall(1); # this means the called function has only one parameter
 for(var i=1;i<30;i+=1)
     println(invoke(fib,i));
-dylib.dlclose(dlhandle);
+dylib.dlclose(dlhandle.lib);
 ```
 
 If get this, Congratulations!

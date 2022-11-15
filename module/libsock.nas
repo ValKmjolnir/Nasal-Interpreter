@@ -1,18 +1,18 @@
 var socket=func(){
     var lib=dylib.dlopen("libnasock"~(os.platform()=="windows"?".dll":".so"));
     
-    var sock=dylib.dlsym(lib,"nas_socket");
-    var closesocket=dylib.dlsym(lib,"nas_closesocket");
-    var shutdown=dylib.dlsym(lib,"nas_shutdown");
-    var bind=dylib.dlsym(lib,"nas_bind");
-    var listen=dylib.dlsym(lib,"nas_listen");
-    var connect=dylib.dlsym(lib,"nas_connect");
-    var accept=dylib.dlsym(lib,"nas_accept");
-    var send=dylib.dlsym(lib,"nas_send");
-    var sendto=dylib.dlsym(lib,"nas_sendto");
-    var recv=dylib.dlsym(lib,"nas_recv");
-    var recvfrom=dylib.dlsym(lib,"nas_recvfrom");
-    var errno=dylib.dlsym(lib,"nas_errno");
+    var sock=lib.nas_socket;
+    var closesocket=lib.nas_closesocket;
+    var shutdown=lib.nas_shutdown;
+    var bind=lib.nas_bind;
+    var listen=lib.nas_listen;
+    var connect=lib.nas_connect;
+    var accept=lib.nas_accept;
+    var send=lib.nas_send;
+    var sendto=lib.nas_sendto;
+    var recv=lib.nas_recv;
+    var recvfrom=lib.nas_recvfrom;
+    var errno=lib.nas_errno;
 
     var (invoke,invoke_i,invoke_ii,invoke_iii,invoke_iiii,invoke_iiiii)=(
         dylib.limitcall(0),

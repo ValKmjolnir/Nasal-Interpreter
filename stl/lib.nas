@@ -428,7 +428,7 @@ var unix={
 # dylib is the core hashmap for developers to load their own library.
 # for safe using dynamic library, you could use 'module' in stl/module.nas
 var dylib={
-    # open dynamic lib.
+    # open dynamic lib. return a hash including dl pointer and function pointers
     dlopen:  func(libname){
         # find dynamic lib from local dir first
         libname=(os.platform()=="windows"?".\\":"./")~libname;
@@ -448,8 +448,6 @@ var dylib={
         }
         return __dlopen(libname);
     },
-    # load symbol from an open dynamic lib.
-    dlsym:   func(lib,sym){return __dlsym; },
     # close dynamic lib, this operation will make all the symbols loaded from it invalid.
     dlclose: func(lib){return __dlclose;   },
     # call the loaded symbol, with infinite parameters:

@@ -930,33 +930,30 @@ var builtin_dlopen(var* local,gc& ngc)
 #endif
     if(!ptr)
         return nas_err("dlopen","cannot open dynamic lib <"+dlname.str()+">");
-    var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::dylib,ptr);
-    return ret;
-}
+    var ret=ngc.temp=ngc.alloc(vm_hash);
+    var lib=ngc.alloc(vm_obj);
+    lib.obj().set(nas_obj::dylib,ptr);
+    ret.hash().elems["lib"]=lib;
 
-var builtin_dlsym(var* local,gc& ngc)
-{
-    var lib=local[1];
-    var sym=local[2];
-    if(!lib.objchk(nas_obj::dylib))
-        return nas_err("dlsym","\"lib\" is not a valid dynamic lib");
-    if(sym.type!=vm_str)
-        return nas_err("dlsym","\"sym\" must be string");
-    // "get" function
 #ifdef _WIN32
     void* func=(void*)GetProcAddress((HMODULE)lib.obj().ptr,"get");
 #else
     void* func=dlsym(lib.obj().ptr,"get");
 #endif
     if(!func)
-        return nas_err("dlsym","cannot find get function");
+        return nas_err("dlopen","cannot find <get> function");
     // get function pointer by name
-    void* ptr=(void*)((getptr)func)(sym.str().c_str());
-    if(!ptr)
-        return nas_err("dlsym","cannot find function <"+sym.str()+">");
-    var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::faddr,ptr);
+    mod_func* tbl=(mod_func*)((getptr)func)();
+    if(!tbl)
+        return nas_err("dlopen","failed to get module functions");
+    for(u32 i=0;tbl[i].name;++i){
+        void* p=(void*)tbl[i].fd;
+        var tmp=ngc.alloc(vm_obj);
+        tmp.obj().set(nas_obj::faddr,p);
+        ret.hash().elems[tbl[i].name]=tmp;
+    }
+
+    ngc.temp=nil;
     return ret;
 }
 
@@ -1295,7 +1292,6 @@ struct
     {"__getcwd",  builtin_getcwd  },
     {"__getenv",  builtin_getenv  },
     {"__dlopen",  builtin_dlopen  },
-    {"__dlsym",   builtin_dlsym   },
     {"__dlclose", builtin_dlclose },
     {"__dlcallv", builtin_dlcallv },
     {"__dlcall",  builtin_dlcall  },

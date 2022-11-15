@@ -5,8 +5,8 @@ var libfib=func(){
         open:func(){
             if(dd==nil){
                 dd=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-                fib=dylib.dlsym(dd,"fib");
-                qfib=dylib.dlsym(dd,"quick_fib");
+                fib=dd.fib;
+                qfib=dd.quick_fib;
             }else{
                 println("[info  ] already loaded.");
             }
@@ -16,7 +16,7 @@ var libfib=func(){
                 println("[error ] already closed.");
                 return;
             }
-            dylib.dlclose(dd);
+            dylib.dlclose(dd.lib);
             (dd,fib,qfib)=(nil,nil,nil);
         },
         fib:func(x){
@@ -51,7 +51,7 @@ libfib.close();
 
 var speed_test=func(){
     var d=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-    var fd=dylib.dlsym(d,"quick_fib");
+    var fd=d.quick_fib;
     var vec_call=dylib.dlcall;
     var invoke=dylib.limitcall(1);
 

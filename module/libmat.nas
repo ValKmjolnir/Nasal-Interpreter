@@ -1,31 +1,31 @@
 var libmat=func(){
     var dl=dylib.dlopen("libmat."~(os.platform()=="windows"?"dll":"so"));
-    var vec2=dylib.dlsym(dl,"nas_vec2");
-    var vec3=dylib.dlsym(dl,"nas_vec3");
+    var vec2=dl.nas_vec2;
+    var vec3=dl.nas_vec3;
     var (vec2add,vec2sub,vec2mul,vec2div,vec2neg,vec2norm,vec2len,vec2dot)=(
-        dylib.dlsym(dl,"nas_vec2_add"),
-        dylib.dlsym(dl,"nas_vec2_sub"),
-        dylib.dlsym(dl,"nas_vec2_mult"),
-        dylib.dlsym(dl,"nas_vec2_div"),
-        dylib.dlsym(dl,"nas_vec2_neg"),
-        dylib.dlsym(dl,"nas_vec2_norm"),
-        dylib.dlsym(dl,"nas_vec2_len"),
-        dylib.dlsym(dl,"nas_vec2_dot")
+        dl.nas_vec2_add,
+        dl.nas_vec2_sub,
+        dl.nas_vec2_mult,
+        dl.nas_vec2_div,
+        dl.nas_vec2_neg,
+        dl.nas_vec2_norm,
+        dl.nas_vec2_len,
+        dl.nas_vec2_dot
     );
     var (vec3add,vec3sub,vec3mul,vec3div,vec3neg,vec3norm,vec3len,vec3dot)=(
-        dylib.dlsym(dl,"nas_vec3_add"),
-        dylib.dlsym(dl,"nas_vec3_sub"),
-        dylib.dlsym(dl,"nas_vec3_mult"),
-        dylib.dlsym(dl,"nas_vec3_div"),
-        dylib.dlsym(dl,"nas_vec3_neg"),
-        dylib.dlsym(dl,"nas_vec3_norm"),
-        dylib.dlsym(dl,"nas_vec3_len"),
-        dylib.dlsym(dl,"nas_vec3_dot")
+        dl.nas_vec3_add,
+        dl.nas_vec3_sub,
+        dl.nas_vec3_mult,
+        dl.nas_vec3_div,
+        dl.nas_vec3_neg,
+        dl.nas_vec3_norm,
+        dl.nas_vec3_len,
+        dl.nas_vec3_dot
     );
     var (rotate_x,rotate_y,rotate_z)=(
-        dylib.dlsym(dl,"nas_rotate_x"),
-        dylib.dlsym(dl,"nas_rotate_y"),
-        dylib.dlsym(dl,"nas_rotate_z")
+        dl.nas_rotate_x,
+        dl.nas_rotate_y,
+        dl.nas_rotate_z
     );
     var (invoke_i,invoke_ii,invoke_iii)=(
         dylib.limitcall(1),
