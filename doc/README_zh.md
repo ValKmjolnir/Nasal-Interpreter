@@ -604,15 +604,18 @@ var fib(var* args,usize size,gc* ngc){
     return {vm_num,fibonaci(num.tonum())};
 }
 
+// 然后将函数名字和函数地址放到一个表里，一定要记住表尾是{nullptr,nullptr}
+mod_func func_tbl[]={
+    {"fib",fib},
+    {nullptr,nullptr}
+};
+
 // 必须实现这个函数, 这样nasal可以通过字符串名字获得函数指针
 // 之所以用这种方式来获取函数指针, 是因为`var`是有构造函数的
 // 有构造函数的类型作为返回值, 和C是不兼容的, 这导致
 // 类似 "extern "C" var fib" 的写法会得到编译错误
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="fib")
-        return fib;
-    return nullptr;
+extern "C" mod_func get(){
+    return func_tbl;
 }
 ```
 
@@ -637,15 +640,13 @@ Windows(`.dll`):
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dylib.dlsym(dlhandle,"fib");
+var fib=dlhandle.fib;
 for(var i=1;i<30;i+=1)
     println(dylib.dlcall(fib,i));
-dylib.dlclose(dlhandle);
+dylib.dlclose(dlhandle.lib);
 ```
 
-`dylib.dlopen`用于加载动态库。
-
-`dylib.dlsym`通过符号从动态库中获得函数地址。
+`dylib.dlopen`用于加载动态库并从动态库中获得函数地址。
 
 `dylib.dlcall`用于调用函数，第一个参数是动态库函数的地址，这是个特殊类型，一定要保证这个参数是`vm_obj`类型并且`type=obj_extern`。
 
@@ -655,11 +656,11 @@ dylib.dlclose(dlhandle);
 
 ```javascript
 var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dylib.dlsym(dlhandle,"fib");
-var invoke=dylib.limitcall(1); # 这说明我们要调用的函数只有一个参数
+var fib=dlhandle.fib;
+var invoke=dylib.limitcall(1); # this means the called function has only one parameter
 for(var i=1;i<30;i+=1)
     println(invoke(fib,i));
-dylib.dlclose(dlhandle);
+dylib.dlclose(dlhandle.lib);
 ```
 
 如果接下来你看到了这个运行结果，恭喜你！

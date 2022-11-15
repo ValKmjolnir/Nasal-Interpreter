@@ -778,4 +778,8 @@ var nas_err(const string& err_f,const string& info)
 }
 
 typedef var (*mod)(var*,usize,gc*); // module function type
-typedef mod (*getptr)(const char*); // module function "get" type
+typedef struct {
+    const char* name;
+    mod fd;
+} mod_func; // module function stores in tables with this type, end with {nullptr,nullptr}
+typedef mod_func* (*getptr)(); // module function "get" type

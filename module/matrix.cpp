@@ -266,49 +266,31 @@ var nas_vec3_dot(var* args,usize size,gc* ngc){
     return {vm_num,v0[0].num()*v1[0].num()+v0[1].num()*v1[1].num()+v0[2].num()*v1[2].num()};
 }
 
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="nas_vec2")
-        return nas_vec2;
-    else if(name=="nas_vec2_add")
-        return nas_vec2_add;
-    else if(name=="nas_vec2_sub")
-        return nas_vec2_sub;
-    else if(name=="nas_vec2_mult")
-        return nas_vec2_mult;
-    else if(name=="nas_vec2_div")
-        return nas_vec2_div;
-    else if(name=="nas_vec2_neg")
-        return nas_vec2_neg;
-    else if(name=="nas_vec2_norm")
-        return nas_vec2_norm;
-    else if(name=="nas_vec2_len")
-        return nas_vec2_len;
-    else if(name=="nas_vec2_dot")
-        return nas_vec2_dot;
-    else if(name=="nas_vec3")
-        return nas_vec3;
-    else if(name=="nas_vec3_add")
-        return nas_vec3_add;
-    else if(name=="nas_vec3_sub")
-        return nas_vec3_sub;
-    else if(name=="nas_vec3_mult")
-        return nas_vec3_mult;
-    else if(name=="nas_vec3_div")
-        return nas_vec3_div;
-    else if(name=="nas_vec3_neg")
-        return nas_vec3_neg;
-    else if(name=="nas_vec3_norm")
-        return nas_vec3_norm;
-    else if(name=="nas_vec3_len")
-        return nas_vec3_len;
-    else if(name=="nas_rotate_x")
-        return nas_rotate_x;
-    else if(name=="nas_rotate_y")
-        return nas_rotate_y;
-    else if(name=="nas_rotate_z")
-        return nas_rotate_z;
-    else if(name=="nas_vec3_dot")
-        return nas_vec3_dot;
-    return nullptr;
+mod_func func_tbl[]={
+    {"nas_vec2",nas_vec2},
+    {"nas_vec2_add",nas_vec2_add},
+    {"nas_vec2_sub",nas_vec2_sub},
+    {"nas_vec2_mult",nas_vec2_mult},
+    {"nas_vec2_div",nas_vec2_div},
+    {"nas_vec2_neg",nas_vec2_neg},
+    {"nas_vec2_norm",nas_vec2_norm},
+    {"nas_vec2_len",nas_vec2_len},
+    {"nas_vec2_dot",nas_vec2_dot},
+    {"nas_vec3",nas_vec3},
+    {"nas_vec3_add",nas_vec3_add},
+    {"nas_vec3_sub",nas_vec3_sub},
+    {"nas_vec3_mult",nas_vec3_mult},
+    {"nas_vec3_div",nas_vec3_div},
+    {"nas_vec3_neg",nas_vec3_neg},
+    {"nas_vec3_norm",nas_vec3_norm},
+    {"nas_vec3_len",nas_vec3_len},
+    {"nas_rotate_x",nas_rotate_x},
+    {"nas_rotate_y",nas_rotate_y},
+    {"nas_rotate_z",nas_rotate_z},
+    {"nas_vec3_dot",nas_vec3_dot},
+    {nullptr,nullptr}
+};
+
+extern "C" mod_func* get(){
+    return func_tbl;
 }

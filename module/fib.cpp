@@ -29,11 +29,12 @@ var quick_fib(var* args,usize size,gc* ngc){
     return {vm_num,res};
 }
 
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="fib")
-        return fib;
-    else if(name=="quick_fib")
-        return quick_fib;
-    return nullptr;
+mod_func func_tbl[]={
+    {"fib",fib},
+    {"quick_fib",quick_fib},
+    {nullptr, nullptr},
+};
+
+extern "C" mod_func* get(){
+    return func_tbl;
 }

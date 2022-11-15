@@ -187,31 +187,22 @@ var nas_errno(var* args,usize size,gc* ngc){
     return ngc->newstr(strerror(errno));
 }
 
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="nas_socket")
-        return nas_socket;
-    else if(name=="nas_closesocket")
-        return nas_closesocket;
-    else if(name=="nas_shutdown")
-        return nas_shutdown;
-    else if(name=="nas_bind")
-        return nas_bind;
-    else if(name=="nas_listen")
-        return nas_listen;
-    else if(name=="nas_connect")
-        return nas_connect;
-    else if(name=="nas_accept")
-        return nas_accept;
-    else if(name=="nas_send")
-        return nas_send;
-    else if(name=="nas_sendto")
-        return nas_sendto;
-    else if(name=="nas_recv")
-        return nas_recv;
-    else if(name=="nas_recvfrom")
-        return nas_recvfrom;
-    else if(name=="nas_errno")
-        return nas_errno;
-    return nullptr;
+mod_func func_tbl[]={
+    {"nas_socket",nas_socket},
+    {"nas_closesocket",nas_closesocket},
+    {"nas_shutdown",nas_shutdown},
+    {"nas_bind",nas_bind},
+    {"nas_listen",nas_listen},
+    {"nas_connect",nas_connect},
+    {"nas_accept",nas_accept},
+    {"nas_send",nas_send},
+    {"nas_sendto",nas_sendto},
+    {"nas_recv",nas_recv},
+    {"nas_recvfrom",nas_recvfrom},
+    {"nas_errno",nas_errno},
+    {nullptr,nullptr}
+};
+
+extern "C" mod_func* get(){
+    return func_tbl;
 }

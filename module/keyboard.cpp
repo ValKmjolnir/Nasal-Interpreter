@@ -83,13 +83,13 @@ var nas_noblock(var* args,usize size,gc* ngc){
     return nil;
 }
 
-extern "C" mod get(const char* n){
-    string name=n;
-    if(name=="nas_getch")
-        return nas_getch;
-    else if(name=="nas_kbhit")
-        return nas_kbhit;
-    else if(name=="nas_noblock")
-        return nas_noblock;
-    return nullptr;
+mod_func func_tbl[]={
+    {"nas_getch",nas_getch},
+    {"nas_kbhit",nas_kbhit},
+    {"nas_noblock",nas_noblock},
+    {nullptr,nullptr}
+};
+
+extern "C" mod_func* get(){
+    return func_tbl;
 }
