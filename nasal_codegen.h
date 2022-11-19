@@ -170,6 +170,7 @@ public:
                    <<ins.nums[num]<<")";break;
             case op_callvi:case op_newv:   case op_callfv:
             case op_intg:  case op_intl:
+            case op_findex:case op_feach:
             case op_newf:  case op_jmp:    case op_jt:    case op_jf:
             case op_callg: case op_mcallg: case op_loadg:
             case op_calll: case op_mcalll: case op_loadl:
@@ -220,7 +221,7 @@ private:
     std::stack<u32> fbstk;
     std::stack<u32> festk;
     
-    void die(const string&,const u32,const u32);
+    void die(const string&,const u32,const u32,const u32);
     void regist_num(const f64);
     void regist_str(const string&);
     void find_symbol(const ast&);
@@ -271,13 +272,10 @@ public:
     const std::vector<opcode>& codes() const {return code;}
 };
 
-void codegen::die(const string& info,const u32 line,const u32 col)
+void codegen::die(const string& info,const u32 line,const u32 col,const u32 len=1)
 {
     err.load(file[fileindex]);
-    if(col)
-        err.err("code",line,col,info);
-    else
-        err.err("code",line,info);
+    err.err("code",line,col,len,info);
 }
 
 void codegen::regist_num(const f64 num)
@@ -406,6 +404,32 @@ void codegen::hash_gen(const ast& node)
 
 void codegen::func_gen(const ast& node)
 {
+    // parameter list format check
+    bool checked_default=false;
+    bool checked_dynamic=false;
+    std::unordered_map<string,bool> argname;
+    for(auto& tmp:node[0].child()){
+        if(tmp.type()==ast_default){
+            checked_default=true;
+        }else if(tmp.type()==ast_dynamic){
+            checked_dynamic=true;
+        }
+        // check default parameter and dynamic parameter
+        if(checked_default && tmp.type()!=ast_default){
+            die("must use default parameters here",tmp.line(),tmp.col(),tmp.str().length());
+        }
+        if(checked_dynamic && &tmp!=&node[0].child().back()){
+            die("dynamic parameter must be the last one",tmp.line(),tmp.col(),tmp.str().length());
+        }
+        // check redefinition
+        string name=tmp.str();
+        if(argname.count(name)){
+            die("redefinition of parameter: "+name,tmp.line(),tmp.col(),name.length());
+        }else{
+            argname[name]=true;
+        }
+    }
+
     usize newf=code.size();
     gen(op_newf,0,node.line());
     usize lsize=code.size();
@@ -423,7 +447,7 @@ void codegen::func_gen(const ast& node)
     {
         const string& str=tmp.str();
         if(str=="me")
-            die("\"me\" should not be a parameter",tmp.line(),tmp.col());
+            die("\"me\" should not be a parameter",tmp.line(),tmp.col(),tmp.str().length());
         regist_str(str);
         switch(tmp.type())
         {
@@ -486,7 +510,7 @@ void codegen::call_id(const ast& node)
         {
             gen(op_callb,i,node.line());
             if(local.empty())
-                die("should warp native function in local scope",node.line(),node.col());
+                die("should warp native function in local scope",node.line(),node.col(),node.str().length());
             return;
         }
     i32 index;
@@ -505,7 +529,7 @@ void codegen::call_id(const ast& node)
         gen(op_callg,index,node.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",node.line(),node.col());
+    die("undefined symbol \""+str+"\"",node.line(),node.col(),node.str().length());
 }
 
 void codegen::call_hash(const ast& node)
@@ -602,7 +626,7 @@ void codegen::mcall_id(const ast& node)
     for(u32 i=0;builtin[i].name;++i)
         if(builtin[i].name==str)
         {
-            die("cannot modify native function",node.line(),node.col());
+            die("cannot modify native function",node.line(),node.col(),node.str().length());
             return;
         }
     i32 index;
@@ -621,7 +645,7 @@ void codegen::mcall_id(const ast& node)
         gen(op_mcallg,index,node.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",node.line(),node.col());
+    die("undefined symbol \""+str+"\"",node.line(),node.col(),node.str().length());
 }
 
 void codegen::mcall_vec(const ast& node)
@@ -677,11 +701,23 @@ void codegen::multi_def(const ast& node)
 
 void codegen::def_gen(const ast& node)
 {
+    if(node[0].type()==ast_id && node[1].type()==ast_tuple){
+        die("cannot accept too many values",node[1].line(),node[1].col(),1);
+    }else if(node[0].type()==ast_multi_id && node[1].type()==ast_tuple && node[0].size()<node[1].size()){
+        die("lack values in multi-definition",node[1].line(),node[1].col(),1);
+    }else if(node[0].type()==ast_multi_id && node[1].type()==ast_tuple && node[0].size()>node[1].size()){
+        die("too many values in multi-definition",node[1].line(),node[1].col(),1);
+    }
     node[0].type()==ast_id?single_def(node):multi_def(node);
 }
 
 void codegen::multi_assign_gen(const ast& node)
 {
+    if(node[1].type()==ast_tuple && node[0].size()<node[1].size()){
+        die("lack values in multi-assignment",node[1].line(),node[1].col(),1);
+    }else if(node[1].type()==ast_tuple && node[0].size()>node[1].size()){
+        die("too many values in multi-assignment",node[1].line(),node[1].col(),1);
+    }
     i32 size=node[0].size();
     if(node[1].type()==ast_tuple)
     {
@@ -1244,10 +1280,14 @@ const error& codegen::compile(const parse& parse,const linker& import)
     gen(op_intg,global.size(),0);
     block_gen(parse.tree()); // generate main block
     gen(op_exit,0,0);
-    if(global.size()>=STACK_DEPTH)
-        die("too many global variants: "+std::to_string(global.size()),0,0);
-    if(code.size()>0xffffffff)
-        die("too large generated bytecode file: "+std::to_string(code.size()),0,0);
+    if(global.size()>=STACK_DEPTH){
+        err.load(file[fileindex]);
+        err.err("code","too many global variants: "+std::to_string(global.size()));
+    }
+    if(code.size()>0xffffffff){
+        err.load(file[fileindex]);
+        err.err("code","too large generated bytecode file: "+std::to_string(code.size()));
+    }
     return err;
 }
 
