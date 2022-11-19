@@ -51,19 +51,25 @@ libfib.close();
 
 var speed_test=func(){
     var d=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+    println("[dylib ] ",d);
     var fd=d.quick_fib;
     var vec_call=dylib.dlcall;
     var invoke=dylib.limitcall(1);
-
     var tm=maketimestamp();
-    tm.stamp();
-    for(var i=0;i<1e7;i+=1)
-        invoke(fd,40);
-    println("[time  ] limited call: ",tm.elapsedMSec()," ms");
-    tm.stamp();
-    for(var i=0;i<1e7;i+=1)
-        vec_call(fd,40);
-    println("[time  ] dynamic call: ",tm.elapsedMSec()," ms");
+    var duration=0;
+
+    for(var t=0;t<10;t+=1){
+        tm.stamp();
+        for(var i=0;i<5e6;i+=1)
+            invoke(fd,40);
+        duration=tm.elapsedMSec();
+        println("[time  ] limited call: ",duration," ms avg ",5e6/duration," call/ms");
+        tm.stamp();
+        for(var i=0;i<5e6;i+=1)
+            vec_call(fd,40);
+        duration=tm.elapsedMSec();
+        println("[time  ] dynamic call: ",duration," ms avg ",5e6/duration," call/ms");
+    }
 }
 
 speed_test();

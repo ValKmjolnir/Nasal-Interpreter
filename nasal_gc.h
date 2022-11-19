@@ -669,15 +669,19 @@ void gc::info()
         len=std::to_string(ini[i]+size[i]*incr[i]).length();
         maxlen=maxlen<len?len:maxlen;
     }
+    double total=0;
     for(u8 i=0;i<gc_tsize;++i)
         if(gcnt[i] || acnt[i] || ini[i] || size[i])
         {
+            total+=gcnt[i];
             std::cout<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
             std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
             std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
         }
-    double t=worktime*1.0/1000000000;
+    double t=worktime*1.0/1000000000; // seconds
     std::cout<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? "ms\n":"s\n");
+    if(total)
+        std::cout<<" avg   | "<<t/total*1000<<" ms\n";
 }
 var gc::alloc(u8 type)
 {

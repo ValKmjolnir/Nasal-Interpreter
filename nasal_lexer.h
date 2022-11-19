@@ -137,7 +137,6 @@ private:
     bool is_str(char);
     bool is_single_opr(char);
     bool is_calc_opr(char);
-    void die(const string&);
     void open(const string&);
     string utf8_gen();
     string id_gen();
@@ -199,10 +198,10 @@ bool lexer::is_calc_opr(char c)
     );
 }
 
-void lexer::die(const string& info)
-{
-    err.err("lexer",line,column,info);
-}
+// void lexer::die(const string& info)
+// {
+//     err.err("lexer",line,column,1,info);
+// }
 
 void lexer::open(const string& file)
 {
@@ -246,9 +245,8 @@ string lexer::utf8_gen()
                 string utf_info="0x"+chrhex(tmp[0]);
                 for(u32 i=1;i<tmp.size();++i)
                     utf_info+=" 0x"+chrhex(tmp[i]);
-                die("invalid utf-8 <"+utf_info+">");
-                err.err("lexer","fatal error occurred, stop");
-                std::exit(1);
+                err.err("lexer",line,column,1,"invalid utf-8 <"+utf_info+">");
+                err.fatal("lexer","fatal error occurred, stop");
             }
             str+=tmp;
             column+=2; // may have some problems because not all the unicode takes 2 space
@@ -289,7 +287,7 @@ string lexer::num_gen()
             str+=res[ptr++];
         column+=str.length();
         if(str.length()<3)// "0x"
-            die("invalid number `"+str+"`");
+            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         return str;
     }
     // generate oct number
@@ -299,9 +297,15 @@ string lexer::num_gen()
         ptr+=2;
         while(ptr<res.size() && is_oct(res[ptr]))
             str+=res[ptr++];
+        bool erfmt=false;
+        while(ptr<res.size() && (is_dec(res[ptr]) || is_hex(res[ptr])))
+        {
+            erfmt=true;
+            str+=res[ptr++];
+        }
         column+=str.length();
-        if(str.length()<3)// "0o"
-            die("invalid number `"+str+"`");
+        if(str.length()==2 || erfmt)
+            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         return str;
     }
     // generate dec number
@@ -318,7 +322,7 @@ string lexer::num_gen()
         if(str.back()=='.')
         {
             column+=str.length();
-            die("invalid number `"+str+"`");
+            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
             return "0";
         }
     }
@@ -333,7 +337,7 @@ string lexer::num_gen()
         if(str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+')
         {
             column+=str.length();
-            die("invalid number `"+str+"`");
+            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
             return "0";
         }
     }
@@ -382,12 +386,12 @@ string lexer::str_gen()
     // check if this string ends with a " or '
     if(ptr++>=res.size())
     {
-        die("get EOF when generating string");
+        err.err("lexer",line,column,1,"get EOF when generating string");
         return str;
     }
     ++column;
     if(begin=='`' && str.length()!=1)
-        die("\'`\' is used for string that includes one character");
+        err.err("lexer",line,column,1,"\'`\' is used for string that includes one character");
     return str;
 }
 
@@ -434,7 +438,7 @@ const error& lexer::scan(const string& file)
             ++column;
             u32 type=get_type(str);
             if(!type)
-                die("invalid operator `"+str+"`");
+                err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
             toks.push_back({line,column,type,str});
             ++ptr;
         }
@@ -462,7 +466,8 @@ const error& lexer::scan(const string& file)
         {
             ++column;
             char c=res[ptr++];
-            die("invalid character 0x"+chrhex(c));
+            err.err("lexer",line,column,1,"invalid character 0x"+chrhex(c));
+            err.fatal("lexer","fatal error occurred, stop");
         }
     }
     toks.push_back({line,column,tok_eof,"<eof>"});

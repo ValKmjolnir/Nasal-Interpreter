@@ -77,20 +77,24 @@ protected:
     string file;
     std::vector<string> res;
 public:
+    flstream():file("<error-file-path>"){}
     void load(const string& f)
     {
-        if(file==f) return; // don't need to load a loaded file
-        file=f;
+        if(file==f){ // don't need to load a loaded file
+            return;
+        }else{
+            file=f;
+        }
+
         res.clear();
         std::ifstream in(f,std::ios::binary);
-        if(in.fail())
-        {
+        if(in.fail()){
             std::cerr<<red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
             std::exit(1);
         }
-        string line;
-        while(!in.eof())
-        {
+        
+        while(!in.eof()){
+            string line;
             std::getline(in,line);
             res.push_back(line);
         }
@@ -112,54 +116,41 @@ private:
     }
 public:
     error():cnt(0){}
+    void fatal(const string& stage,const string& info)
+    {
+        std::cerr
+        <<red<<stage<<": "<<white<<info<<reset<<"\n"
+        <<cyan<<" --> "<<red<<file<<"\n\n";
+        std::exit(1);
+    }
     void err(const string& stage,const string& info)
     {
         ++cnt;
         std::cerr
-        <<red<<stage<<": "
-        <<white<<info<<reset<<"\n\n";
+        <<red<<stage<<": "<<white<<info<<reset<<"\n"
+        <<cyan<<"  --> "<<red<<file<<reset<<"\n\n";
     }
-    void err(const string& stage,u32 line,u32 col,const string& info)
+    void err(const string& stage,u32 line,u32 col,u32 len,const string& info)
     {
         ++cnt;
-        const string& code=res[line-1];
+        col=col?col:1;
+        len=len?len:1;
+
+        std::cerr
+        <<red<<stage<<": "<<white<<info<<reset<<"\n"
+        <<cyan<<"  --> "<<red<<file<<":"<<line<<":"<<col<<reset<<"\n";
+
+        const string& code=line?res[line-1]:"# empty line";
         const string iden=identation(std::to_string(line).length());
+
         std::cerr
-        <<red<<stage<<": "
-        <<white<<info<<reset<<"\n"
-        <<cyan<<" --> "<<reset
-        <<orange<<file<<":"<<line<<":"<<col<<"\n";
-        if(!line)
-        {
-            std::cerr<<"\n";
-            return;
-        }
-        std::cerr
-        <<cyan<<iden<<" | "<<reset<<"\n"
         <<cyan<<line<<" | "<<reset<<code<<"\n"
         <<cyan<<iden<<" | "<<reset;
-        for(i32 i=0;i<(i32)col-1;++i)
+        for(i32 i=0;i<(i32)col-(i32)len;++i)
             std::cerr<<char(" \t"[code[i]=='\t']);
-        std::cerr<<red<<"^ "<<info<<reset<<"\n\n";
-    }
-    void err(const string& stage,u32 line,const string& info)
-    {
-        ++cnt;
-        const string iden=identation(std::to_string(line).length());
-        std::cerr
-        <<red<<stage<<": "
-        <<white<<info<<reset<<"\n"
-        <<cyan<<" --> "<<reset
-        <<orange<<file<<":"<<line<<"\n";
-        if(!line)
-        {
-            std::cerr<<"\n";
-            return;
-        }
-        std::cerr
-        <<cyan<<iden<<" | "<<reset<<"\n"
-        <<cyan<<line<<" | "<<reset<<res[line-1]<<"\n"
-        <<cyan<<iden<<" | "<<reset<<"\n\n";
+        for(u32 i=0;i<len;++i)
+            std::cerr<<red<<"^";
+        std::cerr<<red<<" "<<info<<reset<<"\n\n";
     }
     void chkerr() const {if(cnt)std::exit(1);}
 };
