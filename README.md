@@ -593,16 +593,19 @@ Luckily, we have developed some useful native-functions to help you add modules 
 After 2021/12/3, there are some new functions added to `lib.nas`:
 
 ```javascript
-var dylib=
-{
-    dlopen:  func(libname){return __dlopen;},
-    dlsym:   func(lib,sym){return __dlsym; },
+var dylib={
+    dlopen:  func(libname){
+        ...
+    },
     dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(funcptr,args...){return __dlcall;}
+    dlcall:  func(ptr,args...){return __dlcallv},
+    limitcall: func(arg_size=0){
+        ...
+    }
 };
 ```
 
-Aha, as you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
+As you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
 Let's see how they work.
 
 First, write a cpp file that you want to generate the dynamic lib, take the `fib.cpp` as the example(example codes are in `./module`):

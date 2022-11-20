@@ -99,9 +99,9 @@ public:
             res.push_back(line);
         }
     }
-    const string& operator[](usize n){return res[n];}
-    const string& name(){return file;}
-    usize size(){return res.size();}
+    const string& operator[](usize n) const {return res[n];}
+    const string& name() const {return file;}
+    usize size() const {return res.size();}
 };
 
 class error:public flstream

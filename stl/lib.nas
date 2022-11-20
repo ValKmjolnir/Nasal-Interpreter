@@ -456,14 +456,14 @@ var dylib={
     # get dlcall function with limited parameter list
     limitcall: func(arg_size=0){
         if(arg_size==0){return func(ptr){return __dlcall};}
-        else if(arg_size==1){return func(ptr,_0){return __dlcall};}
-        else if(arg_size==2){return func(ptr,_0,_1){return __dlcall};}
-        else if(arg_size==3){return func(ptr,_0,_1,_2){return __dlcall};}
-        else if(arg_size==4){return func(ptr,_0,_1,_2,_3){return __dlcall};}
-        else if(arg_size==5){return func(ptr,_0,_1,_2,_3,_4){return __dlcall};}
-        else if(arg_size==6){return func(ptr,_0,_1,_2,_3,_4,_5){return __dlcall};}
-        else if(arg_size==7){return func(ptr,_0,_1,_2,_3,_4,_5,_6){return __dlcall};}
-        else if(arg_size==8){return func(ptr,_0,_1,_2,_3,_4,_5,_6,_7){return __dlcall};}
+        elsif(arg_size==1){return func(ptr,_0){return __dlcall};}
+        elsif(arg_size==2){return func(ptr,_0,_1){return __dlcall};}
+        elsif(arg_size==3){return func(ptr,_0,_1,_2){return __dlcall};}
+        elsif(arg_size==4){return func(ptr,_0,_1,_2,_3){return __dlcall};}
+        elsif(arg_size==5){return func(ptr,_0,_1,_2,_3,_4){return __dlcall};}
+        elsif(arg_size==6){return func(ptr,_0,_1,_2,_3,_4,_5){return __dlcall};}
+        elsif(arg_size==7){return func(ptr,_0,_1,_2,_3,_4,_5,_6){return __dlcall};}
+        elsif(arg_size==8){return func(ptr,_0,_1,_2,_3,_4,_5,_6,_7){return __dlcall};}
         else{return func(ptr,args...){return __dlcallv};}
     }
 };
