@@ -107,7 +107,6 @@ private:
     bool check_func_end(const ast&);
     bool check_special_call();
     bool need_semi_check(const ast&);
-    void check_memory_reachable(const ast&);
     ast null();
     ast nil();
     ast num();
@@ -117,7 +116,7 @@ private:
     ast hash();
     ast pair();
     ast func();
-    ast args();
+    ast params();
     ast lcurve_expr();
     ast expr();
     ast exprs();
@@ -138,7 +137,7 @@ private:
     ast incurve_def();
     ast outcurve_def();
     ast multi_id();
-    ast multi_scalar(bool);
+    ast multi_scalar();
     ast multi_assgin();
     ast loop();
     ast while_loop();
@@ -154,7 +153,6 @@ public:
         ptr(0),in_func(0),in_loop(0),
         toks(nullptr),root(0,0,ast_root),
         err(e){}
-    void print(){root.print_tree();}
     const error& compile(const lexer&);
     ast& tree(){return root;}
     const ast& tree() const {return root;}
@@ -183,7 +181,6 @@ void parse::die(u32 line,u32 col,u32 len,string info,bool prev=false)
         col-=2;
         len+=2;
     }
-
     // used to report lack of ',' ';'
     if(prev && ptr){
         line=toks[ptr-1].line;
@@ -191,7 +188,6 @@ void parse::die(u32 line,u32 col,u32 len,string info,bool prev=false)
         len=toks[ptr-1].str.length();
         len+=toks[ptr-1].type==tok_str?2:0;
     }
-
     err.err("parse",line,col,lookahead(tok_eof)?1:len,info);
 }
 void parse::match(u32 type,const char* info)
@@ -305,20 +301,6 @@ bool parse::need_semi_check(const ast& node)
     }
     return !check_func_end(node);
 }
-void parse::check_memory_reachable(const ast& node)
-{
-    if(node.type()==ast_call){
-        const ast& tmp=node.child().back();
-        if(tmp.type()==ast_callf){
-            die(tmp.line(),tmp.col(),1,"bad left-value");
-        }
-        if(tmp.type()==ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0].type()==ast_subvec)){
-            die(tmp.line(),tmp.col(),1,"bad left-value");
-        }
-    }else if(node.type()!=ast_id){
-        die(node.line(),node.col(),1,"bad left-value");
-    }
-}
 ast parse::null()
 {
     return {toks[ptr].line,toks[ptr].col,ast_null};
@@ -411,7 +393,7 @@ ast parse::func()
     ast node(toks[ptr].line,toks[ptr].col,ast_func);
     match(tok_func);
     if(lookahead(tok_lcurve)){
-        node.add(args());
+        node.add(params());
     }else{
         node.add(null());
     }
@@ -419,9 +401,9 @@ ast parse::func()
     --in_func;
     return node;
 }
-ast parse::args()
+ast parse::params()
 {
-    ast node(toks[ptr].line,toks[ptr].col,ast_args);
+    ast node(toks[ptr].line,toks[ptr].col,ast_params);
     match(tok_lcurve);
     while(!lookahead(tok_rcurve)){
         ast tmp=id();
@@ -534,7 +516,6 @@ ast parse::calc()
         tmp.add(calc());
         node=std::move(tmp);
     }else if(tok_eq<=toks[ptr].type && toks[ptr].type<=tok_lnkeq){
-        check_memory_reachable(node);
         // tok_eq~tok_lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         ast tmp(toks[ptr].line,toks[ptr].col,toks[ptr].type-tok_eq+ast_equal);
         tmp.add(std::move(node));
@@ -764,7 +745,7 @@ ast parse::definition()
     }
     match(tok_eq);
     if(lookahead(tok_lcurve)){
-        node.add(check_tuple()?multi_scalar(false):calc());
+        node.add(check_tuple()?multi_scalar():calc());
     }else{
         node.add(calc());
     }
@@ -804,7 +785,7 @@ ast parse::multi_id()
     }
     return node;
 }
-ast parse::multi_scalar(bool check_call_memory)
+ast parse::multi_scalar()
 {
     // if check_call_memory is true,we will check if value called here can reach a memory space
     const u32 panic_set[]={
@@ -817,9 +798,6 @@ ast parse::multi_scalar(bool check_call_memory)
     match(tok_lcurve);
     while(!lookahead(tok_rcurve)){
         node.add(calc());
-        if(check_call_memory){
-            check_memory_reachable(node.child().back());
-        }
         if(lookahead(tok_comma)){
             match(tok_comma);
         }else if(lookahead(tok_eof)){
@@ -834,14 +812,14 @@ ast parse::multi_scalar(bool check_call_memory)
 ast parse::multi_assgin()
 {
     ast node(toks[ptr].line,toks[ptr].col,ast_multi_assign);
-    node.add(multi_scalar(true));
+    node.add(multi_scalar());
     match(tok_eq);
     if(lookahead(tok_eof)){
         die(thisline,thiscol,thislen,"expected value list");
         return node;
     }
     if(lookahead(tok_lcurve)){
-        node.add(check_tuple()?multi_scalar(false):calc());
+        node.add(check_tuple()?multi_scalar():calc());
     }else{
         node.add(calc());
     }
@@ -948,7 +926,6 @@ ast parse::iter_gen()
         while(is_call(toks[ptr].type)){
             node.add(call_scalar());
         }
-        check_memory_reachable(node);
     }
     return node;
 }

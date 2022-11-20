@@ -3,8 +3,7 @@
 #include <vector>
 #include <cstring>
 
-enum ast_node:u32
-{
+enum ast_node:u32{
     ast_null=0,      // null node
     ast_root,        // mark the root node of ast
     ast_block,       // expression block 
@@ -22,7 +21,7 @@ enum ast_node:u32
     ast_callv,       // id[index]
     ast_callf,       // id()
     ast_subvec,      // id[index:index]
-    ast_args,        // mark a sub-tree of function parameters
+    ast_params,      // mark a sub-tree of function parameters
     ast_default,     // default parameter
     ast_dynamic,     // dynamic parameter
     ast_and,         // and keyword
@@ -65,23 +64,65 @@ enum ast_node:u32
     ast_ret          // return keyword, only used in function block
 };
 
-const char* ast_name[]=
-{
-    "null",    "root",   "block",   "file",
-    "nil",     "num",    "str",     "id",
-    "func",    "hash",   "vec",     "pair",
-    "call",    "callh",  "callv",   "callf",
-    "subvec",  "args",   "default", "dynamic",
-    "and",     "or",     "=",       "+=",
-    "-=",      "*=",     "/=",      "~=",
-    "==",      "!=",     "<",       "<=",
-    ">",       ">=",     "+",       "-",
-    "*",       "/",      "~",       "neg",
-    "!",       "trino",  "for",     "forindex",
-    "foreach", "while",  "iter",    "cond",
-    "if",      "elsif",  "else",    "ltuple",
-    "tuple",   "def",    "massign", "continue",
-    "break",   "return"
+const char* ast_name[]={
+    "NullNode",
+    "AbstractSyntaxTreeRoot",
+    "CodeBlock",
+    "FileIndex",
+    "LiteralNil",
+    "LiteralNumber",
+    "LiteralString",
+    "Identifier",
+    "Function",
+    "HashMap",
+    "Vector",
+    "HashMapPair",
+    "IdentifierCallExpression",
+    "HashMapCallExpression",
+    "VectorCallExpression",
+    "FunctionCallExpression",
+    "SubVector",
+    "ParameterList",
+    "DefaultParameter",
+    "DynamicParameter",
+    "AndExpression",
+    "OrExpression",
+    "EqualExpression",
+    "AddEqualExpression",
+    "SubEqualExpression",
+    "MultEqualExpression",
+    "DivEqualExpression",
+    "LinkEqualExpression",
+    "CompareEqualExpression",
+    "NotEqualExpression",
+    "LessExpression",
+    "LessOrEqualExpression",
+    "GreatExpression",
+    "GreatOrEqualExpression",
+    "AddExpression",
+    "SubExpression",
+    "MultExpression",
+    "DivExpression",     
+    "LinkExpression",
+    "NegativeExpression",
+    "NotExpression",
+    "TrinocularExpression",
+    "ForLoop",
+    "ForindexLoop",
+    "ForeachLoop",
+    "WhileLoop",
+    "Iterator",
+    "ConditionExpression",
+    "IfExpression",
+    "ElsifExpression",
+    "ElseExpression",
+    "LeftTuple",
+    "Tuple",
+    "Definition",
+    "MultipleAssignment",
+    "ContinueExpression",
+    "BreakExpression",
+    "ReturnExpression"
 };
 
 class ast
@@ -98,8 +139,8 @@ public:
         nd_line(l),nd_col(c),nd_type(t),nd_num(0){}
     ast(const ast&);
     ast(ast&&);
-    void print_tree();
-    void print(u32,bool,std::vector<string>&);
+    void dump() const;
+    void print(u32,bool,std::vector<string>&) const;
     void clear();
     
     ast& operator=(const ast&);
@@ -174,13 +215,13 @@ void ast::clear()
     nd_child.clear();
 }
 
-void ast::print_tree()
+void ast::dump() const
 {
     std::vector<string> tmp;
     print(0,false,tmp);
 }
 
-void ast::print(u32 depth,bool last,std::vector<string>& indent)
+void ast::print(u32 depth,bool last,std::vector<string>& indent) const
 {
     for(auto& i:indent)
         std::cout<<i;
@@ -191,7 +232,7 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent)
         std::cout<<":"<<rawstr(nd_str);
     else if(nd_type==ast_num || nd_type==ast_file)
         std::cout<<":"<<nd_num;
-    std::cout<<"\n";
+    std::cout<<" -> "<<nd_line<<":"<<nd_col<<"\n";
     if(last && depth)
         indent.back()="  ";
     else if(!last && depth)

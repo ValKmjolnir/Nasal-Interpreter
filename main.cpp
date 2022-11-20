@@ -99,7 +99,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     if(cmd&VM_OPT)
         optimize(parse.tree());
     if(cmd&VM_AST)
-        parse.print();
+        parse.tree().dump();
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,ld).chkerr();

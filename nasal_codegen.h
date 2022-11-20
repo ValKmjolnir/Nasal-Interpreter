@@ -220,6 +220,8 @@ private:
     // func end stack, reserved for code print
     std::stack<u32> fbstk;
     std::stack<u32> festk;
+
+    bool check_memory_reachable(const ast&);
     
     void die(const string&,const u32,const u32,const u32);
     void regist_num(const f64);
@@ -271,6 +273,25 @@ public:
     const std::vector<f64>&    nums()  const {return num_res;}
     const std::vector<opcode>& codes() const {return code;}
 };
+
+bool codegen::check_memory_reachable(const ast& node)
+{
+    if(node.type()==ast_call){
+        const ast& tmp=node.child().back();
+        if(tmp.type()==ast_callf){
+            die("bad left-value",tmp.line(),tmp.col(),1);
+            return false;
+        }
+        if(tmp.type()==ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0].type()==ast_subvec)){
+            die("bad left-value",tmp.line(),tmp.col(),1);
+            return false;
+        }
+    }else if(node.type()!=ast_id){
+        die("bad left-value",node.line(),node.col(),1);
+        return false;
+    }
+    return true;
+}
 
 void codegen::die(const string& info,const u32 line,const u32 col,const u32 len=1)
 {
@@ -592,6 +613,9 @@ void codegen::call_func(const ast& node)
 */
 void codegen::mcall(const ast& node)
 {
+    if(!check_memory_reachable(node)){
+        return;
+    }
     if(node.type()==ast_id)
     {
         mcall_id(node);

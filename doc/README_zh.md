@@ -569,16 +569,19 @@ import("./dirname/dirname/filename.nas");
 在2021/12/3更新后，我们给`lib.nas`添加了下面的这一批函数:
 
 ```javascript
-var dylib=
-{
-    dlopen:  func(libname){return __dlopen;},
-    dlsym:   func(lib,sym){return __dlsym; },
+var dylib={
+    dlopen:  func(libname){
+        ...
+    },
     dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(funcptr,args...){return __dlcall;}
+    dlcall:  func(ptr,args...){return __dlcallv},
+    limitcall: func(arg_size=0){
+        ...
+    }
 };
 ```
 
-看名字就大概能猜出来，这些函数就是用来加载动态库的，这样nasal解释器可以根据用户需求灵活加载动态库来执行。让我们看看这些函数该如何使用。
+这些函数是用来加载动态库的，这样nasal解释器可以根据用户需求灵活加载动态库来执行。让我们看看这些函数该如何使用。
 
 首先，用C++写个项目，并且编译成动态库。我们就拿`fib.cpp`作为例子来说明(样例代码可以在`./module`中找到):
 
