@@ -7,17 +7,15 @@
 
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
-struct for_reset
-{
+struct for_reset {
     CONSOLE_SCREEN_BUFFER_INFO scr;
-    for_reset(){
+    for_reset() {
         GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),&scr);
     }
-}reset_ter_color;
+} reset_ter_color;
 #endif
 
-std::ostream& back_white(std::ostream& s)
-{
+std::ostream& back_white(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0xf0);
 #else
@@ -25,8 +23,8 @@ std::ostream& back_white(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& red(std::ostream& s)
-{
+
+std::ostream& red(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0c);
 #else
@@ -34,8 +32,8 @@ std::ostream& red(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& cyan(std::ostream& s)
-{
+
+std::ostream& cyan(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x03);
 #else
@@ -43,8 +41,8 @@ std::ostream& cyan(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& orange(std::ostream& s)
-{
+
+std::ostream& orange(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0e);
 #else
@@ -52,8 +50,8 @@ std::ostream& orange(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& white(std::ostream& s)
-{
+
+std::ostream& white(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),0x0f);
 #else
@@ -61,8 +59,8 @@ std::ostream& white(std::ostream& s)
 #endif
     return s;
 }
-std::ostream& reset(std::ostream& s)
-{
+
+std::ostream& reset(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),reset_ter_color.scr.wAttributes);
 #else
@@ -71,29 +69,27 @@ std::ostream& reset(std::ostream& s)
     return s;
 }
 
-class flstream
-{
+class flstream {
 protected:
     string file;
     std::vector<string> res;
 public:
-    flstream():file("<error-file-path>"){}
-    void load(const string& f)
-    {
-        if(file==f){ // don't need to load a loaded file
+    flstream():file("") {}
+    void load(const string& f) {
+        if (file==f) { // don't need to load a loaded file
             return;
-        }else{
+        } else {
             file=f;
         }
 
         res.clear();
         std::ifstream in(f,std::ios::binary);
-        if(in.fail()){
+        if (in.fail()) {
             std::cerr<<red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
             std::exit(1);
         }
         
-        while(!in.eof()){
+        while(!in.eof()) {
             string line;
             std::getline(in,line);
             res.push_back(line);
@@ -104,34 +100,35 @@ public:
     usize size() const {return res.size();}
 };
 
-class error:public flstream
-{
+class error:public flstream {
 private:
     u32 cnt;
-    string identation(usize len)
-    {
+    string identation(usize len) {
         string tmp="";
         tmp.resize(len,' ');
         return tmp;
     }
 public:
-    error():cnt(0){}
-    void fatal(const string& stage,const string& info)
-    {
-        std::cerr
-        <<red<<stage<<": "<<white<<info<<reset<<"\n"
-        <<cyan<<" --> "<<red<<file<<"\n\n";
+    error():cnt(0) {}
+    void fatal(const string& stage,const string& info) {
+        std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
+        if (file.length()) {
+            std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+        } else {
+            std::cerr<<"\n";
+        }
         std::exit(1);
     }
-    void err(const string& stage,const string& info)
-    {
+    void err(const string& stage,const string& info) {
         ++cnt;
-        std::cerr
-        <<red<<stage<<": "<<white<<info<<reset<<"\n"
-        <<cyan<<"  --> "<<red<<file<<reset<<"\n\n";
+        std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
+        if (file.length()) {
+            std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+        } else {
+            std::cerr<<"\n";
+        }
     }
-    void err(const string& stage,u32 line,u32 col,u32 len,const string& info)
-    {
+    void err(const string& stage,u32 line,u32 col,u32 len,const string& info) {
         ++cnt;
         col=col?col:1;
         len=len?len:1;
@@ -152,5 +149,9 @@ public:
             std::cerr<<red<<"^";
         std::cerr<<red<<" "<<info<<reset<<"\n\n";
     }
-    void chkerr() const {if(cnt)std::exit(1);}
+    void chkerr() const {
+        if (cnt) {
+            std::exit(1);
+        }
+    }
 };

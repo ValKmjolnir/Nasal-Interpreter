@@ -21,10 +21,8 @@ const u32 VM_TIME  =0x04;
 const u32 VM_EXEC  =0x08;
 const u32 VM_DETAIL=0x10;
 const u32 VM_DEBUG =0x20;
-const u32 VM_OPT   =0x40;
 
-std::ostream& help(std::ostream& out)
-{
+std::ostream& help(std::ostream& out) {
     out
     <<"     ,--#-,\n"
     <<"<3  / \\____\\  <3\n"
@@ -44,8 +42,6 @@ std::ostream& help(std::ostream& out)
     <<"   -d, --detail   | get detail crash info.\n"
     <<"                  | get detail path-not-found info.\n"
     <<"                  | get detail gc info.\n"
-    <<"   -o, --optimize | use optimizer (beta).\n"
-    <<"                  | use <-o -e> to run optimized code.\n"
     <<"   -dbg, --debug  | debug mode (ignore -t -d).\n"
     <<"file:\n"
     <<"   <filename>     | execute file.\n"
@@ -54,8 +50,7 @@ std::ostream& help(std::ostream& out)
     return out;
 }
 
-std::ostream& logo(std::ostream& out)
-{
+std::ostream& logo(std::ostream& out) {
     out
     <<"       __                _\n"
     <<"    /\\ \\ \\__ _ ___  __ _| |\n"
@@ -72,16 +67,14 @@ std::ostream& logo(std::ostream& out)
 }
 
 [[noreturn]]
-void err()
-{
+void err() {
     std::cerr
     <<"invalid argument(s).\n"
     <<"use <nasal -h> to get help.\n";
     std::exit(1);
 }
 
-void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
-{
+void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     error   err;
     lexer   lex(err);
     parse   parse(err);
@@ -96,46 +89,44 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd)
     // linker gets parser's ast and load import files to this ast
     ld.link(parse,file,cmd&VM_DETAIL).chkerr();
     // optimizer does simple optimization on ast
-    if(cmd&VM_OPT)
-        optimize(parse.tree());
-    if(cmd&VM_AST)
+    optimize(parse.tree());
+    if (cmd&VM_AST) {
         parse.tree().dump();
+    }
     
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,ld).chkerr();
-    if(cmd&VM_CODE)
+    if (cmd&VM_CODE) {
         gen.print();
+    }
     
     // run
-    if(cmd&VM_DEBUG)
+    if (cmd&VM_DEBUG) {
         debugger(err).run(gen,ld,argv);
-    else if(cmd&VM_TIME)
-    {
+    } else if (cmd&VM_TIME) {
         auto start=ch_clk::now();
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
         auto end=ch_clk::now();
         std::clog<<"process exited after "<<(end-start).count()*1.0/ch_clk::duration::period::den<<"s.\n";
-    }
-    else if(cmd&VM_EXEC)
+    } else if (cmd&VM_EXEC) {
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
+    }
 }
 
-i32 main(i32 argc,const char* argv[])
-{
-    if(argc<=1)
-    {
+i32 main(i32 argc,const char* argv[]) {
+    if (argc<=1) {
         std::clog<<logo;
         return 0;
     }
-    if(argc==2)
-    {
+    if (argc==2) {
         string s(argv[1]);
-        if(s=="-h" || s=="--help")
+        if (s=="-h" || s=="--help") {
             std::clog<<help;
-        else if(s[0]!='-')
+        } else if (s[0]!='-') {
             execute(s,{},VM_EXEC);
-        else
+        } else {
             err();
+        }
         return 0;
     }
     std::unordered_map<string,u32> cmdlst={
@@ -144,23 +135,23 @@ i32 main(i32 argc,const char* argv[])
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
         {"--time",VM_TIME|VM_EXEC},{"-t",VM_TIME|VM_EXEC},
         {"--detail",VM_DETAIL|VM_EXEC},{"-d",VM_DETAIL|VM_EXEC},
-        {"--optimize",VM_OPT},{"-o",VM_OPT},
         {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
     };
     u32 cmd=0;
     string filename="";
     std::vector<string> vm_argv;
-    for(i32 i=1;i<argc;++i)
-    {
-        if(cmdlst.count(argv[i]))
+    for(i32 i=1;i<argc;++i) {
+        if (cmdlst.count(argv[i])) {
             cmd|=cmdlst[argv[i]];
-        else if(!filename.length())
+        } else if (!filename.length()) {
             filename=argv[i];
-        else
+        } else {
             vm_argv.push_back(argv[i]);
+        }
     }
-    if(!filename.length())
+    if (!filename.length()) {
         err();
+    }
     execute(filename,vm_argv,cmd?cmd:VM_EXEC);
     return 0;
 }

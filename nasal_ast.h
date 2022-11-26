@@ -3,7 +3,7 @@
 #include <vector>
 #include <cstring>
 
-enum ast_node:u32{
+enum ast_node:u32 {
     ast_null=0,      // null node
     ast_root,        // mark the root node of ast
     ast_block,       // expression block 
@@ -125,8 +125,7 @@ const char* ast_name[]={
     "ReturnExpression"
 };
 
-class ast
-{
+class ast {
 private:
     u32 nd_line;
     u32 nd_col;
@@ -135,8 +134,8 @@ private:
     string nd_str;
     std::vector<ast> nd_child;
 public:
-    ast(const u32 l,const u32 c,const u32 t):
-        nd_line(l),nd_col(c),nd_type(t),nd_num(0){}
+    ast(const u32 l,const u32 c,const u32 t)
+        : nd_line(l),nd_col(c),nd_type(t),nd_num(0) {}
     ast(const ast&);
     ast(ast&&);
     void dump() const;
@@ -145,16 +144,16 @@ public:
     
     ast& operator=(const ast&);
     ast& operator=(ast&&);
-    ast& operator[](usize n){return nd_child[n];}
+    ast& operator[](usize n) {return nd_child[n];}
     const ast& operator[](usize n) const {return nd_child[n];}
     usize size() const {return nd_child.size();}
     
-    void add(ast&& node){nd_child.push_back(std::move(node));}
-    void add(const ast& node){nd_child.push_back(node);}
-    void set_line(const u32 l){nd_line=l;}
-    void set_type(const u32 t){nd_type=t;}
-    void set_str(const string& s){nd_str=s;}
-    void set_num(const f64 n){nd_num=n;}
+    void add(ast&& node) {nd_child.push_back(std::move(node));}
+    void add(const ast& node) {nd_child.push_back(node);}
+    void set_line(const u32 l) {nd_line=l;}
+    void set_type(const u32 t) {nd_type=t;}
+    void set_str(const string& s) {nd_str=s;}
+    void set_num(const f64 n) {nd_num=n;}
 
     inline u32 line() const {return nd_line;}
     inline u32 col()  const {return nd_col;}
@@ -162,20 +161,18 @@ public:
     inline f64 num()  const {return nd_num;}
     inline const string& str() const {return nd_str;}
     inline const std::vector<ast>& child() const {return nd_child;}
-    inline std::vector<ast>& child(){return nd_child;}
+    inline std::vector<ast>& child() {return nd_child;}
 };
 
 ast::ast(const ast& tmp):
-    nd_str(tmp.nd_str),nd_child(tmp.nd_child)
-{
+    nd_str(tmp.nd_str),nd_child(tmp.nd_child) {
     nd_line=tmp.nd_line;
     nd_col=tmp.nd_col;
     nd_type=tmp.nd_type;
     nd_num =tmp.nd_num;
 }
 
-ast::ast(ast&& tmp)
-{
+ast::ast(ast&& tmp) {
     nd_line=tmp.nd_line;
     nd_col=tmp.nd_col;
     nd_type=tmp.nd_type;
@@ -184,8 +181,7 @@ ast::ast(ast&& tmp)
     nd_child.swap(tmp.nd_child);
 }
 
-ast& ast::operator=(const ast& tmp)
-{
+ast& ast::operator=(const ast& tmp) {
     nd_line=tmp.nd_line;
     nd_col=tmp.nd_col;
     nd_type=tmp.nd_type;
@@ -195,8 +191,7 @@ ast& ast::operator=(const ast& tmp)
     return *this;
 }
 
-ast& ast::operator=(ast&& tmp)
-{
+ast& ast::operator=(ast&& tmp) {
     nd_line=tmp.nd_line;
     nd_col=tmp.nd_col;
     nd_type=tmp.nd_type;
@@ -206,8 +201,7 @@ ast& ast::operator=(ast&& tmp)
     return *this;
 }
 
-void ast::clear()
-{
+void ast::clear() {
     nd_line=nd_col=0;
     nd_num=0;
     nd_str.clear();
@@ -215,34 +209,36 @@ void ast::clear()
     nd_child.clear();
 }
 
-void ast::dump() const
-{
+void ast::dump() const{
     std::vector<string> tmp;
     print(0,false,tmp);
 }
 
-void ast::print(u32 depth,bool last,std::vector<string>& indent) const
-{
-    for(auto& i:indent)
+void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
+    for(auto& i:indent) {
         std::cout<<i;
+    }
     std::cout<<ast_name[nd_type];
-    if(nd_type==ast_str || nd_type==ast_id ||
-       nd_type==ast_default || nd_type==ast_dynamic ||
-       nd_type==ast_callh)
+    if (nd_type==ast_str ||
+        nd_type==ast_id ||
+        nd_type==ast_default ||
+        nd_type==ast_dynamic ||
+        nd_type==ast_callh) {
         std::cout<<":"<<rawstr(nd_str);
-    else if(nd_type==ast_num || nd_type==ast_file)
+    } else if (nd_type==ast_num || nd_type==ast_file) {
         std::cout<<":"<<nd_num;
+    }
     std::cout<<" -> "<<nd_line<<":"<<nd_col<<"\n";
-    if(last && depth)
+    if (last && depth) {
         indent.back()="  ";
-    else if(!last && depth)
+    } else if (!last && depth) {
 #ifdef _WIN32
         indent.back()="| ";
 #else
         indent.back()="│ ";
 #endif
-    for(u32 i=0;i<nd_child.size();++i)
-    {
+    }
+    for(u32 i=0;i<nd_child.size();++i) {
 #ifdef _WIN32
         indent.push_back(i==nd_child.size()-1?"+-":"|-");
 #else

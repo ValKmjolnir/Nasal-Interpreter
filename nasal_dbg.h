@@ -4,8 +4,7 @@
 #include "nasal_vm.h"
 #include <algorithm>
 
-class debugger:public vm
-{
+class debugger:public vm {
 private:
     bool  next;
     usize fsize;
@@ -24,7 +23,7 @@ public:
     debugger(error& err):
         next(false),fsize(0),
         bk_fidx(0),bk_line(0),
-        src(err){}
+        src(err) {}
     void run(
         const codegen&,
         const linker&,
@@ -32,39 +31,38 @@ public:
     );
 };
 
-std::vector<string> debugger::parse(const string& cmd)
-{
+std::vector<string> debugger::parse(const string& cmd) {
     std::vector<string> res;
     usize last=0,pos=cmd.find(" ",0);
-    while(pos!=string::npos)
-    {
-        if(pos>last)
+    while(pos!=string::npos) {
+        if (pos>last) {
             res.push_back(cmd.substr(last,pos-last));
+        }
         last=pos+1;
         pos=cmd.find(" ",last);
     }
-    if(last<cmd.length())
+    if (last<cmd.length()) {
         res.push_back(cmd.substr(last));
+    }
     return res;
 }
 
-u16 debugger::fileindex(const string& filename)
-{
-    for(u16 i=0;i<fsize;++i)
-        if(filename==files[i])
+u16 debugger::fileindex(const string& filename) {
+    for(u16 i=0;i<fsize;++i) {
+        if (filename==files[i]) {
             return i;
+        }
+    }
     return 65535;
 }
 
-void debugger::err()
-{
+void debugger::err() {
     std::cerr
     <<"incorrect command\n"
     <<"input \'h\' to get help\n";
 }
 
-void debugger::help()
-{
+void debugger::help() {
     std::cout
     <<"<option>\n"
     <<"\th,   help      | get help\n"
@@ -82,123 +80,118 @@ void debugger::help()
     <<"\tbk,  break     | set break point\n";
 }
 
-void debugger::callsort(const u64* arr)
-{
+void debugger::callsort(const u64* arr) {
     typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
     u64 total=0;
-    for(u32 i=0;i<op_ret+1;++i)
-    {
+    for(u32 i=0;i<op_ret+1;++i) {
         total+=arr[i];
         opcall.push_back({i,arr[i]});
     }
     std::sort(opcall.begin(),opcall.end(),
-        [](const op& a,const op& b){return a.second>b.second;}
+        [](const op& a,const op& b) {return a.second>b.second;}
     );
     std::clog<<"\noperands call info (<1% ignored)\n";
-    for(auto& i:opcall)
-    {
+    for(auto& i:opcall) {
         u64 rate=i.second*100/total;
-        if(!rate)
+        if (!rate) {
             break;
+        }
         std::clog<<" "<<opname[i.first]<<" : "<<i.second<<" ("<<rate<<"%)\n";
     }
     std::clog<<" total  : "<<total<<'\n';
 }
 
-void debugger::stepinfo()
-{
+void debugger::stepinfo() {
     u32 line=bytecode[pc].line==0?0:bytecode[pc].line-1;
     u32 begin=(line>>3)==0?0:((line>>3)<<3);
     u32 end=(1+(line>>3))<<3;
     src.load(files[bytecode[pc].fidx]);
     std::cout<<"\nsource code:\n";
-    for(u32 i=begin;i<end && i<src.size();++i)
+    for(u32 i=begin;i<end && i<src.size();++i) {
         std::cout<<(i==line?back_white:reset)<<(i==line?"--> ":"    ")<<src[i]<<reset<<"\n";
+    }
     std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
-    for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i)
+    for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i) {
         std::cout
         <<(i==pc?back_white:reset)<<(i==pc?"--> ":"    ")
         <<codestream(bytecode[i],i,cnum,cstr,files)
         <<reset<<"\n";
+    }
     stackinfo(10);
 }
 
-void debugger::interact()
-{
+void debugger::interact() {
     // special operand
-    if(bytecode[pc].op==op_intg)
-    {
+    if (bytecode[pc].op==op_intg) {
         std::cout
         <<cyan<<"[debug] "<<reset
         <<"nasal debug mode\n"
         <<"input \'h\' to get help\n";
-    }
-    else if(bytecode[pc].op==op_exit)
+    } else if (bytecode[pc].op==op_exit) {
         return;
+    }
     
-    if(
+    if (
         (bytecode[pc].fidx!=bk_fidx || bytecode[pc].line!=bk_line) && // break point
         !next // next step
-    )return;
+    ) {
+        return;
+    }
 
     next=false;
     string cmd;
     stepinfo();
-    while(1)
-    {
+    while(1) {
         std::cout<<">> ";
         std::getline(std::cin,cmd);
         auto res=parse(cmd);
-        if(res.size()==1)
-        {
-            if(res[0]=="h" || res[0]=="help")
+        if (res.size()==1) {
+            if (res[0]=="h" || res[0]=="help") {
                 help();
-            else if(res[0]=="bt" || res[0]=="backtrace")
+            } else if (res[0]=="bt" || res[0]=="backtrace") {
                 traceback();
-            else if(res[0]=="c" || res[0]=="continue")
+            } else if (res[0]=="c" || res[0]=="continue") {
                 return;
-            else if(res[0]=="f" || res[0]=="file")
-                for(usize i=0;i<fsize;++i)
+            } else if (res[0]=="f" || res[0]=="file") {
+                for(usize i=0;i<fsize;++i) {
                     std::cout<<"["<<i<<"] "<<files[i]<<"\n";
-            else if(res[0]=="g" || res[0]=="global")
+                }
+            } else if (res[0]=="g" || res[0]=="global") {
                 gstate();
-            else if(res[0]=="l" || res[0]=="local")
+            } else if (res[0]=="l" || res[0]=="local") {
                 lstate();
-            else if(res[0]=="u" || res[0]=="upval")
+            } else if (res[0]=="u" || res[0]=="upval") {
                 ustate();
-            else if(res[0]=="r" || res[0]=="register")
+            } else if (res[0]=="r" || res[0]=="register") {
                 reginfo();
-            else if(res[0]=="a" || res[0]=="all")
+            } else if (res[0]=="a" || res[0]=="all") {
                 detail();
-            else if(res[0]=="n" || res[0]=="next")
-            {
+            } else if (res[0]=="n" || res[0]=="next") {
                 next=true;
                 return;
-            }
-            else if(res[0]=="q" || res[0]=="exit")
+            } else if (res[0]=="q" || res[0]=="exit")
                 std::exit(0);
-            else
+            else {
                 err();
-        }
-        else if(res.size()==3 && (res[0]=="bk" || res[0]=="break"))
-        {
+            }
+        } else if (res.size()==3 && (res[0]=="bk" || res[0]=="break")) {
             bk_fidx=fileindex(res[1]);
-            if(bk_fidx==65535)
-            {
+            if (bk_fidx==65535) {
                 std::cout<<"cannot find file named `"<<res[1]<<"`\n";
                 bk_fidx=0;
             }
             i32 tmp=atoi(res[2].c_str());
-            if(tmp<=0)
+            if (tmp<=0) {
                 std::cout<<"incorrect line number `"<<res[2]<<"`\n";
-            else
+            } else {
                 bk_line=tmp;
-        }
-        else
+            }
+        } else {
             err();
+        }
     }
 }
 
@@ -212,8 +205,7 @@ void debugger::run(
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
     u64 count[op_ret+1]={0};
 #ifndef _MSC_VER
-    const void* oprs[]=
-    {
+    const void* oprs[]={
         &&vmexit, &&intg,   &&intl,   &&loadg,
         &&loadl,  &&loadu,  &&pnum,   &&pnil,
         &&pstr,   &&newv,   &&newh,   &&newf,
@@ -235,8 +227,7 @@ void debugger::run(
         &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
-    for(auto& i:gen.codes())
-    {
+    for(auto& i:gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -244,8 +235,7 @@ void debugger::run(
     goto *code[pc];
 #else
     typedef void (debugger::*nafunc)();
-    const nafunc oprs[]=
-    {
+    const nafunc oprs[]={
         nullptr,             &debugger::o_intg,
         &debugger::o_intl,   &debugger::o_loadg,
         &debugger::o_loadl,  &debugger::o_loadu,
@@ -286,17 +276,17 @@ void debugger::run(
         &debugger::o_ret
     };
     std::vector<u32> code;
-    for(auto& i:gen.codes())
-    {
+    for(auto& i:gen.codes()) {
         code.push_back(i.op);
         imm.push_back(i.num);
     }
-    while(oprs[code[pc]]){
+    while(oprs[code[pc]]) {
         interact();
         ++count[code[pc]];
         (this->*oprs[code[pc]])();
-        if(top>=canary)
+        if (top>=canary) {
             die("stack overflow");
+        }
         ++pc;
     }
 #endif
@@ -312,8 +302,9 @@ vmexit:
         interact();\
         op();\
         ++count[num];\
-        if(top<canary)\
+        if (top<canary) {\
             goto *code[++pc];\
+        }\
         die("stack overflow");\
         goto *code[++pc];\
     }
