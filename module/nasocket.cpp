@@ -9,10 +9,10 @@ class WSAmanager{
 private:
     WSAData data;
 public:
-    WSAmanager(){
+    WSAmanager() {
         WSAStartup(0x1010,&data);
     }
-    ~WSAmanager(){
+    ~WSAmanager() {
         WSACleanup();
     }
 };
@@ -25,15 +25,15 @@ static WSAmanager win;
 #include <netinet/in.h>
 #endif
 
-var nas_socket(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
+var nas_socket(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
         return nas_err("socket","\"af\", \"type\", \"protocol\" should be number");
     int sd=socket(args[0].num(),args[1].num(),args[2].num());
     return {vm_num,(double)sd};
 }
 
-var nas_closesocket(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_closesocket(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("closesocket","\"\" should be number");
 #ifdef _WIN32
     return {vm_num,(double)closesocket(args[0].num())};
@@ -42,20 +42,20 @@ var nas_closesocket(var* args,usize size,gc* ngc){
 #endif
 }
 
-var nas_shutdown(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_shutdown(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("shutdown","\"sd\" must be a number");
-    if(args[1].type!=vm_num)
+    if (args[1].type!=vm_num)
         return nas_err("shutdown","\"how\" must be a number");
     return {vm_num,(double)shutdown(args[0].num(),args[1].num())};
 }
 
-var nas_bind(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_bind(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("bind","\"sd\" muse be a number");
-    if(args[1].type!=vm_str)
+    if (args[1].type!=vm_str)
         return nas_err("bind","\"ip\" should be a string including an ip with correct format");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("bind","\"port\" must be a number");
     sockaddr_in server;
     memset(&server,0,sizeof(sockaddr_in));
@@ -65,20 +65,20 @@ var nas_bind(var* args,usize size,gc* ngc){
     return {vm_num,(double)bind(args[0].num(),(sockaddr*)&server,sizeof(server))};
 }
 
-var nas_listen(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_listen(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("listen","\"sd\" must be a number");
-    if(args[1].type!=vm_num)
+    if (args[1].type!=vm_num)
         return nas_err("listen","\"backlog\" must be a number");
     return{vm_num,(double)listen(args[0].num(),args[1].num())};
 }
 
-var nas_connect(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_connect(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("connect","\"sd\" must be a number");
-    if(args[1].type!=vm_str)
+    if (args[1].type!=vm_str)
         return nas_err("connect","\"hostname\" must be a string");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("connect","\"port\" must be a number");
     sockaddr_in addr;
     memset(&addr,0,sizeof(sockaddr_in));
@@ -89,8 +89,8 @@ var nas_connect(var* args,usize size,gc* ngc){
     return {vm_num,(double)connect(args[0].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-var nas_accept(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_accept(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("accept","\"sd\" must be a number");
     sockaddr_in client;
     int socklen=sizeof(sockaddr_in);
@@ -107,26 +107,26 @@ var nas_accept(var* args,usize size,gc* ngc){
     return res;
 }
 
-var nas_send(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_send(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("send","\"sd\" must be a number");
-    if(args[1].type!=vm_str)
+    if (args[1].type!=vm_str)
         return nas_err("send","\"buff\" must be a string");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("send","\"flags\" muse be a number");
     return {vm_num,(double)send(args[0].num(),args[1].str().c_str(),args[1].str().length(),args[2].num())};
 }
 
-var nas_sendto(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_sendto(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("sendto","\"sd\" must be a number");
-    if(args[1].type!=vm_str)
+    if (args[1].type!=vm_str)
         return nas_err("sendto","\"hostname\" must be a string");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("sendto","\"port\" must be a number");
-    if(args[3].type!=vm_str)
+    if (args[3].type!=vm_str)
         return nas_err("sendto","\"buff\" must be a string");
-    if(args[4].type!=vm_num)
+    if (args[4].type!=vm_num)
         return nas_err("sendto","\"flags\" must be a number");
     sockaddr_in addr;
     memset(&addr,0,sizeof(sockaddr_in));
@@ -137,14 +137,14 @@ var nas_sendto(var* args,usize size,gc* ngc){
     return {vm_num,(double)sendto(args[0].num(),args[3].str().c_str(),args[3].str().length(),args[4].num(),(sockaddr*)&addr,sizeof(sockaddr_in))};
 }
 
-var nas_recv(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_recv(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("recv","\"sd\" must be a number");
-    if(args[1].type!=vm_num)
+    if (args[1].type!=vm_num)
         return nas_err("recv","\"len\" must be a number");
-    if(args[1].num()<=0 || args[1].num()>16*1024*1024)
+    if (args[1].num()<=0 || args[1].num()>16*1024*1024)
         return nas_err("recv","\"len\" out of range");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("recv","\"flags\" muse be a number");
     var res=ngc->temp=ngc->alloc(vm_hash);
     auto& hash=res.hash().elems;
@@ -156,14 +156,14 @@ var nas_recv(var* args,usize size,gc* ngc){
     return res;
 }
 
-var nas_recvfrom(var* args,usize size,gc* ngc){
-    if(args[0].type!=vm_num)
+var nas_recvfrom(var* args,usize size,gc* ngc) {
+    if (args[0].type!=vm_num)
         return nas_err("recvfrom","\"sd\" must be a number");
-    if(args[1].type!=vm_num)
+    if (args[1].type!=vm_num)
         return nas_err("recvfrom","\"len\" must be a number");
-    if(args[1].num()<=0 || args[1].num()>16*1024*1024)
+    if (args[1].num()<=0 || args[1].num()>16*1024*1024)
         return nas_err("recvfrom","\"len\" out of range");
-    if(args[2].type!=vm_num)
+    if (args[2].type!=vm_num)
         return nas_err("recvfrom","\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen=sizeof(sockaddr_in);
@@ -183,7 +183,7 @@ var nas_recvfrom(var* args,usize size,gc* ngc){
     return res;
 }
 
-var nas_errno(var* args,usize size,gc* ngc){
+var nas_errno(var* args,usize size,gc* ngc) {
     return ngc->newstr(strerror(errno));
 }
 
@@ -203,6 +203,6 @@ mod_func func_tbl[]={
     {nullptr,nullptr}
 };
 
-extern "C" mod_func* get(){
+extern "C" mod_func* get() {
     return func_tbl;
 }

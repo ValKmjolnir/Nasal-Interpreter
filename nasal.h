@@ -23,115 +23,131 @@ using std::string;
 
 const u32 STACK_DEPTH=1024;
 
-inline f64 hex2f(const char* str)
-{
+inline f64 hex2f(const char* str) {
     f64 ret=0;
-    for(;*str;++str)
-    {
-        if('0'<=*str && *str<='9')
+    for(;*str;++str) {
+        if ('0'<=*str && *str<='9') {
             ret=ret*16+(*str-'0');
-        else if('a'<=*str && *str<='f')
+        } else if ('a'<=*str && *str<='f') {
             ret=ret*16+(*str-'a'+10);
-        else if('A'<=*str && *str<='F')
+        } else if ('A'<=*str && *str<='F') {
             ret=ret*16+(*str-'A'+10);
-        else
+        } else {
             return nan("");
+        }
     }
     return ret;
 }
-inline f64 oct2f(const char* str)
-{
+
+inline f64 oct2f(const char* str) {
     f64 ret=0;
-    while('0'<=*str && *str<'8')
+    while('0'<=*str && *str<'8') {
         ret=ret*8+(*str++-'0');
-    if(*str) return nan("");
+    }
+    if (*str) {
+        return nan("");
+    }
     return ret;
 }
+
 // we have the same reason not using atof here just as andy's interpreter does.
 // it is not platform independent, and may have strange output.
 // so we write a new function here to convert str to number manually.
 // but this also makes 0.1+0.2==0.3, not another result that you may get in other languages.
-inline f64 dec2f(const char* str)
-{
+inline f64 dec2f(const char* str) {
     f64 ret=0,negative=1,num_pow=0;
-    while('0'<=*str && *str<='9')
+    while('0'<=*str && *str<='9') {
         ret=ret*10+(*str++-'0');
-    if(!*str) return ret;
-    if(*str=='.')
-    {
-        if(!*++str) return nan("");
+    }
+    if (!*str) {
+        return ret;
+    }
+    if (*str=='.') {
+        if (!*++str) {
+            return nan("");
+        }
         num_pow=0.1;
-        while('0'<=*str && *str<='9')
-        {
+        while('0'<=*str && *str<='9') {
             ret+=num_pow*(*str++-'0');
             num_pow*=0.1;
         }
-        if(!*str) return ret;
+        if (!*str) {
+            return ret;
+        }
     }
-    if(*str!='e' && *str!='E')
+    if (*str!='e' && *str!='E') {
         return nan("");
-    if(!*++str) return nan("");
-    if(*str=='-' || *str=='+')
+    }
+    if (!*++str) {
+        return nan("");
+    }
+    if (*str=='-' || *str=='+') {
         negative=(*str++=='-'? -1:1);
-    if(!*str) return nan("");
+    }
+    if (!*str) {
+        return nan("");
+    }
     num_pow=0;
-    while('0'<=*str && *str<='9')
+    while('0'<=*str && *str<='9') {
         num_pow=num_pow*10+(*str++-'0');
-    if(*str) return nan("");
+    }
+    if (*str) {
+        return nan("");
+    }
     return ret*std::pow(10,negative*num_pow);
 }
-f64 str2num(const char* str)
-{
+
+f64 str2num(const char* str) {
     bool negative=false;
     f64 res=0;
-    if(*str=='-' || *str=='+')
+    if (*str=='-' || *str=='+') {
         negative=(*str++=='-');
-    if(!*str)
+    }
+    if (!*str) {
         return nan("");
-    if(str[0]=='0' && str[1]=='x')
+    }
+    if (str[0]=='0' && str[1]=='x') {
         res=hex2f(str+2);
-    else if(str[0]=='0' && str[1]=='o')
+    } else if (str[0]=='0' && str[1]=='o') {
         res=oct2f(str+2);
-    else
+    } else {
         res=dec2f(str);
+    }
     return negative?-res:res;
 }
 
-i32 utf8_hdchk(const char head)
-{
+i32 utf8_hdchk(const char head) {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
     const u8 c=(u8)head;
-    if((c>>5)==0x06) // 110x xxxx (10xx xxxx)^1
+    if ((c>>5)==0x06) { // 110x xxxx (10xx xxxx)^1
         return 1;
-    if((c>>4)==0x0e) // 1110 xxxx (10xx xxxx)^2
+    }
+    if ((c>>4)==0x0e) { // 1110 xxxx (10xx xxxx)^2
         return 2;
-    if((c>>3)==0x1e) // 1111 0xxx (10xx xxxx)^3
+    }
+    if ((c>>3)==0x1e) { // 1111 0xxx (10xx xxxx)^3
         return 3;
+    }
     return 0;
 }
 
-string chrhex(const char c)
-{
+string chrhex(const char c) {
     const char hextbl[]="0123456789abcdef";
     return {hextbl[(c&0xf0)>>4],hextbl[c&0x0f]};
 }
 
-string rawstr(const string& str,const usize maxlen=0)
-{
+string rawstr(const string& str,const usize maxlen=0) {
     string ret("");
-    for(auto i:str)
-    {
+    for(auto i:str) {
 #ifdef _WIN32
         // windows ps or cmd doesn't output unicode normally
         // if 'chcp65001' is not enabled, we output the hex
-        if(i<=0)
-        {
+        if (i<=0) {
             ret+="\\x"+chrhex(i);
             continue;
         }
 #endif
-        switch(i)
-        {
+        switch(i) {
             case '\0':  ret+="\\0"; break;
             case '\a':  ret+="\\a"; break;
             case '\b':  ret+="\\b"; break;
@@ -147,8 +163,9 @@ string rawstr(const string& str,const usize maxlen=0)
             default:    ret+=i;     break;
         }
     }
-    if(maxlen && ret.length()>maxlen)
+    if (maxlen && ret.length()>maxlen) {
         ret=ret.substr(0,maxlen)+"...";
+    }
     return ret;
 }
 

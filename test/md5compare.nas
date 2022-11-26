@@ -24,7 +24,7 @@ var compare=func(){
             if(cmp(res,_md5(s))){
                 die("error: "~str(i));
             }
-            print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," byte: ",byte," time: ",timestamp.elapsedMSec(),"    \r");
+            print(" ",bar.bar((i-begin+1)/total)," (",i-begin+1,"/",total,")\t",res," byte: ",int(byte/1024),"k time: ",timestamp.elapsedMSec(),"    \r");
         }
         print("\n");
     };
@@ -87,7 +87,7 @@ var filechecksum=func(){
         if(cmp(res,_md5(f))){
             die("error: "~files[i]);
         }
-        print(" ",bar.bar((i+1)/total)," (",i+1,"/",total,")\t",res," byte: ",byte," time: ",timestamp.elapsedMSec(),"    \r");
+        print(" ",bar.bar((i+1)/total)," (",i+1,"/",total,")\t",res," byte: ",int(byte/1024),"k time: ",timestamp.elapsedMSec(),"    \r");
     }
     print("\n");
 }

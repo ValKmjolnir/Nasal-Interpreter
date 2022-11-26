@@ -32,46 +32,46 @@ clean:
 	-@ rm ./nasal.exe
 
 test:nasal
-	@ ./nasal -o -e test/ascii-art.nas
-	@ ./nasal -o -c test/auto_crash.nas
-	@ ./nasal -o -a -c test/bf.nas
-	@ ./nasal -o -a -c test/bfconvertor.nas
-	@ ./nasal -o -d test/bfs.nas
-	@ ./nasal -o -t test/bigloop.nas
-	@ ./nasal -o -e test/bp.nas
-	@ ./nasal -o -d test/calc.nas
-	@ ./nasal -o -e test/choice.nas
-	@ ./nasal -o -e test/class.nas
-	@ ./nasal -o -t -d test/console3D.nas
-	@ ./nasal -o -e test/coroutine.nas
-	@ ./nasal -o -e test/diff.nas
-	@ ./nasal -o -e test/donuts.nas
-	-@ ./nasal -o -d test/exception.nas
-	@ ./nasal -o -t -d test/fib.nas
-	@ ./nasal -o -e test/filesystem.nas
-	@ ./nasal -o -d test/hexdump.nas
-	@ ./nasal -o -c test/httptest.nas
-	@ ./nasal -o -e test/json.nas
-	@ ./nasal -o -e test/leetcode1319.nas
-	@ ./nasal -o -d test/lexer.nas
-	@ ./nasal -o -d test/life.nas
-	@ ./nasal -o -t test/loop.nas
-	@ ./nasal -o -t -d test/mandel.nas
-	@ ./nasal -o -t -d test/mandelbrot.nas
-	@ ./nasal -o -t -d test/md5.nas
-	@ ./nasal -o -t -d test/md5compare.nas
-	-@ ./nasal -o -d test/module_test.nas
-	@ ./nasal -o -e test/nasal_test.nas
-	@ ./nasal -o -c test/occupation.nas
-	@ ./nasal -o -t -d test/pi.nas
-	@ ./nasal -o -c test/ppmgen.nas
-	@ ./nasal -o -t -d test/prime.nas
-	@ ./nasal -o -e test/qrcode.nas
-	@ ./nasal -o -t -d test/quick_sort.nas
-	@ ./nasal -o -e test/scalar.nas hello world
-	-@ ./nasal -o -c -t test/snake.nas
-	@ ./nasal -o -c -e test/trait.nas
-	-@ ./nasal -o -c -t test/tetris.nas
-	@ ./nasal -o -c -t -d test/turingmachine.nas
-	@ ./nasal -o -c -t -d test/ycombinator.nas
-	@ ./nasal -o -d test/wavecollapse.nas
+	@ ./nasal -e test/ascii-art.nas
+	@ ./nasal -c test/auto_crash.nas
+	@ ./nasal -a -c test/bf.nas
+	@ ./nasal -a -c test/bfconvertor.nas
+	@ ./nasal -d test/bfs.nas
+	@ ./nasal -t test/bigloop.nas
+	@ ./nasal -e test/bp.nas
+	@ ./nasal -d test/calc.nas
+	@ ./nasal -e test/choice.nas
+	@ ./nasal -e test/class.nas
+	@ ./nasal -t -d test/console3D.nas
+	@ ./nasal -e test/coroutine.nas
+	@ ./nasal -e test/diff.nas
+	@ ./nasal -e test/donuts.nas
+	-@ ./nasal -d test/exception.nas
+	@ ./nasal -t -d test/fib.nas
+	@ ./nasal -e test/filesystem.nas
+	@ ./nasal -d test/hexdump.nas
+	@ ./nasal -c test/httptest.nas
+	@ ./nasal -e test/json.nas
+	@ ./nasal -e test/leetcode1319.nas
+	@ ./nasal -d test/lexer.nas
+	@ ./nasal -d test/life.nas
+	@ ./nasal -t test/loop.nas
+	@ ./nasal -t -d test/mandel.nas
+	@ ./nasal -t -d test/mandelbrot.nas
+	@ ./nasal -t -d test/md5.nas
+	@ ./nasal -t -d test/md5compare.nas
+	-@ ./nasal -d test/module_test.nas
+	@ ./nasal -e test/nasal_test.nas
+	@ ./nasal -c test/occupation.nas
+	@ ./nasal -t -d test/pi.nas
+	@ ./nasal -c test/ppmgen.nas
+	@ ./nasal -t -d test/prime.nas
+	@ ./nasal -e test/qrcode.nas
+	@ ./nasal -t -d test/quick_sort.nas
+	@ ./nasal -e test/scalar.nas hello world
+	-@ ./nasal -c -t test/snake.nas
+	@ ./nasal -c -e test/trait.nas
+	-@ ./nasal -c -t test/tetris.nas
+	@ ./nasal -c -t -d test/turingmachine.nas
+	@ ./nasal -c -t -d test/ycombinator.nas
+	@ ./nasal -d test/wavecollapse.nas

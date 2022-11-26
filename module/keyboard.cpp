@@ -8,7 +8,7 @@
 #include <termios.h>
 #endif
 
-class noecho_input{
+class noecho_input {
 private:
 #ifndef _WIN32
     struct termios init_termios;
@@ -16,7 +16,7 @@ private:
     int peek_char=-1;
 #endif
 public:
-    noecho_input(){
+    noecho_input() {
 #ifndef _WIN32
         tcflush(0,TCIOFLUSH);
         tcgetattr(0,&init_termios);
@@ -29,23 +29,24 @@ public:
         tcsetattr(0,TCSANOW,&new_termios);
 #endif
     }
-    ~noecho_input(){
+    ~noecho_input() {
 #ifndef _WIN32
         tcflush(0,TCIOFLUSH);
         tcsetattr(0,TCSANOW,&init_termios);
 #endif
     }
-    int noecho_kbhit(){
+    int noecho_kbhit() {
 #ifndef _WIN32
         unsigned char ch=0;
         int nread=0;
-        if(peek_char!=-1)
+        if (peek_char!=-1) {
             return 1;
+        }
         int flag=fcntl(0,F_GETFL);
         fcntl(0,F_SETFL,flag|O_NONBLOCK);
         nread=read(0,&ch,1);
         fcntl(0,F_SETFL,flag);
-        if(nread==1){
+        if (nread==1) {
             peek_char=ch;
             return 1;
         }
@@ -54,10 +55,10 @@ public:
         return kbhit();
 #endif
     }
-    int noecho_getch(){
+    int noecho_getch() {
 #ifndef _WIN32
         int ch=0;
-        if(peek_char!=-1){
+        if (peek_char!=-1) {
             ch=peek_char;
             peek_char=-1;
             return ch;
@@ -71,15 +72,16 @@ public:
 };
 
 noecho_input this_window;
-var nas_getch(var* args,usize size,gc* ngc){
+var nas_getch(var* args,usize size,gc* ngc) {
     return {vm_num,(double)this_window.noecho_getch()};
 }
-var nas_kbhit(var* args,usize size,gc* ngc){
+var nas_kbhit(var* args,usize size,gc* ngc) {
     return {vm_num,(double)this_window.noecho_kbhit()};
 }
-var nas_noblock(var* args,usize size,gc* ngc){
-    if(this_window.noecho_kbhit())
+var nas_noblock(var* args,usize size,gc* ngc) {
+    if (this_window.noecho_kbhit()) {
         return {vm_num,(double)this_window.noecho_getch()};
+    }
     return nil;
 }
 
@@ -90,6 +92,6 @@ mod_func func_tbl[]={
     {nullptr,nullptr}
 };
 
-extern "C" mod_func* get(){
+extern "C" mod_func* get() {
     return func_tbl;
 }

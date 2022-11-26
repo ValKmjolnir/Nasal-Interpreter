@@ -12,14 +12,14 @@
 #define F_OK 0
 #endif
 
-class linker
-{
+class linker{
 private:
     bool show_path;
     bool lib_loaded;
     error& err;
     std::vector<string> files;
     std::vector<string> envpath;
+
     bool imptchk(const ast&);
     bool exist(const string&);
     void link(ast&,ast&&);
@@ -34,7 +34,7 @@ public:
     const std::vector<string>& filelist() const {return files;}
 };
 
-linker::linker(error& e):show_path(false),lib_loaded(false),err(e){
+linker::linker(error& e):show_path(false),lib_loaded(false),err(e) {
 #ifdef _WIN32
     char sep=';';
 #else
@@ -42,66 +42,68 @@ linker::linker(error& e):show_path(false),lib_loaded(false),err(e){
 #endif
     string PATH=getenv("PATH");
     usize last=0,pos=PATH.find(sep,0);
-    while(pos!=string::npos)
-    {
+    while(pos!=string::npos) {
         string dirpath=PATH.substr(last,pos-last);
-        if(dirpath.length())
+        if (dirpath.length()) {
             envpath.push_back(dirpath);
+        }
         last=pos+1;
         pos=PATH.find(sep,last);
     }
-    if(last!=PATH.length())
+    if (last!=PATH.length()) {
         envpath.push_back(PATH.substr(last));
+    }
 }
 
-string linker::path(const ast& node)
-{
-    if(node[1].type()==ast_callf)
+string linker::path(const ast& node) {
+    if (node[1].type()==ast_callf) {
         return node[1][0].str();
+    }
     string fpath=".";
-    for(usize i=1;i<node.size();++i)
+    for(usize i=1;i<node.size();++i) {
 #ifndef _WIN32
         fpath+="/"+node[i].str();
 #else
         fpath+="\\"+node[i].str();
 #endif
+    }
     return fpath+".nas";
 }
 
-string linker::findf(const string& fname)
-{
+string linker::findf(const string& fname) {
     std::vector<string> fpath={fname};
-    for(auto&p:envpath)
-    {
+    for(auto&p:envpath) {
 #ifdef _WIN32
         fpath.push_back(p+"\\"+fname);
 #else
         fpath.push_back(p+"/"+fname);
 #endif
     }
-    for(auto& i:fpath)
-        if(access(i.c_str(),F_OK)!=-1)
+    for(auto& i:fpath) {
+        if (access(i.c_str(),F_OK)!=-1) {
             return i;
-    if(fname=="lib.nas")
+        }
+    }
+    if (fname=="lib.nas") {
 #ifdef _WIN32
         return findf("stl\\lib.nas");
 #else
         return findf("stl/lib.nas");
 #endif
-    if(!show_path)
-    {
+    }
+    if (!show_path) {
         err.err("link","cannot find file <"+fname+">");
         return "";
     }
     string paths="";
-    for(auto& i:fpath)
+    for(auto& i:fpath) {
         paths+="  "+i+"\n";
+    }
     err.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
     return "";
 }
 
-bool linker::imptchk(const ast& node)
-{
+bool linker::imptchk(const ast& node) {
 // only these two kinds of node can be recognized as 'import':
 /*
     call
@@ -109,11 +111,12 @@ bool linker::imptchk(const ast& node)
     |_callh:stl
     |_callh:file
 */
-    if(node.type()==ast_call && node[0].str()=="import" && node.size()>=2 && node[1].type()==ast_callh)
-    {
-        for(usize i=1;i<node.size();++i)
-            if(node[i].type()!=ast_callh)
+    if (node.type()==ast_call && node[0].str()=="import" && node.size()>=2 && node[1].type()==ast_callh) {
+        for(usize i=1;i<node.size();++i) {
+            if (node[i].type()!=ast_callh) {
                 return false;
+            }
+        }
         return true;
     }
 /*
@@ -132,25 +135,25 @@ bool linker::imptchk(const ast& node)
     );
 }
 
-bool linker::exist(const string& file)
-{
+bool linker::exist(const string& file) {
     // avoid importing the same file
-    for(auto& fname:files)
-        if(file==fname)
+    for(auto& fname:files) {
+        if (file==fname) {
             return true;
+        }
+    }
     files.push_back(file);
     return false;
 }
 
-void linker::link(ast& root,ast&& add_root)
-{
+void linker::link(ast& root,ast&& add_root) {
     // add children of add_root to the back of root
-    for(auto& i:add_root.child())
+    for(auto& i:add_root.child()) {
         root.add(std::move(i));
+    }
 }
 
-ast linker::fimpt(ast& node)
-{
+ast linker::fimpt(ast& node) {
     lexer lex(err);
     parse par(err);
     // get filename and set node to ast_null
@@ -159,8 +162,9 @@ ast linker::fimpt(ast& node)
 
     // avoid infinite loading loop
     filename=findf(filename);
-    if(!filename.length() || exist(filename))
+    if (!filename.length() || exist(filename)) {
         return {0,0,ast_root};
+    }
     
     // start importing...
     lex.scan(filename);
@@ -170,17 +174,18 @@ ast linker::fimpt(ast& node)
     return load(tmp,files.size()-1);
 }
 
-ast linker::libimpt()
-{
+ast linker::libimpt() {
     lexer lex(err);
     parse par(err);
     string filename=findf("lib.nas");
-    if(!filename.length())
+    if (!filename.length()) {
         return {0,0,ast_root};
+    }
 
     // avoid infinite loading loop
-    if(exist(filename))
+    if (exist(filename)) {
         return {0,0,ast_root};
+    }
     
     // start importing...
     lex.scan(filename);
@@ -190,20 +195,18 @@ ast linker::libimpt()
     return load(tmp,files.size()-1);
 }
 
-ast linker::load(ast& root,u16 fileindex)
-{
+ast linker::load(ast& root,u16 fileindex) {
     ast tree(0,0,ast_root);
-    if(!lib_loaded)
-    {
+    if (!lib_loaded) {
         link(tree,libimpt());
         lib_loaded=true;
     }
-    for(auto& i:root.child())
-    {
-        if(imptchk(i))
+    for(auto& i:root.child()) {
+        if (imptchk(i)) {
             link(tree,fimpt(i));
-        else
+        } else {
             break;
+        }
     }
     // add root to the back of tree
     ast file_head(0,0,ast_file);
@@ -213,8 +216,7 @@ ast linker::load(ast& root,u16 fileindex)
     return tree;
 }
 
-const error& linker::link(parse& parse,const string& self,bool spath=false)
-{
+const error& linker::link(parse& parse,const string& self,bool spath=false) {
     show_path=spath;
     // initializing
     files={self};
