@@ -1,4 +1,6 @@
-# __Nasal Scripting Language__
+# __Nasal Script Language__
+
+<img src="./doc/pic/header.png" style="width:800px"></img>
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
