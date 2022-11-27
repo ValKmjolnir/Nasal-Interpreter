@@ -8,65 +8,65 @@
 #define S_ISREG(m) (((m)&0xF000)==0x8000)
 #endif
 
-enum tok:u32 {
-    tok_null=0,  // null token (default token type)
-    tok_num,     // number literal
-    tok_str,     // string literal
-    tok_id,      // identifier
-    tok_for,     // loop keyword for
-    tok_forindex,// loop keyword forindex
-    tok_foreach, // loop keyword foreach
-    tok_while,   // loop keyword while
-    tok_var,     // keyword for definition
-    tok_func,    // keyword for definition of function
-    tok_break,   // loop keyword break
-    tok_continue,// loop keyword continue
-    tok_ret,     // function keyword return
-    tok_if,      // condition expression keyword if
-    tok_elsif,   // condition expression keyword elsif
-    tok_else,    // condition expression keyword else
-    tok_nil,     // nil literal
-    tok_lcurve,  // (
-    tok_rcurve,  // )
-    tok_lbracket,// [
-    tok_rbracket,// ]
-    tok_lbrace,  // {
-    tok_rbrace,  // }
-    tok_semi,    // ;
-    tok_and,     // operator and
-    tok_or,      // operator or
-    tok_comma,   // ,
-    tok_dot,     // .
-    tok_ellipsis,// ...
-    tok_quesmark,// ?
-    tok_colon,   // :
-    tok_add,     // operator +
-    tok_sub,     // operator -
-    tok_mult,    // operator *
-    tok_div,     // operator /
-    tok_link,    // operator ~
-    tok_not,     // operator !
-    tok_eq,      // operator =
-    tok_addeq,   // operator +=
-    tok_subeq,   // operator -=
-    tok_multeq,  // operator *=
-    tok_diveq,   // operator /=
-    tok_lnkeq,   // operator ~=
-    tok_cmpeq,   // operator ==
-    tok_neq,     // operator !=
-    tok_less,    // operator <
-    tok_leq,     // operator <=
-    tok_grt,     // operator >
-    tok_geq,     // operator >=
-    tok_eof      // <eof> end of token list
+enum class tok:u32 {
+    null=0,   // null token (default token type)
+    num,      // number literal
+    str,      // string literal
+    id,       // identifier
+    rfor,     // loop keyword for
+    forindex, // loop keyword forindex
+    foreach,  // loop keyword foreach
+    rwhile,   // loop keyword while
+    var,      // keyword for definition
+    func,     // keyword for definition of function
+    brk,      // loop keyword break
+    cont,     // loop keyword continue
+    ret,      // function keyword return
+    rif,      // condition expression keyword if
+    elsif,    // condition expression keyword elsif
+    relse,    // condition expression keyword else
+    nil,      // nil literal
+    lcurve,   // (
+    rcurve,   // )
+    lbracket, // [
+    rbracket, // ]
+    lbrace,   // {
+    rbrace,   // }
+    semi,     // ;
+    opand,    // operator and
+    opor,     // operator or
+    comma,    // ,
+    dot,      // .
+    ellipsis, // ...
+    quesmark, // ?
+    colon,    // :
+    add,      // operator +
+    sub,      // operator -
+    mult,     // operator *
+    div,      // operator /
+    link,     // operator ~
+    opnot,    // operator !
+    eq,       // operator =
+    addeq,    // operator +=
+    subeq,    // operator -=
+    multeq,   // operator *=
+    diveq,    // operator /=
+    lnkeq,    // operator ~=
+    cmpeq,    // operator ==
+    neq,      // operator !=
+    less,     // operator <
+    leq,      // operator <=
+    grt,      // operator >
+    geq,      // operator >=
+    eof       // <eof> end of token list
 };
 
 struct token {
     u32 line;
     u32 col;
-    u32 type;
+    tok type;
     string str;
-    token(u32 l=0,u32 c=0,u32 t=tok_null,const string& s="")
+    token(u32 l=0,u32 c=0,tok t=tok::null,const string& s="")
         : line(l),col(c),type(t),str(s) {}
 };
 
@@ -78,55 +78,55 @@ private:
     string res;
     error& err;
     std::vector<token> toks;
-    std::unordered_map<string,u32> typetbl {
-        {"for"     ,tok_for     },
-        {"forindex",tok_forindex},
-        {"foreach" ,tok_foreach },
-        {"while"   ,tok_while   },
-        {"var"     ,tok_var     },
-        {"func"    ,tok_func    },
-        {"break"   ,tok_break   },
-        {"continue",tok_continue},
-        {"return"  ,tok_ret     },
-        {"if"      ,tok_if      },
-        {"elsif"   ,tok_elsif   },
-        {"else"    ,tok_else    },
-        {"nil"     ,tok_nil     },
-        {"("       ,tok_lcurve  },
-        {")"       ,tok_rcurve  },
-        {"["       ,tok_lbracket},
-        {"]"       ,tok_rbracket},
-        {"{"       ,tok_lbrace  },
-        {"}"       ,tok_rbrace  },
-        {";"       ,tok_semi    },
-        {"and"     ,tok_and     },
-        {"or"      ,tok_or      },
-        {","       ,tok_comma   },
-        {"."       ,tok_dot     },
-        {"..."     ,tok_ellipsis},
-        {"?"       ,tok_quesmark},
-        {":"       ,tok_colon   },
-        {"+"       ,tok_add     },
-        {"-"       ,tok_sub     },
-        {"*"       ,tok_mult    },
-        {"/"       ,tok_div     },
-        {"~"       ,tok_link    },
-        {"!"       ,tok_not     },
-        {"="       ,tok_eq      },
-        {"+="      ,tok_addeq   },
-        {"-="      ,tok_subeq   },
-        {"*="      ,tok_multeq  },
-        {"/="      ,tok_diveq   },
-        {"~="      ,tok_lnkeq   },
-        {"=="      ,tok_cmpeq   },
-        {"!="      ,tok_neq     },
-        {"<"       ,tok_less    },
-        {"<="      ,tok_leq     },
-        {">"       ,tok_grt     },
-        {">="      ,tok_geq     }
+    std::unordered_map<string,tok> typetbl {
+        {"for"     ,tok::rfor    },
+        {"forindex",tok::forindex},
+        {"foreach" ,tok::foreach },
+        {"while"   ,tok::rwhile  },
+        {"var"     ,tok::var     },
+        {"func"    ,tok::func    },
+        {"break"   ,tok::brk     },
+        {"continue",tok::cont    },
+        {"return"  ,tok::ret     },
+        {"if"      ,tok::rif     },
+        {"elsif"   ,tok::elsif   },
+        {"else"    ,tok::relse   },
+        {"nil"     ,tok::nil     },
+        {"("       ,tok::lcurve  },
+        {")"       ,tok::rcurve  },
+        {"["       ,tok::lbracket},
+        {"]"       ,tok::rbracket},
+        {"{"       ,tok::lbrace  },
+        {"}"       ,tok::rbrace  },
+        {";"       ,tok::semi    },
+        {"and"     ,tok::opand   },
+        {"or"      ,tok::opor    },
+        {","       ,tok::comma   },
+        {"."       ,tok::dot     },
+        {"..."     ,tok::ellipsis},
+        {"?"       ,tok::quesmark},
+        {":"       ,tok::colon   },
+        {"+"       ,tok::add     },
+        {"-"       ,tok::sub     },
+        {"*"       ,tok::mult    },
+        {"/"       ,tok::div     },
+        {"~"       ,tok::link    },
+        {"!"       ,tok::opnot   },
+        {"="       ,tok::eq      },
+        {"+="      ,tok::addeq   },
+        {"-="      ,tok::subeq   },
+        {"*="      ,tok::multeq  },
+        {"/="      ,tok::diveq   },
+        {"~="      ,tok::lnkeq   },
+        {"=="      ,tok::cmpeq   },
+        {"!="      ,tok::neq     },
+        {"<"       ,tok::less    },
+        {"<="      ,tok::leq     },
+        {">"       ,tok::grt     },
+        {">="      ,tok::geq     }
     };
 
-    u32 get_type(const string&);
+    tok get_type(const string&);
     bool skip(char);
     bool is_id(char);
     bool is_hex(char);
@@ -205,8 +205,8 @@ void lexer::open(const string& file) {
     res=ss.str();
 }
 
-u32 lexer::get_type(const string& str) {
-    return typetbl.count(str)?typetbl.at(str):tok_null;
+tok lexer::get_type(const string& str) {
+    return typetbl.count(str)?typetbl.at(str):tok::null;
 }
 
 string lexer::utf8_gen() {
@@ -386,19 +386,19 @@ const error& lexer::scan(const string& file) {
         }
         if (is_id(res[ptr])) {
             str=id_gen();
-            u32 type=get_type(str);
-            toks.push_back({line,column,type?type:tok_id,str});
+            tok type=get_type(str);
+            toks.push_back({line,column,(type!=tok::null)?type:tok::id,str});
         } else if (is_dec(res[ptr])) {
             str=num_gen(); // make sure column is correct
-            toks.push_back({line,column,tok_num,str});
+            toks.push_back({line,column,tok::num,str});
         } else if (is_str(res[ptr])) {
             str=str_gen(); // make sure column is correct
-            toks.push_back({line,column,tok_str,str});
+            toks.push_back({line,column,tok::str,str});
         } else if (is_single_opr(res[ptr])) {
             str=res[ptr];
             ++column;
-            u32 type=get_type(str);
-            if (!type) {
+            tok type=get_type(str);
+            if (type==tok::null) {
                 err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
             }
             toks.push_back({line,column,type,str});
@@ -428,7 +428,7 @@ const error& lexer::scan(const string& file) {
             err.fatal("lexer","fatal error occurred, stop");
         }
     }
-    toks.push_back({line,column,tok_eof,"<eof>"});
+    toks.push_back({line,column,tok::eof,"<eof>"});
     res="";
     return err;
 }

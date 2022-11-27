@@ -1,4 +1,4 @@
-# __Nasal Script Language__
+# __Nasal Script__
 
 <img src="./doc/pic/header.png" style="width:800px"></img>
 
