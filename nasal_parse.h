@@ -61,7 +61,7 @@ private:
         {tok::rif     ,"if"      },
         {tok::elsif   ,"elsif"   },
         {tok::relse   ,"else"    },
-        {tok::nil     ,"nil"     },
+        {tok::tknil   ,"nil"     },
         {tok::lcurve  ,"("       },
         {tok::rcurve  ,")"       },
         {tok::lbracket,"["       },
@@ -338,7 +338,7 @@ ast parse::vec() {
     // array end with tok::null=0
     const tok panic[]={
         tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::nil,
+        tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
@@ -451,7 +451,7 @@ ast parse::expr()
         die(thisline,thiscol,thislen,"must use return in functions");
     }
     switch(type) {
-        case tok::nil:
+        case tok::tknil:
         case tok::num:
         case tok::str:
         case tok::id:
@@ -607,9 +607,9 @@ ast parse::unary() {
 
 ast parse::scalar() {
     ast node(toks[ptr].line,toks[ptr].col,ast_null);
-    if (lookahead(tok::nil)) {
+    if (lookahead(tok::tknil)) {
         node=nil();
-        match(tok::nil);
+        match(tok::tknil);
     } else if (lookahead(tok::num)) {
         node=num();
     } else if (lookahead(tok::str)) {
@@ -673,7 +673,7 @@ ast parse::callv() {
     // array end with tok::null=0
     const tok panic[]={
         tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::nil,
+        tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::colon,
         tok::null
@@ -703,7 +703,7 @@ ast parse::callf() {
     // array end with tok::null=0
     const tok panic[]={
         tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::nil,
+        tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
@@ -794,7 +794,7 @@ ast parse::multi_scalar() {
     // if check_call_memory is true,we will check if value called here can reach a memory space
     const tok panic[]={
         tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::nil,
+        tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
@@ -979,7 +979,7 @@ ast parse::ret_expr() {
     ast node(toks[ptr].line,toks[ptr].col,ast_ret);
     match(tok::ret);
     tok type=toks[ptr].type;
-    if (type==tok::nil || type==tok::num || type==tok::str || type==tok::id ||
+    if (type==tok::tknil || type==tok::num || type==tok::str || type==tok::id ||
        type==tok::func || type==tok::sub || type==tok::opnot || type==tok::lcurve ||
        type==tok::lbracket || type==tok::lbrace
     ) {

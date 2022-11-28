@@ -25,7 +25,7 @@ enum class tok:u32 {
     rif,      // condition expression keyword if
     elsif,    // condition expression keyword elsif
     relse,    // condition expression keyword else
-    nil,      // nil literal
+    tknil,    // nil literal
     lcurve,   // (
     rcurve,   // )
     lbracket, // [
@@ -91,7 +91,7 @@ private:
         {"if"      ,tok::rif     },
         {"elsif"   ,tok::elsif   },
         {"else"    ,tok::relse   },
-        {"nil"     ,tok::nil     },
+        {"nil"     ,tok::tknil   },
         {"("       ,tok::lcurve  },
         {")"       ,tok::rcurve  },
         {"["       ,tok::lbracket},
@@ -135,11 +135,18 @@ private:
     bool is_str(char);
     bool is_single_opr(char);
     bool is_calc_opr(char);
+
+    void skip_note();
+    void err_char();
+
     void open(const string&);
     string utf8_gen();
-    string id_gen();
-    string num_gen();
-    string str_gen();
+    token id_gen();
+    token num_gen();
+    token str_gen();
+    token single_opr();
+    token dots();
+    token calc_opr();
 public:
     lexer(error& e): line(1),column(0),ptr(0),res(""),err(e) {}
     const error& scan(const string&);
@@ -186,6 +193,18 @@ bool lexer::is_calc_opr(char c) {
         c=='!'||c=='/'||c=='<'||c=='>'||
         c=='~'
     );
+}
+
+void lexer::skip_note() {
+    // avoid note, after this process ptr will point to a '\n', so next loop line counter+1
+    while(++ptr<res.size() && res[ptr]!='\n') {}
+}
+
+void lexer::err_char() {
+    ++column;
+    char c=res[ptr++];
+    err.err("lexer",line,column,1,"invalid character 0x"+chrhex(c));
+    err.fatal("lexer","fatal error occurred, stop");
 }
 
 void lexer::open(const string& file) {
@@ -240,7 +259,7 @@ string lexer::utf8_gen() {
     return str;
 }
 
-string lexer::id_gen() {
+token lexer::id_gen() {
     string str="";
     while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
@@ -250,10 +269,11 @@ string lexer::id_gen() {
             ++column;
         }
     }
-    return str;
+    tok type=get_type(str);
+    return {line,column,(type!=tok::null)?type:tok::id,str};
 }
 
-string lexer::num_gen() {
+token lexer::num_gen() {
     // generate hex number
     if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
         string str="0x";
@@ -265,7 +285,7 @@ string lexer::num_gen() {
         if (str.length()<3) { // "0x"
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         }
-        return str;
+        return {line,column,tok::num,str};
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
         string str="0o";
         ptr+=2;
@@ -281,7 +301,7 @@ string lexer::num_gen() {
         if (str.length()==2 || erfmt) {
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         }
-        return str;
+        return {line,column,tok::num,str};
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
@@ -298,7 +318,7 @@ string lexer::num_gen() {
         if (str.back()=='.') {
             column+=str.length();
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return "0";
+            return {line,column,tok::num,"0"};
         }
     }
     if (ptr<res.size() && (res[ptr]=='e' || res[ptr]=='E')) {
@@ -313,14 +333,14 @@ string lexer::num_gen() {
         if (str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+') {
             column+=str.length();
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return "0";
+            return {line,column,tok::num,"0"};
         }
     }
     column+=str.length();
-    return str;
+    return {line,column,tok::num,str};
 }
 
-string lexer::str_gen() {
+token lexer::str_gen() {
     string str="";
     const char begin=res[ptr];
     ++column;
@@ -356,13 +376,44 @@ string lexer::str_gen() {
     // check if this string ends with a " or '
     if (ptr++>=res.size()) {
         err.err("lexer",line,column,1,"get EOF when generating string");
-        return str;
+        return {line,column,tok::str,str};
     }
     ++column;
     if (begin=='`' && str.length()!=1) {
         err.err("lexer",line,column,1,"\'`\' is used for string that includes one character");
     }
-    return str;
+    return {line,column,tok::str,str};
+}
+
+token lexer::single_opr() {
+    string str(1,res[ptr]);
+    ++column;
+    tok type=get_type(str);
+    if (type==tok::null) {
+        err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
+    }
+    ++ptr;
+    return {line,column,type,str};
+}
+
+token lexer::dots() {
+    string str=".";
+    if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
+        str+="..";
+    }
+    ptr+=str.length();
+    column+=str.length();
+    return {line,column,get_type(str),str};
+}
+
+token lexer::calc_opr() {
+    // get calculation operator
+    string str(1,res[ptr++]);
+    if (ptr<res.size() && res[ptr]=='=') {
+        str+=res[ptr++];
+    }
+    column+=str.length();
+    return {line,column,get_type(str),str};
 }
 
 const error& lexer::scan(const string& file) {
@@ -371,7 +422,6 @@ const error& lexer::scan(const string& file) {
     ptr=0;
     open(file);
 
-    string str;
     while(ptr<res.size()) {
         while(ptr<res.size() && skip(res[ptr])) {
             // these characters will be ignored, and '\n' will cause ++line
@@ -385,47 +435,21 @@ const error& lexer::scan(const string& file) {
             break;
         }
         if (is_id(res[ptr])) {
-            str=id_gen();
-            tok type=get_type(str);
-            toks.push_back({line,column,(type!=tok::null)?type:tok::id,str});
+            toks.push_back(id_gen());
         } else if (is_dec(res[ptr])) {
-            str=num_gen(); // make sure column is correct
-            toks.push_back({line,column,tok::num,str});
+            toks.push_back(num_gen());
         } else if (is_str(res[ptr])) {
-            str=str_gen(); // make sure column is correct
-            toks.push_back({line,column,tok::str,str});
+            toks.push_back(str_gen());
         } else if (is_single_opr(res[ptr])) {
-            str=res[ptr];
-            ++column;
-            tok type=get_type(str);
-            if (type==tok::null) {
-                err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
-            }
-            toks.push_back({line,column,type,str});
-            ++ptr;
+            toks.push_back(single_opr());
         } else if (res[ptr]=='.') {
-            str=".";
-            if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
-                str+="..";
-            }
-            ptr+=str.length();
-            column+=str.length();
-            toks.push_back({line,column,get_type(str),str});
+            toks.push_back(dots());
         } else if (is_calc_opr(res[ptr])) {
-            // get calculation operator
-            str=res[ptr++];
-            if (ptr<res.size() && res[ptr]=='=') {
-                str+=res[ptr++];
-            }
-            column+=str.length();
-            toks.push_back({line,column,get_type(str),str});
-        } else if (res[ptr]=='#') { // avoid note, after this process ptr will point to a '\n', so next loop line counter+1
-            while(++ptr<res.size() && res[ptr]!='\n') {}
+            toks.push_back(calc_opr());
+        } else if (res[ptr]=='#') {
+            skip_note();
         } else {
-            ++column;
-            char c=res[ptr++];
-            err.err("lexer",line,column,1,"invalid character 0x"+chrhex(c));
-            err.fatal("lexer","fatal error occurred, stop");
+            err_char();
         }
     }
     toks.push_back({line,column,tok::eof,"<eof>"});
