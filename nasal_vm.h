@@ -2,6 +2,9 @@
 
 #include <iomanip>
 #include <stack>
+
+#include "nasal_import.h"
+#include "nasal_gc.h"
 #include "nasal_codegen.h"
 
 class vm {
@@ -46,7 +49,6 @@ protected:
     void ustate();
     void detail();
     void die(const string&);
-#define vm_error(info) {die(info);return;}
     /* vm calculation functions*/
     bool cond(var&);
     /* vm operands */
@@ -441,7 +443,10 @@ inline void vm::o_unot() {
                 top[0]=num?zero:one;
             }
         } break;
-        default:vm_error("incorrect value type");break;
+        default:{
+            die("incorrect value type");
+            return;
+        } break;
     }
 }
 
@@ -587,7 +592,8 @@ inline void vm::o_jf() {
 
 inline void vm::o_cnt() {
     if (top[0].type!=vm_vec) {
-        vm_error("must use vector in forindex/foreach");
+        die("must use vector in forindex/foreach");
+        return;
     }
     (++top)[0]={vm_cnt,(i64)-1};
 }
@@ -630,15 +636,18 @@ inline void vm::o_callv() {
     if (vec.type==vm_vec) {
         top[0]=vec.vec().get_val(val.tonum());
         if (top[0].type==vm_none) {
-            vm_error("out of range:"+std::to_string(val.tonum()));
+            die("out of range:"+std::to_string(val.tonum()));
+            return;
         }
     } else if (vec.type==vm_hash) {
         if (val.type!=vm_str) {
-            vm_error("must use string as the key");
+            die("must use string as the key");
+            return;
         }
         top[0]=vec.hash().get_val(val.str());
         if (top[0].type==vm_none) {
-            vm_error("cannot find member \""+val.str()+"\"");
+            die("cannot find member \""+val.str()+"\"");
+            return;
         } else if (top[0].type==vm_func) {
             top[0].func().local[0]=val; // 'me'
         }
@@ -647,34 +656,40 @@ inline void vm::o_callv() {
         i32 num=val.tonum();
         i32 len=str.length();
         if (num<-len || num>=len) {
-            vm_error("out of range:"+std::to_string(val.tonum()));
+            die("out of range:"+std::to_string(val.tonum()));
+            return;
         }
         top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
     } else {
-        vm_error("must call a vector/hash/string");
+        die("must call a vector/hash/string");
+        return;
     }
 }
 
 inline void vm::o_callvi() {
     var val=top[0];
     if (val.type!=vm_vec) {
-        vm_error("must use a vector");
+        die("must use a vector");
+        return;
     }
     // cannot use operator[],because this may cause overflow
     (++top)[0]=val.vec().get_val(imm[pc]);
     if (top[0].type==vm_none) {
-        vm_error("out of range:"+std::to_string(imm[pc]));
+        die("out of range:"+std::to_string(imm[pc]));
+        return;
     }
 }
 
 inline void vm::o_callh() {
     var val=top[0];
     if (val.type!=vm_hash) {
-        vm_error("must call a hash");
+        die("must call a hash");
+        return;
     }
     top[0]=val.hash().get_val(cstr[imm[pc]]);
     if (top[0].type==vm_none) {
-        vm_error("member \""+cstr[imm[pc]]+"\" does not exist");
+        die("member \""+cstr[imm[pc]]+"\" does not exist");
+        return;
     } else if (top[0].type==vm_func) {
         top[0].func().local[0]=val; // 'me'
     }
@@ -684,7 +699,8 @@ inline void vm::o_callfv() {
     u32 argc=imm[pc]; // arguments counter
     var* local=top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
-        vm_error("must call a function");
+        die("must call a function");
+        return;
     }
     auto& func=local[-1].func();
     var tmp=local[-1];
@@ -692,12 +708,14 @@ inline void vm::o_callfv() {
     funcr=tmp;
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (top-argc+func.lsize+3>=canary) {
-        vm_error("stack overflow");
+        die("stack overflow");
+        return;
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
     u32 psize=func.psize-1;
     if (argc<psize && func.local[argc+1].type==vm_none) {
-        vm_error("lack argument(s)");
+        die("lack argument(s)");
+        return;
     }
 
     var dynamic=nil;
@@ -733,7 +751,8 @@ inline void vm::o_callfv() {
 inline void vm::o_callfh() {
     auto& hash=top[0].hash().elems;
     if (top[-1].type!=vm_func) {
-        vm_error("must call a function");
+        die("must call a function");
+        return;
     }
     auto& func=top[-1].func();
     var tmp=top[-1];
@@ -741,10 +760,12 @@ inline void vm::o_callfh() {
     funcr=tmp;
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (top+func.lsize+2>=canary) {
-        vm_error("stack overflow");
+        die("stack overflow");
+        return;
     }
     if (func.dpara>=0) {
-        vm_error("special call cannot use dynamic argument");
+        die("special call cannot use dynamic argument");
+        return;
     }
 
     var* local=top;
@@ -758,7 +779,8 @@ inline void vm::o_callfh() {
         if (hash.count(key)) {
             local[i.second]=hash[key];
         } else if (local[i.second].type==vm_none) {
-            vm_error("lack argument(s): \""+key+"\"");
+            die("lack argument(s): \""+key+"\"");
+            return;
         }
     }
 
@@ -779,7 +801,8 @@ inline void vm::o_callb() {
     // (top) will be set to another context.top, instead of main_context.top
     top[0]=(*builtin[imm[pc]].func)(localr,ngc);
     if (top[0].type==vm_none) {
-        vm_error("native function error");
+        die("native function error");
+        return;
     }
 }
 
@@ -791,7 +814,8 @@ inline void vm::o_slcbeg() {
     // +--------------+
     (++top)[0]=ngc.alloc(vm_vec);
     if (top[-1].type!=vm_vec) {
-        vm_error("must slice a vector");
+        die("must slice a vector");
+        return;
     }
 }
 
@@ -804,7 +828,8 @@ inline void vm::o_slc() {
     var val=(top--)[0];
     var res=top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
-        vm_error("out of range:"+std::to_string(val.tonum()));
+        die("out of range:"+std::to_string(val.tonum()));
+        return;
     }
     top[0].vec().elems.push_back(res);
 }
@@ -829,10 +854,12 @@ inline void vm::o_slc2() {
     }
 
     if (num1<-size || num1>=size || num2<-size || num2>=size) {
-        vm_error("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range.");
+        die("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range.");
+        return;
     } else if (num1<=num2) {
-        for(i32 i=num1;i<=num2;++i)
+        for(i32 i=num1;i<=num2;++i) {
             aim.push_back(i>=0?ref[i]:ref[i+size]);
+        }
     }
 }
 
@@ -863,11 +890,13 @@ inline void vm::o_mcallv() {
     if (vec.type==vm_vec) {
         memr=vec.vec().get_mem(val.tonum());
         if (!memr) {
-            vm_error("out of range:"+std::to_string(val.tonum()));
+            die("out of range:"+std::to_string(val.tonum()));
+            return;
         }
     } else if (vec.type==vm_hash) { // do mcallh but use the mcallv way
         if (val.type!=vm_str) {
-            vm_error("must use string as the key");
+            die("must use string as the key");
+            return;
         }
         nas_hash& ref=vec.hash();
         string& str=val.str();
@@ -877,14 +906,16 @@ inline void vm::o_mcallv() {
             memr=ref.get_mem(str);
         }
     } else {
-        vm_error("cannot get memory space in this type");
+        die("cannot get memory space in this type");
+        return;
     }
 }
 
 inline void vm::o_mcallh() {
     var hash=top[0]; // mcall hash, reserved on stack to avoid gc
     if (hash.type!=vm_hash) {
-        vm_error("must call a hash");
+        die("must call a hash");
+        return;
     }
     auto& ref=hash.hash();
     auto& str=cstr[imm[pc]];

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nasal_import.h"
 #include "nasal_err.h"
 #include "nasal_vm.h"
 #include <algorithm>

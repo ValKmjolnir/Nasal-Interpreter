@@ -1,6 +1,8 @@
 #pragma once
 
 #include "nasal_err.h"
+#include "nasal_builtin.h"
+
 #include <iomanip>
 #include <list>
 #include <stack>

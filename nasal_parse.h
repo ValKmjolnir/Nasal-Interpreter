@@ -2,6 +2,11 @@
 
 #include <unordered_map>
 
+#include "nasal.h"
+#include "nasal_lexer.h"
+#include "nasal_ast.h"
+#include "nasal_err.h"
+
 /*
               _,,,_                                       
             .'     `'.                                    
