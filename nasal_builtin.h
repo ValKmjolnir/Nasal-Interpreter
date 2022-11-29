@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "nasal.h"
 #include "nasal_gc.h"
 
 #ifndef _MSC_VER

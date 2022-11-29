@@ -140,8 +140,7 @@ string rawstr(const string& str,const usize maxlen=0) {
     string ret("");
     for(auto i:str) {
 #ifdef _WIN32
-        // windows ps or cmd doesn't output unicode normally
-        // if 'chcp65001' is not enabled, we output the hex
+        // windows doesn't output unicode normally, so we output the hex
         if (i<=0) {
             ret+="\\x"+chrhex(i);
             continue;

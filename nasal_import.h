@@ -12,6 +12,10 @@
 #define F_OK 0
 #endif
 
+#include "nasal_ast.h"
+#include "nasal_lexer.h"
+#include "nasal_parse.h"
+
 class linker{
 private:
     bool show_path;

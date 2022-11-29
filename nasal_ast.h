@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstring>
 
+#include "nasal.h"
+
 enum ast_node:u32 {
     ast_null=0,      // null node
     ast_root,        // mark the root node of ast

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "nasal_ast.h"
+
 void const_str(ast& root) {
     auto& vec=root.child();
     root.set_str(vec[0].str()+vec[1].str());

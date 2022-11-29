@@ -4,6 +4,9 @@
 #include <fstream>
 #include <sstream> // MSVC need this to use std::getline
 #include <cstring>
+#include <vector>
+
+#include "nasal.h"
 
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute

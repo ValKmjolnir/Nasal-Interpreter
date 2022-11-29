@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <chrono>
 
+#include "nasal.h"
 #include "nasal_err.h"
 
 enum vm_type:u8 {
