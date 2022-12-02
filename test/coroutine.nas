@@ -73,7 +73,7 @@ println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
 println("ok");
 
 # pressure test
-var main=func(){
+for(var t=0;t<5;t+=1){
     var productor=func(){
         for(var i=0;;i+=1)
             coroutine.yield(i);
@@ -97,6 +97,3 @@ var main=func(){
         consumer();
     println();
 }
-
-for(var i=0;i<5;i+=1)
-    main();

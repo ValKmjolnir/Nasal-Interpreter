@@ -174,15 +174,22 @@ var game=func(x,y){
 }
 
 var co=coroutine.create(func(){
-    var t=maketimestamp();
     while(1){
-        t.stamp();
-        while(t.elapsedMSec()<20);
-        coroutine.yield();
+        var moved=-1;
+        for(var i=0;i<30;i+=1){
+            var ch=libkey.nonblock();
+            if(moved==-1 and ch!=nil){
+                moved=ch;
+            }
+            coroutine.yield(nil);
+            unix.sleep(0.01);
+        }
+        coroutine.yield(moved);
     }
 });
 
-var main=func(){
+var main=func(argv){
+    var should_skip=(size(argv)!=0 and argv[0]=="--skip");
     # enable unicode
     if(os.platform()=="windows")
         system("chcp 65001");
@@ -191,12 +198,14 @@ var main=func(){
     var g=game(15,10);
     g.print();
     print("\rpress any key to start...");
-    libkey.getch();
+    if(!should_skip){
+        libkey.getch();
+    }
     print("\r                         \r");
     var counter=20;
     while(1){
-        var ch=libkey.nonblock();
-        if(ch!=nil){
+        while((var ch=coroutine.resume(co)[0])==nil);
+        if(ch!=nil and ch!=-1){
             if(ch=='q'[0])
                 break;
             elsif(ch=='p'[0]){
@@ -206,20 +215,19 @@ var main=func(){
             }
             g.move(chr(ch));
         }
-        counter-=1;
-        if(!counter){
-            counter=20;
-            g.next();
-            if(g.gameover())
-                break;
-            g.print();
-        }
-        coroutine.resume(co);
+        
+        g.next();
+        if(g.gameover())
+            break;
+        g.print();
     }
 
     println(g.gameover()<=1?"game over.":"you win!");
     println("press 'q' to quit.");
+    if(should_skip){
+        return;
+    }
     while(libkey.getch()!='q'[0]);
 }
 
-main();
+main(runtime.argv());

@@ -86,7 +86,7 @@ var curve3=func(line=2){
         var shadow=[" ","░","▒","▓","█","▀","▄","▐","▌"];
         var s="";
         for(var i=0;i<size(arr);i+=1)
-                s~=shadow[arr[i]];
+            s~=shadow[arr[i]];
         println(s);
     }
     return;
