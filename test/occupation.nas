@@ -2,9 +2,14 @@ import.stl.process_bar;
 import.module.libkey;
 
 var is_windows_platform=os.platform()=="windows";
+var is_macos_platform=os.platform()=="macOS";
+
+if(is_windows_platform){
+    system("chcp 65001");
+}
 
 var cpu_stat=func(){
-    if(is_windows_platform)
+    if(is_windows_platform or is_macos_platform)
         return nil;
     var cpu=split("\n",io.fin("/proc/stat"))[0];
     cpu=split(" ",cpu);
@@ -35,7 +40,7 @@ var cpu_occupation=func(){
             }
         }
         var cpu1=cpu_stat();
-        if(is_windows_platform){
+        if(is_windows_platform or is_macos_platform){
             coroutine.yield(0);
             continue;
         }
@@ -47,7 +52,7 @@ var cpu_occupation=func(){
 }
 
 var mem_occupation=func(){
-    if(is_windows_platform)
+    if(is_windows_platform or is_macos_platform)
         return {MemTotal:math.inf,MemFree:math.inf};
     var meminfo=split("\n",io.fin("/proc/meminfo"));
     var mem_res={};
@@ -60,10 +65,22 @@ var mem_occupation=func(){
 }
 
 func(){
+    var limited_loop=(size(runtime.argv())!=0 and !math.isnan(num(runtime.argv()[0])));
+    if(limited_loop){
+        limited_loop=num(runtime.argv()[0]);
+    }else{
+        limited_loop=-1;
+    }
+    var rise=[" ","▁","▂","▃","▄","▅","▆","▇","█"];
+    var total=0;
+    var statistics=[];
+    setsize(statistics,70);
+
     var co=coroutine.create(cpu_occupation);
-    var bar=process_bar.high_resolution_bar(30);
+    var bar=process_bar.high_resolution_bar(48);
     print("\ec");
-    while(1){
+    while(limited_loop!=0){
+        limited_loop=limited_loop<0?limited_loop:limited_loop-1;
         var mem=mem_occupation();
         var mem_occ=(mem.MemTotal-mem.MemFree)/mem.MemTotal*100;
         if(math.isnan(mem_occ) or mem_occ<0 or mem_occ>100){
@@ -81,6 +98,37 @@ func(){
         println("\e[4;1H\e[1m Memory free(GB)     : \e[0m\e[36m",mem.MemFree/1024/1024,"\e[0m");
         println("\e[5;1H\e[1m Memory occupation(%): \e[0m",mem_occ>60?"\e[91m":"\e[32m",bar.bar(mem_occ/100)~" ",mem_occ,"\e[0m         ");
         println("\e[6;1H\e[1m CPU occupation(%)   : \e[0m",cpu_occ>90?"\e[91m":"\e[32m",bar.bar(cpu_occ/100)~" ",cpu_occ,"\e[0m         ");
-        println("\e[7;1H Press 'q' to quit.");
+
+        for(var i=0;i<size(statistics);i+=1){
+            total+=1;
+            var u=rand()*rand()*(rand()>0.5?-1:1);
+            statistics[int(size(statistics)/2+u*size(statistics)/2)]+=1;
+        }
+        var s=["","","",""];
+        foreach(var st;statistics){
+            var max_rate=100/size(statistics);
+            var rate=st/total*100;
+            for(var i=size(s)-1;i>=0;i-=1){
+                if(rate>=max_rate){
+                    s[i]~="█";
+                    rate-=max_rate;
+                }else{
+                    s[i]~=rise[rate/max_rate*size(rise)];
+                    rate=0;
+                }
+            }
+        }
+         var tmp="";
+        for(var i=0;i<size(statistics);i+=1){
+            tmp~="-";
+        }
+        println("\e[7;1H \e[32m+"~tmp~"+\e[0m");
+        println("\e[8;1H \e[32m|",s[0],"|\e[0m");
+        println("\e[9;1H \e[32m|",s[1],"|\e[0m");
+        println("\e[10;1H \e[32m|",s[2],"|\e[0m");
+        println("\e[11;1H \e[32m|",s[3],"|\e[0m");
+        println("\e[12;1H \e[32m+"~tmp~"+\e[0m");
+
+        println("\e[13;1H Press 'q' to quit.");
     }
 }();

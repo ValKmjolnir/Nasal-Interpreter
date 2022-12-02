@@ -49,4 +49,8 @@ var main=func(run_time){
     }
 }
 
-main(5e2);
+if(size(runtime.argv()) and !math.isnan(num(runtime.argv()[0]))){
+    main(num(runtime.argv()[0]));
+}else{
+    main(5e2);
+}

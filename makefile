@@ -38,14 +38,15 @@ test:nasal
 	@ ./nasal -a -c test/bfconvertor.nas
 	@ ./nasal -d test/bfs.nas
 	@ ./nasal -t test/bigloop.nas
-	@ ./nasal -e test/bp.nas
+	@ ./nasal -t test/bp.nas
 	@ ./nasal -d test/calc.nas
 	@ ./nasal -e test/choice.nas
 	@ ./nasal -e test/class.nas
-	@ ./nasal -t -d test/console3D.nas
+	@ ./nasal -t -d test/console3D.nas 50
 	@ ./nasal -e test/coroutine.nas
+	@ ./nasal -t -d test/datalog.nas
 	@ ./nasal -e test/diff.nas
-	@ ./nasal -e test/donuts.nas
+	@ ./nasal -e test/donuts.nas 100
 	-@ ./nasal -d test/exception.nas
 	@ ./nasal -t -d test/fib.nas
 	@ ./nasal -e test/filesystem.nas
@@ -62,16 +63,17 @@ test:nasal
 	@ ./nasal -t -d test/md5compare.nas
 	-@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas
-	@ ./nasal -c test/occupation.nas
+	@ ./nasal test/occupation.nas 10
 	@ ./nasal -t -d test/pi.nas
 	@ ./nasal -c test/ppmgen.nas
 	@ ./nasal -t -d test/prime.nas
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
 	@ ./nasal -e test/scalar.nas hello world
-	-@ ./nasal -c -t test/snake.nas
-	@ ./nasal -c -e test/trait.nas
-	-@ ./nasal -c -t test/tetris.nas
-	@ ./nasal -c -t -d test/turingmachine.nas
-	@ ./nasal -c -t -d test/ycombinator.nas
+	-@ ./nasal -t test/snake.nas --skip
+	@ ./nasal -e test/trait.nas
+	-@ ./nasal -t test/tetris.nas --skip
+	@ ./nasal -t -d test/turingmachine.nas
 	@ ./nasal -d test/wavecollapse.nas
+	@ ./nasal test/word_collector.nas test/md5compare.nas
+	@ ./nasal -t -d test/ycombinator.nas

@@ -270,7 +270,9 @@ var mapgen=func(mapx,mapy){
     };
 }
 
-var main=func(){
+var main=func(argv){
+    var should_skip=(size(argv)!=0 and argv[0]=="--skip");
+    var init_counter=should_skip?5:30;
     # windows use chcp 65001 to output unicode
     if(os.platform()=="windows")
         system("chcp 65001");
@@ -292,10 +294,13 @@ var main=func(){
     exchange();
     var map=mapgen(mapx:12,mapy:18);
 
-    libkey.getch();
+    if(!should_skip){
+        libkey.getch();
+    }
     print("\ec");
+    map.print();
 
-    var counter=30;
+    var counter=init_counter;
     while(1){
         # nonblock input one character
         var ch=libkey.nonblock();
@@ -325,7 +330,7 @@ var main=func(){
             map.checkmap();
             if(map.gameover())
                 break;
-            counter=30;
+            counter=init_counter;
         }
         unix.sleep(0.02);
         counter-=1;
@@ -341,7 +346,9 @@ var main=func(){
         "\e[36m'\e[94mq\e[95m' ",
         "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
     );
-    while(libkey.getch()!='q'[0]);
+    if(!should_skip){
+        while(libkey.getch()!='q'[0]);
+    }
 };
 
-main();
+main(runtime.argv());
