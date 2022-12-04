@@ -828,7 +828,7 @@ inline void vm::o_slc() {
     var val=(top--)[0];
     var res=top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
-        die("out of range:"+std::to_string(val.tonum()));
+        die("index "+std::to_string(val.tonum())+" out of range");
         return;
     }
     top[0].vec().elems.push_back(res);
@@ -854,7 +854,7 @@ inline void vm::o_slc2() {
     }
 
     if (num1<-size || num1>=size || num2<-size || num2>=size) {
-        die("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range.");
+        die("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range");
         return;
     } else if (num1<=num2) {
         for(i32 i=num1;i<=num2;++i) {
@@ -890,12 +890,12 @@ inline void vm::o_mcallv() {
     if (vec.type==vm_vec) {
         memr=vec.vec().get_mem(val.tonum());
         if (!memr) {
-            die("out of range:"+std::to_string(val.tonum()));
+            die("index "+std::to_string(val.tonum())+" out of range");
             return;
         }
     } else if (vec.type==vm_hash) { // do mcallh but use the mcallv way
         if (val.type!=vm_str) {
-            die("must use string as the key");
+            die("key must be string");
             return;
         }
         nas_hash& ref=vec.hash();
@@ -958,8 +958,10 @@ inline void vm::o_ret() {
         auto& upval=up.upval();
         auto size=func.func().lsize;
         upval.onstk=false;
-        for(u32 i=0;i<size;++i)
-            upval.elems.push_back(local[i]);
+        upval.elems.resize(size);
+        for(u32 i=0;i<size;++i) {
+            upval.elems[i]=local[i];
+        }
     }
     // cannot use gc.cort to judge,
     // because there maybe another function call inside

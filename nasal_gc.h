@@ -94,8 +94,8 @@ struct var {
     var(const u8 t,var* n):type(t) {val.addr=n;}
     // copy
     var(const var& nr):type(nr.type),val(nr.val) {}
-    bool operator==(const var& nr) {return type==nr.type && val.gcobj==nr.val.gcobj;}
-    bool operator!=(const var& nr) {return type!=nr.type || val.gcobj!=nr.val.gcobj;}
+    bool operator==(const var& nr) const {return type==nr.type && val.gcobj==nr.val.gcobj;}
+    bool operator!=(const var& nr) const {return type!=nr.type || val.gcobj!=nr.val.gcobj;}
     // number and string can be translated to each other
     f64    tonum();
     string tostr();
@@ -115,23 +115,21 @@ struct var {
 };
 
 struct nas_vec {
-    bool printed;
     std::vector<var> elems;
+    bool printed;
 
     nas_vec():printed(false) {}
-    friend std::ostream& operator<<(std::ostream&,nas_vec&);
-    usize size() {return elems.size();}
+    usize size() const {return elems.size();}
     var  get_val(const i32);
     var* get_mem(const i32);
 };
 
 struct nas_hash {
-    bool printed;
     std::unordered_map<string,var> elems;
+    bool printed;
 
     nas_hash():printed(false) {}
-    friend std::ostream& operator<<(std::ostream&,nas_hash&);
-    usize size() {return elems.size();}
+    usize size() const {return elems.size();}
     var  get_val(const string&);
     var* get_mem(const string&);
 };
@@ -236,12 +234,14 @@ struct nas_co {
         funcr({vm_nil,(f64)0}),
         upvalr({vm_nil,(f64)0}),
         status(nas_co::suspended) {
-        for(u32 i=0;i<STACK_DEPTH;++i)
+        for(u32 i=0;i<STACK_DEPTH;++i) {
             stack[i]={vm_nil,(f64)0};
+        }
     }
     void clear() {
-        for(u32 i=0;i<STACK_DEPTH;++i)
+        for(u32 i=0;i<STACK_DEPTH;++i) {
             stack[i]={vm_nil,(f64)0};
+        }
         pc=0;
         localr=nullptr;
         memr=nullptr;
@@ -306,7 +306,7 @@ std::ostream& operator<<(std::ostream& out,nas_vec& vec) {
 
 var nas_hash::get_val(const string& key) {
     if (elems.count(key)) {
-        return elems[key];
+        return elems.at(key);
     } else if (elems.count("parents")) {
         var ret(vm_none);
         var val=elems["parents"];
@@ -326,7 +326,7 @@ var nas_hash::get_val(const string& key) {
 
 var* nas_hash::get_mem(const string& key) {
     if (elems.count(key)) {
-        return &elems[key];
+        return &elems.at(key);
     } else if (elems.count("parents")) {
         var* addr=nullptr;
         var val=elems["parents"];
@@ -503,6 +503,7 @@ struct gc {
         worktime(0) {}
     void mark();
     void sweep();
+    void extend(u8);
     void init(const std::vector<string>&,const std::vector<string>&);
     void clear();
     void info();
@@ -577,8 +578,7 @@ void gc::mark() {
     }
 }
 
-void gc::sweep()
-{
+void gc::sweep() {
     for(auto i:memory) {
         if (i->mark==GC_UNCOLLECTED) {
             i->clear();
@@ -587,6 +587,16 @@ void gc::sweep()
         } else if (i->mark==GC_FOUND) {
             i->mark=GC_UNCOLLECTED;
         }
+    }
+}
+
+void gc::extend(u8 type) {
+    u8 index=type-vm_str;
+    ++size[index];
+    for(u32 i=0;i<incr[index];++i) {
+        nas_val* tmp=new nas_val(type);
+        memory.push_back(tmp);
+        unused[index].push(tmp);
     }
 }
 
@@ -661,7 +671,7 @@ void gc::info() {
         }
     }
     double t=worktime*1.0/1000000000; // seconds
-    std::cout<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? "ms\n":"s\n");
+    std::cout<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? " ms\n":" s\n");
     if (total) {
         std::cout<<" avg   | "<<t/total*1000<<" ms\n";
     }
@@ -678,12 +688,7 @@ var gc::alloc(u8 type) {
         worktime+=(std::chrono::high_resolution_clock::now()-begin).count();
     }
     if (unused[index].empty()) {
-        ++size[index];
-        for(u32 i=0;i<incr[index];++i) {
-            nas_val* tmp=new nas_val(type);
-            memory.push_back(tmp);
-            unused[index].push(tmp);
-        }
+        extend(type);
     }
     var ret={type,unused[index].front()};
     ret.val.gcobj->mark=GC_UNCOLLECTED;

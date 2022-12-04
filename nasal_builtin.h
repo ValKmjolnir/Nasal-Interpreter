@@ -1201,6 +1201,30 @@ var builtin_sysargv(var* local,gc& ngc) {
     return res;
 }
 
+var builtin_gcextend(var* local,gc& ngc) {
+    var type=local[1];
+    if (type.type!=vm_str) {
+        return nil;
+    }
+    auto& s=type.str();
+    if (s=="str") {
+        ngc.extend(vm_str);
+    } else if (s=="vec") {
+        ngc.extend(vm_vec);
+    } else if (s=="hash") {
+        ngc.extend(vm_hash);
+    } else if (s=="func") {
+        ngc.extend(vm_func);
+    } else if (s=="upval") {
+        ngc.extend(vm_upval);
+    } else if (s=="obj") {
+        ngc.extend(vm_obj);
+    } else if (s=="co") {
+        ngc.extend(vm_co);
+    }
+    return nil;
+}
+
 var builtin_logtime(var* local,gc& ngc) {
     time_t t=time(nullptr);
     tm* tm_t=localtime(&t);
@@ -1315,6 +1339,7 @@ struct {
     {"__corun"   ,builtin_corun   },
     {"__millisec",builtin_millisec},
     {"__sysargv", builtin_sysargv },
+    {"__gcextd",  builtin_gcextend},
     {"__logtime", builtin_logtime },
     {nullptr,     nullptr         }
 };

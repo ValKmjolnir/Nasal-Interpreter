@@ -1,6 +1,11 @@
 import.stl.sort;
 import.stl.process_bar;
 
+for(var i=0;i<3910;i+=1){
+    runtime.gc.extend("str");
+    runtime.gc.extend("vec");
+}
+
 var test=func(n){
     var ts=maketimestamp();
     var bar=process_bar.high_resolution_bar(50);
@@ -56,8 +61,8 @@ var test=func(n){
         }
     }
 
-    println(cnt," result(s) in ",ts.elapsedMSec()/1000," sec");
+    println(str(cnt)," result(s) in ",ts.elapsedMSec()/1000," sec");
 }
 
-for(var i=100;i<1e6;i*=10)
+for(var i=100;i<1e7;i*=10)
     test(i);
