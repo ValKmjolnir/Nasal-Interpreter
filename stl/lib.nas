@@ -479,7 +479,10 @@ var os={
 # runtime gives us some functions that we could manage it manually.
 var runtime={
     # command line arguments
-    argv: func(){return __sysargv;}
+    argv: func(){return __sysargv;},
+    gc: {
+        extend: func(type){return __gcextd;}
+    }
 };
 
 # functions that not supported in this runtime:
