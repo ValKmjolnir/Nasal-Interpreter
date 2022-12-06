@@ -73,10 +73,11 @@ println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
 println("ok");
 
 # pressure test
-for(var t=0;t<5;t+=1){
+for(var t=0;t<10;t+=1){
     var productor=func(){
-        for(var i=0;;i+=1)
+        while(1){
             coroutine.yield(i);
+        }
     }
     var total=1000; # ms
     var co=coroutine.create(productor);
@@ -86,14 +87,16 @@ for(var t=0;t<5;t+=1){
     var bar=process_bar.high_resolution_bar(40);
     var consumer=func(){
         counter+=1;
-        for(var i=0;i<5;i+=1)
+        for(var i=0;i<t+1;i+=1)
             coroutine.resume(co);
-        var rate=(tm.elapsedMSec()+1)/total;
-        print(" ",bar.bar(rate)," ",int(rate*100),"% | ",counter," tasks         \r");
+        if(counter-int(counter/1000)*1000==0){
+            var rate=(tm.elapsedMSec()+1)/total;
+            print(" ",bar.bar(rate)," ",int(rate*100),"% | ",str(counter)," tasks in ",t+1,"         \r");
+        }
     }
 
     tm.stamp();
     while(tm.elapsedMSec()<total)
         consumer();
-    println();
+    println(" ",bar.bar(1)," 100% | ",str(counter)," tasks in ",t+1,"         ");
 }
