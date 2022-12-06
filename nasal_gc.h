@@ -16,7 +16,6 @@
 
 #include <iomanip>
 #include <vector>
-#include <queue>
 #include <unordered_map>
 #include <chrono>
 
@@ -219,24 +218,15 @@ struct nas_co {
     
     u32  pc;
     var* top;
-    var* canary;
+    var* canary=stack+STACK_DEPTH-1;
     var* localr;
     var* memr;
     var  funcr;
     var  upvalr;
 
     u32 status;
-    nas_co():
-        pc(0),top(stack),
-        canary(stack+STACK_DEPTH-1),
-        localr(nullptr),
-        memr(nullptr),
-        funcr({vm_nil,(f64)0}),
-        upvalr({vm_nil,(f64)0}),
-        status(nas_co::suspended) {
-        for(u32 i=0;i<STACK_DEPTH;++i) {
-            stack[i]={vm_nil,(f64)0};
-        }
+    nas_co() {
+        clear();
     }
     void clear() {
         for(u32 i=0;i<STACK_DEPTH;++i) {
@@ -248,6 +238,7 @@ struct nas_co {
         top=stack;
         status=nas_co::suspended;
         funcr={vm_nil,(f64)0};
+        upvalr={vm_nil,(f64)0};
     }
 };
 
@@ -488,7 +479,7 @@ struct gc {
     std::vector<var> strs;        // reserved address for const vm_str
     std::vector<var> env_argv;    // command line arguments
     std::vector<nas_val*> memory; // gc memory
-    std::queue<nas_val*> unused[gc_tsize]; // gc free list
+    std::vector<nas_val*> unused[gc_tsize]; // gc free list
 
     /* values for analysis */
     u64 size[gc_tsize];
@@ -517,28 +508,28 @@ struct gc {
 
 /* gc functions */
 void gc::mark() {
-    std::queue<var> bfs;
+    std::vector<var> bfs;
     // scan coroutine process stack when coroutine ptr is not null
     // scan main process stack when coroutine ptr is null
     // this scan process must execute because when running coroutine,
     // the nas_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
     for(var* i=stack;i<=top;++i) {
-        bfs.push(*i);
+        bfs.push_back(*i);
     }
-    bfs.push(funcr);
-    bfs.push(upvalr);
-    bfs.push(temp);
+    bfs.push_back(funcr);
+    bfs.push_back(upvalr);
+    bfs.push_back(temp);
     if (cort) { // scan main process stack
         for(var* i=mctx.stack;i<=mctx.top;++i) {
-            bfs.push(*i);
+            bfs.push_back(*i);
         }
-        bfs.push(mctx.funcr);
-        bfs.push(mctx.upvalr);
+        bfs.push_back(mctx.funcr);
+        bfs.push_back(mctx.upvalr);
     }
     
     while(!bfs.empty()) {
-        var tmp=bfs.front();
-        bfs.pop();
+        var tmp=bfs.back();
+        bfs.pop_back();
         if (tmp.type<=vm_num || tmp.val.gcobj->mark) {
             continue;
         }
@@ -546,32 +537,32 @@ void gc::mark() {
         switch(tmp.type) {
             case vm_vec:
                 for(auto& i:tmp.vec().elems) {
-                    bfs.push(i);
+                    bfs.push_back(i);
                 }
                 break;
             case vm_hash:
                 for(auto& i:tmp.hash().elems) {
-                    bfs.push(i.second);
+                    bfs.push_back(i.second);
                 }
                 break;
             case vm_func:
                 for(auto& i:tmp.func().local) {
-                    bfs.push(i);
+                    bfs.push_back(i);
                 }
                 for(auto& i:tmp.func().upval) {
-                    bfs.push(i);
+                    bfs.push_back(i);
                 }
                 break;
             case vm_upval:
                 for(auto& i:tmp.upval().elems) {
-                    bfs.push(i);
+                    bfs.push_back(i);
                 }
                 break;
             case vm_co:
-                bfs.push(tmp.co().funcr);
-                bfs.push(tmp.co().upvalr);
+                bfs.push_back(tmp.co().funcr);
+                bfs.push_back(tmp.co().upvalr);
                 for(var* i=tmp.co().stack;i<=tmp.co().top;++i) {
-                    bfs.push(*i);
+                    bfs.push_back(*i);
                 }
                 break;
         }
@@ -582,7 +573,7 @@ void gc::sweep() {
     for(auto i:memory) {
         if (i->mark==GC_UNCOLLECTED) {
             i->clear();
-            unused[i->type-vm_str].push(i);
+            unused[i->type-vm_str].push_back(i);
             i->mark=GC_COLLECTED;
         } else if (i->mark==GC_FOUND) {
             i->mark=GC_UNCOLLECTED;
@@ -596,7 +587,7 @@ void gc::extend(u8 type) {
     for(u32 i=0;i<incr[index];++i) {
         nas_val* tmp=new nas_val(type);
         memory.push_back(tmp);
-        unused[index].push(tmp);
+        unused[index].push_back(tmp);
     }
 }
 
@@ -612,7 +603,7 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
         for(u32 j=0;j<ini[i];++j) {
             nas_val* tmp=new nas_val(i+vm_str);
             memory.push_back(tmp);
-            unused[i].push(tmp);
+            unused[i].push_back(tmp);
         }
     }
     cort=nullptr;
@@ -638,9 +629,7 @@ void gc::clear() {
     }
     memory.clear();
     for(u8 i=0;i<gc_tsize;++i) {
-        while(!unused[i].empty()) {
-            unused[i].pop();
-        }
+        unused[i].clear();
     }
     for(auto& i:strs) {
         delete i.val.gcobj;
@@ -651,7 +640,7 @@ void gc::clear() {
 
 void gc::info() {
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
-    std::cout<<"\ngarbage collector info (gc count|alloc count|memory size)\n";
+    std::clog<<"\ngarbage collector info (gc count|alloc count|memory size)\n";
     u32 maxlen=0;
     for(u8 i=0;i<gc_tsize;++i) {
         u32 len=std::to_string(gcnt[i]).length();
@@ -665,15 +654,15 @@ void gc::info() {
     for(u8 i=0;i<gc_tsize;++i) {
         if (gcnt[i] || acnt[i] || ini[i] || size[i]) {
             total+=gcnt[i];
-            std::cout<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
-            std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
-            std::cout<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+            std::clog<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
+            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
+            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
         }
     }
     double t=worktime*1.0/1000000000; // seconds
-    std::cout<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? " ms\n":" s\n");
+    std::clog<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? " ms\n":" s\n");
     if (total) {
-        std::cout<<" avg   | "<<t/total*1000<<" ms\n";
+        std::clog<<" avg   | "<<t/total*1000<<" ms\n";
     }
 }
 
@@ -690,9 +679,9 @@ var gc::alloc(u8 type) {
     if (unused[index].empty()) {
         extend(type);
     }
-    var ret={type,unused[index].front()};
+    var ret={type,unused[index].back()};
     ret.val.gcobj->mark=GC_UNCOLLECTED;
-    unused[index].pop();
+    unused[index].pop_back();
     return ret;
 }
 

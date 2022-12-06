@@ -1,14 +1,16 @@
 import.stl.sort;
 import.stl.process_bar;
 
-for(var i=0;i<3910;i+=1){
+for(var i=0;i<1954;i+=1){
     runtime.gc.extend("str");
+}
+for(var i=0;i<3907;i+=1){
     runtime.gc.extend("vec");
 }
 
 var test=func(n){
     var ts=maketimestamp();
-    var bar=process_bar.high_resolution_bar(50);
+    var bar=process_bar.high_resolution_bar(40);
 
     var color=[];
     var message=[];
@@ -21,10 +23,10 @@ var test=func(n){
         message[i]=[i+n*10,"message "~i];
         if((i-last_step)/n>1/100){
             last_step=i;
-            print(bar.bar((i+1)/n)~" "~str(int((i+1)/n*100))~"%  \r");
+            print(" ",bar.bar((i+1)/n)~" "~str(int((i+1)/n*100))~"%  \r");
         }
     }
-    print(bar.bar((i+1)/n)~" 100% | ",ts.elapsedMSec()/1000," s | ");
+    print(" ",bar.bar((i+1)/n)~" 100% | ",ts.elapsedMSec()/1000," s | ");
 
     var mess=func(vec){
         var s=size(vec);
