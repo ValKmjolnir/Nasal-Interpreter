@@ -719,13 +719,18 @@ inline void vm::o_callfv() {
     }
 
     var dynamic=nil;
-    top=local+func.lsize;
     if (func.dpara>=0) { // load dynamic arguments
         dynamic=ngc.alloc(vm_vec);
         for(u32 i=psize;i<argc;++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
+    // should reset stack top after allocating vector
+    // because this may cause gc
+    // then all the available values the vector needs
+    // are all outside the stack top and may be
+    // collected incorrectly
+    top=local+func.lsize;
 
     u32 min_size=(std::min)(psize,argc); // avoid error in MSVC
     for(u32 i=min_size;i>=1;--i) { // load arguments

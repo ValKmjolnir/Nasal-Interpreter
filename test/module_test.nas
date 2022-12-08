@@ -39,14 +39,14 @@ libfib.open();
 libfib.open();
 var tm=maketimestamp();
 tm.stamp();
-println("[result] ",libfib.fib(40));
+println("[result] ",libfib.fib(35));
 println("[time  ] ",tm.elapsedMSec()," ms");
 tm.stamp();
-println("[result] ",libfib.qfib(40));
+println("[result] ",libfib.qfib(35));
 println("[time  ] ",tm.elapsedMSec()," ms");
 libfib.close();
-println("[result] ",libfib.fib(40));
-println("[result] ",libfib.qfib(40));
+println("[result] ",libfib.fib(35));
+println("[result] ",libfib.qfib(35));
 libfib.close();
 
 var speed_test=func(){
@@ -56,19 +56,22 @@ var speed_test=func(){
     var vec_call=dylib.dlcall;
     var invoke=dylib.limitcall(1);
     var tm=maketimestamp();
-    var duration=0;
 
     for(var t=0;t<10;t+=1){
+        var cnt=0;
         tm.stamp();
-        for(var i=0;i<5e6;i+=1)
-            invoke(fd,40);
-        duration=tm.elapsedMSec();
-        println("[time  ] limited call: ",duration," ms avg ",5e6/duration," call/ms");
+        while(tm.elapsedMSec()<50){
+            invoke(fd,35);
+            cnt+=1;
+        }
+        println("[time  ] limited call: ",int(cnt/tm.elapsedMSec())," call/ms");
+        cnt=0;
         tm.stamp();
-        for(var i=0;i<5e6;i+=1)
-            vec_call(fd,40);
-        duration=tm.elapsedMSec();
-        println("[time  ] dynamic call: ",duration," ms avg ",5e6/duration," call/ms");
+        while(tm.elapsedMSec()<50){
+            vec_call(fd,35);
+            cnt+=1;
+        }
+        println("[time  ] dynamic call: ",int(cnt/tm.elapsedMSec())," call/ms");
     }
 }
 
