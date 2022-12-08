@@ -1,9 +1,5 @@
 import.module.libsock;
 
-for(var i=0;i<60;i+=1){
-    runtime.gc.extend("str");
-}
-
 var http=func(){
     var sd=nil;
     return {

@@ -61,37 +61,39 @@ func(){
     var f2=func(){var a=1;return a+1;}
     var f3=func(){var (a,b)=(1,1);return a+b+1;}
     tm.stamp();
-    for(var i=0;i<1e7;i+=1);
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
+    for(var i=0;i<1e6;i+=1);
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e7;i+=1)f1();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
+    for(var i=0;i<1e6;i+=1)f1();
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e7;i+=1)func{}();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
+    for(var i=0;i<1e6;i+=1)func{}();
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e7;i+=1)f2();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
-    for(var i=0;i<1e7;i+=1)
+    for(var i=0;i<1e6;i+=1)f2();
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
+    tm.stamp();
+    for(var i=0;i<1e6;i+=1)
         func{
             var a=1;
             return a+1;
         }();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e7;i+=1)f3();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
-    for(var i=0;i<1e7;i+=1)
+    for(var i=0;i<1e6;i+=1)f3();
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
+    tm.stamp();
+    for(var i=0;i<1e6;i+=1)
         func{
             var (a,b)=(1,1);
             return a+b+1;
         }();
-    duration=tm.elapsedMSec()/1e3;
-    println("total ",duration," sec, ",str(int(1e7/duration/1e6))," M calc/sec");
+    duration=tm.elapsedMSec();
+    println(str(int(1e6/duration))," calc/ms");
 }();

@@ -40,26 +40,6 @@ enum vm_type:u8 {
     vm_co
 };
 const u32 gc_tsize=vm_co-vm_str+1;
-// change parameters here to make your own efficient gc
-// better set bigger number on vm_vec
-const u32 ini[gc_tsize]={
-    128, // vm_str
-    128, // vm_vec
-    32,  // vm_hash
-    128, // vm_func
-    0,   // vm_upval
-    0,   // vm_obj
-    0    // vm_co
-};
-const u32 incr[gc_tsize]={
-    1024,// vm_str
-    512, // vm_vec
-    512, // vm_hash
-    512, // vm_func
-    512, // vm_upval
-    128, // vm_obj
-    128  // vm_co
-};
 
 struct nas_vec;  // vector
 struct nas_hash; // hashmap(dict)
@@ -481,6 +461,16 @@ struct gc {
     std::vector<nas_val*> memory; // gc memory
     std::vector<nas_val*> unused[gc_tsize]; // gc free list
 
+    u32 incr[gc_tsize]={
+        128, // vm_str
+        128, // vm_vec
+        64,  // vm_hash
+        128, // vm_func
+        256, // vm_upval
+        16,  // vm_obj
+        16   // vm_co
+    };
+
     /* values for analysis */
     u64 size[gc_tsize];
     u64 gcnt[gc_tsize];
@@ -583,12 +573,16 @@ void gc::sweep() {
 
 void gc::extend(u8 type) {
     u8 index=type-vm_str;
-    ++size[index];
+    size[index]+=incr[index];
     for(u32 i=0;i<incr[index];++i) {
         nas_val* tmp=new nas_val(type);
+        if (!tmp) {
+            std::exit(-1);
+        }
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
+    incr[index]*=2;
 }
 
 void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
@@ -598,13 +592,6 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
 
     for(u8 i=0;i<gc_tsize;++i) {
         size[i]=gcnt[i]=acnt[i]=0;
-    }
-    for(u8 i=0;i<gc_tsize;++i) {
-        for(u32 j=0;j<ini[i];++j) {
-            nas_val* tmp=new nas_val(i+vm_str);
-            memory.push_back(tmp);
-            unused[i].push_back(tmp);
-        }
     }
     cort=nullptr;
     // init constant strings
@@ -647,16 +634,16 @@ void gc::info() {
         maxlen=maxlen<len?len:maxlen;
         len=std::to_string(acnt[i]).length();
         maxlen=maxlen<len?len:maxlen;
-        len=std::to_string(ini[i]+size[i]*incr[i]).length();
+        len=std::to_string(size[i]).length();
         maxlen=maxlen<len?len:maxlen;
     }
     double total=0;
     for(u8 i=0;i<gc_tsize;++i) {
-        if (gcnt[i] || acnt[i] || ini[i] || size[i]) {
+        if (gcnt[i] || acnt[i] || size[i]) {
             total+=gcnt[i];
             std::clog<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
             std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
-            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<ini[i]+size[i]*incr[i]<<" (+"<<size[i]<<")\n";
+            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<size[i]<<"\n";
         }
     }
     double t=worktime*1.0/1000000000; // seconds
