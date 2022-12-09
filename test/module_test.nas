@@ -58,20 +58,16 @@ var speed_test=func(){
     var tm=maketimestamp();
 
     for(var t=0;t<10;t+=1){
-        var cnt=0;
         tm.stamp();
-        while(tm.elapsedMSec()<50){
-            invoke(fd,35);
-            cnt+=1;
+        for(var i=0;i<5e5;i+=1){
+            invoke(fd,40);
         }
-        println("[time  ] limited call: ",int(cnt/tm.elapsedMSec())," call/ms");
-        cnt=0;
+        println("[time  ] limited call: ",int(1e6/tm.elapsedMSec())," call/ms");
         tm.stamp();
-        while(tm.elapsedMSec()<50){
-            vec_call(fd,35);
-            cnt+=1;
+        for(var i=0;i<5e5;i+=1){
+            vec_call(fd,40);
         }
-        println("[time  ] dynamic call: ",int(cnt/tm.elapsedMSec())," call/ms");
+        println("[time  ] dynamic call: ",int(1e6/tm.elapsedMSec())," call/ms");
     }
 }
 
