@@ -90,13 +90,13 @@ for(var t=0;t<10;t+=1){
         for(var i=0;i<t+1;i+=1)
             coroutine.resume(co);
         if(counter-int(counter/1000)*1000==0){
-            var rate=(tm.elapsedMSec()+1)/total;
-            print(" ",bar.bar(rate)," ",int(rate*100),"% | ",str(counter)," tasks in ",t+1,"         \r");
+            var rate=counter/4e5;
+            print(" ",bar.bar(rate)," ",int(rate*100),"% | ",str(1e3*int(counter/tm.elapsedMSec()))," tasks/s         \r");
         }
     }
 
     tm.stamp();
-    while(tm.elapsedMSec()<total)
+    for(var i=0;i<4e5;i+=1)
         consumer();
-    println(" ",bar.bar(1)," 100% | ",str(counter)," tasks in ",t+1,"         ");
+    println(" ",bar.bar(1)," 100% | ",str(int(1e3*counter/tm.elapsedMSec()))," tasks/s         ");
 }
