@@ -62,12 +62,12 @@ var speed_test=func(){
         for(var i=0;i<5e5;i+=1){
             invoke(fd,40);
         }
-        println("[time  ] limited call: ",int(1e6/tm.elapsedMSec())," call/ms");
+        println("[time  ] limited call: ",int(5e5/tm.elapsedMSec())," call/ms");
         tm.stamp();
         for(var i=0;i<5e5;i+=1){
             vec_call(fd,40);
         }
-        println("[time  ] dynamic call: ",int(1e6/tm.elapsedMSec())," call/ms");
+        println("[time  ] dynamic call: ",int(5e5/tm.elapsedMSec())," call/ms");
     }
 }
 

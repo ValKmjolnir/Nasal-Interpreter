@@ -50,13 +50,13 @@ var reg_size=32;
 var pc=0;
 var ir=[0,0,0,0]; # 32 bit instruction word
 var mem=[];
-var mem_size=1024*1024*1; # memory size, byte
+var mem_size=1024*1024*4; # memory size, byte
 var init=func(){
     println("[",os.time(),"] init ",reg_size," registers.");
     setsize(reg,reg_size); # 8 bit address wire
     for(var i=0;i<reg_size;i+=1)
         reg[i]=0;
-    println("[",os.time(),"] init memory, memory size: ",mem_size/1024/1024,"MB.");
+    println("[",os.time(),"] init memory, memory size: ",mem_size/1024/1024," MB.");
     setsize(mem,mem_size);
     for(var i=0;i<mem_size;i+=1)
         mem[i]=0;
@@ -86,6 +86,7 @@ var ctx_info=func(){
     }
 }
 var exec=func(info=1){
+    println("[",os.time(),"] executing ...");
     while(1){
         ir=[mem[pc],mem[pc+1],mem[pc+2],mem[pc+3]];
         if(info)ctx_info();
@@ -145,6 +146,7 @@ var exec=func(info=1){
         }
         pc+=4;
     }
+    println("[",os.time(),"] execute complete.");
 };
     return {exec:exec};
 }(

@@ -1,4 +1,4 @@
-.PHONY=clean all mingw-all
+.PHONY=clean all winall
 
 dynamic_libs_so=libfib.so libkey.so libnasock.so libmat.so
 dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll libmat.dll
@@ -57,7 +57,11 @@ libmat.dll: matrix.cpp $(used_header)
 	@ del matrix.o
 
 clean:
-	@ echo "[clean] so"
-	-@ rm $(dynamic_libs_so)
-	@ echo "[clean] dll"
-	-@ rm $(dynamic_libs_dll)
+	@ echo "[clean] libfib.so" && if [ -e libfib.so ]; then rm libfib.so; fi
+	@ echo "[clean] libkey.so" && if [ -e libkey.so ]; then rm libkey.so; fi
+	@ echo "[clean] libnasock.so" && if [ -e libnasock.so ]; then rm libnasock.so; fi
+	@ echo "[clean] libmat.so" && if [ -e libmat.so ]; then rm libmat.so; fi
+	@ echo "[clean] libfib.dll" &&if [ -e libfib.dll ]; then rm libfib.dll; fi
+	@ echo "[clean] libkey.dll" &&if [ -e libkey.dll ]; then rm libkey.dll; fi
+	@ echo "[clean] libnasock.dll" &&if [ -e libnasock.dll ]; then rm libnasock.dll; fi
+	@ echo "[clean] libmat.dll" &&if [ -e libmat.dll ]; then rm libmat.dll; fi

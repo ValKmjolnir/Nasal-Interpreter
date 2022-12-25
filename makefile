@@ -28,8 +28,8 @@ stable-release-mingw:$(SRC)
 	$(CXX) -std=$(STD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
 clean:
-	-@ rm ./nasal
-	-@ rm ./nasal.exe
+	@ if [ -e nasal ]; then rm nasal; fi
+	@ if [ -e nasal.exe ]; then rm nasal.exe; fi
 
 test:nasal
 	@ ./nasal -e test/ascii-art.nas
