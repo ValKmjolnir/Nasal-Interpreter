@@ -526,7 +526,7 @@ var builtin_chr(var* local,gc& ngc) {
 }
 
 var builtin_char(var* local,gc& ngc) {
-    return ngc.newstr((char)local[1].num());
+    return ngc.newstr((unsigned char)local[1].num());
 }
 
 var builtin_values(var* local,gc& ngc) {
