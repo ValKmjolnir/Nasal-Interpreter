@@ -313,12 +313,18 @@ void vm::die(const string& str) {
     std::cout<<"[vm] error: "<<str<<"\n";
     traceback();
     stackinfo();
+
+    // show verbose crash info
     if (verbose) {
         detail();
     }
+
     if (ngc.stack==stack) {
+        // in main context, exit directly
         std::exit(1);
     } else {
+        // in coroutine, shut down the coroutine
+        // and return to main context
         pc=0; // mark coroutine 'dead'
         ngc.ctxreserve();
         top[0]=nil;
@@ -330,48 +336,48 @@ inline bool vm::cond(var& val) {
         return val.num();
     } else if (val.type==vm_str) {
         const f64 num=str2num(val.str().c_str());
-        return std::isnan(num)?!val.str().empty():num;
+        return std::isnan(num)? !val.str().empty():num;
     }
     return false;
 }
 
-inline void vm::o_intg() {
+void vm::o_intg() {
     // global values store on stack
     top+=imm[pc];
     --top;// point to the top
 }
 
-inline void vm::o_intl() {
+void vm::o_intl() {
     top[0].func().local.resize(imm[pc],nil);
     top[0].func().lsize=imm[pc];
 }
 
-inline void vm::o_loadg() {
+void vm::o_loadg() {
     stack[imm[pc]]=(top--)[0];
 }
 
-inline void vm::o_loadl() {
+void vm::o_loadl() {
     localr[imm[pc]]=(top--)[0];
 }
 
-inline void vm::o_loadu() {
+void vm::o_loadu() {
     funcr.func().upval[(imm[pc]>>16)&0xffff]
          .upval()[imm[pc]&0xffff]=(top--)[0];
 }
 
-inline void vm::o_pnum() {
+void vm::o_pnum() {
     (++top)[0]={vm_num,cnum[imm[pc]]};
 }
 
-inline void vm::o_pnil() {
+void vm::o_pnil() {
     (++top)[0]=nil;
 }
 
-inline void vm::o_pstr() {
+void vm::o_pstr() {
     (++top)[0]=ngc.strs[imm[pc]];
 }
 
-inline void vm::o_newv() {
+void vm::o_newv() {
     var newv=ngc.alloc(vm_vec);
     auto& vec=newv.vec().elems;
     vec.resize(imm[pc]);
@@ -383,11 +389,11 @@ inline void vm::o_newv() {
     top[0]=newv;
 }
 
-inline void vm::o_newh() {
+void vm::o_newh() {
     (++top)[0]=ngc.alloc(vm_hash);
 }
 
-inline void vm::o_newf() {
+void vm::o_newf() {
     (++top)[0]=ngc.alloc(vm_func);
     nas_func& func=top[0].func();
     func.entry=imm[pc];
@@ -406,19 +412,19 @@ inline void vm::o_newf() {
     }
 }
 
-inline void vm::o_happ() {
+void vm::o_happ() {
     top[-1].hash().elems[cstr[imm[pc]]]=top[0];
     --top;
 }
 
-inline void vm::o_para() {
+void vm::o_para() {
     nas_func& func=top[0].func();
     // func->size has 1 place reserved for "me"
     func.keys[imm[pc]]=func.psize;
     func.local[func.psize++]={vm_none};
 }
 
-inline void vm::o_deft() {
+void vm::o_deft() {
     var val=top[0];
     nas_func& func=(--top)[0].func();
     // func->size has 1 place reserved for "me"
@@ -426,11 +432,11 @@ inline void vm::o_deft() {
     func.local[func.psize++]=val;
 }
 
-inline void vm::o_dyn() {
+void vm::o_dyn() {
     top[0].func().dpara=imm[pc];
 }
 
-inline void vm::o_unot() {
+void vm::o_unot() {
     var val=top[0];
     switch(val.type) {
         case vm_nil:top[0]=one;break;
@@ -450,7 +456,7 @@ inline void vm::o_unot() {
     }
 }
 
-inline void vm::o_usub() {
+void vm::o_usub() {
     top[0]={vm_num,-top[0].tonum()};
 }
 
@@ -458,11 +464,11 @@ inline void vm::o_usub() {
     top[-1]={vm_num,top[-1].tonum() type top[0].tonum()};\
     --top;
 
-inline void vm::o_add() {op_calc(+);}
-inline void vm::o_sub() {op_calc(-);}
-inline void vm::o_mul() {op_calc(*);}
-inline void vm::o_div() {op_calc(/);}
-inline void vm::o_lnk() {
+void vm::o_add() {op_calc(+);}
+void vm::o_sub() {op_calc(-);}
+void vm::o_mul() {op_calc(*);}
+void vm::o_div() {op_calc(/);}
+void vm::o_lnk() {
     top[-1]=ngc.newstr(top[-1].tostr()+top[0].tostr());
     --top;
 }
@@ -470,11 +476,11 @@ inline void vm::o_lnk() {
 #define op_calc_const(type)\
     top[0]={vm_num,top[0].tonum() type cnum[imm[pc]]};
 
-inline void vm::o_addc() {op_calc_const(+);}
-inline void vm::o_subc() {op_calc_const(-);}
-inline void vm::o_mulc() {op_calc_const(*);}
-inline void vm::o_divc() {op_calc_const(/);}
-inline void vm::o_lnkc() {
+void vm::o_addc() {op_calc_const(+);}
+void vm::o_subc() {op_calc_const(-);}
+void vm::o_mulc() {op_calc_const(*);}
+void vm::o_divc() {op_calc_const(/);}
+void vm::o_lnkc() {
     top[0]=ngc.newstr(top[0].tostr()+cstr[imm[pc]]);
 }
 
@@ -483,11 +489,11 @@ inline void vm::o_lnkc() {
     memr=nullptr;\
     top-=imm[pc]+1;
 
-inline void vm::o_addeq() {op_calc_eq(+);}
-inline void vm::o_subeq() {op_calc_eq(-);}
-inline void vm::o_muleq() {op_calc_eq(*);}
-inline void vm::o_diveq() {op_calc_eq(/);}
-inline void vm::o_lnkeq() {
+void vm::o_addeq() {op_calc_eq(+);}
+void vm::o_subeq() {op_calc_eq(-);}
+void vm::o_muleq() {op_calc_eq(*);}
+void vm::o_diveq() {op_calc_eq(/);}
+void vm::o_lnkeq() {
     top[-1]=memr[0]=ngc.newstr(memr[0].tostr()+top[-1].tostr());
     memr=nullptr;
     top-=imm[pc]+1;
@@ -498,17 +504,17 @@ inline void vm::o_lnkeq() {
     memr=nullptr;\
     top-=(imm[pc]>>31);
 
-inline void vm::o_addeqc() {op_calc_eq_const(+);}
-inline void vm::o_subeqc() {op_calc_eq_const(-);}
-inline void vm::o_muleqc() {op_calc_eq_const(*);}
-inline void vm::o_diveqc() {op_calc_eq_const(/);}
-inline void vm::o_lnkeqc() {
+void vm::o_addeqc() {op_calc_eq_const(+);}
+void vm::o_subeqc() {op_calc_eq_const(-);}
+void vm::o_muleqc() {op_calc_eq_const(*);}
+void vm::o_diveqc() {op_calc_eq_const(/);}
+void vm::o_lnkeqc() {
     top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]&0x7fffffff]);
     memr=nullptr;
     top-=(imm[pc]>>31);
 }
 
-inline void vm::o_meq() {
+void vm::o_meq() {
     // pop old memr[0] and replace it
     // the reason why we should get memr and push the old value on stack
     // is that when lnkeq/lnkeqc is called, there will be
@@ -519,7 +525,7 @@ inline void vm::o_meq() {
     top-=imm[pc]+1;
 }
 
-inline void vm::o_eq() {
+void vm::o_eq() {
     var val2=top[0];
     var val1=(--top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
@@ -534,7 +540,7 @@ inline void vm::o_eq() {
     }
 }
 
-inline void vm::o_neq() {
+void vm::o_neq() {
     var val2=top[0];
     var val1=(--top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
@@ -553,28 +559,28 @@ inline void vm::o_neq() {
     --top;\
     top[0]=(top[0].tonum() type top[1].tonum())?one:zero;
 
-inline void vm::o_less() {op_cmp(<);}
-inline void vm::o_leq() {op_cmp(<=);}
-inline void vm::o_grt() {op_cmp(>);}
-inline void vm::o_geq() {op_cmp(>=);}
+void vm::o_less() {op_cmp(<);}
+void vm::o_leq() {op_cmp(<=);}
+void vm::o_grt() {op_cmp(>);}
+void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
     top[0]=(top[0].tonum() type cnum[imm[pc]])?one:zero;
 
-inline void vm::o_lessc() {op_cmp_const(<);}
-inline void vm::o_leqc() {op_cmp_const(<=);}
-inline void vm::o_grtc() {op_cmp_const(>);}
-inline void vm::o_geqc() {op_cmp_const(>=);}
+void vm::o_lessc() {op_cmp_const(<);}
+void vm::o_leqc() {op_cmp_const(<=);}
+void vm::o_grtc() {op_cmp_const(>);}
+void vm::o_geqc() {op_cmp_const(>=);}
 
-inline void vm::o_pop() {
+void vm::o_pop() {
     --top;
 }
 
-inline void vm::o_jmp() {
+void vm::o_jmp() {
     pc=imm[pc]-1;
 }
 
-inline void vm::o_jt() {
+void vm::o_jt() {
     // jump true needs to reserve the result on stack
     // because conditional expression in nasal has return value
     if (cond(top[0])) {
@@ -582,7 +588,7 @@ inline void vm::o_jt() {
     }
 }
 
-inline void vm::o_jf() {
+void vm::o_jf() {
     // jump false doesn't need to reserve result
     if (!cond(top[0])) {
         pc=imm[pc]-1;
@@ -590,7 +596,7 @@ inline void vm::o_jf() {
     --top;
 }
 
-inline void vm::o_cnt() {
+void vm::o_cnt() {
     if (top[0].type!=vm_vec) {
         die("must use vector in forindex/foreach");
         return;
@@ -598,7 +604,7 @@ inline void vm::o_cnt() {
     (++top)[0]={vm_cnt,(i64)-1};
 }
 
-inline void vm::o_findex() {
+void vm::o_findex() {
     if ((usize)(++top[0].cnt())>=top[-1].vec().size()) {
         pc=imm[pc]-1;
         return;
@@ -607,7 +613,7 @@ inline void vm::o_findex() {
     ++top;
 }
 
-inline void vm::o_feach() {
+void vm::o_feach() {
     auto& ref=top[-1].vec().elems;
     if ((usize)(++top[0].cnt())>=ref.size()) {
         pc=imm[pc]-1;
@@ -617,20 +623,20 @@ inline void vm::o_feach() {
     ++top;
 }
 
-inline void vm::o_callg() {
+void vm::o_callg() {
     (++top)[0]=stack[imm[pc]];
 }
 
-inline void vm::o_calll() {
+void vm::o_calll() {
     (++top)[0]=localr[imm[pc]];
 }
 
-inline void vm::o_upval() {
+void vm::o_upval() {
     (++top)[0]=funcr.func().upval[(imm[pc]>>16)&0xffff]
                     .upval()[imm[pc]&0xffff];
 }
 
-inline void vm::o_callv() {
+void vm::o_callv() {
     var val=top[0];
     var vec=(--top)[0];
     if (vec.type==vm_vec) {
@@ -666,7 +672,7 @@ inline void vm::o_callv() {
     }
 }
 
-inline void vm::o_callvi() {
+void vm::o_callvi() {
     var val=top[0];
     if (val.type!=vm_vec) {
         die("must use a vector");
@@ -680,7 +686,7 @@ inline void vm::o_callvi() {
     }
 }
 
-inline void vm::o_callh() {
+void vm::o_callh() {
     var val=top[0];
     if (val.type!=vm_hash) {
         die("must call a hash");
@@ -695,7 +701,7 @@ inline void vm::o_callh() {
     }
 }
 
-inline void vm::o_callfv() {
+void vm::o_callfv() {
     u32 argc=imm[pc]; // arguments counter
     var* local=top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
@@ -753,7 +759,7 @@ inline void vm::o_callfv() {
     upvalr=nil;
 }
 
-inline void vm::o_callfh() {
+void vm::o_callfh() {
     auto& hash=top[0].hash().elems;
     if (top[-1].type!=vm_func) {
         die("must call a function");
@@ -797,7 +803,7 @@ inline void vm::o_callfh() {
     upvalr=nil;
 }
 
-inline void vm::o_callb() {
+void vm::o_callb() {
     // reserve place for builtin function return,
     // in fact this code is changed because of coroutine
     (++top)[0]=nil;
@@ -811,7 +817,7 @@ inline void vm::o_callb() {
     }
 }
 
-inline void vm::o_slcbeg() {
+void vm::o_slcbeg() {
     // +--------------+
     // | slice_vector | <-- top[0]
     // +--------------+
@@ -824,12 +830,12 @@ inline void vm::o_slcbeg() {
     }
 }
 
-inline void vm::o_slcend() {
+void vm::o_slcend() {
     top[-1]=top[0];
     --top;
 }
 
-inline void vm::o_slc() {
+void vm::o_slc() {
     var val=(top--)[0];
     var res=top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
@@ -839,7 +845,7 @@ inline void vm::o_slc() {
     top[0].vec().elems.push_back(res);
 }
 
-inline void vm::o_slc2() {
+void vm::o_slc2() {
     var val2=(top--)[0];
     var val1=(top--)[0];
     auto& ref=top[-1].vec().elems;
@@ -868,28 +874,28 @@ inline void vm::o_slc2() {
     }
 }
 
-inline void vm::o_mcallg() {
+void vm::o_mcallg() {
     memr=stack+imm[pc];
     (++top)[0]=memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-inline void vm::o_mcalll() {
+void vm::o_mcalll() {
     memr=localr+imm[pc];
     (++top)[0]=memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-inline void vm::o_mupval() {
+void vm::o_mupval() {
     memr=&(funcr.func().upval[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
     (++top)[0]=memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-inline void vm::o_mcallv() {
+void vm::o_mcallv() {
     var val=top[0];     // index
     var vec=(--top)[0]; // mcall vector, reserved on stack to avoid gc
     if (vec.type==vm_vec) {
@@ -916,7 +922,7 @@ inline void vm::o_mcallv() {
     }
 }
 
-inline void vm::o_mcallh() {
+void vm::o_mcallh() {
     var hash=top[0]; // mcall hash, reserved on stack to avoid gc
     if (hash.type!=vm_hash) {
         die("must call a hash");
@@ -931,7 +937,7 @@ inline void vm::o_mcallh() {
     }
 }
 
-inline void vm::o_ret() {
+void vm::o_ret() {
 /*  +-------------+
 *   | return value| <- top[0]
 *   +-------------+
@@ -974,6 +980,7 @@ inline void vm::o_ret() {
         ngc.ctxreserve();
     }
 }
+
 void vm::run(
     const codegen& gen,
     const linker& linker,

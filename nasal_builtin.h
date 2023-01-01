@@ -1151,13 +1151,20 @@ var builtin_coresume(var* local,gc& ngc) {
         return nas_err("coroutine::resume","cannot start another coroutine when one is running");
     }
     var co=local[1];
+    // return nil if is not a coroutine object
     if (co.type!=vm_co) {
-        return nas_err("coroutine::resume","must use a coroutine object");
+        return nil;
     }
+    // cannot resume a dead coroutine
     if (co.co().status==nas_co::dead) {
         return nil;
     }
+
+    // change to coroutine context
     ngc.ctxchg(co.co());
+
+    // fetch coroutine's stack top and return
+    // so the coroutine's stack top in fact is not changed
     return ngc.top[0];
 }
 
@@ -1165,16 +1172,21 @@ var builtin_coyield(var* local,gc& ngc) {
     if (!ngc.cort) {
         return nas_err("coroutine::yield","no coroutine is running");
     }
-    ngc.ctxreserve();
+
     // this will set to main stack top
-    // then builtin_coresume will return it
+    ngc.ctxreserve();
+    
+    // then this will return value to main's stack top[0]
+    // the procedure seems like coroutine.resume returns the value
+    // but in fact coroutine.resume stop the main context
+    // until coroutine calls the coroutine.yield
     return local[1];
 }
 
 var builtin_costatus(var* local,gc& ngc) {
     var co=local[1];
     if (co.type!=vm_co) {
-        return nas_err("coroutine::status","must use a coroutine object");
+        return ngc.newstr("error");
     }
     switch(co.co().status) {
         case nas_co::suspended: return ngc.newstr("suspended");break;
