@@ -23,7 +23,7 @@ using std::string;
 
 const u32 STACK_DEPTH=1024;
 
-inline f64 hex2f(const char* str) {
+f64 hex2f(const char* str) {
     f64 ret=0;
     for(;*str;++str) {
         if ('0'<=*str && *str<='9') {
@@ -39,7 +39,7 @@ inline f64 hex2f(const char* str) {
     return ret;
 }
 
-inline f64 oct2f(const char* str) {
+f64 oct2f(const char* str) {
     f64 ret=0;
     while('0'<=*str && *str<'8') {
         ret=ret*8+(*str++-'0');
@@ -54,7 +54,7 @@ inline f64 oct2f(const char* str) {
 // it is not platform independent, and may have strange output.
 // so we write a new function here to convert str to number manually.
 // but this also makes 0.1+0.2==0.3, not another result that you may get in other languages.
-inline f64 dec2f(const char* str) {
+f64 dec2f(const char* str) {
     f64 ret=0,negative=1,num_pow=0;
     while('0'<=*str && *str<='9') {
         ret=ret*10+(*str++-'0');

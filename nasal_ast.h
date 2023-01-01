@@ -157,13 +157,13 @@ public:
     void set_str(const string& s) {nd_str=s;}
     void set_num(const f64 n) {nd_num=n;}
 
-    inline u32 line() const {return nd_line;}
-    inline u32 col()  const {return nd_col;}
-    inline u32 type() const {return nd_type;}
-    inline f64 num()  const {return nd_num;}
-    inline const string& str() const {return nd_str;}
-    inline const std::vector<ast>& child() const {return nd_child;}
-    inline std::vector<ast>& child() {return nd_child;}
+    u32 line() const {return nd_line;}
+    u32 col()  const {return nd_col;}
+    u32 type() const {return nd_type;}
+    f64 num()  const {return nd_num;}
+    const string& str() const {return nd_str;}
+    const std::vector<ast>& child() const {return nd_child;}
+    std::vector<ast>& child() {return nd_child;}
 };
 
 ast::ast(const ast& tmp):

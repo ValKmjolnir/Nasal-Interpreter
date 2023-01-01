@@ -80,17 +80,17 @@ struct var {
     string tostr();
     friend std::ostream& operator<<(std::ostream&,var&);
     bool   objchk(u32);
-    inline var*       addr();
-    inline u32        ret ();
-    inline i64&       cnt ();
-    inline f64        num ();
-    inline string&    str ();
-    inline nas_vec&   vec ();
-    inline nas_hash&  hash();
-    inline nas_func&  func();
-    inline nas_upval& upval();
-    inline nas_obj&   obj ();
-    inline nas_co&    co  ();
+    var*       addr();
+    u32        ret ();
+    i64&       cnt ();
+    f64        num ();
+    string&    str ();
+    nas_vec&   vec ();
+    nas_hash&  hash();
+    nas_func&  func();
+    nas_upval& upval();
+    nas_obj&   obj ();
+    nas_co&    co  ();
 };
 
 struct nas_vec {
@@ -412,17 +412,17 @@ bool var::objchk(u32 objtype) {
     return type==vm_obj && obj().type==objtype && obj().ptr;
 }
 
-inline var*       var::addr () {return val.addr;             }
-inline u32        var::ret  () {return val.ret;              }
-inline i64&       var::cnt  () {return val.cnt;              }
-inline f64        var::num  () {return val.num;              }
-inline string&    var::str  () {return *val.gcobj->ptr.str;  }
-inline nas_vec&   var::vec  () {return *val.gcobj->ptr.vec;  }
-inline nas_hash&  var::hash () {return *val.gcobj->ptr.hash; }
-inline nas_func&  var::func () {return *val.gcobj->ptr.func; }
-inline nas_upval& var::upval() {return *val.gcobj->ptr.upval;}
-inline nas_obj&   var::obj  () {return *val.gcobj->ptr.obj;  }
-inline nas_co&    var::co   () {return *val.gcobj->ptr.co;   }
+var*       var::addr () {return val.addr;             }
+u32        var::ret  () {return val.ret;              }
+i64&       var::cnt  () {return val.cnt;              }
+f64        var::num  () {return val.num;              }
+string&    var::str  () {return *val.gcobj->ptr.str;  }
+nas_vec&   var::vec  () {return *val.gcobj->ptr.vec;  }
+nas_hash&  var::hash () {return *val.gcobj->ptr.hash; }
+nas_func&  var::func () {return *val.gcobj->ptr.func; }
+nas_upval& var::upval() {return *val.gcobj->ptr.upval;}
+nas_obj&   var::obj  () {return *val.gcobj->ptr.obj;  }
+nas_co&    var::co   () {return *val.gcobj->ptr.co;   }
 
 const var zero={vm_num,(f64)0};
 const var one ={vm_num,(f64)1};

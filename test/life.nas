@@ -28,6 +28,7 @@ var run=func(width,height){
         if(_width>=width) _width=0;
         return map[_height][_width]=='O';
     }
+
     # enable ANSI escape sequence
     if(os.platform()=="windows")
         system("color");
@@ -55,43 +56,48 @@ var run=func(width,height){
 };
 
 var ppm_gen=func(width,height){
+    var pixels=width*height;
+
+    var new_map=func(){
+        var tmp=[];
+        setsize(tmp,pixels);
+        return tmp;
+    }
 
     # iteration counter and trigger for ppm/data generator
     var iter_to_print=0;
 
     var init=func(){
-        var res=new_map(width,height);
+        var res=new_map();
         if(io.exists(".life_data")) {
             var vec=split("\n",io.fin(".life_data"));
             if (num(vec[0])!=width or num(vec[1])!=height) {
                 die("incorrect width or height: "~vec[0]~":"~str(width)~" / "~vec[1]~":"~str(height))
             }
             iter_to_print=num(vec[2]);
-            var data=split("",vec[3]);
-            for(var i=0;i<height;i+=1)
-                for(var j=0;j<width;j+=1)
-                    res[i][j]=num(data[i*width+j]);
+            var data=vec[3];
+            var n="1"[0];
+            for(var i=0;i<pixels;i+=1){
+                res[i]=data[i]==n?1:0;
+            }
             return res;
         }
 
         rand(time(0));
-        for(var i=0;i<height;i+=1)
-            for(var j=0;j<width;j+=1)
-                res[i][j]=0;
+        for(var i=0;i<pixels;i+=1)
+            res[i]=0;
         
         for(var i=int(height/5*2);i<int(height/5*3);i+=1)
             forindex(var j;res[i])
-                res[i][j]=rand()<0.5?1:0;
+                res[i*width+j]=rand()<0.5?1:0;
         return res;
     }
 
     var store=func(){
         var fd=io.open(".life_data","w");
         io.write(fd,str(width)~"\n"~str(height)~"\n"~str(iter_to_print)~"\n");
-        for(var i=0;i<height;i+=1){
-            for(var j=0;j<width;j+=1){
-                io.write(fd,map[i][j]==1?"1":"0");
-            }
+        for(var i=0;i<pixels;i+=1){
+            io.write(fd,map[i]==1?"1":"0");
         }
         io.close(fd);
     }
@@ -103,24 +109,21 @@ var ppm_gen=func(width,height){
         io.write(fd,"P6\n"~width~" "~height~"\n255\n");
         var white=char(255)~char(255)~char(255);
         var black=char(0)~char(0)~char(0);
-        for(var i=0;i<height;i+=1){
-            for(var j=0;j<width;j+=1){
-                var s=map[i][j]==1?white:black;
-                io.write(fd,s);
-            }
+        for(var i=0;i<pixels;i+=1){
+            io.write(fd,map[i]==1?white:black);
         }
         io.close(fd);
     }
 
     var ts=maketimestamp();
-    var bar=process_bar.high_resolution_bar(80);
+    var bar=process_bar.high_resolution_bar(50);
     var map=init();
-    var tmp=new_map(width,height);
+    var tmp=new_map();
     
     var check=func(_width,_height){
         if(_height>=height) _height=0;
         if(_width>=width) _width=0;
-        return map[_height][_width]==1;
+        return map[_height*width+_width]==1;
     }
 
     for(var r=0;r<1001;r+=1){
@@ -128,9 +131,9 @@ var ppm_gen=func(width,height){
         for(var i=0;i<height;i+=1){
             for(var j=0;j<width;j+=1){
                 var cnt=check(j,i+1)+check(j+1,i)+check(j,i-1)+check(j-1,i)+check(j+1,i+1)+check(j-1,i-1)+check(j+1,i-1)+check(j-1,i+1);
-                if(cnt==2)    tmp[i][j]=map[i][j];
-                elsif(cnt==3) tmp[i][j]=1;
-                else          tmp[i][j]=0;
+                if(cnt==2)    tmp[i*width+j]=map[i*width+j];
+                elsif(cnt==3) tmp[i*width+j]=1;
+                else          tmp[i*width+j]=0;
             }
         }
         (map,tmp)=(tmp,map);

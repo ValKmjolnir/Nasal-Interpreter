@@ -238,28 +238,31 @@ string lexer::utf8_gen() {
     while(ptr<res.size() && res[ptr]<0) {
         string tmp="";
         u32 nbytes=utf8_hdchk(res[ptr]);
-        if (nbytes) {
-            tmp+=res[ptr++];
-            for(u32 i=0;i<nbytes;++i,++ptr) {
-                if (ptr<res.size() && (res[ptr]&0xc0)==0x80) {
-                    tmp+=res[ptr];
-                }
-            }
-            if (tmp.length()!=1+nbytes) {
-                ++column;
-                string utf_info="0x"+chrhex(tmp[0]);
-                for(u32 i=1;i<tmp.size();++i) {
-                    utf_info+=" 0x"+chrhex(tmp[i]);
-                }
-                err.err("lexer",line,column,1,"invalid utf-8 <"+utf_info+">");
-                err.fatal("lexer","fatal error occurred, stop");
-            }
-            str+=tmp;
-            column+=2; // may have some problems because not all the unicode takes 2 space
-        } else {
+        if (!nbytes) {
             ++ptr;
             ++column;
+            continue;
         }
+
+        tmp+=res[ptr++];
+        for(u32 i=0;i<nbytes;++i,++ptr) {
+            if (ptr<res.size() && (res[ptr]&0xc0)==0x80) {
+                tmp+=res[ptr];
+            }
+        }
+
+        // utf8 character's total length is 1+nbytes
+        if (tmp.length()!=1+nbytes) {
+            ++column;
+            string utf_info="0x"+chrhex(tmp[0]);
+            for(u32 i=1;i<tmp.size();++i) {
+                utf_info+=" 0x"+chrhex(tmp[i]);
+            }
+            err.err("lexer",line,column,1,"invalid utf-8 <"+utf_info+">");
+            err.fatal("lexer","fatal error occurred, stop");
+        }
+        str+=tmp;
+        column+=2; // may have some problems because not all the unicode takes 2 space
     }
     return str;
 }
