@@ -715,7 +715,7 @@ void gc::ctxchg(nas_co& ctx) {
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
-    cort->status=pc?nas_co::suspended:nas_co::dead;
+    cort->status=pc? nas_co::suspended:nas_co::dead;
     cort->pc=pc;
     cort->localr=localr;
     cort->memr=memr;

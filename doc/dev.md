@@ -587,7 +587,7 @@ Then we call `resume`, this function will change stack.
 As we can see, coroutine stack already has some values on it,
 but if we first enter it, the stack top will be `vm_ret`, and the return `pc` is `0`.
 
-So for safe running, `resume` will return `gc.top[0]`.
+So for safe running, when first calling the coroutine, `resume` will return `gc.top[0]`.
 `op_callb` will do `top[0]=resume()`, so the value does not change.
 
 ```C++
