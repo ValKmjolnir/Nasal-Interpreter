@@ -40,6 +40,20 @@ func(){
     }
 }();
 
+# test coroutine.resume passing arguments to coroutine
+func{
+    var co=coroutine.create(func(){
+        var (a,b)=coroutine.yield(a+b);
+        println("coroutine.yield get ",a," ",b);
+        (a,b)=coroutine.yield(a+b);
+        println("coroutine.yield get ",a," ",b);
+        return "end";
+    });
+
+    for(var i=0;i<5;i+=1)
+        println("coroutine.resume get ",coroutine.resume(co,i,i+1));
+}();
+
 # test crash in coroutines
 var co=coroutine.create(func{
     var b=func(){b()}

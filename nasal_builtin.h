@@ -1165,7 +1165,19 @@ var builtin_coresume(var* local,gc& ngc) {
 
     // fetch coroutine's stack top and return
     // so the coroutine's stack top in fact is not changed
-    return ngc.top[0];
+    if (ngc.top[0].type==vm_ret) {
+        // when first calling this coroutine, the stack top must be vm_ret
+        return ngc.top[0];
+    }
+
+    // after first calling the coroutine, each time coroutine.yield triggered
+    // a new space will be reserved on stack with value nil
+    // so we could fill this place with args
+
+    // the coroutine seems like coroutine.yield returns the value
+    // but in fact coroutine.yield stop the coroutine
+    // until main context calls the coroutine.resume
+    return local[2];
 }
 
 var builtin_coyield(var* local,gc& ngc) {

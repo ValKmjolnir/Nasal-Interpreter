@@ -624,6 +624,7 @@ void vm::o_feach() {
 }
 
 void vm::o_callg() {
+    // get main stack directly
     (++top)[0]=stack[imm[pc]];
 }
 

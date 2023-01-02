@@ -507,9 +507,9 @@ var compile=func(code,filename="<compile>"){
 }
 
 var coroutine={
-    create: func(function){return __cocreate;},
-    resume: func(co)      {return __coresume;},
-    yield:  func(args...) {return __coyield; },
-    status: func(co)      {return __costatus;},
-    running:func()        {return __corun;   }
+    create: func(function)   {return __cocreate;},
+    resume: func(co,args...) {return __coresume;},
+    yield:  func(args...)    {return __coyield; },
+    status: func(co)         {return __costatus;},
+    running:func()           {return __corun;   }
 };
