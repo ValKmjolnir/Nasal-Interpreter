@@ -73,14 +73,14 @@ public:
 
 noecho_input this_window;
 var nas_getch(var* args,usize size,gc* ngc) {
-    return {vm_num,(double)this_window.noecho_getch()};
+    return var::num((double)this_window.noecho_getch());
 }
 var nas_kbhit(var* args,usize size,gc* ngc) {
-    return {vm_num,(double)this_window.noecho_kbhit()};
+    return var::num((double)this_window.noecho_kbhit());
 }
 var nas_noblock(var* args,usize size,gc* ngc) {
     if (this_window.noecho_kbhit()) {
-        return {vm_num,(double)this_window.noecho_getch()};
+        return var::num((double)this_window.noecho_getch());
     }
     return nil;
 }

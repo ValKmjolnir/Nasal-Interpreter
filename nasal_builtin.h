@@ -86,9 +86,9 @@ var builtin_setsize(var* local,gc& ngc) {
 var builtin_system(var* local,gc& ngc) {
     var str=local[1];
     if (str.type!=vm_str) {
-        return {vm_num,(f64)-1};
+        return var::num(-1);
     }
-    return {vm_num,(f64)system(str.str().c_str())};
+    return var::num((f64)system(str.str().c_str()));
 }
 
 var builtin_input(var* local,gc& ngc) {
@@ -180,7 +180,7 @@ var builtin_rand(var* local,gc& ngc) {
     for(u32 i=0;i<5;++i) {
         num=(num+rand())*(1.0/(RAND_MAX+1.0));
     }
-    return {vm_num,num};
+    return var::num(num);
 }
 
 var builtin_id(var* local,gc& ngc) {
@@ -198,12 +198,12 @@ var builtin_int(var* local,gc& ngc) {
     if (val.type!=vm_num && val.type!=vm_str) {
         return nil;
     }
-    return {vm_num,f64((i32)val.tonum())};
+    return var::num(f64((i32)val.tonum()));
 }
 
 var builtin_floor(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,std::floor(val.num())};
+    return var::num(std::floor(val.num()));
 }
 
 var builtin_num(var* local,gc& ngc) {
@@ -218,7 +218,7 @@ var builtin_num(var* local,gc& ngc) {
     if (std::isnan(res)) {
         return nil;
     }
-    return {vm_num,res};
+    return var::num(res);
 }
 
 var builtin_pop(var* local,gc& ngc) {
@@ -248,100 +248,100 @@ var builtin_size(var* local,gc& ngc) {
         case vm_vec:  num=val.vec().size();  break;
         case vm_hash: num=val.hash().size(); break;
     }
-    return {vm_num,num};
+    return var::num(num);
 }
 
 var builtin_i32xor(var* local,gc& ngc) {
-    return {vm_num,(f64)(i32(local[1].num())^i32(local[2].num()))};
+    return var::num((f64)(i32(local[1].num())^i32(local[2].num())));
 }
 
 var builtin_i32and(var* local,gc& ngc) {
-    return {vm_num,(f64)(i32(local[1].num())&i32(local[2].num()))};
+    return var::num((f64)(i32(local[1].num())&i32(local[2].num())));
 }
 
 var builtin_i32or(var* local,gc& ngc) {
-    return {vm_num,(f64)(i32(local[1].num())|i32(local[2].num()))};
+    return var::num((f64)(i32(local[1].num())|i32(local[2].num())));
 }
 
 var builtin_i32nand(var* local,gc& ngc) {
-    return {vm_num,(f64)(~(i32(local[1].num())&i32(local[2].num())))};
+    return var::num((f64)(~(i32(local[1].num())&i32(local[2].num()))));
 }
 
 var builtin_i32not(var* local,gc& ngc) {
-    return {vm_num,(f64)(~i32(local[1].num()))};
+    return var::num((f64)(~i32(local[1].num())));
 }
 
 var builtin_u32xor(var* local,gc& ngc) {
-    return {vm_num,(f64)(u32(local[1].num())^u32(local[2].num()))};
+    return var::num((f64)(u32(local[1].num())^u32(local[2].num())));
 }
 
 var builtin_u32and(var* local,gc& ngc) {
-    return {vm_num,(f64)(u32(local[1].num())&u32(local[2].num()))};
+    return var::num((f64)(u32(local[1].num())&u32(local[2].num())));
 }
 
 var builtin_u32or(var* local,gc& ngc) {
-    return {vm_num,(f64)(u32(local[1].num())|u32(local[2].num()))};
+    return var::num((f64)(u32(local[1].num())|u32(local[2].num())));
 }
 
 var builtin_u32nand(var* local,gc& ngc) {
-    return {vm_num,(f64)(u32)(~(u32(local[1].num())&u32(local[2].num())))};
+    return var::num((f64)(u32)(~(u32(local[1].num())&u32(local[2].num()))));
 }
 
 var builtin_u32not(var* local,gc& ngc) {
-    return {vm_num,(f64)(u32)(~u32(local[1].num()))};
+    return var::num((f64)(u32)(~u32(local[1].num())));
 }
 
 var builtin_pow(var* local,gc& ngc) {
     var x=local[1];
     var y=local[2];
     if (x.type!=vm_num || y.type!=vm_num) {
-        return {vm_num,std::nan("")};
+        return var::num(std::nan(""));
     }
-    return {vm_num,std::pow(x.num(),y.num())};
+    return var::num(std::pow(x.num(),y.num()));
 }
 
 var builtin_sin(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?sin(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?sin(val.num()):std::nan(""));
 }
 
 var builtin_cos(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?cos(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?cos(val.num()):std::nan(""));
 }
 
 var builtin_tan(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?tan(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?tan(val.num()):std::nan(""));
 }
 
 var builtin_exp(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?exp(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?exp(val.num()):std::nan(""));
 }
 
 var builtin_lg(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?log(val.num())/log(10.0):std::nan("")};
+    return var::num(val.type==vm_num?log(val.num())/log(10.0):std::nan(""));
 }
 
 var builtin_ln(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?log(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?log(val.num()):std::nan(""));
 }
 
 var builtin_sqrt(var* local,gc& ngc) {
     var val=local[1];
-    return {vm_num,val.type==vm_num?sqrt(val.num()):std::nan("")};
+    return var::num(val.type==vm_num?sqrt(val.num()):std::nan(""));
 }
 
 var builtin_atan2(var* local,gc& ngc) {
     var x=local[1];
     var y=local[2];
     if (x.type!=vm_num || y.type!=vm_num) {
-        return {vm_num,std::nan("")};
+        return var::num(std::nan(""));
     }
-    return {vm_num,atan2(y.num(),x.num())};
+    return var::num(atan2(y.num(),x.num()));
 }
 
 var builtin_isnan(var* local,gc& ngc) {
@@ -355,7 +355,7 @@ var builtin_time(var* local,gc& ngc) {
         return nas_err("time","\"begin\" must be number");
     }
     time_t begin=(time_t)val.num();
-    return {vm_num,(f64)time(&begin)};
+    return var::num((f64)time(&begin));
 }
 
 var builtin_contains(var* local,gc& ngc) {
@@ -406,9 +406,9 @@ var builtin_find(var* local,gc& ngc) {
     var haystack=local[2];
     usize pos=haystack.tostr().find(needle.tostr());
     if (pos==string::npos) {
-        return {vm_num,(f64)-1};
+        return var::num((f64)-1);
     }
-    return {vm_num,(f64)pos};
+    return var::num((f64)pos);
 }
 
 var builtin_type(var* local,gc& ngc) {
@@ -450,7 +450,7 @@ var builtin_substr(var* local,gc& ngc) {
 var builtin_streq(var* local,gc& ngc) {
     var a=local[1];
     var b=local[2];
-    return {vm_num,f64((a.type!=vm_str || b.type!=vm_str)?0:(a.str()==b.str()))};
+    return var::num(f64((a.type!=vm_str || b.type!=vm_str)?0:(a.str()==b.str())));
 }
 
 var builtin_left(var* local,gc& ngc) {
@@ -494,7 +494,7 @@ var builtin_cmp(var* local,gc& ngc) {
     if (a.type!=vm_str || b.type!=vm_str) {
         return nas_err("cmp","\"a\" and \"b\" must be string");
     }
-    return {vm_num,(f64)strcmp(a.str().c_str(),b.str().c_str())};
+    return var::num((f64)strcmp(a.str().c_str(),b.str().c_str()));
 }
 
 var builtin_chr(var* local,gc& ngc) {
@@ -600,7 +600,7 @@ var builtin_read(var* local,gc& ngc) {
     buf.str()=buff;
     buf.val.gcobj->unmut=true;
     delete []buff;
-    return {vm_num,res};
+    return var::num(res);
 }
 
 var builtin_write(var* local,gc& ngc) {
@@ -612,7 +612,7 @@ var builtin_write(var* local,gc& ngc) {
     if (str.type!=vm_str) {
         return nas_err("write","\"str\" must be string");
     }
-    return {vm_num,(f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr)};
+    return var::num((f64)fwrite(str.str().c_str(),1,str.str().length(),(FILE*)fd.obj().ptr));
 }
 
 var builtin_seek(var* local,gc& ngc) {
@@ -622,7 +622,7 @@ var builtin_seek(var* local,gc& ngc) {
     if (!fd.objchk(nas_obj::file)) {
         return nas_err("seek","not a valid filehandle");
     }
-    return {vm_num,(f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num())};
+    return var::num((f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num()));
 }
 
 var builtin_tell(var* local,gc& ngc) {
@@ -630,7 +630,7 @@ var builtin_tell(var* local,gc& ngc) {
     if (!fd.objchk(nas_obj::file)) {
         return nas_err("tell","not a valid filehandle");
     }
-    return {vm_num,(f64)ftell((FILE*)fd.obj().ptr)};
+    return var::num((f64)ftell((FILE*)fd.obj().ptr));
 }
 
 var builtin_readln(var* local,gc& ngc) {
@@ -666,17 +666,17 @@ var builtin_stat(var* local,gc& ngc) {
     }
     var ret=ngc.alloc(vm_vec);
     ret.vec().elems={
-        {vm_num,(f64)buf.st_dev},
-        {vm_num,(f64)buf.st_ino},
-        {vm_num,(f64)buf.st_mode},
-        {vm_num,(f64)buf.st_nlink},
-        {vm_num,(f64)buf.st_uid},
-        {vm_num,(f64)buf.st_gid},
-        {vm_num,(f64)buf.st_rdev},
-        {vm_num,(f64)buf.st_size},
-        {vm_num,(f64)buf.st_atime},
-        {vm_num,(f64)buf.st_mtime},
-        {vm_num,(f64)buf.st_ctime}
+        var::num((f64)buf.st_dev),
+        var::num((f64)buf.st_ino),
+        var::num((f64)buf.st_mode),
+        var::num((f64)buf.st_nlink),
+        var::num((f64)buf.st_uid),
+        var::num((f64)buf.st_gid),
+        var::num((f64)buf.st_rdev),
+        var::num((f64)buf.st_size),
+        var::num((f64)buf.st_atime),
+        var::num((f64)buf.st_mtime),
+        var::num((f64)buf.st_ctime)
     };
     return ret;
 }
@@ -686,7 +686,7 @@ var builtin_eof(var* local,gc& ngc) {
     if (!fd.objchk(nas_obj::file)) {
         return nas_err("readln","not a valid filehandle");
     }
-    return {vm_num,(f64)feof((FILE*)fd.obj().ptr)};
+    return var::num((f64)feof((FILE*)fd.obj().ptr));
 }
 
 var builtin_fld(var* local,gc& ngc) {
@@ -714,7 +714,7 @@ var builtin_fld(var* local,gc& ngc) {
             res|=1<<(bit+len-i-1);
         }
     }
-    return {vm_num,(f64)res};
+    return var::num((f64)res);
 }
 
 var builtin_sfld(var* local,gc& ngc) {
@@ -746,7 +746,7 @@ var builtin_sfld(var* local,gc& ngc) {
     if (res&(1<<(len-1))) {
         res|=~((1<<len)-1);
     }
-    return {vm_num,(f64)((i32)res)};
+    return var::num((f64)((i32)res));
 }
 
 var builtin_setfld(var* local,gc& ngc) {
@@ -808,8 +808,8 @@ var builtin_pipe(var* local,gc& ngc) {
     if (pipe(fd)==-1) {
         return nas_err("pipe","failed to create pipe");
     }
-    res.vec().elems.push_back({vm_num,(f64)fd[0]});
-    res.vec().elems.push_back({vm_num,(f64)fd[1]});
+    res.vec().elems.push_back(var::num((f64)fd[0]));
+    res.vec().elems.push_back(var::num((f64)fd[1]));
     return res;
 #endif
     return nas_err("pipe","not supported");
@@ -821,7 +821,7 @@ var builtin_fork(var* local,gc& ngc) {
     if (res<0) {
         return nas_err("fork","failed to fork a process");
     }
-    return {vm_num,(f64)res};
+    return var::num((f64)res);
 #endif
     return nas_err("fork","not supported");
 }
@@ -836,8 +836,8 @@ var builtin_waitpid(var* local,gc& ngc) {
     i32 ret_pid,status;
     ret_pid=waitpid(pid.num(),&status,nohang.num()==0?0:WNOHANG);
     var vec=ngc.alloc(vm_vec);
-    vec.vec().elems.push_back({vm_num,(f64)ret_pid});
-    vec.vec().elems.push_back({vm_num,(f64)status});
+    vec.vec().elems.push_back(var::num((f64)ret_pid));
+    vec.vec().elems.push_back(var::num((f64)status));
     return vec;
 #endif
     return nas_err("waitpid","not supported");
@@ -895,9 +895,9 @@ var builtin_closedir(var* local,gc& ngc) {
 var builtin_chdir(var* local,gc& ngc) {
     var path=local[1];
     if (path.type!=vm_str) {
-        return {vm_num,(f64)-1};
+        return var::num((f64)-1);
     }
-    return {vm_num,(f64)chdir(path.str().c_str())};
+    return var::num((f64)chdir(path.str().c_str()));
 }
 
 var builtin_environ(var* local,gc& ngc) {
@@ -1136,9 +1136,9 @@ var builtin_cocreate(var* local,gc& ngc) {
     cort.localr[0]=func.func().local[0];
     cort.top[0]=nil; // old upvalr
     cort.top++;
-    cort.top[0]={vm_addr,(var*)nullptr}; // old localr
+    cort.top[0]=var::addr((var*)nullptr); // old localr
     cort.top++;
-    cort.top[0]={vm_ret,(u32)0}; // old pc, set to zero to make op_ret recognizing this as coroutine function
+    cort.top[0]=var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
 
     cort.funcr=func; // make sure the coroutine function can use correct upvalues
     cort.status=nas_co::suspended;
@@ -1216,7 +1216,7 @@ var builtin_millisec(var* local,gc& ngc) {
     f64 res=std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::high_resolution_clock::now().time_since_epoch())
             .count();
-    return {vm_num,res};
+    return var::num(res);
 }
 
 var builtin_sysargv(var* local,gc& ngc) {

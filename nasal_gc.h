@@ -39,6 +39,7 @@ enum vm_type:u8 {
     vm_obj,
     vm_co
 };
+
 const u32 gc_tsize=vm_co-vm_str+1;
 
 struct nas_vec;  // vector
@@ -59,27 +60,27 @@ struct var {
         nas_val* gcobj;
     } val;
 
-    // vm_none/vm_nil
-    var(const u8 t=vm_none):type(t) {}
-    // vm_ret
-    var(const u8 t,const u32 n):type(t) {val.ret=n;}
-    // vm_cnt
-    var(const u8 t,const i64 n):type(t) {val.cnt=n;}
-    // vm_num
-    var(const u8 t,const f64 n):type(t) {val.num=n;}
-    // nas_val
-    var(const u8 t,nas_val* n):type(t) {val.gcobj=n;}
-    // vm_addr
-    var(const u8 t,var* n):type(t) {val.addr=n;}
-    // copy
-    var(const var& nr):type(nr.type),val(nr.val) {}
+    var() = default;
+    var(const var&) = default;
     bool operator==(const var& nr) const {return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const var& nr) const {return type!=nr.type || val.gcobj!=nr.val.gcobj;}
+
     // number and string can be translated to each other
-    f64    tonum();
+    f64 tonum();
     string tostr();
     friend std::ostream& operator<<(std::ostream&,var&);
-    bool   objchk(u32);
+    bool objchk(u32);
+
+    // create new var object
+    static var none();
+    static var nil();
+    static var ret(u32);
+    static var cnt(i64);
+    static var num(f64);
+    static var gcobj(nas_val*);
+    static var addr(var*);
+
+    // get content
     var*       addr();
     u32        ret ();
     i64&       cnt ();
@@ -95,21 +96,25 @@ struct var {
 
 struct nas_vec {
     std::vector<var> elems;
+
+    // mark if this is printed, avoid stackoverflow
     bool printed;
 
     nas_vec():printed(false) {}
     usize size() const {return elems.size();}
-    var  get_val(const i32);
+    var get_val(const i32);
     var* get_mem(const i32);
 };
 
 struct nas_hash {
     std::unordered_map<string,var> elems;
+
+    // mark if this is printed, avoid stackoverflow
     bool printed;
 
     nas_hash():printed(false) {}
     usize size() const {return elems.size();}
-    var  get_val(const string&);
+    var get_val(const string&);
     var* get_mem(const string&);
 };
 
@@ -127,13 +132,16 @@ struct nas_func {
 };
 
 struct nas_upval {
+    // if on stack, use these three variables
     bool onstk;
-    u32  size;
+    u32 size;
     var* stk;
+
+    // if not on stack, use this
     std::vector<var> elems;
 
     nas_upval() {onstk=true;stk=nullptr;size=0;}
-    var& operator[](usize n) {return onstk?stk[n]:elems[n];}
+    var& operator[](usize n) {return onstk? stk[n]:elems[n];}
     void clear() {onstk=true;elems.clear();size=0;}
 };
 
@@ -194,6 +202,8 @@ struct nas_co {
         running,
         dead
     };
+
+    // calculation stack
     var  stack[STACK_DEPTH];
     
     u32  pc;
@@ -205,29 +215,30 @@ struct nas_co {
     var  upvalr;
 
     u32 status;
-    nas_co() {
-        clear();
-    }
+    nas_co() {clear();}
     void clear() {
         for(u32 i=0;i<STACK_DEPTH;++i) {
-            stack[i]={vm_nil,(f64)0};
+            stack[i]=var::nil();
         }
         pc=0;
         localr=nullptr;
         memr=nullptr;
         top=stack;
         status=nas_co::suspended;
-        funcr={vm_nil,(f64)0};
-        upvalr={vm_nil,(f64)0};
+        funcr=var::nil();
+        upvalr=var::nil();
     }
 };
 
-const u8 GC_UNCOLLECTED=0;   
-const u8 GC_COLLECTED  =1;
-const u8 GC_FOUND      =2;
 struct nas_val {
-    u8 mark;
-    u8 type;
+    enum status:u8 {
+        uncollected=0,   
+        collected,
+        found
+    };
+
+    u8 mark; // mark if it is visited by gc or collected by gc
+    u8 type; // value type
     u8 unmut; // used to mark if a string is unmutable
     union {
         string*    str;
@@ -247,7 +258,7 @@ struct nas_val {
 var nas_vec::get_val(const i32 n) {
     i32 size=elems.size();
     if (n<-size || n>=size) {
-        return {vm_none};
+        return var::none();
     }
     return elems[n>=0?n:n+size];
 }
@@ -279,7 +290,7 @@ var nas_hash::get_val(const string& key) {
     if (elems.count(key)) {
         return elems.at(key);
     } else if (elems.count("parents")) {
-        var ret(vm_none);
+        var ret=var::none();
         var val=elems["parents"];
         if (val.type==vm_vec) {
             for(auto& i:val.vec().elems) {
@@ -292,7 +303,7 @@ var nas_hash::get_val(const string& key) {
             }
         }
     }
-    return {vm_none};
+    return var::none();
 }
 
 var* nas_hash::get_mem(const string& key) {
@@ -338,7 +349,7 @@ void nas_func::clear() {
 }
 
 nas_val::nas_val(u8 val_type) {
-    mark=GC_COLLECTED;
+    mark=status::collected;
     type=val_type;
     unmut=0;
     switch(val_type) {
@@ -378,7 +389,7 @@ void nas_val::clear() {
 }
 
 f64 var::tonum() {
-    return type!=vm_str?val.num:str2num(str().c_str());
+    return type!=vm_str? val.num:str2num(str().c_str());
 }
 
 string var::tostr() {
@@ -412,6 +423,54 @@ bool var::objchk(u32 objtype) {
     return type==vm_obj && obj().type==objtype && obj().ptr;
 }
 
+var var::none() {
+    var t;
+    t.type=vm_none;
+    return t;
+}
+
+var var::nil() {
+    var t;
+    t.type=vm_nil;
+    t.val.num=0;
+    return t;
+}
+
+var var::ret(u32 pc) {
+    var t;
+    t.type=vm_ret;
+    t.val.ret=pc;
+    return t;
+}
+
+var var::cnt(i64 n) {
+    var t;
+    t.type=vm_cnt;
+    t.val.cnt=n;
+    return t;
+}
+
+var var::num(f64 n) {
+    var t;
+    t.type=vm_num;
+    t.val.num=n;
+    return t;
+}
+
+var var::gcobj(nas_val* p) {
+    var t;
+    t.type=p->type; // use nas_val::type directly
+    t.val.gcobj=p;
+    return t;
+}
+
+var var::addr(var* p) {
+    var t;
+    t.type=vm_addr;
+    t.val.addr=p;
+    return t;
+}
+
 var*       var::addr () {return val.addr;             }
 u32        var::ret  () {return val.ret;              }
 i64&       var::cnt  () {return val.cnt;              }
@@ -424,9 +483,9 @@ nas_upval& var::upval() {return *val.gcobj->ptr.upval;}
 nas_obj&   var::obj  () {return *val.gcobj->ptr.obj;  }
 nas_co&    var::co   () {return *val.gcobj->ptr.co;   }
 
-const var zero={vm_num,(f64)0};
-const var one ={vm_num,(f64)1};
-const var nil ={vm_nil,(f64)0};
+const var zero=var::num(0);
+const var one =var::num(1);
+const var nil =var::nil();
 
 struct gc {
     /* main context */
@@ -461,6 +520,7 @@ struct gc {
     std::vector<nas_val*> memory; // gc memory
     std::vector<nas_val*> unused[gc_tsize]; // gc free list
 
+    // heap increase size
     u32 incr[gc_tsize]={
         128, // vm_str
         128, // vm_vec
@@ -488,10 +548,10 @@ struct gc {
     void init(const std::vector<string>&,const std::vector<string>&);
     void clear();
     void info();
-    var  alloc(const u8);
-    var  newstr(char);
-    var  newstr(const char*);
-    var  newstr(const string&);
+    var alloc(const u8);
+    var newstr(char);
+    var newstr(const char*);
+    var newstr(const string&);
     void ctxchg(nas_co&);
     void ctxreserve();
 };
@@ -509,7 +569,9 @@ void gc::mark() {
     bfs.push_back(funcr);
     bfs.push_back(upvalr);
     bfs.push_back(temp);
-    if (cort) { // scan main process stack
+
+    // if coroutine is running, scan main process stack from mctx
+    if (cort) {
         for(var* i=mctx.stack;i<=mctx.top;++i) {
             bfs.push_back(*i);
         }
@@ -523,7 +585,7 @@ void gc::mark() {
         if (tmp.type<=vm_num || tmp.val.gcobj->mark) {
             continue;
         }
-        tmp.val.gcobj->mark=GC_FOUND;
+        tmp.val.gcobj->mark=nas_val::status::found;
         switch(tmp.type) {
             case vm_vec:
                 for(auto& i:tmp.vec().elems) {
@@ -561,12 +623,12 @@ void gc::mark() {
 
 void gc::sweep() {
     for(auto i:memory) {
-        if (i->mark==GC_UNCOLLECTED) {
+        if (i->mark==nas_val::status::uncollected) {
             i->clear();
             unused[i->type-vm_str].push_back(i);
-            i->mark=GC_COLLECTED;
-        } else if (i->mark==GC_FOUND) {
-            i->mark=GC_UNCOLLECTED;
+            i->mark=nas_val::status::collected;
+        } else if (i->mark==nas_val::status::found) {
+            i->mark=nas_val::status::uncollected;
         }
     }
 }
@@ -586,25 +648,30 @@ void gc::extend(u8 type) {
 }
 
 void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
-    // initiaize function register
+    // initialize function register
     funcr=nil;
     worktime=0;
 
+    // initialize counters
     for(u8 i=0;i<gc_tsize;++i) {
         size[i]=gcnt[i]=acnt[i]=0;
     }
+
+    // coroutine pointer set to nullpre
     cort=nullptr;
+
     // init constant strings
     strs.resize(s.size());
     for(u32 i=0;i<strs.size();++i) {
-        strs[i]={vm_str,new nas_val(vm_str)};
+        strs[i]=var::gcobj(new nas_val(vm_str));
         strs[i].val.gcobj->unmut=1;
         strs[i].str()=s[i];
     }
+
     // record arguments
     env_argv.resize(argv.size());
     for(usize i=0;i<argv.size();++i) {
-        env_argv[i]={vm_str,new nas_val(vm_str)};
+        env_argv[i]=var::gcobj(new nas_val(vm_str));
         env_argv[i].val.gcobj->unmut=1;
         env_argv[i].str()=argv[i];
     }
@@ -646,10 +713,10 @@ void gc::info() {
             std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<size[i]<<"\n";
         }
     }
-    double t=worktime*1.0/1000000000; // seconds
-    std::clog<<" time  | "<<(t<0.1? t*1000:t)<<(t<0.1? " ms\n":" s\n");
+    double sec=worktime*1.0/1000000000; // seconds
+    std::clog<<" time  | "<<(sec<0.1? sec*1000:sec)<<(sec<0.1? " ms\n":" s\n");
     if (total) {
-        std::clog<<" avg   | "<<t/total*1000<<" ms\n";
+        std::clog<<" avg   | "<<sec/total*1000<<" ms\n";
     }
 }
 
@@ -666,8 +733,8 @@ var gc::alloc(u8 type) {
     if (unused[index].empty()) {
         extend(type);
     }
-    var ret={type,unused[index].back()};
-    ret.val.gcobj->mark=GC_UNCOLLECTED;
+    var ret=var::gcobj(unused[index].back());
+    ret.val.gcobj->mark=nas_val::status::uncollected;
     unused[index].pop_back();
     return ret;
 }
@@ -691,6 +758,7 @@ var gc::newstr(const string& buff) {
 }
 
 void gc::ctxchg(nas_co& ctx) {
+    // store running state to main context
     mctx.pc=pc;
     mctx.top=top;
     mctx.localr=localr;
@@ -700,6 +768,7 @@ void gc::ctxchg(nas_co& ctx) {
     mctx.canary=canary;
     mctx.stack=stack;
 
+    // restore coroutine context state
     pc=ctx.pc;
     top=ctx.top;
     localr=ctx.localr;
@@ -710,12 +779,15 @@ void gc::ctxchg(nas_co& ctx) {
     stack=ctx.stack;
     cort=&ctx;
 
+    // set coroutine state to running
     cort->status=nas_co::running;
 }
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
     cort->status=pc? nas_co::suspended:nas_co::dead;
+
+    // store running state to coroutine
     cort->pc=pc;
     cort->localr=localr;
     cort->memr=memr;
@@ -724,6 +796,7 @@ void gc::ctxreserve() {
     cort->canary=canary;
     cort->top=top;
 
+    // restore main context state
     pc=mctx.pc;
     localr=mctx.localr;
     memr=mctx.memr;
@@ -738,7 +811,7 @@ void gc::ctxreserve() {
 // use to print error log and return error value
 var nas_err(const string& err_f,const string& info) {
     std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
-    return {vm_none};
+    return var::none();
 }
 
 typedef var (*mod)(var*,usize,gc*); // module function type

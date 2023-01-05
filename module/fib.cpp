@@ -13,7 +13,7 @@ var fib(var* args,usize size,gc* ngc) {
         return nas_err("fib","lack arguments");
     }
     var num=args[0];
-    return {vm_num,fibonaci(num.tonum())};
+    return var::num(fibonaci(num.tonum()));
 }
 
 var quick_fib(var* args,usize size,gc* ngc) {
@@ -22,7 +22,7 @@ var quick_fib(var* args,usize size,gc* ngc) {
     }
     double num=args[0].tonum();
     if (num<2) {
-        return {vm_num,num};
+        return var::num(num);
     }
     double a=1,b=1,res=0;
     for(double i=1;i<num;i+=1) {
@@ -30,7 +30,7 @@ var quick_fib(var* args,usize size,gc* ngc) {
         a=b;
         b=res;
     }
-    return {vm_num,res};
+    return var::num(res);
 }
 
 mod_func func_tbl[]={

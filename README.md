@@ -633,7 +633,7 @@ var fib(var* args,usize size,gc* ngc){
     // ok, you must know that vm_num now is not managed by gc
     // if want to return a gc object, use ngc->alloc(type)
     // usage of gc is the same as adding a native function
-    return {vm_num,fibonaci(num.tonum())};
+    return var::num(fibonaci(num.tonum()));
 }
 
 // then put function name and address into this table
