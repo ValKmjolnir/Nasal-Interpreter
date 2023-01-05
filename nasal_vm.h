@@ -366,7 +366,7 @@ void vm::o_loadu() {
 }
 
 void vm::o_pnum() {
-    (++top)[0]={vm_num,cnum[imm[pc]]};
+    (++top)[0]=var::num(cnum[imm[pc]]);
 }
 
 void vm::o_pnil() {
@@ -421,7 +421,7 @@ void vm::o_para() {
     nas_func& func=top[0].func();
     // func->size has 1 place reserved for "me"
     func.keys[imm[pc]]=func.psize;
-    func.local[func.psize++]={vm_none};
+    func.local[func.psize++]=var::none();
 }
 
 void vm::o_deft() {
@@ -444,7 +444,7 @@ void vm::o_unot() {
         case vm_str:{
             const f64 num=str2num(val.str().c_str());
             if (std::isnan(num)) {
-                top[0]={vm_num,(f64)val.str().empty()};
+                top[0]=var::num((f64)val.str().empty());
             } else {
                 top[0]=num?zero:one;
             }
@@ -457,11 +457,11 @@ void vm::o_unot() {
 }
 
 void vm::o_usub() {
-    top[0]={vm_num,-top[0].tonum()};
+    top[0]=var::num(-top[0].tonum());
 }
 
 #define op_calc(type)\
-    top[-1]={vm_num,top[-1].tonum() type top[0].tonum()};\
+    top[-1]=var::num(top[-1].tonum() type top[0].tonum());\
     --top;
 
 void vm::o_add() {op_calc(+);}
@@ -474,7 +474,7 @@ void vm::o_lnk() {
 }
 
 #define op_calc_const(type)\
-    top[0]={vm_num,top[0].tonum() type cnum[imm[pc]]};
+    top[0]=var::num(top[0].tonum() type cnum[imm[pc]]);
 
 void vm::o_addc() {op_calc_const(+);}
 void vm::o_subc() {op_calc_const(-);}
@@ -485,7 +485,7 @@ void vm::o_lnkc() {
 }
 
 #define op_calc_eq(type)\
-    top[-1]=memr[0]={vm_num,memr[0].tonum() type top[-1].tonum()};\
+    top[-1]=memr[0]=var::num(memr[0].tonum() type top[-1].tonum());\
     memr=nullptr;\
     top-=imm[pc]+1;
 
@@ -500,7 +500,7 @@ void vm::o_lnkeq() {
 }
 
 #define op_calc_eq_const(type)\
-    top[0]=memr[0]={vm_num,memr[0].tonum() type cnum[imm[pc]&0x7fffffff]};\
+    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]&0x7fffffff]);\
     memr=nullptr;\
     top-=(imm[pc]>>31);
 
@@ -601,7 +601,7 @@ void vm::o_cnt() {
         die("must use vector in forindex/foreach");
         return;
     }
-    (++top)[0]={vm_cnt,(i64)-1};
+    (++top)[0]=var::cnt(-1);
 }
 
 void vm::o_findex() {
@@ -609,7 +609,7 @@ void vm::o_findex() {
         pc=imm[pc]-1;
         return;
     }
-    top[1]={vm_num,(f64)top[0].cnt()};
+    top[1]=var::num(top[0].cnt());
     ++top;
 }
 
@@ -666,7 +666,7 @@ void vm::o_callv() {
             die("out of range:"+std::to_string(val.tonum()));
             return;
         }
-        top[0]={vm_num,f64((u8)str[num>=0? num:num+len])};
+        top[0]=var::num(f64((u8)str[num>=0? num:num+len]));
     } else {
         die("must call a vector/hash/string");
         return;
@@ -753,8 +753,8 @@ void vm::o_callfv() {
     }
 
     top[0]=upvalr;
-    (++top)[0]={vm_addr,localr};
-    (++top)[0]={vm_ret,pc};
+    (++top)[0]=var::addr(localr);
+    (++top)[0]=var::ret(pc);
     pc=func.entry-1;
     localr=local;
     upvalr=nil;
@@ -797,8 +797,8 @@ void vm::o_callfh() {
     }
 
     top[0]=upvalr;
-    (++top)[0]={vm_addr,localr};
-    (++top)[0]={vm_ret,pc}; // rewrite top with vm_ret
+    (++top)[0]=var::addr(localr);
+    (++top)[0]=var::ret(pc); // rewrite top with vm_ret
     pc=func.entry-1;
     localr=local;
     upvalr=nil;
@@ -806,12 +806,18 @@ void vm::o_callfh() {
 
 void vm::o_callb() {
     // reserve place for builtin function return,
-    // in fact this code is changed because of coroutine
+    // this code is written for coroutine
     (++top)[0]=nil;
-    // this ++top should not be used like: (++top)[0] here
-    // because if running a builtin function about coroutine
+
+    // if running a builtin function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    top[0]=(*builtin[imm[pc]].func)(localr,ngc);
+    var tmp=(*builtin[imm[pc]].func)(localr,ngc);
+
+    // so we use tmp variable to store this return value
+    // and set it to top[0] later
+    top[0]=tmp;
+
+    // if get none, this means errors occurred when calling this native function
     if (top[0].type==vm_none) {
         die("native function error");
         return;

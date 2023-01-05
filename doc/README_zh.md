@@ -606,7 +606,7 @@ var fib(var* args,usize size,gc* ngc){
         return nas_err("extern_fib","\"num\" must be number");
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
     // 如果需要返回内存管理的对象，请使用ngc->alloc(type)
-    return {vm_num,fibonaci(num.tonum())};
+    return var::num(fibonaci(num.tonum()));
 }
 
 // 然后将函数名字和函数地址放到一个表里，一定要记住表尾是{nullptr,nullptr}
