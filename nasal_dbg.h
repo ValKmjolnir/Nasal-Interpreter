@@ -294,6 +294,7 @@ void debugger::run(
 
 vmexit:
     callsort(count);
+    ngc.info();
     ngc.clear();
     imm.clear();
     std::cout<<cyan<<"[debug] "<<reset<<"debugger exited\n";

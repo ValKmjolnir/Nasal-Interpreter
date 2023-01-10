@@ -67,7 +67,7 @@ enum ast_node:u32 {
 };
 
 const char* ast_name[]={
-    "NullNode",
+    "Null",
     "AbstractSyntaxTreeRoot",
     "CodeBlock",
     "FileIndex",
@@ -114,17 +114,17 @@ const char* ast_name[]={
     "ForeachLoop",
     "WhileLoop",
     "Iterator",
-    "ConditionExpression",
-    "IfExpression",
-    "ElsifExpression",
-    "ElseExpression",
+    "ConditionStatement",
+    "IfStatement",
+    "ElsifStatement",
+    "ElseStatement",
     "LeftTuple",
     "Tuple",
     "Definition",
     "MultipleAssignment",
-    "ContinueExpression",
-    "BreakExpression",
-    "ReturnExpression"
+    "Continue",
+    "Break",
+    "ReturnStatement"
 };
 
 class ast {
@@ -133,19 +133,21 @@ private:
     u32 nd_col;
     u32 nd_type;
     f64 nd_num;
+    string nd_file;
     string nd_str;
     std::vector<ast> nd_child;
 public:
-    ast(const u32 l,const u32 c,const u32 t)
-        : nd_line(l),nd_col(c),nd_type(t),nd_num(0) {}
-    ast(const ast&);
-    ast(ast&&);
+    ast(const u32 l,const u32 c,const u32 t,const std::string& f)
+        : nd_line(l),nd_col(c),nd_type(t),nd_num(0),nd_file(f),nd_str("") {}
+    ast(const ast&) = default;
+    ast(ast&&) = default;
+    ast& operator=(const ast&) = default;
+    ast& operator=(ast&&) = default;
+
     void dump() const;
     void print(u32,bool,std::vector<string>&) const;
     void clear();
-    
-    ast& operator=(const ast&);
-    ast& operator=(ast&&);
+
     ast& operator[](usize n) {return nd_child[n];}
     const ast& operator[](usize n) const {return nd_child[n];}
     usize size() const {return nd_child.size();}
@@ -165,43 +167,6 @@ public:
     const std::vector<ast>& child() const {return nd_child;}
     std::vector<ast>& child() {return nd_child;}
 };
-
-ast::ast(const ast& tmp):
-    nd_str(tmp.nd_str),nd_child(tmp.nd_child) {
-    nd_line=tmp.nd_line;
-    nd_col=tmp.nd_col;
-    nd_type=tmp.nd_type;
-    nd_num =tmp.nd_num;
-}
-
-ast::ast(ast&& tmp) {
-    nd_line=tmp.nd_line;
-    nd_col=tmp.nd_col;
-    nd_type=tmp.nd_type;
-    nd_num =tmp.nd_num;
-    nd_str.swap(tmp.nd_str);
-    nd_child.swap(tmp.nd_child);
-}
-
-ast& ast::operator=(const ast& tmp) {
-    nd_line=tmp.nd_line;
-    nd_col=tmp.nd_col;
-    nd_type=tmp.nd_type;
-    nd_num=tmp.nd_num;
-    nd_str=tmp.nd_str;
-    nd_child=tmp.nd_child;
-    return *this;
-}
-
-ast& ast::operator=(ast&& tmp) {
-    nd_line=tmp.nd_line;
-    nd_col=tmp.nd_col;
-    nd_type=tmp.nd_type;
-    nd_num=tmp.nd_num;
-    nd_str.swap(tmp.nd_str);
-    nd_child.swap(tmp.nd_child);
-    return *this;
-}
 
 void ast::clear() {
     nd_line=nd_col=0;
@@ -230,7 +195,7 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
     } else if (nd_type==ast_num || nd_type==ast_file) {
         std::cout<<":"<<nd_num;
     }
-    std::cout<<" -> "<<nd_line<<":"<<nd_col<<"\n";
+    std::cout<<" --> "<<nd_file<<":"<<nd_line<<":"<<nd_col<<"\n";
     if (last && depth) {
         indent.back()="  ";
     } else if (!last && depth) {

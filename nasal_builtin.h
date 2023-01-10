@@ -441,8 +441,8 @@ var builtin_substr(var* local,gc& ngc) {
     }
     usize begin=(usize)beg.num();
     usize length=(usize)len.num();
-    if (begin>=str.str().length() || begin+length>str.str().length()) {
-        return nas_err("susbtr","index out of range");
+    if (begin>=str.str().length()) {
+        return nas_err("susbtr","begin index out of range: "+std::to_string(begin));
     }
     return ngc.newstr(str.str().substr(begin,length));
 }

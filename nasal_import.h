@@ -167,13 +167,14 @@ ast linker::fimpt(ast& node) {
     // avoid infinite loading loop
     filename=findf(filename);
     if (!filename.length() || exist(filename)) {
-        return {0,0,ast_root};
+        return {0,0,ast_root,filename};
     }
     
     // start importing...
     lex.scan(filename);
     par.compile(lex);
     ast tmp=std::move(par.tree());
+
     // check if tmp has 'import'
     return load(tmp,files.size()-1);
 }
@@ -183,24 +184,25 @@ ast linker::libimpt() {
     parse par(err);
     string filename=findf("lib.nas");
     if (!filename.length()) {
-        return {0,0,ast_root};
+        return {0,0,ast_root,filename};
     }
 
     // avoid infinite loading loop
     if (exist(filename)) {
-        return {0,0,ast_root};
+        return {0,0,ast_root,filename};
     }
     
     // start importing...
     lex.scan(filename);
     par.compile(lex);
     ast tmp=std::move(par.tree());
+
     // check if tmp has 'import'
     return load(tmp,files.size()-1);
 }
 
 ast linker::load(ast& root,u16 fileindex) {
-    ast tree(0,0,ast_root);
+    ast tree(0,0,ast_root,files[fileindex]);
     if (!lib_loaded) {
         link(tree,libimpt());
         lib_loaded=true;
@@ -213,7 +215,7 @@ ast linker::load(ast& root,u16 fileindex) {
         }
     }
     // add root to the back of tree
-    ast file_head(0,0,ast_file);
+    ast file_head(0,0,ast_file,files[fileindex]);
     file_head.set_num(fileindex);
     tree.add(std::move(file_head));
     link(tree,std::move(root));
