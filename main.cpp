@@ -39,10 +39,8 @@ std::ostream& help(std::ostream& out) {
     <<"   -c, --code     | view bytecode.\n"
     <<"   -e, --exec     | execute.\n"
     <<"   -t, --time     | show execute time.\n"
-    <<"   -d, --detail   | get detail crash info.\n"
-    <<"                  | get detail path-not-found info.\n"
-    <<"                  | get detail gc info.\n"
-    <<"   -dbg, --debug  | debug mode (ignore -t -d).\n"
+    <<"   -d, --detail   | get detail info.\n"
+    <<"   -dbg, --debug  | debug mode.\n"
     <<"file:\n"
     <<"   <filename>     | execute file.\n"
     <<"argv:\n"
@@ -57,11 +55,11 @@ std::ostream& logo(std::ostream& out) {
     <<"   /  \\/ / _` / __|/ _` | |\n"
     <<"  / /\\  / (_| \\__ \\ (_| | |\n"
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    <<"version   : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
-    <<"c++ std   : "<<__cplusplus<<"\n"
-    <<"code repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
-    <<"code repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
-    <<"lang wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
+    <<"ver  : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
+    <<"std  : c++ "<<__cplusplus<<"\n"
+    <<"repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
+    <<"repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
+    <<"wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
     <<"input <nasal -h> to get help .\n";
     return out;
 }
@@ -84,10 +82,13 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
+
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
+
     // linker gets parser's ast and load import files to this ast
     ld.link(parse,file,cmd&VM_DETAIL).chkerr();
+
     // optimizer does simple optimization on ast
     optimize(parse.tree());
     if (cmd&VM_AST) {
@@ -107,7 +108,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
         auto start=ch_clk::now();
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
         auto end=ch_clk::now();
-        std::clog<<"process exited after "<<(end-start).count()*1.0/ch_clk::duration::period::den<<"s.\n";
+        std::clog<<"process exited after "<<(end-start).count()*1.0/ch_clk::duration::period::den<<"s.\n\n";
     } else if (cmd&VM_EXEC) {
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
     }

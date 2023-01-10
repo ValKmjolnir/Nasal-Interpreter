@@ -638,9 +638,13 @@ void gc::extend(u8 type) {
     size[index]+=incr[index];
     for(u32 i=0;i<incr[index];++i) {
         nas_val* tmp=new nas_val(type);
+
+        // failed to allocate new memory
         if (!tmp) {
             std::exit(-1);
         }
+
+        // add to heap
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
@@ -718,6 +722,7 @@ void gc::info() {
     if (total) {
         std::clog<<" avg   | "<<sec/total*1000<<" ms\n";
     }
+    std::clog<<"\n";
 }
 
 var gc::alloc(u8 type) {
@@ -777,6 +782,8 @@ void gc::ctxchg(nas_co& ctx) {
     upvalr=ctx.upvalr;
     canary=ctx.canary;
     stack=ctx.stack;
+
+    // set coroutine pointer
     cort=&ctx;
 
     // set coroutine state to running
@@ -805,6 +812,8 @@ void gc::ctxreserve() {
     canary=mctx.canary;
     top=mctx.top;
     stack=mctx.stack;
+
+    // set coroutine pointer to nullptr
     cort=nullptr;
 }
 

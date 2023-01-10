@@ -67,12 +67,15 @@ enum class tok:u32 {
 };
 
 struct token {
-    u32 line;
-    u32 col;
-    tok type;
-    string str;
-    token(u32 l=0,u32 c=0,tok t=tok::null,const string& s="")
-        : line(l),col(c),type(t),str(s) {}
+    u32 tk_begin_line;  // token begin line
+    u32 tk_begin_column;// token begin column
+    u32 tk_end_line;    // token end line
+    u32 tk_end_column;  // token end column
+    tok type;           // token type
+    string str;         // content
+    string file;        // scanned file path
+    token() = default;
+    token(const token&) = default;
 };
 
 class lexer {
@@ -80,6 +83,7 @@ private:
     u32    line;
     u32    column;
     usize  ptr;
+    string filename;
     string res;
     error& err;
     std::vector<token> toks;
@@ -153,7 +157,7 @@ private:
     token dots();
     token calc_opr();
 public:
-    lexer(error& e): line(1),column(0),ptr(0),res(""),err(e) {}
+    lexer(error& e): line(1),column(0),ptr(0),filename(""),res(""),err(e) {}
     const error& scan(const string&);
     const std::vector<token>& result() const {return toks;}
 };
@@ -213,11 +217,15 @@ void lexer::err_char() {
 }
 
 void lexer::open(const string& file) {
+    // check file exsits and it is a regular file
     struct stat buffer;
     if (stat(file.c_str(),&buffer)==0 && !S_ISREG(buffer.st_mode)) {
         err.err("lexer","<"+file+"> is not a regular file");
         err.chkerr();
     }
+
+    // load
+    filename=file;
     std::ifstream in(file,std::ios::binary);
     if (in.fail()) {
         err.err("lexer","failed to open <"+file+">");
@@ -268,6 +276,8 @@ string lexer::utf8_gen() {
 }
 
 token lexer::id_gen() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     string str="";
     while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
@@ -278,10 +288,12 @@ token lexer::id_gen() {
         }
     }
     tok type=get_type(str);
-    return {line,column,(type!=tok::null)?type:tok::id,str};
+    return {begin_line,begin_column,line,column,(type!=tok::null)?type:tok::id,str,filename};
 }
 
 token lexer::num_gen() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     // generate hex number
     if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
         string str="0x";
@@ -293,7 +305,7 @@ token lexer::num_gen() {
         if (str.length()<3) { // "0x"
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         }
-        return {line,column,tok::num,str};
+        return {begin_line,begin_column,line,column,tok::num,str,filename};
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
         string str="0o";
         ptr+=2;
@@ -309,7 +321,7 @@ token lexer::num_gen() {
         if (str.length()==2 || erfmt) {
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
         }
-        return {line,column,tok::num,str};
+        return {begin_line,begin_column,line,column,tok::num,str,filename};
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
@@ -326,7 +338,7 @@ token lexer::num_gen() {
         if (str.back()=='.') {
             column+=str.length();
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return {line,column,tok::num,"0"};
+            return {begin_line,begin_column,line,column,tok::num,"0",filename};
         }
     }
     if (ptr<res.size() && (res[ptr]=='e' || res[ptr]=='E')) {
@@ -341,14 +353,16 @@ token lexer::num_gen() {
         if (str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+') {
             column+=str.length();
             err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return {line,column,tok::num,"0"};
+            return {begin_line,begin_column,line,column,tok::num,"0",filename};
         }
     }
     column+=str.length();
-    return {line,column,tok::num,str};
+    return {begin_line,begin_column,line,column,tok::num,str,filename};
 }
 
 token lexer::str_gen() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     string str="";
     const char begin=res[ptr];
     ++column;
@@ -384,16 +398,18 @@ token lexer::str_gen() {
     // check if this string ends with a " or '
     if (ptr++>=res.size()) {
         err.err("lexer",line,column,1,"get EOF when generating string");
-        return {line,column,tok::str,str};
+        return {begin_line,begin_column,line,column,tok::str,str,filename};
     }
     ++column;
     if (begin=='`' && str.length()!=1) {
         err.err("lexer",line,column,1,"\'`\' is used for string that includes one character");
     }
-    return {line,column,tok::str,str};
+    return {begin_line,begin_column,line,column,tok::str,str,filename};
 }
 
 token lexer::single_opr() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     string str(1,res[ptr]);
     ++column;
     tok type=get_type(str);
@@ -401,27 +417,31 @@ token lexer::single_opr() {
         err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
     }
     ++ptr;
-    return {line,column,type,str};
+    return {begin_line,begin_column,line,column,type,str,filename};
 }
 
 token lexer::dots() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     string str=".";
     if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
         str+="..";
     }
     ptr+=str.length();
     column+=str.length();
-    return {line,column,get_type(str),str};
+    return {begin_line,begin_column,line,column,get_type(str),str,filename};
 }
 
 token lexer::calc_opr() {
+    u32 begin_line=line;
+    u32 begin_column=column;
     // get calculation operator
     string str(1,res[ptr++]);
     if (ptr<res.size() && res[ptr]=='=') {
         str+=res[ptr++];
     }
     column+=str.length();
-    return {line,column,get_type(str),str};
+    return {begin_line,begin_column,line,column,get_type(str),str,filename};
 }
 
 const error& lexer::scan(const string& file) {
@@ -460,7 +480,7 @@ const error& lexer::scan(const string& file) {
             err_char();
         }
     }
-    toks.push_back({line,column,tok::eof,"<eof>"});
+    toks.push_back({line,column,line,column,tok::eof,"<eof>",filename});
     res="";
     return err;
 }

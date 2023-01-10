@@ -43,8 +43,8 @@
 */
 
 class parse {
-#define thisline (toks[ptr].line)
-#define thiscol (toks[ptr].col)
+#define thisline (toks[ptr].tk_end_line)
+#define thiscol (toks[ptr].tk_end_column)
 #define thislen (toks[ptr].str.length())
 private:
     u32 ptr;
@@ -155,7 +155,7 @@ private:
 public:
     parse(error& e):
         ptr(0),in_func(0),in_loop(0),
-        toks(nullptr),root(0,0,ast_root),
+        toks(nullptr),root(0,0,ast_root,""),
         err(e) {}
     const error& compile(const lexer&);
     ast& tree() {return root;}
@@ -166,7 +166,7 @@ const error& parse::compile(const lexer& lexer) {
     toks=lexer.result().data();
     ptr=in_func=in_loop=0;
 
-    root={0,0,ast_root};
+    root={0,0,ast_root,toks[0].file};
     while(!lookahead(tok::eof)) {
         root.add(expr());
         if (lookahead(tok::semi)) {
@@ -187,8 +187,8 @@ void parse::die(u32 line,u32 col,u32 len,string info,bool prev=false) {
     }
     // used to report lack of ',' ';'
     if (prev && ptr) {
-        line=toks[ptr-1].line;
-        col=toks[ptr-1].col;
+        line=toks[ptr-1].tk_end_line;
+        col=toks[ptr-1].tk_end_column;
         len=toks[ptr-1].str.length();
         len+=toks[ptr-1].type==tok::str?2:0;
     }
@@ -309,29 +309,29 @@ bool parse::need_semi_check(const ast& node) {
 }
 
 ast parse::null() {
-    return {toks[ptr].line,toks[ptr].col,ast_null};
+    return {toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file};
 }
 
 ast parse::nil() {
-    return {toks[ptr].line,toks[ptr].col,ast_nil};
+    return {toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_nil,toks[ptr].file};
 }
 
 ast parse::num() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_num);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_num,toks[ptr].file);
     node.set_num(str2num(toks[ptr].str.c_str()));
     match(tok::num);
     return node;
 }
 
 ast parse::str() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_str);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_str,toks[ptr].file);
     node.set_str(toks[ptr].str);
     match(tok::str);
     return node;
 }
 
 ast parse::id() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_id);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_id,toks[ptr].file);
     node.set_str(toks[ptr].str);
     match(tok::id);
     return node;
@@ -347,7 +347,7 @@ ast parse::vec() {
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
-    ast node(toks[ptr].line,toks[ptr].col,ast_vec);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_vec,toks[ptr].file);
     match(tok::lbracket);
     while(!lookahead(tok::rbracket)) {
         node.add(calc());
@@ -364,7 +364,7 @@ ast parse::vec() {
 }
 
 ast parse::hash() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_hash);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_hash,toks[ptr].file);
     match(tok::lbrace);
     while(!lookahead(tok::rbrace)) {
         node.add(pair());
@@ -381,7 +381,7 @@ ast parse::hash() {
 }
 
 ast parse::pair() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_pair);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_pair,toks[ptr].file);
     if (lookahead(tok::id)) {
         node.add(id());
     } else if (lookahead(tok::str)) {
@@ -396,7 +396,7 @@ ast parse::pair() {
 
 ast parse::func() {
     ++in_func;
-    ast node(toks[ptr].line,toks[ptr].col,ast_func);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_func,toks[ptr].file);
     match(tok::func);
     if (lookahead(tok::lcurve)) {
         node.add(params());
@@ -409,12 +409,12 @@ ast parse::func() {
 }
 
 ast parse::params() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_params);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_params,toks[ptr].file);
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
         ast tmp=id();
         if (lookahead(tok::eq) || lookahead(tok::ellipsis)) {
-            ast special_arg(toks[ptr].line,toks[ptr].col,ast_null);
+            ast special_arg(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
             if (lookahead(tok::eq)) {
                 match(tok::eq);
                 special_arg=std::move(tmp);
@@ -481,7 +481,7 @@ ast parse::expr()
             next();
             break;
     }
-    return {toks[ptr].line,toks[ptr].col,ast_null};
+    return {toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file};
 }
 
 ast parse::exprs() {
@@ -489,7 +489,7 @@ ast parse::exprs() {
         die(thisline,thiscol,thislen,"expected expression block");
         return null();
     }
-    ast node(toks[ptr].line,toks[ptr].col,ast_block);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_block,toks[ptr].file);
     if (lookahead(tok::lbrace)) {
         match(tok::lbrace);
         while(!lookahead(tok::rbrace) && !lookahead(tok::eof)) {
@@ -514,7 +514,7 @@ ast parse::calc() {
     ast node=or_expr();
     if (lookahead(tok::quesmark)) {
         // trinocular calculation
-        ast tmp(toks[ptr].line,toks[ptr].col,ast_trino);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_trino,toks[ptr].file);
         match(tok::quesmark);
         tmp.add(std::move(node));
         tmp.add(calc());
@@ -523,7 +523,7 @@ ast parse::calc() {
         node=std::move(tmp);
     } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
         // tok::eq~tok::lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
-        ast tmp(toks[ptr].line,toks[ptr].col,(u32)toks[ptr].type-(u32)tok::eq+ast_equal);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::eq+ast_equal,toks[ptr].file);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(calc());
@@ -535,7 +535,7 @@ ast parse::calc() {
 ast parse::or_expr() {
     ast node=and_expr();
     while(lookahead(tok::opor)) {
-        ast tmp(toks[ptr].line,toks[ptr].col,ast_or);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_or,toks[ptr].file);
         tmp.add(std::move(node));
         match(tok::opor);
         tmp.add(and_expr());
@@ -547,7 +547,7 @@ ast parse::or_expr() {
 ast parse::and_expr() {
     ast node=cmp_expr();
     while(lookahead(tok::opand)) {
-        ast tmp(toks[ptr].line,toks[ptr].col,ast_and);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_and,toks[ptr].file);
         tmp.add(std::move(node));
         match(tok::opand);
         tmp.add(cmp_expr());
@@ -560,7 +560,7 @@ ast parse::cmp_expr() {
     ast node=additive_expr();
     while(tok::cmpeq<=toks[ptr].type && toks[ptr].type<=tok::geq) {
         // tok::cmpeq~tok::geq is 43~48,ast_cmpeq~ast_geq is 27~32
-        ast tmp(toks[ptr].line,toks[ptr].col,(u32)toks[ptr].type-(u32)tok::cmpeq+ast_cmpeq);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::cmpeq+ast_cmpeq,toks[ptr].file);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(additive_expr());
@@ -572,7 +572,7 @@ ast parse::cmp_expr() {
 ast parse::additive_expr() {
     ast node=multive_expr();
     while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::link)) {
-        ast tmp(toks[ptr].line,toks[ptr].col,ast_null);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
         switch(toks[ptr].type) {
             case tok::add:  tmp.set_type(ast_add);  break;
             case tok::sub:  tmp.set_type(ast_sub);  break;
@@ -590,7 +590,7 @@ ast parse::additive_expr() {
 ast parse::multive_expr() {
     ast node=(lookahead(tok::sub) || lookahead(tok::opnot))?unary():scalar();
     while(lookahead(tok::mult) || lookahead(tok::div)) {
-        ast tmp(toks[ptr].line,toks[ptr].col,(u32)toks[ptr].type-(u32)tok::mult+ast_mult);
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::mult+ast_mult,toks[ptr].file);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add((lookahead(tok::sub) || lookahead(tok::opnot))?unary():scalar());
@@ -600,7 +600,7 @@ ast parse::multive_expr() {
 }
 
 ast parse::unary() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_null);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     switch(toks[ptr].type) {
         case tok::sub:   node.set_type(ast_neg);match(tok::sub);break;
         case tok::opnot: node.set_type(ast_not);match(tok::opnot);break;
@@ -611,7 +611,7 @@ ast parse::unary() {
 }
 
 ast parse::scalar() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_null);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     if (lookahead(tok::tknil)) {
         node=nil();
         match(tok::tknil);
@@ -644,7 +644,7 @@ ast parse::scalar() {
     // check call and avoid ambiguous syntax
     if (is_call(toks[ptr].type) && !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)) {
         ast tmp=std::move(node);
-        node={toks[ptr].line,toks[ptr].col,ast_call};
+        node={toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_call,toks[ptr].file};
         node.add(std::move(tmp));
         while(is_call(toks[ptr].type)) {
             node.add(call_scalar());
@@ -661,11 +661,11 @@ ast parse::call_scalar() {
         default: break;
     }
     // should never run this expression
-    return {toks[ptr].line,toks[ptr].col,ast_nil};
+    return {toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_nil,toks[ptr].file};
 }
 
 ast parse::callh() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_callh);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_callh,toks[ptr].file);
     match(tok::dot);
     node.set_str(toks[ptr].str);
     match(tok::id,"expected hashmap key"); // get key
@@ -683,7 +683,7 @@ ast parse::callv() {
         tok::lbrace,tok::lbracket,tok::colon,
         tok::null
     };
-    ast node(toks[ptr].line,toks[ptr].col,ast_callv);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_callv,toks[ptr].file);
     match(tok::lbracket);
     while(!lookahead(tok::rbracket)) {
         node.add(subvec());
@@ -712,7 +712,7 @@ ast parse::callf() {
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
-    ast node(toks[ptr].line,toks[ptr].col,ast_callf);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_callf,toks[ptr].file);
     bool special_call=check_special_call();
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
@@ -731,7 +731,7 @@ ast parse::callf() {
 ast parse::subvec() {
     ast node=lookahead(tok::colon)?nil():calc();
     if (lookahead(tok::colon)) {
-        ast tmp(node.line(),node.col(),ast_subvec);
+        ast tmp(node.line(),node.col(),ast_subvec,toks[ptr].file);
         match(tok::colon);
         tmp.add(std::move(node));
         tmp.add((lookahead(tok::comma) || lookahead(tok::rbracket))?nil():calc());
@@ -741,7 +741,7 @@ ast parse::subvec() {
 }
 
 ast parse::definition() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_def);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_def,toks[ptr].file);
     if (lookahead(tok::var)) {
         match(tok::var);
         switch(toks[ptr].type) {
@@ -777,7 +777,7 @@ ast parse::outcurve_def() {
 }
 
 ast parse::multi_id() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_multi_id);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_multi_id,toks[ptr].file);
     while(!lookahead(tok::eof)) {
         node.add(id());
         if (is_call(toks[ptr].type)) {
@@ -803,7 +803,7 @@ ast parse::multi_scalar() {
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
-    ast node(toks[ptr].line,toks[ptr].col,ast_tuple);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_tuple,toks[ptr].file);
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
         node.add(calc());
@@ -820,7 +820,7 @@ ast parse::multi_scalar() {
 }
 
 ast parse::multi_assgin() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_multi_assign);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_multi_assign,toks[ptr].file);
     node.add(multi_scalar());
     match(tok::eq);
     if (lookahead(tok::eof)) {
@@ -837,7 +837,7 @@ ast parse::multi_assgin() {
 
 ast parse::loop() {
     ++in_loop;
-    ast node(0,0,ast_null);
+    ast node(0,0,ast_null,toks[ptr].file);
     switch(toks[ptr].type) {
         case tok::rwhile:  node=while_loop(); break;
         case tok::rfor:    node=for_loop();   break;
@@ -850,7 +850,7 @@ ast parse::loop() {
 }
 
 ast parse::while_loop() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_while);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_while,toks[ptr].file);
     match(tok::rwhile);
     match(tok::lcurve);
     node.add(calc());
@@ -860,7 +860,7 @@ ast parse::while_loop() {
 }
 
 ast parse::for_loop() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_for);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_for,toks[ptr].file);
     match(tok::rfor);
     match(tok::lcurve);
     // first expression
@@ -902,7 +902,7 @@ ast parse::for_loop() {
 }
 
 ast parse::forei_loop() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_null);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     switch(toks[ptr].type) {
         case tok::forindex:node.set_type(ast_forindex);match(tok::forindex);break;
         case tok::foreach: node.set_type(ast_foreach); match(tok::foreach); break;
@@ -926,7 +926,7 @@ ast parse::forei_loop() {
 }
 
 ast parse::iter_gen() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_null);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     if (lookahead(tok::var)) {
         match(tok::var);
         node.set_type(ast_iter);
@@ -942,8 +942,8 @@ ast parse::iter_gen() {
 }
 
 ast parse::cond() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_cond);
-    ast ifnode(toks[ptr].line,toks[ptr].col,ast_if);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_cond,toks[ptr].file);
+    ast ifnode(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_if,toks[ptr].file);
     match(tok::rif);
     match(tok::lcurve);
     ifnode.add(calc());
@@ -951,7 +951,7 @@ ast parse::cond() {
     ifnode.add(exprs());
     node.add(std::move(ifnode));
     while(lookahead(tok::elsif)) {
-        ast elsifnode(toks[ptr].line,toks[ptr].col,ast_elsif);
+        ast elsifnode(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_elsif,toks[ptr].file);
         match(tok::elsif);
         match(tok::lcurve);
         elsifnode.add(calc());
@@ -960,7 +960,7 @@ ast parse::cond() {
         node.add(std::move(elsifnode));
     }
     if (lookahead(tok::relse)) {
-        ast elsenode(toks[ptr].line,toks[ptr].col,ast_else);
+        ast elsenode(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_else,toks[ptr].file);
         match(tok::relse);
         elsenode.add(exprs());
         node.add(std::move(elsenode));
@@ -969,19 +969,19 @@ ast parse::cond() {
 }
 
 ast parse::continue_expr() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_continue);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_continue,toks[ptr].file);
     match(tok::cont);
     return node;
 }
 
 ast parse::break_expr() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_break);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_break,toks[ptr].file);
     match(tok::brk);
     return node;
 }
 
 ast parse::ret_expr() {
-    ast node(toks[ptr].line,toks[ptr].col,ast_ret);
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_ret,toks[ptr].file);
     match(tok::ret);
     tok type=toks[ptr].type;
     if (type==tok::tknil || type==tok::num || type==tok::str || type==tok::id ||
