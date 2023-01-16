@@ -14,6 +14,7 @@ enum ast_node:u32 {
     ast_num,         // number, basic value type
     ast_str,         // string, basic value type
     ast_id,          // identifier
+    ast_bool,        // bools
     ast_func,        // func keyword
     ast_hash,        // hash, basic value type
     ast_vec,         // vector, basic value type
@@ -71,10 +72,11 @@ const char* ast_name[]={
     "AbstractSyntaxTreeRoot",
     "CodeBlock",
     "FileIndex",
-    "LiteralNil",
-    "LiteralNumber",
-    "LiteralString",
+    "NilLiteral",
+    "NumberLiteral",
+    "StringLiteral",
     "Identifier",
+    "BoolLiteral",
     "Function",
     "HashMap",
     "Vector",
@@ -188,6 +190,7 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
     std::cout<<ast_name[nd_type];
     if (nd_type==ast_str ||
         nd_type==ast_id ||
+        nd_type==ast_bool ||
         nd_type==ast_default ||
         nd_type==ast_dynamic ||
         nd_type==ast_callh) {
@@ -199,18 +202,14 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
     if (last && depth) {
         indent.back()="  ";
     } else if (!last && depth) {
-#ifdef _WIN32
-        indent.back()="| ";
-#else
-        indent.back()="│ ";
-#endif
+        indent.back()=is_windows()? "| ":"│ ";
     }
     for(u32 i=0;i<nd_child.size();++i) {
-#ifdef _WIN32
-        indent.push_back(i==nd_child.size()-1?"+-":"|-");
-#else
-        indent.push_back(i==nd_child.size()-1?"└─":"├─");
-#endif
+        if (is_windows()) {
+            indent.push_back(i==nd_child.size()-1?"+-":"|-");
+        } else {
+            indent.push_back(i==nd_child.size()-1?"└─":"├─");
+        }
         nd_child[i].print(depth+1,i==nd_child.size()-1,indent);
         indent.pop_back();
     }

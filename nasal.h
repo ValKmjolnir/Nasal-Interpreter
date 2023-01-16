@@ -11,6 +11,30 @@
 #include <cmath>
 #include <vector>
 
+bool is_windows() {
+#if defined _WIN32 || defined _WIN64
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_linux() {
+#if defined __linux__
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_macos() {
+#if defined __APPLE__
+    return true;
+#else
+    return false;
+#endif
+}
+
 using i32=std::int32_t;
 using i64=std::int64_t;
 using u8=std::uint8_t;
@@ -139,13 +163,11 @@ string chrhex(const char c) {
 string rawstr(const string& str,const usize maxlen=0) {
     string ret("");
     for(auto i:str) {
-#ifdef _WIN32
         // windows doesn't output unicode normally, so we output the hex
-        if (i<=0) {
+        if (is_windows() && i<=0) {
             ret+="\\x"+chrhex(i);
             continue;
         }
-#endif
         switch(i) {
             case '\0':  ret+="\\0"; break;
             case '\a':  ret+="\\a"; break;

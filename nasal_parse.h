@@ -116,6 +116,7 @@ private:
     ast num();
     ast str();
     ast id();
+    ast bools();
     ast vec();
     ast hash();
     ast pair();
@@ -337,13 +338,24 @@ ast parse::id() {
     return node;
 }
 
+ast parse::bools() {
+    ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_bool,toks[ptr].file);
+    node.set_str(toks[ptr].str);
+    if (lookahead(tok::tktrue)) {
+        match(tok::tktrue);
+    } else {
+        match(tok::tkfalse);
+    }
+    return node;
+}
+
 ast parse::vec() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok::null=0
     const tok panic[]={
-        tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::tknil,
+        tok::id,tok::str,tok::num,tok::tktrue,
+        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
@@ -460,6 +472,8 @@ ast parse::expr()
         case tok::num:
         case tok::str:
         case tok::id:
+        case tok::tktrue:
+        case tok::tkfalse:
         case tok::func:
         case tok::lbracket:
         case tok::lbrace:
@@ -621,6 +635,8 @@ ast parse::scalar() {
         node=str();
     } else if (lookahead(tok::id)) {
         node=id();
+    } else if (lookahead(tok::tktrue) || lookahead(tok::tkfalse)) {
+        node=bools();
     } else if (lookahead(tok::func)) {
         node=func();
     } else if (lookahead(tok::lbracket)) {
@@ -677,8 +693,8 @@ ast parse::callv() {
     // this is the FIRST set of subvec
     // array end with tok::null=0
     const tok panic[]={
-        tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::tknil,
+        tok::id,tok::str,tok::num,tok::tktrue,
+        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::colon,
         tok::null
@@ -707,8 +723,8 @@ ast parse::callf() {
     // this is the FIRST set of calculation/hashmember
     // array end with tok::null=0
     const tok panic[]={
-        tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::tknil,
+        tok::id,tok::str,tok::num,tok::tktrue,
+        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };
@@ -798,8 +814,8 @@ ast parse::multi_id() {
 ast parse::multi_scalar() {
     // if check_call_memory is true,we will check if value called here can reach a memory space
     const tok panic[]={
-        tok::id,tok::str,tok::num,
-        tok::opnot,tok::sub,tok::tknil,
+        tok::id,tok::str,tok::num,tok::tktrue,
+        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
         tok::func,tok::var,tok::lcurve,
         tok::lbrace,tok::lbracket,tok::null
     };

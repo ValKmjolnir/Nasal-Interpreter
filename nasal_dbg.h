@@ -145,7 +145,7 @@ void debugger::interact() {
     next=false;
     string cmd;
     stepinfo();
-    while(1) {
+    while(true) {
         std::cout<<">> ";
         std::getline(std::cin,cmd);
         auto res=parse(cmd);

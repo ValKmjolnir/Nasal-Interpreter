@@ -230,6 +230,7 @@ private:
     void gen(u8,u32,u32);
     void num_gen(const ast&);
     void str_gen(const ast&);
+    void bool_gen(const ast&);
     void vec_gen(const ast&);
     void hash_gen(const ast&);
     void func_gen(const ast&);
@@ -388,6 +389,12 @@ void codegen::num_gen(const ast& node) {
 void codegen::str_gen(const ast& node) {
     regist_str(node.str());
     gen(op_pstr,str_table[node.str()],node.line());
+}
+
+void codegen::bool_gen(const ast& node) {
+    f64 num=node.str()=="true"?1:0;
+    regist_num(num);
+    gen(op_pnum,num_table[num],node.line());
 }
 
 void codegen::vec_gen(const ast& node) {
@@ -804,7 +811,7 @@ void codegen::for_gen(const ast& node) {
                 gen(op_pop,0,node[0].line());
             }
             break;
-        case ast_nil:case ast_num:case ast_str:break;
+        case ast_nil:case ast_num:case ast_str:case ast_bool:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
         case ast_neg:case ast_not:
@@ -870,7 +877,7 @@ void codegen::for_gen(const ast& node) {
                 gen(op_pop,0,node[2].line());
             }
             break;
-        case ast_nil:case ast_num:case ast_str:break;
+        case ast_nil:case ast_num:case ast_str:case ast_bool:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
         case ast_neg:case ast_not:
@@ -1029,6 +1036,7 @@ void codegen::calc_gen(const ast& node) {
         case ast_num:  num_gen(node);  break;
         case ast_str:  str_gen(node);  break;
         case ast_id:   call_id(node);  break;
+        case ast_bool: bool_gen(node); break;
         case ast_vec:  vec_gen(node);  break;
         case ast_hash: hash_gen(node); break;
         case ast_func: func_gen(node); break;
@@ -1122,7 +1130,11 @@ void codegen::calc_gen(const ast& node) {
 void codegen::block_gen(const ast& node) {
     for(auto& tmp:node.child()) {
         switch(tmp.type()) {
-            case ast_null:case ast_nil:case ast_num:case ast_str:break;
+            case ast_null:
+            case ast_nil:
+            case ast_num:
+            case ast_str:
+            case ast_bool:break;
             case ast_file:fileindex=tmp.num();break; // special node type in main block
             case ast_def:def_gen(tmp);break;
             case ast_multi_assign:multi_assign_gen(tmp);break;

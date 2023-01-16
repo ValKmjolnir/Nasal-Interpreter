@@ -39,11 +39,7 @@ public:
 };
 
 linker::linker(error& e):show_path(false),lib_loaded(false),err(e) {
-#ifdef _WIN32
-    char sep=';';
-#else
-    char sep=':';
-#endif
+    char sep=is_windows()? ';':':';
     string PATH=getenv("PATH");
     usize last=0,pos=PATH.find(sep,0);
     while(pos!=string::npos) {
@@ -77,11 +73,7 @@ string linker::path(const ast& node) {
 string linker::findf(const string& fname) {
     std::vector<string> fpath={fname};
     for(auto&p:envpath) {
-#ifdef _WIN32
-        fpath.push_back(p+"\\"+fname);
-#else
-        fpath.push_back(p+"/"+fname);
-#endif
+        fpath.push_back(p+(is_windows()? "\\":"/")+fname);
     }
     for(auto& i:fpath) {
         if (access(i.c_str(),F_OK)!=-1) {
@@ -89,11 +81,7 @@ string linker::findf(const string& fname) {
         }
     }
     if (fname=="lib.nas") {
-#ifdef _WIN32
-        return findf("stl\\lib.nas");
-#else
-        return findf("stl/lib.nas");
-#endif
+        return is_windows()? findf("stl\\lib.nas"):findf("stl/lib.nas");
     }
     if (!show_path) {
         err.err("link","cannot find file <"+fname+">");
