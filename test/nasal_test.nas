@@ -51,6 +51,7 @@ z.funcc();                       #//f is called
 println(z.funcccall);            #//func(..){..}
 z2.listt2[3].hashh.funcc();      #//f is called
 println(y1[f2()][w]);            #//hello
+println(true,' ',false);         #//1 0
 
 
 # ValKmjolnir

@@ -1005,13 +1005,13 @@ var builtin_dlcall(var* local,gc& ngc) {
 }
 
 var builtin_platform(var* local,gc& ngc) {
-#if defined _WIN32 || defined _WIN64
-    return ngc.newstr("windows");
-#elif defined __linux__
-    return ngc.newstr("linux");
-#elif defined __APPLE__
-    return ngc.newstr("macOS");
-#endif
+    if (is_windows()) {
+        return ngc.newstr("windows");
+    } else if (is_linux()) {
+        return ngc.newstr("linux");
+    } else if (is_macos()) {
+        return ngc.newstr("macOS");
+    }
     return ngc.newstr("unknown");
 }
 

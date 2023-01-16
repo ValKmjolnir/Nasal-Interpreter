@@ -203,5 +203,5 @@ foreach(i;a){
 }
 println(runtime.argv());
 func(a,b,c,d="只有红茶可以吗"){
-    println(a,' ',b,' ',c,' ',d);
+    println(a,' ',b,' ',c,' ',d,' true: ',true,' false: ',false);
 }(c:1919810,b:514,a:114);

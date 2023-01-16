@@ -10,6 +10,7 @@ nil   ::= nil;
 id    ::= identifier;
 number::= number;
 string::= string;
+bool  ::= true | false;
 vector::= 
     '[' {calculation ','} ']'
 ;
@@ -68,6 +69,7 @@ scalar::=
     |number
     |string
     |nil
+    |bool
     |'(' calculation ')' {call_scalar}
 ;
 call_scalar::=
