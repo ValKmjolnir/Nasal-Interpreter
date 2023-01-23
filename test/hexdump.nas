@@ -2,23 +2,26 @@
 # 2021/8/13
 
 # init
-var hex_num=[
-    '0','1','2','3',
-    '4','5','6','7',
-    '8','9','a','b',
-    'c','d','e','f'
-];
-var hex=[];
-foreach(var i;hex_num)
-    foreach(var j;hex_num)
-        append(hex,i~j);
+var hex=func(){
+    var hex_num=[
+        '0','1','2','3',
+        '4','5','6','7',
+        '8','9','a','b',
+        'c','d','e','f'
+    ];
+    var res=[];
+    foreach(var i;hex_num){
+        foreach(var j;hex_num){
+            append(res,i~j);
+        }
+    }
+    return res;
+}();
 
 # read file
 var s=func(){
     var filename=[
-        "LICENSE",
         "main.cpp",
-        "makefile",
         "nasal_ast.h",
         "nasal_builtin.h",
         "nasal_codegen.h",
@@ -31,9 +34,11 @@ var s=func(){
         "nasal_parse.h",
         "nasal_vm.h",
         "nasal.ebnf",
-        "nasal.h",
-        "README.md"
+        "nasal.h"
     ];
+    if(size(runtime.argv())!=0){
+        return io.fin(runtime.argv()[0]);
+    }
     var ret="";
     foreach(var elem;filename)
         ret~=io.fin(elem);
@@ -48,16 +53,18 @@ var hex_index=[0,0,0,0];
 
 # print binary in text format
 var textprint=func(index){
-    var info='';
-    if(os.platform()=="windows")
+    var info="";
+    if(os.platform()=="windows"){
         for(var i=index-cnt;i<index;i+=1)
-            info~=(s[i]<32 or s[i]>=128)?'.':chr(s[i]);
-    else
+            info~=(s[i]<32 or s[i]>=128)?".":chr(s[i]);
+    }else{
         for(var i=index-cnt;i<index;i+=1)
-            info~=(0<=s[i] and s[i]<32)?'.':chr(s[i]);
-    for(var i=cnt;i<16;i+=1)
-        info~='.';
-    return ' |'~info~'|\n';
+            info~=(0<=s[i] and s[i]<32)?".":chr(s[i]);
+    }
+    for(var i=cnt;i<16;i+=1){
+        info~=".";
+    }
+    return " |"~info~"|\n";
 }
 
 # print index
@@ -66,10 +73,10 @@ var indexprint=func(index){
         hex_index[i]=index-int(index/256)*256;
         index=int(index/256);
     }
-    var info='';
+    var info="";
     for(var i=3;i>=0;i-=1)
         info~=hex[hex_index[i]];
-    return info~'  ';
+    return info~"  ";
 }
 
 # main
@@ -82,14 +89,14 @@ func(){
             cnt=0;
             info=indexprint(i);
         }elsif(cnt==8)
-            info~=' ';
+            info~=" ";
         cnt+=1;
-        info~=hex[s[i]]~' ';
+        info~=hex[s[i]]~" ";
     }
     for(var l=cnt;l<16;l+=1)
-        info~='   ';
+        info~="   ";
     if(cnt<=8)
-        info~=' ';
+        info~=" ";
     info~=textprint(i);
     print(info);
 }();

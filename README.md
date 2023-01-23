@@ -127,6 +127,10 @@ var n=2.147e16;   # dec
 var n=1e-10;      # dec
 var n=0xAA55;     # hex
 var n=0o170001;   # oct
+
+# caution: true and false also useful in nasal now
+var n=true;       # in fact n is now 1.0
+var n=false;      # in face n is now 0.0
 ```
 
 __`str`__ has 3 formats. The third one is used to declare a character.

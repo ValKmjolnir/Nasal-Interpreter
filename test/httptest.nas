@@ -73,7 +73,7 @@ var html_read_file=func(filename){
     var timer=maketimestamp();
     timer.stamp();
     var keyword=["var","func","for","while","foreach","forindex","break","continue","return","if","else","elsif","nil"];
-    var file_text=split("",io.fin(filename));
+    var file_text=io.fin(filename);
     var (s,index,len)=("",-1,size(file_text));
     var content="";
 
@@ -81,12 +81,12 @@ var html_read_file=func(filename){
         if(index+1>=len)
             return index+1;
         index+=1;
-        s=file_text[index];
+        s=char(file_text[index]);
         return index;
     }
     var prev=func(){
         index-=1;
-        s=file_text[index];
+        s=char(file_text[index]);
     }
 
     while(1){
