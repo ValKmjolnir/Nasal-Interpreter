@@ -107,12 +107,16 @@ var spc=nil;
 __`num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数`double`格式来存储。
 
 ```javascript
-# this language use '#' to write notes
-var n=2.71828;    # dec
-var n=2.147e16;   # dec
-var n=1e-10;      # dec
-var n=0xAA55;     # hex
-var n=0o170001;   # oct
+# 该语言用 '#' 来作为注释的开头
+var n=2.71828;    # dec 十进制
+var n=2.147e16;   # dec 十进制
+var n=1e-10;      # dec 十进制
+var n=0xAA55;     # hex 十六进制
+var n=0o170001;   # oct 八进制
+
+# 注意: true 和 false 关键字在现在的 nasal 里也是可用的
+var n=true;       # n 实际上是数字 1.0
+var n=false;      # n 实际上是数字 0.0
 ```
 
 __`str`__ 也有三种不同的格式。第三种只允许包含一个的字符。

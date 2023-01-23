@@ -29,6 +29,7 @@ var char_ttf=[
     ["██╗   ██╗","╚██╗ ██╔╝"," ╚████╔╝ ","  ╚██╔╝  ","   ██║   ","   ╚═╝   "],
     ["███████╗","╚══███╔╝","  ███╔╝ "," ███╔╝  ","███████╗","╚══════╝"],
 ];
+
 var trans_ttf=func(string){
     var str=["","","","","",""];
     for(var i=0;i<size(string);i+=1){
@@ -47,6 +48,7 @@ var trans_ttf=func(string){
         println(i);
     return;
 }
+
 var curve1=func(line=4){
     var table=["╚","═","╝","╔","║","╗"];
     rand(100);
@@ -58,6 +60,7 @@ var curve1=func(line=4){
     }
     print(s);
 }
+
 var curve2=func(line=2){
     var shadow=["░","▒","▓","█","▀","▄","▐","▌"];
     rand(100);
@@ -69,6 +72,7 @@ var curve2=func(line=2){
     }
     print(s);
 }
+
 var curve3=func(line=2){
     var arr=[
         0,1,2,3,4,5,6,7,8,
@@ -91,11 +95,12 @@ var curve3=func(line=2){
     }
     return;
 }
+
 var curve4=func(line=4){
     var shadow=["m░\e[0m","m▒\e[0m","m▓\e[0m","m█\e[0m","m▀\e[0m","m▄\e[0m","m▐\e[0m","m▌\e[0m"];
     var front=[
         "30","31","32","33","34","35","36","37",
-        "90","91","92","93","94","95","96","97"
+        "90","91","92","93","94","95","96","97",
     ];
     var back=[
         "40","41","42","43","44","45","46","47",
@@ -108,6 +113,7 @@ var curve4=func(line=4){
         print('\n');
     }
 }
+
 var curve5=func(line=4){
     var vec=["▀▄─","▄▀─","▀─▄","▄─▀"];
     for(var (y,p)=(0,0);y!=line;y+=1){
@@ -118,27 +124,31 @@ var curve5=func(line=4){
         p=p>=4?0:p;
     }
 }
+
 var ansi_escape_sequence=func(){
-    for(var i=0;i<=9;i+=1)
-        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    for(var i=0;i<10;i+=1)
+        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
     print("\n");
-    for(var i=30;i<=37;i+=1)
-        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    for(var i=30;i<40;i+=1)
+        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
     print("\n");
-    for(var i=40;i<=47;i+=1)
-        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    for(var i=40;i<50;i+=1)
+        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
     print("\n");
-    for(var i=90;i<=97;i+=1)
-        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    for(var i=90;i<100;i+=1)
+        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
     print("\n");
-    for(var i=100;i<=107;i+=1)
-        print(rightpad(i,3),":\e["~i~"mhi\e[0m ");
+    for(var i=100;i<110;i+=1)
+        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
     print("\n");
 }
 
 # enable unicode
-if(os.platform()=="windows")
+if(os.platform()=="windows"){
     system("chcp 65001");
+}
+
+trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
 curve1();
 curve2();
