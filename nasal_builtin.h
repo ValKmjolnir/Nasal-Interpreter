@@ -1252,9 +1252,9 @@ var builtin_gcextend(var* local,gc& ngc) {
 var builtin_logtime(var* local,gc& ngc) {
     time_t t=time(nullptr);
     tm* tm_t=localtime(&t);
-    char s[128];
-    sprintf(
-        s,"%d-%.2d-%.2d %.2d:%.2d:%.2d",
+    char s[64];
+    snprintf(
+        s,64,"%d-%.2d-%.2d %.2d:%.2d:%.2d",
         tm_t->tm_year+1900,
         tm_t->tm_mon+1,
         tm_t->tm_mday,
