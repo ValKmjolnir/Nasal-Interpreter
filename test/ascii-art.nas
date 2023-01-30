@@ -1,4 +1,5 @@
 import.stl.padding;
+import.stl.process_bar;
 
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],
@@ -126,21 +127,66 @@ var curve5=func(line=4){
 }
 
 var ansi_escape_sequence=func(){
+    # decoration
     for(var i=0;i<10;i+=1)
-        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
+        print("\e["~i~"m",rightpad(i,4),"\e[0m");
     print("\n");
-    for(var i=30;i<40;i+=1)
-        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
+
+    # 8/16 color
+    for(var i=30;i<38;i+=1)
+        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+    for(var i=30;i<38;i+=1)
+        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
     print("\n");
-    for(var i=40;i<50;i+=1)
-        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
+    for(var i=40;i<48;i+=1)
+        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+    for(var i=40;i<48;i+=1)
+        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
     print("\n");
-    for(var i=90;i<100;i+=1)
-        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
+    for(var i=90;i<98;i+=1)
+        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+    for(var i=90;i<98;i+=1)
+        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
     print("\n");
-    for(var i=100;i<110;i+=1)
-        print(rightpad(i,4),":\e["~i~"mhi\e[0m ");
+    for(var i=100;i<108;i+=1)
+        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+    for(var i=100;i<108;i+=1)
+        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
     print("\n");
+
+    # 256 color
+    for(var i=0;i<16;i+=1) {
+        for(var j=0;j<16;j+=1) {
+            var code=str(i*16+j);
+            print("\e[38;5;"~code~"m ",rightpad(code,4),"\e[0m");
+        }
+        print("\n");
+    }
+    for(var i=0;i<16;i+=1) {
+        for(var j=0;j<16;j+=1) {
+            var code=str(i*16+j);
+            print("\e[48;5;"~code~"m ",rightpad(code,4),"\e[0m");
+        }
+        print("\n");
+    }
+
+    # move curser left and up
+    var bar=process_bar.default_bar("classic3",30);
+    var progress=[0,0,0,0,0,0,0,0];
+    var increase=[0.015,0.03,0.02,0.047,0.04,0.045,0.025,0.016];
+    foreach(var i;progress) {
+        print("\e[1000D",bar.bar(i)," ",rightpad(str(int(i*100)),3)," % \n");
+    }
+    for(var i=0;i<1/0.015;i+=1) {
+        print("\e[1000D","\e["~str(size(progress))~"A");
+        forindex(var j;progress) {
+            progress[j]+=increase[j];
+            progress[j]=progress[j]>1?1:progress[j];
+            print("\e[1000D",bar.bar(progress[j])," ",rightpad(str(int(progress[j]*100)),3)," % \n")
+        }
+        unix.sleep(0.02);
+    }
+
 }
 
 # enable unicode
