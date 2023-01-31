@@ -126,12 +126,7 @@ void debugger::stepinfo() {
 
 void debugger::interact() {
     // special operand
-    if (bytecode[pc].op==op_intg) {
-        std::cout
-        <<cyan<<"[debug] "<<reset
-        <<"nasal debug mode\n"
-        <<"input \'h\' to get help\n";
-    } else if (bytecode[pc].op==op_exit) {
+    if (bytecode[pc].op==op_exit) {
         return;
     }
     
@@ -297,7 +292,6 @@ vmexit:
     ngc.info();
     ngc.clear();
     imm.clear();
-    std::cout<<cyan<<"[debug] "<<reset<<"debugger exited\n";
     return;
 #ifndef _MSC_VER
 #define dbg(op,num) {\
