@@ -64,7 +64,8 @@ the interpreter a useful tool in your own projects.
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Better download the latest update source of the interpreter and build it! It's quite easy to build this interpreter.
+Better download the latest update source of the interpreter and build it! It's quite easy to build this interpreter, what you need are only two things: C++ compiler and the `make`. There is no third-party library used in this project.
+
 __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs.
 
 Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on `Windows` .
@@ -943,9 +944,6 @@ and the debugger will print this:
 <details><summary>Click to unfold</summary>
 
 ```javascript
-[debug] nasal debug mode
-input 'h' to get help
-
 source code:
 --> var fib=func(x)
     {

@@ -53,7 +53,9 @@ __我们为什么想要重新写一个nasal解释器?__
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧因此你可以非常快速地将它编译出来。
+我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧,没有使用任何第三方库，因此编译起来非常轻松，
+你只需要这两样东西: C++ 编译器以及make程序。
+
 __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之前请阅读[__发行日志__](../doc/dev_zh.md#发行日志)以保证这个发行版的文件中不包含非常严重的bug。
 
 `Windows` 用户通过 g++(`MinGW-w64`) 或者使用 MSVC(`Visual Studio`) 来进行编译。
@@ -904,9 +906,6 @@ local (0x7fffe0ffedf0 <sp+45>)
 <details><summary>展开</summary>
 
 ```javascript
-[debug] nasal debug mode
-input 'h' to get help
-
 source code:
 --> var fib=func(x)
     {
