@@ -37,7 +37,14 @@ var s=func(){
         "nasal.h"
     ];
     if(size(runtime.argv())!=0){
-        return io.fin(runtime.argv()[0]);
+        var argv=runtime.argv();
+        if(argv[0]=="-h" or argv[0]=="--h"){
+            println("usage:");
+            println("  nasal hexdump.nas        | get all files' hexdump.");
+            println("  nasal hexdump.nas [file] | get single file's hexdump.");
+            return "";
+        }
+        return io.fin(argv[0]);
     }
     var ret="";
     foreach(var elem;filename)
@@ -56,10 +63,10 @@ var textprint=func(index){
     var info="";
     if(os.platform()=="windows"){
         for(var i=index-cnt;i<index;i+=1)
-            info~=(s[i]<32 or s[i]>=128)?".":chr(s[i]);
+            info~=(s[i]<32 or s[i]>=127)?".":chr(s[i]);
     }else{
         for(var i=index-cnt;i<index;i+=1)
-            info~=(0<=s[i] and s[i]<32)?".":chr(s[i]);
+            info~=(s[i]<32 or s[i]==127)?".":chr(s[i]);
     }
     for(var i=cnt;i<16;i+=1){
         info~=".";
@@ -81,6 +88,9 @@ var indexprint=func(index){
 
 # main
 func(){
+    if(!size(s)){
+        return;
+    }
     var info=indexprint(0);
     for(var i=0;i<size(s);i+=1){
         if(cnt==16){

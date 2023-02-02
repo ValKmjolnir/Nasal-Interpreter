@@ -11,9 +11,42 @@ var mess=func(vec) {
     }
 }
 
-var equal_join=func(n) {
-    # color a(int) b(str) c(int)  message a(int) b(str)
-    # color.c = message.a
+var project=func(n) {
+    # get(s) :- color(_, s, _).
+
+    var ts=maketimestamp();
+    var bar=process_bar.high_resolution_bar(40);
+
+    var color=[];
+    setsize(color,n);
+
+    var last_step=0;
+    ts.stamp();
+    for(var i=0;i<n;i+=1) {
+        color[i]=[i,"color "~i,i+n*10];
+        # generate process bar, every 0.2%
+        if((i-last_step)/n>1/500) {
+            last_step=i;
+            print(" ",bar.bar((i+1)/n)~" \r");
+        }
+    }
+    print(" ",bar.bar(1)~" ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+
+    mess(color);
+
+    ts.stamp();
+    var cnt=0;
+    foreach(var c;color) {
+        var data=c[2];
+        cnt+=1;
+    }
+
+    println(rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
+}
+
+var select=func(n) {
+    # get(s) :- color(_, _, x), message(x, s).
+
     var ts=maketimestamp();
     var bar=process_bar.high_resolution_bar(40);
 
@@ -64,6 +97,11 @@ var equal_join=func(n) {
     println(rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
+println("project");
+for(var i=10;i<1e6;i*=10) {
+    project(i);
+}
+println("select");
 for(var i=100;i<1e7;i*=10) {
-    equal_join(i);
+    select(i);
 }
