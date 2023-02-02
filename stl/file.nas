@@ -25,6 +25,25 @@ var file={
     }
 };
 
+var find_all_files_with_extension=func(path,extensions...){
+    var in_vec=func(ext){
+        foreach(var i;extensions){
+            if(ext==i){
+                return 1;
+            }
+        }
+        return 0;
+    }
+    var res=[];
+    foreach(var f;find_all_files(path)){
+        var tmp=split('.',f);
+        if(size(tmp)>1 and in_vec(tmp[-1])){
+            append(res,f);
+        }
+    }
+    return res;
+}
+
 var find_all_files=func(path){
     if(!io.exists(path))
         return [];
