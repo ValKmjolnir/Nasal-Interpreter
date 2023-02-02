@@ -1002,7 +1002,7 @@ ast parse::ret_expr() {
     tok type=toks[ptr].type;
     if (type==tok::tknil || type==tok::num || type==tok::str || type==tok::id ||
        type==tok::func || type==tok::sub || type==tok::opnot || type==tok::lcurve ||
-       type==tok::lbracket || type==tok::lbrace
+       type==tok::lbracket || type==tok::lbrace || type==tok::tktrue || type==tok::tkfalse
     ) {
         node.add(calc());
     }
