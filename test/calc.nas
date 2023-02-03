@@ -35,7 +35,7 @@ var blank=func(s){
                 flag=1;
             }
         }
-        if(flag){
+        if(!flag){
             return 0;
         }
     }
@@ -63,7 +63,7 @@ var calc=func(codetype,files,path=""){
         println(rightpad(files[i],padding_length),'|',
             column(line_cnt),' line |',
             column(semi_cnt),' semi |',
-            leftpad(str(int(size(s)/1024)),3),' kb | ',
+            leftpad(str(int(size(s)/1024)),4),' kb | ',
             md5(s),' |');
         bytes+=size(s);
         ctx~=s;
@@ -73,7 +73,7 @@ var calc=func(codetype,files,path=""){
     println(rightpad("total:",padding_length),'|',
         column(line),' line |',
         column(semi),' semi |',
-        leftpad(str(int(bytes/1024)),3),' kb | ',
+        leftpad(str(int(bytes/1024)),4),' kb | ',
         md5(ctx),' |\n');
     return int(bytes/1024);
 }
@@ -82,4 +82,4 @@ var all=calc("source code:",source)
     +calc("lib:",lib,"stl/")
     +calc("test file:",testfile,"test/")
     +calc("module:",module,"module/");
-println(rightpad("total:",padding_length),'| ',rightpad(str(all),6),'kb');
+println(rightpad("total:",padding_length),'|',leftpad(str(all),6),' kb   |');

@@ -27,10 +27,10 @@ var project=func(n) {
         # generate process bar, every 0.2%
         if((i-last_step)/n>1/500) {
             last_step=i;
-            print(" ",bar.bar((i+1)/n)~" \r");
+            print(" ",bar.bar((i+1)/n)," ",leftpad(str(int((i+1)/n*100)),3),"% | \r");
         }
     }
-    print(" ",bar.bar(1)~" ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+    print(" ",bar.bar(1)~" 100% | ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
 
     mess(color);
 
@@ -63,10 +63,10 @@ var select=func(n) {
         # generate process bar, every 0.2%
         if((i-last_step)/n>1/500) {
             last_step=i;
-            print(" ",bar.bar((i+1)/n)~" \r");
+            print(" ",bar.bar((i+1)/n)," ",leftpad(str(int((i+1)/n*100)),3),"% | \r");
         }
     }
-    print(" ",bar.bar(1)~" ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+    print(" ",bar.bar(1)~" 100% | ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
 
     mess(color);
     mess(message);

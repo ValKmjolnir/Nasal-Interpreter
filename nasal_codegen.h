@@ -115,13 +115,7 @@ struct opcode {
     u32 line;// line of source code
     opcode(u8 o=op_exit,u16 f=0,u32 n=0,u32 l=0):
         op(o),fidx(f),num(n),line(l) {}
-    opcode& operator=(const opcode& tmp) {
-        op=tmp.op;
-        fidx=tmp.fidx;
-        num=tmp.num;
-        line=tmp.line;
-        return *this;
-    }
+    opcode& operator=(const opcode& tmp) = default;
 };
 
 class codestream {
