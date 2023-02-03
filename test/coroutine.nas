@@ -1,6 +1,7 @@
 # coroutine.nas by ValKmjolnir
 # 2022/5/19
 import.stl.process_bar;
+import.stl.padding;
 
 if(os.platform()=="windows"){
     system("chcp 65001");
@@ -105,7 +106,7 @@ for(var t=0;t<10;t+=1){
             coroutine.resume(co);
         if(counter-int(counter/1000)*1000==0){
             var rate=counter/4e5;
-            print(" ",bar.bar(rate)," ",int(rate*100),"% | ",str(1e3*int(counter/tm.elapsedMSec()))," tasks/s         \r");
+            print(" ",bar.bar(rate)," ",leftpad(str(int(rate*100)),3),"% | ",str(1e3*int(counter/tm.elapsedMSec()))," tasks/s         \r");
         }
     }
 

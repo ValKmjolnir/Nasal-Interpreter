@@ -67,6 +67,7 @@ test:nasal
 	@ ./nasal -t -d test/pi.nas
 	@ ./nasal -c test/ppmgen.nas
 	@ ./nasal -t -d test/prime.nas
+	@ ./nasal -c test/push.nas
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
 	@ ./nasal -e test/scalar.nas hello world
