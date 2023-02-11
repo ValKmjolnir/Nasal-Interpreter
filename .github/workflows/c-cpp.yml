@@ -20,6 +20,7 @@ jobs:
           cd module
           make all
           cd ..
+          make test
           tar -czf nasal-mac-nightly.tgz .
     - name: Release file
       # You may pin to the exact commit or the version.
@@ -45,6 +46,7 @@ jobs:
           cd module
           make all
           cd ..
+          make test
           touch nasal-linux-x86_64-nightly.tgz
           tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz . 
     - name: Release file
