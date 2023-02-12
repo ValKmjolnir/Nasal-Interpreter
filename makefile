@@ -42,7 +42,7 @@ test:nasal
 	@ ./nasal -d test/calc.nas
 	@ ./nasal -e test/choice.nas
 	@ ./nasal -e test/class.nas
-	@ ./nasal -t -d test/console3D.nas 50
+	@ ./nasal -t -d test/console3D.nas 25
 	@ ./nasal -e test/coroutine.nas
 	@ ./nasal -t -d test/datalog.nas
 	@ ./nasal -e test/diff.nas
@@ -63,7 +63,7 @@ test:nasal
 	@ ./nasal -t -d test/md5compare.nas
 	-@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas
-	@ ./nasal test/occupation.nas 10
+	@ ./nasal test/occupation.nas 5
 	@ ./nasal -t -d test/pi.nas
 	@ ./nasal -c test/ppmgen.nas
 	@ ./nasal -t -d test/prime.nas

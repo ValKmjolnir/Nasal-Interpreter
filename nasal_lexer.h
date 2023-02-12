@@ -51,7 +51,10 @@ enum class tok:u32 {
     sub,      // operator -
     mult,     // operator *
     div,      // operator /
-    link,     // operator ~
+    floater,  // operator ~ and binary operator ~
+    biand,    // binary operator &
+    bior,     // binary operator |
+    bixor,    // binary operator ^
     opnot,    // operator !
     eq,       // operator =
     addeq,    // operator +=
@@ -123,7 +126,10 @@ private:
         {"-"       ,tok::sub     },
         {"*"       ,tok::mult    },
         {"/"       ,tok::div     },
-        {"~"       ,tok::link    },
+        {"~"       ,tok::floater },
+        {"&"       ,tok::biand   },
+        {"|"       ,tok::bior    },
+        {"^"       ,tok::bixor   },
         {"!"       ,tok::opnot   },
         {"="       ,tok::eq      },
         {"+="      ,tok::addeq   },

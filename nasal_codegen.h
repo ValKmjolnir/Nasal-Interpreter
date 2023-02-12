@@ -25,8 +25,9 @@ enum op_code_type:u8 {
     op_para,   // normal  parameter
     op_deft,   // default parameter
     op_dyn,    // dynamic parameter
-    op_unot,   // !
+    op_lnot,   // ! logical negation
     op_usub,   // -
+    op_bnot,   // ~ binary negation static_cast<i32>
     op_add,    // +
     op_sub,    // -
     op_mul,    // *
@@ -91,7 +92,8 @@ const char* opname[]={
     "loadl ","loadu ","pnum  ","pnil  ",
     "pstr  ","newv  ","newh  ","newf  ",
     "happ  ","para  ","def   ","dyn   ",
-    "not   ","usub  ","add   ","sub   ",
+    "lnot  ","usub  ","bnot  ","add   ",
+    "sub   ",
     "mult  ","div   ","lnk   ","addc  ",
     "subc  ","multc ","divc  ","lnkc  ",
     "addeq ","subeq ","muleq ","diveq ",
@@ -1112,7 +1114,11 @@ void codegen::calc_gen(const ast& node) {
             break;
         case ast_not:
             calc_gen(node[0]);
-            gen(op_unot,0,node.line());
+            gen(op_lnot,0,node.line());
+            break;
+        case ast_negate:
+            calc_gen(node[0]);
+            gen(op_bnot,0,node.line());
             break;
         case ast_def:
             single_def(node);

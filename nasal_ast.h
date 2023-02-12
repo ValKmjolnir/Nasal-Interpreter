@@ -46,8 +46,9 @@ enum ast_node:u32 {
     ast_mult,        // *
     ast_div,         // /
     ast_link,        // ~
-    ast_neg,         // -
-    ast_not,         // ~
+    ast_neg,         // unary -
+    ast_not,         // unary !
+    ast_negate,      // unary ~
     ast_trino,       // ?:
     ast_for,         // for keyword
     ast_forindex,    // forindex keyword
@@ -109,7 +110,8 @@ const char* ast_name[]={
     "DivExpression",     
     "LinkExpression",
     "NegativeExpression",
-    "NotExpression",
+    "LogicalNegationExpression",
+    "BinaryNegationExpression",
     "TrinocularExpression",
     "ForLoop",
     "ForindexLoop",
