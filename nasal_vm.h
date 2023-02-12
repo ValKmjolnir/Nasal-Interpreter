@@ -67,8 +67,9 @@ protected:
     void o_para();
     void o_deft();
     void o_dyn();
-    void o_unot();
+    void o_lnot();
     void o_usub();
+    void o_bnot();
     void o_add();
     void o_sub();
     void o_mul();
@@ -436,7 +437,7 @@ void vm::o_dyn() {
     top[0].func().dpara=imm[pc];
 }
 
-void vm::o_unot() {
+void vm::o_lnot() {
     var val=top[0];
     switch(val.type) {
         case vm_nil:top[0]=one;break;
@@ -458,6 +459,10 @@ void vm::o_unot() {
 
 void vm::o_usub() {
     top[0]=var::num(-top[0].tonum());
+}
+
+void vm::o_bnot() {
+    top[0]=var::num(~static_cast<int32_t>(top[0].num()));
 }
 
 #define op_calc(type)\
@@ -1001,7 +1006,8 @@ void vm::run(
         &&loadl,  &&loadu,  &&pnum,   &&pnil,
         &&pstr,   &&newv,   &&newh,   &&newf,
         &&happ,   &&para,   &&deft,   &&dyn,
-        &&unot,   &&usub,   &&add,    &&sub,
+        &&lnot,   &&usub,   &&bnot,   &&add,
+        &&sub,
         &&mul,    &&div,    &&lnk,    &&addc,
         &&subc,   &&mulc,   &&divc,   &&lnkc,
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
@@ -1035,7 +1041,8 @@ void vm::run(
         &vm::o_newh,   &vm::o_newf,
         &vm::o_happ,   &vm::o_para,
         &vm::o_deft,   &vm::o_dyn,
-        &vm::o_unot,   &vm::o_usub,
+        &vm::o_lnot,   &vm::o_usub,
+        &vm::o_bnot,
         &vm::o_add,    &vm::o_sub,
         &vm::o_mul,    &vm::o_div,
         &vm::o_lnk,    &vm::o_addc,
@@ -1115,8 +1122,9 @@ happ:   exec_nodie(o_happ  ); // -1
 para:   exec_nodie(o_para  ); // -0
 deft:   exec_nodie(o_deft  ); // -1
 dyn:    exec_nodie(o_dyn   ); // -0
-unot:   exec_nodie(o_unot  ); // -0
+lnot:   exec_nodie(o_lnot  ); // -0
 usub:   exec_nodie(o_usub  ); // -0
+bnot:   exec_nodie(o_bnot  ); // -0
 add:    exec_nodie(o_add   ); // -1
 sub:    exec_nodie(o_sub   ); // -1
 mul:    exec_nodie(o_mul   ); // -1

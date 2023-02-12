@@ -54,7 +54,7 @@ private:
     ast root;
     error& err;
     std::unordered_map<tok,string> tokname {
-        {tok::rfor     ,"for"     },
+        {tok::rfor    ,"for"     },
         {tok::forindex,"forindex"},
         {tok::foreach ,"foreach" },
         {tok::rwhile  ,"while"   },
@@ -85,7 +85,10 @@ private:
         {tok::sub     ,"-"       },
         {tok::mult    ,"*"       },
         {tok::div     ,"/"       },
-        {tok::link    ,"~"       },
+        {tok::floater ,"~"       },
+        {tok::biand   ,"&"       },
+        {tok::bior    ,"|"       },
+        {tok::bixor   ,"^"       },
         {tok::opnot   ,"!"       },
         {tok::eq      ,"="       },
         {tok::addeq   ,"+="      },
@@ -356,7 +359,7 @@ ast parse::vec() {
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
         tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,
+        tok::func,tok::var,tok::lcurve,tok::floater,
         tok::lbrace,tok::lbracket,tok::null
     };
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_vec,toks[ptr].file);
@@ -585,12 +588,12 @@ ast parse::cmp_expr() {
 
 ast parse::additive_expr() {
     ast node=multive_expr();
-    while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::link)) {
+    while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::floater)) {
         ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
         switch(toks[ptr].type) {
-            case tok::add:  tmp.set_type(ast_add);  break;
-            case tok::sub:  tmp.set_type(ast_sub);  break;
-            case tok::link: tmp.set_type(ast_link); break;
+            case tok::add: tmp.set_type(ast_add);  break;
+            case tok::sub: tmp.set_type(ast_sub);  break;
+            case tok::floater: tmp.set_type(ast_link); break;
             default: break;
         }
         tmp.add(std::move(node));
@@ -602,12 +605,12 @@ ast parse::additive_expr() {
 }
 
 ast parse::multive_expr() {
-    ast node=(lookahead(tok::sub) || lookahead(tok::opnot))?unary():scalar();
+    ast node=(lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar();
     while(lookahead(tok::mult) || lookahead(tok::div)) {
         ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::mult+ast_mult,toks[ptr].file);
         tmp.add(std::move(node));
         match(toks[ptr].type);
-        tmp.add((lookahead(tok::sub) || lookahead(tok::opnot))?unary():scalar());
+        tmp.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
         node=std::move(tmp);
     }
     return node;
@@ -616,11 +619,12 @@ ast parse::multive_expr() {
 ast parse::unary() {
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     switch(toks[ptr].type) {
-        case tok::sub:   node.set_type(ast_neg);match(tok::sub);break;
-        case tok::opnot: node.set_type(ast_not);match(tok::opnot);break;
+        case tok::sub:     node.set_type(ast_neg);match(tok::sub);break;
+        case tok::opnot:   node.set_type(ast_not);match(tok::opnot);break;
+        case tok::floater: node.set_type(ast_negate);match(tok::floater);break;
         default: break;
     }
-    node.add((lookahead(tok::sub) || lookahead(tok::opnot))?unary():scalar());
+    node.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
     return node;
 }
 
@@ -695,9 +699,8 @@ ast parse::callv() {
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
         tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,
-        tok::lbrace,tok::lbracket,tok::colon,
-        tok::null
+        tok::func,tok::var,tok::lcurve,tok::floater,
+        tok::lbrace,tok::lbracket,tok::colon,tok::null
     };
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_callv,toks[ptr].file);
     match(tok::lbracket);
@@ -725,7 +728,7 @@ ast parse::callf() {
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
         tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,
+        tok::func,tok::var,tok::lcurve,tok::floater,
         tok::lbrace,tok::lbracket,tok::null
     };
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_callf,toks[ptr].file);
@@ -816,7 +819,7 @@ ast parse::multi_scalar() {
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
         tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,
+        tok::func,tok::var,tok::lcurve,tok::floater,
         tok::lbrace,tok::lbracket,tok::null
     };
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_tuple,toks[ptr].file);

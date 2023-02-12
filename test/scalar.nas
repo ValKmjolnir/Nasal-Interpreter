@@ -205,3 +205,10 @@ println(runtime.argv());
 func(a,b,c,d="只有红茶可以吗"){
     println(a,' ',b,' ',c,' ',d,' true: ',true,' false: ',false);
 }(c:1919810,b:514,a:114);
+
+# test binary negation
+println("~ 0x80: ",~0x80);
+println("~ 0x8000: ",~0x8000);
+println("~ 0x80000000: ",~0x80000000);
+println("~ 0x8000000000000000: ",~0x8000000000000000);
+println(~0x80000000==~0x8000000000000000);
