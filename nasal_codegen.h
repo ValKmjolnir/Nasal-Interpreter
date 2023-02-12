@@ -810,7 +810,7 @@ void codegen::for_gen(const ast& node) {
         case ast_nil:case ast_num:case ast_str:case ast_bool:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_neg:case ast_not:
+        case ast_neg:case ast_lnot:case ast_bnot:
         case ast_add:case ast_sub:
         case ast_mult:case ast_div:
         case ast_link:
@@ -876,7 +876,7 @@ void codegen::for_gen(const ast& node) {
         case ast_nil:case ast_num:case ast_str:case ast_bool:break;
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
-        case ast_neg:case ast_not:
+        case ast_neg:case ast_lnot:case ast_bnot:
         case ast_add:case ast_sub:case ast_mult:
         case ast_div:case ast_link:
         case ast_cmpeq:case ast_neq:case ast_leq:
@@ -1112,11 +1112,11 @@ void codegen::calc_gen(const ast& node) {
             calc_gen(node[0]);
             gen(op_usub,0,node.line());
             break;
-        case ast_not:
+        case ast_lnot:
             calc_gen(node[0]);
             gen(op_lnot,0,node.line());
             break;
-        case ast_negate:
+        case ast_bnot:
             calc_gen(node[0]);
             gen(op_bnot,0,node.line());
             break;
@@ -1189,7 +1189,8 @@ void codegen::block_gen(const ast& node) {
             case ast_func:
             case ast_call:
             case ast_neg:
-            case ast_not:
+            case ast_lnot:
+            case ast_bnot:
             case ast_add:
             case ast_sub:
             case ast_mult:

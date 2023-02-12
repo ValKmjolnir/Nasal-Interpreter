@@ -620,8 +620,8 @@ ast parse::unary() {
     ast node(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_null,toks[ptr].file);
     switch(toks[ptr].type) {
         case tok::sub:     node.set_type(ast_neg);match(tok::sub);break;
-        case tok::opnot:   node.set_type(ast_not);match(tok::opnot);break;
-        case tok::floater: node.set_type(ast_negate);match(tok::floater);break;
+        case tok::opnot:   node.set_type(ast_lnot);match(tok::opnot);break;
+        case tok::floater: node.set_type(ast_bnot);match(tok::floater);break;
         default: break;
     }
     node.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());

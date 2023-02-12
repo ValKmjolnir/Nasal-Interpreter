@@ -47,8 +47,8 @@ enum ast_node:u32 {
     ast_div,         // /
     ast_link,        // ~
     ast_neg,         // unary -
-    ast_not,         // unary !
-    ast_negate,      // unary ~
+    ast_lnot,        // unary !
+    ast_bnot,        // unary ~
     ast_trino,       // ?:
     ast_for,         // for keyword
     ast_forindex,    // forindex keyword

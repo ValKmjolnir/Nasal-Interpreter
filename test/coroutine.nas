@@ -94,7 +94,7 @@ for(var t=0;t<10;t+=1){
             coroutine.yield(i);
         }
     }
-    var total=1000; # ms
+
     var co=coroutine.create(productor);
     var tm=maketimestamp();
 
@@ -104,14 +104,14 @@ for(var t=0;t<10;t+=1){
         counter+=1;
         for(var i=0;i<t+1;i+=1)
             coroutine.resume(co);
-        if(counter-int(counter/1000)*1000==0){
-            var rate=counter/4e5;
+        if(counter-int(counter/5000)*5000==0){
+            var rate=counter/2e5;
             print(" ",bar.bar(rate)," ",leftpad(str(int(rate*100)),3),"% | ",str(1e3*int(counter/tm.elapsedMSec()))," tasks/s         \r");
         }
     }
 
     tm.stamp();
-    for(var i=0;i<4e5;i+=1)
+    for(var i=0;i<2e5;i+=1)
         consumer();
     println(" ",bar.bar(1)," 100% | ",str(int(1e3*counter/tm.elapsedMSec()))," tasks/s         ");
 }
