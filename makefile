@@ -46,7 +46,7 @@ test:nasal
 	@ ./nasal -e test/coroutine.nas
 	@ ./nasal -t -d test/datalog.nas
 	@ ./nasal -e test/diff.nas
-	@ ./nasal -e test/donuts.nas 100
+	@ ./nasal -e test/donuts.nas 50
 	-@ ./nasal -d test/exception.nas
 	@ ./nasal -t -d test/fib.nas
 	@ ./nasal -e test/filesystem.nas
