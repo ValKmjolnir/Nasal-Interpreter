@@ -86,9 +86,9 @@ private:
         {tok::mult    ,"*"       },
         {tok::div     ,"/"       },
         {tok::floater ,"~"       },
-        {tok::biand   ,"&"       },
-        {tok::bior    ,"|"       },
-        {tok::bixor   ,"^"       },
+        {tok::btand   ,"&"       },
+        {tok::btor    ,"|"       },
+        {tok::btxor   ,"^"       },
         {tok::opnot   ,"!"       },
         {tok::eq      ,"="       },
         {tok::addeq   ,"+="      },
@@ -129,6 +129,9 @@ private:
     ast expr();
     ast exprs();
     ast calc();
+    ast bitwise_or();
+    ast bitwise_xor();
+    ast bitwise_and();
     ast or_expr();
     ast and_expr();
     ast cmp_expr();
@@ -528,7 +531,7 @@ ast parse::exprs() {
 }
 
 ast parse::calc() {
-    ast node=or_expr();
+    ast node=bitwise_or();
     if (lookahead(tok::quesmark)) {
         // trinocular calculation
         ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_trino,toks[ptr].file);
@@ -544,6 +547,42 @@ ast parse::calc() {
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(calc());
+        node=std::move(tmp);
+    }
+    return node;
+}
+
+ast parse::bitwise_or() {
+    ast node=bitwise_xor();
+    while(lookahead(tok::btor)) {
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_bitor,toks[ptr].file);
+        tmp.add(std::move(node));
+        match(tok::btor);
+        tmp.add(bitwise_xor());
+        node=std::move(tmp);
+    }
+    return node;
+}
+
+ast parse::bitwise_xor() {
+    ast node=bitwise_and();
+    while(lookahead(tok::btxor)) {
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_bitxor,toks[ptr].file);
+        tmp.add(std::move(node));
+        match(tok::btxor);
+        tmp.add(bitwise_and());
+        node=std::move(tmp);
+    }
+    return node;
+}
+
+ast parse::bitwise_and() {
+    ast node=or_expr();
+    while(lookahead(tok::btand)) {
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,ast_bitand,toks[ptr].file);
+        tmp.add(std::move(node));
+        match(tok::btand);
+        tmp.add(or_expr());
         node=std::move(tmp);
     }
     return node;

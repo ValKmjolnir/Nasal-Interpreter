@@ -48,7 +48,10 @@ enum ast_node:u32 {
     ast_link,        // ~
     ast_neg,         // unary -
     ast_lnot,        // unary !
-    ast_bnot,        // unary ~
+    ast_bnot,        // unary ~ bitwise not
+    ast_bitor,       // bitwise or
+    ast_bitxor,      // bitwise xor
+    ast_bitand,      // bitwise and
     ast_trino,       // ?:
     ast_for,         // for keyword
     ast_forindex,    // forindex keyword
@@ -110,8 +113,11 @@ const char* ast_name[]={
     "DivExpression",     
     "LinkExpression",
     "NegativeExpression",
-    "LogicalNegationExpression",
-    "BinaryNegationExpression",
+    "LogicalNotExpression",
+    "BitwiseNotExpression",
+    "BitwiseOrExpression",
+    "BitwiseXorExpression",
+    "BitwiseAndExpression",
     "TrinocularExpression",
     "ForLoop",
     "ForindexLoop",

@@ -221,6 +221,19 @@ Unary operators `-` `!` have the same function as C/C++.
 !0;
 ```
 
+Bitwise operators `~` `|` `&` `^` have the same function as C/C++.
+
+```javascript
+# these operators will:
+# 1. convert f64 to i32 (static_cast<int32_t>)
+# 2. do the bitwise function
+
+~0x80000000; # not 2147483647
+0x8|0x1;     # or
+0x1&0x2;     # and
+0x8^0x1;     # xor
+```
+
 Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
 
 ```javascript
