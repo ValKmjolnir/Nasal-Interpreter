@@ -70,6 +70,9 @@ protected:
     void o_lnot();
     void o_usub();
     void o_bnot();
+    void o_btor();
+    void o_btxor();
+    void o_btand();
     void o_add();
     void o_sub();
     void o_mul();
@@ -463,6 +466,21 @@ void vm::o_usub() {
 
 void vm::o_bnot() {
     top[0]=var::num(~static_cast<int32_t>(top[0].num()));
+}
+
+void vm::o_btor() {
+    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())|static_cast<int32_t>(top[0].tonum()));
+    --top;
+}
+
+void vm::o_btxor() {
+    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())^static_cast<int32_t>(top[0].tonum()));
+    --top;
+}
+
+void vm::o_btand() {
+    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())&static_cast<int32_t>(top[0].tonum()));
+    --top;
 }
 
 #define op_calc(type)\
@@ -1006,8 +1024,8 @@ void vm::run(
         &&loadl,  &&loadu,  &&pnum,   &&pnil,
         &&pstr,   &&newv,   &&newh,   &&newf,
         &&happ,   &&para,   &&deft,   &&dyn,
-        &&lnot,   &&usub,   &&bnot,   &&add,
-        &&sub,
+        &&lnot,   &&usub,   &&bnot,   &&btor,
+        &&btxor,  &&btand,  &&add,    &&sub,
         &&mul,    &&div,    &&lnk,    &&addc,
         &&subc,   &&mulc,   &&divc,   &&lnkc,
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
@@ -1042,7 +1060,8 @@ void vm::run(
         &vm::o_happ,   &vm::o_para,
         &vm::o_deft,   &vm::o_dyn,
         &vm::o_lnot,   &vm::o_usub,
-        &vm::o_bnot,
+        &vm::o_bnot,   &vm::o_btor,
+        &vm::o_btxor,  &vm::o_btand,
         &vm::o_add,    &vm::o_sub,
         &vm::o_mul,    &vm::o_div,
         &vm::o_lnk,    &vm::o_addc,
@@ -1125,6 +1144,9 @@ dyn:    exec_nodie(o_dyn   ); // -0
 lnot:   exec_nodie(o_lnot  ); // -0
 usub:   exec_nodie(o_usub  ); // -0
 bnot:   exec_nodie(o_bnot  ); // -0
+btor:   exec_nodie(o_btor  ); // -1
+btxor:  exec_nodie(o_btxor ); // -1
+btand:  exec_nodie(o_btand ); // -1
 add:    exec_nodie(o_add   ); // -1
 sub:    exec_nodie(o_sub   ); // -1
 mul:    exec_nodie(o_mul   ); // -1

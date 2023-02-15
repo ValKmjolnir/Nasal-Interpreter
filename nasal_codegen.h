@@ -27,7 +27,10 @@ enum op_code_type:u8 {
     op_dyn,    // dynamic parameter
     op_lnot,   // ! logical negation
     op_usub,   // -
-    op_bnot,   // ~ binary negation static_cast<i32>
+    op_bnot,   // ~ bitwise not static_cast<i32>
+    op_btor,   // | bitwise or
+    op_btxor,  // ^ bitwise xor
+    op_btand,  // & bitwise and
     op_add,    // +
     op_sub,    // -
     op_mul,    // *
@@ -92,8 +95,8 @@ const char* opname[]={
     "loadl ","loadu ","pnum  ","pnil  ",
     "pstr  ","newv  ","newh  ","newf  ",
     "happ  ","para  ","def   ","dyn   ",
-    "lnot  ","usub  ","bnot  ","add   ",
-    "sub   ",
+    "lnot  ","usub  ","bnot  ","btor  ",
+    "btxor ","btand ","add   ","sub   ",
     "mult  ","div   ","lnk   ","addc  ",
     "subc  ","multc ","divc  ","lnkc  ",
     "addeq ","subeq ","muleq ","diveq ",
@@ -811,6 +814,7 @@ void codegen::for_gen(const ast& node) {
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
         case ast_neg:case ast_lnot:case ast_bnot:
+        case ast_bitor:case ast_bitxor:case ast_bitand:
         case ast_add:case ast_sub:
         case ast_mult:case ast_div:
         case ast_link:
@@ -877,6 +881,7 @@ void codegen::for_gen(const ast& node) {
         case ast_vec:case ast_hash:case ast_func:
         case ast_call:
         case ast_neg:case ast_lnot:case ast_bnot:
+        case ast_bitor:case ast_bitxor:case ast_bitand:
         case ast_add:case ast_sub:case ast_mult:
         case ast_div:case ast_link:
         case ast_cmpeq:case ast_neq:case ast_leq:
@@ -1120,6 +1125,21 @@ void codegen::calc_gen(const ast& node) {
             calc_gen(node[0]);
             gen(op_bnot,0,node.line());
             break;
+        case ast_bitor:
+            calc_gen(node[0]);
+            calc_gen(node[1]);
+            gen(op_btor,0,node.line());
+            break;
+        case ast_bitxor:
+            calc_gen(node[0]);
+            calc_gen(node[1]);
+            gen(op_btxor,0,node.line());
+            break;
+        case ast_bitand:
+            calc_gen(node[0]);
+            calc_gen(node[1]);
+            gen(op_btand,0,node.line());
+            break;
         case ast_def:
             single_def(node);
             call_id(node[0]);
@@ -1191,6 +1211,9 @@ void codegen::block_gen(const ast& node) {
             case ast_neg:
             case ast_lnot:
             case ast_bnot:
+            case ast_bitor:
+            case ast_bitxor:
+            case ast_bitand:
             case ast_add:
             case ast_sub:
             case ast_mult:

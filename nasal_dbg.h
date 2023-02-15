@@ -206,8 +206,8 @@ void debugger::run(
         &&loadl,  &&loadu,  &&pnum,   &&pnil,
         &&pstr,   &&newv,   &&newh,   &&newf,
         &&happ,   &&para,   &&deft,   &&dyn,
-        &&lnot,   &&usub,   &&bnot,   &&add,
-        &&sub,
+        &&lnot,   &&usub,   &&bnot,   &&btor,
+        &&btxor,  &&btand,  &&add,    &&sub,
         &&mul,    &&div,    &&lnk,    &&addc,
         &&subc,   &&mulc,   &&divc,   &&lnkc,
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
@@ -242,7 +242,8 @@ void debugger::run(
         &debugger::o_happ,   &debugger::o_para,
         &debugger::o_deft,   &debugger::o_dyn,
         &debugger::o_lnot,   &debugger::o_usub,
-        &debugger::o_bnot,
+        &debugger::o_bnot,   &debugger::o_btor,
+        &debugger::o_btxor,  &debugger::o_btand,
         &debugger::o_add,    &debugger::o_sub,
         &debugger::o_mul,    &debugger::o_div,
         &debugger::o_lnk,    &debugger::o_addc,
@@ -325,6 +326,9 @@ dyn:    dbg(o_dyn   ,op_dyn   );
 lnot:   dbg(o_lnot  ,op_lnot  );
 usub:   dbg(o_usub  ,op_usub  );
 bnot:   dbg(o_bnot  ,op_bnot  );
+btor:   dbg(o_btor  ,op_btor  );
+btxor:  dbg(o_btxor ,op_btxor );
+btand:  dbg(o_btand ,op_btand );
 add:    dbg(o_add   ,op_add   );
 sub:    dbg(o_sub   ,op_sub   );
 mul:    dbg(o_mul   ,op_mul   );
