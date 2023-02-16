@@ -339,16 +339,6 @@ var fstat=func(filename){
 # functions that do bitwise calculation.
 # carefully use it, all the calculations are based on integer.
 var bits={
-    # i32 xor
-    i32_xor: func(a,b){return __i32xor(a,b); },
-    # i32 and
-    i32_and: func(a,b){return __i32and(a,b); },
-    # i32 or
-    i32_or:  func(a,b){return __i32or(a,b);  },
-    # i32 nand
-    i32_nand:func(a,b){return __i32nand(a,b);},
-    # i32 not
-    i32_not: func(a)  {return __i32not(a);   },
     # u32 xor
     u32_xor: func(a,b){return __u32xor(a,b); },
     # u32 and

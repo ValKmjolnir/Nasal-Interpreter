@@ -251,26 +251,6 @@ var builtin_size(var* local,gc& ngc) {
     return var::num(num);
 }
 
-var builtin_i32xor(var* local,gc& ngc) {
-    return var::num((f64)(i32(local[1].num())^i32(local[2].num())));
-}
-
-var builtin_i32and(var* local,gc& ngc) {
-    return var::num((f64)(i32(local[1].num())&i32(local[2].num())));
-}
-
-var builtin_i32or(var* local,gc& ngc) {
-    return var::num((f64)(i32(local[1].num())|i32(local[2].num())));
-}
-
-var builtin_i32nand(var* local,gc& ngc) {
-    return var::num((f64)(~(i32(local[1].num())&i32(local[2].num()))));
-}
-
-var builtin_i32not(var* local,gc& ngc) {
-    return var::num((f64)(~i32(local[1].num())));
-}
-
 var builtin_u32xor(var* local,gc& ngc) {
     return var::num((f64)(u32(local[1].num())^u32(local[2].num())));
 }
@@ -1290,11 +1270,6 @@ struct {
     {"__pop",     builtin_pop     },
     {"__str",     builtin_str     },
     {"__size",    builtin_size    },
-    {"__i32xor",  builtin_i32xor  },
-    {"__i32and",  builtin_i32and  },
-    {"__i32or",   builtin_i32or   },
-    {"__i32nand", builtin_i32nand },
-    {"__i32not",  builtin_i32not  },
     {"__u32xor",  builtin_u32xor  },
     {"__u32and",  builtin_u32and  },
     {"__u32or",   builtin_u32or   },
