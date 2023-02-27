@@ -15,14 +15,17 @@ void const_num(ast& root) {
     auto& vec=root.child();
     f64 res=0;
     switch(root.type()) {
-        case ast_add: res=vec[0].num()+vec[1].num(); break;
-        case ast_sub: res=vec[0].num()-vec[1].num(); break;
-        case ast_mult:res=vec[0].num()*vec[1].num(); break;
-        case ast_div: res=vec[0].num()/vec[1].num(); break;
-        case ast_less:res=vec[0].num()<vec[1].num(); break;
-        case ast_leq: res=vec[0].num()<=vec[1].num();break;
-        case ast_grt: res=vec[0].num()>vec[1].num(); break;
-        case ast_geq: res=vec[0].num()>=vec[1].num();break;
+        case ast_add:    res=vec[0].num()+vec[1].num(); break;
+        case ast_sub:    res=vec[0].num()-vec[1].num(); break;
+        case ast_mult:   res=vec[0].num()*vec[1].num(); break;
+        case ast_div:    res=vec[0].num()/vec[1].num(); break;
+        case ast_less:   res=vec[0].num()<vec[1].num(); break;
+        case ast_leq:    res=vec[0].num()<=vec[1].num();break;
+        case ast_grt:    res=vec[0].num()>vec[1].num(); break;
+        case ast_geq:    res=vec[0].num()>=vec[1].num();break;
+        case ast_bitor:  res=i32(vec[0].num())|i32(vec[1].num()); break;
+        case ast_bitxor: res=i32(vec[0].num())^i32(vec[1].num()); break;
+        case ast_bitand: res=i32(vec[0].num())&i32(vec[1].num()); break;
     }
     // inf and nan will cause number hashmap error in codegen
     if (std::isinf(res) || std::isnan(res)) {
@@ -52,7 +55,8 @@ void calc_const(ast& root) {
        root.type()!=ast_mult && root.type()!=ast_div &&
        root.type()!=ast_link && root.type()!=ast_less &&
        root.type()!=ast_leq && root.type()!=ast_grt &&
-       root.type()!=ast_geq) {
+       root.type()!=ast_geq && root.type()!=ast_bitor &&
+       root.type()!=ast_bitxor && root.type()!=ast_bitand) {
         return;
     }
     if (root.type()==ast_link &&
@@ -63,6 +67,7 @@ void calc_const(ast& root) {
         const_num(root);
     }
 }
+
 void optimize(ast& root) {
     for(auto& i:root.child()) {
         calc_const(i);

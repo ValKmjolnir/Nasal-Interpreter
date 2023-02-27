@@ -234,7 +234,7 @@ Bitwise operators `~` `|` `&` `^` have the same function as C/C++.
 0x8^0x1;     # xor
 ```
 
-Operators `=` `+=` `-=` `*=` `/=` `~=` are used in assignment expressions.
+Operators `=` `+=` `-=` `*=` `/=` `~=` `^=` `&=` `|=` are used in assignment expressions.
 
 ```javascript
 a=b=c=d=1;
@@ -243,6 +243,10 @@ a-=1;
 a*=1;
 a/=1;
 a~="string";
+
+a^=0xff;
+a&=0xca;
+a|=0xba;
 ```
 
 </details>

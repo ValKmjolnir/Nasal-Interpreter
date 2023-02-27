@@ -62,6 +62,9 @@ enum class tok:u32 {
     multeq,   // operator *=
     diveq,    // operator /=
     lnkeq,    // operator ~=
+    btandeq,  // operator &=
+    btoreq,   // operator |=
+    btxoreq,  // operator ^=
     cmpeq,    // operator ==
     neq,      // operator !=
     less,     // operator <
@@ -137,6 +140,9 @@ private:
         {"*="      ,tok::multeq  },
         {"/="      ,tok::diveq   },
         {"~="      ,tok::lnkeq   },
+        {"&="      ,tok::btandeq },
+        {"|="      ,tok::btoreq  },
+        {"^="      ,tok::btxoreq },
         {"=="      ,tok::cmpeq   },
         {"!="      ,tok::neq     },
         {"<"       ,tok::less    },
@@ -200,9 +206,8 @@ bool lexer::is_single_opr(char c) {
     return (
         c=='('||c==')'||c=='['||c==']'||
         c=='{'||c=='}'||c==','||c==';'||
-        c=='|'||c==':'||c=='?'||c=='`'||
-        c=='&'||c=='@'||c=='%'||c=='$'||
-        c=='^'||c=='\\'
+        c==':'||c=='?'||c=='`'||c=='@'||
+        c=='%'||c=='$'||c=='\\'
     );
 }
 
@@ -210,7 +215,7 @@ bool lexer::is_calc_opr(char c) {
     return (
         c=='='||c=='+'||c=='-'||c=='*'||
         c=='!'||c=='/'||c=='<'||c=='>'||
-        c=='~'
+        c=='~'||c=='|'||c=='&'||c=='^'
     );
 }
 

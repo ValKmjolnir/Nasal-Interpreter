@@ -46,6 +46,9 @@ enum op_code_type:u8 {
     op_muleq,  // *=
     op_diveq,  // /=
     op_lnkeq,  // ~=
+    op_btandeq,// &=
+    op_btoreq, // |=
+    op_btxoreq,// ^=
     op_addeqc, // += const
     op_subeqc, // -= const
     op_muleqc, // *= const
@@ -100,17 +103,18 @@ const char* opname[]={
     "mult  ","div   ","lnk   ","addc  ",
     "subc  ","multc ","divc  ","lnkc  ",
     "addeq ","subeq ","muleq ","diveq ",
-    "lnkeq ","addeqc","subeqc","muleqc",
-    "diveqc","lnkeqc","meq   ","eq    ",
-    "neq   ","less  ","leq   ","grt   ",
-    "geq   ","lessc ","leqc  ","grtc  ",
-    "geqc  ","pop   ","jmp   ","jt    ",
-    "jf    ","cnt   ","findx ","feach ",
-    "callg ","calll ","upval ","callv ",
-    "callvi","callh ","callfv","callfh",
-    "callb ","slcbeg","slcend","slc   ",
-    "slc2  ","mcallg","mcalll","mupval",
-    "mcallv","mcallh","ret   "
+    "lnkeq ","bandeq","boreq ","bxoreq",
+    "addeqc","subeqc","muleqc","diveqc",
+    "lnkeqc","meq   ","eq    ","neq   ",
+    "less  ","leq   ","grt   ","geq   ",
+    "lessc ","leqc  ","grtc  ","geqc  ",
+    "pop   ","jmp   ","jt    ","jf    ",
+    "cnt   ","findx ","feach ","callg ",
+    "calll ","upval ","callv ","callvi",
+    "callh ","callfv","callfh","callb ",
+    "slcbeg","slcend","slc   ","slc2  ",
+    "mcallg","mcalll","mupval","mcallv",
+    "mcallh","ret   "
 };
 
 struct opcode {
@@ -146,7 +150,8 @@ public:
            <<opname[op]<<"  "<<std::dec;
         switch(op) {
             case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
-            case op_lnkeq: case op_meq:
+            case op_lnkeq: case op_meq: case op_btandeq: case op_btoreq:
+            case op_btxoreq:
                 out<<std::hex<<"0x"<<num<<std::dec
                    <<" sp-"<<num;break;
             case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
@@ -801,8 +806,9 @@ void codegen::for_gen(const ast& node) {
         case ast_multi_assign:multi_assign_gen(node[0]);break;
         case ast_addeq:case ast_subeq:
         case ast_multeq:case ast_diveq:case ast_lnkeq:
+        case ast_btandeq:case ast_btoreq:case ast_btxoreq:
             calc_gen(node[0]);
-            if (op_addeq<=code.back().op && code.back().op<=op_lnkeq) {
+            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                 code.back().num=1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
                 code.back().num|=0x80000000;
@@ -868,8 +874,9 @@ void codegen::for_gen(const ast& node) {
         case ast_multi_assign:multi_assign_gen(node[2]);break;
         case ast_addeq:case ast_subeq:
         case ast_multeq:case ast_diveq:case ast_lnkeq:
+        case ast_btandeq:case ast_btoreq:case ast_btxoreq:
             calc_gen(node[2]);
-            if (op_addeq<=code.back().op && code.back().op<=op_lnkeq) {
+            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                 code.back().num=1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
                 code.back().num|=0x80000000;
@@ -1073,6 +1080,11 @@ void codegen::calc_gen(const ast& node) {
                 gen(op_lnkeqc,str_table[node[1].str()],node.line());
             }
             break;
+        case ast_btandeq:case ast_btoreq:case ast_btxoreq:
+            calc_gen(node[1]);
+            mcall(node[0]);
+            gen(node.type()-ast_btandeq+op_btandeq,0,node.line());
+            break;
         case ast_or:or_gen(node);break;
         case ast_and:and_gen(node);break;
         // ast_add(33)~ast_link(37) op_add(18)~op_lnk(22)
@@ -1194,8 +1206,9 @@ void codegen::block_gen(const ast& node) {
                 break;
             case ast_addeq:case ast_subeq:
             case ast_multeq:case ast_diveq:case ast_lnkeq:
+            case ast_btandeq:case ast_btoreq:case ast_btxoreq:
                 calc_gen(tmp);
-                if (op_addeq<=code.back().op && code.back().op<=op_lnkeq) {
+                if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                     code.back().num=1;
                 } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
                     code.back().num|=0x80000000;

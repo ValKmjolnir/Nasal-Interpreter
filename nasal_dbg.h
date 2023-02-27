@@ -211,17 +211,18 @@ void debugger::run(
         &&mul,    &&div,    &&lnk,    &&addc,
         &&subc,   &&mulc,   &&divc,   &&lnkc,
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
-        &&lnkeq,  &&addeqc, &&subeqc, &&muleqc,
-        &&diveqc, &&lnkeqc, &&meq,    &&eq,
-        &&neq,    &&less,   &&leq,    &&grt,
-        &&geq,    &&lessc,  &&leqc,   &&grtc,
-        &&geqc,   &&pop,    &&jmp,    &&jt,
-        &&jf,     &&cnt,    &&findex, &&feach,
-        &&callg,  &&calll,  &&upval,  &&callv,
-        &&callvi, &&callh,  &&callfv, &&callfh,
-        &&callb,  &&slcbeg, &&slcend, &&slc,
-        &&slc2,   &&mcallg, &&mcalll, &&mupval,
-        &&mcallv, &&mcallh, &&ret
+        &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
+        &&addeqc, &&subeqc, &&muleqc, &&diveqc,
+        &&lnkeqc, &&meq,    &&eq,     &&neq,
+        &&less,   &&leq,    &&grt,    &&geq,
+        &&lessc,  &&leqc,   &&grtc,   &&geqc,
+        &&pop,    &&jmp,    &&jt,     &&jf,
+        &&cnt,    &&findex, &&feach,  &&callg,
+        &&calll,  &&upval,  &&callv,  &&callvi,
+        &&callh,  &&callfv, &&callfh, &&callb,
+        &&slcbeg, &&slcend, &&slc,    &&slc2,
+        &&mcallg, &&mcalll, &&mupval, &&mcallv,
+        &&mcallh, &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.codes()) {
@@ -251,7 +252,9 @@ void debugger::run(
         &debugger::o_divc,   &debugger::o_lnkc,
         &debugger::o_addeq,  &debugger::o_subeq,
         &debugger::o_muleq,  &debugger::o_diveq,
-        &debugger::o_lnkeq,  &debugger::o_addeqc,
+        &debugger::o_lnkeq,  &debugger::o_bandeq,
+        &debugger::o_boreq,  &debugger::o_bxoreq,
+        &debugger::o_addeqc,
         &debugger::o_subeqc, &debugger::o_muleqc,
         &debugger::o_diveqc, &debugger::o_lnkeqc,
         &debugger::o_meq,    &debugger::o_eq,
@@ -344,6 +347,9 @@ subeq:  dbg(o_subeq ,op_subeq );
 muleq:  dbg(o_muleq ,op_muleq );
 diveq:  dbg(o_diveq ,op_diveq );
 lnkeq:  dbg(o_lnkeq ,op_lnkeq );
+bandeq: dbg(o_bandeq,op_btandeq);
+boreq:  dbg(o_boreq, op_btoreq);
+bxoreq: dbg(o_bxoreq,op_btxoreq);
 addeqc: dbg(o_addeqc,op_addeqc);
 subeqc: dbg(o_subeqc,op_subeqc);
 muleqc: dbg(o_muleqc,op_muleqc);
