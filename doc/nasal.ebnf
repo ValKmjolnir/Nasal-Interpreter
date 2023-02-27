@@ -41,8 +41,17 @@ exprs::=
 ;
 calculation::=
     calculation '?' calculation ':' calculation
-    |or_expr
-    |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=') calculation
+    |bitwise_or
+    |calculation ('=' | '+=' | '-=' | '*=' | '/=' | '~=' | '^=' | '&=' | '|=') calculation
+;
+bitwise_or::=
+    bitwise_xor '|' bitwise_xor
+;
+bitwise_xor::=
+    bitwise_and '^' bitwise_and
+;
+bitwise_and::=
+    or_expr '&' or_expr
 ;
 or_expr::=
     and_expr or and_expr

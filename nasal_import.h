@@ -12,6 +12,7 @@
 #define F_OK 0
 #endif
 
+#include "nasal.h"
 #include "nasal_ast.h"
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
@@ -61,25 +62,28 @@ string linker::path(const ast& node) {
     }
     string fpath=".";
     for(usize i=1;i<node.size();++i) {
-#ifndef _WIN32
-        fpath+="/"+node[i].str();
-#else
-        fpath+="\\"+node[i].str();
-#endif
+        fpath+=(is_windows()? "\\":"/")+node[i].str();
     }
     return fpath+".nas";
 }
 
 string linker::findf(const string& fname) {
+    // first add file name itself into the file path
     std::vector<string> fpath={fname};
+
+    // generate search path from environ path
     for(auto&p:envpath) {
         fpath.push_back(p+(is_windows()? "\\":"/")+fname);
     }
+
+    // search file
     for(auto& i:fpath) {
         if (access(i.c_str(),F_OK)!=-1) {
             return i;
         }
     }
+
+    // we will find lib.nas in nasal std directory
     if (fname=="lib.nas") {
         return is_windows()? findf("stl\\lib.nas"):findf("stl/lib.nas");
     }

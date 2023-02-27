@@ -88,6 +88,9 @@ protected:
     void o_muleq();
     void o_diveq();
     void o_lnkeq();
+    void o_bandeq();
+    void o_boreq();
+    void o_bxoreq();
     void o_addeqc();
     void o_subeqc();
     void o_muleqc();
@@ -507,6 +510,11 @@ void vm::o_lnkc() {
     top[0]=ngc.newstr(top[0].tostr()+cstr[imm[pc]]);
 }
 
+// top[0] stores the value of memr[0], to avoid being garbage-collected
+// so when the calculation ends, top-=1, then top-=imm[pc]
+// because this return value is meaningless if on stack when imm[pc]=1
+// like this: func{a+=c;}(); the result of 'a+c' will no be used later, imm[pc]=1
+// but if b+=a+=c; the result of 'a+c' will be used later, imm[pc]=0
 #define op_calc_eq(type)\
     top[-1]=memr[0]=var::num(memr[0].tonum() type top[-1].tonum());\
     memr=nullptr;\
@@ -522,6 +530,29 @@ void vm::o_lnkeq() {
     top-=imm[pc]+1;
 }
 
+void vm::o_bandeq() {
+    top[-1]=memr[0]=var::num(i32(memr[0].tonum())&i32(top[-1].tonum()));
+    memr=nullptr;
+    top-=imm[pc]+1;
+}
+
+void vm::o_boreq() {
+    top[-1]=memr[0]=var::num(i32(memr[0].tonum())|i32(top[-1].tonum()));
+    memr=nullptr;
+    top-=imm[pc]+1;
+}
+
+void vm::o_bxoreq() {
+    top[-1]=memr[0]=var::num(i32(memr[0].tonum())^i32(top[-1].tonum()));
+    memr=nullptr;
+    top-=imm[pc]+1;
+}
+
+// top[0] stores the value of memr[0], to avoid being garbage-collected
+// so when the calculation ends, top-=imm[pc]>>31
+// because this return value is meaningless if on stack when imm[pc]>>31=1
+// like this: func{a+=1;}(); the result of 'a+1' will no be used later, imm[pc]>>31=1
+// but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
 #define op_calc_eq_const(type)\
     top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]&0x7fffffff]);\
     memr=nullptr;\
@@ -1029,17 +1060,18 @@ void vm::run(
         &&mul,    &&div,    &&lnk,    &&addc,
         &&subc,   &&mulc,   &&divc,   &&lnkc,
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
-        &&lnkeq,  &&addeqc, &&subeqc, &&muleqc,
-        &&diveqc, &&lnkeqc, &&meq,    &&eq,
-        &&neq,    &&less,   &&leq,    &&grt,
-        &&geq,    &&lessc,  &&leqc,   &&grtc,
-        &&geqc,   &&pop,    &&jmp,    &&jt,
-        &&jf,     &&cnt,    &&findex, &&feach,
-        &&callg,  &&calll,  &&upval,  &&callv,
-        &&callvi, &&callh,  &&callfv, &&callfh,
-        &&callb,  &&slcbeg, &&slcend, &&slc,
-        &&slc2,   &&mcallg, &&mcalll, &&mupval,
-        &&mcallv, &&mcallh, &&ret
+        &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
+        &&addeqc, &&subeqc, &&muleqc, &&diveqc,
+        &&lnkeqc, &&meq,    &&eq,     &&neq,
+        &&less,   &&leq,    &&grt,    &&geq,
+        &&lessc,  &&leqc,   &&grtc,   &&geqc,
+        &&pop,    &&jmp,    &&jt,     &&jf,
+        &&cnt,    &&findex, &&feach,  &&callg,
+        &&calll,  &&upval,  &&callv,  &&callvi,
+        &&callh,  &&callfv, &&callfh, &&callb,
+        &&slcbeg, &&slcend, &&slc,    &&slc2,
+        &&mcallg, &&mcalll, &&mupval, &&mcallv,
+        &&mcallh, &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.codes()) {
@@ -1069,7 +1101,9 @@ void vm::run(
         &vm::o_divc,   &vm::o_lnkc,
         &vm::o_addeq,  &vm::o_subeq,
         &vm::o_muleq,  &vm::o_diveq,
-        &vm::o_lnkeq,  &vm::o_addeqc,
+        &vm::o_lnkeq,  &vm::o_bandeq,
+        &vm::o_boreq,  &vm::o_bxoreq,
+        &vm::o_addeqc,
         &vm::o_subeqc, &vm::o_muleqc,
         &vm::o_diveqc, &vm::o_lnkeqc,
         &vm::o_meq,    &vm::o_eq,
@@ -1162,6 +1196,9 @@ subeq:  exec_nodie(o_subeq ); // -1
 muleq:  exec_nodie(o_muleq ); // -1
 diveq:  exec_nodie(o_diveq ); // -1
 lnkeq:  exec_nodie(o_lnkeq ); // -1
+bandeq: exec_nodie(o_bandeq); // -1
+boreq:  exec_nodie(o_boreq ); // -1
+bxoreq: exec_nodie(o_bxoreq); // -1
 addeqc: exec_nodie(o_addeqc); // -0
 subeqc: exec_nodie(o_subeqc); // -0
 muleqc: exec_nodie(o_muleqc); // -0

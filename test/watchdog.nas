@@ -48,6 +48,7 @@ while(1){
         var cmd=(os.platform()=="windows"?"":"./")~"nasal "~filename;
         foreach(var i;args)
             cmd~=" "~i;
+        println(os_time(),info_hd(),"\e[1mexecuting command \"",cmd,"\"\e[0m");
         var ret=system(cmd);
         if(ret!=0){
             println(os_time(),err_hd(),"\e[1mprocess returned ",ret,"\e[0m");

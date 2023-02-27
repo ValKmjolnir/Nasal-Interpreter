@@ -96,6 +96,9 @@ private:
         {tok::multeq  ,"*="      },
         {tok::diveq   ,"/="      },
         {tok::lnkeq   ,"~="      },
+        {tok::btandeq ,"&="      },
+        {tok::btoreq  ,"|="      },
+        {tok::btxoreq ,"^="      },
         {tok::cmpeq   ,"=="      },
         {tok::neq     ,"!="      },
         {tok::less    ,"<"       },
@@ -464,8 +467,8 @@ ast parse::lcurve_expr() {
         return definition();
     return check_tuple()?multi_assgin():calc();
 }
-ast parse::expr()
-{
+
+ast parse::expr() {
     tok type=toks[ptr].type;
     if ((type==tok::brk || type==tok::cont) && !in_loop) {
         die(thisline,thiscol,thislen,"must use break/continue in loops");
@@ -484,6 +487,7 @@ ast parse::expr()
         case tok::lbracket:
         case tok::lbrace:
         case tok::sub:
+        case tok::floater:
         case tok::opnot:   return calc();          break;
         case tok::var:     return definition();    break;
         case tok::lcurve:  return lcurve_expr();   break;
@@ -544,6 +548,12 @@ ast parse::calc() {
     } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
         // tok::eq~tok::lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::eq+ast_equal,toks[ptr].file);
+        tmp.add(std::move(node));
+        match(toks[ptr].type);
+        tmp.add(calc());
+        node=std::move(tmp);
+    } else if (toks[ptr].type==tok::btandeq || toks[ptr].type==tok::btoreq || toks[ptr].type==tok::btxoreq) {
+        ast tmp(toks[ptr].tk_end_line,toks[ptr].tk_end_column,(u32)toks[ptr].type-(u32)tok::btandeq+ast_btandeq,toks[ptr].file);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(calc());
