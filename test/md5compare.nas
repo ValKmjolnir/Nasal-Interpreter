@@ -33,9 +33,9 @@ var compare=func(){
 var filechecksum=func(){
     var files=[
         "./stl/fg_env.nas",         "./stl/file.nas",
-        "./stl/json.nas",
-        "./stl/lib.nas",            "./stl/list.nas",
-        "./stl/log.nas",            "./stl/module.nas",
+        "./stl/json.nas",           "./stl/lib.nas",
+        "./stl/list.nas",           "./stl/log.nas",
+        "./stl/mat.nas",            "./stl/module.nas",
         "./stl/padding.nas",        "./stl/process_bar.nas",
         "./stl/queue.nas",          "./stl/result.nas",
         "./stl/sort.nas",           "./stl/stack.nas",
