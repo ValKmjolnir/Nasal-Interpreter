@@ -98,7 +98,7 @@ if(os.platform()=="windows")
     system("chcp 65001");
 map.new(90);
 var interval=1/160;
-for(var iter=0;iter<100;iter+=1){
+for(var iter=0;iter<40;iter+=1){
     map.print(1);
     map.next();
     unix.sleep(interval);
