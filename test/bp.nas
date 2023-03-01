@@ -1,3 +1,5 @@
+import.stl.mat;
+
 rand(time(0));
 
 var new_neuron=func(){
@@ -124,3 +126,5 @@ foreach(var v;training_set){
     run(v);
     print(v,': ',output[0].out,'\n');
 }
+
+bp_example();

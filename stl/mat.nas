@@ -31,6 +31,9 @@ var mat_print=func(a) {
 
 var add=func(a,b) {
     if(a.width!=b.width or a.height!=b.height) {
+        println("matrix a: ",a);
+        println("matrix b: ",b);
+        die("width and height must be the same");
         return nil;
     }
 
@@ -48,6 +51,9 @@ var add=func(a,b) {
 
 var sub=func(a,b) {
     if(a.width!=b.width or a.height!=b.height) {
+        println("matrix a: ",a);
+        println("matrix b: ",b);
+        die("width and height must be the same");
         return nil;
     }
 
@@ -65,6 +71,9 @@ var sub=func(a,b) {
 
 var hardamard=func(a,b) {
     if(a.width!=b.width or a.height!=b.height) {
+        println("matrix a: ",a);
+        println("matrix b: ",b);
+        die("width and height must be the same");
         return nil;
     }
 
@@ -131,6 +140,9 @@ var activate=func(a,f) {
 
 var mult=func(a,b) {
     if(a.width!=b.height) {
+        println("matrix a: ",a);
+        println("matrix b: ",b);
+        die("a.width must equal to b.height, but get a.width:"~str(a.width)~" and b.height"~str(b.height));
         return nil;
     }
 
@@ -168,26 +180,6 @@ var tanh=func(x) {
 var difftanh=func(x) {
     x=tanh(x);
     return 1-x*x;
-}
-
-var test=func() {
-    for(var i=0;i<1e4;i+=1) {
-        var a=mat(4,20);
-        var b=mat(10,4);
-        var c=a;
-        rand_init(a);
-        rand_init(b);
-        mult(a,b);
-        add(a,c);
-        sub(a,c);
-        neg(a);
-        trans(a);
-        activate(a,sigmoid);
-        activate(a,tanh);
-        if(i-int(i/100)*100==0) {
-            print(i/1e4*100,"%   \r");
-        }
-    }
 }
 
 var bp_example=func() {
