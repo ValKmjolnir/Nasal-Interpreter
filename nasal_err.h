@@ -8,6 +8,14 @@
 
 #include "nasal.h"
 
+struct span {
+    u32 begin_line;
+    u32 begin_column;
+    u32 end_line;
+    u32 end_column;
+    string file;
+};
+
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
 struct for_reset {
@@ -78,26 +86,7 @@ protected:
     std::vector<string> res;
 public:
     flstream():file("") {}
-    void load(const string& f) {
-        if (file==f) { // don't need to load a loaded file
-            return;
-        } else {
-            file=f;
-        }
-
-        res.clear();
-        std::ifstream in(f,std::ios::binary);
-        if (in.fail()) {
-            std::cerr<<red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
-            std::exit(1);
-        }
-        
-        while(!in.eof()) {
-            string line;
-            std::getline(in,line);
-            res.push_back(line);
-        }
-    }
+    void load(const string&);
     const string& operator[](usize n) const {return res[n];}
     const string& name() const {return file;}
     usize size() const {return res.size();}
@@ -105,56 +94,130 @@ public:
 
 class error:public flstream {
 private:
-    u32 cnt;
+    u32 cnt; // counter for errors
+
     string identation(usize len) {
-        string tmp="";
-        tmp.resize(len,' ');
-        return tmp;
+        return string(len,' ');
+    }
+    string leftpad(u32 num,usize len) {
+        string res=std::to_string(num);
+        while(res.length()<len) {
+            res=" "+res;
+        }
+        return res;
     }
 public:
     error():cnt(0) {}
-    void fatal(const string& stage,const string& info) {
-        std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
-        if (file.length()) {
-            std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
-        } else {
-            std::cerr<<"\n";
-        }
-        std::exit(1);
-    }
-    void err(const string& stage,const string& info) {
-        ++cnt;
-        std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
-        if (file.length()) {
-            std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
-        } else {
-            std::cerr<<"\n";
-        }
-    }
-    void err(const string& stage,u32 line,u32 col,u32 len,const string& info) {
-        ++cnt;
-        col=col?col:1;
-        len=len?len:1;
+    void fatal(const string&,const string&);
+    void err(const string&,const string&);
+    void err(const string&,const span&,const string&);
 
-        std::cerr
-        <<red<<stage<<": "<<white<<info<<reset<<"\n"
-        <<cyan<<"  --> "<<red<<file<<":"<<line<<":"<<col<<reset<<"\n";
-
-        const string& code=line?res[line-1]:"# empty line";
-        const string iden=identation(std::to_string(line).length());
-
-        std::cerr
-        <<cyan<<line<<" | "<<reset<<code<<"\n"
-        <<cyan<<iden<<" | "<<reset;
-        for(i32 i=0;i<(i32)col-(i32)len;++i)
-            std::cerr<<char(" \t"[code[i]=='\t']);
-        for(u32 i=0;i<len;++i)
-            std::cerr<<red<<"^";
-        std::cerr<<red<<" "<<info<<reset<<"\n\n";
-    }
     void chkerr() const {
         if (cnt) {
             std::exit(1);
         }
     }
 };
+
+
+void flstream::load(const string& f) {
+    if (file==f) { // don't need to load a loaded file
+        return;
+    } else {
+        file=f;
+    }
+
+    res.clear();
+    std::ifstream in(f,std::ios::binary);
+    if (in.fail()) {
+        std::cerr<<red<<"src: "<<reset<<"cannot open <"<<f<<">\n";
+        std::exit(1);
+    }
+    
+    while(!in.eof()) {
+        string line;
+        std::getline(in,line);
+        res.push_back(line);
+    }
+}
+
+void error::fatal(const string& stage,const string& info) {
+    std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
+    if (file.length()) {
+        std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+    } else {
+        std::cerr<<"\n";
+    }
+    std::exit(1);
+}
+
+void error::err(const string& stage,const string& info) {
+    ++cnt;
+    std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
+    if (file.length()) {
+        std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+    } else {
+        std::cerr<<"\n";
+    }
+}
+
+void error::err(const string& stage,const span& loc,const string& info) {
+    // load error occurred file into string lines
+    load(loc.file);
+
+    ++cnt;
+
+    std::cerr
+    <<red<<stage<<": "<<white<<info<<reset<<"\n"<<cyan<<"  --> "
+    <<red<<loc.file<<":"<<loc.begin_line<<":"<<loc.begin_column+1<<reset<<"\n";
+
+    const usize maxlen=std::to_string(loc.end_line).length();
+    const string iden=identation(maxlen);
+
+    for(u32 line=loc.begin_line;line<=loc.end_line;++line) {
+        if (!line || !res[line-1].length()) {
+            continue;
+        }
+
+        if (loc.begin_line<line && line<loc.end_line) {
+            if (line==loc.begin_line+1) {
+                std::cerr<<cyan<<iden<<" | "<<reset<<"...\n"<<cyan<<iden<<" | "<<reset<<"\n";
+            }
+            continue;
+        }
+
+        const string& code=res[line-1];
+        std::cerr<<cyan<<leftpad(line,maxlen)<<" | "<<reset<<code<<"\n";
+        // output underline
+        std::cerr<<cyan<<iden<<" | "<<reset;
+        if (loc.begin_line==loc.end_line) {
+            for(i32 i=0;i<loc.begin_column;++i) {
+                std::cerr<<char(" \t"[code[i]=='\t']);
+            }
+            for(i32 i=loc.begin_column;i<loc.end_column;++i) {
+                std::cerr<<red<<(code[i]=='\t'?"^^^^":"^")<<reset;
+            }
+        } else if (line==loc.begin_line) {
+            for(i32 i=0;i<loc.begin_column;++i) {
+                std::cerr<<char(" \t"[code[i]=='\t']);
+            }
+            for(i32 i=loc.begin_column;i<code.size();++i) {
+                std::cerr<<red<<(code[i]=='\t'?"^^^^":"^")<<reset;
+            }
+        } else if (loc.begin_line<line && line<loc.end_line) {
+            for(i32 i=0;i<code.size();++i) {
+                std::cerr<<red<<(code[i]=='\t'?"^^^^":"^");
+            }
+        } else {
+            for(i32 i=0;i<loc.end_column;++i) {
+                std::cerr<<red<<(code[i]=='\t'?"^^^^":"^");
+            }
+        }
+        if (line==loc.end_line) {
+            std::cerr<<reset;
+        } else {
+            std::cerr<<reset<<"\n";
+        }
+    }
+    std::cerr<<"\n\n";
+}

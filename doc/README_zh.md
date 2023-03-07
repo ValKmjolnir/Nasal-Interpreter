@@ -29,17 +29,18 @@ __如果有好的意见或建议，欢迎联系我们!__
 ## __简介__
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
-是一个与ECMAscript标准语法设计相似的编程语言，并且作为运行脚本被著名的开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所依赖。
+是一款语法与ECMAscript相似的编程语言，并作为运行脚本被著名开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所使用。
 该语言的设计者为 [Andy Ross](https://github.com/andyross)。
 
-该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有参考任何代码，我们依然非常感谢Andy为我们带来了这样一个神奇且容易上手的编程语言。
+该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有参考任何代码，我们依然非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言。
 
 该项目已使用 __MIT__ 协议开源 (2021/5/4)。
 
-__我们为什么想要重新写一个nasal解释器?__
-2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误，甚至是检查运行时的错误。
+### __我们为什么想要重新写一个nasal解释器?__
 
-我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误提高了我们的工作效率。
+2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误以及运行时错误。
+
+我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误极大的提高了效率。
 
 你也可以使用这个语言来写一些与Flightgear运行环境无关的有趣的程序，并用这个解释器来执行。你也可以让解释器来调用你自己编写的模块，使它成为项目中一个非常有用的工具。
 
