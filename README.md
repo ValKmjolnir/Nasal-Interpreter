@@ -29,25 +29,25 @@ __Contact us if having great ideas to share!__
 ## __Introduction__
 
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
-is an ECMAscript-like language that used in [FlightGear](https://www.flightgear.org/).
+is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
 This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++14`)
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
-But we really appreciate that Andy created this amazing programming language and his interpreter.
+But we really appreciate that Andy created this amazing programming language.
 
 This project uses __MIT license__ (2021/5/4).
 
-__Why writing this nasal interpreter?__
-In 2019 summer holiday,
+### __Why writing this nasal interpreter?__
+
+2019 summer,
 members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
-So i wrote a new interpreter to help them checking syntax error and even, runtime error.
+So i wrote a new interpreter to help checking syntax error and  runtime error.
 
 I wrote the lexer, parser and
 bytecode virtual machine to help checking errors.
-We found it much easier to check syntax and runtime
-errors.
+We found it much easier to debug.
 
 You could also use this language to write some
 interesting programs and run them without the lib of Flightgear.

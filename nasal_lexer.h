@@ -75,13 +75,9 @@ enum class tok:u32 {
 };
 
 struct token {
-    u32 tk_begin_line;  // token begin line
-    u32 tk_begin_column;// token begin column
-    u32 tk_end_line;    // token end line
-    u32 tk_end_column;  // token end column
-    tok type;           // token type
-    string str;         // content
-    string file;        // scanned file path
+    span loc;    // location
+    tok type;    // token type
+    string str;  // content
     token() = default;
     token(const token&) = default;
 };
@@ -227,7 +223,7 @@ void lexer::skip_note() {
 void lexer::err_char() {
     ++column;
     char c=res[ptr++];
-    err.err("lexer",line,column,1,"invalid character 0x"+chrhex(c));
+    err.err("lexer",{line,column-1,line,column,filename},"invalid character 0x"+chrhex(c));
     err.fatal("lexer","fatal error occurred, stop");
 }
 
@@ -281,7 +277,7 @@ string lexer::utf8_gen() {
             for(u32 i=1;i<tmp.size();++i) {
                 utf_info+=" 0x"+chrhex(tmp[i]);
             }
-            err.err("lexer",line,column,1,"invalid utf-8 <"+utf_info+">");
+            err.err("lexer",{line,column-1,line,column,filename},"invalid utf-8 <"+utf_info+">");
             err.fatal("lexer","fatal error occurred, stop");
         }
         str+=tmp;
@@ -303,7 +299,7 @@ token lexer::id_gen() {
         }
     }
     tok type=get_type(str);
-    return {begin_line,begin_column,line,column,(type!=tok::null)?type:tok::id,str,filename};
+    return {{begin_line,begin_column,line,column,filename},(type!=tok::null)?type:tok::id,str};
 }
 
 token lexer::num_gen() {
@@ -318,9 +314,9 @@ token lexer::num_gen() {
         }
         column+=str.length();
         if (str.length()<3) { // "0x"
-            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
+            err.err("lexer",{begin_line,begin_column,line,column,filename},"invalid number `"+str+"`");
         }
-        return {begin_line,begin_column,line,column,tok::num,str,filename};
+        return {{begin_line,begin_column,line,column,filename},tok::num,str};
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
         string str="0o";
         ptr+=2;
@@ -334,9 +330,9 @@ token lexer::num_gen() {
         }
         column+=str.length();
         if (str.length()==2 || erfmt) {
-            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
+            err.err("lexer",{begin_line,begin_column,line,column,filename},"invalid number `"+str+"`");
         }
-        return {begin_line,begin_column,line,column,tok::num,str,filename};
+        return {{begin_line,begin_column,line,column,filename},tok::num,str};
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
@@ -352,8 +348,8 @@ token lexer::num_gen() {
         // "xxxx." is not a correct number
         if (str.back()=='.') {
             column+=str.length();
-            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return {begin_line,begin_column,line,column,tok::num,"0",filename};
+            err.err("lexer",{begin_line,begin_column,line,column,filename},"invalid number `"+str+"`");
+            return {{begin_line,begin_column,line,column,filename},tok::num,"0"};
         }
     }
     if (ptr<res.size() && (res[ptr]=='e' || res[ptr]=='E')) {
@@ -367,12 +363,12 @@ token lexer::num_gen() {
         // "xxxe(-|+)" is not a correct number
         if (str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+') {
             column+=str.length();
-            err.err("lexer",line,column,str.length(),"invalid number `"+str+"`");
-            return {begin_line,begin_column,line,column,tok::num,"0",filename};
+            err.err("lexer",{begin_line,begin_column,line,column,filename},"invalid number `"+str+"`");
+            return {{begin_line,begin_column,line,column,filename},tok::num,"0"};
         }
     }
     column+=str.length();
-    return {begin_line,begin_column,line,column,tok::num,str,filename};
+    return {{begin_line,begin_column,line,column,filename},tok::num,str};
 }
 
 token lexer::str_gen() {
@@ -406,20 +402,24 @@ token lexer::str_gen() {
                 case '\"':str+='\"';    break;
                 default:  str+=res[ptr];break;
             }
+            if (res[ptr]=='\n') {
+                column=0;
+                ++line;
+            }
             continue;
         }
         str+=res[ptr];
     }
     // check if this string ends with a " or '
     if (ptr++>=res.size()) {
-        err.err("lexer",line,column,1,"get EOF when generating string");
-        return {begin_line,begin_column,line,column,tok::str,str,filename};
+        err.err("lexer",{begin_line,begin_column,line,column,filename},"get EOF when generating string");
+        return {{begin_line,begin_column,line,column,filename},tok::str,str};
     }
     ++column;
     if (begin=='`' && str.length()!=1) {
-        err.err("lexer",line,column,1,"\'`\' is used for string that includes one character");
+        err.err("lexer",{begin_line,begin_column,line,column,filename},"\'`\' is used for string including one character");
     }
-    return {begin_line,begin_column,line,column,tok::str,str,filename};
+    return {{begin_line,begin_column,line,column,filename},tok::str,str};
 }
 
 token lexer::single_opr() {
@@ -429,10 +429,10 @@ token lexer::single_opr() {
     ++column;
     tok type=get_type(str);
     if (type==tok::null) {
-        err.err("lexer",line,column,str.length(),"invalid operator `"+str+"`");
+        err.err("lexer",{begin_line,begin_column,line,column,filename},"invalid operator `"+str+"`");
     }
     ++ptr;
-    return {begin_line,begin_column,line,column,type,str,filename};
+    return {{begin_line,begin_column,line,column,filename},type,str};
 }
 
 token lexer::dots() {
@@ -444,7 +444,7 @@ token lexer::dots() {
     }
     ptr+=str.length();
     column+=str.length();
-    return {begin_line,begin_column,line,column,get_type(str),str,filename};
+    return {{begin_line,begin_column,line,column,filename},get_type(str),str};
 }
 
 token lexer::calc_opr() {
@@ -456,7 +456,7 @@ token lexer::calc_opr() {
         str+=res[ptr++];
     }
     column+=str.length();
-    return {begin_line,begin_column,line,column,get_type(str),str,filename};
+    return {{begin_line,begin_column,line,column,filename},get_type(str),str};
 }
 
 const error& lexer::scan(const string& file) {
@@ -495,7 +495,7 @@ const error& lexer::scan(const string& file) {
             err_char();
         }
     }
-    toks.push_back({line,column,line,column,tok::eof,"<eof>",filename});
+    toks.push_back({{line,column,line,column,filename},tok::eof,"<eof>"});
     res="";
     return err;
 }

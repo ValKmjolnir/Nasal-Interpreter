@@ -115,10 +115,13 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
 }
 
 i32 main(i32 argc,const char* argv[]) {
+    // output version info
     if (argc<=1) {
         std::clog<<logo;
         return 0;
     }
+
+    // run directly or show help
     if (argc==2) {
         string s(argv[1]);
         if (s=="-h" || s=="--help") {
@@ -130,6 +133,8 @@ i32 main(i32 argc,const char* argv[]) {
         }
         return 0;
     }
+
+    // execute with arguments
     std::unordered_map<string,u32> cmdlst={
         {"--ast",VM_AST},{"-a",VM_AST},
         {"--code",VM_CODE},{"-c",VM_CODE},

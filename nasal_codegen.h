@@ -295,7 +295,7 @@ bool codegen::check_memory_reachable(const ast& node) {
 
 void codegen::die(const string& info,const u32 line,const u32 col,const u32 len=1) {
     err.load(file[fileindex]);
-    err.err("code",line,col,len,info);
+    err.err("code",{line,col-len,line,col,file[fileindex]},info);
 }
 
 void codegen::regist_num(const f64 num) {

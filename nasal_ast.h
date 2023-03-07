@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "nasal.h"
+#include "nasal_err.h"
 
 enum ast_node:u32 {
     ast_null=0,      // null node
@@ -145,16 +146,15 @@ const char* ast_name[]={
 
 class ast {
 private:
-    u32 nd_line;
-    u32 nd_col;
+    span loc;
     u32 nd_type;
     f64 nd_num;
-    string nd_file;
     string nd_str;
     std::vector<ast> nd_child;
+
 public:
-    ast(const u32 l,const u32 c,const u32 t,const std::string& f)
-        : nd_line(l),nd_col(c),nd_type(t),nd_num(0),nd_file(f),nd_str("") {}
+    ast(const span& s,const u32 t)
+        : loc(s),nd_type(t),nd_num(0),nd_str("") {}
     ast(const ast&) = default;
     ast(ast&&) = default;
     ast& operator=(const ast&) = default;
@@ -170,22 +170,35 @@ public:
     
     void add(ast&& node) {nd_child.push_back(std::move(node));}
     void add(const ast& node) {nd_child.push_back(node);}
-    void set_line(const u32 l) {nd_line=l;}
+    void set_begin(const u32,const u32);
+    void set_end(const u32,const u32);
     void set_type(const u32 t) {nd_type=t;}
     void set_str(const string& s) {nd_str=s;}
     void set_num(const f64 n) {nd_num=n;}
 
-    u32 line() const {return nd_line;}
-    u32 col()  const {return nd_col;}
+    u32 line() const {return loc.end_line;}
+    u32 col()  const {return loc.end_column;}
     u32 type() const {return nd_type;}
     f64 num()  const {return nd_num;}
     const string& str() const {return nd_str;}
+    const string& file() const {return loc.file;}
+    const span& location() const {return loc;}
     const std::vector<ast>& child() const {return nd_child;}
     std::vector<ast>& child() {return nd_child;}
 };
 
+void ast::set_begin(const u32 l,const u32 c) {
+    loc.begin_line=l;
+    loc.begin_column=c;
+}
+
+void ast::set_end(const u32 l,const u32 c) {
+    loc.end_line=l;
+    loc.end_column=c;
+}
+
 void ast::clear() {
-    nd_line=nd_col=0;
+    loc={0,0,0,0};
     nd_num=0;
     nd_str.clear();
     nd_type=ast_null;
@@ -198,10 +211,15 @@ void ast::dump() const{
 }
 
 void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
+    // output the indentation first
     for(auto& i:indent) {
         std::cout<<i;
     }
+
+    // output ast node name
     std::cout<<ast_name[nd_type];
+
+    // output string literal and number
     if (nd_type==ast_str ||
         nd_type==ast_id ||
         nd_type==ast_bool ||
@@ -212,7 +230,11 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
     } else if (nd_type==ast_num || nd_type==ast_file) {
         std::cout<<":"<<nd_num;
     }
-    std::cout<<" --> "<<nd_file<<":"<<nd_line<<":"<<nd_col<<"\n";
+
+    // okay, we must know that begin_column starts from index 0
+    std::cout<<" --> "<<loc.file<<":"<<loc.begin_line<<":"<<loc.begin_column+1<<"\n";
+
+    // output tree structure
     if (last && depth) {
         indent.back()="  ";
     } else if (!last && depth) {
