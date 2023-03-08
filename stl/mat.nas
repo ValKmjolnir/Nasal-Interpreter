@@ -194,9 +194,9 @@ var bp_example=func() {
     # last 2 column is useless, only used to make sure bp runs correctly
     var expect=[
         {width:3,height:1,mat:[0,0,0]},
-        {width:3,height:1,mat:[1,0,0]},
-        {width:3,height:1,mat:[1,0,0]},
-        {width:3,height:1,mat:[0,0,0]}
+        {width:3,height:1,mat:[1,0,1]},
+        {width:3,height:1,mat:[1,1,0]},
+        {width:3,height:1,mat:[0,1,1]}
     ];
     var hidden={
         weight:mat(4,2),

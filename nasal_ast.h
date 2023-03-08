@@ -185,6 +185,8 @@ public:
     const span& location() const {return loc;}
     const std::vector<ast>& child() const {return nd_child;}
     std::vector<ast>& child() {return nd_child;}
+    void update_span();
+    void update_span(const span&);
 };
 
 void ast::set_begin(const u32 l,const u32 c) {
@@ -198,7 +200,7 @@ void ast::set_end(const u32 l,const u32 c) {
 }
 
 void ast::clear() {
-    loc={0,0,0,0};
+    loc={0,0,0,0,""};
     nd_num=0;
     nd_str.clear();
     nd_type=ast_null;
@@ -249,4 +251,42 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
         nd_child[i].print(depth+1,i==nd_child.size()-1,indent);
         indent.pop_back();
     }
+}
+
+void ast::update_span() {
+    if (!nd_child.size()) {
+        return;
+    }
+    for(const auto& i:nd_child) {
+        if (loc.begin_line>i.loc.begin_line) {
+            loc.begin_line=i.loc.begin_line;
+            loc.begin_column=i.loc.begin_column;
+        } else if (loc.begin_line==i.loc.begin_line && loc.begin_column>i.loc.begin_column) {
+            loc.begin_column=i.loc.begin_column;
+        }
+        if (loc.end_line<i.loc.end_line) {
+            loc.end_line=i.loc.end_line;
+            loc.end_column=i.loc.end_column;
+        } else if (loc.end_line==i.loc.end_line && loc.end_column<i.loc.end_column) {
+            loc.end_column=i.loc.end_column;
+        }
+        loc.file=i.loc.file;
+    }
+}
+
+void ast::update_span(const span& tloc) {
+    update_span();
+    if (loc.begin_line>tloc.begin_line) {
+        loc.begin_line=tloc.begin_line;
+        loc.begin_column=tloc.begin_column;
+    } else if (loc.begin_line==tloc.begin_line && loc.begin_column>tloc.begin_column) {
+        loc.begin_column=tloc.begin_column;
+    }
+    if (loc.end_line<tloc.end_line) {
+        loc.end_line=tloc.end_line;
+        loc.end_column=tloc.end_column;
+    } else if (loc.end_line==tloc.end_line && loc.end_column<tloc.end_column) {
+        loc.end_column=tloc.end_column;
+    }
+    loc.file=tloc.file;
 }
