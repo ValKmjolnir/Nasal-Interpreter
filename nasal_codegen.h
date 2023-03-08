@@ -223,7 +223,10 @@ private:
 
     bool check_memory_reachable(const ast&);
     
-    void die(const string&,const u32,const u32,const u32);
+    void die(const string& info,const span& loc) {
+        err.err("code",loc,info);
+    }
+
     void regist_num(const f64);
     void regist_str(const string&);
     void find_symbol(const ast&);
@@ -279,23 +282,18 @@ bool codegen::check_memory_reachable(const ast& node) {
     if (node.type()==ast_call) {
         const ast& tmp=node.child().back();
         if (tmp.type()==ast_callf) {
-            die("bad left-value",tmp.line(),tmp.col(),1);
+            die("bad left-value with function call",node.location());
             return false;
         }
         if (tmp.type()==ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0].type()==ast_subvec)) {
-            die("bad left-value",tmp.line(),tmp.col(),1);
+            die("bad left-value with subvec",node.location());
             return false;
         }
     } else if (node.type()!=ast_id) {
-        die("bad left-value",node.line(),node.col(),1);
+        die("bad left-value",node.location());
         return false;
     }
     return true;
-}
-
-void codegen::die(const string& info,const u32 line,const u32 col,const u32 len=1) {
-    err.load(file[fileindex]);
-    err.err("code",{line,col-len,line,col,file[fileindex]},info);
 }
 
 void codegen::regist_num(const f64 num) {
@@ -431,15 +429,15 @@ void codegen::func_gen(const ast& node) {
         }
         // check default parameter and dynamic parameter
         if (checked_default && tmp.type()!=ast_default) {
-            die("must use default parameters here",tmp.line(),tmp.col(),tmp.str().length());
+            die("must use default parameters here",tmp.location());
         }
         if (checked_dynamic && &tmp!=&node[0].child().back()) {
-            die("dynamic parameter must be the last one",tmp.line(),tmp.col(),tmp.str().length());
+            die("dynamic parameter must be the last one",tmp.location());
         }
         // check redefinition
         string name=tmp.str();
         if (argname.count(name)) {
-            die("redefinition of parameter: "+name,tmp.line(),tmp.col(),name.length());
+            die("redefinition of parameter: "+name,tmp.location());
         } else {
             argname[name]=true;
         }
@@ -461,7 +459,7 @@ void codegen::func_gen(const ast& node) {
     for(auto& tmp:node[0].child()) {
         const string& str=tmp.str();
         if (str=="me") {
-            die("\"me\" should not be a parameter",tmp.line(),tmp.col(),tmp.str().length());
+            die("\"me\" should not be a parameter",tmp.location());
         }
         regist_str(str);
         switch(tmp.type()) {
@@ -488,7 +486,7 @@ void codegen::func_gen(const ast& node) {
     in_iterloop.pop();
     code[lsize].num=local.back().size();
     if (local.back().size()>=STACK_DEPTH) {
-        die("too many local variants: "+std::to_string(local.back().size()),block.line(),0);
+        die("too many local variants: "+std::to_string(local.back().size()),block.location());
     }
     local.pop_back();
 
@@ -520,7 +518,7 @@ void codegen::call_id(const ast& node) {
         if (builtin[i].name==str) {
             gen(op_callb,i,node.line());
             if (local.empty()) {
-                die("should warp native function in local scope",node.line(),node.col(),node.str().length());
+                die("should warp native function in local scope",node.location());
             }
             return;
         }
@@ -538,7 +536,7 @@ void codegen::call_id(const ast& node) {
         gen(op_callg,index,node.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",node.line(),node.col(),node.str().length());
+    die("undefined symbol \""+str+"\"",node.location());
 }
 
 void codegen::call_hash(const ast& node) {
@@ -622,7 +620,7 @@ void codegen::mcall_id(const ast& node) {
     const string& str=node.str();
     for(u32 i=0;builtin[i].name;++i) {
         if (builtin[i].name==str) {
-            die("cannot modify native function",node.line(),node.col(),node.str().length());
+            die("cannot modify native function",node.location());
             return;
         }
     }
@@ -639,7 +637,7 @@ void codegen::mcall_id(const ast& node) {
         gen(op_mcallg,index,node.line());
         return;
     }
-    die("undefined symbol \""+str+"\"",node.line(),node.col(),node.str().length());
+    die("undefined symbol \""+str+"\"",node.location());
 }
 
 void codegen::mcall_vec(const ast& node) {
@@ -665,6 +663,11 @@ void codegen::multi_def(const ast& node) {
     if (node[1].type()==ast_tuple) { // (var a,b,c)=(c,b,a);
         auto& vals=node[1].child();
         for(usize i=0;i<size;++i) {
+            // check node type, only identifier is allowed
+            if (ids[i].type()!=ast_id) {
+                die("cannot call identifier in multi-definition",ids[i].location());
+                continue;
+            }
             calc_gen(vals[i]);
             const string& str=ids[i].str();
             local.empty()?
@@ -674,6 +677,11 @@ void codegen::multi_def(const ast& node) {
     } else { // (var a,b,c)=[0,1,2];
         calc_gen(node[1]);
         for(usize i=0;i<size;++i) {
+            // check node type, only identifier is allowed
+            if (ids[i].type()!=ast_id) {
+                die("cannot call identifier in multi-definition",ids[i].location());
+                continue;
+            }
             gen(op_callvi,i,node[1].line());
             const string& str=ids[i].str();
             local.empty()?
@@ -686,20 +694,20 @@ void codegen::multi_def(const ast& node) {
 
 void codegen::def_gen(const ast& node) {
     if (node[0].type()==ast_id && node[1].type()==ast_tuple) {
-        die("cannot accept too many values",node[1].line(),node[1].col(),1);
+        die("cannot accept too many values",node[1].location());
     } else if (node[0].type()==ast_multi_id && node[1].type()==ast_tuple && node[0].size()<node[1].size()) {
-        die("lack values in multi-definition",node[1].line(),node[1].col(),1);
+        die("lack values in multi-definition",node[1].location());
     } else if (node[0].type()==ast_multi_id && node[1].type()==ast_tuple && node[0].size()>node[1].size()) {
-        die("too many values in multi-definition",node[1].line(),node[1].col(),1);
+        die("too many values in multi-definition",node[1].location());
     }
     node[0].type()==ast_id?single_def(node):multi_def(node);
 }
 
 void codegen::multi_assign_gen(const ast& node) {
     if (node[1].type()==ast_tuple && node[0].size()<node[1].size()) {
-        die("lack values in multi-assignment",node[1].line(),node[1].col(),1);
+        die("lack values in multi-assignment",node[1].location());
     } else if (node[1].type()==ast_tuple && node[0].size()>node[1].size()) {
-        die("too many values in multi-assignment",node[1].line(),node[1].col(),1);
+        die("too many values in multi-assignment",node[1].location());
     }
     i32 size=node[0].size();
     if (node[1].type()==ast_tuple) {

@@ -176,7 +176,7 @@ const error& parse::compile(const lexer& lexer) {
     toks=lexer.result().data();
     ptr=in_func=in_loop=0;
 
-    root={{0,0,0,0,toks[0].loc.file},ast_root};
+    root={toks[0].loc,ast_root};
     while(!lookahead(tok::eof)) {
         root.add(expr());
         if (lookahead(tok::semi)) {
@@ -186,6 +186,7 @@ const error& parse::compile(const lexer& lexer) {
             die(prevspan,"expected \";\"");
         }
     }
+    root.update_span();
     return err;
 }
 
@@ -368,6 +369,7 @@ ast parse::vec() {
             break;
         }
     }
+    node.update_span(thisspan);
     match(tok::rbracket,"expected ']' when generating vector");
     return node;
 }
@@ -385,6 +387,7 @@ ast parse::hash() {
             break;
         }
     }
+    node.update_span(thisspan);
     match(tok::rbrace,"expected '}' when generating hash");
     return node;
 }
@@ -400,6 +403,7 @@ ast parse::pair() {
     }
     match(tok::colon);
     node.add(calc());
+    node.update_span();
     return node;
 }
 
@@ -414,6 +418,7 @@ ast parse::func() {
     }
     node.add(exprs());
     --in_func;
+    node.update_span();
     return node;
 }
 
@@ -446,6 +451,7 @@ ast parse::params() {
             break;
         }
     }
+    node.update_span(thisspan);
     match(tok::rcurve,"expected ')' after parameter list");
     return node;
 }
@@ -493,6 +499,8 @@ ast parse::expr() {
             next();
             break;
     }
+
+    // unreachable
     return {toks[ptr].loc,ast_null};
 }
 
@@ -519,6 +527,7 @@ ast parse::exprs() {
         if (lookahead(tok::semi))
             match(tok::semi);
     }
+    node.update_span();
     return node;
 }
 
@@ -547,6 +556,7 @@ ast parse::calc() {
         tmp.add(calc());
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -557,8 +567,10 @@ ast parse::bitwise_or() {
         tmp.add(std::move(node));
         match(tok::btor);
         tmp.add(bitwise_xor());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -569,8 +581,10 @@ ast parse::bitwise_xor() {
         tmp.add(std::move(node));
         match(tok::btxor);
         tmp.add(bitwise_and());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -581,8 +595,10 @@ ast parse::bitwise_and() {
         tmp.add(std::move(node));
         match(tok::btand);
         tmp.add(or_expr());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -593,8 +609,10 @@ ast parse::or_expr() {
         tmp.add(std::move(node));
         match(tok::opor);
         tmp.add(and_expr());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -605,8 +623,10 @@ ast parse::and_expr() {
         tmp.add(std::move(node));
         match(tok::opand);
         tmp.add(cmp_expr());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -618,8 +638,10 @@ ast parse::cmp_expr() {
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(additive_expr());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -636,8 +658,10 @@ ast parse::additive_expr() {
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(multive_expr());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -648,8 +672,10 @@ ast parse::multive_expr() {
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
+        tmp.update_span();
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -662,6 +688,7 @@ ast parse::unary() {
         default: break;
     }
     node.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
+    node.update_span();
     return node;
 }
 
@@ -685,8 +712,11 @@ ast parse::scalar() {
     } else if (lookahead(tok::lbrace)) {
         node=hash();
     } else if (lookahead(tok::lcurve)) {
+        const auto& loc=toks[ptr].loc;
         match(tok::lcurve);
         node=calc();
+        node.set_begin(loc.begin_line,loc.begin_column);
+        node.update_span(thisspan);
         match(tok::rcurve);
     } else if (lookahead(tok::var)) {
         match(tok::var);
@@ -707,6 +737,7 @@ ast parse::scalar() {
             node.add(call_scalar());
         }
     }
+    node.update_span();
     return node;
 }
 
@@ -717,7 +748,7 @@ ast parse::call_scalar() {
         case tok::dot:      return callh(); break;
         default: break;
     }
-    // should never run this expression
+    // unreachable
     return {toks[ptr].loc,ast_nil};
 }
 
@@ -725,6 +756,7 @@ ast parse::callh() {
     ast node(toks[ptr].loc,ast_callh);
     match(tok::dot);
     node.set_str(toks[ptr].str);
+    node.set_end(toks[ptr].loc.end_line,toks[ptr].loc.end_column);
     match(tok::id,"expected hashmap key"); // get key
     return node;
 }
@@ -752,8 +784,9 @@ ast parse::callv() {
         }
     }
     if (node.size()==0) {
-        die(node.location(),"expected index value");
+        die(thisspan,"expected index value");
     }
+    node.update_span(thisspan);
     match(tok::rbracket,"expected ']' when calling vector");
     return node;
 }
@@ -780,6 +813,7 @@ ast parse::callf() {
         else if (!lookahead(tok::rcurve) && !check_comma(panic))
             break;
     }
+    node.update_span(thisspan);
     match(tok::rcurve,"expected ')' when calling function");
     return node;
 }
@@ -793,6 +827,7 @@ ast parse::subvec() {
         tmp.add((lookahead(tok::comma) || lookahead(tok::rbracket))?nil():calc());
         node=std::move(tmp);
     }
+    node.update_span();
     return node;
 }
 
@@ -814,32 +849,37 @@ ast parse::definition() {
     } else {
         node.add(calc());
     }
+    node.update_span();
     return node;
 }
 
 ast parse::incurve_def() {
+    const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
     ast node=multi_id();
+    node.update_span(thisspan);
     match(tok::rcurve);
+    node.set_begin(loc.begin_line,loc.begin_column);
     return node;
 }
 
 ast parse::outcurve_def() {
+    const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     ast node=multi_id();
+    node.update_span(thisspan);
     match(tok::rcurve);
+    node.set_begin(loc.begin_line,loc.begin_column);
     return node;
 }
 
 ast parse::multi_id() {
     ast node(toks[ptr].loc,ast_multi_id);
     while(!lookahead(tok::eof)) {
-        node.add(id());
-        if (is_call(toks[ptr].type)) {
-            ast tmp=call_scalar();// recognize calls but this is still a syntax error
-            die(tmp.location(),"cannot call identifier in multi-definition");
-        }
+        // only identifier is allowed here
+        // but we check it at codegen stage
+        node.add(calc());
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id)) { // first set of identifier
@@ -848,6 +888,7 @@ ast parse::multi_id() {
             break;
         }
     }
+    node.update_span();
     return node;
 }
 
@@ -871,6 +912,7 @@ ast parse::multi_scalar() {
             break;
         }
     }
+    node.update_span(thisspan);
     match(tok::rcurve,"expected ')' after multi-scalar");
     return node;
 }
@@ -888,6 +930,7 @@ ast parse::multi_assgin() {
     } else {
         node.add(calc());
     }
+    node.update_span();
     return node;
 }
 
@@ -912,6 +955,7 @@ ast parse::while_loop() {
     node.add(calc());
     match(tok::rcurve);
     node.add(exprs());
+    node.update_span();
     return node;
 }
 
@@ -954,6 +998,7 @@ ast parse::for_loop() {
     }
     match(tok::rcurve);
     node.add(exprs());
+    node.update_span();
     return node;
 }
 
@@ -978,6 +1023,7 @@ ast parse::forei_loop() {
     node.add(calc());
     match(tok::rcurve);
     node.add(exprs());
+    node.update_span();
     return node;
 }
 
@@ -994,18 +1040,24 @@ ast parse::iter_gen() {
             node.add(call_scalar());
         }
     }
+    node.update_span();
     return node;
 }
 
 ast parse::cond() {
     ast node(toks[ptr].loc,ast_cond);
+
+    // generate if
     ast ifnode(toks[ptr].loc,ast_if);
     match(tok::rif);
     match(tok::lcurve);
     ifnode.add(calc());
     match(tok::rcurve);
     ifnode.add(exprs());
+    ifnode.update_span();
     node.add(std::move(ifnode));
+
+    // generate elsif
     while(lookahead(tok::elsif)) {
         ast elsifnode(toks[ptr].loc,ast_elsif);
         match(tok::elsif);
@@ -1013,14 +1065,19 @@ ast parse::cond() {
         elsifnode.add(calc());
         match(tok::rcurve);
         elsifnode.add(exprs());
+        elsifnode.update_span();
         node.add(std::move(elsifnode));
     }
+
+    // generate else
     if (lookahead(tok::relse)) {
         ast elsenode(toks[ptr].loc,ast_else);
         match(tok::relse);
         elsenode.add(exprs());
+        elsenode.update_span();
         node.add(std::move(elsenode));
     }
+    node.update_span();
     return node;
 }
 
@@ -1046,5 +1103,6 @@ ast parse::ret_expr() {
     ) {
         node.add(calc());
     }
+    node.update_span();
     return node;
 }
