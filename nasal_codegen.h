@@ -212,16 +212,13 @@ private:
     std::vector<opcode> code;
     std::list<std::vector<i32>> continue_ptr;
     std::list<std::vector<i32>> break_ptr;
-    // global : max 4095 values
+    // global : max 1023 values
     std::unordered_map<string,i32> global;
     // local  : max 32768 upvalues 65536 values
     std::list<std::unordered_map<string,i32>> local;
 
-    // func end stack, reserved for code print
-    std::stack<u32> fbstk;
-    std::stack<u32> festk;
-
     bool check_memory_reachable(const ast&);
+    void check_id_exist(const ast&);
     
     void die(const string& info,const span& loc) {
         err.err("code",loc,info);
@@ -259,6 +256,7 @@ private:
     void load_continue_break(i32,i32);
     void while_gen(const ast&);
     void for_gen(const ast&);
+    void expr_gen(const ast&);
     void forindex_gen(const ast&);
     void foreach_gen(const ast&);
     void or_gen(const ast&);
@@ -267,8 +265,6 @@ private:
     void calc_gen(const ast&);
     void block_gen(const ast&);
     void ret_gen(const ast&);
-
-    void singleop(const u32);
 public:
     codegen(error& e):fileindex(0),err(e),file(nullptr) {}
     const error& compile(const parse&,const linker&);
@@ -294,6 +290,29 @@ bool codegen::check_memory_reachable(const ast& node) {
         return false;
     }
     return true;
+}
+
+void codegen::check_id_exist(const ast& node) {
+    const string& str=node.str();
+    for(u32 i=0;builtin[i].name;++i) {
+        if (builtin[i].name==str) {
+            if (local.empty()) {
+                die("useless native function used in global scope",node.location());
+            }
+            return;
+        }
+    }
+
+    if (local_find(str)>=0) {
+        return;
+    }
+    if (upvalue_find(str)>=0) {
+        return;
+    }
+    if (global_find(str)>=0) {
+        return;
+    }
+    die("undefined symbol \""+str+"\", and this symbol is useless here",node.location());
 }
 
 void codegen::regist_num(const f64 num) {
@@ -808,63 +827,7 @@ void codegen::while_gen(const ast& node) {
 }
 
 void codegen::for_gen(const ast& node) {
-    switch(node[0].type()) {
-        case ast_null:break;
-        case ast_def:def_gen(node[0]);break;
-        case ast_multi_assign:multi_assign_gen(node[0]);break;
-        case ast_addeq:case ast_subeq:
-        case ast_multeq:case ast_diveq:case ast_lnkeq:
-        case ast_btandeq:case ast_btoreq:case ast_btxoreq:
-            calc_gen(node[0]);
-            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
-                code.back().num=1;
-            } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().num|=0x80000000;
-            } else {
-                gen(op_pop,0,node[0].line());
-            }
-            break;
-        case ast_nil:case ast_num:case ast_str:case ast_bool:break;
-        case ast_vec:case ast_hash:case ast_func:
-        case ast_call:
-        case ast_neg:case ast_lnot:case ast_bnot:
-        case ast_bitor:case ast_bitxor:case ast_bitand:
-        case ast_add:case ast_sub:
-        case ast_mult:case ast_div:
-        case ast_link:
-        case ast_cmpeq:case ast_neq:
-        case ast_leq:case ast_less:
-        case ast_geq:case ast_grt:
-        case ast_trino:
-            calc_gen(node[0]);
-            if (code.back().op==op_meq) {
-                code.back().num=1;
-            } else {
-                gen(op_pop,0,node[0].line());
-            }
-            break;
-        case ast_equal:
-            if (node[0][0].type()==ast_id) {
-                calc_gen(node[0][1]);
-                mcall_id(node[0][0]);
-                // only the first mcall_id can use load
-                if (code.back().op==op_mcalll) {
-                    code.back().op=op_loadl;
-                } else if (code.back().op==op_mupval) {
-                    code.back().op=op_loadu;
-                } else {
-                    code.back().op=op_loadg;
-                }
-            } else {
-                calc_gen(node[0]);
-                if (code.back().op==op_meq) {
-                    code.back().num=1;
-                } else {
-                    gen(op_pop,0,node[0].line());
-                }
-            }
-            break;
-    }
+    expr_gen(node[0]);
     usize jmp_place=code.size();
     if (node[1].type()==ast_null) {
         gen(op_pnum,num_table[1],node[1].line());
@@ -876,43 +839,50 @@ void codegen::for_gen(const ast& node) {
 
     block_gen(node[3]);
     usize continue_place=code.size();
-    switch(node[2].type()) {
+    expr_gen(node[2]);
+    gen(op_jmp,jmp_place,node[2].line());
+    code[label_exit].num=code.size();
+
+    load_continue_break(continue_place,code.size());
+}
+
+void codegen::expr_gen(const ast& node) {
+    switch(node.type()) {
         case ast_null:break;
-        case ast_def:def_gen(node[2]);break;
-        case ast_multi_assign:multi_assign_gen(node[2]);break;
+        case ast_def:def_gen(node);break;
+        case ast_multi_assign:multi_assign_gen(node);break;
         case ast_addeq:case ast_subeq:
         case ast_multeq:case ast_diveq:case ast_lnkeq:
         case ast_btandeq:case ast_btoreq:case ast_btxoreq:
-            calc_gen(node[2]);
+            calc_gen(node);
             if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                 code.back().num=1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
                 code.back().num|=0x80000000;
             } else {
-                gen(op_pop,0,node[2].line());
+                gen(op_pop,0,node.line());
             }
             break;
         case ast_nil:case ast_num:case ast_str:case ast_bool:break;
-        case ast_vec:case ast_hash:case ast_func:
-        case ast_call:
+        case ast_vec:case ast_hash:case ast_func:case ast_call:
         case ast_neg:case ast_lnot:case ast_bnot:
         case ast_bitor:case ast_bitxor:case ast_bitand:
-        case ast_add:case ast_sub:case ast_mult:
-        case ast_div:case ast_link:
-        case ast_cmpeq:case ast_neq:case ast_leq:
-        case ast_less:case ast_geq:case ast_grt:
+        case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+        case ast_cmpeq:case ast_neq:
+        case ast_leq:case ast_less:
+        case ast_geq:case ast_grt:
         case ast_trino:
-            calc_gen(node[2]);
+            calc_gen(node);
             if (code.back().op==op_meq) {
                 code.back().num=1;
             } else {
-                gen(op_pop,0,node[2].line());
+                gen(op_pop,0,node.line());
             }
             break;
         case ast_equal:
-            if (node[2][0].type()==ast_id) {
-                calc_gen(node[2][1]);
-                mcall_id(node[2][0]);
+            if (node[0].type()==ast_id) {
+                calc_gen(node[1]);
+                mcall_id(node[0]);
                 // only the first mcall_id can use load
                 if (code.back().op==op_mcalll) {
                     code.back().op=op_loadl;
@@ -922,19 +892,15 @@ void codegen::for_gen(const ast& node) {
                     code.back().op=op_loadg;
                 }
             } else {
-                calc_gen(node[2]);
+                calc_gen(node);
                 if (code.back().op==op_meq) {
                     code.back().num=1;
                 } else {
-                    gen(op_pop,0,node[2].line());
+                    gen(op_pop,0,node.line());
                 }
             }
             break;
     }
-    gen(op_jmp,jmp_place,node[2].line());
-    code[label_exit].num=code.size();
-
-    load_continue_break(continue_place,code.size());
 }
 
 void codegen::forindex_gen(const ast& node) {
@@ -1170,14 +1136,10 @@ void codegen::calc_gen(const ast& node) {
 void codegen::block_gen(const ast& node) {
     for(auto& tmp:node.child()) {
         switch(tmp.type()) {
-            case ast_null:
-            case ast_nil:
-            case ast_num:
-            case ast_str:
-            case ast_bool:break;
+            case ast_null:break;
+            case ast_id:check_id_exist(tmp);break;
+            case ast_nil:case ast_num:case ast_str:case ast_bool:break;
             case ast_file:fileindex=tmp.num();break; // special node type in main block
-            case ast_def:def_gen(tmp);break;
-            case ast_multi_assign:multi_assign_gen(tmp);break;
             case ast_cond:cond_gen(tmp);break;
             case ast_continue:
                 continue_ptr.front().push_back(code.size());
@@ -1192,70 +1154,21 @@ void codegen::block_gen(const ast& node) {
             case ast_forindex:
             case ast_foreach:loop_gen(tmp);break;
             case ast_equal:
-                if (tmp[0].type()==ast_id) {
-                    calc_gen(tmp[1]);
-                    mcall_id(tmp[0]);
-                    // only the first mcall_id can use load
-                    if (code.back().op==op_mcalll) {
-                        code.back().op=op_loadl;
-                    } else if (code.back().op==op_mupval) {
-                        code.back().op=op_loadu;
-                    } else {
-                        code.back().op=op_loadg;
-                    }
-                } else {
-                    calc_gen(tmp);
-                    if (code.back().op==op_meq) {
-                        code.back().num=1;
-                    } else {
-                        gen(op_pop,0,tmp.line());
-                    }
-                }
-                break;
             case ast_addeq:case ast_subeq:
             case ast_multeq:case ast_diveq:case ast_lnkeq:
             case ast_btandeq:case ast_btoreq:case ast_btxoreq:
-                calc_gen(tmp);
-                if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
-                    code.back().num=1;
-                } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                    code.back().num|=0x80000000;
-                } else {
-                    gen(op_pop,0,tmp.line());
-                }
-                break;
-            case ast_id:
-            case ast_vec:
-            case ast_hash:
-            case ast_func:
-            case ast_call:
-            case ast_neg:
-            case ast_lnot:
-            case ast_bnot:
-            case ast_bitor:
-            case ast_bitxor:
-            case ast_bitand:
-            case ast_add:
-            case ast_sub:
-            case ast_mult:
-            case ast_div:
-            case ast_link:
-            case ast_cmpeq:
-            case ast_neq:
-            case ast_leq:
-            case ast_less:
-            case ast_geq:
-            case ast_grt:
+            case ast_vec:case ast_hash:case ast_func:case ast_call:
+            case ast_neg:case ast_lnot:case ast_bnot:
+            case ast_bitor:case ast_bitxor:case ast_bitand:
+            case ast_add:case ast_sub:case ast_mult:case ast_div:case ast_link:
+            case ast_cmpeq:case ast_neq:
+            case ast_leq:case ast_less:
+            case ast_geq:case ast_grt:
             case ast_or:
             case ast_and:
             case ast_trino:
-                calc_gen(tmp);
-                if (code.back().op==op_meq) {
-                    code.back().num=1;
-                } else {
-                    gen(op_pop,0,tmp.line());
-                }
-                break;
+            case ast_def:
+            case ast_multi_assign:expr_gen(tmp);break;
             case ast_ret:ret_gen(tmp);break;
         }
     }
@@ -1283,49 +1196,59 @@ const error& codegen::compile(const parse& parse,const linker& import) {
     block_gen(parse.tree()); // generate main block
     gen(op_exit,0,0);
     if (global.size()>=STACK_DEPTH) {
-        err.load(file[fileindex]);
+        err.load(file[0]); // load main execute file
         err.err("code","too many global variants: "+std::to_string(global.size()));
     }
-    if (code.size()>0xffffffff) {
-        err.load(file[fileindex]);
-        err.err("code","too large generated bytecode file: "+std::to_string(code.size()));
+    if (code.size()>0x00ffffff) {
+        err.load(file[0]); // load main execute file
+        err.err("code","bytecode size overflow: "+std::to_string(code.size()));
     }
     return err;
 }
 
-void codegen::singleop(const u32 index) {
-    // print opcode index,opcode name,opcode immediate number
-    const opcode& c=code[index];
-    if (!festk.empty() && index==festk.top()) {
-        std::cout<<std::hex<<"<0x"<<fbstk.top()<<std::dec<<">;\n";
-        if (code[index].op!=op_newf) { // avoid two empty lines
-            std::cout<<"\n";
-        }
-        fbstk.pop();
-        festk.pop();
-    }
-    if (c.op==op_newf) {
-        std::cout<<std::hex<<"\nfunc <0x"<<index<<std::dec<<">:\n";
-        for(u32 i=index;i<code.size();++i) {
-            if (code[i].op==op_jmp) {
-                fbstk.push(index);
-                festk.push(code[i].num);
-                break;
-            }
-        }
-    }
-    std::cout<<"  "<<codestream(c,index,num_res.data(),str_res.data())<<"\n";
-}
-
 void codegen::print() {
+    // func end stack, reserved for code print
+    std::stack<u32> fbstk;
+    std::stack<u32> festk;
+
+    // print const numbers
     for(auto& num:num_res) {
         std::cout<<"  .number "<<num<<"\n";
     }
+
+    // print const strings
     for(auto& str:str_res) {
         std::cout<<"  .symbol \""<<rawstr(str)<<"\"\n";
     }
+
+    // print code
     std::cout<<"\n";
     for(u32 i=0;i<code.size();++i) {
-        singleop(i);
+        // print opcode index, opcode name, opcode immediate number
+        const opcode& c=code[i];
+        if (!festk.empty() && i==festk.top()) {
+            std::cout<<std::hex<<"<0x"<<fbstk.top()<<std::dec<<">;\n";
+            // avoid two empty lines
+            if (c.op!=op_newf) {
+                std::cout<<"\n";
+            }
+            fbstk.pop();
+            festk.pop();
+        }
+
+        // get function begin index and end index
+        if (c.op==op_newf) {
+            std::cout<<std::hex<<"\nfunc <0x"<<i<<std::dec<<">:\n";
+            for(u32 j=i;j<code.size();++j) {
+                if (code[j].op==op_jmp) {
+                    fbstk.push(i);
+                    festk.push(code[j].num);
+                    break;
+                }
+            }
+        }
+
+        // output bytecode
+        std::cout<<"  "<<codestream(c,i,num_res.data(),str_res.data())<<"\n";
     }
 }

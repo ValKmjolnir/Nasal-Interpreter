@@ -144,9 +144,9 @@ void flstream::load(const string& f) {
 void error::fatal(const string& stage,const string& info) {
     std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
     if (file.length()) {
-        std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+        std::cerr<<cyan<<" --> "<<red<<file<<reset<<"\n\n";
     } else {
-        std::cerr<<"\n";
+        std::cerr<<reset<<"\n";
     }
     std::exit(1);
 }
@@ -155,9 +155,9 @@ void error::err(const string& stage,const string& info) {
     ++cnt;
     std::cerr<<red<<stage<<": "<<white<<info<<reset<<"\n";
     if (file.length()) {
-        std::cerr<<cyan<<" --> "<<red<<file<<"\n\n";
+        std::cerr<<cyan<<" --> "<<red<<file<<reset<<"\n\n";
     } else {
-        std::cerr<<"\n";
+        std::cerr<<reset<<"\n";
     }
 }
 

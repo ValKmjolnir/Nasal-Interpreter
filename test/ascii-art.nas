@@ -173,18 +173,18 @@ var ansi_escape_sequence=func(){
     # move curser left and up
     var bar=process_bar.default_bar("classic3",30);
     var progress=[0,0,0,0,0,0,0,0];
-    var increase=[0.015,0.03,0.02,0.047,0.04,0.045,0.025,0.016];
+    var increase=[0.03,0.06,0.04,0.094,0.08,0.09,0.05,0.032];
     foreach(var i;progress) {
         print("\e[1000D",bar.bar(i)," ",rightpad(str(int(i*100)),3)," % \n");
     }
-    for(var i=0;i<1/0.015;i+=1) {
+    for(var i=0;i<1/0.03;i+=1) {
         print("\e[1000D","\e["~str(size(progress))~"A");
         forindex(var j;progress) {
             progress[j]+=increase[j];
             progress[j]=progress[j]>1?1:progress[j];
             print("\e[1000D",bar.bar(progress[j])," ",rightpad(str(int(progress[j]*100)),3)," % \n")
         }
-        unix.sleep(0.02);
+        unix.sleep(0.01);
     }
 
 }
