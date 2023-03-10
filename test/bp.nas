@@ -114,7 +114,7 @@ while(error>0.0005){
         backward(i);
     }
     cnt+=1;
-    if(cnt>=3e5)
+    if(cnt>=1e4)
         break;
 }
 if(cnt>=3e5){

@@ -10,7 +10,7 @@
 
 enum op_code_type:u8 {
     op_exit,   // stop the virtual machine
-    op_intg,   // global scope size
+    op_intg,   // global scope size, set stack top
     op_intl,   // local scope size
     op_loadg,  // load global value
     op_loadl,  // load local value
@@ -26,7 +26,7 @@ enum op_code_type:u8 {
     op_deft,   // default parameter
     op_dyn,    // dynamic parameter
     op_lnot,   // ! logical negation
-    op_usub,   // -
+    op_usub,   // - negation
     op_bnot,   // ~ bitwise not static_cast<i32>
     op_btor,   // | bitwise or
     op_btxor,  // ^ bitwise xor
@@ -41,20 +41,25 @@ enum op_code_type:u8 {
     op_mulc,   // * const
     op_divc,   // / const
     op_lnkc,   // ~ const
-    op_addeq,  // +=
-    op_subeq,  // -=
-    op_muleq,  // *=
-    op_diveq,  // /=
-    op_lnkeq,  // ~=
-    op_btandeq,// &=
-    op_btoreq, // |=
-    op_btxoreq,// ^=
-    op_addeqc, // += const
-    op_subeqc, // -= const
-    op_muleqc, // *= const
-    op_diveqc, // /= const
-    op_lnkeqc, // ~= const
-    op_meq,    // =
+    op_addeq,  // += maybe pop stack top
+    op_subeq,  // -= maybe pop stack top
+    op_muleq,  // *= maybe pop stack top
+    op_diveq,  // /= maybe pop stack top
+    op_lnkeq,  // ~= maybe pop stack top
+    op_btandeq,// &= maybe pop stack top
+    op_btoreq, // |= maybe pop stack top
+    op_btxoreq,// ^= maybe pop stack top
+    op_addeqc, // += const don't pop stack top
+    op_subeqc, // -= const don't pop stack top
+    op_muleqc, // *= const don't pop stack top
+    op_diveqc, // /= const don't pop stack top
+    op_lnkeqc, // ~= const don't pop stack top
+    op_addecp, // += const and pop stack top
+    op_subecp, // -= const and pop stack top
+    op_mulecp, // *= const and pop stack top
+    op_divecp, // /= const and pop stack top
+    op_lnkecp, // ~= concat const string and pop stack top
+    op_meq,    // = maybe pop stack top
     op_eq,     // ==
     op_neq,    // !=
     op_less,   // <
@@ -65,8 +70,8 @@ enum op_code_type:u8 {
     op_leqc,   // <= const
     op_grtc,   // > const
     op_geqc,   // >= const
-    op_pop,    // pop a value from stack
-    op_jmp,    // jump with no condition
+    op_pop,    // pop a value out of stack top
+    op_jmp,    // jump absolute address with no condition
     op_jt,     // used in operator and/or,jmp when condition is true and DO NOT POP
     op_jf,     // used in conditional/loop,jmp when condition is false and POP STACK
     op_cnt,    // add counter for forindex/foreach
@@ -74,7 +79,7 @@ enum op_code_type:u8 {
     op_feach,  // index counter on the top of forindex_stack plus 1 and get the value in vector
     op_callg,  // get value in global scope
     op_calll,  // get value in local scope
-    op_upval,  // get upvalue in closure
+    op_upval,  // get upvalue in closure, high 16 as the index of upval, low 16 as the index of local
     op_callv,  // call vec[index]
     op_callvi, // call vec[immediate] (used in multi-assign/multi-define)
     op_callh,  // call hash.label
@@ -105,23 +110,24 @@ const char* opname[]={
     "addeq ","subeq ","muleq ","diveq ",
     "lnkeq ","bandeq","boreq ","bxoreq",
     "addeqc","subeqc","muleqc","diveqc",
-    "lnkeqc","meq   ","eq    ","neq   ",
-    "less  ","leq   ","grt   ","geq   ",
-    "lessc ","leqc  ","grtc  ","geqc  ",
-    "pop   ","jmp   ","jt    ","jf    ",
-    "cnt   ","findx ","feach ","callg ",
-    "calll ","upval ","callv ","callvi",
-    "callh ","callfv","callfh","callb ",
-    "slcbeg","slcend","slc   ","slc2  ",
-    "mcallg","mcalll","mupval","mcallv",
-    "mcallh","ret   "
+    "lnkeqc","addecp","subecp","mulecp",
+    "divecp","lnkecp","meq   ","eq    ",
+    "neq   ","less  ","leq   ","grt   ",
+    "geq   ","lessc ","leqc  ","grtc  ",
+    "geqc  ","pop   ","jmp   ","jt    ",
+    "jf    ","cnt   ","findx ","feach ",
+    "callg ","calll ","upval ","callv ",
+    "callvi","callh ","callfv","callfh",
+    "callb ","slcbeg","slcend","slc   ",
+    "slc2  ","mcallg","mcalll","mupval",
+    "mcallv","mcallh","ret   "
 };
 
 struct opcode {
-    u8  op;  // opcode
-    u16 fidx;// source code file index
-    u32 num; // imm num
-    u32 line;// line of source code
+    u8  op;   // opcode
+    u16 fidx; // source code file index
+    u32 num;  // immediate num
+    u32 line; // location line of source code
     opcode(u8 o=op_exit,u16 f=0,u32 n=0,u32 l=0):
         op(o),fidx(f),num(n),line(l) {}
     opcode& operator=(const opcode& tmp) = default;
@@ -141,7 +147,7 @@ public:
         u8  op=ins.code.op;
         u32 num=ins.code.num;
         out<<std::hex<<"0x"
-           <<std::setw(8)<<std::setfill('0')<<ins.index<<"      "
+           <<std::setw(6)<<std::setfill('0')<<ins.index<<"      "
            <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
            <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
            <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
@@ -155,13 +161,17 @@ public:
                 out<<std::hex<<"0x"<<num<<std::dec
                    <<" sp-"<<num;break;
             case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-                out<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec
-                   <<" ("<<ins.nums[num&0x7fffffff]<<") sp-"
-                   <<(num>>31);break;
+                out<<std::hex<<"0x"<<num<<std::dec
+                   <<" ("<<ins.nums[num]<<")";break;
             case op_lnkeqc:
-                out<<std::hex<<"0x"<<(num&0x7fffffff)<<std::dec<<" (\""
-                   <<rawstr(ins.strs[num&0x7fffffff],16)<<"\") sp-"
-                   <<(num>>31);break;
+                out<<std::hex<<"0x"<<num<<std::dec<<" (\""
+                   <<rawstr(ins.strs[num],16)<<"\")";break;
+            case op_addecp:case op_subecp:case op_mulecp:case op_divecp:
+                out<<std::hex<<"0x"<<num<<std::dec
+                   <<" ("<<ins.nums[num]<<") sp-1";break;
+            case op_lnkecp:
+                out<<std::hex<<"0x"<<num<<std::dec<<" (\""
+                   <<rawstr(ins.strs[num],16)<<"\") sp-1";break;
             case op_addc:  case op_subc:   case op_mulc:  case op_divc:
             case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
             case op_pnum:
@@ -212,9 +222,12 @@ private:
     std::vector<opcode> code;
     std::list<std::vector<i32>> continue_ptr;
     std::list<std::vector<i32>> break_ptr;
-    // global : max 1023 values
+
+    // symbol table
+    // global : max STACK_DEPTH-1 values
     std::unordered_map<string,i32> global;
     // local  : max 32768 upvalues 65536 values
+    // but in fact local scope also has less than STACK_DEPTH value
     std::list<std::unordered_map<string,i32>> local;
 
     bool check_memory_reachable(const ast&);
@@ -858,7 +871,7 @@ void codegen::expr_gen(const ast& node) {
             if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                 code.back().num=1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().num|=0x80000000;
+                code.back().op=code.back().op-op_addeqc+op_addecp;
             } else {
                 gen(op_pop,0,node.line());
             }
@@ -1195,11 +1208,21 @@ const error& codegen::compile(const parse& parse,const linker& import) {
     gen(op_intg,global.size(),0);
     block_gen(parse.tree()); // generate main block
     gen(op_exit,0,0);
+
+    // size out of bound check
+    if (num_res.size()>0xffffff) {
+        err.load(file[0]); // load main execute file
+        err.err("code","too many constant numbers: "+std::to_string(num_res.size()));
+    }
+    if (str_res.size()>0xffffff) {
+        err.load(file[0]); // load main execute file
+        err.err("code","too many constant strings: "+std::to_string(str_res.size()));
+    }
     if (global.size()>=STACK_DEPTH) {
         err.load(file[0]); // load main execute file
         err.err("code","too many global variants: "+std::to_string(global.size()));
     }
-    if (code.size()>0x00ffffff) {
+    if (code.size()>0xffffff) {
         err.load(file[0]); // load main execute file
         err.err("code","bytecode size overflow: "+std::to_string(code.size()));
     }

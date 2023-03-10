@@ -21,8 +21,14 @@ var spliter=func(content){
     for(var i=0;i<len;i+=1){
         var n=content[i];
         var c=chr(n);
-        if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0]) or n=='\''[0] or n=='-'[0]){
+        if(('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0])){
             s~=c;
+        }elsif(c=='.' or c==',' or c=='-' or c=='\'' or c=='\"' or c=='!' or c=='?'){
+            if(size(s)) {
+                token[to_lower(s)]+=1;
+            }
+            token[c]+=1;
+            s="";
         }elsif(size(s)){
             if(s[0]!="-"[0] and s[0]!="'"[0] and s[-1]!="-"[0] and s[-1]!="'"[0])
                 token[to_lower(s)]+=1;
