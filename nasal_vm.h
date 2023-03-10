@@ -96,6 +96,11 @@ protected:
     void o_muleqc();
     void o_diveqc();
     void o_lnkeqc();
+    void o_addecp();
+    void o_subecp();
+    void o_mulecp();
+    void o_divecp();
+    void o_lnkecp();
     void o_meq();
     void o_eq();
     void o_neq();
@@ -554,18 +559,31 @@ void vm::o_bxoreq() {
 // like this: func{a+=1;}(); the result of 'a+1' will no be used later, imm[pc]>>31=1
 // but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
 #define op_calc_eq_const(type)\
-    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]&0x7fffffff]);\
-    memr=nullptr;\
-    top-=(imm[pc]>>31);
+    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]]);\
+    memr=nullptr;
 
 void vm::o_addeqc() {op_calc_eq_const(+);}
 void vm::o_subeqc() {op_calc_eq_const(-);}
 void vm::o_muleqc() {op_calc_eq_const(*);}
 void vm::o_diveqc() {op_calc_eq_const(/);}
 void vm::o_lnkeqc() {
-    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]&0x7fffffff]);
+    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]]);
     memr=nullptr;
-    top-=(imm[pc]>>31);
+}
+
+#define op_calc_eq_const_and_pop(type)\
+    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]]);\
+    memr=nullptr;\
+    --top;
+
+void vm::o_addecp() {op_calc_eq_const_and_pop(+);}
+void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
+void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
+void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
+void vm::o_lnkecp() {
+    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]]);
+    memr=nullptr;
+    --top;
 }
 
 void vm::o_meq() {
@@ -1062,16 +1080,17 @@ void vm::run(
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
         &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
         &&addeqc, &&subeqc, &&muleqc, &&diveqc,
-        &&lnkeqc, &&meq,    &&eq,     &&neq,
-        &&less,   &&leq,    &&grt,    &&geq,
-        &&lessc,  &&leqc,   &&grtc,   &&geqc,
-        &&pop,    &&jmp,    &&jt,     &&jf,
-        &&cnt,    &&findex, &&feach,  &&callg,
-        &&calll,  &&upval,  &&callv,  &&callvi,
-        &&callh,  &&callfv, &&callfh, &&callb,
-        &&slcbeg, &&slcend, &&slc,    &&slc2,
-        &&mcallg, &&mcalll, &&mupval, &&mcallv,
-        &&mcallh, &&ret
+        &&lnkeqc, &&addecp, &&subecp, &&mulecp,
+        &&divecp, &&lnkecp, &&meq,    &&eq,
+        &&neq,    &&less,   &&leq,    &&grt,
+        &&geq,    &&lessc,  &&leqc,   &&grtc,
+        &&geqc,   &&pop,    &&jmp,    &&jt,
+        &&jf,     &&cnt,    &&findex, &&feach,
+        &&callg,  &&calll,  &&upval,  &&callv,
+        &&callvi, &&callh,  &&callfv, &&callfh,
+        &&callb,  &&slcbeg, &&slcend, &&slc,
+        &&slc2,   &&mcallg, &&mcalll, &&mupval,
+        &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.codes()) {
@@ -1103,9 +1122,11 @@ void vm::run(
         &vm::o_muleq,  &vm::o_diveq,
         &vm::o_lnkeq,  &vm::o_bandeq,
         &vm::o_boreq,  &vm::o_bxoreq,
-        &vm::o_addeqc,
-        &vm::o_subeqc, &vm::o_muleqc,
-        &vm::o_diveqc, &vm::o_lnkeqc,
+        &vm::o_addeqc, &vm::o_subeqc,
+        &vm::o_muleqc, &vm::o_diveqc,
+        &vm::o_lnkeqc, &vm::o_addecp,
+        &vm::o_subecp, &vm::o_mulecp,
+        &vm::o_divecp, &vm::o_lnkecp,
         &vm::o_meq,    &vm::o_eq,
         &vm::o_neq,    &vm::o_less,
         &vm::o_leq,    &vm::o_grt,
@@ -1204,6 +1225,11 @@ subeqc: exec_nodie(o_subeqc); // -0
 muleqc: exec_nodie(o_muleqc); // -0
 diveqc: exec_nodie(o_diveqc); // -0
 lnkeqc: exec_nodie(o_lnkeqc); // -0
+addecp: exec_nodie(o_addecp); // -1
+subecp: exec_nodie(o_subecp); // -1
+mulecp: exec_nodie(o_mulecp); // -1
+divecp: exec_nodie(o_divecp); // -1
+lnkecp: exec_nodie(o_lnkecp); // -1
 meq:    exec_nodie(o_meq   ); // -1
 eq:     exec_nodie(o_eq    ); // -1
 neq:    exec_nodie(o_neq   ); // -1

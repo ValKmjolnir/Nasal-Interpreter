@@ -219,7 +219,7 @@ var bp_example=func() {
 
     var epoch=0;
     var total=1e6;
-    while(total>0.01) {
+    while(total>0.001) {
         epoch+=1;
         if(epoch>1e4) {
             println("Training failed after ",epoch," epoch.");

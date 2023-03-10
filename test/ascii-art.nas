@@ -55,7 +55,7 @@ var curve1=func(line=4){
     rand(100);
     var s="";
     for(var i=0;i<line;i+=1){
-        for(var j=0;j<45;j+=1)
+        for(var j=0;j<90;j+=1)
             s~=table[int(6*rand())];
         s~='\n';
     }
@@ -67,7 +67,7 @@ var curve2=func(line=2){
     rand(100);
     var s="";
     for(var i=0;i<line;i+=1){
-        for(var j=0;j<45;j+=1)
+        for(var j=0;j<90;j+=1)
             s~=shadow[int(8*rand())];
         s~='\n';
     }
@@ -76,6 +76,11 @@ var curve2=func(line=2){
 
 var curve3=func(line=2){
     var arr=[
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
+        0,1,2,3,4,5,6,7,8,
         0,1,2,3,4,5,6,7,8,
         0,1,2,3,4,5,6,7,8,
         0,1,2,3,4,5,6,7,8,
@@ -109,7 +114,7 @@ var curve4=func(line=4){
     ];
     rand(time(0));
     for(var i=0;i<line;i+=1){
-        for(var j=0;j<45;j+=1)
+        for(var j=0;j<90;j+=1)
             print("\e["~front[16*rand()]~";"~back[16*rand()]~shadow[8*rand()]);
         print('\n');
     }
@@ -118,7 +123,7 @@ var curve4=func(line=4){
 var curve5=func(line=4){
     var vec=["▀▄─","▄▀─","▀─▄","▄─▀"];
     for(var (y,p)=(0,0);y!=line;y+=1){
-        for(var x=0;x!=15;x+=1)
+        for(var x=0;x!=30;x+=1)
             print(vec[p]);
         print("\n");
         p+=1;

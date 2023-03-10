@@ -213,16 +213,17 @@ void debugger::run(
         &&addeq,  &&subeq,  &&muleq,  &&diveq,
         &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
         &&addeqc, &&subeqc, &&muleqc, &&diveqc,
-        &&lnkeqc, &&meq,    &&eq,     &&neq,
-        &&less,   &&leq,    &&grt,    &&geq,
-        &&lessc,  &&leqc,   &&grtc,   &&geqc,
-        &&pop,    &&jmp,    &&jt,     &&jf,
-        &&cnt,    &&findex, &&feach,  &&callg,
-        &&calll,  &&upval,  &&callv,  &&callvi,
-        &&callh,  &&callfv, &&callfh, &&callb,
-        &&slcbeg, &&slcend, &&slc,    &&slc2,
-        &&mcallg, &&mcalll, &&mupval, &&mcallv,
-        &&mcallh, &&ret
+        &&lnkeqc, &&addecp, &&subecp, &&mulecp,
+        &&divecp, &&lnkecp, &&meq,    &&eq,
+        &&neq,    &&less,   &&leq,    &&grt,
+        &&geq,    &&lessc,  &&leqc,   &&grtc,
+        &&geqc,   &&pop,    &&jmp,    &&jt,
+        &&jf,     &&cnt,    &&findex, &&feach,
+        &&callg,  &&calll,  &&upval,  &&callv,
+        &&callvi, &&callh,  &&callfv, &&callfh,
+        &&callb,  &&slcbeg, &&slcend, &&slc,
+        &&slc2,   &&mcallg, &&mcalll, &&mupval,
+        &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
     for(auto& i:gen.codes()) {
@@ -254,9 +255,11 @@ void debugger::run(
         &debugger::o_muleq,  &debugger::o_diveq,
         &debugger::o_lnkeq,  &debugger::o_bandeq,
         &debugger::o_boreq,  &debugger::o_bxoreq,
-        &debugger::o_addeqc,
-        &debugger::o_subeqc, &debugger::o_muleqc,
-        &debugger::o_diveqc, &debugger::o_lnkeqc,
+        &debugger::o_addeqc, &debugger::o_subeqc,
+        &debugger::o_muleqc, &debugger::o_diveqc,
+        &debugger::o_lnkeqc, &debugger::o_addecp,
+        &debugger::o_subecp, &debugger::o_mulecp,
+        &debugger::o_divecp, &debugger::o_lnkecp,
         &debugger::o_meq,    &debugger::o_eq,
         &debugger::o_neq,    &debugger::o_less,
         &debugger::o_leq,    &debugger::o_grt,
@@ -355,6 +358,11 @@ subeqc: dbg(o_subeqc,op_subeqc);
 muleqc: dbg(o_muleqc,op_muleqc);
 diveqc: dbg(o_diveqc,op_diveqc);
 lnkeqc: dbg(o_lnkeqc,op_lnkeqc);
+addecp: dbg(o_addecp,op_addecp);
+subecp: dbg(o_subecp,op_subecp);
+mulecp: dbg(o_mulecp,op_mulecp);
+divecp: dbg(o_divecp,op_divecp);
+lnkecp: dbg(o_lnkecp,op_lnkecp);
 meq:    dbg(o_meq   ,op_meq   );
 eq:     dbg(o_eq    ,op_eq    );
 neq:    dbg(o_neq   ,op_neq   );
