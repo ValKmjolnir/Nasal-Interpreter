@@ -19,7 +19,7 @@ var prt=func(){
     }
     s~='+--------------------+\n';
     print(s);
-    unix.sleep(1/200);
+    unix.sleep(1/800);
 }
 
 var bfs=func(begin,end){

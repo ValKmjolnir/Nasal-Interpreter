@@ -9,35 +9,39 @@
 
 class vm {
 protected:
+
     /* registers and constants of vm */
-    u32  pc;       // program counter
-    var* localr;   // local scope register
-    var* memr;     // used for mem_call
-    var  funcr;    // function register
-    var  upvalr;   // upvalue register
-    var* canary;   // avoid stackoverflow
-    var* top;      // stack top
+    u32  pc;     // program counter
+    var* localr; // local frame pointer
+    var* memr;   // store address got by memory call
+    var funcr;   // function register
+    var upvalr;  // upvalue register
+    var* canary; // avoid stack overflow, at the top of main stack
+    var* top;    // stack top pointer
 
     /* constants */
-    const f64*    cnum;   // const numbers
-    const string* cstr;   // const symbols
-    std::vector<u32> imm; // immediate number
+    const f64* cnum;      // constant numbers
+    const string* cstr;   // constant symbols and strings
+    std::vector<u32> imm; // immediate number table
     
     /* garbage collector */
-    gc  ngc;
+    gc ngc;
+
     /* main stack */
     var stack[STACK_DEPTH];
 
     /* values used for debugger */
-    const string* files;
-    const opcode* bytecode;
+    const string* files;    // file name list
+    const opcode* bytecode; // bytecode buffer address
 
+    /* vm initializing function */
     void init(
         const std::vector<string>&,
         const std::vector<f64>&,
         const std::vector<opcode>&,
         const std::vector<string>&,
         const std::vector<string>&);
+
     /* debug functions */
     bool verbose;
     void valinfo(var&);
@@ -49,8 +53,10 @@ protected:
     void ustate();
     void detail();
     void die(const string&);
+
     /* vm calculation functions*/
     bool cond(var&);
+
     /* vm operands */
     void o_intg();
     void o_intl();
@@ -139,12 +145,16 @@ protected:
     void o_mcallh();
     void o_ret();
 public:
+
+    /* constructor of vm instance */
     vm():
         pc(0),localr(nullptr),memr(nullptr),funcr(nil),
         upvalr(nil),canary(nullptr),top(stack),
         cnum(nullptr),cstr(nullptr),
         ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
         files(nullptr),bytecode(nullptr),verbose(false) {}
+
+    /* execution entry */
     void run(
         const codegen&,
         const linker&,
@@ -179,39 +189,38 @@ void vm::init(
 
 void vm::valinfo(var& val) {
     const nas_val* p=val.val.gcobj;
-    std::cout<<"\t";
     switch(val.type) {
-        case vm_none: std::cout<<"| null |";break;
-        case vm_ret:  std::cout<<"| pc   | 0x"<<std::hex
+        case vm_none: std::clog<<"| null |";break;
+        case vm_ret:  std::clog<<"| pc   | 0x"<<std::hex
                                <<val.ret()<<std::dec;break;
-        case vm_addr: std::cout<<"| addr | 0x"<<std::hex
+        case vm_addr: std::clog<<"| addr | 0x"<<std::hex
                                <<(u64)val.addr()<<std::dec;break;
-        case vm_cnt:  std::cout<<"| cnt  | "<<val.cnt();break;
-        case vm_nil:  std::cout<<"| nil  |";break;
-        case vm_num:  std::cout<<"| num  | "<<val.num();break;
-        case vm_str:  std::cout<<"| str  | <0x"<<std::hex<<(u64)p
+        case vm_cnt:  std::clog<<"| cnt  | "<<val.cnt();break;
+        case vm_nil:  std::clog<<"| nil  |";break;
+        case vm_num:  std::clog<<"| num  | "<<val.num();break;
+        case vm_str:  std::clog<<"| str  | <0x"<<std::hex<<(u64)p
                                <<"> "<<rawstr(val.str(),16)<<std::dec;break;
-        case vm_func: std::cout<<"| func | <0x"<<std::hex<<(u64)p
+        case vm_func: std::clog<<"| func | <0x"<<std::hex<<(u64)p
                                <<"> entry:0x"<<val.func().entry
                                <<std::dec;break;
-        case vm_upval:std::cout<<"| upval| <0x"<<std::hex<<(u64)p
+        case vm_upval:std::clog<<"| upval| <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> ["<<val.upval().size
                                <<" val]";break;
-        case vm_vec:  std::cout<<"| vec  | <0x"<<std::hex<<(u64)p
+        case vm_vec:  std::clog<<"| vec  | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> ["<<val.vec().size()
                                <<" val]";break;
-        case vm_hash: std::cout<<"| hash | <0x"<<std::hex<<(u64)p
+        case vm_hash: std::clog<<"| hash | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> {"<<val.hash().size()
                                <<" val}";break;
-        case vm_obj:  std::cout<<"| obj  | <0x"<<std::hex<<(u64)p
+        case vm_obj:  std::clog<<"| obj  | <0x"<<std::hex<<(u64)p
                                <<"> obj:0x"<<(u64)val.obj().ptr
                                <<std::dec;break;
-        case vm_co:   std::cout<<"| co   | <0x"<<std::hex<<(u64)p
+        case vm_co:   std::clog<<"| co   | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> coroutine";break;
-        default:      std::cout<<"| err  | <0x"<<std::hex<<(u64)p
+        default:      std::clog<<"| err  | <0x"<<std::hex<<(u64)p
                                <<std::dec<<"> unknown object";break;
     }
-    std::cout<<"\n";
+    std::clog<<"\n";
 }
 
 void vm::traceback() {
@@ -225,19 +234,19 @@ void vm::traceback() {
         }
     }
     ret.push(pc); // store the position program crashed
-    std::cout<<"trace back ("<<(ngc.stack==stack?"main":"coroutine")<<")\n";
+    std::clog<<"trace back ("<<(ngc.stack==stack?"main":"coroutine")<<")\n";
     for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop()) {
         if ((p=ret.top())==prev) {
             ++same;
             continue;
         }
         if (same) {
-            std::cout
-            <<"  0x"<<std::hex<<std::setw(8)<<std::setfill('0')
-            <<prev<<std::dec<<"      "<<same<<" same call(s)\n";
+            std::clog
+            <<"  0x"<<std::hex<<std::setw(6)<<std::setfill('0')
+            <<prev<<std::dec<<"     "<<same<<" same call(s)\n";
         }
         same=0;
-        std::cout<<"  "<<codestream(bytecode[p],p,cnum,cstr,files)<<"\n";
+        std::clog<<"  "<<codestream(bytecode[p],p,cnum,cstr,files)<<"\n";
     }
     // the first called place has no same calls
 }
@@ -247,38 +256,40 @@ void vm::stackinfo(const u32 limit=10) {
     const u32 gsize=ngc.stack==stack?bytecode[0].num:0;
     var* t=top;
     var* bottom=ngc.stack+gsize;
-    std::cout<<"vm stack (0x"<<std::hex<<(u64)bottom<<std::dec
-             <<" <sp+"<<gsize<<">, limit "<<limit<<", total "
+    std::clog<<"stack (0x"<<std::hex<<(u64)bottom<<std::dec
+             <<" <+"<<gsize<<">, limit "<<limit<<", total "
              <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
     for(u32 i=0;i<limit && t>=bottom;++i,--t) {
-        std::cout<<"  0x"<<std::hex
-                 <<std::setw(8)<<std::setfill('0')
-                 <<(u64)(t-ngc.stack)<<std::dec;
+        std::clog<<"  0x"<<std::hex
+                 <<std::setw(6)<<std::setfill('0')
+                 <<(u64)(t-ngc.stack)<<std::dec
+                 <<"    ";
         valinfo(t[0]);
     }
 }
 
 void vm::reginfo() {
-    std::cout<<"registers ("<<(ngc.cort?"coroutine":"main")<<")\n"<<std::hex
-             <<"  [ pc     ]    | pc   | 0x"<<pc<<"\n"
-             <<"  [ global ]    | addr | 0x"<<(u64)stack<<"\n"
-             <<"  [ localr ]    | addr | 0x"<<(u64)localr<<"\n"
-             <<"  [ memr   ]    | addr | 0x"<<(u64)memr<<"\n"
-             <<"  [ canary ]    | addr | 0x"<<(u64)canary<<"\n"
-             <<"  [ top    ]    | addr | 0x"<<(u64)top<<"\n"
+    std::clog<<"registers ("<<(ngc.cort?"coroutine":"main")<<")\n"<<std::hex
+             <<"  [pc    ]    | pc   | 0x"<<pc<<"\n"
+             <<"  [global]    | addr | 0x"<<(u64)stack<<"\n"
+             <<"  [local ]    | addr | 0x"<<(u64)localr<<"\n"
+             <<"  [memr  ]    | addr | 0x"<<(u64)memr<<"\n"
+             <<"  [canary]    | addr | 0x"<<(u64)canary<<"\n"
+             <<"  [top   ]    | addr | 0x"<<(u64)top<<"\n"
              <<std::dec;
-    std::cout<<"  [ funcr  ]";valinfo(funcr);
-    std::cout<<"  [ upvalr ]";valinfo(upvalr);
+    std::clog<<"  [funcr ]    ";valinfo(funcr);
+    std::clog<<"  [upval ]    ";valinfo(upvalr);
 }
 
 void vm::gstate() {
     if (!bytecode[0].num || stack[0].type==vm_none) { // bytecode[0].op is op_intg
         return;
     }
-    std::cout<<"global (0x"<<std::hex<<(u64)stack<<" <sp+0>)\n"<<std::dec;
+    std::clog<<"global (0x"<<std::hex<<(u64)stack<<" <+0>)\n"<<std::dec;
     for(u32 i=0;i<bytecode[0].num;++i) {
-        std::cout<<"  0x"<<std::hex<<std::setw(8)
-                 <<std::setfill('0')<<i<<std::dec;
+        std::clog<<"  0x"<<std::hex<<std::setw(6)
+                 <<std::setfill('0')<<i<<std::dec
+                 <<"    ";
         valinfo(stack[i]);
     }
 }
@@ -288,11 +299,12 @@ void vm::lstate() {
         return;
     }
     const u32 lsize=funcr.func().lsize;
-    std::cout<<"local (0x"<<std::hex<<(u64)localr
-             <<" <sp+"<<(u64)(localr-ngc.stack)<<">)\n"<<std::dec;
+    std::clog<<"local (0x"<<std::hex<<(u64)localr
+             <<" <+"<<(u64)(localr-ngc.stack)<<">)\n"<<std::dec;
     for(u32 i=0;i<lsize;++i) {
-        std::cout<<"  0x"<<std::hex<<std::setw(8)
-                 <<std::setfill('0')<<i<<std::dec;
+        std::clog<<"  0x"<<std::hex<<std::setw(6)
+                 <<std::setfill('0')<<i<<std::dec
+                 <<"    ";
         valinfo(localr[i]);
     }
 }
@@ -301,14 +313,15 @@ void vm::ustate() {
     if (funcr.type==vm_nil || funcr.func().upval.empty()) {
         return;
     }
-    std::cout<<"upvalue\n";
+    std::clog<<"upvalue\n";
     auto& upval=funcr.func().upval;
     for(u32 i=0;i<upval.size();++i) {
-        std::cout<<"  -> upval["<<i<<"]:\n";
+        std::clog<<"  -> upval["<<i<<"]:\n";
         auto& uv=upval[i].upval();
         for(u32 j=0;j<uv.size;++j) {
-            std::cout<<"     0x"<<std::hex<<std::setw(8)
-                     <<std::setfill('0')<<j<<std::dec;
+            std::clog<<"     0x"<<std::hex<<std::setw(6)
+                     <<std::setfill('0')<<j<<std::dec
+                     <<" ";
             valinfo(uv[j]);
         }
     }
@@ -322,7 +335,7 @@ void vm::detail() {
 }
 
 void vm::die(const string& str) {
-    std::cout<<"[vm] error: "<<str<<"\n";
+    std::cerr<<"[vm] error: "<<str<<"\n";
     traceback();
     stackinfo();
 

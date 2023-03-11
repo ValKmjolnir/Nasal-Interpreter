@@ -147,12 +147,11 @@ public:
         u8  op=ins.code.op;
         u32 num=ins.code.num;
         out<<std::hex<<"0x"
-           <<std::setw(6)<<std::setfill('0')<<ins.index<<"      "
+           <<std::setw(6)<<std::setfill('0')<<ins.index<<"     "
            <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
-           <<std::setw(2)<<std::setfill('0')<<((num>>24)&0xff)<<" "
            <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
            <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
-           <<std::setw(2)<<std::setfill('0')<<(num&0xff)<<"      "
+           <<std::setw(2)<<std::setfill('0')<<(num&0xff)<<"     "
            <<opname[op]<<"  "<<std::dec;
         switch(op) {
             case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
