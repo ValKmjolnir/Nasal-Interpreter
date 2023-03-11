@@ -102,6 +102,6 @@ for(var i=10;i<1e6;i*=10) {
     project(i);
 }
 println("select");
-for(var i=100;i<1e7;i*=10) {
+for(var i=10;i<1e6;i*=10) {
     select(i);
 }

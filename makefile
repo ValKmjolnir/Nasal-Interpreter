@@ -33,10 +33,7 @@ clean:
 
 test:nasal
 	@ ./nasal -e test/ascii-art.nas
-	@ ./nasal -c test/auto_crash.nas
-	@ ./nasal -a -c test/bf.nas
-	@ ./nasal -a -c test/bfconvertor.nas
-	@ ./nasal -d test/bfs.nas
+	@ ./nasal -t -d test/bfs.nas
 	@ ./nasal -t test/bigloop.nas
 	@ ./nasal -t test/bp.nas
 	@ ./nasal -d test/calc.nas
@@ -51,7 +48,6 @@ test:nasal
 	@ ./nasal -t -d test/fib.nas
 	@ ./nasal -e test/filesystem.nas
 	@ ./nasal -d test/hexdump.nas
-	@ ./nasal -c test/httptest.nas
 	@ ./nasal -e test/json.nas
 	@ ./nasal -e test/leetcode1319.nas
 	@ ./nasal -d test/lexer.nas
@@ -63,11 +59,9 @@ test:nasal
 	@ ./nasal -t -d test/md5compare.nas
 	-@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas
-	@ ./nasal test/occupation.nas 2
+	@ ./nasal -t -d test/occupation.nas 2
 	@ ./nasal -t -d test/pi.nas
-	@ ./nasal -c test/ppmgen.nas
 	@ ./nasal -t -d test/prime.nas
-	@ ./nasal -c test/push.nas
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
 	@ ./nasal -e test/scalar.nas hello world

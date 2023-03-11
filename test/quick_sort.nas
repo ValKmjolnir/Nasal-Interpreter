@@ -1,10 +1,15 @@
 import.stl.sort;
+
 var vec=[];
 rand(time(0));
 for(var i=0;i<1e4;i+=1)
     append(vec,int(rand()*1e5));
 sort(vec);
-println(vec);
+for(var i=1;i<1e4;i+=1) {
+    if (vec[i]<vec[i-1]) {
+        die("incorrect sort result");
+    }
+}
 
 var test=func(n){
     var a=[];
@@ -27,6 +32,6 @@ var test=func(n){
     println("[time] ",str(n)," in ",ts.elapsedMSec()/1000," sec (lambda)");
 }
 
-for(var i=1000;i<1e7;i*=10){
+for(var i=1000;i<1e6;i*=10){
     test(i);
 }

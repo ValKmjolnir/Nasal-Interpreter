@@ -836,9 +836,9 @@ ast parse::definition() {
     if (lookahead(tok::var)) {
         match(tok::var);
         switch(toks[ptr].type) {
-            case tok::id:     node.add(id());break;
+            case tok::id: node.add(id());break;
             case tok::lcurve: node.add(outcurve_def());break;
-            default:          die(thisspan,"expected identifier");break;
+            default: die(thisspan,"expected identifier");break;
         }
     } else if (lookahead(tok::lcurve)) {
         node.add(incurve_def());
