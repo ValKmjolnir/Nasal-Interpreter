@@ -34,7 +34,7 @@ var nas_socket(var* args,usize size,gc* ngc) {
 
 var nas_closesocket(var* args,usize size,gc* ngc) {
     if (args[0].type!=vm_num)
-        return nas_err("closesocket","\"\" should be number");
+        return nas_err("closesocket","\"sd\" should be number");
 #ifdef _WIN32
     return var::num((double)closesocket(args[0].num()));
 #else
@@ -149,7 +149,9 @@ var nas_recv(var* args,usize size,gc* ngc) {
     var res=ngc->temp=ngc->alloc(vm_hash);
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()];
-    hash["size"]=var::num((double)recv(args[0].num(),buf,args[1].num(),args[2].num()));
+    auto recvsize=recv(args[0].num(),buf,args[1].num(),args[2].num());
+    hash["size"]=var::num((double)recvsize);
+    buf[recvsize>=0?recvsize:0]=0;
     hash["str"]=ngc->newstr(buf);
     delete[] buf;
     ngc->temp=nil;
@@ -171,11 +173,12 @@ var nas_recvfrom(var* args,usize size,gc* ngc) {
     auto& hash=res.hash().elems;
     char* buf=new char[(int)args[1].num()+1];
 #ifdef _WIN32
-    hash["size"]=var::num((double)recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,&socklen));
+    auto recvsize=recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,&socklen);
 #else
-    hash["size"]=var::num((double)recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,(socklen_t*)&socklen));
+    auto recvsize=recvfrom(args[0].num(),buf,args[1].num(),args[2].num(),(sockaddr*)&addr,(socklen_t*)&socklen);
 #endif
-    buf[(int)hash["size"].num()]=0;
+    hash["size"]=var::num((double)recvsize);
+    buf[recvsize>=0?recvsize:0]=0;
     hash["str"]=ngc->newstr(buf);
     delete[] buf;
     hash["fromip"]=ngc->newstr(inet_ntoa(addr.sin_addr));
