@@ -66,7 +66,8 @@ var JSON=func() {
     var get=func(str) {
         init();
         if(!size(str)) {
-            die("empty string");
+            println("JSON.parse: empty string");
+            str="[]";
         }
         text=str;
         text_size=size(text);
@@ -145,7 +146,7 @@ var JSON=func() {
 
     var match=func(type) {
         if(token.type!=type)
-            print("line ",line,": expect ",j_content[type]," but get `",token.content,"`.\n");
+            println("JSON.parse: line ",line,": expect ",j_content[type]," but get `",token.content,"`.");
         next();
         return;
     }
@@ -213,7 +214,8 @@ var JSON=func() {
     return {
         parse:func(str) {
             if(typeof(str)!="str") {
-                die("JSON.parse: must use string");
+                println("JSON.parse: must use string");
+                return [];
             }
             get(str);
             next();
@@ -232,7 +234,8 @@ var JSON=func() {
 
 JSON.stringify=func(object) {
     if(typeof(object)!="hash" and typeof(object)!="vec") {
-        die("JSON.stringify: must use hashmap or vector");
+        println("JSON.stringify: must use hashmap or vector");
+        return "[]";
     }
 
     var s="";
