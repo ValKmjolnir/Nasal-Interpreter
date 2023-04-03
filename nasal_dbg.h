@@ -2,6 +2,7 @@
 
 #include "nasal_import.h"
 #include "nasal_err.h"
+#include "nasal_opcode.h"
 #include "nasal_vm.h"
 #include <algorithm>
 
@@ -115,10 +116,11 @@ void debugger::stepinfo() {
     std::cout<<"next bytecode:\n";
     begin=(pc>>3)==0?0:((pc>>3)<<3);
     end=(1+(pc>>3))<<3;
+    codestream::set(cnum,cstr,files);
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i) {
         std::cout
         <<(i==pc?back_white:reset)<<(i==pc?"--> ":"    ")
-        <<codestream(bytecode[i],i,cnum,cstr,files)
+        <<codestream(bytecode[i],i)
         <<reset<<"\n";
     }
     stackinfo(10);

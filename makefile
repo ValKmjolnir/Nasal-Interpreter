@@ -5,6 +5,7 @@ SRC=\
 	nasal_ast.h\
 	nasal_err.h\
 	nasal_builtin.h\
+	nasal_opcode.h\
 	nasal_opt.h\
 	nasal_codegen.h\
 	nasal_gc.h\
@@ -65,9 +66,7 @@ test:nasal
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
 	@ ./nasal -e test/scalar.nas hello world
-	@ ./nasal -t test/snake.nas --skip
 	@ ./nasal -e test/trait.nas
-	@ ./nasal -t test/tetris.nas --skip
 	@ ./nasal -t -d test/turingmachine.nas
 	@ ./nasal -d test/wavecollapse.nas
 	@ ./nasal test/word_collector.nas test/md5compare.nas
