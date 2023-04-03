@@ -235,6 +235,7 @@ void vm::traceback() {
     }
     ret.push(pc); // store the position program crashed
     std::clog<<"trace back ("<<(ngc.stack==stack?"main":"coroutine")<<")\n";
+    codestream::set(cnum,cstr,files);
     for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop()) {
         if ((p=ret.top())==prev) {
             ++same;
@@ -246,7 +247,7 @@ void vm::traceback() {
             <<prev<<std::dec<<"     "<<same<<" same call(s)\n";
         }
         same=0;
-        std::clog<<"  "<<codestream(bytecode[p],p,cnum,cstr,files)<<"\n";
+        std::clog<<"  "<<codestream(bytecode[p],p)<<"\n";
     }
     // the first called place has no same calls
 }
