@@ -41,7 +41,7 @@ var run=func(width,height){
         forindex(var j;map[i])
             map[i][j]=rand()<0.45?'O':'.';
 
-    for(var r=0;r<200;r+=1){
+    for(var r=0;r<100;r+=1){
         prt(map);
         for(var i=0;i<height;i+=1)
             for(var j=0;j<width;j+=1){

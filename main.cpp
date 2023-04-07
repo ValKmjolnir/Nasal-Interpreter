@@ -13,8 +13,6 @@
 
 #include <unordered_map>
 
-using ch_clk=std::chrono::high_resolution_clock;
-
 const u32 VM_AST   =0x01;
 const u32 VM_CODE  =0x02;
 const u32 VM_TIME  =0x04;
@@ -73,6 +71,8 @@ void err() {
 }
 
 void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
+    using clk=std::chrono::high_resolution_clock;
+
     error   err;
     lexer   lex(err);
     parse   parse(err);
@@ -103,12 +103,12 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     
     // run
     if (cmd&VM_DEBUG) {
-        debugger(err).run(gen,ld,argv);
+        dbg(err).run(gen,ld,argv);
     } else if (cmd&VM_TIME) {
-        auto start=ch_clk::now();
+        auto start=clk::now();
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
-        auto end=ch_clk::now();
-        std::clog<<"process exited after "<<(end-start).count()*1.0/ch_clk::duration::period::den<<"s.\n\n";
+        auto end=clk::now();
+        std::clog<<"process exited after "<<(end-start).count()*1.0/clk::duration::period::den<<"s.\n\n";
     } else if (cmd&VM_EXEC) {
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
     }

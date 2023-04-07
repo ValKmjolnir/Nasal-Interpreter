@@ -981,7 +981,7 @@ var builtin_dlcall(var* local,gc& ngc) {
         return nas_err("dlcall","\"ptr\" is not a valid function pointer");
     }
     // arguments' stored place begins at local +2
-    return ((mod)fp.obj().ptr)(local+2,ngc.top-local-2,&ngc);
+    return ((mod)fp.obj().ptr)(local+2,ngc.rctx->top-local-2,&ngc);
 }
 
 var builtin_platform(var* local,gc& ngc) {
@@ -1108,19 +1108,19 @@ var builtin_cocreate(var* local,gc& ngc) {
     }
     var co=ngc.alloc(vm_co);
     nas_co& cort=co.co();
-    cort.pc=func.func().entry-1;
+    cort.ctx.pc=func.func().entry-1;
 
-    cort.top[0]=nil;
-    cort.localr=cort.top+1;
-    cort.top=cort.localr+func.func().lsize;
-    cort.localr[0]=func.func().local[0];
-    cort.top[0]=nil; // old upvalr
-    cort.top++;
-    cort.top[0]=var::addr((var*)nullptr); // old localr
-    cort.top++;
-    cort.top[0]=var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
+    cort.ctx.top[0]=nil;
+    cort.ctx.localr=cort.ctx.top+1;
+    cort.ctx.top=cort.ctx.localr+func.func().lsize;
+    cort.ctx.localr[0]=func.func().local[0];
+    cort.ctx.top[0]=nil; // old upvalr
+    cort.ctx.top++;
+    cort.ctx.top[0]=var::addr((var*)nullptr); // old localr
+    cort.ctx.top++;
+    cort.ctx.top[0]=var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
 
-    cort.funcr=func; // make sure the coroutine function can use correct upvalues
+    cort.ctx.funcr=func; // make sure the coroutine function can use correct upvalues
     cort.status=nas_co::suspended;
     
     return co;
@@ -1145,9 +1145,9 @@ var builtin_coresume(var* local,gc& ngc) {
 
     // fetch coroutine's stack top and return
     // so the coroutine's stack top in fact is not changed
-    if (ngc.top[0].type==vm_ret) {
+    if (ngc.rctx->top[0].type==vm_ret) {
         // when first calling this coroutine, the stack top must be vm_ret
-        return ngc.top[0];
+        return ngc.rctx->top[0];
     }
 
     // after first calling the coroutine, each time coroutine.yield triggered

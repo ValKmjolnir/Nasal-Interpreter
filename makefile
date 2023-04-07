@@ -58,7 +58,7 @@ test:nasal
 	@ ./nasal -t test/mandelbrot.nas
 	@ ./nasal -t test/md5.nas
 	@ ./nasal -t -d test/md5compare.nas
-	-@ ./nasal -d test/module_test.nas
+	@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas
 	@ ./nasal -t -d test/occupation.nas 2
 	@ ./nasal -t -d test/pi.nas
