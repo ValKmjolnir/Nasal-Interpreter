@@ -6,7 +6,7 @@
 #include "nasal_vm.h"
 #include <algorithm>
 
-class debugger:public vm {
+class dbg:public vm {
 private:
     bool  next;
     usize fsize;
@@ -22,7 +22,7 @@ private:
     void stepinfo();
     void interact();
 public:
-    debugger(error& err):
+    dbg(error& err):
         next(false),fsize(0),
         bk_fidx(0),bk_line(0),
         src(err) {}
@@ -33,7 +33,7 @@ public:
     );
 };
 
-std::vector<string> debugger::parse(const string& cmd) {
+std::vector<string> dbg::parse(const string& cmd) {
     std::vector<string> res;
     usize last=0,pos=cmd.find(" ",0);
     while(pos!=string::npos) {
@@ -49,7 +49,7 @@ std::vector<string> debugger::parse(const string& cmd) {
     return res;
 }
 
-u16 debugger::fileindex(const string& filename) {
+u16 dbg::fileindex(const string& filename) {
     for(u16 i=0;i<fsize;++i) {
         if (filename==files[i]) {
             return i;
@@ -58,13 +58,13 @@ u16 debugger::fileindex(const string& filename) {
     return 65535;
 }
 
-void debugger::err() {
+void dbg::err() {
     std::cerr
     <<"incorrect command\n"
     <<"input \'h\' to get help\n";
 }
 
-void debugger::help() {
+void dbg::help() {
     std::cout
     <<"<option>\n"
     <<"\th,   help      | get help\n"
@@ -82,7 +82,7 @@ void debugger::help() {
     <<"\tbk,  break     | set break point\n";
 }
 
-void debugger::callsort(const u64* arr) {
+void dbg::callsort(const u64* arr) {
     typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
     u64 total=0;
@@ -104,36 +104,38 @@ void debugger::callsort(const u64* arr) {
     std::clog<<" total  : "<<total<<'\n';
 }
 
-void debugger::stepinfo() {
-    u32 line=bytecode[pc].line==0?0:bytecode[pc].line-1;
+void dbg::stepinfo() {
+    u32 line=bytecode[ctx.pc].line==0?0:bytecode[ctx.pc].line-1;
     u32 begin=(line>>3)==0?0:((line>>3)<<3);
     u32 end=(1+(line>>3))<<3;
-    src.load(files[bytecode[pc].fidx]);
+    src.load(files[bytecode[ctx.pc].fidx]);
     std::cout<<"\nsource code:\n";
     for(u32 i=begin;i<end && i<src.size();++i) {
         std::cout<<(i==line?back_white:reset)<<(i==line?"--> ":"    ")<<src[i]<<reset<<"\n";
     }
-    std::cout<<"next bytecode:\n";
-    begin=(pc>>3)==0?0:((pc>>3)<<3);
-    end=(1+(pc>>3))<<3;
+
+    begin=(ctx.pc>>3)==0?0:((ctx.pc>>3)<<3);
+    end=(1+(ctx.pc>>3))<<3;
     codestream::set(cnum,cstr,files);
+    std::cout<<"next bytecode:\n";
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i) {
         std::cout
-        <<(i==pc?back_white:reset)<<(i==pc?"--> ":"    ")
+        <<(i==ctx.pc?back_white:reset)
+        <<(i==ctx.pc?"--> ":"    ")
         <<codestream(bytecode[i],i)
         <<reset<<"\n";
     }
     stackinfo(10);
 }
 
-void debugger::interact() {
+void dbg::interact() {
     // special operand
-    if (bytecode[pc].op==op_exit) {
+    if (bytecode[ctx.pc].op==op_exit) {
         return;
     }
     
     if (
-        (bytecode[pc].fidx!=bk_fidx || bytecode[pc].line!=bk_line) && // break point
+        (bytecode[ctx.pc].fidx!=bk_fidx || bytecode[ctx.pc].line!=bk_line) && // break point
         !next // next step
     ) {
         return;
@@ -146,7 +148,9 @@ void debugger::interact() {
         std::cout<<">> ";
         std::getline(std::cin,cmd);
         auto res=parse(cmd);
-        if (res.size()==1) {
+        if (res.size()==0) {
+            stepinfo();
+        } else if (res.size()==1) {
             if (res[0]=="h" || res[0]=="help") {
                 help();
             } else if (res[0]=="bt" || res[0]=="backtrace") {
@@ -193,7 +197,7 @@ void debugger::interact() {
     }
 }
 
-void debugger::run(
+void dbg::run(
     const codegen& gen,
     const linker& linker,
     const std::vector<string>& argv)
@@ -202,205 +206,71 @@ void debugger::run(
     fsize=linker.filelist().size();
     init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
     u64 count[op_ret+1]={0};
-#ifndef _MSC_VER
-    const void* oprs[]={
-        &&vmexit, &&intg,   &&intl,   &&loadg,
-        &&loadl,  &&loadu,  &&pnum,   &&pnil,
-        &&pstr,   &&newv,   &&newh,   &&newf,
-        &&happ,   &&para,   &&deft,   &&dyn,
-        &&lnot,   &&usub,   &&bnot,   &&btor,
-        &&btxor,  &&btand,  &&add,    &&sub,
-        &&mul,    &&div,    &&lnk,    &&addc,
-        &&subc,   &&mulc,   &&divc,   &&lnkc,
-        &&addeq,  &&subeq,  &&muleq,  &&diveq,
-        &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
-        &&addeqc, &&subeqc, &&muleqc, &&diveqc,
-        &&lnkeqc, &&addecp, &&subecp, &&mulecp,
-        &&divecp, &&lnkecp, &&meq,    &&eq,
-        &&neq,    &&less,   &&leq,    &&grt,
-        &&geq,    &&lessc,  &&leqc,   &&grtc,
-        &&geqc,   &&pop,    &&jmp,    &&jt,
-        &&jf,     &&cnt,    &&findex, &&feach,
-        &&callg,  &&calll,  &&upval,  &&callv,
-        &&callvi, &&callh,  &&callfv, &&callfh,
-        &&callb,  &&slcbeg, &&slcend, &&slc,
-        &&slc2,   &&mcallg, &&mcalll, &&mupval,
-        &&mcallv, &&mcallh, &&ret
-    };
-    std::vector<const void*> code;
-    for(auto& i:gen.codes()) {
-        code.push_back(oprs[i.op]);
-        imm.push_back(i.num);
-    }
-    // goto the first operand
-    goto *code[pc];
-#else
-    typedef void (debugger::*nafunc)();
+    typedef void (dbg::*nafunc)();
     const nafunc oprs[]={
-        nullptr,             &debugger::o_intg,
-        &debugger::o_intl,   &debugger::o_loadg,
-        &debugger::o_loadl,  &debugger::o_loadu,
-        &debugger::o_pnum,   &debugger::o_pnil,
-        &debugger::o_pstr,   &debugger::o_newv,
-        &debugger::o_newh,   &debugger::o_newf,
-        &debugger::o_happ,   &debugger::o_para,
-        &debugger::o_deft,   &debugger::o_dyn,
-        &debugger::o_lnot,   &debugger::o_usub,
-        &debugger::o_bnot,   &debugger::o_btor,
-        &debugger::o_btxor,  &debugger::o_btand,
-        &debugger::o_add,    &debugger::o_sub,
-        &debugger::o_mul,    &debugger::o_div,
-        &debugger::o_lnk,    &debugger::o_addc,
-        &debugger::o_subc,   &debugger::o_mulc,
-        &debugger::o_divc,   &debugger::o_lnkc,
-        &debugger::o_addeq,  &debugger::o_subeq,
-        &debugger::o_muleq,  &debugger::o_diveq,
-        &debugger::o_lnkeq,  &debugger::o_bandeq,
-        &debugger::o_boreq,  &debugger::o_bxoreq,
-        &debugger::o_addeqc, &debugger::o_subeqc,
-        &debugger::o_muleqc, &debugger::o_diveqc,
-        &debugger::o_lnkeqc, &debugger::o_addecp,
-        &debugger::o_subecp, &debugger::o_mulecp,
-        &debugger::o_divecp, &debugger::o_lnkecp,
-        &debugger::o_meq,    &debugger::o_eq,
-        &debugger::o_neq,    &debugger::o_less,
-        &debugger::o_leq,    &debugger::o_grt,
-        &debugger::o_geq,    &debugger::o_lessc,
-        &debugger::o_leqc,   &debugger::o_grtc,
-        &debugger::o_geqc,   &debugger::o_pop,
-        &debugger::o_jmp,    &debugger::o_jt,
-        &debugger::o_jf,     &debugger::o_cnt,
-        &debugger::o_findex, &debugger::o_feach,
-        &debugger::o_callg,  &debugger::o_calll,
-        &debugger::o_upval,  &debugger::o_callv,
-        &debugger::o_callvi, &debugger::o_callh,
-        &debugger::o_callfv, &debugger::o_callfh,
-        &debugger::o_callb,  &debugger::o_slcbeg,
-        &debugger::o_slcend, &debugger::o_slc,
-        &debugger::o_slc2,   &debugger::o_mcallg,
-        &debugger::o_mcalll, &debugger::o_mupval,
-        &debugger::o_mcallv, &debugger::o_mcallh,
-        &debugger::o_ret
+        nullptr,        &dbg::o_intg,
+        &dbg::o_intl,   &dbg::o_loadg,
+        &dbg::o_loadl,  &dbg::o_loadu,
+        &dbg::o_pnum,   &dbg::o_pnil,
+        &dbg::o_pstr,   &dbg::o_newv,
+        &dbg::o_newh,   &dbg::o_newf,
+        &dbg::o_happ,   &dbg::o_para,
+        &dbg::o_deft,   &dbg::o_dyn,
+        &dbg::o_lnot,   &dbg::o_usub,
+        &dbg::o_bnot,   &dbg::o_btor,
+        &dbg::o_btxor,  &dbg::o_btand,
+        &dbg::o_add,    &dbg::o_sub,
+        &dbg::o_mul,    &dbg::o_div,
+        &dbg::o_lnk,    &dbg::o_addc,
+        &dbg::o_subc,   &dbg::o_mulc,
+        &dbg::o_divc,   &dbg::o_lnkc,
+        &dbg::o_addeq,  &dbg::o_subeq,
+        &dbg::o_muleq,  &dbg::o_diveq,
+        &dbg::o_lnkeq,  &dbg::o_bandeq,
+        &dbg::o_boreq,  &dbg::o_bxoreq,
+        &dbg::o_addeqc, &dbg::o_subeqc,
+        &dbg::o_muleqc, &dbg::o_diveqc,
+        &dbg::o_lnkeqc, &dbg::o_addecp,
+        &dbg::o_subecp, &dbg::o_mulecp,
+        &dbg::o_divecp, &dbg::o_lnkecp,
+        &dbg::o_meq,    &dbg::o_eq,
+        &dbg::o_neq,    &dbg::o_less,
+        &dbg::o_leq,    &dbg::o_grt,
+        &dbg::o_geq,    &dbg::o_lessc,
+        &dbg::o_leqc,   &dbg::o_grtc,
+        &dbg::o_geqc,   &dbg::o_pop,
+        &dbg::o_jmp,    &dbg::o_jt,
+        &dbg::o_jf,     &dbg::o_cnt,
+        &dbg::o_findex, &dbg::o_feach,
+        &dbg::o_callg,  &dbg::o_calll,
+        &dbg::o_upval,  &dbg::o_callv,
+        &dbg::o_callvi, &dbg::o_callh,
+        &dbg::o_callfv, &dbg::o_callfh,
+        &dbg::o_callb,  &dbg::o_slcbeg,
+        &dbg::o_slcend, &dbg::o_slc,
+        &dbg::o_slc2,   &dbg::o_mcallg,
+        &dbg::o_mcalll, &dbg::o_mupval,
+        &dbg::o_mcallv, &dbg::o_mcallh,
+        &dbg::o_ret
     };
     std::vector<u32> code;
     for(auto& i:gen.codes()) {
         code.push_back(i.op);
         imm.push_back(i.num);
     }
-    while(oprs[code[pc]]) {
+    while(oprs[code[ctx.pc]]) {
         interact();
-        ++count[code[pc]];
-        (this->*oprs[code[pc]])();
-        if (top>=canary) {
+        ++count[code[ctx.pc]];
+        (this->*oprs[code[ctx.pc]])();
+        if (ctx.top>=ctx.canary) {
             die("stack overflow");
         }
-        ++pc;
+        ++ctx.pc;
     }
-#endif
 
-vmexit:
     callsort(count);
     ngc.info();
     ngc.clear();
     imm.clear();
     return;
-#ifndef _MSC_VER
-#define dbg(op,num) {\
-        interact();\
-        op();\
-        ++count[num];\
-        if (top<canary) {\
-            goto *code[++pc];\
-        }\
-        die("stack overflow");\
-        goto *code[++pc];\
-    }
-
-intg:   dbg(o_intg  ,op_intg  );
-intl:   dbg(o_intl  ,op_intl  );
-loadg:  dbg(o_loadg ,op_loadg );
-loadl:  dbg(o_loadl ,op_loadl );
-loadu:  dbg(o_loadu ,op_loadu );
-pnum:   dbg(o_pnum  ,op_pnum  );
-pnil:   dbg(o_pnil  ,op_pnil  );
-pstr:   dbg(o_pstr  ,op_pstr  );
-newv:   dbg(o_newv  ,op_newv  );
-newh:   dbg(o_newh  ,op_newh  );
-newf:   dbg(o_newf  ,op_newf  );
-happ:   dbg(o_happ  ,op_happ  );
-para:   dbg(o_para  ,op_para  );
-deft:   dbg(o_deft  ,op_deft  );
-dyn:    dbg(o_dyn   ,op_dyn   );
-lnot:   dbg(o_lnot  ,op_lnot  );
-usub:   dbg(o_usub  ,op_usub  );
-bnot:   dbg(o_bnot  ,op_bnot  );
-btor:   dbg(o_btor  ,op_btor  );
-btxor:  dbg(o_btxor ,op_btxor );
-btand:  dbg(o_btand ,op_btand );
-add:    dbg(o_add   ,op_add   );
-sub:    dbg(o_sub   ,op_sub   );
-mul:    dbg(o_mul   ,op_mul   );
-div:    dbg(o_div   ,op_div   );
-lnk:    dbg(o_lnk   ,op_lnk   );
-addc:   dbg(o_addc  ,op_addc  );
-subc:   dbg(o_subc  ,op_subc  );
-mulc:   dbg(o_mulc  ,op_mulc  );
-divc:   dbg(o_divc  ,op_divc  );
-lnkc:   dbg(o_lnkc  ,op_lnkc  );
-addeq:  dbg(o_addeq ,op_addeq );
-subeq:  dbg(o_subeq ,op_subeq );
-muleq:  dbg(o_muleq ,op_muleq );
-diveq:  dbg(o_diveq ,op_diveq );
-lnkeq:  dbg(o_lnkeq ,op_lnkeq );
-bandeq: dbg(o_bandeq,op_btandeq);
-boreq:  dbg(o_boreq, op_btoreq);
-bxoreq: dbg(o_bxoreq,op_btxoreq);
-addeqc: dbg(o_addeqc,op_addeqc);
-subeqc: dbg(o_subeqc,op_subeqc);
-muleqc: dbg(o_muleqc,op_muleqc);
-diveqc: dbg(o_diveqc,op_diveqc);
-lnkeqc: dbg(o_lnkeqc,op_lnkeqc);
-addecp: dbg(o_addecp,op_addecp);
-subecp: dbg(o_subecp,op_subecp);
-mulecp: dbg(o_mulecp,op_mulecp);
-divecp: dbg(o_divecp,op_divecp);
-lnkecp: dbg(o_lnkecp,op_lnkecp);
-meq:    dbg(o_meq   ,op_meq   );
-eq:     dbg(o_eq    ,op_eq    );
-neq:    dbg(o_neq   ,op_neq   );
-less:   dbg(o_less  ,op_less  );
-leq:    dbg(o_leq   ,op_leq   );
-grt:    dbg(o_grt   ,op_grt   );
-geq:    dbg(o_geq   ,op_geq   );
-lessc:  dbg(o_lessc ,op_lessc );
-leqc:   dbg(o_leqc  ,op_leqc  );
-grtc:   dbg(o_grtc  ,op_grtc  );
-geqc:   dbg(o_geqc  ,op_geqc  );
-pop:    dbg(o_pop   ,op_pop   );
-jmp:    dbg(o_jmp   ,op_jmp   );
-jt:     dbg(o_jt    ,op_jt    );
-jf:     dbg(o_jf    ,op_jf    );
-cnt:    dbg(o_cnt   ,op_cnt   );
-findex: dbg(o_findex,op_findex);
-feach:  dbg(o_feach ,op_feach );
-callg:  dbg(o_callg ,op_callg );
-calll:  dbg(o_calll ,op_calll );
-upval:  dbg(o_upval ,op_upval );
-callv:  dbg(o_callv ,op_callv );
-callvi: dbg(o_callvi,op_callvi);
-callh:  dbg(o_callh ,op_callh );
-callfv: dbg(o_callfv,op_callfv);
-callfh: dbg(o_callfh,op_callfh);
-callb:  dbg(o_callb ,op_callb );
-slcbeg: dbg(o_slcbeg,op_slcbeg);
-slcend: dbg(o_slcend,op_slcend);
-slc:    dbg(o_slc   ,op_slc   );
-slc2:   dbg(o_slc2  ,op_slc2  );
-mcallg: dbg(o_mcallg,op_mcallg);
-mcalll: dbg(o_mcalll,op_mcalll);
-mupval: dbg(o_mupval,op_mupval);
-mcallv: dbg(o_mcallv,op_mcallv);
-mcallh: dbg(o_mcallh,op_mcallh);
-ret:    dbg(o_ret   ,op_ret   );
-#endif
 }

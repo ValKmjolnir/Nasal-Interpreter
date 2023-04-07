@@ -11,18 +11,12 @@ class vm {
 protected:
 
     /* registers and constants of vm */
-    u32  pc;     // program counter
-    var* localr; // local frame pointer
-    var* memr;   // store address got by memory call
-    var funcr;   // function register
-    var upvalr;  // upvalue register
-    var* canary; // avoid stack overflow, at the top of main stack
-    var* top;    // stack top pointer
+    context ctx;
 
     /* constants */
-    const f64* cnum;      // constant numbers
-    const string* cstr;   // constant symbols and strings
-    std::vector<u32> imm; // immediate number table
+    const f64* cnum=nullptr;    // constant numbers
+    const string* cstr=nullptr; // constant symbols and strings
+    std::vector<u32> imm;       // immediate number table
     
     /* garbage collector */
     gc ngc;
@@ -31,8 +25,8 @@ protected:
     var stack[STACK_DEPTH];
 
     /* values used for debugger */
-    const string* files;    // file name list
-    const opcode* bytecode; // bytecode buffer address
+    const string* files=nullptr;    // file name list
+    const opcode* bytecode=nullptr; // bytecode buffer address
 
     /* vm initializing function */
     void init(
@@ -147,12 +141,7 @@ protected:
 public:
 
     /* constructor of vm instance */
-    vm():
-        pc(0),localr(nullptr),memr(nullptr),funcr(nil),
-        upvalr(nil),canary(nullptr),top(stack),
-        cnum(nullptr),cstr(nullptr),
-        ngc(pc,localr,memr,funcr,upvalr,canary,top,stack),
-        files(nullptr),bytecode(nullptr),verbose(false) {}
+    vm():ngc(&ctx),verbose(false) {}
 
     /* execution entry */
     void run(
@@ -167,24 +156,28 @@ void vm::init(
     const std::vector<f64>&    nums,
     const std::vector<opcode>& code,
     const std::vector<string>& filenames,
-    const std::vector<string>& argv) {
-    ngc.init(strs,argv);
+    const std::vector<string>& argv
+) {
     cnum=nums.data();
     cstr=strs.data();
     bytecode=code.data();
     files=filenames.data();
 
     /* set canary and program counter */
-    pc=0;
-    localr=memr=nullptr;
-    funcr=upvalr=nil;
-    canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    top=stack;
+    ctx.pc=0;
+    ctx.localr=ctx.memr=nullptr;
+    ctx.funcr=ctx.upvalr=nil;
+    ctx.canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
+    ctx.top=stack;
+    ctx.stack=stack;
 
     /* clear main stack */
     for(u32 i=0;i<STACK_DEPTH;++i) {
         stack[i]=nil;
     }
+
+    /* init gc */
+    ngc.init(strs,argv);
 }
 
 void vm::valinfo(var& val) {
@@ -225,16 +218,16 @@ void vm::valinfo(var& val) {
 
 void vm::traceback() {
     /* bytecode[0].num is the global size */
-    var* bottom=ngc.stack==stack?stack+bytecode[0].num:ngc.stack;
-    var* ctx_top=ngc.stack==stack?top:ngc.top;
+    var* bottom=ngc.rctx->stack==stack?stack+bytecode[0].num:ngc.rctx->stack;
+    var* ctx_top=ngc.rctx->stack==stack?ctx.top:ngc.rctx->top;
     std::stack<u32> ret;
     for(var* i=bottom;i<=ctx_top;++i) {
         if (i->type==vm_ret && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
-    ret.push(pc); // store the position program crashed
-    std::clog<<"trace back ("<<(ngc.stack==stack?"main":"coroutine")<<")\n";
+    ret.push(ctx.pc); // store the position program crashed
+    std::clog<<"trace back ("<<(ngc.rctx->stack==stack?"main":"coroutine")<<")\n";
     codestream::set(cnum,cstr,files);
     for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop()) {
         if ((p=ret.top())==prev) {
@@ -254,16 +247,16 @@ void vm::traceback() {
 
 void vm::stackinfo(const u32 limit=10) {
     /* bytecode[0].num is the global size */
-    const u32 gsize=ngc.stack==stack?bytecode[0].num:0;
-    var* t=top;
-    var* bottom=ngc.stack+gsize;
+    const u32 gsize=ngc.rctx->stack==stack?bytecode[0].num:0;
+    var* t=ctx.top;
+    var* bottom=ngc.rctx->stack+gsize;
     std::clog<<"stack (0x"<<std::hex<<(u64)bottom<<std::dec
              <<" <+"<<gsize<<">, limit "<<limit<<", total "
              <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
     for(u32 i=0;i<limit && t>=bottom;++i,--t) {
         std::clog<<"  0x"<<std::hex
                  <<std::setw(6)<<std::setfill('0')
-                 <<(u64)(t-ngc.stack)<<std::dec
+                 <<(u64)(t-ngc.rctx->stack)<<std::dec
                  <<"    ";
         valinfo(t[0]);
     }
@@ -271,15 +264,15 @@ void vm::stackinfo(const u32 limit=10) {
 
 void vm::reginfo() {
     std::clog<<"registers ("<<(ngc.cort?"coroutine":"main")<<")\n"<<std::hex
-             <<"  [pc    ]    | pc   | 0x"<<pc<<"\n"
+             <<"  [pc    ]    | pc   | 0x"<<ctx.pc<<"\n"
              <<"  [global]    | addr | 0x"<<(u64)stack<<"\n"
-             <<"  [local ]    | addr | 0x"<<(u64)localr<<"\n"
-             <<"  [memr  ]    | addr | 0x"<<(u64)memr<<"\n"
-             <<"  [canary]    | addr | 0x"<<(u64)canary<<"\n"
-             <<"  [top   ]    | addr | 0x"<<(u64)top<<"\n"
+             <<"  [local ]    | addr | 0x"<<(u64)ctx.localr<<"\n"
+             <<"  [memr  ]    | addr | 0x"<<(u64)ctx.memr<<"\n"
+             <<"  [canary]    | addr | 0x"<<(u64)ctx.canary<<"\n"
+             <<"  [top   ]    | addr | 0x"<<(u64)ctx.top<<"\n"
              <<std::dec;
-    std::clog<<"  [funcr ]    ";valinfo(funcr);
-    std::clog<<"  [upval ]    ";valinfo(upvalr);
+    std::clog<<"  [funcr ]    ";valinfo(ctx.funcr);
+    std::clog<<"  [upval ]    ";valinfo(ctx.upvalr);
 }
 
 void vm::gstate() {
@@ -296,26 +289,26 @@ void vm::gstate() {
 }
 
 void vm::lstate() {
-    if (!localr || !funcr.func().lsize) {
+    if (!ctx.localr || !ctx.funcr.func().lsize) {
         return;
     }
-    const u32 lsize=funcr.func().lsize;
-    std::clog<<"local (0x"<<std::hex<<(u64)localr
-             <<" <+"<<(u64)(localr-ngc.stack)<<">)\n"<<std::dec;
+    const u32 lsize=ctx.funcr.func().lsize;
+    std::clog<<"local (0x"<<std::hex<<(u64)ctx.localr
+             <<" <+"<<(u64)(ctx.localr-ngc.rctx->stack)<<">)\n"<<std::dec;
     for(u32 i=0;i<lsize;++i) {
         std::clog<<"  0x"<<std::hex<<std::setw(6)
                  <<std::setfill('0')<<i<<std::dec
                  <<"    ";
-        valinfo(localr[i]);
+        valinfo(ctx.localr[i]);
     }
 }
 
 void vm::ustate() {
-    if (funcr.type==vm_nil || funcr.func().upval.empty()) {
+    if (ctx.funcr.type==vm_nil || ctx.funcr.func().upval.empty()) {
         return;
     }
     std::clog<<"upvalue\n";
-    auto& upval=funcr.func().upval;
+    auto& upval=ctx.funcr.func().upval;
     for(u32 i=0;i<upval.size();++i) {
         std::clog<<"  -> upval["<<i<<"]:\n";
         auto& uv=upval[i].upval();
@@ -345,15 +338,12 @@ void vm::die(const string& str) {
         detail();
     }
 
-    if (ngc.stack==stack) {
-        // in main context, exit directly
+    if (ngc.rctx->stack==stack) { // in main context, exit directly
         std::exit(1);
-    } else {
-        // in coroutine, shut down the coroutine
-        // and return to main context
-        pc=0; // mark coroutine 'dead'
+    } else { // in coroutine, shut down the coroutine and return to main context
+        ctx.pc=0; // mark coroutine 'dead'
         ngc.ctxreserve();
-        top[0]=nil;
+        ctx.top[0]=nil;
     }
 }
 
@@ -369,110 +359,110 @@ inline bool vm::cond(var& val) {
 
 void vm::o_intg() {
     // global values store on stack
-    top+=imm[pc];
-    --top;// point to the top
+    ctx.top+=imm[ctx.pc];
+    --ctx.top;// point to the top
 }
 
 void vm::o_intl() {
-    top[0].func().local.resize(imm[pc],nil);
-    top[0].func().lsize=imm[pc];
+    ctx.top[0].func().local.resize(imm[ctx.pc],nil);
+    ctx.top[0].func().lsize=imm[ctx.pc];
 }
 
 void vm::o_loadg() {
-    stack[imm[pc]]=(top--)[0];
+    stack[imm[ctx.pc]]=(ctx.top--)[0];
 }
 
 void vm::o_loadl() {
-    localr[imm[pc]]=(top--)[0];
+    ctx.localr[imm[ctx.pc]]=(ctx.top--)[0];
 }
 
 void vm::o_loadu() {
-    funcr.func().upval[(imm[pc]>>16)&0xffff]
-         .upval()[imm[pc]&0xffff]=(top--)[0];
+    ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
+         .upval()[imm[ctx.pc]&0xffff]=(ctx.top--)[0];
 }
 
 void vm::o_pnum() {
-    (++top)[0]=var::num(cnum[imm[pc]]);
+    (++ctx.top)[0]=var::num(cnum[imm[ctx.pc]]);
 }
 
 void vm::o_pnil() {
-    (++top)[0]=nil;
+    (++ctx.top)[0]=nil;
 }
 
 void vm::o_pstr() {
-    (++top)[0]=ngc.strs[imm[pc]];
+    (++ctx.top)[0]=ngc.strs[imm[ctx.pc]];
 }
 
 void vm::o_newv() {
     var newv=ngc.alloc(vm_vec);
     auto& vec=newv.vec().elems;
-    vec.resize(imm[pc]);
+    vec.resize(imm[ctx.pc]);
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
-    top=top-imm[pc]+1;
-    for(u32 i=0;i<imm[pc];++i) {
-        vec[i]=top[i];
+    ctx.top=ctx.top-imm[ctx.pc]+1;
+    for(u32 i=0;i<imm[ctx.pc];++i) {
+        vec[i]=ctx.top[i];
     }
-    top[0]=newv;
+    ctx.top[0]=newv;
 }
 
 void vm::o_newh() {
-    (++top)[0]=ngc.alloc(vm_hash);
+    (++ctx.top)[0]=ngc.alloc(vm_hash);
 }
 
 void vm::o_newf() {
-    (++top)[0]=ngc.alloc(vm_func);
-    nas_func& func=top[0].func();
-    func.entry=imm[pc];
+    (++ctx.top)[0]=ngc.alloc(vm_func);
+    nas_func& func=ctx.top[0].func();
+    func.entry=imm[ctx.pc];
     func.psize=1;
 
     /* this means you create a new function in local scope */
-    if (localr) {
-        func.upval=funcr.func().upval;
+    if (ctx.localr) {
+        func.upval=ctx.funcr.func().upval;
         // function created in the same local scope shares one closure
         // so this size & stk setting has no problem
-        var upval=(upvalr.type==vm_nil)?ngc.alloc(vm_upval):upvalr;
-        upval.upval().size=funcr.func().lsize;
-        upval.upval().stk=localr;
+        var upval=(ctx.upvalr.type==vm_nil)?ngc.alloc(vm_upval):ctx.upvalr;
+        upval.upval().size=ctx.funcr.func().lsize;
+        upval.upval().stk=ctx.localr;
         func.upval.push_back(upval);
-        upvalr=upval;
+        ctx.upvalr=upval;
     }
 }
 
 void vm::o_happ() {
-    top[-1].hash().elems[cstr[imm[pc]]]=top[0];
-    --top;
+    ctx.top[-1].hash().elems[cstr[imm[ctx.pc]]]=ctx.top[0];
+    --ctx.top;
 }
 
 void vm::o_para() {
-    nas_func& func=top[0].func();
+    nas_func& func=ctx.top[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[imm[pc]]=func.psize;
+    func.keys[imm[ctx.pc]]=func.psize;
     func.local[func.psize++]=var::none();
 }
 
 void vm::o_deft() {
-    var val=top[0];
-    nas_func& func=(--top)[0].func();
+    var val=ctx.top[0];
+    nas_func& func=(--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[imm[pc]]=func.psize;
+    func.keys[imm[ctx.pc]]=func.psize;
     func.local[func.psize++]=val;
 }
 
 void vm::o_dyn() {
-    top[0].func().dpara=imm[pc];
+    ctx.top[0].func().dpara=imm[ctx.pc];
 }
 
 void vm::o_lnot() {
-    var val=top[0];
+    var val=ctx.top[0];
     switch(val.type) {
-        case vm_nil:top[0]=one;break;
-        case vm_num:top[0]=val.num()?zero:one;break;
+        case vm_nil:ctx.top[0]=one;break;
+        case vm_num:ctx.top[0]=val.num()?zero:one;break;
         case vm_str:{
             const f64 num=str2num(val.str().c_str());
             if (std::isnan(num)) {
-                top[0]=var::num((f64)val.str().empty());
+                ctx.top[0]=var::num((f64)val.str().empty());
             } else {
-                top[0]=num?zero:one;
+                ctx.top[0]=num?zero:one;
             }
         } break;
         default:{
@@ -483,50 +473,50 @@ void vm::o_lnot() {
 }
 
 void vm::o_usub() {
-    top[0]=var::num(-top[0].tonum());
+    ctx.top[0]=var::num(-ctx.top[0].tonum());
 }
 
 void vm::o_bnot() {
-    top[0]=var::num(~static_cast<int32_t>(top[0].num()));
+    ctx.top[0]=var::num(~static_cast<int32_t>(ctx.top[0].num()));
 }
 
 void vm::o_btor() {
-    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())|static_cast<int32_t>(top[0].tonum()));
-    --top;
+    ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())|static_cast<int32_t>(ctx.top[0].tonum()));
+    --ctx.top;
 }
 
 void vm::o_btxor() {
-    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())^static_cast<int32_t>(top[0].tonum()));
-    --top;
+    ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())^static_cast<int32_t>(ctx.top[0].tonum()));
+    --ctx.top;
 }
 
 void vm::o_btand() {
-    top[-1]=var::num(static_cast<int32_t>(top[-1].tonum())&static_cast<int32_t>(top[0].tonum()));
-    --top;
+    ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())&static_cast<int32_t>(ctx.top[0].tonum()));
+    --ctx.top;
 }
 
 #define op_calc(type)\
-    top[-1]=var::num(top[-1].tonum() type top[0].tonum());\
-    --top;
+    ctx.top[-1]=var::num(ctx.top[-1].tonum() type ctx.top[0].tonum());\
+    --ctx.top;
 
 void vm::o_add() {op_calc(+);}
 void vm::o_sub() {op_calc(-);}
 void vm::o_mul() {op_calc(*);}
 void vm::o_div() {op_calc(/);}
 void vm::o_lnk() {
-    top[-1]=ngc.newstr(top[-1].tostr()+top[0].tostr());
-    --top;
+    ctx.top[-1]=ngc.newstr(ctx.top[-1].tostr()+ctx.top[0].tostr());
+    --ctx.top;
 }
 
 #define op_calc_const(type)\
-    top[0]=var::num(top[0].tonum() type cnum[imm[pc]]);
+    ctx.top[0]=var::num(ctx.top[0].tonum() type cnum[imm[ctx.pc]]);
 
 void vm::o_addc() {op_calc_const(+);}
 void vm::o_subc() {op_calc_const(-);}
 void vm::o_mulc() {op_calc_const(*);}
 void vm::o_divc() {op_calc_const(/);}
 void vm::o_lnkc() {
-    top[0]=ngc.newstr(top[0].tostr()+cstr[imm[pc]]);
+    ctx.top[0]=ngc.newstr(ctx.top[0].tostr()+cstr[imm[ctx.pc]]);
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -535,36 +525,36 @@ void vm::o_lnkc() {
 // like this: func{a+=c;}(); the result of 'a+c' will no be used later, imm[pc]=1
 // but if b+=a+=c; the result of 'a+c' will be used later, imm[pc]=0
 #define op_calc_eq(type)\
-    top[-1]=memr[0]=var::num(memr[0].tonum() type top[-1].tonum());\
-    memr=nullptr;\
-    top-=imm[pc]+1;
+    ctx.top[-1]=ctx.memr[0]=var::num(ctx.memr[0].tonum() type ctx.top[-1].tonum());\
+    ctx.memr=nullptr;\
+    ctx.top-=imm[ctx.pc]+1;
 
 void vm::o_addeq() {op_calc_eq(+);}
 void vm::o_subeq() {op_calc_eq(-);}
 void vm::o_muleq() {op_calc_eq(*);}
 void vm::o_diveq() {op_calc_eq(/);}
 void vm::o_lnkeq() {
-    top[-1]=memr[0]=ngc.newstr(memr[0].tostr()+top[-1].tostr());
-    memr=nullptr;
-    top-=imm[pc]+1;
+    ctx.top[-1]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+ctx.top[-1].tostr());
+    ctx.memr=nullptr;
+    ctx.top-=imm[ctx.pc]+1;
 }
 
 void vm::o_bandeq() {
-    top[-1]=memr[0]=var::num(i32(memr[0].tonum())&i32(top[-1].tonum()));
-    memr=nullptr;
-    top-=imm[pc]+1;
+    ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())&i32(ctx.top[-1].tonum()));
+    ctx.memr=nullptr;
+    ctx.top-=imm[ctx.pc]+1;
 }
 
 void vm::o_boreq() {
-    top[-1]=memr[0]=var::num(i32(memr[0].tonum())|i32(top[-1].tonum()));
-    memr=nullptr;
-    top-=imm[pc]+1;
+    ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())|i32(ctx.top[-1].tonum()));
+    ctx.memr=nullptr;
+    ctx.top-=imm[ctx.pc]+1;
 }
 
 void vm::o_bxoreq() {
-    top[-1]=memr[0]=var::num(i32(memr[0].tonum())^i32(top[-1].tonum()));
-    memr=nullptr;
-    top-=imm[pc]+1;
+    ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())^i32(ctx.top[-1].tonum()));
+    ctx.memr=nullptr;
+    ctx.top-=imm[ctx.pc]+1;
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -573,31 +563,31 @@ void vm::o_bxoreq() {
 // like this: func{a+=1;}(); the result of 'a+1' will no be used later, imm[pc]>>31=1
 // but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
 #define op_calc_eq_const(type)\
-    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]]);\
-    memr=nullptr;
+    ctx.top[0]=ctx.memr[0]=var::num(ctx.memr[0].tonum() type cnum[imm[ctx.pc]]);\
+    ctx.memr=nullptr;
 
 void vm::o_addeqc() {op_calc_eq_const(+);}
 void vm::o_subeqc() {op_calc_eq_const(-);}
 void vm::o_muleqc() {op_calc_eq_const(*);}
 void vm::o_diveqc() {op_calc_eq_const(/);}
 void vm::o_lnkeqc() {
-    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]]);
-    memr=nullptr;
+    ctx.top[0]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
+    ctx.memr=nullptr;
 }
 
 #define op_calc_eq_const_and_pop(type)\
-    top[0]=memr[0]=var::num(memr[0].tonum() type cnum[imm[pc]]);\
-    memr=nullptr;\
-    --top;
+    ctx.top[0]=ctx.memr[0]=var::num(ctx.memr[0].tonum() type cnum[imm[ctx.pc]]);\
+    ctx.memr=nullptr;\
+    --ctx.top;
 
 void vm::o_addecp() {op_calc_eq_const_and_pop(+);}
 void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
 void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
 void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
 void vm::o_lnkecp() {
-    top[0]=memr[0]=ngc.newstr(memr[0].tostr()+cstr[imm[pc]]);
-    memr=nullptr;
-    --top;
+    ctx.top[0]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
+    ctx.memr=nullptr;
+    --ctx.top;
 }
 
 void vm::o_meq() {
@@ -606,44 +596,44 @@ void vm::o_meq() {
     // is that when lnkeq/lnkeqc is called, there will be
     // a new gc object vm_str which is returned by gc::alloc
     // this may cause gc, so we should temporarily put it on stack
-    memr[0]=top[-1];
-    memr=nullptr;
-    top-=imm[pc]+1;
+    ctx.memr[0]=ctx.top[-1];
+    ctx.memr=nullptr;
+    ctx.top-=imm[ctx.pc]+1;
 }
 
 void vm::o_eq() {
-    var val2=top[0];
-    var val1=(--top)[0];
+    var val2=ctx.top[0];
+    var val1=(--ctx.top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
-        top[0]=one;
+        ctx.top[0]=one;
     } else if (val1.type==vm_str && val2.type==vm_str) {
-        top[0]=(val1.str()==val2.str())?one:zero;
+        ctx.top[0]=(val1.str()==val2.str())?one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        top[0]=(val1.tonum()==val2.tonum())?one:zero;
+        ctx.top[0]=(val1.tonum()==val2.tonum())?one:zero;
     } else {
-        top[0]=(val1==val2)?one:zero;
+        ctx.top[0]=(val1==val2)?one:zero;
     }
 }
 
 void vm::o_neq() {
-    var val2=top[0];
-    var val1=(--top)[0];
+    var val2=ctx.top[0];
+    var val1=(--ctx.top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
-        top[0]=zero;
+        ctx.top[0]=zero;
     } else if (val1.type==vm_str && val2.type==vm_str) {
-        top[0]=(val1.str()!=val2.str())?one:zero;
+        ctx.top[0]=(val1.str()!=val2.str())?one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        top[0]=(val1.tonum()!=val2.tonum())?one:zero;
+        ctx.top[0]=(val1.tonum()!=val2.tonum())?one:zero;
     } else {
-        top[0]=(val1!=val2)?one:zero;
+        ctx.top[0]=(val1!=val2)?one:zero;
     }
 }
 
 #define op_cmp(type)\
-    --top;\
-    top[0]=(top[0].tonum() type top[1].tonum())?one:zero;
+    --ctx.top;\
+    ctx.top[0]=(ctx.top[0].tonum() type ctx.top[1].tonum())?one:zero;
 
 void vm::o_less() {op_cmp(<);}
 void vm::o_leq() {op_cmp(<=);}
@@ -651,7 +641,7 @@ void vm::o_grt() {op_cmp(>);}
 void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    top[0]=(top[0].tonum() type cnum[imm[pc]])?one:zero;
+    ctx.top[0]=(ctx.top[0].tonum() type cnum[imm[ctx.pc]])?one:zero;
 
 void vm::o_lessc() {op_cmp_const(<);}
 void vm::o_leqc() {op_cmp_const(<=);}
@@ -659,76 +649,77 @@ void vm::o_grtc() {op_cmp_const(>);}
 void vm::o_geqc() {op_cmp_const(>=);}
 
 void vm::o_pop() {
-    --top;
+    --ctx.top;
 }
 
 void vm::o_jmp() {
-    pc=imm[pc]-1;
+    ctx.pc=imm[ctx.pc]-1;
 }
 
 void vm::o_jt() {
     // jump true needs to reserve the result on stack
     // because conditional expression in nasal has return value
-    if (cond(top[0])) {
-        pc=imm[pc]-1;
+    if (cond(ctx.top[0])) {
+        ctx.pc=imm[ctx.pc]-1;
     }
 }
 
 void vm::o_jf() {
     // jump false doesn't need to reserve result
-    if (!cond(top[0])) {
-        pc=imm[pc]-1;
+    if (!cond(ctx.top[0])) {
+        ctx.pc=imm[ctx.pc]-1;
     }
-    --top;
+    --ctx.top;
 }
 
 void vm::o_cnt() {
-    if (top[0].type!=vm_vec) {
+    if (ctx.top[0].type!=vm_vec) {
         die("must use vector in forindex/foreach");
         return;
     }
-    (++top)[0]=var::cnt(-1);
+    (++ctx.top)[0]=var::cnt(-1);
 }
 
 void vm::o_findex() {
-    if ((usize)(++top[0].cnt())>=top[-1].vec().size()) {
-        pc=imm[pc]-1;
+    if ((usize)(++ctx.top[0].cnt())>=ctx.top[-1].vec().size()) {
+        ctx.pc=imm[ctx.pc]-1;
         return;
     }
-    top[1]=var::num(top[0].cnt());
-    ++top;
+    ctx.top[1]=var::num(ctx.top[0].cnt());
+    ++ctx.top;
 }
 
 void vm::o_feach() {
-    auto& ref=top[-1].vec().elems;
-    if ((usize)(++top[0].cnt())>=ref.size()) {
-        pc=imm[pc]-1;
+    auto& ref=ctx.top[-1].vec().elems;
+    if ((usize)(++ctx.top[0].cnt())>=ref.size()) {
+        ctx.pc=imm[ctx.pc]-1;
         return;
     }
-    top[1]=ref[top[0].cnt()];
-    ++top;
+    ctx.top[1]=ref[ctx.top[0].cnt()];
+    ++ctx.top;
 }
 
 void vm::o_callg() {
     // get main stack directly
-    (++top)[0]=stack[imm[pc]];
+    (++ctx.top)[0]=stack[imm[ctx.pc]];
 }
 
 void vm::o_calll() {
-    (++top)[0]=localr[imm[pc]];
+    (++ctx.top)[0]=ctx.localr[imm[ctx.pc]];
 }
 
 void vm::o_upval() {
-    (++top)[0]=funcr.func().upval[(imm[pc]>>16)&0xffff]
-                    .upval()[imm[pc]&0xffff];
+    (++ctx.top)[0]=ctx.funcr.func()
+        .upval[(imm[ctx.pc]>>16)&0xffff]
+        .upval()[imm[ctx.pc]&0xffff];
 }
 
 void vm::o_callv() {
-    var val=top[0];
-    var vec=(--top)[0];
+    var val=ctx.top[0];
+    var vec=(--ctx.top)[0];
     if (vec.type==vm_vec) {
-        top[0]=vec.vec().get_val(val.tonum());
-        if (top[0].type==vm_none) {
+        ctx.top[0]=vec.vec().get_val(val.tonum());
+        if (ctx.top[0].type==vm_none) {
             die("out of range:"+std::to_string(val.tonum()));
             return;
         }
@@ -737,12 +728,12 @@ void vm::o_callv() {
             die("must use string as the key");
             return;
         }
-        top[0]=vec.hash().get_val(val.str());
-        if (top[0].type==vm_none) {
+        ctx.top[0]=vec.hash().get_val(val.str());
+        if (ctx.top[0].type==vm_none) {
             die("cannot find member \""+val.str()+"\"");
             return;
-        } else if (top[0].type==vm_func) {
-            top[0].func().local[0]=val; // 'me'
+        } else if (ctx.top[0].type==vm_func) {
+            ctx.top[0].func().local[0]=val; // 'me'
         }
     } else if (vec.type==vm_str) {
         string& str=vec.str();
@@ -752,7 +743,7 @@ void vm::o_callv() {
             die("out of range:"+std::to_string(val.tonum()));
             return;
         }
-        top[0]=var::num(f64((u8)str[num>=0? num:num+len]));
+        ctx.top[0]=var::num(f64((u8)str[num>=0? num:num+len]));
     } else {
         die("must call a vector/hash/string");
         return;
@@ -760,47 +751,47 @@ void vm::o_callv() {
 }
 
 void vm::o_callvi() {
-    var val=top[0];
+    var val=ctx.top[0];
     if (val.type!=vm_vec) {
         die("must use a vector");
         return;
     }
     // cannot use operator[],because this may cause overflow
-    (++top)[0]=val.vec().get_val(imm[pc]);
-    if (top[0].type==vm_none) {
-        die("out of range:"+std::to_string(imm[pc]));
+    (++ctx.top)[0]=val.vec().get_val(imm[ctx.pc]);
+    if (ctx.top[0].type==vm_none) {
+        die("out of range:"+std::to_string(imm[ctx.pc]));
         return;
     }
 }
 
 void vm::o_callh() {
-    var val=top[0];
+    var val=ctx.top[0];
     if (val.type!=vm_hash) {
         die("must call a hash");
         return;
     }
-    top[0]=val.hash().get_val(cstr[imm[pc]]);
-    if (top[0].type==vm_none) {
-        die("member \""+cstr[imm[pc]]+"\" does not exist");
+    ctx.top[0]=val.hash().get_val(cstr[imm[ctx.pc]]);
+    if (ctx.top[0].type==vm_none) {
+        die("member \""+cstr[imm[ctx.pc]]+"\" does not exist");
         return;
-    } else if (top[0].type==vm_func) {
-        top[0].func().local[0]=val; // 'me'
+    } else if (ctx.top[0].type==vm_func) {
+        ctx.top[0].func().local[0]=val; // 'me'
     }
 }
 
 void vm::o_callfv() {
-    u32 argc=imm[pc]; // arguments counter
-    var* local=top-argc+1; // arguments begin address
+    u32 argc=imm[ctx.pc]; // arguments counter
+    var* local=ctx.top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
         die("must call a function");
         return;
     }
     auto& func=local[-1].func();
     var tmp=local[-1];
-    local[-1]=funcr;
-    funcr=tmp;
+    local[-1]=ctx.funcr;
+    ctx.funcr=tmp;
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
-    if (top-argc+func.lsize+3>=canary) {
+    if (ctx.top-argc+func.lsize+3>=ctx.canary) {
         die("stack overflow");
         return;
     }
@@ -823,7 +814,7 @@ void vm::o_callfv() {
     // then all the available values the vector needs
     // are all outside the stack top and may be
     // collected incorrectly
-    top=local+func.lsize;
+    ctx.top=local+func.lsize;
 
     u32 min_size=(std::min)(psize,argc); // avoid error in MSVC
     for(u32 i=min_size;i>=1;--i) { // load arguments
@@ -838,26 +829,27 @@ void vm::o_callfv() {
         local[psize+1]=dynamic;
     }
 
-    top[0]=upvalr;
-    (++top)[0]=var::addr(localr);
-    (++top)[0]=var::ret(pc);
-    pc=func.entry-1;
-    localr=local;
-    upvalr=nil;
+    ctx.top[0]=ctx.upvalr;
+    (++ctx.top)[0]=var::addr(ctx.localr);
+    (++ctx.top)[0]=var::ret(ctx.pc);
+    ctx.pc=func.entry-1;
+    ctx.localr=local;
+    ctx.upvalr=nil;
 }
 
 void vm::o_callfh() {
-    auto& hash=top[0].hash().elems;
-    if (top[-1].type!=vm_func) {
+    auto& hash=ctx.top[0].hash().elems;
+    if (ctx.top[-1].type!=vm_func) {
         die("must call a function");
         return;
     }
-    auto& func=top[-1].func();
-    var tmp=top[-1];
-    top[-1]=funcr;
-    funcr=tmp;
+    auto& func=ctx.top[-1].func();
+    var tmp=ctx.top[-1];
+    ctx.top[-1]=ctx.funcr;
+    ctx.funcr=tmp;
+
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
-    if (top+func.lsize+2>=canary) {
+    if (ctx.top+func.lsize+2>=ctx.canary) {
         die("stack overflow");
         return;
     }
@@ -866,8 +858,8 @@ void vm::o_callfh() {
         return;
     }
 
-    var* local=top;
-    top+=func.lsize;
+    var* local=ctx.top;
+    ctx.top+=func.lsize;
     for(u32 i=0;i<func.lsize;++i) {
         local[i]=func.local[i];
     }
@@ -882,29 +874,29 @@ void vm::o_callfh() {
         }
     }
 
-    top[0]=upvalr;
-    (++top)[0]=var::addr(localr);
-    (++top)[0]=var::ret(pc); // rewrite top with vm_ret
-    pc=func.entry-1;
-    localr=local;
-    upvalr=nil;
+    ctx.top[0]=ctx.upvalr;
+    (++ctx.top)[0]=var::addr(ctx.localr);
+    (++ctx.top)[0]=var::ret(ctx.pc); // rewrite top with vm_ret
+    ctx.pc=func.entry-1;
+    ctx.localr=local;
+    ctx.upvalr=nil;
 }
 
 void vm::o_callb() {
     // reserve place for builtin function return,
     // this code is written for coroutine
-    (++top)[0]=nil;
+    (++ctx.top)[0]=nil;
 
     // if running a builtin function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    var tmp=(*builtin[imm[pc]].func)(localr,ngc);
+    var tmp=(*builtin[imm[ctx.pc]].func)(ctx.localr,ngc);
 
     // so we use tmp variable to store this return value
     // and set it to top[0] later
-    top[0]=tmp;
+    ctx.top[0]=tmp;
 
     // if get none, this means errors occurred when calling this native function
-    if (top[0].type==vm_none) {
+    if (ctx.top[0].type==vm_none) {
         die("native function error");
         return;
     }
@@ -916,33 +908,33 @@ void vm::o_slcbeg() {
     // +--------------+
     // | resource_vec | <-- top[-1]
     // +--------------+
-    (++top)[0]=ngc.alloc(vm_vec);
-    if (top[-1].type!=vm_vec) {
+    (++ctx.top)[0]=ngc.alloc(vm_vec);
+    if (ctx.top[-1].type!=vm_vec) {
         die("must slice a vector");
         return;
     }
 }
 
 void vm::o_slcend() {
-    top[-1]=top[0];
-    --top;
+    ctx.top[-1]=ctx.top[0];
+    --ctx.top;
 }
 
 void vm::o_slc() {
-    var val=(top--)[0];
-    var res=top[-1].vec().get_val(val.tonum());
+    var val=(ctx.top--)[0];
+    var res=ctx.top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
         die("index "+std::to_string(val.tonum())+" out of range");
         return;
     }
-    top[0].vec().elems.push_back(res);
+    ctx.top[0].vec().elems.push_back(res);
 }
 
 void vm::o_slc2() {
-    var val2=(top--)[0];
-    var val1=(top--)[0];
-    auto& ref=top[-1].vec().elems;
-    auto& aim=top[0].vec().elems;
+    var val2=(ctx.top--)[0];
+    var val1=(ctx.top--)[0];
+    auto& ref=ctx.top[-1].vec().elems;
+    auto& aim=ctx.top[0].vec().elems;
 
     u8 type1=val1.type,type2=val2.type;
     i32 num1=val1.tonum();
@@ -968,32 +960,32 @@ void vm::o_slc2() {
 }
 
 void vm::o_mcallg() {
-    memr=stack+imm[pc];
-    (++top)[0]=memr[0];
+    ctx.memr=stack+imm[ctx.pc];
+    (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
 void vm::o_mcalll() {
-    memr=localr+imm[pc];
-    (++top)[0]=memr[0];
+    ctx.memr=ctx.localr+imm[ctx.pc];
+    (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
 void vm::o_mupval() {
-    memr=&(funcr.func().upval[(imm[pc]>>16)&0xffff].upval()[imm[pc]&0xffff]);
-    (++top)[0]=memr[0];
+    ctx.memr=&(ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff].upval()[imm[ctx.pc]&0xffff]);
+    (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
 void vm::o_mcallv() {
-    var val=top[0];     // index
-    var vec=(--top)[0]; // mcall vector, reserved on stack to avoid gc
+    var val=ctx.top[0];     // index
+    var vec=(--ctx.top)[0]; // mcall vector, reserved on stack to avoid gc
     if (vec.type==vm_vec) {
-        memr=vec.vec().get_mem(val.tonum());
-        if (!memr) {
+        ctx.memr=vec.vec().get_mem(val.tonum());
+        if (!ctx.memr) {
             die("index "+std::to_string(val.tonum())+" out of range");
             return;
         }
@@ -1004,10 +996,10 @@ void vm::o_mcallv() {
         }
         nas_hash& ref=vec.hash();
         string& str=val.str();
-        memr=ref.get_mem(str);
-        if (!memr) {
+        ctx.memr=ref.get_mem(str);
+        if (!ctx.memr) {
             ref.elems[str]=nil;
-            memr=ref.get_mem(str);
+            ctx.memr=ref.get_mem(str);
         }
     } else {
         die("cannot get memory space in this type");
@@ -1016,17 +1008,17 @@ void vm::o_mcallv() {
 }
 
 void vm::o_mcallh() {
-    var hash=top[0]; // mcall hash, reserved on stack to avoid gc
+    var hash=ctx.top[0]; // mcall hash, reserved on stack to avoid gc
     if (hash.type!=vm_hash) {
         die("must call a hash");
         return;
     }
     auto& ref=hash.hash();
-    auto& str=cstr[imm[pc]];
-    memr=ref.get_mem(str);
-    if (!memr) { // create a new key
+    auto& str=cstr[imm[ctx.pc]];
+    ctx.memr=ref.get_mem(str);
+    if (!ctx.memr) { // create a new key
         ref.elems[str]=nil;
-        memr=ref.get_mem(str);
+        ctx.memr=ref.get_mem(str);
     }
 }
 
@@ -1045,18 +1037,18 @@ void vm::o_ret() {
 *   | old funcr   | <- old function stored in funcr
 *   +-------------+
 */
-    var  ret  =top[0];
-    var* local=localr;
-    var  func =funcr;
-    var  up   =upvalr;
+    var  ret  =ctx.top[0];
+    var* local=ctx.localr;
+    var  func =ctx.funcr;
+    var  up   =ctx.upvalr;
 
-    pc    =top[-1].ret();
-    localr=top[-2].addr();
-    upvalr=top[-3];
+    ctx.pc    =ctx.top[-1].ret();
+    ctx.localr=ctx.top[-2].addr();
+    ctx.upvalr=ctx.top[-3];
 
-    top=local-1;
-    funcr=top[0];
-    top[0]=ret; // rewrite func with returned value
+    ctx.top=local-1;
+    ctx.funcr=ctx.top[0];
+    ctx.top[0]=ret; // rewrite func with returned value
 
     if (up.type==vm_upval) { // synchronize upvalue
         auto& upval=up.upval();
@@ -1067,9 +1059,11 @@ void vm::o_ret() {
             upval.elems[i]=local[i];
         }
     }
+
     // cannot use gc.cort to judge,
-    // because there maybe another function call inside
-    if (!pc) {
+    // because there maybe another function call inside but return here
+    // coroutine function ends with setting pc to 0
+    if (!ctx.pc) {
         ngc.ctxreserve();
     }
 }
@@ -1112,7 +1106,7 @@ void vm::run(
         imm.push_back(i.num);
     }
     // goto the first operand
-    goto *code[pc];
+    goto *code[ctx.pc];
 #else
     typedef void (vm::*nafunc)();
     const nafunc oprs[]={
@@ -1166,12 +1160,12 @@ void vm::run(
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
-    while(code[pc]) {
-        (this->*code[pc])();
-        if (top>=canary) {
+    while(code[ctx.pc]) {
+        (this->*code[ctx.pc])();
+        if (ctx.top>=ctx.canary) {
             die("stack overflow");
         }
-        ++pc;
+        ++ctx.pc;
     }
 #endif
 
@@ -1187,13 +1181,13 @@ vmexit:
 // may cause stackoverflow
 #define exec_check(op) {\
         op();\
-        if (top<canary)\
-            goto *code[++pc];\
+        if (ctx.top<ctx.canary)\
+            goto *code[++ctx.pc];\
         die("stack overflow");\
-        goto *code[++pc];\
+        goto *code[++ctx.pc];\
     }
 // do not cause stackoverflow
-#define exec_nodie(op) {op();goto *code[++pc];}
+#define exec_nodie(op) {op();goto *code[++ctx.pc];}
 
 intg:   exec_nodie(o_intg  ); // +imm[pc] (detected at codegen)
 intl:   exec_nodie(o_intl  ); // -0

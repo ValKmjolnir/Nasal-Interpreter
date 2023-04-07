@@ -141,11 +141,6 @@ public:
     codestream(const opcode& c,const u32 i):code(c),index(i) {}
     static void set(const f64*,const string*,const string*);
     void dump(std::ostream&) const;
-
-    friend std::ostream& operator<<(std::ostream& out,const codestream& ins) {
-        ins.dump(out);
-        return out;
-    }
 };
 
 const f64* codestream::nums=nullptr;
@@ -172,25 +167,19 @@ void codestream::dump(std::ostream& out) const {
         case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
         case op_lnkeq: case op_meq: case op_btandeq: case op_btoreq:
         case op_btxoreq:
-            out<<std::hex<<"0x"<<num<<std::dec
-                <<" sp-"<<num;break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" sp-"<<num;break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            out<<std::hex<<"0x"<<num<<std::dec
-                <<" ("<<nums[num]<<")";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<")";break;
         case op_lnkeqc:
-            out<<std::hex<<"0x"<<num<<std::dec<<" (\""
-                <<rawstr(strs[num],16)<<"\")";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<")";break;
         case op_addecp:case op_subecp:case op_mulecp:case op_divecp:
-            out<<std::hex<<"0x"<<num<<std::dec
-                <<" ("<<nums[num]<<") sp-1";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<") sp-1";break;
         case op_lnkecp:
-            out<<std::hex<<"0x"<<num<<std::dec<<" (\""
-                <<rawstr(strs[num],16)<<"\") sp-1";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<") sp-1";break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("
-                <<nums[num]<<")";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<")";break;
         case op_callvi:case op_newv:   case op_callfv:
         case op_intg:  case op_intl:
         case op_findex:case op_feach:
@@ -208,8 +197,7 @@ void codestream::dump(std::ostream& out) const {
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_deft:   case op_dyn:
-            out<<std::hex<<"0x"<<num<<std::dec
-                <<" (\""<<rawstr(strs[num],16)<<"\")";break;
+            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<")";break;
         default:
             if (files) {
                 out<<std::hex<<"0x"<<num<<std::dec;
@@ -217,6 +205,11 @@ void codestream::dump(std::ostream& out) const {
             break;
     }
     if (files) {
-        out<<" ("<<files[code.fidx]<<":"<<code.line<<")";
+        out<<"("<<files[code.fidx]<<":"<<code.line<<")";
     }
+}
+
+std::ostream& operator<<(std::ostream& out,const codestream& ins) {
+    ins.dump(out);
+    return out;
 }

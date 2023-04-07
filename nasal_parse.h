@@ -52,7 +52,7 @@ private:
     const token* toks;
     ast root;
     error& err;
-    std::unordered_map<tok,string> tokname {
+    const std::unordered_map<tok,string> tokname {
         {tok::rfor    ,"for"     },
         {tok::forindex,"forindex"},
         {tok::foreach ,"foreach" },
@@ -204,7 +204,7 @@ void parse::match(tok type,const char* info) {
             case tok::num:die(thisspan,"expected number");    break;
             case tok::str:die(thisspan,"expected string");    break;
             case tok::id: die(thisspan,"expected identifier");break;
-            default:      die(thisspan,"expected '"+tokname[type]+"'"); break;
+            default:      die(thisspan,"expected '"+tokname.at(type)+"'"); break;
         }
         return;
     }

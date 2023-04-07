@@ -196,6 +196,17 @@ public:
     }
 };
 
+struct context {
+    u32  pc;
+    var* localr;
+    var* memr;
+    var  funcr;
+    var  upvalr;
+    var* canary;
+    var* stack;
+    var* top;
+};
+
 struct nas_co {
     enum costat:u32{
         suspended,
@@ -204,15 +215,8 @@ struct nas_co {
     };
 
     // calculation stack
-    var  stack[STACK_DEPTH];
-    
-    u32  pc;
-    var* top;
-    var* canary=stack+STACK_DEPTH-1;
-    var* localr;
-    var* memr;
-    var  funcr;
-    var  upvalr;
+    var stack[STACK_DEPTH];
+    context ctx;
 
     u32 status;
     nas_co() {clear();}
@@ -220,13 +224,16 @@ struct nas_co {
         for(u32 i=0;i<STACK_DEPTH;++i) {
             stack[i]=var::nil();
         }
-        pc=0;
-        localr=nullptr;
-        memr=nullptr;
-        top=stack;
+        ctx.pc=0;
+        ctx.localr=nullptr;
+        ctx.memr=nullptr;
+        ctx.canary=stack+STACK_DEPTH-1;
+        ctx.top=stack;
+        ctx.funcr=var::nil();
+        ctx.upvalr=var::nil();
+        ctx.stack=stack;
+
         status=nas_co::suspended;
-        funcr=var::nil();
-        upvalr=var::nil();
     }
 };
 
@@ -489,30 +496,14 @@ const var nil =var::nil();
 
 struct gc {
     /* main context */
-    struct {
-        u32  pc;
-        var* top;
-        var* localr;
-        var* memr;
-        var  funcr;
-        var  upvalr;
-        var* canary;
-        var* stack;
-    } mctx;
+    context mctx;
     
     /* runtime context */
-    u32&  pc;     // program counter
-    var*& localr; // local scope register
-    var*& memr;   // used for mem_call
-    var&  funcr;  // function register
-    var&  upvalr; // upvalue register
-    var*& canary; // avoid stackoverflow
-    var*& top;    // stack top
-    var*  stack;  // stack pointer
-    nas_co* cort; // running coroutine
+    context* rctx;
+    nas_co* cort=nullptr; // running coroutine
 
     /* native function used */
-    var temp; // temporary place used in builtin/module functions
+    var temp=nil; // temporary place used in builtin/module functions
 
     /* constants and memory pool */
     std::vector<var> strs;        // reserved address for const vm_str
@@ -535,13 +526,9 @@ struct gc {
     u64 size[gc_tsize];
     u64 gcnt[gc_tsize];
     u64 acnt[gc_tsize];
-    i64 worktime;
+    i64 worktime=0;
 
-    gc(u32& _pc, var*& _localr, var*& _memr, var& _funcr,
-       var& _upvalr, var*& _canary, var*& _top, var* _stk):
-        pc(_pc),localr(_localr),memr(_memr),funcr(_funcr),upvalr(_upvalr),
-        canary(_canary),top(_top),stack(_stk),cort(nullptr),temp(nil),
-        worktime(0) {}
+    gc(context* _ctx): rctx(_ctx) {}
     void mark();
     void sweep();
     void extend(u8);
@@ -563,11 +550,11 @@ void gc::mark() {
     // scan main process stack when coroutine ptr is null
     // this scan process must execute because when running coroutine,
     // the nas_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
-    for(var* i=stack;i<=top;++i) {
+    for(var* i=rctx->stack;i<=rctx->top;++i) {
         bfs.push_back(*i);
     }
-    bfs.push_back(funcr);
-    bfs.push_back(upvalr);
+    bfs.push_back(rctx->funcr);
+    bfs.push_back(rctx->upvalr);
     bfs.push_back(temp);
 
     // if coroutine is running, scan main process stack from mctx
@@ -611,9 +598,9 @@ void gc::mark() {
                 }
                 break;
             case vm_co:
-                bfs.push_back(tmp.co().funcr);
-                bfs.push_back(tmp.co().upvalr);
-                for(var* i=tmp.co().stack;i<=tmp.co().top;++i) {
+                bfs.push_back(tmp.co().ctx.funcr);
+                bfs.push_back(tmp.co().ctx.upvalr);
+                for(var* i=tmp.co().stack;i<=tmp.co().ctx.top;++i) {
                     bfs.push_back(*i);
                 }
                 break;
@@ -653,7 +640,7 @@ void gc::extend(u8 type) {
 
 void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
     // initialize function register
-    funcr=nil;
+    rctx->funcr=nil;
     worktime=0;
 
     // initialize counters
@@ -762,29 +749,15 @@ var gc::newstr(const string& buff) {
     return s;
 }
 
-void gc::ctxchg(nas_co& ctx) {
+void gc::ctxchg(nas_co& co) {
     // store running state to main context
-    mctx.pc=pc;
-    mctx.top=top;
-    mctx.localr=localr;
-    mctx.memr=memr;
-    mctx.funcr=funcr;
-    mctx.upvalr=upvalr;
-    mctx.canary=canary;
-    mctx.stack=stack;
+    mctx=*rctx;
 
     // restore coroutine context state
-    pc=ctx.pc;
-    top=ctx.top;
-    localr=ctx.localr;
-    memr=ctx.memr;
-    funcr=ctx.funcr;
-    upvalr=ctx.upvalr;
-    canary=ctx.canary;
-    stack=ctx.stack;
+    *rctx=co.ctx;
 
     // set coroutine pointer
-    cort=&ctx;
+    cort=&co;
 
     // set coroutine state to running
     cort->status=nas_co::running;
@@ -792,26 +765,13 @@ void gc::ctxchg(nas_co& ctx) {
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
-    cort->status=pc? nas_co::suspended:nas_co::dead;
+    cort->status=rctx->pc? nas_co::suspended:nas_co::dead;
 
     // store running state to coroutine
-    cort->pc=pc;
-    cort->localr=localr;
-    cort->memr=memr;
-    cort->funcr=funcr;
-    cort->upvalr=upvalr;
-    cort->canary=canary;
-    cort->top=top;
+    cort->ctx=*rctx;
 
     // restore main context state
-    pc=mctx.pc;
-    localr=mctx.localr;
-    memr=mctx.memr;
-    funcr=mctx.funcr;
-    upvalr=mctx.upvalr;
-    canary=mctx.canary;
-    top=mctx.top;
-    stack=mctx.stack;
+    *rctx=mctx;
 
     // set coroutine pointer to nullptr
     cort=nullptr;
