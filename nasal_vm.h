@@ -148,7 +148,8 @@ public:
         const codegen&,
         const linker&,
         const std::vector<string>&,
-        const bool);
+        const bool
+    );
 };
 
 void vm::init(
