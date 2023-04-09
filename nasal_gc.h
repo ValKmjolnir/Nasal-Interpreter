@@ -40,7 +40,27 @@ enum vm_type:u8 {
     vm_co
 };
 
-const u32 gc_tsize=vm_co-vm_str+1;
+const u32 gc_type_size=vm_co-vm_str+1;
+
+enum class obj_type:u32 {
+    null=0,
+    file=1,
+    dir,
+    dylib,
+    faddr
+};
+
+enum class coroutine_status:u32 {
+    suspended,
+    running,
+    dead
+};
+
+enum class gc_status:u8 {
+    uncollected=0,   
+    collected,
+    found
+};
 
 struct nas_vec;  // vector
 struct nas_hash; // hashmap(dict)
@@ -64,12 +84,12 @@ struct var {
     var(const var&) = default;
     bool operator==(const var& nr) const {return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const var& nr) const {return type!=nr.type || val.gcobj!=nr.val.gcobj;}
+    friend std::ostream& operator<<(std::ostream&,var&);
 
     // number and string can be translated to each other
     f64 tonum();
     string tostr();
-    friend std::ostream& operator<<(std::ostream&,var&);
-    bool objchk(u32);
+    bool objchk(obj_type);
 
     // create new var object
     static var none();
@@ -132,12 +152,12 @@ struct nas_func {
 };
 
 struct nas_upval {
-    // if on stack, use these three variables
+    /* on stack, use these variables */
     bool onstk;
     u32 size;
     var* stk;
 
-    // if not on stack, use this
+    /* not on stack, use this */
     std::vector<var> elems;
 
     nas_upval() {onstk=true;stk=nullptr;size=0;}
@@ -146,18 +166,11 @@ struct nas_upval {
 };
 
 struct nas_obj {
-    enum obj:u32 {
-        file=1,
-        dir,
-        dylib,
-        faddr,
-        unsafe
-    };
-    /* RAII constructor */
-    /* new object is initialized when creating */
-    u32 type;
+    obj_type type;
     void* ptr;
+
 private:
+    /* RAII constructor, new object is initialized when creating */
     void file_dtor() {
         fclose((FILE*)ptr);
     }
@@ -176,24 +189,10 @@ private:
 #endif
     }
 public:
-    nas_obj():type(0),ptr(nullptr) {}
+    nas_obj():type(obj_type::null),ptr(nullptr) {}
     ~nas_obj() {clear();}
-    void set(u32 t=0,void* p=nullptr) {
-        type=t;
-        ptr=p;
-    }
-    void clear() {
-        if (!ptr) {
-            return;
-        }
-        switch(type) {
-            case obj::file:  file_dtor(); break;
-            case obj::dir:   dir_dtor();  break;
-            case obj::dylib: dylib_dtor();break;
-            default: break;
-        }
-        ptr=nullptr;
-    }
+    void set(obj_type,void*);
+    void clear();
 };
 
 struct context {
@@ -208,43 +207,18 @@ struct context {
 };
 
 struct nas_co {
-    enum costat:u32{
-        suspended,
-        running,
-        dead
-    };
 
-    // calculation stack
     var stack[STACK_DEPTH];
     context ctx;
+    coroutine_status status;
 
-    u32 status;
     nas_co() {clear();}
-    void clear() {
-        for(u32 i=0;i<STACK_DEPTH;++i) {
-            stack[i]=var::nil();
-        }
-        ctx.pc=0;
-        ctx.localr=nullptr;
-        ctx.memr=nullptr;
-        ctx.canary=stack+STACK_DEPTH-1;
-        ctx.top=stack;
-        ctx.funcr=var::nil();
-        ctx.upvalr=var::nil();
-        ctx.stack=stack;
-
-        status=nas_co::suspended;
-    }
+    void clear();
 };
 
 struct nas_val {
-    enum status:u8 {
-        uncollected=0,   
-        collected,
-        found
-    };
 
-    u8 mark; // mark if it is visited by gc or collected by gc
+    gc_status mark;
     u8 type; // value type
     u8 unmut; // used to mark if a string is unmutable
     union {
@@ -298,15 +272,16 @@ var nas_hash::get_val(const string& key) {
         return elems.at(key);
     } else if (elems.count("parents")) {
         var ret=var::none();
-        var val=elems["parents"];
-        if (val.type==vm_vec) {
-            for(auto& i:val.vec().elems) {
-                if (i.type==vm_hash) {
-                    ret=i.hash().get_val(key);
-                }
-                if (ret.type!=vm_none) {
-                    return ret;
-                }
+        var val=elems.at("parents");
+        if (val.type!=vm_vec) {
+            return ret;
+        }
+        for(auto& i:val.vec().elems) {
+            if (i.type==vm_hash) {
+                ret=i.hash().get_val(key);
+            }
+            if (ret.type!=vm_none) {
+                return ret;
             }
         }
     }
@@ -318,15 +293,16 @@ var* nas_hash::get_mem(const string& key) {
         return &elems.at(key);
     } else if (elems.count("parents")) {
         var* addr=nullptr;
-        var val=elems["parents"];
-        if (val.type==vm_vec) {
-            for(auto& i:val.vec().elems) {
-                if (i.type==vm_hash) {
-                    addr=i.hash().get_mem(key);
-                }
-                if (addr) {
-                    return addr;
-                }
+        var val=elems.at("parents");
+        if (val.type!=vm_vec) {
+            return addr;
+        }
+        for(auto& i:val.vec().elems) {
+            if (i.type==vm_hash) {
+                addr=i.hash().get_mem(key);
+            }
+            if (addr) {
+                return addr;
             }
         }
     }
@@ -355,8 +331,42 @@ void nas_func::clear() {
     keys.clear();
 }
 
+void nas_obj::set(obj_type t,void* p) {
+    type=t;
+    ptr=p;
+}
+
+void nas_obj::clear() {
+    if (!ptr) {
+        return;
+    }
+    switch(type) {
+        case obj_type::file:  file_dtor(); break;
+        case obj_type::dir:   dir_dtor();  break;
+        case obj_type::dylib: dylib_dtor();break;
+        default: break;
+    }
+    ptr=nullptr;
+}
+
+void nas_co::clear() {
+    for(u32 i=0;i<STACK_DEPTH;++i) {
+        stack[i]=var::nil();
+    }
+    ctx.pc=0;
+    ctx.localr=nullptr;
+    ctx.memr=nullptr;
+    ctx.canary=stack+STACK_DEPTH-1;
+    ctx.top=stack;
+    ctx.funcr=var::nil();
+    ctx.upvalr=var::nil();
+    ctx.stack=stack;
+
+    status=coroutine_status::suspended;
+}
+
 nas_val::nas_val(u8 val_type) {
-    mark=status::collected;
+    mark=gc_status::collected;
     type=val_type;
     unmut=0;
     switch(val_type) {
@@ -426,28 +436,20 @@ std::ostream& operator<<(std::ostream& out,var& ref) {
     return out;
 }
 
-bool var::objchk(u32 objtype) {
+bool var::objchk(obj_type objtype) {
     return type==vm_obj && obj().type==objtype && obj().ptr;
 }
 
 var var::none() {
-    var t;
-    t.type=vm_none;
-    return t;
+    return {vm_none,0};
 }
 
 var var::nil() {
-    var t;
-    t.type=vm_nil;
-    t.val.num=0;
-    return t;
+    return {vm_nil,0};
 }
 
 var var::ret(u32 pc) {
-    var t;
-    t.type=vm_ret;
-    t.val.ret=pc;
-    return t;
+    return {vm_ret,pc};
 }
 
 var var::cnt(i64 n) {
@@ -495,24 +497,24 @@ const var one =var::num(1);
 const var nil =var::nil();
 
 struct gc {
-    /* main context */
+    /* main context temporary storage */
     context mctx;
-    
+
     /* runtime context */
     context* rctx;
     nas_co* cort=nullptr; // running coroutine
 
-    /* native function used */
-    var temp=nil; // temporary place used in builtin/module functions
+    /*  temporary space used in builtin/module functions */
+    var temp=nil;
 
     /* constants and memory pool */
     std::vector<var> strs;        // reserved address for const vm_str
     std::vector<var> env_argv;    // command line arguments
     std::vector<nas_val*> memory; // gc memory
-    std::vector<nas_val*> unused[gc_tsize]; // gc free list
+    std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
-    // heap increase size
-    u32 incr[gc_tsize]={
+    /* heap increase size */
+    u32 incr[gc_type_size]={
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash
@@ -523,14 +525,26 @@ struct gc {
     };
 
     /* values for analysis */
-    u64 size[gc_tsize];
-    u64 gcnt[gc_tsize];
-    u64 acnt[gc_tsize];
+    u64 size[gc_type_size];
+    u64 gcnt[gc_type_size];
+    u64 acnt[gc_type_size];
     i64 worktime=0;
 
     gc(context* _ctx): rctx(_ctx) {}
+
+private:
+    /* gc functions */
     void mark();
+    void mark_context(std::vector<var>&);
+    void mark_var(std::vector<var>&,var&);
+    inline void mark_vec(std::vector<var>&,nas_vec&);
+    inline void mark_hash(std::vector<var>&,nas_hash&);
+    inline void mark_func(std::vector<var>&,nas_func&);
+    inline void mark_upval(std::vector<var>&,nas_upval&);
+    inline void mark_co(std::vector<var>&,nas_co&);
     void sweep();
+
+public:
     void extend(u8);
     void init(const std::vector<string>&,const std::vector<string>&);
     void clear();
@@ -543,79 +557,98 @@ struct gc {
     void ctxreserve();
 };
 
-/* gc functions */
 void gc::mark() {
     std::vector<var> bfs;
-    // scan coroutine process stack when coroutine ptr is not null
-    // scan main process stack when coroutine ptr is null
-    // this scan process must execute because when running coroutine,
-    // the nas_co related to it will not update it's context(like `top`) until the coroutine suspends or exits.
-    for(var* i=rctx->stack;i<=rctx->top;++i) {
-        bfs.push_back(*i);
-    }
-    bfs.push_back(rctx->funcr);
-    bfs.push_back(rctx->upvalr);
-    bfs.push_back(temp);
-
-    // if coroutine is running, scan main process stack from mctx
-    if (cort) {
-        for(var* i=mctx.stack;i<=mctx.top;++i) {
-            bfs.push_back(*i);
-        }
-        bfs.push_back(mctx.funcr);
-        bfs.push_back(mctx.upvalr);
-    }
+    mark_context(bfs);
     
     while(!bfs.empty()) {
-        var tmp=bfs.back();
+        var value=bfs.back();
         bfs.pop_back();
-        if (tmp.type<=vm_num || tmp.val.gcobj->mark) {
+        if (value.type<=vm_num ||
+            value.val.gcobj->mark!=gc_status::uncollected) {
             continue;
         }
-        tmp.val.gcobj->mark=nas_val::status::found;
-        switch(tmp.type) {
-            case vm_vec:
-                for(auto& i:tmp.vec().elems) {
-                    bfs.push_back(i);
-                }
-                break;
-            case vm_hash:
-                for(auto& i:tmp.hash().elems) {
-                    bfs.push_back(i.second);
-                }
-                break;
-            case vm_func:
-                for(auto& i:tmp.func().local) {
-                    bfs.push_back(i);
-                }
-                for(auto& i:tmp.func().upval) {
-                    bfs.push_back(i);
-                }
-                break;
-            case vm_upval:
-                for(auto& i:tmp.upval().elems) {
-                    bfs.push_back(i);
-                }
-                break;
-            case vm_co:
-                bfs.push_back(tmp.co().ctx.funcr);
-                bfs.push_back(tmp.co().ctx.upvalr);
-                for(var* i=tmp.co().stack;i<=tmp.co().ctx.top;++i) {
-                    bfs.push_back(*i);
-                }
-                break;
-        }
+        mark_var(bfs,value);
+    }
+}
+
+void gc::mark_context(std::vector<var>& bfs_queue) {
+
+    // scan now running context, this context maybe related to coroutine or main
+    for(var* i=rctx->stack;i<=rctx->top;++i) {
+        bfs_queue.push_back(*i);
+    }
+    bfs_queue.push_back(rctx->funcr);
+    bfs_queue.push_back(rctx->upvalr);
+    bfs_queue.push_back(temp);
+
+    if (!cort) {
+        return;
+    }
+
+    // coroutine is running, so scan main process stack from mctx
+    for(var* i=mctx.stack;i<=mctx.top;++i) {
+        bfs_queue.push_back(*i);
+    }
+    bfs_queue.push_back(mctx.funcr);
+    bfs_queue.push_back(mctx.upvalr);
+}
+
+void gc::mark_var(std::vector<var>& bfs_queue,var& value) {
+    value.val.gcobj->mark=gc_status::found;
+    switch(value.type) {
+        case vm_vec: mark_vec(bfs_queue,value.vec()); break;
+        case vm_hash: mark_hash(bfs_queue,value.hash()); break;
+        case vm_func: mark_func(bfs_queue,value.func()); break;
+        case vm_upval: mark_upval(bfs_queue,value.upval()); break;
+        case vm_co: mark_co(bfs_queue,value.co()); break;
+        default: break;
+    }
+}
+
+void gc::mark_vec(std::vector<var>& bfs_queue,nas_vec& vec) {
+    for(auto& i:vec.elems) {
+        bfs_queue.push_back(i);
+    }
+}
+
+void gc::mark_hash(std::vector<var>& bfs_queue,nas_hash& hash) {
+    for(auto& i:hash.elems) {
+        bfs_queue.push_back(i.second);
+    }
+}
+
+void gc::mark_func(std::vector<var>& bfs_queue,nas_func& function) {
+    for(auto& i:function.local) {
+        bfs_queue.push_back(i);
+    }
+    for(auto& i:function.upval) {
+        bfs_queue.push_back(i);
+    }
+}
+
+void gc::mark_upval(std::vector<var>& bfs_queue,nas_upval& upval) {
+    for(auto& i:upval.elems) {
+        bfs_queue.push_back(i);
+    }
+}
+
+void gc::mark_co(std::vector<var>& bfs_queue,nas_co& co) {
+    bfs_queue.push_back(co.ctx.funcr);
+    bfs_queue.push_back(co.ctx.upvalr);
+    for(var* i=co.stack;i<=co.ctx.top;++i) {
+        bfs_queue.push_back(*i);
     }
 }
 
 void gc::sweep() {
     for(auto i:memory) {
-        if (i->mark==nas_val::status::uncollected) {
+        if (i->mark==gc_status::uncollected) {
             i->clear();
             unused[i->type-vm_str].push_back(i);
-            i->mark=nas_val::status::collected;
-        } else if (i->mark==nas_val::status::found) {
-            i->mark=nas_val::status::uncollected;
+            i->mark=gc_status::collected;
+        } else if (i->mark==gc_status::found) {
+            i->mark=gc_status::uncollected;
         }
     }
 }
@@ -623,11 +656,12 @@ void gc::sweep() {
 void gc::extend(u8 type) {
     u8 index=type-vm_str;
     size[index]+=incr[index];
+
     for(u32 i=0;i<incr[index];++i) {
         nas_val* tmp=new nas_val(type);
 
-        // failed to allocate new memory
         if (!tmp) {
+            std::cerr<<"failed to allocate new memory\n";
             std::exit(-1);
         }
 
@@ -635,6 +669,7 @@ void gc::extend(u8 type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
+
     incr[index]*=2;
 }
 
@@ -644,7 +679,7 @@ void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
     worktime=0;
 
     // initialize counters
-    for(u8 i=0;i<gc_tsize;++i) {
+    for(u8 i=0;i<gc_type_size;++i) {
         size[i]=gcnt[i]=acnt[i]=0;
     }
 
@@ -673,7 +708,7 @@ void gc::clear() {
         delete i;
     }
     memory.clear();
-    for(u8 i=0;i<gc_tsize;++i) {
+    for(u8 i=0;i<gc_type_size;++i) {
         unused[i].clear();
     }
     for(auto& i:strs) {
@@ -686,8 +721,9 @@ void gc::clear() {
 void gc::info() {
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
     std::clog<<"\ngarbage collector info (gc count|alloc count|memory size)\n";
+
     u32 maxlen=0;
-    for(u8 i=0;i<gc_tsize;++i) {
+    for(u8 i=0;i<gc_type_size;++i) {
         u32 len=std::to_string(gcnt[i]).length();
         maxlen=maxlen<len?len:maxlen;
         len=std::to_string(acnt[i]).length();
@@ -695,8 +731,9 @@ void gc::info() {
         len=std::to_string(size[i]).length();
         maxlen=maxlen<len?len:maxlen;
     }
+
     double total=0;
-    for(u8 i=0;i<gc_tsize;++i) {
+    for(u8 i=0;i<gc_type_size;++i) {
         if (gcnt[i] || acnt[i] || size[i]) {
             total+=gcnt[i];
             std::clog<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
@@ -704,6 +741,7 @@ void gc::info() {
             std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<size[i]<<"\n";
         }
     }
+
     double sec=worktime*1.0/1000000000; // seconds
     std::clog<<" time  | "<<(sec<0.1? sec*1000:sec)<<(sec<0.1? " ms\n":" s\n");
     if (total) {
@@ -726,7 +764,7 @@ var gc::alloc(u8 type) {
         extend(type);
     }
     var ret=var::gcobj(unused[index].back());
-    ret.val.gcobj->mark=nas_val::status::uncollected;
+    ret.val.gcobj->mark=gc_status::uncollected;
     unused[index].pop_back();
     return ret;
 }
@@ -760,12 +798,14 @@ void gc::ctxchg(nas_co& co) {
     cort=&co;
 
     // set coroutine state to running
-    cort->status=nas_co::running;
+    cort->status=coroutine_status::running;
 }
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
-    cort->status=rctx->pc? nas_co::suspended:nas_co::dead;
+    cort->status=rctx->pc?
+        coroutine_status::suspended:
+        coroutine_status::dead;
 
     // store running state to coroutine
     cort->ctx=*rctx;
@@ -784,8 +824,10 @@ var nas_err(const string& err_f,const string& info) {
 }
 
 typedef var (*mod)(var*,usize,gc*); // module function type
+
 typedef struct {
     const char* name;
     mod fd;
 } mod_func; // module function stores in tables with this type, end with {nullptr,nullptr}
+
 typedef mod_func* (*getptr)(); // module function "get" type

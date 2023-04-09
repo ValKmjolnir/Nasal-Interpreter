@@ -543,13 +543,13 @@ var builtin_open(var* local,gc& ngc) {
         return nas_err("open","failed to open file <"+name.str()+">");
     }
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::file,res);
+    ret.obj().set(obj_type::file,res);
     return ret;
 }
 
 var builtin_close(var* local,gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("close","not a valid filehandle");
     }
     fd.obj().clear();
@@ -560,7 +560,7 @@ var builtin_read(var* local,gc& ngc) {
     var fd=local[1];
     var buf=local[2];
     var len=local[3];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("read","not a valid filehandle");
     }
     if (buf.type!=vm_str || buf.val.gcobj->unmut) {
@@ -586,7 +586,7 @@ var builtin_read(var* local,gc& ngc) {
 var builtin_write(var* local,gc& ngc) {
     var fd=local[1];
     var str=local[2];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("write","not a valid filehandle");
     }
     if (str.type!=vm_str) {
@@ -599,7 +599,7 @@ var builtin_seek(var* local,gc& ngc) {
     var fd=local[1];
     var pos=local[2];
     var whence=local[3];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("seek","not a valid filehandle");
     }
     return var::num((f64)fseek((FILE*)fd.obj().ptr,pos.num(),whence.num()));
@@ -607,7 +607,7 @@ var builtin_seek(var* local,gc& ngc) {
 
 var builtin_tell(var* local,gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("tell","not a valid filehandle");
     }
     return var::num((f64)ftell((FILE*)fd.obj().ptr));
@@ -615,7 +615,7 @@ var builtin_tell(var* local,gc& ngc) {
 
 var builtin_readln(var* local,gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("readln","not a valid filehandle");
     }
     var str=ngc.alloc(vm_str);
@@ -663,7 +663,7 @@ var builtin_stat(var* local,gc& ngc) {
 
 var builtin_eof(var* local,gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(nas_obj::file)) {
+    if (!fd.objchk(obj_type::file)) {
         return nas_err("readln","not a valid filehandle");
     }
     return var::num((f64)feof((FILE*)fd.obj().ptr));
@@ -842,13 +842,13 @@ var builtin_opendir(var* local,gc& ngc) {
     }
 #endif
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(nas_obj::dir,p);
+    ret.obj().set(obj_type::dir,p);
     return ret;
 }
 
 var builtin_readdir(var* local,gc& ngc) {
     var handle=local[1];
-    if (!handle.objchk(nas_obj::dir)) {
+    if (!handle.objchk(obj_type::dir)) {
         return nas_err("readdir","not a valid dir handle");
     }
 #ifdef _MSC_VER
@@ -865,7 +865,7 @@ var builtin_readdir(var* local,gc& ngc) {
 
 var builtin_closedir(var* local,gc& ngc) {
     var handle=local[1];
-    if (!handle.objchk(nas_obj::dir)) {
+    if (!handle.objchk(obj_type::dir)) {
         return nas_err("closedir","not a valid dir handle");
     }
     handle.obj().clear();
@@ -929,7 +929,7 @@ var builtin_dlopen(var* local,gc& ngc) {
     }
     var ret=ngc.temp=ngc.alloc(vm_hash);
     var lib=ngc.alloc(vm_obj);
-    lib.obj().set(nas_obj::dylib,ptr);
+    lib.obj().set(obj_type::dylib,ptr);
     ret.hash().elems["lib"]=lib;
 
 #ifdef _WIN32
@@ -948,7 +948,7 @@ var builtin_dlopen(var* local,gc& ngc) {
     for(u32 i=0;tbl[i].name;++i) {
         void* p=(void*)tbl[i].fd;
         var tmp=ngc.alloc(vm_obj);
-        tmp.obj().set(nas_obj::faddr,p);
+        tmp.obj().set(obj_type::faddr,p);
         ret.hash().elems[tbl[i].name]=tmp;
     }
 
@@ -958,7 +958,7 @@ var builtin_dlopen(var* local,gc& ngc) {
 
 var builtin_dlclose(var* local,gc& ngc) {
     var libptr=local[1];
-    if (!libptr.objchk(nas_obj::dylib)) {
+    if (!libptr.objchk(obj_type::dylib)) {
         return nas_err("dlclose","\"lib\" is not a valid dynamic lib");
     }
     libptr.obj().clear();
@@ -968,7 +968,7 @@ var builtin_dlclose(var* local,gc& ngc) {
 var builtin_dlcallv(var* local,gc& ngc) {
     var fp=local[1];
     var args=local[2];
-    if (!fp.objchk(nas_obj::faddr)) {
+    if (!fp.objchk(obj_type::faddr)) {
         return nas_err("dlcall","\"ptr\" is not a valid function pointer");
     }
     auto& vec=args.vec().elems;
@@ -977,11 +977,18 @@ var builtin_dlcallv(var* local,gc& ngc) {
 
 var builtin_dlcall(var* local,gc& ngc) {
     var fp=local[1];
-    if (!fp.objchk(nas_obj::faddr)) {
+    if (!fp.objchk(obj_type::faddr)) {
         return nas_err("dlcall","\"ptr\" is not a valid function pointer");
     }
+
+    var* local_frame_start=local+2;
+    usize local_frame_size=ngc.rctx->top-local_frame_start;
     // arguments' stored place begins at local +2
-    return ((mod)fp.obj().ptr)(local+2,ngc.rctx->top-local-2,&ngc);
+    return ((mod)fp.obj().ptr)(
+        local_frame_start,
+        local_frame_size,
+        &ngc
+    );
 }
 
 var builtin_platform(var* local,gc& ngc) {
@@ -1121,7 +1128,7 @@ var builtin_cocreate(var* local,gc& ngc) {
     cort.ctx.top[0]=var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
 
     cort.ctx.funcr=func; // make sure the coroutine function can use correct upvalues
-    cort.status=nas_co::suspended;
+    cort.status=coroutine_status::suspended;
     
     return co;
 }
@@ -1136,7 +1143,7 @@ var builtin_coresume(var* local,gc& ngc) {
         return nil;
     }
     // cannot resume a dead coroutine
-    if (co.co().status==nas_co::dead) {
+    if (co.co().status==coroutine_status::dead) {
         return nil;
     }
 
@@ -1181,9 +1188,9 @@ var builtin_costatus(var* local,gc& ngc) {
         return ngc.newstr("error");
     }
     switch(co.co().status) {
-        case nas_co::suspended: return ngc.newstr("suspended");break;
-        case nas_co::running:   return ngc.newstr("running");  break;
-        case nas_co::dead:      return ngc.newstr("dead");     break;
+        case coroutine_status::suspended: return ngc.newstr("suspended");break;
+        case coroutine_status::running:   return ngc.newstr("running");  break;
+        case coroutine_status::dead:      return ngc.newstr("dead");     break;
     }
     return nil;
 }
