@@ -270,43 +270,45 @@ std::ostream& operator<<(std::ostream& out,nas_vec& vec) {
 var nas_hash::get_val(const string& key) {
     if (elems.count(key)) {
         return elems.at(key);
-    } else if (elems.count("parents")) {
-        var ret=var::none();
-        var val=elems.at("parents");
-        if (val.type!=vm_vec) {
+    } else if (!elems.count("parents")) {
+        return var::none();
+    }
+    var ret=var::none();
+    var val=elems.at("parents");
+    if (val.type!=vm_vec) {
+        return ret;
+    }
+    for(auto& i:val.vec().elems) {
+        if (i.type==vm_hash) {
+            ret=i.hash().get_val(key);
+        }
+        if (ret.type!=vm_none) {
             return ret;
         }
-        for(auto& i:val.vec().elems) {
-            if (i.type==vm_hash) {
-                ret=i.hash().get_val(key);
-            }
-            if (ret.type!=vm_none) {
-                return ret;
-            }
-        }
     }
-    return var::none();
+    return ret;
 }
 
 var* nas_hash::get_mem(const string& key) {
     if (elems.count(key)) {
         return &elems.at(key);
-    } else if (elems.count("parents")) {
-        var* addr=nullptr;
-        var val=elems.at("parents");
-        if (val.type!=vm_vec) {
+    } else if (!elems.count("parents")) {
+        return nullptr;
+    }
+    var* addr=nullptr;
+    var val=elems.at("parents");
+    if (val.type!=vm_vec) {
+        return addr;
+    }
+    for(auto& i:val.vec().elems) {
+        if (i.type==vm_hash) {
+            addr=i.hash().get_mem(key);
+        }
+        if (addr) {
             return addr;
         }
-        for(auto& i:val.vec().elems) {
-            if (i.type==vm_hash) {
-                addr=i.hash().get_mem(key);
-            }
-            if (addr) {
-                return addr;
-            }
-        }
     }
-    return nullptr;
+    return addr;
 }
 
 std::ostream& operator<<(std::ostream& out,nas_hash& hash) {
@@ -441,43 +443,35 @@ bool var::objchk(obj_type objtype) {
 }
 
 var var::none() {
-    return {vm_none,0};
+    return {vm_none,{0}};
 }
 
 var var::nil() {
-    return {vm_nil,0};
+    return {vm_nil,{0}};
 }
 
 var var::ret(u32 pc) {
-    return {vm_ret,pc};
+    return {vm_ret,{.ret=pc}};
 }
 
 var var::cnt(i64 n) {
-    var t;
-    t.type=vm_cnt;
-    t.val.cnt=n;
-    return t;
+    return {vm_cnt,{.cnt=n}};
 }
 
 var var::num(f64 n) {
-    var t;
-    t.type=vm_num;
-    t.val.num=n;
-    return t;
+    return {vm_num,{.num=n}};
 }
 
 var var::gcobj(nas_val* p) {
-    var t;
-    t.type=p->type; // use nas_val::type directly
-    t.val.gcobj=p;
-    return t;
+    var tmp={p->type,{0}};
+    tmp.val.gcobj=p;
+    return tmp;
 }
 
 var var::addr(var* p) {
-    var t;
-    t.type=vm_addr;
-    t.val.addr=p;
-    return t;
+    var tmp={vm_addr,{0}};
+    tmp.val.addr=p;
+    return tmp;
 }
 
 var*       var::addr () {return val.addr;             }
@@ -823,11 +817,14 @@ var nas_err(const string& err_f,const string& info) {
     return var::none();
 }
 
-typedef var (*mod)(var*,usize,gc*); // module function type
+// module function type
+typedef var (*mod)(var*,usize,gc*);
 
-typedef struct {
+// module function stores in tables with this type, end with {nullptr,nullptr}
+struct mod_func {
     const char* name;
     mod fd;
-} mod_func; // module function stores in tables with this type, end with {nullptr,nullptr}
+};
 
-typedef mod_func* (*getptr)(); // module function "get" type
+// module function "get" type
+typedef mod_func* (*getptr)();
