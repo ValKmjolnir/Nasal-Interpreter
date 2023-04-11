@@ -154,53 +154,57 @@ void codestream::set(const f64* numbuff,const string* strbuff,const string* file
 }
 
 void codestream::dump(std::ostream& out) const {
+    using std::setw;
+    using std::setfill;
+    using std::hex;
+    using std::dec;
     auto op=code.op;
     auto num=code.num;
-    out<<std::hex<<"0x"
-        <<std::setw(6)<<std::setfill('0')<<index<<"     "
-        <<std::setw(2)<<std::setfill('0')<<(u32)op<<" "
-        <<std::setw(2)<<std::setfill('0')<<((num>>16)&0xff)<<" "
-        <<std::setw(2)<<std::setfill('0')<<((num>>8)&0xff)<<" "
-        <<std::setw(2)<<std::setfill('0')<<(num&0xff)<<"     "
-        <<opname[op]<<"  "<<std::dec;
+    out<<hex<<"0x"
+        <<setw(6)<<setfill('0')<<index<<"     "
+        <<setw(2)<<setfill('0')<<(u32)op<<" "
+        <<setw(2)<<setfill('0')<<((num>>16)&0xff)<<" "
+        <<setw(2)<<setfill('0')<<((num>>8)&0xff)<<" "
+        <<setw(2)<<setfill('0')<<(num&0xff)<<"     "
+        <<opname[op]<<"  "<<dec;
     switch(op) {
         case op_addeq: case op_subeq:  case op_muleq: case op_diveq:
         case op_lnkeq: case op_meq: case op_btandeq: case op_btoreq:
         case op_btxoreq:
-            out<<std::hex<<"0x"<<num<<std::dec<<" sp-"<<num;break;
+            out<<hex<<"0x"<<num<<dec<<" sp-"<<num;break;
         case op_addeqc:case op_subeqc: case op_muleqc:case op_diveqc:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<nums[num]<<")";break;
         case op_lnkeqc:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<")";break;
         case op_addecp:case op_subecp:case op_mulecp:case op_divecp:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<") sp-1";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<nums[num]<<") sp-1";break;
         case op_lnkecp:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<") sp-1";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<") sp-1";break;
         case op_addc:  case op_subc:   case op_mulc:  case op_divc:
         case op_lessc: case op_leqc:   case op_grtc:  case op_geqc:
         case op_pnum:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<nums[num]<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<nums[num]<<")";break;
         case op_callvi:case op_newv:   case op_callfv:
         case op_intg:  case op_intl:
         case op_findex:case op_feach:
         case op_newf:  case op_jmp:    case op_jt:    case op_jf:
         case op_callg: case op_mcallg: case op_loadg:
         case op_calll: case op_mcalll: case op_loadl:
-            out<<std::hex<<"0x"<<num<<std::dec;break;
+            out<<hex<<"0x"<<num<<dec;break;
         case op_callb:
-            out<<std::hex<<"0x"<<num<<" <"<<builtin[num].name
-                <<"@0x"<<(u64)builtin[num].func<<std::dec<<">";break;
+            out<<hex<<"0x"<<num<<" <"<<builtin[num].name
+                <<"@0x"<<(u64)builtin[num].func<<dec<<">";break;
         case op_upval: case op_mupval: case op_loadu:
-            out<<std::hex<<"0x"<<((num>>16)&0xffff)
-                <<"[0x"<<(num&0xffff)<<"]"<<std::dec;break;
+            out<<hex<<"0x"<<((num>>16)&0xffff)
+                <<"[0x"<<(num&0xffff)<<"]"<<dec;break;
         case op_happ:  case op_pstr:
         case op_lnkc:
         case op_callh: case op_mcallh:
         case op_para:  case op_deft:   case op_dyn:
-            out<<std::hex<<"0x"<<num<<std::dec<<" ("<<rawstr(strs[num],16)<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<")";break;
         default:
             if (files) {
-                out<<std::hex<<"0x"<<num<<std::dec;
+                out<<hex<<"0x"<<num<<dec;
             }
             break;
     }

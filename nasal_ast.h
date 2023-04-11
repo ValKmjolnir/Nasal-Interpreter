@@ -145,6 +145,15 @@ const char* ast_name[]={
 };
 
 class ast {
+public:
+    ast(const ast&) = delete;
+    ast& operator=(const ast&) = delete;
+
+    ast(ast&&) = default;
+    ast& operator=(ast&&) = default;
+private:
+    void print(u32,bool,std::vector<string>&) const;
+
 private:
     span loc;
     u32 nd_type;
@@ -155,13 +164,8 @@ private:
 public:
     ast(const span& s,const u32 t)
         : loc(s),nd_type(t),nd_num(0),nd_str("") {}
-    ast(const ast&) = default;
-    ast(ast&&) = default;
-    ast& operator=(const ast&) = default;
-    ast& operator=(ast&&) = default;
 
     void dump() const;
-    void print(u32,bool,std::vector<string>&) const;
     void clear();
 
     ast& operator[](usize n) {return nd_child[n];}
@@ -169,7 +173,6 @@ public:
     usize size() const {return nd_child.size();}
     
     void add(ast&& node) {nd_child.push_back(std::move(node));}
-    void add(const ast& node) {nd_child.push_back(node);}
     void set_begin(const u32,const u32);
     void set_end(const u32,const u32);
     void set_type(const u32 t) {nd_type=t;}
@@ -177,14 +180,15 @@ public:
     void set_num(const f64 n) {nd_num=n;}
 
     u32 line() const {return loc.end_line;}
-    u32 col()  const {return loc.end_column;}
     u32 type() const {return nd_type;}
     f64 num()  const {return nd_num;}
     const string& str() const {return nd_str;}
     const string& file() const {return loc.file;}
     const span& location() const {return loc;}
+
     const std::vector<ast>& child() const {return nd_child;}
     std::vector<ast>& child() {return nd_child;}
+
     void update_span();
     void update_span(const span&);
 };

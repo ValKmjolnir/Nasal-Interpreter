@@ -18,6 +18,7 @@
 #include <vector>
 #include <unordered_map>
 #include <chrono>
+#include <algorithm>
 
 #include "nasal.h"
 #include "nasal_err.h"
@@ -713,26 +714,31 @@ void gc::clear() {
 }
 
 void gc::info() {
+    using std::left;
+    using std::setw;
+    using std::setfill;
     const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
-    std::clog<<"\ngarbage collector info (gc count|alloc count|memory size)\n";
+    std::clog<<"\ngc info (gc count|alloc count|memory size)\n";
 
-    u32 maxlen=0;
+    usize ident=0;
     for(u8 i=0;i<gc_type_size;++i) {
-        u32 len=std::to_string(gcnt[i]).length();
-        maxlen=maxlen<len?len:maxlen;
-        len=std::to_string(acnt[i]).length();
-        maxlen=maxlen<len?len:maxlen;
-        len=std::to_string(size[i]).length();
-        maxlen=maxlen<len?len:maxlen;
+        usize len=std::max({
+            std::to_string(gcnt[i]).length(),
+            std::to_string(acnt[i]).length(),
+            std::to_string(size[i]).length()
+        });
+        ident=ident<len?len:ident;
     }
 
     double total=0;
     for(u8 i=0;i<gc_type_size;++i) {
         if (gcnt[i] || acnt[i] || size[i]) {
             total+=gcnt[i];
-            std::clog<<" "<<name[i]<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<gcnt[i];
-            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<acnt[i];
-            std::clog<<" | "<<std::left<<std::setw(maxlen)<<std::setfill(' ')<<size[i]<<"\n";
+            std::clog<<" "<<name[i];
+            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<gcnt[i];
+            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<acnt[i];
+            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<size[i];
+            std::clog<<"\n";
         }
     }
 
@@ -745,14 +751,15 @@ void gc::info() {
 }
 
 var gc::alloc(u8 type) {
+    using clk=std::chrono::high_resolution_clock;
     const u8 index=type-vm_str;
     ++acnt[index];
     if (unused[index].empty()) {
         ++gcnt[index];
-        auto begin=std::chrono::high_resolution_clock::now();
+        auto begin=clk::now();
         mark();
         sweep();
-        worktime+=(std::chrono::high_resolution_clock::now()-begin).count();
+        worktime+=(clk::now()-begin).count();
     }
     if (unused[index].empty()) {
         extend(type);
