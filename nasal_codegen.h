@@ -41,10 +41,12 @@ private:
     void regist_str(const string&);
     void find_symbol(const ast&);
     void add_sym(const string&);
-    i32  local_find(const string&);
-    i32  global_find(const string&);
-    i32  upvalue_find(const string&);
+    i32 local_find(const string&);
+    i32 global_find(const string&);
+    i32 upvalue_find(const string&);
+
     void gen(u8,u32,u32);
+
     void num_gen(const ast&);
     void str_gen(const ast&);
     void bool_gen(const ast&);
@@ -78,6 +80,7 @@ private:
     void calc_gen(const ast&);
     void block_gen(const ast&);
     void ret_gen(const ast&);
+
 public:
     codegen(error& e):fileindex(0),err(e),file(nullptr) {}
     const error& compile(const parse&,const linker&);
