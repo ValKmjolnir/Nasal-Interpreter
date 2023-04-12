@@ -145,38 +145,28 @@ var mandelbrot=
 +[-[->>>>>>>>>+<<<<<<<<<]>>>>>>>>>]>>>>>->>>>>>>>>>>>>>>>>>>>>>>>>>>-<<<<<<[<<<<
 <<<<<]]>>>]";
 
-var paper=[];
-var (ptr,pc)=(0,0);
-var (code,inum,stack,char)=([],[],[],[]);
-var (add,mov,jt,jf,in,out)=(0,1,2,3,4,5);
-setsize(char,256);
+var (ptr,pc,paper,inum)=(0,0,[],[]);
 
-var color=[
-    "\e[31m","\e[32m","\e[33m","\e[34m","\e[35m","\e[36m",
-    "\e[90m","\e[91m","\e[92m","\e[93m","\e[94m","\e[95m","\e[96m"
-];
-
-func() {
-    var cnt=0;
-    forindex(var i;char) {
-        char[i]=color[cnt]~chr(i)~"\e[0m";
-        cnt+=1;
-        if(cnt>12)
-            cnt=0;
+var character=func() {
+    var res=[];
+    setsize(res,256);
+    forindex(var i;res) {
+        res[i]="\e[38;5;"~i~"m"~chr(i)~"\e[0m";
     }
+    return res;
 }();
 
-var funcs=[
+var (add,mov,jt,jf,in,out)=(
     func {paper[ptr]+=inum[pc];},
     func {ptr+=inum[pc];},
     func {if(paper[ptr])pc=inum[pc];},
     func {if(!paper[ptr])pc=inum[pc];},
     func {paper[ptr]=input()[0];},
-    func {print(char[paper[ptr]]);}
-];
+    func {print(character[paper[ptr]]);}
+);
 
-var bf=func(program) {
-    setsize(paper,131072);
+var codegen=func(program) {
+    var (code,stack)=([],[]);
     var len=size(program);
     for(var i=0;i<len;i+=1) {
         var c=chr(program[i]);
@@ -228,19 +218,27 @@ var bf=func(program) {
     }
 
     if(size(stack)) {
-        die("lack ]");
+        die("lack "~size(stack)~" \"]\"");
         return;
     }
 
+    return code;
+}
+
+var bf=func(program) {
     # enable ANSI escape sequence
     if(os.platform()=="windows") {
         system("color");
     }
 
+    # code generation
+    var code=codegen(program);
+
     # execute
-    len=size(code);
+    setsize(paper,131072);
+    var len=size(code);
     for(pc=0;pc<len;pc+=1) {
-        funcs[code[pc]]();
+        code[pc]();
     }
     return;
 }

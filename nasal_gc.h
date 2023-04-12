@@ -72,6 +72,7 @@ struct nas_co;   // coroutine
 struct nas_val;  // nas_val includes gc-managed types
 
 struct var {
+public:
     u8 type;
     union {
         u32 ret;
@@ -81,6 +82,14 @@ struct var {
         nas_val* gcobj;
     } val;
 
+private:
+    var(u8 t,u32 pc) {type=t;val.ret=pc;}
+    var(u8 t,i64 ct) {type=t;val.cnt=ct;}
+    var(u8 t,f64 n) {type=t;val.num=n;}
+    var(u8 t,var* p) {type=t;val.addr=p;}
+    var(u8 t,nas_val* p) {type=t;val.gcobj=p;}
+
+public:
     var() = default;
     var(const var&) = default;
     bool operator==(const var& nr) const {return type==nr.type && val.gcobj==nr.val.gcobj;}
@@ -208,7 +217,6 @@ struct context {
 };
 
 struct nas_co {
-
     var stack[STACK_DEPTH];
     context ctx;
     coroutine_status status;
@@ -218,7 +226,6 @@ struct nas_co {
 };
 
 struct nas_val {
-
     gc_status mark;
     u8 type; // value type
     u8 unmut; // used to mark if a string is unmutable
@@ -444,35 +451,31 @@ bool var::objchk(obj_type objtype) {
 }
 
 var var::none() {
-    return {vm_none,{0}};
+    return {vm_none,(u32)0};
 }
 
 var var::nil() {
-    return {vm_nil,{0}};
+    return {vm_nil,(u32)0};
 }
 
 var var::ret(u32 pc) {
-    return {vm_ret,{.ret=pc}};
+    return {vm_ret,pc};
 }
 
 var var::cnt(i64 n) {
-    return {vm_cnt,{.cnt=n}};
+    return {vm_cnt,n};
 }
 
 var var::num(f64 n) {
-    return {vm_num,{.num=n}};
+    return {vm_num,n};
 }
 
 var var::gcobj(nas_val* p) {
-    var tmp={p->type,{0}};
-    tmp.val.gcobj=p;
-    return tmp;
+    return {p->type,p};
 }
 
 var var::addr(var* p) {
-    var tmp={vm_addr,{0}};
-    tmp.val.addr=p;
-    return tmp;
+    return {vm_addr,p};
 }
 
 var*       var::addr () {return val.addr;             }
@@ -722,11 +725,19 @@ void gc::info() {
 
     usize ident=0;
     for(u8 i=0;i<gc_type_size;++i) {
+#ifndef _MSC_VER
         usize len=std::max({
             std::to_string(gcnt[i]).length(),
             std::to_string(acnt[i]).length(),
             std::to_string(size[i]).length()
         });
+#else // VS is a piece of shit
+        usize len=std::to_string(gcnt[i]).length();
+        ident=ident<len?len:ident;
+        len=std::to_string(acnt[i]).length();
+        ident=ident<len?len:ident;
+        len=std::to_string(size[i]).length();
+#endif
         ident=ident<len?len:ident;
     }
 

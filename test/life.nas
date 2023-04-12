@@ -154,5 +154,5 @@ var ppm_gen=func(width,height){
 if (size(runtime.argv()) and runtime.argv()[0]=="--generate-ppm") {
     ppm_gen(1500*4,1500);
 } else {
-    run(60,25);
+    run(40,25);
 }
