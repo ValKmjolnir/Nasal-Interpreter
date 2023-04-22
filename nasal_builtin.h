@@ -777,7 +777,13 @@ var builtin_sleep(var* local,gc& ngc) {
     if (val.type!=vm_num) {
         return nil;
     }
+#if defined(_WIN32) && !defined(_GLIBCXX_HAS_GTHREADS)
+    // mingw-w64 win32 thread model has no std::this_thread
+    // also msvc will use this
+    Sleep(i64(val.num()*1e3));
+#else
     std::this_thread::sleep_for(std::chrono::microseconds(i64(val.num()*1e6)));
+#endif
     return nil;
 }
 
