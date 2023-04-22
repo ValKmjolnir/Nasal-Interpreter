@@ -74,6 +74,8 @@ Use g++/clang++ on `Linux/macOS/Unix` platform (we suggest `clang`).
 
 On `Windows (MinGW-w64)`:
 
+Make sure your MinGW thread model is `posix thread model`, otherwise it may not have the thread library.
+
 > mingw32-make nasal.exe
 
 You could create project in `Visual Studio` by this way: [__Click__](./doc/vs.md).

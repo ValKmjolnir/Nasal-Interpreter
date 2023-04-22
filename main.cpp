@@ -72,6 +72,7 @@ void err() {
 
 void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     using clk=std::chrono::high_resolution_clock;
+    const auto den=clk::duration::period::den;
 
     error   err;
     lexer   lex(err);
@@ -94,23 +95,23 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     if (cmd&VM_AST) {
         parse.tree().dump();
     }
-    
+
     // code generator gets parser's ast and linker's import file list to generate code
     gen.compile(parse,ld).chkerr();
     if (cmd&VM_CODE) {
         gen.print();
     }
-    
+
     // run
+    auto start=clk::now();
     if (cmd&VM_DEBUG) {
         dbg(err).run(gen,ld,argv);
-    } else if (cmd&VM_TIME) {
-        auto start=clk::now();
+    } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         ctx.run(gen,ld,argv,cmd&VM_DETAIL);
-        auto end=clk::now();
-        std::clog<<"process exited after "<<(end-start).count()*1.0/clk::duration::period::den<<"s.\n\n";
-    } else if (cmd&VM_EXEC) {
-        ctx.run(gen,ld,argv,cmd&VM_DETAIL);
+    }
+    if (cmd&VM_TIME) {
+        f64 tm=(clk::now()-start).count()*1.0/den;
+        std::clog<<"process exited after "<<tm<<"s.\n\n";
     }
 }
 
@@ -135,7 +136,7 @@ i32 main(i32 argc,const char* argv[]) {
     }
 
     // execute with arguments
-    std::unordered_map<string,u32> cmdlst={
+    const std::unordered_map<string,u32> cmdlst={
         {"--ast",VM_AST},{"-a",VM_AST},
         {"--code",VM_CODE},{"-c",VM_CODE},
         {"--exec",VM_EXEC},{"-e",VM_EXEC},
@@ -148,7 +149,7 @@ i32 main(i32 argc,const char* argv[]) {
     std::vector<string> vm_argv;
     for(i32 i=1;i<argc;++i) {
         if (cmdlst.count(argv[i])) {
-            cmd|=cmdlst[argv[i]];
+            cmd|=cmdlst.at(argv[i]);
         } else if (!filename.length()) {
             filename=argv[i];
         } else {

@@ -91,7 +91,7 @@ private:
     string res;
     error& err;
     std::vector<token> toks;
-    std::unordered_map<string,tok> typetbl {
+    const std::unordered_map<string,tok> typetbl {
         {"true"    ,tok::tktrue  },
         {"false"   ,tok::tkfalse },
         {"for"     ,tok::rfor    },
