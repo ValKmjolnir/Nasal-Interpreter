@@ -55,7 +55,7 @@ func(argv){
     }
     var file_content="";
     foreach(var f;argv)
-        file_content~=io.fin(f)~" ";
+        file_content~=io.readfile(f)~" ";
     var vec=keys(spliter(file_content));
     sort(vec,func(a,b){return cmp(a,b)<=0;});
     println(vec);

@@ -67,7 +67,7 @@ var filechecksum=func(){
     timestamp.stamp();
     var bar=process_bar.high_resolution_bar(40);
     forindex(var i;files){
-        var f=io.fin(files[i]);
+        var f=io.readfile(files[i]);
         var res=md5(f);
         byte+=size(f);
         if(cmp(res,_md5(f))){

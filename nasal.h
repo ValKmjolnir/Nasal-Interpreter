@@ -12,7 +12,7 @@
 #include <vector>
 
 bool is_windows() {
-#if defined _WIN32 || defined _WIN64
+#if defined(_WIN32) || defined(_WIN64)
     return true;
 #else
     return false;
@@ -29,6 +29,66 @@ bool is_linux() {
 
 bool is_macos() {
 #if defined __APPLE__
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_x86() {
+#if defined(__i386__) || defined(_M_IX86)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_amd64() {
+#if defined(__amd64__) || defined(_M_X64)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_x86_64() {
+    return is_amd64();
+}
+
+bool is_arm() {
+#if defined(__arm__) || defined(_M_ARM)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_aarch64() {
+#if defined(__aarch64__) || defined(_M_ARM64)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_ia64() {
+#if defined(__ia64__)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_powerpc() {
+#if defined(__powerpc__)
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_superh() {
+#if defined(__sh__)
     return true;
 #else
     return false;

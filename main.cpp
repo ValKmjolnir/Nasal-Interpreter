@@ -70,7 +70,7 @@ void err() {
     std::exit(1);
 }
 
-void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
+void execute(const string& file, const std::vector<string>& argv, const u32 cmd) {
     using clk=std::chrono::high_resolution_clock;
     const auto den=clk::duration::period::den;
 
@@ -88,7 +88,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     parse.compile(lex).chkerr();
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse,file,cmd&VM_DETAIL).chkerr();
+    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
 
     // optimizer does simple optimization on ast
     optimize(parse.tree());
@@ -105,9 +105,9 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     // run
     auto start=clk::now();
     if (cmd&VM_DEBUG) {
-        dbg(err).run(gen,ld,argv);
+        dbg(err).run(gen, ld, argv);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        ctx.run(gen,ld,argv,cmd&VM_DETAIL);
+        ctx.run(gen, ld, argv, cmd&VM_DETAIL);
     }
     if (cmd&VM_TIME) {
         f64 tm=(clk::now()-start).count()*1.0/den;
@@ -115,7 +115,7 @@ void execute(const string& file,const std::vector<string>& argv,const u32 cmd) {
     }
 }
 
-i32 main(i32 argc,const char* argv[]) {
+i32 main(i32 argc, const char* argv[]) {
     // output version info
     if (argc<=1) {
         std::clog<<logo;
@@ -128,7 +128,7 @@ i32 main(i32 argc,const char* argv[]) {
         if (s=="-h" || s=="--help") {
             std::clog<<help;
         } else if (s[0]!='-') {
-            execute(s,{},VM_EXEC);
+            execute(s, {}, VM_EXEC);
         } else {
             err();
         }
@@ -137,12 +137,18 @@ i32 main(i32 argc,const char* argv[]) {
 
     // execute with arguments
     const std::unordered_map<string,u32> cmdlst={
-        {"--ast",VM_AST},{"-a",VM_AST},
-        {"--code",VM_CODE},{"-c",VM_CODE},
-        {"--exec",VM_EXEC},{"-e",VM_EXEC},
-        {"--time",VM_TIME|VM_EXEC},{"-t",VM_TIME|VM_EXEC},
-        {"--detail",VM_DETAIL|VM_EXEC},{"-d",VM_DETAIL|VM_EXEC},
-        {"--debug",VM_DEBUG},{"-dbg",VM_DEBUG}
+        {"--ast",VM_AST},
+        {"-a",VM_AST},
+        {"--code",VM_CODE},
+        {"-c",VM_CODE},
+        {"--exec",VM_EXEC},
+        {"-e",VM_EXEC},
+        {"--time",VM_TIME|VM_EXEC},
+        {"-t",VM_TIME|VM_EXEC},
+        {"--detail",VM_DETAIL|VM_EXEC},
+        {"-d",VM_DETAIL|VM_EXEC},
+        {"--debug",VM_DEBUG},
+        {"-dbg",VM_DEBUG}
     };
     u32 cmd=0;
     string filename="";
@@ -159,6 +165,6 @@ i32 main(i32 argc,const char* argv[]) {
     if (!filename.length()) {
         err();
     }
-    execute(filename,vm_argv,cmd?cmd:VM_EXEC);
+    execute(filename, vm_argv, cmd?cmd:VM_EXEC);
     return 0;
 }

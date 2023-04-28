@@ -70,7 +70,7 @@ var ppm_gen=func(width,height){
     var init=func(){
         var res=new_map();
         if(io.exists(".life_data")) {
-            var vec=split("\n",io.fin(".life_data"));
+            var vec=split("\n",io.readfile(".life_data"));
             if (num(vec[0])!=width or num(vec[1])!=height) {
                 die("incorrect width or height: "~vec[0]~":"~str(width)~" / "~vec[1]~":"~str(height))
             }

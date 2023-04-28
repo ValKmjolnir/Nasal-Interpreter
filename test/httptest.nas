@@ -73,7 +73,7 @@ var html_read_file=func(filename){
     var timer=maketimestamp();
     timer.stamp();
     var keyword=["var","func","for","while","foreach","forindex","break","continue","return","if","else","elsif","nil"];
-    var file_text=io.fin(filename);
+    var file_text=io.readfile(filename);
     var (s,index,len)=("",-1,size(file_text));
     var content="";
 
@@ -302,7 +302,7 @@ while(1){
                 var page_back="</pre>\n</body>\n</html>\n";
                 http.send(client,respond.ok(page~html_read_file("./test/"~filename)~page_back));
             }else{
-                http.send(client,respond.ok(io.fin("./doc/nasal-http-test-web.html")));
+                http.send(client,respond.ok(io.readfile("./doc/nasal-http-test-web.html")));
             }
         }
         elsif(path=="/shutdown"){
@@ -310,11 +310,11 @@ while(1){
             break;
         }
         elsif(path=="/favicon.ico")
-            http.send(client,respond.ok(io.fin("./doc/pic/favicon.ico")));
+            http.send(client,respond.ok(io.readfile("./doc/pic/favicon.ico")));
         elsif(path=="/license")
-            http.send(client,respond.ok(io.fin("./LICENSE")));
+            http.send(client,respond.ok(io.readfile("./LICENSE")));
         elsif(path=="/doc/pic/nasal.png" or path=="/doc/pic/benchmark.png" or path=="/doc/pic/mandelbrot.png")
-            http.send(client,respond.ok(io.fin("."~path)));
+            http.send(client,respond.ok(io.readfile("."~path)));
         else{
             var filename=substr(path,1,size(path)-1);
             if(contains(files,filename)){

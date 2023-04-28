@@ -44,11 +44,11 @@ var s=func(){
             println("  nasal hexdump.nas [file] | get single file's hexdump.");
             return "";
         }
-        return io.fin(argv[0]);
+        return io.readfile(argv[0]);
     }
     var ret="";
     foreach(var elem;filename)
-        ret~=io.fin(elem);
+        ret~=io.readfile(elem);
     return ret;
 }();
 

@@ -58,7 +58,7 @@ var calc=func(codetype,files,path=""){
     println(codetype);
     var (bytes,ctx,line,semi,line_cnt,semi_cnt)=(0,"",0,0,0,0);
     forindex(var i;files){
-        var s=io.exists(path~files[i])?io.fin(path~files[i]):"";
+        var s=io.exists(path~files[i])?io.readfile(path~files[i]):"";
         (line_cnt,semi_cnt)=(count(s,'\n'),count(s,';'));
         println(rightpad(files[i],padding_length),'|',
             column(line_cnt),' line |',
