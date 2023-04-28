@@ -102,10 +102,10 @@ var builtin_input(var* local,gc& ngc) {
     return ret;
 }
 
-var builtin_fin(var* local,gc& ngc) {
+var builtin_readfile(var* local,gc& ngc) {
     var val=local[1];
     if (val.type!=vm_str) {
-        return nas_err("io::fin","\"filename\" must be string");
+        return nas_err("io::readfile","\"filename\" must be string");
     }
     std::ifstream in(val.str(),std::ios::binary);
     std::stringstream rd;
@@ -1008,6 +1008,27 @@ var builtin_platform(var* local,gc& ngc) {
     return ngc.newstr("unknown");
 }
 
+var builtin_arch(var* local,gc& ngc) {
+    if (is_x86()) {
+        return ngc.newstr("x86");
+    } else if (is_x86_64()) {
+        return ngc.newstr("x86-64");
+    } else if (is_amd64()) {
+        return ngc.newstr("amd64");
+    } else if (is_arm()) {
+        return ngc.newstr("arm");
+    } else if (is_aarch64()) {
+        return ngc.newstr("aarch64");
+    } else if (is_ia64()) {
+        return ngc.newstr("ia64");
+    } else if (is_powerpc()) {
+        return ngc.newstr("powerpc");
+    } else if (is_superh()) {
+        return ngc.newstr("superh");
+    }
+    return ngc.newstr("unknown");
+}
+
 // md5 related functions
 string tohex(u32 num) {
     const char str16[]="0123456789abcdef";
@@ -1272,7 +1293,7 @@ struct {
     {"__setsize", builtin_setsize },
     {"__system",  builtin_system  },
     {"__input",   builtin_input   },
-    {"__fin",     builtin_fin     },
+    {"__readfile",builtin_readfile},
     {"__fout",    builtin_fout    },
     {"__split",   builtin_split   },
     {"__rand",    builtin_rand    },
@@ -1343,6 +1364,7 @@ struct {
     {"__dlcallv", builtin_dlcallv },
     {"__dlcall",  builtin_dlcall  },
     {"__platform",builtin_platform},
+    {"__arch",    builtin_arch    },
     {"__md5",     builtin_md5     },
     {"__cocreate",builtin_cocreate},
     {"__coresume",builtin_coresume},

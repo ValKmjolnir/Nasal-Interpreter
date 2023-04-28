@@ -54,7 +54,6 @@ test:nasal
 	@ ./nasal -d test/lexer.nas
 	@ ./nasal -d test/life.nas
 	@ ./nasal -t test/loop.nas
-	@ ./nasal -t -d test/mandel.nas
 	@ ./nasal -t test/mandelbrot.nas
 	@ ./nasal -t test/md5.nas
 	@ ./nasal -t -d test/md5compare.nas

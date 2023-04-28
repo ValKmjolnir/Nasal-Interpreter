@@ -29,6 +29,12 @@ var input=func(end=nil){
     return __input(end);
 }
 
+# readline
+var readline=func(prompt="> ") {
+    print(prompt);
+    return input("\n");
+}
+
 # split a string by separator for example:
 # split("ll","hello world") -> ["he","o world"]
 # this function will return a vector.
@@ -291,7 +297,7 @@ var io={
     SEEK_CUR:1,
     SEEK_END:2,
     # get content of a file by filename. returns a string.
-    fin:   func(filename){return __fin(filename);},
+    readfile: func(filename){return __readfile(filename);},
     # input a string as the content of a file.
     fout:  func(filename,str){return __fout(filename,str);},
     # use C access
@@ -462,8 +468,9 @@ var dylib={
 # windows/macOS/linux are supported.
 var os={
     # get a string that tell which os it runs on.
-    platform: func(){return __platform;},
-    time:     func(){return __logtime; }
+    platform: func() {return __platform;},
+    time: func() {return __logtime;},
+    arch: func() {return __arch;}
 };
 
 # runtime gives us some functions that we could manage it manually.

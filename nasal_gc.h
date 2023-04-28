@@ -181,23 +181,10 @@ struct nas_obj {
 
 private:
     /* RAII constructor, new object is initialized when creating */
-    void file_dtor() {
-        fclose((FILE*)ptr);
-    }
-    void dir_dtor() {
-#ifndef _MSC_VER
-        closedir((DIR*)ptr);
-#else
-        FindClose(ptr);
-#endif
-    }
-    void dylib_dtor() {
-#ifdef _WIN32
-        FreeLibrary((HMODULE)ptr);
-#else
-        dlclose(ptr);
-#endif
-    }
+    void file_dtor();
+    void dir_dtor();
+    void dylib_dtor();
+
 public:
     nas_obj():type(obj_type::null),ptr(nullptr) {}
     ~nas_obj() {clear();}
@@ -357,6 +344,27 @@ void nas_obj::clear() {
         default: break;
     }
     ptr=nullptr;
+}
+
+void nas_obj::file_dtor() {
+    if ((FILE*)ptr==stdin) {
+        return;
+    }
+    fclose((FILE*)ptr);
+}
+void nas_obj::dir_dtor() {
+#ifndef _MSC_VER
+    closedir((DIR*)ptr);
+#else
+    FindClose(ptr);
+#endif
+}
+void nas_obj::dylib_dtor() {
+#ifdef _WIN32
+    FreeLibrary((HMODULE)ptr);
+#else
+    dlclose(ptr);
+#endif
 }
 
 void nas_co::clear() {

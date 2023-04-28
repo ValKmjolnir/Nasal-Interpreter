@@ -1,7 +1,7 @@
 var lexer=func(file)
 {
     var (ptr,token)=(0,[]);
-    var s=io.fin(file);
+    var s=io.readfile(file);
     var len=size(s);
     var line=0;
     var gen=func(tok){

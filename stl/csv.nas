@@ -1,7 +1,7 @@
 # lib csv.nas
 # ValKmjolnir 2022/10/15
 var read_csv=func(path,delimeter=",",endline="\n"){
-    var context=io.fin(path);
+    var context=io.readfile(path);
     context=split(endline,context);
     forindex(var i;context){
         context[i]=split(delimeter,context[i]);

@@ -11,7 +11,7 @@ if(is_windows_platform){
 var cpu_stat=func(){
     if(is_windows_platform or is_macos_platform)
         return nil;
-    var cpu=split("\n",io.fin("/proc/stat"))[0];
+    var cpu=split("\n",io.readfile("/proc/stat"))[0];
     cpu=split(" ",cpu);
     cpu={
         name:cpu[0],
@@ -54,7 +54,7 @@ var cpu_occupation=func(){
 var mem_occupation=func(){
     if(is_windows_platform or is_macos_platform)
         return {MemTotal:math.inf,MemFree:math.inf};
-    var meminfo=split("\n",io.fin("/proc/meminfo"));
+    var meminfo=split("\n",io.readfile("/proc/meminfo"));
     var mem_res={};
     forindex(var i;meminfo){
         var tmp=split(" ",meminfo[i])[0:1];
@@ -149,7 +149,7 @@ func(){
         cpu_occupation_log[-1]=cpu_occ;
         mem_occupation_log[-1]=mem_occ;
 
-        println("\e[1;1H\e[1m Operating system    : \e[0m",is_windows_platform?"\e[31m":"\e[36m",os.platform(),"\e[0m");
+        println("\e[1;1H\e[1m Operating system    : \e[0m",is_windows_platform?"\e[31m":"\e[36m",os.platform()," ",os.arch(),"\e[0m");
         println("\e[2;1H\e[1m Current time        : \e[0m\e[36m",os.time(),"\e[0m");
         println("\e[3;1H\e[1m Memory total(GB)    : \e[0m\e[36m",mem.MemTotal/1024/1024,"\e[0m");
         println("\e[4;1H\e[1m Memory free(GB)     : \e[0m\e[36m",mem.MemFree/1024/1024,"\e[0m");
