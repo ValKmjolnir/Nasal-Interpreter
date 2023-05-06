@@ -8,7 +8,7 @@ double fibonaci(double x) {
     return fibonaci(x-1)+fibonaci(x-2);
 }
 
-var fib(var* args,usize size,gc* ngc) {
+var fib(var* args, usize size, gc* ngc) {
     if (!size) {
         return nas_err("fib","lack arguments");
     }
@@ -16,7 +16,7 @@ var fib(var* args,usize size,gc* ngc) {
     return var::num(fibonaci(num.tonum()));
 }
 
-var quick_fib(var* args,usize size,gc* ngc) {
+var quick_fib(var* args, usize size, gc* ngc) {
     if (!size) {
         return nas_err("quick_fib","lack arguments");
     }

@@ -70,7 +70,11 @@ void err() {
     std::exit(1);
 }
 
-void execute(const string& file, const std::vector<string>& argv, const u32 cmd) {
+void execute(
+    const string& file,
+    const std::vector<string>& argv,
+    const u32 cmd
+) {
     using clk=std::chrono::high_resolution_clock;
     const auto den=clk::duration::period::den;
 
@@ -96,8 +100,8 @@ void execute(const string& file, const std::vector<string>& argv, const u32 cmd)
         parse.tree().dump();
     }
 
-    // code generator gets parser's ast and linker's import file list to generate code
-    gen.compile(parse,ld).chkerr();
+    // code generator gets parser's ast and import file list to generate code
+    gen.compile(parse, ld).chkerr();
     if (cmd&VM_CODE) {
         gen.print();
     }
@@ -109,6 +113,8 @@ void execute(const string& file, const std::vector<string>& argv, const u32 cmd)
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         ctx.run(gen, ld, argv, cmd&VM_DETAIL);
     }
+
+    // get running time
     if (cmd&VM_TIME) {
         f64 tm=(clk::now()-start).count()*1.0/den;
         std::clog<<"process exited after "<<tm<<"s.\n\n";
@@ -137,23 +143,23 @@ i32 main(i32 argc, const char* argv[]) {
 
     // execute with arguments
     const std::unordered_map<string,u32> cmdlst={
-        {"--ast",VM_AST},
-        {"-a",VM_AST},
-        {"--code",VM_CODE},
-        {"-c",VM_CODE},
-        {"--exec",VM_EXEC},
-        {"-e",VM_EXEC},
-        {"--time",VM_TIME|VM_EXEC},
-        {"-t",VM_TIME|VM_EXEC},
-        {"--detail",VM_DETAIL|VM_EXEC},
-        {"-d",VM_DETAIL|VM_EXEC},
-        {"--debug",VM_DEBUG},
-        {"-dbg",VM_DEBUG}
+        {"--ast", VM_AST},
+        {"-a", VM_AST},
+        {"--code", VM_CODE},
+        {"-c", VM_CODE},
+        {"--exec", VM_EXEC},
+        {"-e", VM_EXEC},
+        {"--time", VM_TIME|VM_EXEC},
+        {"-t", VM_TIME|VM_EXEC},
+        {"--detail", VM_DETAIL|VM_EXEC},
+        {"-d", VM_DETAIL|VM_EXEC},
+        {"--debug", VM_DEBUG},
+        {"-dbg", VM_DEBUG}
     };
     u32 cmd=0;
     string filename="";
     std::vector<string> vm_argv;
-    for(i32 i=1;i<argc;++i) {
+    for(i32 i=1; i<argc; ++i) {
         if (cmdlst.count(argv[i])) {
             cmd|=cmdlst.at(argv[i]);
         } else if (!filename.length()) {

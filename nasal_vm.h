@@ -141,7 +141,7 @@ protected:
 public:
 
     /* constructor of vm instance */
-    vm():ngc(&ctx),verbose(false) {}
+    vm(): ngc(&ctx), verbose(false) {}
 
     /* execution entry */
     void run(
@@ -229,7 +229,7 @@ void vm::traceback() {
     }
     ret.push(ctx.pc); // store the position program crashed
     std::clog<<"trace back ("<<(ngc.rctx->stack==stack?"main":"coroutine")<<")\n";
-    codestream::set(cnum,cstr,files);
+    codestream::set(cnum, cstr, files);
     for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop()) {
         if ((p=ret.top())==prev) {
             ++same;
@@ -365,7 +365,7 @@ void vm::o_intg() {
 }
 
 void vm::o_intl() {
-    ctx.top[0].func().local.resize(imm[ctx.pc],nil);
+    ctx.top[0].func().local.resize(imm[ctx.pc], nil);
     ctx.top[0].func().lsize=imm[ctx.pc];
 }
 
@@ -817,7 +817,7 @@ void vm::o_callfv() {
     // collected incorrectly
     ctx.top=local+func.lsize;
 
-    u32 min_size=(std::min)(psize,argc); // avoid error in MSVC
+    u32 min_size=(std::min)(psize, argc); // avoid error in MSVC
     for(u32 i=min_size;i>=1;--i) { // load arguments
         local[i]=local[i-1];
     }
@@ -890,7 +890,7 @@ void vm::o_callb() {
 
     // if running a builtin function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    var tmp=(*builtin[imm[ctx.pc]].func)(ctx.localr,ngc);
+    var tmp=(*builtin[imm[ctx.pc]].func)(ctx.localr, ngc);
 
     // so we use tmp variable to store this return value
     // and set it to top[0] later
@@ -1073,9 +1073,10 @@ void vm::run(
     const codegen& gen,
     const linker& linker,
     const std::vector<string>& argv,
-    const bool detail) {
+    const bool detail
+) {
     verbose=detail;
-    init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
+    init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
 #ifndef _MSC_VER
     const void* oprs[]={
         &&vmexit, &&intg,   &&intl,   &&loadg,

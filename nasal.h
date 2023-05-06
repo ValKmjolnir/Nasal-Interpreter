@@ -109,7 +109,7 @@ const u32 STACK_DEPTH=1024;
 
 f64 hex2f(const char* str) {
     f64 ret=0;
-    for(;*str;++str) {
+    for(; *str; ++str) {
         if ('0'<=*str && *str<='9') {
             ret=ret*16+(*str-'0');
         } else if ('a'<=*str && *str<='f') {
@@ -134,10 +134,12 @@ f64 oct2f(const char* str) {
     return ret;
 }
 
-// we have the same reason not using atof here just as andy's interpreter does.
+// we have the same reason not using atof here
+// just as andy's interpreter does.
 // it is not platform independent, and may have strange output.
 // so we write a new function here to convert str to number manually.
-// but this also makes 0.1+0.2==0.3, not another result that you may get in other languages.
+// but this also makes 0.1+0.2==0.3,
+// not another result that you may get in other languages.
 f64 dec2f(const char* str) {
     f64 ret=0,negative=1,num_pow=0;
     while('0'<=*str && *str<='9') {
@@ -220,7 +222,7 @@ string chrhex(const char c) {
     return {hextbl[(c&0xf0)>>4],hextbl[c&0x0f]};
 }
 
-string rawstr(const string& str,const usize maxlen=0) {
+string rawstr(const string& str, const usize maxlen=0) {
     string ret("");
     for(auto i:str) {
         // windows doesn't output unicode normally, so we output the hex
