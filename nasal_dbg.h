@@ -23,8 +23,8 @@ private:
     void interact();
 public:
     dbg(error& err):
-        next(false),fsize(0),
-        bk_fidx(0),bk_line(0),
+        next(false), fsize(0),
+        bk_fidx(0), bk_line(0),
         src(err) {}
     void run(
         const codegen&,
@@ -35,13 +35,14 @@ public:
 
 std::vector<string> dbg::parse(const string& cmd) {
     std::vector<string> res;
-    usize last=0,pos=cmd.find(" ",0);
+    usize last=0;
+    usize pos=cmd.find(" ", 0);
     while(pos!=string::npos) {
         if (pos>last) {
-            res.push_back(cmd.substr(last,pos-last));
+            res.push_back(cmd.substr(last, pos-last));
         }
         last=pos+1;
-        pos=cmd.find(" ",last);
+        pos=cmd.find(" ", last);
     }
     if (last<cmd.length()) {
         res.push_back(cmd.substr(last));
@@ -88,10 +89,10 @@ void dbg::callsort(const u64* arr) {
     u64 total=0;
     for(u32 i=0;i<op_ret+1;++i) {
         total+=arr[i];
-        opcall.push_back({i,arr[i]});
+        opcall.push_back({i, arr[i]});
     }
-    std::sort(opcall.begin(),opcall.end(),
-        [](const op& a,const op& b) {return a.second>b.second;}
+    std::sort(opcall.begin(), opcall.end(),
+        [](const op& a, const op& b) {return a.second>b.second;}
     );
     std::clog<<"\noperands call info (<1% ignored)\n";
     for(auto& i:opcall) {
@@ -116,13 +117,13 @@ void dbg::stepinfo() {
 
     begin=(ctx.pc>>3)==0?0:((ctx.pc>>3)<<3);
     end=(1+(ctx.pc>>3))<<3;
-    codestream::set(cnum,cstr,files);
+    codestream::set(cnum, cstr, files);
     std::cout<<"next bytecode:\n";
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i) {
         std::cout
         <<(i==ctx.pc?back_white:reset)
         <<(i==ctx.pc?"--> ":"    ")
-        <<codestream(bytecode[i],i)
+        <<codestream(bytecode[i], i)
         <<reset<<"\n";
     }
     stackinfo(10);
@@ -146,7 +147,7 @@ void dbg::interact() {
     stepinfo();
     while(true) {
         std::cout<<">> ";
-        std::getline(std::cin,cmd);
+        std::getline(std::cin, cmd);
         auto res=parse(cmd);
         if (res.size()==0) {
             stepinfo();
@@ -200,11 +201,11 @@ void dbg::interact() {
 void dbg::run(
     const codegen& gen,
     const linker& linker,
-    const std::vector<string>& argv)
-{
+    const std::vector<string>& argv
+) {
     verbose=true;
     fsize=linker.filelist().size();
-    init(gen.strs(),gen.nums(),gen.codes(),linker.filelist(),argv);
+    init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
     u64 count[op_ret+1]={0};
     typedef void (dbg::*nafunc)();
     const nafunc oprs[]={

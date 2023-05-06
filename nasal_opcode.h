@@ -138,8 +138,8 @@ private:
     static const string* strs;
     static const string* files;
 public:
-    codestream(const opcode& c,const u32 i):code(c),index(i) {}
-    static void set(const f64*,const string*,const string*);
+    codestream(const opcode& c, const u32 i): code(c), index(i) {}
+    static void set(const f64*, const string*, const string*);
     void dump(std::ostream&) const;
 };
 
@@ -182,12 +182,12 @@ void codestream::dump(std::ostream& out) const {
         case op_muleqc:case op_diveqc:
             out<<hex<<"0x"<<num<<dec<<" ("<<nums[num]<<")";break;
         case op_lnkeqc:
-            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num], 16)<<")";break;
         case op_addecp: case op_subecp:
         case op_mulecp: case op_divecp:
             out<<hex<<"0x"<<num<<dec<<" ("<<nums[num]<<") sp-1";break;
         case op_lnkecp:
-            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<") sp-1";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num], 16)<<") sp-1";break;
         case op_addc: case op_subc:
         case op_mulc: case op_divc:
         case op_lessc: case op_leqc:
@@ -215,7 +215,7 @@ void codestream::dump(std::ostream& out) const {
         case op_lnkc: case op_callh:
         case op_mcallh: case op_para:
         case op_deft: case op_dyn:
-            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num],16)<<")";break;
+            out<<hex<<"0x"<<num<<dec<<" ("<<rawstr(strs[num], 16)<<")";break;
         default:
             if (files) {
                 out<<hex<<"0x"<<num<<dec;
@@ -227,7 +227,7 @@ void codestream::dump(std::ostream& out) const {
     }
 }
 
-std::ostream& operator<<(std::ostream& out,const codestream& ins) {
+std::ostream& operator<<(std::ostream& out, const codestream& ins) {
     ins.dump(out);
     return out;
 }

@@ -1,14 +1,14 @@
 #include "../nasal.h"
 #include <cmath>
 
-var nas_vec2(var* args,usize size,gc* ngc) {
+var nas_vec2(var* args, usize size, gc* ngc) {
     var res=ngc->alloc(vm_vec);
     res.vec().elems.push_back(args[0]);
     res.vec().elems.push_back(args[1]);
     return res;
 }
 
-var nas_vec3(var* args,usize size,gc* ngc) {
+var nas_vec3(var* args, usize size, gc* ngc) {
     var res=ngc->alloc(vm_vec);
     res.vec().elems.push_back(args[0]);
     res.vec().elems.push_back(args[1]);
@@ -16,7 +16,7 @@ var nas_vec3(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_add(var* args,usize size,gc* ngc) {
+var nas_vec2_add(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -29,7 +29,7 @@ var nas_vec2_add(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_sub(var* args,usize size,gc* ngc) {
+var nas_vec2_sub(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -42,7 +42,7 @@ var nas_vec2_sub(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_mult(var* args,usize size,gc* ngc) {
+var nas_vec2_mult(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -55,7 +55,7 @@ var nas_vec2_mult(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_div(var* args,usize size,gc* ngc) {
+var nas_vec2_div(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -68,7 +68,7 @@ var nas_vec2_div(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_neg(var* args,usize size,gc* ngc) {
+var nas_vec2_neg(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -80,7 +80,7 @@ var nas_vec2_neg(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_norm(var* args,usize size,gc* ngc) {
+var nas_vec2_norm(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -95,7 +95,7 @@ var nas_vec2_norm(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec2_len(var* args,usize size,gc* ngc) {
+var nas_vec2_len(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -106,7 +106,7 @@ var nas_vec2_len(var* args,usize size,gc* ngc) {
     return var::num(std::sqrt(x*x+y*y));
 }
 
-var nas_vec2_dot(var* args,usize size,gc* ngc) {
+var nas_vec2_dot(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -116,7 +116,7 @@ var nas_vec2_dot(var* args,usize size,gc* ngc) {
     return var::num(v0[0].num()*v1[0].num()+v0[1].num()*v1[1].num());
 }
 
-var nas_vec3_add(var* args,usize size,gc* ngc) {
+var nas_vec3_add(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -130,7 +130,7 @@ var nas_vec3_add(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_sub(var* args,usize size,gc* ngc) {
+var nas_vec3_sub(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -144,7 +144,7 @@ var nas_vec3_sub(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_mult(var* args,usize size,gc* ngc) {
+var nas_vec3_mult(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -158,7 +158,7 @@ var nas_vec3_mult(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_div(var* args,usize size,gc* ngc) {
+var nas_vec3_div(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -172,7 +172,7 @@ var nas_vec3_div(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_neg(var* args,usize size,gc* ngc) {
+var nas_vec3_neg(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -185,7 +185,7 @@ var nas_vec3_neg(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_norm(var* args,usize size,gc* ngc) {
+var nas_vec3_norm(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -202,7 +202,7 @@ var nas_vec3_norm(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_len(var* args,usize size,gc* ngc) {
+var nas_vec3_len(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -214,7 +214,7 @@ var nas_vec3_len(var* args,usize size,gc* ngc) {
     return var::num(std::sqrt(x*x+y*y+z*z));
 }
 
-var nas_rotate_x(var* args,usize size,gc* ngc) {
+var nas_rotate_x(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -228,7 +228,7 @@ var nas_rotate_x(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_rotate_y(var* args,usize size,gc* ngc) {
+var nas_rotate_y(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -242,7 +242,7 @@ var nas_rotate_y(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_rotate_z(var* args,usize size,gc* ngc) {
+var nas_rotate_z(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;
@@ -256,7 +256,7 @@ var nas_rotate_z(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_vec3_dot(var* args,usize size,gc* ngc) {
+var nas_vec3_dot(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_vec || args[1].type!=vm_vec)
         return nil;
     auto& v0=args[0].vec().elems;

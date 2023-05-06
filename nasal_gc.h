@@ -83,18 +83,18 @@ public:
     } val;
 
 private:
-    var(u8 t,u32 pc) {type=t;val.ret=pc;}
-    var(u8 t,i64 ct) {type=t;val.cnt=ct;}
-    var(u8 t,f64 n) {type=t;val.num=n;}
-    var(u8 t,var* p) {type=t;val.addr=p;}
-    var(u8 t,nas_val* p) {type=t;val.gcobj=p;}
+    var(u8 t, u32 pc) {type=t;val.ret=pc;}
+    var(u8 t, i64 ct) {type=t;val.cnt=ct;}
+    var(u8 t, f64 n) {type=t;val.num=n;}
+    var(u8 t, var* p) {type=t;val.addr=p;}
+    var(u8 t, nas_val* p) {type=t;val.gcobj=p;}
 
 public:
     var() = default;
     var(const var&) = default;
     bool operator==(const var& nr) const {return type==nr.type && val.gcobj==nr.val.gcobj;}
     bool operator!=(const var& nr) const {return type!=nr.type || val.gcobj!=nr.val.gcobj;}
-    friend std::ostream& operator<<(std::ostream&,var&);
+    friend std::ostream& operator<<(std::ostream&, var&);
 
     // number and string can be translated to each other
     f64 tonum();
@@ -157,7 +157,7 @@ struct nas_func {
     std::vector<var> upval; // closure
     std::unordered_map<u32,u32> keys; // parameter table, u32 begins from 1
 
-    nas_func():dpara(-1),entry(0),psize(0),lsize(0) {}
+    nas_func(): dpara(-1), entry(0), psize(0), lsize(0) {}
     void clear();
 };
 
@@ -186,9 +186,9 @@ private:
     void dylib_dtor();
 
 public:
-    nas_obj():type(obj_type::null),ptr(nullptr) {}
+    nas_obj(): type(obj_type::null), ptr(nullptr) {}
     ~nas_obj() {clear();}
-    void set(obj_type,void*);
+    void set(obj_type, void*);
     void clear();
 };
 
@@ -247,7 +247,7 @@ var* nas_vec::get_mem(const i32 n) {
     return &elems[n>=0?n:n+size];
 }
 
-std::ostream& operator<<(std::ostream& out,nas_vec& vec) {
+std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     if (!vec.elems.size() || vec.printed) {
         out<<(vec.elems.size()?"[..]":"[]");
         return out;
@@ -306,7 +306,7 @@ var* nas_hash::get_mem(const string& key) {
     return addr;
 }
 
-std::ostream& operator<<(std::ostream& out,nas_hash& hash) {
+std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     if (!hash.elems.size() || hash.printed) {
         out<<(hash.elems.size()?"{..}":"{}");
         return out;
@@ -328,7 +328,7 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_obj::set(obj_type t,void* p) {
+void nas_obj::set(obj_type t, void* p) {
     type=t;
     ptr=p;
 }
@@ -352,6 +352,7 @@ void nas_obj::file_dtor() {
     }
     fclose((FILE*)ptr);
 }
+
 void nas_obj::dir_dtor() {
 #ifndef _MSC_VER
     closedir((DIR*)ptr);
@@ -359,6 +360,7 @@ void nas_obj::dir_dtor() {
     FindClose(ptr);
 #endif
 }
+
 void nas_obj::dylib_dtor() {
 #ifdef _WIN32
     FreeLibrary((HMODULE)ptr);
@@ -432,14 +434,14 @@ string var::tostr() {
         return str();
     } else if (type==vm_num) {
         string tmp=std::to_string(num());
-        tmp.erase(tmp.find_last_not_of('0')+1,string::npos);
-        tmp.erase(tmp.find_last_not_of('.')+1,string::npos);
+        tmp.erase(tmp.find_last_not_of('0')+1, string::npos);
+        tmp.erase(tmp.find_last_not_of('.')+1, string::npos);
         return tmp;
     }
     return "";
 }
 
-std::ostream& operator<<(std::ostream& out,var& ref) {
+std::ostream& operator<<(std::ostream& out, var& ref) {
     switch(ref.type) {
         case vm_none: out<<"undefined";   break;
         case vm_nil:  out<<"nil";         break;
@@ -459,31 +461,31 @@ bool var::objchk(obj_type objtype) {
 }
 
 var var::none() {
-    return {vm_none,(u32)0};
+    return {vm_none, (u32)0};
 }
 
 var var::nil() {
-    return {vm_nil,(u32)0};
+    return {vm_nil, (u32)0};
 }
 
 var var::ret(u32 pc) {
-    return {vm_ret,pc};
+    return {vm_ret, pc};
 }
 
 var var::cnt(i64 n) {
-    return {vm_cnt,n};
+    return {vm_cnt, n};
 }
 
 var var::num(f64 n) {
-    return {vm_num,n};
+    return {vm_num, n};
 }
 
 var var::gcobj(nas_val* p) {
-    return {p->type,p};
+    return {p->type, p};
 }
 
 var var::addr(var* p) {
-    return {vm_addr,p};
+    return {vm_addr, p};
 }
 
 var*       var::addr () {return val.addr;             }
@@ -542,17 +544,17 @@ private:
     /* gc functions */
     void mark();
     void mark_context(std::vector<var>&);
-    void mark_var(std::vector<var>&,var&);
-    inline void mark_vec(std::vector<var>&,nas_vec&);
-    inline void mark_hash(std::vector<var>&,nas_hash&);
-    inline void mark_func(std::vector<var>&,nas_func&);
-    inline void mark_upval(std::vector<var>&,nas_upval&);
-    inline void mark_co(std::vector<var>&,nas_co&);
+    void mark_var(std::vector<var>&, var&);
+    inline void mark_vec(std::vector<var>&, nas_vec&);
+    inline void mark_hash(std::vector<var>&, nas_hash&);
+    inline void mark_func(std::vector<var>&, nas_func&);
+    inline void mark_upval(std::vector<var>&, nas_upval&);
+    inline void mark_co(std::vector<var>&, nas_co&);
     void sweep();
 
 public:
     void extend(u8);
-    void init(const std::vector<string>&,const std::vector<string>&);
+    void init(const std::vector<string>&, const std::vector<string>&);
     void clear();
     void info();
     var alloc(const u8);
@@ -574,7 +576,7 @@ void gc::mark() {
             value.val.gcobj->mark!=gc_status::uncollected) {
             continue;
         }
-        mark_var(bfs,value);
+        mark_var(bfs, value);
     }
 }
 
@@ -600,31 +602,31 @@ void gc::mark_context(std::vector<var>& bfs_queue) {
     bfs_queue.push_back(mctx.upvalr);
 }
 
-void gc::mark_var(std::vector<var>& bfs_queue,var& value) {
+void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
     value.val.gcobj->mark=gc_status::found;
     switch(value.type) {
-        case vm_vec: mark_vec(bfs_queue,value.vec()); break;
-        case vm_hash: mark_hash(bfs_queue,value.hash()); break;
-        case vm_func: mark_func(bfs_queue,value.func()); break;
-        case vm_upval: mark_upval(bfs_queue,value.upval()); break;
-        case vm_co: mark_co(bfs_queue,value.co()); break;
+        case vm_vec: mark_vec(bfs_queue, value.vec()); break;
+        case vm_hash: mark_hash(bfs_queue, value.hash()); break;
+        case vm_func: mark_func(bfs_queue, value.func()); break;
+        case vm_upval: mark_upval(bfs_queue, value.upval()); break;
+        case vm_co: mark_co(bfs_queue, value.co()); break;
         default: break;
     }
 }
 
-void gc::mark_vec(std::vector<var>& bfs_queue,nas_vec& vec) {
+void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
     for(auto& i:vec.elems) {
         bfs_queue.push_back(i);
     }
 }
 
-void gc::mark_hash(std::vector<var>& bfs_queue,nas_hash& hash) {
+void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
     for(auto& i:hash.elems) {
         bfs_queue.push_back(i.second);
     }
 }
 
-void gc::mark_func(std::vector<var>& bfs_queue,nas_func& function) {
+void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
     for(auto& i:function.local) {
         bfs_queue.push_back(i);
     }
@@ -633,13 +635,13 @@ void gc::mark_func(std::vector<var>& bfs_queue,nas_func& function) {
     }
 }
 
-void gc::mark_upval(std::vector<var>& bfs_queue,nas_upval& upval) {
+void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
     for(auto& i:upval.elems) {
         bfs_queue.push_back(i);
     }
 }
 
-void gc::mark_co(std::vector<var>& bfs_queue,nas_co& co) {
+void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
     for(var* i=co.stack;i<=co.ctx.top;++i) {
@@ -679,7 +681,7 @@ void gc::extend(u8 type) {
     incr[index]*=2;
 }
 
-void gc::init(const std::vector<string>& s,const std::vector<string>& argv) {
+void gc::init(const std::vector<string>& s, const std::vector<string>& argv) {
     // initialize function register
     rctx->funcr=nil;
     worktime=0;
@@ -838,13 +840,13 @@ void gc::ctxreserve() {
 }
 
 // use to print error log and return error value
-var nas_err(const string& err_f,const string& info) {
+var nas_err(const string& err_f, const string& info) {
     std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
     return var::none();
 }
 
 // module function type
-typedef var (*mod)(var*,usize,gc*);
+typedef var (*mod)(var*, usize, gc*);
 
 // module function stores in tables with this type, end with {nullptr,nullptr}
 struct mod_func {

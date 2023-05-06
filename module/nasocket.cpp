@@ -10,7 +10,7 @@ private:
     WSAData data;
 public:
     WSAmanager() {
-        WSAStartup(0x1010,&data);
+        WSAStartup(0x1010, &data);
     }
     ~WSAmanager() {
         WSACleanup();
@@ -25,14 +25,14 @@ static WSAmanager win;
 #include <netinet/in.h>
 #endif
 
-var nas_socket(var* args,usize size,gc* ngc) {
+var nas_socket(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
         return nas_err("socket","\"af\", \"type\", \"protocol\" should be number");
     int sd=socket(args[0].num(),args[1].num(),args[2].num());
     return var::num((double)sd);
 }
 
-var nas_closesocket(var* args,usize size,gc* ngc) {
+var nas_closesocket(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("closesocket","\"sd\" should be number");
 #ifdef _WIN32
@@ -42,7 +42,7 @@ var nas_closesocket(var* args,usize size,gc* ngc) {
 #endif
 }
 
-var nas_shutdown(var* args,usize size,gc* ngc) {
+var nas_shutdown(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("shutdown","\"sd\" must be a number");
     if (args[1].type!=vm_num)
@@ -50,7 +50,7 @@ var nas_shutdown(var* args,usize size,gc* ngc) {
     return var::num((double)shutdown(args[0].num(),args[1].num()));
 }
 
-var nas_bind(var* args,usize size,gc* ngc) {
+var nas_bind(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("bind","\"sd\" muse be a number");
     if (args[1].type!=vm_str)
@@ -65,7 +65,7 @@ var nas_bind(var* args,usize size,gc* ngc) {
     return var::num((double)bind(args[0].num(),(sockaddr*)&server,sizeof(server)));
 }
 
-var nas_listen(var* args,usize size,gc* ngc) {
+var nas_listen(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("listen","\"sd\" must be a number");
     if (args[1].type!=vm_num)
@@ -73,7 +73,7 @@ var nas_listen(var* args,usize size,gc* ngc) {
     return var::num((double)listen(args[0].num(),args[1].num()));
 }
 
-var nas_connect(var* args,usize size,gc* ngc) {
+var nas_connect(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("connect","\"sd\" must be a number");
     if (args[1].type!=vm_str)
@@ -89,7 +89,7 @@ var nas_connect(var* args,usize size,gc* ngc) {
     return var::num((double)connect(args[0].num(),(sockaddr*)&addr,sizeof(sockaddr_in)));
 }
 
-var nas_accept(var* args,usize size,gc* ngc) {
+var nas_accept(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("accept","\"sd\" must be a number");
     sockaddr_in client;
@@ -107,7 +107,7 @@ var nas_accept(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_send(var* args,usize size,gc* ngc) {
+var nas_send(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("send","\"sd\" must be a number");
     if (args[1].type!=vm_str)
@@ -117,7 +117,7 @@ var nas_send(var* args,usize size,gc* ngc) {
     return var::num((double)send(args[0].num(),args[1].str().c_str(),args[1].str().length(),args[2].num()));
 }
 
-var nas_sendto(var* args,usize size,gc* ngc) {
+var nas_sendto(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("sendto","\"sd\" must be a number");
     if (args[1].type!=vm_str)
@@ -137,7 +137,7 @@ var nas_sendto(var* args,usize size,gc* ngc) {
     return var::num((double)sendto(args[0].num(),args[3].str().c_str(),args[3].str().length(),args[4].num(),(sockaddr*)&addr,sizeof(sockaddr_in)));
 }
 
-var nas_recv(var* args,usize size,gc* ngc) {
+var nas_recv(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("recv","\"sd\" must be a number");
     if (args[1].type!=vm_num)
@@ -158,7 +158,7 @@ var nas_recv(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_recvfrom(var* args,usize size,gc* ngc) {
+var nas_recvfrom(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("recvfrom","\"sd\" must be a number");
     if (args[1].type!=vm_num)
@@ -186,7 +186,7 @@ var nas_recvfrom(var* args,usize size,gc* ngc) {
     return res;
 }
 
-var nas_errno(var* args,usize size,gc* ngc) {
+var nas_errno(var* args, usize size, gc* ngc) {
     return ngc->newstr(strerror(errno));
 }
 

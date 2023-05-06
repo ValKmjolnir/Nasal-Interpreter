@@ -151,8 +151,9 @@ public:
 
     ast(ast&&) = default;
     ast& operator=(ast&&) = default;
+
 private:
-    void print(u32,bool,std::vector<string>&) const;
+    void print(u32, bool, std::vector<string>&) const;
 
 private:
     span loc;
@@ -162,23 +163,27 @@ private:
     std::vector<ast> nd_child;
 
 public:
-    ast(const span& s,const u32 t)
-        : loc(s),nd_type(t),nd_num(0),nd_str("") {}
+    ast(const span& s, const u32 t)
+        : loc(s), nd_type(t), nd_num(0), nd_str("") {}
 
+public:
     void dump() const;
     void clear();
 
+public:
     ast& operator[](usize n) {return nd_child[n];}
     const ast& operator[](usize n) const {return nd_child[n];}
     usize size() const {return nd_child.size();}
-    
+
+public:
     void add(ast&& node) {nd_child.push_back(std::move(node));}
-    void set_begin(const u32,const u32);
-    void set_end(const u32,const u32);
+    void set_begin(const u32, const u32);
+    void set_end(const u32, const u32);
     void set_type(const u32 t) {nd_type=t;}
     void set_str(const string& s) {nd_str=s;}
     void set_num(const f64 n) {nd_num=n;}
 
+public:
     u32 line() const {return loc.end_line;}
     u32 type() const {return nd_type;}
     f64 num()  const {return nd_num;}
@@ -193,18 +198,18 @@ public:
     void update_span(const span&);
 };
 
-void ast::set_begin(const u32 l,const u32 c) {
+void ast::set_begin(const u32 l, const u32 c) {
     loc.begin_line=l;
     loc.begin_column=c;
 }
 
-void ast::set_end(const u32 l,const u32 c) {
+void ast::set_end(const u32 l, const u32 c) {
     loc.end_line=l;
     loc.end_column=c;
 }
 
 void ast::clear() {
-    loc={0,0,0,0,""};
+    loc={0, 0, 0, 0, ""};
     nd_num=0;
     nd_str.clear();
     nd_type=ast_null;
@@ -213,10 +218,10 @@ void ast::clear() {
 
 void ast::dump() const{
     std::vector<string> tmp;
-    print(0,false,tmp);
+    print(0, false, tmp);
 }
 
-void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
+void ast::print(u32 depth, bool last, std::vector<string>& indent) const{
     // output the indentation first
     for(auto& i:indent) {
         std::cout<<i;
@@ -246,7 +251,7 @@ void ast::print(u32 depth,bool last,std::vector<string>& indent) const{
     } else if (!last && depth) {
         indent.back()=is_windows()? "| ":"│ ";
     }
-    for(u32 i=0;i<nd_child.size();++i) {
+    for(u32 i=0; i<nd_child.size(); ++i) {
         if (is_windows()) {
             indent.push_back(i==nd_child.size()-1?"+-":"|-");
         } else {

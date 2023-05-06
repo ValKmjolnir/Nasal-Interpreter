@@ -18,21 +18,21 @@ private:
 public:
     noecho_input() {
 #ifndef _WIN32
-        tcflush(0,TCIOFLUSH);
-        tcgetattr(0,&init_termios);
+        tcflush(0, TCIOFLUSH);
+        tcgetattr(0, &init_termios);
         new_termios=init_termios;
         new_termios.c_lflag&=~(ICANON|ECHO|ECHONL|ECHOE);
         // vmin=0 is nonblock input, but in wsl there is a bug that will block input
         // so we use fcntl to write the nonblock input
         new_termios.c_cc[VMIN]=1;
         new_termios.c_cc[VTIME]=0;
-        tcsetattr(0,TCSANOW,&new_termios);
+        tcsetattr(0, TCSANOW, &new_termios);
 #endif
     }
     ~noecho_input() {
 #ifndef _WIN32
-        tcflush(0,TCIOFLUSH);
-        tcsetattr(0,TCSANOW,&init_termios);
+        tcflush(0, TCIOFLUSH);
+        tcsetattr(0, TCSANOW, &init_termios);
 #endif
     }
     int noecho_kbhit() {
@@ -42,10 +42,10 @@ public:
         if (peek_char!=-1) {
             return 1;
         }
-        int flag=fcntl(0,F_GETFL);
-        fcntl(0,F_SETFL,flag|O_NONBLOCK);
-        nread=read(0,&ch,1);
-        fcntl(0,F_SETFL,flag);
+        int flag=fcntl(0, F_GETFL);
+        fcntl(0, F_SETFL,flag|O_NONBLOCK);
+        nread=read(0, &ch, 1);
+        fcntl(0, F_SETFL, flag);
         if (nread==1) {
             peek_char=ch;
             return 1;
@@ -63,7 +63,7 @@ public:
             peek_char=-1;
             return ch;
         }
-        ssize_t tmp=read(0,&ch,1);
+        ssize_t tmp=read(0, &ch, 1);
         return ch;
 #else
         return getch();
@@ -72,13 +72,16 @@ public:
 };
 
 noecho_input this_window;
-var nas_getch(var* args,usize size,gc* ngc) {
+
+var nas_getch(var* args, usize size, gc* ngc) {
     return var::num((double)this_window.noecho_getch());
 }
-var nas_kbhit(var* args,usize size,gc* ngc) {
+
+var nas_kbhit(var* args, usize size, gc* ngc) {
     return var::num((double)this_window.noecho_kbhit());
 }
-var nas_noblock(var* args,usize size,gc* ngc) {
+
+var nas_noblock(var* args, usize size, gc* ngc) {
     if (this_window.noecho_kbhit()) {
         return var::num((double)this_window.noecho_getch());
     }

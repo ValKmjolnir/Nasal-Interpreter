@@ -47,6 +47,9 @@ nasal.exe
 .vscode
 dump
 
+# build dir
+build
+
 # macOS special cache directory
 .DS_Store
 

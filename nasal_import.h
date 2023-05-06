@@ -27,29 +27,30 @@ private:
 
     bool imptchk(const ast&);
     bool exist(const string&);
-    void link(ast&,ast&&);
+    void link(ast&, ast&&);
     string path(const ast&);
     string findf(const string&);
     ast fimpt(ast&);
     ast libimpt();
-    ast load(ast&,u16);
+    ast load(ast&, u16);
 public:
     linker(error&);
-    const error& link(parse&,const string&,bool);
+    const error& link(parse&, const string&, bool);
     const std::vector<string>& filelist() const {return files;}
 };
 
-linker::linker(error& e):show_path(false),lib_loaded(false),err(e) {
+linker::linker(error& e): show_path(false), lib_loaded(false), err(e) {
     char sep=is_windows()? ';':':';
     string PATH=getenv("PATH");
-    usize last=0,pos=PATH.find(sep,0);
+    usize last=0;
+    usize pos=PATH.find(sep, 0);
     while(pos!=string::npos) {
-        string dirpath=PATH.substr(last,pos-last);
+        string dirpath=PATH.substr(last, pos-last);
         if (dirpath.length()) {
             envpath.push_back(dirpath);
         }
         last=pos+1;
-        pos=PATH.find(sep,last);
+        pos=PATH.find(sep, last);
     }
     if (last!=PATH.length()) {
         envpath.push_back(PATH.substr(last));
@@ -78,7 +79,7 @@ string linker::findf(const string& fname) {
 
     // search file
     for(auto& i:fpath) {
-        if (access(i.c_str(),F_OK)!=-1) {
+        if (access(i.c_str(), F_OK)!=-1) {
             return i;
         }
     }
@@ -88,14 +89,14 @@ string linker::findf(const string& fname) {
         return is_windows()? findf("stl\\lib.nas"):findf("stl/lib.nas");
     }
     if (!show_path) {
-        err.err("link","cannot find file <"+fname+">");
+        err.err("link", "cannot find file <"+fname+">");
         return "";
     }
     string paths="";
     for(auto& i:fpath) {
         paths+="  "+i+"\n";
     }
-    err.err("link","cannot find file <"+fname+"> in these paths:\n"+paths);
+    err.err("link", "cannot find file <"+fname+"> in these paths:\n"+paths);
     return "";
 }
 
@@ -142,7 +143,7 @@ bool linker::exist(const string& file) {
     return false;
 }
 
-void linker::link(ast& root,ast&& add_root) {
+void linker::link(ast& root, ast&& add_root) {
     // add children of add_root to the back of root
     for(auto& i:add_root.child()) {
         root.add(std::move(i));
@@ -159,7 +160,7 @@ ast linker::fimpt(ast& node) {
     // avoid infinite loading loop
     filename=findf(filename);
     if (!filename.length() || exist(filename)) {
-        return {{0,0,0,0,filename},ast_root};
+        return {{0, 0, 0, 0, filename}, ast_root};
     }
     
     // start importing...
@@ -168,7 +169,7 @@ ast linker::fimpt(ast& node) {
     ast tmp=std::move(par.tree());
 
     // check if tmp has 'import'
-    return load(tmp,files.size()-1);
+    return load(tmp, files.size()-1);
 }
 
 ast linker::libimpt() {
@@ -176,12 +177,12 @@ ast linker::libimpt() {
     parse par(err);
     string filename=findf("lib.nas");
     if (!filename.length()) {
-        return {{0,0,0,0,filename},ast_root};
+        return {{0, 0, 0, 0, filename}, ast_root};
     }
 
     // avoid infinite loading loop
     if (exist(filename)) {
-        return {{0,0,0,0,filename},ast_root};
+        return {{0, 0, 0, 0, filename}, ast_root};
     }
     
     // start importing...
@@ -190,36 +191,36 @@ ast linker::libimpt() {
     ast tmp=std::move(par.tree());
 
     // check if tmp has 'import'
-    return load(tmp,files.size()-1);
+    return load(tmp, files.size()-1);
 }
 
-ast linker::load(ast& root,u16 fileindex) {
-    ast tree({0,0,0,0,files[fileindex]},ast_root);
+ast linker::load(ast& root, u16 fileindex) {
+    ast tree({0, 0, 0, 0, files[fileindex]}, ast_root);
     if (!lib_loaded) {
-        link(tree,libimpt());
+        link(tree, libimpt());
         lib_loaded=true;
     }
     for(auto& i:root.child()) {
         if (imptchk(i)) {
-            link(tree,fimpt(i));
+            link(tree, fimpt(i));
         } else {
             break;
         }
     }
     // add root to the back of tree
-    ast file_head({0,0,0,0,files[fileindex]},ast_file);
+    ast file_head({0, 0, 0, 0, files[fileindex]}, ast_file);
     file_head.set_num(fileindex);
     tree.add(std::move(file_head));
-    link(tree,std::move(root));
+    link(tree, std::move(root));
     return tree;
 }
 
-const error& linker::link(parse& parse,const string& self,bool spath=false) {
+const error& linker::link(parse& parse, const string& self, bool spath=false) {
     show_path=spath;
     // initializing
     files={self};
     // scan root and import files,then generate a new ast and return to import_ast
     // the main file's index is 0
-    parse.tree()=load(parse.tree(),0);
+    parse.tree()=load(parse.tree(), 0);
     return err;
 }
