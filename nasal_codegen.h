@@ -691,13 +691,10 @@ void codegen::expr_gen(const ast& node) {
         case ast_cmpeq:case ast_neq:
         case ast_leq:case ast_less:
         case ast_geq:case ast_grt:
+        case ast_or:case ast_and:
         case ast_trino:
             calc_gen(node);
-            if (code.back().op==op_meq) {
-                code.back().num=1;
-            } else {
-                gen(op_pop, 0, node.line());
-            }
+            gen(op_pop, 0, node.line());
             break;
         case ast_equal:
             if (node[0].type()==ast_id) {
