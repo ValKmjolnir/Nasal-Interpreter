@@ -175,6 +175,35 @@ struct nas_upval {
     void clear() {onstk=true;elems.clear();size=0;}
 };
 
+struct ghost_info {
+    string name;
+    void (*destructor)(void*);
+};
+
+struct nas_ghost {
+private:
+    static std::vector<ghost_info> ghost_register_table;
+    usize type;
+    void* ptr;
+
+public:
+    nas_ghost(): type(0), ptr(nullptr) {}
+    ~nas_ghost() {
+        if (!ptr) { return; }
+        ghost_register_table[type].destructor(ptr);
+    }
+
+    static usize regist_ghost_type(ghost_info i) {
+        auto res=ghost_register_table.size();
+        ghost_register_table.push_back(i);
+        return res;
+    }
+
+    const std::string& name() {
+        return ghost_register_table[type].name;
+    }
+};
+
 struct nas_obj {
     obj_type type;
     void* ptr;
