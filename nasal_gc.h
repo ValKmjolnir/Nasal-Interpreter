@@ -43,14 +43,6 @@ enum vm_type:u8 {
 
 const u32 gc_type_size=vm_co-vm_str+1;
 
-enum class obj_type:u32 {
-    null=0,
-    file=1,
-    dir,
-    dylib,
-    faddr
-};
-
 enum class coroutine_status:u32 {
     suspended,
     running,
@@ -99,7 +91,7 @@ public:
     // number and string can be translated to each other
     f64 tonum();
     string tostr();
-    bool objchk(obj_type);
+    bool objchk(usize);
 
     // create new var object
     static var none();
@@ -175,49 +167,76 @@ struct nas_upval {
     void clear() {onstk=true;elems.clear();size=0;}
 };
 
-struct ghost_info {
-    string name;
-    void (*destructor)(void*);
+void file_dtor(void* ptr) {
+    if ((FILE*)ptr==stdin) {
+        return;
+    }
+    fclose((FILE*)ptr);
+}
+
+void dir_dtor(void* ptr) {
+#ifndef _MSC_VER
+    closedir((DIR*)ptr);
+#else
+    FindClose(ptr);
+#endif
+}
+
+void dylib_dtor(void* ptr) {
+#ifdef _WIN32
+    FreeLibrary((HMODULE)ptr);
+#else
+    dlclose(ptr);
+#endif
+}
+
+void faddr_dtor(void* ptr) {}
+
+usize ghost_file, ghost_dir, ghost_dylib, ghost_faddr;
+
+struct ghost_register_table {
+private:
+    using dtor=void (*)(void*);
+
+private:
+    std::unordered_map<string,usize> mapper;
+    std::vector<dtor> destructors;
+
+public:
+    ghost_register_table() {
+        ghost_file=register_ghost_type("file", file_dtor);
+        ghost_dir=register_ghost_type("dir", dir_dtor);
+        ghost_dylib=register_ghost_type("dylib", dylib_dtor);
+        ghost_faddr=register_ghost_type("faddr", faddr_dtor);
+    }
+
+    usize register_ghost_type(const std::string& name, dtor ptr) {
+        if (mapper.count(name)) {
+            std::cerr<<"ghost type \""<<name<<"\" already exists.\n\n";
+            std::exit(-1);
+        }
+        auto res=destructors.size();
+        mapper[name]=res;
+        destructors.push_back(ptr);
+        return res;
+    }
+
+    dtor destructor(usize index) {
+        return destructors.at(index);
+    }
 };
 
-struct nas_ghost {
-private:
-    static std::vector<ghost_info> ghost_register_table;
+ghost_register_table global_ghost_type_table;
+
+struct nas_obj {
+public:
     usize type;
     void* ptr;
 
 public:
-    nas_ghost(): type(0), ptr(nullptr) {}
-    ~nas_ghost() {
-        if (!ptr) { return; }
-        ghost_register_table[type].destructor(ptr);
-    }
-
-    static usize regist_ghost_type(ghost_info i) {
-        auto res=ghost_register_table.size();
-        ghost_register_table.push_back(i);
-        return res;
-    }
-
-    const std::string& name() {
-        return ghost_register_table[type].name;
-    }
-};
-
-struct nas_obj {
-    obj_type type;
-    void* ptr;
-
-private:
-    /* RAII constructor, new object is initialized when creating */
-    void file_dtor();
-    void dir_dtor();
-    void dylib_dtor();
-
-public:
-    nas_obj(): type(obj_type::null), ptr(nullptr) {}
+    nas_obj(): type(0), ptr(nullptr) {}
     ~nas_obj() {clear();}
-    void set(obj_type, void*);
+    void set(usize, void*);
     void clear();
 };
 
@@ -357,45 +376,17 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_obj::set(obj_type t, void* p) {
+void nas_obj::set(usize t, void* p) {
     type=t;
     ptr=p;
 }
 
 void nas_obj::clear() {
-    if (!ptr) {
+    if (!ptr || !type) {
         return;
     }
-    switch(type) {
-        case obj_type::file:  file_dtor(); break;
-        case obj_type::dir:   dir_dtor();  break;
-        case obj_type::dylib: dylib_dtor();break;
-        default: break;
-    }
+    global_ghost_type_table.destructor(type)(ptr);
     ptr=nullptr;
-}
-
-void nas_obj::file_dtor() {
-    if ((FILE*)ptr==stdin) {
-        return;
-    }
-    fclose((FILE*)ptr);
-}
-
-void nas_obj::dir_dtor() {
-#ifndef _MSC_VER
-    closedir((DIR*)ptr);
-#else
-    FindClose(ptr);
-#endif
-}
-
-void nas_obj::dylib_dtor() {
-#ifdef _WIN32
-    FreeLibrary((HMODULE)ptr);
-#else
-    dlclose(ptr);
-#endif
 }
 
 void nas_co::clear() {
@@ -485,8 +476,8 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
     return out;
 }
 
-bool var::objchk(obj_type objtype) {
-    return type==vm_obj && obj().type==objtype && obj().ptr;
+bool var::objchk(usize obj_type) {
+    return type==vm_obj && obj().type==obj_type && obj().ptr;
 }
 
 var var::none() {
@@ -884,4 +875,4 @@ struct mod_func {
 };
 
 // module function "get" type
-typedef mod_func* (*getptr)();
+typedef mod_func* (*getptr)(ghost_register_table*);
