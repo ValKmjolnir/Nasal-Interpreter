@@ -11,7 +11,7 @@ var new_map=func(width,height){
 }
 
 var prt=func(map){
-    var s='\e[1;1H';
+    var s='\ec\e[1;1H';
     foreach(var line;map){
         foreach(var elem;line)
             s~=elem~' ';

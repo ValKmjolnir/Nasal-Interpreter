@@ -544,13 +544,13 @@ var builtin_open(var* local, gc& ngc) {
         return nas_err("open", "failed to open file <"+name.str()+">");
     }
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(obj_type::file, res);
+    ret.obj().set(ghost_file, res);
     return ret;
 }
 
 var builtin_close(var* local, gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("close", "not a valid filehandle");
     }
     fd.obj().clear();
@@ -561,7 +561,7 @@ var builtin_read(var* local, gc& ngc) {
     var fd=local[1];
     var buf=local[2];
     var len=local[3];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("read", "not a valid filehandle");
     }
     if (buf.type!=vm_str || buf.val.gcobj->unmut) {
@@ -587,7 +587,7 @@ var builtin_read(var* local, gc& ngc) {
 var builtin_write(var* local, gc& ngc) {
     var fd=local[1];
     var str=local[2];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("write", "not a valid filehandle");
     }
     if (str.type!=vm_str) {
@@ -600,7 +600,7 @@ var builtin_seek(var* local, gc& ngc) {
     var fd=local[1];
     var pos=local[2];
     var whence=local[3];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("seek", "not a valid filehandle");
     }
     return var::num((f64)fseek((FILE*)fd.obj().ptr, pos.num(), whence.num()));
@@ -608,7 +608,7 @@ var builtin_seek(var* local, gc& ngc) {
 
 var builtin_tell(var* local, gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("tell", "not a valid filehandle");
     }
     return var::num((f64)ftell((FILE*)fd.obj().ptr));
@@ -616,7 +616,7 @@ var builtin_tell(var* local, gc& ngc) {
 
 var builtin_readln(var* local, gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("readln", "not a valid filehandle");
     }
     var str=ngc.alloc(vm_str);
@@ -664,7 +664,7 @@ var builtin_stat(var* local, gc& ngc) {
 
 var builtin_eof(var* local, gc& ngc) {
     var fd=local[1];
-    if (!fd.objchk(obj_type::file)) {
+    if (!fd.objchk(ghost_file)) {
         return nas_err("readln", "not a valid filehandle");
     }
     return var::num((f64)feof((FILE*)fd.obj().ptr));
@@ -849,13 +849,13 @@ var builtin_opendir(var* local, gc& ngc) {
     }
 #endif
     var ret=ngc.alloc(vm_obj);
-    ret.obj().set(obj_type::dir,p);
+    ret.obj().set(ghost_dir,p);
     return ret;
 }
 
 var builtin_readdir(var* local, gc& ngc) {
     var handle=local[1];
-    if (!handle.objchk(obj_type::dir)) {
+    if (!handle.objchk(ghost_dir)) {
         return nas_err("readdir", "not a valid dir handle");
     }
 #ifdef _MSC_VER
@@ -872,7 +872,7 @@ var builtin_readdir(var* local, gc& ngc) {
 
 var builtin_closedir(var* local, gc& ngc) {
     var handle=local[1];
-    if (!handle.objchk(obj_type::dir)) {
+    if (!handle.objchk(ghost_dir)) {
         return nas_err("closedir", "not a valid dir handle");
     }
     handle.obj().clear();
@@ -936,7 +936,7 @@ var builtin_dlopen(var* local, gc& ngc) {
     }
     var ret=ngc.temp=ngc.alloc(vm_hash);
     var lib=ngc.alloc(vm_obj);
-    lib.obj().set(obj_type::dylib, ptr);
+    lib.obj().set(ghost_dylib, ptr);
     ret.hash().elems["lib"]=lib;
 
 #ifdef _WIN32
@@ -948,14 +948,14 @@ var builtin_dlopen(var* local, gc& ngc) {
         return nas_err("dlopen", "cannot find <get> function");
     }
     // get function pointer by name
-    mod_func* tbl=(mod_func*)((getptr)func)();
+    mod_func* tbl=(mod_func*)((getptr)func)(&global_ghost_type_table);
     if (!tbl) {
         return nas_err("dlopen", "failed to get module functions");
     }
     for(u32 i=0;tbl[i].name;++i) {
         void* p=(void*)tbl[i].fd;
         var tmp=ngc.alloc(vm_obj);
-        tmp.obj().set(obj_type::faddr, p);
+        tmp.obj().set(ghost_faddr, p);
         ret.hash().elems[tbl[i].name]=tmp;
     }
 
@@ -965,7 +965,7 @@ var builtin_dlopen(var* local, gc& ngc) {
 
 var builtin_dlclose(var* local, gc& ngc) {
     var libptr=local[1];
-    if (!libptr.objchk(obj_type::dylib)) {
+    if (!libptr.objchk(ghost_dylib)) {
         return nas_err("dlclose", "\"lib\" is not a valid dynamic lib");
     }
     libptr.obj().clear();
@@ -975,7 +975,7 @@ var builtin_dlclose(var* local, gc& ngc) {
 var builtin_dlcallv(var* local, gc& ngc) {
     var fp=local[1];
     var args=local[2];
-    if (!fp.objchk(obj_type::faddr)) {
+    if (!fp.objchk(ghost_faddr)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
     auto& vec=args.vec().elems;
@@ -984,7 +984,7 @@ var builtin_dlcallv(var* local, gc& ngc) {
 
 var builtin_dlcall(var* local, gc& ngc) {
     var fp=local[1];
-    if (!fp.objchk(obj_type::faddr)) {
+    if (!fp.objchk(ghost_faddr)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
 

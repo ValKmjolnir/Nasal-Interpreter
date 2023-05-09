@@ -39,6 +39,6 @@ mod_func func_tbl[]={
     {nullptr, nullptr},
 };
 
-extern "C" mod_func* get() {
+extern "C" mod_func* get(ghost_register_table* table) {
     return func_tbl;
 }
