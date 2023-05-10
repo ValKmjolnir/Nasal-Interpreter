@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
 # generate release executables
 set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)
 target_include_directories(fib PRIVATE ${CMAKE_SOURCE_DIR})
@@ -25,3 +26,10 @@ target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR})
 add_executable(nasal main.cpp)
 target_link_libraries(nasal dl)
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR})
+
+add_custom_command(
+    TARGET nasal POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/build/nasal
+            ${CMAKE_SOURCE_DIR}/nasal
+)

@@ -55,13 +55,13 @@ enum class gc_status:u8 {
     found
 };
 
-struct nas_vec;  // vector
-struct nas_hash; // hashmap(dict)
-struct nas_func; // function(lambda)
-struct nas_upval;// upvalue
-struct nas_obj;  // special objects
-struct nas_co;   // coroutine
-struct nas_val;  // nas_val includes gc-managed types
+struct nas_vec;   // vector
+struct nas_hash;  // hashmap(dict)
+struct nas_func;  // function(lambda)
+struct nas_upval; // upvalue
+struct nas_obj;   // special objects
+struct nas_co;    // coroutine
+struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
 public:
@@ -154,6 +154,7 @@ struct nas_func {
 };
 
 struct nas_upval {
+public:
     /* on stack, use these variables */
     bool onstk;
     u32 size;
@@ -162,19 +163,28 @@ struct nas_upval {
     /* not on stack, use this */
     std::vector<var> elems;
 
-    nas_upval() {onstk=true;stk=nullptr;size=0;}
-    var& operator[](usize n) {return onstk? stk[n]:elems[n];}
-    void clear() {onstk=true;elems.clear();size=0;}
+public:
+    nas_upval(): onstk(true), size(0), stk(nullptr) {}
+
+    var& operator[](usize n) {
+        return onstk? stk[n]:elems[n];
+    }
+
+    void clear() {
+        onstk=true;
+        elems.clear();
+        size=0;
+    }
 };
 
-void file_dtor(void* ptr) {
+void filehandle_destructor(void* ptr) {
     if ((FILE*)ptr==stdin) {
         return;
     }
     fclose((FILE*)ptr);
 }
 
-void dir_dtor(void* ptr) {
+void dir_entry_destructor(void* ptr) {
 #ifndef _MSC_VER
     closedir((DIR*)ptr);
 #else
@@ -182,7 +192,7 @@ void dir_dtor(void* ptr) {
 #endif
 }
 
-void dylib_dtor(void* ptr) {
+void dylib_destructor(void* ptr) {
 #ifdef _WIN32
     FreeLibrary((HMODULE)ptr);
 #else
@@ -190,9 +200,7 @@ void dylib_dtor(void* ptr) {
 #endif
 }
 
-void faddr_dtor(void* ptr) {}
-
-usize ghost_file, ghost_dir, ghost_dylib, ghost_faddr;
+void func_addr_destructor(void* ptr) {}
 
 struct ghost_register_table {
 private:
@@ -203,16 +211,24 @@ private:
     std::vector<dtor> destructors;
 
 public:
+    // reserved ghost type only for native functions
+    usize ghost_file;
+    usize ghost_dir;
+    usize ghost_dylib;
+    usize ghost_faddr;
+
+public:
     ghost_register_table() {
-        ghost_file=register_ghost_type("file", file_dtor);
-        ghost_dir=register_ghost_type("dir", dir_dtor);
-        ghost_dylib=register_ghost_type("dylib", dylib_dtor);
-        ghost_faddr=register_ghost_type("faddr", faddr_dtor);
+        ghost_file=register_ghost_type("file", filehandle_destructor);
+        ghost_dir=register_ghost_type("dir", dir_entry_destructor);
+        ghost_dylib=register_ghost_type("dylib", dylib_destructor);
+        ghost_faddr=register_ghost_type("faddr", func_addr_destructor);
     }
 
     usize register_ghost_type(const std::string& name, dtor ptr) {
         if (mapper.count(name)) {
-            std::cerr<<"ghost type \""<<name<<"\" already exists.\n\n";
+            std::cerr<<"nasal_gc.h: ghost_register_table::register_ghost_type: ";
+            std::cerr<<"ghost type \""<<name<<"\" already exists.\n";
             std::exit(-1);
         }
         auto res=destructors.size();
@@ -578,11 +594,27 @@ public:
     void clear();
     void info();
     var alloc(const u8);
-    var newstr(char);
-    var newstr(const char*);
-    var newstr(const string&);
     void ctxchg(nas_co&);
     void ctxreserve();
+
+public:
+    var newstr(char c) {
+        var s=alloc(vm_str);
+        s.str()=c;
+        return s;
+    }
+
+    var newstr(const char* buff) {
+        var s=alloc(vm_str);
+        s.str()=buff;
+        return s;
+    }
+
+    var newstr(const string& buff) {
+        var s=alloc(vm_str);
+        s.str()=buff;
+        return s;
+    }
 };
 
 void gc::mark() {
@@ -689,7 +721,8 @@ void gc::extend(u8 type) {
         nas_val* tmp=new nas_val(type);
 
         if (!tmp) {
-            std::cerr<<"failed to allocate new memory\n";
+            std::cerr<<"nasal_gc.h: gc::extend: ";
+            std::cerr<<"failed to allocate memory\n";
             std::exit(-1);
         }
 
@@ -811,24 +844,6 @@ var gc::alloc(u8 type) {
     return ret;
 }
 
-var gc::newstr(char c) {
-    var s=alloc(vm_str);
-    s.str()=c;
-    return s;
-}
-
-var gc::newstr(const char* buff) {
-    var s=alloc(vm_str);
-    s.str()=buff;
-    return s;
-}
-
-var gc::newstr(const string& buff) {
-    var s=alloc(vm_str);
-    s.str()=buff;
-    return s;
-}
-
 void gc::ctxchg(nas_co& co) {
     // store running state to main context
     mctx=*rctx;
@@ -860,19 +875,19 @@ void gc::ctxreserve() {
 }
 
 // use to print error log and return error value
-var nas_err(const string& err_f, const string& info) {
-    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
+var nas_err(const string& error_function_name, const string& info) {
+    std::cerr<<"[vm] "<<error_function_name<<": "<<info<<"\n";
     return var::none();
 }
 
 // module function type
-typedef var (*mod)(var*, usize, gc*);
+typedef var (*module_func)(var*, usize, gc*);
 
 // module function stores in tables with this type, end with {nullptr,nullptr}
-struct mod_func {
+struct module_func_info {
     const char* name;
-    mod fd;
+    module_func fd;
 };
 
 // module function "get" type
-typedef mod_func* (*getptr)(ghost_register_table*);
+typedef module_func_info* (*get_func_ptr)(ghost_register_table*);
