@@ -190,7 +190,7 @@ var nas_errno(var* args, usize size, gc* ngc) {
     return ngc->newstr(strerror(errno));
 }
 
-mod_func func_tbl[]={
+module_func_info func_tbl[]={
     {"nas_socket",nas_socket},
     {"nas_closesocket",nas_closesocket},
     {"nas_shutdown",nas_shutdown},
@@ -206,6 +206,6 @@ mod_func func_tbl[]={
     {nullptr,nullptr}
 };
 
-extern "C" mod_func* get(ghost_register_table* table) {
+extern "C" module_func_info* get(ghost_register_table* table) {
     return func_tbl;
 }

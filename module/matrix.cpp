@@ -266,7 +266,7 @@ var nas_vec3_dot(var* args, usize size, gc* ngc) {
     return var::num(v0[0].num()*v1[0].num()+v0[1].num()*v1[1].num()+v0[2].num()*v1[2].num());
 }
 
-mod_func func_tbl[]={
+module_func_info func_tbl[]={
     {"nas_vec2",nas_vec2},
     {"nas_vec2_add",nas_vec2_add},
     {"nas_vec2_sub",nas_vec2_sub},
@@ -291,6 +291,6 @@ mod_func func_tbl[]={
     {nullptr,nullptr}
 };
 
-extern "C" mod_func* get(ghost_register_table* table) {
+extern "C" module_func_info* get(ghost_register_table* table) {
     return func_tbl;
 }
