@@ -1,6 +1,10 @@
 #include "../nasal.h"
-#include <unistd.h>
 #include <iostream>
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -88,13 +92,13 @@ var nas_noblock(var* args, usize size, gc* ngc) {
     return nil;
 }
 
-mod_func func_tbl[]={
+module_func_info func_tbl[]={
     {"nas_getch",nas_getch},
     {"nas_kbhit",nas_kbhit},
     {"nas_noblock",nas_noblock},
     {nullptr,nullptr}
 };
 
-extern "C" mod_func* get() {
+extern "C" module_func_info* get(ghost_register_table* table) {
     return func_tbl;
 }

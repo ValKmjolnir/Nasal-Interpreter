@@ -1,4 +1,9 @@
 #pragma once
+#ifdef _MSC_VER
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4102)
+#endif
 
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -43,14 +48,6 @@ enum vm_type:u8 {
 
 const u32 gc_type_size=vm_co-vm_str+1;
 
-enum class obj_type:u32 {
-    null=0,
-    file=1,
-    dir,
-    dylib,
-    faddr
-};
-
 enum class coroutine_status:u32 {
     suspended,
     running,
@@ -63,13 +60,13 @@ enum class gc_status:u8 {
     found
 };
 
-struct nas_vec;  // vector
-struct nas_hash; // hashmap(dict)
-struct nas_func; // function(lambda)
-struct nas_upval;// upvalue
-struct nas_obj;  // special objects
-struct nas_co;   // coroutine
-struct nas_val;  // nas_val includes gc-managed types
+struct nas_vec;   // vector
+struct nas_hash;  // hashmap(dict)
+struct nas_func;  // function(lambda)
+struct nas_upval; // upvalue
+struct nas_obj;   // special objects
+struct nas_co;    // coroutine
+struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
 public:
@@ -99,7 +96,7 @@ public:
     // number and string can be translated to each other
     f64 tonum();
     string tostr();
-    bool objchk(obj_type);
+    bool objchk(usize);
 
     // create new var object
     static var none();
@@ -162,6 +159,7 @@ struct nas_func {
 };
 
 struct nas_upval {
+public:
     /* on stack, use these variables */
     bool onstk;
     u32 size;
@@ -170,55 +168,119 @@ struct nas_upval {
     /* not on stack, use this */
     std::vector<var> elems;
 
-    nas_upval() {onstk=true;stk=nullptr;size=0;}
-    var& operator[](usize n) {return onstk? stk[n]:elems[n];}
-    void clear() {onstk=true;elems.clear();size=0;}
-};
-
-struct ghost_info {
-    string name;
-    void (*destructor)(void*);
-};
-
-struct nas_ghost {
-private:
-    static std::vector<ghost_info> ghost_register_table;
-    usize type;
-    void* ptr;
-
 public:
-    nas_ghost(): type(0), ptr(nullptr) {}
-    ~nas_ghost() {
-        if (!ptr) { return; }
-        ghost_register_table[type].destructor(ptr);
+    nas_upval(): onstk(true), size(0), stk(nullptr) {}
+
+    var& operator[](usize n) {
+        return onstk? stk[n]:elems[n];
     }
 
-    static usize regist_ghost_type(ghost_info i) {
-        auto res=ghost_register_table.size();
-        ghost_register_table.push_back(i);
+    void clear() {
+        onstk=true;
+        elems.clear();
+        size=0;
+    }
+};
+
+void filehandle_destructor(void* ptr) {
+    if ((FILE*)ptr==stdin) {
+        return;
+    }
+    fclose((FILE*)ptr);
+}
+
+void dir_entry_destructor(void* ptr) {
+#ifndef _MSC_VER
+    closedir((DIR*)ptr);
+#else
+    FindClose(ptr);
+#endif
+}
+
+void dylib_destructor(void* ptr) {
+#ifdef _WIN32
+    FreeLibrary((HMODULE)ptr);
+#else
+    dlclose(ptr);
+#endif
+}
+
+void func_addr_destructor(void* ptr) {}
+
+struct ghost_register_table {
+private:
+    using dtor=void (*)(void*);
+
+private:
+    std::unordered_map<string,usize> mapper;
+    std::vector<string> ghost_name;
+    std::vector<dtor> destructors;
+
+public:
+    // reserved ghost type only for native functions
+    usize ghost_file;
+    usize ghost_dir;
+    usize ghost_dylib;
+    usize ghost_faddr;
+
+public:
+    ghost_register_table() {
+        ghost_file=register_ghost_type("file", filehandle_destructor);
+        ghost_dir=register_ghost_type("dir", dir_entry_destructor);
+        ghost_dylib=register_ghost_type("dylib", dylib_destructor);
+        ghost_faddr=register_ghost_type("faddr", func_addr_destructor);
+    }
+
+    bool exists(const string& name) const {
+        return mapper.count(name);
+    }
+
+    usize get_ghost_type_index(const string& name) const {
+        return mapper.at(name);
+    }
+
+    const string& get_ghost_name(usize index) const {
+        return ghost_name.at(index);
+    }
+
+    usize register_ghost_type(const std::string& name, dtor ptr) {
+        if (mapper.count(name)) {
+            std::cerr<<"nasal_gc.h: ghost_register_table::register_ghost_type: ";
+            std::cerr<<"ghost type \""<<name<<"\" already exists.\n";
+            std::exit(-1);
+        }
+        auto res=destructors.size();
+        mapper[name]=res;
+        ghost_name.push_back(name);
+        destructors.push_back(ptr);
         return res;
     }
 
-    const std::string& name() {
-        return ghost_register_table[type].name;
+    dtor destructor(usize index) {
+        return destructors.at(index);
     }
 };
 
 struct nas_obj {
-    obj_type type;
+public:
+    usize type;
     void* ptr;
 
 private:
-    /* RAII constructor, new object is initialized when creating */
-    void file_dtor();
-    void dir_dtor();
-    void dylib_dtor();
+    ghost_register_table* ghost_type_table;
 
 public:
-    nas_obj(): type(obj_type::null), ptr(nullptr) {}
+    nas_obj(): type(0), ptr(nullptr), ghost_type_table(nullptr) {}
     ~nas_obj() {clear();}
-    void set(obj_type, void*);
+    void set(usize, void*, ghost_register_table*);
     void clear();
+
+public:
+    friend std::ostream& operator<<(std::ostream& out, nas_obj& ghost) {
+        out<<"<object "<<ghost.ghost_type_table->get_ghost_name(ghost.type);
+        out<<" at 0x"<<std::hex<<(u64)ghost.ptr<<std::dec<<">";
+        return out;
+    }
 };
 
 struct context {
@@ -357,45 +419,18 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_obj::set(obj_type t, void* p) {
+void nas_obj::set(usize t, void* p, ghost_register_table* table) {
     type=t;
     ptr=p;
+    ghost_type_table=table;
 }
 
 void nas_obj::clear() {
     if (!ptr) {
         return;
     }
-    switch(type) {
-        case obj_type::file:  file_dtor(); break;
-        case obj_type::dir:   dir_dtor();  break;
-        case obj_type::dylib: dylib_dtor();break;
-        default: break;
-    }
+    ghost_type_table->destructor(type)(ptr);
     ptr=nullptr;
-}
-
-void nas_obj::file_dtor() {
-    if ((FILE*)ptr==stdin) {
-        return;
-    }
-    fclose((FILE*)ptr);
-}
-
-void nas_obj::dir_dtor() {
-#ifndef _MSC_VER
-    closedir((DIR*)ptr);
-#else
-    FindClose(ptr);
-#endif
-}
-
-void nas_obj::dylib_dtor() {
-#ifdef _WIN32
-    FreeLibrary((HMODULE)ptr);
-#else
-    dlclose(ptr);
-#endif
 }
 
 void nas_co::clear() {
@@ -479,14 +514,14 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_vec:  out<<ref.vec();     break;
         case vm_hash: out<<ref.hash();    break;
         case vm_func: out<<"func(..) {..}";break;
-        case vm_obj:  out<<"<object>";    break;
+        case vm_obj:  out<<ref.obj();     break;
         case vm_co:   out<<"<coroutine>"; break;
     }
     return out;
 }
 
-bool var::objchk(obj_type objtype) {
-    return type==vm_obj && obj().type==objtype && obj().ptr;
+bool var::objchk(usize obj_type) {
+    return type==vm_obj && obj().type==obj_type && obj().ptr;
 }
 
 var var::none() {
@@ -534,6 +569,7 @@ const var one =var::num(1);
 const var nil =var::nil();
 
 struct gc {
+    ghost_register_table global_ghost_type_table;
     /* main context temporary storage */
     context mctx;
 
@@ -587,11 +623,27 @@ public:
     void clear();
     void info();
     var alloc(const u8);
-    var newstr(char);
-    var newstr(const char*);
-    var newstr(const string&);
     void ctxchg(nas_co&);
     void ctxreserve();
+
+public:
+    var newstr(char c) {
+        var s=alloc(vm_str);
+        s.str()=c;
+        return s;
+    }
+
+    var newstr(const char* buff) {
+        var s=alloc(vm_str);
+        s.str()=buff;
+        return s;
+    }
+
+    var newstr(const string& buff) {
+        var s=alloc(vm_str);
+        s.str()=buff;
+        return s;
+    }
 };
 
 void gc::mark() {
@@ -691,14 +743,15 @@ void gc::sweep() {
 }
 
 void gc::extend(u8 type) {
-    u8 index=type-vm_str;
+    const u8 index=type-vm_str;
     size[index]+=incr[index];
 
     for(u32 i=0;i<incr[index];++i) {
         nas_val* tmp=new nas_val(type);
 
         if (!tmp) {
-            std::cerr<<"failed to allocate new memory\n";
+            std::cerr<<"nasal_gc.h: gc::extend: ";
+            std::cerr<<"failed to allocate memory\n";
             std::exit(-1);
         }
 
@@ -720,7 +773,7 @@ void gc::init(const std::vector<string>& s, const std::vector<string>& argv) {
         size[i]=gcnt[i]=acnt[i]=0;
     }
 
-    // coroutine pointer set to nullpre
+    // coroutine pointer set to nullptr
     cort=nullptr;
 
     // init constant strings
@@ -820,24 +873,6 @@ var gc::alloc(u8 type) {
     return ret;
 }
 
-var gc::newstr(char c) {
-    var s=alloc(vm_str);
-    s.str()=c;
-    return s;
-}
-
-var gc::newstr(const char* buff) {
-    var s=alloc(vm_str);
-    s.str()=buff;
-    return s;
-}
-
-var gc::newstr(const string& buff) {
-    var s=alloc(vm_str);
-    s.str()=buff;
-    return s;
-}
-
 void gc::ctxchg(nas_co& co) {
     // store running state to main context
     mctx=*rctx;
@@ -869,19 +904,19 @@ void gc::ctxreserve() {
 }
 
 // use to print error log and return error value
-var nas_err(const string& err_f, const string& info) {
-    std::cerr<<"[vm] "<<err_f<<": "<<info<<"\n";
+var nas_err(const string& error_function_name, const string& info) {
+    std::cerr<<"[vm] "<<error_function_name<<": "<<info<<"\n";
     return var::none();
 }
 
 // module function type
-typedef var (*mod)(var*, usize, gc*);
+typedef var (*module_func)(var*, usize, gc*);
 
 // module function stores in tables with this type, end with {nullptr,nullptr}
-struct mod_func {
+struct module_func_info {
     const char* name;
-    mod fd;
+    module_func fd;
 };
 
 // module function "get" type
-typedef mod_func* (*getptr)();
+typedef module_func_info* (*get_func_ptr)(ghost_register_table*);
