@@ -208,6 +208,7 @@ private:
 
 private:
     std::unordered_map<string,usize> mapper;
+    std::vector<string> ghost_name;
     std::vector<dtor> destructors;
 
 public:
@@ -225,6 +226,18 @@ public:
         ghost_faddr=register_ghost_type("faddr", func_addr_destructor);
     }
 
+    bool exists(const string& name) const {
+        return mapper.count(name);
+    }
+
+    usize get_ghost_type_index(const string& name) const {
+        return mapper.at(name);
+    }
+
+    const string& get_ghost_name(usize index) const {
+        return ghost_name.at(index);
+    }
+
     usize register_ghost_type(const std::string& name, dtor ptr) {
         if (mapper.count(name)) {
             std::cerr<<"nasal_gc.h: ghost_register_table::register_ghost_type: ";
@@ -233,6 +246,7 @@ public:
         }
         auto res=destructors.size();
         mapper[name]=res;
+        ghost_name.push_back(name);
         destructors.push_back(ptr);
         return res;
     }
@@ -242,18 +256,26 @@ public:
     }
 };
 
-ghost_register_table global_ghost_type_table;
-
 struct nas_obj {
 public:
     usize type;
     void* ptr;
 
+private:
+    ghost_register_table* ghost_type_table;
+
 public:
-    nas_obj(): type(0), ptr(nullptr) {}
+    nas_obj(): type(0), ptr(nullptr), ghost_type_table(nullptr) {}
     ~nas_obj() {clear();}
-    void set(usize, void*);
+    void set(usize, void*, ghost_register_table*);
     void clear();
+
+public:
+    friend std::ostream& operator<<(std::ostream& out, nas_obj& ghost) {
+        out<<"<object "<<ghost.ghost_type_table->get_ghost_name(ghost.type);
+        out<<" at 0x"<<std::hex<<(u64)ghost.ptr<<std::dec<<">";
+        return out;
+    }
 };
 
 struct context {
@@ -392,16 +414,17 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_obj::set(usize t, void* p) {
+void nas_obj::set(usize t, void* p, ghost_register_table* table) {
     type=t;
     ptr=p;
+    ghost_type_table=table;
 }
 
 void nas_obj::clear() {
-    if (!ptr || !type) {
+    if (!ptr) {
         return;
     }
-    global_ghost_type_table.destructor(type)(ptr);
+    ghost_type_table->destructor(type)(ptr);
     ptr=nullptr;
 }
 
@@ -486,7 +509,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_vec:  out<<ref.vec();     break;
         case vm_hash: out<<ref.hash();    break;
         case vm_func: out<<"func(..) {..}";break;
-        case vm_obj:  out<<"<object>";    break;
+        case vm_obj:  out<<ref.obj();     break;
         case vm_co:   out<<"<coroutine>"; break;
     }
     return out;
@@ -541,6 +564,7 @@ const var one =var::num(1);
 const var nil =var::nil();
 
 struct gc {
+    ghost_register_table global_ghost_type_table;
     /* main context temporary storage */
     context mctx;
 
@@ -714,7 +738,7 @@ void gc::sweep() {
 }
 
 void gc::extend(u8 type) {
-    u8 index=type-vm_str;
+    const u8 index=type-vm_str;
     size[index]+=incr[index];
 
     for(u32 i=0;i<incr[index];++i) {
@@ -744,7 +768,7 @@ void gc::init(const std::vector<string>& s, const std::vector<string>& argv) {
         size[i]=gcnt[i]=acnt[i]=0;
     }
 
-    // coroutine pointer set to nullpre
+    // coroutine pointer set to nullptr
     cort=nullptr;
 
     // init constant strings
