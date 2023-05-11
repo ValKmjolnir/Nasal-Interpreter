@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(nasal VERSION 10.1)
 
+message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
+
 # -std=c++14 -Wshadow -Wall
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -24,12 +26,20 @@ add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
 target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR})
 
 add_executable(nasal main.cpp)
-target_link_libraries(nasal dl)
+
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    message("Ignore linking dl lib")
+else()
+    target_link_libraries(nasal dl)
+endif()
+
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR})
 
-add_custom_command(
-    TARGET nasal POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/build/nasal
-            ${CMAKE_SOURCE_DIR}/nasal
-)
+if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    add_custom_command(
+        TARGET nasal POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/build/nasal
+                ${CMAKE_SOURCE_DIR}/nasal
+    )
+endif()

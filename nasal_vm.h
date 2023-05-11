@@ -7,6 +7,12 @@
 #include "nasal_gc.h"
 #include "nasal_codegen.h"
 
+#ifdef _MSC_VER
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4102)
+#endif
+
 class vm {
 protected:
 

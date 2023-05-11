@@ -9,6 +9,11 @@
 #include <stack>
 #include <unordered_map>
 
+#ifdef _MSC_VER
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#endif
+
 class codegen {
 private:
     u16 fileindex;
