@@ -1,4 +1,9 @@
 #pragma once
+#ifdef _MSC_VER
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4102)
+#endif
 
 #include <cstring>
 #include <sstream>

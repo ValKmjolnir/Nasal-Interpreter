@@ -8,6 +8,9 @@
 #include <dirent.h>
 #else
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4996)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #include <io.h>
