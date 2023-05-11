@@ -38,6 +38,7 @@
 *.vcxproj.user
 .vs
 x64
+CMakePresents.json
 
 # nasal executable
 nasal
@@ -49,6 +50,7 @@ dump
 
 # build dir
 build
+out
 
 # macOS special cache directory
 .DS_Store
