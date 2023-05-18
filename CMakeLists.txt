@@ -27,9 +27,7 @@ target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR})
 
 add_executable(nasal main.cpp)
 
-if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-    message("Ignore linking dl lib")
-else()
+if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
 endif()
 

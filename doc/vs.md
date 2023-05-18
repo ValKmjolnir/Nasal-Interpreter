@@ -2,9 +2,9 @@
 
 ## First | 首先
 
-We give a __CMakeLists.txt__ for you to create new VS project from it.
+We give a [__CMakeLists.txt__](../CMakeLists.txt) for you to create new VS project from it.
 
-我们为你提供了 __CMakeLists.txt__ 用于创建新的 VS 工程。
+我们为你提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于创建新的 VS 工程。
 
 If you are using this way, you will __not need__ to continue reading.
 
