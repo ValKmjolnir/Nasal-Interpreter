@@ -1,4 +1,6 @@
 #pragma once
+
+// avoid MSVC warnings
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
 #pragma warning (disable:4267)
@@ -64,7 +66,7 @@ struct nas_vec;   // vector
 struct nas_hash;  // hashmap(dict)
 struct nas_func;  // function(lambda)
 struct nas_upval; // upvalue
-struct nas_obj;   // special objects
+struct nas_ghost; // objects
 struct nas_co;    // coroutine
 struct nas_val;   // nas_val includes gc-managed types
 
@@ -117,7 +119,7 @@ public:
     nas_hash&  hash();
     nas_func&  func();
     nas_upval& upval();
-    nas_obj&   obj ();
+    nas_ghost& obj ();
     nas_co&    co  ();
 };
 
@@ -261,7 +263,7 @@ public:
     }
 };
 
-struct nas_obj {
+struct nas_ghost {
 public:
     usize type;
     void* ptr;
@@ -270,13 +272,13 @@ private:
     ghost_register_table* ghost_type_table;
 
 public:
-    nas_obj(): type(0), ptr(nullptr), ghost_type_table(nullptr) {}
-    ~nas_obj() {clear();}
+    nas_ghost(): type(0), ptr(nullptr), ghost_type_table(nullptr) {}
+    ~nas_ghost() {clear();}
     void set(usize, void*, ghost_register_table*);
     void clear();
 
 public:
-    friend std::ostream& operator<<(std::ostream& out, nas_obj& ghost) {
+    friend std::ostream& operator<<(std::ostream& out, nas_ghost& ghost) {
         out<<"<object "<<ghost.ghost_type_table->get_ghost_name(ghost.type);
         out<<" at 0x"<<std::hex<<(u64)ghost.ptr<<std::dec<<">";
         return out;
@@ -313,7 +315,7 @@ struct nas_val {
         nas_hash*  hash;
         nas_func*  func;
         nas_upval* upval;
-        nas_obj*   obj;
+        nas_ghost* obj;
         nas_co*    co;
     } ptr;
 
@@ -419,13 +421,13 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_obj::set(usize t, void* p, ghost_register_table* table) {
+void nas_ghost::set(usize t, void* p, ghost_register_table* table) {
     type=t;
     ptr=p;
     ghost_type_table=table;
 }
 
-void nas_obj::clear() {
+void nas_ghost::clear() {
     if (!ptr) {
         return;
     }
@@ -459,7 +461,7 @@ nas_val::nas_val(u8 val_type) {
         case vm_hash: ptr.hash=new nas_hash;  break;
         case vm_func: ptr.func=new nas_func;  break;
         case vm_upval:ptr.upval=new nas_upval;break;
-        case vm_obj:  ptr.obj=new nas_obj;    break;
+        case vm_obj:  ptr.obj=new nas_ghost;  break;
         case vm_co:   ptr.co=new nas_co;      break;
     }
 }
@@ -561,7 +563,7 @@ nas_vec&   var::vec  () {return *val.gcobj->ptr.vec;  }
 nas_hash&  var::hash () {return *val.gcobj->ptr.hash; }
 nas_func&  var::func () {return *val.gcobj->ptr.func; }
 nas_upval& var::upval() {return *val.gcobj->ptr.upval;}
-nas_obj&   var::obj  () {return *val.gcobj->ptr.obj;  }
+nas_ghost& var::obj  () {return *val.gcobj->ptr.obj;  }
 nas_co&    var::co   () {return *val.gcobj->ptr.co;   }
 
 const var zero=var::num(0);
@@ -747,7 +749,7 @@ void gc::extend(u8 type) {
     size[index]+=incr[index];
 
     for(u32 i=0;i<incr[index];++i) {
-        nas_val* tmp=new nas_val(type);
+        nas_val* tmp=new(std::nothrow) nas_val(type);
 
         if (!tmp) {
             std::cerr<<"nasal_gc.h: gc::extend: ";
