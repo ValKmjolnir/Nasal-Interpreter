@@ -249,7 +249,7 @@ public:
         if (mapper.count(name)) {
             std::cerr<<"nasal_gc.h: ghost_register_table::register_ghost_type: ";
             std::cerr<<"ghost type \""<<name<<"\" already exists.\n";
-            std::exit(-1);
+            std::exit(1);
         }
         auto res=destructors.size();
         mapper[name]=res;
@@ -754,7 +754,7 @@ void gc::extend(u8 type) {
         if (!tmp) {
             std::cerr<<"nasal_gc.h: gc::extend: ";
             std::cerr<<"failed to allocate memory\n";
-            std::exit(-1);
+            std::exit(1);
         }
 
         // add to heap
@@ -762,7 +762,7 @@ void gc::extend(u8 type) {
         unused[index].push_back(tmp);
     }
 
-    incr[index]*=2;
+    incr[index]=incr[index]+incr[index]/2;
 }
 
 void gc::init(const std::vector<string>& s, const std::vector<string>& argv) {
