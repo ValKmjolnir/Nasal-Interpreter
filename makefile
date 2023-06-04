@@ -18,10 +18,13 @@ SRC=\
 
 STD=c++14
 
-nasal:$(SRC)
+nasal:$(SRC) nasal_new_ast.o
 	$(CXX) -std=$(STD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
 nasal.exe:$(SRC)
 	$(CXX) -std=$(STD) -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
+
+nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp nasal.h
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .
 
 stable-release:$(SRC)
 	$(CXX) -std=$(STD) -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall

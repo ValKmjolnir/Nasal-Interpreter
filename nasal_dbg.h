@@ -4,9 +4,61 @@
 #include "nasal_err.h"
 #include "nasal_opcode.h"
 #include "nasal_vm.h"
+
+#include <cstring>
 #include <algorithm>
+#include <unordered_map>
 
 class dbg:public vm {
+private:
+    enum class dbg_cmd {
+        cmd_error,
+        cmd_help,
+        cmd_backtrace,
+        cmd_continue,
+        cmd_list_file,
+        cmd_global,
+        cmd_local,
+        cmd_upval,
+        cmd_register,
+        cmd_show_all,
+        cmd_next,
+        cmd_break_point,
+        cmd_exit
+    };
+
+private:
+    const std::unordered_map<string, dbg_cmd> command_table = {
+        {"h", dbg_cmd::cmd_help},
+        {"help", dbg_cmd::cmd_help},
+        {"bt", dbg_cmd::cmd_backtrace},
+        {"backtrace", dbg_cmd::cmd_backtrace},
+        {"c", dbg_cmd::cmd_continue},
+        {"continue", dbg_cmd::cmd_continue},
+        {"f", dbg_cmd::cmd_list_file},
+        {"file", dbg_cmd::cmd_list_file},
+        {"g", dbg_cmd::cmd_global},
+        {"global", dbg_cmd::cmd_global},
+        {"l", dbg_cmd::cmd_local},
+        {"local", dbg_cmd::cmd_local},
+        {"u", dbg_cmd::cmd_upval},
+        {"upval", dbg_cmd::cmd_upval},
+        {"r", dbg_cmd::cmd_register},
+        {"register", dbg_cmd::cmd_register},
+        {"a", dbg_cmd::cmd_show_all},
+        {"all", dbg_cmd::cmd_show_all},
+        {"n", dbg_cmd::cmd_next},
+        {"next", dbg_cmd::cmd_next},
+        {"bk", dbg_cmd::cmd_break_point},
+        {"break", dbg_cmd::cmd_break_point},
+        {"q", dbg_cmd::cmd_exit},
+        {"exit", dbg_cmd::cmd_exit}
+    };
+    dbg_cmd get_cmd_type(const string& cmd) const {
+        return command_table.count(cmd)?
+            command_table.at(cmd):dbg_cmd::cmd_error;
+    }
+
 private:
     bool  next;
     usize fsize;
@@ -15,11 +67,12 @@ private:
     error& src;
 
     std::vector<string> parse(const string&);
-    u16 fileindex(const string&);
+    u16 file_index(const string&) const;
     void err();
     void help();
-    void callsort(const u64*);
-    void stepinfo();
+    void list_file() const;
+    void call_sort(const u64*) const;
+    void step_info();
     void interact();
 public:
     dbg(error& err):
@@ -50,7 +103,7 @@ std::vector<string> dbg::parse(const string& cmd) {
     return res;
 }
 
-u16 dbg::fileindex(const string& filename) {
+u16 dbg::file_index(const string& filename) const {
     for(u16 i=0;i<fsize;++i) {
         if (filename==files[i]) {
             return i;
@@ -66,24 +119,30 @@ void dbg::err() {
 }
 
 void dbg::help() {
-    std::cout
+    std::clog
     <<"<option>\n"
-    <<"\th,   help      | get help\n"
-    <<"\tbt,  backtrace | get function call trace\n"
-    <<"\tc,   continue  | run program until break point or exit\n"
-    <<"\tf,   file      | see all the compiled files\n"
-    <<"\tg,   global    | see global values\n"
-    <<"\tl,   local     | see local values\n"
-    <<"\tu,   upval     | see upvalue\n"
-    <<"\tr,   register  | show vm register detail\n"
-    <<"\ta,   all       | show global,local and upvalue\n"
-    <<"\tn,   next      | execute next bytecode\n"
-    <<"\tq,   exit      | exit debugger\n"
+    <<"  h,   help      | get help\n"
+    <<"  bt,  backtrace | get function call trace\n"
+    <<"  c,   continue  | run program until break point or exit\n"
+    <<"  f,   file      | see all the compiled files\n"
+    <<"  g,   global    | see global values\n"
+    <<"  l,   local     | see local values\n"
+    <<"  u,   upval     | see upvalue\n"
+    <<"  r,   register  | show vm register detail\n"
+    <<"  a,   all       | show global,local and upvalue\n"
+    <<"  n,   next      | execute next bytecode\n"
+    <<"  q,   exit      | exit debugger\n"
     <<"<option> <filename> <line>\n"
-    <<"\tbk,  break     | set break point\n";
+    <<"  bk,  break     | set break point\n";
 }
 
-void dbg::callsort(const u64* arr) {
+void dbg::list_file() const {
+    for(usize i=0; i<fsize; ++i) {
+        std::clog<<"["<<i<<"] "<<files[i]<<"\n";
+    }
+}
+
+void dbg::call_sort(const u64* arr) const {
     typedef std::pair<u32,u64> op;
     std::vector<op> opcall;
     u64 total=0;
@@ -105,22 +164,22 @@ void dbg::callsort(const u64* arr) {
     std::clog<<" total  : "<<total<<'\n';
 }
 
-void dbg::stepinfo() {
+void dbg::step_info() {
     u32 line=bytecode[ctx.pc].line==0?0:bytecode[ctx.pc].line-1;
     u32 begin=(line>>3)==0?0:((line>>3)<<3);
     u32 end=(1+(line>>3))<<3;
     src.load(files[bytecode[ctx.pc].fidx]);
-    std::cout<<"\nsource code:\n";
+    std::clog<<"\nsource code:\n";
     for(u32 i=begin;i<end && i<src.size();++i) {
-        std::cout<<(i==line?back_white:reset)<<(i==line?"--> ":"    ")<<src[i]<<reset<<"\n";
+        std::clog<<(i==line?back_white:reset)<<(i==line?"--> ":"    ")<<src[i]<<reset<<"\n";
     }
 
     begin=(ctx.pc>>3)==0?0:((ctx.pc>>3)<<3);
     end=(1+(ctx.pc>>3))<<3;
     codestream::set(cnum, cstr, files);
-    std::cout<<"next bytecode:\n";
+    std::clog<<"next bytecode:\n";
     for(u32 i=begin;i<end && bytecode[i].op!=op_exit;++i) {
-        std::cout
+        std::clog
         <<(i==ctx.pc?back_white:reset)
         <<(i==ctx.pc?"--> ":"    ")
         <<codestream(bytecode[i], i)
@@ -130,65 +189,51 @@ void dbg::stepinfo() {
 }
 
 void dbg::interact() {
-    // special operand
+    // special operand, end execution
     if (bytecode[ctx.pc].op==op_exit) {
         return;
     }
     
-    if (
-        (bytecode[ctx.pc].fidx!=bk_fidx || bytecode[ctx.pc].line!=bk_line) && // break point
-        !next // next step
-    ) {
+    if ((bytecode[ctx.pc].fidx!=bk_fidx ||
+        bytecode[ctx.pc].line!=bk_line) && // break point
+        !next) {// next step
         return;
     }
 
     next=false;
     string cmd;
-    stepinfo();
+    step_info();
     while(true) {
-        std::cout<<">> ";
+        std::clog<<">> ";
         std::getline(std::cin, cmd);
         auto res=parse(cmd);
         if (res.size()==0) {
-            stepinfo();
+            step_info();
         } else if (res.size()==1) {
-            if (res[0]=="h" || res[0]=="help") {
-                help();
-            } else if (res[0]=="bt" || res[0]=="backtrace") {
-                traceback();
-            } else if (res[0]=="c" || res[0]=="continue") {
-                return;
-            } else if (res[0]=="f" || res[0]=="file") {
-                for(usize i=0;i<fsize;++i) {
-                    std::cout<<"["<<i<<"] "<<files[i]<<"\n";
-                }
-            } else if (res[0]=="g" || res[0]=="global") {
-                gstate();
-            } else if (res[0]=="l" || res[0]=="local") {
-                lstate();
-            } else if (res[0]=="u" || res[0]=="upval") {
-                ustate();
-            } else if (res[0]=="r" || res[0]=="register") {
-                reginfo();
-            } else if (res[0]=="a" || res[0]=="all") {
-                detail();
-            } else if (res[0]=="n" || res[0]=="next") {
-                next=true;
-                return;
-            } else if (res[0]=="q" || res[0]=="exit")
-                std::exit(0);
-            else {
-                err();
+            switch(get_cmd_type(res[0])) {
+                case dbg_cmd::cmd_help: help(); break;
+                case dbg_cmd::cmd_backtrace: traceback(); break;
+                case dbg_cmd::cmd_continue: return;
+                case dbg_cmd::cmd_list_file: list_file(); break;
+                case dbg_cmd::cmd_global: gstate(); break;
+                case dbg_cmd::cmd_local: lstate(); break;
+                case dbg_cmd::cmd_upval: ustate(); break;
+                case dbg_cmd::cmd_register: reginfo(); break;
+                case dbg_cmd::cmd_show_all: detail(); break;
+                case dbg_cmd::cmd_next: next=true; return;
+                case dbg_cmd::cmd_exit: std::exit(0);
+                default: err(); break;
             }
-        } else if (res.size()==3 && (res[0]=="bk" || res[0]=="break")) {
-            bk_fidx=fileindex(res[1]);
+        } else if (res.size()==3 &&
+            get_cmd_type(res[0])==dbg_cmd::cmd_break_point) {
+            bk_fidx=file_index(res[1]);
             if (bk_fidx==65535) {
-                std::cout<<"cannot find file named `"<<res[1]<<"`\n";
-                bk_fidx=0;
+                std::clog<<"cannot find file named `"<<res[1]<<"`\n";
+                continue;
             }
             i32 tmp=atoi(res[2].c_str());
             if (tmp<=0) {
-                std::cout<<"incorrect line number `"<<res[2]<<"`\n";
+                std::clog<<"incorrect line number `"<<res[2]<<"`\n";
             } else {
                 bk_line=tmp;
             }
@@ -201,8 +246,7 @@ void dbg::interact() {
 void dbg::run(
     const codegen& gen,
     const linker& linker,
-    const std::vector<string>& argv
-) {
+    const std::vector<string>& argv) {
     verbose=true;
     fsize=linker.filelist().size();
     init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
@@ -269,7 +313,7 @@ void dbg::run(
         ++ctx.pc;
     }
 
-    callsort(count);
+    call_sort(count);
     ngc.info();
     ngc.clear();
     imm.clear();
