@@ -3,7 +3,7 @@
 #include "nasal.h"
 #include "nasal_err.h"
 
-enum class ast_node_type:u32 {
+enum class expr_type:u32 {
     ast_null=0,      // null node
     ast_stmt,
     ast_expr,
@@ -76,37 +76,49 @@ enum class ast_node_type:u32 {
 
 class ast_visitor;
 
-class ast_node {
+class expr {
 private:
     span nd_loc;
-    ast_node_type nd_type;
+    expr_type nd_type;
 public:
-    ast_node(const span& location,ast_node_type node_type):
+    expr(const span& location,expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
-    ~ast_node() = default;
+    ~expr() = default;
     virtual bool accept(ast_visitor*) = 0;
 };
 
-class stmt:public ast_node {
-public:
-    stmt(const span& location,ast_node_type node_type):
-        ast_node(location, node_type) {}
-    ~stmt() = default;
-    virtual bool accept(ast_visitor*);
-};
-
-class expr:public ast_node {
-private:
-
-public:
-    expr(const span& location,ast_node_type node_type):
-        ast_node(location, node_type) {}
-    ~expr() = default;
-    virtual bool accept(ast_visitor*);
-};
+class null_expr:public expr {};
+class nil_expr:public expr {};
+class number_literal:public expr {};
+class string_literal:public expr {};
+class identifier:public expr {};
+class bool_literal:public expr {};
+class vector_expr:public expr {};
+class hash_expr:public expr {};
+class hash_pair:public expr {};
+class function:public expr {};
+class parameter:public expr {};
+class ternary_operator:public expr {};
+class binary_operator:public expr {};
+class unary_operator:public expr {};
+class call_expr:public expr {};
+class call_hash:public expr {};
+class call_vector:public expr {};
+class call_function:public expr {};
+class slice_vector:public expr {};
+class definition:public expr {};
+class multi_define:public expr {};
+class while_expr:public expr {};
+class for_expr:public expr {};
+class foreach_expr:public expr {};
+class forindex_expr:public expr {};
+class condition_expr:public expr {};
+class if_expr:public expr {};
+class continue_expr:public expr {};
+class break_expr:public expr {};
+class return_expr:public expr {};
 
 class ast_visitor {
 public:
-    virtual void visit_stmt(stmt*);
     virtual void visit_expr(expr*);
 };
