@@ -5,8 +5,7 @@
 
 enum class expr_type:u32 {
     ast_null=0,      // null node
-    ast_stmt,
-    ast_expr,
+    ast_expr,        // expression node
     ast_root,        // mark the root node of ast
     ast_block,       // expression block 
     ast_file,        // used to store which file the sub-tree is on, only used in main block
@@ -81,44 +80,98 @@ private:
     span nd_loc;
     expr_type nd_type;
 public:
-    expr(const span& location,expr_type node_type):
+    expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
     ~expr() = default;
     virtual bool accept(ast_visitor*) = 0;
 };
 
-class null_expr:public expr {};
-class nil_expr:public expr {};
-class number_literal:public expr {};
-class string_literal:public expr {};
-class identifier:public expr {};
-class bool_literal:public expr {};
-class vector_expr:public expr {};
-class hash_expr:public expr {};
-class hash_pair:public expr {};
-class function:public expr {};
-class parameter:public expr {};
-class ternary_operator:public expr {};
-class binary_operator:public expr {};
-class unary_operator:public expr {};
-class call_expr:public expr {};
-class call_hash:public expr {};
-class call_vector:public expr {};
-class call_function:public expr {};
-class slice_vector:public expr {};
-class definition:public expr {};
-class multi_define:public expr {};
-class while_expr:public expr {};
-class for_expr:public expr {};
-class foreach_expr:public expr {};
-class forindex_expr:public expr {};
-class condition_expr:public expr {};
-class if_expr:public expr {};
-class continue_expr:public expr {};
-class break_expr:public expr {};
-class return_expr:public expr {};
-
-class ast_visitor {
+class null_expr:public expr {
 public:
-    virtual void visit_expr(expr*);
+    null_expr(const span& location):
+        expr(location, expr_type::ast_null) {}
+    ~null_expr() = default;
+    virtual bool accept(ast_visitor*);
 };
+
+class nil_expr:public expr {
+public:
+    nil_expr(const span& location):
+        expr(location, expr_type::ast_nil) {}
+    ~nil_expr() = default;
+    virtual bool accept(ast_visitor*);
+};
+
+class number_literal:public expr {
+private:
+    f64 number;
+
+public:
+    number_literal(const span& location, const f64 num):
+        expr(location, expr_type::ast_num), number(num) {}
+    ~number_literal() = default;
+    virtual bool accept(ast_visitor*);
+};
+
+class string_literal:public expr {
+private:
+    string content;
+
+public:
+    string_literal(const span& location, const string& str):
+        expr(location, expr_type::ast_str), content(str) {}
+    ~string_literal() = default;
+    virtual bool accept(ast_visitor*);
+};
+
+class identifier:public expr {};
+
+class bool_literal:public expr {};
+
+class vector_expr:public expr {};
+
+class hash_expr:public expr {};
+
+class hash_pair:public expr {};
+
+class function:public expr {};
+
+class parameter:public expr {};
+
+class ternary_operator:public expr {};
+
+class binary_operator:public expr {};
+
+class unary_operator:public expr {};
+
+class call_expr:public expr {};
+
+class call_hash:public expr {};
+
+class call_vector:public expr {};
+
+class call_function:public expr {};
+
+class slice_vector:public expr {};
+
+class definition:public expr {};
+
+class multi_define:public expr {};
+
+class while_expr:public expr {};
+
+class for_expr:public expr {};
+
+class foreach_expr:public expr {};
+
+class forindex_expr:public expr {};
+
+class condition_expr:public expr {};
+
+class if_expr:public expr {};
+
+class continue_expr:public expr {};
+
+class break_expr:public expr {};
+
+class return_expr:public expr {};

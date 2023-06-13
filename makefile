@@ -18,8 +18,9 @@ SRC=\
 
 STD=c++14
 
-nasal:$(SRC) nasal_new_ast.o nasal_new_parse.o
+nasal:$(SRC) nasal_new_ast.o nasal_new_parse.o ast_visitor.o
 	$(CXX) -std=$(STD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+
 nasal.exe:$(SRC)
 	$(CXX) -std=$(STD) -O3 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
@@ -29,8 +30,12 @@ nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp nasal.h
 nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp nasal.h ast/nasal_new_ast.h
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
 
+ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .
+
 stable-release:$(SRC)
 	$(CXX) -std=$(STD) -O2 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
+
 stable-release-mingw:$(SRC)
 	$(CXX) -std=$(STD) -O2 main.cpp -o nasal.exe -fno-exceptions -Wshadow -Wall -static
 
