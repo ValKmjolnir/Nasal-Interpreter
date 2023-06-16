@@ -83,7 +83,7 @@ public:
     expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
     ~expr() = default;
-    virtual bool accept(ast_visitor*) = 0;
+    virtual void accept(ast_visitor*) = 0;
 };
 
 class null_expr:public expr {
@@ -91,7 +91,7 @@ public:
     null_expr(const span& location):
         expr(location, expr_type::ast_null) {}
     ~null_expr() = default;
-    virtual bool accept(ast_visitor*);
+    virtual void accept(ast_visitor*) override;
 };
 
 class nil_expr:public expr {
@@ -99,7 +99,7 @@ public:
     nil_expr(const span& location):
         expr(location, expr_type::ast_nil) {}
     ~nil_expr() = default;
-    virtual bool accept(ast_visitor*);
+    virtual void accept(ast_visitor*) override;
 };
 
 class number_literal:public expr {
@@ -110,7 +110,7 @@ public:
     number_literal(const span& location, const f64 num):
         expr(location, expr_type::ast_num), number(num) {}
     ~number_literal() = default;
-    virtual bool accept(ast_visitor*);
+    virtual void accept(ast_visitor*) override;
 };
 
 class string_literal:public expr {
@@ -121,57 +121,147 @@ public:
     string_literal(const span& location, const string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() = default;
-    virtual bool accept(ast_visitor*);
+    virtual void accept(ast_visitor*) override;
 };
 
-class identifier:public expr {};
+class identifier:public expr {
+private:
+    string name;
 
-class bool_literal:public expr {};
+public:
+    identifier(const span& location, const string& str):
+        expr(location, expr_type::ast_id), name(str) {}
+    ~identifier() = default;
+    virtual void accept(ast_visitor*) override;
+};
 
-class vector_expr:public expr {};
+class bool_literal:public expr {
+private:
+    bool flag;
 
-class hash_expr:public expr {};
+public:
+    bool_literal(const span& location, const bool bool_flag):
+        expr(location, expr_type::ast_bool), flag(bool_flag) {}
+    ~bool_literal() = default;
+    virtual void accept(ast_visitor*) override;
+};
 
-class hash_pair:public expr {};
+class vector_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class function:public expr {};
+class hash_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class parameter:public expr {};
+class hash_pair:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class ternary_operator:public expr {};
+class function:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class binary_operator:public expr {};
+class parameter:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class unary_operator:public expr {};
+class ternary_operator:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class call_expr:public expr {};
+class binary_operator:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class call_hash:public expr {};
+class unary_operator:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class call_vector:public expr {};
+class call_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class call_function:public expr {};
+class call_hash:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class slice_vector:public expr {};
+class call_vector:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class definition:public expr {};
+class call_function:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class multi_define:public expr {};
+class slice_vector:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class while_expr:public expr {};
+class definition:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class for_expr:public expr {};
+class multi_define:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class foreach_expr:public expr {};
+class while_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class forindex_expr:public expr {};
+class for_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class condition_expr:public expr {};
+class foreach_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class if_expr:public expr {};
+class forindex_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class continue_expr:public expr {};
+class condition_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class break_expr:public expr {};
+class if_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
 
-class return_expr:public expr {};
+class continue_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
+
+class break_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
+
+class return_expr:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};

@@ -1,27 +1,30 @@
 #include "nasal_new_ast.h"
 #include "ast_visitor.h"
 
-bool expr::accept(ast_visitor* visitor) {
+void expr::accept(ast_visitor* visitor) {
     visitor->visit_expr(this);
-    return true;
 }
 
-bool null_expr::accept(ast_visitor* visitor) {
+void null_expr::accept(ast_visitor* visitor) {
     visitor->visit_null_expr(this);
-    return true;
 }
 
-bool nil_expr::accept(ast_visitor* visitor) {
+void nil_expr::accept(ast_visitor* visitor) {
     visitor->visit_nil_expr(this);
-    return true;
 }
 
-bool number_literal::accept(ast_visitor* visitor) {
+void number_literal::accept(ast_visitor* visitor) {
     visitor->visit_number_literal(this);
-    return true;
 }
 
-bool string_literal::accept(ast_visitor* visitor) {
+void string_literal::accept(ast_visitor* visitor) {
     visitor->visit_string_literal(this);
-    return true;
+}
+
+void identifier::accept(ast_visitor* visitor) {
+    visitor->visit_identifier(this);
+}
+
+void bool_literal::accept(ast_visitor* visitor) {
+    visitor->visit_bool_literal(this);
 }
