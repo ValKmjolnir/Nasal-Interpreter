@@ -3,6 +3,9 @@
 #include "nasal_err.h"
 #include "nasal_builtin.h"
 #include "nasal_opcode.h"
+#include "nasal_ast.h"
+#include "nasal_parse.h"
+#include "nasal_import.h"
 
 #include <iomanip>
 #include <list>

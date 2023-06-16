@@ -3,6 +3,9 @@
 #include "nasal.h"
 #include "nasal_err.h"
 
+#include <vector>
+#include <unordered_map>
+
 enum class expr_type:u32 {
     ast_null=0,      // null node
     ast_expr,        // expression node
@@ -74,6 +77,7 @@ enum class expr_type:u32 {
 };
 
 class ast_visitor;
+class hash_pair;
 
 class expr {
 private:
@@ -115,10 +119,10 @@ public:
 
 class string_literal:public expr {
 private:
-    string content;
+    std::string content;
 
 public:
-    string_literal(const span& location, const string& str):
+    string_literal(const span& location, const std::string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() = default;
     virtual void accept(ast_visitor*) override;
@@ -126,10 +130,10 @@ public:
 
 class identifier:public expr {
 private:
-    string name;
+    std::string name;
 
 public:
-    identifier(const span& location, const string& str):
+    identifier(const span& location, const std::string& str):
         expr(location, expr_type::ast_id), name(str) {}
     ~identifier() = default;
     virtual void accept(ast_visitor*) override;
@@ -147,21 +151,53 @@ public:
 };
 
 class vector_expr:public expr {
+private:
+    std::vector<expr*> elements;
+
 public:
+    vector_expr(const span& location):
+        expr(location, expr_type::ast_vec) {}
+    ~vector_expr();
+    void add_element(expr* node) {elements.push_back(node);}
+    std::vector<expr*>& get_elements() {return elements;}
     virtual void accept(ast_visitor*) override;
 };
 
 class hash_expr:public expr {
+private:
+    std::vector<hash_pair*> members;
+
 public:
+    hash_expr(const span& location):
+        expr(location, expr_type::ast_hash) {}
+    ~hash_expr();
+    void add_member(hash_pair* node) {members.push_back(node);}
+    std::vector<hash_pair*>& get_members() {return members;}
     virtual void accept(ast_visitor*) override;
 };
 
 class hash_pair:public expr {
+private:
+    std::string name;
+    expr* element;
+
 public:
+    hash_pair(const span& location):
+        expr(location, expr_type::ast_pair) {}
+    ~hash_pair();
+    void set_name(const std::string& field_name) {name = field_name;}
+    void set_element(expr* node) {element = node;}
+    const std::string& get_name() const {return name;}
+    expr* get_element() {return element;}
     virtual void accept(ast_visitor*) override;
 };
 
 class function:public expr {
+public:
+    virtual void accept(ast_visitor*) override;
+};
+
+class code_block:public expr {
 public:
     virtual void accept(ast_visitor*) override;
 };

@@ -11,4 +11,7 @@ public:
     virtual bool visit_string_literal(string_literal*);
     virtual bool visit_identifier(identifier*);
     virtual bool visit_bool_literal(bool_literal*);
+    virtual bool visit_vector_expr(vector_expr*);
+    virtual bool visit_hash_expr(hash_expr*);
+    virtual bool visit_hash_pair(hash_pair*);
 };
