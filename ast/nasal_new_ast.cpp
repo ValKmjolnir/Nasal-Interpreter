@@ -28,3 +28,33 @@ void identifier::accept(ast_visitor* visitor) {
 void bool_literal::accept(ast_visitor* visitor) {
     visitor->visit_bool_literal(this);
 }
+
+vector_expr::~vector_expr() {
+    for(auto i : elements) {
+        delete i;
+    }
+}
+
+void vector_expr::accept(ast_visitor* visitor) {
+    visitor->visit_vector_expr(this);
+}
+
+hash_expr::~hash_expr() {
+    for(auto i : members) {
+        delete i;
+    }
+}
+
+void hash_expr::accept(ast_visitor* visitor) {
+    visitor->visit_hash_expr(this);
+}
+
+hash_pair::~hash_pair() {
+    if (element) {
+        delete element;
+    }
+}
+
+void hash_pair::accept(ast_visitor* visitor) {
+    visitor->visit_hash_pair(this);
+}
