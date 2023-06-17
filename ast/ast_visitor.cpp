@@ -2,6 +2,7 @@
 
 bool ast_visitor::visit_expr(expr* node) {
     node->accept(this);
+    return true;
 }
 
 bool ast_visitor::visit_null_expr(null_expr* node) {
@@ -39,10 +40,12 @@ bool ast_visitor::visit_hash_expr(hash_expr* node) {
     for(auto i : node->get_members()) {
         i->accept(this);
     }
+    return true;
 }
 
 bool ast_visitor::visit_hash_pair(hash_pair* node) {
     if (node->get_element()) {
         node->get_element()->accept(this);
     }
+    return true;
 }

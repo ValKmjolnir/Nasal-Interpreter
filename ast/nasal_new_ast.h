@@ -78,8 +78,15 @@ enum class expr_type:u32 {
 
 class ast_visitor;
 class hash_pair;
+class parameter;
+class code_block;
 
-class expr {
+class ast_abstract_node {
+public:
+    virtual void accept(ast_visitor*) = 0;
+};
+
+class expr:public ast_abstract_node {
 private:
     span nd_loc;
     expr_type nd_type;
@@ -87,7 +94,7 @@ public:
     expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
     ~expr() = default;
-    virtual void accept(ast_visitor*) = 0;
+    virtual void accept(ast_visitor*);
 };
 
 class null_expr:public expr {
@@ -193,12 +200,32 @@ public:
 };
 
 class function:public expr {
+private:
+    std::vector<parameter*> parameter_list;
+    code_block* block;
+
 public:
+    function(const span& location):
+        expr(location, expr_type::ast_func),
+        block(nullptr) {}
+    ~function();
+    void add_parameter(parameter* node) {parameter_list.push_back(node);}
+    void set_code_block(code_block* node) {block = node;}
+    std::vector<parameter*>& get_parameter_list() {return parameter_list;}
+    code_block* get_code_block() {return block;}
     virtual void accept(ast_visitor*) override;
 };
 
 class code_block:public expr {
+private:
+    std::vector<expr*> expressions;
+
 public:
+    code_block(const span& location):
+        expr(location, expr_type::ast_block) {}
+    ~code_block();
+    void add_expression(expr* node) {expressions.push_back(node);}
+    std::vector<expr*>& get_expressions() {return expressions;}
     virtual void accept(ast_visitor*) override;
 };
 
@@ -289,11 +316,17 @@ public:
 
 class continue_expr:public expr {
 public:
+    continue_expr(const span& location):
+        expr(location, expr_type::ast_continue) {}
+    ~continue_expr() = default;
     virtual void accept(ast_visitor*) override;
 };
 
 class break_expr:public expr {
 public:
+    break_expr(const span& location):
+        expr(location, expr_type::ast_break) {}
+    ~break_expr() = default;
     virtual void accept(ast_visitor*) override;
 };
 
