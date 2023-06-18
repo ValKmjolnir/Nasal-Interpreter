@@ -31,7 +31,7 @@ nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp nasal.h
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .
 
 nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp nasal.h ast/nasal_new_ast.h
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
+#	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_parse.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
 
 ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .

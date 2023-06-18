@@ -9,9 +9,7 @@
 enum class expr_type:u32 {
     ast_null=0,      // null node
     ast_expr,        // expression node
-    ast_root,        // mark the root node of ast
     ast_block,       // expression block 
-    ast_file,        // used to store which file the sub-tree is on, only used in main block
     ast_nil,         // nil keyword
     ast_num,         // number, basic value type
     ast_str,         // string, basic value type
@@ -26,11 +24,11 @@ enum class expr_type:u32 {
     ast_callv,       // id[index]
     ast_callf,       // id()
     ast_subvec,      // id[index:index]
-    ast_params,      // mark a sub-tree of function parameters
-    ast_default,     // default parameter
-    ast_dynamic,     // dynamic parameter
+
+    ast_param,       // function parameter
     ast_and,         // and keyword
     ast_or,          // or keyword
+
     ast_equal,       // =
     ast_addeq,       // +=
     ast_subeq,       // -=
@@ -40,37 +38,18 @@ enum class expr_type:u32 {
     ast_btandeq,     // &=
     ast_btoreq,      // |=
     ast_btxoreq,     // ^=
-    ast_cmpeq,       // ==
-    ast_neq,         // !=
-    ast_less,        // <
-    ast_leq,         // <=
-    ast_grt,         // >
-    ast_geq,         // >=
-    ast_add,         // +
-    ast_sub,         // -
-    ast_mult,        // *
-    ast_div,         // /
-    ast_link,        // ~
-    ast_neg,         // unary -
-    ast_lnot,        // unary !
-    ast_bnot,        // unary ~ bitwise not
-    ast_bitor,       // bitwise or
-    ast_bitxor,      // bitwise xor
-    ast_bitand,      // bitwise and
-    ast_trino,       // ?:
+
+    ast_ternary,
+    ast_binary,
+    ast_unary,
     ast_for,         // for keyword
-    ast_forindex,    // forindex keyword
-    ast_foreach,     // foreach keyword
+    ast_forei,       // foreach or forindex loop
     ast_while,       // while
     ast_iter,        // iterator, used in forindex/foreach
     ast_cond,        // mark a sub-tree of conditional expression
     ast_if,          // if keyword
-    ast_elsif,       // elsif keyword
-    ast_else,        // else keyword
     ast_multi_id,    // multi identifiers sub-tree
-    ast_tuple,       // tuple, only used in multiple assignment
     ast_def,         // definition
-    ast_multi_assign,// multi assignment sub-tree
     ast_continue,    // continue keyword, only used in loop
     ast_break,       // break keyword, only used in loop
     ast_ret          // return keyword, only used in function block
@@ -79,7 +58,9 @@ enum class expr_type:u32 {
 class ast_visitor;
 class hash_pair;
 class parameter;
+class multi_define;
 class code_block;
+class if_expr;
 
 class ast_abstract_node {
 public:
@@ -94,6 +75,12 @@ public:
     expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
     ~expr() = default;
+    const span& get_location() const {return nd_loc;}
+    expr_type get_type() const {return nd_type;}
+    void update_location(const span& location) {
+        nd_loc.end_line = location.end_line;
+        nd_loc.end_column = location.end_column;
+    }
     virtual void accept(ast_visitor*);
 };
 
@@ -231,86 +218,267 @@ public:
 
 class parameter:public expr {
 public:
+    enum class param_type {
+        normal_parameter,
+        default_parameter,
+        dynamic_parameter
+    };
+
+private:
+    param_type type;
+    identifier* name;
+    expr* default_value;
+
+public:
+    parameter(const span& location):
+        expr(location, expr_type::ast_param),
+        name(nullptr), default_value(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class ternary_operator:public expr {
+private:
+    expr* condition;
+    expr* left;
+    expr* right;
+
 public:
+    ternary_operator(const span& location):
+        expr(location, expr_type::ast_ternary),
+        condition(nullptr), left(nullptr), right(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class binary_operator:public expr {
 public:
+    enum class binary_type {
+        add,
+        sub,
+        mult,
+        div,
+        concat,
+        cmpeq,
+        cmpneq,
+        less,
+        leq,
+        grt,
+        geq,
+        bitwise_or,
+        bitwise_xor,
+        bitwise_and
+    };
+
+private:
+    binary_type type;
+    expr* left;
+    expr* right;
+
+public:
+    binary_operator(const span& location):
+        expr(location, expr_type::ast_binary),
+        left(nullptr), right(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class unary_operator:public expr {
 public:
-    virtual void accept(ast_visitor*) override;
-};
+    enum class unary_type {
+        negative,
+        logical_not,
+        bitwise_not
+    };
 
-class call_expr:public expr {
+private:
+    unary_type type;
+    expr* value;
+
 public:
+    unary_operator(const span& location):
+        expr(location, expr_type::ast_unary),
+        value(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class call_hash:public expr {
+private:
+    std::string field;
+
 public:
+    call_hash(const span& location):
+        expr(location, expr_type::ast_callh),
+        field("") {}
     virtual void accept(ast_visitor*) override;
 };
 
 class call_vector:public expr {
+private:
+    std::vector<expr*> calls;
+
 public:
+    call_vector(const span& location):
+        expr(location, expr_type::ast_callv) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class call_function:public expr {
 public:
+    call_function(const span& location):
+        expr(location, expr_type::ast_callf) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class slice_vector:public expr {
+private:
+    expr* begin;
+    expr* end;
+
 public:
+    slice_vector(const span& location):
+        expr(location, expr_type::ast_subvec),
+        begin(nullptr), end(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class definition:public expr {
+private:
+    identifier* variable;
+    multi_define* variables;
+    expr* value;
+
 public:
+    definition(const span& location):
+        expr(location, expr_type::ast_def),
+        variable(nullptr), variables(nullptr), value(nullptr) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class multi_define:public expr {
+private:
+    std::vector<expr*> variables;
+
 public:
+    multi_define(const span& location):
+        expr(location, expr_type::ast_multi_id) {}
     virtual void accept(ast_visitor*) override;
 };
 
 class while_expr:public expr {
+private:
+    expr* condition;
+    code_block* block;
+
 public:
+    while_expr(const span& location):
+        expr(location, expr_type::ast_while),
+        condition(nullptr), block(nullptr) {}
+    void set_condition(expr* node) {condition = node;}
+    void set_code_block (code_block* node) {block = node;}
+    expr* get_condition() {return condition;}
+    code_block* get_code_block() {return block;}
     virtual void accept(ast_visitor*) override;
 };
 
 class for_expr:public expr {
+private:
+    expr* initializing;
+    expr* condition;
+    expr* step;
+    code_block* block;
+
 public:
+    for_expr(const span& location):
+        expr(location, expr_type::ast_for),
+        initializing(nullptr), condition(nullptr),
+        step(nullptr), block(nullptr) {}
+    void set_initial(expr* node) {initializing = node;}
+    void set_condition(expr* node) {condition = node;}
+    void set_step(expr* node) {step = node;}
+    void set_code_block(code_block* node) {block = node;}
+    expr* get_initial() {return initializing;}
+    expr* get_condition() {return condition;}
+    expr* get_step() {return step;}
+    code_block* get_code_block() {return block;}
     virtual void accept(ast_visitor*) override;
 };
 
-class foreach_expr:public expr {
+class iter_expr:public expr {
+private:
+    identifier* name;
+    expr* value;
+
 public:
+    iter_expr(const span& location):
+        expr(location, expr_type::ast_iter),
+        name(nullptr), value(nullptr) {}
+    ~iter_expr();
+    void set_name(identifier* node) {name = node;}
+    void set_value(expr* node) {value = node;}
+    identifier* get_name() {return name;}
+    expr* get_value() {return value;}
     virtual void accept(ast_visitor*) override;
 };
 
-class forindex_expr:public expr {
+class forei_expr:public expr {
 public:
+    enum class forei_loop_type {
+        foreach,
+        forindex
+    };
+
+private:
+    forei_loop_type type;
+    iter_expr* iterator;
+    expr* vector_node;
+    code_block* block;
+
+public:
+    forei_expr(const span& location, forei_loop_type loop_type):
+        expr(location, expr_type::ast_forei),
+        type(loop_type), iterator(nullptr),
+        vector_node(nullptr), block(nullptr) {}
+    ~forei_expr();
+    void set_iterator(iter_expr* node) {iterator = node;}
+    void set_value(expr* node) {vector_node = node;}
+    void set_code_block(code_block* node) {block = node;}
+    iter_expr* get_iterator() {return iterator;}
+    expr* get_value() {return vector_node;}
+    code_block* get_code_block() {return block;}
     virtual void accept(ast_visitor*) override;
 };
 
 class condition_expr:public expr {
+private:
+    if_expr* if_stmt;
+    std::vector<if_expr*> elsif_stmt;
+    if_expr* else_stmt;
+
 public:
+    condition_expr(const span& location):
+        expr(location, expr_type::ast_cond),
+        if_stmt(nullptr), else_stmt(nullptr) {}
+    ~condition_expr();
+    void set_if_statement(if_expr* node) {if_stmt = node;}
+    void add_elsif_statement(if_expr* node) {elsif_stmt.push_back(node);}
+    void set_else_statement(if_expr* node) {else_stmt = node;}
+    if_expr* get_if_statement() {return if_stmt;}
+    std::vector<if_expr*>& get_elsif_stataments() {return elsif_stmt;}
+    if_expr* get_else_statement() {return else_stmt;}
     virtual void accept(ast_visitor*) override;
 };
 
 class if_expr:public expr {
+private:
+    expr* condition;
+    code_block* block;
+
 public:
+    if_expr(const span& location):
+        expr(location, expr_type::ast_if),
+        condition(nullptr), block(nullptr) {}
+    void set_condition(expr* node) {condition = node;}
+    void set_code_block(code_block* node) {block = node;}
+    expr* get_condition() {return condition;}
+    code_block* get_code_block() {return block;}
     virtual void accept(ast_visitor*) override;
 };
 
@@ -331,6 +499,15 @@ public:
 };
 
 class return_expr:public expr {
+private:
+    expr* value;
+
 public:
+    return_expr(const span& location):
+        expr(location, expr_type::ast_ret),
+        value(nullptr) {}
+    ~return_expr();
+    void set_value(expr* node) {value = node;}
+    expr* get_value() {return value;}
     virtual void accept(ast_visitor*) override;
 };
