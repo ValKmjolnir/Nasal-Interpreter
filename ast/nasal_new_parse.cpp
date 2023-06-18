@@ -1,12 +1,14 @@
+#include "nasal_new_ast.h"
 #include "nasal_new_parse.h"
 
 const error& parse::compile(const lexer& lexer) {
     toks=lexer.result().data();
     ptr=in_func=in_loop=0;
 
-    root={toks[0].loc, ast_root};
+    root = new code_block(toks[0].loc);
+
     while(!lookahead(tok::eof)) {
-        root.add(expr());
+        root->add_expression(expr());
         if (lookahead(tok::semi)) {
             match(tok::semi);
         } else if (need_semi_check(root.child().back()) && !lookahead(tok::eof)) {
@@ -54,7 +56,7 @@ void parse::easter_egg() const {
     << "                    `\"`                   `\"`              \n";
 }
 
-void parse::die(const span& loc, string info) {
+void parse::die(const span& loc, std::string info) {
     err.err("parse", loc, info);
 }
 
@@ -123,15 +125,13 @@ bool parse::check_func_end(const ast& node) {
         return false;
     }
     if (node.child().empty() || (
-            type!=ast_def &&
-            type!=ast_equal &&
-            type!=ast_addeq &&
-            type!=ast_subeq &&
-            type!=ast_multeq &&
-            type!=ast_diveq &&
-            type!=ast_lnkeq
-        )
-    ) {
+        type!=ast_def &&
+        type!=ast_equal &&
+        type!=ast_addeq &&
+        type!=ast_subeq &&
+        type!=ast_multeq &&
+        type!=ast_diveq &&
+        type!=ast_lnkeq)) {
         return false;
     } else {
         return check_func_end(node.child().back());
@@ -163,46 +163,50 @@ bool parse::check_special_call() {
     return false;
 }
 
-bool parse::need_semi_check(const ast& node) {
-    u32 type=node.type();
-    if (type==ast_for || type==ast_foreach || type==ast_forindex || type==ast_while || type==ast_cond) {
+bool parse::need_semi_check(expr* node) {
+    auto type=node->get_type();
+    if (type==expr_type::ast_for ||
+        type==expr_type::ast_forei ||
+        type==expr_type::ast_while ||
+        type==expr_type::ast_cond) {
         return false;
     }
     return !check_func_end(node);
 }
 
-ast parse::null() {
-    return {toks[ptr].loc, ast_null};
+void parse::update_location(expr* node) {
+    node->update_location(toks[ptr].loc);
 }
 
-ast parse::nil() {
-    return {toks[ptr].loc, ast_nil};
+null_expr* parse::null() {
+    return new null_expr(toks[ptr].loc);
 }
 
-ast parse::num() {
-    ast node(toks[ptr].loc, ast_num);
-    node.set_num(str2num(toks[ptr].str.c_str()));
+nil_expr* parse::nil() {
+    return new nil_expr(toks[ptr].loc);
+}
+
+number_literal* parse::num() {
+    auto node = new number_literal(toks[ptr].loc,
+        str2num(toks[ptr].str.c_str()));
     match(tok::num);
     return node;
 }
 
-ast parse::str() {
-    ast node(toks[ptr].loc, ast_str);
-    node.set_str(toks[ptr].str);
+string_literal* parse::str() {
+    auto node = new string_literal(toks[ptr].loc, toks[ptr].str);
     match(tok::str);
     return node;
 }
 
-ast parse::id() {
-    ast node(toks[ptr].loc, ast_id);
-    node.set_str(toks[ptr].str);
+identifier* parse::id() {
+    auto node = new identifier(toks[ptr].loc, toks[ptr].str);
     match(tok::id);
     return node;
 }
 
-ast parse::bools() {
-    ast node(toks[ptr].loc, ast_bool);
-    node.set_str(toks[ptr].str);
+bool_literal* parse::bools() {
+    auto node = new bool_literal(toks[ptr].loc, toks[ptr].str=="true");
     if (lookahead(tok::tktrue)) {
         match(tok::tktrue);
     } else {
@@ -211,7 +215,7 @@ ast parse::bools() {
     return node;
 }
 
-ast parse::vec() {
+vector_expr* parse::vec() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok::null=0
@@ -221,7 +225,7 @@ ast parse::vec() {
         tok::func,tok::var,tok::lcurve,tok::floater,
         tok::lbrace,tok::lbracket,tok::null
     };
-    ast node(toks[ptr].loc, ast_vec);
+    auto node = new vector_expr(toks[ptr].loc);
     match(tok::lbracket);
     while(!lookahead(tok::rbracket)) {
         node.add(calc());
@@ -233,16 +237,16 @@ ast parse::vec() {
             break;
         }
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rbracket, "expected ']' when generating vector");
     return node;
 }
 
-ast parse::hash() {
-    ast node(toks[ptr].loc, ast_hash);
+hash_expr* parse::hash() {
+    auto node = new hash_expr(toks[ptr].loc);
     match(tok::lbrace);
     while(!lookahead(tok::rbrace)) {
-        node.add(pair());
+        node->add_member(pair());
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id) || lookahead(tok::str)) { // first set of hashmember
@@ -251,46 +255,45 @@ ast parse::hash() {
             break;
         }
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rbrace, "expected '}' when generating hash");
     return node;
 }
 
-ast parse::pair() {
-    ast node(toks[ptr].loc, ast_pair);
+hash_pair* parse::pair() {
+    auto node = new hash_pair(toks[ptr].loc);
     if (lookahead(tok::id)) {
-        node.add(id());
+        node->set_name(toks[ptr].str);
+        match(tok::id);
     } else if (lookahead(tok::str)) {
-        node.add(str());
+        node->set_name(toks[ptr].str);
+        match(tok::str);
     } else {
         match(tok::id, "expected hashmap key");
     }
     match(tok::colon);
-    node.add(calc());
-    node.update_span();
+    node->set_element(calc());
+    update_location(node);
     return node;
 }
 
-ast parse::func() {
+function* parse::func() {
     ++in_func;
-    ast node(toks[ptr].loc, ast_func);
+    auto node = new function(toks[ptr].loc);
     match(tok::func);
     if (lookahead(tok::lcurve)) {
-        node.add(params());
-    } else {
-        node.add(null());
+        params(node);
     }
-    node.add(exprs());
+    node->set_code_block(exprs());
     --in_func;
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::params() {
-    ast node(toks[ptr].loc, ast_params);
+void parse::params(function* func_node) {
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
-        ast tmp=id();
+        auto tmp = id();
         if (lookahead(tok::eq) || lookahead(tok::ellipsis)) {
             ast special_arg(toks[ptr].loc, ast_null);
             if (lookahead(tok::eq)) {
@@ -315,18 +318,18 @@ ast parse::params() {
             break;
         }
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rcurve, "expected ')' after parameter list");
     return node;
 }
 
-ast parse::lcurve_expr() {
+expr* parse::lcurve_expr() {
     if (toks[ptr+1].type==tok::var)
         return definition();
     return check_tuple()?multi_assgin():calc();
 }
 
-ast parse::expr() {
+expr* parse::expression() {
     tok type=toks[ptr].type;
     if ((type==tok::brk || type==tok::cont) && !in_loop) {
         die(thisspan, "must use break/continue in loops");
@@ -346,18 +349,18 @@ ast parse::expr() {
         case tok::lbrace:
         case tok::sub:
         case tok::floater:
-        case tok::opnot:   return calc();          break;
-        case tok::var:     return definition();    break;
-        case tok::lcurve:  return lcurve_expr();   break;
+        case tok::opnot:   return calc();
+        case tok::var:     return definition();
+        case tok::lcurve:  return lcurve_expr();
         case tok::rfor:
         case tok::forindex:
         case tok::foreach:
-        case tok::rwhile:  return loop();          break;
-        case tok::rif:     return cond();          break;
-        case tok::cont:    return continue_expr(); break;
-        case tok::brk:     return break_expr();    break;
-        case tok::ret:     return ret_expr();      break;
-        case tok::semi:                            break;
+        case tok::rwhile:  return loop();
+        case tok::rif:     return cond();
+        case tok::cont:    return continue_expression();
+        case tok::brk:     return break_expression();
+        case tok::ret:     return return_expression();
+        case tok::semi: break;
         default:
             die(thisspan, "incorrect token <"+toks[ptr].str+">");
             next();
@@ -365,19 +368,19 @@ ast parse::expr() {
     }
 
     // unreachable
-    return {toks[ptr].loc, ast_null};
+    return new null_expr(toks[ptr].loc);
 }
 
-ast parse::exprs() {
+code_block* parse::expression_block() {
     if (lookahead(tok::eof)) {
         die(thisspan, "expected expression block");
-        return null();
+        return new code_block(toks[ptr].loc);
     }
-    ast node(toks[ptr].loc, ast_block);
+    auto node = new code_block(toks[ptr].loc);
     if (lookahead(tok::lbrace)) {
         match(tok::lbrace);
         while(!lookahead(tok::rbrace) && !lookahead(tok::eof)) {
-            node.add(expr());
+            node->add_expression(expression());
             if (lookahead(tok::semi)) {
                 match(tok::semi);
             } else if (need_semi_check(node.child().back()) && !lookahead(tok::rbrace)) {
@@ -387,15 +390,16 @@ ast parse::exprs() {
         }
         match(tok::rbrace, "expected '}' when generating expressions");
     } else {
-        node.add(expr());
-        if (lookahead(tok::semi))
+        node->add_expression(expression());
+        if (lookahead(tok::semi)) {
             match(tok::semi);
+        }
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::calc() {
+expr* parse::calc() {
     ast node=bitwise_or();
     if (lookahead(tok::quesmark)) {
         // trinocular calculation
@@ -420,11 +424,11 @@ ast parse::calc() {
         tmp.add(calc());
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::bitwise_or() {
+expr* parse::bitwise_or() {
     ast node=bitwise_xor();
     while(lookahead(tok::btor)) {
         ast tmp(toks[ptr].loc, ast_bitor);
@@ -434,11 +438,11 @@ ast parse::bitwise_or() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::bitwise_xor() {
+expr* parse::bitwise_xor() {
     ast node=bitwise_and();
     while(lookahead(tok::btxor)) {
         ast tmp(toks[ptr].loc, ast_bitxor);
@@ -448,11 +452,11 @@ ast parse::bitwise_xor() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::bitwise_and() {
+expr* parse::bitwise_and() {
     ast node=or_expr();
     while(lookahead(tok::btand)) {
         ast tmp(toks[ptr].loc, ast_bitand);
@@ -462,11 +466,11 @@ ast parse::bitwise_and() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::or_expr() {
+expr* parse::or_expr() {
     ast node=and_expr();
     while(lookahead(tok::opor)) {
         ast tmp(toks[ptr].loc, ast_or);
@@ -476,11 +480,11 @@ ast parse::or_expr() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::and_expr() {
+expr* parse::and_expr() {
     ast node=cmp_expr();
     while(lookahead(tok::opand)) {
         ast tmp(toks[ptr].loc, ast_and);
@@ -490,11 +494,11 @@ ast parse::and_expr() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::cmp_expr() {
+expr* parse::cmp_expr() {
     ast node=additive_expr();
     while(tok::cmpeq<=toks[ptr].type && toks[ptr].type<=tok::geq) {
         // tok::cmpeq~tok::geq is 43~48,ast_cmpeq~ast_geq is 27~32
@@ -505,11 +509,11 @@ ast parse::cmp_expr() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::additive_expr() {
+expr* parse::additive_expr() {
     ast node=multive_expr();
     while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::floater)) {
         ast tmp(toks[ptr].loc, ast_null);
@@ -525,11 +529,11 @@ ast parse::additive_expr() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::multive_expr() {
+expr* parse::multive_expr() {
     ast node=(lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar();
     while(lookahead(tok::mult) || lookahead(tok::div)) {
         ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::mult+ast_mult);
@@ -539,11 +543,11 @@ ast parse::multive_expr() {
         tmp.update_span();
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::unary() {
+expr* parse::unary() {
     ast node(toks[ptr].loc,ast_null);
     switch(toks[ptr].type) {
         case tok::sub:     node.set_type(ast_neg);match(tok::sub);break;
@@ -552,11 +556,11 @@ ast parse::unary() {
         default: break;
     }
     node.add((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::scalar() {
+expr* parse::scalar() {
     ast node(toks[ptr].loc, ast_null);
     if (lookahead(tok::tknil)) {
         node=nil();
@@ -580,7 +584,7 @@ ast parse::scalar() {
         match(tok::lcurve);
         node=calc();
         node.set_begin(loc.begin_line, loc.begin_column);
-        node.update_span(thisspan);
+        update_location(node);
         match(tok::rcurve);
     } else if (lookahead(tok::var)) {
         match(tok::var);
@@ -601,11 +605,11 @@ ast parse::scalar() {
             node.add(call_scalar());
         }
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::call_scalar() {
+expr* parse::call_scalar() {
     switch(toks[ptr].type) {
         case tok::lcurve:   return callf(); break;
         case tok::lbracket: return callv(); break;
@@ -616,7 +620,7 @@ ast parse::call_scalar() {
     return {toks[ptr].loc, ast_nil};
 }
 
-ast parse::callh() {
+expr* parse::callh() {
     ast node(toks[ptr].loc, ast_callh);
     match(tok::dot);
     node.set_str(toks[ptr].str);
@@ -625,7 +629,7 @@ ast parse::callh() {
     return node;
 }
 
-ast parse::callv() {
+expr* parse::callv() {
     // panic set for this token is not ','
     // this is the FIRST set of subvec
     // array end with tok::null=0
@@ -650,12 +654,12 @@ ast parse::callv() {
     if (node.size()==0) {
         die(thisspan, "expected index value");
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rbracket, "expected ']' when calling vector");
     return node;
 }
 
-ast parse::callf() {
+expr* parse::callf() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
     // array end with tok::null=0
@@ -677,12 +681,12 @@ ast parse::callf() {
         else if (!lookahead(tok::rcurve) && !check_comma(panic))
             break;
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rcurve, "expected ')' when calling function");
     return node;
 }
 
-ast parse::subvec() {
+expr* parse::subvec() {
     ast node=lookahead(tok::colon)?nil():calc();
     if (lookahead(tok::colon)) {
         ast tmp(toks[ptr].loc, ast_subvec);
@@ -691,11 +695,11 @@ ast parse::subvec() {
         tmp.add((lookahead(tok::comma) || lookahead(tok::rbracket))?nil():calc());
         node=std::move(tmp);
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::definition() {
+expr* parse::definition() {
     ast node(toks[ptr].loc, ast_def);
     if (lookahead(tok::var)) {
         match(tok::var);
@@ -713,32 +717,32 @@ ast parse::definition() {
     } else {
         node.add(calc());
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::incurve_def() {
+expr* parse::incurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
     ast node=multi_id();
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rcurve);
     node.set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
-ast parse::outcurve_def() {
+expr* parse::outcurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     ast node=multi_id();
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rcurve);
     node.set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
-ast parse::multi_id() {
+expr* parse::multi_id() {
     ast node(toks[ptr].loc, ast_multi_id);
     while(!lookahead(tok::eof)) {
         // only identifier is allowed here
@@ -752,11 +756,11 @@ ast parse::multi_id() {
             break;
         }
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::multi_scalar() {
+expr* parse::multi_scalar() {
     // if check_call_memory is true,we will check if value called here can reach a memory space
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
@@ -776,12 +780,12 @@ ast parse::multi_scalar() {
             break;
         }
     }
-    node.update_span(thisspan);
+    update_location(node);
     match(tok::rcurve, "expected ')' after multi-scalar");
     return node;
 }
 
-ast parse::multi_assgin() {
+expr* parse::multi_assgin() {
     ast node(toks[ptr].loc, ast_multi_assign);
     node.add(multi_scalar());
     match(tok::eq);
@@ -794,11 +798,11 @@ ast parse::multi_assgin() {
     } else {
         node.add(calc());
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::loop() {
+expr* parse::loop() {
     ++in_loop;
     ast node(toks[ptr].loc, ast_null);
     switch(toks[ptr].type) {
@@ -812,18 +816,18 @@ ast parse::loop() {
     return node;
 }
 
-ast parse::while_loop() {
+expr* parse::while_loop() {
     ast node(toks[ptr].loc, ast_while);
     match(tok::rwhile);
     match(tok::lcurve);
     node.add(calc());
     match(tok::rcurve);
     node.add(exprs());
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::for_loop() {
+expr* parse::for_loop() {
     ast node(toks[ptr].loc, ast_for);
     match(tok::rfor);
     match(tok::lcurve);
@@ -862,11 +866,11 @@ ast parse::for_loop() {
     }
     match(tok::rcurve);
     node.add(exprs());
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::forei_loop() {
+expr* parse::forei_loop() {
     ast node(toks[ptr].loc, ast_null);
     switch(toks[ptr].type) {
         case tok::forindex:node.set_type(ast_forindex);match(tok::forindex);break;
@@ -887,11 +891,11 @@ ast parse::forei_loop() {
     node.add(calc());
     match(tok::rcurve);
     node.add(exprs());
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::iter_gen() {
+expr* parse::iter_gen() {
     ast node(toks[ptr].loc, ast_null);
     if (lookahead(tok::var)) {
         match(tok::var);
@@ -904,11 +908,11 @@ ast parse::iter_gen() {
             node.add(call_scalar());
         }
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::cond() {
+expr* parse::cond() {
     ast node(toks[ptr].loc, ast_cond);
 
     // generate if
@@ -941,24 +945,24 @@ ast parse::cond() {
         elsenode.update_span();
         node.add(std::move(elsenode));
     }
-    node.update_span();
+    update_location(node);
     return node;
 }
 
-ast parse::continue_expr() {
-    ast node(toks[ptr].loc, ast_continue);
+continue_expr* parse::continue_expression() {
+    auto node = new continue_expr(toks[ptr].loc);
     match(tok::cont);
     return node;
 }
 
-ast parse::break_expr() {
-    ast node(toks[ptr].loc, ast_break);
+break_expr* parse::break_expression() {
+    auto node = new break_expr(toks[ptr].loc);
     match(tok::brk);
     return node;
 }
 
-ast parse::ret_expr() {
-    ast node(toks[ptr].loc, ast_ret);
+return_expr* parse::return_expression() {
+    auto node = new return_expr(toks[ptr].loc);
     match(tok::ret);
     tok type=toks[ptr].type;
     if (type==tok::tknil || type==tok::num ||
@@ -966,10 +970,11 @@ ast parse::ret_expr() {
         type==tok::func || type==tok::sub ||
         type==tok::opnot || type==tok::lcurve ||
         type==tok::lbracket || type==tok::lbrace ||
-        type==tok::tktrue || type==tok::tkfalse
-    ) {
-        node.add(calc());
+        type==tok::tktrue || type==tok::tkfalse) {
+        node->set_value(calc());
+    } else {
+        node->set_value(nil());
     }
-    node.update_span();
+    update_location(node);
     return node;
 }

@@ -18,7 +18,7 @@ private:
     u32 in_func; // count function block
     u32 in_loop; // count loop block
     const token* toks;
-    ast root;
+    code_block* root;
     error& err;
 
 private:
@@ -77,7 +77,7 @@ private:
     };
 
 private:
-    void die(const span&,string);
+    void die(const span&,std::string);
     void next() {++ptr;}
     void match(tok type, const char* info=nullptr);
     bool lookahead(tok);
@@ -86,64 +86,64 @@ private:
     bool check_tuple();
     bool check_func_end(const ast&);
     bool check_special_call();
-    bool need_semi_check(const ast&);
+    bool need_semi_check(expr*);
+    void update_location(expr*);
 
 private:
-    ast null();
-    ast nil();
-    ast num();
-    ast str();
-    ast id();
-    ast bools();
-    ast vec();
-    ast hash();
-    ast pair();
-    ast func();
-    ast params();
-    ast lcurve_expr();
-    ast expr();
-    ast exprs();
-    ast calc();
-    ast bitwise_or();
-    ast bitwise_xor();
-    ast bitwise_and();
-    ast or_expr();
-    ast and_expr();
-    ast cmp_expr();
-    ast additive_expr();
-    ast multive_expr();
-    ast unary();
-    ast scalar();
-    ast call_scalar();
-    ast callh();
-    ast callv();
-    ast callf();
-    ast subvec();
-    ast definition();
-    ast incurve_def();
-    ast outcurve_def();
-    ast multi_id();
-    ast multi_scalar();
-    ast multi_assgin();
-    ast loop();
-    ast while_loop();
-    ast for_loop();
-    ast forei_loop();
-    ast iter_gen();
-    ast cond();
-    ast continue_expr();
-    ast break_expr();
-    ast ret_expr();
+    null_expr* null();
+    nil_expr* nil();
+    number_literal* num();
+    string_literal* str();
+    identifier* id();
+    bool_literal* bools();
+    vector_expr* vec();
+    hash_expr* hash();
+    hash_pair* pair();
+    function* func();
+    void params(function*);
+    expr* lcurve_expr();
+    expr* expression();
+    code_block* expression_block();
+    expr* calc();
+    expr* bitwise_or();
+    expr* bitwise_xor();
+    expr* bitwise_and();
+    expr* or_expr();
+    expr* and_expr();
+    expr* cmp_expr();
+    expr* additive_expr();
+    expr* multive_expr();
+    expr* unary();
+    expr* scalar();
+    expr* call_scalar();
+    expr* callh();
+    expr* callv();
+    expr* callf();
+    expr* subvec();
+    expr* definition();
+    expr* incurve_def();
+    expr* outcurve_def();
+    expr* multi_id();
+    expr* multi_scalar();
+    expr* multi_assgin();
+    expr* loop();
+    expr* while_loop();
+    expr* for_loop();
+    expr* forei_loop();
+    expr* iter_gen();
+    expr* cond();
+    continue_expr* continue_expression();
+    break_expr* break_expression();
+    return_expr* return_expression();
 
 public:
-    inline ast& tree() {return root;}
-    inline const ast& tree() const {return root;}
+    inline code_block* tree() {return root;}
 
 public:
     parse(error& e):
         ptr(0), in_func(0), in_loop(0),
         toks(nullptr),
-        root({0, 0, 0, 0, ""}, ast_root),
+        root(nullptr),
         err(e) {}
     const error& compile(const lexer&);
     void easter_egg() const;
