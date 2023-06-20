@@ -12,6 +12,7 @@
 #include "nasal_dbg.h"
 
 #include <unordered_map>
+#include <thread>
 
 const u32 VM_AST   =0x01;
 const u32 VM_CODE  =0x02;
@@ -55,6 +56,7 @@ std::ostream& logo(std::ostream& out) {
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     <<"ver  : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
     <<"std  : c++ "<<__cplusplus<<"\n"
+    <<"core : "<<std::thread::hardware_concurrency()<<" cores\n"
     <<"repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     <<"wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"

@@ -117,21 +117,26 @@ bool parse::check_tuple() {
     return false;
 }
 
-bool parse::check_func_end(const ast& node) {
-    u32 type=node.type();
-    if (type==ast_func) {
+bool parse::check_func_end(expr* node) {
+    auto type=node->get_type();
+    if (type==expr_type::ast_func) {
         return true;
-    } else if (type==ast_num || type==ast_id || type==ast_str || type==ast_nil || type==ast_vec || type==ast_hash) {
+    } else if (type==expr_type::ast_num ||
+        type==expr_type::ast_id ||
+        type==expr_type::ast_str ||
+        type==expr_type::ast_nil ||
+        type==expr_type::ast_vec ||
+        type==expr_type::ast_hash) {
         return false;
     }
     if (node.child().empty() || (
-        type!=ast_def &&
-        type!=ast_equal &&
-        type!=ast_addeq &&
-        type!=ast_subeq &&
-        type!=ast_multeq &&
-        type!=ast_diveq &&
-        type!=ast_lnkeq)) {
+        type!=expr_type::ast_def &&
+        type!=expr_type::ast_equal &&
+        type!=expr_type::ast_addeq &&
+        type!=expr_type::ast_subeq &&
+        type!=expr_type::ast_multeq &&
+        type!=expr_type::ast_diveq &&
+        type!=expr_type::ast_lnkeq)) {
         return false;
     } else {
         return check_func_end(node.child().back());
@@ -326,7 +331,7 @@ void parse::params(function* func_node) {
 expr* parse::lcurve_expr() {
     if (toks[ptr+1].type==tok::var)
         return definition();
-    return check_tuple()?multi_assgin():calc();
+    return check_tuple()?multi_assignment():calc();
 }
 
 expr* parse::expression() {
@@ -712,7 +717,7 @@ slice_vector* parse::subvec() {
 }
 
 expr* parse::definition() {
-    ast node(toks[ptr].loc, ast_def);
+    auto node = new definition_expr(toks[ptr].loc);
     if (lookahead(tok::var)) {
         match(tok::var);
         switch(toks[ptr].type) {
@@ -733,33 +738,33 @@ expr* parse::definition() {
     return node;
 }
 
-expr* parse::incurve_def() {
+multi_define* parse::incurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
-    ast node=multi_id();
+    auto node = multi_id();
     update_location(node);
     match(tok::rcurve);
-    node.set_begin(loc.begin_line, loc.begin_column);
+    node->set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
-expr* parse::outcurve_def() {
+multi_define* parse::outcurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
-    ast node=multi_id();
+    auto node = multi_id();
     update_location(node);
     match(tok::rcurve);
-    node.set_begin(loc.begin_line, loc.begin_column);
+    node->set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
 expr* parse::multi_id() {
-    ast node(toks[ptr].loc, ast_multi_id);
+    auto node = new multi_define(toks[ptr].loc);
     while(!lookahead(tok::eof)) {
         // only identifier is allowed here
         // but we check it at codegen stage
-        node.add(calc());
+        node->add_var(calc());
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id)) { // first set of identifier
@@ -772,7 +777,7 @@ expr* parse::multi_id() {
     return node;
 }
 
-expr* parse::multi_scalar() {
+tuple_expr* parse::multi_scalar() {
     // if check_call_memory is true,we will check if value called here can reach a memory space
     const tok panic[]={
         tok::id,tok::str,tok::num,tok::tktrue,
@@ -780,10 +785,10 @@ expr* parse::multi_scalar() {
         tok::func,tok::var,tok::lcurve,tok::floater,
         tok::lbrace,tok::lbracket,tok::null
     };
-    ast node(toks[ptr].loc, ast_tuple);
+    auto node = new tuple_expr(toks[ptr].loc);
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
-        node.add(calc());
+        node->add_element(calc());
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::eof)) {
@@ -797,18 +802,18 @@ expr* parse::multi_scalar() {
     return node;
 }
 
-expr* parse::multi_assgin() {
-    ast node(toks[ptr].loc, ast_multi_assign);
-    node.add(multi_scalar());
+multi_assign* parse::multi_assignment() {
+    auto node = new multi_assign(toks[ptr].loc);
+    node->set_left(multi_scalar());
     match(tok::eq);
     if (lookahead(tok::eof)) {
         die(thisspan, "expected value list");
         return node;
     }
     if (lookahead(tok::lcurve)) {
-        node.add(check_tuple()?multi_scalar():calc());
+        node->set_right(check_tuple()?multi_scalar():calc());
     } else {
-        node.add(calc());
+        node->set_right(calc());
     }
     update_location(node);
     return node;
@@ -917,14 +922,14 @@ iter_expr* parse::iter_gen() {
     auto node = new iter_expr(toks[ptr].loc);
     if (lookahead(tok::var)) {
         match(tok::var);
-        node.set_type(ast_iter);
         node->set_name(id());
     } else {
-        node.set_type(ast_call);
-        node.add(id());
+        auto tmp = new call_expr(toks[ptr].loc);
+        tmp->set_first(id());
         while(is_call(toks[ptr].type)) {
-            node.add(call_scalar());
+            tmp->add_call(call_scalar());
         }
+        node->set_call(tmp);
     }
     update_location(node);
     return node;

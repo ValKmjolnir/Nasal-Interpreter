@@ -151,7 +151,7 @@ private:
     ast outcurve_def();
     ast multi_id();
     ast multi_scalar();
-    ast multi_assgin();
+    ast multi_assign();
     ast loop();
     ast while_loop();
     ast for_loop();
@@ -459,7 +459,7 @@ ast parse::params() {
 ast parse::lcurve_expr() {
     if (toks[ptr+1].type==tok::var)
         return definition();
-    return check_tuple()?multi_assgin():calc();
+    return check_tuple()?multi_assign():calc();
 }
 
 ast parse::expr() {
@@ -917,7 +917,7 @@ ast parse::multi_scalar() {
     return node;
 }
 
-ast parse::multi_assgin() {
+ast parse::multi_assign() {
     ast node(toks[ptr].loc, ast_multi_assign);
     node.add(multi_scalar());
     match(tok::eq);
