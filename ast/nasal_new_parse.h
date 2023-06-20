@@ -84,7 +84,7 @@ private:
     bool is_call(tok);
     bool check_comma(const tok*);
     bool check_tuple();
-    bool check_func_end(const ast&);
+    bool check_func_end(expr*);
     bool check_special_call();
     bool need_semi_check(expr*);
     void update_location(expr*);
@@ -121,11 +121,11 @@ private:
     call_function* callf();
     slice_vector* subvec();
     expr* definition();
-    expr* incurve_def();
-    expr* outcurve_def();
-    expr* multi_id();
-    expr* multi_scalar();
-    expr* multi_assgin();
+    multi_define* incurve_def();
+    multi_define* outcurve_def();
+    multi_define* multi_id();
+    tuple_expr* multi_scalar();
+    multi_assign* multi_assignment();
     expr* loop();
     while_expr* while_loop();
     for_expr* for_loop();

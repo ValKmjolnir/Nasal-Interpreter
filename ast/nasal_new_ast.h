@@ -49,7 +49,9 @@ enum class expr_type:u32 {
     ast_cond,        // mark a sub-tree of conditional expression
     ast_if,          // if keyword
     ast_multi_id,    // multi identifiers sub-tree
+    ast_tuple,
     ast_def,         // definition
+    ast_multi_assign,
     ast_continue,    // continue keyword, only used in loop
     ast_break,       // break keyword, only used in loop
     ast_ret          // return keyword, only used in function block
@@ -316,6 +318,21 @@ public:
     virtual void accept(ast_visitor*) override;
 };
 
+class call_expr:public expr {
+private:
+    expr* first;
+    std::vector<expr*> calls;
+
+public:
+    call_expr(const span& location):
+        expr(location, expr_type::ast_call),
+        first(nullptr) {}
+    ~call_expr();
+    void set_first(expr* node) {first = node;}
+    void add_call(expr* node) {calls.push_back(node);}
+    virtual void accept(ast_visitor*) override;
+};
+
 class call_hash:public expr {
 private:
     std::string field;
@@ -369,17 +386,17 @@ public:
     virtual void accept(ast_visitor*) override;
 };
 
-class definition:public expr {
+class definition_expr:public expr {
 private:
     identifier* variable;
     multi_define* variables;
     expr* value;
 
 public:
-    definition(const span& location):
+    definition_expr(const span& location):
         expr(location, expr_type::ast_def),
         variable(nullptr), variables(nullptr), value(nullptr) {}
-    ~definition();
+    ~definition_expr();
     virtual void accept(ast_visitor*) override;
 };
 
@@ -391,6 +408,33 @@ public:
     multi_define(const span& location):
         expr(location, expr_type::ast_multi_id) {}
     ~multi_define();
+    void add_var(expr* node) {variables.push_back(node);}
+    virtual void accept(ast_visitor*) override;
+};
+
+class tuple_expr:public expr {
+private:
+    std::vector<expr*> elements;
+
+public:
+    tuple_expr(const span& location):
+        expr(location, expr_type::ast_tuple) {}
+    ~tuple_expr();
+    void add_element(expr* node) {elements.push_back(node);}
+    virtual void accept(ast_visitor*) override;
+};
+
+class multi_assign:public expr {
+private:
+    tuple_expr* left;
+    expr* right;
+
+public:
+    multi_assign(const span& location):
+        expr(location, expr_type::ast_multi_assign) {}
+    ~multi_assign();
+    void set_left(tuple_expr* node) {left = node;}
+    void set_right(expr* node) {right = node;}
     virtual void accept(ast_visitor*) override;
 };
 
@@ -438,17 +482,17 @@ public:
 class iter_expr:public expr {
 private:
     identifier* name;
-    expr* value;
+    expr* call;
 
 public:
     iter_expr(const span& location):
         expr(location, expr_type::ast_iter),
-        name(nullptr), value(nullptr) {}
+        name(nullptr), call(nullptr) {}
     ~iter_expr();
     void set_name(identifier* node) {name = node;}
-    void set_value(expr* node) {value = node;}
+    void set_call(expr* node) {call = node;}
     identifier* get_name() {return name;}
-    expr* get_value() {return value;}
+    expr* get_call() {return call;}
     virtual void accept(ast_visitor*) override;
 };
 
