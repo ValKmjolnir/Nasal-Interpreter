@@ -408,131 +408,145 @@ expr* parse::calc() {
     auto node = bitwise_or();
     if (lookahead(tok::quesmark)) {
         // trinocular calculation
-        ast tmp(toks[ptr].loc, ast_trino);
+        auto tmp = new ternary_operator(toks[ptr].loc);
         match(tok::quesmark);
-        tmp.add(std::move(node));
-        tmp.add(calc());
+        tmp->set_condition(node);
+        tmp->set_left(calc());
         match(tok::colon);
-        tmp.add(calc());
-        node=std::move(tmp);
+        tmp->set_right(calc());
+        node = tmp;
     } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
         // tok::eq~tok::lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::eq+ast_equal);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(calc());
-        node=std::move(tmp);
+        node = tmp;
     } else if (toks[ptr].type==tok::btandeq || toks[ptr].type==tok::btoreq || toks[ptr].type==tok::btxoreq) {
         ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::btandeq+ast_btandeq);
         tmp.add(std::move(node));
         match(toks[ptr].type);
         tmp.add(calc());
-        node=std::move(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::bitwise_or() {
-    ast node=bitwise_xor();
+expr* parse::bitwise_or() {
+    auto node = bitwise_xor();
     while(lookahead(tok::btor)) {
-        ast tmp(toks[ptr].loc, ast_bitor);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_type(binary_operator::binary_type::bitwise_or);
+        tmp->set_left(node);
         match(tok::btor);
-        tmp.add(bitwise_xor());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(bitwise_xor());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::bitwise_xor() {
-    ast node=bitwise_and();
+expr* parse::bitwise_xor() {
+    auto node = bitwise_and();
     while(lookahead(tok::btxor)) {
-        ast tmp(toks[ptr].loc, ast_bitxor);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_type(binary_operator::binary_type::bitwise_xor);
+        tmp->set_left(node);
         match(tok::btxor);
-        tmp.add(bitwise_and());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(bitwise_and());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::bitwise_and() {
-    ast node=or_expr();
+expr* parse::bitwise_and() {
+    auto node = or_expr();
     while(lookahead(tok::btand)) {
-        ast tmp(toks[ptr].loc, ast_bitand);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_type(binary_operator::binary_type::bitwise_and);
+        tmp->set_left(node);
         match(tok::btand);
-        tmp.add(or_expr());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(or_expr());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::or_expr() {
-    ast node=and_expr();
+expr* parse::or_expr() {
+    auto node = and_expr();
     while(lookahead(tok::opor)) {
-        ast tmp(toks[ptr].loc, ast_or);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_type(binary_operator::binary_type::condition_or);
+        tmp->set_left(node);
         match(tok::opor);
-        tmp.add(and_expr());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(and_expr());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::and_expr() {
-    ast node=cmp_expr();
+expr* parse::and_expr() {
+    auto node = cmp_expr();
     while(lookahead(tok::opand)) {
-        ast tmp(toks[ptr].loc, ast_and);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_type(binary_operator::binary_type::condition_and);
+        tmp->set_left(node);
         match(tok::opand);
-        tmp.add(cmp_expr());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(cmp_expr());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::cmp_expr() {
-    ast node=additive_expr();
+expr* parse::cmp_expr() {
+    auto node = additive_expr();
     while(tok::cmpeq<=toks[ptr].type && toks[ptr].type<=tok::geq) {
         // tok::cmpeq~tok::geq is 43~48,ast_cmpeq~ast_geq is 27~32
-        ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::cmpeq+ast_cmpeq);
-        tmp.add(std::move(node));
+        auto tmp = new binary_operator(toks[ptr].loc);
+        switch(toks[ptr].type) {
+            case tok::cmpeq: tmp->set_type(binary_operator::binary_type::cmpeq); break;
+            case tok::neq: tmp->set_type(binary_operator::binary_type::cmpneq); break;
+            case tok::less: tmp->set_type(binary_operator::binary_type::less); break;
+            case tok::leq: tmp->set_type(binary_operator::binary_type::leq); break;
+            case tok::grt: tmp->set_type(binary_operator::binary_type::grt); break;
+            case tok::geq: tmp->set_type(binary_operator::binary_type::geq); break;
+            default: break;
+        }
+        tmp->set_left(node);
         match(toks[ptr].type);
-        tmp.add(additive_expr());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(additive_expr());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
 }
 
-binary_operator* parse::additive_expr() {
-    ast node=multive_expr();
+expr* parse::additive_expr() {
+    auto node = multive_expr();
     while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::floater)) {
-        ast tmp(toks[ptr].loc, ast_null);
+        auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::add: tmp.set_type(ast_add);  break;
-            case tok::sub: tmp.set_type(ast_sub);  break;
-            case tok::floater: tmp.set_type(ast_link); break;
+            case tok::add: tmp->set_type(binary_operator::binary_type::add); break;
+            case tok::sub: tmp->set_type(binary_operator::binary_type::sub); break;
+            case tok::floater: tmp->set_type(binary_operator::binary_type::concat); break;
             default: break;
         }
-        tmp.add(std::move(node));
+        tmp->set_left(node);
         match(toks[ptr].type);
-        tmp.add(multive_expr());
-        tmp.update_span();
-        node=std::move(tmp);
+        tmp->set_right(multive_expr());
+        update_location(tmp);
+        node = tmp;
     }
     update_location(node);
     return node;
@@ -582,47 +596,48 @@ unary_operator* parse::unary() {
 expr* parse::scalar() {
     expr* node = nullptr;
     if (lookahead(tok::tknil)) {
-        node=nil();
+        node = nil();
         match(tok::tknil);
     } else if (lookahead(tok::num)) {
-        node=num();
+        node = num();
     } else if (lookahead(tok::str)) {
-        node=str();
+        node = str();
     } else if (lookahead(tok::id)) {
-        node=id();
+        node = id();
     } else if (lookahead(tok::tktrue) || lookahead(tok::tkfalse)) {
-        node=bools();
+        node = bools();
     } else if (lookahead(tok::func)) {
-        node=func();
+        node = func();
     } else if (lookahead(tok::lbracket)) {
-        node=vec();
+        node = vec();
     } else if (lookahead(tok::lbrace)) {
-        node=hash();
+        node = hash();
     } else if (lookahead(tok::lcurve)) {
         const auto& loc=toks[ptr].loc;
         match(tok::lcurve);
-        node=calc();
+        node = calc();
         node->set_begin(loc.begin_line, loc.begin_column);
         update_location(node);
         match(tok::rcurve);
     } else if (lookahead(tok::var)) {
         match(tok::var);
-        node.set_type(ast_def);
-        node.add(id());
+        auto def_node = new definition_expr(toks[ptr].loc);
+        def_node->set_identifier(id());
         match(tok::eq);
-        node.add(calc());
+        def_node->set_value(calc());
+        node = def_node;
     } else {
         die(thisspan, "expected scalar");
         return node;
     }
     // check call and avoid ambiguous syntax
     if (is_call(toks[ptr].type) && !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)) {
-        ast tmp=std::move(node);
-        node={toks[ptr].loc, ast_call};
-        node.add(std::move(tmp));
+        auto call_node = new call_expr(toks[ptr].loc);
+        call_node->set_first(node);
         while(is_call(toks[ptr].type)) {
-            node.add(call_scalar());
+            call_node->add_call(call_scalar());
         }
+        node = call_node;
     }
     update_location(node);
     return node;
@@ -721,18 +736,18 @@ expr* parse::definition() {
     if (lookahead(tok::var)) {
         match(tok::var);
         switch(toks[ptr].type) {
-            case tok::id: node.add(id());break;
-            case tok::lcurve: node.add(outcurve_def());break;
+            case tok::id: node->set_identifier(id());break;
+            case tok::lcurve: node->set_multi_define(outcurve_def());break;
             default: die(thisspan, "expected identifier");break;
         }
     } else if (lookahead(tok::lcurve)) {
-        node.add(incurve_def());
+        node->set_multi_define(incurve_def());
     }
     match(tok::eq);
     if (lookahead(tok::lcurve)) {
-        node.add(check_tuple()?multi_scalar():calc());
+        node->set_value(check_tuple()?multi_scalar():calc());
     } else {
-        node.add(calc());
+        node->set_value(calc());
     }
     update_location(node);
     return node;
@@ -759,7 +774,7 @@ multi_define* parse::outcurve_def() {
     return node;
 }
 
-expr* parse::multi_id() {
+multi_define* parse::multi_id() {
     auto node = new multi_define(toks[ptr].loc);
     while(!lookahead(tok::eof)) {
         // only identifier is allowed here
