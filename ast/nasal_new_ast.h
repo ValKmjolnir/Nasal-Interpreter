@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal.h"
-#include "nasal_err.h"
+#include "nasal_new_header.h"
+#include "nasal_new_err.h"
 
 #include <vector>
 #include <unordered_map>
@@ -51,6 +51,7 @@ enum class expr_type:u32 {
     ast_multi_id,    // multi identifiers sub-tree
     ast_tuple,
     ast_def,         // definition
+    ast_assign,
     ast_multi_assign,
     ast_continue,    // continue keyword, only used in loop
     ast_break,       // break keyword, only used in loop
@@ -88,7 +89,7 @@ public:
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;
     }
-    virtual void accept(ast_visitor*);
+    void accept(ast_visitor*);
 };
 
 class null_expr:public expr {
@@ -115,6 +116,7 @@ public:
     number_literal(const span& location, const f64 num):
         expr(location, expr_type::ast_num), number(num) {}
     ~number_literal() = default;
+    f64 get_number() const {return number;}
     void accept(ast_visitor*) override;
 };
 
@@ -126,6 +128,7 @@ public:
     string_literal(const span& location, const std::string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() = default;
+    const std::string get_content() const {return content;}
     void accept(ast_visitor*) override;
 };
 
@@ -137,6 +140,7 @@ public:
     identifier(const span& location, const std::string& str):
         expr(location, expr_type::ast_id), name(str) {}
     ~identifier() = default;
+    const std::string get_name() const {return name;}
     void accept(ast_visitor*) override;
 };
 
@@ -346,7 +350,7 @@ public:
     call_hash(const span& location, const std::string& name):
         expr(location, expr_type::ast_callh),
         field(name) {}
-    ~call_hash();
+    ~call_hash() = default;
     void accept(ast_visitor*) override;
 };
 
@@ -405,6 +409,42 @@ public:
     void set_identifier(identifier* node) {variable_name = node;}
     void set_multi_define(multi_define* node) {variables = node;}
     void set_value(expr* node) {value = node;}
+
+    expr* get_value() {return value;}
+    void accept(ast_visitor*) override;
+};
+
+class assignment_expr:public expr {
+public:
+    enum class assign_type {
+        equal,
+        add_equal,
+        sub_equal,
+        mult_equal,
+        div_equal,
+        concat_equal,
+        bitwise_and_equal,
+        bitwise_or_equal,
+        bitwise_xor_equal
+    };
+
+private:
+    assign_type type;
+    expr* left;
+    expr* right;
+
+public:
+    assignment_expr(const span& location):
+        expr(location, expr_type::ast_assign),
+        left(nullptr), right(nullptr) {}
+    ~assignment_expr();
+    void set_type(assign_type operator_type) {type = operator_type;}
+    void set_left(expr* node) {left = node;}
+    void set_right(expr* node) {right = node;}
+
+    assign_type get_type() const {return type;}
+    expr* get_left() {return left;}
+    expr* get_right() {return right;}
     void accept(ast_visitor*) override;
 };
 

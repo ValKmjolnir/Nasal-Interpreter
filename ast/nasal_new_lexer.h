@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <sys/stat.h>
 
-#include "nasal.h"
-#include "nasal_err.h"
+#include "nasal_new_header.h"
+#include "nasal_new_err.h"
 
 #ifdef _MSC_VER
 #define S_ISREG(m) (((m)&0xF000)==0x8000)
@@ -81,9 +81,9 @@ enum class tok:u32 {
 };
 
 struct token {
-    span loc;    // location
-    tok type;    // token type
-    string str;  // content
+    span loc; // location
+    tok type; // token type
+    std::string str; // content
     token() = default;
     token(const token&) = default;
 };
@@ -93,11 +93,11 @@ private:
     u32    line;
     u32    column;
     usize  ptr;
-    string filename;
-    string res;
+    std::string filename;
+    std::string res;
     error& err;
     std::vector<token> toks;
-    const std::unordered_map<string,tok> typetbl {
+    const std::unordered_map<std::string, tok> typetbl {
         {"true"    ,tok::tktrue  },
         {"false"   ,tok::tkfalse },
         {"for"     ,tok::rfor    },
@@ -153,7 +153,7 @@ private:
         {">="      ,tok::geq     }
     };
 
-    tok get_type(const string&);
+    tok get_type(const std::string&);
     bool skip(char);
     bool is_id(char);
     bool is_hex(char);
@@ -166,8 +166,8 @@ private:
     void skip_note();
     void err_char();
 
-    void open(const string&);
-    string utf8_gen();
+    void open(const std::string&);
+    std::string utf8_gen();
     token id_gen();
     token num_gen();
     token str_gen();
@@ -175,7 +175,9 @@ private:
     token dots();
     token calc_opr();
 public:
-    lexer(error& e): line(1), column(0), ptr(0), filename(""), res(""), err(e) {}
-    const error& scan(const string&);
+    lexer(error& e):
+        line(1), column(0),
+        ptr(0), filename(""), res(""), err(e) {}
+    const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };
