@@ -80,11 +80,12 @@ NASAL_NEW_AST=\
 	nasal_new_ast.o\
 	nasal_new_parse.o\
 	ast_visitor.o\
+	ast_dumper.o\
 	nasal_new_main.o
 
 # for test
-nasal_new: $(NASAL_NEW_AST)
-	$(CXX) $(NASAL_NEW_AST) -o nasal_new
+nnew: $(NASAL_NEW_AST)
+	$(CXX) $(NASAL_NEW_AST) -o nnew
 	@ echo "build done"
 
 nasal_new_main.o: ast/nasal_new_main.cpp
@@ -107,6 +108,9 @@ nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp ast/nasal_new_a
 
 ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .
+
+ast_dumper.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_dumper.h ast/ast_dumper.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/ast_dumper.cpp -fno-exceptions -fPIC -o ast_dumper.o -I .
 
 .PHONY: nasal_new_clean
 nasal_new_clean:

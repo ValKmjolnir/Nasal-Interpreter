@@ -60,7 +60,7 @@ void parse::die(const span& loc, std::string info) {
     err.err("parse", loc, info);
 }
 
-void parse::match(tok type,const char* info) {
+void parse::match(tok type, const char* info) {
     if (!lookahead(type)) {
         if (info) {
             die(thisspan, info);
@@ -121,18 +121,10 @@ bool parse::check_func_end(expr* node) {
     auto type=node->get_type();
     if (type==expr_type::ast_func) {
         return true;
-    } else if (type==expr_type::ast_num ||
-        type==expr_type::ast_id ||
-        type==expr_type::ast_str ||
-        type==expr_type::ast_nil ||
-        type==expr_type::ast_vec ||
-        type==expr_type::ast_hash) {
-        return false;
-    }
-    if (type==expr_type::ast_def) {
-        return check_func_end(((definition_expr*)type)->get_value());
+    } else if (type==expr_type::ast_def) {
+        return check_func_end(((definition_expr*)node)->get_value());
     } else if (type==expr_type::ast_assign) {
-        return check_func_end(((assignment_expr*)type)->get_right());
+        return check_func_end(((assignment_expr*)node)->get_right());
     }
     return false;
 }
@@ -270,7 +262,7 @@ hash_pair* parse::pair() {
         match(tok::id, "expected hashmap key");
     }
     match(tok::colon);
-    node->set_element(calc());
+    node->set_value(calc());
     update_location(node);
     return node;
 }
@@ -408,7 +400,6 @@ expr* parse::calc() {
         tmp->set_right(calc());
         node = tmp;
     } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
-        // tok::eq~tok::lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
         auto tmp = new assignment_expr(toks[ptr].loc);
         switch(toks[ptr].type) {
             case tok::eq: tmp->set_type(assignment_expr::assign_type::equal); break;
@@ -518,7 +509,6 @@ expr* parse::and_expr() {
 expr* parse::cmp_expr() {
     auto node = additive_expr();
     while(tok::cmpeq<=toks[ptr].type && toks[ptr].type<=tok::geq) {
-        // tok::cmpeq~tok::geq is 43~48,ast_cmpeq~ast_geq is 27~32
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
             case tok::cmpeq: tmp->set_type(binary_operator::binary_type::cmpeq); break;
@@ -760,7 +750,7 @@ expr* parse::definition() {
     return node;
 }
 
-multi_define* parse::incurve_def() {
+multi_identifier* parse::incurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
@@ -771,7 +761,7 @@ multi_define* parse::incurve_def() {
     return node;
 }
 
-multi_define* parse::outcurve_def() {
+multi_identifier* parse::outcurve_def() {
     const auto& loc=toks[ptr].loc;
     match(tok::lcurve);
     auto node = multi_id();
@@ -781,8 +771,8 @@ multi_define* parse::outcurve_def() {
     return node;
 }
 
-multi_define* parse::multi_id() {
-    auto node = new multi_define(toks[ptr].loc);
+multi_identifier* parse::multi_id() {
+    auto node = new multi_identifier(toks[ptr].loc);
     while(!lookahead(tok::eof)) {
         // only identifier is allowed here
         // but we check it at codegen stage
@@ -826,16 +816,16 @@ tuple_expr* parse::multi_scalar() {
 
 multi_assign* parse::multi_assignment() {
     auto node = new multi_assign(toks[ptr].loc);
-    node->set_left(multi_scalar());
+    node->set_tuple(multi_scalar());
     match(tok::eq);
     if (lookahead(tok::eof)) {
         die(thisspan, "expected value list");
         return node;
     }
     if (lookahead(tok::lcurve)) {
-        node->set_right(check_tuple()?multi_scalar():calc());
+        node->set_value(check_tuple()?multi_scalar():calc());
     } else {
-        node->set_right(calc());
+        node->set_value(calc());
     }
     update_location(node);
     return node;
@@ -845,10 +835,10 @@ expr* parse::loop() {
     ++in_loop;
     expr* node = nullptr;
     switch(toks[ptr].type) {
-        case tok::rwhile:  node=while_loop(); break;
-        case tok::rfor:    node=for_loop();   break;
+        case tok::rwhile:  node = while_loop(); break;
+        case tok::rfor:    node = for_loop();   break;
         case tok::forindex:
-        case tok::foreach: node=forei_loop(); break;
+        case tok::foreach: node = forei_loop(); break;
         default: break;
     }
     --in_loop;
@@ -870,6 +860,7 @@ for_expr* parse::for_loop() {
     auto node = new for_expr(toks[ptr].loc);
     match(tok::rfor);
     match(tok::lcurve);
+
     // first expression
     if (lookahead(tok::eof)) {
         die(thisspan, "expected definition");
@@ -884,6 +875,7 @@ for_expr* parse::for_loop() {
         node->set_initial(calc());
     }
     match(tok::semi, "expected ';' in for(;;)");
+
     // conditional expression
     if (lookahead(tok::eof)) {
         die(thisspan, "expected conditional expr");
@@ -894,6 +886,7 @@ for_expr* parse::for_loop() {
         node->set_condition(calc());
     }
     match(tok::semi, "expected ';' in for(;;)");
+
     //after loop expression
     if (lookahead(tok::eof)) {
         die(thisspan, "expected calculation");
@@ -1009,7 +1002,7 @@ break_expr* parse::break_expression() {
 return_expr* parse::return_expression() {
     auto node = new return_expr(toks[ptr].loc);
     match(tok::ret);
-    tok type=toks[ptr].type;
+    tok type = toks[ptr].type;
     if (type==tok::tknil || type==tok::num ||
         type==tok::str || type==tok::id ||
         type==tok::func || type==tok::sub ||

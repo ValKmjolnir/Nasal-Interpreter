@@ -120,9 +120,9 @@ private:
     call_function* callf();
     slice_vector* subvec();
     expr* definition();
-    multi_define* incurve_def();
-    multi_define* outcurve_def();
-    multi_define* multi_id();
+    multi_identifier* incurve_def();
+    multi_identifier* outcurve_def();
+    multi_identifier* multi_id();
     tuple_expr* multi_scalar();
     multi_assign* multi_assignment();
     expr* loop();

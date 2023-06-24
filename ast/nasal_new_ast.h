@@ -8,8 +8,7 @@
 
 enum class expr_type:u32 {
     ast_null=0,      // null node
-    ast_expr,        // expression node
-    ast_block,       // expression block 
+    ast_block,       // code block 
     ast_nil,         // nil keyword
     ast_num,         // number, basic value type
     ast_str,         // string, basic value type
@@ -24,21 +23,7 @@ enum class expr_type:u32 {
     ast_callv,       // id[index]
     ast_callf,       // id()
     ast_subvec,      // id[index:index]
-
     ast_param,       // function parameter
-    ast_and,         // and keyword
-    ast_or,          // or keyword
-
-    ast_equal,       // =
-    ast_addeq,       // +=
-    ast_subeq,       // -=
-    ast_multeq,      // *=
-    ast_diveq,       // /=
-    ast_lnkeq,       // ~=
-    ast_btandeq,     // &=
-    ast_btoreq,      // |=
-    ast_btxoreq,     // ^=
-
     ast_ternary,
     ast_binary,
     ast_unary,
@@ -62,23 +47,18 @@ class ast_visitor;
 class hash_pair;
 class parameter;
 class slice_vector;
-class multi_define;
+class multi_identifier;
 class code_block;
 class if_expr;
 
 class ast_abstract_node {
-public:
-    virtual void accept(ast_visitor*) = 0;
-};
-
-class expr:public ast_abstract_node {
-private:
+protected:
     span nd_loc;
     expr_type nd_type;
+
 public:
-    expr(const span& location, expr_type node_type):
+    ast_abstract_node(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
-    ~expr() = default;
     void set_begin(u32 line, u32 column) {
         nd_loc.begin_line = line;
         nd_loc.begin_column = column;
@@ -89,6 +69,14 @@ public:
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;
     }
+    virtual void accept(ast_visitor*) = 0;
+};
+
+class expr:public ast_abstract_node {
+public:
+    expr(const span& location, expr_type node_type):
+        ast_abstract_node(location, node_type) {}
+    ~expr() = default;
     void accept(ast_visitor*);
 };
 
@@ -152,6 +140,7 @@ public:
     bool_literal(const span& location, const bool bool_flag):
         expr(location, expr_type::ast_bool), flag(bool_flag) {}
     ~bool_literal() = default;
+    bool get_flag() const {return flag;}
     void accept(ast_visitor*) override;
 };
 
@@ -184,16 +173,17 @@ public:
 class hash_pair:public expr {
 private:
     std::string name;
-    expr* element;
+    expr* value;
 
 public:
     hash_pair(const span& location):
-        expr(location, expr_type::ast_pair) {}
+        expr(location, expr_type::ast_pair),
+        value(nullptr) {}
     ~hash_pair();
     void set_name(const std::string& field_name) {name = field_name;}
-    void set_element(expr* node) {element = node;}
+    void set_value(expr* node) {value = node;}
     const std::string& get_name() const {return name;}
-    expr* get_element() {return element;}
+    expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
 
@@ -248,6 +238,9 @@ public:
     void set_parameter_type(param_type pt) {type = pt;}
     void set_parameter_name(identifier* node) {name = node;}
     void set_default_value(expr* node) {default_value = node;}
+    param_type get_type() {return type;}
+    identifier* get_parameter_name() {return name;}
+    expr* get_default_value() {return default_value;}
     void accept(ast_visitor*) override;
 };
 
@@ -265,6 +258,9 @@ public:
     void set_condition(expr* node) {condition = node;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
+    expr* get_condition() {return condition;}
+    expr* get_left() {return left;}
+    expr* get_right() {return right;}
     void accept(ast_visitor*) override;
 };
 
@@ -302,6 +298,9 @@ public:
     void set_type(binary_type operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
+    binary_type get_type() const {return type;}
+    expr* get_left() {return left;}
+    expr* get_right() {return right;}
     void accept(ast_visitor*) override;
 };
 
@@ -324,6 +323,8 @@ public:
     ~unary_operator();
     void set_type(unary_type operator_type) {type = operator_type;}
     void set_value(expr* node) {value = node;}
+    unary_type get_type() const {return type;}
+    expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
 
@@ -339,6 +340,8 @@ public:
     ~call_expr();
     void set_first(expr* node) {first = node;}
     void add_call(expr* node) {calls.push_back(node);}
+    expr* get_first() {return first;}
+    std::vector<expr*>& get_calls() {return calls;}
     void accept(ast_visitor*) override;
 };
 
@@ -351,6 +354,7 @@ public:
         expr(location, expr_type::ast_callh),
         field(name) {}
     ~call_hash() = default;
+    const std::string& get_field() const {return field;}
     void accept(ast_visitor*) override;
 };
 
@@ -392,13 +396,15 @@ public:
     ~slice_vector();
     void set_begin(expr* node) {begin = node;}
     void set_end(expr* node) {end = node;}
+    expr* get_begin() {return begin;}
+    expr* get_end() {return end;}
     void accept(ast_visitor*) override;
 };
 
 class definition_expr:public expr {
 private:
     identifier* variable_name;
-    multi_define* variables;
+    multi_identifier* variables;
     expr* value;
 
 public:
@@ -407,9 +413,10 @@ public:
         variable_name(nullptr), variables(nullptr), value(nullptr) {}
     ~definition_expr();
     void set_identifier(identifier* node) {variable_name = node;}
-    void set_multi_define(multi_define* node) {variables = node;}
+    void set_multi_define(multi_identifier* node) {variables = node;}
     void set_value(expr* node) {value = node;}
-
+    identifier* get_variable_name() {return variable_name;}
+    multi_identifier* get_variables() {return variables;}
     expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
@@ -441,25 +448,22 @@ public:
     void set_type(assign_type operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
-
     assign_type get_type() const {return type;}
     expr* get_left() {return left;}
     expr* get_right() {return right;}
     void accept(ast_visitor*) override;
 };
 
-class multi_define:public expr {
+class multi_identifier:public expr {
 private:
     std::vector<expr*> variables;
-    expr* value;
 
 public:
-    multi_define(const span& location):
-        expr(location, expr_type::ast_multi_id),
-        value(nullptr) {}
-    ~multi_define();
+    multi_identifier(const span& location):
+        expr(location, expr_type::ast_multi_id) {}
+    ~multi_identifier();
     void add_var(expr* node) {variables.push_back(node);}
-    void set_value(expr* node) {value = node;}
+    std::vector<expr*>& get_variables() {return variables;}
     void accept(ast_visitor*) override;
 };
 
@@ -472,20 +476,24 @@ public:
         expr(location, expr_type::ast_tuple) {}
     ~tuple_expr();
     void add_element(expr* node) {elements.push_back(node);}
+    std::vector<expr*>& get_elements() {return elements;}
     void accept(ast_visitor*) override;
 };
 
 class multi_assign:public expr {
 private:
-    tuple_expr* left;
-    expr* right;
+    tuple_expr* tuple;
+    expr* value;
 
 public:
     multi_assign(const span& location):
-        expr(location, expr_type::ast_multi_assign) {}
+        expr(location, expr_type::ast_multi_assign),
+        tuple(nullptr), value(nullptr) {}
     ~multi_assign();
-    void set_left(tuple_expr* node) {left = node;}
-    void set_right(expr* node) {right = node;}
+    void set_tuple(tuple_expr* node) {tuple = node;}
+    void set_value(expr* node) {value = node;}
+    tuple_expr* get_tuple() {return tuple;}
+    expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
 
@@ -570,6 +578,7 @@ public:
     void set_iterator(iter_expr* node) {iterator = node;}
     void set_value(expr* node) {vector_node = node;}
     void set_code_block(code_block* node) {block = node;}
+    forei_loop_type get_type() const {return type;}
     iter_expr* get_iterator() {return iterator;}
     expr* get_value() {return vector_node;}
     code_block* get_code_block() {return block;}
