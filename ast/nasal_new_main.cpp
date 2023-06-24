@@ -4,6 +4,7 @@
 #include "nasal_new_ast.h"
 #include "nasal_new_parse.h"
 #include "ast_visitor.h"
+#include "ast_dumper.h"
 
 #include <unordered_map>
 #include <thread>
@@ -86,15 +87,16 @@ void execute(
 
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
+    if (cmd&VM_AST) {
+        auto dumper = new ast_dumper();
+        dumper->visit_expr(parse.tree());
+    }
 
     // linker gets parser's ast and load import files to this ast
     // ld.link(parse, file, cmd&VM_DETAIL).chkerr();
 
     // optimizer does simple optimization on ast
     // optimize(parse.tree());
-    // if (cmd&VM_AST) {
-    //     parse.tree().dump();
-    // }
 
     // code generator gets parser's ast and import file list to generate code
     // gen.compile(parse, ld).chkerr();

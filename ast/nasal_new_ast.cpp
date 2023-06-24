@@ -50,8 +50,8 @@ void hash_expr::accept(ast_visitor* visitor) {
 }
 
 hash_pair::~hash_pair() {
-    if (element) {
-        delete element;
+    if (value) {
+        delete value;
     }
 }
 
@@ -69,7 +69,7 @@ function::~function() {
 }
 
 void function::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_function(this);
 }
 
 code_block::~code_block() {
@@ -79,7 +79,7 @@ code_block::~code_block() {
 }
 
 void code_block::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_code_block(this);
 }
 
 parameter::~parameter() {
@@ -92,7 +92,7 @@ parameter::~parameter() {
 }
 
 void parameter::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_parameter(this);
 }
 
 ternary_operator::~ternary_operator() {
@@ -108,7 +108,7 @@ ternary_operator::~ternary_operator() {
 }
 
 void ternary_operator::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_ternary_operator(this);
 }
 
 binary_operator::~binary_operator() {
@@ -121,7 +121,7 @@ binary_operator::~binary_operator() {
 }
 
 void binary_operator::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_binary_operator(this);
 }
 
 unary_operator::~unary_operator() {
@@ -131,7 +131,7 @@ unary_operator::~unary_operator() {
 }
 
 void unary_operator::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_unary_operator(this);
 }
 
 call_expr::~call_expr() {
@@ -144,11 +144,11 @@ call_expr::~call_expr() {
 }
 
 void call_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_call_expr(this);
 }
 
 void call_hash::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_call_hash(this);
 }
 
 call_vector::~call_vector() {
@@ -158,7 +158,7 @@ call_vector::~call_vector() {
 }
 
 void call_vector::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_call_vector(this);
 }
 
 call_function::~call_function() {
@@ -168,7 +168,7 @@ call_function::~call_function() {
 }
 
 void call_function::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_call_function(this);
 }
 
 slice_vector::~slice_vector() {
@@ -181,7 +181,7 @@ slice_vector::~slice_vector() {
 }
 
 void slice_vector::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_slice_vector(this);
 }
 
 definition_expr::~definition_expr() {
@@ -197,7 +197,7 @@ definition_expr::~definition_expr() {
 }
 
 void definition_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_definition_expr(this);
 }
 
 assignment_expr::~assignment_expr() {
@@ -210,20 +210,17 @@ assignment_expr::~assignment_expr() {
 }
 
 void assignment_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_assignment_expr(this);
 }
 
-multi_define::~multi_define() {
+multi_identifier::~multi_identifier() {
     for(auto i : variables) {
         delete i;
     }
-    if (value) {
-        delete value;
-    }
 }
 
-void multi_define::accept(ast_visitor* visitor) {
-    // TODO
+void multi_identifier::accept(ast_visitor* visitor) {
+    visitor->visit_multi_identifier(this);
 }
 
 tuple_expr::~tuple_expr() {
@@ -233,20 +230,20 @@ tuple_expr::~tuple_expr() {
 }
 
 void tuple_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_tuple_expr(this);
 }
 
 multi_assign::~multi_assign() {
-    if (left) {
-        delete left;
+    if (tuple) {
+        delete tuple;
     }
-    if (right) {
-        delete right;
+    if (value) {
+        delete value;
     }
 }
 
 void multi_assign::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_multi_assign(this);
 }
 
 while_expr::~while_expr() {
@@ -259,7 +256,7 @@ while_expr::~while_expr() {
 }
 
 void while_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_while_expr(this);
 }
 
 for_expr::~for_expr() {
@@ -278,7 +275,7 @@ for_expr::~for_expr() {
 }
 
 void for_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_for_expr(this);
 }
 
 iter_expr::~iter_expr() {
@@ -291,7 +288,7 @@ iter_expr::~iter_expr() {
 }
 
 void iter_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_iter_expr(this);
 }
 
 forei_expr::~forei_expr() {
@@ -307,7 +304,7 @@ forei_expr::~forei_expr() {
 }
 
 void forei_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_forei_expr(this);
 }
 
 condition_expr::~condition_expr() {
@@ -323,7 +320,7 @@ condition_expr::~condition_expr() {
 }
 
 void condition_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_condition_expr(this);
 }
 
 if_expr::~if_expr() {
@@ -336,15 +333,15 @@ if_expr::~if_expr() {
 }
 
 void if_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_if_expr(this);
 }
 
 void continue_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_continue_expr(this);
 }
 
 void break_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_break_expr(this);
 }
 
 return_expr::~return_expr() {
@@ -354,5 +351,5 @@ return_expr::~return_expr() {
 }
 
 void return_expr::accept(ast_visitor* visitor) {
-    // TODO
+    visitor->visit_return_expr(this);
 }
