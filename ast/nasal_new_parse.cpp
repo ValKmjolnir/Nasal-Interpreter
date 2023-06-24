@@ -129,17 +129,10 @@ bool parse::check_func_end(expr* node) {
         type==expr_type::ast_hash) {
         return false;
     }
-    if (node.child().empty() || (
-        type!=expr_type::ast_def &&
-        type!=expr_type::ast_equal &&
-        type!=expr_type::ast_addeq &&
-        type!=expr_type::ast_subeq &&
-        type!=expr_type::ast_multeq &&
-        type!=expr_type::ast_diveq &&
-        type!=expr_type::ast_lnkeq)) {
-        return false;
-    } else {
-        return check_func_end(node.child().back());
+    if (type==expr_type::ast_def) {
+        return check_func_end(((definition_expr*)type)->get_value());
+    } else if (type==expr_type::ast_assign) {
+        return check_func_end(((assignment_expr*)type)->get_right());
     }
     return false;
 }
@@ -301,7 +294,6 @@ void parse::params(function* func_node) {
         auto param = new parameter(toks[ptr].loc);
         param->set_parameter_name(id());
         if (lookahead(tok::eq) || lookahead(tok::ellipsis)) {
-            ast special_arg(toks[ptr].loc, ast_null);
             if (lookahead(tok::eq)) {
                 match(tok::eq);
                 param->set_parameter_type(parameter::param_type::default_parameter);
@@ -417,16 +409,31 @@ expr* parse::calc() {
         node = tmp;
     } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
         // tok::eq~tok::lnkeq is 37 to 42,ast_equal~ast_lnkeq is 21~26
-        ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::eq+ast_equal);
-        tmp.add(std::move(node));
+        auto tmp = new assignment_expr(toks[ptr].loc);
+        switch(toks[ptr].type) {
+            case tok::eq: tmp->set_type(assignment_expr::assign_type::equal); break;
+            case tok::addeq: tmp->set_type(assignment_expr::assign_type::add_equal); break;
+            case tok::subeq: tmp->set_type(assignment_expr::assign_type::sub_equal); break;
+            case tok::multeq: tmp->set_type(assignment_expr::assign_type::mult_equal); break;
+            case tok::diveq: tmp->set_type(assignment_expr::assign_type::div_equal); break;
+            case tok::lnkeq: tmp->set_type(assignment_expr::assign_type::concat_equal); break;
+            default: break;
+        }
+        tmp->set_left(node);
         match(toks[ptr].type);
-        tmp.add(calc());
+        tmp->set_right(calc());
         node = tmp;
     } else if (toks[ptr].type==tok::btandeq || toks[ptr].type==tok::btoreq || toks[ptr].type==tok::btxoreq) {
-        ast tmp(toks[ptr].loc, (u32)toks[ptr].type-(u32)tok::btandeq+ast_btandeq);
-        tmp.add(std::move(node));
+        auto tmp = new assignment_expr(toks[ptr].loc);
+        switch(toks[ptr].type) {
+            case tok::btandeq: tmp->set_type(assignment_expr::assign_type::bitwise_and_equal); break;
+            case tok::btoreq: tmp->set_type(assignment_expr::assign_type::bitwise_or_equal); break;
+            case tok::btxoreq: tmp->set_type(assignment_expr::assign_type::bitwise_xor_equal); break;
+            default: break;
+        }
+        tmp->set_left(node);
         match(toks[ptr].type);
-        tmp.add(calc());
+        tmp->set_right(calc());
         node = tmp;
     }
     update_location(node);

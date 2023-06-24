@@ -1,15 +1,9 @@
-#include "nasal.h"
-#include "nasal_err.h"
-#include "nasal_lexer.h"
-#include "nasal_ast.h"
-#include "nasal_parse.h"
-#include "nasal_import.h"
-#include "nasal_opt.h"
-#include "nasal_gc.h"
-#include "nasal_builtin.h"
-#include "nasal_codegen.h"
-#include "nasal_vm.h"
-#include "nasal_dbg.h"
+#include "nasal_new_header.h"
+#include "nasal_new_err.h"
+#include "nasal_new_lexer.h"
+#include "nasal_new_ast.h"
+#include "nasal_new_parse.h"
+#include "ast_visitor.h"
 
 #include <unordered_map>
 #include <thread>
@@ -73,8 +67,8 @@ void err() {
 }
 
 void execute(
-    const string& file,
-    const std::vector<string>& argv,
+    const std::string& file,
+    const std::vector<std::string>& argv,
     const u32 cmd
 ) {
     using clk=std::chrono::high_resolution_clock;
@@ -83,9 +77,9 @@ void execute(
     error   err;
     lexer   lex(err);
     parse   parse(err);
-    linker  ld(err);
-    codegen gen(err);
-    vm      ctx;
+    // linker  ld(err);
+    // codegen gen(err);
+    // vm      ctx;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -94,27 +88,27 @@ void execute(
     parse.compile(lex).chkerr();
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
+    // ld.link(parse, file, cmd&VM_DETAIL).chkerr();
 
     // optimizer does simple optimization on ast
-    optimize(parse.tree());
-    if (cmd&VM_AST) {
-        parse.tree().dump();
-    }
+    // optimize(parse.tree());
+    // if (cmd&VM_AST) {
+    //     parse.tree().dump();
+    // }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld).chkerr();
-    if (cmd&VM_CODE) {
-        gen.print();
-    }
+    // gen.compile(parse, ld).chkerr();
+    // if (cmd&VM_CODE) {
+    //     gen.print();
+    // }
 
     // run
     auto start=clk::now();
-    if (cmd&VM_DEBUG) {
-        dbg(err).run(gen, ld, argv);
-    } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        ctx.run(gen, ld, argv, cmd&VM_DETAIL);
-    }
+    // if (cmd&VM_DEBUG) {
+    //     dbg(err).run(gen, ld, argv);
+    // } else if (cmd&VM_TIME || cmd&VM_EXEC) {
+    //     ctx.run(gen, ld, argv, cmd&VM_DETAIL);
+    // }
 
     // get running time
     if (cmd&VM_TIME) {
@@ -132,7 +126,7 @@ i32 main(i32 argc, const char* argv[]) {
 
     // run directly or show help
     if (argc==2) {
-        string s(argv[1]);
+        std::string s(argv[1]);
         if (s=="-h" || s=="--help") {
             std::clog<<help;
         } else if (s[0]!='-') {
@@ -144,7 +138,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // execute with arguments
-    const std::unordered_map<string,u32> cmdlst={
+    const std::unordered_map<std::string,u32> cmdlst = {
         {"--ast", VM_AST},
         {"-a", VM_AST},
         {"--code", VM_CODE},
@@ -159,8 +153,8 @@ i32 main(i32 argc, const char* argv[]) {
         {"-dbg", VM_DEBUG}
     };
     u32 cmd=0;
-    string filename="";
-    std::vector<string> vm_argv;
+    std::string filename="";
+    std::vector<std::string> vm_argv;
     for(i32 i=1; i<argc; ++i) {
         if (cmdlst.count(argv[i])) {
             cmd|=cmdlst.at(argv[i]);

@@ -2,11 +2,10 @@
 
 #include <unordered_map>
 
-#include "nasal.h"
+#include "nasal_new_header.h"
 #include "nasal_new_ast.h"
-#include "nasal_lexer.h"
-#include "nasal_ast.h"
-#include "nasal_err.h"
+#include "nasal_new_lexer.h"
+#include "nasal_new_err.h"
 
 class parse {
 
@@ -22,7 +21,7 @@ private:
     error& err;
 
 private:
-    const std::unordered_map<tok,string> tokname {
+    const std::unordered_map<tok, std::string> tokname {
         {tok::rfor    ,"for"     },
         {tok::forindex,"forindex"},
         {tok::foreach ,"foreach" },

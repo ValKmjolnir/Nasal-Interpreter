@@ -59,7 +59,7 @@ void lexer::err_char() {
     err.fatal("lexer", "fatal error occurred, stop");
 }
 
-void lexer::open(const string& file) {
+void lexer::open(const std::string& file) {
     // check file exsits and it is a regular file
     struct stat buffer;
     if (stat(file.c_str(), &buffer)==0 && !S_ISREG(buffer.st_mode)) {
@@ -80,14 +80,14 @@ void lexer::open(const string& file) {
     res=ss.str();
 }
 
-tok lexer::get_type(const string& str) {
+tok lexer::get_type(const std::string& str) {
     return typetbl.count(str)?typetbl.at(str):tok::null;
 }
 
-string lexer::utf8_gen() {
-    string str="";
+std::string lexer::utf8_gen() {
+    std::string str="";
     while(ptr<res.size() && res[ptr]<0) {
-        string tmp="";
+        std::string tmp="";
         u32 nbytes=utf8_hdchk(res[ptr]);
         if (!nbytes) {
             ++ptr;
@@ -105,7 +105,7 @@ string lexer::utf8_gen() {
         // utf8 character's total length is 1+nbytes
         if (tmp.length()!=1+nbytes) {
             ++column;
-            string utf_info="0x"+chrhex(tmp[0]);
+            std::string utf_info="0x"+chrhex(tmp[0]);
             for(u32 i=1;i<tmp.size();++i) {
                 utf_info+=" 0x"+chrhex(tmp[i]);
             }
@@ -121,7 +121,7 @@ string lexer::utf8_gen() {
 token lexer::id_gen() {
     u32 begin_line=line;
     u32 begin_column=column;
-    string str="";
+    std::string str="";
     while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
             str+=utf8_gen();
@@ -139,7 +139,7 @@ token lexer::num_gen() {
     u32 begin_column=column;
     // generate hex number
     if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
-        string str="0x";
+        std::string str="0x";
         ptr+=2;
         while(ptr<res.size() && is_hex(res[ptr])) {
             str+=res[ptr++];
@@ -150,7 +150,7 @@ token lexer::num_gen() {
         }
         return {{begin_line, begin_column, line, column, filename}, tok::num, str};
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
-        string str="0o";
+        std::string str="0o";
         ptr+=2;
         while(ptr<res.size() && is_oct(res[ptr])) {
             str+=res[ptr++];
@@ -168,7 +168,7 @@ token lexer::num_gen() {
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
-    string str="";
+    std::string str="";
     while(ptr<res.size() && is_dec(res[ptr])) {
         str+=res[ptr++];
     }
@@ -206,7 +206,7 @@ token lexer::num_gen() {
 token lexer::str_gen() {
     u32 begin_line=line;
     u32 begin_column=column;
-    string str="";
+    std::string str="";
     const char begin=res[ptr];
     ++column;
     while(++ptr<res.size() && res[ptr]!=begin) {
@@ -257,7 +257,7 @@ token lexer::str_gen() {
 token lexer::single_opr() {
     u32 begin_line=line;
     u32 begin_column=column;
-    string str(1,res[ptr]);
+    std::string str(1,res[ptr]);
     ++column;
     tok type=get_type(str);
     if (type==tok::null) {
@@ -270,7 +270,7 @@ token lexer::single_opr() {
 token lexer::dots() {
     u32 begin_line=line;
     u32 begin_column=column;
-    string str=".";
+    std::string str=".";
     if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
         str+="..";
     }
@@ -283,7 +283,7 @@ token lexer::calc_opr() {
     u32 begin_line=line;
     u32 begin_column=column;
     // get calculation operator
-    string str(1,res[ptr++]);
+    std::string str(1,res[ptr++]);
     if (ptr<res.size() && res[ptr]=='=') {
         str+=res[ptr++];
     }
@@ -291,7 +291,7 @@ token lexer::calc_opr() {
     return {{begin_line, begin_column, line, column, filename}, get_type(str), str};
 }
 
-const error& lexer::scan(const string& file) {
+const error& lexer::scan(const std::string& file) {
     line=1;
     column=0;
     ptr=0;
