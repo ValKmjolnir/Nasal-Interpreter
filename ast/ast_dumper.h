@@ -2,9 +2,44 @@
 
 #include "ast_visitor.h"
 
+#include <iostream>
+#include <cstring>
+#include <sstream>
+
 class ast_dumper:public ast_visitor {
+private:
+    std::vector<std::string> indent;
+    void push_indent() {
+        if (indent.size()) {
+            if (indent.back()=="|--") {
+                indent.back() = "|  ";
+            } else if (indent.back()=="+--") {
+                indent.back() = "   ";
+            }
+            // indent.back() = (indent.back()=="|--")? "|  ":"   ";
+        }
+        indent.push_back("|--");
+    }
+    void pop_indent() {indent.pop_back();}
+    void set_last() {indent.back() = "+--";}
+    void dump_indent() {
+        if (indent.size() && indent.back()=="|  ") {
+            indent.back() = "|--";
+        }
+        for(const auto& i : indent) {
+            std::cout << i;
+        }
+    }
+    std::string format_location(const span& location) {
+        std::stringstream ss;
+        ss << " -> ";
+        ss << location.file << ":";
+        ss << location.begin_line << ":" << location.begin_column;
+        ss << "\n";
+        return ss.str();
+    }
+
 public:
-    bool visit_expr(expr*) override;
     bool visit_null_expr(null_expr*) override;
     bool visit_nil_expr(nil_expr*) override;
     bool visit_number_literal(number_literal*) override;

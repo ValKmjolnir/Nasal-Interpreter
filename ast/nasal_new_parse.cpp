@@ -610,7 +610,7 @@ expr* parse::scalar() {
     } else if (lookahead(tok::lbrace)) {
         node = hash();
     } else if (lookahead(tok::lcurve)) {
-        const auto& loc=toks[ptr].loc;
+        const auto& loc = toks[ptr].loc;
         match(tok::lcurve);
         node = calc();
         node->set_begin(loc.begin_line, loc.begin_column);
@@ -625,7 +625,7 @@ expr* parse::scalar() {
         node = def_node;
     } else {
         die(thisspan, "expected scalar");
-        return node;
+        return null();
     }
     // check call and avoid ambiguous syntax
     if (is_call(toks[ptr].type) && !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)) {
@@ -839,7 +839,10 @@ expr* parse::loop() {
         case tok::rfor:    node = for_loop();   break;
         case tok::forindex:
         case tok::foreach: node = forei_loop(); break;
-        default: break;
+        default:
+            die(thisspan, "unreachable");
+            node = null();
+            break;
     }
     --in_loop;
     return node;

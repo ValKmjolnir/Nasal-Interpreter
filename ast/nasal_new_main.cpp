@@ -51,7 +51,7 @@ std::ostream& logo(std::ostream& out) {
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     <<"ver  : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
     <<"std  : c++ "<<__cplusplus<<"\n"
-    <<"core : "<<std::thread::hardware_concurrency()<<" cores\n"
+    <<"core : "<<std::thread::hardware_concurrency()<<" core(s)\n"
     <<"repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     <<"wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
@@ -89,7 +89,7 @@ void execute(
     parse.compile(lex).chkerr();
     if (cmd&VM_AST) {
         auto dumper = new ast_dumper();
-        dumper->visit_expr(parse.tree());
+        dumper->visit_code_block(parse.tree());
     }
 
     // linker gets parser's ast and load import files to this ast
