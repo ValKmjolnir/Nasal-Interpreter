@@ -16,7 +16,6 @@ private:
             } else if (indent.back()=="+--") {
                 indent.back() = "   ";
             }
-            // indent.back() = (indent.back()=="|--")? "|  ":"   ";
         }
         indent.push_back("|--");
     }
