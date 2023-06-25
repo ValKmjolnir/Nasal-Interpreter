@@ -133,7 +133,7 @@ bool ast_dumper::visit_parameter(parameter* node) {
 
 bool ast_dumper::visit_ternary_operator(ternary_operator* node) {
     dump_indent();
-    std::cout << "ternary";
+    std::cout << "ternary_operator";
     std::cout << format_location(node->get_location());
     push_indent();
     node->get_condition()->accept(this);
@@ -146,7 +146,25 @@ bool ast_dumper::visit_ternary_operator(ternary_operator* node) {
 
 bool ast_dumper::visit_binary_operator(binary_operator* node) {
     dump_indent();
-    std::cout << "binary";
+    std::cout << "binary_operator ";
+    switch(node->get_type()) {
+        case binary_operator::binary_type::add: std::cout << "+"; break;
+        case binary_operator::binary_type::sub: std::cout << "-"; break;
+        case binary_operator::binary_type::mult: std::cout << "*"; break;
+        case binary_operator::binary_type::div: std::cout << "/"; break;
+        case binary_operator::binary_type::concat: std::cout << "~"; break;
+        case binary_operator::binary_type::bitwise_and: std::cout << "&"; break;
+        case binary_operator::binary_type::bitwise_or: std::cout << "|"; break;
+        case binary_operator::binary_type::bitwise_xor: std::cout << "^"; break;
+        case binary_operator::binary_type::cmpeq: std::cout << "=="; break;
+        case binary_operator::binary_type::cmpneq: std::cout << "!="; break;
+        case binary_operator::binary_type::grt: std::cout << ">"; break;
+        case binary_operator::binary_type::geq: std::cout << ">="; break;
+        case binary_operator::binary_type::less: std::cout << "<"; break;
+        case binary_operator::binary_type::leq: std::cout << "<="; break;
+        case binary_operator::binary_type::condition_and: std::cout << "and"; break;
+        case binary_operator::binary_type::condition_or: std::cout << "or"; break;
+    }
     std::cout << format_location(node->get_location());
     push_indent();
     node->get_left()->accept(this);
@@ -158,7 +176,12 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
 
 bool ast_dumper::visit_unary_operator(unary_operator* node) {
     dump_indent();
-    std::cout << "unary";
+    std::cout << "unary_operator ";
+    switch(node->get_type()) {
+        case unary_operator::unary_type::negative: std::cout << "-"; break;
+        case unary_operator::unary_type::logical_not: std::cout << "!"; break;
+        case unary_operator::unary_type::bitwise_not: std::cout << "~"; break;
+    }
     std::cout << format_location(node->get_location());
     push_indent();
     set_last();
@@ -188,7 +211,7 @@ bool ast_dumper::visit_call_expr(call_expr* node) {
 
 bool ast_dumper::visit_call_hash(call_hash* node) {
     dump_indent();
-    std::cout << "call_hash" << node->get_field();
+    std::cout << "call_hash " << node->get_field();
     std::cout << format_location(node->get_location());
     return true;
 }
@@ -270,7 +293,7 @@ bool ast_dumper::visit_assignment_expr(assignment_expr* node) {
 
 bool ast_dumper::visit_multi_identifier(multi_identifier* node) {
     dump_indent();
-    std::cout << "multi_define";
+    std::cout << "multiple_definition";
     std::cout << format_location(node->get_location());
     push_indent();
     for(auto i : node->get_variables()) {
@@ -300,7 +323,7 @@ bool ast_dumper::visit_tuple_expr(tuple_expr* node) {
 
 bool ast_dumper::visit_multi_assign(multi_assign* node) {
     dump_indent();
-    std::cout << "multi_assign";
+    std::cout << "multiple_assignment";
     std::cout << format_location(node->get_location());
     push_indent();
     node->get_tuple()->accept(this);
@@ -338,7 +361,7 @@ bool ast_dumper::visit_for_expr(for_expr* node) {
 
 bool ast_dumper::visit_iter_expr(iter_expr* node) {
     dump_indent();
-    std::cout << "iter";
+    std::cout << "iterator";
     std::cout << format_location(node->get_location());
     push_indent();
     set_last();
