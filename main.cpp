@@ -11,6 +11,7 @@
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
 
+#include <thread>
 #include <unordered_map>
 
 const u32 VM_AST   =0x01;
@@ -55,6 +56,7 @@ std::ostream& logo(std::ostream& out) {
     <<"  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     <<"ver  : "<<__nasver<<" ("<<__DATE__<<" "<<__TIME__<<")\n"
     <<"std  : c++ "<<__cplusplus<<"\n"
+    <<"core : "<<std::thread::hardware_concurrency()<<" core(s)\n"
     <<"repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     <<"repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     <<"wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
@@ -90,15 +92,15 @@ void execute(
 
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
+    if (cmd&VM_AST) {
+        parse.tree().dump();
+    }
 
     // linker gets parser's ast and load import files to this ast
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
 
     // optimizer does simple optimization on ast
     optimize(parse.tree());
-    if (cmd&VM_AST) {
-        parse.tree().dump();
-    }
 
     // code generator gets parser's ast and import file list to generate code
     gen.compile(parse, ld).chkerr();

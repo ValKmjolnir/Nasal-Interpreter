@@ -105,7 +105,7 @@ using usize=std::size_t;
 using f64=double;
 using std::string;
 
-const u32 STACK_DEPTH=1024;
+const u32 STACK_DEPTH=4096;
 
 f64 hex2f(const char* str) {
     f64 ret=0;
