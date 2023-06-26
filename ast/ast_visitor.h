@@ -5,6 +5,7 @@
 class ast_visitor {
 public:
     virtual bool visit_expr(expr*);
+    virtual bool visit_file_info(file_info*);
     virtual bool visit_null_expr(null_expr*);
     virtual bool visit_nil_expr(nil_expr*);
     virtual bool visit_number_literal(number_literal*);

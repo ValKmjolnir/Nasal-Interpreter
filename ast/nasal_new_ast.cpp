@@ -5,6 +5,10 @@ void expr::accept(ast_visitor* visitor) {
     visitor->visit_expr(this);
 }
 
+void file_info::accept(ast_visitor* visitor) {
+    visitor->visit_file_info(this);
+}
+
 void null_expr::accept(ast_visitor* visitor) {
     visitor->visit_null_expr(this);
 }

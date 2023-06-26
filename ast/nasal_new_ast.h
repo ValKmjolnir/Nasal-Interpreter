@@ -8,6 +8,7 @@
 
 enum class expr_type:u32 {
     ast_null=0,      // null node
+    ast_file_info,   // stores file info
     ast_block,       // code block 
     ast_nil,         // nil keyword
     ast_num,         // number, basic value type
@@ -71,6 +72,21 @@ public:
         nd_loc.end_column = location.end_column;
     }
     virtual void accept(ast_visitor*);
+};
+
+class file_info:public expr {
+private:
+    uint16_t index;
+    std::string filename;
+
+public:
+    file_info(const span& location, uint16_t file_index, const std::string& name):
+        expr(location, expr_type::ast_file_info),
+        index(file_index), filename(name) {}
+    ~file_info() = default;
+    uint16_t get_index() const {return index;}
+    const std::string& get_file_name() const {return filename;}
+    void accept(ast_visitor*) override;
 };
 
 class null_expr:public expr {

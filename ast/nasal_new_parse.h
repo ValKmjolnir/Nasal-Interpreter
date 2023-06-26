@@ -136,7 +136,14 @@ private:
     return_expr* return_expression();
 
 public:
-    inline code_block* tree() {return root;}
+    code_block* tree() {return root;}
+
+    // swap root pointer with another pointer(maybe nullptr)
+    code_block* swap(code_block* another) {
+        auto res = root;
+        root = another;
+        return res;
+    }
 
 public:
     parse(error& e):
@@ -144,6 +151,11 @@ public:
         toks(nullptr),
         root(nullptr),
         err(e) {}
+    ~parse() {
+        if (root) {
+            delete root;
+        }
+    }
     const error& compile(const lexer&);
     void easter_egg() const;
 };

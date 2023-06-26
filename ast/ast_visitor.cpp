@@ -5,6 +5,10 @@ bool ast_visitor::visit_expr(expr* node) {
     return true;
 }
 
+bool ast_visitor::visit_file_info(file_info* node) {
+    return true;
+}
+
 bool ast_visitor::visit_null_expr(null_expr* node) {
     return true;
 }

@@ -5,7 +5,7 @@ dynamic_libs_dll=libfib.dll libkey.dll libnasock.dll libmat.dll
 
 used_header= ../nasal.h ../nasal_gc.h
 
-STD=c++14
+STD=c++17
 
 all: $(dynamic_libs_so)
 	@ echo "[Compiling] done"
