@@ -51,14 +51,15 @@ class multi_identifier;
 class code_block;
 class if_expr;
 
-class ast_abstract_node {
+class expr {
 protected:
     span nd_loc;
     expr_type nd_type;
 
 public:
-    ast_abstract_node(const span& location, expr_type node_type):
+    expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
+    ~expr() = default;
     void set_begin(u32 line, u32 column) {
         nd_loc.begin_line = line;
         nd_loc.begin_column = column;
@@ -69,15 +70,7 @@ public:
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;
     }
-    virtual void accept(ast_visitor*) = 0;
-};
-
-class expr:public ast_abstract_node {
-public:
-    expr(const span& location, expr_type node_type):
-        ast_abstract_node(location, node_type) {}
-    ~expr() = default;
-    void accept(ast_visitor*);
+    virtual void accept(ast_visitor*);
 };
 
 class null_expr:public expr {
@@ -227,19 +220,19 @@ public:
 
 private:
     param_type type;
-    identifier* name;
+    std::string name;
     expr* default_value;
 
 public:
     parameter(const span& location):
         expr(location, expr_type::ast_param),
-        name(nullptr), default_value(nullptr) {}
+        name(""), default_value(nullptr) {}
     ~parameter();
     void set_parameter_type(param_type pt) {type = pt;}
-    void set_parameter_name(identifier* node) {name = node;}
+    void set_parameter_name(const std::string& pname) {name = pname;}
     void set_default_value(expr* node) {default_value = node;}
     param_type get_type() {return type;}
-    identifier* get_parameter_name() {return name;}
+    const std::string& get_parameter_name() const {return name;}
     expr* get_default_value() {return default_value;}
     void accept(ast_visitor*) override;
 };

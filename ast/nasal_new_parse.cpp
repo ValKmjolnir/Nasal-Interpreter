@@ -284,16 +284,16 @@ void parse::params(function* func_node) {
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
         auto param = new parameter(toks[ptr].loc);
-        param->set_parameter_name(id());
-        if (lookahead(tok::eq) || lookahead(tok::ellipsis)) {
-            if (lookahead(tok::eq)) {
-                match(tok::eq);
-                param->set_parameter_type(parameter::param_type::default_parameter);
-                param->set_default_value(calc());
-            } else {
-                match(tok::ellipsis);
-                param->set_parameter_type(parameter::param_type::dynamic_parameter);
-            }
+        auto id_node = id();
+        param->set_parameter_name(id_node->get_name());
+        delete id_node;
+        if (lookahead(tok::eq)) {
+            match(tok::eq);
+            param->set_parameter_type(parameter::param_type::default_parameter);
+            param->set_default_value(calc());
+        } else if (lookahead(tok::ellipsis)) {
+            match(tok::ellipsis);
+            param->set_parameter_type(parameter::param_type::dynamic_parameter);
         } else {
             param->set_parameter_type(parameter::param_type::normal_parameter);
         }

@@ -66,7 +66,6 @@ bool ast_visitor::visit_code_block(code_block* node) {
 }
 
 bool ast_visitor::visit_parameter(parameter* node) {
-    node->get_parameter_name()->accept(this);
     if (node->get_default_value()) {
         node->get_default_value()->accept(this);
     }

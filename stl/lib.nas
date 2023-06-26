@@ -222,8 +222,7 @@ var isfunc=func(f){
 }
 
 var isghost=func(g){
-    die("this runtime has no ghost object");
-    return 0;
+    return typeof(f)=="obj";
 }
 
 var ishash=func(h){

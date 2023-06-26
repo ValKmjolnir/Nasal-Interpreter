@@ -116,18 +116,14 @@ bool ast_dumper::visit_code_block(code_block* node) {
 
 bool ast_dumper::visit_parameter(parameter* node) {
     dump_indent();
-    std::cout << "parameter";
+    std::cout << "parameter " << node->get_parameter_name();
     std::cout << format_location(node->get_location());
-    push_indent();
-    if (!node->get_default_value()) {
-        set_last();
-    }
-    node->get_parameter_name()->accept(this);
     if (node->get_default_value()) {
+        push_indent();
         set_last();
         node->get_default_value()->accept(this);
+        pop_indent();
     }
-    pop_indent();
     return true;
 }
 
