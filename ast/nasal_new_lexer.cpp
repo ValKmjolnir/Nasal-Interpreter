@@ -68,16 +68,16 @@ void lexer::open(const std::string& file) {
     }
 
     // load
-    filename=file;
+    filename = file;
     std::ifstream in(file, std::ios::binary);
     if (in.fail()) {
-        err.err("lexer", "failed to open <"+file+">");
+        err.err("lexer", "failed to open <" + file + ">");
     } else {
         err.load(file);
     }
     std::stringstream ss;
-    ss<<in.rdbuf();
-    res=ss.str();
+    ss << in.rdbuf();
+    res = ss.str();
 }
 
 tok lexer::get_type(const std::string& str) {

@@ -16,7 +16,7 @@ SRC=\
 	nasal_dbg.h\
 	nasal.h
 
-STD=c++14
+STD=c++17
 
 nasal:$(SRC)
 	$(CXX) -std=$(STD) -O3 main.cpp -o nasal -fno-exceptions -ldl -Wshadow -Wall
@@ -76,6 +76,7 @@ test:nasal
 NASAL_NEW_AST=\
 	nasal_new_misc.o\
 	nasal_new_err.o\
+	nasal_new_import.o\
 	nasal_new_lexer.o\
 	nasal_new_ast.o\
 	nasal_new_parse.o\
@@ -97,8 +98,11 @@ nasal_new_misc.o: ast/nasal_new_header.h ast/nasal_new_misc.cpp
 nasal_new_err.o: ast/nasal_new_err.h ast/nasal_new_err.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_err.cpp -fno-exceptions -fPIC -o nasal_new_err.o -I .
 
+nasal_new_import.o: ast/nasal_new_import.h ast/nasal_new_import.cpp
+	$(CXX) --std=$(STD) -c -O3 ast/nasal_new_import.cpp -fno-exceptions -fPIC -o nasal_new_import.o -I .
+
 nasal_new_lexer.o: ast/nasal_new_lexer.h ast/nasal_new_lexer.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
+	$(CXX) --std=$(STD) -c -O3 ast/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
 
 nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .

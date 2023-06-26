@@ -32,7 +32,7 @@ __Contact us if having great ideas to share!__
 is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
-This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++14`)
+This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`)
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 But we really appreciate that Andy created this amazing programming language.
 

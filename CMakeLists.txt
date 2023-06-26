@@ -5,7 +5,7 @@ project(nasal VERSION 10.1)
 message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
 
 # -std=c++14 -Wshadow -Wall
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 

@@ -3,6 +3,7 @@
 #include "nasal_new_lexer.h"
 #include "nasal_new_ast.h"
 #include "nasal_new_parse.h"
+#include "nasal_new_import.h"
 #include "ast_visitor.h"
 #include "ast_dumper.h"
 
@@ -78,7 +79,7 @@ void execute(
     error   err;
     lexer   lex(err);
     parse   parse(err);
-    // linker  ld(err);
+    linker  ld(err);
     // codegen gen(err);
     // vm      ctx;
 
@@ -87,13 +88,13 @@ void execute(
 
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
+
+    // linker gets parser's ast and load import files to this ast
+    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
     if (cmd&VM_AST) {
         auto dumper = new ast_dumper();
         dumper->visit_code_block(parse.tree());
     }
-
-    // linker gets parser's ast and load import files to this ast
-    // ld.link(parse, file, cmd&VM_DETAIL).chkerr();
 
     // optimizer does simple optimization on ast
     // optimize(parse.tree());
