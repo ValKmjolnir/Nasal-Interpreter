@@ -83,9 +83,6 @@ void code_block::accept(ast_visitor* visitor) {
 }
 
 parameter::~parameter() {
-    if (name) {
-        delete name;
-    }
     if (default_value) {
         delete default_value;
     }
