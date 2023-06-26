@@ -222,7 +222,7 @@ var isfunc=func(f){
 }
 
 var isghost=func(g){
-    return typeof(f)=="obj";
+    return typeof(g)=="obj";
 }
 
 var ishash=func(h){
