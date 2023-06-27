@@ -74,4 +74,9 @@ public:
     bool visit_continue_expr(continue_expr*) override;
     bool visit_break_expr(break_expr*) override;
     bool visit_return_expr(return_expr*) override;
+
+public:
+    void dump(code_block* root) {
+        root->accept(this);
+    }
 };
