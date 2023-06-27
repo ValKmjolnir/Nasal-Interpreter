@@ -250,6 +250,9 @@ var isvec=func(v){
     return typeof(v)=="vec";
 }
 
+var ghosttype=func(ghost_object) {
+    return __ghosttype(ghost_object);
+}
 
 # get the index of val in the vec
 var vecindex=func(vec,val){

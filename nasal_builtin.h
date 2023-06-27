@@ -1287,6 +1287,18 @@ var builtin_logtime(var* local, gc& ngc) {
     return ngc.newstr(s);
 }
 
+var builtin_ghosttype(var* local, gc& ngc) {
+    var arg = local[1];
+    if (arg.type!=vm_obj) {
+        return nas_err("ghosttype", "this is not a ghost object.");
+    }
+    const auto& name = arg.obj().get_ghost_name();
+    if (!name.length()) {
+        return var::num((u64)arg.obj().ptr);
+    }
+    return ngc.newstr(name);
+}
+
 // register builtin function's name and it's address here in this table below
 // this table must end with {nullptr,nullptr}
 struct {
@@ -1383,5 +1395,6 @@ struct {
     {"__sysargv", builtin_sysargv },
     {"__gcextd",  builtin_gcextend},
     {"__logtime", builtin_logtime },
+    {"__ghosttype", builtin_ghosttype},
     {nullptr,     nullptr         }
 };
