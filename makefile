@@ -81,7 +81,10 @@ NASAL_NEW_AST=\
 	nasal_new_lexer.o\
 	nasal_new_ast.o\
 	nasal_new_builtin.o\
+	nasal_new_codegen.o\
+	nasal_new_opcode.o\
 	nasal_new_parse.o\
+	optimizer.o\
 	ast_visitor.o\
 	ast_dumper.o\
 	nasal_new_main.o
@@ -115,8 +118,17 @@ nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp
 nasal_new_builtin.o: ast/nasal_new_builtin.h ast/nasal_new_builtin.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_builtin.cpp -fno-exceptions -fPIC -o nasal_new_builtin.o -I .
 
+nasal_new_codegen.o: ast/nasal_new_codegen.h ast/nasal_new_codegen.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_codegen.cpp -fno-exceptions -fPIC -o nasal_new_codegen.o -I .
+
+nasal_new_opcode.o: ast/nasal_new_opcode.h ast/nasal_new_opcode.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_opcode.cpp -fno-exceptions -fPIC -o nasal_new_opcode.o -I .
+
 nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp ast/nasal_new_ast.h
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_parse.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
+
+optimizer.o: ast/optimizer.h ast/optimizer.cpp ast/nasal_new_ast.h
+	$(CXX) -std=$(STD) -c -O3 ast/optimizer.cpp -fno-exceptions -fPIC -o optimizer.o -I .
 
 ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .

@@ -6,6 +6,7 @@
 #include "nasal_new_import.h"
 #include "ast_visitor.h"
 #include "ast_dumper.h"
+#include "optimizer.h"
 
 #include <unordered_map>
 #include <thread>
@@ -93,11 +94,13 @@ void execute(
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
     if (cmd&VM_AST) {
         auto dumper = new ast_dumper();
-        dumper->visit_code_block(parse.tree());
+        dumper->dump(parse.tree());
     }
 
     // optimizer does simple optimization on ast
-    // optimize(parse.tree());
+    auto opt = new optimizer;
+    opt->do_optimization(parse.tree());
+    delete opt;
 
     // code generator gets parser's ast and import file list to generate code
     // gen.compile(parse, ld).chkerr();
