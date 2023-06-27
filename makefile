@@ -76,9 +76,11 @@ test:nasal
 NASAL_NEW_AST=\
 	nasal_new_misc.o\
 	nasal_new_err.o\
+	nasal_new_gc.o\
 	nasal_new_import.o\
 	nasal_new_lexer.o\
 	nasal_new_ast.o\
+	nasal_new_builtin.o\
 	nasal_new_parse.o\
 	ast_visitor.o\
 	ast_dumper.o\
@@ -86,7 +88,7 @@ NASAL_NEW_AST=\
 
 # for test
 nnew: $(NASAL_NEW_AST)
-	$(CXX) $(NASAL_NEW_AST) -o nnew
+	$(CXX) $(NASAL_NEW_AST) -o nnew -ldl
 	@ echo "build done"
 
 nasal_new_main.o: ast/nasal_new_main.cpp
@@ -98,14 +100,20 @@ nasal_new_misc.o: ast/nasal_new_header.h ast/nasal_new_misc.cpp
 nasal_new_err.o: ast/nasal_new_err.h ast/nasal_new_err.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_err.cpp -fno-exceptions -fPIC -o nasal_new_err.o -I .
 
+nasal_new_gc.o: ast/nasal_new_gc.h ast/nasal_new_gc.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_gc.cpp -fno-exceptions -fPIC -o nasal_new_gc.o -I . 
+
 nasal_new_import.o: ast/nasal_new_import.h ast/nasal_new_import.cpp
-	$(CXX) --std=$(STD) -c -O3 ast/nasal_new_import.cpp -fno-exceptions -fPIC -o nasal_new_import.o -I .
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_import.cpp -fno-exceptions -fPIC -o nasal_new_import.o -I .
 
 nasal_new_lexer.o: ast/nasal_new_lexer.h ast/nasal_new_lexer.cpp
-	$(CXX) --std=$(STD) -c -O3 ast/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
 
 nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .
+
+nasal_new_builtin.o: ast/nasal_new_builtin.h ast/nasal_new_builtin.cpp
+	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_builtin.cpp -fno-exceptions -fPIC -o nasal_new_builtin.o -I .
 
 nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp ast/nasal_new_ast.h
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_parse.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .

@@ -284,9 +284,8 @@ void parse::params(function* func_node) {
     match(tok::lcurve);
     while(!lookahead(tok::rcurve)) {
         auto param = new parameter(toks[ptr].loc);
-        auto id_node = id();
-        param->set_parameter_name(id_node->get_name());
-        delete id_node;
+        param->set_parameter_name(toks[ptr].str);
+        match(tok::id);
         if (lookahead(tok::eq)) {
             match(tok::eq);
             param->set_parameter_type(parameter::param_type::default_parameter);

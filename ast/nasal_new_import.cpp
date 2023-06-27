@@ -137,9 +137,16 @@ void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
 code_block* linker::import_regular_file(call_expr* node) {
     lexer lex(err);
     parse par(err);
-    // get filename and set node to ast_null
+    // get filename
     auto filename = get_path(node);
-    // node.clear();
+    // clear this node
+    for(auto i : node->get_calls()) {
+        delete i;
+    }
+    node->get_calls().clear();
+    auto location = node->get_first()->get_location();
+    delete node->get_first();
+    node->set_first(new nil_expr(location));
 
     // avoid infinite loading loop
     filename = find_file(filename);

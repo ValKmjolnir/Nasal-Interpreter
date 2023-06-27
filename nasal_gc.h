@@ -283,6 +283,10 @@ public:
         out<<" at 0x"<<std::hex<<(u64)ghost.ptr<<std::dec<<">";
         return out;
     }
+
+    const std::string& get_ghost_name() const {
+        return ghost_type_table->get_ghost_name(type);
+    }
 };
 
 struct context {
