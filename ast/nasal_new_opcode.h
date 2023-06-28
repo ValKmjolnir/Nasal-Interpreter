@@ -139,7 +139,7 @@ private:
     inline static const std::string* files = nullptr;
 public:
     codestream(const opcode& c, const u32 i): code(c), index(i) {}
-    static void set(const f64*, const std::string*, const std::string*);
+    static void set(const f64*, const std::string*, const std::string* filelist = nullptr);
     void dump(std::ostream&) const;
 };
 

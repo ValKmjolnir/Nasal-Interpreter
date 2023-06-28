@@ -3,11 +3,11 @@
 void codestream::set(
     const f64* numbuff,
     const std::string* strbuff,
-    const std::string* filelist=nullptr
+    const std::string* filelist
 ) {
-    nums=numbuff;
-    strs=strbuff;
-    files=filelist;
+    nums = numbuff;
+    strs = strbuff;
+    files = filelist;
 }
 
 void codestream::dump(std::ostream& out) const {
