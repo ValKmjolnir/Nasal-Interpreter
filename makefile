@@ -85,6 +85,7 @@ NASAL_NEW_AST=\
 	nasal_new_opcode.o\
 	nasal_new_parse.o\
 	optimizer.o\
+	symbol_finder.o\
 	ast_visitor.o\
 	ast_dumper.o\
 	nasal_new_main.o
@@ -119,7 +120,7 @@ nasal_new_builtin.o: ast/nasal_new_builtin.h ast/nasal_new_builtin.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_builtin.cpp -fno-exceptions -fPIC -o nasal_new_builtin.o -I .
 
 nasal_new_codegen.o: ast/nasal_new_codegen.h ast/nasal_new_codegen.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_codegen.cpp -fno-exceptions -fPIC -o nasal_new_codegen.o -I .
+#	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_codegen.cpp -fno-exceptions -fPIC -o nasal_new_codegen.o -I .
 
 nasal_new_opcode.o: ast/nasal_new_opcode.h ast/nasal_new_opcode.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_opcode.cpp -fno-exceptions -fPIC -o nasal_new_opcode.o -I .
@@ -129,6 +130,9 @@ nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp ast/nasal_new_a
 
 optimizer.o: ast/optimizer.h ast/optimizer.cpp ast/nasal_new_ast.h
 	$(CXX) -std=$(STD) -c -O3 ast/optimizer.cpp -fno-exceptions -fPIC -o optimizer.o -I .
+
+symbol_finder.o: ast/symbol_finder.h ast/symbol_finder.cpp ast/nasal_new_ast.h
+	$(CXX) -std=$(STD) -c -O3 ast/symbol_finder.cpp -fno-exceptions -fPIC -o symbol_finder.o -I .
 
 ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
 	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .

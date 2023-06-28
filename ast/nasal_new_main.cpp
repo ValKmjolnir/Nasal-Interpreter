@@ -6,6 +6,7 @@
 #include "nasal_new_import.h"
 #include "ast_visitor.h"
 #include "ast_dumper.h"
+#include "symbol_finder.h"
 #include "optimizer.h"
 
 #include <unordered_map>
@@ -101,6 +102,11 @@ void execute(
     auto opt = new optimizer;
     opt->do_optimization(parse.tree());
     delete opt;
+
+    auto finder = new symbol_finder;
+    for(const auto& symbol : finder->do_find(parse.tree())) {
+        std::cout << symbol << std::endl;
+    }
 
     // code generator gets parser's ast and import file list to generate code
     // gen.compile(parse, ld).chkerr();

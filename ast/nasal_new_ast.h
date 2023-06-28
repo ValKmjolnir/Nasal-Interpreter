@@ -247,7 +247,7 @@ public:
     void set_parameter_type(param_type pt) {type = pt;}
     void set_parameter_name(const std::string& pname) {name = pname;}
     void set_default_value(expr* node) {default_value = node;}
-    param_type get_type() {return type;}
+    param_type get_parameter_type() {return type;}
     const std::string& get_parameter_name() const {return name;}
     expr* get_default_value() {return default_value;}
     void accept(ast_visitor*) override;
@@ -465,14 +465,14 @@ public:
 
 class multi_identifier:public expr {
 private:
-    std::vector<expr*> variables;
+    std::vector<identifier*> variables;
 
 public:
     multi_identifier(const span& location):
         expr(location, expr_type::ast_multi_id) {}
     ~multi_identifier();
-    void add_var(expr* node) {variables.push_back(node);}
-    std::vector<expr*>& get_variables() {return variables;}
+    void add_var(identifier* node) {variables.push_back(node);}
+    std::vector<identifier*>& get_variables() {return variables;}
     void accept(ast_visitor*) override;
 };
 

@@ -774,8 +774,7 @@ multi_identifier* parse::multi_id() {
     auto node = new multi_identifier(toks[ptr].loc);
     while(!lookahead(tok::eof)) {
         // only identifier is allowed here
-        // but we check it at codegen stage
-        node->add_var(calc());
+        node->add_var(id());
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id)) { // first set of identifier
