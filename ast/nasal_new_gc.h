@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <algorithm>
+#include <thread>
 
 #include "nasal_new_header.h"
 #include "nasal_new_err.h"
@@ -362,11 +363,11 @@ private:
     void mark();
     void mark_context(std::vector<var>&);
     void mark_var(std::vector<var>&, var&);
-    inline void mark_vec(std::vector<var>&, nas_vec&);
-    inline void mark_hash(std::vector<var>&, nas_hash&);
-    inline void mark_func(std::vector<var>&, nas_func&);
-    inline void mark_upval(std::vector<var>&, nas_upval&);
-    inline void mark_co(std::vector<var>&, nas_co&);
+    void mark_vec(std::vector<var>&, nas_vec&);
+    void mark_hash(std::vector<var>&, nas_hash&);
+    void mark_func(std::vector<var>&, nas_func&);
+    void mark_upval(std::vector<var>&, nas_upval&);
+    void mark_co(std::vector<var>&, nas_co&);
     void sweep();
 
 public:

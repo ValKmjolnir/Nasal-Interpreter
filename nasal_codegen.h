@@ -105,7 +105,7 @@ bool codegen::check_memory_reachable(const ast& node) {
             die("bad left-value with function call", node.location());
             return false;
         }
-        if (tmp.type()==ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0].type()==ast_subvec)) {
+        if (tmp.type()==ast_callv && (tmp.size()!=1 || tmp[0].type()==ast_subvec)) {
             die("bad left-value with subvec", node.location());
             return false;
         }
@@ -413,16 +413,14 @@ void codegen::call_vec(const ast& node) {
 }
 
 void codegen::call_func(const ast& node) {
-    if (!node.size()) {
-        gen(op_callfv, 0, node.line());
-    } else if (node[0].type()==ast_pair) {
-        hash_gen(node);
-        gen(op_callfh, 0, node.line());
-    } else {
+    if (!node.size() || node[0].type()!=ast_pair) {
         for(auto& child:node.child()) {
             calc_gen(child);
         }
         gen(op_callfv, node.size(), node.line());
+    } else if (node[0].type()==ast_pair) {
+        hash_gen(node);
+        gen(op_callfh, 0, node.line());
     }
 }
 

@@ -32,7 +32,7 @@ using u64 = std::uint64_t;
 using usize = std::size_t;
 using f64 = double;
 
-const u32 STACK_DEPTH=1024;
+const u32 STACK_DEPTH=4096;
 
 f64 hex2f(const char*);
 f64 oct2f(const char*);

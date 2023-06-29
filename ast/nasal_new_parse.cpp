@@ -907,11 +907,11 @@ forei_expr* parse::forei_loop() {
     auto node = new forei_expr(toks[ptr].loc);
     switch(toks[ptr].type) {
         case tok::forindex:
-            node->set_type(forei_expr::forei_loop_type::forindex);
+            node->set_loop_type(forei_expr::forei_loop_type::forindex);
             match(tok::forindex);
             break;
         case tok::foreach: 
-            node->set_type(forei_expr::forei_loop_type::foreach);
+            node->set_loop_type(forei_expr::forei_loop_type::foreach);
             match(tok::foreach);
             break;
         default: break;
