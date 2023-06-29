@@ -1,10 +1,10 @@
 #include "optimizer.h"
 
-void const_string(binary_operator* node) {
+void optimizer::const_string(binary_operator* node) {
 
 }
 
-void const_number(binary_operator* node) {
+void optimizer::const_number(binary_operator* node) {
     
 }
 

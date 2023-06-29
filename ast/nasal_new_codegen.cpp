@@ -1,17 +1,19 @@
 #include "nasal_new_codegen.h"
 
 bool codegen::check_memory_reachable(call_expr* node) {
-    if (node->get_type()==expr_type::ast_call) {
-        const ast& tmp=node.child().back();
+    if (node->get_first()->get_type()==expr_type::ast_call) {
+        const auto tmp=node->get_calls().back();
         if (tmp->get_type()==expr_type::ast_callf) {
             die("bad left-value with function call", node->get_location());
             return false;
         }
-        if (tmp->get_type()==expr_type::ast_callv && (tmp.size()==0 || tmp.size()>1 || tmp[0]->get_type()==expr_type::ast_subvec)) {
+        if (tmp->get_type()==expr_type::ast_callv &&
+            (((call_vector*)tmp)->get_slices().size()!=1 ||
+            ((call_vector*)tmp)->get_slices()[0]->get_end())) {
             die("bad left-value with subvec", node->get_location());
             return false;
         }
-    } else if (node->get_type()!=ast_id) {
+    } else if (node->get_first()->get_type()!=expr_type::ast_id) {
         die("bad left-value", node->get_location());
         return false;
     }
@@ -186,20 +188,20 @@ void codegen::func_gen(function* node) {
 
     // generate parameter list
     for(auto& tmp : node->get_parameter_list()) {
-        const std::string& str=tmp.str();
+        const auto& str = tmp->get_parameter_name();
         if (str=="me") {
             die("\"me\" should not be a parameter", tmp->get_location());
         }
         regist_str(str);
-        switch(tmp->get_type()) {
-            case expr_type::ast_id:
+        switch(tmp->get_parameter_type()) {
+            case parameter::param_type::normal_parameter:
                 gen(op_para, str_table[str], tmp->get_location().begin_line);
                 break;
-            case expr_type::ast_default:
-                calc_gen(tmp[0]);
+            case parameter::param_type::default_parameter:
+                calc_gen(tmp->get_default_value());
                 gen(op_deft, str_table[str], tmp->get_location().begin_line);
                 break;
-            case expr_type::ast_dynamic:
+            case parameter::param_type::dynamic_parameter:
                 gen(op_dyn, str_table[str], tmp->get_location().begin_line);
                 break;
         }
@@ -223,7 +225,8 @@ void codegen::func_gen(function* node) {
     }
     local.pop_back();
 
-    if (!block.size() || block.child().back()->get_type()!=ast_ret) {
+    if (!block->get_expressions().size() ||
+        block->get_expressions().back()->get_type()!=expr_type::ast_ret) {
         gen(op_pnil, 0, block->get_location().begin_line);
         gen(op_ret, 0, block->get_location().begin_line);
     }
@@ -245,9 +248,9 @@ void codegen::call_gen(call_expr* node) {
 }
 
 void codegen::call_id(identifier* node) {
-    const auto& name = node->get_location();
-    for(u32 i=0;builtin[i].name;++i) {
-        if (builtin[i].name==str) {
+    const auto& name = node->get_name();
+    for(u32 i=0; builtin[i].name; ++i) {
+        if (builtin[i].name==name) {
             gen(op_callb, i, node->get_location().begin_line);
             if (local.empty()) {
                 die("should warp native function in local scope", node->get_location());
@@ -256,41 +259,42 @@ void codegen::call_id(identifier* node) {
         }
     }
     i32 index;
-    if ((index=local_find(str))>=0) {
+    if ((index=local_find(name))>=0) {
         gen(op_calll, index, node->get_location().begin_line);
         return;
     }
-    if ((index=upvalue_find(str))>=0) {
+    if ((index=upvalue_find(name))>=0) {
         gen(op_upval, index, node->get_location().begin_line);
         return;
     }
-    if ((index=global_find(str))>=0) {
+    if ((index=global_find(name))>=0) {
         gen(op_callg, index, node->get_location().begin_line);
         return;
     }
-    die("undefined symbol \""+str+"\"", node->get_location());
+    die("undefined symbol \"" + name + "\"", node->get_location());
 }
 
 void codegen::call_hash_gen(call_hash* node) {
-    regist_str(node.str());
-    gen(op_callh, str_table[node.str()], node->get_location().begin_line);
+    regist_str(node->get_field());
+    gen(op_callh, str_table[node->get_field()], node->get_location().begin_line);
 }
 
 void codegen::call_vec(call_vector* node) {
     // maybe this place can use callv-const if ast's first child is ast_num
-    if (node.size()==1 && node[0]->get_type()!=ast_subvec) {
-        calc_gen(node[0]);
-        gen(op_callv, 0, node[0]->get_location().begin_line);
+    if (node->get_slices().size()==1 &&
+        !node->get_slices()[0]->get_end()) {
+        calc_gen(node->get_slices()[0]->get_begin());
+        gen(op_callv, 0, node->get_slices()[0]->get_location().begin_line);
         return;
     }
     gen(op_slcbeg,0,node->get_location().begin_line);
-    for(auto& tmp:node.child()) {
-        if (tmp->get_type()!=ast_subvec) {
-            calc_gen(tmp);
+    for(auto tmp : node->get_slices()) {
+        if (!tmp->get_end()) {
+            calc_gen(tmp->get_begin());
             gen(op_slc, 0, tmp->get_location().begin_line);
         } else {
-            calc_gen(tmp[0]);
-            calc_gen(tmp[1]);
+            calc_gen(tmp->get_begin());
+            calc_gen(tmp->get_end());
             gen(op_slc2, 0, tmp->get_location().begin_line);
         }
     }
@@ -298,16 +302,21 @@ void codegen::call_vec(call_vector* node) {
 }
 
 void codegen::call_func(call_function* node) {
-    if (!node.size()) {
-        gen(op_callfv, 0, node->get_location().begin_line);
-    } else if (node[0]->get_type()==expr_type::ast_pair) {
-        hash_gen(node);
+    if (node->get_argument().size() &&
+        node->get_argument()[0]->get_type()==expr_type::ast_pair) {
+        gen(op_newh, 0, node->get_location().begin_line);
+        for(auto child : node->get_argument()) {
+            calc_gen(((hash_pair*)child)->get_value());
+            const auto& str = ((hash_pair*)child)->get_name();
+            regist_str(str);
+            gen(op_happ, str_table[str], child->get_location().begin_line);
+        }
         gen(op_callfh, 0, node->get_location().begin_line);
     } else {
-        for(auto& child:node.child()) {
+        for(auto child : node->get_argument()) {
             calc_gen(child);
         }
-        gen(op_callfv, node.size(), node->get_location().begin_line);
+        gen(op_callfv, node->get_argument().size(), node->get_location().begin_line);
     }
 }
 
@@ -323,28 +332,24 @@ void codegen::mcall(call_expr* node) {
     if (!check_memory_reachable(node)) {
         return;
     }
-    if (node->get_type()==expr_type::ast_id) {
-        mcall_id(node);
-        return;
+    if (node->get_first()->get_type()==expr_type::ast_id &&
+        !node->get_calls().size()) {
+        mcall_id((identifier*)node->get_first());
     }
-    if (node.size()==1) { // foreach and forindex use call-id ast to get mcall
-        mcall_id(node[0]);
-        return;
-    }
-    calc_gen(node[0]);
-    for(usize i=1;i<node.size()-1;++i) {
-        const ast& tmp=node[i];
+    calc_gen(node->get_first());
+    for(usize i = 0; i<node->get_calls().size()-1; ++i) {
+        auto tmp = node->get_calls()[i];
         switch(tmp->get_type()) {
-            case expr_type::ast_callh:call_hash(tmp);break;
-            case expr_type::ast_callv:call_vec(tmp); break;
-            case expr_type::ast_callf:call_func(tmp);break;
+            case expr_type::ast_callh: call_hash_gen((call_hash*)tmp); break;
+            case expr_type::ast_callv: call_vec((call_vector*)tmp); break;
+            case expr_type::ast_callf: call_func((call_function*)tmp); break;
         }
     }
-    const ast& tmp=node.child().back();
+    auto tmp = node->get_calls().back();
     if (tmp->get_type()==expr_type::ast_callh) {
-        mcall_hash(tmp);
+        mcall_hash((call_hash*)tmp);
     } else if (tmp->get_type()==expr_type::ast_callv) {
-        mcall_vec(tmp);
+        mcall_vec((call_vector*)tmp);
     }
 }
 
@@ -373,13 +378,13 @@ void codegen::mcall_id(identifier* node) {
 }
 
 void codegen::mcall_vec(call_vector* node) {
-    calc_gen(node[0]);
+    calc_gen(node->get_slices()[0]);
     gen(op_mcallv, 0, node->get_location().begin_line);
 }
 
 void codegen::mcall_hash(call_hash* node) {
-    regist_str(node.str());
-    gen(op_mcallh, str_table[node.str()], node->get_location().begin_line);
+    regist_str(node->get_field());
+    gen(op_mcallh, str_table[node->get_field()], node->get_location().begin_line);
 }
 
 void codegen::single_def(definition_expr* node) {
@@ -391,32 +396,27 @@ void codegen::single_def(definition_expr* node) {
 }
 
 void codegen::multi_def(definition_expr* node) {
-    auto& ids=node[0].child();
-    usize size=ids.size();
-    if (node[1]->get_type()==expr_type::ast_tuple) { // (var a,b,c)=(c,b,a);
-        auto& vals=node[1].child();
-        for(usize i=0;i<size;++i) {
-            // check node type, only identifier is allowed
-            if (ids[i]->get_type()!=ast_id) {
-                die("cannot call identifier in multi-definition", ids[i]->get_location());
-                continue;
-            }
+    auto& ids = node->get_variables()->get_variables();
+    usize size = ids.size();
+    if (node->get_value()->get_type()==expr_type::ast_tuple) { // (var a,b,c)=(c,b,a);
+        auto& vals = ((tuple_expr*)node->get_value())->get_elements();
+        if (ids.size()<vals.size()) {
+            die("lack values in multi-definition", node->get_value()->get_location());
+        } else if (ids.size()>vals.size()) {
+            die("too many values in multi-definition", node->get_value()->get_location());
+        }
+        for(usize i = 0; i<size; ++i) {
             calc_gen(vals[i]);
-            const std::string& str=ids[i].str();
+            const auto& str = ids[i]->get_name();
             local.empty()?
                 gen(op_loadg, global_find(str), ids[i]->get_location().begin_line):
                 gen(op_loadl, local_find(str), ids[i]->get_location().begin_line);
         }
     } else { // (var a,b,c)=[0,1,2];
-        calc_gen(node[1]);
-        for(usize i=0;i<size;++i) {
-            // check node type, only identifier is allowed
-            if (ids[i]->get_type()!=ast_id) {
-                die("cannot call identifier in multi-definition", ids[i]->get_location());
-                continue;
-            }
-            gen(op_callvi, i, node[1]->get_location().begin_line);
-            const std::string& str=ids[i].str();
+        calc_gen(node->get_value());
+        for(usize i = 0; i<size; ++i) {
+            gen(op_callvi, i, node->get_value()->get_location().begin_line);
+            const auto& str = ids[i]->get_name();
             local.empty()?
                 gen(op_loadg, global_find(str), ids[i]->get_location().begin_line):
                 gen(op_loadl, local_find(str), ids[i]->get_location().begin_line);
@@ -426,14 +426,11 @@ void codegen::multi_def(definition_expr* node) {
 }
 
 void codegen::def_gen(definition_expr* node) {
-    if (node[0]->get_type()==expr_type::ast_id && node[1]->get_type()==expr_type::ast_tuple) {
-        die("cannot accept too many values", node[1]->get_location());
-    } else if (node[0]->get_type()==expr_type::ast_multi_id && node[1]->get_type()==expr_type::ast_tuple && node[0].size()<node[1].size()) {
-        die("lack values in multi-definition", node[1]->get_location());
-    } else if (node[0]->get_type()==expr_type::ast_multi_id && node[1]->get_type()==expr_type::ast_tuple && node[0].size()>node[1].size()) {
-        die("too many values in multi-definition", node[1]->get_location());
+    if (node->get_variable_name() &&
+        node->get_value()->get_type()==expr_type::ast_tuple) {
+        die("cannot accept too many values", node->get_value()->get_location());
     }
-    node[0]->get_type()==expr_type::ast_id?single_def(node):multi_def(node);
+    node->get_variable_name()? single_def(node):multi_def(node);
 }
 
 void codegen::multi_assign_gen(multi_assign* node) {
@@ -510,10 +507,17 @@ void codegen::loop_gen(expr* node) {
     continue_ptr.push_front({});
     break_ptr.push_front({});
     switch(node->get_type()) {
-        case expr_type::ast_while:   while_gen(node);   break;
-        case expr_type::ast_for:     for_gen(node);     break;
-        case expr_type::ast_forindex:forindex_gen(node);break;
-        case expr_type::ast_foreach: foreach_gen(node); break;
+        case expr_type::ast_while:
+            while_gen((while_expr*)node); break;
+        case expr_type::ast_for:
+            for_gen((for_expr*)node); break;
+        case expr_type::ast_forei:
+            if (((forei_expr*)node)->get_loop_type()==forei_expr::forei_loop_type::forindex) {
+                forindex_gen((forei_expr*)node);
+            } else {
+                foreach_gen((forei_expr*)node);
+            }
+            break;
     }
 }
 
@@ -530,31 +534,31 @@ void codegen::load_continue_break(i32 continue_place,i32 break_place) {
 
 void codegen::while_gen(while_expr* node) {
     usize loop_ptr=code.size();
-    calc_gen(node[0]);
+    calc_gen(node->get_condition());
     usize condition_ptr=code.size();
-    gen(op_jf, 0, node[0]->get_location().begin_line);
+    gen(op_jf, 0, node->get_condition()->get_location().begin_line);
 
-    block_gen(node[1]);
-    gen(op_jmp, loop_ptr, node[1]->get_location().begin_line);
+    block_gen(node->get_code_block());
+    gen(op_jmp, loop_ptr, node->get_code_block()->get_location().begin_line);
     code[condition_ptr].num=code.size();
     load_continue_break(code.size()-1, code.size());
 }
 
 void codegen::for_gen(for_expr* node) {
-    expr_gen(node[0]);
+    expr_gen(node->get_initial());
     usize jmp_place=code.size();
-    if (node[1]->get_type()==expr_type::ast_null) {
-        gen(op_pnum, num_table[1], node[1]->get_location().begin_line);
+    if (node->get_condition()->get_type()==expr_type::ast_null) {
+        gen(op_pnum, num_table[1], node->get_condition()->get_location().begin_line);
     } else {
-        calc_gen(node[1]);
+        calc_gen(node->get_condition());
     }
     usize label_exit=code.size();
-    gen(op_jf, 0, node[1]->get_location().begin_line);
+    gen(op_jf, 0, node->get_condition()->get_location().begin_line);
 
-    block_gen(node[3]);
+    block_gen(node->get_code_block());
     usize continue_place=code.size();
-    expr_gen(node[2]);
-    gen(op_jmp, jmp_place, node[2]->get_location().begin_line);
+    expr_gen(node->get_step());
+    gen(op_jmp, jmp_place, node->get_step()->get_location().begin_line);
     code[label_exit].num=code.size();
 
     load_continue_break(continue_place, code.size());
@@ -563,30 +567,15 @@ void codegen::for_gen(for_expr* node) {
 void codegen::expr_gen(expr* node) {
     switch(node->get_type()) {
         case expr_type::ast_null:break;
-        case expr_type::ast_def:def_gen(node);break;
-        case expr_type::ast_multi_assign:multi_assign_gen(node);break;
-        case expr_type::ast_addeq:case expr_type::ast_subeq:
-        case expr_type::ast_multeq:case expr_type::ast_diveq:case expr_type::ast_lnkeq:
-        case expr_type::ast_btandeq:case expr_type::ast_btoreq:case expr_type::ast_btxoreq:
-            calc_gen(node);
-            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
-                code.back().num=1;
-            } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().op=code.back().op-op_addeqc+op_addecp;
-            } else {
-                gen(op_pop, 0, node->get_location().begin_line);
-            }
-            break;
+        case expr_type::ast_def:
+            def_gen((definition_expr*)node);break;
+        case expr_type::ast_multi_assign:
+            multi_assign_gen((multi_assign*)node);break;
         case expr_type::ast_nil:case expr_type::ast_num:case expr_type::ast_str:case expr_type::ast_bool:break;
         case expr_type::ast_vec:case expr_type::ast_hash:case expr_type::ast_func:case expr_type::ast_call:
-        case expr_type::ast_neg:case expr_type::ast_lnot:case expr_type::ast_bnot:
-        case expr_type::ast_bitor:case expr_type::ast_bitxor:case expr_type::ast_bitand:
-        case expr_type::ast_add:case expr_type::ast_sub:case expr_type::ast_mult:case expr_type::ast_div:case expr_type::ast_link:
-        case expr_type::ast_cmpeq:case expr_type::ast_neq:
-        case expr_type::ast_leq:case expr_type::ast_less:
-        case expr_type::ast_geq:case expr_type::ast_grt:
-        case expr_type::ast_or:case expr_type::ast_and:
-        case expr_type::ast_trino:
+        case expr_type::ast_unary:
+        case expr_type::ast_binary:
+        case expr_type::ast_ternary:
             calc_gen(node);
             gen(op_pop, 0, node->get_location().begin_line);
             break;
@@ -611,21 +600,33 @@ void codegen::expr_gen(expr* node) {
                 }
             }
             break;
+        case expr_type::ast_addeq:case expr_type::ast_subeq:
+        case expr_type::ast_multeq:case expr_type::ast_diveq:case expr_type::ast_lnkeq:
+        case expr_type::ast_btandeq:case expr_type::ast_btoreq:case expr_type::ast_btxoreq:
+            calc_gen(node);
+            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
+                code.back().num=1;
+            } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
+                code.back().op=code.back().op-op_addeqc+op_addecp;
+            } else {
+                gen(op_pop, 0, node->get_location().begin_line);
+            }
+            break;
     }
 }
 
 void codegen::forindex_gen(forei_expr* node) {
-    calc_gen(node[1]);
-    gen(op_cnt, 0, node[1]->get_location().begin_line);
-    usize ptr=code.size();
+    calc_gen(node->get_value());
+    gen(op_cnt, 0, node->get_value()->get_location().begin_line);
+    usize ptr = code.size();
     gen(op_findex, 0, node->get_location().begin_line);
-    if (node[0]->get_type()==expr_type::ast_iter) { // define a new iterator
-        const std::string& str=node[0][0].str();
+    if (node->get_iterator()->get_name()) { // define a new iterator
+        const auto& str = node->get_iterator()->get_name()->get_name();
         local.empty()?
-            gen(op_loadg, global_find(str), node[0][0]->get_location().begin_line):
-            gen(op_loadl, local_find(str), node[0][0]->get_location().begin_line);
+            gen(op_loadg, global_find(str), node->get_iterator()->get_name()->get_location().begin_line):
+            gen(op_loadl, local_find(str), node->get_iterator()->get_name()->get_location().begin_line);
     } else { // use exist variable as the iterator
-        mcall(node[0]);
+        mcall((call_expr*)node->get_iterator()->get_call());
         if (code.back().op==op_mcallg) {
             code.back().op=op_loadg;
         } else if (code.back().op==op_mcalll) {
@@ -633,31 +634,31 @@ void codegen::forindex_gen(forei_expr* node) {
         } else if (code.back().op==op_mupval) {
             code.back().op=op_loadu;
         } else {
-            gen(op_meq, 1, node[0]->get_location().begin_line);
+            gen(op_meq, 1, node->get_iterator()->get_location().begin_line);
         }
     }
     ++in_iterloop.top();
-    block_gen(node[2]);
+    block_gen(node->get_code_block());
     --in_iterloop.top();
     gen(op_jmp, ptr, node->get_location().begin_line);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1, code.size());
-    gen(op_pop, 0, node[1]->get_location().begin_line);// pop vector
+    gen(op_pop, 0, node->get_value()->get_location().begin_line);// pop vector
     gen(op_pop, 0, node->get_location().begin_line);// pop iterator
 }
 
 void codegen::foreach_gen(forei_expr* node) {
-    calc_gen(node[1]);
+    calc_gen(node->get_value());
     gen(op_cnt, 0, node->get_location().begin_line);
-    usize ptr=code.size();
+    usize ptr = code.size();
     gen(op_feach, 0, node->get_location().begin_line);
-    if (node[0]->get_type()==expr_type::ast_iter) { // define a new iterator
-        const std::string& str=node[0][0].str();
+    if (node->get_iterator()->get_name()) { // define a new iterator
+        const auto& str = node->get_iterator()->get_name()->get_name();
         local.empty()?
-            gen(op_loadg, global_find(str), node[0][0]->get_location().begin_line):
-            gen(op_loadl, local_find(str), node[0][0]->get_location().begin_line);
+            gen(op_loadg, global_find(str), node->get_iterator()->get_name()->get_location().begin_line):
+            gen(op_loadl, local_find(str), node->get_iterator()->get_name()->get_location().begin_line);
     } else { // use exist variable as the iterator
-        mcall(node[0]);
+        mcall((call_expr*)node->get_iterator()->get_call());
         if (code.back().op==op_mcallg) {
             code.back().op=op_loadg;
         } else if (code.back().op==op_mcalll) {
@@ -665,17 +666,17 @@ void codegen::foreach_gen(forei_expr* node) {
         } else if (code.back().op==op_mupval) {
             code.back().op=op_loadu;
         } else {
-            gen(op_meq, 1, node[0]->get_location().begin_line);
+            gen(op_meq, 1, node->get_iterator()->get_location().begin_line);
         }
     }
     ++in_iterloop.top();
-    block_gen(node[2]);
+    block_gen(node->get_code_block());
     --in_iterloop.top();
     gen(op_jmp, ptr, node->get_location().begin_line);
     code[ptr].num=code.size();
     load_continue_break(code.size()-1, code.size());
-    gen(op_pop, 0, node[1]->get_location().begin_line);// pop vector
-    gen(op_pop, 0, node->get_location().begin_line);// pop iterator
+    gen(op_pop, 0, node->get_value()->get_location().begin_line); // pop vector
+    gen(op_pop, 0, node->get_location().begin_line); // pop iterator
 }
 
 void codegen::or_gen(binary_operator* node) {
@@ -725,15 +726,24 @@ void codegen::trino_gen(ternary_operator* node) {
 
 void codegen::calc_gen(expr* node) {
     switch(node->get_type()) {
-        case expr_type::ast_nil:  gen(op_pnil,0,node->get_location().begin_line);break;
-        case expr_type::ast_num:  num_gen(node);  break;
-        case expr_type::ast_str:  str_gen(node);  break;
-        case expr_type::ast_id:   call_id(node);  break;
-        case expr_type::ast_bool: bool_gen(node); break;
-        case expr_type::ast_vec:  vec_gen(node);  break;
-        case expr_type::ast_hash: hash_gen(node); break;
-        case expr_type::ast_func: func_gen(node); break;
-        case expr_type::ast_call: call_gen(node); break;
+        case expr_type::ast_nil:
+            gen(op_pnil,0,node->get_location().begin_line); break;
+        case expr_type::ast_num:
+            num_gen((number_literal*)node); break;
+        case expr_type::ast_str:
+            str_gen((string_literal*)node); break;
+        case expr_type::ast_id:
+            call_id((identifier*)node); break;
+        case expr_type::ast_bool:
+            bool_gen((bool_literal*)node); break;
+        case expr_type::ast_vec:
+            vec_gen((vector_expr*)node); break;
+        case expr_type::ast_hash:
+            hash_gen((hash_expr*)node); break;
+        case expr_type::ast_func:
+            func_gen((function*)node); break;
+        case expr_type::ast_call:
+            call_gen((call_expr*)node); break;
         case expr_type::ast_equal:
             calc_gen(node[1]);
             mcall(node[0]);
@@ -809,7 +819,8 @@ void codegen::calc_gen(expr* node) {
                 gen(node->get_type()-ast_less+op_lessc, num_table[node[1].num()], node->get_location().begin_line);
             }
             break;
-        case expr_type::ast_trino:trino_gen(node);break;
+        case expr_type::ast_ternary:
+            trino_gen((ternary_operator*)node);break;
         case expr_type::ast_neg:
             calc_gen(node[0]);
             gen(op_usub, 0, node->get_location().begin_line);
@@ -838,20 +849,24 @@ void codegen::calc_gen(expr* node) {
             gen(op_btand, 0, node->get_location().begin_line);
             break;
         case expr_type::ast_def:
-            single_def(node);
-            call_id(node[0]);
+            single_def((definition_expr*)node);
+            call_id(((definition_expr*)node)->get_variable_name());
             break;
     }
 }
 
 void codegen::block_gen(code_block* node) {
-    for(auto& tmp:node.child()) {
+    for(auto tmp : node->get_expressions()) {
         switch(tmp->get_type()) {
             case expr_type::ast_null:break;
-            case expr_type::ast_id:check_id_exist(tmp);break;
-            case expr_type::ast_nil:case expr_type::ast_num:case expr_type::ast_str:case expr_type::ast_bool:break;
-            case expr_type::ast_file:fileindex=tmp.num();break; // special node type in main block
-            case expr_type::ast_cond:cond_gen(tmp);break;
+            case expr_type::ast_id:
+                check_id_exist((identifier*)tmp); break;
+            case expr_type::ast_nil:case expr_type::ast_num:
+            case expr_type::ast_str:case expr_type::ast_bool:break;
+            case expr_type::ast_file_info:
+                fileindex = ((file_info*)tmp)->get_index();break; // special node type in main block
+            case expr_type::ast_cond:
+                cond_gen((condition_expr*)tmp); break;
             case expr_type::ast_continue:
                 continue_ptr.front().push_back(code.size());
                 gen(op_jmp, 0, tmp->get_location().begin_line);
@@ -862,43 +877,32 @@ void codegen::block_gen(code_block* node) {
                 break;
             case expr_type::ast_while:
             case expr_type::ast_for:
-            case expr_type::ast_forindex:
-            case expr_type::ast_foreach:loop_gen(tmp);break;
-            case expr_type::ast_equal:
-            case expr_type::ast_addeq:case expr_type::ast_subeq:
-            case expr_type::ast_multeq:case expr_type::ast_diveq:case expr_type::ast_lnkeq:
-            case expr_type::ast_btandeq:case expr_type::ast_btoreq:case expr_type::ast_btxoreq:
-            case expr_type::ast_vec:case expr_type::ast_hash:case expr_type::ast_func:case expr_type::ast_call:
-            case expr_type::ast_neg:case expr_type::ast_lnot:case expr_type::ast_bnot:
-            case expr_type::ast_bitor:case expr_type::ast_bitxor:case expr_type::ast_bitand:
-            case expr_type::ast_add:case expr_type::ast_sub:case expr_type::ast_mult:case expr_type::ast_div:case expr_type::ast_link:
-            case expr_type::ast_cmpeq:case expr_type::ast_neq:
-            case expr_type::ast_leq:case expr_type::ast_less:
-            case expr_type::ast_geq:case expr_type::ast_grt:
-            case expr_type::ast_or:
-            case expr_type::ast_and:
-            case expr_type::ast_trino:
+            case expr_type::ast_forei:
+                loop_gen(tmp); break;
+            case expr_type::ast_binary:
+            case expr_type::ast_vec:case expr_type::ast_hash:
+            case expr_type::ast_func:case expr_type::ast_call:
+            case expr_type::ast_unary:
+            case expr_type::ast_ternary:
             case expr_type::ast_def:
-            case expr_type::ast_multi_assign:expr_gen(tmp);break;
-            case expr_type::ast_ret:ret_gen(tmp);break;
+            case expr_type::ast_multi_assign:
+                expr_gen(tmp); break;
+            case expr_type::ast_ret:
+                ret_gen((return_expr*)tmp); break;
         }
     }
 }
 
-void codegen::ret_gen(const ast& node) {
+void codegen::ret_gen(return_expr* node) {
     for(u32 i=0;i<in_iterloop.top();++i) {
         gen(op_pop, 0, node->get_location().begin_line);
         gen(op_pop, 0, node->get_location().begin_line);
     }
-    if (node.size()) {
-        calc_gen(node[0]);
-    } else {
-        gen(op_pnil, 0, node->get_location().begin_line);
-    }
+    calc_gen(node->get_value());
     gen(op_ret, 0, node->get_location().begin_line);
 }
 
-const error& codegen::compile(const parse& parse, const linker& import) {
+const error& codegen::compile(parse& parse, linker& import) {
     fileindex=0;
     file=import.filelist().data();
     in_iterloop.push(0);

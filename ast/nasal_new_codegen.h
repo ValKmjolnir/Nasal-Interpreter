@@ -93,7 +93,7 @@ private:
 
 public:
     codegen(error& e): fileindex(0), err(e), file(nullptr) {}
-    const error& compile(const parse&, const linker&);
+    const error& compile(parse&, linker&);
     void print();
     const std::vector<std::string>& strs() const {return str_res;}
     const std::vector<f64>& nums() const {return num_res;}

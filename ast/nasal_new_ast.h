@@ -583,11 +583,11 @@ public:
         type(forei_loop_type::foreach), iterator(nullptr),
         vector_node(nullptr), block(nullptr) {}
     ~forei_expr();
-    void set_type(forei_loop_type ft) {type = ft;}
+    void set_loop_type(forei_loop_type ft) {type = ft;}
     void set_iterator(iter_expr* node) {iterator = node;}
     void set_value(expr* node) {vector_node = node;}
     void set_code_block(code_block* node) {block = node;}
-    forei_loop_type get_type() const {return type;}
+    forei_loop_type get_loop_type() const {return type;}
     iter_expr* get_iterator() {return iterator;}
     expr* get_value() {return vector_node;}
     code_block* get_code_block() {return block;}
