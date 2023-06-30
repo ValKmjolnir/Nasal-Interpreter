@@ -304,10 +304,10 @@ public:
         expr(location, expr_type::ast_binary),
         left(nullptr), right(nullptr) {}
     ~binary_operator();
-    void set_type(binary_type operator_type) {type = operator_type;}
+    void set_operator_type(binary_type operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
-    binary_type get_type() const {return type;}
+    binary_type get_operator_type() const {return type;}
     expr* get_left() {return left;}
     expr* get_right() {return right;}
     void accept(ast_visitor*) override;
@@ -330,9 +330,9 @@ public:
         expr(location, expr_type::ast_unary),
         value(nullptr) {}
     ~unary_operator();
-    void set_type(unary_type operator_type) {type = operator_type;}
+    void set_operator_type(unary_type operator_type) {type = operator_type;}
     void set_value(expr* node) {value = node;}
-    unary_type get_type() const {return type;}
+    unary_type get_operator_type() const {return type;}
     expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
@@ -454,10 +454,10 @@ public:
         expr(location, expr_type::ast_assign),
         left(nullptr), right(nullptr) {}
     ~assignment_expr();
-    void set_type(assign_type operator_type) {type = operator_type;}
+    void set_assignment_type(assign_type operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
-    assign_type get_type() const {return type;}
+    assign_type get_assignment_type() const {return type;}
     expr* get_left() {return left;}
     expr* get_right() {return right;}
     void accept(ast_visitor*) override;

@@ -75,6 +75,8 @@ private:
     void multi_def(definition_expr*);
     void single_def(definition_expr*);
     void def_gen(definition_expr*);
+    void assignment_gen(assignment_expr*);
+    void assign_statement(assignment_expr*);
     void multi_assign_gen(multi_assign*);
     void cond_gen(condition_expr*);
     void loop_gen(expr*);
@@ -86,6 +88,8 @@ private:
     void foreach_gen(forei_expr*);
     void or_gen(binary_operator*);
     void and_gen(binary_operator*);
+    void unary_gen(unary_operator*);
+    void binary_gen(binary_operator*);
     void trino_gen(ternary_operator*);
     void calc_gen(expr*);
     void block_gen(code_block*);
