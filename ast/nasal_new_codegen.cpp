@@ -433,19 +433,68 @@ void codegen::def_gen(definition_expr* node) {
     node->get_variable_name()? single_def(node):multi_def(node);
 }
 
-void codegen::multi_assign_gen(multi_assign* node) {
-    if (node[1]->get_type()==expr_type::ast_tuple && node[0].size()<node[1].size()) {
-        die("lack values in multi-assignment", node[1]->get_location());
-    } else if (node[1]->get_type()==expr_type::ast_tuple && node[0].size()>node[1].size()) {
-        die("too many values in multi-assignment", node[1]->get_location());
+void codegen::assignment_gen(assignment_expr* node) {
+    switch(node->get_assignment_type()) {
+        case assignment_expr::assign_type::equal:
+            calc_gen(node->get_right());
+            mcall((call_expr*)node->get_left());
+            gen(op_meq, 0, node->get_location().begin_line);
+            break;
+        case assignment_expr::assign_type::add_equal:
+        case assignment_expr::assign_type::sub_equal:
+        case assignment_expr::assign_type::mult_equal:
+        case assignment_expr::assign_type::div_equal:
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+            }
+            mcall((call_expr*)node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                gen(node->get_type()-ast_addeq+op_addeq, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(node->get_type()-ast_addeq+op_addeqc, num_table[num], node->get_location().begin_line);
+            }
+            break;
+        case assignment_expr::assign_type::concat_equal:
+            if (node[1]->get_type()!=ast_str) {
+                calc_gen(node[1]);
+            } else {
+                regist_str(node[1].str());
+            }
+            mcall(node[0]);
+            if (node[1]->get_type()!=ast_str) {
+                gen(op_lnkeq, 0, node->get_location().begin_line);
+            } else {
+                gen(op_lnkeqc, str_table[node[1].str()], node->get_location().begin_line);
+            }
+            break;
+        case assignment_expr::assign_type::bitwise_and_equal:
+        case assignment_expr::assign_type::bitwise_or_equal:
+        case assignment_expr::assign_type::bitwise_xor_equal:
+            calc_gen(node->get_right());
+            mcall((call_expr*)node->get_left());
+            gen(node->get_type()-ast_btandeq+op_btandeq, 0, node->get_location().begin_line);
+            break;
     }
-    i32 size=node[0].size();
-    if (node[1]->get_type()==expr_type::ast_tuple) {
+}
+
+void codegen::multi_assign_gen(multi_assign* node) {
+    if (node->get_value()->get_type()==expr_type::ast_tuple &&
+        node->get_tuple()->get_elements().size()<((tuple_expr*)node->get_value())->get_elements().size()) {
+        die("lack values in multi-assignment", node->get_value()->get_location());
+    } else if (node->get_value()->get_type()==expr_type::ast_tuple &&
+        node->get_tuple()->get_elements().size()>((tuple_expr*)node->get_value())->get_elements().size()) {
+        die("too many values in multi-assignment", node->get_value()->get_location());
+    }
+    i32 size = node->get_tuple()->get_elements().size();
+    if (node->get_value()->get_type()==expr_type::ast_tuple) {
         for(i32 i=size-1;i>=0;--i) {
-            calc_gen(node[1][i]);
+            calc_gen(((tuple_expr*)node->get_value())->get_elements()[i]);
         }
+        auto& tuple = node->get_tuple()->get_elements();
         for(i32 i=0;i<size;++i) {
-            mcall(node[0][i]);
+            mcall((call_expr*)tuple[i]);
             // multi assign user loadl and loadg to avoid meq's stack--
             // and this operation changes local and global value directly
             if (code.back().op==op_mcalll) {
@@ -455,16 +504,17 @@ void codegen::multi_assign_gen(multi_assign* node) {
             } else if (code.back().op==op_mcallg) {
                 code.back().op=op_loadg;
             } else {
-                gen(op_meq, 1, node[0][i]->get_location().begin_line);
+                gen(op_meq, 1, tuple[i]->get_location().begin_line);
             }
         }
     } else {
-        calc_gen(node[1]);
+        calc_gen(node->get_value());
+        auto& tuple = node->get_tuple()->get_elements();
         for(i32 i=0;i<size;++i) {
-            gen(op_callvi, i, node[1]->get_location().begin_line);
+            gen(op_callvi, i, node->get_value()->get_location().begin_line);
             // multi assign user loadl and loadg to avoid meq's stack--
             // and this operation changes local and global value directly
-            mcall(node[0][i]);
+            mcall((call_expr*)tuple[i]);
             if (code.back().op==op_mcalll) {
                 code.back().op=op_loadl;
             } else if (code.back().op==op_mupval) {
@@ -472,7 +522,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
             } else if (code.back().op==op_mcallg) {
                 code.back().op=op_loadg;
             } else {
-                gen(op_meq, 1, node[0][i]->get_location().begin_line);
+                gen(op_meq, 1, tuple[i]->get_location().begin_line);
             }
         }
         gen(op_pop, 0, node->get_location().begin_line);
@@ -481,25 +531,31 @@ void codegen::multi_assign_gen(multi_assign* node) {
 
 void codegen::cond_gen(condition_expr* node) {
     std::vector<usize> jmp_label;
-    for(auto& tmp:node.child()) {
-        if (tmp->get_type()==expr_type::ast_if || tmp->get_type()==expr_type::ast_elsif) {
-            calc_gen(tmp[0]);
-            usize ptr=code.size();
-            gen(op_jf, 0, tmp->get_location().begin_line);
-            block_gen(tmp[1]);
-            // without 'else' the last condition doesn't need to jmp
-            if (&tmp!=&node.child().back()) {
-                jmp_label.push_back(code.size());
-                gen(op_jmp, 0, tmp->get_location().begin_line);
-            }
-            code[ptr].num=code.size();
-        } else {
-            block_gen(tmp[0]);
-            break;
+    calc_gen(node->get_if_statement()->get_condition());
+    auto ptr = code.size();
+    gen(op_jf, 0, node->get_if_statement()->get_location().begin_line);
+    block_gen(node->get_if_statement()->get_code_block());
+    code[ptr].num = code.size();
+
+    for(auto tmp : node->get_elsif_stataments()) {
+        calc_gen(tmp->get_condition());
+        ptr = code.size();
+        gen(op_jf, 0, tmp->get_location().begin_line);
+        block_gen(tmp->get_code_block());
+        // the last condition doesn't need to jmp
+        if (tmp!=node->get_elsif_stataments().back() ||
+            node->get_else_statement()) {
+            jmp_label.push_back(code.size());
+            gen(op_jmp, 0, tmp->get_location().begin_line);
         }
+        code[ptr].num=code.size();
+    }
+
+    if (node->get_else_statement()) {
+        block_gen(node->get_else_statement()->get_code_block());
     }
     for(auto i:jmp_label) {
-        code[i].num=code.size();
+        code[i].num = code.size();
     }
 }
 
@@ -712,6 +768,156 @@ void codegen::and_gen(binary_operator* node) {
     // jt jumps here
 }
 
+void codegen::unary_gen(unary_operator* node) {
+    calc_gen(node->get_value());
+    switch(node->get_operator_type()) {
+        case unary_operator::unary_type::negative:
+            gen(op_usub, 0, node->get_location().begin_line); break;
+        case unary_operator::unary_type::logical_not:
+            gen(op_lnot, 0, node->get_location().begin_line); break;
+        case unary_operator::unary_type::bitwise_not:
+            gen(op_bnot, 0, node->get_location().begin_line); break;
+    }
+}
+
+void codegen::binary_gen(binary_operator* node) {
+    switch(node->get_operator_type()) {
+        case binary_operator::binary_type::condition_or: or_gen(node); return;
+        case binary_operator::binary_type::condition_and: and_gen(node); return;
+        default: break;
+    }
+    switch(node->get_operator_type()) {
+        case binary_operator::binary_type::cmpeq:
+            calc_gen(node->get_left());
+            calc_gen(node->get_right());
+            gen(op_eq, 0, node->get_location().begin_line);
+            return;
+        case binary_operator::binary_type::cmpneq:
+            calc_gen(node->get_left());
+            calc_gen(node->get_right());
+            gen(op_neq, 0, node->get_location().begin_line);
+            return;
+        case binary_operator::binary_type::bitwise_or:
+            calc_gen(node->get_left());
+            calc_gen(node->get_right());
+            gen(op_btor, 0, node->get_location().begin_line);
+            return;
+        case binary_operator::binary_type::bitwise_xor:
+            calc_gen(node->get_left());
+            calc_gen(node->get_right());
+            gen(op_btxor, 0, node->get_location().begin_line);
+            return;
+        case binary_operator::binary_type::bitwise_and:
+            calc_gen(node->get_left());
+            calc_gen(node->get_right());
+            gen(op_btand, 0, node->get_location().begin_line);
+            return;
+        default: break;
+    }
+    switch(node->get_operator_type()) {
+        case binary_operator::binary_type::add:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_add, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_addc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::sub:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_sub, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_subc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::mult:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_mul, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_mulc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::div:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_div, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_divc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::concat:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_str) {
+                calc_gen(node->get_right());
+                gen(op_lnk, 0, node->get_location().begin_line);
+            } else {
+                const auto& str = ((string_literal*)node->get_right())->get_content();
+                regist_str(str);
+                gen(op_lnkc, str_table[str], node->get_location().begin_line);
+            }
+            break;
+        // ast_cmpeq(27)~ast_geq(32) op_eq(29)~op_geq(34)
+        case binary_operator::binary_type::less:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_less, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_lessc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::leq:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_leq, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_leqc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::grt:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_grt, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_grtc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+        case binary_operator::binary_type::geq:
+            calc_gen(node->get_left());
+            if (node->get_right()->get_type()!=expr_type::ast_num) {
+                calc_gen(node->get_right());
+                gen(op_geq, 0, node->get_location().begin_line);
+            } else {
+                auto num = ((number_literal*)node->get_right())->get_number();
+                regist_num(num);
+                gen(op_geqc, num_table[num], node->get_location().begin_line);
+            }
+            return;
+    }
+}
+
 void codegen::trino_gen(ternary_operator* node) {
     calc_gen(node->get_condition());
     usize lfalse=code.size();
@@ -727,7 +933,7 @@ void codegen::trino_gen(ternary_operator* node) {
 void codegen::calc_gen(expr* node) {
     switch(node->get_type()) {
         case expr_type::ast_nil:
-            gen(op_pnil,0,node->get_location().begin_line); break;
+            gen(op_pnil, 0, node->get_location().begin_line); break;
         case expr_type::ast_num:
             num_gen((number_literal*)node); break;
         case expr_type::ast_str:
@@ -744,110 +950,14 @@ void codegen::calc_gen(expr* node) {
             func_gen((function*)node); break;
         case expr_type::ast_call:
             call_gen((call_expr*)node); break;
-        case expr_type::ast_equal:
-            calc_gen(node[1]);
-            mcall(node[0]);
-            gen(op_meq, 0, node->get_location().begin_line);
-            break;
-        // ast_addeq(22)~ast_lnkeq(26) op_addeq(23)~op_lnkeq(27)
-        case expr_type::ast_addeq:case expr_type::ast_subeq:case expr_type::ast_multeq:case expr_type::ast_diveq:
-            if (node[1]->get_type()!=ast_num) {
-                calc_gen(node[1]);
-            }
-            mcall(node[0]);
-            if (node[1]->get_type()!=ast_num) {
-                gen(node->get_type()-ast_addeq+op_addeq, 0, node->get_location().begin_line);
-            } else {
-                regist_num(node[1].num());
-                gen(node->get_type()-ast_addeq+op_addeqc, num_table[node[1].num()], node->get_location().begin_line);
-            }
-            break;
-        case expr_type::ast_lnkeq:
-            if (node[1]->get_type()!=ast_str) {
-                calc_gen(node[1]);
-            } else {
-                regist_str(node[1].str());
-            }
-            mcall(node[0]);
-            if (node[1]->get_type()!=ast_str) {
-                gen(op_lnkeq, 0, node->get_location().begin_line);
-            } else {
-                gen(op_lnkeqc, str_table[node[1].str()], node->get_location().begin_line);
-            }
-            break;
-        case expr_type::ast_btandeq:case expr_type::ast_btoreq:case expr_type::ast_btxoreq:
-            calc_gen(node[1]);
-            mcall(node[0]);
-            gen(node->get_type()-ast_btandeq+op_btandeq, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_or:or_gen(node);break;
-        case expr_type::ast_and:and_gen(node);break;
-        // ast_add(33)~ast_link(37) op_add(18)~op_lnk(22)
-        case expr_type::ast_add:case expr_type::ast_sub:case expr_type::ast_mult:case expr_type::ast_div:
-            calc_gen(node[0]);
-            if (node[1]->get_type()!=ast_num) {
-                calc_gen(node[1]);
-                gen(node->get_type()-ast_add+op_add, 0, node->get_location().begin_line);
-            } else {
-                regist_num(node[1].num());
-                gen(node->get_type()-ast_add+op_addc, num_table[node[1].num()], node->get_location().begin_line);
-            }
-            break;
-        case expr_type::ast_link:
-            calc_gen(node[0]);
-            if (node[1]->get_type()!=ast_str) {
-                calc_gen(node[1]);
-                gen(op_lnk, 0, node->get_location().begin_line);
-            } else {
-                regist_str(node[1].str());
-                gen(op_lnkc, str_table[node[1].str()], node->get_location().begin_line);
-            }
-            break;
-        // ast_cmpeq(27)~ast_geq(32) op_eq(29)~op_geq(34)
-        case expr_type::ast_cmpeq:case expr_type::ast_neq:
-            calc_gen(node[0]);
-            calc_gen(node[1]);
-            gen(node->get_type()-ast_cmpeq+op_eq, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_less:case expr_type::ast_leq:case expr_type::ast_grt:case expr_type::ast_geq:
-            calc_gen(node[0]);
-            if (node[1]->get_type()!=ast_num) {
-                calc_gen(node[1]);
-                gen(node->get_type()-ast_less+op_less, 0, node->get_location().begin_line);
-            } else {
-                regist_num(node[1].num());
-                gen(node->get_type()-ast_less+op_lessc, num_table[node[1].num()], node->get_location().begin_line);
-            }
-            break;
+        case expr_type::ast_assign:
+            assignment_gen((assignment_expr*)node); break;
         case expr_type::ast_ternary:
-            trino_gen((ternary_operator*)node);break;
-        case expr_type::ast_neg:
-            calc_gen(node[0]);
-            gen(op_usub, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_lnot:
-            calc_gen(node[0]);
-            gen(op_lnot, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_bnot:
-            calc_gen(node[0]);
-            gen(op_bnot, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_bitor:
-            calc_gen(node[0]);
-            calc_gen(node[1]);
-            gen(op_btor, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_bitxor:
-            calc_gen(node[0]);
-            calc_gen(node[1]);
-            gen(op_btxor, 0, node->get_location().begin_line);
-            break;
-        case expr_type::ast_bitand:
-            calc_gen(node[0]);
-            calc_gen(node[1]);
-            gen(op_btand, 0, node->get_location().begin_line);
-            break;
+            trino_gen((ternary_operator*)node); break;
+        case expr_type::ast_unary:
+            unary_gen((unary_operator*)node); break;
+        case expr_type::ast_binary:
+            binary_gen((binary_operator*)node); break;
         case expr_type::ast_def:
             single_def((definition_expr*)node);
             call_id(((definition_expr*)node)->get_variable_name());

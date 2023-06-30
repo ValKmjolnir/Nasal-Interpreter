@@ -150,7 +150,7 @@ bool ast_dumper::visit_ternary_operator(ternary_operator* node) {
 bool ast_dumper::visit_binary_operator(binary_operator* node) {
     dump_indent();
     std::cout << "binary_operator ";
-    switch(node->get_type()) {
+    switch(node->get_operator_type()) {
         case binary_operator::binary_type::add: std::cout << "+"; break;
         case binary_operator::binary_type::sub: std::cout << "-"; break;
         case binary_operator::binary_type::mult: std::cout << "*"; break;
@@ -180,7 +180,7 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
 bool ast_dumper::visit_unary_operator(unary_operator* node) {
     dump_indent();
     std::cout << "unary_operator ";
-    switch(node->get_type()) {
+    switch(node->get_operator_type()) {
         case unary_operator::unary_type::negative: std::cout << "-"; break;
         case unary_operator::unary_type::logical_not: std::cout << "!"; break;
         case unary_operator::unary_type::bitwise_not: std::cout << "~"; break;
