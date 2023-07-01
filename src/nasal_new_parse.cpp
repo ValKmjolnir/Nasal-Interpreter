@@ -20,7 +20,7 @@ const error& parse::compile(const lexer& lexer) {
     return err;
 }
 
-void parse::easter_egg() const {
+void parse::easter_egg() {
     std::clog
     << "              _,,,_                                          \n"
     << "            .'     `'.                                       \n"

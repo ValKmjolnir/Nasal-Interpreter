@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __nasver
-#define __nasver "10.1"
+#define __nasver "11.0"
 #endif
 
 #include <cstdint>
