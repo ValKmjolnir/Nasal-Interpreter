@@ -144,6 +144,7 @@ protected:
     void o_mcallv();
     void o_mcallh();
     void o_ret();
+
 public:
 
     /* constructor of vm instance */
