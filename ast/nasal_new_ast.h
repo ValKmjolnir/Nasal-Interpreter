@@ -66,6 +66,7 @@ public:
         nd_loc.begin_column = column;
     }
     const span& get_location() const {return nd_loc;}
+    const u32 get_line() const {return nd_loc.begin_line;}
     expr_type get_type() const {return nd_type;}
     void update_location(const span& location) {
         nd_loc.end_line = location.end_line;

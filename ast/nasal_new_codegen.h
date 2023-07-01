@@ -40,7 +40,6 @@ private:
     // but in fact local scope also has less than STACK_DEPTH value
     std::list<std::unordered_map<std::string,i32>> local;
 
-    bool check_memory_reachable(expr*);
     void check_id_exist(identifier*);
     
     void die(const std::string& info, const span& loc) {
@@ -68,7 +67,7 @@ private:
     void call_hash_gen(call_hash*);
     void call_vec(call_vector*);
     void call_func(call_function*);
-    void mcall(call_expr*);
+    void mcall(expr*);
     void mcall_id(identifier*);
     void mcall_vec(call_vector*);
     void mcall_hash(call_hash*);

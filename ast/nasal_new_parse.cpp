@@ -939,14 +939,21 @@ iter_expr* parse::iter_gen() {
     if (lookahead(tok::var)) {
         match(tok::var);
         node->set_name(id());
-    } else {
-        auto tmp = new call_expr(toks[ptr].loc);
-        tmp->set_first(id());
-        while(is_call(toks[ptr].type)) {
-            tmp->add_call(call_scalar());
-        }
-        node->set_call(tmp);
+        update_location(node);
+        return node;
     }
+    auto id_node = id();
+    if (!is_call(toks[ptr].type)) {
+        node->set_name(id_node);
+        update_location(node);
+        return node;
+    }
+    auto tmp = new call_expr(id_node->get_location());
+    tmp->set_first(id());
+    while(is_call(toks[ptr].type)) {
+        tmp->add_call(call_scalar());
+    }
+    node->set_call(tmp);
     update_location(node);
     return node;
 }
