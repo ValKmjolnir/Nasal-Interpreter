@@ -157,5 +157,5 @@ public:
         }
     }
     const error& compile(const lexer&);
-    void easter_egg() const;
+    static void easter_egg();
 };

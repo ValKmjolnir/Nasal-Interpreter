@@ -83,8 +83,7 @@ private:
     void while_gen(while_expr*);
     void for_gen(for_expr*);
     void expr_gen(expr*);
-    void forindex_gen(forei_expr*);
-    void foreach_gen(forei_expr*);
+    void forei_gen(forei_expr*);
     void or_gen(binary_operator*);
     void and_gen(binary_operator*);
     void unary_gen(unary_operator*);
