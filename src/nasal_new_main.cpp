@@ -15,12 +15,13 @@
 #include <unordered_map>
 #include <thread>
 
-const u32 VM_AST   =0x01;
-const u32 VM_CODE  =0x02;
-const u32 VM_TIME  =0x04;
-const u32 VM_EXEC  =0x08;
-const u32 VM_DETAIL=0x10;
-const u32 VM_DEBUG =0x20;
+const u32 VM_RAW_AST = 1;
+const u32 VM_AST     = 1<<1;
+const u32 VM_CODE    = 1<<2;
+const u32 VM_TIME    = 1<<3;
+const u32 VM_EXEC    = 1<<4;
+const u32 VM_DETAIL  = 1<<5;
+const u32 VM_DEBUG   = 1<<6;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -32,19 +33,20 @@ std::ostream& help(std::ostream& out) {
 #endif
     <<"\nnasal <option>\n"
     <<"option:\n"
-    <<"   -h,   --help   | get help.\n"
+    <<"   -h,   --help    | get help.\n"
     <<"\nnasal [option] <file> [argv]\n"
     <<"option:\n"
-    <<"   -a,   --ast    | view abstract syntax tree.\n"
-    <<"   -c,   --code   | view bytecode.\n"
-    <<"   -e,   --exec   | execute.\n"
-    <<"   -t,   --time   | show execute time.\n"
-    <<"   -d,   --detail | get detail info.\n"
-    <<"   -dbg, --debug  | debug mode.\n"
+    <<"   -a,   --ast     | view ast (after link/optimize process).\n"
+    <<"         --raw-ast | view ast without after-processing.\n"
+    <<"   -c,   --code    | view bytecode.\n"
+    <<"   -e,   --exec    | execute.\n"
+    <<"   -t,   --time    | show execute time.\n"
+    <<"   -d,   --detail  | get detail info.\n"
+    <<"   -dbg, --debug   | debug mode.\n"
     <<"file:\n"
-    <<"   <filename>     | execute file.\n"
+    <<"   <filename>      | execute file.\n"
     <<"argv:\n"
-    <<"   <args>         | cmd arguments used in program.\n";
+    <<"   <args>          | cmd arguments used in program.\n";
     return out;
 }
 
@@ -93,18 +95,24 @@ void execute(
 
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
+    if (cmd&VM_RAW_AST) {
+        auto dumper = new ast_dumper;
+        dumper->dump(parse.tree());
+        delete dumper;
+    }
 
     // linker gets parser's ast and load import files to this ast
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
-    if (cmd&VM_AST) {
-        auto dumper = new ast_dumper();
-        dumper->dump(parse.tree());
-    }
-
+    
     // optimizer does simple optimization on ast
     auto opt = new optimizer;
     opt->do_optimization(parse.tree());
     delete opt;
+    if (cmd&VM_AST) {
+        auto dumper = new ast_dumper;
+        dumper->dump(parse.tree());
+        delete dumper;
+    }
 
     // code generator gets parser's ast and import file list to generate code
     gen.compile(parse, ld).chkerr();
@@ -149,6 +157,7 @@ i32 main(i32 argc, const char* argv[]) {
 
     // execute with arguments
     const std::unordered_map<std::string,u32> cmdlst = {
+        {"--raw-ast", VM_RAW_AST},
         {"--ast", VM_AST},
         {"-a", VM_AST},
         {"--code", VM_CODE},

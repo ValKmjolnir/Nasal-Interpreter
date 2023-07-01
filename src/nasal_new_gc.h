@@ -327,8 +327,8 @@ struct gc {
     context mctx;
 
     /* runtime context */
-    context* rctx;
-    nas_co* cort=nullptr; // running coroutine
+    context* rctx = nullptr;
+    nas_co* cort = nullptr; // running coroutine
 
     /*  temporary space used in builtin/module functions */
     var temp=nil;
@@ -340,7 +340,7 @@ struct gc {
     std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
     /* heap increase size */
-    u32 incr[gc_type_size]={
+    u32 incr[gc_type_size] = {
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash
@@ -354,7 +354,10 @@ struct gc {
     u64 size[gc_type_size];
     u64 gcnt[gc_type_size];
     u64 acnt[gc_type_size];
-    i64 worktime=0;
+    i64 worktime = 0;
+    i64 max_time = 0;
+    i64 max_mark_time = 0;
+    i64 max_sweep_time = 0;
 
     gc(context* _ctx): rctx(_ctx) {}
 

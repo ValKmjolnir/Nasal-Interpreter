@@ -74,79 +74,81 @@ test:nasal
 	@ ./nasal -t -d test/ycombinator.nas
 
 NASAL_NEW_AST=\
-	nasal_new_misc.o\
 	nasal_new_err.o\
-	nasal_new_gc.o\
-	nasal_new_import.o\
-	nasal_new_lexer.o\
 	nasal_new_ast.o\
-	nasal_new_builtin.o\
-	nasal_new_codegen.o\
-	nasal_new_opcode.o\
-	nasal_new_parse.o\
-	nasal_new_vm.o\
-	nasal_new_dbg.o\
-	optimizer.o\
-	symbol_finder.o\
 	ast_visitor.o\
 	ast_dumper.o\
+	nasal_new_lexer.o\
+	nasal_new_parse.o\
+	nasal_new_import.o\
+	optimizer.o\
+	nasal_new_opcode.o\
+	symbol_finder.o\
+	nasal_new_codegen.o\
+	nasal_new_misc.o\
+	nasal_new_gc.o\
+	nasal_new_builtin.o\
+	nasal_new_vm.o\
+	nasal_new_dbg.o\
 	nasal_new_main.o
 
 # for test
 nnew: $(NASAL_NEW_AST)
-	$(CXX) $(NASAL_NEW_AST) -o nnew -ldl
-	@ echo "build done"
+	$(CXX) $(NASAL_NEW_AST) -O3 -o nnew -ldl
 
-nasal_new_main.o: ast/nasal_new_main.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_main.cpp -fno-exceptions -fPIC -o nasal_new_main.o -I .
+nnew.exe: $(NASAL_NEW_AST)
+	$(CXX) $(NASAL_NEW_AST) -O3 -o nnew.exe
 
-nasal_new_misc.o: ast/nasal_new_header.h ast/nasal_new_misc.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_misc.cpp -fno-exceptions -fPIC -o nasal_new_misc.o -I .
+nasal_new_main.o: src/nasal_new_main.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_main.cpp -fno-exceptions -fPIC -o nasal_new_main.o -I .
 
-nasal_new_err.o: ast/nasal_new_err.h ast/nasal_new_err.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_err.cpp -fno-exceptions -fPIC -o nasal_new_err.o -I .
+nasal_new_misc.o: src/nasal_new_header.h src/nasal_new_misc.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_misc.cpp -fno-exceptions -fPIC -o nasal_new_misc.o -I .
 
-nasal_new_gc.o: ast/nasal_new_gc.h ast/nasal_new_gc.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_gc.cpp -fno-exceptions -fPIC -o nasal_new_gc.o -I . 
+nasal_new_err.o: src/nasal_new_err.h src/nasal_new_err.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_err.cpp -fno-exceptions -fPIC -o nasal_new_err.o -I .
 
-nasal_new_import.o: ast/nasal_new_import.h ast/nasal_new_import.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_import.cpp -fno-exceptions -fPIC -o nasal_new_import.o -I .
+nasal_new_gc.o: src/nasal_new_gc.h src/nasal_new_gc.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_gc.cpp -fno-exceptions -fPIC -o nasal_new_gc.o -I . 
 
-nasal_new_lexer.o: ast/nasal_new_lexer.h ast/nasal_new_lexer.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
+nasal_new_import.o: src/nasal_new_import.h src/nasal_new_import.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_import.cpp -fno-exceptions -fPIC -o nasal_new_import.o -I .
 
-nasal_new_ast.o: ast/nasal_new_ast.h ast/nasal_new_ast.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .
+nasal_new_lexer.o: src/nasal_new_lexer.h src/nasal_new_lexer.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_lexer.cpp -fno-exceptions -fPIC -o nasal_new_lexer.o -I .
 
-nasal_new_builtin.o: ast/nasal_new_builtin.h ast/nasal_new_builtin.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_builtin.cpp -fno-exceptions -fPIC -o nasal_new_builtin.o -I .
+nasal_new_ast.o: src/nasal_new_ast.h src/nasal_new_ast.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_ast.cpp -fno-exceptions -fPIC -o nasal_new_ast.o -I .
 
-nasal_new_codegen.o: ast/nasal_new_codegen.h ast/nasal_new_codegen.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_codegen.cpp -fno-exceptions -fPIC -o nasal_new_codegen.o -I .
+nasal_new_builtin.o: src/nasal_new_builtin.h src/nasal_new_builtin.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_builtin.cpp -fno-exceptions -fPIC -o nasal_new_builtin.o -I .
 
-nasal_new_opcode.o: ast/nasal_new_opcode.h ast/nasal_new_opcode.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_opcode.cpp -fno-exceptions -fPIC -o nasal_new_opcode.o -I .
+nasal_new_codegen.o: src/nasal_new_codegen.h src/nasal_new_codegen.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_codegen.cpp -fno-exceptions -fPIC -o nasal_new_codegen.o -I .
 
-nasal_new_parse.o: ast/nasal_new_parse.h ast/nasal_new_parse.cpp ast/nasal_new_ast.h
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_parse.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
+nasal_new_opcode.o: src/nasal_new_opcode.h src/nasal_new_opcode.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_opcode.cpp -fno-exceptions -fPIC -o nasal_new_opcode.o -I .
 
-optimizer.o: ast/optimizer.h ast/optimizer.cpp ast/nasal_new_ast.h
-	$(CXX) -std=$(STD) -c -O3 ast/optimizer.cpp -fno-exceptions -fPIC -o optimizer.o -I .
+nasal_new_parse.o: src/nasal_new_parse.h src/nasal_new_parse.cpp src/nasal_new_ast.h
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_parse.cpp -fno-exceptions -fPIC -o nasal_new_parse.o -I .
 
-symbol_finder.o: ast/symbol_finder.h ast/symbol_finder.cpp ast/nasal_new_ast.h
-	$(CXX) -std=$(STD) -c -O3 ast/symbol_finder.cpp -fno-exceptions -fPIC -o symbol_finder.o -I .
+optimizer.o: src/optimizer.h src/optimizer.cpp src/nasal_new_ast.h
+	$(CXX) -std=$(STD) -c -O3 src/optimizer.cpp -fno-exceptions -fPIC -o optimizer.o -I .
 
-ast_visitor.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_visitor.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .
+symbol_finder.o: src/symbol_finder.h src/symbol_finder.cpp src/nasal_new_ast.h
+	$(CXX) -std=$(STD) -c -O3 src/symbol_finder.cpp -fno-exceptions -fPIC -o symbol_finder.o -I .
 
-ast_dumper.o: ast/nasal_new_ast.h ast/ast_visitor.h ast/ast_dumper.h ast/ast_dumper.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/ast_dumper.cpp -fno-exceptions -fPIC -o ast_dumper.o -I .
+ast_visitor.o: src/nasal_new_ast.h src/ast_visitor.h src/ast_visitor.cpp
+	$(CXX) -std=$(STD) -c -O3 src/ast_visitor.cpp -fno-exceptions -fPIC -o ast_visitor.o -I .
 
-nasal_new_vm.o: ast/nasal_new_vm.h ast/nasal_new_vm.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_vm.cpp -fno-exceptions -fPIC -o nasal_new_vm.o -I .
+ast_dumper.o: src/nasal_new_ast.h src/ast_visitor.h src/ast_dumper.h src/ast_dumper.cpp
+	$(CXX) -std=$(STD) -c -O3 src/ast_dumper.cpp -fno-exceptions -fPIC -o ast_dumper.o -I .
 
-nasal_new_dbg.o: ast/nasal_new_dbg.h ast/nasal_new_dbg.cpp
-	$(CXX) -std=$(STD) -c -O3 ast/nasal_new_dbg.cpp -fno-exceptions -fPIC -o nasal_new_dbg.o -I .
+nasal_new_vm.o: src/nasal_new_vm.h src/nasal_new_vm.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_vm.cpp -fno-exceptions -fPIC -o nasal_new_vm.o -I .
+
+nasal_new_dbg.o: src/nasal_new_dbg.h src/nasal_new_dbg.cpp
+	$(CXX) -std=$(STD) -c -O3 src/nasal_new_dbg.cpp -fno-exceptions -fPIC -o nasal_new_dbg.o -I .
 
 .PHONY: nasal_new_clean
 nasal_new_clean:

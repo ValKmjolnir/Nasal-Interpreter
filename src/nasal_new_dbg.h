@@ -74,6 +74,7 @@ private:
     void call_sort(const u64*) const;
     void step_info();
     void interact();
+
 public:
     dbg(error& err):
         next(false), fsize(0),
