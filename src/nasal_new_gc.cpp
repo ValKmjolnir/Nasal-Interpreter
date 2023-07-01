@@ -466,57 +466,71 @@ void gc::info() {
     using std::left;
     using std::setw;
     using std::setfill;
-    const char* name[]={"str  ","vec  ","hash ","func ","upval","obj  ","co   "};
-    std::clog<<"\ngc info (gc count|alloc count|memory size)\n";
+    const char* name[] = {
+        "string   ",
+        "vector   ",
+        "hashmap  ",
+        "function ",
+        "upvalue  ",
+        "object   ",
+        "coroutine"
+    };
 
-    usize ident=0;
+    usize indent=0;
     for(u8 i=0;i<gc_type_size;++i) {
-#ifndef _MSC_VER
-        usize len=std::max({
-            std::to_string(gcnt[i]).length(),
-            std::to_string(acnt[i]).length(),
-            std::to_string(size[i]).length()
-        });
-#else // VS is a piece of shit
-        usize len=std::to_string(gcnt[i]).length();
-        ident=ident<len?len:ident;
-        len=std::to_string(acnt[i]).length();
-        ident=ident<len?len:ident;
-        len=std::to_string(size[i]).length();
-#endif
-        ident=ident<len?len:ident;
+        usize len = 0;
+        len = std::to_string(gcnt[i]).length();
+        indent = indent<len? len:indent;
+        len = std::to_string(acnt[i]).length();
+        indent = indent<len? len:indent;
+        len = std::to_string(size[i]).length();
+        indent = indent<len? len:indent;
     }
 
     double total=0;
-    for(u8 i=0;i<gc_type_size;++i) {
-        if (gcnt[i] || acnt[i] || size[i]) {
-            total+=gcnt[i];
-            std::clog<<" "<<name[i];
-            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<gcnt[i];
-            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<acnt[i];
-            std::clog<<" | "<<left<<setw(ident)<<setfill(' ')<<size[i];
-            std::clog<<"\n";
+    std::clog << "\ngc info (gc count|alloc count|memory size)\n";
+    for(u8 i = 0; i<gc_type_size; ++i) {
+        if (!gcnt[i] && !acnt[i] && !size[i]) {
+            continue;
         }
+        total += gcnt[i];
+        std::clog << " " << name[i];
+        std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
+        std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];
+        std::clog << " | " << left << setw(indent) << setfill(' ') << size[i];
+        std::clog << "\n";
     }
 
-    double sec=worktime*1.0/1000000000; // seconds
-    std::clog<<" time  | "<<(sec<0.1? sec*1000:sec)<<(sec<0.1? " ms\n":" s\n");
+    auto den = std::chrono::high_resolution_clock::duration::period::den;
+    std::clog << " gc time   | " << worktime*1.0/den*1000 << " ms\n";
     if (total) {
-        std::clog<<" avg   | "<<sec/total*1000<<" ms\n";
+        std::clog << " avg time  | " << worktime*1.0/den*1000/total << " ms\n";
+        std::clog << " max gc    | " << max_time*1.0/den*1000 << " ms\n";
+        std::clog << " max mark  | " << max_mark_time*1.0/den*1000 << " ms\n";
+        std::clog << " max sweep | " << max_sweep_time*1.0/den*1000 << " ms\n";
     }
     std::clog<<"\n";
 }
 
 var gc::alloc(u8 type) {
-    using clk=std::chrono::high_resolution_clock;
-    const u8 index=type-vm_str;
+    using clk = std::chrono::high_resolution_clock;
+    const u8 index = type-vm_str;
     ++acnt[index];
     if (unused[index].empty()) {
         ++gcnt[index];
-        auto begin=clk::now();
+        auto begin = clk::now();
         mark();
+        auto mark_end = clk::now();
         sweep();
-        worktime+=(clk::now()-begin).count();
+        auto sweep_end = clk::now();
+        
+        auto total_time = (sweep_end-begin).count();
+        auto mark_time = (mark_end-begin).count();
+        auto sweep_time = (sweep_end-mark_end).count();
+        worktime += total_time;
+        max_time = max_time<total_time? total_time:max_time;
+        max_mark_time = max_mark_time<mark_time? mark_time:max_mark_time;
+        max_sweep_time = max_sweep_time<sweep_time? sweep_time:max_sweep_time;
     }
     if (unused[index].empty()) {
         extend(type);

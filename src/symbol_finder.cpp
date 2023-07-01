@@ -20,6 +20,7 @@ bool symbol_finder::visit_iter_expr(iter_expr* node) {
     if (node->get_name()) {
         symbols.push_back(node->get_name()->get_name());
     }
+    return true;
 }
 
 const std::vector<std::string>& symbol_finder::do_find(code_block* root) {

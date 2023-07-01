@@ -1,4 +1,13 @@
 #include "nasal_new_err.h"
+#ifdef _WIN32
+#include <windows.h> // use SetConsoleTextAttribute
+struct for_reset {
+    CONSOLE_SCREEN_BUFFER_INFO scr;
+    for_reset() {
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scr);
+    }
+} reset_ter_color;
+#endif
 
 std::ostream& back_white(std::ostream& s) {
 #ifdef _WIN32
