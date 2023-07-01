@@ -8,6 +8,9 @@
 #include "ast_dumper.h"
 #include "symbol_finder.h"
 #include "optimizer.h"
+#include "nasal_new_codegen.h"
+#include "nasal_new_vm.h"
+#include "nasal_new_dbg.h"
 
 #include <unordered_map>
 #include <thread>
@@ -73,8 +76,8 @@ void err() {
 void execute(
     const std::string& file,
     const std::vector<std::string>& argv,
-    const u32 cmd
-) {
+    const u32 cmd) {
+
     using clk=std::chrono::high_resolution_clock;
     const auto den=clk::duration::period::den;
 
@@ -82,8 +85,8 @@ void execute(
     lexer   lex(err);
     parse   parse(err);
     linker  ld(err);
-    // codegen gen(err);
-    // vm      ctx;
+    codegen gen(err);
+    vm      ctx;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -103,24 +106,19 @@ void execute(
     opt->do_optimization(parse.tree());
     delete opt;
 
-    auto finder = new symbol_finder;
-    for(const auto& symbol : finder->do_find(parse.tree())) {
-        std::cout << symbol << std::endl;
-    }
-
     // code generator gets parser's ast and import file list to generate code
-    // gen.compile(parse, ld).chkerr();
-    // if (cmd&VM_CODE) {
-    //     gen.print();
-    // }
+    gen.compile(parse, ld).chkerr();
+    if (cmd&VM_CODE) {
+        gen.print();
+    }
 
     // run
     auto start=clk::now();
-    // if (cmd&VM_DEBUG) {
-    //     dbg(err).run(gen, ld, argv);
-    // } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-    //     ctx.run(gen, ld, argv, cmd&VM_DETAIL);
-    // }
+    if (cmd&VM_DEBUG) {
+        dbg(err).run(gen, ld, argv);
+    } else if (cmd&VM_TIME || cmd&VM_EXEC) {
+        ctx.run(gen, ld, argv, cmd&VM_DETAIL);
+    }
 
     // get running time
     if (cmd&VM_TIME) {
