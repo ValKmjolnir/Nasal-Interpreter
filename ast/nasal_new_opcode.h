@@ -95,31 +95,6 @@ enum op_code_type:u8 {
     op_ret     // return
 };
 
-const char* opname[]={
-    "exit  ","intg  ","intl  ","loadg ",
-    "loadl ","loadu ","pnum  ","pnil  ",
-    "pstr  ","newv  ","newh  ","newf  ",
-    "happ  ","para  ","def   ","dyn   ",
-    "lnot  ","usub  ","bnot  ","btor  ",
-    "btxor ","btand ","add   ","sub   ",
-    "mult  ","div   ","lnk   ","addc  ",
-    "subc  ","multc ","divc  ","lnkc  ",
-    "addeq ","subeq ","muleq ","diveq ",
-    "lnkeq ","bandeq","boreq ","bxoreq",
-    "addeqc","subeqc","muleqc","diveqc",
-    "lnkeqc","addecp","subecp","mulecp",
-    "divecp","lnkecp","meq   ","eq    ",
-    "neq   ","less  ","leq   ","grt   ",
-    "geq   ","lessc ","leqc  ","grtc  ",
-    "geqc  ","pop   ","jmp   ","jt    ",
-    "jf    ","cnt   ","findx ","feach ",
-    "callg ","calll ","upval ","callv ",
-    "callvi","callh ","callfv","callfh",
-    "callb ","slcbeg","slcend","slc   ",
-    "slc2  ","mcallg","mcalll","mupval",
-    "mcallv","mcallh","ret   "
-};
-
 struct opcode {
     u8  op;   // opcode
     u16 fidx; // source code file index
@@ -144,3 +119,5 @@ public:
 };
 
 std::ostream& operator<<(std::ostream&, const codestream&);
+
+extern const char* opname[];
