@@ -829,6 +829,16 @@ void codegen::unary_gen(unary_operator* node) {
 }
 
 void codegen::binary_gen(binary_operator* node) {
+    // generate optimized result
+    if (node->get_optimized_number()) {
+        num_gen(node->get_optimized_number());
+        return;
+    }
+    if (node->get_optimized_string()) {
+        str_gen(node->get_optimized_string());
+        return;
+    }
+
     switch(node->get_operator_type()) {
         case binary_operator::binary_type::condition_or: or_gen(node); return;
         case binary_operator::binary_type::condition_and: and_gen(node); return;

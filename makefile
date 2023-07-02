@@ -1,5 +1,3 @@
-.PHONY:test clean
-
 STD=c++17
 
 NASAL_OBJECT=\
@@ -83,38 +81,12 @@ nasal_new_dbg.o: src/nasal_new_dbg.h src/nasal_new_dbg.cpp
 nasal_new_clean:
 	rm $(NASAL_OBJECT)
 
-SRC=\
-	main.cpp\
-	nasal_ast.h\
-	nasal_err.h\
-	nasal_builtin.h\
-	nasal_opcode.h\
-	nasal_opt.h\
-	nasal_codegen.h\
-	nasal_gc.h\
-	nasal_import.h\
-	nasal_lexer.h\
-	nasal_parse.h\
-	nasal_vm.h\
-	nasal_dbg.h\
-	nasal.h
-
-nasal_old:$(SRC)
-	$(CXX) -std=$(STD) -O3 main.cpp -o nasal_old -fno-exceptions -ldl -Wshadow -Wall
-
-nasal_old.exe:$(SRC)
-	$(CXX) -std=$(STD) -O3 main.cpp -o nasal_old.exe -fno-exceptions -Wshadow -Wall -static
-
-stable-release:$(SRC)
-	$(CXX) -std=$(STD) -O2 main.cpp -o nasal_old -fno-exceptions -ldl -Wshadow -Wall
-
-stable-release-mingw:$(SRC)
-	$(CXX) -std=$(STD) -O2 main.cpp -o nasal_old.exe -fno-exceptions -Wshadow -Wall -static
-
+.PHONY: clean
 clean:
 	@ echo "[clean] nasal" && if [ -e nasal ]; then rm nasal; fi
 	@ echo "[clean] nasal.exe" && if [ -e nasal.exe ]; then rm nasal.exe; fi
 
+.PHONY: test
 test:nasal
 	@ ./nasal -e test/ascii-art.nas
 	@ ./nasal -t -d test/bfs.nas

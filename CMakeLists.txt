@@ -9,22 +9,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
+add_compile_options(-fPIC)
+
 # generate release executables
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
-add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)
-target_include_directories(fib PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-add_library(key SHARED ${CMAKE_SOURCE_DIR}/module/keyboard.cpp)
-target_include_directories(key PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-add_library(mat SHARED ${CMAKE_SOURCE_DIR}/module/matrix.cpp)
-target_include_directories(mat PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
-target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
+# build nasal used object
 set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
@@ -42,18 +32,16 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_new_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
     ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
-
-add_executable(nasal ${CMAKE_SOURCE_DIR}/src/nasal_new_main.cpp)
-
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
+# build nasal
+add_executable(nasal ${CMAKE_SOURCE_DIR}/src/nasal_new_main.cpp)
 target_link_libraries(nasal nasal-object)
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     add_custom_command(
         TARGET nasal POST_BUILD
@@ -62,3 +50,27 @@ if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
                 ${CMAKE_SOURCE_DIR}/nasal
     )
 endif()
+
+# build module
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
+
+set(MODULE_USED_OBJECT_SOURCE_FILE
+    ${CMAKE_SOURCE_DIR}/src/nasal_new_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_new_gc.cpp)
+add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
+
+add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)
+target_include_directories(fib PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(fib module-used-object)
+
+add_library(key SHARED ${CMAKE_SOURCE_DIR}/module/keyboard.cpp)
+target_include_directories(key PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(key module-used-object)
+
+add_library(mat SHARED ${CMAKE_SOURCE_DIR}/module/matrix.cpp)
+target_include_directories(mat PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(mat module-used-object)
+
+add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
+target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(nasock module-used-object)

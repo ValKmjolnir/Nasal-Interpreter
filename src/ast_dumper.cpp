@@ -148,6 +148,14 @@ bool ast_dumper::visit_ternary_operator(ternary_operator* node) {
 }
 
 bool ast_dumper::visit_binary_operator(binary_operator* node) {
+    if (node->get_optimized_number()) {
+        node->get_optimized_number()->accept(this);
+        return true;
+    }
+    if (node->get_optimized_string()) {
+        node->get_optimized_string()->accept(this);
+        return true;
+    }
     dump_indent();
     std::cout << "binary_operator ";
     switch(node->get_operator_type()) {
@@ -178,6 +186,10 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
 }
 
 bool ast_dumper::visit_unary_operator(unary_operator* node) {
+    if (node->get_optimized_number()) {
+        node->get_optimized_number()->accept(this);
+        return true;
+    }
     dump_indent();
     std::cout << "unary_operator ";
     switch(node->get_operator_type()) {

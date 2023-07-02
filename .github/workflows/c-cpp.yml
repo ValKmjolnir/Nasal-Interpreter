@@ -16,9 +16,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: make
       run: |
-          make -j
+          make -j4
           cd module
-          make all -j
+          make all -j4
           cd ..
           make test
           tar -czf nasal-mac-nightly.tgz .
@@ -42,9 +42,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: make
       run: |
-          make -j
+          make -j4
           cd module
-          make all -j
+          make all -j4
           cd ..
           make test
           touch nasal-linux-x86_64-nightly.tgz

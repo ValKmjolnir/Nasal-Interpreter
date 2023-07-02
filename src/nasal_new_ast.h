@@ -299,18 +299,26 @@ private:
     binary_type type;
     expr* left;
     expr* right;
+    number_literal* optimized_const_number;
+    string_literal* optimized_const_string;
 
 public:
     binary_operator(const span& location):
         expr(location, expr_type::ast_binary),
-        left(nullptr), right(nullptr) {}
+        left(nullptr), right(nullptr),
+        optimized_const_number(nullptr),
+        optimized_const_string(nullptr) {}
     ~binary_operator();
     void set_operator_type(binary_type operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
+    void set_optimized_number(number_literal* node) {optimized_const_number = node;}
+    void set_optimized_string(string_literal* node) {optimized_const_string = node;}
     binary_type get_operator_type() const {return type;}
     expr* get_left() {return left;}
     expr* get_right() {return right;}
+    number_literal* get_optimized_number() {return optimized_const_number;}
+    string_literal* get_optimized_string() {return optimized_const_string;}
     void accept(ast_visitor*) override;
 };
 
@@ -325,16 +333,19 @@ public:
 private:
     unary_type type;
     expr* value;
+    number_literal* optimized_number;
 
 public:
     unary_operator(const span& location):
         expr(location, expr_type::ast_unary),
-        value(nullptr) {}
+        value(nullptr), optimized_number(nullptr) {}
     ~unary_operator();
     void set_operator_type(unary_type operator_type) {type = operator_type;}
     void set_value(expr* node) {value = node;}
+    void set_optimized_number(number_literal* node) {optimized_number = node;}
     unary_type get_operator_type() const {return type;}
     expr* get_value() {return value;}
+    number_literal* get_optimized_number() {return optimized_number;}
     void accept(ast_visitor*) override;
 };
 

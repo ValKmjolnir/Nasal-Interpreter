@@ -54,8 +54,11 @@ var filechecksum=func(){
     foreach(var p;find_all_files_with_extension("./module","nas","cpp")) {
         append(files,"./module/"~p);
     }
-    foreach(var p;find_all_files_with_extension(".","cpp","h","md")) {
+    foreach(var p;find_all_files_with_extension(".","md")) {
         append(files,"./"~p);
+    }
+    foreach(var p;find_all_files_with_extension("./src","cpp","h")) {
+        append(files,"./src/"~p);
     }
     foreach(var p;find_all_files_with_extension("./doc","md")) {
         append(files,"./doc/"~p);
