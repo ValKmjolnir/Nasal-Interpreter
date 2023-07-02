@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal_new_header.h"
-#include "nasal_new_err.h"
+#include "nasal.h"
+#include "nasal_err.h"
 
 #include <vector>
 #include <unordered_map>

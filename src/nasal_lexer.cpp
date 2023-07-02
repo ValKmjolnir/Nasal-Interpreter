@@ -4,7 +4,7 @@
 #pragma warning (disable:4102)
 #endif
 
-#include "nasal_new_lexer.h"
+#include "nasal_lexer.h"
 
 bool lexer::skip(char c) {
     return c==' '||c=='\n'||c=='\t'||c=='\r'||c==0;

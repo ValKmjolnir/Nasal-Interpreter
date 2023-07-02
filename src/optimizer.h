@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "nasal_new_ast.h"
+#include "nasal_ast.h"
 #include "ast_visitor.h"
 
 class optimizer:public ast_visitor {

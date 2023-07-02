@@ -1,4 +1,4 @@
-#include "nasal_new_header.h"
+#include "nasal.h"
 
 bool is_windows() {
 #if defined(_WIN32) || defined(_WIN64)

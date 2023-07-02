@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal_new_ast.h"
+#include "nasal_ast.h"
 
 class ast_visitor {
 public:

@@ -1,4 +1,4 @@
-#include "nasal_new_codegen.h"
+#include "nasal_codegen.h"
 
 void codegen::check_id_exist(identifier* node) {
     const auto& name = node->get_name();

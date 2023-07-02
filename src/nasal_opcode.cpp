@@ -1,4 +1,4 @@
-#include "nasal_new_opcode.h"
+#include "nasal_opcode.h"
 
 const char* opname[]={
     "exit  ","intg  ","intl  ","loadg ",

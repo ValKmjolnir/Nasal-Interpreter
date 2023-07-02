@@ -1,4 +1,4 @@
-#include "nasal_new_dbg.h"
+#include "nasal_dbg.h"
 
 std::vector<std::string> dbg::parse(const std::string& cmd) {
     std::vector<std::string> res;

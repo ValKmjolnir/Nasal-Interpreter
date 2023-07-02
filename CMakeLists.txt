@@ -18,25 +18,25 @@ set(CMAKE_BUILD_TYPE "Release")
 set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_ast.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_builtin.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_codegen.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_dbg.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_err.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_gc.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_import.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_misc.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_opcode.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_parse.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_vm.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_import.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_lexer.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
     ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # build nasal
-add_executable(nasal ${CMAKE_SOURCE_DIR}/src/nasal_new_main.cpp)
+add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
@@ -55,8 +55,8 @@ endif()
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_misc.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_new_gc.cpp)
+    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
 
 add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)

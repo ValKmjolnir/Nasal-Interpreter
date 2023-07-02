@@ -2,10 +2,10 @@
 
 #include <unordered_map>
 
-#include "nasal_new_header.h"
-#include "nasal_new_ast.h"
-#include "nasal_new_lexer.h"
-#include "nasal_new_err.h"
+#include "nasal.h"
+#include "nasal_ast.h"
+#include "nasal_lexer.h"
+#include "nasal_err.h"
 
 class parse {
 

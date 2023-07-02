@@ -1,4 +1,4 @@
-#include "nasal_new_vm.h"
+#include "nasal_vm.h"
 
 void vm::init(
     const std::vector<std::string>& strs,

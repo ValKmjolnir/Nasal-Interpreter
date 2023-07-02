@@ -30,7 +30,7 @@
 #include <cstring>
 #include <sstream>
 
-#include "nasal_new_header.h"
+#include "nasal.h"
 
 enum vm_type:u8 {
     /* none-gc object */

@@ -3,8 +3,8 @@
 dynamic_libs_so = libfib.so libkey.so libnasock.so libmat.so
 dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll
 
-used_header = ../src/nasal_new_header.h ../src/nasal_new_gc.h
-used_object = ../nasal_new_misc.o ../nasal_new_gc.o
+used_header = ../src/nasal.h ../src/nasal_gc.h
+used_object = ../nasal_misc.o ../nasal_gc.o
 
 STD=c++17
 

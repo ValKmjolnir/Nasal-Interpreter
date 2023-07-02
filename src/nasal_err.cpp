@@ -1,4 +1,4 @@
-#include "nasal_new_err.h"
+#include "nasal_err.h"
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
 struct for_reset {
