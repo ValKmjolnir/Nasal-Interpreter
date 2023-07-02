@@ -86,7 +86,7 @@ string linker::findf(const string& fname) {
 
     // we will find lib.nas in nasal std directory
     if (fname=="lib.nas") {
-        return is_windows()? findf("stl\\lib.nas"):findf("stl/lib.nas");
+        return is_windows()? findf("std\\lib.nas"):findf("std/lib.nas");
     }
     if (!show_path) {
         err.err("link", "cannot find file <"+fname+">");
@@ -105,7 +105,7 @@ bool linker::imptchk(const ast& node) {
 /*
     call
     |_id:import
-    |_callh:stl
+    |_callh:std
     |_callh:file
 */
     if (node.type()==ast_call && node[0].str()=="import" && node.size()>=2 && node[1].type()==ast_callh) {

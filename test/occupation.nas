@@ -1,4 +1,4 @@
-import.stl.process_bar;
+import.std.process_bar;
 import.module.libkey;
 
 var is_windows_platform=os.platform()=="windows";

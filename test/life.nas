@@ -1,4 +1,4 @@
-import.stl.process_bar;
+import.std.process_bar;
 
 var new_map=func(width,height){
     var tmp=[];

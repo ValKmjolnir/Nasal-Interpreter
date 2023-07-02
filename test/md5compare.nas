@@ -1,6 +1,6 @@
 import.test.md5;
-import.stl.process_bar;
-import.stl.file;
+import.std.process_bar;
+import.std.file;
 srand();
 
 var compare=func() {
@@ -48,8 +48,8 @@ var filechecksum=func(){
     foreach(var p;find_all_files_with_extension("./test","nas")) {
         append(files,"./test/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./stl","nas")) {
-        append(files,"./stl/"~p);
+    foreach(var p;find_all_files_with_extension("./std","nas")) {
+        append(files,"./std/"~p);
     }
     foreach(var p;find_all_files_with_extension("./module","nas","cpp")) {
         append(files,"./module/"~p);

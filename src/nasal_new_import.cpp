@@ -30,7 +30,8 @@ std::string linker::get_path(call_expr* node) {
     return fpath + ".nas";
 }
 
-std::string linker::find_file(const std::string& filename) {
+std::string linker::find_file(
+    const std::string& filename, const span& location) {
     // first add file name itself into the file path
     std::vector<std::string> fpath = {filename};
 
@@ -48,9 +49,12 @@ std::string linker::find_file(const std::string& filename) {
 
     // we will find lib.nas in nasal std directory
     if (filename=="lib.nas") {
-        return is_windows()? find_file("stl\\lib.nas"):find_file("stl/lib.nas");
+        return is_windows()?
+            find_file("std\\lib.nas", location):
+            find_file("std/lib.nas", location);
     }
     if (!show_path) {
+        err.load(location.file);
         err.err("link", "cannot find file <" + filename + ">");
         return "";
     }
@@ -58,6 +62,7 @@ std::string linker::find_file(const std::string& filename) {
     for(const auto& i : fpath) {
         paths += "  " + i + "\n";
     }
+    err.load(location.file);
     err.err("link", "cannot find file <" + filename + "> in these paths:\n" + paths);
     return "";
 }
@@ -66,7 +71,7 @@ bool linker::import_check(expr* node) {
 /*
     call
     |_id:import
-    |_callh:stl
+    |_callh:std
     |_callh:file
 */
     if (node->get_type()!=expr_type::ast_call) {
@@ -149,7 +154,7 @@ code_block* linker::import_regular_file(call_expr* node) {
     node->set_first(new nil_expr(location));
 
     // avoid infinite loading loop
-    filename = find_file(filename);
+    filename = find_file(filename, node->get_location());
     if (!filename.length() || exist(filename)) {
         return new code_block({0, 0, 0, 0, filename});
     }
@@ -166,7 +171,7 @@ code_block* linker::import_regular_file(call_expr* node) {
 code_block* linker::import_nasal_lib() {
     lexer lex(err);
     parse par(err);
-    auto filename = find_file("lib.nas");
+    auto filename = find_file("lib.nas", {0, 0, 0, 0, files[0]});
     if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }

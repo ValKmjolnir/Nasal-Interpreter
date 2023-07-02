@@ -1,4 +1,4 @@
-import.stl.sort;
+import.std.sort;
 
 var to_lower=func(s){
     var tmp="";

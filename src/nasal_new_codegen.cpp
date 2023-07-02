@@ -237,6 +237,7 @@ void codegen::call_gen(call_expr* node) {
             case expr_type::ast_callh: call_hash_gen((call_hash*)i); break;
             case expr_type::ast_callv: call_vec((call_vector*)i); break;
             case expr_type::ast_callf: call_func((call_function*)i); break;
+            default: break;
         }
     }
 }
@@ -341,6 +342,7 @@ void codegen::mcall(expr* node) {
             case expr_type::ast_callh: call_hash_gen((call_hash*)tmp); break;
             case expr_type::ast_callv: call_vec((call_vector*)tmp); break;
             case expr_type::ast_callf: call_func((call_function*)tmp); break;
+            default: break;
         }
     }
     auto tmp = call_node->get_calls().back();
@@ -444,7 +446,7 @@ void codegen::def_gen(definition_expr* node) {
     node->get_variable_name()? single_def(node):multi_def(node);
 }
 
-void codegen::assignment_gen(assignment_expr* node) {
+void codegen::assignment_expression(assignment_expr* node) {
     switch(node->get_assignment_type()) {
         case assignment_expr::assign_type::equal:
             calc_gen(node->get_right());
@@ -534,7 +536,7 @@ void codegen::assignment_gen(assignment_expr* node) {
     }
 }
 
-void codegen::assign_statement(assignment_expr* node) {
+void codegen::assignment_statement(assignment_expr* node) {
     switch(node->get_assignment_type()) {
         case assignment_expr::assign_type::equal:
             if (node->get_left()->get_type()==expr_type::ast_id) {
@@ -672,6 +674,7 @@ void codegen::loop_gen(expr* node) {
             for_gen((for_expr*)node); break;
         case expr_type::ast_forei:
             forei_gen((forei_expr*)node); break;
+        default: break;
     }
 }
 
@@ -699,7 +702,7 @@ void codegen::while_gen(while_expr* node) {
 }
 
 void codegen::for_gen(for_expr* node) {
-    expr_gen(node->get_initial());
+    statement_generation(node->get_initial());
     usize jmp_place = code.size();
     if (node->get_condition()->get_type()==expr_type::ast_null) {
         regist_num(1);
@@ -712,7 +715,7 @@ void codegen::for_gen(for_expr* node) {
 
     block_gen(node->get_code_block());
     usize continue_place = code.size();
-    expr_gen(node->get_step());
+    statement_generation(node->get_step());
     gen(op_jmp, jmp_place, node->get_step()->get_line());
     code[label_exit].num = code.size();
 
@@ -755,7 +758,7 @@ void codegen::forei_gen(forei_expr* node) {
     gen(op_pop, 0, node->get_line());// pop iterator
 }
 
-void codegen::expr_gen(expr* node) {
+void codegen::statement_generation(expr* node) {
     switch(node->get_type()) {
         case expr_type::ast_null:break;
         case expr_type::ast_def:
@@ -763,17 +766,20 @@ void codegen::expr_gen(expr* node) {
         case expr_type::ast_multi_assign:
             multi_assign_gen((multi_assign*)node); break;
         case expr_type::ast_assign:
-            assign_statement((assignment_expr*)node); break;
+            assignment_statement((assignment_expr*)node); break;
         case expr_type::ast_nil:case expr_type::ast_num:
         case expr_type::ast_str:case expr_type::ast_bool: break;
-        case expr_type::ast_vec:case expr_type::ast_hash:
-        case expr_type::ast_func:case expr_type::ast_call:
+        case expr_type::ast_vec:
+        case expr_type::ast_hash:
+        case expr_type::ast_func:
+        case expr_type::ast_call:
         case expr_type::ast_unary:
         case expr_type::ast_binary:
         case expr_type::ast_ternary:
             calc_gen(node);
             gen(op_pop, 0, node->get_line());
             break;
+        default: break;
     }
 }
 
@@ -956,6 +962,7 @@ void codegen::binary_gen(binary_operator* node) {
                 gen(op_geqc, num_table.at(num), node->get_line());
             }
             return;
+        default: break;
     }
 }
 
@@ -992,7 +999,7 @@ void codegen::calc_gen(expr* node) {
         case expr_type::ast_call:
             call_gen((call_expr*)node); break;
         case expr_type::ast_assign:
-            assignment_gen((assignment_expr*)node); break;
+            assignment_expression((assignment_expr*)node); break;
         case expr_type::ast_ternary:
             trino_gen((ternary_operator*)node); break;
         case expr_type::ast_unary:
@@ -1004,6 +1011,7 @@ void codegen::calc_gen(expr* node) {
             single_def((definition_expr*)node);
             call_id(((definition_expr*)node)->get_variable_name());
             break;
+        default: break;
     }
 }
 
@@ -1032,17 +1040,20 @@ void codegen::block_gen(code_block* node) {
             case expr_type::ast_for:
             case expr_type::ast_forei:
                 loop_gen(tmp); break;
-            case expr_type::ast_binary:
-            case expr_type::ast_vec:case expr_type::ast_hash:
-            case expr_type::ast_func:case expr_type::ast_call:
+            case expr_type::ast_vec:
+            case expr_type::ast_hash:
+            case expr_type::ast_func:
+            case expr_type::ast_call:
             case expr_type::ast_unary:
+            case expr_type::ast_binary:
             case expr_type::ast_ternary:
             case expr_type::ast_def:
             case expr_type::ast_assign:
             case expr_type::ast_multi_assign:
-                expr_gen(tmp); break;
+                statement_generation(tmp); break;
             case expr_type::ast_ret:
                 ret_gen((return_expr*)tmp); break;
+            default: break;
         }
     }
 }
