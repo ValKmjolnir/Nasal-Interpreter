@@ -80,6 +80,7 @@ std::ostream& version(std::ostream& out) {
     }
     out << "version " << __nasver;
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
+    return out;
 }
 
 [[noreturn]]

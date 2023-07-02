@@ -29,7 +29,7 @@ private:
     bool exist(const std::string&);
     void link(code_block*, code_block*);
     std::string get_path(call_expr*);
-    std::string find_file(const std::string&);
+    std::string find_file(const std::string&, const span&);
     code_block* import_regular_file(call_expr*);
     code_block* import_nasal_lib();
     code_block* load(code_block*, u16);

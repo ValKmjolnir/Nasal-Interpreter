@@ -1,4 +1,4 @@
-import.stl.sort;
+import.std.sort;
 
 var vec=[];
 rand(time(0));

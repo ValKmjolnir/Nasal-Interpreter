@@ -172,7 +172,7 @@ var lexer=func(file)
     };
 }
 
-var lex=lexer("stl/fg_env.nas");
+var lex=lexer("std/fg_env.nas");
 lex.compile();
 foreach(var tok;lex.get_token())
     print('(',tok.line,' | ',tok.token,')\n');

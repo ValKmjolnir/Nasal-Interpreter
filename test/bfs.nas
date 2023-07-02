@@ -1,4 +1,4 @@
-import.stl.queue;
+import.std.queue;
 
 rand(time(0));
 var pixel=[' ','#','.','*'];
