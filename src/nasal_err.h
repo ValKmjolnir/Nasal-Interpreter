@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include "nasal_new_header.h"
+#include "nasal.h"
 
 struct span {
     u32 begin_line;

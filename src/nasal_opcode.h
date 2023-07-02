@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal_new_header.h"
-#include "nasal_new_builtin.h"
+#include "nasal.h"
+#include "nasal_builtin.h"
 
 #include <iostream>
 

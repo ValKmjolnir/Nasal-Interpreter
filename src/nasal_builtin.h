@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "nasal_new_header.h"
-#include "nasal_new_gc.h"
+#include "nasal.h"
+#include "nasal_gc.h"
 
 #ifndef _MSC_VER
 #include <unistd.h>

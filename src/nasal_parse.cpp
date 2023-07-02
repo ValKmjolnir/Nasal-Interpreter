@@ -1,5 +1,5 @@
-#include "nasal_new_ast.h"
-#include "nasal_new_parse.h"
+#include "nasal_ast.h"
+#include "nasal_parse.h"
 
 const error& parse::compile(const lexer& lexer) {
     toks=lexer.result().data();

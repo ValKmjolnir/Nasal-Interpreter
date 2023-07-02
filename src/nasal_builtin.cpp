@@ -1,4 +1,4 @@
-﻿#include "nasal_new_builtin.h"
+﻿#include "nasal_builtin.h"
 
 var builtin_print(var* local, gc& ngc) {
     for(auto& i:local[1].vec().elems) {

@@ -1,4 +1,4 @@
-#include "nasal_new_gc.h"
+#include "nasal_gc.h"
 
 void filehandle_destructor(void* ptr) {
     if ((FILE*)ptr==stdin) {

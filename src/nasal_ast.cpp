@@ -1,4 +1,4 @@
-#include "nasal_new_ast.h"
+#include "nasal_ast.h"
 #include "ast_visitor.h"
 
 void expr::accept(ast_visitor* visitor) {

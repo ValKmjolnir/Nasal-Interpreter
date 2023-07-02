@@ -1,4 +1,4 @@
-#include "../src/nasal_new_header.h"
+#include "../src/nasal.h"
 #include <cmath>
 
 var nas_vec2(var* args, usize size, gc* ngc) {

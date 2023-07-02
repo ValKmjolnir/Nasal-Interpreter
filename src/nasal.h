@@ -50,4 +50,4 @@ i32 utf8_hdchk(const char);
 std::string chrhex(const char);
 std::string rawstr(const std::string&, const usize maxlen=0);
 
-#include "nasal_new_gc.h"
+#include "nasal_gc.h"

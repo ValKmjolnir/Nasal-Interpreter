@@ -12,10 +12,10 @@
 #define F_OK 0
 #endif
 
-#include "nasal_new_header.h"
-#include "nasal_new_ast.h"
-#include "nasal_new_lexer.h"
-#include "nasal_new_parse.h"
+#include "nasal.h"
+#include "nasal_ast.h"
+#include "nasal_lexer.h"
+#include "nasal_parse.h"
 
 class linker{
 private:

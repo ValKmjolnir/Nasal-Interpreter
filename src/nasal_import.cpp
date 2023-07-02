@@ -1,4 +1,4 @@
-#include "nasal_new_import.h"
+#include "nasal_import.h"
 
 linker::linker(error& e): show_path(false), lib_loaded(false), err(e) {
     char sep=is_windows()? ';':':';

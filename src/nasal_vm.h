@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <stack>
 
-#include "nasal_new_import.h"
-#include "nasal_new_gc.h"
-#include "nasal_new_codegen.h"
+#include "nasal_import.h"
+#include "nasal_gc.h"
+#include "nasal_codegen.h"
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
