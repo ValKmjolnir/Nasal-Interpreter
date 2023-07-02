@@ -1,7 +1,7 @@
 // module for test
 
 #include <iostream>
-#include "../nasal.h"
+#include "../src/nasal.h"
 
 namespace nasal_fib_module {
 

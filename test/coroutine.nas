@@ -1,7 +1,7 @@
 # coroutine.nas by ValKmjolnir
 # 2022/5/19
-import.stl.process_bar;
-import.stl.padding;
+import.std.process_bar;
+import.std.padding;
 
 if(os.platform()=="windows"){
     system("chcp 65001");

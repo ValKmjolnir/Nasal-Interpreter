@@ -20,9 +20,9 @@ protected:
     context ctx;
 
     /* constants */
-    const f64* cnum=nullptr;    // constant numbers
-    const string* cstr=nullptr; // constant symbols and strings
-    std::vector<u32> imm;       // immediate number table
+    const f64* cnum = nullptr; // constant numbers
+    const std::string* cstr = nullptr; // constant symbols and strings
+    std::vector<u32> imm; // immediate number table
     
     /* garbage collector */
     gc ngc;
@@ -31,16 +31,16 @@ protected:
     var stack[STACK_DEPTH];
 
     /* values used for debugger */
-    const string* files=nullptr;    // file name list
-    const opcode* bytecode=nullptr; // bytecode buffer address
+    const std::string* files = nullptr; // file name list
+    const opcode* bytecode = nullptr; // bytecode buffer address
 
     /* vm initializing function */
     void init(
-        const std::vector<string>&,
+        const std::vector<std::string>&,
         const std::vector<f64>&,
         const std::vector<opcode>&,
-        const std::vector<string>&,
-        const std::vector<string>&);
+        const std::vector<std::string>&,
+        const std::vector<std::string>&);
 
     /* debug functions */
     bool verbose;
@@ -52,98 +52,99 @@ protected:
     void lstate();
     void ustate();
     void detail();
-    void die(const string&);
+    void die(const std::string&);
 
     /* vm calculation functions*/
-    bool cond(var&);
+    inline bool cond(var&);
 
     /* vm operands */
-    void o_intg();
-    void o_intl();
-    void o_loadg();
-    void o_loadl();
-    void o_loadu();
-    void o_pnum();
-    void o_pnil();
-    void o_pstr();
-    void o_newv();
-    void o_newh();
-    void o_newf();
-    void o_happ();
-    void o_para();
-    void o_deft();
-    void o_dyn();
-    void o_lnot();
-    void o_usub();
-    void o_bnot();
-    void o_btor();
-    void o_btxor();
-    void o_btand();
-    void o_add();
-    void o_sub();
-    void o_mul();
-    void o_div();
-    void o_lnk();
-    void o_addc();
-    void o_subc();
-    void o_mulc();
-    void o_divc();
-    void o_lnkc();
-    void o_addeq();
-    void o_subeq();
-    void o_muleq();
-    void o_diveq();
-    void o_lnkeq();
-    void o_bandeq();
-    void o_boreq();
-    void o_bxoreq();
-    void o_addeqc();
-    void o_subeqc();
-    void o_muleqc();
-    void o_diveqc();
-    void o_lnkeqc();
-    void o_addecp();
-    void o_subecp();
-    void o_mulecp();
-    void o_divecp();
-    void o_lnkecp();
-    void o_meq();
-    void o_eq();
-    void o_neq();
-    void o_less();
-    void o_leq();
-    void o_grt();
-    void o_geq();
-    void o_lessc();
-    void o_leqc();
-    void o_grtc();
-    void o_geqc();
-    void o_pop();
-    void o_jmp();
-    void o_jt();
-    void o_jf();
-    void o_cnt();
-    void o_findex();
-    void o_feach();
-    void o_callg();
-    void o_calll();
-    void o_upval();
-    void o_callv();
-    void o_callvi();
-    void o_callh();
-    void o_callfv();
-    void o_callfh();
-    void o_callb();
-    void o_slcbeg();
-    void o_slcend();
-    void o_slc();
-    void o_slc2();
-    void o_mcallg();
-    void o_mcalll();
-    void o_mupval();
-    void o_mcallv();
-    void o_mcallh();
-    void o_ret();
+    inline void o_intg();
+    inline void o_intl();
+    inline void o_loadg();
+    inline void o_loadl();
+    inline void o_loadu();
+    inline void o_pnum();
+    inline void o_pnil();
+    inline void o_pstr();
+    inline void o_newv();
+    inline void o_newh();
+    inline void o_newf();
+    inline void o_happ();
+    inline void o_para();
+    inline void o_deft();
+    inline void o_dyn();
+    inline void o_lnot();
+    inline void o_usub();
+    inline void o_bnot();
+    inline void o_btor();
+    inline void o_btxor();
+    inline void o_btand();
+    inline void o_add();
+    inline void o_sub();
+    inline void o_mul();
+    inline void o_div();
+    inline void o_lnk();
+    inline void o_addc();
+    inline void o_subc();
+    inline void o_mulc();
+    inline void o_divc();
+    inline void o_lnkc();
+    inline void o_addeq();
+    inline void o_subeq();
+    inline void o_muleq();
+    inline void o_diveq();
+    inline void o_lnkeq();
+    inline void o_bandeq();
+    inline void o_boreq();
+    inline void o_bxoreq();
+    inline void o_addeqc();
+    inline void o_subeqc();
+    inline void o_muleqc();
+    inline void o_diveqc();
+    inline void o_lnkeqc();
+    inline void o_addecp();
+    inline void o_subecp();
+    inline void o_mulecp();
+    inline void o_divecp();
+    inline void o_lnkecp();
+    inline void o_meq();
+    inline void o_eq();
+    inline void o_neq();
+    inline void o_less();
+    inline void o_leq();
+    inline void o_grt();
+    inline void o_geq();
+    inline void o_lessc();
+    inline void o_leqc();
+    inline void o_grtc();
+    inline void o_geqc();
+    inline void o_pop();
+    inline void o_jmp();
+    inline void o_jt();
+    inline void o_jf();
+    inline void o_cnt();
+    inline void o_findex();
+    inline void o_feach();
+    inline void o_callg();
+    inline void o_calll();
+    inline void o_upval();
+    inline void o_callv();
+    inline void o_callvi();
+    inline void o_callh();
+    inline void o_callfv();
+    inline void o_callfh();
+    inline void o_callb();
+    inline void o_slcbeg();
+    inline void o_slcend();
+    inline void o_slc();
+    inline void o_slc2();
+    inline void o_mcallg();
+    inline void o_mcalll();
+    inline void o_mupval();
+    inline void o_mcallv();
+    inline void o_mcallh();
+    inline void o_ret();
+
 public:
 
     /* constructor of vm instance */
@@ -153,206 +154,10 @@ public:
     void run(
         const codegen&,
         const linker&,
-        const std::vector<string>&,
+        const std::vector<std::string>&,
         const bool
     );
 };
-
-void vm::init(
-    const std::vector<string>& strs,
-    const std::vector<f64>&    nums,
-    const std::vector<opcode>& code,
-    const std::vector<string>& filenames,
-    const std::vector<string>& argv
-) {
-    cnum=nums.data();
-    cstr=strs.data();
-    bytecode=code.data();
-    files=filenames.data();
-
-    /* set canary and program counter */
-    ctx.pc=0;
-    ctx.localr=ctx.memr=nullptr;
-    ctx.funcr=ctx.upvalr=nil;
-    ctx.canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top=stack;
-    ctx.stack=stack;
-
-    /* clear main stack */
-    for(u32 i=0;i<STACK_DEPTH;++i) {
-        stack[i]=nil;
-    }
-
-    /* init gc */
-    ngc.init(strs,argv);
-}
-
-void vm::valinfo(var& val) {
-    const nas_val* p=val.val.gcobj;
-    switch(val.type) {
-        case vm_none: std::clog<<"| null |";break;
-        case vm_ret:  std::clog<<"| pc   | 0x"<<std::hex
-                               <<val.ret()<<std::dec;break;
-        case vm_addr: std::clog<<"| addr | 0x"<<std::hex
-                               <<(u64)val.addr()<<std::dec;break;
-        case vm_cnt:  std::clog<<"| cnt  | "<<val.cnt();break;
-        case vm_nil:  std::clog<<"| nil  |";break;
-        case vm_num:  std::clog<<"| num  | "<<val.num();break;
-        case vm_str:  std::clog<<"| str  | <0x"<<std::hex<<(u64)p
-                               <<"> "<<rawstr(val.str(),16)<<std::dec;break;
-        case vm_func: std::clog<<"| func | <0x"<<std::hex<<(u64)p
-                               <<"> entry:0x"<<val.func().entry
-                               <<std::dec;break;
-        case vm_upval:std::clog<<"| upval| <0x"<<std::hex<<(u64)p
-                               <<std::dec<<"> ["<<val.upval().size
-                               <<" val]";break;
-        case vm_vec:  std::clog<<"| vec  | <0x"<<std::hex<<(u64)p
-                               <<std::dec<<"> ["<<val.vec().size()
-                               <<" val]";break;
-        case vm_hash: std::clog<<"| hash | <0x"<<std::hex<<(u64)p
-                               <<std::dec<<"> {"<<val.hash().size()
-                               <<" val}";break;
-        case vm_obj:  std::clog<<"| obj  | <0x"<<std::hex<<(u64)p
-                               <<"> obj:0x"<<(u64)val.obj().ptr
-                               <<std::dec;break;
-        case vm_co:   std::clog<<"| co   | <0x"<<std::hex<<(u64)p
-                               <<std::dec<<"> coroutine";break;
-        default:      std::clog<<"| err  | <0x"<<std::hex<<(u64)p
-                               <<std::dec<<"> unknown object";break;
-    }
-    std::clog<<"\n";
-}
-
-void vm::traceback() {
-    /* bytecode[0].num is the global size */
-    var* bottom=ngc.rctx->stack==stack?stack+bytecode[0].num:ngc.rctx->stack;
-    var* ctx_top=ngc.rctx->stack==stack?ctx.top:ngc.rctx->top;
-    std::stack<u32> ret;
-    for(var* i=bottom;i<=ctx_top;++i) {
-        if (i->type==vm_ret && i->ret()!=0) {
-            ret.push(i->ret());
-        }
-    }
-    ret.push(ctx.pc); // store the position program crashed
-    std::clog<<"trace back ("<<(ngc.rctx->stack==stack?"main":"coroutine")<<")\n";
-    codestream::set(cnum, cstr, files);
-    for(u32 p=0,same=0,prev=0xffffffff;!ret.empty();prev=p,ret.pop()) {
-        if ((p=ret.top())==prev) {
-            ++same;
-            continue;
-        }
-        if (same) {
-            std::clog
-            <<"  0x"<<std::hex<<std::setw(6)<<std::setfill('0')
-            <<prev<<std::dec<<"     "<<same<<" same call(s)\n";
-        }
-        same=0;
-        std::clog<<"  "<<codestream(bytecode[p],p)<<"\n";
-    }
-    // the first called place has no same calls
-}
-
-void vm::stackinfo(const u32 limit=10) {
-    /* bytecode[0].num is the global size */
-    const u32 gsize=ngc.rctx->stack==stack?bytecode[0].num:0;
-    var* t=ctx.top;
-    var* bottom=ngc.rctx->stack+gsize;
-    std::clog<<"stack (0x"<<std::hex<<(u64)bottom<<std::dec
-             <<" <+"<<gsize<<">, limit "<<limit<<", total "
-             <<(t<bottom? 0:(i64)(t-bottom+1))<<")\n";
-    for(u32 i=0;i<limit && t>=bottom;++i,--t) {
-        std::clog<<"  0x"<<std::hex
-                 <<std::setw(6)<<std::setfill('0')
-                 <<(u64)(t-ngc.rctx->stack)<<std::dec
-                 <<"    ";
-        valinfo(t[0]);
-    }
-}
-
-void vm::reginfo() {
-    std::clog<<"registers ("<<(ngc.cort?"coroutine":"main")<<")\n"<<std::hex
-             <<"  [pc    ]    | pc   | 0x"<<ctx.pc<<"\n"
-             <<"  [global]    | addr | 0x"<<(u64)stack<<"\n"
-             <<"  [local ]    | addr | 0x"<<(u64)ctx.localr<<"\n"
-             <<"  [memr  ]    | addr | 0x"<<(u64)ctx.memr<<"\n"
-             <<"  [canary]    | addr | 0x"<<(u64)ctx.canary<<"\n"
-             <<"  [top   ]    | addr | 0x"<<(u64)ctx.top<<"\n"
-             <<std::dec;
-    std::clog<<"  [funcr ]    ";valinfo(ctx.funcr);
-    std::clog<<"  [upval ]    ";valinfo(ctx.upvalr);
-}
-
-void vm::gstate() {
-    if (!bytecode[0].num || stack[0].type==vm_none) { // bytecode[0].op is op_intg
-        return;
-    }
-    std::clog<<"global (0x"<<std::hex<<(u64)stack<<" <+0>)\n"<<std::dec;
-    for(u32 i=0;i<bytecode[0].num;++i) {
-        std::clog<<"  0x"<<std::hex<<std::setw(6)
-                 <<std::setfill('0')<<i<<std::dec
-                 <<"    ";
-        valinfo(stack[i]);
-    }
-}
-
-void vm::lstate() {
-    if (!ctx.localr || !ctx.funcr.func().lsize) {
-        return;
-    }
-    const u32 lsize=ctx.funcr.func().lsize;
-    std::clog<<"local (0x"<<std::hex<<(u64)ctx.localr
-             <<" <+"<<(u64)(ctx.localr-ngc.rctx->stack)<<">)\n"<<std::dec;
-    for(u32 i=0;i<lsize;++i) {
-        std::clog<<"  0x"<<std::hex<<std::setw(6)
-                 <<std::setfill('0')<<i<<std::dec
-                 <<"    ";
-        valinfo(ctx.localr[i]);
-    }
-}
-
-void vm::ustate() {
-    if (ctx.funcr.type==vm_nil || ctx.funcr.func().upval.empty()) {
-        return;
-    }
-    std::clog<<"upvalue\n";
-    auto& upval=ctx.funcr.func().upval;
-    for(u32 i=0;i<upval.size();++i) {
-        std::clog<<"  -> upval["<<i<<"]:\n";
-        auto& uv=upval[i].upval();
-        for(u32 j=0;j<uv.size;++j) {
-            std::clog<<"     0x"<<std::hex<<std::setw(6)
-                     <<std::setfill('0')<<j<<std::dec
-                     <<" ";
-            valinfo(uv[j]);
-        }
-    }
-}
-
-void vm::detail() {
-    reginfo();
-    gstate();
-    lstate();
-    ustate();
-}
-
-void vm::die(const string& str) {
-    std::cerr<<"[vm] error: "<<str<<"\n";
-    traceback();
-    stackinfo();
-
-    // show verbose crash info
-    if (verbose) {
-        detail();
-    }
-
-    if (ngc.rctx->stack==stack) { // in main context, exit directly
-        std::exit(1);
-    } else { // in coroutine, shut down the coroutine and return to main context
-        ctx.pc=0; // mark coroutine 'dead'
-        ngc.ctxreserve();
-        ctx.top[0]=nil;
-    }
-}
 
 inline bool vm::cond(var& val) {
     if (val.type==vm_num) {
@@ -364,43 +169,43 @@ inline bool vm::cond(var& val) {
     return false;
 }
 
-void vm::o_intg() {
+inline void vm::o_intg() {
     // global values store on stack
     ctx.top+=imm[ctx.pc];
     --ctx.top;// point to the top
 }
 
-void vm::o_intl() {
+inline void vm::o_intl() {
     ctx.top[0].func().local.resize(imm[ctx.pc], nil);
     ctx.top[0].func().lsize=imm[ctx.pc];
 }
 
-void vm::o_loadg() {
+inline void vm::o_loadg() {
     stack[imm[ctx.pc]]=(ctx.top--)[0];
 }
 
-void vm::o_loadl() {
+inline void vm::o_loadl() {
     ctx.localr[imm[ctx.pc]]=(ctx.top--)[0];
 }
 
-void vm::o_loadu() {
+inline void vm::o_loadu() {
     ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
          .upval()[imm[ctx.pc]&0xffff]=(ctx.top--)[0];
 }
 
-void vm::o_pnum() {
+inline void vm::o_pnum() {
     (++ctx.top)[0]=var::num(cnum[imm[ctx.pc]]);
 }
 
-void vm::o_pnil() {
+inline void vm::o_pnil() {
     (++ctx.top)[0]=nil;
 }
 
-void vm::o_pstr() {
+inline void vm::o_pstr() {
     (++ctx.top)[0]=ngc.strs[imm[ctx.pc]];
 }
 
-void vm::o_newv() {
+inline void vm::o_newv() {
     var newv=ngc.alloc(vm_vec);
     auto& vec=newv.vec().elems;
     vec.resize(imm[ctx.pc]);
@@ -412,11 +217,11 @@ void vm::o_newv() {
     ctx.top[0]=newv;
 }
 
-void vm::o_newh() {
+inline void vm::o_newh() {
     (++ctx.top)[0]=ngc.alloc(vm_hash);
 }
 
-void vm::o_newf() {
+inline void vm::o_newf() {
     (++ctx.top)[0]=ngc.alloc(vm_func);
     nas_func& func=ctx.top[0].func();
     func.entry=imm[ctx.pc];
@@ -435,19 +240,19 @@ void vm::o_newf() {
     }
 }
 
-void vm::o_happ() {
+inline void vm::o_happ() {
     ctx.top[-1].hash().elems[cstr[imm[ctx.pc]]]=ctx.top[0];
     --ctx.top;
 }
 
-void vm::o_para() {
+inline void vm::o_para() {
     nas_func& func=ctx.top[0].func();
     // func->size has 1 place reserved for "me"
     func.keys[imm[ctx.pc]]=func.psize;
     func.local[func.psize++]=var::none();
 }
 
-void vm::o_deft() {
+inline void vm::o_deft() {
     var val=ctx.top[0];
     nas_func& func=(--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
@@ -455,11 +260,11 @@ void vm::o_deft() {
     func.local[func.psize++]=val;
 }
 
-void vm::o_dyn() {
+inline void vm::o_dyn() {
     ctx.top[0].func().dpara=imm[ctx.pc];
 }
 
-void vm::o_lnot() {
+inline void vm::o_lnot() {
     var val=ctx.top[0];
     switch(val.type) {
         case vm_nil:ctx.top[0]=one;break;
@@ -479,25 +284,25 @@ void vm::o_lnot() {
     }
 }
 
-void vm::o_usub() {
+inline void vm::o_usub() {
     ctx.top[0]=var::num(-ctx.top[0].tonum());
 }
 
-void vm::o_bnot() {
+inline void vm::o_bnot() {
     ctx.top[0]=var::num(~static_cast<int32_t>(ctx.top[0].num()));
 }
 
-void vm::o_btor() {
+inline void vm::o_btor() {
     ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())|static_cast<int32_t>(ctx.top[0].tonum()));
     --ctx.top;
 }
 
-void vm::o_btxor() {
+inline void vm::o_btxor() {
     ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())^static_cast<int32_t>(ctx.top[0].tonum()));
     --ctx.top;
 }
 
-void vm::o_btand() {
+inline void vm::o_btand() {
     ctx.top[-1]=var::num(static_cast<int32_t>(ctx.top[-1].tonum())&static_cast<int32_t>(ctx.top[0].tonum()));
     --ctx.top;
 }
@@ -506,11 +311,11 @@ void vm::o_btand() {
     ctx.top[-1]=var::num(ctx.top[-1].tonum() type ctx.top[0].tonum());\
     --ctx.top;
 
-void vm::o_add() {op_calc(+);}
-void vm::o_sub() {op_calc(-);}
-void vm::o_mul() {op_calc(*);}
-void vm::o_div() {op_calc(/);}
-void vm::o_lnk() {
+inline void vm::o_add() {op_calc(+);}
+inline void vm::o_sub() {op_calc(-);}
+inline void vm::o_mul() {op_calc(*);}
+inline void vm::o_div() {op_calc(/);}
+inline void vm::o_lnk() {
     ctx.top[-1]=ngc.newstr(ctx.top[-1].tostr()+ctx.top[0].tostr());
     --ctx.top;
 }
@@ -518,11 +323,11 @@ void vm::o_lnk() {
 #define op_calc_const(type)\
     ctx.top[0]=var::num(ctx.top[0].tonum() type cnum[imm[ctx.pc]]);
 
-void vm::o_addc() {op_calc_const(+);}
-void vm::o_subc() {op_calc_const(-);}
-void vm::o_mulc() {op_calc_const(*);}
-void vm::o_divc() {op_calc_const(/);}
-void vm::o_lnkc() {
+inline void vm::o_addc() {op_calc_const(+);}
+inline void vm::o_subc() {op_calc_const(-);}
+inline void vm::o_mulc() {op_calc_const(*);}
+inline void vm::o_divc() {op_calc_const(/);}
+inline void vm::o_lnkc() {
     ctx.top[0]=ngc.newstr(ctx.top[0].tostr()+cstr[imm[ctx.pc]]);
 }
 
@@ -536,29 +341,29 @@ void vm::o_lnkc() {
     ctx.memr=nullptr;\
     ctx.top-=imm[ctx.pc]+1;
 
-void vm::o_addeq() {op_calc_eq(+);}
-void vm::o_subeq() {op_calc_eq(-);}
-void vm::o_muleq() {op_calc_eq(*);}
-void vm::o_diveq() {op_calc_eq(/);}
-void vm::o_lnkeq() {
+inline void vm::o_addeq() {op_calc_eq(+);}
+inline void vm::o_subeq() {op_calc_eq(-);}
+inline void vm::o_muleq() {op_calc_eq(*);}
+inline void vm::o_diveq() {op_calc_eq(/);}
+inline void vm::o_lnkeq() {
     ctx.top[-1]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+ctx.top[-1].tostr());
     ctx.memr=nullptr;
     ctx.top-=imm[ctx.pc]+1;
 }
 
-void vm::o_bandeq() {
+inline void vm::o_bandeq() {
     ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())&i32(ctx.top[-1].tonum()));
     ctx.memr=nullptr;
     ctx.top-=imm[ctx.pc]+1;
 }
 
-void vm::o_boreq() {
+inline void vm::o_boreq() {
     ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())|i32(ctx.top[-1].tonum()));
     ctx.memr=nullptr;
     ctx.top-=imm[ctx.pc]+1;
 }
 
-void vm::o_bxoreq() {
+inline void vm::o_bxoreq() {
     ctx.top[-1]=ctx.memr[0]=var::num(i32(ctx.memr[0].tonum())^i32(ctx.top[-1].tonum()));
     ctx.memr=nullptr;
     ctx.top-=imm[ctx.pc]+1;
@@ -573,11 +378,11 @@ void vm::o_bxoreq() {
     ctx.top[0]=ctx.memr[0]=var::num(ctx.memr[0].tonum() type cnum[imm[ctx.pc]]);\
     ctx.memr=nullptr;
 
-void vm::o_addeqc() {op_calc_eq_const(+);}
-void vm::o_subeqc() {op_calc_eq_const(-);}
-void vm::o_muleqc() {op_calc_eq_const(*);}
-void vm::o_diveqc() {op_calc_eq_const(/);}
-void vm::o_lnkeqc() {
+inline void vm::o_addeqc() {op_calc_eq_const(+);}
+inline void vm::o_subeqc() {op_calc_eq_const(-);}
+inline void vm::o_muleqc() {op_calc_eq_const(*);}
+inline void vm::o_diveqc() {op_calc_eq_const(/);}
+inline void vm::o_lnkeqc() {
     ctx.top[0]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
     ctx.memr=nullptr;
 }
@@ -587,17 +392,17 @@ void vm::o_lnkeqc() {
     ctx.memr=nullptr;\
     --ctx.top;
 
-void vm::o_addecp() {op_calc_eq_const_and_pop(+);}
-void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
-void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
-void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
-void vm::o_lnkecp() {
+inline void vm::o_addecp() {op_calc_eq_const_and_pop(+);}
+inline void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
+inline void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
+inline void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
+inline void vm::o_lnkecp() {
     ctx.top[0]=ctx.memr[0]=ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
     ctx.memr=nullptr;
     --ctx.top;
 }
 
-void vm::o_meq() {
+inline void vm::o_meq() {
     // pop old memr[0] and replace it
     // the reason why we should get memr and push the old value on stack
     // is that when lnkeq/lnkeqc is called, there will be
@@ -608,7 +413,7 @@ void vm::o_meq() {
     ctx.top-=imm[ctx.pc]+1;
 }
 
-void vm::o_eq() {
+inline void vm::o_eq() {
     var val2=ctx.top[0];
     var val1=(--ctx.top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
@@ -623,7 +428,7 @@ void vm::o_eq() {
     }
 }
 
-void vm::o_neq() {
+inline void vm::o_neq() {
     var val2=ctx.top[0];
     var val1=(--ctx.top)[0];
     if (val1.type==vm_nil && val2.type==vm_nil) {
@@ -642,28 +447,28 @@ void vm::o_neq() {
     --ctx.top;\
     ctx.top[0]=(ctx.top[0].tonum() type ctx.top[1].tonum())?one:zero;
 
-void vm::o_less() {op_cmp(<);}
-void vm::o_leq() {op_cmp(<=);}
-void vm::o_grt() {op_cmp(>);}
-void vm::o_geq() {op_cmp(>=);}
+inline void vm::o_less() {op_cmp(<);}
+inline void vm::o_leq() {op_cmp(<=);}
+inline void vm::o_grt() {op_cmp(>);}
+inline void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
     ctx.top[0]=(ctx.top[0].tonum() type cnum[imm[ctx.pc]])?one:zero;
 
-void vm::o_lessc() {op_cmp_const(<);}
-void vm::o_leqc() {op_cmp_const(<=);}
-void vm::o_grtc() {op_cmp_const(>);}
-void vm::o_geqc() {op_cmp_const(>=);}
+inline void vm::o_lessc() {op_cmp_const(<);}
+inline void vm::o_leqc() {op_cmp_const(<=);}
+inline void vm::o_grtc() {op_cmp_const(>);}
+inline void vm::o_geqc() {op_cmp_const(>=);}
 
-void vm::o_pop() {
+inline void vm::o_pop() {
     --ctx.top;
 }
 
-void vm::o_jmp() {
+inline void vm::o_jmp() {
     ctx.pc=imm[ctx.pc]-1;
 }
 
-void vm::o_jt() {
+inline void vm::o_jt() {
     // jump true needs to reserve the result on stack
     // because conditional expression in nasal has return value
     if (cond(ctx.top[0])) {
@@ -671,7 +476,7 @@ void vm::o_jt() {
     }
 }
 
-void vm::o_jf() {
+inline void vm::o_jf() {
     // jump false doesn't need to reserve result
     if (!cond(ctx.top[0])) {
         ctx.pc=imm[ctx.pc]-1;
@@ -679,7 +484,7 @@ void vm::o_jf() {
     --ctx.top;
 }
 
-void vm::o_cnt() {
+inline void vm::o_cnt() {
     if (ctx.top[0].type!=vm_vec) {
         die("must use vector in forindex/foreach");
         return;
@@ -687,7 +492,7 @@ void vm::o_cnt() {
     (++ctx.top)[0]=var::cnt(-1);
 }
 
-void vm::o_findex() {
+inline void vm::o_findex() {
     if ((usize)(++ctx.top[0].cnt())>=ctx.top[-1].vec().size()) {
         ctx.pc=imm[ctx.pc]-1;
         return;
@@ -696,7 +501,7 @@ void vm::o_findex() {
     ++ctx.top;
 }
 
-void vm::o_feach() {
+inline void vm::o_feach() {
     auto& ref=ctx.top[-1].vec().elems;
     if ((usize)(++ctx.top[0].cnt())>=ref.size()) {
         ctx.pc=imm[ctx.pc]-1;
@@ -706,22 +511,22 @@ void vm::o_feach() {
     ++ctx.top;
 }
 
-void vm::o_callg() {
+inline void vm::o_callg() {
     // get main stack directly
     (++ctx.top)[0]=stack[imm[ctx.pc]];
 }
 
-void vm::o_calll() {
+inline void vm::o_calll() {
     (++ctx.top)[0]=ctx.localr[imm[ctx.pc]];
 }
 
-void vm::o_upval() {
+inline void vm::o_upval() {
     (++ctx.top)[0]=ctx.funcr.func()
         .upval[(imm[ctx.pc]>>16)&0xffff]
         .upval()[imm[ctx.pc]&0xffff];
 }
 
-void vm::o_callv() {
+inline void vm::o_callv() {
     var val=ctx.top[0];
     var vec=(--ctx.top)[0];
     if (vec.type==vm_vec) {
@@ -743,9 +548,9 @@ void vm::o_callv() {
             ctx.top[0].func().local[0]=val; // 'me'
         }
     } else if (vec.type==vm_str) {
-        string& str=vec.str();
-        i32 num=val.tonum();
-        i32 len=str.length();
+        auto& str = vec.str();
+        i32 num = val.tonum();
+        i32 len = str.length();
         if (num<-len || num>=len) {
             die("out of range:"+std::to_string(val.tonum()));
             return;
@@ -757,7 +562,7 @@ void vm::o_callv() {
     }
 }
 
-void vm::o_callvi() {
+inline void vm::o_callvi() {
     var val=ctx.top[0];
     if (val.type!=vm_vec) {
         die("must use a vector");
@@ -771,7 +576,7 @@ void vm::o_callvi() {
     }
 }
 
-void vm::o_callh() {
+inline void vm::o_callh() {
     var val=ctx.top[0];
     if (val.type!=vm_hash) {
         die("must call a hash");
@@ -786,7 +591,7 @@ void vm::o_callh() {
     }
 }
 
-void vm::o_callfv() {
+inline void vm::o_callfv() {
     u32 argc=imm[ctx.pc]; // arguments counter
     var* local=ctx.top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
@@ -844,7 +649,7 @@ void vm::o_callfv() {
     ctx.upvalr=nil;
 }
 
-void vm::o_callfh() {
+inline void vm::o_callfh() {
     auto& hash=ctx.top[0].hash().elems;
     if (ctx.top[-1].type!=vm_func) {
         die("must call a function");
@@ -889,7 +694,7 @@ void vm::o_callfh() {
     ctx.upvalr=nil;
 }
 
-void vm::o_callb() {
+inline void vm::o_callb() {
     // reserve place for builtin function return,
     // this code is written for coroutine
     (++ctx.top)[0]=nil;
@@ -909,7 +714,7 @@ void vm::o_callb() {
     }
 }
 
-void vm::o_slcbeg() {
+inline void vm::o_slcbeg() {
     // +--------------+
     // | slice_vector | <-- top[0]
     // +--------------+
@@ -922,12 +727,12 @@ void vm::o_slcbeg() {
     }
 }
 
-void vm::o_slcend() {
+inline void vm::o_slcend() {
     ctx.top[-1]=ctx.top[0];
     --ctx.top;
 }
 
-void vm::o_slc() {
+inline void vm::o_slc() {
     var val=(ctx.top--)[0];
     var res=ctx.top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
@@ -937,7 +742,7 @@ void vm::o_slc() {
     ctx.top[0].vec().elems.push_back(res);
 }
 
-void vm::o_slc2() {
+inline void vm::o_slc2() {
     var val2=(ctx.top--)[0];
     var val1=(ctx.top--)[0];
     auto& ref=ctx.top[-1].vec().elems;
@@ -966,28 +771,28 @@ void vm::o_slc2() {
     }
 }
 
-void vm::o_mcallg() {
+inline void vm::o_mcallg() {
     ctx.memr=stack+imm[ctx.pc];
     (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-void vm::o_mcalll() {
+inline void vm::o_mcalll() {
     ctx.memr=ctx.localr+imm[ctx.pc];
     (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-void vm::o_mupval() {
+inline void vm::o_mupval() {
     ctx.memr=&(ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff].upval()[imm[ctx.pc]&0xffff]);
     (++ctx.top)[0]=ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
 }
 
-void vm::o_mcallv() {
+inline void vm::o_mcallv() {
     var val=ctx.top[0];     // index
     var vec=(--ctx.top)[0]; // mcall vector, reserved on stack to avoid gc
     if (vec.type==vm_vec) {
@@ -1001,9 +806,9 @@ void vm::o_mcallv() {
             die("key must be string");
             return;
         }
-        nas_hash& ref=vec.hash();
-        string& str=val.str();
-        ctx.memr=ref.get_mem(str);
+        auto& ref = vec.hash();
+        auto& str = val.str();
+        ctx.memr = ref.get_mem(str);
         if (!ctx.memr) {
             ref.elems[str]=nil;
             ctx.memr=ref.get_mem(str);
@@ -1014,7 +819,7 @@ void vm::o_mcallv() {
     }
 }
 
-void vm::o_mcallh() {
+inline void vm::o_mcallh() {
     var hash=ctx.top[0]; // mcall hash, reserved on stack to avoid gc
     if (hash.type!=vm_hash) {
         die("must call a hash");
@@ -1029,7 +834,7 @@ void vm::o_mcallh() {
     }
 }
 
-void vm::o_ret() {
+inline void vm::o_ret() {
 /*  +-------------+
 *   | return value| <- top[0]
 *   +-------------+
@@ -1073,215 +878,4 @@ void vm::o_ret() {
     if (!ctx.pc) {
         ngc.ctxreserve();
     }
-}
-
-void vm::run(
-    const codegen& gen,
-    const linker& linker,
-    const std::vector<string>& argv,
-    const bool detail
-) {
-    verbose=detail;
-    init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
-#ifndef _MSC_VER
-    const void* oprs[]={
-        &&vmexit, &&intg,   &&intl,   &&loadg,
-        &&loadl,  &&loadu,  &&pnum,   &&pnil,
-        &&pstr,   &&newv,   &&newh,   &&newf,
-        &&happ,   &&para,   &&deft,   &&dyn,
-        &&lnot,   &&usub,   &&bnot,   &&btor,
-        &&btxor,  &&btand,  &&add,    &&sub,
-        &&mul,    &&div,    &&lnk,    &&addc,
-        &&subc,   &&mulc,   &&divc,   &&lnkc,
-        &&addeq,  &&subeq,  &&muleq,  &&diveq,
-        &&lnkeq,  &&bandeq, &&boreq,  &&bxoreq,
-        &&addeqc, &&subeqc, &&muleqc, &&diveqc,
-        &&lnkeqc, &&addecp, &&subecp, &&mulecp,
-        &&divecp, &&lnkecp, &&meq,    &&eq,
-        &&neq,    &&less,   &&leq,    &&grt,
-        &&geq,    &&lessc,  &&leqc,   &&grtc,
-        &&geqc,   &&pop,    &&jmp,    &&jt,
-        &&jf,     &&cnt,    &&findex, &&feach,
-        &&callg,  &&calll,  &&upval,  &&callv,
-        &&callvi, &&callh,  &&callfv, &&callfh,
-        &&callb,  &&slcbeg, &&slcend, &&slc,
-        &&slc2,   &&mcallg, &&mcalll, &&mupval,
-        &&mcallv, &&mcallh, &&ret
-    };
-    std::vector<const void*> code;
-    for(auto& i:gen.codes()) {
-        code.push_back(oprs[i.op]);
-        imm.push_back(i.num);
-    }
-    // goto the first operand
-    goto *code[ctx.pc];
-#else
-    typedef void (vm::*nafunc)();
-    const nafunc oprs[]={
-        nullptr,       &vm::o_intg,
-        &vm::o_intl,   &vm::o_loadg,
-        &vm::o_loadl,  &vm::o_loadu,
-        &vm::o_pnum,   &vm::o_pnil,
-        &vm::o_pstr,   &vm::o_newv,
-        &vm::o_newh,   &vm::o_newf,
-        &vm::o_happ,   &vm::o_para,
-        &vm::o_deft,   &vm::o_dyn,
-        &vm::o_lnot,   &vm::o_usub,
-        &vm::o_bnot,   &vm::o_btor,
-        &vm::o_btxor,  &vm::o_btand,
-        &vm::o_add,    &vm::o_sub,
-        &vm::o_mul,    &vm::o_div,
-        &vm::o_lnk,    &vm::o_addc,
-        &vm::o_subc,   &vm::o_mulc,
-        &vm::o_divc,   &vm::o_lnkc,
-        &vm::o_addeq,  &vm::o_subeq,
-        &vm::o_muleq,  &vm::o_diveq,
-        &vm::o_lnkeq,  &vm::o_bandeq,
-        &vm::o_boreq,  &vm::o_bxoreq,
-        &vm::o_addeqc, &vm::o_subeqc,
-        &vm::o_muleqc, &vm::o_diveqc,
-        &vm::o_lnkeqc, &vm::o_addecp,
-        &vm::o_subecp, &vm::o_mulecp,
-        &vm::o_divecp, &vm::o_lnkecp,
-        &vm::o_meq,    &vm::o_eq,
-        &vm::o_neq,    &vm::o_less,
-        &vm::o_leq,    &vm::o_grt,
-        &vm::o_geq,    &vm::o_lessc,
-        &vm::o_leqc,   &vm::o_grtc,
-        &vm::o_geqc,   &vm::o_pop,
-        &vm::o_jmp,    &vm::o_jt,
-        &vm::o_jf,     &vm::o_cnt,
-        &vm::o_findex, &vm::o_feach,
-        &vm::o_callg,  &vm::o_calll,
-        &vm::o_upval,  &vm::o_callv,
-        &vm::o_callvi, &vm::o_callh,
-        &vm::o_callfv, &vm::o_callfh,
-        &vm::o_callb,  &vm::o_slcbeg,
-        &vm::o_slcend, &vm::o_slc,
-        &vm::o_slc2,   &vm::o_mcallg,
-        &vm::o_mcalll, &vm::o_mupval,
-        &vm::o_mcallv, &vm::o_mcallh,
-        &vm::o_ret
-    };
-    std::vector<nafunc> code;
-    for(auto& i:gen.codes()) {
-        code.push_back(oprs[i.op]);
-        imm.push_back(i.num);
-    }
-    while(code[ctx.pc]) {
-        (this->*code[ctx.pc])();
-        if (ctx.top>=ctx.canary) {
-            die("stack overflow");
-        }
-        ++ctx.pc;
-    }
-#endif
-
-vmexit:
-    if (detail) {
-        ngc.info();
-    }
-    ngc.clear();
-    imm.clear();
-    return;
-
-#ifndef _MSC_VER
-// may cause stackoverflow
-#define exec_check(op) {\
-        op();\
-        if (ctx.top<ctx.canary)\
-            goto *code[++ctx.pc];\
-        die("stack overflow");\
-        goto *code[++ctx.pc];\
-    }
-// do not cause stackoverflow
-#define exec_nodie(op) {op();goto *code[++ctx.pc];}
-
-intg:   exec_nodie(o_intg  ); // +imm[pc] (detected at codegen)
-intl:   exec_nodie(o_intl  ); // -0
-loadg:  exec_nodie(o_loadg ); // -1
-loadl:  exec_nodie(o_loadl ); // -1
-loadu:  exec_nodie(o_loadu ); // -1
-pnum:   exec_check(o_pnum  ); // +1
-pnil:   exec_check(o_pnil  ); // +1
-pstr:   exec_check(o_pstr  ); // +1
-newv:   exec_check(o_newv  ); // +1-imm[pc]
-newh:   exec_check(o_newh  ); // +1
-newf:   exec_check(o_newf  ); // +1
-happ:   exec_nodie(o_happ  ); // -1
-para:   exec_nodie(o_para  ); // -0
-deft:   exec_nodie(o_deft  ); // -1
-dyn:    exec_nodie(o_dyn   ); // -0
-lnot:   exec_nodie(o_lnot  ); // -0
-usub:   exec_nodie(o_usub  ); // -0
-bnot:   exec_nodie(o_bnot  ); // -0
-btor:   exec_nodie(o_btor  ); // -1
-btxor:  exec_nodie(o_btxor ); // -1
-btand:  exec_nodie(o_btand ); // -1
-add:    exec_nodie(o_add   ); // -1
-sub:    exec_nodie(o_sub   ); // -1
-mul:    exec_nodie(o_mul   ); // -1
-div:    exec_nodie(o_div   ); // -1
-lnk:    exec_nodie(o_lnk   ); // -1
-addc:   exec_nodie(o_addc  ); // -0
-subc:   exec_nodie(o_subc  ); // -0
-mulc:   exec_nodie(o_mulc  ); // -0
-divc:   exec_nodie(o_divc  ); // -0
-lnkc:   exec_nodie(o_lnkc  ); // -0
-addeq:  exec_nodie(o_addeq ); // -1
-subeq:  exec_nodie(o_subeq ); // -1
-muleq:  exec_nodie(o_muleq ); // -1
-diveq:  exec_nodie(o_diveq ); // -1
-lnkeq:  exec_nodie(o_lnkeq ); // -1
-bandeq: exec_nodie(o_bandeq); // -1
-boreq:  exec_nodie(o_boreq ); // -1
-bxoreq: exec_nodie(o_bxoreq); // -1
-addeqc: exec_nodie(o_addeqc); // -0
-subeqc: exec_nodie(o_subeqc); // -0
-muleqc: exec_nodie(o_muleqc); // -0
-diveqc: exec_nodie(o_diveqc); // -0
-lnkeqc: exec_nodie(o_lnkeqc); // -0
-addecp: exec_nodie(o_addecp); // -1
-subecp: exec_nodie(o_subecp); // -1
-mulecp: exec_nodie(o_mulecp); // -1
-divecp: exec_nodie(o_divecp); // -1
-lnkecp: exec_nodie(o_lnkecp); // -1
-meq:    exec_nodie(o_meq   ); // -1
-eq:     exec_nodie(o_eq    ); // -1
-neq:    exec_nodie(o_neq   ); // -1
-less:   exec_nodie(o_less  ); // -1
-leq:    exec_nodie(o_leq   ); // -1
-grt:    exec_nodie(o_grt   ); // -1
-geq:    exec_nodie(o_geq   ); // -1
-lessc:  exec_nodie(o_lessc ); // -0
-leqc:   exec_nodie(o_leqc  ); // -0
-grtc:   exec_nodie(o_grtc  ); // -0
-geqc:   exec_nodie(o_geqc  ); // -0
-pop:    exec_nodie(o_pop   ); // -1
-jmp:    exec_nodie(o_jmp   ); // -0
-jt:     exec_nodie(o_jt    ); // -0
-jf:     exec_nodie(o_jf    ); // -1
-cnt:    exec_nodie(o_cnt   ); // -0
-findex: exec_check(o_findex); // +1
-feach:  exec_check(o_feach ); // +1
-callg:  exec_check(o_callg ); // +1
-calll:  exec_check(o_calll ); // +1
-upval:  exec_check(o_upval ); // +1
-callv:  exec_nodie(o_callv ); // -0
-callvi: exec_nodie(o_callvi); // -0
-callh:  exec_nodie(o_callh ); // -0
-callfv: exec_nodie(o_callfv); // check in the function
-callfh: exec_nodie(o_callfh); // check in the function
-callb:  exec_nodie(o_callb ); // -0
-slcbeg: exec_check(o_slcbeg); // +1
-slcend: exec_nodie(o_slcend); // -1
-slc:    exec_nodie(o_slc   ); // -1
-slc2:   exec_nodie(o_slc2  ); // -2
-mcallg: exec_check(o_mcallg); // +1
-mcalll: exec_check(o_mcalll); // +1
-mupval: exec_check(o_mupval); // +1
-mcallv: exec_nodie(o_mcallv); // -0
-mcallh: exec_nodie(o_mcallh); // -0
-ret:    exec_nodie(o_ret   ); // -2
-#endif
 }

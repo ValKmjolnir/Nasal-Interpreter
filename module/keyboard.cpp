@@ -1,4 +1,4 @@
-#include "../nasal.h"
+#include "../src/nasal.h"
 #include <iostream>
 
 #ifndef _MSC_VER

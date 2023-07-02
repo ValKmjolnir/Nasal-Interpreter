@@ -222,8 +222,7 @@ var isfunc=func(f){
 }
 
 var isghost=func(g){
-    die("this runtime has no ghost object");
-    return 0;
+    return typeof(g)=="obj";
 }
 
 var ishash=func(h){
@@ -251,6 +250,9 @@ var isvec=func(v){
     return typeof(v)=="vec";
 }
 
+var ghosttype=func(ghost_object) {
+    return __ghosttype(ghost_object);
+}
 
 # get the index of val in the vec
 var vecindex=func(vec,val){

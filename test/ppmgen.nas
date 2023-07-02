@@ -1,4 +1,4 @@
-import.stl.process_bar;
+import.std.process_bar;
 
 var ppm=func(filename,width,height,RGB){
     # P3 use ASCII number

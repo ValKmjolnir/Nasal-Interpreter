@@ -4,8 +4,8 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v10.1-blue?style=flat-square&logo=github)
-[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](./LICENSE)
+![in dev](https://img.shields.io/badge/dev-v11.0-blue?style=flat-square&logo=github)
+[![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](./LICENSE)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
 
@@ -32,11 +32,11 @@ __Contact us if having great ideas to share!__
 is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
-This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++14`)
+This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`)
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 But we really appreciate that Andy created this amazing programming language.
 
-This project uses __MIT license__ (2021/5/4).
+This project uses __MIT license__ (2019/7~2021/5/4~2023/5), __GPL v2 license__ (since 2023/6).
 
 ### __Why writing this nasal interpreter?__
 
@@ -59,7 +59,6 @@ the interpreter a useful tool in your own projects.
 ![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
 ![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
-
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
@@ -68,19 +67,17 @@ Better download the latest update source of the interpreter and build it! It's q
 
 __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs.
 
-Use g++(`MinGW-w64`) or MSVC(`Visual Studio`) on `Windows` .
-
-Use g++/clang++ on `Linux/macOS/Unix` platform (we suggest `clang`).
-
-On `Windows (MinGW-w64)`:
+### __`Windows (MinGW-w64)`__
 
 Make sure your MinGW thread model is `posix thread model`, otherwise it may not have the thread library.
 
 > mingw32-make nasal.exe
 
-You could create project in `Visual Studio` by this way: [__Click__](./doc/vs.md).
+### __`Windows (Visual Studio)`__
 
-On `Linux/macOS/Unix`:
+This project gives a [__CMakelists.txt__](./CMakeLists.txt) for you to create project in `Visual Studio`.
+
+### __`Linux/macOS/Unix`__
 
 > make nasal
 

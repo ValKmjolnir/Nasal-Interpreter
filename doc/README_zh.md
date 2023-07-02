@@ -4,8 +4,8 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v10.1-blue?style=flat-square&logo=github)
-[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](../LICENSE)
+![in dev](https://img.shields.io/badge/dev-v11.0-blue?style=flat-square&logo=github)
+[![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
@@ -34,7 +34,7 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有参考任何代码，我们依然非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言。
 
-该项目已使用 __MIT__ 协议开源 (2021/5/4)。
+该项目使用 __MIT__ 协议开源 (2019/7~2021/5/4~2023/5)，从 2023/6 开始使用 __GPL v2__ 协议。
 
 ### __我们为什么想要重新写一个nasal解释器?__
 
@@ -49,29 +49,26 @@ __如果有好的意见或建议，欢迎联系我们!__
 ![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
 ![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
-
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-我们推荐你下载最新更新的代码包来直接编译，这个项目非常小巧,没有使用任何第三方库，因此编译起来非常轻松，
+我们推荐你下载最新代码包编译，这个项目非常小巧,没有使用任何第三方库，因此编译起来非常轻松，
 你只需要这两样东西: C++ 编译器以及make程序。
 
 __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之前请阅读[__发行日志__](../doc/dev_zh.md#发行日志)以保证这个发行版的文件中不包含非常严重的bug。
 
-`Windows` 用户通过 g++(`MinGW-w64`) 或者使用 MSVC(`Visual Studio`) 来进行编译。
-
-`Linux/macOS/Unix` 用户可以使用 g++ 或者 clang++ 来进行编译 (建议您使用 `clang`)。
-
-`Windows` 平台(`MinGW-w64`):
+### __`Windows` 平台(`MinGW-w64`)__
 
 一定要确保您的 MinGW thread model 是 `posix thread model`, 否则可能存在没有 thread 库的问题。
 
 > mingw32-make nasal.exe
 
-你也可以在`Visual Studio`中用这种方式来创建项目：[__点击跳转__](../doc/vs.md)。
+### __`Windows` 平台(`Vistual Studio`)__
 
-`Linux/macOS/Unix` 平台:
+项目提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于在`Visual Studio`中用这种方式来创建项目。
+
+### __`Linux/macOS/Unix` 平台__
 
 > make nasal
 
