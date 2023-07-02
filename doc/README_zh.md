@@ -5,7 +5,7 @@
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v11.0-blue?style=flat-square&logo=github)
-[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](../LICENSE)
+[![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
@@ -34,7 +34,7 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++14`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有参考任何代码，我们依然非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言。
 
-该项目已使用 __MIT__ 协议开源 (2021/5/4)。
+该项目使用 __MIT__ 协议开源 (2019/7~2021/5/4~2023/5)，从 2023/6 开始使用 __GPL v2__ 协议。
 
 ### __我们为什么想要重新写一个nasal解释器?__
 
