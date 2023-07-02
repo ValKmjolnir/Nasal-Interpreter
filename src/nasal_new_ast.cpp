@@ -119,6 +119,12 @@ binary_operator::~binary_operator() {
     if (right) {
         delete right;
     }
+    if (optimized_const_number) {
+        delete optimized_const_number;
+    }
+    if (optimized_const_string) {
+        delete optimized_const_string;
+    }
 }
 
 void binary_operator::accept(ast_visitor* visitor) {
@@ -128,6 +134,9 @@ void binary_operator::accept(ast_visitor* visitor) {
 unary_operator::~unary_operator() {
     if (value) {
         delete value;
+    }
+    if (optimized_number) {
+        delete optimized_number;
     }
 }
 

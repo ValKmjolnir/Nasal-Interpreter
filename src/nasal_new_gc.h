@@ -29,7 +29,6 @@
 #include <thread>
 
 #include "nasal_new_header.h"
-#include "nasal_new_err.h"
 
 enum vm_type:u8 {
     /* none-gc object */
