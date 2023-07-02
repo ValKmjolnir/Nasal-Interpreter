@@ -1,6 +1,6 @@
-import.stl.sort;
-import.stl.padding;
-import.stl.process_bar;
+import.std.sort;
+import.std.padding;
+import.std.process_bar;
 
 var mess=func(vec) {
     srand();

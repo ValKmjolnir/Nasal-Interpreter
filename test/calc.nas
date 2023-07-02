@@ -1,11 +1,11 @@
-import.stl.padding;
-import.stl.file;
-import.stl.sort;
+import.std.padding;
+import.std.file;
+import.std.sort;
 
-var source=find_all_files_with_extension(".","cpp","h");
+var source=find_all_files_with_extension("./src","cpp","h");
 sort(source,func(a,b){return cmp(a,b)<0});
 
-var lib=find_all_files_with_extension("./stl","nas");
+var lib=find_all_files_with_extension("./std","nas");
 sort(lib,func(a,b){return cmp(a,b)<0});
 
 var testfile=find_all_files_with_extension("./test","nas");
@@ -78,8 +78,8 @@ var calc=func(codetype,files,path=""){
     return int(bytes/1024);
 }
 
-var all=calc("source code:",source)
-    +calc("lib:",lib,"stl/")
+var all=calc("source code:",source,"src/")
+    +calc("lib:",lib,"std/")
     +calc("test file:",testfile,"test/")
     +calc("module:",module,"module/");
 println(rightpad("total:",padding_length),'|',leftpad(str(all),6),' kb   |');

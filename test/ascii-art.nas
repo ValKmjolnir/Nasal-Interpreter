@@ -1,5 +1,5 @@
-import.stl.padding;
-import.stl.process_bar;
+import.std.padding;
+import.std.process_bar;
 
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],

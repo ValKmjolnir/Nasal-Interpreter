@@ -1,5 +1,5 @@
 import.module.libsock;
-import.stl.json;
+import.std.json;
 
 var gettime=func(){
     return split(" ",os.time())[1];

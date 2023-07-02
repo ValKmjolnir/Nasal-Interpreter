@@ -1,4 +1,4 @@
-import.stl.process_bar;
+import.std.process_bar;
 
 var new_map=func(width,height){
     var tmp=[];
@@ -11,7 +11,7 @@ var new_map=func(width,height){
 }
 
 var prt=func(map){
-    var s='\ec\e[1;1H';
+    var s='\e[H';
     foreach(var line;map){
         foreach(var elem;line)
             s~=elem~' ';
