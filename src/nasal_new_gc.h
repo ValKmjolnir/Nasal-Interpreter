@@ -27,6 +27,8 @@
 #include <chrono>
 #include <algorithm>
 #include <thread>
+#include <cstring>
+#include <sstream>
 
 #include "nasal_new_header.h"
 
