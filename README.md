@@ -5,7 +5,7 @@
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![in dev](https://img.shields.io/badge/dev-v11.0-blue?style=flat-square&logo=github)
-[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=github)](./LICENSE)
+[![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](./LICENSE)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
 
@@ -36,7 +36,7 @@ This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmj
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 But we really appreciate that Andy created this amazing programming language.
 
-This project uses __MIT license__ (2021/5/4).
+This project uses __MIT license__ (2019/7~2021/5/4~2023/5), __GPL v2 license__ (since 2023/6).
 
 ### __Why writing this nasal interpreter?__
 
