@@ -314,7 +314,7 @@ void parse::params(function* func_node) {
 expr* parse::lcurve_expr() {
     if (toks[ptr+1].type==tok::var)
         return definition();
-    return check_tuple()?multi_assignment():calc();
+    return check_tuple()? multi_assignment():calc();
 }
 
 expr* parse::expression() {
@@ -741,7 +741,9 @@ expr* parse::definition() {
     }
     match(tok::eq);
     if (lookahead(tok::lcurve)) {
-        node->set_value(check_tuple()?multi_scalar():calc());
+        check_tuple()?
+            node->set_tuple(multi_scalar()):
+            node->set_value(calc());
     } else {
         node->set_value(calc());
     }

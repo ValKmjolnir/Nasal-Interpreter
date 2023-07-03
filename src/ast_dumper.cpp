@@ -289,14 +289,29 @@ bool ast_dumper::visit_definition_expr(definition_expr* node) {
         node->get_variables()->accept(this);
     }
     set_last();
-    node->get_value()->accept(this);
+    if (node->get_tuple()) {
+        node->get_tuple()->accept(this);
+    } else {
+        node->get_value()->accept(this);
+    }
     pop_indent();
     return true;
 }
 
 bool ast_dumper::visit_assignment_expr(assignment_expr* node) {
     dump_indent();
-    std::cout << "assignment";
+    std::cout << "assignment ";
+    switch(node->get_assignment_type()) {
+        case assignment_expr::assign_type::add_equal: std::cout << "+="; break;
+        case assignment_expr::assign_type::sub_equal: std::cout << "-="; break;
+        case assignment_expr::assign_type::mult_equal: std::cout << "*="; break;
+        case assignment_expr::assign_type::div_equal: std::cout << "/="; break;
+        case assignment_expr::assign_type::concat_equal: std::cout << "~="; break;
+        case assignment_expr::assign_type::equal: std::cout << "="; break;
+        case assignment_expr::assign_type::bitwise_and_equal: std::cout << "&="; break;
+        case assignment_expr::assign_type::bitwise_or_equal: std::cout << "|="; break;
+        case assignment_expr::assign_type::bitwise_xor_equal: std::cout << "^="; break;
+    }
     std::cout << format_location(node->get_location());
     push_indent();
     node->get_left()->accept(this);
@@ -308,7 +323,7 @@ bool ast_dumper::visit_assignment_expr(assignment_expr* node) {
 
 bool ast_dumper::visit_multi_identifier(multi_identifier* node) {
     dump_indent();
-    std::cout << "multiple_definition";
+    std::cout << "multiple_identifier";
     std::cout << format_location(node->get_location());
     push_indent();
     for(auto i : node->get_variables()) {

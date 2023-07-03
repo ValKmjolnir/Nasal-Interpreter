@@ -1,4 +1,4 @@
-# __Nasal Script__
+# __Nasal - Modern Interpreter__
 
 <img src="./doc/pic/header.png" style="width:800px"></img>
 
@@ -36,7 +36,7 @@ This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmj
 without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 But we really appreciate that Andy created this amazing programming language.
 
-This project uses __MIT license__ (2019/7~2021/5/4~2023/5), __GPL v2 license__ (since 2023/6).
+This project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5), __GPL v2 license__ (since 2023/6).
 
 ### __Why writing this nasal interpreter?__
 

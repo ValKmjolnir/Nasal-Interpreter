@@ -8,7 +8,11 @@ bool symbol_finder::visit_definition_expr(definition_expr* node) {
             symbols.push_back(i->get_name());
         }
     }
-    node->get_value()->accept(this);
+    if (node->get_tuple()) {
+        node->get_tuple()->accept(this);
+    } else {
+        node->get_value()->accept(this);
+    }
     return true;
 }
 

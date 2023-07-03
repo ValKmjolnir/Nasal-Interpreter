@@ -65,8 +65,8 @@ private:
     void call_gen(call_expr*);
     void call_id(identifier*);
     void call_hash_gen(call_hash*);
-    void call_vec(call_vector*);
-    void call_func(call_function*);
+    void call_vector_gen(call_vector*);
+    void call_func_gen(call_function*);
     void mcall(expr*);
     void mcall_id(identifier*);
     void mcall_vec(call_vector*);

@@ -201,6 +201,9 @@ definition_expr::~definition_expr() {
     if (variables) {
         delete variables;
     }
+    if (tuple) {
+        delete tuple;
+    }
     if (value) {
         delete value;
     }

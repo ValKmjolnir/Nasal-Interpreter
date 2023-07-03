@@ -50,7 +50,7 @@ enum vm_type:u8 {
     vm_co
 };
 
-const u32 gc_type_size=vm_co-vm_str+1;
+const u32 gc_type_size = vm_co-vm_str+1;
 
 enum class coroutine_status:u32 {
     suspended,
@@ -84,11 +84,11 @@ public:
     } val;
 
 private:
-    var(u8 t, u32 pc) {type=t;val.ret=pc;}
-    var(u8 t, i64 ct) {type=t;val.cnt=ct;}
-    var(u8 t, f64 n) {type=t;val.num=n;}
-    var(u8 t, var* p) {type=t;val.addr=p;}
-    var(u8 t, nas_val* p) {type=t;val.gcobj=p;}
+    var(u8 t, u32 pc) {type = t; val.ret = pc;}
+    var(u8 t, i64 ct) {type = t; val.cnt = ct;}
+    var(u8 t, f64 n) {type = t; val.num = n;}
+    var(u8 t, var* p) {type = t; val.addr = p;}
+    var(u8 t, nas_val* p) {type = t; val.gcobj = p;}
 
 public:
     var() = default;
@@ -147,7 +147,7 @@ struct nas_hash {
     // mark if this is printed, avoid stackoverflow
     bool printed;
 
-    nas_hash():printed(false) {}
+    nas_hash(): printed(false) {}
     usize size() const {return elems.size();}
     var get_val(const std::string&);
     var* get_mem(const std::string&);
@@ -184,9 +184,9 @@ public:
     }
 
     void clear() {
-        onstk=true;
+        onstk = true;
         elems.clear();
-        size=0;
+        size = 0;
     }
 };
 
@@ -233,12 +233,12 @@ public:
 
     usize register_ghost_type(const std::string& name, dtor ptr) {
         if (mapper.count(name)) {
-            std::cerr<<"nasal_gc.h: ghost_register_table::register_ghost_type: ";
-            std::cerr<<"ghost type \""<<name<<"\" already exists.\n";
+            std::cerr << "nasal_gc.h: ghost_register_table::register_ghost_type: ";
+            std::cerr << "ghost type \"" << name << "\" already exists.\n";
             std::exit(1);
         }
-        auto res=destructors.size();
-        mapper[name]=res;
+        auto res = destructors.size();
+        mapper[name] = res;
         ghost_name.push_back(name);
         destructors.push_back(ptr);
         return res;
@@ -265,8 +265,8 @@ public:
 
 public:
     friend std::ostream& operator<<(std::ostream& out, nas_ghost& ghost) {
-        out<<"<object "<<ghost.ghost_type_table->get_ghost_name(ghost.type);
-        out<<" at 0x"<<std::hex<<(u64)ghost.ptr<<std::dec<<">";
+        out << "<object " << ghost.ghost_type_table->get_ghost_name(ghost.type);
+        out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
         return out;
     }
 
@@ -332,7 +332,7 @@ struct gc {
     nas_co* cort = nullptr; // running coroutine
 
     /*  temporary space used in builtin/module functions */
-    var temp=nil;
+    var temp = nil;
 
     /* constants and memory pool */
     std::vector<var> strs;        // reserved address for const vm_str
@@ -385,20 +385,20 @@ public:
 
 public:
     var newstr(char c) {
-        var s=alloc(vm_str);
-        s.str()=c;
+        var s = alloc(vm_str);
+        s.str() = c;
         return s;
     }
 
     var newstr(const char* buff) {
         var s=alloc(vm_str);
-        s.str()=buff;
+        s.str() = buff;
         return s;
     }
 
     var newstr(const std::string& buff) {
         var s=alloc(vm_str);
-        s.str()=buff;
+        s.str() = buff;
         return s;
     }
 };
