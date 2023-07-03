@@ -27,27 +27,28 @@ void codegen::check_id_exist(identifier* node) {
 }
 
 void codegen::regist_num(const f64 num) {
-    if (!num_table.count(num)) {
-        u32 size = num_table.size();
-        num_table[num] = size;
-        num_res.push_back(num);
+    if (num_table.count(num)) {
+        return;
     }
+    u32 size = num_table.size();
+    num_table[num] = size;
+    num_res.push_back(num);
 }
 
 void codegen::regist_str(const std::string& str) {
-    if (!str_table.count(str)) {
-        u32 size = str_table.size();
-        str_table[str] = size;
-        str_res.push_back(str);
+    if (str_table.count(str)) {
+        return;
     }
+    u32 size = str_table.size();
+    str_table[str] = size;
+    str_res.push_back(str);
 }
 
 void codegen::find_symbol(code_block* node) {
-    auto finder = new symbol_finder;
+    auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
     for(const auto& i : finder->do_find(node)) {
         add_sym(i);
     }
-    delete finder;
 }
 
 void codegen::add_sym(const std::string& name) {
@@ -104,8 +105,9 @@ void codegen::num_gen(number_literal* node) {
 }
 
 void codegen::str_gen(string_literal* node) {
-    regist_str(node->get_content());
-    gen(op_pstr, str_table.at(node->get_content()), node->get_line());
+    const auto& str = node->get_content();
+    regist_str(str);
+    gen(op_pstr, str_table.at(str), node->get_line());
 }
 
 void codegen::bool_gen(bool_literal* node) {
@@ -235,8 +237,8 @@ void codegen::call_gen(call_expr* node) {
     for(auto i : node->get_calls()) {
         switch(i->get_type()) {
             case expr_type::ast_callh: call_hash_gen((call_hash*)i); break;
-            case expr_type::ast_callv: call_vec((call_vector*)i); break;
-            case expr_type::ast_callf: call_func((call_function*)i); break;
+            case expr_type::ast_callv: call_vector_gen((call_vector*)i); break;
+            case expr_type::ast_callf: call_func_gen((call_function*)i); break;
             default: break;
         }
     }
@@ -275,7 +277,7 @@ void codegen::call_hash_gen(call_hash* node) {
     gen(op_callh, str_table.at(node->get_field()), node->get_line());
 }
 
-void codegen::call_vec(call_vector* node) {
+void codegen::call_vector_gen(call_vector* node) {
     // maybe this place can use callv-const if ast's first child is ast_num
     if (node->get_slices().size()==1 &&
         !node->get_slices()[0]->get_end()) {
@@ -297,7 +299,7 @@ void codegen::call_vec(call_vector* node) {
     gen(op_slcend, 0, node->get_line());
 }
 
-void codegen::call_func(call_function* node) {
+void codegen::call_func_gen(call_function* node) {
     if (node->get_argument().size() &&
         node->get_argument()[0]->get_type()==expr_type::ast_pair) {
         gen(op_newh, 0, node->get_line());
@@ -340,8 +342,8 @@ void codegen::mcall(expr* node) {
         auto tmp = call_node->get_calls()[i];
         switch(tmp->get_type()) {
             case expr_type::ast_callh: call_hash_gen((call_hash*)tmp); break;
-            case expr_type::ast_callv: call_vec((call_vector*)tmp); break;
-            case expr_type::ast_callf: call_func((call_function*)tmp); break;
+            case expr_type::ast_callv: call_vector_gen((call_vector*)tmp); break;
+            case expr_type::ast_callf: call_func_gen((call_function*)tmp); break;
             default: break;
         }
     }
@@ -411,12 +413,13 @@ void codegen::single_def(definition_expr* node) {
 void codegen::multi_def(definition_expr* node) {
     auto& identifiers = node->get_variables()->get_variables();
     usize size = identifiers.size();
-    if (node->get_value()->get_type()==expr_type::ast_tuple) { // (var a,b,c)=(c,b,a);
-        auto& vals = ((tuple_expr*)node->get_value())->get_elements();
+    // (var a,b,c) = (c,b,a);
+    if (node->get_tuple()) {
+        auto& vals = node->get_tuple()->get_elements();
         if (identifiers.size()<vals.size()) {
-            die("lack values in multi-definition", node->get_value()->get_location());
+            die("lack values in multi-definition", node->get_tuple()->get_location());
         } else if (identifiers.size()>vals.size()) {
-            die("too many values in multi-definition", node->get_value()->get_location());
+            die("too many values in multi-definition", node->get_tuple()->get_location());
         }
         for(usize i = 0; i<size; ++i) {
             calc_gen(vals[i]);
@@ -425,22 +428,22 @@ void codegen::multi_def(definition_expr* node) {
                 gen(op_loadg, global_find(name), identifiers[i]->get_line()):
                 gen(op_loadl, local_find(name), identifiers[i]->get_line());
         }
-    } else { // (var a,b,c)=[0,1,2];
-        calc_gen(node->get_value());
-        for(usize i = 0; i<size; ++i) {
-            gen(op_callvi, i, node->get_value()->get_line());
-            const auto& name = identifiers[i]->get_name();
-            local.empty()?
-                gen(op_loadg, global_find(name), identifiers[i]->get_line()):
-                gen(op_loadl, local_find(name), identifiers[i]->get_line());
-        }
-        gen(op_pop, 0, node->get_line());
+        return;
     }
+    // (var a,b,c) = [0,1,2];
+    calc_gen(node->get_value());
+    for(usize i = 0; i<size; ++i) {
+        gen(op_callvi, i, node->get_value()->get_line());
+        const auto& name = identifiers[i]->get_name();
+        local.empty()?
+            gen(op_loadg, global_find(name), identifiers[i]->get_line()):
+            gen(op_loadl, local_find(name), identifiers[i]->get_line());
+    }
+    gen(op_pop, 0, node->get_line());
 }
 
 void codegen::def_gen(definition_expr* node) {
-    if (node->get_variable_name() &&
-        node->get_value()->get_type()==expr_type::ast_tuple) {
+    if (node->get_variable_name() && node->get_tuple()) {
         die("cannot accept too many values", node->get_value()->get_location());
     }
     node->get_variable_name()? single_def(node):multi_def(node);

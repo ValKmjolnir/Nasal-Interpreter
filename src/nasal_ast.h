@@ -51,6 +51,7 @@ class slice_vector;
 class multi_identifier;
 class code_block;
 class if_expr;
+class tuple_expr;
 
 class expr {
 protected:
@@ -426,18 +427,22 @@ class definition_expr:public expr {
 private:
     identifier* variable_name;
     multi_identifier* variables;
+    tuple_expr* tuple;
     expr* value;
 
 public:
     definition_expr(const span& location):
         expr(location, expr_type::ast_def),
-        variable_name(nullptr), variables(nullptr), value(nullptr) {}
+        variable_name(nullptr), variables(nullptr),
+        tuple(nullptr), value(nullptr) {}
     ~definition_expr();
     void set_identifier(identifier* node) {variable_name = node;}
     void set_multi_define(multi_identifier* node) {variables = node;}
+    void set_tuple(tuple_expr* node) {tuple = node;}
     void set_value(expr* node) {value = node;}
     identifier* get_variable_name() {return variable_name;}
     multi_identifier* get_variables() {return variables;}
+    tuple_expr* get_tuple() {return tuple;}
     expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
@@ -562,7 +567,7 @@ public:
 class iter_expr:public expr {
 private:
     identifier* name;
-    expr* call;
+    call_expr* call;
 
 public:
     iter_expr(const span& location):
@@ -570,9 +575,9 @@ public:
         name(nullptr), call(nullptr) {}
     ~iter_expr();
     void set_name(identifier* node) {name = node;}
-    void set_call(expr* node) {call = node;}
+    void set_call(call_expr* node) {call = node;}
     identifier* get_name() {return name;}
-    expr* get_call() {return call;}
+    call_expr* get_call() {return call;}
     void accept(ast_visitor*) override;
 };
 

@@ -78,7 +78,7 @@ std::ostream& version(std::ostream& out) {
     if (num<0.01) {
         parse::easter_egg();
     }
-    out << "version " << __nasver;
+    out << "nasal interpreter version " << __nasver;
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
 }
@@ -112,9 +112,8 @@ void execute(
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
     if (cmd&VM_RAW_AST) {
-        auto dumper = new ast_dumper;
+        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
         dumper->dump(parse.tree());
-        delete dumper;
     }
 
     // linker gets parser's ast and load import files to this ast
@@ -125,9 +124,8 @@ void execute(
     opt->do_optimization(parse.tree());
     delete opt;
     if (cmd&VM_AST) {
-        auto dumper = new ast_dumper;
+        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
         dumper->dump(parse.tree());
-        delete dumper;
     }
 
     // code generator gets parser's ast and import file list to generate code
