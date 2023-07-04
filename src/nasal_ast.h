@@ -51,6 +51,7 @@ class slice_vector;
 class multi_identifier;
 class code_block;
 class if_expr;
+class tuple_expr;
 
 class expr {
 protected:
@@ -72,6 +73,14 @@ public:
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;
     }
+    virtual void accept(ast_visitor*);
+};
+
+class call:public expr {
+public:
+    call(const span& location, expr_type node_type):
+        expr(location, node_type) {}
+    ~call() = default;
     virtual void accept(ast_visitor*);
 };
 
@@ -352,7 +361,7 @@ public:
 class call_expr:public expr {
 private:
     expr* first;
-    std::vector<expr*> calls;
+    std::vector<call*> calls;
 
 public:
     call_expr(const span& location):
@@ -360,45 +369,45 @@ public:
         first(nullptr) {}
     ~call_expr();
     void set_first(expr* node) {first = node;}
-    void add_call(expr* node) {calls.push_back(node);}
+    void add_call(call* node) {calls.push_back(node);}
     expr* get_first() {return first;}
-    std::vector<expr*>& get_calls() {return calls;}
+    std::vector<call*>& get_calls() {return calls;}
     void accept(ast_visitor*) override;
 };
 
-class call_hash:public expr {
+class call_hash:public call {
 private:
     std::string field;
 
 public:
     call_hash(const span& location, const std::string& name):
-        expr(location, expr_type::ast_callh),
+        call(location, expr_type::ast_callh),
         field(name) {}
     ~call_hash() = default;
     const std::string& get_field() const {return field;}
     void accept(ast_visitor*) override;
 };
 
-class call_vector:public expr {
+class call_vector:public call {
 private:
     std::vector<slice_vector*> calls;
 
 public:
     call_vector(const span& location):
-        expr(location, expr_type::ast_callv) {}
+        call(location, expr_type::ast_callv) {}
     ~call_vector();
     void add_slice(slice_vector* node) {calls.push_back(node);}
     std::vector<slice_vector*>& get_slices() {return calls;}
     void accept(ast_visitor*) override;
 };
 
-class call_function:public expr {
+class call_function:public call {
 private:
     std::vector<expr*> args;
 
 public:
     call_function(const span& location):
-        expr(location, expr_type::ast_callf) {}
+        call(location, expr_type::ast_callf) {}
     ~call_function();
     void add_argument(expr* node) {args.push_back(node);}
     std::vector<expr*>& get_argument() {return args;}
@@ -426,18 +435,22 @@ class definition_expr:public expr {
 private:
     identifier* variable_name;
     multi_identifier* variables;
+    tuple_expr* tuple;
     expr* value;
 
 public:
     definition_expr(const span& location):
         expr(location, expr_type::ast_def),
-        variable_name(nullptr), variables(nullptr), value(nullptr) {}
+        variable_name(nullptr), variables(nullptr),
+        tuple(nullptr), value(nullptr) {}
     ~definition_expr();
     void set_identifier(identifier* node) {variable_name = node;}
     void set_multi_define(multi_identifier* node) {variables = node;}
+    void set_tuple(tuple_expr* node) {tuple = node;}
     void set_value(expr* node) {value = node;}
     identifier* get_variable_name() {return variable_name;}
     multi_identifier* get_variables() {return variables;}
+    tuple_expr* get_tuple() {return tuple;}
     expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
@@ -562,7 +575,7 @@ public:
 class iter_expr:public expr {
 private:
     identifier* name;
-    expr* call;
+    call_expr* call;
 
 public:
     iter_expr(const span& location):
@@ -570,9 +583,9 @@ public:
         name(nullptr), call(nullptr) {}
     ~iter_expr();
     void set_name(identifier* node) {name = node;}
-    void set_call(expr* node) {call = node;}
+    void set_call(call_expr* node) {call = node;}
     identifier* get_name() {return name;}
-    expr* get_call() {return call;}
+    call_expr* get_call() {return call;}
     void accept(ast_visitor*) override;
 };
 

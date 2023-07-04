@@ -5,6 +5,11 @@ bool ast_visitor::visit_expr(expr* node) {
     return true;
 }
 
+bool ast_visitor::visit_call(call* node) {
+    node->accept(this);
+    return true;
+}
+
 bool ast_visitor::visit_file_info(file_info* node) {
     return true;
 }
@@ -134,7 +139,11 @@ bool ast_visitor::visit_definition_expr(definition_expr* node) {
     } else {
         node->get_variables()->accept(this);
     }
-    node->get_value()->accept(this);
+    if (node->get_tuple()) {
+        node->get_tuple()->accept(this);
+    } else {
+        node->get_value()->accept(this);
+    }
     return true;
 }
 
