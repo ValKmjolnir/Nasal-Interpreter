@@ -131,7 +131,7 @@ void execute(
     // code generator gets parser's ast and import file list to generate code
     gen.compile(parse, ld).chkerr();
     if (cmd&VM_CODE) {
-        gen.print();
+        gen.print(std::cout);
     }
 
     // run
