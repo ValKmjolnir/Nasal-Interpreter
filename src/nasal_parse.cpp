@@ -639,7 +639,7 @@ expr* parse::scalar() {
     return node;
 }
 
-expr* parse::call_scalar() {
+call* parse::call_scalar() {
     switch(toks[ptr].type) {
         case tok::lcurve:   return callf(); break;
         case tok::lbracket: return callv(); break;
@@ -647,7 +647,7 @@ expr* parse::call_scalar() {
         default: break;
     }
     // unreachable
-    return null();
+    return new call(toks[ptr].loc, expr_type::ast_null);
 }
 
 call_hash* parse::callh() {

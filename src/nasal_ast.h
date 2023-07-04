@@ -76,6 +76,14 @@ public:
     virtual void accept(ast_visitor*);
 };
 
+class call:public expr {
+public:
+    call(const span& location, expr_type node_type):
+        expr(location, node_type) {}
+    ~call() = default;
+    virtual void accept(ast_visitor*);
+};
+
 class file_info:public expr {
 private:
     uint16_t index;
@@ -353,7 +361,7 @@ public:
 class call_expr:public expr {
 private:
     expr* first;
-    std::vector<expr*> calls;
+    std::vector<call*> calls;
 
 public:
     call_expr(const span& location):
@@ -361,45 +369,45 @@ public:
         first(nullptr) {}
     ~call_expr();
     void set_first(expr* node) {first = node;}
-    void add_call(expr* node) {calls.push_back(node);}
+    void add_call(call* node) {calls.push_back(node);}
     expr* get_first() {return first;}
-    std::vector<expr*>& get_calls() {return calls;}
+    std::vector<call*>& get_calls() {return calls;}
     void accept(ast_visitor*) override;
 };
 
-class call_hash:public expr {
+class call_hash:public call {
 private:
     std::string field;
 
 public:
     call_hash(const span& location, const std::string& name):
-        expr(location, expr_type::ast_callh),
+        call(location, expr_type::ast_callh),
         field(name) {}
     ~call_hash() = default;
     const std::string& get_field() const {return field;}
     void accept(ast_visitor*) override;
 };
 
-class call_vector:public expr {
+class call_vector:public call {
 private:
     std::vector<slice_vector*> calls;
 
 public:
     call_vector(const span& location):
-        expr(location, expr_type::ast_callv) {}
+        call(location, expr_type::ast_callv) {}
     ~call_vector();
     void add_slice(slice_vector* node) {calls.push_back(node);}
     std::vector<slice_vector*>& get_slices() {return calls;}
     void accept(ast_visitor*) override;
 };
 
-class call_function:public expr {
+class call_function:public call {
 private:
     std::vector<expr*> args;
 
 public:
     call_function(const span& location):
-        expr(location, expr_type::ast_callf) {}
+        call(location, expr_type::ast_callf) {}
     ~call_function();
     void add_argument(expr* node) {args.push_back(node);}
     std::vector<expr*>& get_argument() {return args;}

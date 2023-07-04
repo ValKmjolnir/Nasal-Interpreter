@@ -114,7 +114,7 @@ private:
     expr* multive_expr();
     unary_operator* unary();
     expr* scalar();
-    expr* call_scalar();
+    call* call_scalar();
     call_hash* callh();
     call_vector* callv();
     call_function* callf();
