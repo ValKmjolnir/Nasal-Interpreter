@@ -25,10 +25,10 @@ private:
     error& err;
     const std::string* file;
     std::stack<u32> in_iterloop;
-    std::unordered_map<f64,u32> num_table;
-    std::unordered_map<std::string,u32> str_table;
-    std::vector<f64> num_res;
-    std::vector<std::string> str_res;
+    std::unordered_map<f64,u32> const_number_map;
+    std::unordered_map<std::string,u32> const_string_map;
+    std::vector<f64> const_number_table;
+    std::vector<std::string> const_string_table;
     std::vector<opcode> code;
     std::list<std::vector<i32>> continue_ptr;
     std::list<std::vector<i32>> break_ptr;
@@ -49,7 +49,7 @@ private:
     void regist_num(const f64);
     void regist_str(const std::string&);
     void find_symbol(code_block*);
-    void add_sym(const std::string&);
+    void add_symbol(const std::string&);
     i32 local_find(const std::string&);
     i32 global_find(const std::string&);
     i32 upvalue_find(const std::string&);
@@ -65,8 +65,8 @@ private:
     void call_gen(call_expr*);
     void call_id(identifier*);
     void call_hash_gen(call_hash*);
-    void call_vec(call_vector*);
-    void call_func(call_function*);
+    void call_vector_gen(call_vector*);
+    void call_func_gen(call_function*);
     void mcall(expr*);
     void mcall_id(identifier*);
     void mcall_vec(call_vector*);
@@ -94,10 +94,12 @@ private:
     void ret_gen(return_expr*);
 
 public:
+    const std::vector<std::string>& strs() const {return const_string_table;}
+    const std::vector<f64>& nums() const {return const_number_table;}
+    const std::vector<opcode>& codes() const {return code;}
+
+public:
     codegen(error& e): fileindex(0), err(e), file(nullptr) {}
     const error& compile(parse&, linker&);
-    void print();
-    const std::vector<std::string>& strs() const {return str_res;}
-    const std::vector<f64>& nums() const {return num_res;}
-    const std::vector<opcode>& codes() const {return code;}
+    void print(std::ostream&);
 };
