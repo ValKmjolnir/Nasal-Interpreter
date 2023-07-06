@@ -2,8 +2,9 @@
 
 void vm::init(
     const std::vector<std::string>& strs,
-    const std::vector<f64>&    nums,
+    const std::vector<f64>& nums,
     const std::vector<opcode>& code,
+    const std::unordered_map<std::string, i32>& global,
     const std::vector<std::string>& filenames,
     const std::vector<std::string>& argv
 ) {
@@ -27,6 +28,13 @@ void vm::init(
 
     /* init gc */
     ngc.init(strs,argv);
+
+    /* init vm globals */
+    auto map_instance = ngc.alloc(vm_map);
+    stack[global.at("globals")] = map_instance;
+    for(const auto& i : global) {
+        map_instance.map().mapper[i.first] = stack+i.second;
+    }
 }
 
 void vm::valinfo(var& val) {
@@ -204,7 +212,12 @@ void vm::run(
     const bool detail
 ) {
     verbose=detail;
-    init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
+    init(gen.strs(),
+         gen.nums(),
+         gen.codes(),
+         gen.globals(),
+         linker.filelist(),
+         argv);
 #ifndef _MSC_VER
     const void* oprs[]={
         &&vmexit, &&intg,   &&intl,   &&loadg,

@@ -1,5 +1,6 @@
 # hexdump.nas by ValKmjolnir
 # 2021/8/13
+import.std.file;
 
 # init
 var hex=func(){
@@ -20,22 +21,7 @@ var hex=func(){
 
 # read file
 var s=func(){
-    var filename=[
-        "main.cpp",
-        "nasal_ast.h",
-        "nasal_builtin.h",
-        "nasal_codegen.h",
-        "nasal_dbg.h",
-        "nasal_err.h",
-        "nasal_gc.h",
-        "nasal_import.h",
-        "nasal_lexer.h",
-        "nasal_opt.h",
-        "nasal_parse.h",
-        "nasal_vm.h",
-        "nasal.ebnf",
-        "nasal.h"
-    ];
+    var filename = find_all_files_with_extension("./src","cpp","h");
     if(size(runtime.argv())!=0){
         var argv=runtime.argv();
         if(argv[0]=="-h" or argv[0]=="--h"){

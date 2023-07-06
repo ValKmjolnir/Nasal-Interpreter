@@ -334,14 +334,20 @@ var builtin_delete(var* local, gc& ngc) {
 
 var builtin_keys(var* local, gc& ngc) {
     var hash=local[1];
-    if (hash.type!=vm_hash) {
+    if (hash.type!=vm_hash && hash.type!=vm_map) {
         return nas_err("keys", "\"hash\" must be hash");
     }
     // avoid being sweeped
     var res=ngc.temp=ngc.alloc(vm_vec);
     auto& vec=res.vec().elems;
-    for(auto& iter:hash.hash().elems) {
-        vec.push_back(ngc.newstr(iter.first));
+    if (hash.type==vm_hash) {
+        for(const auto& iter : hash.hash().elems) {
+            vec.push_back(ngc.newstr(iter.first));
+        }
+    } else {
+        for(const auto& iter : hash.map().mapper) {
+            vec.push_back(ngc.newstr(iter.first));
+        }
     }
     ngc.temp=nil;
     return res;
@@ -372,6 +378,7 @@ var builtin_type(var* local, gc& ngc) {
         case vm_func: return ngc.newstr("func");     break;
         case vm_obj:  return ngc.newstr("obj");      break;
         case vm_co:   return ngc.newstr("coroutine");break;
+        case vm_map:  return ngc.newstr("mapper");   break;
     }
     return nil;
 }
