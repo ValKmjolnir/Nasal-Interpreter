@@ -25,8 +25,8 @@ private:
     error& err;
     const std::string* file;
     std::stack<u32> in_iterloop;
-    std::unordered_map<f64,u32> const_number_map;
-    std::unordered_map<std::string,u32> const_string_map;
+    std::unordered_map<f64, u32> const_number_map;
+    std::unordered_map<std::string, u32> const_string_map;
     std::vector<f64> const_number_table;
     std::vector<std::string> const_string_table;
     std::vector<opcode> code;
@@ -35,10 +35,10 @@ private:
 
     // symbol table
     // global : max STACK_DEPTH-1 values
-    std::unordered_map<std::string,i32> global;
+    std::unordered_map<std::string, i32> global;
     // local  : max 32768 upvalues 65536 values
     // but in fact local scope also has less than STACK_DEPTH value
-    std::list<std::unordered_map<std::string,i32>> local;
+    std::list<std::unordered_map<std::string, i32>> local;
 
     void check_id_exist(identifier*);
     
@@ -97,6 +97,7 @@ public:
     const std::vector<std::string>& strs() const {return const_string_table;}
     const std::vector<f64>& nums() const {return const_number_table;}
     const std::vector<opcode>& codes() const {return code;}
+    const std::unordered_map<std::string, i32>& globals() const {return global;}
 
 public:
     codegen(error& e): fileindex(0), err(e), file(nullptr) {}

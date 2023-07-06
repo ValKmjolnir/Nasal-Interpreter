@@ -153,6 +153,35 @@ void nas_co::clear() {
     status = coroutine_status::suspended;
 }
 
+var nas_map::get_val(const std::string& key) {
+    if (mapper.count(key)) {
+        return *mapper.at(key);
+    }
+    return var::none();
+}
+
+var* nas_map::get_mem(const std::string& key) {
+    if (mapper.count(key)) {
+        return mapper.at(key);
+    }
+    return nullptr;
+}
+
+std::ostream& operator<<(std::ostream& out, nas_map& mp) {
+    if (!mp.mapper.size() || mp.printed) {
+        out << (mp.mapper.size()? "{..}":"{}");
+        return out;
+    }
+    mp.printed = true;
+    usize iter = 0, size = mp.mapper.size();
+    out << "{";
+    for(auto& i : mp.mapper) {
+        out << i.first << ":" << *i.second << ",}"[(++iter)==size];
+    }
+    mp.printed = false;
+    return out;
+}
+
 nas_val::nas_val(u8 val_type) {
     mark = gc_status::collected;
     type = val_type;
@@ -165,6 +194,7 @@ nas_val::nas_val(u8 val_type) {
         case vm_upval: ptr.upval = new nas_upval; break;
         case vm_obj: ptr.obj = new nas_ghost; break;
         case vm_co: ptr.co = new nas_co; break;
+        case vm_map: ptr.map = new nas_map; break;
     }
 }
 
@@ -177,6 +207,7 @@ nas_val::~nas_val() {
         case vm_upval:delete ptr.upval;break;
         case vm_obj:  delete ptr.obj;  break;
         case vm_co:   delete ptr.co;   break;
+        case vm_map:  delete ptr.map;  break;
     }
     type=vm_nil;
 }
@@ -190,6 +221,7 @@ void nas_val::clear() {
         case vm_upval:ptr.upval->clear();     break;
         case vm_obj:  ptr.obj->clear();       break;
         case vm_co:   ptr.co->clear();        break;
+        case vm_map:  ptr.map->clear();       break;
     }
 }
 
@@ -220,6 +252,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_func: out << "func(..) {..}"; break;
         case vm_obj:  out << ref.obj();     break;
         case vm_co:   out << "<coroutine>"; break;
+        case vm_map:  out << ref.map();     break;
     }
     return out;
 }
@@ -300,6 +333,10 @@ nas_co& var::co() {
     return *val.gcobj->ptr.co;
 }
 
+nas_map& var::map() {
+    return *val.gcobj->ptr.map;
+}
+
 void gc::mark() {
     std::vector<var> bfs;
     mark_context(bfs);
@@ -345,6 +382,7 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
         case vm_func: mark_func(bfs_queue, value.func()); break;
         case vm_upval: mark_upval(bfs_queue, value.upval()); break;
         case vm_co: mark_co(bfs_queue, value.co()); break;
+        case vm_map: mark_map(bfs_queue, value.map()); break;
         default: break;
     }
 }
@@ -381,6 +419,12 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.upvalr);
     for(var* i = co.stack; i<=co.ctx.top; ++i) {
         bfs_queue.push_back(*i);
+    }
+}
+
+void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
+    for(const auto& i : mp.mapper) {
+        bfs_queue.push_back(*i.second);
     }
 }
 
@@ -469,7 +513,8 @@ void gc::info() {
         "function ",
         "upvalue  ",
         "object   ",
-        "coroutine"
+        "coroutine",
+        "mapper   "
     };
 
     usize indent = 0;
