@@ -1091,6 +1091,7 @@ const error& codegen::compile(parse& parse, linker& import) {
     fileindex = 0;
     file = import.filelist().data();
     in_iterloop.push(0);
+    add_symbol("globals");
     find_symbol(parse.tree()); // search symbols first
     gen(op_intg, global.size(), 0);
     block_gen(parse.tree()); // generate main block
