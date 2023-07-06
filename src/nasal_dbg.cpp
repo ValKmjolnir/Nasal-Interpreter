@@ -163,7 +163,12 @@ void dbg::run(
     const std::vector<std::string>& argv) {
     verbose=true;
     fsize=linker.filelist().size();
-    init(gen.strs(), gen.nums(), gen.codes(), linker.filelist(), argv);
+    init(gen.strs(),
+         gen.nums(),
+         gen.codes(),
+         gen.globals(),
+         linker.filelist(),
+         argv);
     u64 count[op_ret+1]={0};
     typedef void (dbg::*nafunc)();
     const nafunc oprs[]={

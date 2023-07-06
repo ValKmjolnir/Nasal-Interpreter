@@ -47,10 +47,11 @@ enum vm_type:u8 {
     vm_func,
     vm_upval,
     vm_obj,
-    vm_co
+    vm_co,
+    vm_map // for globals, arg
 };
 
-const u32 gc_type_size = vm_co-vm_str+1;
+const u32 gc_type_size = vm_map-vm_str+1;
 
 enum class coroutine_status:u32 {
     suspended,
@@ -70,6 +71,7 @@ struct nas_func;  // function(lambda)
 struct nas_upval; // upvalue
 struct nas_ghost; // objects
 struct nas_co;    // coroutine
+struct nas_map;   // mapper
 struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
@@ -127,6 +129,7 @@ public:
     nas_upval& upval();
     nas_ghost& obj();
     nas_co& co();
+    nas_map& map();
 };
 
 struct nas_vec {
@@ -295,6 +298,19 @@ struct nas_co {
     void clear();
 };
 
+struct nas_map {
+    bool printed = false;
+    std::unordered_map<std::string, var*> mapper;
+
+    nas_map() {}
+    void clear() {
+        mapper.clear();
+    }
+
+    var get_val(const std::string&);
+    var* get_mem(const std::string&);
+};
+
 struct nas_val {
     gc_status mark;
     u8 type; // value type
@@ -307,6 +323,7 @@ struct nas_val {
         nas_upval* upval;
         nas_ghost* obj;
         nas_co*    co;
+        nas_map*   map;
     } ptr;
 
     nas_val(u8);
@@ -316,6 +333,7 @@ struct nas_val {
 
 std::ostream& operator<<(std::ostream&, nas_vec&);
 std::ostream& operator<<(std::ostream&, nas_hash&);
+std::ostream& operator<<(std::ostream&, nas_map&);
 std::ostream& operator<<(std::ostream&, var&);
 
 const var zero = var::num(0);
@@ -348,7 +366,8 @@ struct gc {
         128, // vm_func
         256, // vm_upval
         16,  // vm_obj
-        16   // vm_co
+        16,  // vm_co
+        2,   // vm_map
     };
 
     /* values for analysis */
@@ -372,6 +391,7 @@ private:
     void mark_func(std::vector<var>&, nas_func&);
     void mark_upval(std::vector<var>&, nas_upval&);
     void mark_co(std::vector<var>&, nas_co&);
+    void mark_map(std::vector<var>&, nas_map&);
     void sweep();
 
 public:

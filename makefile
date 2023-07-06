@@ -100,6 +100,7 @@ test:nasal
 	-@ ./nasal -d test/exception.nas
 	@ ./nasal -t -d test/fib.nas
 	@ ./nasal -e test/filesystem.nas
+	@ ./nasal -t -d test/globals_test.nas
 	@ ./nasal -d test/hexdump.nas
 	@ ./nasal -e test/json.nas
 	@ ./nasal -e test/leetcode1319.nas
