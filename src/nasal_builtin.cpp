@@ -369,16 +369,16 @@ var builtin_find(var* local, gc& ngc) {
 
 var builtin_type(var* local, gc& ngc) {
     switch(local[1].type) {
-        case vm_none: return ngc.newstr("undefined");break;
-        case vm_nil:  return ngc.newstr("nil");      break;
-        case vm_num:  return ngc.newstr("num");      break;
-        case vm_str:  return ngc.newstr("str");      break;
-        case vm_vec:  return ngc.newstr("vec");      break;
-        case vm_hash: return ngc.newstr("hash");     break;
-        case vm_func: return ngc.newstr("func");     break;
-        case vm_obj:  return ngc.newstr("obj");      break;
-        case vm_co:   return ngc.newstr("coroutine");break;
-        case vm_map:  return ngc.newstr("mapper");   break;
+        case vm_none: return ngc.newstr("undefined");
+        case vm_nil: return ngc.newstr("nil");
+        case vm_num: return ngc.newstr("num");
+        case vm_str: return ngc.newstr("str");
+        case vm_vec: return ngc.newstr("vec");
+        case vm_hash: return ngc.newstr("hash");
+        case vm_func: return ngc.newstr("func");
+        case vm_obj: return ngc.newstr("obj");
+        case vm_co: return ngc.newstr("coroutine");
+        case vm_map: return ngc.newstr("namespace");
     }
     return nil;
 }
