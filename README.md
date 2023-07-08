@@ -71,7 +71,9 @@ __CAUTION__: If want to use the release zip/tar.gz file to build the interpreter
 
 Make sure your MinGW thread model is `posix thread model`, otherwise it may not have the thread library.
 
-> mingw32-make nasal.exe
+> mkdir build
+>
+> mingw32-make nasal.exe -j4
 
 ### __`Windows (Visual Studio)`__
 
@@ -79,15 +81,13 @@ This project gives a [__CMakelists.txt__](./CMakeLists.txt) for you to create pr
 
 ### __`Linux/macOS/Unix`__
 
-> make nasal
+> mkdir build
+>
+> make -j4
 
 You could choose which compiler you want to use:
 
 > make nasal CXX=...
-
-If you think `-O3` isn't that safe and stable, you could choose:
-
-> make stable-release
 
 ## __How to Use__
 

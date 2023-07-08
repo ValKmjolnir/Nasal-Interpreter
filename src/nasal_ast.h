@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 enum class expr_type:u32 {
-    ast_null=0,      // null node
+    ast_null = 0,    // null node
     ast_file_info,   // stores file info
     ast_block,       // code block 
     ast_nil,         // nil keyword
@@ -25,9 +25,9 @@ enum class expr_type:u32 {
     ast_callf,       // id()
     ast_subvec,      // id[index:index]
     ast_param,       // function parameter
-    ast_ternary,
-    ast_binary,
-    ast_unary,
+    ast_ternary,     // ternary operator
+    ast_binary,      // binary operator
+    ast_unary,       // unary operator
     ast_for,         // for keyword
     ast_forei,       // foreach or forindex loop
     ast_while,       // while
@@ -35,10 +35,10 @@ enum class expr_type:u32 {
     ast_cond,        // mark a sub-tree of conditional expression
     ast_if,          // if keyword
     ast_multi_id,    // multi identifiers sub-tree
-    ast_tuple,
+    ast_tuple,       // tuple, stores multiple scalars
     ast_def,         // definition
-    ast_assign,
-    ast_multi_assign,
+    ast_assign,      // assignment
+    ast_multi_assign,// multiple assignment
     ast_continue,    // continue keyword, only used in loop
     ast_break,       // break keyword, only used in loop
     ast_ret          // return keyword, only used in function block
