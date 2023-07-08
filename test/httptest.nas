@@ -314,7 +314,10 @@ while(1){
             http.send(client,respond.ok(io.readfile("./doc/pic/favicon.ico")));
         elsif(path=="/license")
             http.send(client,respond.ok(io.readfile("./LICENSE")));
-        elsif(path=="/doc/pic/nasal.png" or path=="/doc/pic/benchmark.png" or path=="/doc/pic/mandelbrot.png")
+        elsif(path=="/doc/pic/nasal.png" or
+            path=="/doc/pic/benchmark.png" or
+            path=="/doc/pic/mandelbrot.png" or
+            path=="/doc/pic/feigenbaum.png")
             http.send(client,respond.ok(io.readfile("."~path)));
         else{
             var filename=substr(path,1,size(path)-1);

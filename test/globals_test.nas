@@ -13,3 +13,12 @@ globals.test_func = func() {
 println();
 println(globals.test_func);
 globals.test_func();
+
+var f = func() {
+    println(arg);
+}
+
+f(1, 2, 3);
+
+println(arg);
+println(globals.arg);

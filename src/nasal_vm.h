@@ -643,6 +643,12 @@ inline void vm::o_callfv() {
         for(u32 i=psize;i<argc;++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
+    } else if (psize<argc) {
+        // load arguments to "arg", located at stack+1
+        stack[1] = ngc.alloc(vm_vec);
+        for(u32 i=psize;i<argc;++i) {
+            stack[1].vec().elems.push_back(local[i]);
+        }
     }
     // should reset stack top after allocating vector
     // because this may cause gc
@@ -905,6 +911,9 @@ inline void vm::o_ret() {
     ctx.top=local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
+
+    // reset "arg"
+    stack[1] = nil;
 
     if (up.type==vm_upval) { // synchronize upvalue
         auto& upval = up.upval();

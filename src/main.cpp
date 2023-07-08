@@ -135,7 +135,7 @@ void execute(
     }
 
     // run
-    auto start=clk::now();
+    auto start = clk::now();
     if (cmd&VM_DEBUG) {
         dbg(err).run(gen, ld, argv);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
@@ -144,7 +144,7 @@ void execute(
 
     // get running time
     if (cmd&VM_TIME) {
-        f64 tm=(clk::now()-start).count()*1.0/den;
+        f64 tm = (clk::now()-start).count()*1.0/den;
         std::clog << "process exited after " << tm << "s.\n\n";
     }
 }
