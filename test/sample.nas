@@ -245,6 +245,7 @@ var next_to_last = list1[-2];
 # concatenate vectors:
 #
 var joined_list = [1, 2, 3] ~ [4, 5, 6];
+print(joined_list, "\n");
 
 ###
 ### Now some fun examples:

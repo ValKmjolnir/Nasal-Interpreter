@@ -322,6 +322,19 @@ inline void vm::o_sub() {op_calc(-);}
 inline void vm::o_mul() {op_calc(*);}
 inline void vm::o_div() {op_calc(/);}
 inline void vm::o_lnk() {
+    if (ctx.top[-1].type==vm_vec && ctx.top[0].type==vm_vec) {
+        ngc.temp = ngc.alloc(vm_vec);
+        for(auto i : ctx.top[-1].vec().elems) {
+            ngc.temp.vec().elems.push_back(i);
+        }
+        for(auto i : ctx.top[0].vec().elems) {
+            ngc.temp.vec().elems.push_back(i);
+        }
+        ctx.top[-1] = ngc.temp;
+        ngc.temp = nil;
+        --ctx.top;
+        return;
+    }
     ctx.top[-1] = ngc.newstr(ctx.top[-1].tostr()+ctx.top[0].tostr());
     --ctx.top;
 }
