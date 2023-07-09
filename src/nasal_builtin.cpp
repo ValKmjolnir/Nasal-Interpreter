@@ -1210,12 +1210,6 @@ var builtin_millisec(var* local, gc& ngc) {
     return var::num(res);
 }
 
-var builtin_sysargv(var* local, gc& ngc) {
-    var res = ngc.alloc(vm_vec);
-    res.vec().elems = ngc.env_argv;
-    return res;
-}
-
 var builtin_gcextend(var* local, gc& ngc) {
     var type = local[1];
     if (type.type!=vm_str) {
@@ -1356,7 +1350,6 @@ nasal_builtin_table builtin[] = {
     {"__costatus", builtin_costatus},
     {"__corun", builtin_corun},
     {"__millisec", builtin_millisec},
-    {"__sysargv", builtin_sysargv},
     {"__gcextd", builtin_gcextend},
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},

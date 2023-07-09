@@ -622,9 +622,12 @@ inline void vm::o_callfv() {
         return;
     }
     auto& func = local[-1].func();
+
+    // swap funcr with local[-1]
     var tmp = local[-1];
     local[-1] = ctx.funcr;
-    ctx.funcr=tmp;
+    ctx.funcr = tmp;
+
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (ctx.top-argc+func.lsize+3>=ctx.canary) {
         die("stack overflow");
@@ -640,14 +643,14 @@ inline void vm::o_callfv() {
     var dynamic = nil;
     if (func.dpara>=0) { // load dynamic arguments
         dynamic = ngc.alloc(vm_vec);
-        for(u32 i=psize;i<argc;++i) {
+        for(u32 i = psize; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     } else if (psize<argc) {
         // load arguments to "arg", located at stack+1
-        stack[1] = ngc.alloc(vm_vec);
-        for(u32 i=psize;i<argc;++i) {
-            stack[1].vec().elems.push_back(local[i]);
+        dynamic = ngc.alloc(vm_vec);
+        for(u32 i = psize; i<argc; ++i) {
+            dynamic.vec().elems.push_back(local[i]);
         }
     }
     // should reset stack top after allocating vector
@@ -658,22 +661,21 @@ inline void vm::o_callfv() {
     ctx.top = local+func.lsize;
 
     u32 min_size = (std::min)(psize, argc); // avoid error in MSVC
-    for(u32 i=min_size;i>=1;--i) { // load arguments
+    for(u32 i = min_size; i>=1; --i) { // load arguments
         local[i] = local[i-1];
     }
     local[0] = func.local[0];// load "me"
+
     // load local scope & default arguments
-    for(u32 i=min_size+1;i<func.lsize;++i) {
+    for(u32 i = min_size+1; i<func.lsize; ++i) {
         local[i] = func.local[i];
     }
-    if (func.dpara>=0) {
-        local[psize+1] = dynamic;
-    }
+    local[func.dpara>=0? psize+1:func.lsize-1] = dynamic;
 
     ctx.top[0] = ctx.upvalr;
     (++ctx.top)[0] = var::addr(ctx.localr);
     (++ctx.top)[0] = var::ret(ctx.pc);
-    ctx.pc=func.entry-1;
+    ctx.pc = func.entry-1;
     ctx.localr = local;
     ctx.upvalr = nil;
 }
@@ -911,9 +913,6 @@ inline void vm::o_ret() {
     ctx.top=local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
-
-    // reset "arg"
-    stack[1] = nil;
 
     if (up.type==vm_upval) { // synchronize upvalue
         auto& upval = up.upval();

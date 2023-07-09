@@ -1,16 +1,16 @@
 # This file is written by Andy Ross, and is protected by GPLv2.0
 
 # A no-op function used below to get this file to run.  Ignore and read on...
-dummyFunc = func { 1 }
+var dummyFunc = func { 1 }
 
 #
 # Literal numbers can be decimal, exponential, or hex constants.  All
 # numbers are stored internally as IEEE double-precision values.
 #
-n1 = 3;
-n2 = 3.14;
-n3 = 6.023e23;
-n3 = 0x123456;
+var n1 = 3;
+var n2 = 3.14;
+var n3 = 6.023e23;
+var n3 = 0x123456;
 
 #
 # Two identical string literals with different quotes.  Double quotes
@@ -19,14 +19,14 @@ n3 = 0x123456;
 # whitespace like newlines).  Double quotes handle the following
 # C-like escapes: \n \r \t \xnn \"
 #
-s1 = 'Andy\'s "computer" has a C:\righteous\newstuff directory.';
-s2 = "Andy's \"computer\" has a C:\\righteous\\newstuff directory.";
+var s1 = 'Andy\'s "computer" has a C:\righteous\newstuff directory.';
+var s2 = "Andy's \"computer\" has a C:\\righteous\\newstuff directory.";
 
 #
 # Literal lists use square brackets with a comma-separated expression
 # list.
 #
-list1 = ["a", "b", 1, 2];
+var list1 = ["a", "b", 1, 2];
 
 #
 # Literal hashes (or objects -- same thing) use curlies and colons to
@@ -35,8 +35,8 @@ list1 = ["a", "b", 1, 2];
 # to use symbols, lookup tables of other types will be more
 # comfortable with literals.
 #
-hash1 = { name : "Andy", job : "Hacker" };
-EnglishEspanol = { "one" : "uno", "two": "dos", "blue" : "azul" };
+var hash1 = { name : "Andy", job : "Hacker" };
+var EnglishEspanol = { "one" : "uno", "two": "dos", "blue" : "azul" };
 
 #
 # Both vectors and hashes use square brackets for the lookup operation:
@@ -50,7 +50,7 @@ hash1["name"] == "Andy";
 # (anonymous) function argument to the local "log_message" variable.
 # There is no function declaration syntax in Nasal.
 #
-log_message = func {
+var log_message = func {
     print(arg[0]);
 }
 
@@ -58,10 +58,10 @@ log_message = func {
 # You can also pass named arguments to a function, thus saving the
 # typing and performance costs of extracting them from the arg array.
 #
-sqrt = dummyFunc;
-dist = func(x1, y1, x2, y2) {
-    dx = x2-x1;
-    dy = y2-y1;
+var sqrt = dummyFunc;
+var dist = func(x1, y1, x2, y2) {
+    var dx = x2-x1;
+    var dy = y2-y1;
     return sqrt(dx*dx + dy*dy);
 }
 dist(0,0,1,1); # == sqrt(2)
@@ -71,14 +71,14 @@ dist(0,0,1,1); # == sqrt(2)
 # default value must be a scalar (number, string, function, nil) and
 # not a mutable composite object (list, hash).
 #
-read = func(bytes, flags=0) { }
+var read = func(bytes, flags=0) { }
 
 #
 # Any extra arguments after the named list are placed in the "arg"
 # vector as above.  You can rename this to something other than "arg"
 # by specifying a final argument name with an ellipsis:
 #
-listify = func(elements...) { return elements; }
+var listify = func(elements...) { return elements; }
 listify(1, 2, 3, 4); # returns a list: [1, 2, 3, 4]
 
 #
@@ -87,7 +87,7 @@ listify(1, 2, 3, 4); # returns a list: [1, 2, 3, 4]
 # good practice in general, although it is not required.  Note that
 # this is not a "declaration", just a qualifier on the "=" operator.
 #
-innerFunc = func {
+var innerFunc = func {
     for(var dist=0; dist<100; dist += 1) {
         # Does not interfere with the "dist" symbol defined above
     }
@@ -99,26 +99,26 @@ innerFunc = func {
 # what the ?: does in C.  The last semicolon in a code block is
 # optional, to make this prettier.
 #
-abs = func(n) { if(n<0) { -n } else { n } }
+var abs = func(n) { if(n<0) { -n } else { n } }
 
 #
 # But for those who don't like typing, the ternary operator works like
 # you expect:
 #
-abs = func(n) { n < 0 ? -n : n }
+var abs = func(n) { n < 0 ? -n : n }
 
 #
 # Nasal supports a "nil" value for use as a null pointer equivalent.
 # It can be tested for equality, matching only other nils.
 #
-listNode = { data : ["what", "ever"], next : nil };
+var listNode = { data : ["what", "ever"], next : nil };
 
 #
 # Nasal's binary boolean operators are "and" and "or", unlike C.
 # unary not is still "!" however.  They short-circuit like you expect
 #
-toggle = 0;
-a = nil;
+var toggle = 0;
+var a = nil;
 if(a and a.field == 42) {
     toggle = !toggle; # doesn't crash when a is nil
 }
@@ -129,24 +129,24 @@ if(a and a.field == 42) {
 # takes a local variable name as its first argument and a vector as
 # its second.
 #
-doSomething = dummyFunc;
+var doSomething = dummyFunc;
 
-stillGoing = 0;
+var stillGoing = 0;
 while(stillGoing) { doSomething(); }
 
-for(i=0; i < 3; i = i+1) {
+for(var i=0; i < 3; i = i+1) {
     elem = list1[i];
     doSomething(elem);
 }
 
-foreach(elem; list1) { doSomething(elem) }  # Shorthand for above
+foreach(var elem; list1) { doSomething(elem) }  # Shorthand for above
 
 #
 # There is also a "forindex", which is like foreach except that it
 # assigns the index of each element, instead of the value, to the loop
 # variable.
 #
-forindex(i; list1) { doSomething(list1[i]); }
+forindex(var i; list1) { doSomething(list1[i]); }
 
 #
 # Define a class object with one method, one field and one "new"
@@ -155,10 +155,10 @@ forindex(i; list1) { doSomething(list1[i]); }
 # appropriately.  Member functions can get their local object (the
 # equivalent of the "this" pointer in C++) as the "me" variable.
 #
-Class1 = {};
+var Class1 = {};
 
 Class1.new = func {
-    obj = { parents : [Class1],
+    var obj = { parents : [Class1],
             count : 0 };
     return obj;
 }
@@ -168,7 +168,7 @@ Class1.getcount = func {
     return me.count;
 }
 
-c = Class1.new();
+var c = Class1.new();
 print(c.getcount(), "\n"); # prints 1
 print(c.getcount(), "\n"); # prints 2
 print(c.getcount(), "\n"); # prints 3
@@ -177,20 +177,20 @@ print(c.getcount(), "\n"); # prints 3
 # But *set* operations always go to the local object.  You can't
 # corrupt a parent class via OOP operations on its instances (but you
 # *can* get to it via hand-inspection of the parents arrays).
-c2 = Class1.new();
-c2.getcount() = func { 12345 }; # custom "derived" function!
+var c2 = Class1.new();
+c2.getcount = func { return 12345 }; # custom "derived" function!
 
 print(c2.getcount(), "\n"); # prints 12345
-print(c1.getcount(), "\n"); # prints 4, Class1.getcount is unchanged
+print(c.getcount(), "\n"); # prints 4, Class1.getcount is unchanged
 
 #
 # This creates an identical class using alternative syntax.
 #
-Class2 = {
+var Class2 = {
     new : func {
-        obj = {};
-	obj.parents = [Class2];
-	obj.count = 0;
+        var obj = {};
+        obj.parents = [Class2];
+        obj.count = 0;
         return obj;
     },
     getcount : func {
@@ -206,7 +206,7 @@ Class2 = {
 # C (although note that there is no nul termination -- get the length
 # with size()):
 #
-string = "abcdefghijklmnopqrstuvwxyz";
+var string = "abcdefghijklmnopqrstuvwxyz";
 var ascii_sum = 0;
 for(var i=0; i<size(string); i+=1) { ascii_sum += string[i]; }
 
@@ -222,7 +222,7 @@ if(`©` != 169) { print("Unicode violation bug!\n"); }
 # can make a mutable string either with the append operator or the
 # bits.buf() function.
 #
-ascii_lc = func(string) {
+var ascii_lc = func(string) {
     var mutable = string ~ "";
     for(var i=0; i<size(mutable); i+=1) {
         if(mutable[i] >= `A` and mutable[i] <= `Z`) {
@@ -237,14 +237,14 @@ print(ascii_lc("ABCDEFG"), "\n"); # prints "abcdefg"
 # Advanced vectors: The lookup index can be negative, where -1
 # indicates the last element in the vector (or string).
 #
-next_to_last = list1[-2];
+var next_to_last = list1[-2];
 
 #
 # Remember that strings look syntactically like vectors of bytes; so
 # conversely, the "~" concatenation operator works equally well to
 # concatenate vectors:
 #
-joined_list = [1, 2, 3] ~ [4, 5, 6];
+var joined_list = [1, 2, 3] ~ [4, 5, 6];
 
 ###
 ### Now some fun examples:
@@ -254,9 +254,9 @@ joined_list = [1, 2, 3] ~ [4, 5, 6];
 # Make a "inverted index" hash out of a vector that returns the index
 # for each element.
 #
-invert = func(vec) {
-    hash = {};
-    for(i=0; i<size(vec); i = i+1) {
+var invert = func(vec) {
+    var hash = {};
+    for(var i=0; i<size(vec); i = i+1) {
         hash[vec[i]] = i;
     }
     return hash;
@@ -266,16 +266,16 @@ invert = func(vec) {
 # Use the return value of the above function to do an "index of"
 # lookup on a vector
 #
-vecfind = func(vec, elem) { return invert(vec)[elem]; }
+var vecfind = func(vec, elem) { return invert(vec)[elem]; }
 
 #
 # Joins its arguments with the empty string and returns a scalar.
 # Note use of "~" operator to do string concatenation (Nasal's only
 # funny syntax).
 #
-join = func { 
-    s = "";
-    foreach(elem; arg) { s = s ~ elem; }
+var join = func { 
+    var s = "";
+    foreach(var elem; arg) { s = s ~ elem; }
     return s;
 }
 
@@ -283,14 +283,16 @@ join = func {
 # Labeled break/continue syntax puts the label in as an extra first
 # argument to the for/while/foreach.
 #
-doneWithInnerLoopEarly = dummyFunc;
-completelyDone = dummyFunc;
-for(OUTER; i=0; i<100; i = i+1) {
-    for(j=0; j<100; j = j+1) {
+var doneWithInnerLoopEarly = dummyFunc;
+var completelyDone = dummyFunc;
+# not supported now
+for(#OUTER;
+    var i=0; i<100; i = i+1) {
+    for(var j=0; j<100; j = j+1) {
         if(doneWithInnerLoopEarly()) {
             break;
         } elsif(completelyDone()) {
-            break OUTER;
+            break #OUTER;
         }
     }
 }
@@ -303,10 +305,10 @@ for(OUTER; i=0; i<100; i = i+1) {
 ## also makes no attempt to escape special characters in strings, which
 ## can break re-parsing in strange (and possibly insecure!) ways.
 ##
-dump = func(o) {
-    result = "";
+var dump = func(o) {
+    var result = "";
     if(typeof(o) == "scalar") {
-        n = num(o);
+        var n = num(o);
         if(n == nil) { result = result ~ '"' ~ o ~ '"'; }
         else { result = result ~ o; }
     } elsif(typeof(o) == "vector") {
@@ -317,14 +319,14 @@ dump = func(o) {
         }
         result = result ~ " ]";
     } elsif(typeof(o) == "hash") {
-        ks = keys(o);
+        var ks = keys(o);
         result = result ~ "{ ";
         if(size(o) > 0) {
-            k = ks[0];
+            var k = ks[0];
             result = result ~ k ~ ":" ~ dump(o[k]);
         }
         for(i=1; i<size(o); i=i+1) {
-            k = ks[i];
+            var k = ks[i];
             result = result ~ ", " ~ k ~ " : " ~ dump(o[k]);
         }
         result = result ~ " }";
@@ -345,7 +347,7 @@ dump = func(o) {
 # normal function definition.  Oh well, every language has a syntactic
 # quirk or two...)
 #
-a = (func(n){ n + 1 })(232);  # "a" now equals 233
+var a = (func(n){ n + 1 })(232);  # "a" now equals 233
 
 #
 # Functional programming B.  All expressions have a value, the last
@@ -354,7 +356,7 @@ a = (func(n){ n + 1 })(232);  # "a" now equals 233
 # (assignment, duh) have side effects.  e.g. The "if" expression works
 # both for code flow and as the ?: expression in C/C++.
 #
-factorial = func(n) { if(n == 0) { 1 }
+var factorial = func(n) { if(n == 0) { 1 }
                       else       { n * factorial(n-1) } }
 print(factorial(10), "\n");
 
@@ -364,8 +366,8 @@ print(factorial(10), "\n");
 # local variables in the outer scope even after their creator has
 # returned.
 #
-getcounter = func { count = 0; return func { count = count + 1 } }
-mycounter = getcounter();
+var getcounter = func { var count = 0; return func { count = count + 1 } }
+var mycounter = getcounter();
 print(mycounter(), "\n"); # prints 1
 print(mycounter(), "\n"); # prints 2
 print(mycounter(), "\n"); # prints 3

@@ -16,9 +16,12 @@ globals.test_func();
 
 var f = func() {
     println(arg);
+    func() {println(arg);}(114, 514, 1919, 810);
+    println(arg);
 }
 
 f(1, 2, 3);
 
+# command line arguments
 println(arg);
 println(globals.arg);
