@@ -211,6 +211,16 @@ void codegen::func_gen(function* node) {
     // search symbols first, must use after loading parameters
     // or the location of symbols will change and cause fatal error
     find_symbol(block);
+    // add special varibale "arg", which is used to store overflowed args
+    // but if dynamic parameter is declared, this variable will be useless
+    // for example:
+    //     var f = func(a) {print(arg)}
+    //     f(1, 2, 3);
+    // then the arg is [2, 3], because 1 is accepted by "a"
+    // so in fact "f" is the same as:
+    //     var f = func(a, arg...) {return(arg)}
+    add_symbol("arg");
+
     in_iterloop.push(0);
     block_gen(block);
     in_iterloop.pop();
@@ -1094,13 +1104,7 @@ const error& codegen::compile(parse& parse, linker& import) {
 
     // add special symbol globals, which is a hash stores all global variables
     add_symbol("globals");
-    // add special symbol arg here, which is used to store function arguments
-    // for example:
-    //     var f = func(a) {print(arg)}
-    //     f(1, 2, 3);
-    // then the arg is [2, 3], because 1 is accepted by "a"
-    // so in fact "f" is the same as:
-    //     var f = func(a, arg...) {return(arg)}
+    // add special symbol arg here, which is used to store command line args
     add_symbol("arg");
 
     find_symbol(parse.tree()); // search symbols first
