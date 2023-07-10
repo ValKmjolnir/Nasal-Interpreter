@@ -762,7 +762,7 @@ If get this, Congratulations!
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
 And flightgear's nasal interpreter also has the same rule.
-So do not use varibale without using `var` to declare it.
+So do not use variable without using `var` to declare it.
 
 In Andy's interpreter:
 
