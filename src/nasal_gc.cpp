@@ -337,6 +337,23 @@ nas_map& var::map() {
     return *val.gcobj->ptr.map;
 }
 
+void gc::do_mark_sweep() {
+    using clk = std::chrono::high_resolution_clock;
+    auto begin = clk::now();
+    mark();
+    auto mark_end = clk::now();
+    sweep();
+    auto sweep_end = clk::now();
+    
+    auto total_time = (sweep_end-begin).count();
+    auto mark_time = (mark_end-begin).count();
+    auto sweep_time = (sweep_end-mark_end).count();
+    worktime += total_time;
+    max_time = max_time<total_time? total_time:max_time;
+    max_mark_time = max_mark_time<mark_time? mark_time:max_mark_time;
+    max_sweep_time = max_sweep_time<sweep_time? sweep_time:max_sweep_time;
+}
+
 void gc::mark() {
     std::vector<var> bfs;
     mark_context(bfs);
@@ -389,13 +406,17 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
 
 void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
     for(auto& i : vec.elems) {
-        bfs_queue.push_back(i);
+        if (i.type>vm_num) {
+            bfs_queue.push_back(i);
+        }
     }
 }
 
 void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
     for(auto& i : hash.elems) {
-        bfs_queue.push_back(i.second);
+        if (i.second.type>vm_num) {
+            bfs_queue.push_back(i.second);
+        }
     }
 }
 
@@ -502,24 +523,39 @@ void gc::clear() {
     env_argv.clear();
 }
 
-void gc::info() {
+void gc::info() const {
+
     using std::left;
     using std::setw;
     using std::setfill;
+
+    const char* used_table_name[] = {
+        "object type", "gc count", "alloc count", "memory size",
+        "detail", "time spend", "gc time", "avg time", "max gc",
+        "max mark", "max sweep", nullptr
+    };
     const char* name[] = {
-        "string   ",
-        "vector   ",
-        "hashmap  ",
-        "function ",
-        "upvalue  ",
-        "object   ",
+        "string",
+        "vector",
+        "hashmap",
+        "function",
+        "upvalue",
+        "object",
         "coroutine",
-        "mapper   "
+        "mapper",
+        nullptr
     };
 
-    usize indent = 0;
-    for(u8 i = 0; i<gc_type_size; ++i) {
-        usize len = 0;
+    usize indent = 0, len = 0;
+    for(usize i = 0; used_table_name[i]; ++i) {
+        len = std::string(used_table_name[i]).length();
+        indent = indent<len? len:indent;
+    }
+    for(usize i = 0; name[i]; ++i) {
+        len = std::string(name[i]).length();
+        indent = indent<len? len:indent;
+    }
+    for(u32 i = 0; i<gc_type_size; ++i) {
         len = std::to_string(gcnt[i]).length();
         indent = indent<len? len:indent;
         len = std::to_string(acnt[i]).length();
@@ -527,51 +563,60 @@ void gc::info() {
         len = std::to_string(size[i]).length();
         indent = indent<len? len:indent;
     }
+    auto indent_string = std::string("--");
+    for(usize i = 0; i<indent; ++i) {
+        indent_string += "-";
+    }
+    indent_string = indent_string + "+" +
+        indent_string + "+" + indent_string + "+" + indent_string;
+
+    std::clog << "\n" << indent_string << "\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "object type";
+    std::clog << " | " << left << setw(indent) << setfill(' ') << "gc count";
+    std::clog << " | " << left << setw(indent) << setfill(' ') << "alloc count";
+    std::clog << " | " << left << setw(indent) << setfill(' ') << "memory size";
+    std::clog << "\n" << indent_string << "\n";
 
     double total = 0;
-    std::clog << "\ngc info (gc count|alloc count|memory size)\n";
     for(u8 i = 0; i<gc_type_size; ++i) {
         if (!gcnt[i] && !acnt[i] && !size[i]) {
             continue;
         }
         total += gcnt[i];
-        std::clog << " " << name[i];
+        std::clog << " " << left << setw(indent) << setfill(' ') << name[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << size[i];
         std::clog << "\n";
     }
+    std::clog << indent_string << "\n";
 
     auto den = std::chrono::high_resolution_clock::duration::period::den;
-    std::clog << " gc time   | " << worktime*1.0/den*1000 << " ms\n";
-    if (total) {
-        std::clog << " avg time  | " << worktime*1.0/den*1000/total << " ms\n";
-        std::clog << " max gc    | " << max_time*1.0/den*1000 << " ms\n";
-        std::clog << " max mark  | " << max_mark_time*1.0/den*1000 << " ms\n";
-        std::clog << " max sweep | " << max_sweep_time*1.0/den*1000 << " ms\n";
-    }
-    std::clog<<"\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "detail";
+    std::clog << " | " << left << setw(indent) << setfill(' ') << "time spend";
+    std::clog << " | " << left << setw(indent) << setfill('x') << "x";
+    std::clog << " | " << left << setw(indent) << setfill('x') << "x";
+    std::clog << "\n" << indent_string << "\n";
+
+    std::clog << " " << left << setw(indent) << setfill(' ') << "gc time";
+    std::clog << " | " << worktime*1.0/den*1000 << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "avg time";
+    std::clog << " | " << worktime*1.0/den*1000/total << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "max gc";
+    std::clog << " | " << max_time*1.0/den*1000 << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "max mark";
+    std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
+    std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
+    std::clog << indent_string << "\n";
 }
 
 var gc::alloc(u8 type) {
-    using clk = std::chrono::high_resolution_clock;
     const u8 index = type-vm_str;
     ++acnt[index];
     if (unused[index].empty()) {
         ++gcnt[index];
-        auto begin = clk::now();
-        mark();
-        auto mark_end = clk::now();
-        sweep();
-        auto sweep_end = clk::now();
-        
-        auto total_time = (sweep_end-begin).count();
-        auto mark_time = (mark_end-begin).count();
-        auto sweep_time = (sweep_end-mark_end).count();
-        worktime += total_time;
-        max_time = max_time<total_time? total_time:max_time;
-        max_mark_time = max_mark_time<mark_time? mark_time:max_mark_time;
-        max_sweep_time = max_sweep_time<sweep_time? sweep_time:max_sweep_time;
+        do_mark_sweep();
     }
     if (unused[index].empty()) {
         extend(type);

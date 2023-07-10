@@ -145,7 +145,7 @@ void execute(
     // get running time
     if (cmd&VM_TIME) {
         f64 tm = (clk::now()-start).count()*1.0/den;
-        std::clog << "process exited after " << tm << "s.\n\n";
+        std::clog << " process exited after " << tm << "s.\n\n";
     }
 }
 
