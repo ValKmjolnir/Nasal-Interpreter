@@ -22,6 +22,16 @@ var f = func() {
 
 f(1, 2, 3);
 
+var a = func(arg, b) {
+    println(arg, " ", b);
+}
+var b = func(a) {
+    println(a, " ", arg);
+}
+
+a(1, 2, 3, 4); # 1 2
+b(1, 2, 3, 4); # 1 [2 3 4]
+
 # command line arguments
 println(arg);
 println(globals.arg);
