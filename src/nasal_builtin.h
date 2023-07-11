@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
+#define F_OK 0 // fuck msc
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
 #pragma warning (disable:4244)
 #pragma warning (disable:4267)
