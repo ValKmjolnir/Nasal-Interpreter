@@ -45,12 +45,12 @@ var var_sort=func(){
             j-=1;
         }
         vec[i]=tmp;
-        quick_sort_core(vec,left,i-1,cmp);
-        quick_sort_core(vec,i+1,right,cmp);
+        quick_sort_core(vec,left,i-1);
+        quick_sort_core(vec,i+1,right);
         return nil;
     }
     return func(vec){
-        quick_sort_core(vec,0,size(vec)-1,cmp);
+        quick_sort_core(vec,0,size(vec)-1);
         return nil;
     }
 }();

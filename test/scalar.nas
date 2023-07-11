@@ -229,3 +229,5 @@ for(var a=0;a<16;a+=1) {
         println("temp^=0x"~h[a]~" -> 0x",h[temp^=a]," temp&=0x"~h[a]~" -> 0x",h[temp&=a]," temp|=0x"~h[a]~" -> 0x",h[temp|=a]);
     }
 }
+
+print([0, 1, 2]~[3, 4, 5], "\n");

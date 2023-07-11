@@ -8,26 +8,28 @@ void vm::init(
     const std::vector<std::string>& filenames,
     const std::vector<std::string>& argv
 ) {
-    cnum=nums.data();
-    cstr=strs.data();
-    bytecode=code.data();
-    files=filenames.data();
+    cnum = nums.data();
+    cstr = strs.data();
+    bytecode = code.data();
+    files = filenames.data();
 
     /* set canary and program counter */
-    ctx.pc=0;
-    ctx.localr=ctx.memr=nullptr;
-    ctx.funcr=ctx.upvalr=nil;
-    ctx.canary=stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top=stack;
-    ctx.stack=stack;
+    ctx.pc = 0;
+    ctx.localr = nullptr;
+    ctx.memr = nullptr;
+    ctx.funcr = nil;
+    ctx.upvalr = nil;
+    ctx.canary = stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
+    ctx.top = stack;
+    ctx.stack = stack;
 
     /* clear main stack */
-    for(u32 i=0;i<STACK_DEPTH;++i) {
-        stack[i]=nil;
+    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+        stack[i] = nil;
     }
 
     /* init gc */
-    ngc.init(strs,argv);
+    ngc.init(strs, argv);
 
     /* init vm globals */
     auto map_instance = ngc.alloc(vm_map);
@@ -35,10 +37,15 @@ void vm::init(
     for(const auto& i : global) {
         map_instance.map().mapper[i.first] = stack+i.second;
     }
+
+    /* init vm arg */
+    auto arg_instance = ngc.alloc(vm_vec);
+    stack[global.at("arg")] = arg_instance;
+    arg_instance.vec().elems = ngc.env_argv;
 }
 
 void vm::valinfo(var& val) {
-    const nas_val* p=val.val.gcobj;
+    const nas_val* p = val.val.gcobj;
     switch(val.type) {
         case vm_none: std::clog<<"| null |";break;
         case vm_ret:  std::clog<<"| pc   | 0x"<<std::hex
@@ -49,7 +56,8 @@ void vm::valinfo(var& val) {
         case vm_nil:  std::clog<<"| nil  |";break;
         case vm_num:  std::clog<<"| num  | "<<val.num();break;
         case vm_str:  std::clog<<"| str  | <0x"<<std::hex<<(u64)p
-                               <<"> "<<rawstr(val.str(),16)<<std::dec;break;
+                               <<"> "<<rawstr(val.str(),16)
+                               <<std::dec;break;
         case vm_func: std::clog<<"| func | <0x"<<std::hex<<(u64)p
                                <<"> entry:0x"<<val.func().entry
                                <<std::dec;break;

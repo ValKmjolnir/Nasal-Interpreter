@@ -1,17 +1,17 @@
 #include "nasal_import.h"
 
-linker::linker(error& e): show_path(false), lib_loaded(false), err(e) {
-    char sep=is_windows()? ';':':';
-    std::string PATH=getenv("PATH");
-    usize last=0;
-    usize pos=PATH.find(sep, 0);
+linker::linker(error& e):
+    show_path(false), lib_loaded(false), err(e) {
+    char sep = is_windows()? ';':':';
+    std::string PATH = getenv("PATH");
+    usize last = 0, pos = PATH.find(sep, 0);
     while(pos!=std::string::npos) {
-        std::string dirpath=PATH.substr(last, pos-last);
+        std::string dirpath = PATH.substr(last, pos-last);
         if (dirpath.length()) {
             envpath.push_back(dirpath);
         }
-        last=pos+1;
-        pos=PATH.find(sep, last);
+        last = pos+1;
+        pos = PATH.find(sep, last);
     }
     if (last!=PATH.length()) {
         envpath.push_back(PATH.substr(last));
@@ -132,7 +132,7 @@ bool linker::exist(const std::string& file) {
 
 void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
     // add children of add_root to the back of root
-    for(auto& i:old_tree_root->get_expressions()) {
+    for(auto& i : old_tree_root->get_expressions()) {
         new_tree_root->add_expression(i);
     }
     // clean old root

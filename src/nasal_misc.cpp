@@ -85,14 +85,14 @@ bool is_superh() {
 }
 
 f64 hex2f(const char* str) {
-    f64 ret=0;
+    f64 ret = 0;
     for(; *str; ++str) {
         if ('0'<=*str && *str<='9') {
-            ret=ret*16+(*str-'0');
+            ret = ret*16+(*str-'0');
         } else if ('a'<=*str && *str<='f') {
-            ret=ret*16+(*str-'a'+10);
+            ret = ret*16+(*str-'a'+10);
         } else if ('A'<=*str && *str<='F') {
-            ret=ret*16+(*str-'A'+10);
+            ret = ret*16+(*str-'A'+10);
         } else {
             return nan("");
         }
@@ -101,9 +101,9 @@ f64 hex2f(const char* str) {
 }
 
 f64 oct2f(const char* str) {
-    f64 ret=0;
+    f64 ret = 0;
     while('0'<=*str && *str<'8') {
-        ret=ret*8+(*str++-'0');
+        ret = ret*8+(*str++-'0');
     }
     if (*str) {
         return nan("");
@@ -118,9 +118,9 @@ f64 oct2f(const char* str) {
 // but this also makes 0.1+0.2==0.3,
 // not another result that you may get in other languages.
 f64 dec2f(const char* str) {
-    f64 ret=0,negative=1,num_pow=0;
+    f64 ret = 0, negative = 1, num_pow = 0;
     while('0'<=*str && *str<='9') {
-        ret=ret*10+(*str++-'0');
+        ret = ret*10+(*str++-'0');
     }
     if (!*str) {
         return ret;
@@ -129,10 +129,10 @@ f64 dec2f(const char* str) {
         if (!*++str) {
             return nan("");
         }
-        num_pow=0.1;
+        num_pow = 0.1;
         while('0'<=*str && *str<='9') {
-            ret+=num_pow*(*str++-'0');
-            num_pow*=0.1;
+            ret += num_pow*(*str++-'0');
+            num_pow *= 0.1;
         }
         if (!*str) {
             return ret;
@@ -145,14 +145,14 @@ f64 dec2f(const char* str) {
         return nan("");
     }
     if (*str=='-' || *str=='+') {
-        negative=(*str++=='-'? -1:1);
+        negative = (*str++=='-'? -1:1);
     }
     if (!*str) {
         return nan("");
     }
-    num_pow=0;
+    num_pow = 0;
     while('0'<=*str && *str<='9') {
-        num_pow=num_pow*10+(*str++-'0');
+        num_pow = num_pow*10+(*str++-'0');
     }
     if (*str) {
         return nan("");
@@ -161,27 +161,27 @@ f64 dec2f(const char* str) {
 }
 
 f64 str2num(const char* str) {
-    bool negative=false;
-    f64 res=0;
+    bool negative = false;
+    f64 res = 0;
     if (*str=='-' || *str=='+') {
-        negative=(*str++=='-');
+        negative = (*str++=='-');
     }
     if (!*str) {
         return nan("");
     }
     if (str[0]=='0' && str[1]=='x') {
-        res=hex2f(str+2);
+        res = hex2f(str+2);
     } else if (str[0]=='0' && str[1]=='o') {
-        res=oct2f(str+2);
+        res = oct2f(str+2);
     } else {
-        res=dec2f(str);
+        res = dec2f(str);
     }
-    return negative?-res:res;
+    return negative? -res:res;
 }
 
 i32 utf8_hdchk(const char head) {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
-    const u8 c=(u8)head;
+    const u8 c = (u8)head;
     if ((c>>5)==0x06) { // 110x xxxx (10xx xxxx)^1
         return 1;
     }
@@ -195,36 +195,36 @@ i32 utf8_hdchk(const char head) {
 }
 
 std::string chrhex(const char c) {
-    const char hextbl[]="0123456789abcdef";
-    return {hextbl[(c&0xf0)>>4],hextbl[c&0x0f]};
+    const char hextbl[] = "0123456789abcdef";
+    return {hextbl[(c&0xf0)>>4], hextbl[c&0x0f]};
 }
 
 std::string rawstr(const std::string& str, const usize maxlen) {
     std::string ret("");
-    for(auto i:str) {
+    for(auto i : str) {
         // windows doesn't output unicode normally, so we output the hex
         if (is_windows() && i<=0) {
-            ret+="\\x"+chrhex(i);
+            ret += "\\x"+chrhex(i);
             continue;
         }
         switch(i) {
-            case '\0':  ret+="\\0"; break;
-            case '\a':  ret+="\\a"; break;
-            case '\b':  ret+="\\b"; break;
-            case '\t':  ret+="\\t"; break;
-            case '\n':  ret+="\\n"; break;
-            case '\v':  ret+="\\v"; break;
-            case '\f':  ret+="\\f"; break;
-            case '\r':  ret+="\\r"; break;
-            case '\033':ret+="\\e"; break;
-            case '\"':  ret+="\\\"";break;
-            case '\'':  ret+="\\\'";break;
-            case '\\':  ret+="\\\\";break;
-            default:    ret+=i;     break;
+            case '\0':  ret += "\\0";  break;
+            case '\a':  ret += "\\a";  break;
+            case '\b':  ret += "\\b";  break;
+            case '\t':  ret += "\\t";  break;
+            case '\n':  ret += "\\n";  break;
+            case '\v':  ret += "\\v";  break;
+            case '\f':  ret += "\\f";  break;
+            case '\r':  ret += "\\r";  break;
+            case '\033':ret += "\\e";  break;
+            case '\"':  ret += "\\\""; break;
+            case '\'':  ret += "\\\'"; break;
+            case '\\':  ret += "\\\\"; break;
+            default:    ret += i;      break;
         }
     }
     if (maxlen && ret.length()>maxlen) {
-        ret=ret.substr(0,maxlen)+"...";
+        ret = ret.substr(0,maxlen)+"...";
     }
     return ret;
 }

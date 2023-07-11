@@ -383,6 +383,7 @@ struct gc {
 
 private:
     /* gc functions */
+    void do_mark_sweep();
     void mark();
     void mark_context(std::vector<var>&);
     void mark_var(std::vector<var>&, var&);
@@ -398,7 +399,7 @@ public:
     void extend(u8);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
-    void info();
+    void info() const;
     var alloc(const u8);
     void ctxchg(nas_co&);
     void ctxreserve();
