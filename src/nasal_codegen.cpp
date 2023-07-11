@@ -219,7 +219,12 @@ void codegen::func_gen(function* node) {
     // then the arg is [2, 3], because 1 is accepted by "a"
     // so in fact "f" is the same as:
     //     var f = func(a, arg...) {return(arg)}
-    add_symbol("arg");
+    auto arg = std::string("arg");
+    // this is used to avoid confliction with defined parameter
+    while(local_find(arg)>=0) {
+        arg = "0" + arg;
+    }
+    add_symbol(arg);
 
     in_iterloop.push(0);
     block_gen(block);
