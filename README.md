@@ -761,6 +761,8 @@ If get this, Congratulations!
 <details><summary>Must use `var` to define variables</summary> 
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
+And flightgear's nasal interpreter also has the same rule.
+So do not use variable without using `var` to declare it.
 
 In Andy's interpreter:
 
@@ -790,32 +792,6 @@ code: undefined symbol "i"
   | 
 2 |     print(i)
   |           ^ undefined symbol "i"
-```
-
-</details>
-
-<details><summary>Default dynamic arguments not supported</summary>
-
-In this interpreter,
-function doesn't put dynamic args into vector `arg` by default.
-So if you use `arg` without definition,
-you'll get an error of `undefined symbol`.
-
-```javascript
-var f=func(){
-    println(arg)
-}
-f(1,2,3);
-```
-
-Compilation result:
-
-```javascript
-code: undefined symbol "arg"
- --> test.nas:2:15
-  | 
-2 |     println(arg)
-  |               ^ undefined symbol "arg"
 ```
 
 </details>

@@ -735,6 +735,7 @@ dylib.dlclose(dlhandle.lib);
 <details><summary>必须用 var 定义变量</summary>
 
 这个解释器使用了更加严格的语法检查来保证你可以更轻松地debug。这是非常有必要的严格，否则debug会非常痛苦。
+同样的，flightgear 内置的 nasal 解释器也采取了类似的措施，所以使用变量前务必用 `var` 先进行声明。
 
 在Andy的解释器中:
 
@@ -760,29 +761,6 @@ code: undefined symbol "i"
 2 |     print(i)
   |           ^ undefined symbol "i"
 ```
-</details>
-
-<details><summary>默认不定长参数</summary>
-
-这个解释器在运行时，函数不会将超出参数表的那部分不定长参数放到默认的`arg`中。所以你如果不定义`arg`就使用它，那你只会得到`undefined symbol`。
-
-```javascript
-var f=func(){
-    println(arg)
-}
-f(1,2,3);
-```
-
-编译结果:
-
-```javascript
-code: undefined symbol "arg"
- --> test.nas:2:15
-  | 
-2 |     println(arg)
-  |               ^ undefined symbol "arg"
-```
-
 </details>
 
 ## __堆栈追踪信息__
