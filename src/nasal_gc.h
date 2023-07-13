@@ -48,7 +48,7 @@ enum vm_type:u8 {
     vm_upval,
     vm_obj,
     vm_co,
-    vm_map // for globals, arg
+    vm_map // for globals and namespaces
 };
 
 const u32 gc_type_size = vm_map-vm_str+1;

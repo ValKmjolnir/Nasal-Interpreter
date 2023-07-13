@@ -373,7 +373,9 @@ void gc::mark_context(std::vector<var>& bfs_queue) {
 
     // scan now running context, this context maybe related to coroutine or main
     for(var* i = rctx->stack; i<=rctx->top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
     bfs_queue.push_back(rctx->funcr);
     bfs_queue.push_back(rctx->upvalr);
@@ -385,7 +387,9 @@ void gc::mark_context(std::vector<var>& bfs_queue) {
 
     // coroutine is running, so scan main process stack from mctx
     for(var* i = mctx.stack; i<=mctx.top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
     bfs_queue.push_back(mctx.funcr);
     bfs_queue.push_back(mctx.upvalr);
@@ -422,7 +426,9 @@ void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
 
 void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
     for(auto& i : function.local) {
-        bfs_queue.push_back(i);
+        if (i.type>vm_num) {
+            bfs_queue.push_back(i);
+        }
     }
     for(auto& i : function.upval) {
         bfs_queue.push_back(i);
@@ -431,7 +437,9 @@ void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
 
 void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
     for(auto& i : upval.elems) {
-        bfs_queue.push_back(i);
+        if (i.type>vm_num) {
+            bfs_queue.push_back(i);
+        }
     }
 }
 
@@ -439,13 +447,17 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
     for(var* i = co.stack; i<=co.ctx.top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
 }
 
 void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
     for(const auto& i : mp.mapper) {
-        bfs_queue.push_back(*i.second);
+        if (i.second->type>vm_num) {
+            bfs_queue.push_back(*i.second);
+        }
     }
 }
 
@@ -542,7 +554,7 @@ void gc::info() const {
         "upvalue",
         "object",
         "coroutine",
-        "mapper",
+        "namespace",
         nullptr
     };
 
