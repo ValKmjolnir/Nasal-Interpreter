@@ -1,4 +1,5 @@
 ﻿#include "nasal_builtin.h"
+#include <chrono>
 
 var builtin_print(var* local, gc& ngc) {
     for(auto& i : local[1].vec().elems) {
@@ -1234,6 +1235,24 @@ var builtin_gcextend(var* local, gc& ngc) {
     return nil;
 }
 
+var builtin_gcinfo(var* local, gc& ngc) {
+    auto den = std::chrono::high_resolution_clock::duration::period::den;
+    var res = ngc.alloc(vm_hash);
+
+    double total = 0;
+    for(u32 i = 0; i<gc_type_size; ++i) {
+        total += ngc.gcnt[i];
+    }
+    // using ms
+    auto& map = res.hash().elems;
+    map["total"] = var::num(ngc.worktime*1.0/den*1000);
+    map["average"] = var::num(ngc.worktime*1.0/den*1000/total);
+    map["max_gc"] = var::num(ngc.max_time*1.0/den*1000);
+    map["max_mark"] = var::num(ngc.max_mark_time*1.0/den*1000);
+    map["max_sweep"] = var::num(ngc.max_sweep_time*1.0/den*1000);
+    return res;
+}
+
 var builtin_logtime(var* local, gc& ngc) {
     time_t t = time(nullptr);
     tm* tm_t = localtime(&t);
@@ -1346,11 +1365,12 @@ nasal_builtin_table builtin[] = {
     {"__md5", builtin_md5},
     {"__cocreate", builtin_cocreate},
     {"__coresume", builtin_coresume},
-    {"__coyield", builtin_coyield },
+    {"__coyield", builtin_coyield},
     {"__costatus", builtin_costatus},
     {"__corun", builtin_corun},
     {"__millisec", builtin_millisec},
     {"__gcextd", builtin_gcextend},
+    {"__gcinfo", builtin_gcinfo},
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
     {nullptr, nullptr}

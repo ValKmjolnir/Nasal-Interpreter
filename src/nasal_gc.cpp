@@ -357,7 +357,40 @@ void gc::do_mark_sweep() {
 void gc::mark() {
     std::vector<var> bfs;
     mark_context(bfs);
+    if (memory.size()>1048576 && bfs.size()>4) {
+        usize size = bfs.size();
+        std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
+        std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
+        std::thread t2(&gc::concurrent_mark, this, std::ref(bfs), size/2, size/4*3);
+        std::thread t3(&gc::concurrent_mark, this, std::ref(bfs), size/4*3, size);
+        t0.join();
+        t1.join();
+        t2.join();
+        t3.join();
+        return;
+    }
     
+    while(!bfs.empty()) {
+        var value = bfs.back();
+        bfs.pop_back();
+        if (value.type<=vm_num ||
+            value.val.gcobj->mark!=gc_status::uncollected) {
+            continue;
+        }
+        mark_var(bfs, value);
+    }
+}
+
+void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
+    std::vector<var> bfs;
+    for(auto i = begin; i<end; ++i) {
+        var value = vec[i];
+        if (value.type<=vm_num ||
+            value.val.gcobj->mark!=gc_status::uncollected) {
+            continue;
+        }
+        mark_var(bfs, value);
+    }
     while(!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
@@ -579,6 +612,8 @@ void gc::info() const {
     for(usize i = 0; i<indent; ++i) {
         indent_string += "-";
     }
+    auto last_line = indent_string + "+" +
+        indent_string + "-" + indent_string + "-" + indent_string;
     indent_string = indent_string + "+" +
         indent_string + "+" + indent_string + "+" + indent_string;
 
@@ -620,7 +655,7 @@ void gc::info() const {
     std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
     std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
     std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
-    std::clog << indent_string << "\n";
+    std::clog << last_line << "\n";
 }
 
 var gc::alloc(u8 type) {

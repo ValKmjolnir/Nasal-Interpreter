@@ -126,6 +126,7 @@ var builtin_costatus(var*, gc&);
 var builtin_corun(var*, gc&);
 var builtin_millisec(var*, gc&);
 var builtin_gcextend(var*, gc&);
+var builtin_gcinfo(var*, gc&);
 var builtin_logtime(var*, gc&);
 var builtin_ghosttype(var*, gc&);
 

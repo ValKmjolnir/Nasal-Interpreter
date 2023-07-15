@@ -39,7 +39,7 @@ NASAL_OBJECT=\
 
 # for test
 nasal: $(NASAL_OBJECT) | build
-	$(CXX) $(NASAL_OBJECT) -O3 -o nasal -ldl
+	$(CXX) $(NASAL_OBJECT) -O3 -o nasal -ldl -lpthread
 
 nasal.exe: $(NASAL_OBJECT) | build
 	$(CXX) $(NASAL_OBJECT) -O3 -o nasal.exe
@@ -57,7 +57,7 @@ build/nasal_err.o: src/nasal.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_err.cpp -fno-exceptions -fPIC -o build/nasal_err.o -I .
 
 build/nasal_gc.o: src/nasal.h src/nasal_gc.h src/nasal_gc.cpp | build
-	$(CXX) -std=$(STD) -c -O3 src/nasal_gc.cpp -fno-exceptions -fPIC -o build/nasal_gc.o -I . 
+	$(CXX) -std=$(STD) -c -O3 src/nasal_gc.cpp -fno-exceptions -fPIC -o build/nasal_gc.o -I .
 
 build/nasal_import.o: \
 	src/nasal.h\

@@ -385,6 +385,7 @@ private:
     /* gc functions */
     void do_mark_sweep();
     void mark();
+    void concurrent_mark(std::vector<var>&, usize, usize);
     void mark_context(std::vector<var>&);
     void mark_var(std::vector<var>&, var&);
     void mark_vec(std::vector<var>&, nas_vec&);
