@@ -480,7 +480,8 @@ var runtime = {
     # command line arguments
     argv: func() {return globals.arg;},
     gc: {
-        extend: func(type) {return __gcextd;}
+        extend: func(type) {return __gcextd;},
+        info: func() {return __gcinfo;}
     }
 };
 

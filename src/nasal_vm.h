@@ -923,7 +923,7 @@ inline void vm::o_ret() {
     ctx.localr = ctx.top[-2].addr();
     ctx.upvalr = ctx.top[-3];
 
-    ctx.top=local-1;
+    ctx.top = local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
 
