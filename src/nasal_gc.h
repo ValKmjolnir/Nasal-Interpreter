@@ -101,7 +101,6 @@ public:
     bool operator!=(const var& nr) const {
         return type!=nr.type || val.gcobj!=nr.val.gcobj;
     }
-    friend std::ostream& operator<<(std::ostream&, var&);
 
     // number and string can be translated to each other
     f64 tonum();
@@ -267,12 +266,6 @@ public:
     void clear();
 
 public:
-    friend std::ostream& operator<<(std::ostream& out, nas_ghost& ghost) {
-        out << "<object " << ghost.ghost_type_table->get_ghost_name(ghost.type);
-        out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
-        return out;
-    }
-
     const std::string& get_ghost_name() const {
         return ghost_type_table->get_ghost_name(type);
     }
@@ -334,6 +327,8 @@ struct nas_val {
 std::ostream& operator<<(std::ostream&, nas_vec&);
 std::ostream& operator<<(std::ostream&, nas_hash&);
 std::ostream& operator<<(std::ostream&, nas_map&);
+std::ostream& operator<<(std::ostream&, const nas_ghost&);
+std::ostream& operator<<(std::ostream&, const nas_co&);
 std::ostream& operator<<(std::ostream&, var&);
 
 const var zero = var::num(0);
@@ -386,7 +381,7 @@ private:
     void do_mark_sweep();
     void mark();
     void concurrent_mark(std::vector<var>&, usize, usize);
-    void mark_context(std::vector<var>&);
+    void mark_context_root(std::vector<var>&);
     void mark_var(std::vector<var>&, var&);
     void mark_vec(std::vector<var>&, nas_vec&);
     void mark_hash(std::vector<var>&, nas_hash&);

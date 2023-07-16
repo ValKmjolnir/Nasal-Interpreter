@@ -56,7 +56,8 @@ std::ostream& white(std::ostream& s) {
 
 std::ostream& reset(std::ostream& s) {
 #ifdef _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), reset_ter_color.scr.wAttributes);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),
+        reset_ter_color.scr.wAttributes);
 #else
     s << "\033[0m";
 #endif

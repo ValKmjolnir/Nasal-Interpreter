@@ -137,6 +137,12 @@ void nas_ghost::clear() {
     ptr = nullptr;
 }
 
+std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
+    out << "<object " << ghost.get_ghost_name();
+    out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
+    return out;
+}
+
 void nas_co::clear() {
     for(u32 i = 0; i<STACK_DEPTH; ++i) {
         stack[i] = var::nil();
@@ -151,6 +157,11 @@ void nas_co::clear() {
     ctx.stack = stack;
 
     status = coroutine_status::suspended;
+}
+
+std::ostream& operator<<(std::ostream& out, const nas_co& co) {
+    out << "<coroutine at 0x" << std::hex << u64(&co) << std::dec << ">";
+    return out;
 }
 
 var nas_map::get_val(const std::string& key) {
@@ -251,7 +262,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_hash: out << ref.hash();    break;
         case vm_func: out << "func(..) {..}"; break;
         case vm_obj:  out << ref.obj();     break;
-        case vm_co:   out << "<coroutine>"; break;
+        case vm_co:   out << ref.co();      break;
         case vm_map:  out << ref.map();     break;
     }
     return out;
@@ -356,8 +367,8 @@ void gc::do_mark_sweep() {
 
 void gc::mark() {
     std::vector<var> bfs;
-    mark_context(bfs);
-    if (memory.size()>1048576 && bfs.size()>4) {
+    mark_context_root(bfs);
+    if (memory.size()>8192 && bfs.size()>4) {
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
@@ -402,7 +413,7 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
     }
 }
 
-void gc::mark_context(std::vector<var>& bfs_queue) {
+void gc::mark_context_root(std::vector<var>& bfs_queue) {
 
     // scan now running context, this context maybe related to coroutine or main
     for(var* i = rctx->stack; i<=rctx->top; ++i) {
