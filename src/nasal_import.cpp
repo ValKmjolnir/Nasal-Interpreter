@@ -1,7 +1,6 @@
 #include "nasal_import.h"
 
-linker::linker(error& e):
-    show_path(false), lib_loaded(false), err(e) {
+linker::linker(): show_path(false), lib_loaded(false) {
     char sep = is_windows()? ';':':';
     std::string PATH = getenv("PATH");
     usize last = 0, pos = PATH.find(sep, 0);
@@ -54,16 +53,19 @@ std::string linker::find_file(
             find_file("std/lib.nas", location);
     }
     if (!show_path) {
-        err.load(location.file);
-        err.err("link", "cannot find file <" + filename + ">");
+        err.err("link",
+            "in <" + location.file + ">: " +
+            "cannot find file <" + filename + ">\n");
+        err.err("link", "use <-d> to get detail search path");
         return "";
     }
     std::string paths = "";
     for(const auto& i : fpath) {
-        paths += "  " + i + "\n";
+        paths += "  -> " + i + "\n";
     }
-    err.load(location.file);
-    err.err("link", "cannot find file <" + filename + "> in these paths:\n" + paths);
+    err.err("link",
+        "in <" + location.file + ">: " +
+        "cannot find file <" + filename + "> in these paths:\n" + paths);
     return "";
 }
 
@@ -140,8 +142,8 @@ void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
 }
 
 code_block* linker::import_regular_file(call_expr* node) {
-    lexer lex(err);
-    parse par(err);
+    lexer lex;
+    parse par;
     // get filename
     auto filename = get_path(node);
     // clear this node
@@ -160,8 +162,12 @@ code_block* linker::import_regular_file(call_expr* node) {
     }
     
     // start importing...
-    lex.scan(filename);
-    par.compile(lex);
+    if (lex.scan(filename).geterr()) {
+        err.err("link", "error occurred when analysing <" + filename + ">");
+    }
+    if (par.compile(lex).geterr())  {
+        err.err("link", "error occurred when analysing <" + filename + ">");
+    }
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'
@@ -169,8 +175,8 @@ code_block* linker::import_regular_file(call_expr* node) {
 }
 
 code_block* linker::import_nasal_lib() {
-    lexer lex(err);
-    parse par(err);
+    lexer lex;
+    parse par;
     auto filename = find_file("lib.nas", {0, 0, 0, 0, files[0]});
     if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
@@ -182,8 +188,12 @@ code_block* linker::import_nasal_lib() {
     }
     
     // start importing...
-    lex.scan(filename);
-    par.compile(lex);
+    if (lex.scan(filename).geterr()) {
+        err.err("link", "error occurred when analysing library <" + filename + ">");
+    }
+    if (par.compile(lex).geterr())  {
+        err.err("link", "error occurred when analysing library <" + filename + ">");
+    }
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'

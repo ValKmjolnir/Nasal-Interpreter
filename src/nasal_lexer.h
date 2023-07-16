@@ -90,12 +90,12 @@ struct token {
 
 class lexer {
 private:
-    u32    line;
-    u32    column;
-    usize  ptr;
+    u32 line;
+    u32 column;
+    usize ptr;
     std::string filename;
     std::string res;
-    error& err;
+    error err;
     std::vector<token> toks;
     const std::unordered_map<std::string, tok> typetbl {
         {"true"    ,tok::tktrue  },
@@ -175,9 +175,7 @@ private:
     token dots();
     token calc_opr();
 public:
-    lexer(error& e):
-        line(1), column(0),
-        ptr(0), filename(""), res(""), err(e) {}
+    lexer(): line(1), column(0), ptr(0), filename(""), res("") {}
     const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };

@@ -21,7 +21,7 @@ class linker{
 private:
     bool show_path;
     bool lib_loaded;
-    error& err;
+    error err;
     std::vector<std::string> files;
     std::vector<std::string> envpath;
 
@@ -34,7 +34,7 @@ private:
     code_block* import_nasal_lib();
     code_block* load(code_block*, u16);
 public:
-    linker(error&);
+    linker();
     const error& link(parse&, const std::string&, bool);
     const std::vector<std::string>& filelist() const {return files;}
 };

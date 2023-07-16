@@ -60,11 +60,11 @@ private:
     }
 
 private:
-    bool  next;
+    bool next;
     usize fsize;
-    u16   bk_fidx;
-    u32   bk_line;
-    error& src;
+    u16 bk_fidx;
+    u32 bk_line;
+    error src;
 
     std::vector<std::string> parse(const std::string&);
     u16 file_index(const std::string&) const;
@@ -76,10 +76,7 @@ private:
     void interact();
 
 public:
-    dbg(error& err):
-        next(false), fsize(0),
-        bk_fidx(0), bk_line(0),
-        src(err) {}
+    dbg(): next(false), fsize(0), bk_fidx(0), bk_line(0) {}
     void run(
         const codegen&,
         const linker&,
