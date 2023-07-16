@@ -13,6 +13,7 @@
 #include <list>
 #include <stack>
 #include <unordered_map>
+#include <unordered_set>
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
@@ -36,6 +37,7 @@ private:
     // symbol table
     // global : max STACK_DEPTH-1 values
     std::unordered_map<std::string, i32> global;
+    std::unordered_map<std::string, std::unordered_set<std::string>> experimental_namespace;
     // local  : max 32768 upvalues 65536 values
     // but in fact local scope also has less than STACK_DEPTH value
     std::list<std::unordered_map<std::string, i32>> local;
@@ -94,10 +96,13 @@ private:
     void ret_gen(return_expr*);
 
 public:
-    const std::vector<std::string>& strs() const {return const_string_table;}
-    const std::vector<f64>& nums() const {return const_number_table;}
-    const std::vector<opcode>& codes() const {return code;}
-    const std::unordered_map<std::string, i32>& globals() const {return global;}
+    const auto& strs() const {return const_string_table;}
+    const auto& nums() const {return const_number_table;}
+    const auto& codes() const {return code;}
+    const auto& globals() const {return global;}
+    const auto& get_experimental_namespace() const {
+        return experimental_namespace;
+    }
 
 public:
     codegen(error& e): fileindex(0), err(e), file(nullptr) {}

@@ -47,7 +47,13 @@ void codegen::regist_str(const std::string& str) {
 void codegen::find_symbol(code_block* node) {
     auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
     for(const auto& i : finder->do_find(node)) {
-        add_symbol(i);
+        if (!experimental_namespace.count(i.file)) {
+            experimental_namespace[i.file] = {};
+        }
+        if (local.empty() && !experimental_namespace.at(i.file).count(i.name)) {
+            experimental_namespace.at(i.file).insert(i.name);
+        }
+        add_symbol(i.name);
     }
 }
 
