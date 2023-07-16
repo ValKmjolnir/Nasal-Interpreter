@@ -18,7 +18,7 @@ private:
     u32 in_loop; // count loop block
     const token* toks;
     code_block* root;
-    error& err;
+    error err;
 
 private:
     const std::unordered_map<tok, std::string> tokname {
@@ -146,11 +146,7 @@ public:
     }
 
 public:
-    parse(error& e):
-        ptr(0), in_func(0), in_loop(0),
-        toks(nullptr),
-        root(nullptr),
-        err(e) {}
+    parse(): ptr(0), in_func(0), in_loop(0), toks(nullptr), root(nullptr) {}
     ~parse() {
         if (root) {
             delete root;

@@ -60,4 +60,5 @@ public:
             std::exit(1);
         }
     }
+    u32 geterr() const {return cnt;}
 };

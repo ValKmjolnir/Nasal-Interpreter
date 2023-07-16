@@ -232,9 +232,9 @@ void codegen::func_gen(function* node) {
     }
     add_symbol(arg);
 
-    in_iterloop.push(0);
+    in_loop_level.push_back(0);
     block_gen(block);
-    in_iterloop.pop();
+    in_loop_level.pop_back();
     code[lsize].num = local.back().size();
     if (local.back().size()>=STACK_DEPTH) {
         die("too many local variants: " +
@@ -775,9 +775,9 @@ void codegen::forei_gen(forei_expr* node) {
             gen(op_meq, 1, node->get_iterator()->get_line());
         }
     }
-    ++in_iterloop.top();
+    ++in_loop_level.back();
     block_gen(node->get_code_block());
-    --in_iterloop.top();
+    --in_loop_level.back();
     gen(op_jmp, ptr, node->get_line());
     code[ptr].num=code.size();
     load_continue_break(code.size()-1, code.size());
@@ -1100,7 +1100,7 @@ void codegen::block_gen(code_block* node) {
 }
 
 void codegen::ret_gen(return_expr* node) {
-    for(u32 i = 0; i<in_iterloop.top(); ++i) {
+    for(u32 i = 0; i<in_loop_level.back(); ++i) {
         gen(op_pop, 0, node->get_line());
         gen(op_pop, 0, node->get_line());
     }
@@ -1110,8 +1110,8 @@ void codegen::ret_gen(return_expr* node) {
 
 const error& codegen::compile(parse& parse, linker& import) {
     fileindex = 0;
-    file = import.filelist().data();
-    in_iterloop.push(0);
+    file = import.filelist();
+    in_loop_level.push_back(0);
 
     // add special symbol globals, which is a hash stores all global variables
     add_symbol("globals");
@@ -1124,7 +1124,6 @@ const error& codegen::compile(parse& parse, linker& import) {
     gen(op_exit, 0, 0);
 
     // size out of bound check
-    err.load(file[0]); // load main execute file
     if (const_number_table.size()>0xffffff) {
         err.err("code",
             "too many constant numbers: " +

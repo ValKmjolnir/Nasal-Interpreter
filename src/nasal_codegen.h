@@ -23,9 +23,9 @@
 class codegen {
 private:
     u16 fileindex;
-    error& err;
-    const std::string* file;
-    std::stack<u32> in_iterloop;
+    error err;
+    std::vector<std::string> file;
+    std::vector<u32> in_loop_level;
     std::unordered_map<f64, u32> const_number_map;
     std::unordered_map<std::string, u32> const_string_map;
     std::vector<f64> const_number_table;
@@ -105,7 +105,7 @@ public:
     }
 
 public:
-    codegen(error& e): fileindex(0), err(e), file(nullptr) {}
+    codegen(): fileindex(0) {}
     const error& compile(parse&, linker&);
     void print(std::ostream&);
 };

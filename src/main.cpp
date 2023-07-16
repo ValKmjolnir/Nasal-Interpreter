@@ -105,11 +105,10 @@ void execute(
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
-    error   err;
-    lexer   lex(err);
-    parse   parse(err);
-    linker  ld(err);
-    codegen gen(err);
+    lexer   lex;
+    parse   parse;
+    linker  ld;
+    codegen gen;
     vm      ctx;
 
     // lexer scans file to get tokens
@@ -151,7 +150,7 @@ void execute(
     // run
     auto start = clk::now();
     if (cmd&VM_DEBUG) {
-        dbg(err).run(gen, ld, argv);
+        dbg().run(gen, ld, argv);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         ctx.run(gen, ld, argv, cmd&VM_DETAIL);
     }
