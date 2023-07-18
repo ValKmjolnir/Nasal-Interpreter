@@ -1,6 +1,8 @@
 #include "nasal_import.h"
 
-linker::linker(): show_path(false), lib_loaded(false) {
+linker::linker():
+    show_path(false), lib_loaded(false),
+    this_file(""), lib_path("") {
     char sep = is_windows()? ';':':';
     std::string PATH = getenv("PATH");
     usize last = 0, pos = PATH.find(sep, 0);
@@ -181,6 +183,7 @@ code_block* linker::import_nasal_lib() {
     if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }
+    lib_path = filename;
 
     // avoid infinite loading loop
     if (exist(filename)) {
@@ -228,6 +231,7 @@ const error& linker::link(
     parse& parse, const std::string& self, bool spath = false) {
     show_path = spath;
     // initializing
+    this_file = self;
     files = {self};
     // scan root and import files
     // then generate a new ast and return to import_ast
@@ -235,5 +239,10 @@ const error& linker::link(
     auto new_tree_root = load(parse.tree(), 0);
     auto old_tree_root = parse.swap(new_tree_root);
     delete old_tree_root;
+    if (show_path) {
+        std::clog << orange << "Linker Info" << reset << ":\n";
+        std::clog << "  compiled file: <" << this_file << ">\n";
+        std::clog << "  library path : <" << lib_path << ">\n\n";
+    }
     return err;
 }

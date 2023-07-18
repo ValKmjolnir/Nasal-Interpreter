@@ -34,7 +34,7 @@
 
 enum vm_type:u8 {
     /* none-gc object */
-    vm_none=0,
+    vm_none = 0,
     vm_cnt,
     vm_addr,
     vm_ret,
@@ -52,18 +52,6 @@ enum vm_type:u8 {
 };
 
 const u32 gc_type_size = vm_map-vm_str+1;
-
-enum class coroutine_status:u32 {
-    suspended,
-    running,
-    dead
-};
-
-enum class gc_status:u8 {
-    uncollected=0,   
-    collected,
-    found
-};
 
 struct nas_vec;   // vector
 struct nas_hash;  // hashmap(dict)
@@ -283,9 +271,15 @@ struct context {
 };
 
 struct nas_co {
+    enum class status:u32 {
+        suspended,
+        running,
+        dead
+    };
+
     var stack[STACK_DEPTH];
     context ctx;
-    coroutine_status status;
+    status status;
 
     nas_co() {clear();}
     void clear();
@@ -305,6 +299,12 @@ struct nas_map {
 };
 
 struct nas_val {
+    enum class gc_status:u8 {
+        uncollected = 0,   
+        collected,
+        found
+    };
+
     gc_status mark;
     u8 type; // value type
     u8 unmut; // used to mark if a string is unmutable
