@@ -1133,7 +1133,7 @@ var builtin_cocreate(var* local, gc& ngc) {
     cort.ctx.top[0] = var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
 
     cort.ctx.funcr = func; // make sure the coroutine function can use correct upvalues
-    cort.status = coroutine_status::suspended;
+    cort.status = nas_co::status::suspended;
     
     return co;
 }
@@ -1148,7 +1148,7 @@ var builtin_coresume(var* local, gc& ngc) {
         return nil;
     }
     // cannot resume a dead coroutine
-    if (co.co().status==coroutine_status::dead) {
+    if (co.co().status==nas_co::status::dead) {
         return nil;
     }
 
@@ -1193,9 +1193,9 @@ var builtin_costatus(var* local, gc& ngc) {
         return ngc.newstr("error");
     }
     switch(co.co().status) {
-        case coroutine_status::suspended: return ngc.newstr("suspended");
-        case coroutine_status::running:   return ngc.newstr("running");
-        case coroutine_status::dead:      return ngc.newstr("dead");
+        case nas_co::status::suspended: return ngc.newstr("suspended");
+        case nas_co::status::running:   return ngc.newstr("running");
+        case nas_co::status::dead:      return ngc.newstr("dead");
     }
     return nil;
 }

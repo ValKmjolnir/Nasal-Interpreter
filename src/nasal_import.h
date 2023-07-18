@@ -21,6 +21,8 @@ class linker{
 private:
     bool show_path;
     bool lib_loaded;
+    std::string this_file;
+    std::string lib_path;
     error err;
     std::vector<std::string> files;
     std::vector<std::string> envpath;

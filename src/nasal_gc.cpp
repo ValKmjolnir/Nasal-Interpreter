@@ -156,7 +156,7 @@ void nas_co::clear() {
     ctx.upvalr = var::nil();
     ctx.stack = stack;
 
-    status = coroutine_status::suspended;
+    status = status::suspended;
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_co& co) {
@@ -385,7 +385,7 @@ void gc::mark() {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_num ||
-            value.val.gcobj->mark!=gc_status::uncollected) {
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
             continue;
         }
         mark_var(bfs, value);
@@ -397,7 +397,7 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
     for(auto i = begin; i<end; ++i) {
         var value = vec[i];
         if (value.type<=vm_num ||
-            value.val.gcobj->mark!=gc_status::uncollected) {
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
             continue;
         }
         mark_var(bfs, value);
@@ -406,7 +406,7 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_num ||
-            value.val.gcobj->mark!=gc_status::uncollected) {
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
             continue;
         }
         mark_var(bfs, value);
@@ -440,7 +440,7 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
 }
 
 void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
-    value.val.gcobj->mark = gc_status::found;
+    value.val.gcobj->mark = nas_val::gc_status::found;
     switch(value.type) {
         case vm_vec: mark_vec(bfs_queue, value.vec()); break;
         case vm_hash: mark_hash(bfs_queue, value.hash()); break;
@@ -507,12 +507,12 @@ void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
 
 void gc::sweep() {
     for(auto i : memory) {
-        if (i->mark==gc_status::uncollected) {
+        if (i->mark==nas_val::gc_status::uncollected) {
             i->clear();
             unused[i->type-vm_str].push_back(i);
-            i->mark = gc_status::collected;
-        } else if (i->mark==gc_status::found) {
-            i->mark = gc_status::uncollected;
+            i->mark = nas_val::gc_status::collected;
+        } else if (i->mark==nas_val::gc_status::found) {
+            i->mark = nas_val::gc_status::uncollected;
         }
     }
 }
@@ -680,7 +680,7 @@ var gc::alloc(u8 type) {
         extend(type);
     }
     var ret = var::gcobj(unused[index].back());
-    ret.val.gcobj->mark = gc_status::uncollected;
+    ret.val.gcobj->mark = nas_val::gc_status::uncollected;
     unused[index].pop_back();
     return ret;
 }
@@ -696,14 +696,14 @@ void gc::ctxchg(nas_co& co) {
     cort = &co;
 
     // set coroutine state to running
-    cort->status = coroutine_status::running;
+    cort->status = nas_co::status::running;
 }
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
     cort->status = rctx->pc?
-        coroutine_status::suspended:
-        coroutine_status::dead;
+        nas_co::status::suspended:
+        nas_co::status::dead;
 
     // store running state to coroutine
     cort->ctx = *rctx;
