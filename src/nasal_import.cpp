@@ -1,4 +1,5 @@
 #include "nasal_import.h"
+#include "symbol_finder.h"
 
 linker::linker():
     show_path(false), lib_loaded(false),
@@ -203,6 +204,55 @@ code_block* linker::import_nasal_lib() {
     return load(tmp, files.size()-1);
 }
 
+std::string linker::generate_module_name(const std::string& filename) {
+    auto error_name = "error_generated@[" + filename + "]";
+    auto pos = filename.find_last_of(".nas");
+    if (pos==std::string::npos) {
+        return error_name;
+    }
+    pos -= 4;
+    auto split_pos = filename.find_last_of("/");
+    if (split_pos==std::string::npos) {
+        split_pos = filename.find_last_of("\\");
+    }
+    if (split_pos==std::string::npos) {
+        return error_name;
+    }
+    return filename.substr(split_pos + 1, pos - split_pos);
+}
+
+return_expr* linker::generate_module_return(code_block* block) {
+    auto sf = new symbol_finder;
+    auto res = new return_expr(block->get_location());
+    auto value = new hash_expr(block->get_location());
+    res->set_value(value);
+    for(const auto& i : sf->do_find(block)) {
+        auto pair = new hash_pair(block->get_location());
+        pair->set_name(i.name);
+        pair->set_value(new identifier(block->get_location(), i.name));
+        value->add_member(pair);
+    }
+    delete sf;
+    return res;
+}
+
+definition_expr* linker::generate_module_definition(code_block* block) {
+    auto def = new definition_expr(block->get_location());
+    def->set_identifier(new identifier(
+        block->get_location(),
+        generate_module_name(block->get_location().file)));
+    
+    auto call = new call_expr(block->get_location());
+    auto func = new function(block->get_location());
+    func->set_code_block(block);
+    func->get_code_block()->add_expression(generate_module_return(block));
+    call->set_first(func);
+    call->add_call(new call_function(block->get_location()));
+
+    def->set_value(call);
+    return def;
+}
+
 code_block* linker::load(code_block* root, u16 fileindex) {
     auto tree = new code_block({0, 0, 0, 0, files[fileindex]});
     if (!lib_loaded) {
@@ -216,8 +266,9 @@ code_block* linker::load(code_block* root, u16 fileindex) {
             break;
         }
         auto tmp = import_regular_file((call_expr*)i);
-        link(tree, tmp);
-        delete tmp;
+        tree->add_expression(generate_module_definition(tmp));
+        // link(tree, tmp);
+        // delete tmp;
     }
     // add root to the back of tree
     auto file_head = new file_info(
@@ -239,10 +290,5 @@ const error& linker::link(
     auto new_tree_root = load(parse.tree(), 0);
     auto old_tree_root = parse.swap(new_tree_root);
     delete old_tree_root;
-    if (show_path) {
-        std::clog << orange << "Linker Info" << reset << ":\n";
-        std::clog << "  compiled file: <" << this_file << ">\n";
-        std::clog << "  library path : <" << lib_path << ">\n\n";
-    }
     return err;
 }

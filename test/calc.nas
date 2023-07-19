@@ -2,16 +2,20 @@ import.std.padding;
 import.std.file;
 import.std.sort;
 
-var source=find_all_files_with_extension("./src","cpp","h");
+var sort = sort.sort;
+
+var (leftpad, rightpad) = (padding.leftpad, padding.rightpad);
+
+var source=file.find_all_files_with_extension("./src","cpp","h");
 sort(source,func(a,b){return cmp(a,b)<0});
 
-var lib=find_all_files_with_extension("./std","nas");
+var lib=file.find_all_files_with_extension("./std","nas");
 sort(lib,func(a,b){return cmp(a,b)<0});
 
-var testfile=find_all_files_with_extension("./test","nas");
+var testfile=file.find_all_files_with_extension("./test","nas");
 sort(testfile,func(a,b){return cmp(a,b)<0});
 
-var module=find_all_files_with_extension("./module","cpp","nas");
+var module=file.find_all_files_with_extension("./module","cpp","nas");
 sort(module,func(a,b){return cmp(a,b)<0});
 
 var longest=func(vec...){

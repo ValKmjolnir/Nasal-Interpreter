@@ -1,6 +1,8 @@
 import.std.padding;
 import.std.process_bar;
 
+var (leftpad, rightpad) = (padding.leftpad, padding.rightpad);
+
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],
     [" █████╗ ","██╔══██╗","███████║","██╔══██║","██║  ██║","╚═╝  ╚═╝"],

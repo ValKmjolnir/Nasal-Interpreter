@@ -2,13 +2,7 @@
 # ValKmjolnir 2022/6/14
 # this file is inspired by a Python lib: alive_progress
 
-var process_bar={
-    bar:nil,
-    high_resolution_bar:nil,
-    spinner:nil
-};
-
-process_bar.bar=func(){
+var bar=func(){
     var bar={
         solid_triangle_right:"▶",
         hollow_triangle_right:"▷",
@@ -73,7 +67,7 @@ process_bar.bar=func(){
 #     unix.sleep(0.001);
 # }
 # println();
-process_bar.high_resolution_bar=func(){
+var high_resolution_bar=func(){
     var block=["▏","▎","▍","▌","▋","▊","▉","█"];
     return func(length){
         return {
@@ -103,7 +97,7 @@ process_bar.high_resolution_bar=func(){
     };
 }();
 
-process_bar.spinner=func(){
+var spinner=func(){
     var generate_scrolling_spinner=func(s){
         if(typeof(s)!="str")
             s="****";
@@ -241,7 +235,8 @@ process_bar.spinner=func(){
         }
     };
 }();
-process_bar.default_bar=func(name="classic",length=20){
+
+var default_bar=func(name="classic",length=20){
     if(typeof(name)!="str")
         name="classic";
     if(name=="classic")
@@ -267,7 +262,8 @@ process_bar.default_bar=func(name="classic",length=20){
     else
         return process_bar.bar("sharp","point","bracket",length);
 }
-process_bar.default_spinner=func(name="classic",repeat=1){
+
+var default_spinner=func(name="classic",repeat=1){
     if(typeof(name)!="str")
         name="classic";
     if(name=="rise")

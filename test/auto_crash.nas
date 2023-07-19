@@ -1,6 +1,12 @@
 # Road check and auto pilot by ValKmjolnir
 import.std.fg_env;
 
+var props = fg_env.props;
+var geodinfo = fg_env.geodinfo;
+var maketimer = fg_env.maketimer;
+var D2R = fg_env.D2R;
+var simulation = fg_env.simulation;
+
 var dt=0.01;
 var intergral=0;
 var derivative=0;
