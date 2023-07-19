@@ -170,7 +170,7 @@ test:nasal
 	@ ./nasal -d test/life.nas
 	@ ./nasal -t test/loop.nas
 	@ ./nasal -t test/mandelbrot.nas
-	@ ./nasal -t test/md5.nas
+	@ ./nasal -t test/md5_self.nas
 	@ ./nasal -t -d test/md5compare.nas
 	@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas

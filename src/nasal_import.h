@@ -16,6 +16,9 @@
 #include "nasal_ast.h"
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
+#include "symbol_finder.h"
+
+#include <vector>
 
 class linker{
 private:
@@ -34,9 +37,15 @@ private:
     std::string find_file(const std::string&, const span&);
     code_block* import_regular_file(call_expr*);
     code_block* import_nasal_lib();
+    std::string generate_module_name(const std::string&);
+    return_expr* generate_module_return(code_block*);
+    definition_expr* generate_module_definition(code_block*);
     code_block* load(code_block*, u16);
+
 public:
     linker();
     const error& link(parse&, const std::string&, bool);
     const std::vector<std::string>& filelist() const {return files;}
+    const std::string& get_this_file() const {return this_file;}
+    const std::string& get_lib_path() const {return lib_path;}
 };

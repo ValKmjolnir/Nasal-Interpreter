@@ -1,5 +1,9 @@
 import.std.sort;
 
+var var_sort = sort.var_sort;
+var sort = sort.sort;
+
+
 var vec=[];
 setsize(vec, 1e4);
 rand(time(0));

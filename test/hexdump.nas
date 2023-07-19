@@ -21,7 +21,7 @@ var hex=func(){
 
 # read file
 var s=func(){
-    var filename = find_all_files_with_extension("./src","cpp","h");
+    var filename = file.find_all_files_with_extension("./src","cpp","h");
     if(size(runtime.argv())!=0){
         var argv=runtime.argv();
         if(argv[0]=="-h" or argv[0]=="--h"){

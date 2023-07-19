@@ -1,7 +1,9 @@
-import.test.md5;
+import.test.md5_self;
 import.std.process_bar;
 import.std.file;
 srand();
+
+var _md5 = md5_self._md5;
 
 var compare=func() {
     var ch=[
@@ -45,22 +47,22 @@ var compare=func() {
 
 var filechecksum=func(){
     var files=[];
-    foreach(var p;find_all_files_with_extension("./test","nas")) {
+    foreach(var p;file.find_all_files_with_extension("./test","nas")) {
         append(files,"./test/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./std","nas")) {
+    foreach(var p;file.find_all_files_with_extension("./std","nas")) {
         append(files,"./std/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./module","nas","cpp")) {
+    foreach(var p;file.find_all_files_with_extension("./module","nas","cpp")) {
         append(files,"./module/"~p);
     }
-    foreach(var p;find_all_files_with_extension(".","md")) {
+    foreach(var p;file.find_all_files_with_extension(".","md")) {
         append(files,"./"~p);
     }
-    foreach(var p;find_all_files_with_extension("./src","cpp","h")) {
+    foreach(var p;file.find_all_files_with_extension("./src","cpp","h")) {
         append(files,"./src/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./doc","md")) {
+    foreach(var p;file.find_all_files_with_extension("./doc","md")) {
         append(files,"./doc/"~p);
     }
 

@@ -2,6 +2,9 @@ import.std.sort;
 import.std.padding;
 import.std.process_bar;
 
+var sort = sort.sort;
+var (leftpad, rightpad) = (padding.leftpad, padding.rightpad);
+
 var mess=func(vec) {
     srand();
     var s=size(vec);

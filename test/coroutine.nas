@@ -3,6 +3,8 @@
 import.std.process_bar;
 import.std.padding;
 
+var (leftpad, rightpad) = (padding.leftpad, padding.rightpad);
+
 if(os.platform()=="windows"){
     system("chcp 65001");
     system("color");
