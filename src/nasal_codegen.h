@@ -108,4 +108,5 @@ public:
     codegen(): fileindex(0) {}
     const error& compile(parse&, linker&);
     void print(std::ostream&);
+    void symbol_dump(std::ostream&) const;
 };

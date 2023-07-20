@@ -95,6 +95,10 @@ void error::err(const std::string& stage, const std::string& info) {
     std::cerr << red << stage << ": " << white << info << reset << "\n\n";
 }
 
+void error::warn(const std::string& stage, const std::string& info) {
+    std::clog << orange << stage << ": " << white << info << reset << "\n\n";
+}
+
 void error::err(
     const std::string& stage, const span& loc, const std::string& info) {
     // load error occurred file into string lines
