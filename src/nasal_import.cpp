@@ -58,8 +58,8 @@ std::string linker::find_file(
     if (!show_path) {
         err.err("link",
             "in <" + location.file + ">: " +
-            "cannot find file <" + filename + ">\n");
-        err.err("link", "use <-d> to get detail search path");
+            "cannot find file <" + filename + ">, " +
+            "use <-d> to get detail search path");
         return "";
     }
     std::string paths = "";
@@ -215,10 +215,22 @@ std::string linker::generate_module_name(const std::string& filename) {
     if (split_pos==std::string::npos) {
         split_pos = filename.find_last_of("\\");
     }
-    if (split_pos==std::string::npos) {
-        return error_name;
+    auto res = split_pos==std::string::npos?
+        filename.substr(0, pos + 1):
+        filename.substr(split_pos + 1, pos - split_pos);
+    if (!res.length()) {
+        err.warn("link", "get empty module name from <" + filename + ">, " +
+            "will not be easily accessed.");
     }
-    return filename.substr(split_pos + 1, pos - split_pos);
+    if (res.length() && '0' <= res[0] && res[0] <= '9') {
+        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
+            "will not be easily accessed.");
+    }
+    if (res.length() && res.find(".")!=std::string::npos) {
+        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
+            "will not be easily accessed.");
+    }
+    return res;
 }
 
 return_expr* linker::generate_module_return(code_block* block) {

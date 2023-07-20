@@ -1196,3 +1196,13 @@ void codegen::print(std::ostream& out) {
         out << "  " << codestream(c,i) << "\n";
     }
 }
+
+void codegen::symbol_dump(std::ostream& out) const {
+    for(const auto& domain : experimental_namespace) {
+        out << "<" << domain.first << ">\n";
+        for(const auto& i : domain.second) {
+            out << "  " << i << ": 0x";
+            out << std::hex << global.at(i) << std::dec << "\n";
+        }
+    }
+}

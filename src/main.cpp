@@ -139,12 +139,7 @@ void execute(
         gen.print(std::cout);
     }
     if (cmd&VM_SYMINFO) {
-        for(const auto& domain : gen.get_experimental_namespace()) {
-            std::cout << domain.first << ":\n";
-            for(const auto& i : domain.second) {
-                std::cout << "  [" << domain.first << "]@" << i << "\n";
-            }
-        }
+        gen.symbol_dump(std::cout);
     }
 
     // run
