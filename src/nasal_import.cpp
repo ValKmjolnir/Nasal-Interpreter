@@ -279,8 +279,6 @@ code_block* linker::load(code_block* root, u16 fileindex) {
         }
         auto tmp = import_regular_file((call_expr*)i);
         tree->add_expression(generate_module_definition(tmp));
-        // link(tree, tmp);
-        // delete tmp;
     }
     // add root to the back of tree
     auto file_head = new file_info(

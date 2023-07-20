@@ -1201,8 +1201,9 @@ void codegen::symbol_dump(std::ostream& out) const {
     for(const auto& domain : experimental_namespace) {
         out << "<" << domain.first << ">\n";
         for(const auto& i : domain.second) {
-            out << "  " << i << ": 0x";
-            out << std::hex << global.at(i) << std::dec << "\n";
+            out << "  0x" << std::setw(4) << std::setfill('0');
+            out << std::hex << global.at(i) << std::dec << " ";
+            out << i << std::endl;
         }
     }
 }
