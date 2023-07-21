@@ -135,6 +135,43 @@ bool linker::exist(const std::string& file) {
     return false;
 }
 
+u16 linker::find(const std::string& file) {
+    for(usize i = 0; i<files.size(); ++i) {
+        if (files[i]==file) {
+            return static_cast<u16>(i);
+        }
+    }
+    std::cerr << "unreachable: using this method incorrectly\n";
+    std::exit(-1);
+    return UINT16_MAX;
+}
+
+bool linker::check_self_import(const std::string& file) {
+    for(const auto& i : module_load_stack) {
+        if (file==i) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string linker::generate_self_import_path() {
+    std::string res = "";
+    usize size = module_load_stack.size();
+    if (!size) {
+        return res;
+    }
+    usize count = 0;
+    for(const auto& i : module_load_stack) {
+        res += "<" + i + ">";
+        if (count!=size-1) {
+            res += " -> ";
+        }
+        ++count;
+    }
+    return res;
+}
+
 void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
     // add children of add_root to the back of root
     for(auto& i : old_tree_root->get_expressions()) {
@@ -160,10 +197,17 @@ code_block* linker::import_regular_file(call_expr* node) {
 
     // avoid infinite loading loop
     filename = find_file(filename, node->get_location());
-    if (!filename.length() || exist(filename)) {
+    if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }
+    if (check_self_import(filename)) {
+        err.err("link", "self-referenced module <" + filename + ">\n" +
+            "    reference path: " + generate_self_import_path());
+        return new code_block({0, 0, 0, 0, filename});
+    }
+    exist(filename);
     
+    module_load_stack.push_back(filename);
     // start importing...
     if (lex.scan(filename).geterr()) {
         err.err("link", "error occurred when analysing <" + filename + ">");
@@ -174,7 +218,9 @@ code_block* linker::import_regular_file(call_expr* node) {
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'
-    return load(tmp, files.size()-1);
+    auto res = load(tmp, find(filename));
+    module_load_stack.pop_back();
+    return res;
 }
 
 code_block* linker::import_nasal_lib() {
@@ -186,7 +232,7 @@ code_block* linker::import_nasal_lib() {
     }
     lib_path = filename;
 
-    // avoid infinite loading loop
+    // avoid infinite loading library
     if (exist(filename)) {
         return new code_block({0, 0, 0, 0, filename});
     }
@@ -201,7 +247,7 @@ code_block* linker::import_nasal_lib() {
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'
-    return load(tmp, files.size()-1);
+    return load(tmp, find(filename));
 }
 
 std::string linker::generate_module_name(const std::string& filename) {
@@ -294,6 +340,7 @@ const error& linker::link(
     // initializing
     this_file = self;
     files = {self};
+    module_load_stack = {self};
     // scan root and import files
     // then generate a new ast and return to import_ast
     // the main file's index is 0

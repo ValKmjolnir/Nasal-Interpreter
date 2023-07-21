@@ -28,10 +28,14 @@ private:
     std::string lib_path;
     error err;
     std::vector<std::string> files;
+    std::vector<std::string> module_load_stack;
     std::vector<std::string> envpath;
 
     bool import_check(expr*);
     bool exist(const std::string&);
+    u16 find(const std::string&);
+    bool check_self_import(const std::string&);
+    std::string generate_self_import_path();
     void link(code_block*, code_block*);
     std::string get_path(call_expr*);
     std::string find_file(const std::string&, const span&);
