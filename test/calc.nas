@@ -1,10 +1,5 @@
 import.std.padding;
 import.std.file;
-import.std.sort;
-
-var sort = sort.sort;
-
-var (leftpad, rightpad) = (padding.leftpad, padding.rightpad);
 
 var source=file.find_all_files_with_extension("./src","cpp","h");
 sort(source,func(a,b){return cmp(a,b)<0});
@@ -55,7 +50,7 @@ var count=func(s,c){
 
 var column=func(number){
     number=number>=1000?substr(str(number/1000),0,3)~'k':str(number);
-    return leftpad(number,6);
+    return padding.leftpad(number,6);
 }
 
 var calc=func(codetype,files,path=""){
@@ -64,20 +59,20 @@ var calc=func(codetype,files,path=""){
     forindex(var i;files){
         var s=io.exists(path~files[i])?io.readfile(path~files[i]):"";
         (line_cnt,semi_cnt)=(count(s,'\n'),count(s,';'));
-        println(rightpad(files[i],padding_length),'|',
+        println(padding.rightpad(files[i],padding_length),'|',
             column(line_cnt),' line |',
             column(semi_cnt),' semi |',
-            leftpad(str(int(size(s)/1024)),4),' kb | ',
+            padding.leftpad(str(int(size(s)/1024)),4),' kb | ',
             md5(s),' |');
         bytes+=size(s);
         ctx~=s;
         line+=line_cnt;
         semi+=semi_cnt;
     }
-    println(rightpad("total:",padding_length),'|',
+    println(padding.rightpad("total:",padding_length),'|',
         column(line),' line |',
         column(semi),' semi |',
-        leftpad(str(int(bytes/1024)),4),' kb | ',
+        padding.leftpad(str(int(bytes/1024)),4),' kb | ',
         md5(ctx),' |\n');
     return int(bytes/1024);
 }
@@ -86,4 +81,4 @@ var all=calc("source code:",source,"src/")
     +calc("lib:",lib,"std/")
     +calc("test file:",testfile,"test/")
     +calc("module:",module,"module/");
-println(rightpad("total:",padding_length),'|',leftpad(str(all),6),' kb   |');
+println(padding.rightpad("total:",padding_length),'|',padding.leftpad(str(all),6),' kb   |');

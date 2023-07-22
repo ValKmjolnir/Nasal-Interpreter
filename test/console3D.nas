@@ -25,15 +25,26 @@ import.module.libmat;
 
 func(){
     # allocate more spaces
-    var t=[];
-    for(var i=0;i<16384;i+=1)
-        append(t,[],[],[],str(i));
-    t=[];
+    for(var i = 0; i<10; i+=1) {
+        runtime.gc.extend("str");
+        runtime.gc.extend("vec");
+    }
 }();
 
-var (max,min,sqrt,sin,cos,abs)=(math.max,math.min,math.sqrt,math.sin,math.cos,math.abs);
+var (max,min,sqrt,sin,cos,abs)=(
+    math.max,
+    math.min,
+    math.sqrt,
+    math.sin,
+    math.cos,
+    math.abs
+);
 
-var (vec2,vec3)=(libmat.vec2.new,libmat.vec3.new);
+var (vec2,vec3)=(
+    libmat.vec2.new,
+    libmat.vec3.new
+);
+
 var (vec2add,vec2sub,vec2mul,vec2div,vec2len)=(
     libmat.vec2.add,
     libmat.vec2.sub,
@@ -41,6 +52,7 @@ var (vec2add,vec2sub,vec2mul,vec2div,vec2len)=(
     libmat.vec2.div,
     libmat.vec2.len
 );
+
 var (vec3add,vec3sub,vec3mul,vec3div,vec3neg,vec3norm,vec3len,vec3dot)=(
     libmat.vec3.add,
     libmat.vec3.sub,
@@ -51,6 +63,7 @@ var (vec3add,vec3sub,vec3mul,vec3div,vec3neg,vec3norm,vec3len,vec3dot)=(
     libmat.vec3.len,
     libmat.vec3.dot
 );
+
 var (rotateX,rotateY,rotateZ)=(
     libmat.vec3.rx,
     libmat.vec3.ry,
