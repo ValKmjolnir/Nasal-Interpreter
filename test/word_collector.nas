@@ -1,5 +1,3 @@
-import.std.sort;
-var sort = sort.sort;
 
 var to_lower=func(s){
     var tmp="";

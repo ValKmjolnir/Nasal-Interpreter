@@ -1,5 +1,4 @@
 import.std.file;
-import.std.sort;
 
 if (size(arg)!=1) {
     println("need a key string to search files.");
@@ -21,7 +20,7 @@ var do_flat = func(vec) {
             append(flat, d.dir~"/"~f);
         }
     }
-    sort.sort(flat, func(a,b){return cmp(a,b)<0});
+    sort(flat, func(a,b){return cmp(a,b)<0});
     return flat;
 }
 
