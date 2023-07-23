@@ -1,6 +1,8 @@
 # lib.nas
 # 2019 ValKmjolnir
 
+import.std.coroutine;
+
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
 var print = func(elems...) {
@@ -219,29 +221,29 @@ var println = func(elems...) {
 
 # sort function using quick sort
 # not very efficient... :(
-var sort=func(){
-    srand(); # be aware! this causes global changes
-    var quick_sort_core=func(vec,left,right,cmp){
+var sort = func(){
+    srand();  # be aware! this causes global changes
+    var quick_sort_core = func(vec, left, right, cmp) {
         if(left>=right) return nil;
-        var base=left+int(rand()*(right-left));
-        (vec[left],vec[base])=(vec[base],vec[left]);
-        var (i,j,tmp)=(left,right,vec[left]);
+        var base = left+int(rand()*(right-left));
+        (vec[left], vec[base]) = (vec[base], vec[left]);
+        var (i, j, tmp) = (left, right, vec[left]);
         while(i<j){
             while(i<j and cmp(tmp,vec[j]))
-                j-=1;
-            vec[i]=vec[j];
+                j -= 1;
+            vec[i] = vec[j];
             while(i<j and cmp(vec[i],tmp))
-                i+=1;
-            vec[j]=vec[i];
-            j-=1;
+                i += 1;
+            vec[j] = vec[i];
+            j -= 1;
         }
-        vec[i]=tmp;
-        quick_sort_core(vec,left,i-1,cmp);
-        quick_sort_core(vec,i+1,right,cmp);
+        vec[i] = tmp;
+        quick_sort_core(vec, left, i-1, cmp);
+        quick_sort_core(vec, i+1, right, cmp);
         return nil;
     }
-    return func(vec,cmp=func(a,b){return a<b;}){
-        quick_sort_core(vec,0,size(vec)-1,cmp);
+    return func(vec, cmp = func(a, b) {return a<b;}){
+        quick_sort_core(vec, 0, size(vec)-1, cmp);
         return nil;
     }
 }();
@@ -293,19 +295,21 @@ var vecindex = func(vec,val) {
 
 # check if the object is an instance of the class
 var isa = func(object, class) {
-    if(!contains(object, "parents") or typeof(object.parents)!="vec")
+    if (!ishash(object)) {
         return 0;
+    }
+    if(!contains(object, "parents") or !isvec(object.parents)) {
+        return 0;
+    }
     foreach(var elem;object.parents)
-        if(elem==class)
+        if(elem==class or isa(elem, class))
             return 1;
     return 0;
 }
 
 # assert aborts when condition is not true
 var assert = func(condition, message = "assertion failed!") {
-    if(condition)
-        return 1;
-    die(message);
+    condition or die(message);
 }
 
 # get time stamp, this will return a timestamp object
@@ -412,8 +416,6 @@ var bits = {
 var math = {
     e: 2.7182818284590452354,
     pi: 3.14159265358979323846264338327950288,
-    D2R: 2.7182818284590452354/180,
-    R2D: 180/2.7182818284590452354,
     inf: 1/0,
     nan: 0/0,
     abs: func(x) {return x>0? x:-x;},
@@ -431,6 +433,29 @@ var math = {
     max: func(x, y) {return x>y? x:y;},
     min: func(x, y) {return x<y? x:y;}
 };
+
+# important global constants
+var D2R = math.pi / 180;               # degree to radian
+var R2D = 180 / math.pi;               # radian to degree
+
+var FT2M = 0.3048;                     # feet to meter
+var M2FT = 1 / FT2M;
+var IN2M = FT2M / 12;
+var M2IN = 1 / IN2M;
+var NM2M = 1852;                       # nautical miles to meter
+var M2NM = 1 / NM2M;
+
+var KT2MPS = 0.5144444444;             # knots to m/s
+var MPS2KT = 1 / KT2MPS;
+
+var FPS2KT = 0.5924838012958964;       # fps to knots
+var KT2FPS = 1 / FPS2KT;
+
+var LB2KG = 0.45359237;                # pounds to kg
+var KG2LB = 1 / LB2KG;
+
+var GAL2L = 3.785411784;               # US gallons to liter
+var L2GAL = 1 / GAL2L;
 
 var unix = {
     pipe: func() {return __pipe;},
@@ -535,10 +560,23 @@ var compile = func(code, filename = "<compile>") {
     die("this runtime uses static code generator");
 }
 
-var coroutine = {
-    create: func(function) {return __cocreate;},
-    resume: func(co, args...) {return __coresume;},
-    yield: func(args...) {return __coyield; },
-    status: func(co) {return __costatus;},
-    running:func() {return __corun;   }
-};
+# for log print
+var LOG_BULK = 1;
+var LOG_DEBUG = 2;
+var LOG_INFO = 3;
+var LOG_WARN = 4;
+var LOG_ALERT = 5;
+var DEV_WARN = 7;
+var DEV_ALERT = 8;
+var MANDATORY_INFO = 9;
+
+var logprint = func(level, elem...) {
+    return _logprint(level, elem);
+}
+
+var fgcommand = func(cmd, node=nil) {
+    # if (isa(node, props.Node)) node = node._g;
+    # elsif (ishash(node)) node = props.Node.new(node)._g;
+    # _fgcommand(cmd, node);
+    println("in progress, not supported yet.");
+}

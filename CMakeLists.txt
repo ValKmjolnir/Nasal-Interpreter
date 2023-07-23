@@ -20,6 +20,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/fg_props.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp
