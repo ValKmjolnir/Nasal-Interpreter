@@ -1,3 +1,5 @@
+import.std.runtime;
+
 # basic type
 nil;
 2147483647;
@@ -202,6 +204,7 @@ foreach(i;a){
     ;
 }
 println(runtime.argv());
+println(globals.arg);
 func(a,b,c,d="只有红茶可以吗"){
     println(a,' ',b,' ',c,' ',d,' true: ',true,' false: ',false);
 }(c:1919810,b:514,a:114);

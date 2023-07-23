@@ -1,5 +1,6 @@
 import.module.libsock;
 import.std.json;
+import.std.runtime;
 
 var JSON = json.JSON;
 var socket = libsock.socket;

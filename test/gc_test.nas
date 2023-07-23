@@ -1,3 +1,4 @@
+import.std.runtime;
 
 var test_func = func(test_processes...) {
     var test_process_total = maketimestamp();

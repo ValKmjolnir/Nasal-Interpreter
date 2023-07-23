@@ -22,15 +22,24 @@
 
 class codegen {
 private:
-    u16 fileindex;
     error err;
-    std::vector<std::string> file;
+
+    // file mapper for file -> index
+    std::unordered_map<std::string, usize> file_map;
+
+    // used for generate pop in return expression
     std::vector<u32> in_loop_level;
+
+    // constant numbers and strings
     std::unordered_map<f64, u32> const_number_map;
     std::unordered_map<std::string, u32> const_string_map;
     std::vector<f64> const_number_table;
     std::vector<std::string> const_string_table;
+
+    // generated opcodes
     std::vector<opcode> code;
+
+    // used to store jmp operands index, to fill the jump address back
     std::list<std::vector<i32>> continue_ptr;
     std::list<std::vector<i32>> break_ptr;
 
@@ -38,6 +47,7 @@ private:
     // global : max STACK_DEPTH-1 values
     std::unordered_map<std::string, i32> global;
     std::unordered_map<std::string, std::unordered_set<std::string>> experimental_namespace;
+
     // local  : max 32768 upvalues 65536 values
     // but in fact local scope also has less than STACK_DEPTH value
     std::list<std::unordered_map<std::string, i32>> local;
@@ -56,7 +66,7 @@ private:
     i32 global_find(const std::string&);
     i32 upvalue_find(const std::string&);
 
-    void gen(u8, u32, u32);
+    void gen(u8, u32, const span&);
 
     void num_gen(number_literal*);
     void str_gen(string_literal*);
@@ -105,7 +115,7 @@ public:
     }
 
 public:
-    codegen(): fileindex(0) {}
+    codegen() = default;
     const error& compile(parse&, linker&);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;

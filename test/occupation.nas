@@ -1,5 +1,6 @@
 import.std.process_bar;
 import.module.libkey;
+import.std.runtime;
 
 var is_windows_platform=os.platform()=="windows";
 var is_macos_platform=os.platform()=="macOS";

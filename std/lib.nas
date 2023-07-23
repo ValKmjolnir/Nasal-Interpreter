@@ -2,6 +2,10 @@
 # 2019 ValKmjolnir
 
 import.std.coroutine;
+import.std.math;
+import.std.string;
+import.std.io;
+import.std.os;
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
@@ -327,38 +331,6 @@ var md5 = func(str) {
     return __md5(str);
 }
 
-var io = {
-    SEEK_SET: 0,
-    SEEK_CUR: 1,
-    SEEK_END: 2,
-    # get content of a file by filename. returns a string.
-    readfile: func(filename) {return __readfile(filename);},
-    # input a string as the content of a file.
-    fout: func(filename, str) {return __fout(filename, str);},
-    # use C access
-    exists:func(filename) {return __exists(filename);},
-    # same as C fopen. open file and get the FILE*.
-    open: func(filename, mode = "r") {return __open(filename, mode);},
-    # same as C fclose. close file by FILE*.
-    close: func(filehandle) {return __close(filehandle);},
-    # same as C fread. read file by FILE*.
-    # caution: buf must be a mutable string.use mut("") to get an empty mutable string.
-    read: func(filehandle, buf, len) {return __read(filehandle, buf, len);},
-    # same as C fwrite. write file by FILE*.
-    write: func(filehandle, str) {return __write(filehandle, str);},
-    # same as C fseek. seek place by FILE*.
-    seek: func(filehandle, pos, whence) {return __seek(filehandle, pos, whence);},
-    # same as C ftell.
-    tell: func(filehandle) {return __tell(filehandle);},
-    # read file by lines. use FILE*.
-    # get nil if EOF
-    readln: func(filehandle) {return __readln(filehandle);},
-    # same as C stat.
-    stat: func(filename) {return __stat(filename);},
-    # same as C feof. check if FILE* gets the end of file(EOF).
-    eof: func(filehandle) {return __eof(filehandle);}
-};
-
 # get file status. using data from io.stat
 var fstat = func(filename) {
     var s = io.stat(filename);
@@ -410,28 +382,6 @@ var bits = {
     setfld: func(str, startbit, len, val) {return __setfld;},
     # get a special string filled by '\0' to use in setfld.
     buf: func(len) {return __buf;}
-};
-
-# mostly used math functions and special constants, you know.
-var math = {
-    e: 2.7182818284590452354,
-    pi: 3.14159265358979323846264338327950288,
-    inf: 1/0,
-    nan: 0/0,
-    abs: func(x) {return x>0? x:-x;},
-    floor: func(x) {return __floor(x);},
-    pow: func(x, y) {return __pow(x, y);},
-    sin: func(x) {return __sin(x);},
-    cos: func(x) {return __cos(x);},
-    tan: func(x) {return __tan(x);},
-    exp: func(x) {return __exp(x);},
-    lg: func(x) {return __lg(x);},
-    ln: func(x) {return __ln(x);},
-    sqrt: func(x) {return __sqrt(x);},
-    atan2: func(x, y) {return __atan2(x, y);},
-    isnan: func(x) {return __isnan(x);},
-    max: func(x, y) {return x>y? x:y;},
-    min: func(x, y) {return x<y? x:y;}
 };
 
 # important global constants
@@ -517,25 +467,6 @@ var dylib = {
         elsif(arg_size==7) {return func(ptr, _0, _1, _2, _3, _4, _5, _6) {return __dlcall};}
         elsif(arg_size==8) {return func(ptr, _0, _1, _2, _3, _4, _5, _6, _7) {return __dlcall};}
         else {return func(ptr, args...) {return __dlcallv};}
-    }
-};
-
-# os is used to use or get some os-related info/functions.
-# windows/macOS/linux are supported.
-var os = {
-    # get a string that tell which os it runs on.
-    platform: func() {return __platform;},
-    time: func() {return __logtime;},
-    arch: func() {return __arch;}
-};
-
-# runtime gives us some functions that we could manage it manually.
-var runtime = {
-    # command line arguments
-    argv: func() {return globals.arg;},
-    gc: {
-        extend: func(type) {return __gcextd;},
-        info: func() {return __gcinfo;}
     }
 };
 

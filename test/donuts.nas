@@ -1,3 +1,5 @@
+import.std.runtime;
+
 var mod=func(n,a){
     return n-int(n/a)*a;
 }
