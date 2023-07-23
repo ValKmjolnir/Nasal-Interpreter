@@ -313,12 +313,15 @@ definition_expr* linker::generate_module_definition(code_block* block) {
 
 code_block* linker::load(code_block* root, u16 fileindex) {
     auto tree = new code_block({0, 0, 0, 0, files[fileindex]});
+    // load library, this ast will be linked with root directly
+    // so no namespace is generated
     if (!lib_loaded) {
         auto tmp = import_nasal_lib();
         link(tree, tmp);
         delete tmp;
         lib_loaded = true;
     }
+    // load imported modules
     for(auto i : root->get_expressions()) {
         if (!import_check(i)) {
             break;
@@ -327,9 +330,6 @@ code_block* linker::load(code_block* root, u16 fileindex) {
         tree->add_expression(generate_module_definition(tmp));
     }
     // add root to the back of tree
-    auto file_head = new file_info(
-        {0, 0, 0, 0, files[fileindex]}, fileindex, files[fileindex]);
-    tree->add_expression(file_head);
     link(tree, root);
     return tree;
 }

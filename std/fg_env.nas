@@ -1,5 +1,6 @@
 # flightgear developer environments simulator (beta)
 # ValKmjolnir 2022
+import.std.runtime;
 
 println("-------------------------------------------------------------");
 println(" FlightGear simulated-env for developers project, since 2019");
