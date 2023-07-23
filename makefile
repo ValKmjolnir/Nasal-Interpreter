@@ -16,7 +16,8 @@ NASAL_HEADER=\
 	src/nasal_vm.h\
 	src/nasal.h\
 	src/optimizer.h\
-	src/symbol_finder.h
+	src/symbol_finder.h\
+	src/fg_props.h
 
 NASAL_OBJECT=\
 	build/nasal_err.o\
@@ -33,6 +34,7 @@ NASAL_OBJECT=\
 	build/nasal_misc.o\
 	build/nasal_gc.o\
 	build/nasal_builtin.o\
+	build/fg_props.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/main.o
@@ -82,8 +84,15 @@ build/nasal_ast.o: \
 build/nasal_builtin.o: \
 	src/nasal.h\
 	src/nasal_gc.h\
+	src/fg_props.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_builtin.cpp -fno-exceptions -fPIC -o build/nasal_builtin.o -I .
+
+build/fg_props.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/fg_props.h src/fg_props.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/fg_props.cpp -fno-exceptions -fPIC -o build/fg_props.o -I .
 
 build/nasal_codegen.o: $(NASAL_HEADER) src/nasal_codegen.h src/nasal_codegen.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_codegen.cpp -fno-exceptions -fPIC -o build/nasal_codegen.o -I .
