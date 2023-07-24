@@ -155,21 +155,12 @@ bool linker::check_self_import(const std::string& file) {
     return false;
 }
 
-std::string linker::generate_self_import_path() {
+std::string linker::generate_self_import_path(const std::string& filename) {
     std::string res = "";
-    usize size = module_load_stack.size();
-    if (!size) {
-        return res;
-    }
-    usize count = 0;
     for(const auto& i : module_load_stack) {
-        res += "<" + i + ">";
-        if (count!=size-1) {
-            res += " -> ";
-        }
-        ++count;
+        res += "[" + i + "] -> ";
     }
-    return res;
+    return res + "[" + filename + "]";
 }
 
 void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
@@ -194,6 +185,8 @@ code_block* linker::import_regular_file(call_expr* node) {
     auto location = node->get_first()->get_location();
     delete node->get_first();
     node->set_first(new nil_expr(location));
+    // this will make node to call_expr(nil),
+    // will not be optimized when generating bytecodes
 
     // avoid infinite loading loop
     filename = find_file(filename, node->get_location());
@@ -201,8 +194,8 @@ code_block* linker::import_regular_file(call_expr* node) {
         return new code_block({0, 0, 0, 0, filename});
     }
     if (check_self_import(filename)) {
-        err.err("link", "self-referenced module <" + filename + ">\n" +
-            "    reference path: " + generate_self_import_path());
+        err.err("link", "self-referenced module <" + filename + ">:\n" +
+            "    reference path: " + generate_self_import_path(filename));
         return new code_block({0, 0, 0, 0, filename});
     }
     exist(filename);

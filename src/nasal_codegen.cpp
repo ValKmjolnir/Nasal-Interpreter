@@ -848,6 +848,12 @@ void codegen::and_gen(binary_operator* node) {
 }
 
 void codegen::unary_gen(unary_operator* node) {
+    // generate optimized result
+    if (node->get_optimized_number()) {
+        num_gen(node->get_optimized_number());
+        return;
+    }
+
     calc_gen(node->get_value());
     switch(node->get_operator_type()) {
         case unary_operator::unary_type::negative:

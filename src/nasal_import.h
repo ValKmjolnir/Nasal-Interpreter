@@ -35,7 +35,7 @@ private:
     bool exist(const std::string&);
     u16 find(const std::string&);
     bool check_self_import(const std::string&);
-    std::string generate_self_import_path();
+    std::string generate_self_import_path(const std::string&);
     void link(code_block*, code_block*);
     std::string get_path(call_expr*);
     std::string find_file(const std::string&, const span&);
