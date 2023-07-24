@@ -1,3 +1,4 @@
+import.std.dylib;
 
 var dl=dylib.dlopen("libmat."~(os.platform()=="windows"?"dll":"so"));
 var vec2=dl.nas_vec2;

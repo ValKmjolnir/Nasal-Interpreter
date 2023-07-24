@@ -1,3 +1,5 @@
+import.std.dylib;
+
 var libfib=func(){
     var (dd,fib,qfib)=(nil,nil,nil);
     var invoke=dylib.limitcall(1);
