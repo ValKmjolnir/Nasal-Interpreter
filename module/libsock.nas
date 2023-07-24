@@ -1,3 +1,5 @@
+import.std.dylib;
+
 var socket=func(){
     var lib=dylib.dlopen("libnasock"~(os.platform()=="windows"?".dll":".so"));
     

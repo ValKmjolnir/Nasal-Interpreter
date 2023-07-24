@@ -6,6 +6,8 @@ import.std.math;
 import.std.string;
 import.std.io;
 import.std.os;
+import.std.bits;
+import.std.unix;
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
@@ -133,6 +135,7 @@ var keys = func(hash) {
 var time = func(begin) {
     return __time(begin);
 }
+
 var systime = func() {
     return time(0);
 }
@@ -349,126 +352,28 @@ var fstat = func(filename) {
     };
 }
 
-# functions that do bitwise calculation.
-# carefully use it, all the calculations are based on integer.
-var bits = {
-    # u32 xor
-    u32_xor: func(a, b) {return __u32xor(a, b);},
-    # u32 and
-    u32_and: func(a, b) {return __u32and(a, b);},
-    # u32 or
-    u32_or: func(a, b) {return __u32or(a, b);},
-    # u32 nand
-    u32_nand: func(a, b) {return __u32nand(a, b);},
-    # u32 not
-    u32_not: func(a) {return __u32not(a);},
-
-    # get bit data from a special string. for example:
-    # bits.fld(s,0,3);
-    # if s stores 10100010(162)
-    # will get 101(5).
-    fld: func(str, startbit, len) {return __fld;},
-    # get sign-extended data from a special string. for example:
-    # bits.sfld(s,0,3);
-    # if s stores 10100010(162)
-    # will get 101(5) then this will be signed extended to
-    # 11111101(-3).
-    sfld: func(str, startbit, len) {return __sfld;},
-    # set value into a special string to store it. little-endian, for example:
-    # bits.setfld(s,0,8,69);
-    # set 01000101(69) to string will get this:
-    # 10100010(162)
-    # so s[0]=162.
-    setfld: func(str, startbit, len, val) {return __setfld;},
-    # get a special string filled by '\0' to use in setfld.
-    buf: func(len) {return __buf;}
-};
-
 # important global constants
-var D2R = math.pi / 180;               # degree to radian
-var R2D = 180 / math.pi;               # radian to degree
+var D2R = math.pi / 180;         # degree to radian
+var R2D = 180 / math.pi;         # radian to degree
 
-var FT2M = 0.3048;                     # feet to meter
+var FT2M = 0.3048;               # feet to meter
 var M2FT = 1 / FT2M;
 var IN2M = FT2M / 12;
 var M2IN = 1 / IN2M;
-var NM2M = 1852;                       # nautical miles to meter
+var NM2M = 1852;                 # nautical miles to meter
 var M2NM = 1 / NM2M;
 
-var KT2MPS = 0.5144444444;             # knots to m/s
+var KT2MPS = 0.5144444444;       # knots to m/s
 var MPS2KT = 1 / KT2MPS;
 
-var FPS2KT = 0.5924838012958964;       # fps to knots
+var FPS2KT = 0.5924838012958964; # fps to knots
 var KT2FPS = 1 / FPS2KT;
 
-var LB2KG = 0.45359237;                # pounds to kg
+var LB2KG = 0.45359237;          # pounds to kg
 var KG2LB = 1 / LB2KG;
 
-var GAL2L = 3.785411784;               # US gallons to liter
+var GAL2L = 3.785411784;         # US gallons to liter
 var L2GAL = 1 / GAL2L;
-
-var unix = {
-    pipe: func() {return __pipe;},
-    fork: func() {return __fork;},
-    dup2: func(fd0, fd1) {die("not supported yet");},
-    exec: func(filename, argv, envp) {die("not supported yet");},
-    waitpid: func(pid, nohang = 0) {return __waitpid;},
-    isdir: func(path) {return !!bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
-    isfile: func(path) {return !!bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
-    opendir: func(path) {return __opendir;},
-    readdir: func(handle) {return __readdir;},
-    closedir: func(handle) {return __closedir;},
-    time: func() {return time(0);},
-    sleep: func(secs) {return __sleep(secs);},
-    chdir: func(path) {return __chdir(path);},
-    environ: func() {return __environ();},
-    getcwd: func() {return __getcwd();},
-    getenv: func(envvar) {return __getenv(envvar);},
-    getpath: func() {return split(os.platform()=="windows"? ";":":", unix.getenv("PATH"));}
-};
-
-# dylib is the core hashmap for developers to load their own library.
-# for safe using dynamic library, you could use 'module' in stl/module.nas
-var dylib = {
-    # open dynamic lib. return a hash including dl pointer and function pointers
-    dlopen: func(libname) {
-        # find dynamic lib from local dir first
-        libname = (os.platform()=="windows"? ".\\":"./")~libname;
-        if(io.exists(libname))
-            return __dlopen(libname);
-        # find dynamic lib through PATH
-        var envpath = split(os.platform()=="windows"? ";":":",unix.getenv("PATH"));
-        # first find ./module
-        append(envpath, ".");
-        var path = os.platform()=="windows"? "\\module\\":"/module/";
-        foreach(var p;envpath) {
-            p ~= path~libname;
-            if(io.exists(p)) {
-                libname = p;
-                break;
-            }
-        }
-        return __dlopen(libname);
-    },
-    # close dynamic lib, this operation will make all the symbols loaded from it invalid.
-    dlclose: func(lib) {return __dlclose;},
-    # call the loaded symbol, with infinite parameters:
-    # Caution: this may cause garbage collection process, be aware of the performance.
-    dlcall:  func(ptr, args...) {return __dlcallv},
-    # get dlcall function with limited parameter list
-    limitcall: func(arg_size = 0) {
-        if(arg_size==0) {return func(ptr) {return __dlcall};}
-        elsif(arg_size==1) {return func(ptr, _0) {return __dlcall};}
-        elsif(arg_size==2) {return func(ptr, _0, _1) {return __dlcall};}
-        elsif(arg_size==3) {return func(ptr, _0, _1, _2) {return __dlcall};}
-        elsif(arg_size==4) {return func(ptr, _0, _1, _2, _3) {return __dlcall};}
-        elsif(arg_size==5) {return func(ptr, _0, _1, _2, _3, _4) {return __dlcall};}
-        elsif(arg_size==6) {return func(ptr, _0, _1, _2, _3, _4, _5) {return __dlcall};}
-        elsif(arg_size==7) {return func(ptr, _0, _1, _2, _3, _4, _5, _6) {return __dlcall};}
-        elsif(arg_size==8) {return func(ptr, _0, _1, _2, _3, _4, _5, _6, _7) {return __dlcall};}
-        else {return func(ptr, args...) {return __dlcallv};}
-    }
-};
 
 # functions that not supported in this runtime:
 var bind = func(function, locals, outer_scope = nil) {

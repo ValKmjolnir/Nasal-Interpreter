@@ -1,3 +1,4 @@
+import.std.dylib;
 
 var libfib=func(){
     var dl=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
