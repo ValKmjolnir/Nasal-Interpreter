@@ -91,7 +91,7 @@ void dbg::step_info() {
 
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
-    codestream::set(cnum, cstr, files);
+    codestream::set(cnum, cstr, native.data(), files);
     std::clog << "next bytecode:\n";
     for(u32 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
@@ -164,12 +164,8 @@ void dbg::run(
     const std::vector<std::string>& argv) {
     verbose = true;
     fsize = linker.filelist().size();
-    init(gen.strs(),
-         gen.nums(),
-         gen.codes(),
-         gen.globals(),
-         linker.filelist(),
-         argv);
+    init(gen.strs(), gen.nums(), gen.natives(),
+         gen.codes(), gen.globals(), linker.filelist(), argv);
     u64 count[op_ret+1] = {0};
     typedef void (dbg::*nafunc)();
     const nafunc oprs[] = {

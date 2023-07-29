@@ -1,15 +1,30 @@
 #include "nasal_codegen.h"
 
+void codegen::load_native_function_table(nasal_builtin_table* table) {
+    for(usize i = 0; table[i].func; ++i) {
+        if (native_function_mapper.count(table[i].name)) {
+            err.err("code", "\"" + std::string(table[i].name) + "\" conflicts.");
+            continue;
+        }
+        native_function.push_back(table[i]);
+        auto index = native_function_mapper.size();
+        native_function_mapper[table[i].name] = index;
+    }
+}
+
+void codegen::init_native_function() {
+    load_native_function_table(builtin);
+    load_native_function_table(flight_gear_native);
+}
+
 void codegen::check_id_exist(identifier* node) {
     const auto& name = node->get_name();
-    for(u32 i = 0; builtin[i].name; ++i) {
-        if (builtin[i].name==name) {
-            if (local.empty()) {
-                die("native function used in global scope",
-                    node->get_location());
-            }
-            return;
+    if (native_function_mapper.count(name)) {
+        if (local.empty()) {
+            die("native function should not be used in global scope",
+                node->get_location());
         }
+        return;
     }
 
     if (local_find(name)>=0) {
@@ -269,16 +284,17 @@ void codegen::call_gen(call_expr* node) {
 
 void codegen::call_id(identifier* node) {
     const auto& name = node->get_name();
-    for(u32 i = 0; builtin[i].name; ++i) {
-        if (builtin[i].name==name) {
-            gen(op_callb, i, node->get_location());
-            if (local.empty()) {
-                die("should warp native function in local scope",
-                    node->get_location());
-            }
-            return;
+    if (native_function_mapper.count(name)) {
+        gen(op_callb,
+            static_cast<u32>(native_function_mapper.at(name)),
+            node->get_location());
+        if (local.empty()) {
+            die("should warp native function in local scope",
+                node->get_location());
         }
+        return;
     }
+
     i32 index;
     if ((index=local_find(name))>=0) {
         gen(op_calll, index, node->get_location());
@@ -384,12 +400,11 @@ void codegen::mcall(expr* node) {
 
 void codegen::mcall_id(identifier* node) {
     const auto& name = node->get_name();
-    for(u32 i = 0; builtin[i].name; ++i) {
-        if (builtin[i].name==name) {
-            die("cannot modify native function", node->get_location());
-            return;
-        }
+    if (native_function_mapper.count(name)) {
+        die("cannot modify native function", node->get_location());
+        return;
     }
+
     i32 index;
     if ((index=local_find(name))>=0) {
         gen(op_mcalll, index, node->get_location());
@@ -1114,6 +1129,7 @@ void codegen::ret_gen(return_expr* node) {
 }
 
 const error& codegen::compile(parse& parse, linker& import) {
+    init_native_function();
     const auto& file = import.filelist();
     file_map = {};
     for(usize i = 0; i<file.size(); ++i) {
@@ -1175,7 +1191,10 @@ void codegen::print(std::ostream& out) {
     }
 
     // print code
-    codestream::set(const_number_table.data(), const_string_table.data());
+    codestream::set(
+        const_number_table.data(),
+        const_string_table.data(),
+        native_function.data());
     for(u32 i = 0; i<code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];

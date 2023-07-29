@@ -26,12 +26,14 @@ const char* opname[] = {
 };
 
 void codestream::set(
-    const f64* numbuff,
-    const std::string* strbuff,
-    const std::string* filelist) {
-    nums = numbuff;
-    strs = strbuff;
-    files = filelist;
+    const f64* num_buff,
+    const std::string* str_buff,
+    const nasal_builtin_table* native_table_ptr,
+    const std::string* file_list) {
+    nums = num_buff;
+    strs = str_buff;
+    natives = native_table_ptr;
+    files = file_list;
 }
 
 void codestream::dump(std::ostream& out) const {
@@ -87,8 +89,8 @@ void codestream::dump(std::ostream& out) const {
         case op_loadl:
             out << hex << "0x" << num << dec; break;
         case op_callb:
-            out << hex << "0x" << num << " <" << builtin[num].name
-                << "@0x" << (u64)builtin[num].func << dec << ">"; break;
+            out << hex << "0x" << num << " <" << natives[num].name
+                << "@0x" << (u64)natives[num].func << dec << ">"; break;
         case op_upval: case op_mupval:
         case op_loadu:
             out << hex << "0x" << ((num>>16)&0xffff)

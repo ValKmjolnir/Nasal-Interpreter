@@ -2,6 +2,7 @@
 
 #include "nasal.h"
 #include "nasal_gc.h"
+#include "nasal_builtin.h"
 
 #define SG_LOG_BULK 1
 #define SG_LOG_DEBUG 2
@@ -13,3 +14,5 @@
 #define SG_MANDATORY_INFO 9
 
 var builtin_logprint(var*, gc&);
+
+extern nasal_builtin_table flight_gear_native[];
