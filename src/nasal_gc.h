@@ -344,7 +344,7 @@ struct gc {
     context* rctx = nullptr;
     nas_co* cort = nullptr; // running coroutine
 
-    /*  temporary space used in builtin/module functions */
+    /*  temporary space used in native/module functions */
     var temp = nil;
 
     /* constants and memory pool */

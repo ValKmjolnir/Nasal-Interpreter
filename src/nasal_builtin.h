@@ -134,7 +134,7 @@ var builtin_ghosttype(var*, gc&);
 // this table must end with {nullptr,nullptr}
 struct nasal_builtin_table {
     const char* name;
-    var (*func)(var*,gc&);
+    var (*func)(var*, gc&);
 };
 
 extern nasal_builtin_table builtin[];

@@ -84,7 +84,6 @@ build/nasal_ast.o: \
 build/nasal_builtin.o: \
 	src/nasal.h\
 	src/nasal_gc.h\
-	src/fg_props.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_builtin.cpp -fno-exceptions -fPIC -o build/nasal_builtin.o -I .
 

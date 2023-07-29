@@ -57,16 +57,16 @@ enum op_code_type:u8 {
     op_divecp, // /= const and pop stack top
     op_lnkecp, // ~= concat const std::string and pop stack top
     op_meq,    // = maybe pop stack top
-    op_eq,     // ==
-    op_neq,    // !=
-    op_less,   // <
-    op_leq,    // <=
-    op_grt,    // >
-    op_geq,    // >=
-    op_lessc,  // < const
-    op_leqc,   // <= const
-    op_grtc,   // > const
-    op_geqc,   // >= const
+    op_eq,     // == compare operator
+    op_neq,    // != compare operator
+    op_less,   // < compare operator
+    op_leq,    // <= compare operator
+    op_grt,    // > compare operator
+    op_geq,    // >= compare operator
+    op_lessc,  // < const compare operator
+    op_leqc,   // <= const compare operator
+    op_grtc,   // > const compare operator
+    op_geqc,   // >= const compare operator
     op_pop,    // pop a value out of stack top
     op_jmp,    // jump absolute address with no condition
     op_jt,     // used in operator and/or,jmp when condition is true and DO NOT POP
@@ -82,8 +82,8 @@ enum op_code_type:u8 {
     op_callh,  // call hash.label
     op_callfv, // call function(vector as parameters)
     op_callfh, // call function(hash as parameters)
-    op_callb,  // call builtin-function
-    op_slcbeg, // begin of slice like: vec[1,2,3:6,0,-1]
+    op_callb,  // call native functions
+    op_slcbeg, // begin of slice like: vec[1, 2, 3:6, 0, -1]
     op_slcend, // end of slice
     op_slc,    // slice like vec[1]
     op_slc2,   // slice like vec[nil:10]
@@ -111,10 +111,16 @@ private:
     const u32 index;
     inline static const f64* nums = nullptr;
     inline static const std::string* strs = nullptr;
+    inline static const nasal_builtin_table* natives = nullptr;
     inline static const std::string* files = nullptr;
+    
 public:
     codestream(const opcode& c, const u32 i): code(c), index(i) {}
-    static void set(const f64*, const std::string*, const std::string* filelist = nullptr);
+    static void set(
+        const f64*, const std::string*,
+        const nasal_builtin_table*,
+        const std::string* file_list = nullptr
+    );
     void dump(std::ostream&) const;
 };
 

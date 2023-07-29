@@ -3,6 +3,7 @@
 void vm::init(
     const std::vector<std::string>& strs,
     const std::vector<f64>& nums,
+    const std::vector<nasal_builtin_table>& natives,
     const std::vector<opcode>& code,
     const std::unordered_map<std::string, i32>& global,
     const std::vector<std::string>& filenames,
@@ -12,6 +13,9 @@ void vm::init(
     cstr = strs.data();
     bytecode = code.data();
     files = filenames.data();
+
+    /* set native functions */
+    native = natives;
 
     /* set canary and program counter */
     ctx.pc = 0;
@@ -98,7 +102,7 @@ void vm::traceback() {
     std::clog << "trace back ("
               << (ngc.rctx->stack==stack? "main":"coroutine")
               << ")\n";
-    codestream::set(cnum, cstr, files);
+    codestream::set(cnum, cstr, native.data(), files);
     for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
@@ -230,12 +234,8 @@ void vm::run(
     const std::vector<std::string>& argv,
     const bool detail) {
     verbose = detail;
-    init(gen.strs(),
-         gen.nums(),
-         gen.codes(),
-         gen.globals(),
-         linker.filelist(),
-         argv);
+    init(gen.strs(), gen.nums(), gen.natives(),
+         gen.codes(), gen.globals(), linker.filelist(), argv);
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {

@@ -29,3 +29,8 @@ var builtin_logprint(var* local, gc& ngc) {
     out << "\n";
     return nil;
 }
+
+nasal_builtin_table flight_gear_native[] = {
+    {"_logprint", builtin_logprint},
+    {nullptr, nullptr}
+};

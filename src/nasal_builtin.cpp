@@ -1,5 +1,4 @@
 ﻿#include "nasal_builtin.h"
-#include "fg_props.h"
 #include <chrono>
 
 var builtin_print(var* local, gc& ngc) {
@@ -1374,6 +1373,5 @@ nasal_builtin_table builtin[] = {
     {"__gcinfo", builtin_gcinfo},
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
-    {"_logprint", builtin_logprint},
     {nullptr, nullptr}
 };

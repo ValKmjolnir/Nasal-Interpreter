@@ -1,13 +1,15 @@
 #pragma once
 
 #include "nasal_err.h"
-#include "nasal_builtin.h"
 #include "nasal_opcode.h"
 #include "nasal_ast.h"
 #include "ast_visitor.h"
 #include "symbol_finder.h"
 #include "nasal_parse.h"
 #include "nasal_import.h"
+
+#include "nasal_builtin.h"
+#include "fg_props.h"
 
 #include <iomanip>
 #include <list>
@@ -35,6 +37,12 @@ private:
     std::unordered_map<std::string, u32> const_string_map;
     std::vector<f64> const_number_table;
     std::vector<std::string> const_string_table;
+
+    // native functions
+    std::vector<nasal_builtin_table> native_function;
+    std::unordered_map<std::string, usize> native_function_mapper;
+    void load_native_function_table(nasal_builtin_table*);
+    void init_native_function();
 
     // generated opcodes
     std::vector<opcode> code;
@@ -108,6 +116,7 @@ private:
 public:
     const auto& strs() const {return const_string_table;}
     const auto& nums() const {return const_number_table;}
+    const auto& natives() const {return native_function;}
     const auto& codes() const {return code;}
     const auto& globals() const {return global;}
     const auto& get_experimental_namespace() const {
