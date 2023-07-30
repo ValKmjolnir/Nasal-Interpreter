@@ -18,7 +18,8 @@ NASAL_HEADER=\
 	src/optimizer.h\
 	src/symbol_finder.h\
 	src/fg_props.h\
-	src/math_lib.h
+	src/math_lib.h\
+	src/coroutine.h
 
 NASAL_OBJECT=\
 	build/nasal_err.o\
@@ -37,6 +38,7 @@ NASAL_OBJECT=\
 	build/nasal_builtin.o\
 	build/fg_props.o\
 	build/math_lib.o\
+	build/coroutine.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/main.o
@@ -88,6 +90,12 @@ build/nasal_builtin.o: \
 	src/nasal_gc.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_builtin.cpp -fno-exceptions -fPIC -o build/nasal_builtin.o -I .
+
+build/coroutine.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/coroutine.h src/coroutine.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/coroutine.cpp -fno-exceptions -fPIC -o build/coroutine.o -I .
 
 build/math_lib.o: \
 	src/nasal.h\

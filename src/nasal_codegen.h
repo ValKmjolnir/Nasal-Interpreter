@@ -9,6 +9,7 @@
 #include "nasal_import.h"
 
 #include "nasal_builtin.h"
+#include "coroutine.h"
 #include "math_lib.h"
 #include "fg_props.h"
 
