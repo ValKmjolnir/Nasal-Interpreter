@@ -10,6 +10,7 @@
 
 #include "nasal_builtin.h"
 #include "coroutine.h"
+#include "bits_lib.h"
 #include "math_lib.h"
 #include "fg_props.h"
 
