@@ -21,6 +21,10 @@ var abs = func(x) {
     return x>0? x:-x;
 }
 
+var sgn = func(x) {
+    return x<0? -1:(x>0);
+}
+
 # floor will get the integral number of input argument
 # which is less than or equal to this argument.
 # this is basic native function in old nasal, 
@@ -57,6 +61,9 @@ var ln = func(x) {
     return __ln(x);
 }
 
+var _iln10 = 1/ln(10);
+var log10 = lg;
+
 var sqrt = func(x) {
     return __sqrt(x);
 }
@@ -69,10 +76,39 @@ var isnan = func(x) {
     return __isnan(x);
 }
 
-var max = func(x, y) {
-    return x>y? x:y;
+var max = func(x, arg...) {
+    var res = x;
+    foreach(var i;arg) {
+        if (i>res) {
+            res = i;
+        }
+    }
+    return res;
 }
 
-var min = func(x, y) {
-    return x<y? x:y;
+var min = func(x, arg...) {
+    var res = x;
+    foreach(var i;arg) {
+        if (i<res) {
+            res = i;
+        }
+    }
+    return res;
+}
+
+var mod = func(n, m) {
+    var x = n-int(n/m)*m;
+    return x<0? x+abs(m):x;
+}
+
+var fmod = func(n, m) {
+    return n-int(n/m)*m;
+}
+
+var clamp = func(value, min, max) {
+    return (value<min)? min:((value>max)? max:value);
+}
+
+var approx_eq = func(a, b, d = 0.000001) {
+    return abs(a-b)<d;
 }
