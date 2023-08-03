@@ -62,6 +62,8 @@ var ln = func(x) {
 }
 
 var _iln10 = 1/ln(10);
+
+# log10 is alias of lg
 var log10 = lg;
 
 var sqrt = func(x) {
@@ -94,6 +96,14 @@ var min = func(x, arg...) {
         }
     }
     return res;
+}
+
+var avg = func(arg...) {
+    var x = 0;
+    foreach(var i;arg) {
+        x += i;
+    }
+    return x/size(arg);
 }
 
 var mod = func(n, m) {

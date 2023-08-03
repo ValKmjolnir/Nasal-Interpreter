@@ -1131,7 +1131,7 @@ void codegen::ret_gen(return_expr* node) {
     gen(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import) {
+const error& codegen::compile(parse& parse, linker& import, bool repl) {
     init_native_function();
     const auto& file = import.filelist();
     file_map = {};
@@ -1146,9 +1146,13 @@ const error& codegen::compile(parse& parse, linker& import) {
     // add special symbol arg here, which is used to store command line args
     add_symbol("arg");
 
-    find_symbol(parse.tree()); // search symbols first
-    gen(op_intg, global.size(), parse.tree()->get_location());
-    block_gen(parse.tree()); // generate main block
+    // search global symbols first
+    find_symbol(parse.tree());
+    gen(op_intg, repl? STACK_DEPTH/2:global.size(), parse.tree()->get_location());
+
+    // generate main block
+    block_gen(parse.tree());
+    // generate exit operand, vm stops here
     gen(op_exit, 0, parse.tree()->get_location());
 
     // size out of bound check
@@ -1162,10 +1166,14 @@ const error& codegen::compile(parse& parse, linker& import) {
             "too many constant strings: " +
             std::to_string(const_string_table.size()));
     }
-    if (global.size()>=STACK_DEPTH) {
+
+    // check global variables size
+    if (global.size()>=STACK_DEPTH/2) {
         err.err("code",
             "too many global variables: " + std::to_string(global.size()));
     }
+
+    // check generated code size
     if (code.size()>0xffffff) {
         err.err("code",
             "bytecode size overflow: " + std::to_string(code.size()));
