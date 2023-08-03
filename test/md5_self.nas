@@ -34,7 +34,7 @@ var hex32str=func(){
     };
 }();
 
-var _md5=func(){
+var md5=func(){
     var K=[
         0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
         0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
@@ -201,7 +201,7 @@ var md5check=func(){
         "ec6d5b197ba019db23c719112f3f70b7"
     ];
     forindex(var i;test_set){
-        var res=_md5(test_set[i]);
+        var res=md5(test_set[i]);
         if(cmp(res,result[i]))
             println(
                 "md5 cannot work:\n",

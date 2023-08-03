@@ -23,7 +23,7 @@ var compare=func() {
             }
             byte+=size(s);
             var res=md5(s);
-            if(cmp(res,md5_self._md5(s))) {
+            if(cmp(res, md5_self.md5(s))) {
                 die("error: "~str(i));
             }
             if (i-begin-int((i-begin)/4)*4==0) {
@@ -74,7 +74,7 @@ var filechecksum=func(){
         var f=io.readfile(files[i]);
         var res=md5(f);
         byte+=size(f);
-        if(cmp(res,md5_self._md5(f))){
+        if(cmp(res, md5_self.md5(f))){
             die("error: "~files[i]);
         }
         print(
