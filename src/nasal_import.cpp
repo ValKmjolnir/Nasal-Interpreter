@@ -279,6 +279,10 @@ return_expr* linker::generate_module_return(code_block* block) {
     res->set_value(value);
     for(const auto& i : sf->do_find(block)) {
         auto pair = new hash_pair(block->get_location());
+        // do not export symbol begins with '_'
+        if (i.name.length() && i.name[0]=='_') {
+            continue;
+        }
         pair->set_name(i.name);
         pair->set_value(new identifier(block->get_location(), i.name));
         value->add_member(pair);
