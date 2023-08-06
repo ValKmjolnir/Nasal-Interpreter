@@ -9,7 +9,82 @@
 #include <algorithm>
 #include <unordered_map>
 
+class debug_prof_data {
+private:
+    static const usize operand_size = op_code_type::op_ret + 1;
+    u64 operand_counter[operand_size];
+    std::vector<std::string> file_name_list;
+    std::vector<std::vector<u64>> file_line_counter;
+    std::vector<std::vector<std::string>> file_contents;
+
+private:
+    void init_counter();
+    void load_file_line_counter(const std::vector<std::string>&);
+
+public:
+    void init(const std::vector<std::string>&);
+    void dump_counter() const;
+    void dump_code_line_counter(std::ostream&) const;
+    void dump_this_file_line_counter(std::ostream&) const;
+    void add_operand_counter(usize index) {
+        operand_counter[index] += index<operand_size? 1:0;
+    }
+    void add_code_line_counter(usize fidx, usize line) {
+        auto& vec = file_line_counter[fidx];
+        vec[line==0? line: line-1]++;
+    }
+};
+
 class dbg:public vm {
+private:
+    typedef void (dbg::*nasal_vm_func)();
+    const nasal_vm_func operand_function[op_ret + 1] = {
+        nullptr,        &dbg::o_intg,
+        &dbg::o_intl,   &dbg::o_loadg,
+        &dbg::o_loadl,  &dbg::o_loadu,
+        &dbg::o_pnum,   &dbg::o_pnil,
+        &dbg::o_pstr,   &dbg::o_newv,
+        &dbg::o_newh,   &dbg::o_newf,
+        &dbg::o_happ,   &dbg::o_para,
+        &dbg::o_deft,   &dbg::o_dyn,
+        &dbg::o_lnot,   &dbg::o_usub,
+        &dbg::o_bnot,   &dbg::o_btor,
+        &dbg::o_btxor,  &dbg::o_btand,
+        &dbg::o_add,    &dbg::o_sub,
+        &dbg::o_mul,    &dbg::o_div,
+        &dbg::o_lnk,    &dbg::o_addc,
+        &dbg::o_subc,   &dbg::o_mulc,
+        &dbg::o_divc,   &dbg::o_lnkc,
+        &dbg::o_addeq,  &dbg::o_subeq,
+        &dbg::o_muleq,  &dbg::o_diveq,
+        &dbg::o_lnkeq,  &dbg::o_bandeq,
+        &dbg::o_boreq,  &dbg::o_bxoreq,
+        &dbg::o_addeqc, &dbg::o_subeqc,
+        &dbg::o_muleqc, &dbg::o_diveqc,
+        &dbg::o_lnkeqc, &dbg::o_addecp,
+        &dbg::o_subecp, &dbg::o_mulecp,
+        &dbg::o_divecp, &dbg::o_lnkecp,
+        &dbg::o_meq,    &dbg::o_eq,
+        &dbg::o_neq,    &dbg::o_less,
+        &dbg::o_leq,    &dbg::o_grt,
+        &dbg::o_geq,    &dbg::o_lessc,
+        &dbg::o_leqc,   &dbg::o_grtc,
+        &dbg::o_geqc,   &dbg::o_pop,
+        &dbg::o_jmp,    &dbg::o_jt,
+        &dbg::o_jf,     &dbg::o_cnt,
+        &dbg::o_findex, &dbg::o_feach,
+        &dbg::o_callg,  &dbg::o_calll,
+        &dbg::o_upval,  &dbg::o_callv,
+        &dbg::o_callvi, &dbg::o_callh,
+        &dbg::o_callfv, &dbg::o_callfh,
+        &dbg::o_callb,  &dbg::o_slcbeg,
+        &dbg::o_slcend, &dbg::o_slc,
+        &dbg::o_slc2,   &dbg::o_mcallg,
+        &dbg::o_mcalll, &dbg::o_mupval,
+        &dbg::o_mcallv, &dbg::o_mcallh,
+        &dbg::o_ret
+    };
+
 private:
     enum class dbg_cmd {
         cmd_error,
@@ -66,20 +141,27 @@ private:
     u32 bk_line;
     error src;
 
+    debug_prof_data data;
+    bool do_profiling;
+
     std::vector<std::string> parse(const std::string&);
     u16 file_index(const std::string&) const;
     void err();
     void help();
     void list_file() const;
-    void call_sort(const u64*) const;
     void step_info();
     void interact();
 
 public:
-    dbg(): next(false), fsize(0), bk_fidx(0), bk_line(0) {}
+    dbg():
+        next(false), fsize(0),
+        bk_fidx(0), bk_line(0),
+        do_profiling(false) {}
     void run(
         const codegen&,
         const linker&,
-        const std::vector<std::string>&
+        const std::vector<std::string>&,
+        bool,
+        bool
     );
 };

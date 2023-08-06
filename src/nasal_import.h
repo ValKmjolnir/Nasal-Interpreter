@@ -49,7 +49,7 @@ private:
 public:
     linker();
     const error& link(parse&, const std::string&, bool);
-    const std::vector<std::string>& filelist() const {return files;}
-    const std::string& get_this_file() const {return this_file;}
-    const std::string& get_lib_path() const {return lib_path;}
+    const auto& get_file_list() const {return files;}
+    const auto& get_this_file() const {return this_file;}
+    const auto& get_lib_path() const {return lib_path;}
 };

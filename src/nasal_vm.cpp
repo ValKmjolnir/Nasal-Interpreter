@@ -235,7 +235,7 @@ void vm::run(
     const bool detail) {
     verbose = detail;
     init(gen.strs(), gen.nums(), gen.natives(),
-         gen.codes(), gen.globals(), linker.filelist(), argv);
+         gen.codes(), gen.globals(), linker.get_file_list(), argv);
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {

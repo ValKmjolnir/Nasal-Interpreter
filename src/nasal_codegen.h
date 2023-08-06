@@ -31,6 +31,7 @@ private:
 
     // file mapper for file -> index
     std::unordered_map<std::string, usize> file_map;
+    void init_file_map(const std::vector<std::string>&);
 
     // used for generate pop in return expression
     std::vector<u32> in_loop_level;

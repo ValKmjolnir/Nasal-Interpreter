@@ -1,5 +1,12 @@
 #include "nasal_codegen.h"
 
+void codegen::init_file_map(const std::vector<std::string>& file_list) {
+    file_map = {};
+    for(usize i = 0; i<file_list.size(); ++i) {
+        file_map.insert({file_list[i], i});
+    }
+}
+
 void codegen::load_native_function_table(nasal_builtin_table* table) {
     for(usize i = 0; table[i].func; ++i) {
         if (native_function_mapper.count(table[i].name)) {
@@ -1133,11 +1140,7 @@ void codegen::ret_gen(return_expr* node) {
 
 const error& codegen::compile(parse& parse, linker& import, bool repl) {
     init_native_function();
-    const auto& file = import.filelist();
-    file_map = {};
-    for(usize i = 0; i<file.size(); ++i) {
-        file_map[file[i]] = i;
-    }
+    init_file_map(import.get_file_list());
 
     in_loop_level.push_back(0);
 
