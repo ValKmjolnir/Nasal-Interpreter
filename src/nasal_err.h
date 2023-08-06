@@ -27,11 +27,13 @@ class flstream {
 protected:
     std::string file;
     std::vector<std::string> res;
+
 public:
     flstream():file("") {}
     void load(const std::string&);
     const std::string& operator[](usize n) const {return res[n];}
-    const std::string& name() const {return file;}
+    const auto& name() const {return file;}
+    const auto& file_content() const {return res;}
     usize size() const {return res.size();}
 };
 
@@ -49,6 +51,7 @@ private:
         }
         return tmp;
     }
+
 public:
     error():cnt(0) {}
     void fatal(const std::string&, const std::string&);
