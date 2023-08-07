@@ -1,6 +1,7 @@
-import.test.md5;
+import.test.md5_self;
 import.std.process_bar;
 import.std.file;
+
 srand();
 
 var compare=func() {
@@ -22,7 +23,7 @@ var compare=func() {
             }
             byte+=size(s);
             var res=md5(s);
-            if(cmp(res,_md5(s))) {
+            if(cmp(res, md5_self.md5(s))) {
                 die("error: "~str(i));
             }
             if (i-begin-int((i-begin)/4)*4==0) {
@@ -45,22 +46,22 @@ var compare=func() {
 
 var filechecksum=func(){
     var files=[];
-    foreach(var p;find_all_files_with_extension("./test","nas")) {
+    foreach(var p;file.find_all_files_with_extension("./test","nas")) {
         append(files,"./test/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./std","nas")) {
+    foreach(var p;file.find_all_files_with_extension("./std","nas")) {
         append(files,"./std/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./module","nas","cpp")) {
+    foreach(var p;file.find_all_files_with_extension("./module","nas","cpp")) {
         append(files,"./module/"~p);
     }
-    foreach(var p;find_all_files_with_extension(".","md")) {
+    foreach(var p;file.find_all_files_with_extension(".","md")) {
         append(files,"./"~p);
     }
-    foreach(var p;find_all_files_with_extension("./src","cpp","h")) {
+    foreach(var p;file.find_all_files_with_extension("./src","cpp","h")) {
         append(files,"./src/"~p);
     }
-    foreach(var p;find_all_files_with_extension("./doc","md")) {
+    foreach(var p;file.find_all_files_with_extension("./doc","md")) {
         append(files,"./doc/"~p);
     }
 
@@ -73,7 +74,7 @@ var filechecksum=func(){
         var f=io.readfile(files[i]);
         var res=md5(f);
         byte+=size(f);
-        if(cmp(res,_md5(f))){
+        if(cmp(res, md5_self.md5(f))){
             die("error: "~files[i]);
         }
         print(

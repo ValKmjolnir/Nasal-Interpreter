@@ -35,3 +35,4 @@ b(1, 2, 3, 4); # 1 [2 3 4]
 # command line arguments
 println(arg);
 println(globals.arg);
+println(typeof(globals));

@@ -74,9 +74,10 @@ void lexer::open(const std::string& file) {
     std::ifstream in(file, std::ios::binary);
     if (in.fail()) {
         err.err("lexer", "failed to open <" + file + ">");
-    } else {
-        err.load(file);
+        res = "";
+        return;
     }
+    err.load(file);
     std::stringstream ss;
     ss << in.rdbuf();
     res = ss.str();

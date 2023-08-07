@@ -1,6 +1,6 @@
-var mod=func(n,a){
-    return n-int(n/a)*a;
-}
+import.std.runtime;
+
+var mod = math.mod;
 
 var main=func(run_time){
     var ts=maketimestamp();

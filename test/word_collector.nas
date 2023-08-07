@@ -1,4 +1,4 @@
-import.std.sort;
+import.std.runtime;
 
 var to_lower=func(s){
     var tmp="";

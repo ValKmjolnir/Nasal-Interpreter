@@ -137,6 +137,12 @@ void nas_ghost::clear() {
     ptr = nullptr;
 }
 
+std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
+    out << "<object " << ghost.get_ghost_name();
+    out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
+    return out;
+}
+
 void nas_co::clear() {
     for(u32 i = 0; i<STACK_DEPTH; ++i) {
         stack[i] = var::nil();
@@ -150,7 +156,12 @@ void nas_co::clear() {
     ctx.upvalr = var::nil();
     ctx.stack = stack;
 
-    status = coroutine_status::suspended;
+    status = status::suspended;
+}
+
+std::ostream& operator<<(std::ostream& out, const nas_co& co) {
+    out << "<coroutine at 0x" << std::hex << u64(&co) << std::dec << ">";
+    return out;
 }
 
 var nas_map::get_val(const std::string& key) {
@@ -251,7 +262,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_hash: out << ref.hash();    break;
         case vm_func: out << "func(..) {..}"; break;
         case vm_obj:  out << ref.obj();     break;
-        case vm_co:   out << "<coroutine>"; break;
+        case vm_co:   out << ref.co();      break;
         case vm_map:  out << ref.map();     break;
     }
     return out;
@@ -356,24 +367,59 @@ void gc::do_mark_sweep() {
 
 void gc::mark() {
     std::vector<var> bfs;
-    mark_context(bfs);
+    mark_context_root(bfs);
+    if (memory.size()>8192 && bfs.size()>4) {
+        usize size = bfs.size();
+        std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
+        std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
+        std::thread t2(&gc::concurrent_mark, this, std::ref(bfs), size/2, size/4*3);
+        std::thread t3(&gc::concurrent_mark, this, std::ref(bfs), size/4*3, size);
+        t0.join();
+        t1.join();
+        t2.join();
+        t3.join();
+        return;
+    }
     
     while(!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_num ||
-            value.val.gcobj->mark!=gc_status::uncollected) {
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
             continue;
         }
         mark_var(bfs, value);
     }
 }
 
-void gc::mark_context(std::vector<var>& bfs_queue) {
+void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
+    std::vector<var> bfs;
+    for(auto i = begin; i<end; ++i) {
+        var value = vec[i];
+        if (value.type<=vm_num ||
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
+            continue;
+        }
+        mark_var(bfs, value);
+    }
+    while(!bfs.empty()) {
+        var value = bfs.back();
+        bfs.pop_back();
+        if (value.type<=vm_num ||
+            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
+            continue;
+        }
+        mark_var(bfs, value);
+    }
+}
+
+void gc::mark_context_root(std::vector<var>& bfs_queue) {
 
     // scan now running context, this context maybe related to coroutine or main
     for(var* i = rctx->stack; i<=rctx->top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
     bfs_queue.push_back(rctx->funcr);
     bfs_queue.push_back(rctx->upvalr);
@@ -385,14 +431,16 @@ void gc::mark_context(std::vector<var>& bfs_queue) {
 
     // coroutine is running, so scan main process stack from mctx
     for(var* i = mctx.stack; i<=mctx.top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
     bfs_queue.push_back(mctx.funcr);
     bfs_queue.push_back(mctx.upvalr);
 }
 
 void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
-    value.val.gcobj->mark = gc_status::found;
+    value.val.gcobj->mark = nas_val::gc_status::found;
     switch(value.type) {
         case vm_vec: mark_vec(bfs_queue, value.vec()); break;
         case vm_hash: mark_hash(bfs_queue, value.hash()); break;
@@ -422,7 +470,9 @@ void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
 
 void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
     for(auto& i : function.local) {
-        bfs_queue.push_back(i);
+        if (i.type>vm_num) {
+            bfs_queue.push_back(i);
+        }
     }
     for(auto& i : function.upval) {
         bfs_queue.push_back(i);
@@ -431,7 +481,9 @@ void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
 
 void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
     for(auto& i : upval.elems) {
-        bfs_queue.push_back(i);
+        if (i.type>vm_num) {
+            bfs_queue.push_back(i);
+        }
     }
 }
 
@@ -439,24 +491,28 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
     for(var* i = co.stack; i<=co.ctx.top; ++i) {
-        bfs_queue.push_back(*i);
+        if (i->type>vm_num) {
+            bfs_queue.push_back(*i);
+        }
     }
 }
 
 void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
     for(const auto& i : mp.mapper) {
-        bfs_queue.push_back(*i.second);
+        if (i.second->type>vm_num) {
+            bfs_queue.push_back(*i.second);
+        }
     }
 }
 
 void gc::sweep() {
     for(auto i : memory) {
-        if (i->mark==gc_status::uncollected) {
+        if (i->mark==nas_val::gc_status::uncollected) {
             i->clear();
             unused[i->type-vm_str].push_back(i);
-            i->mark = gc_status::collected;
-        } else if (i->mark==gc_status::found) {
-            i->mark = gc_status::uncollected;
+            i->mark = nas_val::gc_status::collected;
+        } else if (i->mark==nas_val::gc_status::found) {
+            i->mark = nas_val::gc_status::uncollected;
         }
     }
 }
@@ -542,7 +598,7 @@ void gc::info() const {
         "upvalue",
         "object",
         "coroutine",
-        "mapper",
+        "namespace",
         nullptr
     };
 
@@ -567,6 +623,8 @@ void gc::info() const {
     for(usize i = 0; i<indent; ++i) {
         indent_string += "-";
     }
+    auto last_line = indent_string + "+" +
+        indent_string + "-" + indent_string + "-" + indent_string;
     indent_string = indent_string + "+" +
         indent_string + "+" + indent_string + "+" + indent_string;
 
@@ -608,7 +666,7 @@ void gc::info() const {
     std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
     std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
     std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
-    std::clog << indent_string << "\n";
+    std::clog << last_line << "\n";
 }
 
 var gc::alloc(u8 type) {
@@ -622,7 +680,7 @@ var gc::alloc(u8 type) {
         extend(type);
     }
     var ret = var::gcobj(unused[index].back());
-    ret.val.gcobj->mark = gc_status::uncollected;
+    ret.val.gcobj->mark = nas_val::gc_status::uncollected;
     unused[index].pop_back();
     return ret;
 }
@@ -638,14 +696,14 @@ void gc::ctxchg(nas_co& co) {
     cort = &co;
 
     // set coroutine state to running
-    cort->status = coroutine_status::running;
+    cort->status = nas_co::status::running;
 }
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
     cort->status = rctx->pc?
-        coroutine_status::suspended:
-        coroutine_status::dead;
+        nas_co::status::suspended:
+        nas_co::status::dead;
 
     // store running state to coroutine
     cort->ctx = *rctx;

@@ -1,7 +1,9 @@
 #include "nasal_import.h"
+#include "symbol_finder.h"
 
-linker::linker(error& e):
-    show_path(false), lib_loaded(false), err(e) {
+linker::linker():
+    show_path(false), lib_loaded(false),
+    this_file(""), lib_path("") {
     char sep = is_windows()? ';':':';
     std::string PATH = getenv("PATH");
     usize last = 0, pos = PATH.find(sep, 0);
@@ -54,16 +56,19 @@ std::string linker::find_file(
             find_file("std/lib.nas", location);
     }
     if (!show_path) {
-        err.load(location.file);
-        err.err("link", "cannot find file <" + filename + ">");
+        err.err("link",
+            "in <" + location.file + ">: " +
+            "cannot find file <" + filename + ">, " +
+            "use <-d> to get detail search path");
         return "";
     }
     std::string paths = "";
     for(const auto& i : fpath) {
-        paths += "  " + i + "\n";
+        paths += "  -> " + i + "\n";
     }
-    err.load(location.file);
-    err.err("link", "cannot find file <" + filename + "> in these paths:\n" + paths);
+    err.err("link",
+        "in <" + location.file + ">: " +
+        "cannot find file <" + filename + "> in these paths:\n" + paths);
     return "";
 }
 
@@ -130,6 +135,34 @@ bool linker::exist(const std::string& file) {
     return false;
 }
 
+u16 linker::find(const std::string& file) {
+    for(usize i = 0; i<files.size(); ++i) {
+        if (files[i]==file) {
+            return static_cast<u16>(i);
+        }
+    }
+    std::cerr << "unreachable: using this method incorrectly\n";
+    std::exit(-1);
+    return UINT16_MAX;
+}
+
+bool linker::check_self_import(const std::string& file) {
+    for(const auto& i : module_load_stack) {
+        if (file==i) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string linker::generate_self_import_path(const std::string& filename) {
+    std::string res = "";
+    for(const auto& i : module_load_stack) {
+        res += "[" + i + "] -> ";
+    }
+    return res + "[" + filename + "]";
+}
+
 void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
     // add children of add_root to the back of root
     for(auto& i : old_tree_root->get_expressions()) {
@@ -140,8 +173,8 @@ void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
 }
 
 code_block* linker::import_regular_file(call_expr* node) {
-    lexer lex(err);
-    parse par(err);
+    lexer lex;
+    parse par;
     // get filename
     auto filename = get_path(node);
     // clear this node
@@ -152,64 +185,148 @@ code_block* linker::import_regular_file(call_expr* node) {
     auto location = node->get_first()->get_location();
     delete node->get_first();
     node->set_first(new nil_expr(location));
+    // this will make node to call_expr(nil),
+    // will not be optimized when generating bytecodes
 
     // avoid infinite loading loop
     filename = find_file(filename, node->get_location());
-    if (!filename.length() || exist(filename)) {
+    if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }
+    if (check_self_import(filename)) {
+        err.err("link", "self-referenced module <" + filename + ">:\n" +
+            "    reference path: " + generate_self_import_path(filename));
+        return new code_block({0, 0, 0, 0, filename});
+    }
+    exist(filename);
     
+    module_load_stack.push_back(filename);
     // start importing...
-    lex.scan(filename);
-    par.compile(lex);
+    if (lex.scan(filename).geterr()) {
+        err.err("link", "error occurred when analysing <" + filename + ">");
+    }
+    if (par.compile(lex).geterr())  {
+        err.err("link", "error occurred when analysing <" + filename + ">");
+    }
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'
-    return load(tmp, files.size()-1);
+    auto res = load(tmp, find(filename));
+    module_load_stack.pop_back();
+    return res;
 }
 
 code_block* linker::import_nasal_lib() {
-    lexer lex(err);
-    parse par(err);
+    lexer lex;
+    parse par;
     auto filename = find_file("lib.nas", {0, 0, 0, 0, files[0]});
     if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }
+    lib_path = filename;
 
-    // avoid infinite loading loop
+    // avoid infinite loading library
     if (exist(filename)) {
         return new code_block({0, 0, 0, 0, filename});
     }
     
     // start importing...
-    lex.scan(filename);
-    par.compile(lex);
+    if (lex.scan(filename).geterr()) {
+        err.err("link", "error occurred when analysing library <" + filename + ">");
+    }
+    if (par.compile(lex).geterr())  {
+        err.err("link", "error occurred when analysing library <" + filename + ">");
+    }
     auto tmp = par.swap(nullptr);
 
     // check if tmp has 'import'
-    return load(tmp, files.size()-1);
+    return load(tmp, find(filename));
+}
+
+std::string linker::generate_module_name(const std::string& filename) {
+    auto error_name = "error_generated@[" + filename + "]";
+    auto pos = filename.find_last_of(".nas");
+    if (pos==std::string::npos) {
+        return error_name;
+    }
+    pos -= 4;
+    auto split_pos = filename.find_last_of("/");
+    if (split_pos==std::string::npos) {
+        split_pos = filename.find_last_of("\\");
+    }
+    auto res = split_pos==std::string::npos?
+        filename.substr(0, pos + 1):
+        filename.substr(split_pos + 1, pos - split_pos);
+    if (!res.length()) {
+        err.warn("link", "get empty module name from <" + filename + ">, " +
+            "will not be easily accessed.");
+    }
+    if (res.length() && '0' <= res[0] && res[0] <= '9') {
+        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
+            "will not be easily accessed.");
+    }
+    if (res.length() && res.find(".")!=std::string::npos) {
+        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
+            "will not be easily accessed.");
+    }
+    return res;
+}
+
+return_expr* linker::generate_module_return(code_block* block) {
+    auto sf = new symbol_finder;
+    auto res = new return_expr(block->get_location());
+    auto value = new hash_expr(block->get_location());
+    res->set_value(value);
+    for(const auto& i : sf->do_find(block)) {
+        auto pair = new hash_pair(block->get_location());
+        // do not export symbol begins with '_'
+        if (i.name.length() && i.name[0]=='_') {
+            continue;
+        }
+        pair->set_name(i.name);
+        pair->set_value(new identifier(block->get_location(), i.name));
+        value->add_member(pair);
+    }
+    delete sf;
+    return res;
+}
+
+definition_expr* linker::generate_module_definition(code_block* block) {
+    auto def = new definition_expr(block->get_location());
+    def->set_identifier(new identifier(
+        block->get_location(),
+        generate_module_name(block->get_location().file)));
+    
+    auto call = new call_expr(block->get_location());
+    auto func = new function(block->get_location());
+    func->set_code_block(block);
+    func->get_code_block()->add_expression(generate_module_return(block));
+    call->set_first(func);
+    call->add_call(new call_function(block->get_location()));
+
+    def->set_value(call);
+    return def;
 }
 
 code_block* linker::load(code_block* root, u16 fileindex) {
     auto tree = new code_block({0, 0, 0, 0, files[fileindex]});
+    // load library, this ast will be linked with root directly
+    // so no namespace is generated
     if (!lib_loaded) {
         auto tmp = import_nasal_lib();
         link(tree, tmp);
         delete tmp;
         lib_loaded = true;
     }
+    // load imported modules
     for(auto i : root->get_expressions()) {
         if (!import_check(i)) {
             break;
         }
         auto tmp = import_regular_file((call_expr*)i);
-        link(tree, tmp);
-        delete tmp;
+        tree->add_expression(generate_module_definition(tmp));
     }
     // add root to the back of tree
-    auto file_head = new file_info(
-        {0, 0, 0, 0, files[fileindex]}, fileindex, files[fileindex]);
-    tree->add_expression(file_head);
     link(tree, root);
     return tree;
 }
@@ -218,7 +335,9 @@ const error& linker::link(
     parse& parse, const std::string& self, bool spath = false) {
     show_path = spath;
     // initializing
+    this_file = self;
     files = {self};
+    module_load_stack = {self};
     // scan root and import files
     // then generate a new ast and return to import_ast
     // the main file's index is 0

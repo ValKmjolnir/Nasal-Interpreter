@@ -1,5 +1,7 @@
 import.module.libsock;
 
+var socket = libsock.socket;
+
 var http=func(){
     var sd=nil;
     return {

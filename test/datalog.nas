@@ -1,4 +1,3 @@
-import.std.sort;
 import.std.padding;
 import.std.process_bar;
 
@@ -27,10 +26,12 @@ var project=func(n) {
         # generate process bar, every 0.2%
         if((i-last_step)/n>1/500) {
             last_step=i;
-            print(" ",bar.bar((i+1)/n)," ",leftpad(str(int((i+1)/n*100)),3),"% | \r");
+            print(" ",bar.bar((i+1)/n)," ",
+                padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");
         }
     }
-    print(" ",bar.bar(1)~" 100% | ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+    print(" ",bar.bar(1)~" 100% | ",
+        padding.rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
 
     mess(color);
 
@@ -41,7 +42,7 @@ var project=func(n) {
         cnt+=1;
     }
 
-    println(rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
+    println(padding.rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
 var select=func(n) {
@@ -63,10 +64,12 @@ var select=func(n) {
         # generate process bar, every 0.2%
         if((i-last_step)/n>1/500) {
             last_step=i;
-            print(" ",bar.bar((i+1)/n)," ",leftpad(str(int((i+1)/n*100)),3),"% | \r");
+            print(" ",bar.bar((i+1)/n)," ",
+                padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");
         }
     }
-    print(" ",bar.bar(1)~" 100% | ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+    print(" ",bar.bar(1)~" 100% | ",
+        padding.rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
 
     mess(color);
     mess(message);
@@ -94,7 +97,7 @@ var select=func(n) {
         }
     }
 
-    println(rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
+    println(padding.rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
 var cartesian=func(n) {
@@ -116,10 +119,12 @@ var cartesian=func(n) {
         # generate process bar, every 0.2%
         if((i-last_step)/n>1/500) {
             last_step=i;
-            print(" ",bar.bar((i+1)/n)," ",leftpad(str(int((i+1)/n*100)),3),"% | \r");
+            print(" ",bar.bar((i+1)/n)," ",
+                padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");
         }
     }
-    print(" ",bar.bar(1)~" 100% | ",rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
+    print(" ",bar.bar(1)~" 100% | ",
+        padding.rightpad(str(ts.elapsedMSec()/1000),5)," s | ");
 
     mess(color);
     mess(message);
@@ -140,7 +145,7 @@ var cartesian=func(n) {
         }
     }
 
-    println(rightpad(str(size(res)),7)," in ",ts.elapsedMSec()/1000," s");
+    println(padding.rightpad(str(size(res)),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
 println("project");

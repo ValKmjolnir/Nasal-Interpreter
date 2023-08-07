@@ -1,4 +1,5 @@
 ﻿#include "nasal_builtin.h"
+#include <chrono>
 
 var builtin_print(var* local, gc& ngc) {
     for(auto& i : local[1].vec().elems) {
@@ -220,84 +221,6 @@ var builtin_size(var* local, gc& ngc) {
         case vm_map:  num = val.map().mapper.size(); break;
     }
     return var::num(num);
-}
-
-var builtin_u32xor(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())^u32(local[2].num())));
-}
-
-var builtin_u32and(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())&u32(local[2].num())));
-}
-
-var builtin_u32or(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())|u32(local[2].num())));
-}
-
-var builtin_u32nand(var* local, gc& ngc) {
-    return var::num((f64)(u32)(~(u32(local[1].num())&u32(local[2].num()))));
-}
-
-var builtin_u32not(var* local, gc& ngc) {
-    return var::num((f64)(u32)(~u32(local[1].num())));
-}
-
-var builtin_pow(var* local, gc& ngc) {
-    var x = local[1];
-    var y = local[2];
-    if (x.type!=vm_num || y.type!=vm_num) {
-        return var::num(std::nan(""));
-    }
-    return var::num(std::pow(x.num(), y.num()));
-}
-
-var builtin_sin(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?sin(val.num()):std::nan(""));
-}
-
-var builtin_cos(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?cos(val.num()):std::nan(""));
-}
-
-var builtin_tan(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?tan(val.num()):std::nan(""));
-}
-
-var builtin_exp(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?exp(val.num()):std::nan(""));
-}
-
-var builtin_lg(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?log(val.num())/log(10.0):std::nan(""));
-}
-
-var builtin_ln(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?log(val.num()):std::nan(""));
-}
-
-var builtin_sqrt(var* local, gc& ngc) {
-    var val = local[1];
-    return var::num(val.type==vm_num?sqrt(val.num()):std::nan(""));
-}
-
-var builtin_atan2(var* local, gc& ngc) {
-    var x = local[1];
-    var y = local[2];
-    if (x.type!=vm_num || y.type!=vm_num) {
-        return var::num(std::nan(""));
-    }
-    return var::num(atan2(y.num(), x.num()));
-}
-
-var builtin_isnan(var* local, gc& ngc) {
-    var x = local[1];
-    return (x.type==vm_num && std::isnan(x.num()))?one:zero;
 }
 
 var builtin_time(var* local, gc& ngc) {
@@ -647,109 +570,6 @@ var builtin_eof(var* local, gc& ngc) {
     return var::num((f64)feof((FILE*)fd.obj().ptr));
 }
 
-var builtin_fld(var* local, gc& ngc) {
-    // bits.fld(s,0,3);
-    // if s stores 10100010(162)
-    // will get 101(5)
-    var str = local[1];
-    var startbit = local[2];
-    var length = local[3];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
-        return nas_err("fld", "\"str\" must be mutable string");
-    }
-    if (startbit.type!=vm_num || length.type!=vm_num) {
-        return nas_err("fld", "\"startbit\",\"len\" must be number");
-    }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
-    if (bit+len>8*str.str().length()) {
-        return nas_err("fld", "bitfield out of bounds");
-    }
-    u32 res = 0;
-    auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
-        if (s[i>>3]&(1<<(7-(i&7)))) {
-            res |= 1<<(bit+len-i-1);
-        }
-    }
-    return var::num((f64)res);
-}
-
-var builtin_sfld(var* local, gc& ngc) {
-    // bits.sfld(s,0,3);
-    // if s stores 10100010(162)
-    // will get 101(5) then this will be signed extended to
-    // 11111101(-3)
-    var str = local[1];
-    var startbit = local[2];
-    var length = local[3];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
-        return nas_err("sfld", "\"str\" must be mutable string");
-    }
-    if (startbit.type!=vm_num || length.type!=vm_num) {
-        return nas_err("sfld", "\"startbit\",\"len\" must be number");
-    }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
-    if (bit+len>8*str.str().length()) {
-        return nas_err("sfld", "bitfield out of bounds");
-    }
-    u32 res = 0;
-    auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
-        if (s[i>>3]&(1<<(7-(i&7)))) {
-            res |= 1<<(bit+len-i-1);
-        }
-    }
-    if (res&(1<<(len-1))) {
-        res |= ~((1<<len)-1);
-    }
-    return var::num((f64)((i32)res));
-}
-
-var builtin_setfld(var* local, gc& ngc) {
-    // bits.setfld(s,0,8,69);
-    // set 01000101(69) to string will get this:
-    // 10100010(162)
-    // so s[0]=162
-    var str = local[1];
-    var startbit = local[2];
-    var length = local[3];
-    var value = local[4];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
-        return nas_err("setfld", "\"str\" must be mutable string");
-    }
-    if (startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num) {
-        return nas_err("setfld", "\"startbit\",\"len\",\"val\" must be number");
-    }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
-    u64 val = (u64)value.num();
-    if (bit+len>8*str.str().length()) {
-        return nas_err("setfld", "bitfield out of bounds");
-    }
-    auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
-        if (val&(1<<(i-bit))) {
-            s[i>>3] |= (1<<(7-(i&7)));
-        } else {
-            s[i>>3] &= ~(1<<(7-(i&7)));
-        }
-    }
-    return nil;
-}
-
-var builtin_buf(var* local, gc& ngc) {
-    var length = local[1];
-    if (length.type!=vm_num || length.num()<=0) {
-        return nas_err("buf", "\"len\" must be number greater than 0");
-    }
-    var str = ngc.alloc(vm_str);
-    auto& s = str.str();
-    s.resize(length.num(), '\0');
-    return str;
-}
-
 var builtin_sleep(var* local, gc& ngc) {
     var val = local[1];
     if (val.type!=vm_num) {
@@ -1097,112 +917,6 @@ var builtin_md5(var* local, gc& ngc) {
     return ngc.newstr(md5(str.str()));
 }
 
-var builtin_cocreate(var* local, gc& ngc) {
-    // +-------------+
-    // | old pc      | <- top[0]
-    // +-------------+
-    // | old localr  | <- top[-1]
-    // +-------------+
-    // | old upvalr  | <- top[-2]
-    // +-------------+
-    // | local scope |
-    // | ...         |
-    // +-------------+ <- local pointer stored in localr
-    // | old funcr   | <- old function stored in funcr
-    // +-------------+
-    var func = local[1];
-    if (func.type!=vm_func) {
-        return nas_err("coroutine::create", "must use a function to create coroutine");
-    }
-    if (ngc.cort) {
-        return nas_err("coroutine::create", "cannot create another coroutine in a coroutine");
-    }
-    var co = ngc.alloc(vm_co);
-    nas_co& cort = co.co();
-    cort.ctx.pc = func.func().entry-1;
-
-    cort.ctx.top[0] = nil;
-    cort.ctx.localr = cort.ctx.top+1;
-    cort.ctx.top = cort.ctx.localr+func.func().lsize;
-    cort.ctx.localr[0] = func.func().local[0];
-    cort.ctx.top[0] = nil; // old upvalr
-    cort.ctx.top++;
-    cort.ctx.top[0] = var::addr((var*)nullptr); // old localr
-    cort.ctx.top++;
-    cort.ctx.top[0] = var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
-
-    cort.ctx.funcr = func; // make sure the coroutine function can use correct upvalues
-    cort.status = coroutine_status::suspended;
-    
-    return co;
-}
-
-var builtin_coresume(var* local, gc& ngc) {
-    if (ngc.cort) {
-        return nas_err("coroutine::resume", "cannot start another coroutine when one is running");
-    }
-    var co = local[1];
-    // return nil if is not a coroutine object
-    if (co.type!=vm_co) {
-        return nil;
-    }
-    // cannot resume a dead coroutine
-    if (co.co().status==coroutine_status::dead) {
-        return nil;
-    }
-
-    // change to coroutine context
-    ngc.ctxchg(co.co());
-
-    // fetch coroutine's stack top and return
-    // so the coroutine's stack top in fact is not changed
-    if (ngc.rctx->top[0].type==vm_ret) {
-        // when first calling this coroutine, the stack top must be vm_ret
-        return ngc.rctx->top[0];
-    }
-
-    // after first calling the coroutine, each time coroutine.yield triggered
-    // a new space will be reserved on stack with value nil
-    // so we could fill this place with args
-
-    // the coroutine seems like coroutine.yield returns the value
-    // but in fact coroutine.yield stop the coroutine
-    // until main context calls the coroutine.resume
-    return local[2];
-}
-
-var builtin_coyield(var* local, gc& ngc) {
-    if (!ngc.cort) {
-        return nas_err("coroutine::yield", "no coroutine is running");
-    }
-
-    // this will set to main stack top
-    ngc.ctxreserve();
-    
-    // then this will return value to main's stack top[0]
-    // the procedure seems like coroutine.resume returns the value
-    // but in fact coroutine.resume stop the main context
-    // until coroutine calls the coroutine.yield
-    return local[1];
-}
-
-var builtin_costatus(var* local, gc& ngc) {
-    var co = local[1];
-    if (co.type!=vm_co) {
-        return ngc.newstr("error");
-    }
-    switch(co.co().status) {
-        case coroutine_status::suspended: return ngc.newstr("suspended");
-        case coroutine_status::running:   return ngc.newstr("running");
-        case coroutine_status::dead:      return ngc.newstr("dead");
-    }
-    return nil;
-}
-
-var builtin_corun(var* local, gc& ngc) {
-    return ngc.cort? one:zero;
-}
-
 var builtin_millisec(var* local, gc& ngc) {
     f64 res = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -1232,6 +946,24 @@ var builtin_gcextend(var* local, gc& ngc) {
         ngc.extend(vm_co);
     }
     return nil;
+}
+
+var builtin_gcinfo(var* local, gc& ngc) {
+    auto den = std::chrono::high_resolution_clock::duration::period::den;
+    var res = ngc.alloc(vm_hash);
+
+    double total = 0;
+    for(u32 i = 0; i<gc_type_size; ++i) {
+        total += ngc.gcnt[i];
+    }
+    // using ms
+    auto& map = res.hash().elems;
+    map["total"] = var::num(ngc.worktime*1.0/den*1000);
+    map["average"] = var::num(ngc.worktime*1.0/den*1000/total);
+    map["max_gc"] = var::num(ngc.max_time*1.0/den*1000);
+    map["max_mark"] = var::num(ngc.max_mark_time*1.0/den*1000);
+    map["max_sweep"] = var::num(ngc.max_sweep_time*1.0/den*1000);
+    return res;
 }
 
 var builtin_logtime(var* local, gc& ngc) {
@@ -1282,21 +1014,6 @@ nasal_builtin_table builtin[] = {
     {"__pop", builtin_pop},
     {"__str", builtin_str},
     {"__size", builtin_size},
-    {"__u32xor", builtin_u32xor},
-    {"__u32and", builtin_u32and},
-    {"__u32or", builtin_u32or},
-    {"__u32nand", builtin_u32nand},
-    {"__u32not", builtin_u32not},
-    {"__pow", builtin_pow},
-    {"__sin", builtin_sin},
-    {"__cos", builtin_cos},
-    {"__tan", builtin_tan},
-    {"__exp", builtin_exp},
-    {"__lg", builtin_lg},
-    {"__ln", builtin_ln},
-    {"__sqrt", builtin_sqrt},
-    {"__atan2", builtin_atan2},
-    {"__isnan", builtin_isnan},
     {"__time", builtin_time},
     {"__contains", builtin_contains},
     {"__delete", builtin_delete},
@@ -1322,10 +1039,6 @@ nasal_builtin_table builtin[] = {
     {"__readln", builtin_readln},
     {"__stat", builtin_stat},
     {"__eof", builtin_eof},
-    {"__fld", builtin_fld},
-    {"__sfld", builtin_sfld},
-    {"__setfld", builtin_setfld},
-    {"__buf", builtin_buf},
     {"__sleep", builtin_sleep},
     {"__pipe", builtin_pipe},
     {"__fork", builtin_fork},
@@ -1344,13 +1057,9 @@ nasal_builtin_table builtin[] = {
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
     {"__md5", builtin_md5},
-    {"__cocreate", builtin_cocreate},
-    {"__coresume", builtin_coresume},
-    {"__coyield", builtin_coyield },
-    {"__costatus", builtin_costatus},
-    {"__corun", builtin_corun},
     {"__millisec", builtin_millisec},
     {"__gcextd", builtin_gcextend},
+    {"__gcinfo", builtin_gcinfo},
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
     {nullptr, nullptr}

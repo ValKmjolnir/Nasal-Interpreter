@@ -16,12 +16,17 @@ NASAL_HEADER=\
 	src/nasal_vm.h\
 	src/nasal.h\
 	src/optimizer.h\
-	src/symbol_finder.h
+	src/symbol_finder.h\
+	src/fg_props.h\
+	src/bits_lib.h\
+	src/math_lib.h\
+	src/coroutine.h
 
 NASAL_OBJECT=\
 	build/nasal_err.o\
 	build/nasal_ast.o\
 	build/ast_visitor.o\
+	build/bits_lib.o\
 	build/ast_dumper.o\
 	build/nasal_lexer.o\
 	build/nasal_parse.o\
@@ -33,13 +38,16 @@ NASAL_OBJECT=\
 	build/nasal_misc.o\
 	build/nasal_gc.o\
 	build/nasal_builtin.o\
+	build/fg_props.o\
+	build/math_lib.o\
+	build/coroutine.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/main.o
 
 # for test
 nasal: $(NASAL_OBJECT) | build
-	$(CXX) $(NASAL_OBJECT) -O3 -o nasal -ldl
+	$(CXX) $(NASAL_OBJECT) -O3 -o nasal -ldl -lpthread
 
 nasal.exe: $(NASAL_OBJECT) | build
 	$(CXX) $(NASAL_OBJECT) -O3 -o nasal.exe
@@ -57,7 +65,7 @@ build/nasal_err.o: src/nasal.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_err.cpp -fno-exceptions -fPIC -o build/nasal_err.o -I .
 
 build/nasal_gc.o: src/nasal.h src/nasal_gc.h src/nasal_gc.cpp | build
-	$(CXX) -std=$(STD) -c -O3 src/nasal_gc.cpp -fno-exceptions -fPIC -o build/nasal_gc.o -I . 
+	$(CXX) -std=$(STD) -c -O3 src/nasal_gc.cpp -fno-exceptions -fPIC -o build/nasal_gc.o -I .
 
 build/nasal_import.o: \
 	src/nasal.h\
@@ -84,6 +92,30 @@ build/nasal_builtin.o: \
 	src/nasal_gc.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_builtin.cpp -fno-exceptions -fPIC -o build/nasal_builtin.o -I .
+
+build/coroutine.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/coroutine.h src/coroutine.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/coroutine.cpp -fno-exceptions -fPIC -o build/coroutine.o -I .
+
+build/bits_lib.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/bits_lib.h src/bits_lib.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/bits_lib.cpp -fno-exceptions -fPIC -o build/bits_lib.o -I .
+
+build/math_lib.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/math_lib.h src/math_lib.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/math_lib.cpp -fno-exceptions -fPIC -o build/math_lib.o -I .
+
+build/fg_props.o: \
+	src/nasal.h\
+	src/nasal_gc.h\
+	src/fg_props.h src/fg_props.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/fg_props.cpp -fno-exceptions -fPIC -o build/fg_props.o -I .
 
 build/nasal_codegen.o: $(NASAL_HEADER) src/nasal_codegen.h src/nasal_codegen.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_codegen.cpp -fno-exceptions -fPIC -o build/nasal_codegen.o -I .
@@ -170,7 +202,7 @@ test:nasal
 	@ ./nasal -d test/life.nas
 	@ ./nasal -t test/loop.nas
 	@ ./nasal -t test/mandelbrot.nas
-	@ ./nasal -t test/md5.nas
+	@ ./nasal -t test/md5_self.nas
 	@ ./nasal -t -d test/md5compare.nas
 	@ ./nasal -d test/module_test.nas
 	@ ./nasal -e test/nasal_test.nas

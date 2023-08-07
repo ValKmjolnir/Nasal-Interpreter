@@ -1,4 +1,5 @@
 import.std.process_bar;
+import.std.runtime;
 
 var new_map=func(width,height){
     var tmp=[];

@@ -127,4 +127,4 @@ foreach(var v;training_set){
     print(v,': ',output[0].out,'\n');
 }
 
-bp_example();
+mat.bp_example();
