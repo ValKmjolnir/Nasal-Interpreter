@@ -34,7 +34,7 @@
 
 enum vm_type:u8 {
     /* none-gc object */
-    vm_none=0,
+    vm_none = 0,
     vm_cnt,
     vm_addr,
     vm_ret,
@@ -48,22 +48,10 @@ enum vm_type:u8 {
     vm_upval,
     vm_obj,
     vm_co,
-    vm_map // for globals, arg
+    vm_map // for globals and namespaces
 };
 
 const u32 gc_type_size = vm_map-vm_str+1;
-
-enum class coroutine_status:u32 {
-    suspended,
-    running,
-    dead
-};
-
-enum class gc_status:u8 {
-    uncollected=0,   
-    collected,
-    found
-};
 
 struct nas_vec;   // vector
 struct nas_hash;  // hashmap(dict)
@@ -101,7 +89,6 @@ public:
     bool operator!=(const var& nr) const {
         return type!=nr.type || val.gcobj!=nr.val.gcobj;
     }
-    friend std::ostream& operator<<(std::ostream&, var&);
 
     // number and string can be translated to each other
     f64 tonum();
@@ -267,12 +254,6 @@ public:
     void clear();
 
 public:
-    friend std::ostream& operator<<(std::ostream& out, nas_ghost& ghost) {
-        out << "<object " << ghost.ghost_type_table->get_ghost_name(ghost.type);
-        out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
-        return out;
-    }
-
     const std::string& get_ghost_name() const {
         return ghost_type_table->get_ghost_name(type);
     }
@@ -290,9 +271,15 @@ struct context {
 };
 
 struct nas_co {
+    enum class status:u32 {
+        suspended,
+        running,
+        dead
+    };
+
     var stack[STACK_DEPTH];
     context ctx;
-    coroutine_status status;
+    status status;
 
     nas_co() {clear();}
     void clear();
@@ -312,6 +299,12 @@ struct nas_map {
 };
 
 struct nas_val {
+    enum class gc_status:u8 {
+        uncollected = 0,   
+        collected,
+        found
+    };
+
     gc_status mark;
     u8 type; // value type
     u8 unmut; // used to mark if a string is unmutable
@@ -334,6 +327,8 @@ struct nas_val {
 std::ostream& operator<<(std::ostream&, nas_vec&);
 std::ostream& operator<<(std::ostream&, nas_hash&);
 std::ostream& operator<<(std::ostream&, nas_map&);
+std::ostream& operator<<(std::ostream&, const nas_ghost&);
+std::ostream& operator<<(std::ostream&, const nas_co&);
 std::ostream& operator<<(std::ostream&, var&);
 
 const var zero = var::num(0);
@@ -349,7 +344,7 @@ struct gc {
     context* rctx = nullptr;
     nas_co* cort = nullptr; // running coroutine
 
-    /*  temporary space used in builtin/module functions */
+    /*  temporary space used in native/module functions */
     var temp = nil;
 
     /* constants and memory pool */
@@ -385,7 +380,8 @@ private:
     /* gc functions */
     void do_mark_sweep();
     void mark();
-    void mark_context(std::vector<var>&);
+    void concurrent_mark(std::vector<var>&, usize, usize);
+    void mark_context_root(std::vector<var>&);
     void mark_var(std::vector<var>&, var&);
     void mark_vec(std::vector<var>&, nas_vec&);
     void mark_hash(std::vector<var>&, nas_hash&);

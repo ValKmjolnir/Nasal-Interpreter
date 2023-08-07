@@ -134,43 +134,43 @@ var curve5=func(line=4){
 var ansi_escape_sequence=func(){
     # decoration
     for(var i=0;i<10;i+=1)
-        print("\e["~i~"m",rightpad(i,4),"\e[0m");
+        print("\e["~i~"m",padding.rightpad(i,4),"\e[0m");
     print("\n");
 
     # 8/16 color
     for(var i=30;i<38;i+=1)
-        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
     for(var i=30;i<38;i+=1)
-        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
     print("\n");
     for(var i=40;i<48;i+=1)
-        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
     for(var i=40;i<48;i+=1)
-        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
     print("\n");
     for(var i=90;i<98;i+=1)
-        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
     for(var i=90;i<98;i+=1)
-        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
     print("\n");
     for(var i=100;i<108;i+=1)
-        print("\e["~i~"m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
     for(var i=100;i<108;i+=1)
-        print("\e["~i~";1m ",rightpad(i,4),"\e[0m");
+        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
     print("\n");
 
     # 256 color
     for(var i=0;i<16;i+=1) {
         for(var j=0;j<16;j+=1) {
             var code=str(i*16+j);
-            print("\e[38;5;"~code~"m ",rightpad(code,4),"\e[0m");
+            print("\e[38;5;"~code~"m ",padding.rightpad(code,4),"\e[0m");
         }
         print("\n");
     }
     for(var i=0;i<16;i+=1) {
         for(var j=0;j<16;j+=1) {
             var code=str(i*16+j);
-            print("\e[48;5;"~code~"m ",rightpad(code,4),"\e[0m");
+            print("\e[48;5;"~code~"m ",padding.rightpad(code,4),"\e[0m");
         }
         print("\n");
     }
@@ -180,14 +180,14 @@ var ansi_escape_sequence=func(){
     var progress=[0,0,0,0,0,0,0,0];
     var increase=[0.03,0.06,0.04,0.094,0.08,0.09,0.05,0.032];
     foreach(var i;progress) {
-        print("\e[1000D",bar.bar(i)," ",rightpad(str(int(i*100)),3)," % \n");
+        print("\e[1000D",bar.bar(i)," ",padding.rightpad(str(int(i*100)),3)," % \n");
     }
     for(var i=0;i<1/0.03;i+=1) {
         print("\e[1000D","\e["~str(size(progress))~"A");
         forindex(var j;progress) {
             progress[j]+=increase[j];
             progress[j]=progress[j]>1?1:progress[j];
-            print("\e[1000D",bar.bar(progress[j])," ",rightpad(str(int(progress[j]*100)),3)," % \n")
+            print("\e[1000D",bar.bar(progress[j])," ",padding.rightpad(str(int(progress[j]*100)),3)," % \n")
         }
         unix.sleep(0.01);
     }
@@ -201,9 +201,15 @@ if(os.platform()=="windows"){
 
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");
+print("curve 1\n");
 curve1();
+print("curve 2\n");
 curve2();
+print("curve 3\n");
 curve3();
+print("curve 4\n");
 curve4();
+print("curve 5\n");
 curve5();
+print("ANSI escape sequence\n");
 ansi_escape_sequence();

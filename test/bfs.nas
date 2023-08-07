@@ -24,7 +24,7 @@ var prt=func(){
 
 var bfs=func(begin,end){
     var move=[[1,0],[0,1],[-1,0],[0,-1]];
-    var que=queue();
+    var que=queue.new();
     que.push(begin);
     map[begin[0]][begin[1]]=2;
     map[end[0]][end[1]]=0;

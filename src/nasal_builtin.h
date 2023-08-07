@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
+#define F_OK 0 // fuck msc
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
 #pragma warning (disable:4244)
 #pragma warning (disable:4267)
@@ -53,21 +54,6 @@ var builtin_num(var*, gc&);
 var builtin_pop(var*, gc&);
 var builtin_str(var*, gc&);
 var builtin_size(var*, gc&);
-var builtin_u32xor(var*, gc&);
-var builtin_u32and(var*, gc&);
-var builtin_u32or(var*, gc&);
-var builtin_u32nand(var*, gc&);
-var builtin_u32not(var*, gc&);
-var builtin_pow(var*, gc&);
-var builtin_sin(var*, gc&);
-var builtin_cos(var*, gc&);
-var builtin_tan(var*, gc&);
-var builtin_exp(var*, gc&);
-var builtin_lg(var*, gc&);
-var builtin_ln(var*, gc&);
-var builtin_sqrt(var*, gc&);
-var builtin_atan2(var*, gc&);
-var builtin_isnan(var*, gc&);
 var builtin_time(var*, gc&);
 var builtin_contains(var*, gc&);
 var builtin_delete(var*, gc&);
@@ -93,10 +79,6 @@ var builtin_tell(var*, gc&);
 var builtin_readln(var*, gc&);
 var builtin_stat(var*, gc&);
 var builtin_eof(var*, gc&);
-var builtin_fld(var*, gc&);
-var builtin_sfld(var*, gc&);
-var builtin_setfld(var*, gc&);
-var builtin_buf(var*, gc&);
 var builtin_sleep(var*, gc&);
 var builtin_pipe(var*, gc&);
 var builtin_fork(var*, gc&);
@@ -118,13 +100,9 @@ var builtin_arch(var*, gc&);
 std::string tohex(u32);
 std::string md5(const std::string&);
 var builtin_md5(var*, gc&);
-var builtin_cocreate(var*, gc&);
-var builtin_coresume(var*, gc&);
-var builtin_coyield(var*, gc&);
-var builtin_costatus(var*, gc&);
-var builtin_corun(var*, gc&);
 var builtin_millisec(var*, gc&);
 var builtin_gcextend(var*, gc&);
+var builtin_gcinfo(var*, gc&);
 var builtin_logtime(var*, gc&);
 var builtin_ghosttype(var*, gc&);
 
@@ -132,7 +110,7 @@ var builtin_ghosttype(var*, gc&);
 // this table must end with {nullptr,nullptr}
 struct nasal_builtin_table {
     const char* name;
-    var (*func)(var*,gc&);
+    var (*func)(var*, gc&);
 };
 
 extern nasal_builtin_table builtin[];

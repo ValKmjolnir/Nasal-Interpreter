@@ -33,11 +33,13 @@ protected:
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
     const opcode* bytecode = nullptr; // bytecode buffer address
+    std::vector<nasal_builtin_table> native;
 
     /* vm initializing function */
     void init(
         const std::vector<std::string>&,
         const std::vector<f64>&,
+        const std::vector<nasal_builtin_table>&,
         const std::vector<opcode>&,
         const std::unordered_map<std::string, i32>&,
         const std::vector<std::string>&,
@@ -739,13 +741,13 @@ inline void vm::o_callfh() {
 }
 
 inline void vm::o_callb() {
-    // reserve place for builtin function return,
+    // reserve place for native function return,
     // this code is written for coroutine
     (++ctx.top)[0] = nil;
 
-    // if running a builtin function about coroutine
+    // if running a native function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    var tmp = (*builtin[imm[ctx.pc]].func)(ctx.localr, ngc);
+    var tmp = (*native[imm[ctx.pc]].func)(ctx.localr, ngc);
 
     // so we use tmp variable to store this return value
     // and set it to top[0] later
@@ -753,7 +755,7 @@ inline void vm::o_callb() {
 
     // if get none, this means errors occurred when calling this native function
     if (ctx.top[0].type==vm_none) {
-        die("native function error");
+        die("error occurred in native function");
         return;
     }
 }
@@ -780,7 +782,7 @@ inline void vm::o_slc() {
     var val = (ctx.top--)[0];
     var res = ctx.top[-1].vec().get_val(val.tonum());
     if (res.type==vm_none) {
-        die("index "+std::to_string(val.tonum())+" out of range");
+        die("index " + std::to_string(val.tonum()) + " out of range");
         return;
     }
     ctx.top[0].vec().elems.push_back(res);
@@ -806,7 +808,8 @@ inline void vm::o_slc2() {
     }
 
     if (num1<-size || num1>=size || num2<-size || num2>=size) {
-        die("index "+std::to_string(num1)+":"+std::to_string(num2)+" out of range");
+        die("index " + std::to_string(num1) + ":" +
+            std::to_string(num2) + " out of range");
         return;
     } else if (num1<=num2) {
         for(i32 i = num1; i<=num2; ++i) {
@@ -923,7 +926,7 @@ inline void vm::o_ret() {
     ctx.localr = ctx.top[-2].addr();
     ctx.upvalr = ctx.top[-3];
 
-    ctx.top=local-1;
+    ctx.top = local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
 

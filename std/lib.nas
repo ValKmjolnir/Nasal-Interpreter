@@ -1,6 +1,14 @@
 # lib.nas
 # 2019 ValKmjolnir
 
+import.std.coroutine;
+import.std.math;
+import.std.string;
+import.std.io;
+import.std.os;
+import.std.bits;
+import.std.unix;
+
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
 var print = func(elems...) {
@@ -127,6 +135,7 @@ var keys = func(hash) {
 var time = func(begin) {
     return __time(begin);
 }
+
 var systime = func() {
     return time(0);
 }
@@ -217,6 +226,35 @@ var println = func(elems...) {
     return __println(elems);
 }
 
+# sort function using quick sort
+# not very efficient... :(
+var sort = func(){
+    srand();  # be aware! this causes global changes
+    var quick_sort_core = func(vec, left, right, cmp) {
+        if(left>=right) return nil;
+        var base = left+int(rand()*(right-left));
+        (vec[left], vec[base]) = (vec[base], vec[left]);
+        var (i, j, tmp) = (left, right, vec[left]);
+        while(i<j){
+            while(i<j and cmp(tmp,vec[j]))
+                j -= 1;
+            vec[i] = vec[j];
+            while(i<j and cmp(vec[i],tmp))
+                i += 1;
+            vec[j] = vec[i];
+            j -= 1;
+        }
+        vec[i] = tmp;
+        quick_sort_core(vec, left, i-1, cmp);
+        quick_sort_core(vec, i+1, right, cmp);
+        return nil;
+    }
+    return func(vec, cmp = func(a, b) {return a<b;}){
+        quick_sort_core(vec, 0, size(vec)-1, cmp);
+        return nil;
+    }
+}();
+
 var isfunc = func(f) {
     return typeof(f)=="func";
 }
@@ -264,19 +302,21 @@ var vecindex = func(vec,val) {
 
 # check if the object is an instance of the class
 var isa = func(object, class) {
-    if(!contains(object, "parents") or typeof(object.parents)!="vec")
+    if (!ishash(object)) {
         return 0;
+    }
+    if(!contains(object, "parents") or !isvec(object.parents)) {
+        return 0;
+    }
     foreach(var elem;object.parents)
-        if(elem==class)
+        if(elem==class or isa(elem, class))
             return 1;
     return 0;
 }
 
 # assert aborts when condition is not true
 var assert = func(condition, message = "assertion failed!") {
-    if(condition)
-        return 1;
-    die(message);
+    condition or die(message);
 }
 
 # get time stamp, this will return a timestamp object
@@ -293,38 +333,6 @@ var maketimestamp = func() {
 var md5 = func(str) {
     return __md5(str);
 }
-
-var io = {
-    SEEK_SET: 0,
-    SEEK_CUR: 1,
-    SEEK_END: 2,
-    # get content of a file by filename. returns a string.
-    readfile: func(filename) {return __readfile(filename);},
-    # input a string as the content of a file.
-    fout: func(filename, str) {return __fout(filename, str);},
-    # use C access
-    exists:func(filename) {return __exists(filename);},
-    # same as C fopen. open file and get the FILE*.
-    open: func(filename, mode = "r") {return __open(filename, mode);},
-    # same as C fclose. close file by FILE*.
-    close: func(filehandle) {return __close(filehandle);},
-    # same as C fread. read file by FILE*.
-    # caution: buf must be a mutable string.use mut("") to get an empty mutable string.
-    read: func(filehandle, buf, len) {return __read(filehandle, buf, len);},
-    # same as C fwrite. write file by FILE*.
-    write: func(filehandle, str) {return __write(filehandle, str);},
-    # same as C fseek. seek place by FILE*.
-    seek: func(filehandle, pos, whence) {return __seek(filehandle, pos, whence);},
-    # same as C ftell.
-    tell: func(filehandle) {return __tell(filehandle);},
-    # read file by lines. use FILE*.
-    # get nil if EOF
-    readln: func(filehandle) {return __readln(filehandle);},
-    # same as C stat.
-    stat: func(filename) {return __stat(filename);},
-    # same as C feof. check if FILE* gets the end of file(EOF).
-    eof: func(filehandle) {return __eof(filehandle);}
-};
 
 # get file status. using data from io.stat
 var fstat = func(filename) {
@@ -344,145 +352,28 @@ var fstat = func(filename) {
     };
 }
 
-# functions that do bitwise calculation.
-# carefully use it, all the calculations are based on integer.
-var bits = {
-    # u32 xor
-    u32_xor: func(a, b) {return __u32xor(a, b);},
-    # u32 and
-    u32_and: func(a, b) {return __u32and(a, b);},
-    # u32 or
-    u32_or: func(a, b) {return __u32or(a, b);},
-    # u32 nand
-    u32_nand: func(a, b) {return __u32nand(a, b);},
-    # u32 not
-    u32_not: func(a) {return __u32not(a);},
+# important global constants
+var D2R = math.pi / 180;         # degree to radian
+var R2D = 180 / math.pi;         # radian to degree
 
-    # get bit data from a special string. for example:
-    # bits.fld(s,0,3);
-    # if s stores 10100010(162)
-    # will get 101(5).
-    fld: func(str, startbit, len) {return __fld;},
-    # get sign-extended data from a special string. for example:
-    # bits.sfld(s,0,3);
-    # if s stores 10100010(162)
-    # will get 101(5) then this will be signed extended to
-    # 11111101(-3).
-    sfld: func(str, startbit, len) {return __sfld;},
-    # set value into a special string to store it. little-endian, for example:
-    # bits.setfld(s,0,8,69);
-    # set 01000101(69) to string will get this:
-    # 10100010(162)
-    # so s[0]=162.
-    setfld: func(str, startbit, len, val) {return __setfld;},
-    # get a special string filled by '\0' to use in setfld.
-    buf: func(len) {return __buf;}
-};
+var FT2M = 0.3048;               # feet to meter
+var M2FT = 1 / FT2M;
+var IN2M = FT2M / 12;
+var M2IN = 1 / IN2M;
+var NM2M = 1852;                 # nautical miles to meter
+var M2NM = 1 / NM2M;
 
-# mostly used math functions and special constants, you know.
-var math = {
-    e: 2.7182818284590452354,
-    pi: 3.14159265358979323846264338327950288,
-    D2R: 2.7182818284590452354/180,
-    R2D: 180/2.7182818284590452354,
-    inf: 1/0,
-    nan: 0/0,
-    abs: func(x) {return x>0? x:-x;},
-    floor: func(x) {return __floor(x);},
-    pow: func(x, y) {return __pow(x, y);},
-    sin: func(x) {return __sin(x);},
-    cos: func(x) {return __cos(x);},
-    tan: func(x) {return __tan(x);},
-    exp: func(x) {return __exp(x);},
-    lg: func(x) {return __lg(x);},
-    ln: func(x) {return __ln(x);},
-    sqrt: func(x) {return __sqrt(x);},
-    atan2: func(x, y) {return __atan2(x, y);},
-    isnan: func(x) {return __isnan(x);},
-    max: func(x, y) {return x>y? x:y;},
-    min: func(x, y) {return x<y? x:y;}
-};
+var KT2MPS = 0.5144444444;       # knots to m/s
+var MPS2KT = 1 / KT2MPS;
 
-var unix = {
-    pipe: func() {return __pipe;},
-    fork: func() {return __fork;},
-    dup2: func(fd0, fd1) {die("not supported yet");},
-    exec: func(filename, argv, envp) {die("not supported yet");},
-    waitpid: func(pid, nohang = 0) {return __waitpid;},
-    isdir: func(path) {return !!bits.u32_and(io.stat(path)[2],0x4000);}, # S_IFDIR 0x4000
-    isfile: func(path) {return !!bits.u32_and(io.stat(path)[2],0x8000);}, # S_IFREG 0x8000
-    opendir: func(path) {return __opendir;},
-    readdir: func(handle) {return __readdir;},
-    closedir: func(handle) {return __closedir;},
-    time: func() {return time(0);},
-    sleep: func(secs) {return __sleep(secs);},
-    chdir: func(path) {return __chdir(path);},
-    environ: func() {return __environ();},
-    getcwd: func() {return __getcwd();},
-    getenv: func(envvar) {return __getenv(envvar);},
-    getpath: func() {return split(os.platform()=="windows"? ";":":", unix.getenv("PATH"));}
-};
+var FPS2KT = 0.5924838012958964; # fps to knots
+var KT2FPS = 1 / FPS2KT;
 
-# dylib is the core hashmap for developers to load their own library.
-# for safe using dynamic library, you could use 'module' in stl/module.nas
-var dylib = {
-    # open dynamic lib. return a hash including dl pointer and function pointers
-    dlopen: func(libname) {
-        # find dynamic lib from local dir first
-        libname = (os.platform()=="windows"? ".\\":"./")~libname;
-        if(io.exists(libname))
-            return __dlopen(libname);
-        # find dynamic lib through PATH
-        var envpath = split(os.platform()=="windows"? ";":":",unix.getenv("PATH"));
-        # first find ./module
-        append(envpath, ".");
-        var path = os.platform()=="windows"? "\\module\\":"/module/";
-        foreach(var p;envpath) {
-            p ~= path~libname;
-            if(io.exists(p)) {
-                libname = p;
-                break;
-            }
-        }
-        return __dlopen(libname);
-    },
-    # close dynamic lib, this operation will make all the symbols loaded from it invalid.
-    dlclose: func(lib) {return __dlclose;},
-    # call the loaded symbol, with infinite parameters:
-    # Caution: this may cause garbage collection process, be aware of the performance.
-    dlcall:  func(ptr, args...) {return __dlcallv},
-    # get dlcall function with limited parameter list
-    limitcall: func(arg_size = 0) {
-        if(arg_size==0) {return func(ptr) {return __dlcall};}
-        elsif(arg_size==1) {return func(ptr, _0) {return __dlcall};}
-        elsif(arg_size==2) {return func(ptr, _0, _1) {return __dlcall};}
-        elsif(arg_size==3) {return func(ptr, _0, _1, _2) {return __dlcall};}
-        elsif(arg_size==4) {return func(ptr, _0, _1, _2, _3) {return __dlcall};}
-        elsif(arg_size==5) {return func(ptr, _0, _1, _2, _3, _4) {return __dlcall};}
-        elsif(arg_size==6) {return func(ptr, _0, _1, _2, _3, _4, _5) {return __dlcall};}
-        elsif(arg_size==7) {return func(ptr, _0, _1, _2, _3, _4, _5, _6) {return __dlcall};}
-        elsif(arg_size==8) {return func(ptr, _0, _1, _2, _3, _4, _5, _6, _7) {return __dlcall};}
-        else {return func(ptr, args...) {return __dlcallv};}
-    }
-};
+var LB2KG = 0.45359237;          # pounds to kg
+var KG2LB = 1 / LB2KG;
 
-# os is used to use or get some os-related info/functions.
-# windows/macOS/linux are supported.
-var os = {
-    # get a string that tell which os it runs on.
-    platform: func() {return __platform;},
-    time: func() {return __logtime;},
-    arch: func() {return __arch;}
-};
-
-# runtime gives us some functions that we could manage it manually.
-var runtime = {
-    # command line arguments
-    argv: func() {return globals.arg;},
-    gc: {
-        extend: func(type) {return __gcextd;}
-    }
-};
+var GAL2L = 3.785411784;         # US gallons to liter
+var L2GAL = 1 / GAL2L;
 
 # functions that not supported in this runtime:
 var bind = func(function, locals, outer_scope = nil) {
@@ -505,10 +396,23 @@ var compile = func(code, filename = "<compile>") {
     die("this runtime uses static code generator");
 }
 
-var coroutine = {
-    create: func(function) {return __cocreate;},
-    resume: func(co, args...) {return __coresume;},
-    yield: func(args...) {return __coyield; },
-    status: func(co) {return __costatus;},
-    running:func() {return __corun;   }
-};
+# for log print
+var LOG_BULK = 1;
+var LOG_DEBUG = 2;
+var LOG_INFO = 3;
+var LOG_WARN = 4;
+var LOG_ALERT = 5;
+var DEV_WARN = 7;
+var DEV_ALERT = 8;
+var MANDATORY_INFO = 9;
+
+var logprint = func(level, elem...) {
+    return _logprint(level, elem);
+}
+
+var fgcommand = func(cmd, node=nil) {
+    # if (isa(node, props.Node)) node = node._g;
+    # elsif (ishash(node)) node = props.Node.new(node)._g;
+    # _fgcommand(cmd, node);
+    println("in progress, not supported yet.");
+}

@@ -1,6 +1,8 @@
 import.std.json;
 import.std.process_bar;
 
+var JSON = json.JSON;
+
 var ss=JSON.stringify({
     vec:[0,1,2],
     hash:{

@@ -2,13 +2,6 @@
 
 #include <iostream>
 
-bool ast_dumper::visit_file_info(file_info* node) {
-    dump_indent();
-    std::cout << "file \"" << node->get_file_name() << "\"";
-    std::cout << format_location(node->get_location());
-    return true;
-}
-
 bool ast_dumper::visit_null_expr(null_expr* node) {
     dump_indent();
     std::cout << "null" << format_location(node->get_location());

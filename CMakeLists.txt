@@ -20,6 +20,10 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/coroutine.cpp
+    ${CMAKE_SOURCE_DIR}/src/fg_props.cpp
+    ${CMAKE_SOURCE_DIR}/src/bits_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/math_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp
@@ -40,6 +44,7 @@ add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
+    target_link_libraries(nasal pthread)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
