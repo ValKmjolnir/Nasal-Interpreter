@@ -141,9 +141,11 @@ private:
     u32 bk_line;
     error src;
 
+private:
     debug_prof_data data;
     bool do_profiling;
 
+private:
     std::vector<std::string> parse(const std::string&);
     u16 file_index(const std::string&) const;
     void err();

@@ -93,7 +93,7 @@ public:
     // number and string can be translated to each other
     f64 tonum();
     std::string tostr();
-    bool objchk(usize);
+    bool objchk(const std::string&);
 
     // create new var object
     static var none();
@@ -185,77 +185,24 @@ void dir_entry_destructor(void*);
 void dylib_destructor(void*);
 void func_addr_destructor(void*);
 
-struct ghost_register_table {
-private:
-    using dtor=void (*)(void*);
-
-private:
-    std::unordered_map<std::string, usize> mapper;
-    std::vector<std::string> ghost_name;
-    std::vector<dtor> destructors;
-
-public:
-    // reserved ghost type only for native functions
-    usize ghost_file;
-    usize ghost_dir;
-    usize ghost_dylib;
-    usize ghost_faddr;
-
-public:
-    ghost_register_table() {
-        ghost_file = register_ghost_type("file", filehandle_destructor);
-        ghost_dir = register_ghost_type("dir", dir_entry_destructor);
-        ghost_dylib = register_ghost_type("dylib", dylib_destructor);
-        ghost_faddr = register_ghost_type("faddr", func_addr_destructor);
-    }
-
-    bool exists(const std::string& name) const {
-        return mapper.count(name);
-    }
-
-    usize get_ghost_type_index(const std::string& name) const {
-        return mapper.at(name);
-    }
-
-    const std::string& get_ghost_name(usize index) const {
-        return ghost_name.at(index);
-    }
-
-    usize register_ghost_type(const std::string& name, dtor ptr) {
-        if (mapper.count(name)) {
-            std::cerr << "nasal_gc.h: ghost_register_table::register_ghost_type: ";
-            std::cerr << "ghost type \"" << name << "\" already exists.\n";
-            std::exit(1);
-        }
-        auto res = destructors.size();
-        mapper[name] = res;
-        ghost_name.push_back(name);
-        destructors.push_back(ptr);
-        return res;
-    }
-
-    dtor destructor(usize index) {
-        return destructors.at(index);
-    }
-};
-
 struct nas_ghost {
+private:
+    using destructor=void (*)(void*);
+
 public:
-    usize type;
+    std::string type_name;
+    destructor dtor_ptr;
     void* ptr;
 
-private:
-    ghost_register_table* ghost_type_table;
-
 public:
-    nas_ghost(): type(0), ptr(nullptr), ghost_type_table(nullptr) {}
+    nas_ghost(): type_name(""), dtor_ptr(nullptr), ptr(nullptr) {}
     ~nas_ghost() {clear();}
-    void set(usize, void*, ghost_register_table*);
+    void set(const std::string&, destructor, void*);
     void clear();
 
 public:
     const std::string& get_ghost_name() const {
-        return ghost_type_table->get_ghost_name(type);
+        return type_name;
     }
 };
 
@@ -336,7 +283,6 @@ const var one = var::num(1);
 const var nil = var::nil();
 
 struct gc {
-    ghost_register_table global_ghost_type_table;
     /* main context temporary storage */
     context mctx;
 
@@ -433,4 +379,4 @@ struct module_func_info {
 };
 
 // module function "get" type
-typedef module_func_info* (*get_func_ptr)(ghost_register_table*);
+typedef module_func_info* (*get_func_ptr)();

@@ -123,18 +123,22 @@ void nas_func::clear() {
 }
 
 void nas_ghost::set(
-    usize ghost_type, void* ghost_pointer, ghost_register_table* table) {
-    type = ghost_type;
+    const std::string& ghost_type_name,
+    destructor destructor_pointer,
+    void* ghost_pointer) {
+    type_name = ghost_type_name;
+    dtor_ptr = destructor_pointer;
     ptr = ghost_pointer;
-    ghost_type_table = table;
 }
 
 void nas_ghost::clear() {
-    if (!ptr) {
+    if (!ptr || !dtor_ptr) {
         return;
     }
-    ghost_type_table->destructor(type)(ptr);
+    dtor_ptr(ptr);
+    type_name = "";
     ptr = nullptr;
+    dtor_ptr = nullptr;
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
@@ -268,8 +272,8 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
     return out;
 }
 
-bool var::objchk(usize obj_type) {
-    return type==vm_obj && obj().type==obj_type && obj().ptr;
+bool var::objchk(const std::string& name) {
+    return type==vm_obj && obj().type_name==name && obj().ptr;
 }
 
 var var::none() {
