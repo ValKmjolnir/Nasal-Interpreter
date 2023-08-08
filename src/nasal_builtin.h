@@ -21,7 +21,6 @@
 #include <sstream>
 #include <cmath>
 #include <thread>
-#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -43,8 +42,6 @@ var builtin_append(var*, gc&);
 var builtin_setsize(var*, gc&);
 var builtin_system(var*, gc&);
 var builtin_input(var*, gc&);
-var builtin_readfile(var*, gc&);
-var builtin_fout(var*, gc&);
 var builtin_split(var*, gc&);
 var builtin_rand(var*, gc&);
 var builtin_id(var*, gc&);
@@ -69,16 +66,6 @@ var builtin_cmp(var*, gc&);
 var builtin_chr(var*, gc&);
 var builtin_char(var*, gc&);
 var builtin_values(var*, gc&);
-var builtin_exists(var*, gc&);
-var builtin_open(var*, gc&);
-var builtin_close(var*, gc&);
-var builtin_read(var*, gc&);
-var builtin_write(var*, gc&);
-var builtin_seek(var*, gc&);
-var builtin_tell(var*, gc&);
-var builtin_readln(var*, gc&);
-var builtin_stat(var*, gc&);
-var builtin_eof(var*, gc&);
 var builtin_sleep(var*, gc&);
 var builtin_pipe(var*, gc&);
 var builtin_fork(var*, gc&);
