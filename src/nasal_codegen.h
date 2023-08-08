@@ -13,6 +13,7 @@
 #include "bits_lib.h"
 #include "math_lib.h"
 #include "fg_props.h"
+#include "io_lib.h"
 
 #include <iomanip>
 #include <list>

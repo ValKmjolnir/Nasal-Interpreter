@@ -59,12 +59,16 @@ var buf = func(len) {
     return __buf;
 }
 
-var bit = [var __ = 1];
-for(var i = 1; i<32; i += 1) {
-    func(vec, arg...){
+var bit = func() {
+    var res = [var __ = 1];
+    var append = func(vec, arg...) {
         return __append;
-    }(bit, __ += __);
-}
+    }
+    for(var i = 1; i<32; i += 1) {
+        append(res, __ += __);
+    }
+    return res;
+}();
 
 var test = func(n, b) {
     n /= bit[b];

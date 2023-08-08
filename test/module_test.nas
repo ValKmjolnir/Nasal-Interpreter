@@ -1,4 +1,8 @@
 import.std.dylib;
+import.module.libfib;
+
+println(keys(libfib));
+libfib.test_ghost();
 
 var libfib=func(){
     var (dd,fib,qfib)=(nil,nil,nil);

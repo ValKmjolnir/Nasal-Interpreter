@@ -21,6 +21,7 @@ void codegen::load_native_function_table(nasal_builtin_table* table) {
 
 void codegen::init_native_function() {
     load_native_function_table(builtin);
+    load_native_function_table(io_lib_native);
     load_native_function_table(math_lib_native);
     load_native_function_table(bits_native);
     load_native_function_table(coroutine_native);
