@@ -1,5 +1,14 @@
 #include "io_lib.h"
 
+const auto file_type_name = "file";
+
+void filehandle_destructor(void* ptr) {
+    if ((FILE*)ptr==stdin) {
+        return;
+    }
+    fclose((FILE*)ptr);
+}
+
 var builtin_readfile(var* local, gc& ngc) {
     var val = local[1];
     if (val.type!=vm_str) {
@@ -48,13 +57,13 @@ var builtin_open(var* local, gc& ngc) {
         return nas_err("open", "failed to open file <"+name.str()+">");
     }
     var ret = ngc.alloc(vm_obj);
-    ret.obj().set("file", filehandle_destructor, res);
+    ret.obj().set(file_type_name, filehandle_destructor, res);
     return ret;
 }
 
 var builtin_close(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("close", "not a valid filehandle");
     }
     fd.obj().clear();
@@ -65,7 +74,7 @@ var builtin_read(var* local, gc& ngc) {
     var fd = local[1];
     var buf = local[2];
     var len = local[3];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("read", "not a valid filehandle");
     }
     if (buf.type!=vm_str || buf.val.gcobj->unmut) {
@@ -91,7 +100,7 @@ var builtin_read(var* local, gc& ngc) {
 var builtin_write(var* local, gc& ngc) {
     var fd = local[1];
     var str = local[2];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("write", "not a valid filehandle");
     }
     if (str.type!=vm_str) {
@@ -104,7 +113,7 @@ var builtin_seek(var* local, gc& ngc) {
     var fd = local[1];
     var pos = local[2];
     var whence = local[3];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("seek", "not a valid filehandle");
     }
     return var::num((f64)fseek((FILE*)fd.obj().ptr, pos.num(), whence.num()));
@@ -112,7 +121,7 @@ var builtin_seek(var* local, gc& ngc) {
 
 var builtin_tell(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("tell", "not a valid filehandle");
     }
     return var::num((f64)ftell((FILE*)fd.obj().ptr));
@@ -120,7 +129,7 @@ var builtin_tell(var* local, gc& ngc) {
 
 var builtin_readln(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
     var str = ngc.alloc(vm_str);
@@ -168,7 +177,7 @@ var builtin_stat(var* local, gc& ngc) {
 
 var builtin_eof(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk("file")) {
+    if (!fd.objchk(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
     return var::num((f64)feof((FILE*)fd.obj().ptr));

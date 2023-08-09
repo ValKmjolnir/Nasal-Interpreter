@@ -180,7 +180,6 @@ public:
     }
 };
 
-void filehandle_destructor(void*);
 void dir_entry_destructor(void*);
 void dylib_destructor(void*);
 void func_addr_destructor(void*);
