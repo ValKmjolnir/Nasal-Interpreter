@@ -1,12 +1,5 @@
 #include "nasal_gc.h"
 
-void filehandle_destructor(void* ptr) {
-    if ((FILE*)ptr==stdin) {
-        return;
-    }
-    fclose((FILE*)ptr);
-}
-
 void dir_entry_destructor(void* ptr) {
 #ifndef _MSC_VER
     closedir((DIR*)ptr);

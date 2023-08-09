@@ -10,6 +10,8 @@
 #define F_OK 0 // fuck msc
 #endif
 
+void filehandle_destructor(void*);
+
 var builtin_readfile(var*, gc&);
 var builtin_fout(var*, gc&);
 var builtin_exists(var*, gc&);
