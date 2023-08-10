@@ -180,10 +180,6 @@ public:
     }
 };
 
-void dir_entry_destructor(void*);
-void dylib_destructor(void*);
-void func_addr_destructor(void*);
-
 struct nas_ghost {
 private:
     using destructor=void (*)(void*);
