@@ -1,23 +1,5 @@
 #include "nasal_gc.h"
 
-void dir_entry_destructor(void* ptr) {
-#ifndef _MSC_VER
-    closedir((DIR*)ptr);
-#else
-    FindClose(ptr);
-#endif
-}
-
-void dylib_destructor(void* ptr) {
-#ifdef _WIN32
-    FreeLibrary((HMODULE)ptr);
-#else
-    dlclose(ptr);
-#endif
-}
-
-void func_addr_destructor(void* ptr) {}
-
 var nas_vec::get_val(const i32 n) {
     i32 size = elems.size();
     if (n<-size || n>=size) {
