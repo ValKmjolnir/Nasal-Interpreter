@@ -37,7 +37,7 @@ var quick_fib(var* args, usize size, gc* ngc) {
     return var::num(res);
 }
 
-u32 ghost_for_test;
+const auto ghost_for_test = "ghost_for_test";
 
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
@@ -49,7 +49,7 @@ void ghost_for_test_destructor(void* ptr) {
 
 var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_obj);
-    res.obj().set(ghost_for_test, new u32, &ngc->global_ghost_type_table);
+    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
     return res;
 }
 
@@ -87,14 +87,6 @@ module_func_info func_tbl[] = {
 
 }
 
-extern "C" module_func_info* get(ghost_register_table* table) {
-    if (table->exists("fib_for_test")) {
-        nasal_fib_module::ghost_for_test = table->get_ghost_type_index("fib_for_test");
-        return nasal_fib_module::func_tbl;
-    }
-    nasal_fib_module::ghost_for_test = table->register_ghost_type(
-        "fib_for_test",
-        nasal_fib_module::ghost_for_test_destructor
-    );
+extern "C" module_func_info* get() {
     return nasal_fib_module::func_tbl;
 }

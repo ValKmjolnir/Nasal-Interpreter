@@ -99,6 +99,6 @@ module_func_info func_tbl[]={
     {nullptr,nullptr}
 };
 
-extern "C" module_func_info* get(ghost_register_table* table) {
+extern "C" module_func_info* get() {
     return func_tbl;
 }
