@@ -1,6 +1,9 @@
 # unix.nas
 # 2023 by ValKmjolnir
 
+var _S_IFDIR = 0x4000;
+var _S_IFREG = 0x8000;
+
 var pipe = func() {
     return __pipe;
 }
@@ -22,13 +25,11 @@ var waitpid = func(pid, nohang = 0) {
 }
 
 var isdir = func(path) {
-    # S_IFDIR 0x4000
-    return !!bits.u32_and(io.stat(path)[2],0x4000);
+    return !!bits.u32_and(io.stat(path)[2], _S_IFDIR);
 }
 
 var isfile = func(path) {
-    # S_IFREG 0x8000
-    return !!bits.u32_and(io.stat(path)[2],0x8000);
+    return !!bits.u32_and(io.stat(path)[2], _S_IFREG);
 }
 
 var opendir = func(path) {

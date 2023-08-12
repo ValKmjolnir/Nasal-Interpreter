@@ -21,10 +21,13 @@ void codegen::load_native_function_table(nasal_builtin_table* table) {
 
 void codegen::init_native_function() {
     load_native_function_table(builtin);
+    load_native_function_table(io_lib_native);
     load_native_function_table(math_lib_native);
     load_native_function_table(bits_native);
     load_native_function_table(coroutine_native);
     load_native_function_table(flight_gear_native);
+    load_native_function_table(dylib_lib_native);
+    load_native_function_table(unix_lib_native);
 }
 
 void codegen::check_id_exist(identifier* node) {

@@ -23,6 +23,7 @@ protected:
     const f64* cnum = nullptr; // constant numbers
     const std::string* cstr = nullptr; // constant symbols and strings
     std::vector<u32> imm; // immediate number table
+    std::vector<nasal_builtin_table> native;
     
     /* garbage collector */
     gc ngc;
@@ -33,7 +34,6 @@ protected:
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
     const opcode* bytecode = nullptr; // bytecode buffer address
-    std::vector<nasal_builtin_table> native;
 
     /* vm initializing function */
     void init(

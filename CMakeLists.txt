@@ -23,7 +23,10 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/coroutine.cpp
     ${CMAKE_SOURCE_DIR}/src/fg_props.cpp
     ${CMAKE_SOURCE_DIR}/src/bits_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/io_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/math_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/dylib_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/unix_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp

@@ -3,33 +3,20 @@
 #include "nasal.h"
 #include "nasal_gc.h"
 
-#ifndef _MSC_VER
-#include <unistd.h>
-#include <dirent.h>
-#else
-#define F_OK 0 // fuck msc
+#ifdef _MSC_VER
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
 #pragma warning (disable:4244)
 #pragma warning (disable:4267)
 #pragma warning (disable:4996)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define _CRT_NONSTDC_NO_DEPRECATE 1
-#include <io.h>
-#include <direct.h>
 #endif
 
 #include <sstream>
 #include <cmath>
 #include <thread>
-#include <sys/stat.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#include <sys/wait.h>
-#endif
-
+// for environ
 #if defined __APPLE__
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
@@ -43,8 +30,6 @@ var builtin_append(var*, gc&);
 var builtin_setsize(var*, gc&);
 var builtin_system(var*, gc&);
 var builtin_input(var*, gc&);
-var builtin_readfile(var*, gc&);
-var builtin_fout(var*, gc&);
 var builtin_split(var*, gc&);
 var builtin_rand(var*, gc&);
 var builtin_id(var*, gc&);
@@ -69,31 +54,7 @@ var builtin_cmp(var*, gc&);
 var builtin_chr(var*, gc&);
 var builtin_char(var*, gc&);
 var builtin_values(var*, gc&);
-var builtin_exists(var*, gc&);
-var builtin_open(var*, gc&);
-var builtin_close(var*, gc&);
-var builtin_read(var*, gc&);
-var builtin_write(var*, gc&);
-var builtin_seek(var*, gc&);
-var builtin_tell(var*, gc&);
-var builtin_readln(var*, gc&);
-var builtin_stat(var*, gc&);
-var builtin_eof(var*, gc&);
 var builtin_sleep(var*, gc&);
-var builtin_pipe(var*, gc&);
-var builtin_fork(var*, gc&);
-var builtin_waitpid(var*, gc&);
-var builtin_opendir(var*, gc&);
-var builtin_readdir(var*, gc&);
-var builtin_closedir(var*, gc&);
-var builtin_chdir(var*, gc&);
-var builtin_environ(var*, gc&);
-var builtin_getcwd(var*, gc&);
-var builtin_getenv(var*, gc&);
-var builtin_dlopen(var*, gc&);
-var builtin_dlclose(var*, gc&);
-var builtin_dlcallv(var*, gc&);
-var builtin_dlcall(var*, gc&);
 var builtin_platform(var*, gc&);
 var builtin_arch(var*, gc&);
 // md5 related functions
