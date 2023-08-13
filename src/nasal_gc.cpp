@@ -107,9 +107,19 @@ void nas_ghost::set(
 }
 
 void nas_ghost::clear() {
-    if (!ptr || !dtor_ptr) {
+    // do nothing if pointer is null
+    if (!ptr) {
         return;
     }
+
+    // do clear pointer if destructor function pointer is null
+    if (!dtor_ptr) {
+        type_name = "";
+        ptr = nullptr;
+        return;
+    }
+
+    // do destruction
     dtor_ptr(ptr);
     type_name = "";
     ptr = nullptr;
