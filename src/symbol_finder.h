@@ -11,7 +11,7 @@ class symbol_finder:public ast_visitor {
 public:
     struct symbol_info {
         std::string name;
-        std::string file;
+        span location;
     };
 
 private:
