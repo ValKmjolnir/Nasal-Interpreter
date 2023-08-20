@@ -13,6 +13,7 @@ var content = [];
 var log_cache = "";
 
 println("Nasal: This is experimental REPL");
+println("Tips : \";\" is automatically added at the end of the input line.");
 help();
 
 var count_bracket = func(line) {

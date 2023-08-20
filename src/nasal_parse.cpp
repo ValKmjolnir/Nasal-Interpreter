@@ -118,7 +118,11 @@ bool parse::check_tuple() {
 }
 
 bool parse::check_func_end(expr* node) {
-    auto type=node->get_type();
+    // avoid error parse caused nullptr return value
+    if (!node) {
+        return true;
+    }
+    auto type = node->get_type();
     if (type==expr_type::ast_func) {
         return true;
     } else if (type==expr_type::ast_def) {
@@ -154,7 +158,11 @@ bool parse::check_special_call() {
 }
 
 bool parse::need_semi_check(expr* node) {
-    auto type=node->get_type();
+    // avoid error parse caused nullptr return value
+    if (!node) {
+        return true;
+    }
+    auto type = node->get_type();
     if (type==expr_type::ast_for ||
         type==expr_type::ast_forei ||
         type==expr_type::ast_while ||
@@ -348,7 +356,7 @@ expr* parse::expression() {
         case tok::cont:    return continue_expression();
         case tok::brk:     return break_expression();
         case tok::ret:     return return_expression();
-        case tok::semi: break;
+        case tok::semi:    break;
         default:
             die(thisspan, "incorrect token <"+toks[ptr].str+">");
             next();
@@ -627,7 +635,9 @@ expr* parse::scalar() {
         return null();
     }
     // check call and avoid ambiguous syntax
-    if (is_call(toks[ptr].type) && !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)) {
+    // i don't know why using `&& !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)`
+    // here, maybe we'll find the reason XD
+    if (is_call(toks[ptr].type)) {
         auto call_node = new call_expr(toks[ptr].loc);
         call_node->set_first(node);
         while(is_call(toks[ptr].type)) {
