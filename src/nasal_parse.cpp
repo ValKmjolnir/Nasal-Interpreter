@@ -13,7 +13,7 @@ const error& parse::compile(const lexer& lexer) {
             match(tok::semi);
         } else if (need_semi_check(root->get_expressions().back()) && !lookahead(tok::eof)) {
             // the last expression can be recognized without semi
-            die(prevspan, "expected \";\"");
+            die(prevspan, "expected \";\" after this token");
         }
     }
     update_location(root);
@@ -60,6 +60,13 @@ void parse::die(const span& loc, std::string info) {
     err.err("parse", loc, info);
 }
 
+void parse::next() {
+    if (lookahead(tok::eof)) {
+        return;
+    }
+    ++ptr;
+}
+
 void parse::match(tok type, const char* info) {
     if (!lookahead(type)) {
         if (info) {
@@ -70,11 +77,8 @@ void parse::match(tok type, const char* info) {
             case tok::num:die(thisspan, "expected number");    break;
             case tok::str:die(thisspan, "expected string");    break;
             case tok::id: die(thisspan, "expected identifier");break;
-            default:      die(thisspan, "expected '"+tokname.at(type)+"'"); break;
+            default:      die(thisspan, "expected \""+tokname.at(type)+"\""); break;
         }
-        return;
-    }
-    if (lookahead(tok::eof)) {
         return;
     }
     next();
@@ -91,7 +95,7 @@ bool parse::is_call(tok type) {
 bool parse::check_comma(const tok* panic_set) {
     for(u32 i=0;panic_set[i]!=tok::null;++i) {
         if (lookahead(panic_set[i])) {
-            die(prevspan, "expected ',' between scalars");
+            die(prevspan, "expected \",\" between scalars");
             return true;
         }
     }
@@ -133,9 +137,21 @@ bool parse::check_func_end(expr* node) {
     return false;
 }
 
+bool parse::check_in_curve_multi_definition() {
+    // we do not allow syntax like:
+    //   func {}(var a, b, c)
+    // but we still allow syntax like:
+    //   func {}(var a = 1)
+    // in fact, this syntax is not recommended
+    if (!lookahead(tok::lcurve) || toks[ptr+1].type!=tok::var) {
+        return false;
+    }
+    return toks[ptr+2].type==tok::id && toks[ptr+3].type==tok::comma;
+}
+
 bool parse::check_special_call() {
     // special call means like this: function_name(a:1,b:2,c:3);
-    u32 check_ptr=ptr, curve=1, bracket=0, brace=0;
+    u32 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::lcurve:   ++curve;  break;
@@ -236,7 +252,7 @@ vector_expr* parse::vec() {
         }
     }
     update_location(node);
-    match(tok::rbracket, "expected ']' when generating vector");
+    match(tok::rbracket, "expected \"]\" when generating vector");
     return node;
 }
 
@@ -248,13 +264,13 @@ hash_expr* parse::hash() {
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id) || lookahead(tok::str)) { // first set of hashmember
-            die(prevspan, "expected ',' between hash members");
+            die(prevspan, "expected \",\" between hash members");
         } else {
             break;
         }
     }
     update_location(node);
-    match(tok::rbrace, "expected '}' when generating hash");
+    match(tok::rbrace, "expected \"}\" when generating hash");
     return node;
 }
 
@@ -309,13 +325,13 @@ void parse::params(function* func_node) {
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id)) { // first set of identifier
-            die(prevspan, "expected ',' between identifiers");
+            die(prevspan, "expected \",\" between identifiers");
         } else {
             break;
         }
     }
     update_location(func_node);
-    match(tok::rcurve, "expected ')' after parameter list");
+    match(tok::rcurve, "expected \")\" after parameter list");
     return;
 }
 
@@ -381,10 +397,10 @@ code_block* parse::expression_block() {
                 match(tok::semi);
             } else if (need_semi_check(node->get_expressions().back()) && !lookahead(tok::rbrace)) {
                 // the last expression can be recognized without semi
-                die(prevspan, "expected ';'");
+                die(prevspan, "expected \";\" after this token");
             }
         }
-        match(tok::rbrace, "expected '}' when generating expressions");
+        match(tok::rbrace, "expected \"}\" when generating expressions");
     } else {
         node->add_expression(expression());
         if (lookahead(tok::semi)) {
@@ -634,10 +650,12 @@ expr* parse::scalar() {
         die(thisspan, "expected scalar");
         return null();
     }
-    // check call and avoid ambiguous syntax
-    // i don't know why using `&& !(lookahead(tok::lcurve) && toks[ptr+1].type==tok::var)`
-    // here, maybe we'll find the reason XD
-    if (is_call(toks[ptr].type)) {
+    // check call and avoid ambiguous syntax:
+    //   var f = func(){}
+    //   (var a, b, c) = (1, 2, 3);
+    // will be incorrectly recognized like:
+    //   var f = func(){}(var a, b, c)
+    if (is_call(toks[ptr].type) && !check_in_curve_multi_definition()) {
         auto call_node = new call_expr(toks[ptr].loc);
         call_node->set_first(node);
         while(is_call(toks[ptr].type)) {
@@ -695,7 +713,7 @@ call_vector* parse::callv() {
         die(thisspan, "expected index value");
     }
     update_location(node);
-    match(tok::rbracket, "expected ']' when calling vector");
+    match(tok::rbracket, "expected \"]\" when calling vector");
     return node;
 }
 
@@ -722,7 +740,7 @@ call_function* parse::callf() {
             break;
     }
     update_location(node);
-    match(tok::rcurve, "expected ')' when calling function");
+    match(tok::rcurve, "expected \")\" when calling function");
     return node;
 }
 
@@ -790,7 +808,7 @@ multi_identifier* parse::multi_id() {
         if (lookahead(tok::comma)) {
             match(tok::comma);
         } else if (lookahead(tok::id)) { // first set of identifier
-            die(prevspan, "expected ',' between identifiers");
+            die(prevspan, "expected \",\" between identifiers");
         } else {
             break;
         }
@@ -820,7 +838,7 @@ tuple_expr* parse::multi_scalar() {
         }
     }
     update_location(node);
-    match(tok::rcurve, "expected ')' after multi-scalar");
+    match(tok::rcurve, "expected \")\" after multi-scalar");
     return node;
 }
 
@@ -887,7 +905,7 @@ for_expr* parse::for_loop() {
     } else {
         node->set_initial(calc());
     }
-    match(tok::semi, "expected ';' in for(;;)");
+    match(tok::semi, "expected \";\" in for(;;)");
 
     // conditional expression
     if (lookahead(tok::eof)) {
@@ -898,7 +916,7 @@ for_expr* parse::for_loop() {
     } else {
         node->set_condition(calc());
     }
-    match(tok::semi, "expected ';' in for(;;)");
+    match(tok::semi, "expected \";\" in for(;;)");
 
     //after loop expression
     if (lookahead(tok::eof)) {
@@ -935,7 +953,7 @@ forei_expr* parse::forei_loop() {
         die(thisspan, "expected iterator");
     }
     node->set_iterator(iter_gen());
-    match(tok::semi, "expected ';' in foreach/forindex(iter;vector)");
+    match(tok::semi, "expected \";\" in foreach/forindex(iter;vector)");
     if (lookahead(tok::eof)) {
         die(thisspan, "expected vector");
     }
