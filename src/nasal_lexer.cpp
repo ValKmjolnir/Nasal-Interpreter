@@ -11,11 +11,11 @@ bool lexer::skip(char c) {
 }
 
 bool lexer::is_id(char c) {
-    return (c=='_') || ('a'<=c && c<='z') || ('A'<=c && c<='Z') || (c<0);   
+    return (c=='_') || std::isalpha(c) || (c<0);   
 }
 
 bool lexer::is_hex(char c) {
-    return ('0'<=c && c<='9') || ('a'<=c && c<='f') || ('A'<=c && c<='F');
+    return std::isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c<='F');
 }
 
 bool lexer::is_oct(char c) {
@@ -23,7 +23,7 @@ bool lexer::is_oct(char c) {
 }
 
 bool lexer::is_dec(char c) {
-    return '0'<=c && c<='9';
+    return std::isdigit(c);
 }
 
 bool lexer::is_str(char c) {

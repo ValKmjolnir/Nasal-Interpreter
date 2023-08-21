@@ -48,28 +48,31 @@ http.establish("127.0.0.1",8080);
 
 var highlight_style="
 <style>
-    body{
+    body {
         background: #303030;
     }
-    pre{
+    pre {
         background: #303030;
         font-family: 'Courier New', Courier, monospace;
         font-size: small;
         color: #d4d4d4;
     }
-    code{
+    code {
         color: white;
         font-family: 'Courier New', Courier, monospace;
         font-size: small;
         text-align: left;
     }
-    code.key{color: #f895e7;}
-    code.id{color: #8abef0;}
-    code.opr{color: #f895e7;}
-    code.brace{color: #eafd70;}
-    code.str{color: #a5ffd0;}
-    code.num{color: #ff9a41;}
-    code.note{color: #808080;}
+    code.key {
+        color: #f895e7;
+        font-weight: bold;
+    }
+    code.id {color: #8abef0;}
+    code.opr {color: #f895e7;}
+    code.brace {color: #eafd70;}
+    code.str {color: #a5ffd0;}
+    code.num {color: #ff9a41;}
+    code.note {color: #808080;}
 </style>";
 
 var html_read_file=func(filename){
