@@ -15,7 +15,7 @@ bool lexer::is_id(char c) {
 }
 
 bool lexer::is_hex(char c) {
-    return std::isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c<='F');
+    return std::isxdigit(c);
 }
 
 bool lexer::is_oct(char c) {
@@ -127,7 +127,7 @@ token lexer::id_gen() {
     u32 begin_line = line;
     u32 begin_column = column;
     std::string str = "";
-    while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr]))) {
+    while(ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
             str += utf8_gen();
         } else { // ascii
