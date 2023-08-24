@@ -133,17 +133,20 @@ std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
 }
 
 void nas_co::clear() {
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
-        stack[i] = var::nil();
+    if (!ctx.stack) {
+        return;
     }
+    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+        ctx.stack[i] = var::nil();
+    }
+
     ctx.pc = 0;
     ctx.localr = nullptr;
     ctx.memr = nullptr;
-    ctx.canary = stack+STACK_DEPTH-1;
-    ctx.top = stack;
+    ctx.canary = ctx.stack+STACK_DEPTH-1;
+    ctx.top = ctx.stack;
     ctx.funcr = var::nil();
     ctx.upvalr = var::nil();
-    ctx.stack = stack;
 
     status = status::suspended;
 }
@@ -403,7 +406,13 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
 }
 
 void gc::mark_context_root(std::vector<var>& bfs_queue) {
-
+    // scan global
+    for(usize i = 0; i<main_context_global_size; ++i) {
+        auto& val = main_context_global[i];
+        if (val.type>vm_num) {
+            bfs_queue.push_back(val);
+        }
+    }
     // scan now running context, this context maybe related to coroutine or main
     for(var* i = rctx->stack; i<=rctx->top; ++i) {
         if (i->type>vm_num) {
@@ -479,7 +488,7 @@ void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
 void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
-    for(var* i = co.stack; i<=co.ctx.top; ++i) {
+    for(var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
         if (i->type>vm_num) {
             bfs_queue.push_back(*i);
         }

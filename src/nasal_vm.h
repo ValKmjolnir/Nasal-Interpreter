@@ -29,7 +29,7 @@ protected:
     gc ngc;
 
     /* main stack */
-    var stack[STACK_DEPTH];
+    var* global = nullptr;
 
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
@@ -46,7 +46,7 @@ protected:
         const std::vector<std::string>&);
 
     /* debug functions */
-    bool verbose;
+    bool verbose = false;
     void valinfo(var&);
     void traceback();
     void stackinfo(const u32);
@@ -151,7 +151,14 @@ protected:
 public:
 
     /* constructor of vm instance */
-    vm(): ngc(&ctx), verbose(false) {}
+    vm() {
+        ctx.stack = new var[STACK_DEPTH];
+        global = new var[STACK_DEPTH];
+    }
+    ~vm() {
+        delete[] ctx.stack;
+        delete[] global;
+    }
 
     /* execution entry */
     void run(
@@ -184,7 +191,7 @@ inline void vm::o_intl() {
 }
 
 inline void vm::o_loadg() {
-    stack[imm[ctx.pc]] = (ctx.top--)[0];
+    global[imm[ctx.pc]] = (ctx.top--)[0];
 }
 
 inline void vm::o_loadl() {
@@ -534,7 +541,7 @@ inline void vm::o_feach() {
 
 inline void vm::o_callg() {
     // get main stack directly
-    (++ctx.top)[0] = stack[imm[ctx.pc]];
+    (++ctx.top)[0] = global[imm[ctx.pc]];
 }
 
 inline void vm::o_calll() {
@@ -819,7 +826,7 @@ inline void vm::o_slc2() {
 }
 
 inline void vm::o_mcallg() {
-    ctx.memr = stack+imm[ctx.pc];
+    ctx.memr = global+imm[ctx.pc];
     (++ctx.top)[0] = ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
