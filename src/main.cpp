@@ -114,7 +114,6 @@ void execute(
     parse   parse;
     linker  ld;
     codegen gen;
-    vm      ctx;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -150,15 +149,18 @@ void execute(
     // run
     auto start = clk::now();
     if (cmd&VM_DEBUG) {
-        dbg().run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
+        auto debugger = std::unique_ptr<dbg>(new dbg);
+        debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        ctx.run(gen, ld, argv, cmd&VM_DETAIL);
+        auto runtime = std::unique_ptr<vm>(new vm);
+        runtime->run(gen, ld, argv, cmd&VM_DETAIL);
     }
 
     // get running time
+    auto end = clk::now();
     if (cmd&VM_TIME) {
-        f64 tm = (clk::now()-start).count()*1.0/den;
-        std::clog << "process exited after " << tm << "s.\n\n";
+        std::clog << "process exited after ";
+        std::clog << (end-start).count()*1.0/den << "s.\n\n";
     }
 }
 

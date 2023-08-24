@@ -202,14 +202,14 @@ public:
 };
 
 struct context {
-    u32  pc;
-    var* localr;
-    var* memr;
-    var  funcr;
-    var  upvalr;
-    var* canary;
-    var* stack;
-    var* top;
+    u32  pc = 0;
+    var* localr = nullptr;
+    var* memr = nullptr;
+    var  funcr = var::nil();
+    var  upvalr = var::nil();
+    var* canary = nullptr;
+    var* stack = nullptr;
+    var* top = nullptr;
 };
 
 struct nas_co {
@@ -219,11 +219,16 @@ struct nas_co {
         dead
     };
 
-    var stack[STACK_DEPTH];
     context ctx;
     status status;
 
-    nas_co() {clear();}
+    nas_co() {
+        ctx.stack = new var[STACK_DEPTH];
+        clear();
+    }
+    ~nas_co() {
+        delete[] ctx.stack;
+    }
     void clear();
 };
 
@@ -281,6 +286,10 @@ struct gc {
     /* main context temporary storage */
     context mctx;
 
+    /* global storage */
+    var* main_context_global = nullptr;
+    usize main_context_global_size = 0;
+
     /* runtime context */
     context* rctx = nullptr;
     nas_co* cort = nullptr; // running coroutine
@@ -315,7 +324,11 @@ struct gc {
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
 
-    gc(context* _ctx): rctx(_ctx) {}
+    void set(context* _ctx, var* _global, usize _size) {
+        rctx = _ctx;
+        main_context_global = _global;
+        main_context_global_size = _size;
+    }
 
 private:
     /* gc functions */

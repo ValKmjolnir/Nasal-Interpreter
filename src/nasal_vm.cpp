@@ -5,7 +5,7 @@ void vm::init(
     const std::vector<f64>& nums,
     const std::vector<nasal_builtin_table>& natives,
     const std::vector<opcode>& code,
-    const std::unordered_map<std::string, i32>& global,
+    const std::unordered_map<std::string, i32>& global_symbol,
     const std::vector<std::string>& filenames,
     const std::vector<std::string>& argv
 ) {
@@ -23,28 +23,29 @@ void vm::init(
     ctx.memr = nullptr;
     ctx.funcr = nil;
     ctx.upvalr = nil;
-    ctx.canary = stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top = stack;
-    ctx.stack = stack;
+    ctx.canary = ctx.stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
+    ctx.top = ctx.stack;
 
-    /* clear main stack */
+    /* clear main stack and global */
     for(u32 i = 0; i<STACK_DEPTH; ++i) {
-        stack[i] = nil;
+        ctx.stack[i] = nil;
+        global[i] = nil;
     }
 
     /* init gc */
+    ngc.set(&ctx, global, global_symbol.size());
     ngc.init(strs, argv);
 
     /* init vm globals */
     auto map_instance = ngc.alloc(vm_map);
-    stack[global.at("globals")] = map_instance;
-    for(const auto& i : global) {
-        map_instance.map().mapper[i.first] = stack+i.second;
+    global[global_symbol.at("globals")] = map_instance;
+    for(const auto& i : global_symbol) {
+        map_instance.map().mapper[i.first] = global+i.second;
     }
 
     /* init vm arg */
     auto arg_instance = ngc.alloc(vm_vec);
-    stack[global.at("arg")] = arg_instance;
+    global[global_symbol.at("arg")] = arg_instance;
     arg_instance.vec().elems = ngc.env_argv;
 }
 
@@ -89,18 +90,19 @@ void vm::valinfo(var& val) {
 }
 
 void vm::traceback() {
-    /* bytecode[0].num is the global size */
-    var* bottom = ngc.rctx->stack==stack? stack+bytecode[0].num:ngc.rctx->stack;
-    var* ctx_top = ngc.rctx->stack==stack? ctx.top:ngc.rctx->top;
+    var* bottom = ctx.stack;
+    var* top = ctx.top;
+
     std::stack<u32> ret;
-    for(var* i = bottom; i<=ctx_top; ++i) {
+    for(var* i = bottom; i<=top; ++i) {
         if (i->type==vm_ret && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
     ret.push(ctx.pc); // store the position program crashed
+
     std::clog << "trace back ("
-              << (ngc.rctx->stack==stack? "main":"coroutine")
+              << (ngc.cort? "coroutine":"main")
               << ")\n";
     codestream::set(cnum, cstr, native.data(), files);
     for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
@@ -121,19 +123,17 @@ void vm::traceback() {
 }
 
 void vm::stackinfo(const u32 limit = 10) {
-    /* bytecode[0].num is the global size */
-    const u32 gsize = ngc.rctx->stack==stack? bytecode[0].num:0;
-    var* t = ctx.top;
-    var* bottom = ngc.rctx->stack+gsize;
+    var* top = ctx.top;
+    var* bottom = ctx.stack;
     std::clog << "stack (0x" << std::hex << (u64)bottom << std::dec;
-    std::clog << " <+" << gsize << ">, limit " << limit << ", total ";
-    std::clog << (t<bottom? 0:(i64)(t-bottom+1)) << ")\n";
-    for(u32 i = 0; i<limit && t>=bottom; ++i, --t) {
+    std::clog << ", limit " << limit << ", total ";
+    std::clog << (top<bottom? 0:(i64)(top-bottom+1)) << ")\n";
+    for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
-                  << (u64)(t-ngc.rctx->stack) << std::dec
+                  << (u64)(top-ngc.rctx->stack) << std::dec
                   << "    ";
-        valinfo(t[0]);
+        valinfo(top[0]);
     }
 }
 
@@ -141,7 +141,7 @@ void vm::reginfo() {
     std::clog << "registers (" << (ngc.cort? "coroutine":"main")
               << ")\n" << std::hex
               << "  [pc    ]    | pc   | 0x" << ctx.pc << "\n"
-              << "  [global]    | addr | 0x" << (u64)stack << "\n"
+              << "  [global]    | addr | 0x" << (u64)global << "\n"
               << "  [local ]    | addr | 0x" << (u64)ctx.localr << "\n"
               << "  [memr  ]    | addr | 0x" << (u64)ctx.memr << "\n"
               << "  [canary]    | addr | 0x" << (u64)ctx.canary << "\n"
@@ -153,16 +153,16 @@ void vm::reginfo() {
 
 void vm::gstate() {
     // bytecode[0].op is op_intg
-    if (!bytecode[0].num || stack[0].type==vm_none) {
+    if (!bytecode[0].num || global[0].type==vm_none) {
         return;
     }
     std::clog << "global (0x" << std::hex
-              << (u64)stack << " <+0>)\n" << std::dec;
+              << (u64)global << ")\n" << std::dec;
     for(u32 i = 0; i<bytecode[0].num; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
                   << std::setfill('0') << i << std::dec
                   << "    ";
-        valinfo(stack[i]);
+        valinfo(global[i]);
     }
 }
 
@@ -172,7 +172,7 @@ void vm::lstate() {
     }
     const u32 lsize = ctx.funcr.func().lsize;
     std::clog << "local (0x" << std::hex << (u64)ctx.localr
-              << " <+" << (u64)(ctx.localr-ngc.rctx->stack)
+              << " <+" << (u64)(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
     for(u32 i = 0; i<lsize; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
@@ -217,7 +217,7 @@ void vm::die(const std::string& str) {
         detail();
     }
 
-    if (ngc.rctx->stack==stack) {
+    if (!ngc.cort) {
         // in main context, exit directly
         std::exit(1);
     } else {
