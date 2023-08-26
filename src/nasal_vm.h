@@ -16,7 +16,7 @@
 class vm {
 protected:
 
-    /* registers and constants of vm */
+    /* registers of vm */
     context ctx;
 
     /* constants */
@@ -30,6 +30,7 @@ protected:
 
     /* main stack */
     var* global = nullptr;
+    usize global_size = 0;
 
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
@@ -180,7 +181,7 @@ inline bool vm::cond(var& val) {
 
 inline void vm::o_intg() {
     // global values store on stack
-    ctx.top += imm[ctx.pc];
+    // ctx.top += imm[ctx.pc];
     // point to the top
     --ctx.top;
 }

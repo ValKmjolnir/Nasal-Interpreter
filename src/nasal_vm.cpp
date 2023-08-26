@@ -13,6 +13,7 @@ void vm::init(
     cstr = strs.data();
     bytecode = code.data();
     files = filenames.data();
+    global_size = global_symbol.size();
 
     /* set native functions */
     native = natives;
@@ -24,7 +25,7 @@ void vm::init(
     ctx.funcr = nil;
     ctx.upvalr = nil;
     ctx.canary = ctx.stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top = ctx.stack;
+    ctx.top = ctx.stack; // nothing is on stack
 
     /* clear main stack and global */
     for(u32 i = 0; i<STACK_DEPTH; ++i) {
@@ -33,7 +34,7 @@ void vm::init(
     }
 
     /* init gc */
-    ngc.set(&ctx, global, global_symbol.size());
+    ngc.set(&ctx, global, global_size);
     ngc.init(strs, argv);
 
     /* init vm globals */
@@ -131,7 +132,7 @@ void vm::stackinfo(const u32 limit = 10) {
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
-                  << (u64)(top-ngc.rctx->stack) << std::dec
+                  << (u64)(top-bottom) << std::dec
                   << "    ";
         valinfo(top[0]);
     }
@@ -152,13 +153,12 @@ void vm::reginfo() {
 }
 
 void vm::gstate() {
-    // bytecode[0].op is op_intg
-    if (!bytecode[0].num || global[0].type==vm_none) {
+    if (!global_size || global[0].type==vm_none) {
         return;
     }
     std::clog << "global (0x" << std::hex
               << (u64)global << ")\n" << std::dec;
-    for(u32 i = 0; i<bytecode[0].num; ++i) {
+    for(usize i = 0; i<global_size; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
                   << std::setfill('0') << i << std::dec
                   << "    ";
