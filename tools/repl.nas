@@ -31,6 +31,9 @@ var count_bracket = func(line) {
 
 while(1) {
     var line = readline(">>> ");
+    if (!size(line)) {
+        continue;
+    }
     if (line == ".exit" or line == ".quit") {
         break;
     } elsif (line == ".help") {

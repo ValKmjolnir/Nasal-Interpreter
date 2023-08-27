@@ -1144,7 +1144,7 @@ void codegen::ret_gen(return_expr* node) {
     gen(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import, bool repl) {
+const error& codegen::compile(parse& parse, linker& import) {
     init_native_function();
     init_file_map(import.get_file_list());
 
@@ -1157,7 +1157,7 @@ const error& codegen::compile(parse& parse, linker& import, bool repl) {
 
     // search global symbols first
     find_symbol(parse.tree());
-    gen(op_intg, repl? STACK_DEPTH/2:global.size(), parse.tree()->get_location());
+    gen(op_intg, global.size(), parse.tree()->get_location());
 
     // generate main block
     block_gen(parse.tree());

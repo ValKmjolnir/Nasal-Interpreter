@@ -11,21 +11,22 @@
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
+#include "repl.h"
 
 #include <unordered_map>
 #include <thread>
 #include <cstdlib>
 
-const u32 VM_RAW_AST  = 1;
-const u32 VM_AST      = 1<<1;
-const u32 VM_CODE     = 1<<2;
-const u32 VM_TIME     = 1<<3;
-const u32 VM_EXEC     = 1<<4;
-const u32 VM_DETAIL   = 1<<5;
-const u32 VM_DEBUG    = 1<<6;
-const u32 VM_SYMINFO  = 1<<7;
-const u32 VM_PROFILE  = 1<<8;
-const u32 VM_PROF_ALL = 1<<9;
+const u32 VM_RAW_AST   = 1;
+const u32 VM_AST       = 1<<1;
+const u32 VM_CODE      = 1<<2;
+const u32 VM_TIME      = 1<<3;
+const u32 VM_EXEC      = 1<<4;
+const u32 VM_DETAIL    = 1<<5;
+const u32 VM_DEBUG     = 1<<6;
+const u32 VM_SYMINFO   = 1<<7;
+const u32 VM_PROFILE   = 1<<8;
+const u32 VM_PROF_ALL  = 1<<9;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -53,6 +54,7 @@ std::ostream& help(std::ostream& out) {
     << "         --prof     | show profiling result, available under debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
     << "available under debug mode.\n"
+    << "   -r,   --repl     | use repl interpreter(experimental).\n"
     << "file:\n"
     << "   <filename>       | execute file.\n"
     << "argv:\n"
@@ -129,9 +131,8 @@ void execute(
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
     
     // optimizer does simple optimization on ast
-    auto opt = new optimizer;
+    auto opt = std::unique_ptr<optimizer>(new optimizer);
     opt->do_optimization(parse.tree());
-    delete opt;
     if (cmd&VM_AST) {
         auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
         dumper->dump(parse.tree());
@@ -178,6 +179,9 @@ i32 main(i32 argc, const char* argv[]) {
             std::clog << help;
         } else if (s=="-v" || s=="--version") {
             std::clog << version;
+        } else if (s=="-r" || s=="--repl") {
+            auto repl_module = std::unique_ptr<repl::repl>(new repl::repl);
+            repl_module->execute();
         } else if (s[0]!='-') {
             execute(s, {}, VM_EXEC);
         } else {
