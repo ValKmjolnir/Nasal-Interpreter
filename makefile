@@ -23,7 +23,8 @@ NASAL_HEADER=\
 	src/math_lib.h\
 	src/dylib_lib.h\
 	src/unix_lib.h\
-	src/coroutine.h
+	src/coroutine.h\
+	src/repl.h
 
 NASAL_OBJECT=\
 	build/nasal_err.o\
@@ -49,6 +50,7 @@ NASAL_OBJECT=\
 	build/coroutine.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
+	build/repl.o\
 	build/main.o
 
 # for test
@@ -66,6 +68,9 @@ build/main.o: $(NASAL_HEADER) src/main.cpp | build
 
 build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_misc.cpp -fno-exceptions -fPIC -o build/nasal_misc.o -I .
+
+build/repl.o: src/nasal.h src/repl.h src/repl.cpp | build
+	$(CXX) -std=$(STD) -c -O3 src/repl.cpp -fno-exceptions -fPIC -o build/repl.o -I .
 
 build/nasal_err.o: src/nasal.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_err.cpp -fno-exceptions -fPIC -o build/nasal_err.o -I .
