@@ -160,3 +160,45 @@ println("cartesian");
 for(var i=100;i<600;i+=100) {
     cartesian(i);
 }
+
+var person_data = [];
+var person = func(name, age) {
+    append(person_data, [name, age]);
+    return person_data;
+}
+
+var know_data = [];
+var know = func(name_a, name_b) {
+    append(know_data, [name_a, name_b]);
+}
+
+person("a", 1);
+person("b", 2);
+person("c", 3);
+person("d", 4);
+
+know("a", "b");
+know("b", "c");
+know("c", "d");
+know("d", "a");
+
+# maybe_know(a, b) :- know(a, tmp), know(tmp, b).
+var maybe_know_data = [];
+
+var temp = [];
+
+foreach(var i; know_data) {
+    foreach(var j; know_data) {
+        append(temp, [i[0], i[1], j[0], j[1]]);
+    }
+}
+
+foreach(var i; temp) {
+    if (!cmp(i[1], i[2])) {
+        append(maybe_know_data, [i, i[0], i[3]]);
+    }
+}
+
+foreach(var res; maybe_know_data) {
+    println(res[0], " -> ", res[1], " ", res[2]);
+}
