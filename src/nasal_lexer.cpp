@@ -62,6 +62,14 @@ void lexer::err_char() {
 }
 
 void lexer::open(const std::string& file) {
+    if (repl_file_info::instance()->in_repl_mode &&
+        repl_file_info::instance()->repl_file_name==file) {
+        err.load(file);
+        filename = file;
+        res = repl_file_info::instance()->repl_file_source;
+        return;
+    }
+
     // check file exsits and it is a regular file
     struct stat buffer;
     if (stat(file.c_str(), &buffer)==0 && !S_ISREG(buffer.st_mode)) {

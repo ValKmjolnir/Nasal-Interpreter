@@ -1,4 +1,5 @@
 #include "nasal_err.h"
+
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
 struct for_reset {
@@ -6,7 +7,11 @@ struct for_reset {
     for_reset() {
         GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scr);
     }
-} reset_ter_color;
+    static for_reset* singleton() {
+        static for_reset windows_set;
+        return &windows_set;
+    }
+};
 #endif
 
 std::ostream& back_white(std::ostream& s) {
@@ -57,7 +62,7 @@ std::ostream& white(std::ostream& s) {
 std::ostream& reset(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),
-        reset_ter_color.scr.wAttributes);
+        for_reset::singleton()->scr.wAttributes);
 #else
     s << "\033[0m";
 #endif
@@ -68,7 +73,22 @@ void flstream::load(const std::string& f) {
     if (file==f) { // don't need to load a loaded file
         return;
     } else {
-        file=f;
+        file = f;
+    }
+
+    if (repl_file_info::instance()->in_repl_mode &&
+        repl_file_info::instance()->repl_file_name==file) {
+        const auto& source = repl_file_info::instance()->repl_file_source;
+        res = {};
+        size_t pos = 0, last = 0;
+        while ((pos = source.find("\n", last))!=std::string::npos) {
+            res.push_back(source.substr(last, pos - last));
+            last = pos + 1;
+        }
+        if (last<source.length()) {
+            res.push_back(source.substr(last));
+        }
+        return;
     }
 
     res.clear();

@@ -8,6 +8,18 @@
 
 #include "nasal.h"
 
+struct repl_file_info {
+    bool in_repl_mode = false;
+    std::string repl_file_name = "<nasal-repl>";
+    std::string repl_file_source = "";
+
+    // singleton
+    static repl_file_info* instance() {
+        static repl_file_info info;
+        return &info;
+    }
+};
+
 struct span {
     u32 begin_line;
     u32 begin_column;

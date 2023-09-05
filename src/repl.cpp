@@ -20,16 +20,14 @@ void repl::update_temp_file() {
     for(const auto& i : source) {
         content += i + "\n";
     }
-
-    std::ofstream out(".temp.nas", std::ios::binary);
-    out << content;
+    repl_file_info::instance()->repl_file_source = content;
 }
 
 bool repl::check_need_more_input() {
     while(true) {
         update_temp_file();
         auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
-        if (nasal_lexer->scan(".temp.nas").geterr()) {
+        if (nasal_lexer->scan("<nasal-repl>").geterr()) {
             return false;
         }
 
@@ -67,6 +65,10 @@ void repl::help() {
 bool repl::run() {
     update_temp_file();
 
+    using clk = std::chrono::high_resolution_clock;
+    const auto den = clk::duration::period::den;
+    auto start = clk::now();
+
     auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
     auto nasal_parser = std::unique_ptr<parse>(new parse);
     auto nasal_linker = std::unique_ptr<linker>(new linker);
@@ -74,7 +76,7 @@ bool repl::run() {
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
     auto nasal_runtime = std::unique_ptr<vm>(new vm);
 
-    if (nasal_lexer->scan(".temp.nas").geterr()) {
+    if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return false;
     }
 
@@ -82,7 +84,7 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_linker->link(*nasal_parser, ".temp.nas", true).geterr()) {
+    if (nasal_linker->link(*nasal_parser, "<nasal-repl>", true).geterr()) {
         return false;
     }
 
@@ -91,6 +93,8 @@ bool repl::run() {
         return false;
     }
 
+    auto end = clk::now();
+    std::clog << "[compile time: " << (end-start).count()*1.0/den << "s]\n";
     nasal_runtime->run(*nasal_codegen, *nasal_linker, {}, false);
 
     return true;
@@ -98,6 +102,9 @@ bool repl::run() {
 
 void repl::execute() {
     source = {};
+    auto repl_file_handle = repl_file_info::instance();
+    repl_file_handle->in_repl_mode = true;
+
     std::cout << "Nasal REPL interpreter(experimental).\n";
     help();
 
@@ -127,9 +134,11 @@ void repl::execute() {
             continue;
         }
 
+        // run program
         if (!run()) {
             source.pop_back();
         }
+
         std::cout << "\n";
     }
 }
