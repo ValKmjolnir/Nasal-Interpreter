@@ -189,7 +189,10 @@ bool parse::need_semi_check(expr* node) {
 }
 
 void parse::update_location(expr* node) {
-    node->update_location(toks[ptr].loc);
+    if (!ptr) {
+        return;
+    }
+    node->update_location(toks[ptr-1].loc);
 }
 
 null_expr* parse::null() {
