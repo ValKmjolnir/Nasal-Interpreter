@@ -72,7 +72,7 @@ build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 build/repl.o: src/nasal.h src/repl.h src/repl.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/repl.cpp -fno-exceptions -fPIC -o build/repl.o -I .
 
-build/nasal_err.o: src/nasal.h src/nasal_err.h src/nasal_err.cpp | build
+build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_err.cpp -fno-exceptions -fPIC -o build/nasal_err.o -I .
 
 build/nasal_gc.o: src/nasal.h src/nasal_gc.h src/nasal_gc.cpp | build
@@ -88,6 +88,7 @@ build/nasal_import.o: \
 
 build/nasal_lexer.o: \
 	src/nasal.h\
+	src/repl.h\
 	src/nasal_err.h\
 	src/nasal_lexer.h src/nasal_lexer.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_lexer.cpp -fno-exceptions -fPIC -o build/nasal_lexer.o -I .
