@@ -49,7 +49,7 @@ var count=func(s,c){
 }
 
 var column=func(number){
-    number=number>=1000?substr(str(number/1000),0,3)~'k':str(number);
+    number=number>=1000?substr(str(number/1000),0,4)~'k':str(number);
     return padding.leftpad(number,6);
 }
 

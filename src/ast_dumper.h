@@ -6,6 +6,8 @@
 #include <cstring>
 #include <sstream>
 
+namespace nasal {
+
 class ast_dumper:public ast_visitor {
 private:
     std::vector<std::string> indent;
@@ -79,3 +81,5 @@ public:
         root->accept(this);
     }
 };
+
+}

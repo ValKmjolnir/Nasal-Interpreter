@@ -5,17 +5,20 @@
 #endif
 
 #include "nasal_lexer.h"
+#include "repl.h"
+
+namespace nasal {
 
 bool lexer::skip(char c) {
     return c==' ' || c=='\n' || c=='\t' || c=='\r' || c==0;
 }
 
 bool lexer::is_id(char c) {
-    return (c=='_') || ('a'<=c && c<='z') || ('A'<=c && c<='Z') || (c<0);   
+    return (c=='_') || std::isalpha(c) || (c<0);   
 }
 
 bool lexer::is_hex(char c) {
-    return ('0'<=c && c<='9') || ('a'<=c && c<='f') || ('A'<=c && c<='F');
+    return std::isxdigit(c);
 }
 
 bool lexer::is_oct(char c) {
@@ -23,7 +26,7 @@ bool lexer::is_oct(char c) {
 }
 
 bool lexer::is_dec(char c) {
-    return '0'<=c && c<='9';
+    return std::isdigit(c);
 }
 
 bool lexer::is_str(char c) {
@@ -58,10 +61,18 @@ void lexer::err_char() {
     err.err("lexer",
         {line, column-1, line, column, filename},
         "invalid character 0x"+chrhex(c));
-    err.fatal("lexer", "fatal error occurred, stop");
+    ++invalid_char;
 }
 
 void lexer::open(const std::string& file) {
+    if (repl::info::instance()->in_repl_mode &&
+        repl::info::instance()->repl_file_name==file) {
+        err.load(file);
+        filename = file;
+        res = repl::info::instance()->repl_file_source;
+        return;
+    }
+
     // check file exsits and it is a regular file
     struct stat buffer;
     if (stat(file.c_str(), &buffer)==0 && !S_ISREG(buffer.st_mode)) {
@@ -115,7 +126,7 @@ std::string lexer::utf8_gen() {
             err.err("lexer",
                 {line, column-1, line, column, filename},
                 "invalid utf-8 <"+utf_info+">");
-            err.fatal("lexer", "fatal error occurred, stop");
+            ++invalid_char;
         }
         str += tmp;
         column += 2; // may have some problems because not all the unicode takes 2 space
@@ -127,7 +138,7 @@ token lexer::id_gen() {
     u32 begin_line = line;
     u32 begin_column = column;
     std::string str = "";
-    while(ptr<res.size() && (is_id(res[ptr])||is_dec(res[ptr]))) {
+    while(ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
             str += utf8_gen();
         } else { // ascii
@@ -350,8 +361,18 @@ const error& lexer::scan(const std::string& file) {
         } else {
             err_char();
         }
+        if (invalid_char>10) {
+            err.err("lexer", "too many invalid characters, stop");
+            break;
+        }
     }
-    toks.push_back({{line, column, line, column, filename}, tok::eof, "<eof>"});
+    if (toks.size()) {
+        toks.push_back({toks.back().loc, tok::eof, "<eof>"});
+    } else {
+        toks.push_back({{line, column, line, column, filename}, tok::eof, "<eof>"});
+    }
     res = "";
     return err;
+}
+
 }

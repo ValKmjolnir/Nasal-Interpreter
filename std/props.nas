@@ -10,42 +10,152 @@
 # available in C++; just use node.getNode(path).whatever() instead.
 #
 
-# unfinished
-var getprop = func {}
-var fgcommand = func {}
-var _globals = func {}
-var _createCondition = func {}
-var _new = func {}
-var string = {};
-var _getNode = func {};
-var _getParent = func {};
-var _getChildren = func {};
-var _setChildren = func {};
-var _alias = func {};
-var _equals = func {};
-var _unalias = func {};
-var _adjustValue = func {};
-var _setDoubleValue = func {};
-var _setIntValue = func {};
-var _setBoolValue = func {};
-var _toggleBoolValue = func {};
-var _setValue = func {};
-var _setValues = func {};
-var _getAttribute = func {};
-var _setAttribute = func {};
-var _getValue = func {};
-var _getType = func {};
-var _isNumeric = func {};
-var _isInt = func {};
-var _getIndex = func {};
-var _getName = func {};
-var _getAliasTarget = func {};
-var _getChild = func {};
-var _addChild = func {};
-var _addChildren = func {};
-var _removeChild = func {};
-var _removeChildren = func {};
-var _removeAllChildren = func {};
+var _new = func {
+    return {
+        type: "",
+        name: "",
+        value: nil,
+        parent_list:[],
+        child_list:[]
+    };
+}
+
+var _fg_props_globals = _new();
+var _globals = func {
+    return _fg_props_globals;
+}
+
+var getprop = func(arg...) {
+    die("unimplemented");
+}
+
+var addcommand = func(name, code) {
+    die("unimplemented");
+}
+
+var fgcommand = func(name, args = nil) {
+    die("unimplemented");
+}
+
+var _createCondition = func {
+    die("unimplemented");
+}
+
+var _getNode = func {
+    die("unimplemented");
+};
+
+var _getParent = func {
+    die("unimplemented");
+};
+
+var _getChildren = func {
+    die("unimplemented");
+};
+
+var _setChildren = func {
+    die("unimplemented");
+};
+
+var _alias = func {
+    die("unimplemented");
+};
+
+var _equals = func {
+    die("unimplemented");
+};
+
+var _unalias = func {
+    die("unimplemented");
+};
+
+var _adjustValue = func {
+    die("unimplemented");
+};
+
+var _setDoubleValue = func {
+    die("unimplemented");
+};
+
+var _setIntValue = func {
+    die("unimplemented");
+};
+
+var _setBoolValue = func {
+    die("unimplemented");
+};
+
+var _toggleBoolValue = func {
+    die("unimplemented");
+};
+
+var _setValue = func {
+    die("unimplemented");
+};
+
+var _setValues = func {
+    die("unimplemented");
+};
+
+var _getAttribute = func {
+    die("unimplemented");
+};
+
+var _setAttribute = func {
+    die("unimplemented");
+};
+
+var _getValue = func {
+    die("unimplemented");
+};
+
+var _getType = func {
+    die("unimplemented");
+};
+
+var _isNumeric = func {
+    die("unimplemented");
+};
+
+var _isInt = func {
+    die("unimplemented");
+};
+
+var _getIndex = func {
+    die("unimplemented");
+};
+
+var _getName = func {
+    die("unimplemented");
+};
+
+var _getAliasTarget = func {
+    die("unimplemented");
+};
+
+var _getChild = func {
+    die("unimplemented");
+};
+
+var _addChild = func {
+    die("unimplemented");
+};
+
+var _addChildren = func {
+    die("unimplemented");
+};
+
+var _removeChild = func {
+    die("unimplemented");
+};
+
+var _removeChildren = func {
+    die("unimplemented");
+};
+
+var _removeAllChildren = func {
+    die("unimplemented");
+};
 
 
 var Node = {
@@ -190,8 +300,9 @@ var Node = {
 #
 Node.new = func(values = nil) {
     var result = wrapNode(_new());
-    if(ishash(values))
+    if(ishash(values)) {
         result.setValues(values);
+    }
     return result;
 }
 
@@ -331,14 +442,18 @@ var wrap = func(node) {
 # Node object and its _g (ghost) field set to the specified object.
 # Nasal's literal syntax can be pleasingly terse. I like that. :)
 #
-var wrapNode = func(node) { { parents : [Node], _g : node } }
+var wrapNode = func(node) {
+    return { parents : [Node], _g : node };
+}
 
 ##
 # Global property tree.  Set once at initialization.  Is that OK?
 # Does anything ever call globals.set_props() from C++?  May need to
 # turn this into a function if so.
 #
-var globals = wrapNode(_globals());
+var globals = func {
+    return wrapNode(_globals());
+}();
 
 ##
 # Shortcut for props.globals.getNode().

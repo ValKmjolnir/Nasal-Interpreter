@@ -7,7 +7,7 @@
 
 enum op_code_type:u8 {
     op_exit,   // stop the virtual machine
-    op_intg,   // global scope size, set stack top
+    op_intg,   // init global scope
     op_intl,   // local scope size
     op_loadg,  // load global value
     op_loadl,  // load local value

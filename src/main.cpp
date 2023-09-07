@@ -11,21 +11,22 @@
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
+#include "repl.h"
 
 #include <unordered_map>
 #include <thread>
 #include <cstdlib>
 
-const u32 VM_RAW_AST  = 1;
-const u32 VM_AST      = 1<<1;
-const u32 VM_CODE     = 1<<2;
-const u32 VM_TIME     = 1<<3;
-const u32 VM_EXEC     = 1<<4;
-const u32 VM_DETAIL   = 1<<5;
-const u32 VM_DEBUG    = 1<<6;
-const u32 VM_SYMINFO  = 1<<7;
-const u32 VM_PROFILE  = 1<<8;
-const u32 VM_PROF_ALL = 1<<9;
+const u32 VM_RAW_AST   = 1;
+const u32 VM_AST       = 1<<1;
+const u32 VM_CODE      = 1<<2;
+const u32 VM_TIME      = 1<<3;
+const u32 VM_EXEC      = 1<<4;
+const u32 VM_DETAIL    = 1<<5;
+const u32 VM_DEBUG     = 1<<6;
+const u32 VM_SYMINFO   = 1<<7;
+const u32 VM_PROFILE   = 1<<8;
+const u32 VM_PROF_ALL  = 1<<9;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -40,6 +41,7 @@ std::ostream& help(std::ostream& out) {
     << "option:\n"
     << "   -h,   --help     | get help.\n"
     << "   -v,   --version  | get version.\n"
+    << "   -r,   --repl     | use repl interpreter(experimental).\n"
     << "\nnasal [option] <file> [argv]\n"
     << "option:\n"
     << "   -a,   --ast      | view ast after link/optimize process.\n"
@@ -87,7 +89,7 @@ std::ostream& version(std::ostream& out) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
     }
     if (num<0.01) {
-        parse::easter_egg();
+        nasal::parse::easter_egg();
     }
     out << "nasal interpreter version " << __nasver;
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
@@ -110,11 +112,10 @@ void execute(
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
-    lexer   lex;
-    parse   parse;
-    linker  ld;
-    codegen gen;
-    vm      ctx;
+    nasal::lexer   lex;
+    nasal::parse   parse;
+    nasal::linker  ld;
+    nasal::codegen gen;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -122,7 +123,7 @@ void execute(
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
     if (cmd&VM_RAW_AST) {
-        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
+        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
         dumper->dump(parse.tree());
     }
 
@@ -130,11 +131,10 @@ void execute(
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
     
     // optimizer does simple optimization on ast
-    auto opt = new optimizer;
+    auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
     opt->do_optimization(parse.tree());
-    delete opt;
     if (cmd&VM_AST) {
-        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
+        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
         dumper->dump(parse.tree());
     }
 
@@ -150,15 +150,18 @@ void execute(
     // run
     auto start = clk::now();
     if (cmd&VM_DEBUG) {
-        dbg().run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
+        auto debugger = std::unique_ptr<nasal::dbg>(new nasal::dbg);
+        debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        ctx.run(gen, ld, argv, cmd&VM_DETAIL);
+        auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
+        runtime->run(gen, ld, argv, cmd&VM_DETAIL);
     }
 
     // get running time
+    auto end = clk::now();
     if (cmd&VM_TIME) {
-        f64 tm = (clk::now()-start).count()*1.0/den;
-        std::clog << "process exited after " << tm << "s.\n\n";
+        std::clog << "process exited after ";
+        std::clog << (end-start).count()*1.0/den << "s.\n\n";
     }
 }
 
@@ -176,6 +179,9 @@ i32 main(i32 argc, const char* argv[]) {
             std::clog << help;
         } else if (s=="-v" || s=="--version") {
             std::clog << version;
+        } else if (s=="-r" || s=="--repl") {
+            auto repl = std::unique_ptr<nasal::repl::repl>(new nasal::repl::repl);
+            repl->execute();
         } else if (s[0]!='-') {
             execute(s, {}, VM_EXEC);
         } else {

@@ -7,6 +7,8 @@
 #include "nasal_lexer.h"
 #include "nasal_err.h"
 
+namespace nasal {
+
 class parse {
 
 #define thisspan (toks[ptr].loc)
@@ -77,13 +79,14 @@ private:
 
 private:
     void die(const span&,std::string);
-    void next() {++ptr;}
-    void match(tok type, const char* info=nullptr);
+    void next();
+    void match(tok, const char* info=nullptr);
     bool lookahead(tok);
     bool is_call(tok);
     bool check_comma(const tok*);
     bool check_tuple();
     bool check_func_end(expr*);
+    bool check_in_curve_multi_definition();
     bool check_special_call();
     bool need_semi_check(expr*);
     void update_location(expr*);
@@ -155,3 +158,5 @@ public:
     const error& compile(const lexer&);
     static void easter_egg();
 };
+
+}

@@ -38,7 +38,8 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
-    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
+    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp
+    ${CMAKE_SOURCE_DIR}/src/repl.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 

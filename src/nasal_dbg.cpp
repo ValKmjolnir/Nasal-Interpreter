@@ -1,5 +1,7 @@
 #include "nasal_dbg.h"
 
+namespace nasal {
+
 void debug_prof_data::init_counter() {
     for(usize i = 0; i<debug_prof_data::operand_size; ++i) {
         operand_counter[i] = 0;
@@ -275,4 +277,6 @@ void dbg::run(
     ngc.clear();
     imm.clear();
     return;
+}
+
 }

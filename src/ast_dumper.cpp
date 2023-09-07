@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+namespace nasal {
+
 bool ast_dumper::visit_null_expr(null_expr* node) {
     dump_indent();
     std::cout << "null" << format_location(node->get_location());
@@ -478,4 +480,6 @@ bool ast_dumper::visit_return_expr(return_expr* node) {
         pop_indent();
     }
     return true;
+}
+
 }

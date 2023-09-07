@@ -20,7 +20,9 @@
 
 #include <vector>
 
-class linker{
+namespace nasal {
+
+class linker {
 private:
     bool show_path;
     bool lib_loaded;
@@ -31,6 +33,7 @@ private:
     std::vector<std::string> module_load_stack;
     std::vector<std::string> envpath;
 
+private:
     bool import_check(expr*);
     bool exist(const std::string&);
     u16 find(const std::string&);
@@ -53,3 +56,5 @@ public:
     const auto& get_this_file() const {return this_file;}
     const auto& get_lib_path() const {return lib_path;}
 };
+
+}

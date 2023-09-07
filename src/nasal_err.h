@@ -8,6 +8,8 @@
 
 #include "nasal.h"
 
+namespace nasal {
+
 struct span {
     u32 begin_line;
     u32 begin_column;
@@ -54,7 +56,6 @@ private:
 
 public:
     error():cnt(0) {}
-    void fatal(const std::string&, const std::string&);
     void err(const std::string&, const std::string&);
     void warn(const std::string&, const std::string&);
     void err(const std::string&, const span&, const std::string&);
@@ -66,3 +67,5 @@ public:
     }
     u32 geterr() const {return cnt;}
 };
+
+}

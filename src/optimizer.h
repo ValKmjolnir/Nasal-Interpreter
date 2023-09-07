@@ -5,6 +5,8 @@
 #include "nasal_ast.h"
 #include "ast_visitor.h"
 
+namespace nasal {
+
 class optimizer:public ast_visitor {
 private:
     void const_string(binary_operator*, string_literal*, string_literal*);
@@ -18,3 +20,5 @@ public:
 public:
     void do_optimization(code_block*);
 };
+
+}
