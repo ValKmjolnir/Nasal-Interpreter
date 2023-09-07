@@ -89,7 +89,7 @@ std::ostream& version(std::ostream& out) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
     }
     if (num<0.01) {
-        parse::easter_egg();
+        nasal::parse::easter_egg();
     }
     out << "nasal interpreter version " << __nasver;
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
@@ -112,10 +112,10 @@ void execute(
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
-    lexer   lex;
-    parse   parse;
-    linker  ld;
-    codegen gen;
+    nasal::lexer   lex;
+    nasal::parse   parse;
+    nasal::linker  ld;
+    nasal::codegen gen;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -123,7 +123,7 @@ void execute(
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
     if (cmd&VM_RAW_AST) {
-        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
+        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
         dumper->dump(parse.tree());
     }
 
@@ -131,10 +131,10 @@ void execute(
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
     
     // optimizer does simple optimization on ast
-    auto opt = std::unique_ptr<optimizer>(new optimizer);
+    auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
     opt->do_optimization(parse.tree());
     if (cmd&VM_AST) {
-        auto dumper = std::unique_ptr<ast_dumper>(new ast_dumper);
+        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
         dumper->dump(parse.tree());
     }
 
@@ -150,10 +150,10 @@ void execute(
     // run
     auto start = clk::now();
     if (cmd&VM_DEBUG) {
-        auto debugger = std::unique_ptr<dbg>(new dbg);
+        auto debugger = std::unique_ptr<nasal::dbg>(new nasal::dbg);
         debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        auto runtime = std::unique_ptr<vm>(new vm);
+        auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
         runtime->run(gen, ld, argv, cmd&VM_DETAIL);
     }
 
@@ -180,8 +180,8 @@ i32 main(i32 argc, const char* argv[]) {
         } else if (s=="-v" || s=="--version") {
             std::clog << version;
         } else if (s=="-r" || s=="--repl") {
-            auto repl_module = std::unique_ptr<repl::repl>(new repl::repl);
-            repl_module->execute();
+            auto repl = std::unique_ptr<nasal::repl::repl>(new nasal::repl::repl);
+            repl->execute();
         } else if (s[0]!='-') {
             execute(s, {}, VM_EXEC);
         } else {

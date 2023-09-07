@@ -7,6 +7,8 @@
 #include <sstream>
 #include <vector>
 
+namespace nasal {
+
 class symbol_finder:public ast_visitor {
 public:
     struct symbol_info {
@@ -23,3 +25,5 @@ public:
     bool visit_iter_expr(iter_expr*) override;
     const std::vector<symbol_finder::symbol_info>& do_find(code_block*);
 };
+
+}

@@ -1,5 +1,7 @@
 #include "nasal_codegen.h"
 
+namespace nasal {
+
 void codegen::init_file_map(const std::vector<std::string>& file_list) {
     file_map = {};
     for(usize i = 0; i<file_list.size(); ++i) {
@@ -1254,4 +1256,6 @@ void codegen::symbol_dump(std::ostream& out) const {
             out << i << std::endl;
         }
     }
+}
+
 }

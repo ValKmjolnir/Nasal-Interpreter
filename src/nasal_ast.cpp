@@ -1,6 +1,8 @@
 #include "nasal_ast.h"
 #include "ast_visitor.h"
 
+namespace nasal {
+
 void expr::accept(ast_visitor* visitor) {
     visitor->visit_expr(this);
 }
@@ -365,4 +367,6 @@ return_expr::~return_expr() {
 
 void return_expr::accept(ast_visitor* visitor) {
     visitor->visit_return_expr(this);
+}
+
 }

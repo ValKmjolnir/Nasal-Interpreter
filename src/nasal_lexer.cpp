@@ -7,6 +7,8 @@
 #include "nasal_lexer.h"
 #include "repl.h"
 
+namespace nasal {
+
 bool lexer::skip(char c) {
     return c==' ' || c=='\n' || c=='\t' || c=='\r' || c==0;
 }
@@ -371,4 +373,6 @@ const error& lexer::scan(const std::string& file) {
     }
     res = "";
     return err;
+}
+
 }

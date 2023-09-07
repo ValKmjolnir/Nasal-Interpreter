@@ -19,6 +19,8 @@
 #define S_ISREG(m) (((m)&0xF000)==0x8000)
 #endif
 
+namespace nasal {
+
 enum class tok:u32 {
     null=0,   // null token (default token type)
     num,      // number literal
@@ -182,3 +184,5 @@ public:
     const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };
+
+}

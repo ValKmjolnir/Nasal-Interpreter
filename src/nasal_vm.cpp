@@ -1,5 +1,7 @@
 #include "nasal_vm.h"
 
+namespace nasal {
+
 void vm::init(
     const std::vector<std::string>& strs,
     const std::vector<f64>& nums,
@@ -441,4 +443,6 @@ mcallv: exec_nodie(o_mcallv); // -0
 mcallh: exec_nodie(o_mcallh); // -0
 ret:    exec_nodie(o_ret   ); // -2
 #endif
+}
+
 }

@@ -1,5 +1,7 @@
 #include "symbol_finder.h"
 
+namespace nasal {
+
 bool symbol_finder::visit_definition_expr(definition_expr* node) {
     if (node->get_variable_name()) {
         symbols.push_back({
@@ -40,4 +42,6 @@ const std::vector<symbol_finder::symbol_info>& symbol_finder::do_find(code_block
     symbols.clear();
     root->accept(this);
     return symbols;
+}
+
 }
