@@ -8,7 +8,7 @@
 #include <winsock.h>
 #pragma comment(lib,"ws2_32")
 
-class WSAmanager{
+class WSAmanager {
 private:
     WSAData data;
 public:

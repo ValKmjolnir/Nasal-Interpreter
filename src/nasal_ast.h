@@ -6,6 +6,8 @@
 #include <vector>
 #include <unordered_map>
 
+namespace nasal {
+
 enum class expr_type:u32 {
     ast_null = 0,    // null node
     ast_block,       // code block 
@@ -669,3 +671,5 @@ public:
     expr* get_value() {return value;}
     void accept(ast_visitor*) override;
 };
+
+}

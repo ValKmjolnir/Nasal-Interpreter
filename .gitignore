@@ -48,6 +48,7 @@ nasal.exe
 .vscode
 dump
 fgfs.log
+.temp.*
 
 # build dir
 build

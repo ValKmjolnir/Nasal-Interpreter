@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+namespace nasal {
+
 class debug_prof_data {
 private:
     static const usize operand_size = op_code_type::op_ret + 1;
@@ -167,3 +169,5 @@ public:
         bool
     );
 };
+
+}

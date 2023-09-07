@@ -1,5 +1,7 @@
 #include "nasal_codegen.h"
 
+namespace nasal {
+
 void codegen::init_file_map(const std::vector<std::string>& file_list) {
     file_map = {};
     for(usize i = 0; i<file_list.size(); ++i) {
@@ -75,11 +77,14 @@ void codegen::regist_str(const std::string& str) {
 void codegen::find_symbol(code_block* node) {
     auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
     for(const auto& i : finder->do_find(node)) {
-        if (!experimental_namespace.count(i.file)) {
-            experimental_namespace[i.file] = {};
+        if (native_function_mapper.count(i.name)) {
+            die("definition conflicts with native function", i.location);
         }
-        if (local.empty() && !experimental_namespace.at(i.file).count(i.name)) {
-            experimental_namespace.at(i.file).insert(i.name);
+        if (!experimental_namespace.count(i.location.file)) {
+            experimental_namespace[i.location.file] = {};
+        }
+        if (local.empty() && !experimental_namespace.at(i.location.file).count(i.name)) {
+            experimental_namespace.at(i.location.file).insert(i.name);
         }
         add_symbol(i.name);
     }
@@ -1141,7 +1146,7 @@ void codegen::ret_gen(return_expr* node) {
     gen(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import, bool repl) {
+const error& codegen::compile(parse& parse, linker& import) {
     init_native_function();
     init_file_map(import.get_file_list());
 
@@ -1154,7 +1159,7 @@ const error& codegen::compile(parse& parse, linker& import, bool repl) {
 
     // search global symbols first
     find_symbol(parse.tree());
-    gen(op_intg, repl? STACK_DEPTH/2:global.size(), parse.tree()->get_location());
+    gen(op_intg, global.size(), parse.tree()->get_location());
 
     // generate main block
     block_gen(parse.tree());
@@ -1251,4 +1256,6 @@ void codegen::symbol_dump(std::ostream& out) const {
             out << i << std::endl;
         }
     }
+}
+
 }
