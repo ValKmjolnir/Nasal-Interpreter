@@ -95,8 +95,11 @@ private:
     usize ptr;
     std::string filename;
     std::string res;
+
     error err;
+    u64 invalid_char;
     std::vector<token> toks;
+
     const std::unordered_map<std::string, tok> typetbl {
         {"true"    ,tok::tktrue  },
         {"false"   ,tok::tkfalse },
@@ -175,7 +178,7 @@ private:
     token dots();
     token calc_opr();
 public:
-    lexer(): line(1), column(0), ptr(0), filename(""), res("") {}
+    lexer(): line(1), column(0), ptr(0), filename(""), res(""), invalid_char(0) {}
     const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };

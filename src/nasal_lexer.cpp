@@ -5,6 +5,7 @@
 #endif
 
 #include "nasal_lexer.h"
+#include "repl.h"
 
 bool lexer::skip(char c) {
     return c==' ' || c=='\n' || c=='\t' || c=='\r' || c==0;
@@ -58,15 +59,15 @@ void lexer::err_char() {
     err.err("lexer",
         {line, column-1, line, column, filename},
         "invalid character 0x"+chrhex(c));
-    err.fatal("lexer", "fatal error occurred, stop");
+    ++invalid_char;
 }
 
 void lexer::open(const std::string& file) {
-    if (repl_file_info::instance()->in_repl_mode &&
-        repl_file_info::instance()->repl_file_name==file) {
+    if (repl::info::instance()->in_repl_mode &&
+        repl::info::instance()->repl_file_name==file) {
         err.load(file);
         filename = file;
-        res = repl_file_info::instance()->repl_file_source;
+        res = repl::info::instance()->repl_file_source;
         return;
     }
 
@@ -123,7 +124,7 @@ std::string lexer::utf8_gen() {
             err.err("lexer",
                 {line, column-1, line, column, filename},
                 "invalid utf-8 <"+utf_info+">");
-            err.fatal("lexer", "fatal error occurred, stop");
+            ++invalid_char;
         }
         str += tmp;
         column += 2; // may have some problems because not all the unicode takes 2 space
@@ -358,8 +359,16 @@ const error& lexer::scan(const std::string& file) {
         } else {
             err_char();
         }
+        if (invalid_char>10) {
+            err.err("lexer", "too many invalid characters, stop");
+            break;
+        }
     }
-    toks.push_back({{line, column, line, column, filename}, tok::eof, "<eof>"});
+    if (toks.size()) {
+        toks.push_back({toks.back().loc, tok::eof, "<eof>"});
+    } else {
+        toks.push_back({{line, column, line, column, filename}, tok::eof, "<eof>"});
+    }
     res = "";
     return err;
 }

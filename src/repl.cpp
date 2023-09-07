@@ -20,7 +20,7 @@ void repl::update_temp_file() {
     for(const auto& i : source) {
         content += i + "\n";
     }
-    repl_file_info::instance()->repl_file_source = content;
+    info::instance()->repl_file_source = content;
 }
 
 bool repl::check_need_more_input() {
@@ -45,7 +45,7 @@ bool repl::check_need_more_input() {
                 default: break;
             }
         }
-        if (!in_curve && !in_bracket && !in_brace) {
+        if (in_curve<=0 && in_bracket<=0 && in_brace<=0) {
             break;
         }
         auto line = readline("... ");
@@ -94,7 +94,7 @@ bool repl::run() {
     }
 
     auto end = clk::now();
-    std::clog << "[compile time: " << (end-start).count()*1.0/den << "s]\n";
+    std::clog << "[compile time: " << (end-start).count()*1000.0/den << " ms]\n";
     nasal_runtime->run(*nasal_codegen, *nasal_linker, {}, false);
 
     return true;
@@ -102,8 +102,7 @@ bool repl::run() {
 
 void repl::execute() {
     source = {};
-    auto repl_file_handle = repl_file_info::instance();
-    repl_file_handle->in_repl_mode = true;
+    info::instance()->in_repl_mode = true;
 
     std::cout << "Nasal REPL interpreter(experimental).\n";
     help();

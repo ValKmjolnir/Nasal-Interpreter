@@ -1,4 +1,5 @@
 #include "nasal_err.h"
+#include "repl.h"
 
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
@@ -76,9 +77,9 @@ void flstream::load(const std::string& f) {
         file = f;
     }
 
-    if (repl_file_info::instance()->in_repl_mode &&
-        repl_file_info::instance()->repl_file_name==file) {
-        const auto& source = repl_file_info::instance()->repl_file_source;
+    if (repl::info::instance()->in_repl_mode &&
+        repl::info::instance()->repl_file_name==file) {
+        const auto& source = repl::info::instance()->repl_file_source;
         res = {};
         size_t pos = 0, last = 0;
         while ((pos = source.find("\n", last))!=std::string::npos) {
@@ -87,6 +88,8 @@ void flstream::load(const std::string& f) {
         }
         if (last<source.length()) {
             res.push_back(source.substr(last));
+        } else {
+            res.push_back("");
         }
         return;
     }
@@ -103,11 +106,6 @@ void flstream::load(const std::string& f) {
         std::getline(in, line);
         res.push_back(line);
     }
-}
-
-void error::fatal(const std::string& stage, const std::string& info) {
-    std::cerr << red << stage << ": " << white << info << reset << "\n\n";
-    std::exit(1);
 }
 
 void error::err(const std::string& stage, const std::string& info) {
