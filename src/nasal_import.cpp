@@ -1,6 +1,8 @@
 #include "nasal_import.h"
 #include "symbol_finder.h"
 
+namespace nasal {
+
 linker::linker():
     show_path(false), lib_loaded(false),
     this_file(""), lib_path("") {
@@ -345,4 +347,6 @@ const error& linker::link(
     auto old_tree_root = parse.swap(new_tree_root);
     delete old_tree_root;
     return err;
+}
+
 }

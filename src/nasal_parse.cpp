@@ -1,6 +1,8 @@
 #include "nasal_ast.h"
 #include "nasal_parse.h"
 
+namespace nasal {
+
 const error& parse::compile(const lexer& lexer) {
     toks=lexer.result().data();
     ptr=in_func=in_loop=0;
@@ -1056,4 +1058,6 @@ return_expr* parse::return_expression() {
     }
     update_location(node);
     return node;
+}
+
 }

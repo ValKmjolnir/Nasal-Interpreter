@@ -8,6 +8,7 @@
 #include <cstring>
 #include <sstream>
 
+namespace nasal {
 namespace repl {
 
 struct info {
@@ -37,4 +38,5 @@ public:
     void execute();
 };
 
+}
 }

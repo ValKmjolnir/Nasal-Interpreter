@@ -13,6 +13,8 @@
 #pragma warning (disable:4102)
 #endif
 
+namespace nasal {
+
 class vm {
 protected:
 
@@ -954,4 +956,6 @@ inline void vm::o_ret() {
     if (!ctx.pc) {
         ngc.ctxreserve();
     }
+}
+
 }

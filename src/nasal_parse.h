@@ -7,6 +7,8 @@
 #include "nasal_lexer.h"
 #include "nasal_err.h"
 
+namespace nasal {
+
 class parse {
 
 #define thisspan (toks[ptr].loc)
@@ -156,3 +158,5 @@ public:
     const error& compile(const lexer&);
     static void easter_egg();
 };
+
+}

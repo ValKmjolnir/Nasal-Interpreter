@@ -28,6 +28,8 @@
 #pragma warning (disable:4267)
 #endif
 
+namespace nasal {
+
 class codegen {
 private:
     error err;
@@ -136,3 +138,5 @@ public:
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };
+
+}

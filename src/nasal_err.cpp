@@ -1,6 +1,8 @@
 #include "nasal_err.h"
 #include "repl.h"
 
+namespace nasal {
+
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
 struct for_reset {
@@ -184,4 +186,6 @@ void error::err(
         }
     }
     std::cerr << "\n\n";
+}
+
 }

@@ -6,6 +6,7 @@
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
 
+namespace nasal {
 namespace repl {
 
 std::string repl::readline(std::string prompt = ">>> ") {
@@ -142,4 +143,5 @@ void repl::execute() {
     }
 }
 
+}
 }

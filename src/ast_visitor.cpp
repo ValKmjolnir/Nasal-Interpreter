@@ -1,5 +1,7 @@
 #include "ast_visitor.h"
 
+namespace nasal {
+
 bool ast_visitor::visit_expr(expr* node) {
     node->accept(this);
     return true;
@@ -231,4 +233,6 @@ bool ast_visitor::visit_return_expr(return_expr* node) {
         node->get_value()->accept(this);
     }
     return true;
+}
+
 }

@@ -2,6 +2,8 @@
 
 #include "nasal_ast.h"
 
+namespace nasal {
+
 class ast_visitor {
 public:
     virtual bool visit_expr(expr*);
@@ -41,3 +43,5 @@ public:
     virtual bool visit_break_expr(break_expr*);
     virtual bool visit_return_expr(return_expr*);
 };
+
+}

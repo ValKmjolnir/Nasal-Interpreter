@@ -1,5 +1,7 @@
 #include "optimizer.h"
 
+namespace nasal {
+
 void optimizer::const_string(
     binary_operator* node,
     string_literal* left_node,
@@ -129,4 +131,6 @@ bool optimizer::visit_unary_operator(unary_operator* node) {
 
 void optimizer::do_optimization(code_block* root) {
     root->accept(this);
+}
+
 }
