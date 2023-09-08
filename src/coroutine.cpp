@@ -1,5 +1,7 @@
 #include "coroutine.h"
 
+namespace nasal {
+
 var builtin_cocreate(var* local, gc& ngc) {
     // +-------------+
     // | old pc      | <- top[0]
@@ -114,3 +116,5 @@ nasal_builtin_table coroutine_native[] = {
     {"__corun", builtin_corun},
     {nullptr, nullptr}
 };
+
+}

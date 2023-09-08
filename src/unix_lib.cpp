@@ -1,5 +1,7 @@
 #include "unix_lib.h"
 
+namespace nasal {
+
 const auto dir_type_name = "dir";
 
 void dir_entry_destructor(void* ptr) {
@@ -149,3 +151,5 @@ nasal_builtin_table unix_lib_native[] = {
     {"__getenv", builtin_getenv},
     {nullptr, nullptr}
 };
+
+}

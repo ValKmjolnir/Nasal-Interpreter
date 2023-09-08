@@ -1,5 +1,7 @@
 #include "nasal_gc.h"
 
+namespace nasal {
+
 var nas_vec::get_val(const i32 n) {
     i32 size = elems.size();
     if (n<-size || n>=size) {
@@ -716,4 +718,6 @@ void gc::ctxreserve() {
 var nas_err(const std::string& error_function_name, const std::string& info) {
     std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
     return var::none();
+}
+
 }

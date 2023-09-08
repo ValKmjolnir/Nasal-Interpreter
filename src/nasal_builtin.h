@@ -22,6 +22,8 @@
 #define environ (*_NSGetEnviron())
 #endif
 
+namespace nasal {
+
 var builtin_print(var*, gc&);
 var builtin_println(var*, gc&);
 var builtin_exit(var*, gc&);
@@ -75,3 +77,5 @@ struct nasal_builtin_table {
 };
 
 extern nasal_builtin_table builtin[];
+
+}

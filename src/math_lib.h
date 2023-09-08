@@ -4,6 +4,8 @@
 #include "nasal_gc.h"
 #include "nasal_builtin.h"
 
+namespace nasal {
+
 var builtin_pow(var*, gc&);
 var builtin_sin(var*, gc&);
 var builtin_cos(var*, gc&);
@@ -16,3 +18,5 @@ var builtin_atan2(var*, gc&);
 var builtin_isnan(var*, gc&);
 
 extern nasal_builtin_table math_lib_native[];
+
+}

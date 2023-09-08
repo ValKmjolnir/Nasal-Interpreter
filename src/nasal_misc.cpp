@@ -1,5 +1,7 @@
 #include "nasal.h"
 
+namespace nasal {
+
 bool is_windows() {
 #if defined(_WIN32) || defined(_WIN64)
     return true;
@@ -227,4 +229,6 @@ std::string rawstr(const std::string& str, const usize maxlen) {
         ret = ret.substr(0,maxlen)+"...";
     }
     return ret;
+}
+
 }

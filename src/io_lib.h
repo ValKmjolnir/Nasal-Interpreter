@@ -10,6 +10,8 @@
 #define F_OK 0 // fuck msc
 #endif
 
+namespace nasal {
+
 void filehandle_destructor(void*);
 
 var builtin_readfile(var*, gc&);
@@ -26,3 +28,5 @@ var builtin_stat(var*, gc&);
 var builtin_eof(var*, gc&);
 
 extern nasal_builtin_table io_lib_native[];
+
+}
