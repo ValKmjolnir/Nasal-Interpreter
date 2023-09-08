@@ -1,5 +1,7 @@
 #include "bits_lib.h"
 
+namespace nasal {
+
 var builtin_u32xor(var* local, gc& ngc) {
     return var::num((f64)(u32(local[1].num())^u32(local[2].num())));
 }
@@ -135,3 +137,5 @@ nasal_builtin_table bits_native[] = {
     {"__buf", builtin_buf},
     {nullptr, nullptr}
 };
+
+}

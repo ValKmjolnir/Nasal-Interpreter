@@ -3,7 +3,8 @@
 #include <iostream>
 #include "../src/nasal.h"
 
-namespace nasal_fib_module {
+namespace nasal {
+namespace fib_module {
 
 double fibonaci(double x) {
     if (x<=2) {
@@ -88,5 +89,7 @@ module_func_info func_tbl[] = {
 }
 
 extern "C" module_func_info* get() {
-    return nasal_fib_module::func_tbl;
+    return fib_module::func_tbl;
+}
+
 }

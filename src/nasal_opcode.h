@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+namespace nasal {
+
 enum op_code_type:u8 {
     op_exit,   // stop the virtual machine
     op_intg,   // init global scope
@@ -127,3 +129,5 @@ public:
 std::ostream& operator<<(std::ostream&, const codestream&);
 
 extern const char* opname[];
+
+}

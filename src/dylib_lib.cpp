@@ -1,5 +1,7 @@
 #include "dylib_lib.h"
 
+namespace nasal {
+
 const auto dylib_type_name = "dylib";
 const auto func_addr_type_name = "faddr";
 
@@ -103,3 +105,5 @@ nasal_builtin_table dylib_lib_native[] = {
     {"__dlcall", builtin_dlcall},
     {nullptr, nullptr}
 };
+
+}

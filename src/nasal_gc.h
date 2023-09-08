@@ -32,6 +32,8 @@
 
 #include "nasal.h"
 
+namespace nasal {
+
 enum vm_type:u8 {
     /* none-gc object */
     vm_none = 0,
@@ -388,3 +390,5 @@ struct module_func_info {
 
 // module function "get" type
 typedef module_func_info* (*get_func_ptr)();
+
+}

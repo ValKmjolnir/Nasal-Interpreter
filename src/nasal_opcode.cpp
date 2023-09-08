@@ -1,5 +1,7 @@
 #include "nasal_opcode.h"
 
+namespace nasal {
+
 const char* opname[] = {
     "exit  ", "intg  ", "intl  ", "loadg ",
     "loadl ", "loadu ", "pnum  ", "pnil  ",
@@ -115,4 +117,6 @@ void codestream::dump(std::ostream& out) const {
 std::ostream& operator<<(std::ostream& out, const codestream& ins) {
     ins.dump(out);
     return out;
+}
+
 }

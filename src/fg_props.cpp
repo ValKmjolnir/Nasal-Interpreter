@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+namespace nasal {
+
 var builtin_logprint(var* local, gc& ngc) {
     var level = local[1];
     var elems = local[2];
@@ -34,3 +36,5 @@ nasal_builtin_table flight_gear_native[] = {
     {"_logprint", builtin_logprint},
     {nullptr, nullptr}
 };
+
+}

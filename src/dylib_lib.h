@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #endif
 
+namespace nasal {
+
 void dylib_destructor(void*);
 void func_addr_destructor(void*);
 
@@ -20,3 +22,5 @@ var builtin_dlcallv(var*, gc&);
 var builtin_dlcall(var*, gc&);
 
 extern nasal_builtin_table dylib_lib_native[];
+
+}

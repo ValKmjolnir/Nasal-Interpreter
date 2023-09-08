@@ -1,5 +1,7 @@
 #include "math_lib.h"
 
+namespace nasal {
+
 var builtin_pow(var* local, gc& ngc) {
     var x = local[1];
     var y = local[2];
@@ -71,3 +73,5 @@ nasal_builtin_table math_lib_native[] = {
     {"__isnan", builtin_isnan},
     {nullptr, nullptr}
 };
+
+}

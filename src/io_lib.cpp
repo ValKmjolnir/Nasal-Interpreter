@@ -1,5 +1,7 @@
 #include "io_lib.h"
 
+namespace nasal {
+
 const auto file_type_name = "file";
 
 void filehandle_destructor(void* ptr) {
@@ -198,3 +200,5 @@ nasal_builtin_table io_lib_native[] = {
     {"__eof", builtin_eof},
     {nullptr, nullptr}
 };
+
+}
