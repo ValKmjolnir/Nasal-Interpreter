@@ -154,7 +154,8 @@ void nas_co::clear() {
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_co& co) {
-    out << "<coroutine at 0x" << std::hex << u64(&co) << std::dec << ">";
+    out << "<coroutine at 0x" << std::hex;
+    out << reinterpret_cast<u64>(&co) << std::dec << ">";
     return out;
 }
 

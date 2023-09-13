@@ -51,7 +51,7 @@ var builtin_setsize(var* local, gc& ngc) {
     if (size.type!=vm_num || size.num()<0) {
         return nil;
     }
-    vec.vec().elems.resize((i64)size.num(), nil);
+    vec.vec().elems.resize(static_cast<i64>(size.num()), nil);
     return nil;
 }
 
@@ -144,7 +144,7 @@ var builtin_int(var* local, gc& ngc) {
     if (val.type!=vm_num && val.type!=vm_str) {
         return nil;
     }
-    return var::num(f64((i32)val.tonum()));
+    return var::num(static_cast<f64>(static_cast<i32>(val.tonum())));
 }
 
 var builtin_floor(var* local, gc& ngc) {
@@ -333,7 +333,7 @@ var builtin_right(var* local, gc& ngc) {
     if (len.type!=vm_num) {
         return nas_err("right", "\"length\" must be number");
     }
-    i32 length = (i32)len.num();
+    i32 length = static_cast<i32>(len.num());
     i32 srclen = str.str().length();
     if (length>srclen) {
         length = srclen;

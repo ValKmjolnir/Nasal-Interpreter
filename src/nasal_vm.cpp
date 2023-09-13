@@ -130,11 +130,11 @@ void vm::stackinfo(const u32 limit = 10) {
     var* bottom = ctx.stack;
     std::clog << "stack (0x" << std::hex << (u64)bottom << std::dec;
     std::clog << ", limit " << limit << ", total ";
-    std::clog << (top<bottom? 0:(i64)(top-bottom+1)) << ")\n";
+    std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
-                  << (u64)(top-bottom) << std::dec
+                  << static_cast<u64>(top-bottom) << std::dec
                   << "    ";
         valinfo(top[0]);
     }

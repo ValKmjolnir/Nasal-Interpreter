@@ -52,7 +52,7 @@ std::ostream& help(std::ostream& out) {
     << "   -t,   --time     | show execute time.\n"
     << "   -d,   --detail   | get detail info.\n"
     << "   -dbg, --debug    | debug mode.\n"
-    << "         --prof     | show profiling result, available under debug mode.\n"
+    << "         --prof     | show profiling result, available in debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
     << "available under debug mode.\n"
     << "file:\n"
