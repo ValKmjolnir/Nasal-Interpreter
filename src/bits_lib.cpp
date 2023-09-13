@@ -3,23 +3,35 @@
 namespace nasal {
 
 var builtin_u32xor(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())^u32(local[2].num())));
+    return var::num((f64)(
+        static_cast<u32>(local[1].num()) ^
+        static_cast<u32>(local[2].num())
+    ));
 }
 
 var builtin_u32and(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())&u32(local[2].num())));
+    return var::num((f64)(
+        static_cast<u32>(local[1].num()) &
+        static_cast<u32>(local[2].num())
+    ));
 }
 
 var builtin_u32or(var* local, gc& ngc) {
-    return var::num((f64)(u32(local[1].num())|u32(local[2].num())));
+    return var::num((f64)(
+        static_cast<u32>(local[1].num()) |
+        static_cast<u32>(local[2].num())
+    ));
 }
 
 var builtin_u32nand(var* local, gc& ngc) {
-    return var::num((f64)(u32)(~(u32(local[1].num())&u32(local[2].num()))));
+    return var::num(static_cast<f64>(~(
+        static_cast<u32>(local[1].num()) &
+        static_cast<u32>(local[2].num())
+    )));
 }
 
 var builtin_u32not(var* local, gc& ngc) {
-    return var::num((f64)(u32)(~u32(local[1].num())));
+    return var::num(static_cast<f64>(~static_cast<u32>(local[1].num())));
 }
 
 var builtin_fld(var* local, gc& ngc) {
@@ -79,7 +91,7 @@ var builtin_sfld(var* local, gc& ngc) {
     if (res&(1<<(len-1))) {
         res |= ~((1<<len)-1);
     }
-    return var::num((f64)((i32)res));
+    return var::num(static_cast<f64>(static_cast<i32>(res)));
 }
 
 var builtin_setfld(var* local, gc& ngc) {

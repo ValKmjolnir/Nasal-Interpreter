@@ -42,9 +42,10 @@ const auto ghost_for_test = "ghost_for_test";
 
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
-    std::cout << std::hex << (u64)ptr << std::dec << ") {\n";
-    delete (u32*)ptr;
-    std::cout << "    delete 0x" << std::hex << (u64)ptr << std::dec << ";\n";
+    std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+    delete static_cast<u32*>(ptr);
+    std::cout << "    delete 0x" << std::hex;
+    std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
     std::cout << "}\n";
 }
 
