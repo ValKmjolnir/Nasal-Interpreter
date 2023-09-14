@@ -13,37 +13,37 @@ var builtin_pow(var* local, gc& ngc) {
 
 var builtin_sin(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?sin(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? sin(val.num()):std::nan(""));
 }
 
 var builtin_cos(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?cos(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? cos(val.num()):std::nan(""));
 }
 
 var builtin_tan(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?tan(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? tan(val.num()):std::nan(""));
 }
 
 var builtin_exp(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?exp(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? exp(val.num()):std::nan(""));
 }
 
 var builtin_lg(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?log(val.num())/log(10.0):std::nan(""));
+    return var::num(val.type==vm_num? log(val.num())/log(10.0):std::nan(""));
 }
 
 var builtin_ln(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?log(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? log(val.num()):std::nan(""));
 }
 
 var builtin_sqrt(var* local, gc& ngc) {
     var val = local[1];
-    return var::num(val.type==vm_num?sqrt(val.num()):std::nan(""));
+    return var::num(val.type==vm_num? sqrt(val.num()):std::nan(""));
 }
 
 var builtin_atan2(var* local, gc& ngc) {

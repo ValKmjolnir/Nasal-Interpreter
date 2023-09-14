@@ -130,7 +130,8 @@ void nas_ghost::clear() {
 
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     out << "<object " << ghost.get_ghost_name();
-    out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
+    out << " at 0x" << std::hex;
+    out << reinterpret_cast<u64>(ghost.ptr) << std::dec << ">";
     return out;
 }
 
@@ -268,11 +269,11 @@ bool var::objchk(const std::string& name) {
 }
 
 var var::none() {
-    return {vm_none, (u32)0};
+    return {vm_none, static_cast<u32>(0)};
 }
 
 var var::nil() {
-    return {vm_nil, (u32)0};
+    return {vm_nil, static_cast<u32>(0)};
 }
 
 var var::ret(u32 pc) {

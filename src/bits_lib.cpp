@@ -3,21 +3,21 @@
 namespace nasal {
 
 var builtin_u32xor(var* local, gc& ngc) {
-    return var::num((f64)(
+    return var::num(static_cast<f64>(
         static_cast<u32>(local[1].num()) ^
         static_cast<u32>(local[2].num())
     ));
 }
 
 var builtin_u32and(var* local, gc& ngc) {
-    return var::num((f64)(
+    return var::num(static_cast<f64>(
         static_cast<u32>(local[1].num()) &
         static_cast<u32>(local[2].num())
     ));
 }
 
 var builtin_u32or(var* local, gc& ngc) {
-    return var::num((f64)(
+    return var::num(static_cast<f64>(
         static_cast<u32>(local[1].num()) |
         static_cast<u32>(local[2].num())
     ));
@@ -47,8 +47,8 @@ var builtin_fld(var* local, gc& ngc) {
     if (startbit.type!=vm_num || length.type!=vm_num) {
         return nas_err("fld", "\"startbit\",\"len\" must be number");
     }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
+    u32 bit = static_cast<u32>(startbit.num());
+    u32 len = static_cast<u32>(length.num());
     if (bit+len>8*str.str().length()) {
         return nas_err("fld", "bitfield out of bounds");
     }
@@ -59,7 +59,7 @@ var builtin_fld(var* local, gc& ngc) {
             res |= 1<<(bit+len-i-1);
         }
     }
-    return var::num((f64)res);
+    return var::num(static_cast<f64>(res));
 }
 
 var builtin_sfld(var* local, gc& ngc) {
@@ -76,8 +76,8 @@ var builtin_sfld(var* local, gc& ngc) {
     if (startbit.type!=vm_num || length.type!=vm_num) {
         return nas_err("sfld", "\"startbit\",\"len\" must be number");
     }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
+    u32 bit = static_cast<u32>(startbit.num());
+    u32 len = static_cast<u32>(length.num());
     if (bit+len>8*str.str().length()) {
         return nas_err("sfld", "bitfield out of bounds");
     }
@@ -109,9 +109,9 @@ var builtin_setfld(var* local, gc& ngc) {
     if (startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num) {
         return nas_err("setfld", "\"startbit\",\"len\",\"val\" must be number");
     }
-    u32 bit = (u32)startbit.num();
-    u32 len = (u32)length.num();
-    u64 val = (u64)value.num();
+    u32 bit = static_cast<u32>(startbit.num());
+    u32 len = static_cast<u32>(length.num());
+    u64 val = static_cast<u64>(value.num());
     if (bit+len>8*str.str().length()) {
         return nas_err("setfld", "bitfield out of bounds");
     }

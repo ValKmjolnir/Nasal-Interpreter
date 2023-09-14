@@ -60,7 +60,7 @@ var builtin_system(var* local, gc& ngc) {
     if (str.type!=vm_str) {
         return var::num(-1);
     }
-    return var::num((f64)system(str.str().c_str()));
+    return var::num(static_cast<f64>(system(str.str().c_str())));
 }
 
 var builtin_input(var* local, gc& ngc) {
@@ -119,7 +119,7 @@ var builtin_rand(var* local, gc& ngc) {
         return nas_err("rand", "\"seed\" must be nil or number");
     }
     if (val.type==vm_num) {
-        srand((u32)val.num());
+        srand(static_cast<u32>(val.num()));
         return nil;
     }
     f64 num = 0;
@@ -134,7 +134,8 @@ var builtin_id(var* local, gc& ngc) {
     std::stringstream ss;
     ss << "0";
     if (val.type>vm_num) {
-        ss << "x" << std::hex << (u64)val.val.gcobj << std::dec;
+        ss << "x" << std::hex;
+        ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
     }
     return ngc.newstr(ss.str());
 }
@@ -204,7 +205,7 @@ var builtin_time(var* local, gc& ngc) {
         return nas_err("time", "\"begin\" must be number");
     }
     time_t begin = (time_t)val.num();
-    return var::num((f64)time(&begin));
+    return var::num(static_cast<f64>(time(&begin)));
 }
 
 var builtin_contains(var* local, gc& ngc) {
@@ -261,9 +262,9 @@ var builtin_find(var* local, gc& ngc) {
     var haystack = local[2];
     usize pos = haystack.tostr().find(needle.tostr());
     if (pos==std::string::npos) {
-        return var::num((f64)-1);
+        return var::num(-1.0);
     }
-    return var::num((f64)pos);
+    return var::num(static_cast<f64>(pos));
 }
 
 var builtin_type(var* local, gc& ngc) {
@@ -350,7 +351,10 @@ var builtin_cmp(var* local, gc& ngc) {
     if (a.type!=vm_str || b.type!=vm_str) {
         return nas_err("cmp", "\"a\" and \"b\" must be string");
     }
-    return var::num((f64)strcmp(a.str().c_str(), b.str().c_str()));
+    return var::num(static_cast<f64>(strcmp(
+        a.str().c_str(),
+        b.str().c_str()
+    )));
 }
 
 var builtin_chr(var* local, gc& ngc) {
@@ -608,7 +612,7 @@ var builtin_ghosttype(var* local, gc& ngc) {
     }
     const auto& name = arg.obj().get_ghost_name();
     if (!name.length()) {
-        return var::num((u64)arg.obj().ptr);
+        return var::num(reinterpret_cast<u64>(arg.obj().ptr));
     }
     return ngc.newstr(name);
 }

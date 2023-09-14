@@ -285,7 +285,7 @@ inline void vm::o_lnot() {
         case vm_str: {
             const f64 num = str2num(val.str().c_str());
             if (std::isnan(num)) {
-                ctx.top[0] = var::num((f64)val.str().empty());
+                ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
             } else {
                 ctx.top[0] = num? zero:one;
             }
