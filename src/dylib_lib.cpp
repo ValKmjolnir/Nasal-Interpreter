@@ -7,7 +7,7 @@ const auto func_addr_type_name = "faddr";
 
 void dylib_destructor(void* ptr) {
 #ifdef _WIN32
-    FreeLibrary((HMODULE)ptr);
+    FreeLibrary(static_cast<HMODULE>(ptr));
 #else
     dlclose(ptr);
 #endif
@@ -41,7 +41,10 @@ var builtin_dlopen(var* local, gc& ngc) {
     ret.hash().elems["lib"] = lib;
 
 #ifdef _WIN32
-    void* func = (void*)GetProcAddress((HMODULE)lib.obj().ptr, "get");
+    void* func = (void*)GetProcAddress(
+        static_cast<HMODULE>(lib.obj().ptr),
+        "get"
+    );
 #else
     void* func = dlsym(lib.obj().ptr, "get");
 #endif
@@ -49,7 +52,7 @@ var builtin_dlopen(var* local, gc& ngc) {
         return nas_err("dlopen", "cannot find <get> function");
     }
     // get function pointer by name
-    module_func_info* tbl = ((get_func_ptr)func)();
+    module_func_info* tbl = reinterpret_cast<get_func_ptr>(func)();
     if (!tbl) {
         return nas_err("dlopen", "failed to get module functions");
     }
@@ -80,7 +83,11 @@ var builtin_dlcallv(var* local, gc& ngc) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
     auto& vec = args.vec().elems;
-    return ((module_func)fp.obj().ptr)(vec.data(), vec.size(), &ngc);
+    return reinterpret_cast<module_func>(fp.obj().ptr)(
+        vec.data(),
+        vec.size(),
+        &ngc
+    );
 }
 
 var builtin_dlcall(var* local, gc& ngc) {
@@ -92,10 +99,11 @@ var builtin_dlcall(var* local, gc& ngc) {
     var* local_frame_start = local+2;
     usize local_frame_size = ngc.rctx->top-local_frame_start;
     // arguments' stored place begins at local +2
-    return ((module_func)fp.obj().ptr)(
+    return reinterpret_cast<module_func>(fp.obj().ptr)(
         local_frame_start,
         local_frame_size,
-        &ngc);
+        &ngc
+    );
 }
 
 nasal_builtin_table dylib_lib_native[] = {
