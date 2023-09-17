@@ -300,9 +300,9 @@ struct gc {
     var temp = nil;
 
     /* constants and memory pool */
-    std::vector<var> strs;        // reserved address for const vm_str
-    std::vector<var> env_argv;    // command line arguments
-    std::vector<nas_val*> memory; // gc memory
+    std::vector<var> strs = {};        // reserved address for const vm_str
+    std::vector<var> env_argv = {};    // command line arguments
+    std::vector<nas_val*> memory;      // gc memory
     std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
     /* heap increase size */

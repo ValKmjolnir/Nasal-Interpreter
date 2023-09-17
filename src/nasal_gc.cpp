@@ -537,11 +537,8 @@ void gc::extend(u8 type) {
 
 void gc::init(
     const std::vector<std::string>& s, const std::vector<std::string>& argv) {
-    // initialize function register
-    rctx->funcr = nil;
-    worktime = 0;
-
     // initialize counters
+    worktime = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
         size[i] = gcnt[i] = acnt[i] = 0;
     }

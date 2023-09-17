@@ -237,7 +237,8 @@ void dbg::run(
     const std::vector<std::string>& argv,
     bool profile,
     bool show_all_prof_result) {
-    verbose = true;
+
+    set_detail_report_info(true);
     do_profiling = profile || show_all_prof_result;
 
     const auto& file_list = linker.get_file_list();
