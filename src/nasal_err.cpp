@@ -137,14 +137,15 @@ void error::err(
     const std::string iden = identation(maxlen);
 
     for(u32 line = loc.begin_line; line<=loc.end_line; ++line) {
+        // skip line 0
         if (!line) {
             continue;
         }
 
         if (loc.begin_line<line && line<loc.end_line) {
             if (line==loc.begin_line+1) {
-                std::cerr << cyan << iden << " | " << reset << "...\n"
-                << cyan << iden << " | " << reset << "\n";
+                std::cerr << cyan << iden << " | " << reset << "...\n";
+                std::cerr << cyan << iden << " | " << reset << "\n";
             }
             continue;
         }
@@ -154,7 +155,12 @@ void error::err(
             continue;
         }
 
-        const std::string& code=res[line-1];
+        // line out of range
+        if (line-1>=res.size()) {
+            continue;
+        }
+
+        const auto& code = res[line-1];
         std::cerr << cyan << leftpad(line, maxlen) << " | " << reset << code << "\n";
         // output underline
         std::cerr << cyan << iden << " | " << reset;

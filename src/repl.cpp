@@ -21,7 +21,7 @@ void repl::update_temp_file() {
     for(const auto& i : source) {
         content += i + "\n";
     }
-    info::instance()->repl_file_source = content;
+    info::instance()->repl_file_source = content + " ";
 }
 
 bool repl::check_need_more_input() {
@@ -49,6 +49,7 @@ bool repl::check_need_more_input() {
         if (in_curve<=0 && in_bracket<=0 && in_brace<=0) {
             break;
         }
+
         auto line = readline("... ");
         source.back() += "\n" + line;
     }
@@ -56,19 +57,17 @@ bool repl::check_need_more_input() {
 }
 
 void repl::help() {
-    std::cout << ".h, .help  | show help\n";
-    std::cout << ".e, .exit  | quit the REPL\n";
-    std::cout << ".q, .quit  | quit the REPL\n";
-    std::cout << ".c, .clear | clear the screen\n";
+    std::cout << ".h, .help   | show help\n";
+    std::cout << ".e, .exit   | quit the REPL\n";
+    std::cout << ".q, .quit   | quit the REPL\n";
+    std::cout << ".c, .clear  | clear the screen\n";
+    std::cout << ".s, .source | show source code\n";
     std::cout << "\n";
 }
 
 bool repl::run() {
-    update_temp_file();
-
     using clk = std::chrono::high_resolution_clock;
-    const auto den = clk::duration::period::den;
-    auto start = clk::now();
+    const auto den = clk::duration::period::den;    
 
     auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
     auto nasal_parser = std::unique_ptr<parse>(new parse);
@@ -76,6 +75,8 @@ bool repl::run() {
     auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
 
+    auto start = clk::now();
+    update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return false;
     }
@@ -88,18 +89,18 @@ bool repl::run() {
         return false;
     }
 
-    nasal_opt->do_optimization(nasal_parser->tree());
+    // nasal_opt->do_optimization(nasal_parser->tree());
     if (nasal_codegen->compile(*nasal_parser, *nasal_linker).geterr()) {
         return false;
     }
 
     auto end = clk::now();
     std::clog << "[compile time: " << (end-start).count()*1000.0/den << " ms]\n";
-    runtime->set_detail_report_info(false);
+
     // TODO: gc init stage in this run may cause memory leak,
     // because constant strings will be generated again.
     // but we could not delete old strings, they maybe still on stack.
-    runtime->run(*nasal_codegen, *nasal_linker, {});
+    runtime.run(*nasal_codegen, *nasal_linker, {});
 
     return true;
 }
@@ -117,13 +118,19 @@ void repl::execute() {
             continue;
         }
 
-        if (line == ".e" || line == ".exit" || line == ".q" || line == ".quit") {
+        if (line == ".e" || line == ".exit") {
+            break;
+        } else if (line == ".q" || line == ".quit") {
             break;
         } else if (line == ".h" || line == ".help") {
             help();
             continue;
         } else if (line == ".c" || line == ".clear") {
             std::cout << "\033c";
+            continue;
+        } else if (line == ".s" || line == ".source") {
+            update_temp_file();
+            std::cout << info::instance()->repl_file_source << "\n";
             continue;
         } else if (line[0] == "."[0]) {
             std::cout << "no such command \"" << line;
