@@ -20,6 +20,8 @@
 #include <sys/wait.h>
 #endif
 
+namespace nasal {
+
 void dir_entry_destructor(void*);
 
 var builtin_pipe(var*, gc&);
@@ -34,3 +36,5 @@ var builtin_getcwd(var*, gc&);
 var builtin_getenv(var*, gc&);
 
 extern nasal_builtin_table unix_lib_native[];
+
+}

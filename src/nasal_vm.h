@@ -38,6 +38,10 @@ protected:
     const std::string* files = nullptr; // file name list
     const opcode* bytecode = nullptr; // bytecode buffer address
 
+    /* variables for repl mode */
+    bool is_repl_mode = false;
+    bool first_exec_flag = true;
+
     /* vm initializing function */
     void init(
         const std::vector<std::string>&,
@@ -46,7 +50,9 @@ protected:
         const std::vector<opcode>&,
         const std::unordered_map<std::string, i32>&,
         const std::vector<std::string>&,
-        const std::vector<std::string>&);
+        const std::vector<std::string>&
+    );
+    void context_and_global_init();
 
     /* debug functions */
     bool verbose = false;
@@ -167,8 +173,13 @@ public:
     void run(
         const codegen&,
         const linker&,
-        const std::vector<std::string>&,
-        const bool);
+        const std::vector<std::string>&
+    );
+
+    /* set detail report info flag */
+    void set_detail_report_info(bool flag) {verbose = flag;}
+    /* set repl mode flag */
+    void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
 };
 
 inline bool vm::cond(var& val) {
@@ -285,7 +296,7 @@ inline void vm::o_lnot() {
         case vm_str: {
             const f64 num = str2num(val.str().c_str());
             if (std::isnan(num)) {
-                ctx.top[0] = var::num((f64)val.str().empty());
+                ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
             } else {
                 ctx.top[0] = num? zero:one;
             }

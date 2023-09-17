@@ -52,7 +52,7 @@ std::ostream& help(std::ostream& out) {
     << "   -t,   --time     | show execute time.\n"
     << "   -d,   --detail   | get detail info.\n"
     << "   -dbg, --debug    | debug mode.\n"
-    << "         --prof     | show profiling result, available under debug mode.\n"
+    << "         --prof     | show profiling result, available in debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
     << "available under debug mode.\n"
     << "file:\n"
@@ -154,7 +154,8 @@ void execute(
         debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
-        runtime->run(gen, ld, argv, cmd&VM_DETAIL);
+        runtime->set_detail_report_info(cmd&VM_DETAIL);
+        runtime->run(gen, ld, argv);
     }
 
     // get running time

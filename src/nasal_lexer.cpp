@@ -330,6 +330,7 @@ const error& lexer::scan(const std::string& file) {
     line = 1;
     column = 0;
     ptr = 0;
+    toks = {};
     open(file);
 
     while(ptr<res.size()) {

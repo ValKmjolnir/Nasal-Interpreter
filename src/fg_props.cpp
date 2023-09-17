@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+namespace nasal {
+
 var builtin_logprint(var* local, gc& ngc) {
     var level = local[1];
     var elems = local[2];
@@ -21,7 +23,8 @@ var builtin_logprint(var* local, gc& ngc) {
         default:
             return nas_err("logprint",
                 "incorrect log level " +
-                std::to_string(level.num()));
+                std::to_string(level.num())
+            );
     }
     for(auto& i : elems.vec().elems) {
         out << i << " ";
@@ -34,3 +37,5 @@ nasal_builtin_table flight_gear_native[] = {
     {"_logprint", builtin_logprint},
     {nullptr, nullptr}
 };
+
+}

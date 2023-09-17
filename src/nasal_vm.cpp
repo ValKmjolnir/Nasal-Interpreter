@@ -20,19 +20,10 @@ void vm::init(
     /* set native functions */
     native = natives;
 
-    /* set canary and program counter */
-    ctx.pc = 0;
-    ctx.localr = nullptr;
-    ctx.memr = nullptr;
-    ctx.funcr = nil;
-    ctx.upvalr = nil;
-    ctx.canary = ctx.stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top = ctx.stack; // nothing is on stack
-
-    /* clear main stack and global */
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
-        ctx.stack[i] = nil;
-        global[i] = nil;
+    /* set context and global */
+    if (!is_repl_mode || first_exec_flag) {
+        context_and_global_init();
+        first_exec_flag = false;
     }
 
     /* init gc */
@@ -52,41 +43,64 @@ void vm::init(
     arg_instance.vec().elems = ngc.env_argv;
 }
 
+void vm::context_and_global_init() {
+    /* set canary and program counter */
+    ctx.pc = 0;
+    ctx.localr = nullptr;
+    ctx.memr = nullptr;
+    ctx.funcr = nil;
+    ctx.upvalr = nil;
+
+    /* set canary = stack[STACK_DEPTH-1] */
+    ctx.canary = ctx.stack+STACK_DEPTH-1;
+
+    /* nothing is on stack */
+    ctx.top = ctx.stack;
+
+    /* clear main stack and global */
+    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+        ctx.stack[i] = nil;
+        global[i] = nil;
+    }
+}
+
 void vm::valinfo(var& val) {
-    const nas_val* p = val.val.gcobj;
+    const auto p = reinterpret_cast<u64>(val.val.gcobj);
     switch(val.type) {
         case vm_none: std::clog << "| null |"; break;
         case vm_ret:  std::clog << "| pc   | 0x" << std::hex
                                 << val.ret() << std::dec; break;
         case vm_addr: std::clog << "| addr | 0x" << std::hex
-                                << (u64)val.addr() << std::dec; break;
+                                << reinterpret_cast<u64>(val.addr())
+                                << std::dec; break;
         case vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
         case vm_nil:  std::clog << "| nil  |"; break;
         case vm_num:  std::clog << "| num  | " << val.num(); break;
-        case vm_str:  std::clog << "| str  | <0x" << std::hex << (u64)p
+        case vm_str:  std::clog << "| str  | <0x" << std::hex << p
                                 << "> " << rawstr(val.str(), 16)
                                 << std::dec; break;
-        case vm_func: std::clog << "| func | <0x" << std::hex << (u64)p
+        case vm_func: std::clog << "| func | <0x" << std::hex << p
                                 << "> entry:0x" << val.func().entry
                                 << std::dec; break;
-        case vm_upval:std::clog << "| upval| <0x" << std::hex << (u64)p
+        case vm_upval:std::clog << "| upval| <0x" << std::hex << p
                                 << std::dec << "> [" << val.upval().size
                                 << " val]"; break;
-        case vm_vec:  std::clog << "| vec  | <0x" << std::hex << (u64)p
+        case vm_vec:  std::clog << "| vec  | <0x" << std::hex << p
                                 << std::dec << "> [" << val.vec().size()
                                 << " val]"; break;
-        case vm_hash: std::clog << "| hash | <0x" << std::hex << (u64)p
+        case vm_hash: std::clog << "| hash | <0x" << std::hex << p
                                 << std::dec << "> {" << val.hash().size()
                                 << " val}"; break;
-        case vm_obj:  std::clog << "| obj  | <0x" << std::hex << (u64)p
-                                << "> obj:0x" << (u64)val.obj().ptr
+        case vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
+                                << "> obj:0x"
+                                << reinterpret_cast<u64>(val.obj().ptr)
                                 << std::dec; break;
-        case vm_co:   std::clog << "| co   | <0x" << std::hex << (u64)p
+        case vm_co:   std::clog << "| co   | <0x" << std::hex << p
                                 << std::dec << "> coroutine"; break;
-        case vm_map:  std::clog << "| nmspc| <0x" << std::hex << (u64)p
+        case vm_map:  std::clog << "| nmspc| <0x" << std::hex << p
                                 << std::dec << "> namespace ["
                                 << val.map().mapper.size() << " val]"; break;
-        default:      std::clog << "| err  | <0x" << std::hex << (u64)p
+        default:      std::clog << "| err  | <0x" << std::hex << p
                                 << std::dec << "> unknown object"; break;
     }
     std::clog << "\n";
@@ -128,13 +142,13 @@ void vm::traceback() {
 void vm::stackinfo(const u32 limit = 10) {
     var* top = ctx.top;
     var* bottom = ctx.stack;
-    std::clog << "stack (0x" << std::hex << (u64)bottom << std::dec;
-    std::clog << ", limit " << limit << ", total ";
-    std::clog << (top<bottom? 0:(i64)(top-bottom+1)) << ")\n";
+    std::clog << "stack (0x" << std::hex << reinterpret_cast<u64>(bottom);
+    std::clog << std::dec << ", limit " << limit << ", total ";
+    std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
-                  << (u64)(top-bottom) << std::dec
+                  << static_cast<u64>(top-bottom) << std::dec
                   << "    ";
         valinfo(top[0]);
     }
@@ -144,11 +158,16 @@ void vm::reginfo() {
     std::clog << "registers (" << (ngc.cort? "coroutine":"main")
               << ")\n" << std::hex
               << "  [pc    ]    | pc   | 0x" << ctx.pc << "\n"
-              << "  [global]    | addr | 0x" << (u64)global << "\n"
-              << "  [local ]    | addr | 0x" << (u64)ctx.localr << "\n"
-              << "  [memr  ]    | addr | 0x" << (u64)ctx.memr << "\n"
-              << "  [canary]    | addr | 0x" << (u64)ctx.canary << "\n"
-              << "  [top   ]    | addr | 0x" << (u64)ctx.top << "\n"
+              << "  [global]    | addr | 0x"
+              << reinterpret_cast<u64>(global) << "\n"
+              << "  [local ]    | addr | 0x"
+              << reinterpret_cast<u64>(ctx.localr) << "\n"
+              << "  [memr  ]    | addr | 0x"
+              << reinterpret_cast<u64>(ctx.memr) << "\n"
+              << "  [canary]    | addr | 0x"
+              << reinterpret_cast<u64>(ctx.canary) << "\n"
+              << "  [top   ]    | addr | 0x"
+              << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
     std::clog << "  [funcr ]    "; valinfo(ctx.funcr);
     std::clog << "  [upval ]    "; valinfo(ctx.upvalr);
@@ -159,7 +178,7 @@ void vm::gstate() {
         return;
     }
     std::clog << "global (0x" << std::hex
-              << (u64)global << ")\n" << std::dec;
+              << reinterpret_cast<u64>(global) << ")\n" << std::dec;
     for(usize i = 0; i<global_size; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
                   << std::setfill('0') << i << std::dec
@@ -173,8 +192,8 @@ void vm::lstate() {
         return;
     }
     const u32 lsize = ctx.funcr.func().lsize;
-    std::clog << "local (0x" << std::hex << (u64)ctx.localr
-              << " <+" << (u64)(ctx.localr-ctx.stack)
+    std::clog << "local (0x" << std::hex << reinterpret_cast<u64>(ctx.localr)
+              << " <+" << static_cast<u64>(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
     for(u32 i = 0; i<lsize; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
@@ -233,9 +252,8 @@ void vm::die(const std::string& str) {
 void vm::run(
     const codegen& gen,
     const linker& linker,
-    const std::vector<std::string>& argv,
-    const bool detail) {
-    verbose = detail;
+    const std::vector<std::string>& argv
+) {
     init(gen.strs(), gen.nums(), gen.natives(),
          gen.codes(), gen.globals(), linker.get_file_list(), argv);
 #ifndef _MSC_VER
@@ -334,11 +352,13 @@ void vm::run(
 #endif
 
 vmexit:
-    if (detail) {
+    if (verbose) {
         ngc.info();
     }
-    ngc.clear();
     imm.clear();
+    if (!is_repl_mode) {
+        ngc.clear();
+    }
     return;
 
 #ifndef _MSC_VER

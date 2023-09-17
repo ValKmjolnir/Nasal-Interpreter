@@ -1,5 +1,7 @@
 #include "nasal_opcode.h"
 
+namespace nasal {
+
 const char* opname[] = {
     "exit  ", "intg  ", "intl  ", "loadg ",
     "loadl ", "loadu ", "pnum  ", "pnil  ",
@@ -45,7 +47,7 @@ void codestream::dump(std::ostream& out) const {
     auto num = code.num;
     out << hex << "0x"
         << setw(6) << setfill('0') << index << "     "
-        << setw(2) << setfill('0') << (u32)op << " "
+        << setw(2) << setfill('0') << static_cast<u32>(op) << " "
         << setw(2) << setfill('0') << ((num>>16)&0xff) << " "
         << setw(2) << setfill('0') << ((num>>8)&0xff) << " "
         << setw(2) << setfill('0') << (num&0xff) << "     "
@@ -90,7 +92,8 @@ void codestream::dump(std::ostream& out) const {
             out << hex << "0x" << num << dec; break;
         case op_callb:
             out << hex << "0x" << num << " <" << natives[num].name
-                << "@0x" << (u64)natives[num].func << dec << ">"; break;
+                << "@0x" << reinterpret_cast<u64>(natives[num].func)
+                << dec << ">"; break;
         case op_upval: case op_mupval:
         case op_loadu:
             out << hex << "0x" << ((num>>16)&0xffff)
@@ -115,4 +118,6 @@ void codestream::dump(std::ostream& out) const {
 std::ostream& operator<<(std::ostream& out, const codestream& ins) {
     ins.dump(out);
     return out;
+}
+
 }
