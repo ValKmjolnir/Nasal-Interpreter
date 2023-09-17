@@ -1,10 +1,12 @@
 #include "unix_lib.h"
 
+namespace nasal {
+
 const auto dir_type_name = "dir";
 
 void dir_entry_destructor(void* ptr) {
 #ifndef _MSC_VER
-    closedir((DIR*)ptr);
+    closedir(static_cast<DIR*>(ptr));
 #else
     FindClose(ptr);
 #endif
@@ -17,11 +19,11 @@ var builtin_pipe(var* local, gc& ngc) {
     if (pipe(fd)==-1) {
         return nas_err("pipe", "failed to create pipe");
     }
-    res.vec().elems.push_back(var::num((f64)fd[0]));
-    res.vec().elems.push_back(var::num((f64)fd[1]));
+    res.vec().elems.push_back(var::num(static_cast<f64>(fd[0])));
+    res.vec().elems.push_back(var::num(static_cast<f64>(fd[1])));
     return res;
 #endif
-    return nas_err("pipe", "not supported");
+    return nas_err("pipe", "not supported on windows");
 }
 
 var builtin_fork(var* local, gc& ngc) {
@@ -30,9 +32,9 @@ var builtin_fork(var* local, gc& ngc) {
     if (res<0) {
         return nas_err("fork", "failed to fork a process");
     }
-    return var::num((f64)res);
+    return var::num(static_cast<f64>(res));
 #endif
-    return nas_err("fork", "not supported");
+    return nas_err("fork", "not supported on windows");
 }
 
 var builtin_waitpid(var* local, gc& ngc) {
@@ -42,14 +44,14 @@ var builtin_waitpid(var* local, gc& ngc) {
         return nas_err("waitpid", "pid and nohang must be number");
     }
 #ifndef _WIN32
-    i32 ret_pid,status;
-    ret_pid = waitpid(pid.num(),&status,nohang.num()==0? 0:WNOHANG);
+    i32 ret_pid, status;
+    ret_pid = waitpid(pid.num(), &status, nohang.num()==0? 0:WNOHANG);
     var vec = ngc.alloc(vm_vec);
-    vec.vec().elems.push_back(var::num((f64)ret_pid));
-    vec.vec().elems.push_back(var::num((f64)status));
+    vec.vec().elems.push_back(var::num(static_cast<f64>(ret_pid)));
+    vec.vec().elems.push_back(var::num(static_cast<f64>(status)));
     return vec;
 #endif
-    return nas_err("waitpid", "not supported");
+    return nas_err("waitpid", "not supported on windows");
 }
 
 var builtin_opendir(var* local, gc& ngc) {
@@ -60,7 +62,7 @@ var builtin_opendir(var* local, gc& ngc) {
 #ifdef _MSC_VER
     WIN32_FIND_DATAA data;
     HANDLE p;
-    p = FindFirstFileA((path.str()+"\\*.*").c_str(),&data);
+    p = FindFirstFileA((path.str()+"\\*.*").c_str(), &data);
     if (p==INVALID_HANDLE_VALUE) {
         return nas_err("opendir", "cannot open dir <"+path.str()+">");
     }
@@ -87,7 +89,7 @@ var builtin_readdir(var* local, gc& ngc) {
     }
     return ngc.newstr(data.cFileName);
 #else
-    dirent* p = readdir((DIR*)handle.obj().ptr);
+    dirent* p = readdir(static_cast<DIR*>(handle.obj().ptr));
     return p? ngc.newstr(p->d_name):nil;
 #endif
 }
@@ -104,9 +106,9 @@ var builtin_closedir(var* local, gc& ngc) {
 var builtin_chdir(var* local, gc& ngc) {
     var path = local[1];
     if (path.type!=vm_str) {
-        return var::num((f64)-1);
+        return var::num(-1.0);
     }
-    return var::num((f64)chdir(path.str().c_str()));
+    return var::num(static_cast<f64>(chdir(path.str().c_str())));
 }
 
 var builtin_environ(var* local, gc& ngc) {
@@ -149,3 +151,5 @@ nasal_builtin_table unix_lib_native[] = {
     {"__getenv", builtin_getenv},
     {nullptr, nullptr}
 };
+
+}

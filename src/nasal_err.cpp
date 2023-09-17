@@ -75,10 +75,12 @@ std::ostream& reset(std::ostream& s) {
 void flstream::load(const std::string& f) {
     if (file==f) { // don't need to load a loaded file
         return;
-    } else {
-        file = f;
     }
+    
+    // update file name
+    file = f;
 
+    // REPL: load from memory
     if (repl::info::instance()->in_repl_mode &&
         repl::info::instance()->repl_file_name==file) {
         const auto& source = repl::info::instance()->repl_file_source;
@@ -134,15 +136,16 @@ void error::err(
     const usize maxlen = std::to_string(loc.end_line).length();
     const std::string iden = identation(maxlen);
 
-    for(u32 line=loc.begin_line; line<=loc.end_line; ++line) {
+    for(u32 line = loc.begin_line; line<=loc.end_line; ++line) {
+        // skip line 0
         if (!line) {
             continue;
         }
 
         if (loc.begin_line<line && line<loc.end_line) {
             if (line==loc.begin_line+1) {
-                std::cerr << cyan << iden << " | " << reset << "...\n"
-                << cyan << iden << " | " << reset << "\n";
+                std::cerr << cyan << iden << " | " << reset << "...\n";
+                std::cerr << cyan << iden << " | " << reset << "\n";
             }
             continue;
         }
@@ -152,7 +155,12 @@ void error::err(
             continue;
         }
 
-        const std::string& code=res[line-1];
+        // line out of range
+        if (line-1>=res.size()) {
+            continue;
+        }
+
+        const auto& code = res[line-1];
         std::cerr << cyan << leftpad(line, maxlen) << " | " << reset << code << "\n";
         // output underline
         std::cerr << cyan << iden << " | " << reset;
@@ -160,7 +168,7 @@ void error::err(
             for(u32 i = 0; i<loc.begin_column; ++i) {
                 std::cerr << char(" \t"[code[i]=='\t']);
             }
-            for(u32 i = loc.begin_column ;i<loc.end_column; ++i) {
+            for(u32 i = loc.begin_column; i<loc.end_column; ++i) {
                 std::cerr << red << (code[i]=='\t'? "^^^^":"^") << reset;
             }
         } else if (line==loc.begin_line) {

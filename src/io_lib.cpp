@@ -1,12 +1,14 @@
 #include "io_lib.h"
 
+namespace nasal {
+
 const auto file_type_name = "file";
 
 void filehandle_destructor(void* ptr) {
-    if ((FILE*)ptr==stdin) {
+    if (static_cast<FILE*>(ptr)==stdin) {
         return;
     }
-    fclose((FILE*)ptr);
+    fclose(static_cast<FILE*>(ptr));
 }
 
 var builtin_readfile(var* local, gc& ngc) {
@@ -90,7 +92,7 @@ var builtin_read(var* local, gc& ngc) {
     if (!buff) {
         return nas_err("read", "malloc failed");
     }
-    f64 res = fread(buff,1,len.num(), (FILE*)fd.obj().ptr);
+    f64 res = fread(buff, 1, len.num(), static_cast<FILE*>(fd.obj().ptr));
     buf.str() = buff;
     buf.val.gcobj->unmut = true;
     delete []buff;
@@ -106,7 +108,12 @@ var builtin_write(var* local, gc& ngc) {
     if (str.type!=vm_str) {
         return nas_err("write", "\"str\" must be string");
     }
-    return var::num((f64)fwrite(str.str().c_str(), 1, str.str().length(), (FILE*)fd.obj().ptr));
+    return var::num(static_cast<f64>(fwrite(
+        str.str().c_str(),
+        1,
+        str.str().length(),
+        static_cast<FILE*>(fd.obj().ptr)
+    )));
 }
 
 var builtin_seek(var* local, gc& ngc) {
@@ -116,7 +123,11 @@ var builtin_seek(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("seek", "not a valid filehandle");
     }
-    return var::num((f64)fseek((FILE*)fd.obj().ptr, pos.num(), whence.num()));
+    return var::num(static_cast<f64>(fseek(
+        static_cast<FILE*>(fd.obj().ptr),
+        pos.num(),
+        whence.num()
+    )));
 }
 
 var builtin_tell(var* local, gc& ngc) {
@@ -124,7 +135,7 @@ var builtin_tell(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("tell", "not a valid filehandle");
     }
-    return var::num((f64)ftell((FILE*)fd.obj().ptr));
+    return var::num(static_cast<f64>(ftell(static_cast<FILE*>(fd.obj().ptr))));
 }
 
 var builtin_readln(var* local, gc& ngc) {
@@ -134,7 +145,7 @@ var builtin_readln(var* local, gc& ngc) {
     }
     var str = ngc.alloc(vm_str);
     char c;
-    while((c = fgetc((FILE*)fd.obj().ptr))!=EOF) {
+    while((c = fgetc(static_cast<FILE*>(fd.obj().ptr)))!=EOF) {
         if (c=='\r') {
             continue;
         }
@@ -160,17 +171,17 @@ var builtin_stat(var* local, gc& ngc) {
     }
     var ret = ngc.alloc(vm_vec);
     ret.vec().elems = {
-        var::num((f64)buf.st_dev),
-        var::num((f64)buf.st_ino),
-        var::num((f64)buf.st_mode),
-        var::num((f64)buf.st_nlink),
-        var::num((f64)buf.st_uid),
-        var::num((f64)buf.st_gid),
-        var::num((f64)buf.st_rdev),
-        var::num((f64)buf.st_size),
-        var::num((f64)buf.st_atime),
-        var::num((f64)buf.st_mtime),
-        var::num((f64)buf.st_ctime)
+        var::num(static_cast<f64>(buf.st_dev)),
+        var::num(static_cast<f64>(buf.st_ino)),
+        var::num(static_cast<f64>(buf.st_mode)),
+        var::num(static_cast<f64>(buf.st_nlink)),
+        var::num(static_cast<f64>(buf.st_uid)),
+        var::num(static_cast<f64>(buf.st_gid)),
+        var::num(static_cast<f64>(buf.st_rdev)),
+        var::num(static_cast<f64>(buf.st_size)),
+        var::num(static_cast<f64>(buf.st_atime)),
+        var::num(static_cast<f64>(buf.st_mtime)),
+        var::num(static_cast<f64>(buf.st_ctime))
     };
     return ret;
 }
@@ -180,7 +191,7 @@ var builtin_eof(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
-    return var::num((f64)feof((FILE*)fd.obj().ptr));
+    return var::num(static_cast<f64>(feof(static_cast<FILE*>(fd.obj().ptr))));
 }
 
 nasal_builtin_table io_lib_native[] = {
@@ -198,3 +209,5 @@ nasal_builtin_table io_lib_native[] = {
     {"__eof", builtin_eof},
     {nullptr, nullptr}
 };
+
+}

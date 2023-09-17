@@ -32,6 +32,8 @@
 
 #include "nasal.h"
 
+namespace nasal {
+
 enum vm_type:u8 {
     /* none-gc object */
     vm_none = 0,
@@ -298,9 +300,9 @@ struct gc {
     var temp = nil;
 
     /* constants and memory pool */
-    std::vector<var> strs;        // reserved address for const vm_str
-    std::vector<var> env_argv;    // command line arguments
-    std::vector<nas_val*> memory; // gc memory
+    std::vector<var> strs = {};        // reserved address for const vm_str
+    std::vector<var> env_argv = {};    // command line arguments
+    std::vector<nas_val*> memory;      // gc memory
     std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
     /* heap increase size */
@@ -388,3 +390,5 @@ struct module_func_info {
 
 // module function "get" type
 typedef module_func_info* (*get_func_ptr)();
+
+}

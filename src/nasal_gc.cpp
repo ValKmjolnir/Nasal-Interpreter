@@ -1,5 +1,7 @@
 #include "nasal_gc.h"
 
+namespace nasal {
+
 var nas_vec::get_val(const i32 n) {
     i32 size = elems.size();
     if (n<-size || n>=size) {
@@ -128,7 +130,8 @@ void nas_ghost::clear() {
 
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     out << "<object " << ghost.get_ghost_name();
-    out << " at 0x" << std::hex << (u64)ghost.ptr << std::dec << ">";
+    out << " at 0x" << std::hex;
+    out << reinterpret_cast<u64>(ghost.ptr) << std::dec << ">";
     return out;
 }
 
@@ -152,7 +155,8 @@ void nas_co::clear() {
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_co& co) {
-    out << "<coroutine at 0x" << std::hex << u64(&co) << std::dec << ">";
+    out << "<coroutine at 0x" << std::hex;
+    out << reinterpret_cast<u64>(&co) << std::dec << ">";
     return out;
 }
 
@@ -265,11 +269,11 @@ bool var::objchk(const std::string& name) {
 }
 
 var var::none() {
-    return {vm_none, (u32)0};
+    return {vm_none, static_cast<u32>(0)};
 }
 
 var var::nil() {
-    return {vm_nil, (u32)0};
+    return {vm_nil, static_cast<u32>(0)};
 }
 
 var var::ret(u32 pc) {
@@ -533,11 +537,8 @@ void gc::extend(u8 type) {
 
 void gc::init(
     const std::vector<std::string>& s, const std::vector<std::string>& argv) {
-    // initialize function register
-    rctx->funcr = nil;
-    worktime = 0;
-
     // initialize counters
+    worktime = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
         size[i] = gcnt[i] = acnt[i] = 0;
     }
@@ -716,4 +717,6 @@ void gc::ctxreserve() {
 var nas_err(const std::string& error_function_name, const std::string& info) {
     std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
     return var::none();
+}
+
 }

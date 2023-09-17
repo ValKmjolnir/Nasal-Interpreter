@@ -3,7 +3,8 @@
 #include <iostream>
 #include "../src/nasal.h"
 
-namespace nasal_fib_module {
+namespace nasal {
+namespace fib_module {
 
 double fibonaci(double x) {
     if (x<=2) {
@@ -41,9 +42,10 @@ const auto ghost_for_test = "ghost_for_test";
 
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
-    std::cout << std::hex << (u64)ptr << std::dec << ") {\n";
-    delete (u32*)ptr;
-    std::cout << "    delete 0x" << std::hex << (u64)ptr << std::dec << ";\n";
+    std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+    delete static_cast<u32*>(ptr);
+    std::cout << "    delete 0x" << std::hex;
+    std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
     std::cout << "}\n";
 }
 
@@ -88,5 +90,7 @@ module_func_info func_tbl[] = {
 }
 
 extern "C" module_func_info* get() {
-    return nasal_fib_module::func_tbl;
+    return fib_module::func_tbl;
+}
+
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nasal.h"
+#include "nasal_vm.h"
 
 #include <iostream>
 #include <fstream>
@@ -26,6 +27,7 @@ struct info {
 class repl {
 private:
     std::vector<std::string> source;
+    vm runtime;
 
 private:
     std::string readline(std::string);
@@ -35,6 +37,12 @@ private:
     bool run();
 
 public:
+    repl() {
+        // set repl mode
+        runtime.set_repl_mode_flag(true);
+        // no detail report info
+        runtime.set_detail_report_info(false);
+    }
     void execute();
 };
 
