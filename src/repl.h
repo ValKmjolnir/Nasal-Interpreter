@@ -27,7 +27,7 @@ struct info {
 class repl {
 private:
     std::vector<std::string> source;
-    std::unique_ptr<vm> runtime;
+    vm runtime;
 
 private:
     std::string readline(std::string);
@@ -37,8 +37,11 @@ private:
     bool run();
 
 public:
-    repl(): runtime(std::unique_ptr<vm>(new vm)) {
-        runtime->set_repl_mode_flag(true);
+    repl() {
+        // set repl mode
+        runtime.set_repl_mode_flag(true);
+        // no detail report info
+        runtime.set_detail_report_info(false);
     }
     void execute();
 };
