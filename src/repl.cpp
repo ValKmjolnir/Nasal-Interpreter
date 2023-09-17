@@ -75,7 +75,6 @@ bool repl::run() {
     auto nasal_linker = std::unique_ptr<linker>(new linker);
     auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
-    auto nasal_runtime = std::unique_ptr<vm>(new vm);
 
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return false;
@@ -96,7 +95,11 @@ bool repl::run() {
 
     auto end = clk::now();
     std::clog << "[compile time: " << (end-start).count()*1000.0/den << " ms]\n";
-    nasal_runtime->run(*nasal_codegen, *nasal_linker, {}, false);
+    runtime->set_detail_report_info(false);
+    // TODO: gc init stage in this run may cause memory leak,
+    // because constant strings will be generated again.
+    // but we could not delete old strings, they maybe still on stack.
+    runtime->run(*nasal_codegen, *nasal_linker, {});
 
     return true;
 }

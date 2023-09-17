@@ -20,19 +20,10 @@ void vm::init(
     /* set native functions */
     native = natives;
 
-    /* set canary and program counter */
-    ctx.pc = 0;
-    ctx.localr = nullptr;
-    ctx.memr = nullptr;
-    ctx.funcr = nil;
-    ctx.upvalr = nil;
-    ctx.canary = ctx.stack+STACK_DEPTH-1; // stack[STACK_DEPTH-1]
-    ctx.top = ctx.stack; // nothing is on stack
-
-    /* clear main stack and global */
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
-        ctx.stack[i] = nil;
-        global[i] = nil;
+    /* set context and global */
+    if (!is_repl_mode || first_exec_flag) {
+        context_and_global_init();
+        first_exec_flag = false;
     }
 
     /* init gc */
@@ -50,6 +41,27 @@ void vm::init(
     auto arg_instance = ngc.alloc(vm_vec);
     global[global_symbol.at("arg")] = arg_instance;
     arg_instance.vec().elems = ngc.env_argv;
+}
+
+void vm::context_and_global_init() {
+    /* set canary and program counter */
+    ctx.pc = 0;
+    ctx.localr = nullptr;
+    ctx.memr = nullptr;
+    ctx.funcr = nil;
+    ctx.upvalr = nil;
+
+    /* set canary = stack[STACK_DEPTH-1] */
+    ctx.canary = ctx.stack+STACK_DEPTH-1;
+
+    /* nothing is on stack */
+    ctx.top = ctx.stack;
+
+    /* clear main stack and global */
+    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+        ctx.stack[i] = nil;
+        global[i] = nil;
+    }
 }
 
 void vm::valinfo(var& val) {
@@ -240,9 +252,8 @@ void vm::die(const std::string& str) {
 void vm::run(
     const codegen& gen,
     const linker& linker,
-    const std::vector<std::string>& argv,
-    const bool detail) {
-    verbose = detail;
+    const std::vector<std::string>& argv
+) {
     init(gen.strs(), gen.nums(), gen.natives(),
          gen.codes(), gen.globals(), linker.get_file_list(), argv);
 #ifndef _MSC_VER
@@ -341,11 +352,13 @@ void vm::run(
 #endif
 
 vmexit:
-    if (detail) {
+    if (verbose) {
         ngc.info();
     }
-    ngc.clear();
     imm.clear();
+    if (!is_repl_mode) {
+        ngc.clear();
+    }
     return;
 
 #ifndef _MSC_VER

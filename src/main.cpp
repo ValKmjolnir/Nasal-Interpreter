@@ -154,7 +154,8 @@ void execute(
         debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
-        runtime->run(gen, ld, argv, cmd&VM_DETAIL);
+        runtime->set_detail_report_info(cmd&VM_DETAIL);
+        runtime->run(gen, ld, argv);
     }
 
     // get running time
