@@ -9,6 +9,13 @@
 namespace nasal {
 namespace repl {
 
+void repl::add_command_history(const std::string& history) {
+    command_history.push_back(history);
+    if (command_history.size()>1000) {
+        command_history.pop_front();
+    }
+}
+
 std::string repl::readline(std::string prompt = ">>> ") {
     auto line = std::string("");
     std::cout << prompt;
@@ -51,6 +58,7 @@ bool repl::check_need_more_input() {
         }
 
         auto line = readline("... ");
+        add_command_history(line);
         source.back() += "\n" + line;
     }
     return true;
@@ -117,6 +125,7 @@ void repl::execute() {
         if (!line.length()) {
             continue;
         }
+        add_command_history(line);
 
         if (line == ".e" || line == ".exit") {
             break;

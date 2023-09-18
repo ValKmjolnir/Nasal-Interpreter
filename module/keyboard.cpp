@@ -51,7 +51,7 @@ public:
             return 1;
         }
         int flag = fcntl(0, F_GETFL);
-        fcntl(0, F_SETFL,flag|O_NONBLOCK);
+        fcntl(0, F_SETFL, flag|O_NONBLOCK);
         nread = read(0, &ch, 1);
         fcntl(0, F_SETFL, flag);
         if (nread==1) {
@@ -83,25 +83,25 @@ public:
 noecho_input this_window;
 
 var nas_getch(var* args, usize size, gc* ngc) {
-    return var::num((double)this_window.noecho_getch());
+    return var::num(static_cast<double>(this_window.noecho_getch()));
 }
 
 var nas_kbhit(var* args, usize size, gc* ngc) {
-    return var::num((double)this_window.noecho_kbhit());
+    return var::num(static_cast<double>(this_window.noecho_kbhit()));
 }
 
 var nas_noblock(var* args, usize size, gc* ngc) {
     if (this_window.noecho_kbhit()) {
-        return var::num((double)this_window.noecho_getch());
+        return var::num(static_cast<double>(this_window.noecho_getch()));
     }
     return nil;
 }
 
 module_func_info func_tbl[] = {
-    {"nas_getch",nas_getch},
-    {"nas_kbhit",nas_kbhit},
-    {"nas_noblock",nas_noblock},
-    {nullptr,nullptr}
+    {"nas_getch", nas_getch},
+    {"nas_kbhit", nas_kbhit},
+    {"nas_noblock", nas_noblock},
+    {nullptr, nullptr}
 };
 
 extern "C" module_func_info* get() {
