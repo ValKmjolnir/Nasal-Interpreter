@@ -10,6 +10,9 @@ namespace nasal {
 namespace repl {
 
 void repl::add_command_history(const std::string& history) {
+    if (command_history.size() && command_history.back()==history) {
+        return;
+    }
     command_history.push_back(history);
     if (command_history.size()>1000) {
         command_history.pop_front();
@@ -74,16 +77,12 @@ void repl::help() {
 }
 
 bool repl::run() {
-    using clk = std::chrono::high_resolution_clock;
-    const auto den = clk::duration::period::den;    
-
     auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
     auto nasal_parser = std::unique_ptr<parse>(new parse);
     auto nasal_linker = std::unique_ptr<linker>(new linker);
     auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
 
-    auto start = clk::now();
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return false;
@@ -101,9 +100,6 @@ bool repl::run() {
     if (nasal_codegen->compile(*nasal_parser, *nasal_linker).geterr()) {
         return false;
     }
-
-    auto end = clk::now();
-    std::clog << "[compile time: " << (end-start).count()*1000.0/den << " ms]\n";
 
     // TODO: gc init stage in this run may cause memory leak,
     // because constant strings will be generated again.

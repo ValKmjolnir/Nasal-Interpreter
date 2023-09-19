@@ -536,7 +536,9 @@ void gc::extend(u8 type) {
 }
 
 void gc::init(
-    const std::vector<std::string>& s, const std::vector<std::string>& argv) {
+    const std::vector<std::string>& constant_strings,
+    const std::vector<std::string>& argv
+) {
     // initialize counters
     worktime = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -547,16 +549,24 @@ void gc::init(
     cort = nullptr;
 
     // init constant strings
-    strs.resize(s.size());
+    strs.resize(constant_strings.size());
     for(u32 i = 0; i<strs.size(); ++i) {
-        strs[i]=var::gcobj(new nas_val(vm_str));
+        // incremental initialization, avoid memory leak in repl mode
+        if (strs[i].type==vm_str && strs[i].str()==constant_strings[i]) {
+            continue;
+        }
+        strs[i] = var::gcobj(new nas_val(vm_str));
         strs[i].val.gcobj->unmut = 1;
-        strs[i].str() = s[i];
+        strs[i].str() = constant_strings[i];
     }
 
     // record arguments
     env_argv.resize(argv.size());
     for(usize i = 0; i<argv.size(); ++i) {
+        // incremental initialization, avoid memory leak in repl mode
+        if (env_argv[i].type==vm_str && env_argv[i].str()==argv[i]) {
+            continue;
+        }
         env_argv[i] = var::gcobj(new nas_val(vm_str));
         env_argv[i].val.gcobj->unmut = 1;
         env_argv[i].str() = argv[i];

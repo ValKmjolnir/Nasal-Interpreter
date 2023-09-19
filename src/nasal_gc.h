@@ -66,7 +66,7 @@ struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
 public:
-    u8 type;
+    u8 type = vm_none;
     union {
         u32 ret;
         i64 cnt;
