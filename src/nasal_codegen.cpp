@@ -1181,13 +1181,15 @@ const error& codegen::compile(parse& parse, linker& import) {
     // check global variables size
     if (global.size()>=STACK_DEPTH/2) {
         err.err("code",
-            "too many global variables: " + std::to_string(global.size()));
+            "too many global variables: " + std::to_string(global.size())
+        );
     }
 
     // check generated code size
     if (code.size()>0xffffff) {
         err.err("code",
-            "bytecode size overflow: " + std::to_string(code.size()));
+            "bytecode size overflow: " + std::to_string(code.size())
+        );
     }
     return err;
 }
