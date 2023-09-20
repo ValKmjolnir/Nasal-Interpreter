@@ -192,7 +192,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // execute with arguments
-    const std::unordered_map<std::string,u32> cmdlst = {
+    const std::unordered_map<std::string, u32> cmdlst = {
         {"--raw-ast", VM_RAW_AST},
         {"--ast", VM_AST},
         {"-a", VM_AST},
