@@ -183,7 +183,7 @@ f64 str2num(const char* str) {
 
 i32 utf8_hdchk(const char head) {
     // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
-    const u8 c = (u8)head;
+    const auto c = static_cast<u8>(head);
     if ((c>>5)==0x06) { // 110x xxxx (10xx xxxx)^1
         return 1;
     }

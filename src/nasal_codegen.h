@@ -83,7 +83,7 @@ private:
     i32 global_find(const std::string&);
     i32 upvalue_find(const std::string&);
 
-    void gen(u8, u32, const span&);
+    void emit(u8, u32, const span&);
 
     void num_gen(number_literal*);
     void str_gen(string_literal*);
@@ -104,6 +104,7 @@ private:
     void single_def(definition_expr*);
     void def_gen(definition_expr*);
     void assignment_expression(assignment_expr*);
+    void gen_assignment_equal_statement(assignment_expr*);
     void assignment_statement(assignment_expr*);
     void multi_assign_gen(multi_assign*);
     void cond_gen(condition_expr*);

@@ -307,7 +307,9 @@ var builtin_substr(var* local, gc& ngc) {
 var builtin_streq(var* local, gc& ngc) {
     var a = local[1];
     var b = local[2];
-    return var::num(f64((a.type!=vm_str || b.type!=vm_str)? 0:(a.str()==b.str())));
+    return var::num(static_cast<f64>(
+        (a.type!=vm_str || b.type!=vm_str)? 0:(a.str()==b.str())
+    ));
 }
 
 var builtin_left(var* local, gc& ngc) {
@@ -410,9 +412,11 @@ var builtin_sleep(var* local, gc& ngc) {
 #if defined(_WIN32) && !defined(_GLIBCXX_HAS_GTHREADS)
     // mingw-w64 win32 thread model has no std::this_thread
     // also msvc will use this
-    Sleep(i64(val.num()*1e3));
+    Sleep(static_cast<i64>(val.num()*1e3));
 #else
-    std::this_thread::sleep_for(std::chrono::microseconds(i64(val.num()*1e6)));
+    std::this_thread::sleep_for(
+        std::chrono::microseconds(static_cast<i64>(val.num()*1e6))
+    );
 #endif
     return nil;
 }
@@ -469,7 +473,7 @@ std::string md5(const std::string& src) {
     usize buffsize = num<<4;
     buff.resize(buffsize,0);
     for(usize i = 0; i<src.length(); i++) {
-        buff[i>>2] |= ((u8)src[i])<<((i&0x3)<<3);
+        buff[i>>2] |= (static_cast<u8>(src[i]))<<((i&0x3)<<3);
     }
     buff[src.length()>>2] |= 0x80<<(((src.length()%4))<<3);
     buff[buffsize-2] = (src.length()<<3)&0xffffffff;
