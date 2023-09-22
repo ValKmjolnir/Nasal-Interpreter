@@ -55,7 +55,7 @@ void vm::context_and_global_init() {
     ctx.canary = ctx.stack+STACK_DEPTH-1;
 
     /* nothing is on stack */
-    ctx.top = ctx.stack;
+    ctx.top = ctx.stack - 1;
 
     /* clear main stack and global */
     for(u32 i = 0; i<STACK_DEPTH; ++i) {
