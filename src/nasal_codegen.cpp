@@ -37,18 +37,19 @@ void codegen::check_id_exist(identifier* node) {
     if (native_function_mapper.count(name)) {
         if (local.empty()) {
             die("native function should not be used in global scope",
-                node->get_location());
+                node->get_location()
+            );
         }
         return;
     }
 
-    if (local_find(name)>=0) {
+    if (local_symbol_find(name)>=0) {
         return;
     }
-    if (upvalue_find(name)>=0) {
+    if (upvalue_symbol_find(name)>=0) {
         return;
     }
-    if (global_find(name)>=0) {
+    if (global_symbol_find(name)>=0) {
         return;
     }
     die("undefined symbol \"" + name +
@@ -106,18 +107,18 @@ void codegen::add_symbol(const std::string& name) {
     local.back()[name] = index;
 }
 
-i32 codegen::local_find(const std::string& name) {
+i32 codegen::local_symbol_find(const std::string& name) {
     if (local.empty()) {
         return -1;
     }
     return local.back().count(name)? local.back().at(name):-1;
 }
 
-i32 codegen::global_find(const std::string& name) {
+i32 codegen::global_symbol_find(const std::string& name) {
     return global.count(name)? global.at(name):-1;
 }
 
-i32 codegen::upvalue_find(const std::string& name) {
+i32 codegen::upvalue_symbol_find(const std::string& name) {
     // 32768 level 65536 upvalues
     i32 index = -1;
     usize size = local.size();
@@ -252,9 +253,11 @@ void codegen::func_gen(function* node) {
     emit(op_jmp, 0, node->get_location());
 
     auto block = node->get_code_block();
+
     // search symbols first, must use after loading parameters
     // or the location of symbols will change and cause fatal error
     find_symbol(block);
+
     // add special varibale "arg", which is used to store overflowed args
     // but if dynamic parameter is declared, this variable will be useless
     // for example:
@@ -265,7 +268,7 @@ void codegen::func_gen(function* node) {
     //     var f = func(a, arg...) {return(arg)}
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
-    while(local_find(arg)>=0) {
+    while(local_symbol_find(arg)>=0) {
         arg = "0" + arg;
     }
     add_symbol(arg);
@@ -308,24 +311,26 @@ void codegen::call_id(identifier* node) {
     if (native_function_mapper.count(name)) {
         emit(op_callb,
             static_cast<u32>(native_function_mapper.at(name)),
-            node->get_location());
+            node->get_location()
+        );
         if (local.empty()) {
             die("should warp native function in local scope",
-                node->get_location());
+                node->get_location()
+            );
         }
         return;
     }
 
     i32 index;
-    if ((index=local_find(name))>=0) {
+    if ((index = local_symbol_find(name))>=0) {
         emit(op_calll, index, node->get_location());
         return;
     }
-    if ((index=upvalue_find(name))>=0) {
+    if ((index = upvalue_symbol_find(name))>=0) {
         emit(op_upval, index, node->get_location());
         return;
     }
-    if ((index=global_find(name))>=0) {
+    if ((index = global_symbol_find(name))>=0) {
         emit(op_callg, index, node->get_location());
         return;
     }
@@ -427,15 +432,15 @@ void codegen::mcall_id(identifier* node) {
     }
 
     i32 index;
-    if ((index=local_find(name))>=0) {
+    if ((index = local_symbol_find(name))>=0) {
         emit(op_mcalll, index, node->get_location());
         return;
     }
-    if ((index=upvalue_find(name))>=0) {
+    if ((index = upvalue_symbol_find(name))>=0) {
         emit(op_mupval, index, node->get_location());
         return;
     }
-    if ((index=global_find(name))>=0) {
+    if ((index = global_symbol_find(name))>=0) {
         emit(op_mcallg, index, node->get_location());
         return;
     }
@@ -465,9 +470,9 @@ void codegen::single_def(definition_expr* node) {
     const auto& str = node->get_variable_name()->get_name();
     calc_gen(node->get_value());
     if (local.empty()) {
-        emit(op_loadg, global_find(str), node->get_location());
+        emit(op_loadg, global_symbol_find(str), node->get_location());
     } else {
-        emit(op_loadl, local_find(str), node->get_location());
+        emit(op_loadl, local_symbol_find(str), node->get_location());
     }
 }
 
@@ -490,8 +495,8 @@ void codegen::multi_def(definition_expr* node) {
             calc_gen(vals[i]);
             const auto& name = identifiers[i]->get_name();
             local.empty()?
-                emit(op_loadg, global_find(name), identifiers[i]->get_location()):
-                emit(op_loadl, local_find(name), identifiers[i]->get_location());
+                emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
+                emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
         }
         return;
     }
@@ -501,8 +506,8 @@ void codegen::multi_def(definition_expr* node) {
         emit(op_callvi, i, node->get_value()->get_location());
         const auto& name = identifiers[i]->get_name();
         local.empty()?
-            emit(op_loadg, global_find(name), identifiers[i]->get_location()):
-            emit(op_loadl, local_find(name), identifiers[i]->get_location());
+            emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
+            emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
     }
     emit(op_pop, 0, node->get_location());
 }
@@ -632,6 +637,20 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     }
 }
 
+void codegen::replace_left_assignment_with_load(const span& location) {
+    // replace mcall with load,
+    // because mcall needs meq(1) (meq-pop) after it to load,
+    // but load to mcall-meq-pop in one operand.
+    // if is not mcall operand, emit meq(1) (meq-pop).
+    switch(code.back().op) {
+        case op_mcallg: code.back().op = op_loadg; break;
+        case op_mcalll: code.back().op = op_loadl; break;
+        case op_mupval: code.back().op = op_loadu; break;
+        default: emit(op_meq, 1, location); break;
+    }
+    return;
+}
+
 void codegen::assignment_statement(assignment_expr* node) {
     switch(node->get_assignment_type()) {
         case assignment_expr::assign_type::equal:
@@ -665,7 +684,9 @@ void codegen::multi_assign_gen(multi_assign* node) {
         node->get_tuple()->get_elements().size()>((tuple_expr*)node->get_value())->get_elements().size()) {
         die("too many values in multi-assignment", node->get_value()->get_location());
     }
+
     i32 size = node->get_tuple()->get_elements().size();
+    // generate multiple assignment: (a, b, c) = (1, 2, 3);
     if (node->get_value()->get_type()==expr_type::ast_tuple) {
         for(i32 i = size-1; i>=0; --i) {
             calc_gen(((tuple_expr*)node->get_value())->get_elements()[i]);
@@ -673,37 +694,24 @@ void codegen::multi_assign_gen(multi_assign* node) {
         auto& tuple = node->get_tuple()->get_elements();
         for(i32 i = 0; i<size; ++i) {
             mcall(tuple[i]);
-            // multi assign user loadl and loadg to avoid meq's stack--
+            // use load operands to avoid meq's pop operand
             // and this operation changes local and global value directly
-            if (code.back().op==op_mcalll) {
-                code.back().op = op_loadl;
-            } else if (code.back().op==op_mupval) {
-                code.back().op = op_loadu;
-            } else if (code.back().op==op_mcallg) {
-                code.back().op = op_loadg;
-            } else {
-                emit(op_meq, 1, tuple[i]->get_location());
-            }
+            replace_left_assignment_with_load(tuple[i]->get_location());
         }
         return;
     }
+
+    // generate multiple assignment: (a, b, c) = [1, 2, 3];
     calc_gen(node->get_value());
     auto& tuple = node->get_tuple()->get_elements();
     for(i32 i = 0; i<size; ++i) {
         emit(op_callvi, i, node->get_value()->get_location());
-        // multi assign user loadl and loadg to avoid meq's stack--
-        // and this operation changes local and global value directly
         mcall(tuple[i]);
-        if (code.back().op==op_mcalll) {
-            code.back().op = op_loadl;
-        } else if (code.back().op==op_mupval) {
-            code.back().op = op_loadu;
-        } else if (code.back().op==op_mcallg) {
-            code.back().op = op_loadg;
-        } else {
-            emit(op_meq, 1, tuple[i]->get_location());
-        }
+        // use load operands to avoid meq's pop operand
+        // and this operation changes local and global value directly
+        replace_left_assignment_with_load(tuple[i]->get_location());
     }
+    // pop source vector
     emit(op_pop, 0, node->get_location());
 }
 
@@ -800,38 +808,39 @@ void codegen::for_gen(for_expr* node) {
 void codegen::forei_gen(forei_expr* node) {
     calc_gen(node->get_value());
     emit(op_cnt, 0, node->get_value()->get_location());
-    usize ptr = code.size();
+    usize loop_begin = code.size();
     if (node->get_loop_type()==forei_expr::forei_loop_type::forindex) {
         emit(op_findex, 0, node->get_location());
     } else {
         emit(op_feach, 0, node->get_location());
     }
-    if (node->get_iterator()->get_name()) { // define a new iterator
+    if (node->get_iterator()->get_name()) {
+        // define a new iterator
         auto name_node = node->get_iterator()->get_name();
         const auto& str = name_node->get_name();
         local.empty()?
-            emit(op_loadg, global_find(str), name_node->get_location()):
-            emit(op_loadl, local_find(str), name_node->get_location());
-    } else { // use exist variable as the iterator
+            emit(op_loadg, global_symbol_find(str), name_node->get_location()):
+            emit(op_loadl, local_symbol_find(str), name_node->get_location());
+    } else {
+        // use exist variable as the iterator
         mcall(node->get_iterator()->get_call());
-        if (code.back().op==op_mcallg) {
-            code.back().op = op_loadg;
-        } else if (code.back().op==op_mcalll) {
-            code.back().op = op_loadl;
-        } else if (code.back().op==op_mupval) {
-            code.back().op = op_loadu;
-        } else {
-            emit(op_meq, 1, node->get_iterator()->get_location());
-        }
+        replace_left_assignment_with_load(node->get_iterator()->get_location());
     }
+
+    // generate code block
     ++in_loop_level.back();
     block_gen(node->get_code_block());
     --in_loop_level.back();
-    emit(op_jmp, ptr, node->get_location());
-    code[ptr].num=code.size();
+
+    // jump to loop begin
+    emit(op_jmp, loop_begin, node->get_location());
+    code[loop_begin].num=code.size();
     load_continue_break(code.size()-1, code.size());
-    emit(op_pop, 0, node->get_value()->get_location());// pop vector
-    emit(op_pop, 0, node->get_location());// pop iterator
+
+    // pop source vector
+    emit(op_pop, 0, node->get_value()->get_location());
+    // pop loop iterator
+    emit(op_pop, 0, node->get_location());
 }
 
 void codegen::statement_generation(expr* node) {
@@ -1196,14 +1205,16 @@ const error& codegen::compile(parse& parse, linker& import) {
     // check global variables size
     if (global.size()>=STACK_DEPTH/2) {
         err.err("code",
-            "too many global variables: " + std::to_string(global.size())
+            "too many global variables: " +
+            std::to_string(global.size())
         );
     }
 
     // check generated code size
     if (code.size()>0xffffff) {
         err.err("code",
-            "bytecode size overflow: " + std::to_string(code.size())
+            "bytecode size overflow: " +
+            std::to_string(code.size())
         );
     }
     return err;
@@ -1233,7 +1244,8 @@ void codegen::print(std::ostream& out) {
     codestream::set(
         const_number_table.data(),
         const_string_table.data(),
-        native_function.data());
+        native_function.data()
+    );
     for(u32 i = 0; i<code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];
