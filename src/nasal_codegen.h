@@ -79,9 +79,9 @@ private:
     void regist_str(const std::string&);
     void find_symbol(code_block*);
     void add_symbol(const std::string&);
-    i32 local_find(const std::string&);
-    i32 global_find(const std::string&);
-    i32 upvalue_find(const std::string&);
+    i32 local_symbol_find(const std::string&);
+    i32 global_symbol_find(const std::string&);
+    i32 upvalue_symbol_find(const std::string&);
 
     void emit(u8, u32, const span&);
 
@@ -105,6 +105,7 @@ private:
     void def_gen(definition_expr*);
     void assignment_expression(assignment_expr*);
     void gen_assignment_equal_statement(assignment_expr*);
+    void replace_left_assignment_with_load(const span&);
     void assignment_statement(assignment_expr*);
     void multi_assign_gen(multi_assign*);
     void cond_gen(condition_expr*);
