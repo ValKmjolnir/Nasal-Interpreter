@@ -54,7 +54,8 @@ void codegen::check_id_exist(identifier* node) {
     }
     die("undefined symbol \"" + name +
         "\", and this symbol is useless here",
-        node->get_location());
+        node->get_location()
+    );
 }
 
 void codegen::regist_num(const f64 num) {
@@ -186,28 +187,31 @@ void codegen::func_gen(function* node) {
     for(auto tmp : node->get_parameter_list()) {
         if (tmp->get_parameter_type()==
             parameter::param_type::default_parameter) {
-            checked_default=true;
+            checked_default = true;
         } else if (tmp->get_parameter_type()==
             parameter::param_type::dynamic_parameter) {
-            checked_dynamic=true;
+            checked_dynamic = true;
         }
         // check default parameter and dynamic parameter
         if (checked_default &&
             tmp->get_parameter_type()!=
             parameter::param_type::default_parameter) {
             die("must use default parameter here",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         if (checked_dynamic &&
             tmp!=node->get_parameter_list().back()) {
             die("dynamic parameter must be the last one",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         // check redefinition
         const auto& name = tmp->get_parameter_name();
         if (argname.count(name)) {
             die("redefinition of parameter: " + name,
-                tmp->get_location());
+                tmp->get_location()
+            );
         } else {
             argname[name] = true;
         }
@@ -230,7 +234,8 @@ void codegen::func_gen(function* node) {
         const auto& name = tmp->get_parameter_name();
         if (name=="me") {
             die("\"me\" should not be a parameter",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         regist_str(name);
         switch(tmp->get_parameter_type()) {
@@ -279,7 +284,8 @@ void codegen::func_gen(function* node) {
     code[lsize].num = local.back().size();
     if (local.back().size()>=STACK_DEPTH) {
         die("too many local variants: " +
-            std::to_string(local.back().size()), block->get_location());
+            std::to_string(local.back().size()), block->get_location()
+        );
     }
     local.pop_back();
 
@@ -394,14 +400,16 @@ void codegen::call_func_gen(call_function* node) {
 void codegen::mcall(expr* node) {
     if (node->get_type()!=expr_type::ast_id &&
         node->get_type()!=expr_type::ast_call) {
-        die("bad left-value", node->get_location());
+        die("bad left-value: cannot get memory space", node->get_location());
         return;
     }
+    // generate symbol call if node is just ast_id and return
     if (node->get_type()==expr_type::ast_id) {
         mcall_id((identifier*)node);
         return;
     }
-    auto call_node = (call_expr*)node;
+    // generate call expression until the last sub-node
+    auto call_node = static_cast<call_expr*>(node);
     calc_gen(call_node->get_first());
     for(usize i = 0; i<call_node->get_calls().size()-1; ++i) {
         auto tmp = call_node->get_calls()[i];
@@ -412,15 +420,15 @@ void codegen::mcall(expr* node) {
             default: break;
         }
     }
+    // the last sub-node will be used to generate memory call expression
     auto tmp = call_node->get_calls().back();
-    if (tmp->get_type()==expr_type::ast_callh) {
-        mcall_hash((call_hash*)tmp);
-    } else if (tmp->get_type()==expr_type::ast_callv) {
-        mcall_vec((call_vector*)tmp);
-    } else if (tmp->get_type()==expr_type::ast_callf) {
-        die("bad left-value: function call", tmp->get_location());
-    } else {
-        die("bad left-value: unknown call", tmp->get_location());
+    switch(tmp->get_type()) {
+        case expr_type::ast_callh: mcall_hash((call_hash*)tmp); break;
+        case expr_type::ast_callv: mcall_vec((call_vector*)tmp); break;
+        case expr_type::ast_callf:
+            die("bad left-value: function call", tmp->get_location()); break;
+        default:
+            die("bad left-value: unknown call", tmp->get_location()); break;
     }
 }
 
@@ -666,9 +674,9 @@ void codegen::assignment_statement(assignment_expr* node) {
         case assignment_expr::assign_type::bitwise_xor_equal:
             calc_gen(node);
             if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
-                code.back().num=1;
+                code.back().num = 1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().op=code.back().op-op_addeqc+op_addecp;
+                code.back().op = code.back().op-op_addeqc+op_addecp;
             } else {
                 emit(op_pop, 0, node->get_location());
             }
