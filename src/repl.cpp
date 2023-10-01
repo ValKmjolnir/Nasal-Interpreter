@@ -9,6 +9,16 @@
 namespace nasal {
 namespace repl {
 
+void repl::add_command_history(const std::string& history) {
+    if (command_history.size() && command_history.back()==history) {
+        return;
+    }
+    command_history.push_back(history);
+    if (command_history.size()>1000) {
+        command_history.pop_front();
+    }
+}
+
 std::string repl::readline(std::string prompt = ">>> ") {
     auto line = std::string("");
     std::cout << prompt;
@@ -51,6 +61,7 @@ bool repl::check_need_more_input() {
         }
 
         auto line = readline("... ");
+        add_command_history(line);
         source.back() += "\n" + line;
     }
     return true;
@@ -66,16 +77,12 @@ void repl::help() {
 }
 
 bool repl::run() {
-    using clk = std::chrono::high_resolution_clock;
-    const auto den = clk::duration::period::den;    
-
     auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
     auto nasal_parser = std::unique_ptr<parse>(new parse);
     auto nasal_linker = std::unique_ptr<linker>(new linker);
     auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
 
-    auto start = clk::now();
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return false;
@@ -89,25 +96,25 @@ bool repl::run() {
         return false;
     }
 
-    // nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker).geterr()) {
+    nasal_opt->do_optimization(nasal_parser->tree());
+    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true).geterr()) {
         return false;
     }
 
-    auto end = clk::now();
-    std::clog << "[compile time: " << (end-start).count()*1000.0/den << " ms]\n";
-
-    // TODO: gc init stage in this run may cause memory leak,
-    // because constant strings will be generated again.
-    // but we could not delete old strings, they maybe still on stack.
     runtime.run(*nasal_codegen, *nasal_linker, {});
-
     return true;
 }
 
 void repl::execute() {
     source = {};
+    // mark we are in repl mode
     info::instance()->in_repl_mode = true;
+    std::cout << "[nasal-repl] Initializating enviroment...\n";
+    // run on pass for initializing basic modules, without output
+    run();
+    // allow output now
+    runtime.set_allow_repl_output_flag(true);
+    std::cout << "[nasal-repl] Initialization complete.\n\n";
 
     std::cout << "Nasal REPL interpreter(experimental).\n";
     help();
@@ -117,6 +124,7 @@ void repl::execute() {
         if (!line.length()) {
             continue;
         }
+        add_command_history(line);
 
         if (line == ".e" || line == ".exit") {
             break;

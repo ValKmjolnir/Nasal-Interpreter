@@ -37,23 +37,25 @@ void codegen::check_id_exist(identifier* node) {
     if (native_function_mapper.count(name)) {
         if (local.empty()) {
             die("native function should not be used in global scope",
-                node->get_location());
+                node->get_location()
+            );
         }
         return;
     }
 
-    if (local_find(name)>=0) {
+    if (local_symbol_find(name)>=0) {
         return;
     }
-    if (upvalue_find(name)>=0) {
+    if (upvalue_symbol_find(name)>=0) {
         return;
     }
-    if (global_find(name)>=0) {
+    if (global_symbol_find(name)>=0) {
         return;
     }
     die("undefined symbol \"" + name +
         "\", and this symbol is useless here",
-        node->get_location());
+        node->get_location()
+    );
 }
 
 void codegen::regist_num(const f64 num) {
@@ -77,15 +79,21 @@ void codegen::regist_str(const std::string& str) {
 void codegen::find_symbol(code_block* node) {
     auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
     for(const auto& i : finder->do_find(node)) {
+        // check if symbol conflicts with native function name
         if (native_function_mapper.count(i.name)) {
-            die("definition conflicts with native function", i.location);
+            die("symbol conflicts with native function", i.location);
+            continue;
         }
+        // create new namespace with checking existence of location file
         if (!experimental_namespace.count(i.location.file)) {
             experimental_namespace[i.location.file] = {};
         }
-        if (local.empty() && !experimental_namespace.at(i.location.file).count(i.name)) {
-            experimental_namespace.at(i.location.file).insert(i.name);
+        // if in global scope, load global symbol into this namespace
+        auto scope = experimental_namespace.at(i.location.file);
+        if (local.empty() && !scope.count(i.name)) {
+            scope.insert(i.name);
         }
+        // add symbol for codegen symbol check
         add_symbol(i.name);
     }
 }
@@ -106,18 +114,18 @@ void codegen::add_symbol(const std::string& name) {
     local.back()[name] = index;
 }
 
-i32 codegen::local_find(const std::string& name) {
+i32 codegen::local_symbol_find(const std::string& name) {
     if (local.empty()) {
         return -1;
     }
     return local.back().count(name)? local.back().at(name):-1;
 }
 
-i32 codegen::global_find(const std::string& name) {
+i32 codegen::global_symbol_find(const std::string& name) {
     return global.count(name)? global.at(name):-1;
 }
 
-i32 codegen::upvalue_find(const std::string& name) {
+i32 codegen::upvalue_symbol_find(const std::string& name) {
     // 32768 level 65536 upvalues
     i32 index = -1;
     usize size = local.size();
@@ -133,44 +141,47 @@ i32 codegen::upvalue_find(const std::string& name) {
     return index;
 }
 
-void codegen::gen(u8 operation_code, u32 num, const span& loc) {
-    code.push_back({operation_code,
-        static_cast<u16>(file_map.at(loc.file)),
-        num, loc.begin_line});
+void codegen::emit(u8 operation_code, u32 immediate_num, const span& location) {
+    code.push_back({
+        operation_code,
+        static_cast<u16>(file_map.at(location.file)),
+        immediate_num,
+        location.begin_line
+    });
 }
 
 void codegen::num_gen(number_literal* node) {
     f64 num = node->get_number();
     regist_num(num);
-    gen(op_pnum, const_number_map.at(num), node->get_location());
+    emit(op_pnum, const_number_map.at(num), node->get_location());
 }
 
 void codegen::str_gen(string_literal* node) {
     const auto& str = node->get_content();
     regist_str(str);
-    gen(op_pstr, const_string_map.at(str), node->get_location());
+    emit(op_pstr, const_string_map.at(str), node->get_location());
 }
 
 void codegen::bool_gen(bool_literal* node) {
     f64 num = node->get_flag()? 1:0;
     regist_num(num);
-    gen(op_pnum, const_number_map.at(num), node->get_location());
+    emit(op_pnum, const_number_map.at(num), node->get_location());
 }
 
 void codegen::vec_gen(vector_expr* node) {
     for(auto child : node->get_elements()) {
         calc_gen(child);
     }
-    gen(op_newv, node->get_elements().size(), node->get_location());
+    emit(op_newv, node->get_elements().size(), node->get_location());
 }
 
 void codegen::hash_gen(hash_expr* node) {
-    gen(op_newh, 0, node->get_location());
+    emit(op_newh, 0, node->get_location());
     for(auto child : node->get_members()) {
         calc_gen(child->get_value());
         const auto& field_name = child->get_name();
         regist_str(field_name);
-        gen(op_happ, const_string_map.at(field_name), child->get_location());
+        emit(op_happ, const_string_map.at(field_name), child->get_location());
     }
 }
 
@@ -182,37 +193,40 @@ void codegen::func_gen(function* node) {
     for(auto tmp : node->get_parameter_list()) {
         if (tmp->get_parameter_type()==
             parameter::param_type::default_parameter) {
-            checked_default=true;
+            checked_default = true;
         } else if (tmp->get_parameter_type()==
             parameter::param_type::dynamic_parameter) {
-            checked_dynamic=true;
+            checked_dynamic = true;
         }
         // check default parameter and dynamic parameter
         if (checked_default &&
             tmp->get_parameter_type()!=
             parameter::param_type::default_parameter) {
             die("must use default parameter here",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         if (checked_dynamic &&
             tmp!=node->get_parameter_list().back()) {
             die("dynamic parameter must be the last one",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         // check redefinition
         const auto& name = tmp->get_parameter_name();
         if (argname.count(name)) {
             die("redefinition of parameter: " + name,
-                tmp->get_location());
+                tmp->get_location()
+            );
         } else {
             argname[name] = true;
         }
     }
 
     usize newf=code.size();
-    gen(op_newf, 0, node->get_location());
+    emit(op_newf, 0, node->get_location());
     usize lsize=code.size();
-    gen(op_intl, 0, node->get_location());
+    emit(op_intl, 0, node->get_location());
     
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
@@ -226,19 +240,20 @@ void codegen::func_gen(function* node) {
         const auto& name = tmp->get_parameter_name();
         if (name=="me") {
             die("\"me\" should not be a parameter",
-                tmp->get_location());
+                tmp->get_location()
+            );
         }
         regist_str(name);
         switch(tmp->get_parameter_type()) {
             case parameter::param_type::normal_parameter:
-                gen(op_para, const_string_map.at(name), tmp->get_location());
+                emit(op_para, const_string_map.at(name), tmp->get_location());
                 break;
             case parameter::param_type::default_parameter:
                 calc_gen(tmp->get_default_value());
-                gen(op_deft, const_string_map.at(name), tmp->get_location());
+                emit(op_deft, const_string_map.at(name), tmp->get_location());
                 break;
             case parameter::param_type::dynamic_parameter:
-                gen(op_dyn, const_string_map.at(name), tmp->get_location());
+                emit(op_dyn, const_string_map.at(name), tmp->get_location());
                 break;
         }
         add_symbol(name);
@@ -246,12 +261,14 @@ void codegen::func_gen(function* node) {
 
     code[newf].num = code.size()+1; // entry
     usize jmp_ptr = code.size();
-    gen(op_jmp, 0, node->get_location());
+    emit(op_jmp, 0, node->get_location());
 
     auto block = node->get_code_block();
+
     // search symbols first, must use after loading parameters
     // or the location of symbols will change and cause fatal error
     find_symbol(block);
+
     // add special varibale "arg", which is used to store overflowed args
     // but if dynamic parameter is declared, this variable will be useless
     // for example:
@@ -262,7 +279,7 @@ void codegen::func_gen(function* node) {
     //     var f = func(a, arg...) {return(arg)}
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
-    while(local_find(arg)>=0) {
+    while(local_symbol_find(arg)>=0) {
         arg = "0" + arg;
     }
     add_symbol(arg);
@@ -273,14 +290,15 @@ void codegen::func_gen(function* node) {
     code[lsize].num = local.back().size();
     if (local.back().size()>=STACK_DEPTH) {
         die("too many local variants: " +
-            std::to_string(local.back().size()), block->get_location());
+            std::to_string(local.back().size()), block->get_location()
+        );
     }
     local.pop_back();
 
     if (!block->get_expressions().size() ||
         block->get_expressions().back()->get_type()!=expr_type::ast_ret) {
-        gen(op_pnil, 0, block->get_location());
-        gen(op_ret, 0, block->get_location());
+        emit(op_pnil, 0, block->get_location());
+        emit(op_ret, 0, block->get_location());
     }
     code[jmp_ptr].num = code.size();
 }
@@ -303,27 +321,29 @@ void codegen::call_gen(call_expr* node) {
 void codegen::call_id(identifier* node) {
     const auto& name = node->get_name();
     if (native_function_mapper.count(name)) {
-        gen(op_callb,
+        emit(op_callb,
             static_cast<u32>(native_function_mapper.at(name)),
-            node->get_location());
+            node->get_location()
+        );
         if (local.empty()) {
             die("should warp native function in local scope",
-                node->get_location());
+                node->get_location()
+            );
         }
         return;
     }
 
     i32 index;
-    if ((index=local_find(name))>=0) {
-        gen(op_calll, index, node->get_location());
+    if ((index = local_symbol_find(name))>=0) {
+        emit(op_calll, index, node->get_location());
         return;
     }
-    if ((index=upvalue_find(name))>=0) {
-        gen(op_upval, index, node->get_location());
+    if ((index = upvalue_symbol_find(name))>=0) {
+        emit(op_upval, index, node->get_location());
         return;
     }
-    if ((index=global_find(name))>=0) {
-        gen(op_callg, index, node->get_location());
+    if ((index = global_symbol_find(name))>=0) {
+        emit(op_callg, index, node->get_location());
         return;
     }
     die("undefined symbol \"" + name + "\"", node->get_location());
@@ -331,7 +351,7 @@ void codegen::call_id(identifier* node) {
 
 void codegen::call_hash_gen(call_hash* node) {
     regist_str(node->get_field());
-    gen(op_callh, const_string_map.at(node->get_field()), node->get_location());
+    emit(op_callh, const_string_map.at(node->get_field()), node->get_location());
 }
 
 void codegen::call_vector_gen(call_vector* node) {
@@ -339,39 +359,39 @@ void codegen::call_vector_gen(call_vector* node) {
     if (node->get_slices().size()==1 &&
         !node->get_slices()[0]->get_end()) {
         calc_gen(node->get_slices()[0]->get_begin());
-        gen(op_callv, 0, node->get_slices()[0]->get_location());
+        emit(op_callv, 0, node->get_slices()[0]->get_location());
         return;
     }
-    gen(op_slcbeg, 0, node->get_location());
+    emit(op_slcbeg, 0, node->get_location());
     for(auto tmp : node->get_slices()) {
         if (!tmp->get_end()) {
             calc_gen(tmp->get_begin());
-            gen(op_slc, 0, tmp->get_location());
+            emit(op_slc, 0, tmp->get_location());
         } else {
             calc_gen(tmp->get_begin());
             calc_gen(tmp->get_end());
-            gen(op_slc2, 0, tmp->get_location());
+            emit(op_slc2, 0, tmp->get_location());
         }
     }
-    gen(op_slcend, 0, node->get_location());
+    emit(op_slcend, 0, node->get_location());
 }
 
 void codegen::call_func_gen(call_function* node) {
     if (node->get_argument().size() &&
         node->get_argument()[0]->get_type()==expr_type::ast_pair) {
-        gen(op_newh, 0, node->get_location());
+        emit(op_newh, 0, node->get_location());
         for(auto child : node->get_argument()) {
             calc_gen(((hash_pair*)child)->get_value());
             const auto& field_name = ((hash_pair*)child)->get_name();
             regist_str(field_name);
-            gen(op_happ, const_string_map.at(field_name), child->get_location());
+            emit(op_happ, const_string_map.at(field_name), child->get_location());
         }
-        gen(op_callfh, 0, node->get_location());
+        emit(op_callfh, 0, node->get_location());
     } else {
         for(auto child : node->get_argument()) {
             calc_gen(child);
         }
-        gen(op_callfv, node->get_argument().size(), node->get_location());
+        emit(op_callfv, node->get_argument().size(), node->get_location());
     }
 }
 
@@ -386,14 +406,16 @@ void codegen::call_func_gen(call_function* node) {
 void codegen::mcall(expr* node) {
     if (node->get_type()!=expr_type::ast_id &&
         node->get_type()!=expr_type::ast_call) {
-        die("bad left-value", node->get_location());
+        die("bad left-value: cannot get memory space", node->get_location());
         return;
     }
+    // generate symbol call if node is just ast_id and return
     if (node->get_type()==expr_type::ast_id) {
         mcall_id((identifier*)node);
         return;
     }
-    auto call_node = (call_expr*)node;
+    // generate call expression until the last sub-node
+    auto call_node = static_cast<call_expr*>(node);
     calc_gen(call_node->get_first());
     for(usize i = 0; i<call_node->get_calls().size()-1; ++i) {
         auto tmp = call_node->get_calls()[i];
@@ -404,15 +426,15 @@ void codegen::mcall(expr* node) {
             default: break;
         }
     }
+    // the last sub-node will be used to generate memory call expression
     auto tmp = call_node->get_calls().back();
-    if (tmp->get_type()==expr_type::ast_callh) {
-        mcall_hash((call_hash*)tmp);
-    } else if (tmp->get_type()==expr_type::ast_callv) {
-        mcall_vec((call_vector*)tmp);
-    } else if (tmp->get_type()==expr_type::ast_callf) {
-        die("bad left-value: function call", tmp->get_location());
-    } else {
-        die("bad left-value: unknown call", tmp->get_location());
+    switch(tmp->get_type()) {
+        case expr_type::ast_callh: mcall_hash((call_hash*)tmp); break;
+        case expr_type::ast_callv: mcall_vec((call_vector*)tmp); break;
+        case expr_type::ast_callf:
+            die("bad left-value: function call", tmp->get_location()); break;
+        default:
+            die("bad left-value: unknown call", tmp->get_location()); break;
     }
 }
 
@@ -424,16 +446,16 @@ void codegen::mcall_id(identifier* node) {
     }
 
     i32 index;
-    if ((index=local_find(name))>=0) {
-        gen(op_mcalll, index, node->get_location());
+    if ((index = local_symbol_find(name))>=0) {
+        emit(op_mcalll, index, node->get_location());
         return;
     }
-    if ((index=upvalue_find(name))>=0) {
-        gen(op_mupval, index, node->get_location());
+    if ((index = upvalue_symbol_find(name))>=0) {
+        emit(op_mupval, index, node->get_location());
         return;
     }
-    if ((index=global_find(name))>=0) {
-        gen(op_mcallg, index, node->get_location());
+    if ((index = global_symbol_find(name))>=0) {
+        emit(op_mcallg, index, node->get_location());
         return;
     }
     die("undefined symbol \"" + name + "\"", node->get_location());
@@ -450,20 +472,26 @@ void codegen::mcall_vec(call_vector* node) {
         return;
     }
     calc_gen(call->get_begin());
-    gen(op_mcallv, 0, node->get_location());
+    emit(op_mcallv, 0, node->get_location());
 }
 
 void codegen::mcall_hash(call_hash* node) {
     regist_str(node->get_field());
-    gen(op_mcallh, const_string_map.at(node->get_field()), node->get_location());
+    emit(op_mcallh, const_string_map.at(node->get_field()), node->get_location());
 }
 
 void codegen::single_def(definition_expr* node) {
     const auto& str = node->get_variable_name()->get_name();
     calc_gen(node->get_value());
-    local.empty()?
-        gen(op_loadg, global_find(str), node->get_location()):
-        gen(op_loadl, local_find(str), node->get_location());
+    // only generate in repl mode and in global scope
+    if (need_repl_output && local.empty()) {
+        emit(op_repl, 0, node->get_location());
+    }
+    if (local.empty()) {
+        emit(op_loadg, global_symbol_find(str), node->get_location());
+    } else {
+        emit(op_loadl, local_symbol_find(str), node->get_location());
+    }
 }
 
 void codegen::multi_def(definition_expr* node) {
@@ -474,30 +502,32 @@ void codegen::multi_def(definition_expr* node) {
         auto& vals = node->get_tuple()->get_elements();
         if (identifiers.size()<vals.size()) {
             die("lack values in multi-definition",
-                node->get_tuple()->get_location());
+                node->get_tuple()->get_location()
+            );
         } else if (identifiers.size()>vals.size()) {
             die("too many values in multi-definition",
-                node->get_tuple()->get_location());
+                node->get_tuple()->get_location()
+            );
         }
         for(usize i = 0; i<size; ++i) {
             calc_gen(vals[i]);
             const auto& name = identifiers[i]->get_name();
             local.empty()?
-                gen(op_loadg, global_find(name), identifiers[i]->get_location()):
-                gen(op_loadl, local_find(name), identifiers[i]->get_location());
+                emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
+                emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
         }
         return;
     }
     // (var a,b,c) = [0,1,2];
     calc_gen(node->get_value());
     for(usize i = 0; i<size; ++i) {
-        gen(op_callvi, i, node->get_value()->get_location());
+        emit(op_callvi, i, node->get_value()->get_location());
         const auto& name = identifiers[i]->get_name();
         local.empty()?
-            gen(op_loadg, global_find(name), identifiers[i]->get_location()):
-            gen(op_loadl, local_find(name), identifiers[i]->get_location());
+            emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
+            emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
     }
-    gen(op_pop, 0, node->get_location());
+    emit(op_pop, 0, node->get_location());
 }
 
 void codegen::def_gen(definition_expr* node) {
@@ -512,7 +542,7 @@ void codegen::assignment_expression(assignment_expr* node) {
         case assignment_expr::assign_type::equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
-            gen(op_meq, 0, node->get_location());
+            emit(op_meq, 0, node->get_location());
             break;
         case assignment_expr::assign_type::add_equal:
             if (node->get_right()->get_type()!=expr_type::ast_num) {
@@ -520,11 +550,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             mcall(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
-                gen(op_addeq, 0, node->get_location());
+                emit(op_addeq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_addeqc, const_number_map[num], node->get_location());
+                emit(op_addeqc, const_number_map[num], node->get_location());
             }
             break;
         case assignment_expr::assign_type::sub_equal:
@@ -533,11 +563,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             mcall(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
-                gen(op_subeq, 0, node->get_location());
+                emit(op_subeq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_subeqc, const_number_map[num], node->get_location());
+                emit(op_subeqc, const_number_map[num], node->get_location());
             }
             break;
         case assignment_expr::assign_type::mult_equal:
@@ -546,11 +576,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             mcall(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
-                gen(op_muleq, 0, node->get_location());
+                emit(op_muleq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_muleqc, const_number_map[num], node->get_location());
+                emit(op_muleqc, const_number_map[num], node->get_location());
             }
             break;
         case assignment_expr::assign_type::div_equal:
@@ -559,11 +589,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             mcall(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
-                gen(op_diveq, 0, node->get_location());
+                emit(op_diveq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_diveqc, const_number_map[num], node->get_location());
+                emit(op_diveqc, const_number_map[num], node->get_location());
             }
             break;
         case assignment_expr::assign_type::concat_equal:
@@ -572,53 +602,77 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             mcall(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_str) {
-                gen(op_lnkeq, 0, node->get_location());
+                emit(op_lnkeq, 0, node->get_location());
             } else {
                 const auto& str = ((string_literal*)node->get_right())->get_content();
                 regist_str(str);
-                gen(op_lnkeqc, const_string_map[str], node->get_location());
+                emit(op_lnkeqc, const_string_map[str], node->get_location());
             }
             break;
         case assignment_expr::assign_type::bitwise_and_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
-            gen(op_btandeq, 0, node->get_location());
+            emit(op_btandeq, 0, node->get_location());
             break;
         case assignment_expr::assign_type::bitwise_or_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
-            gen(op_btoreq, 0, node->get_location());
+            emit(op_btoreq, 0, node->get_location());
             break;
         case assignment_expr::assign_type::bitwise_xor_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
-            gen(op_btxoreq, 0, node->get_location());
+            emit(op_btxoreq, 0, node->get_location());
             break;
     }
+}
+
+void codegen::gen_assignment_equal_statement(assignment_expr* node) {
+    // if is not symbol load type assignment, use calc_gen directly
+    // what is symbol load assignment? example:
+    //     a = 1;         # this is symbol load
+    //     a.foo = "bar"; # this is not symbol load
+    if (node->get_left()->get_type()!=expr_type::ast_id) {
+        calc_gen(node);
+        if (code.back().op==op_meq) {
+            code.back().num = 1; // 1 means need pop after op_meq
+        } else {
+            emit(op_pop, 0, node->get_location());
+        }
+        return;
+    }
+    
+    // generate symbol load
+    calc_gen(node->get_right());
+    // get memory space of left identifier
+    mcall_id((identifier*)node->get_left());
+    // check memory get operand type and replace it with load operand
+    switch(code.back().op) {
+        case op_mcallg: code.back().op = op_loadg; break;
+        case op_mcalll: code.back().op = op_loadl; break;
+        case op_mupval: code.back().op = op_loadu; break;
+        default: die("unexpected operand to replace", node->get_location());
+    }
+}
+
+void codegen::replace_left_assignment_with_load(const span& location) {
+    // replace mcall with load,
+    // because mcall needs meq(1) (meq-pop) after it to load,
+    // but load to mcall-meq-pop in one operand.
+    // if is not mcall operand, emit meq(1) (meq-pop).
+    switch(code.back().op) {
+        case op_mcallg: code.back().op = op_loadg; break;
+        case op_mcalll: code.back().op = op_loadl; break;
+        case op_mupval: code.back().op = op_loadu; break;
+        default: emit(op_meq, 1, location); break;
+    }
+    return;
 }
 
 void codegen::assignment_statement(assignment_expr* node) {
     switch(node->get_assignment_type()) {
         case assignment_expr::assign_type::equal:
-            if (node->get_left()->get_type()==expr_type::ast_id) {
-                calc_gen(node->get_right());
-                mcall_id((identifier*)node->get_left());
-                // only the first mcall_id can use load
-                if (code.back().op==op_mcalll) {
-                    code.back().op=op_loadl;
-                } else if (code.back().op==op_mupval) {
-                    code.back().op=op_loadu;
-                } else {
-                    code.back().op=op_loadg;
-                }
-            } else {
-                calc_gen(node);
-                if (code.back().op==op_meq) {
-                    code.back().num=1;
-                } else {
-                    gen(op_pop, 0, node->get_location());
-                }
-            }
+            gen_assignment_equal_statement(node);
             break;
         case assignment_expr::assign_type::add_equal:
         case assignment_expr::assign_type::sub_equal:
@@ -630,11 +684,11 @@ void codegen::assignment_statement(assignment_expr* node) {
         case assignment_expr::assign_type::bitwise_xor_equal:
             calc_gen(node);
             if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
-                code.back().num=1;
+                code.back().num = 1;
             } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().op=code.back().op-op_addeqc+op_addecp;
+                code.back().op = code.back().op-op_addeqc+op_addecp;
             } else {
-                gen(op_pop, 0, node->get_location());
+                emit(op_pop, 0, node->get_location());
             }
             break;
     }
@@ -648,7 +702,9 @@ void codegen::multi_assign_gen(multi_assign* node) {
         node->get_tuple()->get_elements().size()>((tuple_expr*)node->get_value())->get_elements().size()) {
         die("too many values in multi-assignment", node->get_value()->get_location());
     }
+
     i32 size = node->get_tuple()->get_elements().size();
+    // generate multiple assignment: (a, b, c) = (1, 2, 3);
     if (node->get_value()->get_type()==expr_type::ast_tuple) {
         for(i32 i = size-1; i>=0; --i) {
             calc_gen(((tuple_expr*)node->get_value())->get_elements()[i]);
@@ -656,63 +712,50 @@ void codegen::multi_assign_gen(multi_assign* node) {
         auto& tuple = node->get_tuple()->get_elements();
         for(i32 i = 0; i<size; ++i) {
             mcall(tuple[i]);
-            // multi assign user loadl and loadg to avoid meq's stack--
+            // use load operands to avoid meq's pop operand
             // and this operation changes local and global value directly
-            if (code.back().op==op_mcalll) {
-                code.back().op=op_loadl;
-            } else if (code.back().op==op_mupval) {
-                code.back().op=op_loadu;
-            } else if (code.back().op==op_mcallg) {
-                code.back().op=op_loadg;
-            } else {
-                gen(op_meq, 1, tuple[i]->get_location());
-            }
+            replace_left_assignment_with_load(tuple[i]->get_location());
         }
         return;
     }
+
+    // generate multiple assignment: (a, b, c) = [1, 2, 3];
     calc_gen(node->get_value());
     auto& tuple = node->get_tuple()->get_elements();
     for(i32 i = 0; i<size; ++i) {
-        gen(op_callvi, i, node->get_value()->get_location());
-        // multi assign user loadl and loadg to avoid meq's stack--
-        // and this operation changes local and global value directly
+        emit(op_callvi, i, node->get_value()->get_location());
         mcall(tuple[i]);
-        if (code.back().op==op_mcalll) {
-            code.back().op=op_loadl;
-        } else if (code.back().op==op_mupval) {
-            code.back().op=op_loadu;
-        } else if (code.back().op==op_mcallg) {
-            code.back().op=op_loadg;
-        } else {
-            gen(op_meq, 1, tuple[i]->get_location());
-        }
+        // use load operands to avoid meq's pop operand
+        // and this operation changes local and global value directly
+        replace_left_assignment_with_load(tuple[i]->get_location());
     }
-    gen(op_pop, 0, node->get_location());
+    // pop source vector
+    emit(op_pop, 0, node->get_location());
 }
 
 void codegen::cond_gen(condition_expr* node) {
     std::vector<usize> jmp_label;
     calc_gen(node->get_if_statement()->get_condition());
     auto ptr = code.size();
-    gen(op_jf, 0, node->get_if_statement()->get_location());
+    emit(op_jf, 0, node->get_if_statement()->get_location());
     block_gen(node->get_if_statement()->get_code_block());
     if (node->get_elsif_stataments().size() ||
         node->get_else_statement()) {
         jmp_label.push_back(code.size());
-        gen(op_jmp, 0, node->get_if_statement()->get_location());
+        emit(op_jmp, 0, node->get_if_statement()->get_location());
     }
     code[ptr].num = code.size();
 
     for(auto tmp : node->get_elsif_stataments()) {
         calc_gen(tmp->get_condition());
         ptr = code.size();
-        gen(op_jf, 0, tmp->get_location());
+        emit(op_jf, 0, tmp->get_location());
         block_gen(tmp->get_code_block());
         // the last condition doesn't need to jmp
         if (tmp!=node->get_elsif_stataments().back() ||
             node->get_else_statement()) {
             jmp_label.push_back(code.size());
-            gen(op_jmp, 0, tmp->get_location());
+            emit(op_jmp, 0, tmp->get_location());
         }
         code[ptr].num=code.size();
     }
@@ -729,12 +772,9 @@ void codegen::loop_gen(expr* node) {
     continue_ptr.push_front({});
     break_ptr.push_front({});
     switch(node->get_type()) {
-        case expr_type::ast_while:
-            while_gen((while_expr*)node); break;
-        case expr_type::ast_for:
-            for_gen((for_expr*)node); break;
-        case expr_type::ast_forei:
-            forei_gen((forei_expr*)node); break;
+        case expr_type::ast_while: while_gen((while_expr*)node); break;
+        case expr_type::ast_for: for_gen((for_expr*)node); break;
+        case expr_type::ast_forei: forei_gen((forei_expr*)node); break;
         default: break;
     }
 }
@@ -754,10 +794,10 @@ void codegen::while_gen(while_expr* node) {
     usize loop_ptr = code.size();
     calc_gen(node->get_condition());
     usize condition_ptr = code.size();
-    gen(op_jf, 0, node->get_condition()->get_location());
+    emit(op_jf, 0, node->get_condition()->get_location());
 
     block_gen(node->get_code_block());
-    gen(op_jmp, loop_ptr, node->get_code_block()->get_location());
+    emit(op_jmp, loop_ptr, node->get_code_block()->get_location());
     code[condition_ptr].num = code.size();
     load_continue_break(code.size()-1, code.size());
 }
@@ -767,17 +807,17 @@ void codegen::for_gen(for_expr* node) {
     usize jmp_place = code.size();
     if (node->get_condition()->get_type()==expr_type::ast_null) {
         regist_num(1);
-        gen(op_pnum, const_number_map.at(1), node->get_condition()->get_location());
+        emit(op_pnum, const_number_map.at(1), node->get_condition()->get_location());
     } else {
         calc_gen(node->get_condition());
     }
     usize label_exit = code.size();
-    gen(op_jf, 0, node->get_condition()->get_location());
+    emit(op_jf, 0, node->get_condition()->get_location());
 
     block_gen(node->get_code_block());
     usize continue_place = code.size();
     statement_generation(node->get_step());
-    gen(op_jmp, jmp_place, node->get_step()->get_location());
+    emit(op_jmp, jmp_place, node->get_step()->get_location());
     code[label_exit].num = code.size();
 
     load_continue_break(continue_place, code.size());
@@ -785,39 +825,40 @@ void codegen::for_gen(for_expr* node) {
 
 void codegen::forei_gen(forei_expr* node) {
     calc_gen(node->get_value());
-    gen(op_cnt, 0, node->get_value()->get_location());
-    usize ptr = code.size();
+    emit(op_cnt, 0, node->get_value()->get_location());
+    usize loop_begin = code.size();
     if (node->get_loop_type()==forei_expr::forei_loop_type::forindex) {
-        gen(op_findex, 0, node->get_location());
+        emit(op_findex, 0, node->get_location());
     } else {
-        gen(op_feach, 0, node->get_location());
+        emit(op_feach, 0, node->get_location());
     }
-    if (node->get_iterator()->get_name()) { // define a new iterator
+    if (node->get_iterator()->get_name()) {
+        // define a new iterator
         auto name_node = node->get_iterator()->get_name();
         const auto& str = name_node->get_name();
         local.empty()?
-            gen(op_loadg, global_find(str), name_node->get_location()):
-            gen(op_loadl, local_find(str), name_node->get_location());
-    } else { // use exist variable as the iterator
+            emit(op_loadg, global_symbol_find(str), name_node->get_location()):
+            emit(op_loadl, local_symbol_find(str), name_node->get_location());
+    } else {
+        // use exist variable as the iterator
         mcall(node->get_iterator()->get_call());
-        if (code.back().op==op_mcallg) {
-            code.back().op=op_loadg;
-        } else if (code.back().op==op_mcalll) {
-            code.back().op=op_loadl;
-        } else if (code.back().op==op_mupval) {
-            code.back().op=op_loadu;
-        } else {
-            gen(op_meq, 1, node->get_iterator()->get_location());
-        }
+        replace_left_assignment_with_load(node->get_iterator()->get_location());
     }
+
+    // generate code block
     ++in_loop_level.back();
     block_gen(node->get_code_block());
     --in_loop_level.back();
-    gen(op_jmp, ptr, node->get_location());
-    code[ptr].num=code.size();
+
+    // jump to loop begin
+    emit(op_jmp, loop_begin, node->get_location());
+    code[loop_begin].num=code.size();
     load_continue_break(code.size()-1, code.size());
-    gen(op_pop, 0, node->get_value()->get_location());// pop vector
-    gen(op_pop, 0, node->get_location());// pop iterator
+
+    // pop source vector
+    emit(op_pop, 0, node->get_value()->get_location());
+    // pop loop iterator
+    emit(op_pop, 0, node->get_location());
 }
 
 void codegen::statement_generation(expr* node) {
@@ -841,7 +882,11 @@ void codegen::statement_generation(expr* node) {
         case expr_type::ast_binary:
         case expr_type::ast_ternary:
             calc_gen(node);
-            gen(op_pop, 0, node->get_location());
+            // only generate in repl mode and in global scope
+            if (need_repl_output && local.empty()) {
+                emit(op_repl, 0, node->get_location());
+            }
+            emit(op_pop, 0, node->get_location());
             break;
         default: break;
     }
@@ -850,33 +895,33 @@ void codegen::statement_generation(expr* node) {
 void codegen::or_gen(binary_operator* node) {
     calc_gen(node->get_left());
     usize label_jump_true_1 = code.size();
-    gen(op_jt, 0, node->get_left()->get_location());
+    emit(op_jt, 0, node->get_left()->get_location());
 
-    gen(op_pop, 0, node->get_left()->get_location());
+    emit(op_pop, 0, node->get_left()->get_location());
     calc_gen(node->get_right());
     usize label_jump_true_2 = code.size();
-    gen(op_jt, 0, node->get_right()->get_location());
+    emit(op_jt, 0, node->get_right()->get_location());
 
-    gen(op_pop, 0, node->get_right()->get_location());
-    gen(op_pnil, 0, node->get_right()->get_location());
+    emit(op_pop, 0, node->get_right()->get_location());
+    emit(op_pnil, 0, node->get_right()->get_location());
 
     code[label_jump_true_1].num = code[label_jump_true_2].num = code.size();
 }
 
 void codegen::and_gen(binary_operator* node) {
     calc_gen(node->get_left());
-    gen(op_jt, code.size()+2, node->get_left()->get_location());
+    emit(op_jt, code.size()+2, node->get_left()->get_location());
 
     usize lable_jump_false = code.size();
-    gen(op_jmp, 0, node->get_left()->get_location());
-    gen(op_pop, 0, node->get_right()->get_location()); // jt jumps here
+    emit(op_jmp, 0, node->get_left()->get_location());
+    emit(op_pop, 0, node->get_right()->get_location()); // jt jumps here
 
     calc_gen(node->get_right());
-    gen(op_jt, code.size()+3, node->get_right()->get_location());
+    emit(op_jt, code.size()+3, node->get_right()->get_location());
 
     code[lable_jump_false].num = code.size();
-    gen(op_pop, 0, node->get_right()->get_location());
-    gen(op_pnil, 0, node->get_right()->get_location());
+    emit(op_pop, 0, node->get_right()->get_location());
+    emit(op_pnil, 0, node->get_right()->get_location());
     // jt jumps here, avoid pop and pnil
 }
 
@@ -890,11 +935,11 @@ void codegen::unary_gen(unary_operator* node) {
     calc_gen(node->get_value());
     switch(node->get_operator_type()) {
         case unary_operator::unary_type::negative:
-            gen(op_usub, 0, node->get_location()); break;
+            emit(op_usub, 0, node->get_location()); break;
         case unary_operator::unary_type::logical_not:
-            gen(op_lnot, 0, node->get_location()); break;
+            emit(op_lnot, 0, node->get_location()); break;
         case unary_operator::unary_type::bitwise_not:
-            gen(op_bnot, 0, node->get_location()); break;
+            emit(op_bnot, 0, node->get_location()); break;
     }
 }
 
@@ -918,27 +963,27 @@ void codegen::binary_gen(binary_operator* node) {
         case binary_operator::binary_type::cmpeq:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
-            gen(op_eq, 0, node->get_location());
+            emit(op_eq, 0, node->get_location());
             return;
         case binary_operator::binary_type::cmpneq:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
-            gen(op_neq, 0, node->get_location());
+            emit(op_neq, 0, node->get_location());
             return;
         case binary_operator::binary_type::bitwise_or:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
-            gen(op_btor, 0, node->get_location());
+            emit(op_btor, 0, node->get_location());
             return;
         case binary_operator::binary_type::bitwise_xor:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
-            gen(op_btxor, 0, node->get_location());
+            emit(op_btxor, 0, node->get_location());
             return;
         case binary_operator::binary_type::bitwise_and:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
-            gen(op_btand, 0, node->get_location());
+            emit(op_btand, 0, node->get_location());
             return;
         default: break;
     }
@@ -947,99 +992,99 @@ void codegen::binary_gen(binary_operator* node) {
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_add, 0, node->get_location());
+                emit(op_add, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_addc, const_number_map.at(num), node->get_location());
+                emit(op_addc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::sub:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_sub, 0, node->get_location());
+                emit(op_sub, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_subc, const_number_map.at(num), node->get_location());
+                emit(op_subc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::mult:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_mul, 0, node->get_location());
+                emit(op_mul, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_mulc, const_number_map.at(num), node->get_location());
+                emit(op_mulc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::div:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_div, 0, node->get_location());
+                emit(op_div, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_divc, const_number_map.at(num), node->get_location());
+                emit(op_divc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::concat:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_str) {
                 calc_gen(node->get_right());
-                gen(op_lnk, 0, node->get_location());
+                emit(op_lnk, 0, node->get_location());
             } else {
                 const auto& str = ((string_literal*)node->get_right())->get_content();
                 regist_str(str);
-                gen(op_lnkc, const_string_map.at(str), node->get_location());
+                emit(op_lnkc, const_string_map.at(str), node->get_location());
             }
             break;
         case binary_operator::binary_type::less:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_less, 0, node->get_location());
+                emit(op_less, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_lessc, const_number_map.at(num), node->get_location());
+                emit(op_lessc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::leq:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_leq, 0, node->get_location());
+                emit(op_leq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_leqc, const_number_map.at(num), node->get_location());
+                emit(op_leqc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::grt:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_grt, 0, node->get_location());
+                emit(op_grt, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_grtc, const_number_map.at(num), node->get_location());
+                emit(op_grtc, const_number_map.at(num), node->get_location());
             }
             return;
         case binary_operator::binary_type::geq:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
-                gen(op_geq, 0, node->get_location());
+                emit(op_geq, 0, node->get_location());
             } else {
                 auto num = ((number_literal*)node->get_right())->get_number();
                 regist_num(num);
-                gen(op_geqc, const_number_map.at(num), node->get_location());
+                emit(op_geqc, const_number_map.at(num), node->get_location());
             }
             return;
         default: break;
@@ -1049,10 +1094,10 @@ void codegen::binary_gen(binary_operator* node) {
 void codegen::trino_gen(ternary_operator* node) {
     calc_gen(node->get_condition());
     usize label_jump_false = code.size();
-    gen(op_jf, 0, node->get_condition()->get_location());
+    emit(op_jf, 0, node->get_condition()->get_location());
     calc_gen(node->get_left());
     usize label_jump_to_exit = code.size();
-    gen(op_jmp, 0, node->get_left()->get_location());
+    emit(op_jmp, 0, node->get_left()->get_location());
     code[label_jump_false].num = code.size();
     calc_gen(node->get_right());
     code[label_jump_to_exit].num = code.size();
@@ -1061,7 +1106,7 @@ void codegen::trino_gen(ternary_operator* node) {
 void codegen::calc_gen(expr* node) {
     switch(node->get_type()) {
         case expr_type::ast_nil:
-            gen(op_pnil, 0, node->get_location()); break;
+            emit(op_pnil, 0, node->get_location()); break;
         case expr_type::ast_num:
             num_gen((number_literal*)node); break;
         case expr_type::ast_str:
@@ -1095,25 +1140,49 @@ void codegen::calc_gen(expr* node) {
     }
 }
 
+void codegen::repl_mode_info_output_gen(expr* node) {
+    switch(node->get_type()) {
+        case expr_type::ast_id: call_id((identifier*)node); break;
+        case expr_type::ast_nil: emit(op_pnil, 0, node->get_location()); break;
+        case expr_type::ast_num: num_gen((number_literal*)node); break;
+        case expr_type::ast_str: str_gen((string_literal*)node); break;
+        case expr_type::ast_bool: bool_gen((bool_literal*)node); break;
+        default: return;
+    }
+    // generate repl output operand
+    emit(op_repl, 0, node->get_location());
+    // pop stack
+    emit(op_pop, 0, node->get_location());
+}
+
 void codegen::block_gen(code_block* node) {
     for(auto tmp : node->get_expressions()) {
         switch(tmp->get_type()) {
             case expr_type::ast_null: break;
             case expr_type::ast_id:
-                check_id_exist((identifier*)tmp); break;
+                if (need_repl_output) {
+                    repl_mode_info_output_gen(tmp);
+                } else {
+                    check_id_exist((identifier*)tmp);
+                }
+                break;
             case expr_type::ast_nil:
             case expr_type::ast_num:
             case expr_type::ast_str:
-            case expr_type::ast_bool: break;
+            case expr_type::ast_bool:
+                if (need_repl_output) {
+                    repl_mode_info_output_gen(tmp);
+                }
+                break;
             case expr_type::ast_cond:
                 cond_gen((condition_expr*)tmp); break;
             case expr_type::ast_continue:
                 continue_ptr.front().push_back(code.size());
-                gen(op_jmp, 0, tmp->get_location());
+                emit(op_jmp, 0, tmp->get_location());
                 break;
             case expr_type::ast_break:
                 break_ptr.front().push_back(code.size());
-                gen(op_jmp, 0, tmp->get_location());
+                emit(op_jmp, 0, tmp->get_location());
                 break;
             case expr_type::ast_while:
             case expr_type::ast_for:
@@ -1139,16 +1208,17 @@ void codegen::block_gen(code_block* node) {
 
 void codegen::ret_gen(return_expr* node) {
     for(u32 i = 0; i<in_loop_level.back(); ++i) {
-        gen(op_pop, 0, node->get_location());
-        gen(op_pop, 0, node->get_location());
+        emit(op_pop, 0, node->get_location());
+        emit(op_pop, 0, node->get_location());
     }
     calc_gen(node->get_value());
-    gen(op_ret, 0, node->get_location());
+    emit(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import) {
+const error& codegen::compile(parse& parse, linker& import, bool repl_flag) {
     init_native_function();
     init_file_map(import.get_file_list());
+    need_repl_output = repl_flag;
 
     in_loop_level.push_back(0);
 
@@ -1159,35 +1229,40 @@ const error& codegen::compile(parse& parse, linker& import) {
 
     // search global symbols first
     find_symbol(parse.tree());
-    gen(op_intg, global.size(), parse.tree()->get_location());
 
     // generate main block
     block_gen(parse.tree());
     // generate exit operand, vm stops here
-    gen(op_exit, 0, parse.tree()->get_location());
+    emit(op_exit, 0, parse.tree()->get_location());
 
     // size out of bound check
     if (const_number_table.size()>0xffffff) {
         err.err("code",
             "too many constant numbers: " +
-            std::to_string(const_number_table.size()));
+            std::to_string(const_number_table.size())
+        );
     }
     if (const_string_table.size()>0xffffff) {
         err.err("code",
             "too many constant strings: " +
-            std::to_string(const_string_table.size()));
+            std::to_string(const_string_table.size())
+        );
     }
 
     // check global variables size
     if (global.size()>=STACK_DEPTH/2) {
         err.err("code",
-            "too many global variables: " + std::to_string(global.size()));
+            "too many global variables: " +
+            std::to_string(global.size())
+        );
     }
 
     // check generated code size
     if (code.size()>0xffffff) {
         err.err("code",
-            "bytecode size overflow: " + std::to_string(code.size()));
+            "bytecode size overflow: " +
+            std::to_string(code.size())
+        );
     }
     return err;
 }
@@ -1216,7 +1291,8 @@ void codegen::print(std::ostream& out) {
     codestream::set(
         const_number_table.data(),
         const_string_table.data(),
-        native_function.data());
+        native_function.data()
+    );
     for(u32 i = 0; i<code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];

@@ -139,7 +139,7 @@ void execute(
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld).chkerr();
+    gen.compile(parse, ld, false).chkerr();
     if (cmd&VM_CODE) {
         gen.print(std::cout);
     }
@@ -192,7 +192,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // execute with arguments
-    const std::unordered_map<std::string,u32> cmdlst = {
+    const std::unordered_map<std::string, u32> cmdlst = {
         {"--raw-ast", VM_RAW_AST},
         {"--ast", VM_AST},
         {"-a", VM_AST},

@@ -34,16 +34,16 @@ var nas_socket(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num || args[1].type!=vm_num || args[2].type!=vm_num)
         return nas_err("socket", "\"af\", \"type\", \"protocol\" should be number");
     int sd = socket(args[0].num(), args[1].num(), args[2].num());
-    return var::num((double)sd);
+    return var::num(static_cast<double>(sd));
 }
 
 var nas_closesocket(var* args, usize size, gc* ngc) {
     if (args[0].type!=vm_num)
         return nas_err("closesocket", "\"sd\" should be number");
 #ifdef _WIN32
-    return var::num((double)closesocket(args[0].num()));
+    return var::num(static_cast<double>(closesocket(args[0].num())));
 #else
-    return var::num((double)close(args[0].num()));
+    return var::num(static_cast<double>(close(args[0].num())));
 #endif
 }
 
@@ -52,7 +52,7 @@ var nas_shutdown(var* args, usize size, gc* ngc) {
         return nas_err("shutdown", "\"sd\" must be a number");
     if (args[1].type!=vm_num)
         return nas_err("shutdown", "\"how\" must be a number");
-    return var::num((double)shutdown(args[0].num(), args[1].num()));
+    return var::num(static_cast<double>(shutdown(args[0].num(), args[1].num())));
 }
 
 var nas_bind(var* args, usize size, gc* ngc) {
@@ -67,7 +67,11 @@ var nas_bind(var* args, usize size, gc* ngc) {
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(args[1].str().c_str());
     server.sin_port = htons(args[2].num());
-    return var::num((double)bind(args[0].num(), (sockaddr*)&server, sizeof(server)));
+    return var::num(static_cast<double>(bind(
+        args[0].num(),
+        (sockaddr*)&server,
+        sizeof(server)
+    )));
 }
 
 var nas_listen(var* args, usize size, gc* ngc) {
@@ -75,7 +79,7 @@ var nas_listen(var* args, usize size, gc* ngc) {
         return nas_err("listen", "\"sd\" must be a number");
     if (args[1].type!=vm_num)
         return nas_err("listen", "\"backlog\" must be a number");
-    return var::num((double)listen(args[0].num(), args[1].num()));
+    return var::num(static_cast<double>(listen(args[0].num(), args[1].num())));
 }
 
 var nas_connect(var* args, usize size, gc* ngc) {
@@ -91,11 +95,11 @@ var nas_connect(var* args, usize size, gc* ngc) {
     addr.sin_port = htons(args[2].num());
     hostent* entry = gethostbyname(args[1].str().c_str());
     memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
-    return var::num((double)connect(
+    return var::num(static_cast<double>(connect(
         args[0].num(),
         (sockaddr*)&addr,
         sizeof(sockaddr_in)
-    ));
+    )));
 }
 
 var nas_accept(var* args, usize size, gc* ngc) {
@@ -110,7 +114,7 @@ var nas_accept(var* args, usize size, gc* ngc) {
 #endif
     var res=ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
-    hash["sd"] = var::num((double)client_sd);
+    hash["sd"] = var::num(static_cast<double>(client_sd));
     hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));
     ngc->temp = nil;
     return res;
@@ -123,12 +127,12 @@ var nas_send(var* args, usize size, gc* ngc) {
         return nas_err("send", "\"buff\" must be a string");
     if (args[2].type!=vm_num)
         return nas_err("send", "\"flags\" muse be a number");
-    return var::num((double)send(
+    return var::num(static_cast<double>(send(
         args[0].num(),
         args[1].str().c_str(),
         args[1].str().length(),
         args[2].num()
-    ));
+    )));
 }
 
 var nas_sendto(var* args, usize size, gc* ngc) {
@@ -148,14 +152,14 @@ var nas_sendto(var* args, usize size, gc* ngc) {
     addr.sin_port = htons(args[2].num());
     hostent* entry = gethostbyname(args[1].str().c_str());
     memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
-    return var::num((double)sendto(
+    return var::num(static_cast<double>(sendto(
         args[0].num(),
         args[3].str().c_str(),
         args[3].str().length(),
         args[4].num(),
         (sockaddr*)&addr,
         sizeof(sockaddr_in)
-    ));
+    )));
 }
 
 var nas_recv(var* args, usize size, gc* ngc) {
@@ -169,9 +173,9 @@ var nas_recv(var* args, usize size, gc* ngc) {
         return nas_err("recv", "\"flags\" muse be a number");
     var res = ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
-    char* buf = new char[(int)args[1].num()];
+    char* buf = new char[static_cast<int>(args[1].num())];
     auto recvsize = recv(args[0].num(), buf,args[1].num(), args[2].num());
-    hash["size"] = var::num((double)recvsize);
+    hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
     hash["str"] = ngc->newstr(buf);
     delete[] buf;
@@ -192,7 +196,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
     int socklen = sizeof(sockaddr_in);
     var res = ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
-    char* buf = new char[(int)args[1].num()+1];
+    char* buf = new char[static_cast<int>(args[1].num()+1)];
 #ifdef _WIN32
     auto recvsize = recvfrom(
         args[0].num(),
@@ -212,7 +216,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
         (socklen_t*)&socklen
     );
 #endif
-    hash["size"] = var::num((double)recvsize);
+    hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
     hash["str"] = ngc->newstr(buf);
     delete[] buf;

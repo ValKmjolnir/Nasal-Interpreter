@@ -9,7 +9,7 @@ namespace nasal {
 
 enum op_code_type:u8 {
     op_exit,   // stop the virtual machine
-    op_intg,   // init global scope
+    op_repl,   // in repl mode: print value on stack top
     op_intl,   // local scope size
     op_loadg,  // load global value
     op_loadl,  // load local value
