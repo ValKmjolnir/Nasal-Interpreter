@@ -259,7 +259,7 @@ void vm::run(
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {
-        &&vmexit, &&intg,   &&intl,   &&loadg,
+        &&vmexit, &&repl,   &&intl,   &&loadg,
         &&loadl,  &&loadu,  &&pnum,   &&pnil,
         &&pstr,   &&newv,   &&newh,   &&newf,
         &&happ,   &&para,   &&deft,   &&dyn,
@@ -292,7 +292,7 @@ void vm::run(
 #else
     typedef void (vm::*nafunc)();
     const nafunc oprs[] = {
-        nullptr,       &vm::o_intg,
+        nullptr,       &vm::o_repl,
         &vm::o_intl,   &vm::o_loadg,
         &vm::o_loadl,  &vm::o_loadu,
         &vm::o_pnum,   &vm::o_pnil,
@@ -376,7 +376,7 @@ vmexit:
     goto *code[++ctx.pc];\
 }
 
-intg:   exec_nodie(o_intg  ); // +imm[pc] (detected at codegen)
+repl:   exec_nodie(o_repl  ); // 0
 intl:   exec_nodie(o_intl  ); // -0
 loadg:  exec_nodie(o_loadg ); // -1
 loadl:  exec_nodie(o_loadl ); // -1

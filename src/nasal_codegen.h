@@ -34,6 +34,9 @@ class codegen {
 private:
     error err;
 
+    // 
+    bool need_repl_output;
+
     // file mapper for file -> index
     std::unordered_map<std::string, usize> file_map;
     void init_file_map(const std::vector<std::string>&);
@@ -121,6 +124,7 @@ private:
     void binary_gen(binary_operator*);
     void trino_gen(ternary_operator*);
     void calc_gen(expr*);
+    void repl_mode_info_output_gen(expr*);
     void block_gen(code_block*);
     void ret_gen(return_expr*);
 
@@ -136,7 +140,7 @@ public:
 
 public:
     codegen() = default;
-    const error& compile(parse&, linker&);
+    const error& compile(parse&, linker&, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };

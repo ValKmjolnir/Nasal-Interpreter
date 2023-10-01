@@ -96,22 +96,25 @@ bool repl::run() {
         return false;
     }
 
-    // nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker).geterr()) {
+    nasal_opt->do_optimization(nasal_parser->tree());
+    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true).geterr()) {
         return false;
     }
 
-    // TODO: gc init stage in this run may cause memory leak,
-    // because constant strings will be generated again.
-    // but we could not delete old strings, they maybe still on stack.
     runtime.run(*nasal_codegen, *nasal_linker, {});
-
     return true;
 }
 
 void repl::execute() {
     source = {};
+    // mark we are in repl mode
     info::instance()->in_repl_mode = true;
+    std::cout << "[nasal-repl] Initializating enviroment...\n";
+    // run on pass for initializing basic modules, without output
+    run();
+    // allow output now
+    runtime.set_allow_repl_output_flag(true);
+    std::cout << "[nasal-repl] Initialization complete.\n\n";
 
     std::cout << "Nasal REPL interpreter(experimental).\n";
     help();

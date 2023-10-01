@@ -79,15 +79,21 @@ void codegen::regist_str(const std::string& str) {
 void codegen::find_symbol(code_block* node) {
     auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
     for(const auto& i : finder->do_find(node)) {
+        // check if symbol conflicts with native function name
         if (native_function_mapper.count(i.name)) {
-            die("definition conflicts with native function", i.location);
+            die("symbol conflicts with native function", i.location);
+            continue;
         }
+        // create new namespace with checking existence of location file
         if (!experimental_namespace.count(i.location.file)) {
             experimental_namespace[i.location.file] = {};
         }
-        if (local.empty() && !experimental_namespace.at(i.location.file).count(i.name)) {
-            experimental_namespace.at(i.location.file).insert(i.name);
+        // if in global scope, load global symbol into this namespace
+        auto scope = experimental_namespace.at(i.location.file);
+        if (local.empty() && !scope.count(i.name)) {
+            scope.insert(i.name);
         }
+        // add symbol for codegen symbol check
         add_symbol(i.name);
     }
 }
@@ -477,6 +483,10 @@ void codegen::mcall_hash(call_hash* node) {
 void codegen::single_def(definition_expr* node) {
     const auto& str = node->get_variable_name()->get_name();
     calc_gen(node->get_value());
+    // only generate in repl mode and in global scope
+    if (need_repl_output && local.empty()) {
+        emit(op_repl, 0, node->get_location());
+    }
     if (local.empty()) {
         emit(op_loadg, global_symbol_find(str), node->get_location());
     } else {
@@ -872,6 +882,10 @@ void codegen::statement_generation(expr* node) {
         case expr_type::ast_binary:
         case expr_type::ast_ternary:
             calc_gen(node);
+            // only generate in repl mode and in global scope
+            if (need_repl_output && local.empty()) {
+                emit(op_repl, 0, node->get_location());
+            }
             emit(op_pop, 0, node->get_location());
             break;
         default: break;
@@ -1126,16 +1140,40 @@ void codegen::calc_gen(expr* node) {
     }
 }
 
+void codegen::repl_mode_info_output_gen(expr* node) {
+    switch(node->get_type()) {
+        case expr_type::ast_id: call_id((identifier*)node); break;
+        case expr_type::ast_nil: emit(op_pnil, 0, node->get_location()); break;
+        case expr_type::ast_num: num_gen((number_literal*)node); break;
+        case expr_type::ast_str: str_gen((string_literal*)node); break;
+        case expr_type::ast_bool: bool_gen((bool_literal*)node); break;
+        default: return;
+    }
+    // generate repl output operand
+    emit(op_repl, 0, node->get_location());
+    // pop stack
+    emit(op_pop, 0, node->get_location());
+}
+
 void codegen::block_gen(code_block* node) {
     for(auto tmp : node->get_expressions()) {
         switch(tmp->get_type()) {
             case expr_type::ast_null: break;
             case expr_type::ast_id:
-                check_id_exist((identifier*)tmp); break;
+                if (need_repl_output) {
+                    repl_mode_info_output_gen(tmp);
+                } else {
+                    check_id_exist((identifier*)tmp);
+                }
+                break;
             case expr_type::ast_nil:
             case expr_type::ast_num:
             case expr_type::ast_str:
-            case expr_type::ast_bool: break;
+            case expr_type::ast_bool:
+                if (need_repl_output) {
+                    repl_mode_info_output_gen(tmp);
+                }
+                break;
             case expr_type::ast_cond:
                 cond_gen((condition_expr*)tmp); break;
             case expr_type::ast_continue:
@@ -1177,9 +1215,10 @@ void codegen::ret_gen(return_expr* node) {
     emit(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import) {
+const error& codegen::compile(parse& parse, linker& import, bool repl_flag) {
     init_native_function();
     init_file_map(import.get_file_list());
+    need_repl_output = repl_flag;
 
     in_loop_level.push_back(0);
 
