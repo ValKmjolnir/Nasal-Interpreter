@@ -3,7 +3,7 @@
 namespace nasal {
 
 const char* opname[] = {
-    "exit  ", "intg  ", "intl  ", "loadg ",
+    "exit  ", "repl  ", "intl  ", "loadg ",
     "loadl ", "loadu ", "pnum  ", "pnil  ",
     "pstr  ", "newv  ", "newh  ", "newf  ",
     "happ  ", "para  ", "def   ", "dyn   ",
@@ -81,7 +81,7 @@ void codestream::dump(std::ostream& out) const {
             out << hex << "0x" << num << dec
                 << " (" << nums[num] << ")"; break;
         case op_callvi: case op_newv:
-        case op_callfv: case op_intg:
+        case op_callfv: case op_repl:
         case op_intl: case op_findex:
         case op_feach: case op_newf:
         case op_jmp: case op_jt:

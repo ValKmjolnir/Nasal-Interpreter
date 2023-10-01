@@ -41,6 +41,7 @@ protected:
     /* variables for repl mode */
     bool is_repl_mode = false;
     bool first_exec_flag = true;
+    bool allow_repl_output = false;
 
     /* vm initializing function */
     void init(
@@ -70,7 +71,7 @@ protected:
     inline bool cond(var&);
 
     /* vm operands */
-    inline void o_intg();
+    inline void o_repl();
     inline void o_intl();
     inline void o_loadg();
     inline void o_loadl();
@@ -180,6 +181,8 @@ public:
     void set_detail_report_info(bool flag) {verbose = flag;}
     /* set repl mode flag */
     void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
+    /* set repl output flag */
+    void set_allow_repl_output_flag(bool flag) {allow_repl_output = flag;}
 };
 
 inline bool vm::cond(var& val) {
@@ -192,9 +195,11 @@ inline bool vm::cond(var& val) {
     return false;
 }
 
-inline void vm::o_intg() {
-    // reserved for another usage
-    std::cout << "[vm] do nothing\n";
+inline void vm::o_repl() {
+    // reserved for repl mode stack top value output
+    if (allow_repl_output) {
+        std::cout << ctx.top[0] << "\n";
+    }
 }
 
 inline void vm::o_intl() {
