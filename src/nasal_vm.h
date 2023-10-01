@@ -41,6 +41,7 @@ protected:
     /* variables for repl mode */
     bool is_repl_mode = false;
     bool first_exec_flag = true;
+    bool allow_repl_output = false;
 
     /* vm initializing function */
     void init(
@@ -70,7 +71,7 @@ protected:
     inline bool cond(var&);
 
     /* vm operands */
-    inline void o_intg();
+    inline void o_repl();
     inline void o_intl();
     inline void o_loadg();
     inline void o_loadl();
@@ -180,6 +181,8 @@ public:
     void set_detail_report_info(bool flag) {verbose = flag;}
     /* set repl mode flag */
     void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
+    /* set repl output flag */
+    void set_allow_repl_output_flag(bool flag) {allow_repl_output = flag;}
 };
 
 inline bool vm::cond(var& val) {
@@ -192,11 +195,11 @@ inline bool vm::cond(var& val) {
     return false;
 }
 
-inline void vm::o_intg() {
-    // global values store on stack
-    // ctx.top += imm[ctx.pc];
-    // point to the top
-    --ctx.top;
+inline void vm::o_repl() {
+    // reserved for repl mode stack top value output
+    if (allow_repl_output) {
+        std::cout << ctx.top[0] << "\n";
+    }
 }
 
 inline void vm::o_intl() {
@@ -301,9 +304,7 @@ inline void vm::o_lnot() {
                 ctx.top[0] = num? zero:one;
             }
         } break;
-        default:
-            die("incorrect value type");
-            return;
+        default: die("incorrect value type"); return;
     }
 }
 
@@ -317,22 +318,25 @@ inline void vm::o_bnot() {
 
 inline void vm::o_btor() {
     ctx.top[-1] = var::num(
-        static_cast<int32_t>(ctx.top[-1].tonum())|
-        static_cast<int32_t>(ctx.top[0].tonum()));
+        static_cast<i32>(ctx.top[-1].tonum())|
+        static_cast<i32>(ctx.top[0].tonum())
+    );
     --ctx.top;
 }
 
 inline void vm::o_btxor() {
     ctx.top[-1] = var::num(
-        static_cast<int32_t>(ctx.top[-1].tonum())^
-        static_cast<int32_t>(ctx.top[0].tonum()));
+        static_cast<i32>(ctx.top[-1].tonum())^
+        static_cast<i32>(ctx.top[0].tonum())
+    );
     --ctx.top;
 }
 
 inline void vm::o_btand() {
     ctx.top[-1] = var::num(
-        static_cast<int32_t>(ctx.top[-1].tonum())&
-        static_cast<int32_t>(ctx.top[0].tonum()));
+        static_cast<i32>(ctx.top[-1].tonum())&
+        static_cast<i32>(ctx.top[0].tonum())
+    );
     --ctx.top;
 }
 
@@ -388,25 +392,36 @@ inline void vm::o_subeq() {op_calc_eq(-);}
 inline void vm::o_muleq() {op_calc_eq(*);}
 inline void vm::o_diveq() {op_calc_eq(/);}
 inline void vm::o_lnkeq() {
-    ctx.top[-1] = ctx.memr[0] = ngc.newstr(ctx.memr[0].tostr()+ctx.top[-1].tostr());
+    ctx.top[-1] = ctx.memr[0] = ngc.newstr(
+        ctx.memr[0].tostr()+ctx.top[-1].tostr()
+    );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
 }
 
 inline void vm::o_bandeq() {
-    ctx.top[-1] = ctx.memr[0] = var::num(i32(ctx.memr[0].tonum())&i32(ctx.top[-1].tonum()));
+    ctx.top[-1] = ctx.memr[0] = var::num(
+        static_cast<i32>(ctx.memr[0].tonum())&
+        static_cast<i32>(ctx.top[-1].tonum())
+    );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
 }
 
 inline void vm::o_boreq() {
-    ctx.top[-1] = ctx.memr[0] = var::num(i32(ctx.memr[0].tonum())|i32(ctx.top[-1].tonum()));
+    ctx.top[-1] = ctx.memr[0] = var::num(
+        static_cast<i32>(ctx.memr[0].tonum())|
+        static_cast<i32>(ctx.top[-1].tonum())
+    );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
 }
 
 inline void vm::o_bxoreq() {
-    ctx.top[-1] = ctx.memr[0] = var::num(i32(ctx.memr[0].tonum())^i32(ctx.top[-1].tonum()));
+    ctx.top[-1] = ctx.memr[0] = var::num(
+        static_cast<i32>(ctx.memr[0].tonum())^
+        static_cast<i32>(ctx.top[-1].tonum())
+    );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
 }
@@ -439,7 +454,9 @@ inline void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
 inline void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
 inline void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
 inline void vm::o_lnkecp() {
-    ctx.top[0] = ctx.memr[0] = ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
+    ctx.top[0] = ctx.memr[0] = ngc.newstr(
+        ctx.memr[0].tostr()+cstr[imm[ctx.pc]]
+    );
     ctx.memr = nullptr;
     --ctx.top;
 }
@@ -461,12 +478,12 @@ inline void vm::o_eq() {
     if (val1.type==vm_nil && val2.type==vm_nil) {
         ctx.top[0] = one;
     } else if (val1.type==vm_str && val2.type==vm_str) {
-        ctx.top[0] = (val1.str()==val2.str())?one:zero;
+        ctx.top[0] = (val1.str()==val2.str())? one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        ctx.top[0] = (val1.tonum()==val2.tonum())?one:zero;
+        ctx.top[0] = (val1.tonum()==val2.tonum())? one:zero;
     } else {
-        ctx.top[0] = (val1==val2)?one:zero;
+        ctx.top[0] = (val1==val2)? one:zero;
     }
 }
 
@@ -476,12 +493,12 @@ inline void vm::o_neq() {
     if (val1.type==vm_nil && val2.type==vm_nil) {
         ctx.top[0] = zero;
     } else if (val1.type==vm_str && val2.type==vm_str) {
-        ctx.top[0] = (val1.str()!=val2.str())?one:zero;
+        ctx.top[0] = (val1.str()!=val2.str())? one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        ctx.top[0] = (val1.tonum()!=val2.tonum())?one:zero;
+        ctx.top[0] = (val1.tonum()!=val2.tonum())? one:zero;
     } else {
-        ctx.top[0] = (val1!=val2)?one:zero;
+        ctx.top[0] = (val1!=val2)? one:zero;
     }
 }
 
@@ -597,7 +614,9 @@ inline void vm::o_callv() {
             die("out of range:"+std::to_string(val.tonum()));
             return;
         }
-        ctx.top[0] = var::num(f64((u8)str[num>=0? num:num+len]));
+        ctx.top[0] = var::num(
+            static_cast<f64>(static_cast<u8>(str[num>=0? num:num+len]))
+        );
     } else if (vec.type==vm_map) {
         if (val.type!=vm_str) {
             die("must use string as the key");

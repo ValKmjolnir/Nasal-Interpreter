@@ -32,11 +32,11 @@ void optimizer::const_number(
         case binary_operator::binary_type::grt: res = left>right; break;
         case binary_operator::binary_type::geq: res = left>=right; break;
         case binary_operator::binary_type::bitwise_or:
-            res = i32(left)|i32(right); break;
+            res = static_cast<i32>(left)|static_cast<i32>(right); break;
         case binary_operator::binary_type::bitwise_xor:
-            res = i32(left)^i32(right); break;
+            res = static_cast<i32>(left)^static_cast<i32>(right); break;
         case binary_operator::binary_type::bitwise_and:
-            res = i32(left)&i32(right); break;
+            res = static_cast<i32>(left)&static_cast<i32>(right); break;
         default: return;
     }
     if (std::isinf(res) || std::isnan(res)) {
@@ -51,9 +51,12 @@ void optimizer::const_number(
     number_literal* value_node) {
     auto res = value_node->get_number();
     switch(node->get_operator_type()) {
-        case unary_operator::unary_type::negative: res = -res; break;
-        case unary_operator::unary_type::bitwise_not: res = ~i32(res); break;
-        case unary_operator::unary_type::logical_not: res = !res; break;
+        case unary_operator::unary_type::negative:
+            res = -res; break;
+        case unary_operator::unary_type::bitwise_not:
+            res = ~static_cast<i32>(res); break;
+        case unary_operator::unary_type::logical_not:
+            res = !res; break;
     }
     if (std::isinf(res) || std::isnan(res)) {
         return;

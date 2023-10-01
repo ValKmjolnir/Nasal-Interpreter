@@ -41,7 +41,7 @@ class dbg:public vm {
 private:
     typedef void (dbg::*nasal_vm_func)();
     const nasal_vm_func operand_function[op_ret + 1] = {
-        nullptr,        &dbg::o_intg,
+        nullptr,        &dbg::o_repl,
         &dbg::o_intl,   &dbg::o_loadg,
         &dbg::o_loadl,  &dbg::o_loadu,
         &dbg::o_pnum,   &dbg::o_pnil,

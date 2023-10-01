@@ -150,11 +150,7 @@ public:
 
 public:
     parse(): ptr(0), in_func(0), in_loop(0), toks(nullptr), root(nullptr) {}
-    ~parse() {
-        if (root) {
-            delete root;
-        }
-    }
+    ~parse() {delete root;}
     const error& compile(const lexer&);
     static void easter_egg();
 };

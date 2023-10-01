@@ -34,6 +34,9 @@ class codegen {
 private:
     error err;
 
+    // 
+    bool need_repl_output;
+
     // file mapper for file -> index
     std::unordered_map<std::string, usize> file_map;
     void init_file_map(const std::vector<std::string>&);
@@ -79,11 +82,11 @@ private:
     void regist_str(const std::string&);
     void find_symbol(code_block*);
     void add_symbol(const std::string&);
-    i32 local_find(const std::string&);
-    i32 global_find(const std::string&);
-    i32 upvalue_find(const std::string&);
+    i32 local_symbol_find(const std::string&);
+    i32 global_symbol_find(const std::string&);
+    i32 upvalue_symbol_find(const std::string&);
 
-    void gen(u8, u32, const span&);
+    void emit(u8, u32, const span&);
 
     void num_gen(number_literal*);
     void str_gen(string_literal*);
@@ -104,6 +107,8 @@ private:
     void single_def(definition_expr*);
     void def_gen(definition_expr*);
     void assignment_expression(assignment_expr*);
+    void gen_assignment_equal_statement(assignment_expr*);
+    void replace_left_assignment_with_load(const span&);
     void assignment_statement(assignment_expr*);
     void multi_assign_gen(multi_assign*);
     void cond_gen(condition_expr*);
@@ -119,6 +124,7 @@ private:
     void binary_gen(binary_operator*);
     void trino_gen(ternary_operator*);
     void calc_gen(expr*);
+    void repl_mode_info_output_gen(expr*);
     void block_gen(code_block*);
     void ret_gen(return_expr*);
 
@@ -134,7 +140,7 @@ public:
 
 public:
     codegen() = default;
-    const error& compile(parse&, linker&);
+    const error& compile(parse&, linker&, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };
