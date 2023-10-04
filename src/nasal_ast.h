@@ -357,7 +357,7 @@ public:
     void set_first(expr* node) {first = node;}
     void add_call(call* node) {calls.push_back(node);}
     expr* get_first() {return first;}
-    std::vector<call*>& get_calls() {return calls;}
+    auto& get_calls() {return calls;}
     void accept(ast_visitor*) override;
 };
 

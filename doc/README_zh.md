@@ -21,6 +21,7 @@
 * [__特殊之处__](#与andy解释器的不同之处)
 * [__堆栈追踪信息__](#堆栈追踪信息)
 * [__调试器__](#调试器)
+* [__交互解释器__](#交互解释器)
 
 __如果有好的意见或建议，欢迎联系我们!__
 
@@ -591,19 +592,24 @@ import("./dirname/dirname/filename.nas");
 如果只有上文中那种方式来添加你自定义的函数到nasal中，这肯定是非常麻烦的。
 因此，我们实现了一组实用的内置函数来帮助你添加你自己创建的模块。
 
-在2021/12/3更新后，我们给`lib.nas`添加了下面的这一批函数:
+用于加载动态库的函数在`std/dylib.nas`中:
 
 ```javascript
-var dylib={
-    dlopen:  func(libname){
-        ...
-    },
-    dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(ptr,args...){return __dlcallv},
-    limitcall: func(arg_size=0){
-        ...
-    }
-};
+var dlopen = func(libname) {
+    ...
+}
+
+var dlclose = func(lib) {
+    ...
+}
+
+var dlcall = func(ptr, args...) {
+    ...
+}
+
+var limitcall = func(arg_size = 0) {
+    ...
+}
 ```
 
 这些函数是用来加载动态库的，这样nasal解释器可以根据用户需求灵活加载动态库来执行。让我们看看这些函数该如何使用。
@@ -613,36 +619,41 @@ var dylib={
 ```C++
 // 这个头文件得加上，因为我们需要拿到nasal的api
 #include "nasal.h"
-double fibonaci(double x){
-    if(x<=2)
+double fibonaci(double x) {
+    if (x<=2) {
         return x;
+    }
     return fibonaci(x-1)+fibonaci(x-2);
 }
 
 // 模块函数的参数列表一律以这个为准
-var fib(var* args,usize size,gc* ngc){
+var fib(var* args, usize size, gc* ngc) {
+    if (!size) {
+        return nas_err("fib", "lack arguments");
+    }
     // 传参会给予一个var指针，指向一个vm_vec的data()
-    var num=args[0];
+    var num = args[0];
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
     // nas_err会输出错误信息并返回错误类型让虚拟机终止执行
-    if(num.type!=vm_num)
-        return nas_err("extern_fib","\"num\" must be number");
+    if(num.type!=vm_num) {
+        return nas_err("extern_fib", "\"num\" must be number");
+    }
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请
     // 如果需要返回内存管理的对象，请使用ngc->alloc(type)
     return var::num(fibonaci(num.tonum()));
 }
 
 // 然后将函数名字和函数地址放到一个表里，一定要记住表尾是{nullptr,nullptr}
-mod_func func_tbl[]={
-    {"fib",fib},
-    {nullptr,nullptr}
+module_func_info func_tbl[] = {
+    {"fib", fib},
+    {nullptr, nullptr}
 };
 
 // 必须实现这个函数, 这样nasal可以通过字符串名字获得函数指针
 // 之所以用这种方式来获取函数指针, 是因为`var`是有构造函数的
 // 有构造函数的类型作为返回值, 和C是不兼容的, 这导致
 // 类似 "extern "C" var fib" 的写法会得到编译错误
-extern "C" mod_func get(){
+extern "C" module_func_info* get() {
     return func_tbl;
 }
 ```
@@ -667,10 +678,11 @@ Windows(`.dll`):
 下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样可以实现跨平台:
 
 ```javascript
-var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dlhandle.fib;
-for(var i=1;i<30;i+=1)
-    println(dylib.dlcall(fib,i));
+import.std.dylib;
+var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib = dlhandle.fib;
+for(var i = 1; i<30; i+=1)
+    println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
 
@@ -683,15 +695,16 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall`用于获取使用固定长度传参的 `dlcall` 函数，这种函数可以提高你的程序运行效率，因为它不需要用 `vm_vec` 来存储传入参数，而是使用局部作用域来直接存储，从而避免了频繁调用可能导致的频繁垃圾收集。所以上面展示的代码同样可以这样写：
 
 ```javascript
-var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dlhandle.fib;
-var invoke=dylib.limitcall(1); # this means the called function has only one parameter
-for(var i=1;i<30;i+=1)
-    println(invoke(fib,i));
+import.std.dylib;
+var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib = dlhandle.fib;
+var invoke = dylib.limitcall(1); # this means the called function has only one parameter
+for(var i = 1; i<30; i+=1)
+    println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
 
-如果接下来你看到了这个运行结果，恭喜你！
+如果得到如下运行结果，恭喜你！
 
 ```bash
 ./nasal a.nas
@@ -963,3 +976,9 @@ vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
 ```
 
 </details>
+
+## 交互解释器
+
+v11.0 版本新增了交互式解释器 (REPL)，使用如下命令开启：
+
+> nasal -r
