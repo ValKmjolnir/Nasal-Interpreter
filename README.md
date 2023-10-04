@@ -21,6 +21,7 @@
 * [__Difference__](#difference-between-andys-and-this-interpreter)
 * [__Trace Back Info__](#trace-back-info)
 * [__Debugger__](#debugger)
+* [__REPL__](#repl)
 
 __Contact us if having great ideas to share!__
 
@@ -613,19 +614,24 @@ that is really inconvenient.
 
 Luckily, we have developed some useful native-functions to help you add modules that created by you.
 
-After 2021/12/3, there are some new functions added to `lib.nas`:
+Functions used to load dynamic libraries are added to `std/dylib.nas`:
 
 ```javascript
-var dylib={
-    dlopen:  func(libname){
-        ...
-    },
-    dlclose: func(lib){return __dlclose;   },
-    dlcall:  func(ptr,args...){return __dlcallv},
-    limitcall: func(arg_size=0){
-        ...
-    }
-};
+var dlopen = func(libname) {
+    ...
+}
+
+var dlclose = func(lib) {
+    ...
+}
+
+var dlcall = func(ptr, args...) {
+    ...
+}
+
+var limitcall = func(arg_size = 0) {
+    ...
+}
 ```
 
 As you could see, these functions are used to load dynamic libraries into the nasal runtime and execute.
@@ -636,21 +642,26 @@ First, write a cpp file that you want to generate the dynamic lib, take the `fib
 ```C++
 // add header file nasal.h to get api
 #include "nasal.h"
-double fibonaci(double x){
-    if(x<=2)
+double fibonaci(double x) {
+    if (x<=2) {
         return x;
+    }
     return fibonaci(x-1)+fibonaci(x-2);
 }
 // module functions' parameter list example
-var fib(var* args,usize size,gc* ngc){
+var fib(var* args, usize size, gc* ngc) {
+    if (!size) {
+        return nas_err("fib", "lack arguments");
+    }
     // the arguments are generated into a vm_vec: args
     // get values from the vector that must be used here
-    var num=args[0];
+    var num = args[0];
     // if you want your function safer, try this
     // nas_err will print the error info on screen
     // and return vm_null for runtime to interrupt
-    if(num.type!=vm_num)
-        return nas_err("extern_fib","\"num\" must be number");
+    if(num.type!=vm_num) {
+        return nas_err("extern_fib", "\"num\" must be number");
+    }
     // ok, you must know that vm_num now is not managed by gc
     // if want to return a gc object, use ngc->alloc(type)
     // usage of gc is the same as adding a native function
@@ -659,9 +670,9 @@ var fib(var* args,usize size,gc* ngc){
 
 // then put function name and address into this table
 // make sure the end of the table is {nullptr,nullptr}
-mod_func func_tbl[]={
-    {"fib",fib},
-    {nullptr,nullptr}
+module_func_info func_tbl[] = {
+    {"fib", fib},
+    {nullptr, nullptr}
 };
 
 // must write this function, this will help nasal to
@@ -669,7 +680,7 @@ mod_func func_tbl[]={
 // the reason why using this way to get function pointer
 // is because `var` has constructors, which is not compatiable in C
 // so "extern "C" var fib" may get compilation warnings
-extern "C" mod_func get(){
+extern "C" module_func_info* get() {
     return func_tbl;
 }
 ```
@@ -693,10 +704,11 @@ Windows(`.dll`):
 Then we write a test nasal file to run this fib function, using `os.platform()` we could write a cross-platform program:
 
 ```javascript
-var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dlhandle.fib;
-for(var i=1;i<30;i+=1)
-    println(dylib.dlcall(fib,i));
+import.std.dylib;
+var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib = dlhandle.fib;
+for(var i = 1; i<30; i+=1)
+    println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
 
@@ -709,11 +721,12 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall` is used to get `dlcall` function that has limited parameter size, this function will prove the performance of your code because it does not use `vm_vec` to store the arguments, instead it uses local scope to store them, so this could avoid frequently garbage collecting. And the code above could also be written like this:
 
 ```javascript
-var dlhandle=dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
-var fib=dlhandle.fib;
-var invoke=dylib.limitcall(1); # this means the called function has only one parameter
-for(var i=1;i<30;i+=1)
-    println(invoke(fib,i));
+import.std.dylib;
+var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var fib = dlhandle.fib;
+var invoke = dylib.limitcall(1); # this means the called function has only one parameter
+for(var i = 1; i<30; i+=1)
+    println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
 
@@ -998,3 +1011,10 @@ vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
 ```
 
 </details>
+
+## REPL
+
+We added experimental repl interpreter in v11.0.
+Use this command to use the repl interpreter:
+
+> nasal -r
