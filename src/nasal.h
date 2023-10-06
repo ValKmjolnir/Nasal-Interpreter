@@ -11,6 +11,7 @@
 #include <cmath>
 #include <vector>
 
+// abbreviation of some useful basic type
 using i32 = std::int32_t;
 using i64 = std::int64_t;
 using u8 = std::uint8_t;
@@ -35,7 +36,8 @@ bool is_powerpc();
 bool is_superh();
 
 
-
+// virtual machine stack depth
+// both global depth and value stack depth
 const u32 STACK_DEPTH = 4096;
 
 f64 hex2f(const char*);
