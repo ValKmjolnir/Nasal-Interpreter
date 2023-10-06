@@ -69,7 +69,7 @@ build/main.o: $(NASAL_HEADER) src/main.cpp | build
 build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/nasal_misc.cpp -fno-exceptions -fPIC -o build/nasal_misc.o -I .
 
-build/repl.o: src/nasal.h src/repl.h src/repl.cpp | build
+build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
 	$(CXX) -std=$(STD) -c -O3 src/repl.cpp -fno-exceptions -fPIC -o build/repl.o -I .
 
 build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build
