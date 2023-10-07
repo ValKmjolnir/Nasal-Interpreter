@@ -9,6 +9,7 @@
   * [v2.0](#version-20-ast-last-update-2020831)
   * [v3.0](#version-30-ast-last-update-20201023)
   * [v5.0](#version-50-ast-last-update-202137)
+  * [v11.0](#version-110-ast-latest)
 * [__字节码虚拟机__](#字节码虚拟机)
   * [v4.0](#version-40-vm-last-update-20201217)
   * [v5.0](#version-50-vm-last-update-202137)
@@ -17,8 +18,10 @@
   * [v7.0](#version-70-vm-last-update-2021108)
   * [v8.0](#version-80-vm-last-update-2022212)
   * [v9.0](#version-90-vm-last-update-2022518)
-  * [v10.0](#version-100-vm-latest)
+  * [v10.0](#version-100-vm-last-update-2022816)
 * [__发行日志__](#发行日志)
+  * [v8.0](#version-80-release)
+  * [v11.0](#version-110-release)
 
 ## __语法分析__
 
@@ -88,6 +91,10 @@ __该项目于2019/7/25正式开始__。
 ### version 5.0 ast (last update 2021/3/7)
 
 我改变想法了，树解释器给维护带来了太大的麻烦。如果想继续保留这个解释器，那么为了兼容性，字节码虚拟机的优化工作会更难推进。
+
+### version 11.0 ast (latest)
+
+改变了语法树的设计模式，采用访问者模式。
 
 ## __字节码虚拟机__
 
@@ -458,7 +465,7 @@ func <0x2a3>:
   0x000002aa:       0c 00 00 00 6a        happ    0x6a ("dlsym")
 ```
 
-### version 10.0 vm (latest)
+### version 10.0 vm (last update 2022/8/16)
 
 2022/5/19 update:
 
@@ -597,7 +604,29 @@ in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
 另外一个bug在 `nasal_err.h:class nasal_err`这边，要给这个类添加一个构造函数来进行初始化，否则会出问题:
 
 ```C++
-    nasal_err():error(0){}
+    nasal_err(): error(0) {}
 ```
 
 同样这个也在`v9.0`中修复了。所以我们建议不要使用`v8.0`。
+
+### __version 11.0 release__
+
+1. 使用C++标准 `std=c++17`。
+
+2. 改变语法树设计模式，采用访问者模式。
+
+3. 全新的语法树结构输出格式。
+
+4. 改变了导出模块的方式，把主要的库分成了多个模块。以`_`开头的变量不会被导出。
+
+5. 文件夹`stl`更名为`std`。
+
+6. 添加交互式解释器 (REPL)。
+
+7. 优化虚拟机结构, 将全局数据栈 (存储全局变量的数据) 和操作数据栈 (用于运算) 分离。
+
+8. 删除`op_intg`指令，添加`op_repl`指令。
+
+9. 添加`CMakeLists.txt` (可在`Visual Studio`中使用)。
+
+10. 全新的自定义类型注册流程。
