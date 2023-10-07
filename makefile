@@ -1,12 +1,11 @@
-STD=c++17
-OS := $(shell uname)
+STD = c++17
+OS = $(shell uname)
 ifeq ($(OS), Darwin)
-	CXXFLAGS=-std=$(STD) -c -O3 -fno-exceptions -fPIC -mmacosx-version-min=10.15
+	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC -mmacosx-version-min=10.15
 else
-	CXXFLAGS=-std=$(STD) -c -O3 -fno-exceptions -fPIC
+	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
 endif
-CPPFLAGS=-I .
-
+CPPFLAGS = -I .
 
 NASAL_HEADER=\
 	src/ast_dumper.h\
@@ -82,7 +81,7 @@ build/main.o: $(NASAL_HEADER) src/main.cpp | build
 build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_misc.cpp -o build/nasal_misc.o
 
-build/repl.o: src/nasal.h src/repl.h src/repl.cpp | build
+build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
 	$(CXX) $(CXXFLAGS) src/repl.cpp -o build/repl.o
 
 build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build

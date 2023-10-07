@@ -6,11 +6,12 @@ dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll
 used_header = ../src/nasal.h ../src/nasal_gc.h
 used_object = ../build/nasal_misc.o ../build/nasal_gc.o
 
-STD=c++17
+STD = c++17
+OS = $(shell uname)
 ifeq ($(OS), Darwin)
-	CXXFLAGS-std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15
 else
-	CXXFLAGS=-std=$(STD) -c -O3 -fPIC
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC
 endif
 
 all: $(dynamic_libs_so)

@@ -159,7 +159,7 @@ f64 dec2f(const char* str) {
     if (*str) {
         return nan("");
     }
-    return ret*std::pow(10,negative*num_pow);
+    return ret*std::pow(10, negative*num_pow);
 }
 
 f64 str2num(const char* str) {
@@ -226,7 +226,7 @@ std::string rawstr(const std::string& str, const usize maxlen) {
         }
     }
     if (maxlen && ret.length()>maxlen) {
-        ret = ret.substr(0,maxlen)+"...";
+        ret = ret.substr(0, maxlen)+"...";
     }
     return ret;
 }

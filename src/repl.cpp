@@ -116,7 +116,9 @@ void repl::execute() {
     runtime.set_allow_repl_output_flag(true);
     std::cout << "[nasal-repl] Initialization complete.\n\n";
 
-    std::cout << "Nasal REPL interpreter(experimental).\n";
+    // finish initialization, output version info
+    std::cout << "Nasal REPL interpreter version " << __nasver;
+    std::cout << " (" << __DATE__ << " " << __TIME__ << ")\n";
     help();
 
     while(true) {
