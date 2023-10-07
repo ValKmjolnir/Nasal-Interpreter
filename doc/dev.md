@@ -9,6 +9,7 @@
   * [v2.0](#version-20-ast-last-update-2020831)
   * [v3.0](#version-30-ast-last-update-20201023)
   * [v5.0](#version-50-ast-last-update-202137)
+  * [v11.0](#version-110-ast-latest)
 * [__Bytecode VM__](#bytecode-virtual-machine)
   * [v4.0](#version-40-vm-last-update-20201217)
   * [v5.0](#version-50-vm-last-update-202137)
@@ -17,8 +18,10 @@
   * [v7.0](#version-70-vm-last-update-2021108)
   * [v8.0](#version-80-vm-last-update-2022212)
   * [v9.0](#version-90-vm-last-update-2022518)
-  * [v10.0](#version-100-vm-latest)
+  * [v10.0](#version-100-vm-last-update-2022816)
 * [__Release Notes__](#release-notes)
+  * [v8.0](#version-80-release)
+  * [v11.0](#version-110-release)
 
 ## __Parser__
 
@@ -96,6 +99,10 @@ AST interpreter leaves me too much things to do.
 
 If i continue saving this interpreter,
 it will be harder for me to make the bytecode vm become more efficient.
+
+### version 11.0 ast (latest)
+
+Change ast framework. Now we use visitor pattern.
 
 ## __Bytecode Virtual Machine__
 
@@ -513,7 +520,7 @@ func <0x2a3>:
   0x000002aa:       0c 00 00 00 6a        happ    0x6a ("dlsym")
 ```
 
-### version 10.0 vm (latest)
+### version 10.0 vm (last update 2022/8/16)
 
 2022/5/19 update:
 
@@ -664,7 +671,29 @@ If do not change this line, only the debugger runs abnormally. this bug is fixed
 Another bug is that in `nasal_err.h:class nasal_err`, we should add a constructor for this class:
 
 ```C++
-    nasal_err():error(0){}
+    nasal_err(): error(0) {}
 ```
 
 This bug is fixed in `v9.0`. So we suggest that do not use `v8.0`.
+
+### __version 11.0 release__
+
+1. Use C++ `std=c++17`.
+
+2. Change framework of ast, using visitor pattern.
+
+3. New ast structure dump info format.
+
+4. Change the way of module export, split library into different modules. Symbols begin with `_` will not be exported.
+
+5. Change `stl` to `std`.
+
+6. Add REPL interpreter.
+
+7. Improve structure of virtual machine, split global symbol stack(stores global symbols' values) and value stack(using in process).
+
+8. Delete operand `op_intg`, add operand `op_repl`.
+
+9. Add `CMakeLists.txt` for cmake user(including `Visual Studio`).
+
+10. New ghost type register process.
