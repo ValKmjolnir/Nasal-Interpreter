@@ -6,7 +6,13 @@ dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll
 used_header = ../src/nasal.h ../src/nasal_gc.h
 used_object = ../build/nasal_misc.o ../build/nasal_gc.o
 
-STD=c++17
+STD = c++17
+OS = $(shell uname)
+ifeq ($(OS), Darwin)
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15
+else
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC
+endif
 
 all: $(dynamic_libs_so)
 	@ echo "[Compiling] done"
@@ -15,7 +21,7 @@ winall: $(dynamic_libs_dll)
 
 libfib.so: fib.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libfib.so"
-	@ $(CXX) -std=$(STD) -c -O3 fib.cpp -fPIC -o fib.o
+	@ $(CXX) $(CXXFLAGS) fib.cpp -o fib.o
 	@ $(CXX) -shared -o libfib.so fib.o $(used_object)
 	@ rm fib.o
 libfib.dll: fib.cpp $(used_header) $(used_object)
@@ -26,7 +32,7 @@ libfib.dll: fib.cpp $(used_header) $(used_object)
 
 libkey.so: keyboard.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libkey.so"
-	@ $(CXX) -std=$(STD) -c -O3 keyboard.cpp -fPIC -o keyboard.o
+	@ $(CXX) $(CXXFLAGS) keyboard.cpp -o keyboard.o
 	@ $(CXX) -shared -o libkey.so keyboard.o $(used_object)
 	@ rm keyboard.o
 libkey.dll: keyboard.cpp $(used_header) $(used_object)
@@ -37,7 +43,7 @@ libkey.dll: keyboard.cpp $(used_header) $(used_object)
 
 libnasock.so: nasocket.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libnasock.so"
-	@ $(CXX) -std=$(STD) -c -O3 nasocket.cpp -fPIC -o nasocket.o
+	@ $(CXX) $(CXXFLAGS) nasocket.cpp -o nasocket.o
 	@ $(CXX) -shared -o libnasock.so nasocket.o $(used_object)
 	@ rm nasocket.o
 libnasock.dll: nasocket.cpp $(used_header) $(used_object)
@@ -48,7 +54,7 @@ libnasock.dll: nasocket.cpp $(used_header) $(used_object)
 
 libmat.so: matrix.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libmat.so"
-	@ $(CXX) -std=$(STD) -c -O3 matrix.cpp -fPIC -o matrix.o
+	@ $(CXX) $(CXXFLAGS) matrix.cpp -o matrix.o
 	@ $(CXX) -shared -o libmat.so matrix.o $(used_object)
 	@ rm matrix.o
 libmat.dll: matrix.cpp $(used_header) $(used_object)
