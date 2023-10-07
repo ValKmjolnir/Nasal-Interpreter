@@ -284,9 +284,11 @@ void codegen::func_gen(function* node) {
     }
     add_symbol(arg);
 
-    in_loop_level.push_back(0);
+    // generate code block
+    in_foreach_loop_level.push_back(0);
     block_gen(block);
-    in_loop_level.pop_back();
+    in_foreach_loop_level.pop_back();
+
     code[lsize].num = local.back().size();
     if (local.back().size()>=STACK_DEPTH) {
         die("too many local variants: " +
@@ -771,6 +773,7 @@ void codegen::cond_gen(condition_expr* node) {
 void codegen::loop_gen(expr* node) {
     continue_ptr.push_front({});
     break_ptr.push_front({});
+
     switch(node->get_type()) {
         case expr_type::ast_while: while_gen((while_expr*)node); break;
         case expr_type::ast_for: for_gen((for_expr*)node); break;
@@ -846,9 +849,9 @@ void codegen::forei_gen(forei_expr* node) {
     }
 
     // generate code block
-    ++in_loop_level.back();
+    ++in_foreach_loop_level.back();
     block_gen(node->get_code_block());
-    --in_loop_level.back();
+    --in_foreach_loop_level.back();
 
     // jump to loop begin
     emit(op_jmp, loop_begin, node->get_location());
@@ -1207,7 +1210,7 @@ void codegen::block_gen(code_block* node) {
 }
 
 void codegen::ret_gen(return_expr* node) {
-    for(u32 i = 0; i<in_loop_level.back(); ++i) {
+    for(u32 i = 0; i<in_foreach_loop_level.back(); ++i) {
         emit(op_pop, 0, node->get_location());
         emit(op_pop, 0, node->get_location());
     }
@@ -1220,7 +1223,7 @@ const error& codegen::compile(parse& parse, linker& import, bool repl_flag) {
     init_file_map(import.get_file_list());
     need_repl_output = repl_flag;
 
-    in_loop_level.push_back(0);
+    in_foreach_loop_level.push_back(0);
 
     // add special symbol globals, which is a hash stores all global variables
     add_symbol("globals");

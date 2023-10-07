@@ -34,7 +34,7 @@ class codegen {
 private:
     error err;
 
-    // 
+    // repl output flag, will generate op_repl to output stack top value if true
     bool need_repl_output;
 
     // file mapper for file -> index
@@ -42,7 +42,7 @@ private:
     void init_file_map(const std::vector<std::string>&);
 
     // used for generate pop in return expression
-    std::vector<u32> in_loop_level;
+    std::vector<u32> in_foreach_loop_level;
 
     // constant numbers and strings
     std::unordered_map<f64, u32> const_number_map;

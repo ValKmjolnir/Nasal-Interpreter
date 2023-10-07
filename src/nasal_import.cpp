@@ -297,7 +297,8 @@ definition_expr* linker::generate_module_definition(code_block* block) {
     auto def = new definition_expr(block->get_location());
     def->set_identifier(new identifier(
         block->get_location(),
-        generate_module_name(block->get_location().file)));
+        generate_module_name(block->get_location().file)
+    ));
     
     auto call = new call_expr(block->get_location());
     auto func = new function(block->get_location());
@@ -310,33 +311,44 @@ definition_expr* linker::generate_module_definition(code_block* block) {
     return def;
 }
 
-code_block* linker::load(code_block* root, u16 fileindex) {
+code_block* linker::load(code_block* program_root, u16 fileindex) {
     auto tree = new code_block({0, 0, 0, 0, files[fileindex]});
     // load library, this ast will be linked with root directly
-    // so no namespace is generated
+    // so no extra namespace is generated
     if (!lib_loaded) {
-        auto tmp = import_nasal_lib();
-        link(tree, tmp);
-        delete tmp;
+        auto nasal_lib_code_block = import_nasal_lib();
+        // insert nasal lib code to the back of tree
+        link(tree, nasal_lib_code_block);
+        delete nasal_lib_code_block;
         lib_loaded = true;
     }
+
     // load imported modules
-    for(auto i : root->get_expressions()) {
-        if (!import_check(i)) {
+    for(auto& import_ast_node : program_root->get_expressions()) {
+        if (!import_check(import_ast_node)) {
             break;
         }
-        auto tmp = import_regular_file((call_expr*)i);
-        tree->add_expression(generate_module_definition(tmp));
+        auto module_code_block = import_regular_file((call_expr*)import_ast_node);
+        // after importing the regular file as module, delete this node
+        const auto loc = import_ast_node->get_location();
+        delete import_ast_node;
+        // and replace the node with null_expr node
+        import_ast_node = new null_expr(loc);
+        // then we generate a function warping the code block,
+        // and export the necessary global symbols in this code block
+        // by generate a return statement, with a hashmap return value
+        tree->add_expression(generate_module_definition(module_code_block));
     }
-    // add root to the back of tree
-    link(tree, root);
+
+    // insert program root to the back of tree
+    link(tree, program_root);
     return tree;
 }
 
 const error& linker::link(
     parse& parse, const std::string& self, bool spath = false) {
     show_path = spath;
-    // initializing
+    // initializing file map
     this_file = self;
     files = {self};
     module_load_stack = {self};

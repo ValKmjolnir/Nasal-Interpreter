@@ -15,7 +15,7 @@ double fibonaci(double x) {
 
 var fib(var* args, usize size, gc* ngc) {
     if (!size) {
-        return nas_err("fib","lack arguments");
+        return nas_err("fib", "lack arguments");
     }
     var num = args[0];
     return var::num(fibonaci(num.tonum()));
