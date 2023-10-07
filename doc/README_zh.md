@@ -247,6 +247,30 @@ var (a,b,c)=[0,1,2]; # 从数组中初始化多个变量
 var (a,b,c)=(0,1,2); # 从元组中初始化多个变量
 ```
 
+Nasal 有很多特别的全局变量：
+
+```javascript
+globals; # 包含所有全局声明变量名和对应数据的哈希表
+arg;     # 在全局作用域，arg 是包含命令行参数的数组
+         # 在局部作用域，arg 是函数调用时的动态参数数组
+```
+
+具体实例：
+
+```javascript
+var a = 1;
+println(globals); # 输出 {a:1}
+```
+
+```javascript
+# nasal a b c
+println(arg); # 输出 ["a", "b", "c"]
+
+func() {
+    println(arg);
+}(1, 2, 3);   # 输出 [1, 2, 3]
+```
+
 </details>
 
 <details><summary>多变量赋值</summary>
@@ -741,6 +765,61 @@ dylib.dlclose(dlhandle.lib);
 
 </details>
 
+<details><summary> 自定义类型(开发者教程) </summary>
+
+创建一个自定义类型现在不是很困难。下面是使用示例：
+
+```c++
+const auto ghost_for_test = "ghost_for_test";
+
+// 声明自定义类型的析构函数
+void ghost_for_test_destructor(void* ptr) {
+    std::cout << "ghost_for_test::destructor (0x";
+    std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+    delete static_cast<u32*>(ptr);
+    std::cout << "    delete 0x" << std::hex;
+    std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
+    std::cout << "}\n";
+}
+
+var create_new_ghost(var* args, usize size, gc* ngc) {
+    var res = ngc->alloc(vm_obj);
+    // 创建自定义类型
+    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    return res;
+}
+
+var print_new_ghost(var* args, usize size, gc* ngc) {
+    var res = args[0];
+    // 用自定义类型的名字来检查是否是正确的自定义类型
+    if (!res.objchk(ghost_for_test)) {
+        std::cout << "print_new_ghost: not ghost for test type.\n";
+        return nil;
+    }
+    std::cout << "print_new_ghost: " << res.obj() << " result = "
+        << *((u32*)res.obj().ptr) << "\n";
+    return nil;
+}
+```
+
+我们使用下面这个函数来创建一个自定义类型：
+
+`void nas_ghost::set(const std::string&, nasal::nas_ghost::destructor, void*);`
+
+`const std::string&` 是自定义类型的类型名。
+
+`nasal::nas_ghost::destructor` 是自定义类型的析构函数指针。
+
+`void*` 是指向自定义类型实例的指针。
+
+我们使用下面的这个函数检测是否是正确的自定义类型：
+
+`bool var::objchk(const std::string&);`
+
+参数是自定义类型的类型名。
+
+</details>
+
 ## __与andy解释器的不同之处__
 
 ![error](../doc/gif/error.gif)
@@ -982,3 +1061,19 @@ vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
 v11.0 版本新增了交互式解释器 (REPL)，使用如下命令开启：
 
 > nasal -r
+
+接下来就可以随便玩了~
+
+```bash
+[nasal-repl] Initializating enviroment...
+[nasal-repl] Initialization complete.
+
+Nasal REPL interpreter version 11.0 (Oct  7 2023 17:28:31)
+.h, .help   | show help
+.e, .exit   | quit the REPL
+.q, .quit   | quit the REPL
+.c, .clear  | clear the screen
+.s, .source | show source code
+
+>>>
+```
