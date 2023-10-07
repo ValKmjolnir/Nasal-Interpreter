@@ -261,6 +261,30 @@ var (a,b,c)=[0,1,2]; # define multiple variables from a vector
 var (a,b,c)=(0,1,2); # define multiple variables from a tuple
 ```
 
+Nasal has many special global symbols:
+
+```javascript
+globals; # hashmap including all global symbols and their values
+arg;     # in global scope, arg is the command line arguments
+         # in local scope, arg is the dynamic arguments of this function call
+```
+
+For example:
+
+```javascript
+var a = 1;
+println(globals); # will print {a:1}
+```
+
+```javascript
+# nasal a b c
+println(arg); # will print ["a", "b", "c"]
+
+func() {
+    println(arg);
+}(1, 2, 3);   # will print [1, 2, 3]
+```
+
 </details>
 
 <details><summary> Multi-assignment </summary>
@@ -767,6 +791,62 @@ If get this, Congratulations!
 
 </details>
 
+<details><summary> Ghost Type(for lib developers) </summary>
+
+It's quite easy to create a new ghost by yourself now.
+Look at the example below:
+
+```c++
+const auto ghost_for_test = "ghost_for_test";
+
+// declare destructor for ghost type
+void ghost_for_test_destructor(void* ptr) {
+    std::cout << "ghost_for_test::destructor (0x";
+    std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+    delete static_cast<u32*>(ptr);
+    std::cout << "    delete 0x" << std::hex;
+    std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
+    std::cout << "}\n";
+}
+
+var create_new_ghost(var* args, usize size, gc* ngc) {
+    var res = ngc->alloc(vm_obj);
+    // create ghost type
+    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    return res;
+}
+
+var print_new_ghost(var* args, usize size, gc* ngc) {
+    var res = args[0];
+    // check ghost type by the type name
+    if (!res.objchk(ghost_for_test)) {
+        std::cout << "print_new_ghost: not ghost for test type.\n";
+        return nil;
+    }
+    std::cout << "print_new_ghost: " << res.obj() << " result = "
+        << *((u32*)res.obj().ptr) << "\n";
+    return nil;
+}
+```
+
+We use this function to create a new ghost type:
+
+`void nas_ghost::set(const std::string&, nasal::nas_ghost::destructor, void*);`
+
+`const std::string&` is the name of the ghost type.
+
+`nasal::nas_ghost::destructor` is the pointer of the destructor of the ghost type.
+
+`void*` is the pointer of the ghost type instance.
+
+And we use this function to check if value is the correct ghost type:
+
+`bool var::objchk(const std::string&);`
+
+The parameter is the name of the ghost type.
+
+</details>
+
 ## __Difference Between Andy's and This Interpreter__
 
 ![error](./doc/gif/error.gif)
@@ -1018,3 +1098,19 @@ We added experimental repl interpreter in v11.0.
 Use this command to use the repl interpreter:
 
 > nasal -r
+
+Then enjoy!
+
+```bash
+[nasal-repl] Initializating enviroment...
+[nasal-repl] Initialization complete.
+
+Nasal REPL interpreter version 11.0 (Oct  7 2023 17:28:31)
+.h, .help   | show help
+.e, .exit   | quit the REPL
+.q, .quit   | quit the REPL
+.c, .clear  | clear the screen
+.s, .source | show source code
+
+>>>
+```
