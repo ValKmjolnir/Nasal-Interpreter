@@ -120,7 +120,8 @@ f64 oct2f(const char* str) {
 // but this also makes 0.1+0.2==0.3,
 // not another result that you may get in other languages.
 f64 dec2f(const char* str) {
-    f64 ret = 0, negative = 1, num_pow = 0;
+    f64 ret = 0, num_pow = 0;
+    bool negative = false;
     while('0'<=*str && *str<='9') {
         ret = ret*10+(*str++-'0');
     }
@@ -147,7 +148,7 @@ f64 dec2f(const char* str) {
         return nan("");
     }
     if (*str=='-' || *str=='+') {
-        negative = (*str++=='-'? -1:1);
+        negative = (*str++=='-');
     }
     if (!*str) {
         return nan("");
@@ -159,7 +160,9 @@ f64 dec2f(const char* str) {
     if (*str) {
         return nan("");
     }
-    return ret*std::pow(10, negative*num_pow);
+    return negative?
+        ret*std::pow(10, 1-num_pow)*0.1:
+        ret*std::pow(10, num_pow-1)*10;
 }
 
 f64 str2num(const char* str) {
