@@ -146,22 +146,26 @@ struct nas_hash {
 };
 
 struct nas_func {
-    i32 dpara; // dynamic parameter name index in hash.
+    i32 dynamic_parameter_index; // dynamic parameter name index in hash.
     u32 entry; // pc will set to entry-1 to call this function
-    u32 psize; // used to load default parameters to a new function
-    u32 lsize; // used to expand memory space for local values on stack
+    u32 parameter_size; // used to load default parameters to a new function
+    u32 local_size; // used to expand memory space for local values on stack
     std::vector<var> local; // local scope with default value(var)
     std::vector<var> upval; // closure
-    std::unordered_map<u32,u32> keys; // parameter table, u32 begins from 1
 
-    nas_func(): dpara(-1), entry(0), psize(0), lsize(0) {}
+    // parameter table, u32 begins from 1
+    std::unordered_map<std::string, u32> keys;
+
+    nas_func():
+        dynamic_parameter_index(-1), entry(0),
+        parameter_size(0), local_size(0) {}
     void clear();
 };
 
 struct nas_upval {
 public:
     /* on stack, use these variables */
-    bool onstk;
+    bool on_stack;
     u32 size;
     var* stk;
 
@@ -169,14 +173,14 @@ public:
     std::vector<var> elems;
 
 public:
-    nas_upval(): onstk(true), size(0), stk(nullptr) {}
+    nas_upval(): on_stack(true), size(0), stk(nullptr) {}
 
     var& operator[](usize n) {
-        return onstk? stk[n]:elems[n];
+        return on_stack? stk[n]:elems[n];
     }
 
     void clear() {
-        onstk = true;
+        on_stack = true;
         elems.clear();
         size = 0;
     }
@@ -184,7 +188,7 @@ public:
 
 struct nas_ghost {
 private:
-    using destructor=void (*)(void*);
+    using destructor = void (*)(void*);
 
 public:
     std::string type_name;

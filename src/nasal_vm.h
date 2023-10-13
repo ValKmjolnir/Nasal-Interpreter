@@ -65,6 +65,7 @@ protected:
     void lstate();
     void ustate();
     void detail();
+    std::string report_lack_arguments(u32, const nas_func&) const;
     void die(const std::string&);
 
     /* vm calculation functions*/
@@ -204,7 +205,7 @@ inline void vm::o_repl() {
 
 inline void vm::o_intl() {
     ctx.top[0].func().local.resize(imm[ctx.pc], nil);
-    ctx.top[0].func().lsize = imm[ctx.pc];
+    ctx.top[0].func().local_size = imm[ctx.pc];
 }
 
 inline void vm::o_loadg() {
@@ -217,7 +218,7 @@ inline void vm::o_loadl() {
 
 inline void vm::o_loadu() {
     ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
-         .upval()[imm[ctx.pc]&0xffff] = (ctx.top--)[0];
+                    .upval()[imm[ctx.pc]&0xffff] = (ctx.top--)[0];
 }
 
 inline void vm::o_pnum() {
@@ -252,7 +253,7 @@ inline void vm::o_newf() {
     (++ctx.top)[0] = ngc.alloc(vm_func);
     auto& func = ctx.top[0].func();
     func.entry = imm[ctx.pc];
-    func.psize = 1;
+    func.parameter_size = 1;
 
     /* this means you create a new function in local scope */
     if (ctx.localr) {
@@ -260,7 +261,7 @@ inline void vm::o_newf() {
         // function created in the same local scope shares one closure
         // so this size & stk setting has no problem
         var upval = (ctx.upvalr.type==vm_nil)? ngc.alloc(vm_upval):ctx.upvalr;
-        upval.upval().size = ctx.funcr.func().lsize;
+        upval.upval().size = ctx.funcr.func().local_size;
         upval.upval().stk = ctx.localr;
         func.upval.push_back(upval);
         ctx.upvalr = upval;
@@ -275,20 +276,20 @@ inline void vm::o_happ() {
 inline void vm::o_para() {
     auto& func = ctx.top[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[imm[ctx.pc]] = func.psize;
-    func.local[func.psize++] = var::none();
+    func.keys[cstr[imm[ctx.pc]]] = func.parameter_size;
+    func.local[func.parameter_size++] = var::none();
 }
 
 inline void vm::o_deft() {
     var val = ctx.top[0];
     auto& func = (--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[imm[ctx.pc]] = func.psize;
-    func.local[func.psize++] = val;
+    func.keys[cstr[imm[ctx.pc]]] = func.parameter_size;
+    func.local[func.parameter_size++] = val;
 }
 
 inline void vm::o_dyn() {
-    ctx.top[0].func().dpara = imm[ctx.pc];
+    ctx.top[0].func().dynamic_parameter_index = imm[ctx.pc];
 }
 
 inline void vm::o_lnot() {
@@ -349,6 +350,7 @@ inline void vm::o_sub() {op_calc(-);}
 inline void vm::o_mul() {op_calc(*);}
 inline void vm::o_div() {op_calc(/);}
 inline void vm::o_lnk() {
+    // concat two vectors into one
     if (ctx.top[-1].type==vm_vec && ctx.top[0].type==vm_vec) {
         ngc.temp = ngc.alloc(vm_vec);
         for(auto i : ctx.top[-1].vec().elems) {
@@ -362,6 +364,7 @@ inline void vm::o_lnk() {
         --ctx.top;
         return;
     }
+    // concat strings
     ctx.top[-1] = ngc.newstr(ctx.top[-1].tostr()+ctx.top[0].tostr());
     --ctx.top;
 }
@@ -607,7 +610,7 @@ inline void vm::o_callv() {
             ctx.top[0].func().local[0] = val; // 'me'
         }
     } else if (vec.type==vm_str) {
-        auto& str = vec.str();
+        const auto& str = vec.str();
         i32 num = val.tonum();
         i32 len = str.length();
         if (num<-len || num>=len) {
@@ -670,13 +673,13 @@ inline void vm::o_callh() {
 }
 
 inline void vm::o_callfv() {
-    u32 argc = imm[ctx.pc]; // arguments counter
+    const u32 argc = imm[ctx.pc]; // arguments counter
     var* local = ctx.top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
         die("must call a function");
         return;
     }
-    auto& func = local[-1].func();
+    const auto& func = local[-1].func();
 
     // swap funcr with local[-1]
     var tmp = local[-1];
@@ -684,27 +687,29 @@ inline void vm::o_callfv() {
     ctx.funcr = tmp;
 
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
-    if (ctx.top-argc+func.lsize+3>=ctx.canary) {
+    if (ctx.top-argc+func.local_size+3>=ctx.canary) {
         die("stack overflow");
         return;
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
-    u32 psize = func.psize-1;
-    if (argc<psize && func.local[argc+1].type==vm_none) {
-        die("lack argument(s)");
+    const u32 parameter_size = func.parameter_size-1;
+    if (argc<parameter_size && func.local[argc+1].type==vm_none) {
+        die(report_lack_arguments(argc, func));
         return;
     }
 
+    // load dynamic argument, default nil, for better performance
     var dynamic = nil;
-    if (func.dpara>=0) { // load dynamic arguments
+    if (func.dynamic_parameter_index>=0) {
+        // load dynamic argument
         dynamic = ngc.alloc(vm_vec);
-        for(u32 i = psize; i<argc; ++i) {
+        for(u32 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
-    } else if (psize<argc) {
-        // load arguments to "arg", located at stack+1
+    } else if (parameter_size<argc) {
+        // load arguments to default dynamic argument "arg", located at stack+1
         dynamic = ngc.alloc(vm_vec);
-        for(u32 i = psize; i<argc; ++i) {
+        for(u32 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
@@ -713,19 +718,21 @@ inline void vm::o_callfv() {
     // then all the available values the vector needs
     // are all outside the stack top and may be
     // collected incorrectly
-    ctx.top = local+func.lsize;
+    ctx.top = local+func.local_size;
 
-    u32 min_size = (std::min)(psize, argc); // avoid error in MSVC
+    const u32 min_size = (std::min)(parameter_size, argc); // avoid error in MSVC
     for(u32 i = min_size; i>=1; --i) { // load arguments
         local[i] = local[i-1];
     }
     local[0] = func.local[0];// load "me"
 
     // load local scope & default arguments
-    for(u32 i = min_size+1; i<func.lsize; ++i) {
+    for(u32 i = min_size+1; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
-    local[func.dpara>=0? psize+1:func.lsize-1] = dynamic;
+    // load dynamic argument
+    local[func.dynamic_parameter_index>=0?
+          parameter_size+1:func.local_size-1] = dynamic;
 
     ctx.top[0] = ctx.upvalr;
     (++ctx.top)[0] = var::addr(ctx.localr);
@@ -736,40 +743,55 @@ inline void vm::o_callfv() {
 }
 
 inline void vm::o_callfh() {
-    auto& hash = ctx.top[0].hash().elems;
+    const auto& hash = ctx.top[0].hash().elems;
     if (ctx.top[-1].type!=vm_func) {
         die("must call a function");
         return;
     }
-    auto& func = ctx.top[-1].func();
+    const auto& func = ctx.top[-1].func();
     var tmp = ctx.top[-1];
     ctx.top[-1] = ctx.funcr;
     ctx.funcr = tmp;
 
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
-    if (ctx.top+func.lsize+2>= ctx.canary) {
+    if (ctx.top+func.local_size+2>= ctx.canary) {
         die("stack overflow");
         return;
     }
-    if (func.dpara>=0) {
-        die("special call cannot use dynamic argument");
+    // dynamic parameter is not allowed in this kind of function call
+    if (func.dynamic_parameter_index>=0) {
+        die("special call cannot use dynamic argument \"" +
+            cstr[func.dynamic_parameter_index] + "\""
+        );
         return;
     }
 
     var* local = ctx.top;
-    ctx.top += func.lsize;
-    for(u32 i = 0; i<func.lsize; ++i) {
+    ctx.top += func.local_size;
+    for(u32 i = 0; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
     
+    bool lack_arguments_flag = false;
     for(const auto& i : func.keys) {
-        auto& key = cstr[i.first];
+        const auto& key = i.first;
         if (hash.count(key)) {
-            local[i.second] = hash[key];
+            local[i.second] = hash.at(key);
         } else if (local[i.second].type==vm_none) {
-            die("lack argument(s): \""+key+"\"");
-            return;
+            lack_arguments_flag = true;
         }
+    }
+    if (lack_arguments_flag) {
+        auto info = std::string("lack argument(s): ");
+        for(const auto& i : func.keys) {
+            const auto& key = i.first;
+            if (local[i.second].type==vm_none) {
+                info += key + ", ";
+            }
+        }
+        info = info.substr(0, info.length()-2);
+        die(info);
+        return;
     }
 
     ctx.top[0] = ctx.upvalr;
@@ -831,7 +853,7 @@ inline void vm::o_slc() {
 inline void vm::o_slc2() {
     var val2 = (ctx.top--)[0];
     var val1 = (ctx.top--)[0];
-    auto& ref = ctx.top[-1].vec().elems;
+    const auto& ref = ctx.top[-1].vec().elems;
     auto& aim = ctx.top[0].vec().elems;
 
     u8 type1 = val1.type,type2=val2.type;
@@ -875,8 +897,9 @@ inline void vm::o_mcalll() {
 inline void vm::o_mupval() {
     ctx.memr = &(
         ctx.funcr.func()
-            .upval[(imm[ctx.pc]>>16)&0xffff]
-            .upval()[imm[ctx.pc]&0xffff]);
+           .upval[(imm[ctx.pc]>>16)&0xffff]
+           .upval()[imm[ctx.pc]&0xffff]
+    );
     (++ctx.top)[0] = ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected
@@ -897,7 +920,7 @@ inline void vm::o_mcallv() {
             return;
         }
         auto& ref = vec.hash();
-        auto& str = val.str();
+        const auto& str = val.str();
         ctx.memr = ref.get_mem(str);
         if (!ctx.memr) {
             ref.elems[str] = nil;
@@ -909,7 +932,7 @@ inline void vm::o_mcallv() {
             return;
         }
         auto& ref = vec.map();
-        auto& str = val.str();
+        const auto& str = val.str();
         ctx.memr = ref.get_mem(str);
         if (!ctx.memr) {
             die("cannot find symbol \"" + str + "\"");
@@ -926,7 +949,7 @@ inline void vm::o_mcallh() {
         die("must call a hash");
         return;
     }
-    auto& str = cstr[imm[ctx.pc]];
+    const auto& str = cstr[imm[ctx.pc]];
     if (hash.type==vm_map) {
         ctx.memr = hash.map().get_mem(str);
         if (!ctx.memr) {
@@ -936,7 +959,8 @@ inline void vm::o_mcallh() {
     }
     auto& ref = hash.hash();
     ctx.memr = ref.get_mem(str);
-    if (!ctx.memr) { // create a new key
+    // create a new key
+    if (!ctx.memr) {
         ref.elems[str] = nil;
         ctx.memr = ref.get_mem(str);
     }
@@ -970,10 +994,11 @@ inline void vm::o_ret() {
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
 
-    if (up.type==vm_upval) { // synchronize upvalue
+    // synchronize upvalue
+    if (up.type==vm_upval) {
         auto& upval = up.upval();
-        auto size = func.func().lsize;
-        upval.onstk = false;
+        auto size = func.func().local_size;
+        upval.on_stack = false;
         upval.elems.resize(size);
         for(u32 i = 0; i<size; ++i) {
             upval.elems[i] = local[i];

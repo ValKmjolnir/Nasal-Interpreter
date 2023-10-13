@@ -188,10 +188,10 @@ void vm::gstate() {
 }
 
 void vm::lstate() {
-    if (!ctx.localr || !ctx.funcr.func().lsize) {
+    if (!ctx.localr || !ctx.funcr.func().local_size) {
         return;
     }
-    const u32 lsize = ctx.funcr.func().lsize;
+    const u32 lsize = ctx.funcr.func().local_size;
     std::clog << "local (0x" << std::hex << reinterpret_cast<u64>(ctx.localr)
               << " <+" << static_cast<u64>(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
@@ -226,6 +226,22 @@ void vm::detail() {
     gstate();
     lstate();
     ustate();
+}
+
+std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
+    auto result = std::string("lack argument(s): ");
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& i : func.keys) {
+        argument_list[i.second-1] = i.first;
+    }
+    for(u32 i = argc; i<argument_list.size(); ++i) {
+        result += argument_list[i];
+        if (i!=argument_list.size()-1) {
+            result += ", ";
+        }
+    }
+    return result;
 }
 
 void vm::die(const std::string& str) {
