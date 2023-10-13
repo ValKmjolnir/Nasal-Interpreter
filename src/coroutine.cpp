@@ -28,7 +28,7 @@ var builtin_cocreate(var* local, gc& ngc) {
 
     cort.ctx.top[0] = nil;
     cort.ctx.localr = cort.ctx.top+1;
-    cort.ctx.top = cort.ctx.localr+func.func().lsize;
+    cort.ctx.top = cort.ctx.localr+func.func().local_size;
     cort.ctx.localr[0] = func.func().local[0];
     cort.ctx.top[0] = nil; // old upvalr
     cort.ctx.top++;

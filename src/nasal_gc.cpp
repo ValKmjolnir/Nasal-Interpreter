@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
 }
 
 void nas_func::clear() {
-    dpara = -1;
+    dynamic_parameter_index = -1;
     local.clear();
     upval.clear();
     keys.clear();
