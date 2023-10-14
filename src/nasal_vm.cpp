@@ -93,7 +93,7 @@ void vm::valinfo(var& val) {
                                 << " val}"; break;
         case vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
                                 << "> obj:0x"
-                                << reinterpret_cast<u64>(val.obj().ptr)
+                                << reinterpret_cast<u64>(val.obj().pointer)
                                 << std::dec; break;
         case vm_co:   std::clog << "| co   | <0x" << std::hex << p
                                 << std::dec << "> coroutine"; break;

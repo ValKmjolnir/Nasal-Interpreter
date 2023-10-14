@@ -17,10 +17,16 @@ var builtin_cocreate(var* local, gc& ngc) {
     // +-------------+
     var func = local[1];
     if (func.type!=vm_func) {
-        return nas_err("coroutine::create", "must use a function to create coroutine");
+        return nas_err(
+            "coroutine::create",
+            "must use a function to create coroutine"
+        );
     }
     if (ngc.cort) {
-        return nas_err("coroutine::create", "cannot create another coroutine in a coroutine");
+        return nas_err(
+            "coroutine::create",
+            "cannot create another coroutine in a coroutine"
+        );
     }
     var co = ngc.alloc(vm_co);
     nas_co& cort = co.co();
@@ -30,13 +36,18 @@ var builtin_cocreate(var* local, gc& ngc) {
     cort.ctx.localr = cort.ctx.top+1;
     cort.ctx.top = cort.ctx.localr+func.func().local_size;
     cort.ctx.localr[0] = func.func().local[0];
-    cort.ctx.top[0] = nil; // old upvalr
+    // store old upvalr on stack
+    cort.ctx.top[0] = nil;
     cort.ctx.top++;
-    cort.ctx.top[0] = var::addr((var*)nullptr); // old localr
+    // store old localr on stack
+    cort.ctx.top[0] = var::addr((var*)nullptr);
     cort.ctx.top++;
-    cort.ctx.top[0] = var::ret(0); // old pc, set to zero to make op_ret recognizing this as coroutine function
+    // store old pc on stack
+    // set to zero to make op_ret recognizing this as coroutine function
+    cort.ctx.top[0] = var::ret(0);
 
-    cort.ctx.funcr = func; // make sure the coroutine function can use correct upvalues
+    // make sure the coroutine function can use correct upvalues
+    cort.ctx.funcr = func;
     cort.status = nas_co::status::suspended;
     
     return co;
@@ -44,7 +55,10 @@ var builtin_cocreate(var* local, gc& ngc) {
 
 var builtin_coresume(var* local, gc& ngc) {
     if (ngc.cort) {
-        return nas_err("coroutine::resume", "cannot start another coroutine when one is running");
+        return nas_err(
+            "coroutine::resume",
+            "cannot start another coroutine when one is running"
+        );
     }
     var co = local[1];
     // return nil if is not a coroutine object
@@ -61,9 +75,9 @@ var builtin_coresume(var* local, gc& ngc) {
 
     // fetch coroutine's stack top and return
     // so the coroutine's stack top in fact is not changed
-    if (ngc.rctx->top[0].type==vm_ret) {
+    if (ngc.running_context->top[0].type==vm_ret) {
         // when first calling this coroutine, the stack top must be vm_ret
-        return ngc.rctx->top[0];
+        return ngc.running_context->top[0];
     }
 
     // after first calling the coroutine, each time coroutine.yield triggered

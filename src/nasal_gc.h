@@ -192,11 +192,12 @@ private:
 
 public:
     std::string type_name;
-    destructor dtor_ptr;
-    void* ptr;
+    destructor destructor_function;
+    void* pointer;
 
 public:
-    nas_ghost(): type_name(""), dtor_ptr(nullptr), ptr(nullptr) {}
+    nas_ghost():
+        type_name(""), destructor_function(nullptr), pointer(nullptr) {}
     ~nas_ghost() {clear();}
     void set(const std::string&, destructor, void*);
     void clear();
@@ -290,14 +291,14 @@ const var nil = var::nil();
 
 struct gc {
     /* main context temporary storage */
-    context mctx;
+    context main_context;
 
     /* global storage */
     var* main_context_global = nullptr;
     usize main_context_global_size = 0;
 
     /* runtime context */
-    context* rctx = nullptr;
+    context* running_context = nullptr;
     nas_co* cort = nullptr; // running coroutine
 
     /*  temporary space used in native/module functions */
@@ -331,7 +332,7 @@ struct gc {
     i64 max_sweep_time = 0;
 
     void set(context* _ctx, var* _global, usize _size) {
-        rctx = _ctx;
+        running_context = _ctx;
         main_context_global = _global;
         main_context_global_size = _size;
     }
@@ -368,13 +369,13 @@ public:
     }
 
     var newstr(const char* buff) {
-        var s=alloc(vm_str);
+        var s = alloc(vm_str);
         s.str() = buff;
         return s;
     }
 
     var newstr(const std::string& buff) {
-        var s=alloc(vm_str);
+        var s = alloc(vm_str);
         s.str() = buff;
         return s;
     }

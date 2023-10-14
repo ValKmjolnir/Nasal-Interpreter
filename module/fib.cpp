@@ -62,7 +62,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     f64 num = args[1].num();
-    *((u32*)res.obj().ptr) = static_cast<u32>(num);
+    *((u32*)res.obj().pointer) = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
     return nil;
 }
@@ -74,7 +74,7 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     std::cout << "print_new_ghost: " << res.obj() << " result = "
-        << *((u32*)res.obj().ptr) << "\n";
+        << *((u32*)res.obj().pointer) << "\n";
     return nil;
 }
 

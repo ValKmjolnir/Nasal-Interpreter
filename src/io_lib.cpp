@@ -92,7 +92,7 @@ var builtin_read(var* local, gc& ngc) {
     if (!buff) {
         return nas_err("read", "malloc failed");
     }
-    f64 res = fread(buff, 1, len.num(), static_cast<FILE*>(fd.obj().ptr));
+    f64 res = fread(buff, 1, len.num(), static_cast<FILE*>(fd.obj().pointer));
     buf.str() = buff;
     buf.val.gcobj->unmut = true;
     delete []buff;
@@ -112,7 +112,7 @@ var builtin_write(var* local, gc& ngc) {
         str.str().c_str(),
         1,
         str.str().length(),
-        static_cast<FILE*>(fd.obj().ptr)
+        static_cast<FILE*>(fd.obj().pointer)
     )));
 }
 
@@ -124,7 +124,7 @@ var builtin_seek(var* local, gc& ngc) {
         return nas_err("seek", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(fseek(
-        static_cast<FILE*>(fd.obj().ptr),
+        static_cast<FILE*>(fd.obj().pointer),
         pos.num(),
         whence.num()
     )));
@@ -135,7 +135,9 @@ var builtin_tell(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("tell", "not a valid filehandle");
     }
-    return var::num(static_cast<f64>(ftell(static_cast<FILE*>(fd.obj().ptr))));
+    return var::num(static_cast<f64>(
+        ftell(static_cast<FILE*>(fd.obj().pointer))
+    ));
 }
 
 var builtin_readln(var* local, gc& ngc) {
@@ -145,7 +147,7 @@ var builtin_readln(var* local, gc& ngc) {
     }
     var str = ngc.alloc(vm_str);
     char c;
-    while((c = fgetc(static_cast<FILE*>(fd.obj().ptr)))!=EOF) {
+    while((c = fgetc(static_cast<FILE*>(fd.obj().pointer)))!=EOF) {
         if (c=='\r') {
             continue;
         }
@@ -191,7 +193,9 @@ var builtin_eof(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
-    return var::num(static_cast<f64>(feof(static_cast<FILE*>(fd.obj().ptr))));
+    return var::num(static_cast<f64>(
+        feof(static_cast<FILE*>(fd.obj().pointer))
+    ));
 }
 
 nasal_builtin_table io_lib_native[] = {
