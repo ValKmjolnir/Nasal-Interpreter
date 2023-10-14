@@ -42,11 +42,11 @@ var builtin_dlopen(var* local, gc& ngc) {
 
 #ifdef _WIN32
     void* func = (void*)GetProcAddress(
-        static_cast<HMODULE>(lib.obj().ptr),
+        static_cast<HMODULE>(lib.obj().pointer),
         "get"
     );
 #else
-    void* func = dlsym(lib.obj().ptr, "get");
+    void* func = dlsym(lib.obj().pointer, "get");
 #endif
     if (!func) {
         return nas_err("dlopen", "cannot find <get> function");
@@ -83,7 +83,7 @@ var builtin_dlcallv(var* local, gc& ngc) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
     auto& vec = args.vec().elems;
-    return reinterpret_cast<module_func>(fp.obj().ptr)(
+    return reinterpret_cast<module_func>(fp.obj().pointer)(
         vec.data(),
         vec.size(),
         &ngc
@@ -97,9 +97,9 @@ var builtin_dlcall(var* local, gc& ngc) {
     }
 
     var* local_frame_start = local+2;
-    usize local_frame_size = ngc.rctx->top-local_frame_start;
+    usize local_frame_size = ngc.running_context->top-local_frame_start;
     // arguments' stored place begins at local +2
-    return reinterpret_cast<module_func>(fp.obj().ptr)(
+    return reinterpret_cast<module_func>(fp.obj().pointer)(
         local_frame_start,
         local_frame_size,
         &ngc

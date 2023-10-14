@@ -616,7 +616,7 @@ var builtin_ghosttype(var* local, gc& ngc) {
     }
     const auto& name = arg.obj().get_ghost_name();
     if (!name.length()) {
-        return var::num(reinterpret_cast<u64>(arg.obj().ptr));
+        return var::num(reinterpret_cast<u64>(arg.obj().pointer));
     }
     return ngc.newstr(name);
 }

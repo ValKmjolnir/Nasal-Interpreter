@@ -1,11 +1,13 @@
 STD = c++17
-OS = $(shell uname)
+
+ifndef OS
+	OS = $(shell uname)
+endif
 ifeq ($(OS), Darwin)
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC -mmacosx-version-min=10.15
 else
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
 endif
-CPPFLAGS = -I .
 
 NASAL_HEADER=\
 	src/ast_dumper.h\

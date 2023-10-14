@@ -104,34 +104,34 @@ void nas_ghost::set(
     destructor destructor_pointer,
     void* ghost_pointer) {
     type_name = ghost_type_name;
-    dtor_ptr = destructor_pointer;
-    ptr = ghost_pointer;
+    destructor_function = destructor_pointer;
+    pointer = ghost_pointer;
 }
 
 void nas_ghost::clear() {
     // do nothing if pointer is null
-    if (!ptr) {
+    if (!pointer) {
         return;
     }
 
     // do clear pointer if destructor function pointer is null
-    if (!dtor_ptr) {
+    if (!destructor_function) {
         type_name = "";
-        ptr = nullptr;
+        pointer = nullptr;
         return;
     }
 
     // do destruction
-    dtor_ptr(ptr);
+    destructor_function(pointer);
     type_name = "";
-    ptr = nullptr;
-    dtor_ptr = nullptr;
+    pointer = nullptr;
+    destructor_function = nullptr;
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     out << "<object " << ghost.get_ghost_name();
     out << " at 0x" << std::hex;
-    out << reinterpret_cast<u64>(ghost.ptr) << std::dec << ">";
+    out << reinterpret_cast<u64>(ghost.pointer) << std::dec << ">";
     return out;
 }
 
@@ -265,7 +265,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
 }
 
 bool var::objchk(const std::string& name) {
-    return type==vm_obj && obj().type_name==name && obj().ptr;
+    return type==vm_obj && obj().type_name==name && obj().pointer;
 }
 
 var var::none() {
@@ -418,13 +418,13 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
         }
     }
     // scan now running context, this context maybe related to coroutine or main
-    for(var* i = rctx->stack; i<=rctx->top; ++i) {
+    for(var* i = running_context->stack; i<=running_context->top; ++i) {
         if (i->type>vm_num) {
             bfs_queue.push_back(*i);
         }
     }
-    bfs_queue.push_back(rctx->funcr);
-    bfs_queue.push_back(rctx->upvalr);
+    bfs_queue.push_back(running_context->funcr);
+    bfs_queue.push_back(running_context->upvalr);
     bfs_queue.push_back(temp);
 
     if (!cort) {
@@ -432,13 +432,13 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
     }
 
     // coroutine is running, so scan main process stack from mctx
-    for(var* i = mctx.stack; i<=mctx.top; ++i) {
+    for(var* i = main_context.stack; i<=main_context.top; ++i) {
         if (i->type>vm_num) {
             bfs_queue.push_back(*i);
         }
     }
-    bfs_queue.push_back(mctx.funcr);
-    bfs_queue.push_back(mctx.upvalr);
+    bfs_queue.push_back(main_context.funcr);
+    bfs_queue.push_back(main_context.upvalr);
 }
 
 void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
@@ -696,10 +696,10 @@ var gc::alloc(u8 type) {
 
 void gc::ctxchg(nas_co& co) {
     // store running state to main context
-    mctx = *rctx;
+    main_context = *running_context;
 
     // restore coroutine context state
-    *rctx = co.ctx;
+    *running_context = co.ctx;
 
     // set coroutine pointer
     cort = &co;
@@ -710,15 +710,15 @@ void gc::ctxchg(nas_co& co) {
 
 void gc::ctxreserve() {
     // pc=0 means this coroutine is finished
-    cort->status = rctx->pc?
+    cort->status = running_context->pc?
         nas_co::status::suspended:
         nas_co::status::dead;
 
     // store running state to coroutine
-    cort->ctx = *rctx;
+    cort->ctx = *running_context;
 
     // restore main context state
-    *rctx = mctx;
+    *running_context = main_context;
 
     // set coroutine pointer to nullptr
     cort = nullptr;

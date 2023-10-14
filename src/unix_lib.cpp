@@ -84,12 +84,12 @@ var builtin_readdir(var* local, gc& ngc) {
     }
 #ifdef _MSC_VER
     WIN32_FIND_DATAA data;
-    if (!FindNextFileA(handle.obj().ptr,&data)) {
+    if (!FindNextFileA(handle.obj().pointer, &data)) {
         return nil;
     }
     return ngc.newstr(data.cFileName);
 #else
-    dirent* p = readdir(static_cast<DIR*>(handle.obj().ptr));
+    dirent* p = readdir(static_cast<DIR*>(handle.obj().pointer));
     return p? ngc.newstr(p->d_name):nil;
 #endif
 }
