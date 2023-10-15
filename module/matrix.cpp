@@ -1,4 +1,6 @@
 #include "../src/nasal.h"
+#include "../src/nasal_type.h"
+#include "../src/nasal_gc.h"
 #include <cmath>
 
 namespace nasal {

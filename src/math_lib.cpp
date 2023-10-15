@@ -57,7 +57,7 @@ var builtin_atan2(var* local, gc& ngc) {
 
 var builtin_isnan(var* local, gc& ngc) {
     var x = local[1];
-    return (x.type==vm_num && std::isnan(x.num()))?one:zero;
+    return (x.type==vm_num && std::isnan(x.num()))? one:zero;
 }
 
 nasal_builtin_table math_lib_native[] = {

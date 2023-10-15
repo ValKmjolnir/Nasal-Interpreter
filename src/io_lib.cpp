@@ -42,7 +42,7 @@ var builtin_exists(var* local, gc& ngc) {
     if (local[1].type!=vm_str) {
         return zero;
     }
-    return access(local[1].str().c_str(), F_OK)!=-1?one:zero;
+    return access(local[1].str().c_str(), F_OK)!=-1? one:zero;
 }
 
 var builtin_open(var* local, gc& ngc) {
@@ -79,7 +79,7 @@ var builtin_read(var* local, gc& ngc) {
     if (!fd.objchk(file_type_name)) {
         return nas_err("read", "not a valid filehandle");
     }
-    if (buf.type!=vm_str || buf.val.gcobj->unmut) {
+    if (buf.type!=vm_str || buf.val.gcobj->unmutable) {
         return nas_err("read", "\"buf\" must be mutable string");
     }
     if (len.type!=vm_num) {
@@ -94,7 +94,7 @@ var builtin_read(var* local, gc& ngc) {
     }
     f64 res = fread(buff, 1, len.num(), static_cast<FILE*>(fd.obj().pointer));
     buf.str() = buff;
-    buf.val.gcobj->unmut = true;
+    buf.val.gcobj->unmutable = true;
     delete []buff;
     return var::num(res);
 }

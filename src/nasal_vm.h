@@ -262,7 +262,7 @@ inline void vm::o_newf() {
         // so this size & stk setting has no problem
         var upval = (ctx.upvalr.type==vm_nil)? ngc.alloc(vm_upval):ctx.upvalr;
         upval.upval().size = ctx.funcr.func().local_size;
-        upval.upval().stk = ctx.localr;
+        upval.upval().stack_frame_offset = ctx.localr;
         func.upval.push_back(upval);
         ctx.upvalr = upval;
     }
@@ -507,7 +507,7 @@ inline void vm::o_neq() {
 
 #define op_cmp(type)\
     --ctx.top;\
-    ctx.top[0] = (ctx.top[0].tonum() type ctx.top[1].tonum())?one:zero;
+    ctx.top[0] = (ctx.top[0].tonum() type ctx.top[1].tonum())? one:zero;
 
 inline void vm::o_less() {op_cmp(<);}
 inline void vm::o_leq() {op_cmp(<=);}
@@ -515,7 +515,7 @@ inline void vm::o_grt() {op_cmp(>);}
 inline void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    ctx.top[0] = (ctx.top[0].tonum() type cnum[imm[ctx.pc]])?one:zero;
+    ctx.top[0] = (ctx.top[0].tonum() type cnum[imm[ctx.pc]])? one:zero;
 
 inline void vm::o_lessc() {op_cmp_const(<);}
 inline void vm::o_leqc() {op_cmp_const(<=);}

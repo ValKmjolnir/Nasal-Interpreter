@@ -9,7 +9,6 @@
 #include <fstream>
 #include <cstring>
 #include <cmath>
-#include <vector>
 
 // abbreviation of some useful basic type
 using i32 = std::int32_t;
@@ -54,8 +53,6 @@ f64 dec2f(const char*);
 f64 str2num(const char*);
 i32 utf8_hdchk(const char);
 std::string chrhex(const char);
-std::string rawstr(const std::string&, const usize maxlen=0);
+std::string rawstr(const std::string&, const usize maxlen = 0);
 
 }
-
-#include "nasal_gc.h"

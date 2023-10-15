@@ -41,7 +41,7 @@ var builtin_fld(var* local, gc& ngc) {
     var str = local[1];
     var startbit = local[2];
     var length = local[3];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
+    if (str.type!=vm_str || str.val.gcobj->unmutable) {
         return nas_err("fld", "\"str\" must be mutable string");
     }
     if (startbit.type!=vm_num || length.type!=vm_num) {
@@ -70,7 +70,7 @@ var builtin_sfld(var* local, gc& ngc) {
     var str = local[1];
     var startbit = local[2];
     var length = local[3];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
+    if (str.type!=vm_str || str.val.gcobj->unmutable) {
         return nas_err("sfld", "\"str\" must be mutable string");
     }
     if (startbit.type!=vm_num || length.type!=vm_num) {
@@ -103,7 +103,7 @@ var builtin_setfld(var* local, gc& ngc) {
     var startbit = local[2];
     var length = local[3];
     var value = local[4];
-    if (str.type!=vm_str || str.val.gcobj->unmut) {
+    if (str.type!=vm_str || str.val.gcobj->unmutable) {
         return nas_err("setfld", "\"str\" must be mutable string");
     }
     if (startbit.type!=vm_num || length.type!=vm_num || value.type!=vm_num) {

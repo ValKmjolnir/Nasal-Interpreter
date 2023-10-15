@@ -1,7 +1,12 @@
 ﻿#pragma once
 
 #include "nasal.h"
+#include "nasal_type.h"
 #include "nasal_gc.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #ifdef _MSC_VER
 #pragma warning (disable:4566) // i know i'm using utf-8, fuck you
