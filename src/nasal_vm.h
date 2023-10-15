@@ -2,6 +2,8 @@
 
 #include <iomanip>
 #include <stack>
+#include <cstring>
+#include <sstream>
 
 #include "nasal_import.h"
 #include "nasal_gc.h"
@@ -22,10 +24,10 @@ protected:
     context ctx;
 
     /* constants */
-    const f64* cnum = nullptr; // constant numbers
-    const std::string* cstr = nullptr; // constant symbols and strings
+    const f64* const_number = nullptr; // constant numbers
+    const std::string* const_string = nullptr; // constant symbols and strings
     std::vector<u32> imm; // immediate number table
-    std::vector<nasal_builtin_table> native;
+    std::vector<nasal_builtin_table> native_function;
     
     /* garbage collector */
     gc ngc;
@@ -57,15 +59,18 @@ protected:
 
     /* debug functions */
     bool verbose = false;
-    void valinfo(var&);
-    void traceback();
-    void stackinfo(const u32);
-    void reginfo();
-    void gstate();
-    void lstate();
-    void ustate();
-    void detail();
+    void value_info(var&);
+    void function_detail_info(const nas_func&);
+    void function_call_trace();
+    void trace_back();
+    void stack_info(const u32);
+    void register_info();
+    void global_state();
+    void local_state();
+    void upvalue_state();
+    void all_state_detail();
     std::string report_lack_arguments(u32, const nas_func&) const;
+    std::string report_special_call_lack_arguments(var*, const nas_func&) const;
     void die(const std::string&);
 
     /* vm calculation functions*/
@@ -222,7 +227,7 @@ inline void vm::o_loadu() {
 }
 
 inline void vm::o_pnum() {
-    (++ctx.top)[0] = var::num(cnum[imm[ctx.pc]]);
+    (++ctx.top)[0] = var::num(const_number[imm[ctx.pc]]);
 }
 
 inline void vm::o_pnil() {
@@ -269,14 +274,14 @@ inline void vm::o_newf() {
 }
 
 inline void vm::o_happ() {
-    ctx.top[-1].hash().elems[cstr[imm[ctx.pc]]] = ctx.top[0];
+    ctx.top[-1].hash().elems[const_string[imm[ctx.pc]]] = ctx.top[0];
     --ctx.top;
 }
 
 inline void vm::o_para() {
     auto& func = ctx.top[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[cstr[imm[ctx.pc]]] = func.parameter_size;
+    func.keys[const_string[imm[ctx.pc]]] = func.parameter_size;
     func.local[func.parameter_size++] = var::none();
 }
 
@@ -284,7 +289,7 @@ inline void vm::o_deft() {
     var val = ctx.top[0];
     auto& func = (--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[cstr[imm[ctx.pc]]] = func.parameter_size;
+    func.keys[const_string[imm[ctx.pc]]] = func.parameter_size;
     func.local[func.parameter_size++] = val;
 }
 
@@ -370,14 +375,14 @@ inline void vm::o_lnk() {
 }
 
 #define op_calc_const(type)\
-    ctx.top[0] = var::num(ctx.top[0].tonum() type cnum[imm[ctx.pc]]);
+    ctx.top[0] = var::num(ctx.top[0].tonum() type const_number[imm[ctx.pc]]);
 
 inline void vm::o_addc() {op_calc_const(+);}
 inline void vm::o_subc() {op_calc_const(-);}
 inline void vm::o_mulc() {op_calc_const(*);}
 inline void vm::o_divc() {op_calc_const(/);}
 inline void vm::o_lnkc() {
-    ctx.top[0] = ngc.newstr(ctx.top[0].tostr()+cstr[imm[ctx.pc]]);
+    ctx.top[0] = ngc.newstr(ctx.top[0].tostr()+const_string[imm[ctx.pc]]);
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -435,7 +440,9 @@ inline void vm::o_bxoreq() {
 // like this: func{a+=1;}(); the result of 'a+1' will no be used later, imm[pc]>>31=1
 // but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
 #define op_calc_eq_const(type)\
-    ctx.top[0] = ctx.memr[0] = var::num(ctx.memr[0].tonum() type cnum[imm[ctx.pc]]);\
+    ctx.top[0] = ctx.memr[0] = var::num(\
+        ctx.memr[0].tonum() type const_number[imm[ctx.pc]]\
+    );\
     ctx.memr = nullptr;
 
 inline void vm::o_addeqc() {op_calc_eq_const(+);}
@@ -443,12 +450,16 @@ inline void vm::o_subeqc() {op_calc_eq_const(-);}
 inline void vm::o_muleqc() {op_calc_eq_const(*);}
 inline void vm::o_diveqc() {op_calc_eq_const(/);}
 inline void vm::o_lnkeqc() {
-    ctx.top[0] = ctx.memr[0] = ngc.newstr(ctx.memr[0].tostr()+cstr[imm[ctx.pc]]);
+    ctx.top[0] = ctx.memr[0] = ngc.newstr(
+        ctx.memr[0].tostr()+const_string[imm[ctx.pc]]
+    );
     ctx.memr = nullptr;
 }
 
 #define op_calc_eq_const_and_pop(type)\
-    ctx.top[0] = ctx.memr[0] = var::num(ctx.memr[0].tonum() type cnum[imm[ctx.pc]]);\
+    ctx.top[0] = ctx.memr[0] = var::num(\
+        ctx.memr[0].tonum() type const_number[imm[ctx.pc]]\
+    );\
     ctx.memr = nullptr;\
     --ctx.top;
 
@@ -458,7 +469,7 @@ inline void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
 inline void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
 inline void vm::o_lnkecp() {
     ctx.top[0] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].tostr()+cstr[imm[ctx.pc]]
+        ctx.memr[0].tostr()+const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
     --ctx.top;
@@ -515,7 +526,7 @@ inline void vm::o_grt() {op_cmp(>);}
 inline void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    ctx.top[0] = (ctx.top[0].tonum() type cnum[imm[ctx.pc]])? one:zero;
+    ctx.top[0] = (ctx.top[0].tonum() type const_number[imm[ctx.pc]])? one:zero;
 
 inline void vm::o_lessc() {op_cmp_const(<);}
 inline void vm::o_leqc() {op_cmp_const(<=);}
@@ -656,7 +667,7 @@ inline void vm::o_callh() {
         die("must call a hash");
         return;
     }
-    const auto& str = cstr[imm[ctx.pc]];
+    const auto& str = const_string[imm[ctx.pc]];
     if (val.type==vm_hash) {
         ctx.top[0] = val.hash().get_val(str);
     } else {
@@ -761,7 +772,7 @@ inline void vm::o_callfh() {
     // dynamic parameter is not allowed in this kind of function call
     if (func.dynamic_parameter_index>=0) {
         die("special call cannot use dynamic argument \"" +
-            cstr[func.dynamic_parameter_index] + "\""
+            const_string[func.dynamic_parameter_index] + "\""
         );
         return;
     }
@@ -782,15 +793,7 @@ inline void vm::o_callfh() {
         }
     }
     if (lack_arguments_flag) {
-        auto info = std::string("lack argument(s): ");
-        for(const auto& i : func.keys) {
-            const auto& key = i.first;
-            if (local[i.second].type==vm_none) {
-                info += key + ", ";
-            }
-        }
-        info = info.substr(0, info.length()-2);
-        die(info);
+        die(report_special_call_lack_arguments(local, func));
         return;
     }
 
@@ -809,7 +812,7 @@ inline void vm::o_callb() {
 
     // if running a native function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    var tmp = (*native[imm[ctx.pc]].func)(ctx.localr, ngc);
+    var tmp = (*native_function[imm[ctx.pc]].func)(ctx.localr, ngc);
 
     // so we use tmp variable to store this return value
     // and set it to top[0] later
@@ -949,7 +952,7 @@ inline void vm::o_mcallh() {
         die("must call a hash");
         return;
     }
-    const auto& str = cstr[imm[ctx.pc]];
+    const auto& str = const_string[imm[ctx.pc]];
     if (hash.type==vm_map) {
         ctx.memr = hash.map().get_mem(str);
         if (!ctx.memr) {
