@@ -6,6 +6,12 @@
 
 #include <sys/stat.h>
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #ifdef _MSC_VER
 #define F_OK 0 // fuck msc
 #endif

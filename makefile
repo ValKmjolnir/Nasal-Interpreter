@@ -23,6 +23,7 @@ NASAL_HEADER=\
 	src/nasal_opcode.h\
 	src/nasal_parse.h\
 	src/nasal_vm.h\
+	src/nasal_type.h\
 	src/nasal.h\
 	src/optimizer.h\
 	src/symbol_finder.h\
@@ -57,6 +58,7 @@ NASAL_OBJECT=\
 	build/unix_lib.o\
 	build/dylib_lib.o\
 	build/coroutine.o\
+	build/nasal_type.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/repl.o\
@@ -89,7 +91,10 @@ build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
 build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_err.cpp -o build/nasal_err.o
 
-build/nasal_gc.o: src/nasal.h src/nasal_gc.h src/nasal_gc.cpp | build
+build/nasal_type.o: src/nasal.h src/nasal_type.h src/nasal_type.cpp | build
+	$(CXX) $(CXXFLAGS) src/nasal_type.cpp -o build/nasal_type.o
+
+build/nasal_gc.o: src/nasal.h src/nasal_type.h src/nasal_gc.h src/nasal_gc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_gc.cpp -o build/nasal_gc.o
 
 build/nasal_import.o: \
@@ -115,6 +120,7 @@ build/nasal_ast.o: \
 
 build/nasal_builtin.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_builtin.cpp -o build/nasal_builtin.o

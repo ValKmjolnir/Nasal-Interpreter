@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include "../src/nasal.h"
+#include "../src/nasal_type.h"
+#include "../src/nasal_gc.h"
 
 namespace nasal {
 namespace fib_module {
