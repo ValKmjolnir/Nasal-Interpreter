@@ -159,7 +159,7 @@ void dbg::step_info() {
 
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
-    codestream::set(cnum, cstr, native.data(), files);
+    codestream::set(const_number, const_string, native_function.data(), files);
     std::clog << "next bytecode:\n";
     for(u32 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
@@ -168,7 +168,7 @@ void dbg::step_info() {
         << codestream(bytecode[i], i)
         << reset << "\n";
     }
-    stackinfo(10);
+    stack_info(10);
 }
 
 void dbg::interact() {
@@ -194,20 +194,20 @@ void dbg::interact() {
     while(true) {
         std::clog << ">> ";
         std::getline(std::cin, cmd);
-        auto res=parse(cmd);
+        auto res = parse(cmd);
         if (res.size()==0) {
             step_info();
         } else if (res.size()==1) {
             switch(get_cmd_type(res[0])) {
                 case dbg_cmd::cmd_help: help(); break;
-                case dbg_cmd::cmd_backtrace: traceback(); break;
+                case dbg_cmd::cmd_backtrace: trace_back(); break;
                 case dbg_cmd::cmd_continue: return;
                 case dbg_cmd::cmd_list_file: list_file(); break;
-                case dbg_cmd::cmd_global: gstate(); break;
-                case dbg_cmd::cmd_local: lstate(); break;
-                case dbg_cmd::cmd_upval: ustate(); break;
-                case dbg_cmd::cmd_register: reginfo(); break;
-                case dbg_cmd::cmd_show_all: detail(); break;
+                case dbg_cmd::cmd_global: global_state(); break;
+                case dbg_cmd::cmd_local: local_state(); break;
+                case dbg_cmd::cmd_upval: upvalue_state(); break;
+                case dbg_cmd::cmd_register: register_info(); break;
+                case dbg_cmd::cmd_show_all: all_state_detail(); break;
                 case dbg_cmd::cmd_next: next = true; return;
                 case dbg_cmd::cmd_exit: std::exit(0);
                 default: err(); break;
