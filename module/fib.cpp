@@ -20,14 +20,14 @@ var fib(var* args, usize size, gc* ngc) {
         return nas_err("fib", "lack arguments");
     }
     var num = args[0];
-    return var::num(fibonaci(num.tonum()));
+    return var::num(fibonaci(num.to_num()));
 }
 
 var quick_fib(var* args, usize size, gc* ngc) {
     if (!size) {
         return nas_err("quick_fib","lack arguments");
     }
-    double num = args[0].tonum();
+    double num = args[0].to_num();
     if (num<2) {
         return var::num(num);
     }

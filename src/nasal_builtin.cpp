@@ -145,7 +145,7 @@ var builtin_int(var* local, gc& ngc) {
     if (val.type!=vm_num && val.type!=vm_str) {
         return nil;
     }
-    return var::num(static_cast<f64>(static_cast<i32>(val.tonum())));
+    return var::num(static_cast<f64>(static_cast<i32>(val.to_num())));
 }
 
 var builtin_floor(var* local, gc& ngc) {
@@ -161,7 +161,7 @@ var builtin_num(var* local, gc& ngc) {
     if (val.type!=vm_str) {
         return nil;
     }
-    f64 res = val.tonum();
+    f64 res = val.to_num();
     if (std::isnan(res)) {
         return nil;
     }
@@ -183,7 +183,7 @@ var builtin_pop(var* local, gc& ngc) {
 }
 
 var builtin_str(var* local, gc& ngc) {
-    return ngc.newstr(local[1].tostr());
+    return ngc.newstr(local[1].to_str());
 }
 
 var builtin_size(var* local, gc& ngc) {
@@ -254,13 +254,13 @@ var builtin_keys(var* local, gc& ngc) {
 }
 
 var builtin_die(var* local, gc& ngc) {
-    return nas_err("error", local[1].tostr());
+    return nas_err("error", local[1].to_str());
 }
 
 var builtin_find(var* local, gc& ngc) {
     var needle = local[1];
     var haystack = local[2];
-    usize pos = haystack.tostr().find(needle.tostr());
+    usize pos = haystack.to_str().find(needle.to_str());
     if (pos==std::string::npos) {
         return var::num(-1.0);
     }
