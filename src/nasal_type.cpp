@@ -232,11 +232,11 @@ void nas_val::clear() {
     }
 }
 
-f64 var::tonum() {
+f64 var::to_num() {
     return type!=vm_str? val.num:str2num(str().c_str());
 }
 
-std::string var::tostr() {
+std::string var::to_str() {
     if (type==vm_str) {
         return str();
     } else if (type==vm_num) {

@@ -340,6 +340,39 @@ std::string vm::report_special_call_lack_arguments(
     return result + out.str();
 }
 
+std::string vm::report_key_not_found(
+    const std::string& not_found, const nas_hash& hash) const {
+    auto result = "member \"" + not_found + "\" doesn't exist in hash {";
+    for(const auto& i : hash.elems) {
+        result += i.first + ", ";
+    }
+    if (hash.elems.size()) {
+        result = result.substr(0, result.length()-2);
+    }
+    result += "}";
+    return result;
+}
+
+std::string vm::type_name_string(const var& value) const {
+    switch(value.type) {
+        case vm_none: return "none";
+        case vm_cnt: return "counter";
+        case vm_addr: return "address";
+        case vm_ret: return "program counter";
+        case vm_nil: return "nil";
+        case vm_num: return "number";
+        case vm_str: return "string";
+        case vm_vec: return "vector";
+        case vm_hash: return "hash";
+        case vm_func: return "function";
+        case vm_upval: return "upvalue";
+        case vm_obj: return "ghost type";
+        case vm_co: return "coroutine";
+        case vm_map: return "namespace";
+    }
+    return "unknown";
+}
+
 void vm::die(const std::string& str) {
     std::cerr << "[vm] error: " << str << "\n";
     function_call_trace();

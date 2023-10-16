@@ -70,8 +70,8 @@ public:
     }
 
     // number and string can be translated to each other
-    f64 tonum();
-    std::string tostr();
+    f64 to_num();
+    std::string to_str();
     bool objchk(const std::string&);
 
     // create new var object

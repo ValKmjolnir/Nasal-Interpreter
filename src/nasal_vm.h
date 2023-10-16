@@ -71,6 +71,8 @@ protected:
     void all_state_detail();
     std::string report_lack_arguments(u32, const nas_func&) const;
     std::string report_special_call_lack_arguments(var*, const nas_func&) const;
+    std::string report_key_not_found(const std::string&, const nas_hash&) const;
+    std::string type_name_string(const var&) const;
     void die(const std::string&);
 
     /* vm calculation functions*/
@@ -315,7 +317,7 @@ inline void vm::o_lnot() {
 }
 
 inline void vm::o_usub() {
-    ctx.top[0] = var::num(-ctx.top[0].tonum());
+    ctx.top[0] = var::num(-ctx.top[0].to_num());
 }
 
 inline void vm::o_bnot() {
@@ -324,30 +326,30 @@ inline void vm::o_bnot() {
 
 inline void vm::o_btor() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].tonum())|
-        static_cast<i32>(ctx.top[0].tonum())
+        static_cast<i32>(ctx.top[-1].to_num())|
+        static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
 }
 
 inline void vm::o_btxor() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].tonum())^
-        static_cast<i32>(ctx.top[0].tonum())
+        static_cast<i32>(ctx.top[-1].to_num())^
+        static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
 }
 
 inline void vm::o_btand() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].tonum())&
-        static_cast<i32>(ctx.top[0].tonum())
+        static_cast<i32>(ctx.top[-1].to_num())&
+        static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
 }
 
 #define op_calc(type)\
-    ctx.top[-1] = var::num(ctx.top[-1].tonum() type ctx.top[0].tonum());\
+    ctx.top[-1] = var::num(ctx.top[-1].to_num() type ctx.top[0].to_num());\
     --ctx.top;
 
 inline void vm::o_add() {op_calc(+);}
@@ -370,19 +372,19 @@ inline void vm::o_lnk() {
         return;
     }
     // concat strings
-    ctx.top[-1] = ngc.newstr(ctx.top[-1].tostr()+ctx.top[0].tostr());
+    ctx.top[-1] = ngc.newstr(ctx.top[-1].to_str()+ctx.top[0].to_str());
     --ctx.top;
 }
 
 #define op_calc_const(type)\
-    ctx.top[0] = var::num(ctx.top[0].tonum() type const_number[imm[ctx.pc]]);
+    ctx.top[0] = var::num(ctx.top[0].to_num() type const_number[imm[ctx.pc]]);
 
 inline void vm::o_addc() {op_calc_const(+);}
 inline void vm::o_subc() {op_calc_const(-);}
 inline void vm::o_mulc() {op_calc_const(*);}
 inline void vm::o_divc() {op_calc_const(/);}
 inline void vm::o_lnkc() {
-    ctx.top[0] = ngc.newstr(ctx.top[0].tostr()+const_string[imm[ctx.pc]]);
+    ctx.top[0] = ngc.newstr(ctx.top[0].to_str()+const_string[imm[ctx.pc]]);
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -391,7 +393,9 @@ inline void vm::o_lnkc() {
 // like this: func{a+=c;}(); the result of 'a+c' will no be used later, imm[pc] = 1
 // but if b+=a+=c; the result of 'a+c' will be used later, imm[pc] = 0
 #define op_calc_eq(type)\
-    ctx.top[-1] = ctx.memr[0] = var::num(ctx.memr[0].tonum() type ctx.top[-1].tonum());\
+    ctx.top[-1] = ctx.memr[0] = var::num(\
+        ctx.memr[0].to_num() type ctx.top[-1].to_num()\
+    );\
     ctx.memr = nullptr;\
     ctx.top -= imm[ctx.pc]+1;
 
@@ -401,7 +405,7 @@ inline void vm::o_muleq() {op_calc_eq(*);}
 inline void vm::o_diveq() {op_calc_eq(/);}
 inline void vm::o_lnkeq() {
     ctx.top[-1] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].tostr()+ctx.top[-1].tostr()
+        ctx.memr[0].to_str()+ctx.top[-1].to_str()
     );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
@@ -409,8 +413,8 @@ inline void vm::o_lnkeq() {
 
 inline void vm::o_bandeq() {
     ctx.top[-1] = ctx.memr[0] = var::num(
-        static_cast<i32>(ctx.memr[0].tonum())&
-        static_cast<i32>(ctx.top[-1].tonum())
+        static_cast<i32>(ctx.memr[0].to_num())&
+        static_cast<i32>(ctx.top[-1].to_num())
     );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
@@ -418,8 +422,8 @@ inline void vm::o_bandeq() {
 
 inline void vm::o_boreq() {
     ctx.top[-1] = ctx.memr[0] = var::num(
-        static_cast<i32>(ctx.memr[0].tonum())|
-        static_cast<i32>(ctx.top[-1].tonum())
+        static_cast<i32>(ctx.memr[0].to_num())|
+        static_cast<i32>(ctx.top[-1].to_num())
     );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
@@ -427,8 +431,8 @@ inline void vm::o_boreq() {
 
 inline void vm::o_bxoreq() {
     ctx.top[-1] = ctx.memr[0] = var::num(
-        static_cast<i32>(ctx.memr[0].tonum())^
-        static_cast<i32>(ctx.top[-1].tonum())
+        static_cast<i32>(ctx.memr[0].to_num())^
+        static_cast<i32>(ctx.top[-1].to_num())
     );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc]+1;
@@ -441,7 +445,7 @@ inline void vm::o_bxoreq() {
 // but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
 #define op_calc_eq_const(type)\
     ctx.top[0] = ctx.memr[0] = var::num(\
-        ctx.memr[0].tonum() type const_number[imm[ctx.pc]]\
+        ctx.memr[0].to_num() type const_number[imm[ctx.pc]]\
     );\
     ctx.memr = nullptr;
 
@@ -451,14 +455,14 @@ inline void vm::o_muleqc() {op_calc_eq_const(*);}
 inline void vm::o_diveqc() {op_calc_eq_const(/);}
 inline void vm::o_lnkeqc() {
     ctx.top[0] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].tostr()+const_string[imm[ctx.pc]]
+        ctx.memr[0].to_str()+const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
 }
 
 #define op_calc_eq_const_and_pop(type)\
     ctx.top[0] = ctx.memr[0] = var::num(\
-        ctx.memr[0].tonum() type const_number[imm[ctx.pc]]\
+        ctx.memr[0].to_num() type const_number[imm[ctx.pc]]\
     );\
     ctx.memr = nullptr;\
     --ctx.top;
@@ -469,7 +473,7 @@ inline void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
 inline void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
 inline void vm::o_lnkecp() {
     ctx.top[0] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].tostr()+const_string[imm[ctx.pc]]
+        ctx.memr[0].to_str()+const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
     --ctx.top;
@@ -495,7 +499,7 @@ inline void vm::o_eq() {
         ctx.top[0] = (val1.str()==val2.str())? one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        ctx.top[0] = (val1.tonum()==val2.tonum())? one:zero;
+        ctx.top[0] = (val1.to_num()==val2.to_num())? one:zero;
     } else {
         ctx.top[0] = (val1==val2)? one:zero;
     }
@@ -510,7 +514,7 @@ inline void vm::o_neq() {
         ctx.top[0] = (val1.str()!=val2.str())? one:zero;
     } else if ((val1.type==vm_num || val2.type==vm_num)
         && val1.type!=vm_nil && val2.type!=vm_nil) {
-        ctx.top[0] = (val1.tonum()!=val2.tonum())? one:zero;
+        ctx.top[0] = (val1.to_num()!=val2.to_num())? one:zero;
     } else {
         ctx.top[0] = (val1!=val2)? one:zero;
     }
@@ -518,7 +522,7 @@ inline void vm::o_neq() {
 
 #define op_cmp(type)\
     --ctx.top;\
-    ctx.top[0] = (ctx.top[0].tonum() type ctx.top[1].tonum())? one:zero;
+    ctx.top[0] = (ctx.top[0].to_num() type ctx.top[1].to_num())? one:zero;
 
 inline void vm::o_less() {op_cmp(<);}
 inline void vm::o_leq() {op_cmp(<=);}
@@ -526,7 +530,7 @@ inline void vm::o_grt() {op_cmp(>);}
 inline void vm::o_geq() {op_cmp(>=);}
 
 #define op_cmp_const(type)\
-    ctx.top[0] = (ctx.top[0].tonum() type const_number[imm[ctx.pc]])? one:zero;
+    ctx.top[0] = (ctx.top[0].to_num() type const_number[imm[ctx.pc]])? one:zero;
 
 inline void vm::o_lessc() {op_cmp_const(<);}
 inline void vm::o_leqc() {op_cmp_const(<=);}
@@ -559,7 +563,9 @@ inline void vm::o_jf() {
 
 inline void vm::o_cnt() {
     if (ctx.top[0].type!=vm_vec) {
-        die("must use vector in forindex/foreach");
+        die("must use vector in forindex/foreach but get "+
+            type_name_string(ctx.top[0])
+        );
         return;
     }
     (++ctx.top)[0] = var::cnt(-1);
@@ -603,14 +609,14 @@ inline void vm::o_callv() {
     var val = ctx.top[0];
     var vec = (--ctx.top)[0];
     if (vec.type==vm_vec) {
-        ctx.top[0] = vec.vec().get_val(val.tonum());
+        ctx.top[0] = vec.vec().get_val(val.to_num());
         if (ctx.top[0].type==vm_none) {
-            die("out of range:"+std::to_string(val.tonum()));
+            die("out of range:"+std::to_string(val.to_num()));
             return;
         }
     } else if (vec.type==vm_hash) {
         if (val.type!=vm_str) {
-            die("must use string as the key");
+            die("must use string as the key but get "+type_name_string(val));
             return;
         }
         ctx.top[0] = vec.hash().get_val(val.str());
@@ -622,10 +628,10 @@ inline void vm::o_callv() {
         }
     } else if (vec.type==vm_str) {
         const auto& str = vec.str();
-        i32 num = val.tonum();
+        i32 num = val.to_num();
         i32 len = str.length();
         if (num<-len || num>=len) {
-            die("out of range:"+std::to_string(val.tonum()));
+            die("out of range:"+std::to_string(val.to_num()));
             return;
         }
         ctx.top[0] = var::num(
@@ -633,7 +639,7 @@ inline void vm::o_callv() {
         );
     } else if (vec.type==vm_map) {
         if (val.type!=vm_str) {
-            die("must use string as the key");
+            die("must use string as the key but get "+type_name_string(val));
             return;
         }
         ctx.top[0] = vec.map().get_val(val.str());
@@ -642,7 +648,7 @@ inline void vm::o_callv() {
             return;
         }
     } else {
-        die("must call a vector/hash/string");
+        die("must call a vector/hash/string but get "+type_name_string(vec));
         return;
     }
 }
@@ -650,7 +656,7 @@ inline void vm::o_callv() {
 inline void vm::o_callvi() {
     var val = ctx.top[0];
     if (val.type!=vm_vec) {
-        die("must use a vector");
+        die("must use a vector but get "+type_name_string(val));
         return;
     }
     // cannot use operator[],because this may cause overflow
@@ -664,7 +670,7 @@ inline void vm::o_callvi() {
 inline void vm::o_callh() {
     var val = ctx.top[0];
     if (val.type!=vm_hash && val.type!=vm_map) {
-        die("must call a hash");
+        die("must call a hash but get "+type_name_string(val));
         return;
     }
     const auto& str = const_string[imm[ctx.pc]];
@@ -675,7 +681,7 @@ inline void vm::o_callh() {
     }
     if (ctx.top[0].type==vm_none) {
         val.type==vm_hash? 
-            die("member \"" + str + "\" does not exist"):
+            die(report_key_not_found(str, val.hash())):
             die("cannot find symbol \"" + str + "\"");
         return;
     } else if (ctx.top[0].type==vm_func) {
@@ -687,7 +693,7 @@ inline void vm::o_callfv() {
     const u32 argc = imm[ctx.pc]; // arguments counter
     var* local = ctx.top-argc+1; // arguments begin address
     if (local[-1].type!=vm_func) {
-        die("must call a function");
+        die("must call a function but get "+type_name_string(local[-1]));
         return;
     }
     const auto& func = local[-1].func();
@@ -756,7 +762,7 @@ inline void vm::o_callfv() {
 inline void vm::o_callfh() {
     const auto& hash = ctx.top[0].hash().elems;
     if (ctx.top[-1].type!=vm_func) {
-        die("must call a function");
+        die("must call a function but get "+type_name_string(ctx.top[-1]));
         return;
     }
     const auto& func = ctx.top[-1].func();
@@ -833,7 +839,7 @@ inline void vm::o_slcbeg() {
     // +--------------+
     (++ctx.top)[0] = ngc.alloc(vm_vec);
     if (ctx.top[-1].type!=vm_vec) {
-        die("must slice a vector");
+        die("must slice a vector but get "+type_name_string(ctx.top[-1]));
         return;
     }
 }
@@ -845,9 +851,9 @@ inline void vm::o_slcend() {
 
 inline void vm::o_slc() {
     var val = (ctx.top--)[0];
-    var res = ctx.top[-1].vec().get_val(val.tonum());
+    var res = ctx.top[-1].vec().get_val(val.to_num());
     if (res.type==vm_none) {
-        die("index " + std::to_string(val.tonum()) + " out of range");
+        die("index " + std::to_string(val.to_num()) + " out of range");
         return;
     }
     ctx.top[0].vec().elems.push_back(res);
@@ -860,8 +866,8 @@ inline void vm::o_slc2() {
     auto& aim = ctx.top[0].vec().elems;
 
     u8 type1 = val1.type,type2=val2.type;
-    i32 num1 = val1.tonum();
-    i32 num2 = val2.tonum();
+    i32 num1 = val1.to_num();
+    i32 num2 = val2.to_num();
     i32 size = ref.size();
     if (type1==vm_nil && type2==vm_nil) {
         num1 = 0;
@@ -912,14 +918,14 @@ inline void vm::o_mcallv() {
     var val = ctx.top[0];     // index
     var vec = (--ctx.top)[0]; // mcall vector, reserved on stack to avoid gc
     if (vec.type==vm_vec) {
-        ctx.memr = vec.vec().get_mem(val.tonum());
+        ctx.memr = vec.vec().get_mem(val.to_num());
         if (!ctx.memr) {
-            die("index "+std::to_string(val.tonum())+" out of range");
+            die("index "+std::to_string(val.to_num())+" out of range");
             return;
         }
     } else if (vec.type==vm_hash) { // do mcallh but use the mcallv way
         if (val.type!=vm_str) {
-            die("key must be string");
+            die("must use string as the key but get "+type_name_string(val));
             return;
         }
         auto& ref = vec.hash();
@@ -931,7 +937,7 @@ inline void vm::o_mcallv() {
         }
     } else if (vec.type==vm_map) {
         if (val.type!=vm_str) {
-            die("key must be string");
+            die("must use string as the key but get "+type_name_string(val));
             return;
         }
         auto& ref = vec.map();
@@ -949,7 +955,7 @@ inline void vm::o_mcallv() {
 inline void vm::o_mcallh() {
     var hash = ctx.top[0]; // mcall hash, reserved on stack to avoid gc
     if (hash.type!=vm_hash && hash.type!=vm_map) {
-        die("must call a hash");
+        die("must call a hash/namespace but get "+type_name_string(hash));
         return;
     }
     const auto& str = const_string[imm[ctx.pc]];
