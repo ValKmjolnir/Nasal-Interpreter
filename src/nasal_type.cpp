@@ -264,7 +264,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
     return out;
 }
 
-bool var::objchk(const std::string& name) {
+bool var::object_check(const std::string& name) {
     return type==vm_obj && obj().type_name==name && obj().pointer;
 }
 

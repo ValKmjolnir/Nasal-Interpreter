@@ -72,7 +72,7 @@ public:
     // number and string can be translated to each other
     f64 to_num();
     std::string to_str();
-    bool objchk(const std::string&);
+    bool object_check(const std::string&);
 
     // create new var object
     static var none();

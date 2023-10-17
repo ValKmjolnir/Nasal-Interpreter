@@ -353,6 +353,17 @@ std::string vm::report_key_not_found(
     return result;
 }
 
+std::string vm::report_out_of_range(f64 index, usize real_size) const {
+    auto result = "index out of range: " + std::to_string(index);
+    result += " but max size is " + std::to_string(real_size);
+    if (!real_size) {
+        return result;
+    }
+    result += ", index range is -" + std::to_string(real_size);
+    result += "~" + std::to_string(real_size-1);
+    return result;
+}
+
 std::string vm::type_name_string(const var& value) const {
     switch(value.type) {
         case vm_none: return "none";
