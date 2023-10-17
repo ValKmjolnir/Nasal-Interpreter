@@ -65,7 +65,7 @@ var builtin_open(var* local, gc& ngc) {
 
 var builtin_close(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("close", "not a valid filehandle");
     }
     fd.obj().clear();
@@ -76,7 +76,7 @@ var builtin_read(var* local, gc& ngc) {
     var fd = local[1];
     var buf = local[2];
     var len = local[3];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("read", "not a valid filehandle");
     }
     if (buf.type!=vm_str || buf.val.gcobj->unmutable) {
@@ -102,7 +102,7 @@ var builtin_read(var* local, gc& ngc) {
 var builtin_write(var* local, gc& ngc) {
     var fd = local[1];
     var str = local[2];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("write", "not a valid filehandle");
     }
     if (str.type!=vm_str) {
@@ -120,7 +120,7 @@ var builtin_seek(var* local, gc& ngc) {
     var fd = local[1];
     var pos = local[2];
     var whence = local[3];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("seek", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(fseek(
@@ -132,7 +132,7 @@ var builtin_seek(var* local, gc& ngc) {
 
 var builtin_tell(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("tell", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(
@@ -142,7 +142,7 @@ var builtin_tell(var* local, gc& ngc) {
 
 var builtin_readln(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
     var str = ngc.alloc(vm_str);
@@ -190,7 +190,7 @@ var builtin_stat(var* local, gc& ngc) {
 
 var builtin_eof(var* local, gc& ngc) {
     var fd = local[1];
-    if (!fd.objchk(file_type_name)) {
+    if (!fd.object_check(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(

@@ -79,7 +79,7 @@ var builtin_opendir(var* local, gc& ngc) {
 
 var builtin_readdir(var* local, gc& ngc) {
     var handle = local[1];
-    if (!handle.objchk(dir_type_name)) {
+    if (!handle.object_check(dir_type_name)) {
         return nas_err("readdir", "not a valid dir handle");
     }
 #ifdef _MSC_VER
@@ -96,7 +96,7 @@ var builtin_readdir(var* local, gc& ngc) {
 
 var builtin_closedir(var* local, gc& ngc) {
     var handle = local[1];
-    if (!handle.objchk(dir_type_name)) {
+    if (!handle.object_check(dir_type_name)) {
         return nas_err("closedir", "not a valid dir handle");
     }
     handle.obj().clear();

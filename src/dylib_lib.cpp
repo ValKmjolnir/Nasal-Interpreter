@@ -69,7 +69,7 @@ var builtin_dlopen(var* local, gc& ngc) {
 
 var builtin_dlclose(var* local, gc& ngc) {
     var libptr = local[1];
-    if (!libptr.objchk(dylib_type_name)) {
+    if (!libptr.object_check(dylib_type_name)) {
         return nas_err("dlclose", "\"lib\" is not a valid dynamic lib");
     }
     libptr.obj().clear();
@@ -79,7 +79,7 @@ var builtin_dlclose(var* local, gc& ngc) {
 var builtin_dlcallv(var* local, gc& ngc) {
     var fp = local[1];
     var args = local[2];
-    if (!fp.objchk(func_addr_type_name)) {
+    if (!fp.object_check(func_addr_type_name)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
     auto& vec = args.vec().elems;
@@ -92,7 +92,7 @@ var builtin_dlcallv(var* local, gc& ngc) {
 
 var builtin_dlcall(var* local, gc& ngc) {
     var fp = local[1];
-    if (!fp.objchk(func_addr_type_name)) {
+    if (!fp.object_check(func_addr_type_name)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
 

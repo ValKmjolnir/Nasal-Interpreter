@@ -72,6 +72,7 @@ protected:
     std::string report_lack_arguments(u32, const nas_func&) const;
     std::string report_special_call_lack_arguments(var*, const nas_func&) const;
     std::string report_key_not_found(const std::string&, const nas_hash&) const;
+    std::string report_out_of_range(f64, usize) const;
     std::string type_name_string(const var&) const;
     void die(const std::string&);
 
@@ -312,7 +313,9 @@ inline void vm::o_lnot() {
                 ctx.top[0] = num? zero:one;
             }
         } break;
-        default: die("incorrect value type"); return;
+        default:
+            die("cannot do not-operation on "+type_name_string(val));
+            return;
     }
 }
 
@@ -611,7 +614,7 @@ inline void vm::o_callv() {
     if (vec.type==vm_vec) {
         ctx.top[0] = vec.vec().get_val(val.to_num());
         if (ctx.top[0].type==vm_none) {
-            die("out of range:"+std::to_string(val.to_num()));
+            die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
         }
     } else if (vec.type==vm_hash) {
@@ -621,7 +624,7 @@ inline void vm::o_callv() {
         }
         ctx.top[0] = vec.hash().get_val(val.str());
         if (ctx.top[0].type==vm_none) {
-            die("cannot find member \""+val.str()+"\"");
+            die(report_key_not_found(val.str(), vec.hash()));
             return;
         } else if (ctx.top[0].type==vm_func) {
             ctx.top[0].func().local[0] = val; // 'me'
@@ -631,7 +634,7 @@ inline void vm::o_callv() {
         i32 num = val.to_num();
         i32 len = str.length();
         if (num<-len || num>=len) {
-            die("out of range:"+std::to_string(val.to_num()));
+            die(report_out_of_range(num, str.size()));
             return;
         }
         ctx.top[0] = var::num(
@@ -662,7 +665,7 @@ inline void vm::o_callvi() {
     // cannot use operator[],because this may cause overflow
     (++ctx.top)[0] = val.vec().get_val(imm[ctx.pc]);
     if (ctx.top[0].type==vm_none) {
-        die("out of range:"+std::to_string(imm[ctx.pc]));
+        die(report_out_of_range(imm[ctx.pc], val.vec().size()));
         return;
     }
 }
@@ -853,7 +856,7 @@ inline void vm::o_slc() {
     var val = (ctx.top--)[0];
     var res = ctx.top[-1].vec().get_val(val.to_num());
     if (res.type==vm_none) {
-        die("index " + std::to_string(val.to_num()) + " out of range");
+        die(report_out_of_range(val.to_num(), ctx.top[-1].vec().size()));
         return;
     }
     ctx.top[0].vec().elems.push_back(res);
@@ -880,7 +883,9 @@ inline void vm::o_slc2() {
 
     if (num1<-size || num1>=size || num2<-size || num2>=size) {
         die("index " + std::to_string(num1) + ":" +
-            std::to_string(num2) + " out of range");
+            std::to_string(num2) + " out of range, real size is " +
+            std::to_string(size)
+        );
         return;
     } else if (num1<=num2) {
         for(i32 i = num1; i<=num2; ++i) {
@@ -920,7 +925,7 @@ inline void vm::o_mcallv() {
     if (vec.type==vm_vec) {
         ctx.memr = vec.vec().get_mem(val.to_num());
         if (!ctx.memr) {
-            die("index "+std::to_string(val.to_num())+" out of range");
+            die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
         }
     } else if (vec.type==vm_hash) { // do mcallh but use the mcallv way
