@@ -612,7 +612,7 @@ inline void vm::o_callv() {
     var val = ctx.top[0];
     var vec = (--ctx.top)[0];
     if (vec.type==vm_vec) {
-        ctx.top[0] = vec.vec().get_val(val.to_num());
+        ctx.top[0] = vec.vec().get_value(val.to_num());
         if (ctx.top[0].type==vm_none) {
             die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
@@ -622,7 +622,7 @@ inline void vm::o_callv() {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
-        ctx.top[0] = vec.hash().get_val(val.str());
+        ctx.top[0] = vec.hash().get_value(val.str());
         if (ctx.top[0].type==vm_none) {
             die(report_key_not_found(val.str(), vec.hash()));
             return;
@@ -645,7 +645,7 @@ inline void vm::o_callv() {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
-        ctx.top[0] = vec.map().get_val(val.str());
+        ctx.top[0] = vec.map().get_value(val.str());
         if (ctx.top[0].type==vm_none) {
             die("cannot find symbol \""+val.str()+"\"");
             return;
@@ -663,7 +663,7 @@ inline void vm::o_callvi() {
         return;
     }
     // cannot use operator[],because this may cause overflow
-    (++ctx.top)[0] = val.vec().get_val(imm[ctx.pc]);
+    (++ctx.top)[0] = val.vec().get_value(imm[ctx.pc]);
     if (ctx.top[0].type==vm_none) {
         die(report_out_of_range(imm[ctx.pc], val.vec().size()));
         return;
@@ -678,9 +678,9 @@ inline void vm::o_callh() {
     }
     const auto& str = const_string[imm[ctx.pc]];
     if (val.type==vm_hash) {
-        ctx.top[0] = val.hash().get_val(str);
+        ctx.top[0] = val.hash().get_value(str);
     } else {
-        ctx.top[0] = val.map().get_val(str);
+        ctx.top[0] = val.map().get_value(str);
     }
     if (ctx.top[0].type==vm_none) {
         val.type==vm_hash? 
@@ -854,7 +854,7 @@ inline void vm::o_slcend() {
 
 inline void vm::o_slc() {
     var val = (ctx.top--)[0];
-    var res = ctx.top[-1].vec().get_val(val.to_num());
+    var res = ctx.top[-1].vec().get_value(val.to_num());
     if (res.type==vm_none) {
         die(report_out_of_range(val.to_num(), ctx.top[-1].vec().size()));
         return;
@@ -923,7 +923,7 @@ inline void vm::o_mcallv() {
     var val = ctx.top[0];     // index
     var vec = (--ctx.top)[0]; // mcall vector, reserved on stack to avoid gc
     if (vec.type==vm_vec) {
-        ctx.memr = vec.vec().get_mem(val.to_num());
+        ctx.memr = vec.vec().get_memory(val.to_num());
         if (!ctx.memr) {
             die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
@@ -935,10 +935,10 @@ inline void vm::o_mcallv() {
         }
         auto& ref = vec.hash();
         const auto& str = val.str();
-        ctx.memr = ref.get_mem(str);
+        ctx.memr = ref.get_memory(str);
         if (!ctx.memr) {
             ref.elems[str] = nil;
-            ctx.memr = ref.get_mem(str);
+            ctx.memr = ref.get_memory(str);
         }
     } else if (vec.type==vm_map) {
         if (val.type!=vm_str) {
@@ -947,7 +947,7 @@ inline void vm::o_mcallv() {
         }
         auto& ref = vec.map();
         const auto& str = val.str();
-        ctx.memr = ref.get_mem(str);
+        ctx.memr = ref.get_memory(str);
         if (!ctx.memr) {
             die("cannot find symbol \"" + str + "\"");
         }
@@ -965,18 +965,18 @@ inline void vm::o_mcallh() {
     }
     const auto& str = const_string[imm[ctx.pc]];
     if (hash.type==vm_map) {
-        ctx.memr = hash.map().get_mem(str);
+        ctx.memr = hash.map().get_memory(str);
         if (!ctx.memr) {
             die("cannot find symbol \"" + str + "\"");
         }
         return;
     }
     auto& ref = hash.hash();
-    ctx.memr = ref.get_mem(str);
+    ctx.memr = ref.get_memory(str);
     // create a new key
     if (!ctx.memr) {
         ref.elems[str] = nil;
-        ctx.memr = ref.get_mem(str);
+        ctx.memr = ref.get_memory(str);
     }
 }
 

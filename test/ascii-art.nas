@@ -191,7 +191,6 @@ var ansi_escape_sequence=func(){
         }
         unix.sleep(0.01);
     }
-
 }
 
 # enable unicode

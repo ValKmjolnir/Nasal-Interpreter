@@ -2,7 +2,7 @@
 
 namespace nasal {
 
-var nas_vec::get_val(const i32 n) {
+var nas_vec::get_value(const i32 n) {
     i32 size = elems.size();
     if (n<-size || n>=size) {
         return var::none();
@@ -10,7 +10,7 @@ var nas_vec::get_val(const i32 n) {
     return elems[n>=0? n:n+size];
 }
 
-var* nas_vec::get_mem(const i32 n) {
+var* nas_vec::get_memory(const i32 n) {
     i32 size = elems.size();
     if (n<-size || n>=size) {
         return nullptr;
@@ -33,7 +33,7 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     return out;
 }
 
-var nas_hash::get_val(const std::string& key) {
+var nas_hash::get_value(const std::string& key) {
     if (elems.count(key)) {
         return elems.at(key);
     } else if (!elems.count("parents")) {
@@ -46,7 +46,7 @@ var nas_hash::get_val(const std::string& key) {
     }
     for(auto& i : val.vec().elems) {
         if (i.type==vm_hash) {
-            ret = i.hash().get_val(key);
+            ret = i.hash().get_value(key);
         }
         if (ret.type!=vm_none) {
             return ret;
@@ -55,7 +55,7 @@ var nas_hash::get_val(const std::string& key) {
     return ret;
 }
 
-var* nas_hash::get_mem(const std::string& key) {
+var* nas_hash::get_memory(const std::string& key) {
     if (elems.count(key)) {
         return &elems.at(key);
     } else if (!elems.count("parents")) {
@@ -68,7 +68,7 @@ var* nas_hash::get_mem(const std::string& key) {
     }
     for(auto& i : val.vec().elems) {
         if (i.type==vm_hash) {
-            addr = i.hash().get_mem(key);
+            addr = i.hash().get_memory(key);
         }
         if (addr) {
             return addr;
@@ -160,14 +160,14 @@ std::ostream& operator<<(std::ostream& out, const nas_co& co) {
     return out;
 }
 
-var nas_map::get_val(const std::string& key) {
+var nas_map::get_value(const std::string& key) {
     if (mapper.count(key)) {
         return *mapper.at(key);
     }
     return var::none();
 }
 
-var* nas_map::get_mem(const std::string& key) {
+var* nas_map::get_memory(const std::string& key) {
     if (mapper.count(key)) {
         return mapper.at(key);
     }
