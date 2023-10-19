@@ -101,25 +101,23 @@ public:
 struct nas_vec {
     std::vector<var> elems;
 
-    // mark if this is printed, avoid stackoverflow
-    bool printed;
+    // mark if this is printed, avoid stack overflow
+    bool printed = false;
 
-    nas_vec():printed(false) {}
     usize size() const {return elems.size();}
-    var get_val(const i32);
-    var* get_mem(const i32);
+    var get_value(const i32);
+    var* get_memory(const i32);
 };
 
 struct nas_hash {
     std::unordered_map<std::string, var> elems;
 
-    // mark if this is printed, avoid stackoverflow
-    bool printed;
+    // mark if this is printed, avoid stack overflow
+    bool printed = false;
 
-    nas_hash(): printed(false) {}
     usize size() const {return elems.size();}
-    var get_val(const std::string&);
-    var* get_mem(const std::string&);
+    var get_value(const std::string&);
+    var* get_memory(const std::string&);
 };
 
 struct nas_func {
@@ -180,9 +178,7 @@ public:
     void clear();
 
 public:
-    const std::string& get_ghost_name() const {
-        return type_name;
-    }
+    const auto& get_ghost_name() const {return type_name;}
 };
 
 struct context {
@@ -220,13 +216,12 @@ struct nas_map {
     bool printed = false;
     std::unordered_map<std::string, var*> mapper;
 
-    nas_map() {}
     void clear() {
         mapper.clear();
     }
 
-    var get_val(const std::string&);
-    var* get_mem(const std::string&);
+    var get_value(const std::string&);
+    var* get_memory(const std::string&);
 };
 
 struct nas_val {
