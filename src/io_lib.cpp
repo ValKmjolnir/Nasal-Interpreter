@@ -11,8 +11,8 @@ void filehandle_destructor(void* ptr) {
     fclose(static_cast<FILE*>(ptr));
 }
 
-var builtin_readfile(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_readfile(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     if (val.type!=vm_str) {
         return nas_err("io::readfile", "\"filename\" must be string");
     }
@@ -21,12 +21,13 @@ var builtin_readfile(var* local, gc& ngc) {
     if (!in.fail()) {
         rd << in.rdbuf();
     }
-    return ngc.newstr(rd.str());
+    return ngc->newstr(rd.str());
 }
 
-var builtin_fout(var* local, gc& ngc) {
-    var val = local[1];
-    var str = local[2];
+var builtin_fout(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto val = local[1];
+    auto str = local[2];
     if (val.type!=vm_str) {
         return nas_err("io::fout", "\"filename\" must be string");
     }
@@ -38,16 +39,18 @@ var builtin_fout(var* local, gc& ngc) {
     return nil;
 }
 
-var builtin_exists(var* local, gc& ngc) {
+var builtin_exists(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
     if (local[1].type!=vm_str) {
         return zero;
     }
     return access(local[1].str().c_str(), F_OK)!=-1? one:zero;
 }
 
-var builtin_open(var* local, gc& ngc) {
-    var name = local[1];
-    var mode = local[2];
+var builtin_open(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto name = local[1];
+    auto mode = local[2];
     if (name.type!=vm_str) {
         return nas_err("open", "\"filename\" must be string");
     }
@@ -58,13 +61,13 @@ var builtin_open(var* local, gc& ngc) {
     if (!res) {
         return nas_err("open", "failed to open file <"+name.str()+">");
     }
-    var ret = ngc.alloc(vm_obj);
+    var ret = ngc->alloc(vm_obj);
     ret.obj().set(file_type_name, filehandle_destructor, res);
     return ret;
 }
 
-var builtin_close(var* local, gc& ngc) {
-    var fd = local[1];
+var builtin_close(context* ctx, gc* ngc) {
+    var fd = ctx->localr[1];
     if (!fd.object_check(file_type_name)) {
         return nas_err("close", "not a valid filehandle");
     }
@@ -72,10 +75,11 @@ var builtin_close(var* local, gc& ngc) {
     return nil;
 }
 
-var builtin_read(var* local, gc& ngc) {
-    var fd = local[1];
-    var buf = local[2];
-    var len = local[3];
+var builtin_read(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto fd = local[1];
+    auto buf = local[2];
+    auto len = local[3];
     if (!fd.object_check(file_type_name)) {
         return nas_err("read", "not a valid filehandle");
     }
@@ -99,9 +103,10 @@ var builtin_read(var* local, gc& ngc) {
     return var::num(res);
 }
 
-var builtin_write(var* local, gc& ngc) {
-    var fd = local[1];
-    var str = local[2];
+var builtin_write(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto fd = local[1];
+    auto str = local[2];
     if (!fd.object_check(file_type_name)) {
         return nas_err("write", "not a valid filehandle");
     }
@@ -116,10 +121,11 @@ var builtin_write(var* local, gc& ngc) {
     )));
 }
 
-var builtin_seek(var* local, gc& ngc) {
-    var fd = local[1];
-    var pos = local[2];
-    var whence = local[3];
+var builtin_seek(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto fd = local[1];
+    auto pos = local[2];
+    auto whence = local[3];
     if (!fd.object_check(file_type_name)) {
         return nas_err("seek", "not a valid filehandle");
     }
@@ -130,8 +136,8 @@ var builtin_seek(var* local, gc& ngc) {
     )));
 }
 
-var builtin_tell(var* local, gc& ngc) {
-    var fd = local[1];
+var builtin_tell(context* ctx, gc* ngc) {
+    auto fd = ctx->localr[1];
     if (!fd.object_check(file_type_name)) {
         return nas_err("tell", "not a valid filehandle");
     }
@@ -140,12 +146,12 @@ var builtin_tell(var* local, gc& ngc) {
     ));
 }
 
-var builtin_readln(var* local, gc& ngc) {
-    var fd = local[1];
+var builtin_readln(context* ctx, gc* ngc) {
+    auto fd = ctx->localr[1];
     if (!fd.object_check(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }
-    var str = ngc.alloc(vm_str);
+    auto str = ngc->alloc(vm_str);
     char c;
     while((c = fgetc(static_cast<FILE*>(fd.obj().pointer)))!=EOF) {
         if (c=='\r') {
@@ -162,16 +168,16 @@ var builtin_readln(var* local, gc& ngc) {
     return nil;
 }
 
-var builtin_stat(var* local, gc& ngc) {
-    var name = local[1];
+var builtin_stat(context* ctx, gc* ngc) {
+    auto name = ctx->localr[1];
     if (name.type!=vm_str) {
         return nas_err("stat", "\"filename\" must be string");
     }
     struct stat buf;
-    if (stat(name.str().c_str(),&buf)<0) {
+    if (stat(name.str().c_str(), &buf)<0) {
         return nas_err("stat", "failed to open file <"+name.str()+">");
     }
-    var ret = ngc.alloc(vm_vec);
+    auto ret = ngc->alloc(vm_vec);
     ret.vec().elems = {
         var::num(static_cast<f64>(buf.st_dev)),
         var::num(static_cast<f64>(buf.st_ino)),
@@ -188,8 +194,8 @@ var builtin_stat(var* local, gc& ngc) {
     return ret;
 }
 
-var builtin_eof(var* local, gc& ngc) {
-    var fd = local[1];
+var builtin_eof(context* ctx, gc* ngc) {
+    auto fd = ctx->localr[1];
     if (!fd.object_check(file_type_name)) {
         return nas_err("readln", "not a valid filehandle");
     }

@@ -6,16 +6,16 @@
 
 namespace nasal {
 
-var builtin_pow(var*, gc&);
-var builtin_sin(var*, gc&);
-var builtin_cos(var*, gc&);
-var builtin_tan(var*, gc&);
-var builtin_exp(var*, gc&);
-var builtin_lg(var*, gc&);
-var builtin_ln(var*, gc&);
-var builtin_sqrt(var*, gc&);
-var builtin_atan2(var*, gc&);
-var builtin_isnan(var*, gc&);
+var builtin_pow(context*, gc*);
+var builtin_sin(context*, gc*);
+var builtin_cos(context*, gc*);
+var builtin_tan(context*, gc*);
+var builtin_exp(context*, gc*);
+var builtin_lg(context*, gc*);
+var builtin_ln(context*, gc*);
+var builtin_sqrt(context*, gc*);
+var builtin_atan2(context*, gc*);
+var builtin_isnan(context*, gc*);
 
 extern nasal_builtin_table math_lib_native[];
 

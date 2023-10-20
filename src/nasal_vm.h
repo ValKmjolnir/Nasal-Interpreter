@@ -821,11 +821,12 @@ inline void vm::o_callb() {
 
     // if running a native function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
-    var tmp = (*native_function[imm[ctx.pc]].func)(ctx.localr, ngc);
+    auto function_pointer = native_function[imm[ctx.pc]].func;
+    var result = (*function_pointer)(&ctx, &ngc);
 
     // so we use tmp variable to store this return value
     // and set it to top[0] later
-    ctx.top[0] = tmp;
+    ctx.top[0] = result;
 
     // if get none, this means errors occurred when calling this native function
     if (ctx.top[0].type==vm_none) {

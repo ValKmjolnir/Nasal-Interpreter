@@ -2,61 +2,61 @@
 
 namespace nasal {
 
-var builtin_pow(var* local, gc& ngc) {
-    var x = local[1];
-    var y = local[2];
+var builtin_pow(context* ctx, gc* ngc) {
+    auto x = ctx->localr[1];
+    auto y = ctx->localr[2];
     if (x.type!=vm_num || y.type!=vm_num) {
         return var::num(std::nan(""));
     }
     return var::num(std::pow(x.num(), y.num()));
 }
 
-var builtin_sin(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_sin(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? sin(val.num()):std::nan(""));
 }
 
-var builtin_cos(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_cos(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? cos(val.num()):std::nan(""));
 }
 
-var builtin_tan(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_tan(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? tan(val.num()):std::nan(""));
 }
 
-var builtin_exp(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_exp(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? exp(val.num()):std::nan(""));
 }
 
-var builtin_lg(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_lg(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? log(val.num())/log(10.0):std::nan(""));
 }
 
-var builtin_ln(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_ln(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? log(val.num()):std::nan(""));
 }
 
-var builtin_sqrt(var* local, gc& ngc) {
-    var val = local[1];
+var builtin_sqrt(context* ctx, gc* ngc) {
+    auto val = ctx->localr[1];
     return var::num(val.type==vm_num? sqrt(val.num()):std::nan(""));
 }
 
-var builtin_atan2(var* local, gc& ngc) {
-    var x = local[1];
-    var y = local[2];
+var builtin_atan2(context* ctx, gc* ngc) {
+    auto x = ctx->localr[1];
+    auto y = ctx->localr[2];
     if (x.type!=vm_num || y.type!=vm_num) {
         return var::num(std::nan(""));
     }
     return var::num(atan2(y.num(), x.num()));
 }
 
-var builtin_isnan(var* local, gc& ngc) {
-    var x = local[1];
+var builtin_isnan(context* ctx, gc* ngc) {
+    auto x = ctx->localr[1];
     return (x.type==vm_num && std::isnan(x.num()))? one:zero;
 }
 

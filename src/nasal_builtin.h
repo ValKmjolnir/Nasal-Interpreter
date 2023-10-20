@@ -29,56 +29,56 @@
 
 namespace nasal {
 
-var builtin_print(var*, gc&);
-var builtin_println(var*, gc&);
-var builtin_exit(var*, gc&);
-var builtin_abort(var*, gc&);
-var builtin_append(var*, gc&);
-var builtin_setsize(var*, gc&);
-var builtin_system(var*, gc&);
-var builtin_input(var*, gc&);
-var builtin_split(var*, gc&);
-var builtin_rand(var*, gc&);
-var builtin_id(var*, gc&);
-var builtin_int(var*, gc&);
-var builtin_floor(var*, gc&);
-var builtin_num(var*, gc&);
-var builtin_pop(var*, gc&);
-var builtin_str(var*, gc&);
-var builtin_size(var*, gc&);
-var builtin_time(var*, gc&);
-var builtin_contains(var*, gc&);
-var builtin_delete(var*, gc&);
-var builtin_keys(var*, gc&);
-var builtin_die(var*, gc&);
-var builtin_find(var*, gc&);
-var builtin_type(var*, gc&);
-var builtin_substr(var*, gc&);
-var builtin_streq(var*, gc&);
-var builtin_left(var*, gc&);
-var builtin_right(var*, gc&);
-var builtin_cmp(var*, gc&);
-var builtin_chr(var*, gc&);
-var builtin_char(var*, gc&);
-var builtin_values(var*, gc&);
-var builtin_sleep(var*, gc&);
-var builtin_platform(var*, gc&);
-var builtin_arch(var*, gc&);
+var builtin_print(context*, gc*);
+var builtin_println(context*, gc*);
+var builtin_exit(context*, gc*);
+var builtin_abort(context*, gc*);
+var builtin_append(context*, gc*);
+var builtin_setsize(context*, gc*);
+var builtin_system(context*, gc*);
+var builtin_input(context*, gc*);
+var builtin_split(context*, gc*);
+var builtin_rand(context*, gc*);
+var builtin_id(context*, gc*);
+var builtin_int(context*, gc*);
+var builtin_floor(context*, gc*);
+var builtin_num(context*, gc*);
+var builtin_pop(context*, gc*);
+var builtin_str(context*, gc*);
+var builtin_size(context*, gc*);
+var builtin_time(context*, gc*);
+var builtin_contains(context*, gc*);
+var builtin_delete(context*, gc*);
+var builtin_keys(context*, gc*);
+var builtin_die(context*, gc*);
+var builtin_find(context*, gc*);
+var builtin_type(context*, gc*);
+var builtin_substr(context*, gc*);
+var builtin_streq(context*, gc*);
+var builtin_left(context*, gc*);
+var builtin_right(context*, gc*);
+var builtin_cmp(context*, gc*);
+var builtin_chr(context*, gc*);
+var builtin_char(context*, gc*);
+var builtin_values(context*, gc*);
+var builtin_sleep(context*, gc*);
+var builtin_platform(context*, gc*);
+var builtin_arch(context*, gc*);
 // md5 related functions
 std::string tohex(u32);
 std::string md5(const std::string&);
-var builtin_md5(var*, gc&);
-var builtin_millisec(var*, gc&);
-var builtin_gcextend(var*, gc&);
-var builtin_gcinfo(var*, gc&);
-var builtin_logtime(var*, gc&);
-var builtin_ghosttype(var*, gc&);
+var builtin_md5(context*, gc*);
+var builtin_millisec(context*, gc*);
+var builtin_gcextend(context*, gc*);
+var builtin_gcinfo(context*, gc*);
+var builtin_logtime(context*, gc*);
+var builtin_ghosttype(context*, gc*);
 
 // register builtin function's name and it's address here in this table below
 // this table must end with {nullptr,nullptr}
 struct nasal_builtin_table {
     const char* name;
-    var (*func)(var*, gc&);
+    var (*func)(context*, gc*);
 };
 
 extern nasal_builtin_table builtin[];

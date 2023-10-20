@@ -15,8 +15,8 @@ void dylib_destructor(void* ptr) {
 
 void func_addr_destructor(void* ptr) {}
 
-var builtin_dlopen(var* local, gc& ngc) {
-    var dlname = local[1];
+var builtin_dlopen(context* ctx, gc* ngc) {
+    auto dlname = ctx->localr[1];
     if (dlname.type!=vm_str) {
         return nas_err("dlopen", "\"libname\" must be string");
     }
@@ -35,8 +35,8 @@ var builtin_dlopen(var* local, gc& ngc) {
     if (!ptr) {
         return nas_err("dlopen", "cannot open dynamic lib <"+dlname.str()+">");
     }
-    var ret = ngc.temp = ngc.alloc(vm_hash);
-    var lib = ngc.alloc(vm_obj);
+    auto ret = ngc->temp = ngc->alloc(vm_hash);
+    auto lib = ngc->alloc(vm_obj);
     lib.obj().set(dylib_type_name, dylib_destructor, ptr);
     ret.hash().elems["lib"] = lib;
 
@@ -52,23 +52,23 @@ var builtin_dlopen(var* local, gc& ngc) {
         return nas_err("dlopen", "cannot find <get> function");
     }
     // get function pointer by name
-    module_func_info* tbl = reinterpret_cast<get_func_ptr>(func)();
+    auto tbl = reinterpret_cast<get_func_ptr>(func)();
     if (!tbl) {
         return nas_err("dlopen", "failed to get module functions");
     }
     for(u32 i = 0; tbl[i].name; ++i) {
         void* p = (void*)tbl[i].fd;
-        var tmp = ngc.alloc(vm_obj);
+        var tmp = ngc->alloc(vm_obj);
         tmp.obj().set(func_addr_type_name, func_addr_destructor, p);
         ret.hash().elems[tbl[i].name] = tmp;
     }
 
-    ngc.temp = nil;
+    ngc->temp = nil;
     return ret;
 }
 
-var builtin_dlclose(var* local, gc& ngc) {
-    var libptr = local[1];
+var builtin_dlclose(context* ctx, gc* ngc) {
+    auto libptr = ctx->localr[1];
     if (!libptr.object_check(dylib_type_name)) {
         return nas_err("dlclose", "\"lib\" is not a valid dynamic lib");
     }
@@ -76,9 +76,10 @@ var builtin_dlclose(var* local, gc& ngc) {
     return nil;
 }
 
-var builtin_dlcallv(var* local, gc& ngc) {
-    var fp = local[1];
-    var args = local[2];
+var builtin_dlcallv(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto fp = local[1];
+    auto args = local[2];
     if (!fp.object_check(func_addr_type_name)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
@@ -86,23 +87,24 @@ var builtin_dlcallv(var* local, gc& ngc) {
     return reinterpret_cast<module_func>(fp.obj().pointer)(
         vec.data(),
         vec.size(),
-        &ngc
+        ngc
     );
 }
 
-var builtin_dlcall(var* local, gc& ngc) {
+var builtin_dlcall(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
     var fp = local[1];
     if (!fp.object_check(func_addr_type_name)) {
         return nas_err("dlcall", "\"ptr\" is not a valid function pointer");
     }
 
     var* local_frame_start = local+2;
-    usize local_frame_size = ngc.running_context->top-local_frame_start;
+    usize local_frame_size = ngc->running_context->top-local_frame_start;
     // arguments' stored place begins at local +2
     return reinterpret_cast<module_func>(fp.obj().pointer)(
         local_frame_start,
         local_frame_size,
-        &ngc
+        ngc
     );
 }
 
