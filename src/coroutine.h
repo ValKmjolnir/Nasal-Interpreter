@@ -6,11 +6,11 @@
 
 namespace nasal {
 
-var builtin_cocreate(var*, gc&);
-var builtin_coresume(var*, gc&);
-var builtin_coyield(var*, gc&);
-var builtin_costatus(var*, gc&);
-var builtin_corun(var*, gc&);
+var builtin_cocreate(context*, gc*);
+var builtin_coresume(context*, gc*);
+var builtin_coyield(context*, gc*);
+var builtin_costatus(context*, gc*);
+var builtin_corun(context*, gc*);
 
 extern nasal_builtin_table coroutine_native[];
 

@@ -4,9 +4,10 @@
 
 namespace nasal {
 
-var builtin_logprint(var* local, gc& ngc) {
-    var level = local[1];
-    var elems = local[2];
+var builtin_logprint(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    auto level = local[1];
+    auto elems = local[2];
     if (elems.type!=vm_vec) {
         return nas_err("logprint", "received argument is not vector.");
     }
