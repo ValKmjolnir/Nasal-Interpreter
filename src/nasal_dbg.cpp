@@ -181,10 +181,10 @@ void dbg::interact() {
     if (do_profiling) {
         return;
     }
-    
-    if ((bytecode[ctx.pc].fidx!=bk_fidx ||
-        bytecode[ctx.pc].line!=bk_line) && // break point
-        !next) {// next step
+
+    // is not break point and is not next stop command
+    const auto& code = bytecode[ctx.pc];
+    if ((code.fidx!=bk_fidx || code.line!=bk_line) && !next) {
         return;
     }
 
@@ -240,6 +240,7 @@ void dbg::run(
 
     set_detail_report_info(true);
     do_profiling = profile || show_all_prof_result;
+    next = true;
 
     const auto& file_list = linker.get_file_list();
     fsize = file_list.size();
