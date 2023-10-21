@@ -405,13 +405,19 @@ var builtin_char(context* ctx, gc* ngc) {
 
 var builtin_values(context* ctx, gc* ngc) {
     auto hash = ctx->localr[1];
-    if (hash.type!=vm_hash) {
-        return nas_err("values", "\"hash\" must be hash");
+    if (hash.type!=vm_hash && hash.type!=vm_map) {
+        return nas_err("values", "\"hash\" must be hash or namespace");
     }
-    var vec = ngc->alloc(vm_vec);
+    auto vec = ngc->alloc(vm_vec);
     auto& v = vec.vec().elems;
-    for(auto& i : hash.hash().elems) {
-        v.push_back(i.second);
+    if (hash.type==vm_hash) {
+        for(auto& i : hash.hash().elems) {
+            v.push_back(i.second);
+        }
+    } else {
+        for(auto& i : hash.map().mapper) {
+            v.push_back(*i.second);
+        }
     }
     return vec;
 }

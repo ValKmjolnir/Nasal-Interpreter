@@ -200,7 +200,10 @@ void dbg::interact() {
         } else if (res.size()==1) {
             switch(get_cmd_type(res[0])) {
                 case dbg_cmd::cmd_help: help(); break;
-                case dbg_cmd::cmd_backtrace: trace_back(); break;
+                case dbg_cmd::cmd_backtrace:
+                    function_call_trace();
+                    trace_back();
+                    break;
                 case dbg_cmd::cmd_continue: return;
                 case dbg_cmd::cmd_list_file: list_file(); break;
                 case dbg_cmd::cmd_global: global_state(); break;
@@ -240,13 +243,18 @@ void dbg::run(
 
     set_detail_report_info(true);
     do_profiling = profile || show_all_prof_result;
-    next = true;
 
     const auto& file_list = linker.get_file_list();
     fsize = file_list.size();
-    init(gen.strs(), gen.nums(), gen.natives(),
-         gen.codes(), gen.globals(),
-         file_list, argv);
+    init(
+        gen.strs(),
+        gen.nums(),
+        gen.natives(),
+        gen.codes(),
+        gen.globals(),
+        file_list,
+        argv
+    );
     data.init(file_list);
 
     std::vector<u32> code;

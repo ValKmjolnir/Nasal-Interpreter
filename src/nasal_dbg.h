@@ -158,7 +158,7 @@ private:
 
 public:
     dbg():
-        next(false), fsize(0),
+        next(true), fsize(0),
         bk_fidx(0), bk_line(0),
         do_profiling(false) {}
     void run(
