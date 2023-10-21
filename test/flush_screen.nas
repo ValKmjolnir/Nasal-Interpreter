@@ -24,5 +24,5 @@ while(1) {
         res ~= "\n";
     }
     print(res);
-    unix.sleep(1/30);
+    unix.sleep(1/20);
 }
