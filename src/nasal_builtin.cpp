@@ -632,9 +632,9 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
     if (arg.type!=vm_obj) {
         return nas_err("ghosttype", "this is not a ghost object.");
     }
-    const auto& name = arg.obj().get_ghost_name();
+    const auto& name = arg.ghost().get_ghost_name();
     if (!name.length()) {
-        return var::num(reinterpret_cast<u64>(arg.obj().pointer));
+        return var::num(reinterpret_cast<u64>(arg.ghost().pointer));
     }
     return ngc->newstr(name);
 }

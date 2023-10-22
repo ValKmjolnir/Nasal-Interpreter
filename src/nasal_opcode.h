@@ -111,8 +111,8 @@ class codestream {
 private:
     opcode code;
     const u32 index;
-    inline static const f64* nums = nullptr;
-    inline static const std::string* strs = nullptr;
+    inline static const f64* const_number = nullptr;
+    inline static const std::string* const_string = nullptr;
     inline static const nasal_builtin_table* natives = nullptr;
     inline static const std::string* files = nullptr;
     

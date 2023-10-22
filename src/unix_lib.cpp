@@ -73,7 +73,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
     }
 #endif
     var ret = ngc->alloc(vm_obj);
-    ret.obj().set(dir_type_name, dir_entry_destructor, p);
+    ret.ghost().set(dir_type_name, dir_entry_destructor, p);
     return ret;
 }
 
@@ -84,12 +84,12 @@ var builtin_readdir(context* ctx, gc* ngc) {
     }
 #ifdef _MSC_VER
     WIN32_FIND_DATAA data;
-    if (!FindNextFileA(handle.obj().pointer, &data)) {
+    if (!FindNextFileA(handle.ghost().pointer, &data)) {
         return nil;
     }
     return ngc->newstr(data.cFileName);
 #else
-    dirent* p = readdir(static_cast<DIR*>(handle.obj().pointer));
+    dirent* p = readdir(static_cast<DIR*>(handle.ghost().pointer));
     return p? ngc->newstr(p->d_name):nil;
 #endif
 }
@@ -99,7 +99,7 @@ var builtin_closedir(context* ctx, gc* ngc) {
     if (!handle.object_check(dir_type_name)) {
         return nas_err("unix::closedir", "not a valid dir handle");
     }
-    handle.obj().clear();
+    handle.ghost().clear();
     return nil;
 }
 

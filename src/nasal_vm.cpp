@@ -93,7 +93,7 @@ void vm::value_info(var& val) {
                                 << " val}"; break;
         case vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
                                 << "> obj:0x"
-                                << reinterpret_cast<u64>(val.obj().pointer)
+                                << reinterpret_cast<u64>(val.ghost().pointer)
                                 << std::dec; break;
         case vm_co:   std::clog << "| co   | <0x" << std::hex << p
                                 << std::dec << "> coroutine"; break;
@@ -170,12 +170,12 @@ void vm::function_call_trace() {
 }
 
 void vm::trace_back() {
-    var* bottom = ctx.stack;
-    var* top = ctx.top;
+    // var* bottom = ctx.stack;
+    // var* top = ctx.top;
 
     // generate trace back
     std::stack<u32> ret;
-    for(var* i = bottom; i<=top; ++i) {
+    for(var* i = ctx.stack; i<=ctx.top; ++i) {
         if (i->type==vm_ret && i->ret()!=0) {
             ret.push(i->ret());
         }
@@ -401,7 +401,7 @@ void vm::die(const std::string& str) {
     } else {
         // in coroutine, shut down the coroutine and return to main context
         ctx.pc = 0; // mark coroutine 'dead'
-        ngc.ctxreserve(); // switch context to main
+        ngc.context_reserve(); // switch context to main
         ctx.top[0] = nil; // generate return value 'nil'
     }
 }

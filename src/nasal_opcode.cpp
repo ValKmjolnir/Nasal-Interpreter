@@ -28,13 +28,13 @@ const char* opname[] = {
 };
 
 void codestream::set(
-    const f64* num_buff,
-    const std::string* str_buff,
-    const nasal_builtin_table* native_table_ptr,
+    const f64* number_list,
+    const std::string* string_list,
+    const nasal_builtin_table* native_table,
     const std::string* file_list) {
-    nums = num_buff;
-    strs = str_buff;
-    natives = native_table_ptr;
+    const_number = number_list;
+    const_string = string_list;
+    natives = native_table;
     files = file_list;
 }
 
@@ -62,24 +62,24 @@ void codestream::dump(std::ostream& out) const {
         case op_addeqc: case op_subeqc:
         case op_muleqc:case op_diveqc:
             out << hex << "0x" << num << dec
-                << " (" << nums[num] << ")"; break;
+                << " (" << const_number[num] << ")"; break;
         case op_lnkeqc:
             out << hex << "0x" << num << dec
-                << " (" << rawstr(strs[num], 16) << ")"; break;
+                << " (" << rawstr(const_string[num], 16) << ")"; break;
         case op_addecp: case op_subecp:
         case op_mulecp: case op_divecp:
             out << hex << "0x" << num << dec
-                << " (" << nums[num] << ") sp-1"; break;
+                << " (" << const_number[num] << ") sp-1"; break;
         case op_lnkecp:
             out << hex << "0x" << num << dec
-                << " (" << rawstr(strs[num], 16) << ") sp-1"; break;
+                << " (" << rawstr(const_string[num], 16) << ") sp-1"; break;
         case op_addc: case op_subc:
         case op_mulc: case op_divc:
         case op_lessc: case op_leqc:
         case op_grtc: case op_geqc:
         case op_pnum:
             out << hex << "0x" << num << dec
-                << " (" << nums[num] << ")"; break;
+                << " (" << const_number[num] << ")"; break;
         case op_callvi: case op_newv:
         case op_callfv: case op_repl:
         case op_intl: case op_findex:
@@ -103,7 +103,7 @@ void codestream::dump(std::ostream& out) const {
         case op_mcallh: case op_para:
         case op_deft: case op_dyn:
             out << hex << "0x" << num << dec
-                << " (" << rawstr(strs[num], 16) << ")"; break;
+                << " (" << rawstr(const_string[num], 16) << ")"; break;
         default:
             if (files) {
                 out << hex << "0x" << num << dec;

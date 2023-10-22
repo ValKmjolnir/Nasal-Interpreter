@@ -75,7 +75,7 @@ var builtin_coresume(context* ctx, gc* ngc) {
     }
 
     // change to coroutine context
-    ngc->ctxchg(coroutine_object.co());
+    ngc->context_change(&coroutine_object.co());
 
     // fetch coroutine's stack top and return
     // then coroutine's stack top will catch this return value
@@ -103,7 +103,7 @@ var builtin_coyield(context* ctx, gc* ngc) {
     auto coroutine_local_frame = ctx->localr;
 
     // vm context will set to main context
-    ngc->ctxreserve();
+    ngc->context_reserve();
 
     // then this will return value to main's stack top[0]
     // the procedure seems like coroutine.resume returns the value
