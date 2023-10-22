@@ -9,7 +9,7 @@ var builtin_logprint(context* ctx, gc* ngc) {
     auto level = local[1];
     auto elems = local[2];
     if (elems.type!=vm_vec) {
-        return nas_err("logprint", "received argument is not vector.");
+        return nas_err("fg_env::logprint", "received argument is not vector.");
     }
     std::ofstream out("fgfs.log", std::ios::app);
     switch (static_cast<u32>(level.num())) {
@@ -22,13 +22,12 @@ var builtin_logprint(context* ctx, gc* ngc) {
         case SG_DEV_ALERT: out << "[DEV_ALERT]"; break;
         case SG_MANDATORY_INFO: out << "[MANDATORY_INFO]"; break;
         default:
-            return nas_err("logprint",
-                "incorrect log level " +
-                std::to_string(level.num())
+            return nas_err("fg_env::logprint",
+                "incorrect log level " + std::to_string(level.num())
             );
     }
-    for(auto& i : elems.vec().elems) {
-        out << i << " ";
+    for(auto& value : elems.vec().elems) {
+        out << value << " ";
     }
     out << "\n";
     return nil;

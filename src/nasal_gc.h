@@ -88,8 +88,8 @@ public:
     void clear();
     void info() const;
     var alloc(const u8);
-    void ctxchg(nas_co&);
-    void ctxreserve();
+    void context_change(nas_co*);
+    void context_reserve();
 
 public:
     var newstr(char c) {

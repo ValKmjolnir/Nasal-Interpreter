@@ -352,21 +352,21 @@ var gc::alloc(u8 type) {
     return ret;
 }
 
-void gc::ctxchg(nas_co& co) {
+void gc::context_change(nas_co* co) {
     // store running state to main context
     main_context = *running_context;
 
     // restore coroutine context state
-    *running_context = co.ctx;
+    *running_context = co->ctx;
 
     // set coroutine pointer
-    cort = &co;
+    cort = co;
 
     // set coroutine state to running
     cort->status = nas_co::status::running;
 }
 
-void gc::ctxreserve() {
+void gc::context_reserve() {
     // pc=0 means this coroutine is finished
     cort->status = running_context->pc?
         nas_co::status::suspended:

@@ -160,7 +160,7 @@ void dbg::step_info() {
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
     codestream::set(const_number, const_string, native_function.data(), files);
-    std::clog << "next bytecode:\n";
+    std::clog << "\nnext bytecode:\n";
     for(u32 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
         << (i==ctx.pc? back_white:reset)
@@ -184,7 +184,7 @@ void dbg::interact() {
 
     // is not break point and is not next stop command
     const auto& code = bytecode[ctx.pc];
-    if ((code.fidx!=bk_fidx || code.line!=bk_line) && !next) {
+    if ((code.fidx!=break_file_index || code.line!=break_line) && !next) {
         return;
     }
 
@@ -217,8 +217,8 @@ void dbg::interact() {
             }
         } else if (res.size()==3 &&
             get_cmd_type(res[0])==dbg_cmd::cmd_break_point) {
-            bk_fidx = file_index(res[1]);
-            if (bk_fidx==65535) {
+            break_file_index = file_index(res[1]);
+            if (break_file_index==65535) {
                 std::clog << "cannot find file named `" << res[1] << "`\n";
                 continue;
             }
@@ -226,7 +226,7 @@ void dbg::interact() {
             if (tmp<=0) {
                 std::clog << "incorrect line number `" << res[2] << "`\n";
             } else {
-                bk_line = tmp;
+                break_line = tmp;
             }
         } else {
             err();

@@ -1024,7 +1024,7 @@ inline void vm::o_ret() {
     // because there maybe another function call inside but return here
     // coroutine function ends with setting pc to 0
     if (!ctx.pc) {
-        ngc.ctxreserve();
+        ngc.context_reserve();
     }
 }
 

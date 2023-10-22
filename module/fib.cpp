@@ -53,7 +53,7 @@ void ghost_for_test_destructor(void* ptr) {
 
 var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_obj);
-    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    res.ghost().set(ghost_for_test, ghost_for_test_destructor, new u32);
     return res;
 }
 
@@ -64,7 +64,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     f64 num = args[1].num();
-    *((u32*)res.obj().pointer) = static_cast<u32>(num);
+    *((u32*)res.ghost().pointer) = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
     return nil;
 }
@@ -75,8 +75,8 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
-    std::cout << "print_new_ghost: " << res.obj() << " result = "
-        << *((u32*)res.obj().pointer) << "\n";
+    std::cout << "print_new_ghost: " << res.ghost() << " result = "
+              << *((u32*)res.ghost().pointer) << "\n";
     return nil;
 }
 

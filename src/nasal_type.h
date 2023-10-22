@@ -23,11 +23,13 @@ enum vm_type:u8 {
     vm_upval,    // upvalue
     vm_obj,      // ghost type
     vm_co,       // coroutine
-    vm_map       // for globals and namespaces
+    vm_map,      // for globals and namespaces
+    /* mark type range */
+    vm_type_size_max
 };
 
 // size of gc object type
-const u32 gc_type_size = vm_map-vm_str+1;
+const u32 gc_type_size = vm_type_size_max-vm_str;
 
 // basic types
 struct nas_vec;   // vector
@@ -85,15 +87,15 @@ public:
 
     // get value
     var* addr();
-    u32 ret();
+    u32 ret() const;
     i64& cnt();
-    f64 num();
+    f64 num() const;
     std::string& str();
     nas_vec& vec();
     nas_hash& hash();
     nas_func& func();
     nas_upval& upval();
-    nas_ghost& obj();
+    nas_ghost& ghost();
     nas_co& co();
     nas_map& map();
 };

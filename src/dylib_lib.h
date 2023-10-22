@@ -13,8 +13,7 @@
 
 namespace nasal {
 
-void dylib_destructor(void*);
-void func_addr_destructor(void*);
+void dynamic_library_destructor(void*);
 
 var builtin_dlopen(context*, gc*);
 var builtin_dlclose(context*, gc*);
