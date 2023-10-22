@@ -1,5 +1,8 @@
 #include "nasal_type.h"
 
+#include <cstring>
+#include <sstream>
+
 namespace nasal {
 
 var nas_vec::get_value(const i32 index) {
