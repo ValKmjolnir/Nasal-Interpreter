@@ -1303,7 +1303,7 @@ void codegen::print(std::ostream& out) {
             out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
             // avoid two empty lines
             if (c.op!=op_newf) {
-                out<<"\n";
+                out << "\n";
             }
             func_begin_stack.pop();
             func_end_stack.pop();
@@ -1322,7 +1322,7 @@ void codegen::print(std::ostream& out) {
         }
 
         // output bytecode
-        out << "  " << codestream(c,i) << "\n";
+        out << "  " << codestream(c, i) << "\n";
     }
 }
 

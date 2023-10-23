@@ -198,8 +198,10 @@ code_block* linker::import_regular_file(call_expr* node) {
         return new code_block({0, 0, 0, 0, filename});
     }
     if (check_self_import(filename)) {
-        err.err("link", "self-referenced module <" + filename + ">:\n" +
-            "    reference path: " + generate_self_import_path(filename));
+        err.err("link",
+            "self-referenced module <" + filename + ">:\n" +
+            "    reference path: " + generate_self_import_path(filename)
+        );
         return new code_block({0, 0, 0, 0, filename});
     }
     exist(filename);
@@ -208,16 +210,19 @@ code_block* linker::import_regular_file(call_expr* node) {
     // start importing...
     if (lex.scan(filename).geterr()) {
         err.err("link", "error occurred when analysing <" + filename + ">");
+        return new code_block({0, 0, 0, 0, filename});
     }
     if (par.compile(lex).geterr())  {
         err.err("link", "error occurred when analysing <" + filename + ">");
+        return new code_block({0, 0, 0, 0, filename});
     }
-    auto tmp = par.swap(nullptr);
 
-    // check if tmp has 'import'
-    auto res = load(tmp, find(filename));
+    auto parse_result = par.swap(nullptr);
+
+    // check if parse result has 'import'
+    auto result = load(parse_result, find(filename));
     module_load_stack.pop_back();
-    return res;
+    return result;
 }
 
 code_block* linker::import_nasal_lib() {
@@ -239,16 +244,18 @@ code_block* linker::import_nasal_lib() {
         err.err("link",
             "error occurred when analysing library <" + filename + ">"
         );
+        return new code_block({0, 0, 0, 0, filename});
     }
     if (par.compile(lex).geterr())  {
         err.err("link",
             "error occurred when analysing library <" + filename + ">"
         );
+        return new code_block({0, 0, 0, 0, filename});
     }
-    auto tmp = par.swap(nullptr);
 
-    // check if tmp has 'import'
-    return load(tmp, find(filename));
+    auto parse_result = par.swap(nullptr);
+    // check if library has 'import' (in fact it should not)
+    return load(parse_result, find(filename));
 }
 
 std::string linker::generate_module_name(const std::string& file_path) {
