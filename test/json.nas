@@ -1,9 +1,7 @@
 import.std.json;
 import.std.process_bar;
 
-var JSON = json.JSON;
-
-var ss=JSON.stringify({
+var ss = json.stringify({
     vec:[0,1,2],
     hash:{
         m1:0,
@@ -17,10 +15,11 @@ var ss=JSON.stringify({
     empty_an:[[[[[[{}]]]]]],
     function:func(){}
 });
-println(ss,"\n");
-println(JSON.parse(ss),"\n");
 
-var ss=JSON.stringify([{
+println(ss, "\n");
+println(json.parse(ss), "\n");
+
+var ss = json.stringify([{
     vec:[0,1,2,3],
     hash:{
         m1:0,
@@ -33,12 +32,13 @@ var ss=JSON.stringify([{
     empty_an:[[[[[{}]]]]],
     function:func(){}
 }]);
-println(ss,"\n");
-println(JSON.parse(ss),"\n");
+
+println(ss, "\n");
+println(json.parse(ss), "\n");
 
 func {
-    var bar=process_bar.high_resolution_bar(30);
-    var tmp=[
+    var bar = process_bar.high_resolution_bar(30);
+    var tmp = [
         {t0:nil},
         {t1:nil},
         {t2:nil},
@@ -50,18 +50,18 @@ func {
     ];
 
     srand();
-    foreach(var h;tmp) {
-        var name=keys(h)[0];
-        h[name]=[];
-        print("\e[1000D",bar.bar(0));
-        for(var i=0;i<500;i+=1) {
-            append(h[name],{id:i,content:int(rand()*1e7)});
-            print("\e[1000D",bar.bar((i+1)/500));
+    foreach(var h; tmp) {
+        var name = keys(h)[0];
+        h[name] = [];
+        print("\e[1000D", bar.bar(0));
+        for(var i = 0; i<500; i+=1) {
+            append(h[name], {id:i, content:int(rand()*1e7)});
+            print("\e[1000D", bar.bar((i+1)/500));
         }
-        print("\e[1000D",bar.bar(1)," executing...\n");
+        print("\e[1000D", bar.bar(1), " executing...\n");
     }
-    print("\e[1000D","\e["~str(size(tmp))~"A");
-    foreach(var h;JSON.parse(JSON.stringify(tmp))) {
-        println("\e[1000D",bar.bar(1)," parse done ",keys(h)[0]," ",size(h[keys(h)[0]]));
+    print("\e[1000D", "\e["~str(size(tmp))~"A");
+    foreach(var h; json.parse(json.stringify(tmp))) {
+        println("\e[1000D", bar.bar(1), " parse done ", keys(h)[0], " ", size(h[keys(h)[0]]));
     }
 }();
