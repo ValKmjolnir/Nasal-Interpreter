@@ -2,7 +2,6 @@ import.module.libsock;
 import.std.json;
 import.std.runtime;
 
-var JSON = json.JSON;
 var socket = libsock.socket;
 
 var gettime=func(){
@@ -79,19 +78,19 @@ var server=func(ip,port) {
         while(1) {
             var data=jsonRPC.recv(client);
             if (data!=nil) {
-                data=JSON.parse(data);
+                data=json.parse(data);
             } else {
                 break;
             }
             if (contains(methods,data.method)) {
-                jsonRPC.send(client, JSON.stringify({
+                jsonRPC.send(client, json.stringify({
                     jsonrpc:2.0,
                     id:data.id,
                     error:"null",
                     result:methods[data.method](data.params)
                 }));
             } else {
-                jsonRPC.send(client, JSON.stringify({
+                jsonRPC.send(client, json.stringify({
                     jsonrpc:2.0,
                     id:data.id,
                     error:"no such method \\\""~data.method~"\\\"",
@@ -113,13 +112,13 @@ var client=func(ip,port) {
     var server=jsonRPC.connect(ip,port);
     while(1) {
         unix.sleep(5);
-        var data=JSON.stringify({jsonrpc:2.0, id:call_id, method:methods[rand()*size(methods)],params:params[rand()*size(params)]});
+        var data=json.stringify({jsonrpc:2.0, id:call_id, method:methods[rand()*size(methods)],params:params[rand()*size(params)]});
         jsonRPC.send(server, data);
         var respond=jsonRPC.recv(server);
         if (respond==nil) {
             break;
         }
-        println("[",gettime(),"] result: ",JSON.parse(respond).result);
+        println("[",gettime(),"] result: ",json.parse(respond).result);
         call_id+=1;
     }
     jsonRPC.disconnect(server);

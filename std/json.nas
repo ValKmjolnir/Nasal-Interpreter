@@ -19,7 +19,7 @@ var _j_content = [
     "identifier"
 ];
 
-var JSON = func() {
+var parse = func() {
 
     var text = "";
     var line = 1;
@@ -66,7 +66,7 @@ var JSON = func() {
     var get = func(str) {
         init();
         if (!size(str)) {
-            println("JSON.parse: empty string");
+            println("json::parse: empty string");
             str = "[]";
         }
         text = str;
@@ -147,7 +147,7 @@ var JSON = func() {
 
     var match = func(type) {
         if(token.type!=type)
-            println("JSON.parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
+            println("json::parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
         next();
         return;
     }
@@ -212,30 +212,30 @@ var JSON = func() {
         return vec;
     }
 
-    return {
-        parse:func(str) {
-            if(typeof(str)!="str") {
-                println("JSON.parse: must use string");
-                return [];
-            }
-            get(str);
-            next();
-
-            if (token.type==_j_lbrkt) {
-                var res = vec_gen();
-            } else {
-                var res = hash_gen();
-            }
-
-            init();
-            return res;
+    return func(source) {
+        if(typeof(source)!="str") {
+            println("json::parse: must use string but get", typeof(str));
+            return [];
         }
-    };
+
+        get(source);
+        next();
+
+        if (token.type==_j_lbrkt) {
+            var res = vec_gen();
+        } else {
+            var res = hash_gen();
+        }
+
+        init();
+        return res;
+    }
 }();
 
-JSON.stringify = func(object) {
-    if(typeof(object)!="hash" and typeof(object)!="vec") {
-        println("JSON.stringify: must use hashmap or vector");
+var stringify = func(object) {
+    var object_type = typeof(object);
+    if(object_type!="hash" and object_type!="vec" and object_type!="namespace") {
+        println("json::stringify: must use hashmap or vector, but get ", typeof(object));
         return "[]";
     }
 
