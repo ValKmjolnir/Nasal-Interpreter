@@ -2,8 +2,16 @@
 # 2021 ValKmjolnir
 
 var (
-    _j_eof, _j_lbrace, _j_rbrace, _j_lbrkt, _j_rbrkt,
-    _j_comma, _j_colon, _j_str, _j_num, _j_id
+    _j_eof,
+    _j_lbrace,
+    _j_rbrace,
+    _j_lbrkt,
+    _j_rbrkt,
+    _j_comma,
+    _j_colon,
+    _j_str,
+    _j_num,
+    _j_id
 ) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
 var _j_content = [
@@ -146,28 +154,29 @@ var parse = func() {
     }
 
     var match = func(type) {
-        if(token.type!=type)
+        if(token.type!=type) {
             println("json::parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
+        }
         next();
         return;
     }
 
     var member = func(hash) {
         var name = token.content;
-        if(token.type==_j_rbrace) {
+        if (token.type==_j_rbrace) {
             return;
         }
-        if(token.type==_j_str) {
+        if (token.type==_j_str) {
             match(_j_str);
         } else {
             match(_j_id);
         }
         match(_j_colon);
-        if(token.type==_j_lbrace) {
+        if (token.type==_j_lbrace) {
             hash[name] = hash_gen();
-        } elsif(token.type==_j_lbrkt) {
+        } elsif (token.type==_j_lbrkt) {
             hash[name] = vec_gen();
-        } elsif(token.type==_j_str or token.type==_j_num) {
+        } elsif (token.type==_j_str or token.type==_j_num) {
             hash[name] = token.content;
             next();
         }
@@ -189,21 +198,21 @@ var parse = func() {
     var vec_gen = func() {
         var vec = [];
         match(_j_lbrkt);
-        if(token.type==_j_lbrace) {
+        if (token.type==_j_lbrace) {
             append(vec, hash_gen());
-        } elsif(token.type==_j_lbrkt) {
+        } elsif (token.type==_j_lbrkt) {
             append(vec, vec_gen());
-        } elsif(token.type==_j_str or token.type==_j_num) {
+        } elsif (token.type==_j_str or token.type==_j_num) {
             append(vec, token.content);
             next();
         }
         while(token.type==_j_comma) {
             match(_j_comma);
-            if(token.type==_j_lbrace) {
+            if (token.type==_j_lbrace) {
                 append(vec, hash_gen());
-            } elsif(token.type==_j_lbrkt) {
+            } elsif (token.type==_j_lbrkt) {
                 append(vec, vec_gen());
-            } elsif(token.type==_j_str or token.type==_j_num) {
+            } elsif (token.type==_j_str or token.type==_j_num) {
                 append(vec, token.content);
                 next();
             }
@@ -242,13 +251,13 @@ var stringify = func(object) {
     var s = "";
     var gen = func(elem) {
         var t = typeof(elem);
-        if(t=="num") {
+        if (t=="num") {
             s ~= str(elem);
-        } elsif(t=="str") {
+        } elsif (t=="str") {
             s ~= '"'~elem~'"';
-        } elsif(t=="vec") {
+        } elsif (t=="vec") {
             vgen(elem);
-        } elsif(t=="hash") {
+        } elsif (t=="hash") {
             hgen(elem);
         } else {
             s ~= '"undefined"';

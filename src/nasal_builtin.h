@@ -42,6 +42,7 @@ var builtin_rand(context*, gc*);
 var builtin_id(context*, gc*);
 var builtin_int(context*, gc*);
 var builtin_floor(context*, gc*);
+var builtin_ceil(context*, gc*);
 var builtin_num(context*, gc*);
 var builtin_pop(context*, gc*);
 var builtin_str(context*, gc*);

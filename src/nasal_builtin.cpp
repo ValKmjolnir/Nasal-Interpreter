@@ -157,6 +157,11 @@ var builtin_floor(context* ctx, gc* ngc) {
     return var::num(std::floor(value.num()));
 }
 
+var builtin_ceil(context* ctx, gc* ngc) {
+    auto value = ctx->localr[1];
+    return var::num(std::ceil(value.num()));
+}
+
 var builtin_num(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     if (val.type==vm_num) {
@@ -653,6 +658,7 @@ nasal_builtin_table builtin[] = {
     {"__id", builtin_id},
     {"__int", builtin_int},
     {"__floor", builtin_floor},
+    {"__ceil", builtin_ceil},
     {"__num", builtin_num},
     {"__pop", builtin_pop},
     {"__str", builtin_str},
