@@ -75,6 +75,10 @@ var floor = func(val) {
     return __floor(val);
 }
 
+var ceil = func(val) {
+    return __ceil(val);
+}
+
 # exit using std::exit
 var exit = func(val = -1) {
     return __exit(val);
@@ -228,19 +232,21 @@ var println = func(elems...) {
 
 # sort function using quick sort
 # not very efficient... :(
-var sort = func(){
+var sort = func() {
     srand();  # be aware! this causes global changes
     var quick_sort_core = func(vec, left, right, cmp) {
         if(left>=right) return nil;
         var base = left+int(rand()*(right-left));
         (vec[left], vec[base]) = (vec[base], vec[left]);
         var (i, j, tmp) = (left, right, vec[left]);
-        while(i<j){
-            while(i<j and cmp(tmp,vec[j]))
+        while(i<j) {
+            while(i<j and cmp(tmp,vec[j])) {
                 j -= 1;
+            }
             vec[i] = vec[j];
-            while(i<j and cmp(vec[i],tmp))
+            while(i<j and cmp(vec[i],tmp)) {
                 i += 1;
+            }
             vec[j] = vec[i];
             j -= 1;
         }
@@ -249,7 +255,7 @@ var sort = func(){
         quick_sort_core(vec, i+1, right, cmp);
         return nil;
     }
-    return func(vec, cmp = func(a, b) {return a<b;}){
+    return func(vec, cmp = func(a, b) {return a<b;}) {
         quick_sort_core(vec, 0, size(vec)-1, cmp);
         return nil;
     }
@@ -276,7 +282,7 @@ var isnum = func(x) {
 }
 
 var isscalar = func(s) {
-    var t=typeof(s);
+    var t = typeof(s);
     return (t=="num" or t=="str")? 1:0;
 }
 
@@ -293,25 +299,29 @@ var ghosttype = func(ghost_object) {
 }
 
 # get the index of val in the vec
-var vecindex = func(vec,val) {
-    forindex(var i;vec)
-        if(val==vec[i])
+var vecindex = func(vec, val) {
+    forindex(var i; vec) {
+        if(val==vec[i]) {
             return i;
+        }
+    }
     return nil;
 }
 
 # check if the object is an instance of the class
 var isa = func(object, class) {
     if (!ishash(object)) {
-        return 0;
+        return false;
     }
     if(!contains(object, "parents") or !isvec(object.parents)) {
-        return 0;
+        return false;
     }
-    foreach(var elem;object.parents)
-        if(elem==class or isa(elem, class))
-            return 1;
-    return 0;
+    foreach(var elem; object.parents) {
+        if(elem==class or isa(elem, class)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 # assert aborts when condition is not true
