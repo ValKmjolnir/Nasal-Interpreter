@@ -89,7 +89,7 @@ void codegen::find_symbol(code_block* node) {
             experimental_namespace[i.location.file] = {};
         }
         // if in global scope, load global symbol into this namespace
-        auto scope = experimental_namespace.at(i.location.file);
+        auto& scope = experimental_namespace.at(i.location.file);
         if (local.empty() && !scope.count(i.name)) {
             scope.insert(i.name);
         }
@@ -835,13 +835,18 @@ void codegen::forei_gen(forei_expr* node) {
     } else {
         emit(op_feach, 0, node->get_location());
     }
-    if (node->get_iterator()->get_name()) {
+
+    auto iterator_node = node->get_iterator();
+    if (iterator_node->is_definition()) {
         // define a new iterator
-        auto name_node = node->get_iterator()->get_name();
+        const auto name_node = iterator_node->get_name();
         const auto& str = name_node->get_name();
         local.empty()?
             emit(op_loadg, global_symbol_find(str), name_node->get_location()):
             emit(op_loadl, local_symbol_find(str), name_node->get_location());
+    } else if (!iterator_node->is_definition() && iterator_node->get_name()) {
+        mcall(node->get_iterator()->get_name());
+        replace_left_assignment_with_load(node->get_iterator()->get_location());
     } else {
         // use exist variable as the iterator
         mcall(node->get_iterator()->get_call());
@@ -1303,7 +1308,7 @@ void codegen::print(std::ostream& out) {
             out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
             // avoid two empty lines
             if (c.op!=op_newf) {
-                out<<"\n";
+                out << "\n";
             }
             func_begin_stack.pop();
             func_end_stack.pop();
@@ -1322,7 +1327,7 @@ void codegen::print(std::ostream& out) {
         }
 
         // output bytecode
-        out << "  " << codestream(c,i) << "\n";
+        out << "  " << codestream(c, i) << "\n";
     }
 }
 

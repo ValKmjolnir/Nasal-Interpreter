@@ -10,11 +10,8 @@ struct for_reset {
     for_reset() {
         GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scr);
     }
-    static for_reset* singleton() {
-        static for_reset windows_set;
-        return &windows_set;
-    }
 };
+static for_reset windows_system_set;
 #endif
 
 std::ostream& back_white(std::ostream& s) {
@@ -64,8 +61,10 @@ std::ostream& white(std::ostream& s) {
 
 std::ostream& reset(std::ostream& s) {
 #ifdef _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),
-        for_reset::singleton()->scr.wAttributes);
+    SetConsoleTextAttribute(
+        GetStdHandle(STD_OUTPUT_HANDLE),
+        windows_system_set.scr.wAttributes
+    );
 #else
     s << "\033[0m";
 #endif

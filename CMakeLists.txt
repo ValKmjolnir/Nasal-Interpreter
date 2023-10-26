@@ -36,6 +36,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
     ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp
@@ -65,6 +66,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
 

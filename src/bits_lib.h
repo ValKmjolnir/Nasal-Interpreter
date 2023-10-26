@@ -6,15 +6,15 @@
 
 namespace nasal {
 
-var builtin_u32xor(var*, gc&);
-var builtin_u32and(var*, gc&);
-var builtin_u32or(var*, gc&);
-var builtin_u32nand(var*, gc&);
-var builtin_u32not(var*, gc&);
-var builtin_fld(var*, gc&);
-var builtin_sfld(var*, gc&);
-var builtin_setfld(var*, gc&);
-var builtin_buf(var*, gc&);
+var builtin_u32xor(context*, gc*);
+var builtin_u32and(context*, gc*);
+var builtin_u32or(context*, gc*);
+var builtin_u32nand(context*, gc*);
+var builtin_u32not(context*, gc*);
+var builtin_fld(context*, gc*);
+var builtin_sfld(context*, gc*);
+var builtin_setfld(context*, gc*);
+var builtin_buf(context*, gc*);
 
 extern nasal_builtin_table bits_native[];
 

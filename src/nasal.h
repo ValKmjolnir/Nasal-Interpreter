@@ -1,15 +1,15 @@
 #pragma once
 
 #ifndef __nasver
-#define __nasver "11.0"
+#define __nasver "11.1"
 #endif
 
 #include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <sstream>
 #include <cmath>
-#include <vector>
 
 // abbreviation of some useful basic type
 using i32 = std::int32_t;
@@ -36,8 +36,7 @@ bool is_powerpc();
 bool is_superh();
 
 
-// virtual machine stack depth
-// both global depth and value stack depth
+// virtual machine stack depth, both global depth and value stack depth
 const u32 STACK_DEPTH = 4096;
 
 f64 hex2f(const char*);
@@ -54,8 +53,6 @@ f64 dec2f(const char*);
 f64 str2num(const char*);
 i32 utf8_hdchk(const char);
 std::string chrhex(const char);
-std::string rawstr(const std::string&, const usize maxlen=0);
+std::string rawstr(const std::string&, const usize maxlen = 0);
 
 }
-
-#include "nasal_gc.h"

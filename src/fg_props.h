@@ -15,7 +15,7 @@ namespace nasal {
 #define SG_DEV_ALERT 8
 #define SG_MANDATORY_INFO 9
 
-var builtin_logprint(var*, gc&);
+var builtin_logprint(context*, gc*);
 
 extern nasal_builtin_table flight_gear_native[];
 

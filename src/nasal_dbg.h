@@ -37,7 +37,7 @@ public:
     }
 };
 
-class dbg:public vm {
+class dbg: public vm {
 private:
     typedef void (dbg::*nasal_vm_func)();
     const nasal_vm_func operand_function[op_ret + 1] = {
@@ -139,8 +139,8 @@ private:
 private:
     bool next;
     usize fsize;
-    u16 bk_fidx;
-    u32 bk_line;
+    u16 break_file_index;
+    u32 break_line;
     error src;
 
 private:
@@ -158,8 +158,8 @@ private:
 
 public:
     dbg():
-        next(false), fsize(0),
-        bk_fidx(0), bk_line(0),
+        next(true), fsize(0),
+        break_file_index(0), break_line(0),
         do_profiling(false) {}
     void run(
         const codegen&,

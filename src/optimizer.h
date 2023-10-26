@@ -7,7 +7,7 @@
 
 namespace nasal {
 
-class optimizer:public ast_visitor {
+class optimizer: public ast_visitor {
 private:
     void const_string(binary_operator*, string_literal*, string_literal*);
     void const_number(binary_operator*, number_literal*, number_literal*);

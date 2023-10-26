@@ -1,6 +1,8 @@
 #include "nasal_import.h"
 #include "symbol_finder.h"
 
+#include <memory>
+
 namespace nasal {
 
 linker::linker():
@@ -196,8 +198,10 @@ code_block* linker::import_regular_file(call_expr* node) {
         return new code_block({0, 0, 0, 0, filename});
     }
     if (check_self_import(filename)) {
-        err.err("link", "self-referenced module <" + filename + ">:\n" +
-            "    reference path: " + generate_self_import_path(filename));
+        err.err("link",
+            "self-referenced module <" + filename + ">:\n" +
+            "    reference path: " + generate_self_import_path(filename)
+        );
         return new code_block({0, 0, 0, 0, filename});
     }
     exist(filename);
@@ -206,16 +210,19 @@ code_block* linker::import_regular_file(call_expr* node) {
     // start importing...
     if (lex.scan(filename).geterr()) {
         err.err("link", "error occurred when analysing <" + filename + ">");
+        return new code_block({0, 0, 0, 0, filename});
     }
     if (par.compile(lex).geterr())  {
         err.err("link", "error occurred when analysing <" + filename + ">");
+        return new code_block({0, 0, 0, 0, filename});
     }
-    auto tmp = par.swap(nullptr);
 
-    // check if tmp has 'import'
-    auto res = load(tmp, find(filename));
+    auto parse_result = par.swap(nullptr);
+
+    // check if parse result has 'import'
+    auto result = load(parse_result, find(filename));
     module_load_stack.pop_back();
-    return res;
+    return result;
 }
 
 code_block* linker::import_nasal_lib() {
@@ -234,52 +241,88 @@ code_block* linker::import_nasal_lib() {
     
     // start importing...
     if (lex.scan(filename).geterr()) {
-        err.err("link", "error occurred when analysing library <" + filename + ">");
+        err.err("link",
+            "error occurred when analysing library <" + filename + ">"
+        );
+        return new code_block({0, 0, 0, 0, filename});
     }
     if (par.compile(lex).geterr())  {
-        err.err("link", "error occurred when analysing library <" + filename + ">");
+        err.err("link",
+            "error occurred when analysing library <" + filename + ">"
+        );
+        return new code_block({0, 0, 0, 0, filename});
     }
-    auto tmp = par.swap(nullptr);
 
-    // check if tmp has 'import'
-    return load(tmp, find(filename));
+    auto parse_result = par.swap(nullptr);
+    // check if library has 'import' (in fact it should not)
+    return load(parse_result, find(filename));
 }
 
-std::string linker::generate_module_name(const std::string& filename) {
-    auto error_name = "error_generated@[" + filename + "]";
-    auto pos = filename.find_last_of(".nas");
-    if (pos==std::string::npos) {
+std::string linker::generate_module_name(const std::string& file_path) {
+    auto error_name = "module@[" + file_path + "]";
+    if (!file_path.length()) {
         return error_name;
     }
-    pos -= 4;
-    auto split_pos = filename.find_last_of("/");
-    if (split_pos==std::string::npos) {
-        split_pos = filename.find_last_of("\\");
+
+    // check file suffix and get file suffix position
+    auto suffix_position = file_path.find(".nas");
+    if (suffix_position==std::string::npos) {
+        err.warn("link",
+            "get invalid module name from <" + file_path + ">, " +
+            "will not be easily accessed. " +
+            "\".nas\" suffix is required."
+        );
+        return error_name;
     }
-    auto res = split_pos==std::string::npos?
-        filename.substr(0, pos + 1):
-        filename.substr(split_pos + 1, pos - split_pos);
-    if (!res.length()) {
-        err.warn("link", "get empty module name from <" + filename + ">, " +
-            "will not be easily accessed.");
+    if (suffix_position+4!=file_path.length()) {
+        err.warn("link",
+            "get invalid module name from <" + file_path + ">, " +
+            "will not be easily accessed. " +
+            "only one \".nas\" suffix is required in the path."
+        );
+        return error_name;
     }
-    if (res.length() && '0' <= res[0] && res[0] <= '9') {
-        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
-            "will not be easily accessed.");
+
+    // only get the file name as module name, directory path is not included
+    auto split_position = file_path.find_last_of("/");
+    // find "\\" in windows platform
+    if (split_position==std::string::npos) {
+        split_position = file_path.find_last_of("\\");
     }
-    if (res.length() && res.find(".")!=std::string::npos) {
-        err.warn("link", "get module <" + res + "> from <" + filename + ">, " +
-            "will not be easily accessed.");
+
+    // split file path to get module name
+    auto module_name = split_position==std::string::npos?
+        file_path.substr(0, suffix_position):
+        file_path.substr(split_position+1, suffix_position-split_position-1);
+    
+    // check validation of module name
+    if (!module_name.length()) {
+        err.warn("link",
+            "get empty module name from <" + file_path + ">, " +
+            "will not be easily accessed."
+        );
     }
-    return res;
+    if (module_name.length() && '0' <= module_name[0] && module_name[0] <= '9') {
+        err.warn("link",
+            "get module <" + module_name + "> from <" + file_path + ">, " +
+            "will not be easily accessed."
+        );
+    }
+    if (module_name.length() && module_name.find(".")!=std::string::npos) {
+        err.warn("link",
+            "get module <" + module_name + "> from <" + file_path + ">, " +
+            "will not be easily accessed."
+        );
+    }
+    return module_name;
 }
 
 return_expr* linker::generate_module_return(code_block* block) {
-    auto sf = new symbol_finder;
-    auto res = new return_expr(block->get_location());
+    auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
+    auto result = new return_expr(block->get_location());
     auto value = new hash_expr(block->get_location());
-    res->set_value(value);
-    for(const auto& i : sf->do_find(block)) {
+    result->set_value(value);
+    for(const auto& i : finder->do_find(block)) {
         auto pair = new hash_pair(block->get_location());
         // do not export symbol begins with '_'
         if (i.name.length() && i.name[0]=='_') {
@@ -289,8 +332,7 @@ return_expr* linker::generate_module_return(code_block* block) {
         pair->set_value(new identifier(block->get_location(), i.name));
         value->add_member(pair);
     }
-    delete sf;
-    return res;
+    return result;
 }
 
 definition_expr* linker::generate_module_definition(code_block* block) {

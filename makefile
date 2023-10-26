@@ -1,11 +1,13 @@
 STD = c++17
-OS = $(shell uname)
+
+ifndef OS
+	OS = $(shell uname)
+endif
 ifeq ($(OS), Darwin)
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC -mmacosx-version-min=10.15
 else
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
 endif
-CPPFLAGS = -I .
 
 NASAL_HEADER=\
 	src/ast_dumper.h\
@@ -21,6 +23,7 @@ NASAL_HEADER=\
 	src/nasal_opcode.h\
 	src/nasal_parse.h\
 	src/nasal_vm.h\
+	src/nasal_type.h\
 	src/nasal.h\
 	src/optimizer.h\
 	src/symbol_finder.h\
@@ -55,6 +58,7 @@ NASAL_OBJECT=\
 	build/unix_lib.o\
 	build/dylib_lib.o\
 	build/coroutine.o\
+	build/nasal_type.o\
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/repl.o\
@@ -87,7 +91,10 @@ build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
 build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_err.cpp -o build/nasal_err.o
 
-build/nasal_gc.o: src/nasal.h src/nasal_gc.h src/nasal_gc.cpp | build
+build/nasal_type.o: src/nasal.h src/nasal_type.h src/nasal_type.cpp | build
+	$(CXX) $(CXXFLAGS) src/nasal_type.cpp -o build/nasal_type.o
+
+build/nasal_gc.o: src/nasal.h src/nasal_type.h src/nasal_gc.h src/nasal_gc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_gc.cpp -o build/nasal_gc.o
 
 build/nasal_import.o: \
@@ -113,18 +120,21 @@ build/nasal_ast.o: \
 
 build/nasal_builtin.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/nasal_builtin.h src/nasal_builtin.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_builtin.cpp -o build/nasal_builtin.o
 
 build/coroutine.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/coroutine.h src/coroutine.cpp | build
 	$(CXX) $(CXXFLAGS) src/coroutine.cpp -o build/coroutine.o
 
 build/bits_lib.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/bits_lib.h src/bits_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/bits_lib.cpp -o build/bits_lib.o
@@ -132,30 +142,35 @@ build/bits_lib.o: \
 
 build/math_lib.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/math_lib.h src/math_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/math_lib.cpp -o build/math_lib.o
 
 build/io_lib.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/io_lib.h src/io_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/io_lib.cpp -o build/io_lib.o
 
 build/dylib_lib.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/dylib_lib.h src/dylib_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/dylib_lib.cpp -o build/dylib_lib.o
 
 build/unix_lib.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/unix_lib.h src/unix_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/unix_lib.cpp -o build/unix_lib.o
 
 build/fg_props.o: \
 	src/nasal.h\
+	src/nasal_type.h\
 	src/nasal_gc.h\
 	src/fg_props.h src/fg_props.cpp | build
 	$(CXX) $(CXXFLAGS) src/fg_props.cpp -o build/fg_props.o

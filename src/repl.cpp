@@ -111,7 +111,10 @@ void repl::execute() {
     info::instance()->in_repl_mode = true;
     std::cout << "[nasal-repl] Initializating enviroment...\n";
     // run on pass for initializing basic modules, without output
-    run();
+    if (!run()) {
+        std::cout << "[nasal-repl] Initialization failed.\n\n";
+        std::exit(-1);
+    }
     // allow output now
     runtime.set_allow_repl_output_flag(true);
     std::cout << "[nasal-repl] Initialization complete.\n\n";

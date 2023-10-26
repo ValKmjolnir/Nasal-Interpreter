@@ -234,4 +234,19 @@ for(var a=0;a<16;a+=1) {
 }
 
 print([0, 1, 2]~[3, 4, 5], "\n");
+
+print(num("1.79769313486231570814527423731704357e+308"), "\n");
 print(num("4.94065645841246544176568792868e-324"), "\n");
+
+
+var test_call_iterator = {iter: 0};
+
+foreach(test_call_iterator.iter; [0, 1, 2, 3]) {
+    println(test_call_iterator);
+}
+
+var test_single_id_iterator = 0;
+
+foreach(test_single_id_iterator; [0, 1, 2, 3]) {
+    println(test_single_id_iterator);
+}
