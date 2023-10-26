@@ -1,4 +1,6 @@
 #include "nasal.h"
+#include "nasal_type.h"
+#include "nasal_gc.h"
 #include "nasal_err.h"
 #include "nasal_lexer.h"
 #include "nasal_ast.h"

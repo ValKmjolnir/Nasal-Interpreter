@@ -9,7 +9,7 @@
 
 namespace nasal {
 
-class symbol_finder:public ast_visitor {
+class symbol_finder: public ast_visitor {
 public:
     struct symbol_info {
         std::string name;

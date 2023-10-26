@@ -77,7 +77,7 @@ public:
     virtual void accept(ast_visitor*);
 };
 
-class call:public expr {
+class call: public expr {
 public:
     call(const span& location, expr_type node_type):
         expr(location, node_type) {}
@@ -85,7 +85,7 @@ public:
     virtual void accept(ast_visitor*);
 };
 
-class null_expr:public expr {
+class null_expr: public expr {
 public:
     null_expr(const span& location):
         expr(location, expr_type::ast_null) {}
@@ -93,7 +93,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class nil_expr:public expr {
+class nil_expr: public expr {
 public:
     nil_expr(const span& location):
         expr(location, expr_type::ast_nil) {}
@@ -101,7 +101,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class number_literal:public expr {
+class number_literal: public expr {
 private:
     f64 number;
 
@@ -113,7 +113,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class string_literal:public expr {
+class string_literal: public expr {
 private:
     std::string content;
 
@@ -125,7 +125,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class identifier:public expr {
+class identifier: public expr {
 private:
     std::string name;
 
@@ -137,7 +137,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class bool_literal:public expr {
+class bool_literal: public expr {
 private:
     bool flag;
 
@@ -149,7 +149,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class vector_expr:public expr {
+class vector_expr: public expr {
 private:
     std::vector<expr*> elements;
 
@@ -162,7 +162,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class hash_expr:public expr {
+class hash_expr: public expr {
 private:
     std::vector<hash_pair*> members;
 
@@ -175,7 +175,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class hash_pair:public expr {
+class hash_pair: public expr {
 private:
     std::string name;
     expr* value;
@@ -192,7 +192,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class function:public expr {
+class function: public expr {
 private:
     std::vector<parameter*> parameter_list;
     code_block* block;
@@ -209,7 +209,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class code_block:public expr {
+class code_block: public expr {
 private:
     std::vector<expr*> expressions;
 
@@ -222,7 +222,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class parameter:public expr {
+class parameter: public expr {
 public:
     enum class param_type {
         normal_parameter,
@@ -249,7 +249,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class ternary_operator:public expr {
+class ternary_operator: public expr {
 private:
     expr* condition;
     expr* left;
@@ -269,7 +269,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class binary_operator:public expr {
+class binary_operator: public expr {
 public:
     enum class binary_type {
         add,
@@ -317,7 +317,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class unary_operator:public expr {
+class unary_operator: public expr {
 public:
     enum class unary_type {
         negative,
@@ -344,7 +344,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class call_expr:public expr {
+class call_expr: public expr {
 private:
     expr* first;
     std::vector<call*> calls;
@@ -361,7 +361,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class call_hash:public call {
+class call_hash: public call {
 private:
     std::string field;
 
@@ -374,7 +374,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class call_vector:public call {
+class call_vector: public call {
 private:
     std::vector<slice_vector*> calls;
 
@@ -387,7 +387,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class call_function:public call {
+class call_function: public call {
 private:
     std::vector<expr*> args;
 
@@ -400,7 +400,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class slice_vector:public expr {
+class slice_vector: public expr {
 private:
     expr* begin;
     expr* end;
@@ -417,7 +417,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class definition_expr:public expr {
+class definition_expr: public expr {
 private:
     identifier* variable_name;
     multi_identifier* variables;
@@ -441,7 +441,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class assignment_expr:public expr {
+class assignment_expr: public expr {
 public:
     enum class assign_type {
         equal,
@@ -474,7 +474,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class multi_identifier:public expr {
+class multi_identifier: public expr {
 private:
     std::vector<identifier*> variables;
 
@@ -487,7 +487,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class tuple_expr:public expr {
+class tuple_expr: public expr {
 private:
     std::vector<expr*> elements;
 
@@ -500,7 +500,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class multi_assign:public expr {
+class multi_assign: public expr {
 private:
     tuple_expr* tuple;
     expr* value;
@@ -517,7 +517,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class while_expr:public expr {
+class while_expr: public expr {
 private:
     expr* condition;
     code_block* block;
@@ -534,7 +534,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class for_expr:public expr {
+class for_expr: public expr {
 private:
     expr* initializing;
     expr* condition;
@@ -558,24 +558,28 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class iter_expr:public expr {
+class iter_expr: public expr {
 private:
+    bool is_iterator_definition;
     identifier* name;
     call_expr* call;
 
 public:
     iter_expr(const span& location):
         expr(location, expr_type::ast_iter),
+        is_iterator_definition(false),
         name(nullptr), call(nullptr) {}
     ~iter_expr() override;
     void set_name(identifier* node) {name = node;}
     void set_call(call_expr* node) {call = node;}
+    void set_is_definition(bool flag) {is_iterator_definition = flag;}
     identifier* get_name() {return name;}
     call_expr* get_call() {return call;}
+    bool is_definition() const {return is_iterator_definition;}
     void accept(ast_visitor*) override;
 };
 
-class forei_expr:public expr {
+class forei_expr: public expr {
 public:
     enum class forei_loop_type {
         foreach,
@@ -605,7 +609,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class condition_expr:public expr {
+class condition_expr: public expr {
 private:
     if_expr* if_stmt;
     std::vector<if_expr*> elsif_stmt;
@@ -625,7 +629,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class if_expr:public expr {
+class if_expr: public expr {
 private:
     expr* condition;
     code_block* block;
@@ -642,7 +646,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class continue_expr:public expr {
+class continue_expr: public expr {
 public:
     continue_expr(const span& location):
         expr(location, expr_type::ast_continue) {}
@@ -650,7 +654,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class break_expr:public expr {
+class break_expr: public expr {
 public:
     break_expr(const span& location):
         expr(location, expr_type::ast_break) {}
@@ -658,7 +662,7 @@ public:
     void accept(ast_visitor*) override;
 };
 
-class return_expr:public expr {
+class return_expr: public expr {
 private:
     expr* value;
 

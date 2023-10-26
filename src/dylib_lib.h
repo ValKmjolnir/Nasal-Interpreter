@@ -13,13 +13,12 @@
 
 namespace nasal {
 
-void dylib_destructor(void*);
-void func_addr_destructor(void*);
+void dynamic_library_destructor(void*);
 
-var builtin_dlopen(var*, gc&);
-var builtin_dlclose(var*, gc&);
-var builtin_dlcallv(var*, gc&);
-var builtin_dlcall(var*, gc&);
+var builtin_dlopen(context*, gc*);
+var builtin_dlclose(context*, gc*);
+var builtin_dlcallv(context*, gc*);
+var builtin_dlcall(context*, gc*);
 
 extern nasal_builtin_table dylib_lib_native[];
 

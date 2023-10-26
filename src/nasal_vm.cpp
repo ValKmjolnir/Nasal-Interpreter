@@ -11,14 +11,14 @@ void vm::init(
     const std::vector<std::string>& filenames,
     const std::vector<std::string>& argv
 ) {
-    cnum = nums.data();
-    cstr = strs.data();
+    const_number = nums.data();
+    const_string = strs.data();
     bytecode = code.data();
     files = filenames.data();
     global_size = global_symbol.size();
 
     /* set native functions */
-    native = natives;
+    native_function = natives;
 
     /* set context and global */
     if (!is_repl_mode || first_exec_flag) {
@@ -64,7 +64,7 @@ void vm::context_and_global_init() {
     }
 }
 
-void vm::valinfo(var& val) {
+void vm::value_info(var& val) {
     const auto p = reinterpret_cast<u64>(val.val.gcobj);
     switch(val.type) {
         case vm_none: std::clog << "| null |"; break;
@@ -93,7 +93,7 @@ void vm::valinfo(var& val) {
                                 << " val}"; break;
         case vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
                                 << "> obj:0x"
-                                << reinterpret_cast<u64>(val.obj().ptr)
+                                << reinterpret_cast<u64>(val.ghost().pointer)
                                 << std::dec; break;
         case vm_co:   std::clog << "| co   | <0x" << std::hex << p
                                 << std::dec << "> coroutine"; break;
@@ -106,22 +106,84 @@ void vm::valinfo(var& val) {
     std::clog << "\n";
 }
 
-void vm::traceback() {
+void vm::function_detail_info(const nas_func& func) {
+    std::clog << "func@0x";
+    std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
+    
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& key : func.keys) {
+        argument_list[key.second-1] = key.first;
+    }
+
+    std::clog << "(";
+    for(const auto& key : argument_list) {
+        std::clog << key;
+        if (key != argument_list.back()) {
+            std::clog << ", ";
+        }
+    }
+    if (func.dynamic_parameter_index>=0) {
+        std::clog << (argument_list.size()? ", ":"");
+        std::clog << const_string[func.dynamic_parameter_index] << "...";
+    }
+    std::clog << ") ";
+    std::clog << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+}
+
+void vm::function_call_trace() {
     var* bottom = ctx.stack;
     var* top = ctx.top;
 
-    std::stack<u32> ret;
+    // generate trace back
+    std::stack<const nas_func*> functions;
     for(var* i = bottom; i<=top; ++i) {
+        if (i->type==vm_func && i-1>=bottom && (i-1)->type==vm_ret) {
+            functions.push(&i->func());
+        }
+    }
+    if (functions.empty()) {
+        return;
+    }
+
+    std::clog << "\ncall trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    const nas_func* last = nullptr;
+    u32 same = 0;
+    for(auto func = last; !functions.empty(); functions.pop()) {
+        func = functions.top();
+        if (last==func) {
+            ++same;
+            continue;
+        } else if (same) {
+            std::clog << "   --> " << same << " same call(s)\n";
+            same = 0;
+        }
+
+        last = func;
+        std::clog << "  call ";
+        function_detail_info(*func);
+        std::clog << "\n";
+    }
+    if (same) {
+        std::clog << "   --> " << same << " same call(s)\n";
+    }
+}
+
+void vm::trace_back() {
+    // var* bottom = ctx.stack;
+    // var* top = ctx.top;
+
+    // generate trace back
+    std::stack<u32> ret;
+    for(var* i = ctx.stack; i<=ctx.top; ++i) {
         if (i->type==vm_ret && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
     ret.push(ctx.pc); // store the position program crashed
 
-    std::clog << "trace back ("
-              << (ngc.cort? "coroutine":"main")
-              << ")\n";
-    codestream::set(cnum, cstr, native.data(), files);
+    std::clog << "\ntrace back " << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    codestream::set(const_number, const_string, native_function.data(), files);
     for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
@@ -132,17 +194,17 @@ void vm::traceback() {
                       << std::setw(6) << std::setfill('0')
                       << prev << std::dec << "     "
                       << same << " same call(s)\n";
+            same = 0;
         }
-        same = 0;
         std::clog << "  " << codestream(bytecode[p], p) << "\n";
     }
     // the first called place has no same calls
 }
 
-void vm::stackinfo(const u32 limit = 10) {
+void vm::stack_info(const u32 limit = 10) {
     var* top = ctx.top;
     var* bottom = ctx.stack;
-    std::clog << "stack (0x" << std::hex << reinterpret_cast<u64>(bottom);
+    std::clog << "\nstack (0x" << std::hex << reinterpret_cast<u64>(bottom);
     std::clog << std::dec << ", limit " << limit << ", total ";
     std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
@@ -150,12 +212,12 @@ void vm::stackinfo(const u32 limit = 10) {
                   << std::setw(6) << std::setfill('0')
                   << static_cast<u64>(top-bottom) << std::dec
                   << "    ";
-        valinfo(top[0]);
+        value_info(top[0]);
     }
 }
 
-void vm::reginfo() {
-    std::clog << "registers (" << (ngc.cort? "coroutine":"main")
+void vm::register_info() {
+    std::clog << "\nregisters (" << (ngc.cort? "coroutine":"main")
               << ")\n" << std::hex
               << "  [pc    ]    | pc   | 0x" << ctx.pc << "\n"
               << "  [global]    | addr | 0x"
@@ -169,45 +231,45 @@ void vm::reginfo() {
               << "  [top   ]    | addr | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
-    std::clog << "  [funcr ]    "; valinfo(ctx.funcr);
-    std::clog << "  [upval ]    "; valinfo(ctx.upvalr);
+    std::clog << "  [funcr ]    "; value_info(ctx.funcr);
+    std::clog << "  [upval ]    "; value_info(ctx.upvalr);
 }
 
-void vm::gstate() {
+void vm::global_state() {
     if (!global_size || global[0].type==vm_none) {
         return;
     }
-    std::clog << "global (0x" << std::hex
+    std::clog << "\nglobal (0x" << std::hex
               << reinterpret_cast<u64>(global) << ")\n" << std::dec;
     for(usize i = 0; i<global_size; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
                   << std::setfill('0') << i << std::dec
                   << "    ";
-        valinfo(global[i]);
+        value_info(global[i]);
     }
 }
 
-void vm::lstate() {
-    if (!ctx.localr || !ctx.funcr.func().lsize) {
+void vm::local_state() {
+    if (!ctx.localr || !ctx.funcr.func().local_size) {
         return;
     }
-    const u32 lsize = ctx.funcr.func().lsize;
-    std::clog << "local (0x" << std::hex << reinterpret_cast<u64>(ctx.localr)
+    const u32 lsize = ctx.funcr.func().local_size;
+    std::clog << "\nlocal (0x" << std::hex << reinterpret_cast<u64>(ctx.localr)
               << " <+" << static_cast<u64>(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
     for(u32 i = 0; i<lsize; ++i) {
         std::clog << "  0x" << std::hex << std::setw(6)
                   << std::setfill('0') << i << std::dec
                   << "    ";
-        valinfo(ctx.localr[i]);
+        value_info(ctx.localr[i]);
     }
 }
 
-void vm::ustate() {
+void vm::upvalue_state() {
     if (ctx.funcr.type==vm_nil || ctx.funcr.func().upval.empty()) {
         return;
     }
-    std::clog << "upvalue\n";
+    std::clog << "\nupvalue\n";
     auto& upval = ctx.funcr.func().upval;
     for(u32 i = 0; i<upval.size(); ++i) {
         std::clog << "  -> upval[" << i << "]:\n";
@@ -216,26 +278,121 @@ void vm::ustate() {
             std::clog << "     0x" << std::hex << std::setw(6)
                       << std::setfill('0') << j << std::dec
                       << " ";
-            valinfo(uv[j]);
+            value_info(uv[j]);
         }
     }
 }
 
-void vm::detail() {
-    reginfo();
-    gstate();
-    lstate();
-    ustate();
+void vm::all_state_detail() {
+    register_info();
+    global_state();
+    local_state();
+    upvalue_state();
+}
+
+std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
+    auto result = std::string("lack argument(s) when calling function:\n  func(");
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& i : func.keys) {
+        argument_list[i.second-1] = i.first;
+    }
+    for(u32 i = 0; i<argument_list.size(); ++i) {
+        result += argument_list[i];
+        if (i<argc) {
+            result += "[get]";
+        }
+        if (i!=argument_list.size()-1) {
+            result += ", ";
+        }
+    }
+    if (func.dynamic_parameter_index>=0) {
+        result += argument_list.size()? ", ":"";
+        result += const_string[func.dynamic_parameter_index] + "[dynamic]";
+    }
+    result += ") ";
+    std::stringstream out;
+    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
+    return result + out.str();
+}
+
+std::string vm::report_special_call_lack_arguments(
+    var* local, const nas_func& func) const {
+    auto result = std::string("lack argument(s) when calling function:\n  func(");
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& i : func.keys) {
+        argument_list[i.second-1] = i.first;
+    }
+    for(const auto& key : argument_list) {
+        if (local[func.keys.at(key)].type==vm_none) {
+            result += key + ", ";
+        } else {
+            result += key + "[get], ";
+        }
+    }
+    result = result.substr(0, result.length()-2);
+    result += ") ";
+    std::stringstream out;
+    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
+    return result + out.str();
+}
+
+std::string vm::report_key_not_found(
+    const std::string& not_found, const nas_hash& hash) const {
+    auto result = "member \"" + not_found + "\" doesn't exist in hash {";
+    for(const auto& i : hash.elems) {
+        result += i.first + ", ";
+    }
+    if (hash.elems.size()) {
+        result = result.substr(0, result.length()-2);
+    }
+    result += "}";
+    return result;
+}
+
+std::string vm::report_out_of_range(f64 index, usize real_size) const {
+    auto result = "index out of range: " + std::to_string(index);
+    result += " but max size is " + std::to_string(real_size);
+    if (!real_size) {
+        return result;
+    }
+    result += ", index range is -" + std::to_string(real_size);
+    result += "~" + std::to_string(real_size-1);
+    return result;
+}
+
+std::string vm::type_name_string(const var& value) const {
+    switch(value.type) {
+        case vm_none: return "none";
+        case vm_cnt: return "counter";
+        case vm_addr: return "address";
+        case vm_ret: return "program counter";
+        case vm_nil: return "nil";
+        case vm_num: return "number";
+        case vm_str: return "string";
+        case vm_vec: return "vector";
+        case vm_hash: return "hash";
+        case vm_func: return "function";
+        case vm_upval: return "upvalue";
+        case vm_obj: return "ghost type";
+        case vm_co: return "coroutine";
+        case vm_map: return "namespace";
+    }
+    return "unknown";
 }
 
 void vm::die(const std::string& str) {
     std::cerr << "[vm] error: " << str << "\n";
-    traceback();
-    stackinfo();
+    function_call_trace();
+    trace_back();
+    stack_info();
 
     // show verbose crash info
     if (verbose) {
-        detail();
+        all_state_detail();
     }
 
     if (!ngc.cort) {
@@ -244,7 +401,7 @@ void vm::die(const std::string& str) {
     } else {
         // in coroutine, shut down the coroutine and return to main context
         ctx.pc = 0; // mark coroutine 'dead'
-        ngc.ctxreserve(); // switch context to main
+        ngc.context_reserve(); // switch context to main
         ctx.top[0] = nil; // generate return value 'nil'
     }
 }
