@@ -971,20 +971,26 @@ forei_expr* parse::forei_loop() {
 
 iter_expr* parse::iter_gen() {
     auto node = new iter_expr(toks[ptr].loc);
+    // definition
     if (lookahead(tok::var)) {
         match(tok::var);
         node->set_name(id());
+        node->set_is_definition(true);
         update_location(node);
         return node;
     }
+
+    // single symbol call
     auto id_node = id();
     if (!is_call(toks[ptr].type)) {
         node->set_name(id_node);
         update_location(node);
         return node;
     }
+
+    // call expression
     auto tmp = new call_expr(id_node->get_location());
-    tmp->set_first(id());
+    tmp->set_first(id_node);
     while(is_call(toks[ptr].type)) {
         tmp->add_call(call_scalar());
     }

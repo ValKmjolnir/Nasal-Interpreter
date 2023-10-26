@@ -386,7 +386,11 @@ bool ast_dumper::visit_for_expr(for_expr* node) {
 
 bool ast_dumper::visit_iter_expr(iter_expr* node) {
     dump_indent();
-    std::cout << "iterator";
+    if (node->is_definition()) {
+        std::cout << "iterator_definition";
+    } else {
+        std::cout << "iterator";
+    }
     std::cout << format_location(node->get_location());
     push_indent();
     set_last();
