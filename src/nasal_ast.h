@@ -560,18 +560,22 @@ public:
 
 class iter_expr: public expr {
 private:
+    bool is_iterator_definition;
     identifier* name;
     call_expr* call;
 
 public:
     iter_expr(const span& location):
         expr(location, expr_type::ast_iter),
+        is_iterator_definition(false),
         name(nullptr), call(nullptr) {}
     ~iter_expr() override;
     void set_name(identifier* node) {name = node;}
     void set_call(call_expr* node) {call = node;}
+    void set_is_definition(bool flag) {is_iterator_definition = flag;}
     identifier* get_name() {return name;}
     call_expr* get_call() {return call;}
+    bool is_definition() const {return is_iterator_definition;}
     void accept(ast_visitor*) override;
 };
 
