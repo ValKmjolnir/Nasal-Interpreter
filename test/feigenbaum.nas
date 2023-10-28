@@ -1,6 +1,6 @@
 import.std.process_bar;
 
-var ppm=func(filename, width, height, RGB){
+var ppm = func(filename, width, height, RGB) {
     # P3 use ASCII number
     # P6 use binary character
     var fd = io.open(filename, "wb");
@@ -15,8 +15,8 @@ var ppm=func(filename, width, height, RGB){
 
 var width = 1600;
 var height = 900;
-var bar=(os.platform()=="windows")?
-    process_bar.bar(front:"sharp",back:"point",sep:"line",length:50):
+var bar = (os.platform()=="windows")?
+    process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);
 
 var RGB = func(h, w) {

@@ -379,7 +379,7 @@ var dump = func {
     # Don't recurse into aliases, lest we get stuck in a loop
     if(type != "ALIAS") {
         var children = node.getChildren();
-        foreach(c; children) { dump(name ~ "/", c); }
+        foreach(var c; children) { dump(name ~ "/", c); }
     }
 }
 
@@ -498,7 +498,7 @@ var createNodeObjectsFromHash = func (property_list, namespace = nil) {
         logprint(LOG_WARN, "createNodeObjectsFromHash: Error, property_list argument is not a hash.");
         return nil;
     }
-    foreach (key; keys(property_list)) {
+    foreach (var key; keys(property_list)) {
         namespace[key] = props.getNode(property_list[key],1);
     }
 }
@@ -743,7 +743,7 @@ var UpdateManager =
         obj.needs_update = 0;
         obj.property = {};
         obj.is_numeric = {};
-        foreach (hashkey; obj.hashkeylist) {
+        foreach (var hashkey; obj.hashkeylist) {
             obj.property[hashkey] = props.globals.getNode(hashkey);
             obj.lastval[hashkey] = nil;
 #            var ty = obj.property[hashkey].getType();
@@ -833,7 +833,7 @@ var UpdateManager =
                 me.needs_update = 0;
 
               if (obj != nil or me.lastval == nil) {
-                  foreach (hashkey; me.hashkeylist) {
+                  foreach (var hashkey; me.hashkeylist) {
                       if (me.isnum) {
                           if (me.lastval[hashkey] == nil or math.abs(me.lastval[hashkey] - obj[hashkey]) >= me.delta) {
                               me.needs_update = 1;
@@ -847,7 +847,7 @@ var UpdateManager =
               }
               if (me.needs_update) {
                   me.changed(obj);
-                  foreach (hashkey; me.hashkeylist) {
+                  foreach (var hashkey; me.hashkeylist) {
                       me.lastval[hashkey] = obj[hashkey];
                   }
               }
