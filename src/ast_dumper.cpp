@@ -4,6 +4,20 @@
 
 namespace nasal {
 
+bool ast_dumper::visit_use_stmt(use_stmt* node) {
+    dump_indent();
+    std::cout << "use" << format_location(node->get_location());
+    push_indent();
+    for(auto i : node->get_path()) {
+        if (i==node->get_path().back()) {
+            set_last();
+        }
+        i->accept(this);
+    }
+    pop_indent();
+    return true;
+}
+
 bool ast_dumper::visit_null_expr(null_expr* node) {
     dump_indent();
     std::cout << "null" << format_location(node->get_location());

@@ -197,6 +197,18 @@ void parse::update_location(expr* node) {
     node->update_location(toks[ptr-1].loc);
 }
 
+use_stmt* parse::use_stmt_gen() {
+    auto node = new use_stmt(toks[ptr].loc);
+    match(tok::use);
+    node->add_path(id());
+    while(lookahead(tok::dot)) {
+        match(tok::dot);
+        node->add_path(id());
+    }
+    update_location(node);
+    return node;
+}
+
 null_expr* parse::null() {
     return new null_expr(toks[ptr].loc);
 }
@@ -355,6 +367,7 @@ expr* parse::expression() {
         die(thisspan, "must use return in functions");
     }
     switch(type) {
+        case tok::use: return use_stmt_gen();
         case tok::tknil:
         case tok::num:
         case tok::str:
