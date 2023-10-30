@@ -1168,7 +1168,7 @@ void codegen::block_gen(code_block* node) {
         switch(tmp->get_type()) {
             case expr_type::ast_null: break;
             case expr_type::ast_id:
-                if (need_repl_output) {
+                if (need_repl_output && local.empty()) {
                     repl_mode_info_output_gen(tmp);
                 } else {
                     check_id_exist((identifier*)tmp);
@@ -1178,7 +1178,7 @@ void codegen::block_gen(code_block* node) {
             case expr_type::ast_num:
             case expr_type::ast_str:
             case expr_type::ast_bool:
-                if (need_repl_output) {
+                if (need_repl_output && local.empty()) {
                     repl_mode_info_output_gen(tmp);
                 }
                 break;
