@@ -7,6 +7,16 @@ void expr::accept(ast_visitor* visitor) {
     visitor->visit_expr(this);
 }
 
+use_stmt::~use_stmt() {
+    for(auto i : path) {
+        delete i;
+    }
+}
+
+void use_stmt::accept(ast_visitor* visitor) {
+    visitor->visit_use_stmt(this);
+}
+
 void call::accept(ast_visitor* visitor) {
     visitor->visit_call(this);
 }

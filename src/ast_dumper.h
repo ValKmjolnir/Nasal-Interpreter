@@ -41,6 +41,7 @@ private:
     }
 
 public:
+    bool visit_use_stmt(use_stmt*) override;
     bool visit_null_expr(null_expr*) override;
     bool visit_nil_expr(nil_expr*) override;
     bool visit_number_literal(number_literal*) override;

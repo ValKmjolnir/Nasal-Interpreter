@@ -1166,6 +1166,7 @@ void codegen::repl_mode_info_output_gen(expr* node) {
 void codegen::block_gen(code_block* node) {
     for(auto tmp : node->get_expressions()) {
         switch(tmp->get_type()) {
+            case expr_type::ast_use: break;
             case expr_type::ast_null: break;
             case expr_type::ast_id:
                 if (need_repl_output && local.empty()) {

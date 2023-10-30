@@ -7,6 +7,13 @@ bool ast_visitor::visit_expr(expr* node) {
     return true;
 }
 
+bool ast_visitor::visit_use_stmt(use_stmt* node) {
+    for(auto i : node->get_path()) {
+        i->accept(this);
+    }
+    return true;
+}
+
 bool ast_visitor::visit_call(call* node) {
     node->accept(this);
     return true;
