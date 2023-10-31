@@ -36,18 +36,17 @@ private:
 private:
     bool import_check(expr*);
     bool exist(const std::string&);
-    u16 find(const std::string&);
     bool check_self_import(const std::string&);
     std::string generate_self_import_path(const std::string&);
     void link(code_block*, code_block*);
-    std::string get_path(call_expr*);
-    std::string find_file(const std::string&, const span&);
-    code_block* import_regular_file(call_expr*);
+    std::string get_path(expr*);
+    std::string find_real_file_path(const std::string&, const span&);
+    code_block* import_regular_file(expr*);
     code_block* import_nasal_lib();
     std::string generate_module_name(const std::string&);
     return_expr* generate_module_return(code_block*);
     definition_expr* generate_module_definition(code_block*);
-    code_block* load(code_block*, u16);
+    code_block* load(code_block*, const std::string&);
 
 public:
     linker();

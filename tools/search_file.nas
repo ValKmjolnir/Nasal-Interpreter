@@ -1,4 +1,4 @@
-import.std.file;
+use std.file;
 
 var tips = func() {
     println("usage:");

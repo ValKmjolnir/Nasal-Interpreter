@@ -1,4 +1,4 @@
-import.module.libsock;
+use module.libsock;
 
 var socket = libsock.socket;
 

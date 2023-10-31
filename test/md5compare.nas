@@ -1,6 +1,6 @@
-import.test.md5_self;
-import.std.process_bar;
-import.std.file;
+use test.md5_self;
+use std.process_bar;
+use std.file;
 
 srand();
 

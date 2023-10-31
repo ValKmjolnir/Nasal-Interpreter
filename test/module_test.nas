@@ -1,5 +1,5 @@
-import.std.dylib;
-import.module.libfib;
+use std.dylib;
+use module.libfib;
 
 println(keys(libfib));
 libfib.test_ghost();

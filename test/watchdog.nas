@@ -1,4 +1,4 @@
-import.std.runtime;
+use std.runtime;
 
 var os_time=func(){
     return "[\e[33;1m"~os.time()~"\e[0m] ";

@@ -1,4 +1,4 @@
-import.std.runtime;
+use std.runtime;
 
 # basic type
 nil;

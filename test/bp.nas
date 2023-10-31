@@ -1,4 +1,4 @@
-import.std.mat;
+use std.mat;
 
 rand(time(0));
 
