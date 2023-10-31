@@ -1,4 +1,4 @@
-import.module.libkey;
+use module.libkey;
 
 srand();
 

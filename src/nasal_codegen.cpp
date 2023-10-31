@@ -307,7 +307,7 @@ void codegen::func_gen(function* node) {
 
 void codegen::call_gen(call_expr* node) {
     calc_gen(node->get_first());
-    if (code.back().op==op_callb) {
+    if (code.size() && code.back().op==op_callb) {
         return;
     }
     for(auto i : node->get_calls()) {
@@ -349,6 +349,8 @@ void codegen::call_id(identifier* node) {
         return;
     }
     die("undefined symbol \"" + name + "\"", node->get_location());
+    // generation failed, put a push nil operand here to fill the space
+    emit(op_pnil, index, node->get_location());
 }
 
 void codegen::call_hash_gen(call_hash* node) {

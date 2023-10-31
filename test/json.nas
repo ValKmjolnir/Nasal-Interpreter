@@ -1,5 +1,5 @@
-import.std.json;
-import.std.process_bar;
+use std.json;
+use std.process_bar;
 
 var ss = json.stringify({
     vec:[0,1,2],

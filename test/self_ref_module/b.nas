@@ -1,3 +1,3 @@
-import.a;
+use a;
 
 println("init b");

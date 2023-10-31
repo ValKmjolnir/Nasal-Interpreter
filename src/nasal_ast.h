@@ -136,7 +136,7 @@ public:
     string_literal(const span& location, const std::string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() override = default;
-    const std::string get_content() const {return content;}
+    const std::string& get_content() const {return content;}
     void accept(ast_visitor*) override;
 };
 

@@ -1,6 +1,6 @@
-import.module.libkey;
-import.std.list;
-import.std.runtime;
+use module.libkey;
+use std.list;
+use std.runtime;
 
 var game=func(x,y){
     rand(time(0));

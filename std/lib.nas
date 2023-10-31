@@ -1,13 +1,13 @@
 # lib.nas
 # 2019 ValKmjolnir
 
-import.std.coroutine;
-import.std.math;
-import.std.string;
-import.std.io;
-import.std.os;
-import.std.bits;
-import.std.unix;
+use std.coroutine;
+use std.math;
+use std.string;
+use std.io;
+use std.os;
+use std.bits;
+use std.unix;
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.

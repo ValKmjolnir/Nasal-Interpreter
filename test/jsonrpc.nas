@@ -1,6 +1,6 @@
-import.module.libsock;
-import.std.json;
-import.std.runtime;
+use module.libsock;
+use std.json;
+use std.runtime;
 
 var socket = libsock.socket;
 
