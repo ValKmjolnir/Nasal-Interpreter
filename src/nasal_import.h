@@ -18,30 +18,32 @@
 #include "nasal_parse.h"
 #include "symbol_finder.h"
 
+#include <cstring>
+#include <sstream>
 #include <vector>
+#include <unordered_set>
 
 namespace nasal {
 
 class linker {
 private:
-    bool show_path;
-    bool lib_loaded;
+    bool show_path_flag;
+    bool library_loaded;
     std::string this_file;
-    std::string lib_path;
     error err;
-    std::vector<std::string> files;
+    std::vector<std::string> imported_files;
     std::vector<std::string> module_load_stack;
     std::vector<std::string> envpath;
 
 private:
     bool import_check(expr*);
-    bool exist(const std::string&);
+    bool check_exist_or_record_file(const std::string&);
     bool check_self_import(const std::string&);
     std::string generate_self_import_path(const std::string&);
     void link(code_block*, code_block*);
     std::string get_path(expr*);
     std::string find_real_file_path(const std::string&, const span&);
-    code_block* import_regular_file(expr*);
+    code_block* import_regular_file(expr*, std::unordered_set<std::string>&);
     code_block* import_nasal_lib();
     std::string generate_module_name(const std::string&);
     return_expr* generate_module_return(code_block*);
@@ -51,9 +53,7 @@ private:
 public:
     linker();
     const error& link(parse&, const std::string&, bool);
-    const auto& get_file_list() const {return files;}
-    const auto& get_this_file() const {return this_file;}
-    const auto& get_lib_path() const {return lib_path;}
+    const auto& get_file_list() const {return imported_files;}
 };
 
 }

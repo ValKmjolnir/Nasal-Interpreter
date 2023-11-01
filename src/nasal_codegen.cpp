@@ -1166,11 +1166,19 @@ void codegen::repl_mode_info_output_gen(expr* node) {
 }
 
 void codegen::block_gen(code_block* node) {
+    bool is_use_statement = true;
     for(auto tmp : node->get_expressions()) {
+        if (tmp->get_type()!=expr_type::ast_use) {
+            is_use_statement = false;
+        }
         switch(tmp->get_type()) {
             case expr_type::ast_use:
                 if (!local.empty()) {
                     die("module import is not allowed here.",
+                        tmp->get_location()
+                    );
+                } else if (!is_use_statement) {
+                    die("module import should be used at the top of the file.",
                         tmp->get_location()
                     );
                 }

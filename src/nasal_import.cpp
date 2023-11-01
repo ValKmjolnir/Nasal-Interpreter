@@ -2,22 +2,21 @@
 #include "symbol_finder.h"
 
 #include <memory>
+#include <unordered_set>
 
 namespace nasal {
 
-linker::linker():
-    show_path(false), lib_loaded(false),
-    this_file(""), lib_path("") {
-    char sep = is_windows()? ';':':';
-    std::string PATH = getenv("PATH");
-    usize last = 0, pos = PATH.find(sep, 0);
-    while(pos!=std::string::npos) {
-        std::string dirpath = PATH.substr(last, pos-last);
+linker::linker(): show_path_flag(false), library_loaded(false), this_file("") {
+    const auto seperator= is_windows()? ';':':';
+    const auto PATH = std::string(getenv("PATH"));
+    usize last = 0, position = PATH.find(seperator, 0);
+    while(position!=std::string::npos) {
+        std::string dirpath = PATH.substr(last, position-last);
         if (dirpath.length()) {
             envpath.push_back(dirpath);
         }
-        last = pos+1;
-        pos = PATH.find(sep, last);
+        last = position+1;
+        position = PATH.find(seperator, last);
     }
     if (last!=PATH.length()) {
         envpath.push_back(PATH.substr(last));
@@ -26,32 +25,36 @@ linker::linker():
 
 std::string linker::get_path(expr* node) {
     if (node->get_type()==expr_type::ast_use) {
-        auto file_relative_path = std::string(".");
-        for(auto i : reinterpret_cast<use_stmt*>(node)->get_path()) {
-            file_relative_path += (is_windows()? "\\":"/") +i->get_name();
+        auto file_relative_path = std::string("");
+        const auto& path = reinterpret_cast<use_stmt*>(node)->get_path();
+        for(auto i : path) {
+            file_relative_path += i->get_name();
+            if (i!=path.back()) {
+                file_relative_path += (is_windows()? "\\":"/");
+            }
         }
         return file_relative_path + ".nas";
     }
     auto call_node = reinterpret_cast<call_expr*>(node);
-    auto tmp = reinterpret_cast<call_function*>(call_node->get_calls()[0]);
-    auto content = reinterpret_cast<string_literal*>(tmp->get_argument()[0]);
+    auto arguments = reinterpret_cast<call_function*>(call_node->get_calls()[0]);
+    auto content = reinterpret_cast<string_literal*>(arguments->get_argument()[0]);
     return content->get_content();
 }
 
 std::string linker::find_real_file_path(
     const std::string& filename, const span& location) {
     // first add file name itself into the file path
-    std::vector<std::string> fpath = {filename};
+    std::vector<std::string> path_list = {filename};
 
     // generate search path from environ path
     for(const auto& p : envpath) {
-        fpath.push_back(p + (is_windows()? "\\":"/") + filename);
+        path_list.push_back(p + (is_windows()? "\\":"/") + filename);
     }
 
     // search file
-    for(const auto& i : fpath) {
-        if (access(i.c_str(), F_OK)!=-1) {
-            return i;
+    for(const auto& path : path_list) {
+        if (access(path.c_str(), F_OK)!=-1) {
+            return path;
         }
     }
 
@@ -61,7 +64,7 @@ std::string linker::find_real_file_path(
             find_real_file_path("std\\lib.nas", location):
             find_real_file_path("std/lib.nas", location);
     }
-    if (!show_path) {
+    if (!show_path_flag) {
         err.err("link",
             "in <" + location.file + ">: " +
             "cannot find file <" + filename + ">, " +
@@ -69,13 +72,14 @@ std::string linker::find_real_file_path(
         );
         return "";
     }
-    auto paths = std::string("");
-    for(const auto& i : fpath) {
-        paths += "  -> " + i + "\n";
+    auto path_list_info = std::string("");
+    for(const auto& path : path_list) {
+        path_list_info += "  -> " + path + "\n";
     }
     err.err("link",
         "in <" + location.file + ">: " +
-        "cannot find file <" + filename + "> in these paths:\n" + paths
+        "cannot find file <" + filename +
+        "> in these paths:\n" + path_list_info
     );
     return "";
 }
@@ -123,20 +127,20 @@ bool linker::import_check(expr* node) {
     return true;
 }
 
-bool linker::exist(const std::string& file) {
+bool linker::check_exist_or_record_file(const std::string& file) {
     // avoid importing the same file
-    for(const auto& fname : files) {
-        if (file==fname) {
+    for(const auto& name : imported_files) {
+        if (file==name) {
             return true;
         }
     }
-    files.push_back(file);
+    imported_files.push_back(file);
     return false;
 }
 
 bool linker::check_self_import(const std::string& file) {
-    for(const auto& i : module_load_stack) {
-        if (file==i) {
+    for(const auto& name : module_load_stack) {
+        if (file==name) {
             return true;
         }
     }
@@ -160,29 +164,21 @@ void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
     old_tree_root->get_expressions().clear();
 }
 
-code_block* linker::import_regular_file(expr* node) {
+code_block* linker::import_regular_file(
+    expr* node, std::unordered_set<std::string>& used_modules) {
     // get filename
     auto filename = get_path(node);
-
-    // clear import("xxx/xxx.nas") node
-    if (node->get_type()!=expr_type::ast_use) {
-        auto cast_node = reinterpret_cast<call_expr*>(node);
-        for(auto i : cast_node->get_calls()) {
-            delete i;
-        }
-        cast_node->get_calls().clear();
-        const auto& location = cast_node->get_first()->get_location();
-        delete cast_node->get_first();
-        cast_node->set_first(new nil_expr(location));
-        // this will make node to call_expr(nil),
-        // will not be optimized when generating bytecodes
-    }
 
     // avoid infinite loading loop
     filename = find_real_file_path(filename, node->get_location());
     if (!filename.length()) {
         return new code_block({0, 0, 0, 0, filename});
     }
+    if (used_modules.count(filename)) {
+        return new code_block({0, 0, 0, 0, filename});
+    }
+
+    // check self import, avoid infinite loading loop
     if (check_self_import(filename)) {
         err.err("link",
             "self-referenced module <" + filename + ">:\n" +
@@ -190,7 +186,7 @@ code_block* linker::import_regular_file(expr* node) {
         );
         return new code_block({0, 0, 0, 0, filename});
     }
-    exist(filename);
+    check_exist_or_record_file(filename);
     
     module_load_stack.push_back(filename);
     // start importing...
@@ -214,36 +210,37 @@ code_block* linker::import_regular_file(expr* node) {
 }
 
 code_block* linker::import_nasal_lib() {
-    auto filename = find_real_file_path("lib.nas", {0, 0, 0, 0, files[0]});
-    if (!filename.length()) {
-        return new code_block({0, 0, 0, 0, filename});
+    auto path = find_real_file_path(
+        "lib.nas", {0, 0, 0, 0, this_file}
+    );
+    if (!path.length()) {
+        return new code_block({0, 0, 0, 0, path});
     }
-    lib_path = filename;
 
     // avoid infinite loading library
-    if (exist(filename)) {
-        return new code_block({0, 0, 0, 0, filename});
+    if (check_exist_or_record_file(path)) {
+        return new code_block({0, 0, 0, 0, path});
     }
     
     // start importing...
     lexer nasal_lexer;
     parse nasal_parser;
-    if (nasal_lexer.scan(filename).geterr()) {
+    if (nasal_lexer.scan(path).geterr()) {
         err.err("link",
-            "error occurred when analysing library <" + filename + ">"
+            "error occurred when analysing library <" + path + ">"
         );
-        return new code_block({0, 0, 0, 0, filename});
+        return new code_block({0, 0, 0, 0, path});
     }
     if (nasal_parser.compile(nasal_lexer).geterr())  {
         err.err("link",
-            "error occurred when analysing library <" + filename + ">"
+            "error occurred when analysing library <" + path + ">"
         );
-        return new code_block({0, 0, 0, 0, filename});
+        return new code_block({0, 0, 0, 0, path});
     }
     // swap result out
     auto parse_result = nasal_parser.swap(nullptr);
     // check if library has 'import' (in fact it should not)
-    return load(parse_result, filename);
+    return load(parse_result, path);
 }
 
 std::string linker::generate_module_name(const std::string& file_path) {
@@ -351,26 +348,35 @@ code_block* linker::load(code_block* program_root, const std::string& filename) 
     auto tree = new code_block({0, 0, 0, 0, filename});
     // load library, this ast will be linked with root directly
     // so no extra namespace is generated
-    if (!lib_loaded) {
+    if (!library_loaded) {
         auto nasal_lib_code_block = import_nasal_lib();
         // insert nasal lib code to the back of tree
         link(tree, nasal_lib_code_block);
         delete nasal_lib_code_block;
-        lib_loaded = true;
+        library_loaded = true;
     }
 
     // load imported modules
+    std::unordered_set<std::string> used_modules = {};
     for(auto& import_ast_node : program_root->get_expressions()) {
         if (!import_check(import_ast_node)) {
             break;
         }
-        auto module_code_block = import_regular_file(import_ast_node);
+        auto module_code_block = import_regular_file(import_ast_node, used_modules);
         // this location should not be a reference, may cause use after free!
         const auto location = import_ast_node->get_location();
         // after importing the regular file as module, delete this node
         delete import_ast_node;
         // and replace the node with null_expr node
         import_ast_node = new null_expr(location);
+        // avoid repeatedly importing the same module
+        const auto& module_path = module_code_block->get_location().file;
+        if (used_modules.count(module_path)) {
+            delete module_code_block;
+            continue;
+        } else {
+            used_modules.insert(module_path);
+        }
         // then we generate a function warping the code block,
         // and export the necessary global symbols in this code block
         // by generate a return statement, with a hashmap return value
@@ -384,14 +390,16 @@ code_block* linker::load(code_block* program_root, const std::string& filename) 
 
 const error& linker::link(
     parse& parse, const std::string& self, bool spath = false) {
-    show_path = spath;
+    // switch for showing path when errors occur
+    show_path_flag = spath;
+
     // initializing file map
     this_file = self;
-    files = {self};
+    imported_files = {self};
     module_load_stack = {self};
+
     // scan root and import files
     // then generate a new ast and return to import_ast
-    // the main file's index is 0
     auto new_tree_root = load(parse.tree(), self);
     auto old_tree_root = parse.swap(new_tree_root);
     delete old_tree_root;
