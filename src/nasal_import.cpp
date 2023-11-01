@@ -97,27 +97,27 @@ bool linker::import_check(expr* node) {
     if (node->get_type()!=expr_type::ast_call) {
         return false;
     }
-    auto tmp = reinterpret_cast<call_expr*>(node);
-    auto first_expr = tmp->get_first();
+    auto call_node = reinterpret_cast<call_expr*>(node);
+    auto first_expr = call_node->get_first();
     if (first_expr->get_type()!=expr_type::ast_id) {
         return false;
     }
     if (reinterpret_cast<identifier*>(first_expr)->get_name()!="import") {
         return false;
     }
-    if (!tmp->get_calls().size()) {
+    if (!call_node->get_calls().size()) {
         return false;
     }
 
     // import("xxx");
-    if (tmp->get_calls().size()!=1) {
+    if (call_node->get_calls().size()!=1) {
         return false;
     }
 
-    if (tmp->get_calls()[0]->get_type()!=expr_type::ast_callf) {
+    if (call_node->get_calls()[0]->get_type()!=expr_type::ast_callf) {
         return false;
     }
-    auto func_call = (call_function*)tmp->get_calls()[0];
+    auto func_call = (call_function*)call_node->get_calls()[0];
     if (func_call->get_argument().size()!=1) {
         return false;
     }
@@ -171,10 +171,8 @@ code_block* linker::import_regular_file(
 
     // avoid infinite loading loop
     filename = find_real_file_path(filename, node->get_location());
-    if (!filename.length()) {
-        return new code_block({0, 0, 0, 0, filename});
-    }
-    if (used_modules.count(filename)) {
+    // if get empty string(error) or this file is used before, do not parse
+    if (!filename.length() || used_modules.count(filename)) {
         return new code_block({0, 0, 0, 0, filename});
     }
 
@@ -286,20 +284,11 @@ std::string linker::generate_module_name(const std::string& file_path) {
             "get empty module name from <" + file_path + ">, " +
             "will not be easily accessed."
         );
+        return module_name;
     }
-    if (module_name.length() && '0' <= module_name[0] && module_name[0] <= '9') {
-        err.warn("link",
-            "get module <" + module_name + "> from <" + file_path + ">, " +
-            "will not be easily accessed."
-        );
-    }
-    if (module_name.length() && module_name.find(".")!=std::string::npos) {
-        err.warn("link",
-            "get module <" + module_name + "> from <" + file_path + ">, " +
-            "will not be easily accessed."
-        );
-    }
-    if (module_name.length() && module_name.find("-")!=std::string::npos) {
+    if (std::isdigit(module_name[0]) ||
+        module_name.find(".")!=std::string::npos ||
+        module_name.find("-")!=std::string::npos) {
         err.warn("link",
             "get module <" + module_name + "> from <" + file_path + ">, " +
             "will not be easily accessed."
@@ -358,28 +347,29 @@ code_block* linker::load(code_block* program_root, const std::string& filename) 
 
     // load imported modules
     std::unordered_set<std::string> used_modules = {};
-    for(auto& import_ast_node : program_root->get_expressions()) {
-        if (!import_check(import_ast_node)) {
+    for(auto& import_node : program_root->get_expressions()) {
+        if (!import_check(import_node)) {
             break;
         }
-        auto module_code_block = import_regular_file(import_ast_node, used_modules);
-        // this location should not be a reference, may cause use after free!
-        const auto location = import_ast_node->get_location();
+        // parse file and get ast
+        auto module_code_block = import_regular_file(import_node, used_modules);
+        auto replace_node = new null_expr(import_node->get_location());
         // after importing the regular file as module, delete this node
-        delete import_ast_node;
+        delete import_node;
         // and replace the node with null_expr node
-        import_ast_node = new null_expr(location);
+        import_node = replace_node;
+
         // avoid repeatedly importing the same module
         const auto& module_path = module_code_block->get_location().file;
         if (used_modules.count(module_path)) {
             delete module_code_block;
             continue;
-        } else {
-            used_modules.insert(module_path);
         }
+        
         // then we generate a function warping the code block,
         // and export the necessary global symbols in this code block
         // by generate a return statement, with a hashmap return value
+        used_modules.insert(module_path);
         tree->add_expression(generate_module_definition(module_code_block));
     }
 

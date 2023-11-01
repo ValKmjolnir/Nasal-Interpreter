@@ -605,7 +605,7 @@ var print=func(elems...){
 当然也有另外一种办法来导入这些nasal文件，下面两种导入方式的效果是一样的：
 
 ```javascript
-import.dirname.dirname.filename;
+use dirname.dirname.filename;
 import("./dirname/dirname/filename.nas");
 ```
 
@@ -702,7 +702,7 @@ Windows(`.dll`):
 下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样可以实现跨平台:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 for(var i = 1; i<30; i+=1)
@@ -719,7 +719,7 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall`用于获取使用固定长度传参的 `dlcall` 函数，这种函数可以提高你的程序运行效率，因为它不需要用 `vm_vec` 来存储传入参数，而是使用局部作用域来直接存储，从而避免了频繁调用可能导致的频繁垃圾收集。所以上面展示的代码同样可以这样写：
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
