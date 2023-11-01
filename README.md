@@ -625,7 +625,7 @@ Use `import("filename.nas")` to get the nasal file including your built-in funct
 Also there's another way of importing nasal files, the two way of importing have the same function:
 
 ```javascript
-import.dirname.dirname.filename;
+use dirname.dirname.filename;
 import("./dirname/dirname/filename.nas");
 ```
 
@@ -728,7 +728,7 @@ Windows(`.dll`):
 Then we write a test nasal file to run this fib function, using `os.platform()` we could write a cross-platform program:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 for(var i = 1; i<30; i+=1)
@@ -745,7 +745,7 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall` is used to get `dlcall` function that has limited parameter size, this function will prove the performance of your code because it does not use `vm_vec` to store the arguments, instead it uses local scope to store them, so this could avoid frequently garbage collecting. And the code above could also be written like this:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
