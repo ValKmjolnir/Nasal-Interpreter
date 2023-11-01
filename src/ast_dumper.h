@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 namespace nasal {
 
