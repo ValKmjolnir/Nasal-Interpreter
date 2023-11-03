@@ -99,7 +99,7 @@ var nas_connect(var* args, usize size, gc* ngc) {
     memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
     return var::num(static_cast<double>(connect(
         args[0].num(),
-        (sockaddr*)&addr,
+        reinterpret_cast<sockaddr*>(&addr),
         sizeof(sockaddr_in)
     )));
 }
@@ -114,7 +114,7 @@ var nas_accept(var* args, usize size, gc* ngc) {
 #else
     int client_sd = accept(args[0].num(), (sockaddr*)&client, (socklen_t*)&socklen);
 #endif
-    var res=ngc->temp = ngc->alloc(vm_hash);
+    var res = ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
     hash["sd"] = var::num(static_cast<double>(client_sd));
     hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));

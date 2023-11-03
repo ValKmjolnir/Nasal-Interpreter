@@ -64,7 +64,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     f64 num = args[1].num();
-    *((u32*)res.ghost().pointer) = static_cast<u32>(num);
+    *(reinterpret_cast<u32*>(res.ghost().pointer)) = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
     return nil;
 }
