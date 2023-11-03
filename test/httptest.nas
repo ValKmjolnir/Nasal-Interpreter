@@ -320,6 +320,7 @@ while(1){
         elsif(path=="/license")
             http.send(client,respond.ok(io.readfile("./LICENSE")));
         elsif(path=="/doc/pic/nasal.png" or
+            path=="/doc/pic/social.png" or
             path=="/doc/pic/benchmark.png" or
             path=="/doc/pic/mandelbrot.png" or
             path=="/doc/pic/feigenbaum.png" or

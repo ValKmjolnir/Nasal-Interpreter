@@ -260,7 +260,7 @@ var builtin_keys(context* ctx, gc* ngc) {
             vec.push_back(ngc->newstr(iter.first));
         }
     }
-    ngc->temp=nil;
+    ngc->temp = nil;
     return res;
 }
 

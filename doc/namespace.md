@@ -62,3 +62,27 @@ var example_module = func {
     };
 }();
 ```
+
+## Import a module
+
+Here is a module named `std/example_module.nas`:
+
+```nasal
+var a = 1;
+```
+
+Then there's a script file named `test.nas`, import module in this file using this way:
+
+```nasal
+use std.example_module;
+
+println(example_module.a); # 1
+```
+
+Or this way:
+
+```nasal
+import("std/example_module.nas");
+
+println(example_module.a); # 1
+```
