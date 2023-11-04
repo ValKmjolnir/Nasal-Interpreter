@@ -132,9 +132,13 @@ bool parse::check_func_end(expr* node) {
     if (type==expr_type::ast_func) {
         return true;
     } else if (type==expr_type::ast_def) {
-        return check_func_end(((definition_expr*)node)->get_value());
+        return check_func_end(
+            reinterpret_cast<definition_expr*>(node)->get_value()
+        );
     } else if (type==expr_type::ast_assign) {
-        return check_func_end(((assignment_expr*)node)->get_right());
+        return check_func_end(
+            reinterpret_cast<assignment_expr*>(node)->get_right()
+        );
     }
     return false;
 }

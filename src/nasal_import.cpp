@@ -113,11 +113,11 @@ bool linker::import_check(expr* node) {
     if (call_node->get_calls().size()!=1) {
         return false;
     }
-
-    if (call_node->get_calls()[0]->get_type()!=expr_type::ast_callf) {
+    auto maybe_func_call = call_node->get_calls()[0];
+    if (maybe_func_call->get_type()!=expr_type::ast_callf) {
         return false;
     }
-    auto func_call = (call_function*)call_node->get_calls()[0];
+    auto func_call = reinterpret_cast<call_function*>(maybe_func_call);
     if (func_call->get_argument().size()!=1) {
         return false;
     }
