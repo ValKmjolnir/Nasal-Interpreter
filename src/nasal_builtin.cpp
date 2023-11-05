@@ -309,8 +309,8 @@ var builtin_substr(context* ctx, gc* ngc) {
     if (len.type!=vm_num || len.num()<0) {
         return nas_err("substr", "\"length\" should be number >= 0");
     }
-    usize begin = (usize)beg.num();
-    usize length = (usize)len.num();
+    auto begin = static_cast<usize>(beg.num());
+    auto length = static_cast<usize>(len.num());
     if (begin>=str.str().length()) {
         return nas_err("susbtr", "begin index out of range: "+std::to_string(begin));
     }
@@ -397,7 +397,7 @@ var builtin_chr(context* ctx, gc* ngc) {
     };
     auto num = static_cast<i32>(ctx->localr[1].num());
     if (0<=num && num<128) {
-        return ngc->newstr((char)num);
+        return ngc->newstr(static_cast<char>(num));
     } else if (128<=num && num<256) {
         return ngc->newstr(extend[num-128]);
     }
