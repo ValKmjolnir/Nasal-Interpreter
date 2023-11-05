@@ -10,6 +10,7 @@ namespace nasal {
 
 enum class expr_type:u32 {
     ast_null = 0,    // null node
+    ast_use,         // use statement
     ast_block,       // code block 
     ast_nil,         // nil keyword
     ast_num,         // number, basic value type
@@ -46,6 +47,7 @@ enum class expr_type:u32 {
 };
 
 class ast_visitor;
+class identifier;
 class hash_pair;
 class parameter;
 class slice_vector;
@@ -75,6 +77,19 @@ public:
         nd_loc.end_column = location.end_column;
     }
     virtual void accept(ast_visitor*);
+};
+
+class use_stmt: public expr {
+private:
+    std::vector<identifier*> path;
+
+public:
+    use_stmt(const span& location):
+        expr(location, expr_type::ast_use) {}
+    ~use_stmt() override;
+    void accept(ast_visitor*) override;
+    void add_path(identifier* node) {path.push_back(node);}
+    const auto& get_path() const {return path;}
 };
 
 class call: public expr {
@@ -121,7 +136,7 @@ public:
     string_literal(const span& location, const std::string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() override = default;
-    const std::string get_content() const {return content;}
+    const std::string& get_content() const {return content;}
     void accept(ast_visitor*) override;
 };
 

@@ -7,6 +7,7 @@ namespace nasal {
 class ast_visitor {
 public:
     virtual bool visit_expr(expr*);
+    virtual bool visit_use_stmt(use_stmt*);
     virtual bool visit_call(call*);
     virtual bool visit_null_expr(null_expr*);
     virtual bool visit_nil_expr(nil_expr*);

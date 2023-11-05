@@ -71,7 +71,7 @@ var nas_bind(var* args, usize size, gc* ngc) {
     server.sin_port = htons(args[2].num());
     return var::num(static_cast<double>(bind(
         args[0].num(),
-        (sockaddr*)&server,
+        reinterpret_cast<sockaddr*>(&server),
         sizeof(server)
     )));
 }
@@ -99,7 +99,7 @@ var nas_connect(var* args, usize size, gc* ngc) {
     memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
     return var::num(static_cast<double>(connect(
         args[0].num(),
-        (sockaddr*)&addr,
+        reinterpret_cast<sockaddr*>(&addr),
         sizeof(sockaddr_in)
     )));
 }
@@ -110,11 +110,19 @@ var nas_accept(var* args, usize size, gc* ngc) {
     sockaddr_in client;
     int socklen = sizeof(sockaddr_in);
 #ifdef _WIN32
-    int client_sd = accept(args[0].num(), (sockaddr*)&client, &socklen);
+    int client_sd = accept(
+        args[0].num(),
+        reinterpret_cast<sockaddr*>(&client),
+        &socklen
+    );
 #else
-    int client_sd = accept(args[0].num(), (sockaddr*)&client, (socklen_t*)&socklen);
+    int client_sd = accept(
+        args[0].num(),
+        reinterpret_cast<sockaddr*>(&client),
+        reinterpret_cast<socklen_t*>(&socklen)
+    );
 #endif
-    var res=ngc->temp = ngc->alloc(vm_hash);
+    var res = ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
     hash["sd"] = var::num(static_cast<double>(client_sd));
     hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));
@@ -159,7 +167,7 @@ var nas_sendto(var* args, usize size, gc* ngc) {
         args[3].str().c_str(),
         args[3].str().length(),
         args[4].num(),
-        (sockaddr*)&addr,
+        reinterpret_cast<sockaddr*>(&addr),
         sizeof(sockaddr_in)
     )));
 }
@@ -205,7 +213,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
         buf,
         args[1].num(),
         args[2].num(),
-        (sockaddr*)&addr,
+        reinterpret_cast<sockaddr*>(&addr),
         &socklen
     );
 #else
@@ -214,8 +222,8 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
         buf,
         args[1].num(),
         args[2].num(),
-        (sockaddr*)&addr,
-        (socklen_t*)&socklen
+        reinterpret_cast<sockaddr*>(&addr),
+        reinterpret_cast<socklen_t*>(&socklen)
     );
 #endif
     hash["size"] = var::num(static_cast<double>(recvsize));

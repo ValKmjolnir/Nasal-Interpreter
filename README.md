@@ -4,7 +4,7 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v11.1-blue?style=flat-square&logo=github)
+![in dev](https://img.shields.io/badge/dev-v11.2-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](./LICENSE)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
@@ -25,7 +25,7 @@
 
 __Contact us if having great ideas to share!__
 
-* __E-mail__: __lhk101lhk101@qq.com__
+* __E-mail__: __lhk101lhk101@qq.com__(ValKmjolnir) __1467329765@qq.com__(Sidi762)
 
 ## __Introduction__
 
@@ -97,8 +97,9 @@ You could choose which compiler you want to use:
 If your system is `Windows` and you want to output unicode, you could write this in nasal code:
 
 ```javascript
-if(os.platform()=="windows")
+if (os.platform()=="windows") {
     system("chcp 65001");
+}
 ```
 
 ## __Tutorial__
@@ -116,30 +117,30 @@ This type is not created by user program.
 __`nil`__ is a null type. Just like `null`.
 
 ```javascript
-var spc=nil;
+var spc = nil;
 ```
 
 __`num`__ has 3 formats: `dec`, `hex` and `oct`. Using IEEE754 `double` to store.
 
 ```javascript
 # this language use '#' to write notes
-var n=2.71828;    # dec
-var n=2.147e16;   # dec
-var n=1e-10;      # dec
-var n=0xAA55;     # hex
-var n=0o170001;   # oct
+var n = 2.71828;    # dec
+var n = 2.147e16;   # dec
+var n = 1e-10;      # dec
+var n = 0xAA55;     # hex
+var n = 0o170001;   # oct
 
 # caution: true and false also useful in nasal now
-var n=true;       # in fact n is now 1.0
-var n=false;      # in face n is now 0.0
+var n = true;       # in fact n is now 1.0
+var n = false;      # in face n is now 0.0
 ```
 
 __`str`__ has 3 formats. The third one is used to declare a character.
 
 ```javascript
-var s='str';
-var s="another string";
-var s=`c`;
+var s = 'str';
+var s = "another string";
+var s = `c`;
 # some special characters is allowed in this language:
 '\a'; '\b'; '\e'; '\f';
 '\n'; '\r'; '\t'; '\v';
@@ -150,19 +151,19 @@ var s=`c`;
 __`vec`__ has unlimited length and can store all types of values.
 
 ```javascript
-var vec=[];
-var vec=[0,nil,{},[],func(){return 0}];
-append(vec,0,1,2);
+var vec = [];
+var vec = [0, nil, {}, [], func(){return 0}];
+append(vec, 0, 1, 2);
 ```
 
 __`hash`__ is a hashmap (or like a `dict` in `python`) that stores values with strings/identifiers as the key.
 
 ```javascript
-var hash={
-    member1:nil,
-    member2:"str",
-    "member3":"member\'s name can also be a string constant",
-    funct:func(){
+var hash = {
+    member1: nil,
+    member2: "str",
+    "member3": "member\'s name can also be a string constant",
+    funct: func() {
         return me.member2~me.member3;
     }
 };
@@ -171,27 +172,28 @@ var hash={
 __`func`__ is a function type (in fact it is `lambda`).
 
 ```javascript
-var f=func(x,y,z){
+var f = func(x, y, z) {
     return nil;
 }
 # function could be declared without parameters and `(`, `)`
-var f=func{
+var f = func {
     return 114514;
 }
-var f=func(x,y,z,deft=1){
+var f = func(x, y, z, deft = 1) {
     return x+y+z+deft;
 }
-var f=func(args...){
-    var sum=0;
-    foreach(var i;args)
-        sum+=i;
+var f = func(args...) {
+    var sum = 0;
+    foreach(var i; args) {
+        sum += i;
+    }
     return sum;
 }
 ```
 
 __`upval`__ is used to store upvalues, used in __`vm`__ to make sure closure runs correctly.
 
-__`obj`__ is used to store other complex `C/C++` data types.
+__`ghost`__ is used to store other complex `C/C++` data types.
 This type is created by native-function of nasal. If want to define a new data type, see how to add native-functions by editing code.
 
 </details>
@@ -237,16 +239,16 @@ Bitwise operators `~` `|` `&` `^` have the same function as C/C++.
 Operators `=` `+=` `-=` `*=` `/=` `~=` `^=` `&=` `|=` are used in assignment expressions.
 
 ```javascript
-a=b=c=d=1;
-a+=1;
-a-=1;
-a*=1;
-a/=1;
-a~="string";
+a = b = c = d = 1;
+a += 1;
+a -= 1;
+a *= 1;
+a /= 1;
+a ~= "string";
 
-a^=0xff;
-a&=0xca;
-a|=0xba;
+a ^= 0xff;
+a &= 0xca;
+a |= 0xba;
 ```
 
 </details>
@@ -256,9 +258,9 @@ a|=0xba;
 As follows.
 
 ```javascript
-var a=1;             # define single variable
-var (a,b,c)=[0,1,2]; # define multiple variables from a vector
-var (a,b,c)=(0,1,2); # define multiple variables from a tuple
+var a = 1;             # define single variable
+var (a, b, c) = [0, 1, 2]; # define multiple variables from a vector
+var (a, b, c) = (0, 1, 2); # define multiple variables from a tuple
 ```
 
 Nasal has many special global symbols:
@@ -292,9 +294,9 @@ func() {
 The last one is often used to swap two variables.
 
 ```javascript
-(a,b[0],c.d)=[0,1,2];
-(a,b[1],c.e)=(0,1,2);
-(a,b)=(b,a);
+(a, b[0], c.d) = [0, 1, 2];
+(a, b[1], c.e) = (0, 1, 2);
+(a, b) = (b, a);
 ```
 
 </details>
@@ -305,13 +307,13 @@ In nasal there's a new key word `elsif`.
 It has the same functions as `else if`.
 
 ```javascript
-if(1){
+if (1) {
     ;
-}elsif(2){
+} elsif (2) {
     ;
-}else if(3){
+} else if (3) {
     ;
-}else{
+} else {
     ;
 }
 ```
@@ -323,10 +325,12 @@ if(1){
 While loop and for loop is simalar to C/C++.
 
 ```javascript
-while(condition)
+while(condition) {
     continue;
-for(var i=0;i<10;i+=1)
+}
+for(var i = 0; i<10; i += 1) {
     break;
+}
 ```
 
 Nasal has another two kinds of loops that iterates through a vector:
@@ -334,15 +338,17 @@ Nasal has another two kinds of loops that iterates through a vector:
 `forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
 
 ```javascript
-forindex(var i;elem)
+forindex(var i; elem) {
     print(elem[i]);
+}
 ```
 
 `foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i;elem)
+foreach(var i; elem) {
     print(i);
+}
 ```
 
 </details>
@@ -356,7 +362,7 @@ If you want to get the character, use built-in function `chr()`.
 
 ```javascript
 a[0];
-a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
+a[-1, 1, 0:2, 0:, :3, :, nil:8, 3:nil, nil:nil];
 "hello world"[0];
 ```
 
@@ -370,7 +376,7 @@ because hashmap use string as the key to compare.
 But if it really useful, the efficientcy may not be so important...
 
 ```javascript
-f(x:0,y:nil,z:[]);
+f(x:0, y:nil, z:[]);
 ```
 
 </details>
@@ -380,10 +386,10 @@ f(x:0,y:nil,z:[]);
 Also functions have this kind of use:
 
 ```javascript
-func(x,y){
+func(x, y) {
     return x+y
-}(0,1);
-func(x){
+}(0, 1);
+func(x) {
     return 1/(1+math.exp(-x));
 }(0.5);
 ```
@@ -392,11 +398,11 @@ There's an interesting test file `y-combinator.nas`,
 try it for fun:
 
 ```javascript
-var fib=func(f){
+var fib = func(f) {
     return f(f);
 }(
-    func(f){
-        return func(x){
+    func(f) {
+        return func(x) {
             if(x<2) return x;
             return f(f)(x-1)+f(f)(x-2);
         }
@@ -412,9 +418,9 @@ Closure means you could get the variable that is not in the local scope of a fun
 Here is an example, result is `1`:
 
 ```javascript
-var f=func(){
-    var a=1;
-    return func(){return a;};
+var f = func() {
+    var a = 1;
+    return func() {return a;};
 }
 print(f()());
 ```
@@ -422,14 +428,14 @@ print(f()());
 Using closure makes it easier to OOP.
 
 ```javascript
-var student=func(n,a){
-    var (name,age)=(n,a);
+var student = func(n, a) {
+    var (name, age) = (n, a);
     return {
-        print_info:func() {println(name,' ',age);},
-        set_age:   func(a){age=a;},
-        get_age:   func() {return age;},
-        set_name:  func(n){name=n;},
-        get_name:  func() {return name;}
+        print_info: func()  {println(name, ' ', age);},
+        set_age:    func(a) {age = a;},
+        get_age:    func()  {return age;},
+        set_name:   func(n) {name = n;},
+        get_name:   func()  {return name;}
     };
 }
 ```
@@ -448,20 +454,20 @@ If there is a hash that has the member, you will get the member's value.
 Using this mechanism, we could OOP like this, the result is `114514`:
 
 ```javascript
-var trait={
-    get:func{return me.val;},
-    set:func(x){me.val=x;}
+var trait = {
+    get: func {return me.val;},
+    set: func(x) {me.val = x;}
 };
 
-var class={
-    new:func(){
+var class = {
+    new: func() {
         return {
-            val:nil,
-            parents:[trait]
+            val: nil,
+            parents: [trait]
         };
     }
 };
-var a=class.new();
+var a = class.new();
 a.set(114514);
 println(a.get());
 ```
@@ -473,28 +479,28 @@ And `get` has the same process.
 And we must remind you that if you do this:
 
 ```javascript
-var trait={
-    get:func{return me.val;},
-    set:func(x){me.val=x;}
+var trait = {
+    get: func {return me.val;},
+    set: func(x) {me.val = x;}
 };
 
-var class={
-    new:func(){
+var class = {
+    new: func() {
         return {
-            val:nil,
-            parents:[trait]
+            val: nil,
+            parents: [trait]
         };
     }
 };
-var a=class.new();
-var b=class.new();
+var a = class.new();
+var b = class.new();
 a.set(114);
 b.set(514);
 println(a.get());
 println(b.get());
 
-var c=a.get;
-var d=b.get;
+var c = a.get;
+var d = b.get;
 
 println(c());
 println(c());
@@ -532,33 +538,19 @@ Definition:
 
 ```C++
 // you could also use a macro to define one.
-nas_native(builtin_print);
+var builtin_print(context*, gc*);
 ```
 
 Then complete this function using C++:
 
 ```C++
-var builtin_print(var* local,gc& ngc)
-{
+var builtin_print(context* ctx, gc* ngc) {
     // find value with index begin from 1
     // because local[0] is reserved for value 'me'
-    var vec=local[1];
-    // main process
-    // also check number of arguments and type here
-    // if get an error,use nas_err
-    for(auto& i:vec.vec().elems)
-        switch(i.type)
-        {
-            case vm_none: std::cout<<"undefined";   break;
-            case vm_nil:  std::cout<<"nil";         break;
-            case vm_num:  std::cout<<i.num();       break;
-            case vm_str:  std::cout<<i.str();       break;
-            case vm_vec:  std::cout<<i.vec();       break;
-            case vm_hash: std::cout<<i.hash();      break;
-            case vm_func: std::cout<<"func(..){..}";break;
-            case vm_obj:  std::cout<<"<object>";    break;
-        }
-    std::cout<<std::flush;
+    for(auto& i : ctx->localr[1].vec().elems) {
+        std::cout << i;
+    }
+    std::cout << std::flush;
     // generate return value,
     // use ngc::alloc(type) to make a new value
     // or use reserved reference nil/one/zero
@@ -572,17 +564,24 @@ The value got before will be collected, but stil in use in this builtin function
 So use `gc::temp` in builtin functions to temprorarily store the gc-managed value that you want to return later. Like this:
 
 ```C++
-var builtin_keys(var* local,gc& ngc)
-{
-    var hash=local[1];
-    if(hash.type!=vm_hash)
-        return nas_err("keys","\"hash\" must be hash");
+var builtin_keys(context* ctx, gc* ngc) {
+    auto hash = ctx->localr[1];
+    if (hash.type!=vm_hash && hash.type!=vm_map) {
+        return nas_err("keys", "\"hash\" must be hash");
+    }
     // use gc.temp to store the gc-managed-value, to avoid being sweeped
-    var res=ngc.temp=ngc.alloc(vm_vec);
-    auto& vec=res.vec().elems;
-    for(auto& iter:hash.hash().elems)
-        vec.push_back(ngc.newstr(iter.first));
-    ngc.temp=nil;
+    auto res = ngc->temp = ngc->alloc(vm_vec);
+    auto& vec = res.vec().elems;
+    if (hash.type==vm_hash) {
+        for(const auto& iter : hash.hash().elems) {
+            vec.push_back(ngc->newstr(iter.first));
+        }
+    } else {
+        for(const auto& iter : hash.map().mapper) {
+            vec.push_back(ngc->newstr(iter.first));
+        }
+    }
+    ngc->temp = nil;
     return res;
 }
 ```
@@ -590,21 +589,16 @@ var builtin_keys(var* local,gc& ngc)
 After that, register the built-in function's name(in nasal) and the function's pointer in this table:
 
 ```C++
-struct func
-{
-    const char* name;
-    var (*func)(var*,gc&);
-} builtin[]=
-{
-    {"__print",builtin_print},
-    {nullptr,  nullptr      }
+nasal_builtin_table builtin[] = {
+    {"__print", builtin_print},
+    {nullptr,  nullptr}
 };
 ```
 
 At last,warp the `__print` in a nasal file:
 
 ```javascript
-var print=func(elems...){
+var print = func(elems...) {
     return __print(elems);
 };
 ```
@@ -613,7 +607,7 @@ In fact the arguments that `__print` uses are not necessary.
 So writting it like this is also right:
 
 ```javascript
-var print=func(elems...){
+var print = func(elems...) {
     return __print;
 };
 ```
@@ -625,13 +619,13 @@ Use `import("filename.nas")` to get the nasal file including your built-in funct
 Also there's another way of importing nasal files, the two way of importing have the same function:
 
 ```javascript
-import.dirname.dirname.filename;
+use dirname.dirname.filename;
 import("./dirname/dirname/filename.nas");
 ```
 
 </details>
 
-<details><summary> Modules(for lib developers) </summary>
+<details><summary> Modules (for lib developers) </summary>
 
 If there is only one way to add your own functions into nasal,
 that is really inconvenient.
@@ -728,10 +722,10 @@ Windows(`.dll`):
 Then we write a test nasal file to run this fib function, using `os.platform()` we could write a cross-platform program:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
-for(var i = 1; i<30; i+=1)
+for(var i = 1; i<30; i += 1)
     println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -745,11 +739,11 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall` is used to get `dlcall` function that has limited parameter size, this function will prove the performance of your code because it does not use `vm_vec` to store the arguments, instead it uses local scope to store them, so this could avoid frequently garbage collecting. And the code above could also be written like this:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
-for(var i = 1; i<30; i+=1)
+for(var i = 1; i<30; i += 1)
     println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -791,7 +785,7 @@ If get this, Congratulations!
 
 </details>
 
-<details><summary> Ghost Type(for lib developers) </summary>
+<details><summary> Ghost Type (for lib developers) </summary>
 
 It's quite easy to create a new ghost by yourself now.
 Look at the example below:
@@ -812,19 +806,31 @@ void ghost_for_test_destructor(void* ptr) {
 var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_obj);
     // create ghost type
-    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    res.ghost().set(ghost_for_test, ghost_for_test_destructor, new u32);
     return res;
+}
+
+var set_new_ghost(var* args, usize size, gc* ngc) {
+    var res = args[0];
+    if (!res.object_check(ghost_for_test)) {
+        std::cout << "set_new_ghost: not ghost for test type.\n";
+        return nil;
+    }
+    f64 num = args[1].num();
+    *(reinterpret_cast<u32*>(res.ghost().pointer)) = static_cast<u32>(num);
+    std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
+    return nil;
 }
 
 var print_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
     // check ghost type by the type name
-    if (!res.objchk(ghost_for_test)) {
+    if (!res.object_check(ghost_for_test)) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
-    std::cout << "print_new_ghost: " << res.obj() << " result = "
-        << *((u32*)res.obj().ptr) << "\n";
+    std::cout << "print_new_ghost: " << res.ghost() << " result = "
+              << *((u32*)res.ghost().pointer) << "\n";
     return nil;
 }
 ```
@@ -841,7 +847,7 @@ We use this function to create a new ghost type:
 
 And we use this function to check if value is the correct ghost type:
 
-`bool var::objchk(const std::string&);`
+`bool var::object_check(const std::string&);`
 
 The parameter is the name of the ghost type.
 
@@ -860,7 +866,7 @@ So do not use variable without using `var` to declare it.
 In Andy's interpreter:
 
 ```javascript
-foreach(i;[0,1,2,3])
+foreach(i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -877,7 +883,7 @@ If you forget to add the keyword `var`, you will get this:
 code: undefined symbol "i"
  --> test.nas:1:9
   | 
-1 | foreach(i;[0,1,2,3])
+1 | foreach(i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"
@@ -901,8 +907,7 @@ it will print trace back information:
 Function `die` is used to throw error and crash immediately.
 
 ```javascript
-func()
-{
+func() {
     println("hello");
     die("error occurred this line");
     return;
@@ -912,17 +917,27 @@ func()
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] native function error.
-trace back:
-  0x000000ac      40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-  0x000004f6      3e 00 00 00 01      callfv 0x1 (a.nas:4)
-  0x000004fa      3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
-  0x0000005b    | null |
-  ...
-  0x00000057    | str  | <0x138ff60> error occurred t...
-  ...
-  0x00000052    | nil  |
+[vm] error: error occurred in native function
+
+call trace (main)
+  call func@0x557513935710() {entry: 0x850}
+
+trace back (main)
+  0x000547     4c 00 00 16     callb   0x16 <__die@0x557512441780>(std/lib.nas:150)
+  0x000856     4a 00 00 01     callfv  0x1(a.nas:3)
+  0x00085a     4a 00 00 00     callfv  0x0(a.nas:5)
+
+stack (0x5575138e8c40, limit 10, total 14)
+  0x00000d    | null |
+  0x00000c    | pc   | 0x856
+  0x00000b    | addr | 0x5575138e8c50
+  0x00000a    | nil  |
+  0x000009    | nil  |
+  0x000008    | str  | <0x5575138d9190> error occurred t...
+  0x000007    | nil  |
+  0x000006    | func | <0x5575139356f0> entry:0x850
+  0x000005    | pc   | 0x85a
+  0x000004    | addr | 0x0
 ```
 
 </details>
@@ -932,28 +947,41 @@ vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
 Here is an example of stack overflow:
 
 ```javascript
-func(f){
+func(f) {
     return f(f);
 }(
-    func(f){
+    func(f) {
         f(f);
     }
 )();
 ```
 
 ```javascript
-[vm] stack overflow
-trace back:
-  0x000004fb      3e 00 00 00 01      callfv 0x1 (a.nas:5)
-  0x000004fb      1349 same call(s)
-  0x000004f3      3e 00 00 00 01      callfv 0x1 (a.nas:2)
-  0x000004ff      3e 00 00 00 01      callfv 0x1 (a.nas:3)
-vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
-  0x00001ffb    | func | <0x15f8d90> entry:0x4f9
-  0x00001ffa    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff9    | pc   | 0x4fb
-  ...
-  0x00001ff2    | addr | 0x7fffd37a16e8
+[vm] error: stack overflow
+
+call trace (main)
+  call func@0x564106058620(f) {entry: 0x859}
+   --> 583 same call(s)
+  call func@0x5641060586c0(f) {entry: 0x851}
+
+trace back (main)
+  0x000859     45 00 00 01     calll   0x1(a.nas:5)
+  0x00085b     4a 00 00 01     callfv  0x1(a.nas:5)
+  0x00085b     582 same call(s)
+  0x000853     4a 00 00 01     callfv  0x1(a.nas:2)
+  0x00085f     4a 00 00 01     callfv  0x1(a.nas:3)
+
+stack (0x56410600be00, limit 10, total 4096)
+  0x000fff    | func | <0x564106058600> entry:0x859
+  0x000ffe    | pc   | 0x85b
+  0x000ffd    | addr | 0x56410601bd20
+  0x000ffc    | nil  |
+  0x000ffb    | nil  |
+  0x000ffa    | func | <0x564106058600> entry:0x859
+  0x000ff9    | nil  |
+  0x000ff8    | func | <0x564106058600> entry:0x859
+  0x000ff7    | pc   | 0x85b
+  0x000ff6    | addr | 0x56410601bcb0
 ```
 
 </details>
@@ -963,17 +991,19 @@ vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
 Error will be thrown if there's a fatal error when executing:
 
 ```javascript
-func(){
+func() {
     return 0;
 }()[1];
 ```
 
 ```javascript
-[vm] callv: must call a vector/hash/string
-trace back:
-  0x000004f4      3b 00 00 00 00      callv  0x0 (a.nas:3)
-vm stack (0x7fffff539c28 <sp+80>, limit 10, total 1):
-  0x00000050    | num  | 0
+[vm] error: must call a vector/hash/string but get number
+
+trace back (main)
+  0x000854     47 00 00 00     callv   0x0(a.nas:3)
+
+stack (0x564993f462b0, limit 10, total 1)
+  0x000000    | num  | 0
 ```
 
 </details>
@@ -985,35 +1015,48 @@ Use command __`-d`__ or __`--detail`__ the trace back info will show more detail
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] error: native function error
+[vm] error: error occurred in native function
+
+call trace (main)
+  call func@0x55dcb5b8fbf0() {entry: 0x850}
+
 trace back (main)
-  0x000000b0      40 00 00 00 2b      callb   0x2b <__die@0x41c380> (lib.nas:131)
-  0x00000553      3e 00 00 00 01      callfv  0x1 (test.nas:4)
-  0x00000557      3e 00 00 00 00      callfv  0x0 (test.nas:6)
-vm stack (0x7fffe0ffed90 <sp+63>, limit 10, total 12)
-  0x0000004a    | null |
-  0x00000049    | pc   | 0x553
-  0x00000048    | addr | 0x7fffe0ffeda0
-  ...
-  0x00000041    | nil  |
+  0x000547     4c 00 00 16     callb   0x16 <__die@0x55dcb3c41780>(std/lib.nas:150)
+  0x000856     4a 00 00 01     callfv  0x1(a.nas:3)
+  0x00085a     4a 00 00 00     callfv  0x0(a.nas:5)
+
+stack (0x55dcb5b43120, limit 10, total 14)
+  0x00000d    | null |
+  0x00000c    | pc   | 0x856
+  0x00000b    | addr | 0x55dcb5b43130
+  0x00000a    | nil  |
+  0x000009    | nil  |
+  0x000008    | str  | <0x55dcb5b33670> error occurred t...
+  0x000007    | nil  |
+  0x000006    | func | <0x55dcb5b8fbd0> entry:0x850
+  0x000005    | pc   | 0x85a
+  0x000004    | addr | 0x0
+
 registers (main)
-  [ pc     ]    | pc   | 0xb0
-  [ global ]    | addr | 0x7fffe0ffe9a0
-  [ localr ]    | addr | 0x7fffe0ffedf0
-  [ memr   ]    | addr | 0x0
-  [ canary ]    | addr | 0x7fffe1002990
-  [ top    ]    | addr | 0x7fffe0ffee40
-  [ funcr  ]    | func | <0x677cd0> entry:0xb0
-  [ upvalr ]    | nil  |
-global (0x7fffe0ffe9a0 <sp+0>)
-  0x00000000    | func | <0x65fb00> entry:0x5
-  0x00000001    | func | <0x65fb20> entry:0xd
+  [pc    ]    | pc   | 0x547
+  [global]    | addr | 0x55dcb5b53130
+  [local ]    | addr | 0x55dcb5b43190
+  [memr  ]    | addr | 0x0
+  [canary]    | addr | 0x55dcb5b53110
+  [top   ]    | addr | 0x55dcb5b431f0
+  [funcr ]    | func | <0x55dcb5b65620> entry:0x547
+  [upval ]    | nil  |
+
+global (0x55dcb5b53130)
+  0x000000    | nmspc| <0x55dcb5b33780> namespace [95 val]
+  0x000001    | vec  | <0x55dcb5b64c20> [0 val]
   ...
-  0x0000003d    | func | <0x66bf00> entry:0x51f
-  0x0000003e    | hash | <0x65ffa0> {5 val}
-local (0x7fffe0ffedf0 <sp+45>)
-  0x00000000    | nil  |
-  0x00000001    | str  | <0x6cb630> error occurred t...
+  0x00005e    | func | <0x55dcb5b8fc70> entry:0x846
+
+local (0x55dcb5b43190 <+7>)
+  0x000000    | nil  |
+  0x000001    | str  | <0x55dcb5b33670> error occurred t...
+  0x000002    | nil  |
 ```
 
 </details>
@@ -1038,16 +1081,18 @@ source code:
     for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
+
 next bytecode:
---> 0x00000000      01 00 00 00 41      intg    0x41 (test/fib.nas:0)
-    0x00000001      0b 00 00 00 05      newf    0x5 (lib.nas:6)
-    0x00000002      02 00 00 00 02      intl    0x2 (lib.nas:6)
-    0x00000003      0f 00 00 00 00      dyn     0x0 ("elems") (lib.nas:6)
-    0x00000004      32 00 00 00 07      jmp     0x7 (lib.nas:6)
-    0x00000005      40 00 00 00 00      callb   0x0 <__print@0x419c80> (lib.nas:7)
-    0x00000006      4a 00 00 00 00      ret     0x0 (lib.nas:7)
-    0x00000007      03 00 00 00 00      loadg   0x0 (lib.nas:6)
-vm stack (0x7fffd0259138 <sp+65>, limit 10, total 0)
+    0x000848     4a 00 00 01     callfv  0x1(std/lib.nas:427)
+    0x000849     3d 00 00 00     pop     0x0(std/lib.nas:427)
+    0x00084a     07 00 00 00     pnil    0x0(std/lib.nas:423)
+    0x00084b     56 00 00 00     ret     0x0(std/lib.nas:423)
+    0x00084c     03 00 00 5e     loadg   0x5e(std/lib.nas:423)
+--> 0x00084d     0b 00 08 51     newf    0x851(test/fib.nas:1)
+    0x00084e     02 00 00 03     intl    0x3(test/fib.nas:1)
+    0x00084f     0d 00 00 08     para    0x8 (x)(test/fib.nas:1)
+
+stack (0x55ccd0a1b9d0, limit 10, total 0)
 >>
 ```
 
@@ -1070,23 +1115,26 @@ source code:
     for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
+
 next bytecode:
-    0x00000548      0c 00 00 00 aa      happ    0xaa ("running") (lib.nas:503)
-    0x00000549      03 00 00 00 3e      loadg   0x3e (lib.nas:498)
-    0x0000054a      0b 00 00 05 4e      newf    0x54e (test/fib.nas:1)
-    0x0000054b      02 00 00 00 02      intl    0x2 (test/fib.nas:1)
-    0x0000054c      0d 00 00 00 1b      para    0x1b ("x") (test/fib.nas:1)
-    0x0000054d      32 00 00 05 5d      jmp     0x55d (test/fib.nas:1)
---> 0x0000054e      39 00 00 00 01      calll   0x1 (test/fib.nas:3)
-    0x0000054f      2d 00 00 00 03      lessc   0x3 (2) (test/fib.nas:3)
-vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
-  0x00000047    | pc   | 0x566
-  0x00000046    | addr | 0x0
-  0x00000045    | nil  |
-  0x00000044    | num  | 0
-  0x00000043    | nil  |
-  0x00000042    | nil  |
-  0x00000041    | func | <0x88d2f0> entry:0x5
+    0x000850     3e 00 08 60     jmp     0x860(test/fib.nas:1)
+--> 0x000851     45 00 00 01     calll   0x1(test/fib.nas:3)
+    0x000852     39 00 00 07     lessc   0x7 (2)(test/fib.nas:3)
+    0x000853     40 00 08 56     jf      0x856(test/fib.nas:3)
+    0x000854     45 00 00 01     calll   0x1(test/fib.nas:3)
+    0x000855     56 00 00 00     ret     0x0(test/fib.nas:3)
+    0x000856     44 00 00 5f     callg   0x5f(test/fib.nas:4)
+    0x000857     45 00 00 01     calll   0x1(test/fib.nas:4)
+
+stack (0x55ccd0a1b9d0, limit 10, total 8)
+  0x000007    | pc   | 0x869
+  0x000006    | addr | 0x0
+  0x000005    | nil  |
+  0x000004    | nil  |
+  0x000003    | num  | 0
+  0x000002    | nil  |
+  0x000001    | nil  |
+  0x000000    | func | <0x55ccd0a58fa0> entry:0x487
 >>
 ```
 
@@ -1113,4 +1161,23 @@ Nasal REPL interpreter version 11.0 (Oct  7 2023 17:28:31)
 .s, .source | show source code
 
 >>>
+```
+
+Try import `std/json.nas`~
+
+```bash
+[nasal-repl] Initializating enviroment...
+[nasal-repl] Initialization complete.
+
+Nasal REPL interpreter version 11.1 (Nov  1 2023 23:37:30)
+.h, .help   | show help
+.e, .exit   | quit the REPL
+.q, .quit   | quit the REPL
+.c, .clear  | clear the screen
+.s, .source | show source code
+
+>>> use std.json;
+{stringify:func(..) {..},parse:func(..) {..}}
+
+>>> 
 ```

@@ -45,7 +45,7 @@ var builtin_cocreate(context* ctx, gc* ngc) {
     coroutine.ctx.top++;
 
     // store old localr on stack
-    coroutine.ctx.top[0] = var::addr((var*)nullptr);
+    coroutine.ctx.top[0] = var::addr(nullptr);
     coroutine.ctx.top++;
 
     // store old pc on stack

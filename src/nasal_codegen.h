@@ -78,34 +78,34 @@ private:
         err.err("code", loc, info);
     }
 
-    void regist_num(const f64);
-    void regist_str(const std::string&);
+    void regist_number(const f64);
+    void regist_string(const std::string&);
     void find_symbol(code_block*);
-    void add_symbol(const std::string&);
+    void regist_symbol(const std::string&);
     i32 local_symbol_find(const std::string&);
     i32 global_symbol_find(const std::string&);
     i32 upvalue_symbol_find(const std::string&);
 
     void emit(u8, u32, const span&);
 
-    void num_gen(number_literal*);
-    void str_gen(string_literal*);
+    void number_gen(number_literal*);
+    void string_gen(string_literal*);
     void bool_gen(bool_literal*);
-    void vec_gen(vector_expr*);
+    void vector_gen(vector_expr*);
     void hash_gen(hash_expr*);
     void func_gen(function*);
     void call_gen(call_expr*);
-    void call_id(identifier*);
+    void call_identifier(identifier*);
     void call_hash_gen(call_hash*);
     void call_vector_gen(call_vector*);
     void call_func_gen(call_function*);
     void mcall(expr*);
-    void mcall_id(identifier*);
+    void mcall_identifier(identifier*);
     void mcall_vec(call_vector*);
     void mcall_hash(call_hash*);
     void multi_def(definition_expr*);
     void single_def(definition_expr*);
-    void def_gen(definition_expr*);
+    void definition_gen(definition_expr*);
     void assignment_expression(assignment_expr*);
     void gen_assignment_equal_statement(assignment_expr*);
     void replace_left_assignment_with_load(const span&);

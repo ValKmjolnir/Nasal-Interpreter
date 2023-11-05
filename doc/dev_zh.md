@@ -1,5 +1,7 @@
 # __开发历史记录__
 
+![buringship](./pic/burningship.png)
+
 ## __目录__
 
 * [__语法分析__](#语法分析)
@@ -22,6 +24,7 @@
 * [__发行日志__](#发行日志)
   * [v8.0](#version-80-release)
   * [v11.0](#version-110-release)
+  * [v11.1](#version-111-release)
 
 ## __语法分析__
 
@@ -630,3 +633,11 @@ in __`nasal_dbg.h:215`__: `auto canary=gc.stack+STACK_MAX_DEPTH-1;`
 9. 添加`CMakeLists.txt` (可在`Visual Studio`中使用)。
 
 10. 全新的自定义类型注册流程。
+
+### __version 11.1 release__
+
+1. Bug 修复: 修复 v11.0 的 debugger 无法启动的问题。
+
+2. Bug 修复: symbol_finder 不检查 foreach/forindex 中的迭代变量声明的问题。
+
+3. 扩展语法 `import.xx.xx` 改为 `use xx.xx`。

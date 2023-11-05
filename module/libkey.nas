@@ -1,4 +1,4 @@
-import.std.dylib;
+use std.dylib;
 
 var (
     kbhit,

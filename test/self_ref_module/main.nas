@@ -1,6 +1,6 @@
-import.c;
-import.a;
-import.b;
+use c;
+use a;
+use b;
 
 println(a);
 println(b);

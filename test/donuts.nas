@@ -1,4 +1,4 @@
-import.std.runtime;
+use std.runtime;
 
 var mod = math.mod;
 
