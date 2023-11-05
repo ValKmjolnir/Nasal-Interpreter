@@ -4,7 +4,7 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v11.1-blue?style=flat-square&logo=github)
+![in dev](https://img.shields.io/badge/dev-v11.2-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
@@ -25,7 +25,7 @@
 
 __如果有好的意见或建议，欢迎联系我们!__
 
-* __E-mail__: __lhk101lhk101@qq.com__
+* __E-mail__: __lhk101lhk101@qq.com__(ValKmjolnir) __1467329765@qq.com__(Sidi762)
 
 ## __简介__
 
@@ -88,8 +88,9 @@ __注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构�
 如果你是 `Windows` 用户且想正常输出unicode，在nasal代码里写这个来开启unicode代码页:
 
 ```javascript
-if(os.platform()=="windows")
+if (os.platform()=="windows") {
     system("chcp 65001");
+}
 ```
 
 ## __教程__
@@ -104,30 +105,30 @@ __`none`__ 是特殊的错误类型。这个类型用于终止虚拟机的执行
 __`nil`__ 是空类型。类似于null。
 
 ```javascript
-var spc=nil;
+var spc = nil;
 ```
 
 __`num`__ 有三种形式:十进制，十六进制以及八进制。并且该类型使用IEEE754标准的浮点数`double`格式来存储。
 
 ```javascript
 # 该语言用 '#' 来作为注释的开头
-var n=2.71828;    # dec 十进制
-var n=2.147e16;   # dec 十进制
-var n=1e-10;      # dec 十进制
-var n=0xAA55;     # hex 十六进制
-var n=0o170001;   # oct 八进制
+var n = 2.71828;    # dec 十进制
+var n = 2.147e16;   # dec 十进制
+var n = 1e-10;      # dec 十进制
+var n = 0xAA55;     # hex 十六进制
+var n = 0o170001;   # oct 八进制
 
 # 注意: true 和 false 关键字在现在的 nasal 里也是可用的
-var n=true;       # n 实际上是数字 1.0
-var n=false;      # n 实际上是数字 0.0
+var n = true;       # n 实际上是数字 1.0
+var n = false;      # n 实际上是数字 0.0
 ```
 
 __`str`__ 也有三种不同的格式。第三种只允许包含一个的字符。
 
 ```javascript
-var s='str';
-var s="another string";
-var s=`c`;
+var s = 'str';
+var s = "another string";
+var s = `c`;
 # 该语言也支持一些特别的转义字符:
 '\a'; '\b'; '\e'; '\f';
 '\n'; '\r'; '\t'; '\v';
@@ -138,19 +139,19 @@ var s=`c`;
 __`vec`__ 有不受限制的长度并且可以存储所有类型的数据。(当然不能超过可分配内存空间的长度)
 
 ```javascript
-var vec=[];
-var vec=[0,nil,{},[],func(){return 0}];
-append(vec,0,1,2);
+var vec = [];
+var vec = [0, nil, {}, [], func(){return 0}];
+append(vec, 0, 1, 2);
 ```
 
 __`hash`__ 使用哈希表 (类似于`python`中的`dict`)，通过键值对来存储数据。key可以是一个字符串，也可以是一个标识符。
 
 ```javascript
-var hash={
-    member1:nil,
-    member2:"str",
-    "member3":"member\'s name can also be a string constant",
-    funct:func(){
+var hash = {
+    member1: nil,
+    member2: "str",
+    "member3": "member\'s name can also be a string constant",
+    funct: func() {
         return me.member2~me.member3;
     }
 };
@@ -159,27 +160,28 @@ var hash={
 __`func`__ 函数类型。(实际上在这个语言里函数是一种`lambda`表达式)
 
 ```javascript
-var f=func(x,y,z){
+var f = func(x, y, z) {
     return nil;
 }
 # 函数声明可以没有参数列表以及 `(`, `)`
-var f=func{
+var f = func {
     return 114514;
 }
-var f=func(x,y,z,deft=1){
+var f = func(x, y, z, deft = 1) {
     return x+y+z+deft;
 }
-var f=func(args...){
-    var sum=0;
-    foreach(var i;args)
-        sum+=i;
+var f = func(args...) {
+    var sum = 0;
+    foreach(var i; args) {
+        sum += i;
+    }
     return sum;
 }
 ```
 
 __`upval`__ 是存储闭包数据的特殊类型, 在 __`vm`__ 中使用，以确保闭包功能正常。
 
-__`obj`__ 是用来存储`C/C++`的一些复杂数据结构。这种类型的数据由内置函数生成。如果想为nasal添加新的数据结构, 可以看下文如何通过修改本项目来添加内置函数。
+__`ghost`__ 是用来存储`C/C++`的一些复杂数据结构。这种类型的数据由内置函数生成。如果想为nasal添加新的数据结构, 可以看下文如何通过修改本项目来添加内置函数。
 
 </details>
 
@@ -223,16 +225,16 @@ Nasal拥有基本的四种数学运算符 `+` `-` `*` `/`以及一个特别的�
 赋值运算符`=` `+=` `-=` `*=` `/=` `~=` `^=` `&=` `|=`正如其名，用于进行赋值。
 
 ```javascript
-a=b=c=d=1;
-a+=1;
-a-=1;
-a*=1;
-a/=1;
-a~="string";
+a = b = c = d = 1;
+a += 1;
+a -= 1;
+a *= 1;
+a /= 1;
+a ~= "string";
 
-a^=0xff;
-a&=0xca;
-a|=0xba;
+a ^= 0xff;
+a &= 0xca;
+a |= 0xba;
 ```
 
 </details>
@@ -242,9 +244,9 @@ a|=0xba;
 如下所示。
 
 ```javascript
-var a=1;             # 定义单个变量
-var (a,b,c)=[0,1,2]; # 从数组中初始化多个变量
-var (a,b,c)=(0,1,2); # 从元组中初始化多个变量
+var a = 1;             # 定义单个变量
+var (a, b, c) = [0, 1, 2]; # 从数组中初始化多个变量
+var (a, b, c) = (0, 1, 2); # 从元组中初始化多个变量
 ```
 
 Nasal 有很多特别的全局变量：
@@ -278,9 +280,9 @@ func() {
 最后这个语句通常用于交换两个变量的数据，类似于Python中的操作。
 
 ```javascript
-(a,b[0],c.d)=[0,1,2];
-(a,b[1],c.e)=(0,1,2);
-(a,b)=(b,a);
+(a, b[0], c.d) = [0, 1, 2];
+(a, b[1], c.e) = (0, 1, 2);
+(a, b) = (b, a);
 ```
 
 </details>
@@ -290,13 +292,13 @@ func() {
 nasal在提供`else if`的同时还有另外一个关键字`elsif`。该关键字与`else if`有相同的功能。
 
 ```javascript
-if(1){
+if (1) {
     ;
-}elsif(2){
+} elsif (2) {
     ;
-}else if(3){
+} else if (3) {
     ;
-}else{
+} else {
     ;
 }
 ```
@@ -308,10 +310,12 @@ if(1){
 while循环和for循环大体上与C/C++是一致的。
 
 ```javascript
-while(condition)
+while(condition) {
     continue;
-for(var i=0;i<10;i+=1)
+}
+for(var i = 0; i<10; i += 1) {
     break;
+}
 ```
 
 同时，nasal还有另外两种直接遍历列表的循环方式:
@@ -319,15 +323,17 @@ for(var i=0;i<10;i+=1)
 `forindex` 会获取列表的下标，依次递增. 下标会从`0`递增到`size(elem)-1`结束。
 
 ```javascript
-forindex(var i;elem)
+forindex(var i; elem) {
     print(elem[i]);
+}
 ```
 
 `foreach`会依次直接获取列表中的数据. 这些数据会从`elem[0]`依次获取到`elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i;elem)
+foreach(var i; elem) {
     print(i);
+}
 ```
 
 </details>
@@ -338,7 +344,7 @@ nasal提供了下面第一句的类似语法来从列表中随机或者按照一
 
 ```javascript
 a[0];
-a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
+a[-1, 1, 0:2, 0:, :3, :, nil:8, 3:nil, nil:nil];
 "hello world"[0];
 ```
 
@@ -351,7 +357,7 @@ a[-1,1,0:2,0:,:3,:,nil:8,3:nil,nil:nil];
 然而如果它用起来非常舒适，那效率也显得不是非常重要了……
 
 ```javascript
-f(x:0,y:nil,z:[]);
+f(x:0, y:nil, z:[]);
 ```
 
 </details>
@@ -361,10 +367,10 @@ f(x:0,y:nil,z:[]);
 函数有这样一种直接编写函数体并且立即调用的方式:
 
 ```javascript
-func(x,y){
+func(x, y) {
     return x+y;
-}(0,1);
-func(x){
+}(0, 1);
+func(x) {
     return 1/(1+math.exp(-x));
 }(0.5);
 ```
@@ -372,11 +378,11 @@ func(x){
 测试文件中有一个非常有趣的文件`y-combinator.nas`，可以试一试:
 
 ```javascript
-var fib=func(f){
+var fib = func(f) {
     return f(f);
 }(
-    func(f){
-        return func(x){
+    func(f) {
+        return func(x) {
             if(x<2) return x;
             return f(f)(x-1)+f(f)(x-2);
         }
@@ -393,9 +399,9 @@ var fib=func(f){
 下面这个例子里，结果是`1`:
 
 ```javascript
-var f=func(){
-    var a=1;
-    return func(){return a;};
+var f = func() {
+    var a = 1;
+    return func() {return a;};
 }
 print(f()());
 ```
@@ -403,14 +409,14 @@ print(f()());
 如果善用闭包，你可以使用它来进行面向对象编程。
 
 ```javascript
-var student=func(n,a){
-    var (name,age)=(n,a);
+var student = func(n, a) {
+    var (name, age) = (n, a);
     return {
-        print_info:func() {println(name,' ',age);},
-        set_age:   func(a){age=a;},
-        get_age:   func() {return age;},
-        set_name:  func(n){name=n;},
-        get_name:  func() {return name;}
+        print_info: func()  {println(name, ' ', age);},
+        set_age:    func(a) {age = a;},
+        get_age:    func()  {return age;},
+        set_name:   func(n) {name = n;},
+        get_name:   func()  {return name;}
     };
 }
 ```
@@ -429,20 +435,20 @@ var student=func(n,a){
 使用这个机制，我们可以进行面向对象编程，下面样例的结果是`114514`:
 
 ```javascript
-var trait={
-    get:func{return me.val;},
-    set:func(x){me.val=x;}
+var trait = {
+    get: func {return me.val;},
+    set: func(x) {me.val = x;}
 };
 
-var class={
-    new:func(){
+var class = {
+    new: func() {
         return {
-            val:nil,
-            parents:[trait]
+            val: nil,
+            parents: [trait]
         };
     }
 };
-var a=class.new();
+var a = class.new();
 a.set(114514);
 println(a.get());
 ```
@@ -453,28 +459,28 @@ println(a.get());
 不过我们必须提醒你一点，如果你在这个地方使用该优化来减少hash的搜索开销:
 
 ```javascript
-var trait={
-    get:func{return me.val;},
-    set:func(x){me.val=x;}
+var trait = {
+    get: func {return me.val;},
+    set: func(x) {me.val = x;}
 };
 
-var class={
-    new:func(){
+var class = {
+    new: func() {
         return {
-            val:nil,
-            parents:[trait]
+            val: nil,
+            parents: [trait]
         };
     }
 };
-var a=class.new();
-var b=class.new();
+var a = class.new();
+var b = class.new();
 a.set(114);
 b.set(514);
 println(a.get());
 println(b.get());
 
-var c=a.get;
-var d=b.get;
+var c = a.get;
+var d = b.get;
 
 println(c());
 println(c());
@@ -506,42 +512,27 @@ println(d());
 
 __警告:__ 如果你 __不想__ 通过直接修改解释器源码来添加你自定义的函数，那么你应该看下一个节 __`模块`__ 的内容。
 
-如果你确实是想修改源码来搞一个自己私人订制的解释器，那么你可以说：“我他妈就是想自己私人订制，你们他妈的管得着吗”，
-然后看看源码中关于内置函数的部分，以及`lib.nas`中是如何包装这些函数的，还有下面的样例:
+如果你确实是想修改源码来搞一个自己私人订制的解释器 ———— “我他妈就是想自己私人订制，你们他妈的管得着吗？”，
+参考源码中关于内置函数的部分，以及`lib.nas`中是如何包装这些函数的，下面是其中一个样例:
 
 定义新的内置函数:
 
 ```C++
 // 你可以使用这个宏来直接定义一个新的内置函数
-nas_native(builtin_print);
+var builtin_print(context*, gc*);
 ```
 
 然后用C++完成这个函数的函数体:
 
 ```C++
-var builtin_print(var* local,gc& ngc)
-{
-    // 局部变量的下标其实是从1开始的
-    // 因为local[0]是保留给'me'的空间
-    var vec=local[1];
-    // 主要部分
-    // 一些必要的类型检查和输入合法性检测也要在这里写出
-    // 如果检测到问题，用builtin_err函数来返回vm_null
-    // 并且狠狠地骂那些不好好写代码的混蛋(玩笑)
-    for(auto& i:vec.vec().elems)
-        switch(i.type)
-        {
-            case vm_none: std::cout<<"undefined";   break;
-            case vm_nil:  std::cout<<"nil";         break;
-            case vm_num:  std::cout<<i.num();       break;
-            case vm_str:  std::cout<<i.str();       break;
-            case vm_vec:  std::cout<<i.vec();       break;
-            case vm_hash: std::cout<<i.hash();      break;
-            case vm_func: std::cout<<"func(..){..}";break;
-            case vm_obj:  std::cout<<"<object>";    break;
-        }
-    std::cout<<std::flush;
-    // 最后一定要记得生成返回值,返回值必须是一个内置的类型，
+var builtin_print(context* ctx, gc* ngc) {
+    // 局部变量的下标其实是从 1 开始的
+    // 因为 local[0] 是保留给 'me' 的空间
+    for(auto& i : ctx->localr[1].vec().elems) {
+        std::cout << i;
+    }
+    std::cout << std::flush;
+    // 最后生成返回值,返回值必须是一个内置的类型，
     // 可以使用ngc::alloc(type)来申请一个需要内存管理的复杂数据结构
     // 或者用我们已经定义好的nil/one/zero，这些可以直接使用
     return nil;
@@ -554,17 +545,24 @@ var builtin_print(var* local,gc& ngc)
 可以使用`gc::temp`来暂时存储一个会被返回的需要gc管理的变量，这样可以防止内部所有的申请错误触发垃圾回收。如下所示：
 
 ```C++
-var builtin_keys(var* local,gc& ngc)
-{
-    var hash=local[1];
-    if(hash.type!=vm_hash)
-        return nas_err("keys","\"hash\" must be hash");
+var builtin_keys(context* ctx, gc* ngc) {
+    auto hash = ctx->localr[1];
+    if (hash.type!=vm_hash && hash.type!=vm_map) {
+        return nas_err("keys", "\"hash\" must be hash");
+    }
     // 使用gc.temp来存储gc管理的变量，防止错误的回收
-    var res=ngc.temp=ngc.alloc(vm_vec);
-    auto& vec=res.vec().elems;
-    for(auto& iter:hash.hash().elems)
-        vec.push_back(ngc.newstr(iter.first));
-    ngc.temp=nil;
+    auto res = ngc->temp = ngc->alloc(vm_vec);
+    auto& vec = res.vec().elems;
+    if (hash.type==vm_hash) {
+        for(const auto& iter : hash.hash().elems) {
+            vec.push_back(ngc->newstr(iter.first));
+        }
+    } else {
+        for(const auto& iter : hash.map().mapper) {
+            vec.push_back(ngc->newstr(iter.first));
+        }
+    }
+    ngc->temp = nil;
     return res;
 }
 ```
@@ -572,21 +570,16 @@ var builtin_keys(var* local,gc& ngc)
 这些工作都完成之后，在内置函数注册表中填写它在nasal中的别名，并且在表中填对这个函数的函数指针:
 
 ```C++
-struct func
-{
-    const char* name;
-    var (*func)(var*,gc&);
-} builtin[]=
-{
-    {"__print",builtin_print},
-    {nullptr,  nullptr      }
+nasal_builtin_table builtin[] = {
+    {"__print", builtin_print},
+    {nullptr,  nullptr}
 };
 ```
 
 最后，将其包装到nasal文件中:
 
 ```javascript
-var print=func(elems...){
+var print = func(elems...) {
     return __print(elems);
 };
 ```
@@ -594,7 +587,7 @@ var print=func(elems...){
 事实上`__print`后面跟着的传参列表不是必须要写的。所以这样写也对:
 
 ```javascript
-var print=func(elems...){
+var print = func(elems...) {
     return __print;
 };
 ```
@@ -605,7 +598,7 @@ var print=func(elems...){
 当然也有另外一种办法来导入这些nasal文件，下面两种导入方式的效果是一样的：
 
 ```javascript
-import.dirname.dirname.filename;
+use dirname.dirname.filename;
 import("./dirname/dirname/filename.nas");
 ```
 
@@ -702,10 +695,10 @@ Windows(`.dll`):
 下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样可以实现跨平台:
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
-for(var i = 1; i<30; i+=1)
+for(var i = 1; i<30; i += 1)
     println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -719,11 +712,11 @@ dylib.dlclose(dlhandle.lib);
 `dylib.limitcall`用于获取使用固定长度传参的 `dlcall` 函数，这种函数可以提高你的程序运行效率，因为它不需要用 `vm_vec` 来存储传入参数，而是使用局部作用域来直接存储，从而避免了频繁调用可能导致的频繁垃圾收集。所以上面展示的代码同样可以这样写：
 
 ```javascript
-import.std.dylib;
+use std.dylib;
 var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
-for(var i = 1; i<30; i+=1)
+for(var i = 1; i<30; i += 1)
     println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -767,7 +760,7 @@ dylib.dlclose(dlhandle.lib);
 
 <details><summary> 自定义类型(开发者教程) </summary>
 
-创建一个自定义类型现在不是很困难。下面是使用示例：
+创建一个自定义类型很容易。下面是使用示例：
 
 ```c++
 const auto ghost_for_test = "ghost_for_test";
@@ -785,19 +778,31 @@ void ghost_for_test_destructor(void* ptr) {
 var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_obj);
     // 创建自定义类型
-    res.obj().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    res.ghost().set(ghost_for_test, ghost_for_test_destructor, new u32);
     return res;
+}
+
+var set_new_ghost(var* args, usize size, gc* ngc) {
+    var res = args[0];
+    if (!res.object_check(ghost_for_test)) {
+        std::cout << "set_new_ghost: not ghost for test type.\n";
+        return nil;
+    }
+    f64 num = args[1].num();
+    *(reinterpret_cast<u32*>(res.ghost().pointer)) = static_cast<u32>(num);
+    std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
+    return nil;
 }
 
 var print_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
     // 用自定义类型的名字来检查是否是正确的自定义类型
-    if (!res.objchk(ghost_for_test)) {
+    if (!res.object_check(ghost_for_test)) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
-    std::cout << "print_new_ghost: " << res.obj() << " result = "
-        << *((u32*)res.obj().ptr) << "\n";
+    std::cout << "print_new_ghost: " << res.ghost() << " result = "
+              << *((u32*)res.ghost().pointer) << "\n";
     return nil;
 }
 ```
@@ -814,7 +819,7 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
 
 我们使用下面的这个函数检测是否是正确的自定义类型：
 
-`bool var::objchk(const std::string&);`
+`bool var::object_check(const std::string&);`
 
 参数是自定义类型的类型名。
 
@@ -832,7 +837,7 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
 在Andy的解释器中:
 
 ```javascript
-foreach(i;[0,1,2,3])
+foreach(i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -844,7 +849,7 @@ foreach(i;[0,1,2,3])
 code: undefined symbol "i"
  --> test.nas:1:9
   | 
-1 | foreach(i;[0,1,2,3])
+1 | foreach(i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"
@@ -866,8 +871,7 @@ code: undefined symbol "i"
 `die`函数用于直接抛出错误并终止执行。
 
 ```javascript
-func()
-{
+func() {
     println("hello");
     die("error occurred this line");
     return;
@@ -877,17 +881,27 @@ func()
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] native function error.
-trace back:
-  0x000000ac      40 00 00 00 25      callb  0x25 <__die@0x41afc0> (lib.nas:131)
-  0x000004f6      3e 00 00 00 01      callfv 0x1 (a.nas:4)
-  0x000004fa      3e 00 00 00 00      callfv 0x0 (a.nas:6)
-vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
-  0x0000005b    | null |
-  ...
-  0x00000057    | str  | <0x138ff60> error occurred t...
-  ...
-  0x00000052    | nil  |
+[vm] error: error occurred in native function
+
+call trace (main)
+  call func@0x557513935710() {entry: 0x850}
+
+trace back (main)
+  0x000547     4c 00 00 16     callb   0x16 <__die@0x557512441780>(std/lib.nas:150)
+  0x000856     4a 00 00 01     callfv  0x1(a.nas:3)
+  0x00085a     4a 00 00 00     callfv  0x0(a.nas:5)
+
+stack (0x5575138e8c40, limit 10, total 14)
+  0x00000d    | null |
+  0x00000c    | pc   | 0x856
+  0x00000b    | addr | 0x5575138e8c50
+  0x00000a    | nil  |
+  0x000009    | nil  |
+  0x000008    | str  | <0x5575138d9190> error occurred t...
+  0x000007    | nil  |
+  0x000006    | func | <0x5575139356f0> entry:0x850
+  0x000005    | pc   | 0x85a
+  0x000004    | addr | 0x0
 ```
 
 </details>
@@ -897,28 +911,41 @@ vm stack (0x7fffcd21bc68 <sp+80>, limit 10, total 12):
 这是一个会导致栈溢出的例子:
 
 ```javascript
-func(f){
+func(f) {
     return f(f);
 }(
-    func(f){
+    func(f) {
         f(f);
     }
 )();
 ```
 
 ```javascript
-[vm] stack overflow
-trace back:
-  0x000004fb      3e 00 00 00 01      callfv 0x1 (a.nas:5)
-  0x000004fb      1349 same call(s)
-  0x000004f3      3e 00 00 00 01      callfv 0x1 (a.nas:2)
-  0x000004ff      3e 00 00 00 01      callfv 0x1 (a.nas:3)
-vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
-  0x00001ffb    | func | <0x15f8d90> entry:0x4f9
-  0x00001ffa    | func | <0x15f8d90> entry:0x4f9
-  0x00001ff9    | pc   | 0x4fb
-  ...
-  0x00001ff2    | addr | 0x7fffd37a16e8
+[vm] error: stack overflow
+
+call trace (main)
+  call func@0x564106058620(f) {entry: 0x859}
+   --> 583 same call(s)
+  call func@0x5641060586c0(f) {entry: 0x851}
+
+trace back (main)
+  0x000859     45 00 00 01     calll   0x1(a.nas:5)
+  0x00085b     4a 00 00 01     callfv  0x1(a.nas:5)
+  0x00085b     582 same call(s)
+  0x000853     4a 00 00 01     callfv  0x1(a.nas:2)
+  0x00085f     4a 00 00 01     callfv  0x1(a.nas:3)
+
+stack (0x56410600be00, limit 10, total 4096)
+  0x000fff    | func | <0x564106058600> entry:0x859
+  0x000ffe    | pc   | 0x85b
+  0x000ffd    | addr | 0x56410601bd20
+  0x000ffc    | nil  |
+  0x000ffb    | nil  |
+  0x000ffa    | func | <0x564106058600> entry:0x859
+  0x000ff9    | nil  |
+  0x000ff8    | func | <0x564106058600> entry:0x859
+  0x000ff7    | pc   | 0x85b
+  0x000ff6    | addr | 0x56410601bcb0
 ```
 
 </details>
@@ -928,17 +955,19 @@ vm stack (0x7fffd3781d58 <sp+80>, limit 10, total 8108):
 如果在执行的时候出现错误，程序会直接终止执行:
 
 ```javascript
-func(){
+func() {
     return 0;
 }()[1];
 ```
 
 ```javascript
-[vm] callv: must call a vector/hash/string
-trace back:
-  0x000004f4      3b 00 00 00 00      callv  0x0 (a.nas:3)
-vm stack (0x7fffff539c28 <sp+80>, limit 10, total 1):
-  0x00000050    | num  | 0
+[vm] error: must call a vector/hash/string but get number
+
+trace back (main)
+  0x000854     47 00 00 00     callv   0x0(a.nas:3)
+
+stack (0x564993f462b0, limit 10, total 1)
+  0x000000    | num  | 0
 ```
 
 </details>
@@ -950,35 +979,48 @@ vm stack (0x7fffff539c28 <sp+80>, limit 10, total 1):
 ```javascript
 hello
 [vm] error: error occurred this line
-[vm] error: native function error
+[vm] error: error occurred in native function
+
+call trace (main)
+  call func@0x55dcb5b8fbf0() {entry: 0x850}
+
 trace back (main)
-  0x000000b0      40 00 00 00 2b      callb   0x2b <__die@0x41c380> (lib.nas:131)
-  0x00000553      3e 00 00 00 01      callfv  0x1 (test.nas:4)
-  0x00000557      3e 00 00 00 00      callfv  0x0 (test.nas:6)
-vm stack (0x7fffe0ffed90 <sp+63>, limit 10, total 12)
-  0x0000004a    | null |
-  0x00000049    | pc   | 0x553
-  0x00000048    | addr | 0x7fffe0ffeda0
-  ...
-  0x00000041    | nil  |
+  0x000547     4c 00 00 16     callb   0x16 <__die@0x55dcb3c41780>(std/lib.nas:150)
+  0x000856     4a 00 00 01     callfv  0x1(a.nas:3)
+  0x00085a     4a 00 00 00     callfv  0x0(a.nas:5)
+
+stack (0x55dcb5b43120, limit 10, total 14)
+  0x00000d    | null |
+  0x00000c    | pc   | 0x856
+  0x00000b    | addr | 0x55dcb5b43130
+  0x00000a    | nil  |
+  0x000009    | nil  |
+  0x000008    | str  | <0x55dcb5b33670> error occurred t...
+  0x000007    | nil  |
+  0x000006    | func | <0x55dcb5b8fbd0> entry:0x850
+  0x000005    | pc   | 0x85a
+  0x000004    | addr | 0x0
+
 registers (main)
-  [ pc     ]    | pc   | 0xb0
-  [ global ]    | addr | 0x7fffe0ffe9a0
-  [ localr ]    | addr | 0x7fffe0ffedf0
-  [ memr   ]    | addr | 0x0
-  [ canary ]    | addr | 0x7fffe1002990
-  [ top    ]    | addr | 0x7fffe0ffee40
-  [ funcr  ]    | func | <0x677cd0> entry:0xb0
-  [ upvalr ]    | nil  |
-global (0x7fffe0ffe9a0 <sp+0>)
-  0x00000000    | func | <0x65fb00> entry:0x5
-  0x00000001    | func | <0x65fb20> entry:0xd
+  [pc    ]    | pc   | 0x547
+  [global]    | addr | 0x55dcb5b53130
+  [local ]    | addr | 0x55dcb5b43190
+  [memr  ]    | addr | 0x0
+  [canary]    | addr | 0x55dcb5b53110
+  [top   ]    | addr | 0x55dcb5b431f0
+  [funcr ]    | func | <0x55dcb5b65620> entry:0x547
+  [upval ]    | nil  |
+
+global (0x55dcb5b53130)
+  0x000000    | nmspc| <0x55dcb5b33780> namespace [95 val]
+  0x000001    | vec  | <0x55dcb5b64c20> [0 val]
   ...
-  0x0000003d    | func | <0x66bf00> entry:0x51f
-  0x0000003e    | hash | <0x65ffa0> {5 val}
-local (0x7fffe0ffedf0 <sp+45>)
-  0x00000000    | nil  |
-  0x00000001    | str  | <0x6cb630> error occurred t...
+  0x00005e    | func | <0x55dcb5b8fc70> entry:0x846
+
+local (0x55dcb5b43190 <+7>)
+  0x000000    | nil  |
+  0x000001    | str  | <0x55dcb5b33670> error occurred t...
+  0x000002    | nil  |
 ```
 
 </details>
@@ -1002,16 +1044,18 @@ source code:
     for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
+
 next bytecode:
---> 0x00000000      01 00 00 00 41      intg    0x41 (test/fib.nas:0)
-    0x00000001      0b 00 00 00 05      newf    0x5 (lib.nas:6)
-    0x00000002      02 00 00 00 02      intl    0x2 (lib.nas:6)
-    0x00000003      0f 00 00 00 00      dyn     0x0 ("elems") (lib.nas:6)
-    0x00000004      32 00 00 00 07      jmp     0x7 (lib.nas:6)
-    0x00000005      40 00 00 00 00      callb   0x0 <__print@0x419c80> (lib.nas:7)
-    0x00000006      4a 00 00 00 00      ret     0x0 (lib.nas:7)
-    0x00000007      03 00 00 00 00      loadg   0x0 (lib.nas:6)
-vm stack (0x7fffd0259138 <sp+65>, limit 10, total 0)
+    0x000848     4a 00 00 01     callfv  0x1(std/lib.nas:427)
+    0x000849     3d 00 00 00     pop     0x0(std/lib.nas:427)
+    0x00084a     07 00 00 00     pnil    0x0(std/lib.nas:423)
+    0x00084b     56 00 00 00     ret     0x0(std/lib.nas:423)
+    0x00084c     03 00 00 5e     loadg   0x5e(std/lib.nas:423)
+--> 0x00084d     0b 00 08 51     newf    0x851(test/fib.nas:1)
+    0x00084e     02 00 00 03     intl    0x3(test/fib.nas:1)
+    0x00084f     0d 00 00 08     para    0x8 (x)(test/fib.nas:1)
+
+stack (0x55ccd0a1b9d0, limit 10, total 0)
 >>
 ```
 
@@ -1034,23 +1078,26 @@ source code:
     for(var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
+
 next bytecode:
-    0x00000548      0c 00 00 00 aa      happ    0xaa ("running") (lib.nas:503)
-    0x00000549      03 00 00 00 3e      loadg   0x3e (lib.nas:498)
-    0x0000054a      0b 00 00 05 4e      newf    0x54e (test/fib.nas:1)
-    0x0000054b      02 00 00 00 02      intl    0x2 (test/fib.nas:1)
-    0x0000054c      0d 00 00 00 1b      para    0x1b ("x") (test/fib.nas:1)
-    0x0000054d      32 00 00 05 5d      jmp     0x55d (test/fib.nas:1)
---> 0x0000054e      39 00 00 00 01      calll   0x1 (test/fib.nas:3)
-    0x0000054f      2d 00 00 00 03      lessc   0x3 (2) (test/fib.nas:3)
-vm stack (0x7fffd0259138 <sp+65>, limit 10, total 7)
-  0x00000047    | pc   | 0x566
-  0x00000046    | addr | 0x0
-  0x00000045    | nil  |
-  0x00000044    | num  | 0
-  0x00000043    | nil  |
-  0x00000042    | nil  |
-  0x00000041    | func | <0x88d2f0> entry:0x5
+    0x000850     3e 00 08 60     jmp     0x860(test/fib.nas:1)
+--> 0x000851     45 00 00 01     calll   0x1(test/fib.nas:3)
+    0x000852     39 00 00 07     lessc   0x7 (2)(test/fib.nas:3)
+    0x000853     40 00 08 56     jf      0x856(test/fib.nas:3)
+    0x000854     45 00 00 01     calll   0x1(test/fib.nas:3)
+    0x000855     56 00 00 00     ret     0x0(test/fib.nas:3)
+    0x000856     44 00 00 5f     callg   0x5f(test/fib.nas:4)
+    0x000857     45 00 00 01     calll   0x1(test/fib.nas:4)
+
+stack (0x55ccd0a1b9d0, limit 10, total 8)
+  0x000007    | pc   | 0x869
+  0x000006    | addr | 0x0
+  0x000005    | nil  |
+  0x000004    | nil  |
+  0x000003    | num  | 0
+  0x000002    | nil  |
+  0x000001    | nil  |
+  0x000000    | func | <0x55ccd0a58fa0> entry:0x487
 >>
 ```
 
@@ -1076,4 +1123,23 @@ Nasal REPL interpreter version 11.0 (Oct  7 2023 17:28:31)
 .s, .source | show source code
 
 >>>
+```
+
+试试引入 `std/json.nas` 模块 ~
+
+```bash
+[nasal-repl] Initializating enviroment...
+[nasal-repl] Initialization complete.
+
+Nasal REPL interpreter version 11.1 (Nov  1 2023 23:37:30)
+.h, .help   | show help
+.e, .exit   | quit the REPL
+.q, .quit   | quit the REPL
+.c, .clear  | clear the screen
+.s, .source | show source code
+
+>>> use std.json;
+{stringify:func(..) {..},parse:func(..) {..}}
+
+>>> 
 ```

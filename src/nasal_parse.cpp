@@ -132,9 +132,13 @@ bool parse::check_func_end(expr* node) {
     if (type==expr_type::ast_func) {
         return true;
     } else if (type==expr_type::ast_def) {
-        return check_func_end(((definition_expr*)node)->get_value());
+        return check_func_end(
+            reinterpret_cast<definition_expr*>(node)->get_value()
+        );
     } else if (type==expr_type::ast_assign) {
-        return check_func_end(((assignment_expr*)node)->get_right());
+        return check_func_end(
+            reinterpret_cast<assignment_expr*>(node)->get_right()
+        );
     }
     return false;
 }
@@ -195,6 +199,18 @@ void parse::update_location(expr* node) {
         return;
     }
     node->update_location(toks[ptr-1].loc);
+}
+
+use_stmt* parse::use_stmt_gen() {
+    auto node = new use_stmt(toks[ptr].loc);
+    match(tok::use);
+    node->add_path(id());
+    while(lookahead(tok::dot)) {
+        match(tok::dot);
+        node->add_path(id());
+    }
+    update_location(node);
+    return node;
 }
 
 null_expr* parse::null() {
@@ -355,6 +371,7 @@ expr* parse::expression() {
         die(thisspan, "must use return in functions");
     }
     switch(type) {
+        case tok::use: return use_stmt_gen();
         case tok::tknil:
         case tok::num:
         case tok::str:

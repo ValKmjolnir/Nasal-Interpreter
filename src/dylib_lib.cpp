@@ -53,9 +53,9 @@ var builtin_dlopen(context* ctx, gc* ngc) {
 
     // get "get" function, to get the register table
 #ifdef _WIN32
-    void* register_table_get_function = (void*)GetProcAddress(
+    void* register_table_get_function = reinterpret_cast<void*>(GetProcAddress(
         static_cast<HMODULE>(library_object.ghost().pointer), "get"
-    );
+    ));
 #else
     void* register_table_get_function = dlsym(
         library_object.ghost().pointer, "get"

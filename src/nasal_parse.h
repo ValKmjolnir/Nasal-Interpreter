@@ -24,6 +24,7 @@ private:
 
 private:
     const std::unordered_map<tok, std::string> tokname {
+        {tok::use     ,"use"     },
         {tok::rfor    ,"for"     },
         {tok::forindex,"forindex"},
         {tok::foreach ,"foreach" },
@@ -92,6 +93,7 @@ private:
     void update_location(expr*);
 
 private:
+    use_stmt* use_stmt_gen();
     null_expr* null();
     nil_expr* nil();
     number_literal* num();

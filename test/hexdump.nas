@@ -1,7 +1,7 @@
 # hexdump.nas by ValKmjolnir
 # 2021/8/13
-import.std.file;
-import.std.runtime;
+use std.file;
+use std.runtime;
 
 # init
 var hex=func(){

@@ -12,7 +12,8 @@ void optimizer::const_string(
     const auto& left = left_node->get_content();
     const auto& right = right_node->get_content();
     node->set_optimized_string(
-        new string_literal(node->get_location(), left+right));
+        new string_literal(node->get_location(), left+right)
+    );
 }
 
 void optimizer::const_number(
@@ -43,7 +44,8 @@ void optimizer::const_number(
         return;
     }
     node->set_optimized_number(
-        new number_literal(node->get_location(), res));
+        new number_literal(node->get_location(), res)
+    );
 }
 
 void optimizer::const_number(
@@ -62,46 +64,56 @@ void optimizer::const_number(
         return;
     }
     node->set_optimized_number(
-        new number_literal(node->get_location(), res));
+        new number_literal(node->get_location(), res)
+    );
 }
 
 bool optimizer::visit_binary_operator(binary_operator* node) {
-    node->get_left()->accept(this);
-    node->get_right()->accept(this);
+    auto left_node = node->get_left();
+    auto right_node = node->get_right();
+    left_node->accept(this);
+    right_node->accept(this);
+
     number_literal* left_num_node = nullptr;
     number_literal* right_num_node = nullptr;
     string_literal* left_str_node = nullptr;
     string_literal* right_str_node = nullptr;
-    if (node->get_left()->get_type()==expr_type::ast_num) {
-        left_num_node = (number_literal*)node->get_left();
-    } else if (node->get_left()->get_type()==expr_type::ast_binary &&
-        ((binary_operator*)node->get_left())->get_optimized_number()) {
-        left_num_node = ((binary_operator*)node->get_left())->get_optimized_number();
-    } else if (node->get_left()->get_type()==expr_type::ast_unary &&
-        ((unary_operator*)node->get_left())->get_optimized_number()) {
-        left_num_node = ((unary_operator*)node->get_left())->get_optimized_number();
+    if (left_node->get_type()==expr_type::ast_num) {
+        left_num_node = reinterpret_cast<number_literal*>(left_node);
+    } else if (left_node->get_type()==expr_type::ast_binary &&
+        reinterpret_cast<binary_operator*>(left_node)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<binary_operator*>(left_node);
+        left_num_node = optimized->get_optimized_number();
+    } else if (left_node->get_type()==expr_type::ast_unary &&
+        reinterpret_cast<unary_operator*>(left_node)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<unary_operator*>(left_node);
+        left_num_node = optimized->get_optimized_number();
     }
-    if (node->get_right()->get_type()==expr_type::ast_num) {
-        right_num_node = (number_literal*)node->get_right();
-    } else if (node->get_right()->get_type()==expr_type::ast_binary &&
-        ((binary_operator*)node->get_right())->get_optimized_number()) {
-        right_num_node = ((binary_operator*)node->get_right())->get_optimized_number();
-    } else if (node->get_right()->get_type()==expr_type::ast_unary &&
-        ((unary_operator*)node->get_right())->get_optimized_number()) {
-        right_num_node = ((unary_operator*)node->get_right())->get_optimized_number();
+    if (right_node->get_type()==expr_type::ast_num) {
+        right_num_node = reinterpret_cast<number_literal*>(right_node);
+    } else if (right_node->get_type()==expr_type::ast_binary &&
+        reinterpret_cast<binary_operator*>(right_node)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<binary_operator*>(right_node);
+        right_num_node = optimized->get_optimized_number();
+    } else if (right_node->get_type()==expr_type::ast_unary &&
+        reinterpret_cast<unary_operator*>(right_node)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<unary_operator*>(right_node);
+        right_num_node = optimized->get_optimized_number();
     }
 
-    if (node->get_left()->get_type()==expr_type::ast_str) {
-        left_str_node = (string_literal*)node->get_left();
-    } else if (node->get_left()->get_type()==expr_type::ast_binary &&
-        ((binary_operator*)node->get_left())->get_optimized_string()) {
-        left_str_node = ((binary_operator*)node->get_left())->get_optimized_string();
+    if (left_node->get_type()==expr_type::ast_str) {
+        left_str_node = reinterpret_cast<string_literal*>(left_node);
+    } else if (left_node->get_type()==expr_type::ast_binary &&
+        reinterpret_cast<binary_operator*>(left_node)->get_optimized_string()) {
+        auto optimized = reinterpret_cast<binary_operator*>(left_node);
+        left_str_node = optimized->get_optimized_string();
     }
-    if (node->get_right()->get_type()==expr_type::ast_str) {
-        right_str_node = (string_literal*)node->get_right();
-    } else if (node->get_right()->get_type()==expr_type::ast_binary &&
-        ((binary_operator*)node->get_right())->get_optimized_string()) {
-        right_str_node = ((binary_operator*)node->get_right())->get_optimized_string();
+    if (right_node->get_type()==expr_type::ast_str) {
+        right_str_node = reinterpret_cast<string_literal*>(right_node);
+    } else if (right_node->get_type()==expr_type::ast_binary &&
+        reinterpret_cast<binary_operator*>(right_node)->get_optimized_string()) {
+        auto optimized = reinterpret_cast<binary_operator*>(right_node);
+        right_str_node = optimized->get_optimized_string();
     }
     if (left_num_node && right_num_node) {
         const_number(node, left_num_node, right_num_node);
@@ -115,19 +127,23 @@ bool optimizer::visit_binary_operator(binary_operator* node) {
 }
 
 bool optimizer::visit_unary_operator(unary_operator* node) {
-    node->get_value()->accept(this);
-    number_literal* value_node = nullptr;
-    if (node->get_value()->get_type()==expr_type::ast_num) {
-        value_node = (number_literal*)node->get_value();
-    } else if (node->get_value()->get_type()==expr_type::ast_binary &&
-        ((binary_operator*)node->get_value())->get_optimized_number()) {
-        value_node = ((binary_operator*)node->get_value())->get_optimized_number();
-    } else if (node->get_value()->get_type()==expr_type::ast_unary &&
-        ((unary_operator*)node->get_value())->get_optimized_number()) {
-        value_node = ((unary_operator*)node->get_value())->get_optimized_number();
+    auto value = node->get_value();
+    value->accept(this);
+
+    number_literal* num_node = nullptr;
+    if (value->get_type()==expr_type::ast_num) {
+        num_node = reinterpret_cast<number_literal*>(value);
+    } else if (value->get_type()==expr_type::ast_binary &&
+        reinterpret_cast<binary_operator*>(value)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<binary_operator*>(value);
+        num_node = optimized->get_optimized_number();
+    } else if (value->get_type()==expr_type::ast_unary &&
+        reinterpret_cast<unary_operator*>(value)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<unary_operator*>(value);
+        num_node = optimized->get_optimized_number();
     }
-    if (value_node) {
-        const_number(node, value_node);
+    if (num_node) {
+        const_number(node, num_node);
     }
     return true;
 }

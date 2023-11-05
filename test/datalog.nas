@@ -1,5 +1,5 @@
-import.std.padding;
-import.std.process_bar;
+use std.padding;
+use std.process_bar;
 
 var mess=func(vec) {
     srand();

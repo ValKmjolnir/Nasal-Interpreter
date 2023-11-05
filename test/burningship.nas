@@ -18,15 +18,17 @@ var height = 1080;
 var bar = (os.platform()=="windows")?
     process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);
+
 var f = func(i, j) {
-    var (yMin, yMax, xMin, xMax) = (-1.35, 1.35, -3.3, 1.5);
+    var (yMin, yMax, xMin, xMax) = (-2, 1.1, -3.2, 2);
     var (yDel, xDel) = (yMax-yMin, xMax-xMin);
     var (y, x) = ((i/height)*yDel+yMin, (j/width)*xDel+xMin);
     var (x0, y0) = (x, y);
     for(var iter = 0; iter<64; iter += 1) {
+        (x0, y0) = (math.abs(x0), math.abs(y0));
         var (x1, y1) = ((x0*x0)-(y0*y0)+x, 2*x0*y0+y);
         (x0, y0) = (x1, y1);
-        if ((x0*x0)+(y0*y0)>4) {
+        if ((x0*x0)+(y0*y0)>8) {
             break;
         }
     }
@@ -39,5 +41,5 @@ var f = func(i, j) {
     return c~c~c;
 }
 
-ppm("mandelbrotset.ppm", width, height, f);
+ppm("burningship.ppm", width, height, f);
 println();

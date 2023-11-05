@@ -66,3 +66,9 @@ var stat = func(filename) {
 var eof = func(filehandle) {
     return __eof(filehandle);
 }
+
+var stdin = func() { return __stdin; }();
+
+var stdout = func() { return __stdout;}();
+
+var stderr = func() { return __stderr; }();

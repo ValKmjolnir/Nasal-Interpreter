@@ -1,5 +1,7 @@
 # __Development History__
 
+![buringship](./pic/burningship.png)
+
 ## __Contents__
 
 * [__Parser__](#parser)
@@ -22,6 +24,7 @@
 * [__Release Notes__](#release-notes)
   * [v8.0](#version-80-release)
   * [v11.0](#version-110-release)
+  * [v11.1](#version-111-release)
 
 ## __Parser__
 
@@ -697,3 +700,11 @@ This bug is fixed in `v9.0`. So we suggest that do not use `v8.0`.
 9. Add `CMakeLists.txt` for cmake user(including `Visual Studio`).
 
 10. New ghost type register process.
+
+### __version 11.1 release__
+
+1. Bug fix: debugger in v11.0 is malfunctional.
+
+2. Bug fix: symbol_finder does not check definition in foreach/forindex loop.
+
+3. Change extension syntax `import.xx.xx` to `use xx.xx`.

@@ -5,9 +5,6 @@ namespace nasal {
 const auto file_type_name = "file";
 
 void filehandle_destructor(void* ptr) {
-    if (static_cast<FILE*>(ptr)==stdin) {
-        return;
-    }
     fclose(static_cast<FILE*>(ptr));
 }
 
@@ -207,6 +204,25 @@ var builtin_eof(context* ctx, gc* ngc) {
     ));
 }
 
+var builtin_stdin(context* ctx, gc* ngc) {
+    auto file_descriptor = ngc->alloc(vm_obj);
+    file_descriptor.ghost().set(file_type_name, nullptr, stdin);
+    return file_descriptor;
+}
+
+var builtin_stdout(context* ctx, gc* ngc) {
+    auto file_descriptor = ngc->alloc(vm_obj);
+    file_descriptor.ghost().set(file_type_name, nullptr, stdout);
+    return file_descriptor;
+}
+
+var builtin_stderr(context* ctx, gc* ngc) {
+    auto file_descriptor = ngc->alloc(vm_obj);
+    file_descriptor.ghost().set(file_type_name, nullptr, stderr);
+    return file_descriptor;
+}
+
+
 nasal_builtin_table io_lib_native[] = {
     {"__readfile", builtin_readfile},
     {"__fout", builtin_fout},
@@ -220,6 +236,9 @@ nasal_builtin_table io_lib_native[] = {
     {"__readln", builtin_readln},
     {"__stat", builtin_stat},
     {"__eof", builtin_eof},
+    {"__stdin", builtin_stdin},
+    {"__stdout", builtin_stdout},
+    {"__stderr", builtin_stderr},
     {nullptr, nullptr}
 };
 
