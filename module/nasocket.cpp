@@ -231,6 +231,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
     hash["str"] = ngc->newstr(buf);
     delete[] buf;
     hash["fromip"] = ngc->newstr(inet_ntoa(addr.sin_addr));
+    hash["port"] = var::num(ntohs(addr.sin_port));
     ngc->temp = nil;
     return res;
 }

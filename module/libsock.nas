@@ -76,8 +76,9 @@ var socket=func(){
         MSG_OOB:0x1,
         MSG_PEEK:0x2,
         MSG_DONTROUTE:0x4,
+        MSG_DONTWAIT:0x40,
 
-        socket:func(af,type,proto){
+        socket:func(af,type,proto = 0){
             return invoke_iii(sock,af,type,proto);
         },
         closesocket:func(sd){
