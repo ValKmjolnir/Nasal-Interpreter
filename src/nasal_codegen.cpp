@@ -312,9 +312,12 @@ void codegen::call_gen(call_expr* node) {
     }
     for(auto i : node->get_calls()) {
         switch(i->get_type()) {
-            case expr_type::ast_callh: call_hash_gen((call_hash*)i); break;
-            case expr_type::ast_callv: call_vector_gen((call_vector*)i); break;
-            case expr_type::ast_callf: call_func_gen((call_function*)i); break;
+            case expr_type::ast_callh:
+                call_hash_gen(reinterpret_cast<call_hash*>(i)); break;
+            case expr_type::ast_callv:
+                call_vector_gen(reinterpret_cast<call_vector*>(i)); break;
+            case expr_type::ast_callf:
+                call_func_gen(reinterpret_cast<call_function*>(i)); break;
             default: break;
         }
     }
@@ -385,8 +388,9 @@ void codegen::call_func_gen(call_function* node) {
         node->get_argument()[0]->get_type()==expr_type::ast_pair) {
         emit(op_newh, 0, node->get_location());
         for(auto child : node->get_argument()) {
-            calc_gen(((hash_pair*)child)->get_value());
-            const auto& field_name = ((hash_pair*)child)->get_name();
+            auto pair_node = reinterpret_cast<hash_pair*>(child);
+            calc_gen(pair_node->get_value());
+            const auto& field_name = pair_node->get_name();
             regist_str(field_name);
             emit(op_happ, const_string_map.at(field_name), child->get_location());
         }
@@ -415,7 +419,7 @@ void codegen::mcall(expr* node) {
     }
     // generate symbol call if node is just ast_id and return
     if (node->get_type()==expr_type::ast_id) {
-        mcall_id((identifier*)node);
+        mcall_id(reinterpret_cast<identifier*>(node));
         return;
     }
     // generate call expression until the last sub-node
@@ -504,14 +508,16 @@ void codegen::multi_def(definition_expr* node) {
     // (var a,b,c) = (c,b,a);
     if (node->get_tuple()) {
         auto& vals = node->get_tuple()->get_elements();
-        if (identifiers.size()<vals.size()) {
+        if (identifiers.size()>vals.size()) {
             die("lack values in multi-definition",
                 node->get_tuple()->get_location()
             );
-        } else if (identifiers.size()>vals.size()) {
+            return;
+        } else if (identifiers.size()<vals.size()) {
             die("too many values in multi-definition",
                 node->get_tuple()->get_location()
             );
+            return;
         }
         for(usize i = 0; i<size; ++i) {
             calc_gen(vals[i]);
@@ -649,7 +655,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     // generate symbol load
     calc_gen(node->get_right());
     // get memory space of left identifier
-    mcall_id((identifier*)node->get_left());
+    mcall_id(reinterpret_cast<identifier*>(node->get_left()));
     // check memory get operand type and replace it with load operand
     switch(code.back().op) {
         case op_mcallg: code.back().op = op_loadg; break;
@@ -699,21 +705,40 @@ void codegen::assignment_statement(assignment_expr* node) {
 }
 
 void codegen::multi_assign_gen(multi_assign* node) {
-    if (node->get_value()->get_type()==expr_type::ast_tuple &&
-        node->get_tuple()->get_elements().size()<((tuple_expr*)node->get_value())->get_elements().size()) {
-        die("lack values in multi-assignment", node->get_value()->get_location());
-    } else if (node->get_value()->get_type()==expr_type::ast_tuple &&
-        node->get_tuple()->get_elements().size()>((tuple_expr*)node->get_value())->get_elements().size()) {
-        die("too many values in multi-assignment", node->get_value()->get_location());
+    auto tuple_node = node->get_tuple();
+    auto value_node = node->get_value();
+    if (value_node->get_type()==expr_type::ast_tuple) {
+        auto tuple_size = tuple_node->get_elements().size();
+        auto value_size = reinterpret_cast<tuple_expr*>(value_node)
+                          ->get_elements().size();
+        if (tuple_size>value_size) {
+            die(
+                "lack value(s) in multi-assignment, expect " +
+                std::to_string(tuple_size) + " but get " +
+                std::to_string(value_size),
+                value_node->get_location()
+            );
+            return;
+        } else if (tuple_size<value_size) {
+            die(
+                "too many values in multi-assignment, expect " +
+                std::to_string(tuple_size) + " but get " +
+                std::to_string(value_size),
+                value_node->get_location()
+            );
+            return;
+        }
     }
 
-    i32 size = node->get_tuple()->get_elements().size();
+    i32 size = tuple_node->get_elements().size();
     // generate multiple assignment: (a, b, c) = (1, 2, 3);
-    if (node->get_value()->get_type()==expr_type::ast_tuple) {
+    if (value_node->get_type()==expr_type::ast_tuple) {
+        const auto& value_tuple = reinterpret_cast<tuple_expr*>(value_node)
+                                  ->get_elements();
         for(i32 i = size-1; i>=0; --i) {
-            calc_gen(((tuple_expr*)node->get_value())->get_elements()[i]);
+            calc_gen(value_tuple[i]);
         }
-        auto& tuple = node->get_tuple()->get_elements();
+        auto& tuple = tuple_node->get_elements();
         for(i32 i = 0; i<size; ++i) {
             mcall(tuple[i]);
             // use load operands to avoid meq's pop operand
@@ -724,10 +749,10 @@ void codegen::multi_assign_gen(multi_assign* node) {
     }
 
     // generate multiple assignment: (a, b, c) = [1, 2, 3];
-    calc_gen(node->get_value());
-    auto& tuple = node->get_tuple()->get_elements();
+    calc_gen(value_node);
+    auto& tuple = tuple_node->get_elements();
     for(i32 i = 0; i<size; ++i) {
-        emit(op_callvi, i, node->get_value()->get_location());
+        emit(op_callvi, i, value_node->get_location());
         mcall(tuple[i]);
         // use load operands to avoid meq's pop operand
         // and this operation changes local and global value directly
@@ -1188,7 +1213,7 @@ void codegen::block_gen(code_block* node) {
                 if (need_repl_output && local.empty()) {
                     repl_mode_info_output_gen(tmp);
                 } else {
-                    check_id_exist((identifier*)tmp);
+                    check_id_exist(reinterpret_cast<identifier*>(tmp));
                 }
                 break;
             case expr_type::ast_nil:
@@ -1200,7 +1225,7 @@ void codegen::block_gen(code_block* node) {
                 }
                 break;
             case expr_type::ast_cond:
-                cond_gen((condition_expr*)tmp); break;
+                cond_gen(reinterpret_cast<condition_expr*>(tmp)); break;
             case expr_type::ast_continue:
                 continue_ptr.front().push_back(code.size());
                 emit(op_jmp, 0, tmp->get_location());
@@ -1225,7 +1250,7 @@ void codegen::block_gen(code_block* node) {
             case expr_type::ast_multi_assign:
                 statement_generation(tmp); break;
             case expr_type::ast_ret:
-                ret_gen((return_expr*)tmp); break;
+                ret_gen(reinterpret_cast<return_expr*>(tmp)); break;
             default: break;
         }
     }
