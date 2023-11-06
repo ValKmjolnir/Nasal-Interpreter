@@ -184,7 +184,7 @@ var nas_recv(var* args, usize size, gc* ngc) {
     var res = ngc->temp = ngc->alloc(vm_hash);
     auto& hash = res.hash().elems;
     char* buf = new char[static_cast<int>(args[1].num())];
-    auto recvsize = recv(args[0].num(), buf,args[1].num(), args[2].num());
+    auto recvsize = recv(args[0].num(), buf, args[1].num(), args[2].num());
     hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
     hash["str"] = ngc->newstr(buf);
