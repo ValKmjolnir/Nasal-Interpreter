@@ -27,8 +27,10 @@ var _j_content = [
     "identifier"
 ];
 
-var parse = func() {
+var _parse_error = 0;
 
+var parse = func() {
+    _parse_error = 0;
     var text = "";
     var line = 1;
     var text_size = 0;
@@ -75,6 +77,7 @@ var parse = func() {
         init();
         if (!size(str)) {
             println("json::parse: empty string");
+            _parse_error += 1;
             str = "[]";
         }
         text = str;
@@ -156,6 +159,7 @@ var parse = func() {
     var match = func(type) {
         if(token.type!=type) {
             println("json::parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
+            _parse_error += 1;
         }
         next();
         return;
@@ -224,6 +228,7 @@ var parse = func() {
     return func(source) {
         if(typeof(source)!="str") {
             println("json::parse: must use string but get", typeof(str));
+            _parse_error += 1;
             return [];
         }
 
@@ -296,4 +301,16 @@ var stringify = func(object) {
         hgen(object);
     }
     return s;
+}
+
+var get_error = func() {
+    return _parse_error;
+}
+
+var check_error = func() {
+    if (_parse_error==0) {
+        return;
+    }
+    println("json: encounter ", _parse_error, " error(s), stop.");
+    exit(-1);
 }
