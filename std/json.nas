@@ -11,8 +11,9 @@ var (
     _j_colon,
     _j_str,
     _j_num,
-    _j_id
-) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    _j_id,
+    _j_bool
+) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 var _j_content = [
     "eof",
@@ -24,7 +25,8 @@ var _j_content = [
     "`:`",
     "string",
     "number",
-    "identifier"
+    "identifier",
+    "boolean"
 ];
 
 var _parse_error = 0;
@@ -133,7 +135,13 @@ var parse = func() {
         } elsif (isnum(c)) {
             var s = c;
             ptr += 1;
-            while(ptr<text_size and ((isnum(char(text[ptr])) or char(text[ptr])=='.'))) {
+            while(ptr<text_size and ((
+                isnum(char(text[ptr])) or
+                char(text[ptr])=='.' or
+                char(text[ptr])=='e' or
+                char(text[ptr])=='-' or
+                char(text[ptr])=='+'))
+            ) {
                 s ~= char(text[ptr]);
                 ptr += 1;
             }
@@ -150,6 +158,9 @@ var parse = func() {
             ptr -= 1;
             token.content = s;
             token.type = _j_id;
+            if (s=="true" or s=="false") {
+                token.type = _j_bool;
+            }
         }
         ptr += 1;
         return;
@@ -179,7 +190,7 @@ var parse = func() {
             hash[name] = hash_gen();
         } elsif (token.type==_j_lbrkt) {
             hash[name] = vec_gen();
-        } elsif (token.type==_j_str or token.type==_j_num) {
+        } elsif (token.type==_j_str or token.type==_j_num or token.type==_j_bool) {
             hash[name] = token.content;
             next();
         }
