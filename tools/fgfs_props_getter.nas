@@ -43,8 +43,11 @@ connection.new = func(hostname, port) {
     }
 
     var getprop = func(path) {
+        # GET header
         var header = "GET /json"~path~" HTTP/1.1\n\r\n";
         var res = socket.send(sd, header);
+
+        # get message head 1024
         var message = socket.recv(sd, 1024);
         var head_vector = split("\r\n", message.str);
         if (size(head_vector)<11) {
@@ -54,6 +57,7 @@ connection.new = func(hostname, port) {
         }
         var message_total_size = num("0x"~head_vector[10]);
 
+        # get total message
         var total_source = message.str;
         var total_size = message.size;
         while(total_size<=message_total_size) {
@@ -61,12 +65,14 @@ connection.new = func(hostname, port) {
             total_source ~= message.str;
             total_size += message.size;
         }
+        # if not get end of the message, recv one more time
         if (find("0\r\n\r\n", total_source)<0) {
             message = socket.recv(sd, 1024);
             total_source ~= message.str;
             total_size += message.size;
         }
 
+        # get json in this message
         var begin_position = find("{", total_source);
         if (begin_position<0) {
             println("getprop: node \"", path, "\" not found, invalid begin token");
@@ -79,12 +85,16 @@ connection.new = func(hostname, port) {
             return {path: path};
         }
         var data = substr(total_source, begin_position, length);
+
+        # parse this json and return
         var props = json.parse(data);
         if (json.get_error()) {
             println("getprop: encounter error when parsing \"", path, "\"");
-            logprint(LOG_DEBUG, data);
+            logprint(LOG_DEBUG, raw(data));
             return {path: path};
         }
+
+        # empty prop node is not allowed...
         if (size(props)==0) {
             println("getprop: node \"", path, "\" not found, empty tree node");
         }
@@ -93,21 +103,18 @@ connection.new = func(hostname, port) {
     }
 
     var setprop = func(path, data) {
+        # POST header
         var header = "POST /json"~path~" HTTP/1.1\n\n";
+        # generate value
         header ~= "{\"value\":\""~data~"\"}\n\r\n";
 
         var res = socket.send(sd, header);
         var message = socket.recv(sd, 1024);
     }
 
-    var close = func {
-        socket.closesocket(sd);
-    }
-
     return {
         getprop: getprop,
-        setprop: setprop,
-        close: close
+        setprop: setprop
     };
 }
 
@@ -135,12 +142,19 @@ var dump = func(tree, indent = "") {
     }
 }
 
+var tips = func() {
+    println("usage:");
+    println("  nasal <this_file> <hostname> <port>");
+}
+
 if (size(arg)<2) {
-    println("require hostname and port");
+    println("require hostname and port.");
+    tips();
     exit(-1);
 }
 if (size(arg)>2) {
-    println("too many arguments, only require hostname and port");
+    println("too many arguments, only require hostname and port.");
+    tips();
     exit(-1);
 }
 
