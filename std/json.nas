@@ -30,7 +30,6 @@ var _j_content = [
 var _parse_error = 0;
 
 var parse = func() {
-    _parse_error = 0;
     var text = "";
     var line = 1;
     var text_size = 0;
@@ -226,6 +225,7 @@ var parse = func() {
     }
 
     return func(source) {
+        _parse_error = 0;
         if(typeof(source)!="str") {
             println("json::parse: must use string but get", typeof(str));
             _parse_error += 1;
@@ -247,8 +247,10 @@ var parse = func() {
 }();
 
 var stringify = func(object) {
+    _parse_error = 0;
     var object_type = typeof(object);
     if(object_type!="hash" and object_type!="vec" and object_type!="namespace") {
+        _parse_error += 1;
         println("json::stringify: must use hashmap or vector, but get ", typeof(object));
         return "[]";
     }
