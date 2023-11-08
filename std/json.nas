@@ -299,7 +299,7 @@ var stringify = func(object) {
         var k = keys(h);
         var vsize = size(k);
         for(var i = 0; i<vsize; i += 1) {
-            s ~= k[i]~":";
+            s ~= "\""~k[i]~"\":";
             gen(h[k[i]]);
             if (i!=vsize-1) {
                 s ~= ",";
