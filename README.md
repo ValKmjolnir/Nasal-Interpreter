@@ -57,34 +57,31 @@ the interpreter a useful tool in your own projects.
 
 ## __How to Compile__
 
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
-![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
-![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
 Better download the latest update source of the interpreter and build it! It's quite easy to build this interpreter, what you need are only two things: C++ compiler and the `make`. There is no third-party library used in this project.
 
-__CAUTION__: If want to use the release zip/tar.gz file to build the interpreter, please read the [__Release Notes__](./doc/dev.md#release-notes) to make sure this release file has no fatal bugs.
+### __Windows (MinGW-w64)__
 
-### __`Windows (MinGW-w64)`__
+![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
-Make sure your MinGW thread model is `posix thread model`, otherwise it may not have the thread library.
+Make sure MinGW thread model is `posix thread model`, otherwise it may not have the thread library.
 
-> mkdir build
->
 > mingw32-make nasal.exe -j4
 
-### __`Windows (Visual Studio)`__
+### __Windows (Visual Studio)__
+
+![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 This project gives a [__CMakelists.txt__](./CMakeLists.txt) for you to create project in `Visual Studio`.
 
-### __`Linux/macOS/Unix`__
+### __Linux / macOS / Unix__
 
-> mkdir build
->
-> make -j4
+![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU) ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
+
+> make -j
 
 You could choose which compiler you want to use:
 

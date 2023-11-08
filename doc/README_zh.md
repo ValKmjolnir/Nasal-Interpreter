@@ -47,35 +47,33 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 ## __编译__
 
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
-![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
-![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-我们推荐你下载最新代码包编译，这个项目非常小巧,没有使用任何第三方库，因此编译起来非常轻松，
-你只需要这两样东西: C++ 编译器以及make程序。
+推荐下载最新代码包编译，这个项目非常小巧, 没有使用任何第三方库，因此编译起来非常轻松，
+只需要这两样东西: C++ 编译器以及make程序。
 
-__注意__: 如果你想直接下载发行版提供的zip/tar.gz压缩包来构建这个解释器，在下载之前请阅读[__发行日志__](../doc/dev_zh.md#发行日志)以保证这个发行版的文件中不包含非常严重的bug。
+### __Windows 平台 (MinGW-w64)__
 
-### __`Windows` 平台(`MinGW-w64`)__
+![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 一定要确保您的 MinGW thread model 是 `posix thread model`, 否则可能存在没有 thread 库的问题。
 
-> mkdir build
->
 > mingw32-make nasal.exe -j4
 
-### __`Windows` 平台(`Vistual Studio`)__
+### __Windows 平台 (Vistual Studio)__
+
+![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 项目提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于在`Visual Studio`中用这种方式来创建项目。
 
-### __`Linux/macOS/Unix` 平台__
+### __Linux / macOS / Unix 平台__
 
-> mkdir build
->
-> make -j4
+![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
+![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
+
+> make -j
 
 你也可以通过如下的其中一行命令来指定你想要使用的编译器：
 
