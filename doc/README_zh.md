@@ -25,7 +25,11 @@
 
 __如果有好的意见或建议，欢迎联系我们!__
 
-* __E-mail__: __lhk101lhk101@qq.com__(ValKmjolnir) __1467329765@qq.com__(Sidi762)
+* __E-mail__:
+
+  * __lhk101lhk101@qq.com__ (ValKmjolnir)
+
+  * __1467329765@qq.com__(Sidi762)
 
 ## __简介__
 

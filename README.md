@@ -25,7 +25,11 @@
 
 __Contact us if having great ideas to share!__
 
-* __E-mail__: __lhk101lhk101@qq.com__(ValKmjolnir) __1467329765@qq.com__(Sidi762)
+* __E-mail__:
+
+  * __lhk101lhk101@qq.com__ (ValKmjolnir)
+
+  * __1467329765@qq.com__ (Sidi762)
 
 ## __Introduction__
 
