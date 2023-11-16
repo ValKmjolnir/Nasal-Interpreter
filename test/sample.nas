@@ -99,7 +99,7 @@ var innerFunc = func {
 # what the ?: does in C.  The last semicolon in a code block is
 # optional, to make this prettier.
 #
-var abs = func(n) { if(n<0) { -n } else { n } }
+var abs = func(n) { if (n<0) { -n } else { n } }
 
 #
 # But for those who don't like typing, the ternary operator works like
@@ -119,7 +119,7 @@ var listNode = { data : ["what", "ever"], next : nil };
 #
 var toggle = 0;
 var a = nil;
-if(a and a.field == 42) {
+if (a and a.field == 42) {
     toggle = !toggle; # doesn't crash when a is nil
 }
 
@@ -213,8 +213,8 @@ for(var i=0; i<size(string); i+=1) { ascii_sum += string[i]; }
 #
 # You can use backquotes to write UTF8 character constants
 #
-if(`A` != 65) { print("ASCII violation bug!\n"); }
-if(`©` != 169) { print("Unicode violation bug!\n"); }
+if (`A` != 65) { print("ASCII violation bug!\n"); }
+if (`©` != 169) { print("Unicode violation bug!\n"); }
 
 #
 # And you can mutate strings by assigning to their indices, as long as
@@ -225,7 +225,7 @@ if(`©` != 169) { print("Unicode violation bug!\n"); }
 var ascii_lc = func(string) {
     var mutable = string ~ "";
     for(var i=0; i<size(mutable); i+=1) {
-        if(mutable[i] >= `A` and mutable[i] <= `Z`) {
+        if (mutable[i] >= `A` and mutable[i] <= `Z`) {
             mutable[i] += (`a` - `A`);
         }
     }
@@ -290,9 +290,9 @@ var completelyDone = dummyFunc;
 for(#OUTER;
     var i=0; i<100; i = i+1) {
     for(var j=0; j<100; j = j+1) {
-        if(doneWithInnerLoopEarly()) {
+        if (doneWithInnerLoopEarly()) {
             break;
-        } elsif(completelyDone()) {
+        } elsif (completelyDone()) {
             break #OUTER;
         }
     }
@@ -308,21 +308,21 @@ for(#OUTER;
 ##
 var dump = func(o) {
     var result = "";
-    if(typeof(o) == "scalar") {
+    if (typeof(o) == "scalar") {
         var n = num(o);
-        if(n == nil) { result = result ~ '"' ~ o ~ '"'; }
+        if (n == nil) { result = result ~ '"' ~ o ~ '"'; }
         else { result = result ~ o; }
-    } elsif(typeof(o) == "vector") {
+    } elsif (typeof(o) == "vector") {
         result = result ~ "[ ";
-        if(size(o) > 0) { result = result ~ dump(o[0]); }
+        if (size(o) > 0) { result = result ~ dump(o[0]); }
         for(i=1; i<size(o); i=i+1) {
             result = result ~ ", " ~ dump(o[i]);
         }
         result = result ~ " ]";
-    } elsif(typeof(o) == "hash") {
+    } elsif (typeof(o) == "hash") {
         var ks = keys(o);
         result = result ~ "{ ";
-        if(size(o) > 0) {
+        if (size(o) > 0) {
             var k = ks[0];
             result = result ~ k ~ ":" ~ dump(o[k]);
         }
@@ -348,7 +348,7 @@ var dump = func(o) {
 # normal function definition.  Oh well, every language has a syntactic
 # quirk or two...)
 #
-var a = (func(n){ n + 1 })(232);  # "a" now equals 233
+var a = (func(n) { n + 1 })(232);  # "a" now equals 233
 
 #
 # Functional programming B.  All expressions have a value, the last
@@ -357,7 +357,7 @@ var a = (func(n){ n + 1 })(232);  # "a" now equals 233
 # (assignment, duh) have side effects.  e.g. The "if" expression works
 # both for code flow and as the ?: expression in C/C++.
 #
-var factorial = func(n) { if(n == 0) { 1 }
+var factorial = func(n) { if (n == 0) { 1 }
                       else       { n * factorial(n-1) } }
 print(factorial(10), "\n");
 

@@ -1,6 +1,7 @@
 # flightgear developer environments simulator (beta)
 # ValKmjolnir 2022
 use std.runtime;
+use std.coroutine;
 
 println("-------------------------------------------------------------");
 println(" FlightGear simulated-env for developers project, since 2019");
@@ -15,8 +16,8 @@ var fg_env_cli={
     "--fg-env-help":{
         info:"get help",
         trigger:0,
-        f:func{
-            if(me.trigger)
+        f:func {
+            if (me.trigger)
                 return;
             println("-------------------------------------------------------------");
             println(" Help:");
@@ -29,8 +30,8 @@ var fg_env_cli={
     "--fg-env-debug":{
         info:"get property tree structure",
         trigger:0,
-        f:func{
-            if(me.trigger)
+        f:func {
+            if (me.trigger)
                 return;
             props.globals.debug();
             me.trigger=1;
@@ -39,8 +40,8 @@ var fg_env_cli={
     "--fg-env-mktmtest":{
         info:"test maketimer",
         trigger:0,
-        f:func{
-            if(me.trigger)
+        f:func {
+            if (me.trigger)
                 return;
             maketimer_multi_coroutine_test(32);
             me.trigger=1;
@@ -57,8 +58,8 @@ var fg_globals={
 };
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] new func add_event(name,interval,function)");
-var add_event=func(name,interval,function){
-    fg_globals.event[name]=coroutine.create(func{
+var add_event = func(name,interval,function) {
+    fg_globals.event[name]=coroutine.create(func {
         var timestamp=maketimestamp();
         timestamp.stamp();
         while(timestamp.elapsedMSec()<interval*1000)
@@ -69,11 +70,11 @@ var add_event=func(name,interval,function){
 }
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] new func add_task(name,interval,function)");
-var add_task=func(name,interval,function){
-    fg_globals.task[name]=coroutine.create(func{
+var add_task = func(name,interval,function) {
+    fg_globals.task[name]=coroutine.create(func {
         var counter=0;
         var timestamp=maketimestamp();
-        while(1){
+        while(1) {
             counter+=1;
             timestamp.stamp();
             while(timestamp.elapsedMSec()<interval*1000)
@@ -86,38 +87,38 @@ var add_task=func(name,interval,function){
 }
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] new func remove_task(name)");
-var remove_task=func(name){
-    if(contains(fg_globals.task,name))
+var remove_task = func(name) {
+    if (contains(fg_globals.task,name))
         delete(fg_globals.task,name);
 }
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] new func remove_event(name)");
-var remove_event=func(name){
-    if(contains(fg_globals.event,name))
+var remove_event = func(name) {
+    if (contains(fg_globals.event,name))
         delete(fg_globals.event,name);
 }
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] new func maketimer(interval,function)");
-var maketimer=func(interval,function){
+var maketimer = func(interval,function) {
     var name="nasal-timer-";
     var res={
-        start:func{
-            if(me.isRunning)
+        start:func {
+            if (me.isRunning)
                 return;
             me.isRunning=1;
-            if(me.singleShot){
+            if (me.singleShot) {
                 add_event(name,interval,function);
-            }else{
+            } else {
                 add_task(name,interval,function);
             }
         },
-        stop:func{
-            if(me.isRunning){
+        stop:func {
+            if (me.isRunning) {
                 remove_task(name);
                 me.isRunning=0;
             }
         },
-        restart:func(itv){
+        restart:func(itv) {
             interval=itv;
             me.stop();
             me.start();
@@ -131,9 +132,9 @@ var maketimer=func(interval,function){
 }
 
 println("[\e[32m settimer  \e[0m] [",os.time(),"] new func settimer(function,interval,rt)");
-var settimer=func(){
+var settimer = func() {
     var index=0;
-    return func(function,interval,realtime=1){
+    return func(function,interval,realtime=1) {
         var name="nasal-settimer-"~index;
         index+=1;
         add_task(name,interval,function);
@@ -141,25 +142,25 @@ var settimer=func(){
 }();
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] test func simulation()");
-var simulation=func(){
+var simulation = func() {
     var running=1;
-    while(running){
+    while(running) {
         running=0;
-        foreach(var i;keys(fg_globals.task)){
-            if(!contains(fg_globals.task,i))
+        foreach(var i;keys(fg_globals.task)) {
+            if (!contains(fg_globals.task,i))
                 continue;
-            if(coroutine.resume(fg_globals.task[i])!=nil){
+            if (coroutine.resume(fg_globals.task[i])!=nil) {
                 running=1;
-            }else{
+            } else {
                 remove_task(i);
             }
         }
-        foreach(var i;keys(fg_globals.event)){
-            if(!contains(fg_globals.event,i))
+        foreach(var i;keys(fg_globals.event)) {
+            if (!contains(fg_globals.event,i))
                 continue;
-            if(coroutine.resume(fg_globals.event[i])!=nil){
+            if (coroutine.resume(fg_globals.event[i])!=nil) {
                 running=1;
-            }else{
+            } else {
                 remove_event(i);
             }
         }
@@ -167,14 +168,14 @@ var simulation=func(){
 }
 
 println("[\e[32m maketimer \e[0m] [",os.time(),"] test func maketimer_multi_coroutine_test(size)");
-var maketimer_multi_coroutine_test=func(coroutine_size){
-    if(coroutine_size<1)
+var maketimer_multi_coroutine_test = func(coroutine_size) {
+    if (coroutine_size<1)
         return;
     var task_vec=[];
     setsize(task_vec,coroutine_size);
     forindex(var i;task_vec)
-        task_vec[i]=func{};
-    task_vec[coroutine_size-1]=func{
+        task_vec[i] = func {};
+    task_vec[coroutine_size-1] = func {
         println("\e[101m",coroutine_size," tasks invoked.\e[0m");
         forindex(var i;task_vec)
             task_vec[i].stop();
@@ -182,23 +183,23 @@ var maketimer_multi_coroutine_test=func(coroutine_size){
     var event_vec=[];
     setsize(event_vec,coroutine_size);
     forindex(var i;event_vec)
-        event_vec[i]=func{};
-    event_vec[coroutine_size-1]=func{
+        event_vec[i] = func {};
+    event_vec[coroutine_size-1] = func {
         println("\e[101m",coroutine_size," events invoked.\e[0m");
     }
     var set_vec=[];
     setsize(set_vec,coroutine_size);
     forindex(var i;set_vec)
-        set_vec[i]=func{};
-    set_vec[coroutine_size-1]=func{
+        set_vec[i] = func {};
+    set_vec[coroutine_size-1] = func {
         println("\e[101m",coroutine_size," settimer invoked.\e[0m");
     }
 
-    forindex(var i;task_vec){
+    forindex(var i;task_vec) {
         task_vec[i]=maketimer((i+1)/10,task_vec[i]);
         task_vec[i].start();
     }
-    forindex(var i;event_vec){
+    forindex(var i;event_vec) {
         event_vec[i]=maketimer((i+1)/10,event_vec[i]);
         event_vec[i].singleShot=1;
         event_vec[i].start();
@@ -209,7 +210,7 @@ var maketimer_multi_coroutine_test=func(coroutine_size){
 }
 
 println("[\e[32m geodinfo  \e[0m] [",os.time(),"] init geodinfo(lat,lon)");
-var geodinfo=func(lat,lon){
+var geodinfo = func(lat,lon) {
     return [nil,{
         names:["Road","Freeway"]
     }];
@@ -219,14 +220,14 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init props");
 var props={
     globals:nil,
     Node:nil,
-    getNode:func(path,index){
+    getNode:func(path,index) {
         path=split('/',path);
         var tmp=me.globals;
         var path_size=size(path);
         for(var i=0;i<path_size-1;i+=1)
             tmp=tmp.val[path[i]];
-        if(path_size>0){
-            if(contains(tmp.val,path[i]~'['~index~']'))
+        if (path_size>0) {
+            if (contains(tmp.val,path[i]~'['~index~']'))
                 return tmp.val[path[i]~'['~index~']'];
             else
                 return tmp.val[path[i]];
@@ -238,89 +239,89 @@ var props={
 println("[\e[32m props     \e[0m] [",os.time(),"] init props.Node");
 
 props.Node={
-    new:func(values=nil){
+    new:func(values=nil) {
         var res={
             parents:fg_env_props_node_traits,
             val:{},
             type:'GHOST',
             parent:nil
         };
-        if(typeof(values)=="hash")
+        if (typeof(values)=="hash")
             res.val=values;
         return res;
     },
-    addChild:func(name){
-        if(!contains(me.val,name)){
+    addChild:func(name) {
+        if (!contains(me.val,name)) {
             me.val[name]=props.Node.new();
             me.val[name].parent=me;
             return 1;
         }
         return 0;
     },
-    addChildren:func(name,cnt=0){
-        for(var i=0;i<cnt;i+=1){
+    addChildren:func(name,cnt=0) {
+        for(var i=0;i<cnt;i+=1) {
             var label=name~'['~i~']';
             me.val[label]=props.Node.new();
             me.val[label].parent=me;
         }
         return;
     },
-    setValue:func(path,val){
+    setValue:func(path,val) {
         path=split('/',path);
         var tmp=me;
         foreach(var label;path)
             tmp=tmp.val[label];
         tmp.val=val;
-        if(typeof(val)=='str'){
-            if(val=='true' or val=='false')
+        if (typeof(val)=='str') {
+            if (val=='true' or val=='false')
                 tmp.type='BOOL';
             else
                 tmp.type='STRING';
         }
-        elsif(typeof(val)=='num')
+        elsif (typeof(val)=='num')
             tmp.type='DOUBLE';
         return;
     },
-    setIntValue:func(num){
+    setIntValue:func(num) {
         me.val=num;
         me.type='INT';
         return;
     },
-    setBoolValue:func(state){
+    setBoolValue:func(state) {
         me.val=state;
         me.type='BOOL';
         return;
     },
-    setDoubleValue:func(num){
+    setDoubleValue:func(num) {
         me.val=num;
         me.type='DOUBLE';
         return;
     },
-    getValue:func(){return me.val;},
-    getName:func(){
+    getValue:func() {return me.val;},
+    getName:func() {
         var val=me.parent.val;
         foreach(var k;keys(val))
-            if(val[k]==me)
+            if (val[k]==me)
                 return k;
         return '';
     },
-    getParent:func(){
+    getParent:func() {
         return me.parent;
     },
-    getPath:func(){
-        if(me.parent==nil) return '';
+    getPath:func() {
+        if (me.parent==nil) return '';
         return me.parent.getPath()~'/'~me.getName();
     },
-    equals:func(node){return me==node;},
-    debug:func(s=''){
-        if(typeof(me.val)=='hash'){
+    equals:func(node) {return me==node;},
+    debug:func(s='') {
+        if (typeof(me.val)=='hash') {
             var key=keys(me.val);
-            if(!size(key)){
+            if (!size(key)) {
                 println("\e[91m{}\e[0m");
                 return;
             }
             println('\e[91m{\e[0m');
-            foreach(var k;key){
+            foreach(var k;key) {
                 print(s~"   ","\e[34m",k,"\e[0m\e[95m:\e[0m");
                 me.val[k].debug(s~"   ");
             }
@@ -352,7 +353,7 @@ props.getNode("/consumables/fuel",1).addChild("total-gal_us");
 props.getNode("/consumables/fuel/total-fuel-lbs",1).setValue('/',0);
 props.getNode("/consumables/fuel/total-gal_us",1).setValue('/',0);
 props.getNode("/consumables/fuel",1).addChildren("tank",4);
-for(var i=0;i<4;i+=1){
+for(var i=0;i<4;i+=1) {
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-lb");
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-lbs");
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-gal_us");
@@ -374,7 +375,7 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/anti-ice");
 foreach(var i;['wing-heat','pitot-heat','wiper','window-heat'])
     props.getNode("/controls/anti-ice",1).addChild(i);
 props.getNode("/controls/anti-ice",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1){
+for(var i=0;i<2;i+=1) {
     props.getNode("/controls/anti-ice/engine["~i~"]",1).addChild("carb-heat");
     props.getNode("/controls/anti-ice/engine["~i~"]",1).addChild("inlet-heat");
 }
@@ -388,7 +389,7 @@ props.getNode("/controls/armament",1).addChild("master-arm");
 props.getNode("/controls/armament",1).addChild("station-select");
 props.getNode("/controls/armament",1).addChild("release-all");
 props.getNode("/controls/armament",1).addChildren("station",4);
-for(var i=0;i<4;i+=1){
+for(var i=0;i<4;i+=1) {
     props.getNode("/controls/armament/station["~i~"]",1).addChild("stick-size");
     props.getNode("/controls/armament/station["~i~"]",1).addChild("release-stick");
     props.getNode("/controls/armament/station["~i~"]",1).addChild("release-all");
@@ -406,7 +407,7 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/electric");
 foreach(var i;['battery-switch','external-power','APU-generator'])
     props.getNode("/controls/electric",1).addChild(i);
 props.getNode("/controls/electric",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1){
+for(var i=0;i<2;i+=1) {
     props.getNode("/controls/electric/engine["~i~"]",1).addChild("generator");
     props.getNode("/controls/electric/engine["~i~"]",1).addChild("bus-tie");
 }
@@ -425,7 +426,7 @@ foreach(var i;['aileron','aileron-trim','elevator','elevator-trim','rudder','rud
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/fuel");
 props.getNode("/controls/fuel",1).addChild("dump-value");
 props.getNode("/controls/fuel",1).addChildren("tank",4);
-for(var i=0;i<4;i+=1){
+for(var i=0;i<4;i+=1) {
     foreach(var j;['fuel-selector','to_engine','to_tank'])
         props.getNode("/controls/fuel/tank["~i~"]",1).addChild(j);
     props.getNode("/controls/fuel/tank["~i~"]",1).addChildren("boost-pump",4);
@@ -440,7 +441,7 @@ for(var i=0;i<4;i+=1)
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/hydraulic");
 props.getNode("/controls/hydraulic",1).addChildren("system",2);
-for(var i=0;i<2;i+=1){
+for(var i=0;i<2;i+=1) {
     props.getNode("/controls/hydraulic/system["~i~"]",1).addChild("engine-pump");
     props.getNode("/controls/hydraulic/system["~i~"]",1).addChild("electric-pump");
 }
@@ -466,7 +467,7 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/seat");
 foreach(var i;['vertical-adjust','fore-aft-adjust','cmd_selector_valve'])
     props.getNode("/controls/seat",1).addChild(i);
 props.getNode("/controls/seat",1).addChildren("eject",3);
-for(var i=0;i<3;i+=1){
+for(var i=0;i<3;i+=1) {
     props.getNode("/controls/seat/eject["~i~"]",1).addChild("initiate");
     props.getNode("/controls/seat/eject["~i~"]",1).addChild("status");
 }
@@ -536,17 +537,17 @@ props.getNode("/position/altitude-agl-ft",1).setValue('/',22.4704);
 props.getNode("/orientation/heading-deg",1).setValue('/',90);
 props.getNode("/controls/flight/rudder",1).setValue('/',0.114);
 
-func(){
+func() {
     srand();
     var tmp=nil;
     var vec=[props.globals];
-    while(size(vec)){
+    while(size(vec)) {
         tmp=[];
-        foreach(var i;vec){
-            if(typeof(i.val)=="hash"){
-                if(size(i.val)==0){
+        foreach(var i;vec) {
+            if (typeof(i.val)=="hash") {
+                if (size(i.val)==0) {
                     i.setDoubleValue(rand()*10);
-                }else{
+                } else {
                     foreach(var j;keys(i.val))
                         append(tmp,i.val[j]);
                 }
@@ -561,6 +562,6 @@ println("[\e[32m fg_env    \e[0m] [",os.time(),"] init done");
 println("-------------------------------------------------------------");
 
 foreach(var a;runtime.argv())
-    if(contains(fg_env_cli,a)){
+    if (contains(fg_env_cli,a)) {
         fg_env_cli[a].f();
     }

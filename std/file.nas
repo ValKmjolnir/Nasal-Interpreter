@@ -8,7 +8,7 @@ var SEEK_CUR = io.SEEK_CUR;
 var SEEK_END = io.SEEK_END;
 
 
-var new = func(filename, mode="r"){
+var new = func(filename, mode="r") {
     if (!io.exists(filename)) {
         return nil;
     }
@@ -29,17 +29,17 @@ var new = func(filename, mode="r"){
     };
 }
 
-var find_all_files_with_extension = func(path, extensions...){
+var find_all_files_with_extension = func(path, extensions...) {
     var in_vec = func(ext) {
         foreach(var i;extensions) {
-            if (ext==i){
+            if (ext==i) {
                 return 1;
             }
         }
         return 0;
     }
     var res = [];
-    foreach(var f;find_all_files(path)){
+    foreach(var f;find_all_files(path)) {
         var tmp = split('.', f);
         if (size(tmp)>1 and in_vec(tmp[-1])) {
             append(res, f);
@@ -48,16 +48,17 @@ var find_all_files_with_extension = func(path, extensions...){
     return res;
 }
 
-var find_all_files = func(path){
+var find_all_files = func(path) {
     if (!io.exists(path)) {
         return [];
     }
     var dd = unix.opendir(path);
     var res = [];
-    while(var n = unix.readdir(dd))
-        if(unix.isfile(path~"/"~n)) {
+    while(var n = unix.readdir(dd)) {
+        if (unix.isfile(path~"/"~n)) {
             append(res, n);
         }
+    }
     unix.closedir(dd);
     return res;
 }

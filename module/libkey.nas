@@ -11,8 +11,8 @@ var (
     var nb = lib.nas_noblock;
     var call = dylib.limitcall(0);
     return [
-        func(){return call(kb);},
-        func(){return call(gt);},
-        func(){return call(nb);}
+        func() {return call(kb);},
+        func() {return call(gt);},
+        func() {return call(nb);}
     ];
 }();

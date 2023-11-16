@@ -60,8 +60,8 @@ var blockshape=[
 var color_count=0;
 var counter=0;
 var package=[0,1,2,3,4,5,6];
-var exchange=func(){
-    for(var i=6;i>=0;i-=1){
+var exchange = func() {
+    for(var i=6;i>=0;i-=1) {
         var index=int(i*rand());
         (package[i],package[index])=(package[index],package[i]);
     }
@@ -74,12 +74,12 @@ var block={
     type:nil,
     shape:nil,
     color:nil,
-    new:func(x=0,y=0){
+    new:func(x=0,y=0) {
         (me.x,me.y)=(x,y);
         me.rotate=0;
         me.type=blocktype[package[counter]];
         counter+=1;
-        if(counter==7){
+        if (counter==7) {
             exchange();
             counter=0;
         }
@@ -88,18 +88,18 @@ var block={
 
         me.color=color_count;
         color_count+=1;
-        if(color_count>=size(color))
+        if (color_count>=size(color))
             color_count=0;
         
         return {parents:[block]};
     }
 };
 
-var mapgen=func(mapx,mapy){
+var mapgen = func(mapx,mapy) {
     var (score,gameover)=(0,0);
     var (empty,unset,full)=(0,1,2);
 
-    if(mapx<1 or mapy<1)
+    if (mapx<1 or mapy<1)
         die("map_x or map_y must be greater than 1");
     
     # use in print
@@ -111,7 +111,7 @@ var mapgen=func(mapx,mapy){
 
     # generate new map
     var map=[];
-    for(var y=0;y<mapy;y+=1){
+    for(var y=0;y<mapy;y+=1) {
         var tmp=[];
         for(var x=0;x<mapx;x+=1)
             append(tmp,empty);
@@ -119,12 +119,12 @@ var mapgen=func(mapx,mapy){
     }
 
     var blk=nil;
-    var new_block=func(){
+    var new_block = func() {
         blk=block.new(int(mapx/2),0);
 
         # check if has enough place to place a new block
         foreach(var i;blk.shape)
-            if(map[blk.y+i[1]][blk.x+i[0]]>=full){
+            if (map[blk.y+i[1]][blk.x+i[0]]>=full) {
                 gameover=1;
                 return;
             }
@@ -135,17 +135,17 @@ var mapgen=func(mapx,mapy){
     new_block(); # initialize the first block
 
     # color print
-    var map_print=func(){
+    var map_print = func() {
         var s="\e[1;1H"~head;
-        for(var y=0;y<mapy;y+=1){
+        for(var y=0;y<mapy;y+=1) {
             s~="\e[32m║\e[0m";
-            for(var x=0;x<mapx;x+=1){
+            for(var x=0;x<mapx;x+=1) {
                 var c=map[y][x];
-                if(c==empty)
+                if (c==empty)
                     s~="  ";
-                elsif(c==unset)
+                elsif (c==unset)
                     s~=color[blk.color]~"██\e[0m";
-                elsif(c>=full)
+                elsif (c>=full)
                     s~=color[c-full]~"██\e[0m";
             }
             s~="\e[32m║\e[0m\n";
@@ -154,12 +154,12 @@ var mapgen=func(mapx,mapy){
         print(s,"\e[31ms\e[32mc\e[33mo\e[34mr\e[35me\e[36m: \e[0m",score,'\n');
     }
 
-    var moveleft=func(){
+    var moveleft = func() {
         var (x,y)=(blk.x-1,blk.y);
-        foreach(var i;blk.shape){
-            if(x+i[0]<0)
+        foreach(var i;blk.shape) {
+            if (x+i[0]<0)
                 return;
-            if(map[y+i[1]][x+i[0]]>=full)
+            if (map[y+i[1]][x+i[0]]>=full)
                 return;
         }
         # update block state and map
@@ -171,12 +171,12 @@ var mapgen=func(mapx,mapy){
         map_print();
     }
 
-    var moveright=func(){
+    var moveright = func() {
         var (x,y)=(blk.x+1,blk.y);
-        foreach(var i;blk.shape){
-            if(x+i[0]>=mapx)
+        foreach(var i;blk.shape) {
+            if (x+i[0]>=mapx)
                 return;
-            if(map[y+i[1]][x+i[0]]>=full)
+            if (map[y+i[1]][x+i[0]]>=full)
                 return;
         }
         # update block state and map
@@ -188,14 +188,14 @@ var mapgen=func(mapx,mapy){
         map_print();
     }
 
-    var rotate=func(){
+    var rotate = func() {
         var (r,x,y)=(blk.rotate,blk.x,blk.y);
         r=(r+1>=size(blk.type))?0:r+1;
         var shape=blockshape[blk.type[r]];
-        foreach(var i;shape){
-            if(x+i[0]>=mapx or x+i[0]<0 or y+i[1]>=mapy or y+i[1]<0)
+        foreach(var i;shape) {
+            if (x+i[0]>=mapx or x+i[0]<0 or y+i[1]>=mapy or y+i[1]<0)
                 return;
-            if(map[y+i[1]][x+i[0]]>=full)
+            if (map[y+i[1]][x+i[0]]>=full)
                 return;
         }
 
@@ -209,17 +209,17 @@ var mapgen=func(mapx,mapy){
         map_print();
     }
 
-    var fall=func(){
+    var fall = func() {
         var (x,y)=(blk.x,blk.y+1);
         # check if falls to the edge of other blocks or map
         var sethere=0;
         foreach(var i;blk.shape)
-            if(y+i[1]>=mapy or map[y+i[1]][x+i[0]]>=full){
+            if (y+i[1]>=mapy or map[y+i[1]][x+i[0]]>=full) {
                 sethere=1;
                 break;
             }
         # set block here and generate a new block
-        if(sethere){
+        if (sethere) {
             foreach(var i;blk.shape)
                 map[blk.y+i[1]][blk.x+i[0]]=blk.color+full;
             checkmap();
@@ -236,19 +236,19 @@ var mapgen=func(mapx,mapy){
         map_print();
     }
 
-    var checkmap=func(){
+    var checkmap = func() {
         var lines=1;
-        for(var y=mapy-1;y>=0;y-=1){
+        for(var y=mapy-1;y>=0;y-=1) {
             # check if this line is full of blocks
             var tmp=0;
-            for(var x=0;x<mapx;x+=1){
-                if(map[y][x]<full)
+            for(var x=0;x<mapx;x+=1) {
+                if (map[y][x]<full)
                     break;
                 tmp+=map[y][x];
             }
             # if is full, clear this line and
             # all the lines above fall one block
-            if(x==mapx){
+            if (x==mapx) {
                 score+=lines*tmp;
                 lines*=2;
                 for(var t=y;t>=1;t-=1)
@@ -268,15 +268,15 @@ var mapgen=func(mapx,mapy){
         rotate:rotate,
         fall:fall,
         checkmap:checkmap,
-        gameover:func(){return gameover;}
+        gameover:func() {return gameover;}
     };
 }
 
-var main=func(argv){
+var main = func(argv) {
     var should_skip=(size(argv)!=0 and argv[0]=="--skip");
     var init_counter=should_skip?5:30;
     # windows use chcp 65001 to output unicode
-    if(os.platform()=="windows")
+    if (os.platform()=="windows")
         system("chcp 65001");
     
     print(
@@ -296,41 +296,41 @@ var main=func(argv){
     exchange();
     var map=mapgen(mapx:12,mapy:18);
 
-    if(!should_skip){
+    if (!should_skip) {
         libkey.getch();
     }
     print("\ec");
     map.print();
 
     var counter=init_counter;
-    while(1){
+    while(1) {
         # nonblock input one character
         var ch=libkey.nonblock();
-        if(ch){
-            if(ch=='a'[0])     # move left
+        if (ch) {
+            if (ch=='a'[0])     # move left
                 map.moveleft();
-            elsif(ch=='d'[0])  # move right
+            elsif (ch=='d'[0])  # move right
                 map.moveright();
-            elsif(ch=='w'[0])  # rotate
+            elsif (ch=='w'[0])  # rotate
                 map.rotate();
-            elsif(ch=='s'[0])  # move down
+            elsif (ch=='s'[0])  # move down
                 map.fall();
-            elsif(ch=='q'[0])  # quit the game
+            elsif (ch=='q'[0])  # quit the game
                 break;
-            if(ch=='p'[0]){    # pause the game
+            if (ch=='p'[0]) {    # pause the game
                 print("\rpress any key to continue...");
                 libkey.getch();
                 print("\r                            ");
             }
             map.checkmap();
-            if(map.gameover())
+            if (map.gameover())
                 break;
         }
-        if(!counter){
+        if (!counter) {
             # automatically fall one block and check
             map.fall();
             map.checkmap();
-            if(map.gameover())
+            if (map.gameover())
                 break;
             counter=init_counter;
         }
@@ -348,7 +348,7 @@ var main=func(argv){
         "\e[36m'\e[94mq\e[95m' ",
         "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
     );
-    if(!should_skip){
+    if (!should_skip) {
         while(libkey.getch()!='q'[0]);
     }
 };

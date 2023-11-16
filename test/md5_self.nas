@@ -1,32 +1,34 @@
-var check=func(x){
-    if(x<0x100000000)
+use std.bits;
+
+var check = func(x) {
+    if (x<0x100000000)
         return x;
     return x-floor(x/0x100000000)*0x100000000;
 }
-var u32_bits_and=func(x,y){
+var u32_bits_and = func(x,y) {
     return bits.u32_and(check(x),check(y));
 }
-var u32_bits_or=func(x,y){
+var u32_bits_or = func(x,y) {
     return bits.u32_or(check(x),check(y));
 }
-var u32_bits_xor=func(x,y){
+var u32_bits_xor = func(x,y) {
     return bits.u32_xor(check(x),check(y));
 }
-var u32_bits_not=func(x){
+var u32_bits_not = func(x) {
     return bits.u32_not(check(x));
 }
 
-var hex32str=func(){
+var hex32str = func() {
     var ch=["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
     var tbl=[];
     setsize(tbl,256);
-    for(var i=0;i<16;i+=1){
+    for(var i=0;i<16;i+=1) {
         for(var j=0;j<16;j+=1)
             tbl[i*16+j]=ch[i]~ch[j];
     }
-    return func(num){
+    return func(num) {
         var res="";
-        for(var i=0;i<4;i+=1){
+        for(var i=0;i<4;i+=1) {
             res~=tbl[u32_bits_and(num,0xff)];
             num=floor(num/256);
         }
@@ -34,7 +36,7 @@ var hex32str=func(){
     };
 }();
 
-var md5=func(){
+var md5 = func() {
     var K=[
         0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
         0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
@@ -59,42 +61,42 @@ var md5=func(){
         0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9
     ];
 
-    var l=func(num,cx){
-        for(var i=0;i<cx;i+=1){
+    var l = func(num,cx) {
+        for(var i=0;i<cx;i+=1) {
             num=check(num*2);
         }
         return num;
     }
-    var r=func(num,cx){
+    var r = func(num,cx) {
         num=check(num);
-        for(var i=0;i<cx;i+=1){
+        for(var i=0;i<cx;i+=1) {
             num=num/2;
         }
         return floor(num);
     }
-    var rol=func(num,cx){
+    var rol = func(num,cx) {
         return u32_bits_or(l(num,cx),r(num,32-cx));
     }
     # round 1
-    var F=func(x,y,z){
+    var F = func(x,y,z) {
         return u32_bits_or(
             u32_bits_and(x,y),
             u32_bits_and(u32_bits_not(x),z)
         );
     }
     # round 2
-    var G=func(x,y,z){
+    var G = func(x,y,z) {
         return u32_bits_or(
             u32_bits_and(x,z),
             u32_bits_and(y,u32_bits_not(z))
         );
     }
     # round 3
-    var H=func(x,y,z){
+    var H = func(x,y,z) {
         return u32_bits_xor(u32_bits_xor(x,y),z);
     }
     # round 4
-    var I=func(x,y,z){
+    var I = func(x,y,z) {
         return u32_bits_xor(
             y,
             u32_bits_or(x,u32_bits_not(z))
@@ -107,21 +109,21 @@ var md5=func(){
         I,I,I,I,I,I,I,I,I,I,I,I,I,I,I,I
     ];
 
-    return func(s){
+    return func(s) {
         var (s_size,len,res)=(size(s),size(s)*8,[]);
         setsize(res,s_size);
-        for(var i=0;i<s_size;i+=1){
+        for(var i=0;i<s_size;i+=1) {
             res[i]=s[i];
         }
         # +------len------+--1~512--+--64--+
         # |      text     |  fill   | size |
         # +---------------+---------+------+ N*512 bit
         var (mod,res_size)=(s_size-floor(s_size/64)*64,0);
-        if(mod==56){
+        if (mod==56) {
             res_size=s_size+64;
-        }elsif(mod<56){
+        } elsif (mod<56) {
             res_size=floor(s_size/64)*64+56;
-        }elsif(mod>56){
+        } elsif (mod>56) {
             res_size=floor(s_size/64)*64+120; # 512+448=960 960/8=120
         }
         setsize(res,res_size);
@@ -132,11 +134,11 @@ var md5=func(){
         # little endian
         setsize(res,size(res)+8);
         var (s_size,lower32,higher32)=(size(res),check(len),check(len/math.pow(2,32)));
-        for(var i=4;i>0;i-=1){
+        for(var i=4;i>0;i-=1) {
             res[s_size-4-i]=floor(lower32-floor(lower32/256)*256);
             lower32=floor(lower32/256);
         }
-        for(var i=4;i>0;i-=1){
+        for(var i=4;i>0;i-=1) {
             res[s_size-i]=floor(higher32-floor(higher32/256)*256);
             higher32=floor(higher32/256);
         }
@@ -146,7 +148,7 @@ var md5=func(){
         # this may only work when string's length is under 1<<51
         var tmp=[];
         setsize(tmp,size(res)/4);
-        for(var i=0;i<size(res);i+=4){
+        for(var i=0;i<size(res);i+=4) {
             tmp[i/4]=res[i+3]*math.pow(2,24)+
                 res[i+2]*math.pow(2,16)+
                 res[i+1]*math.pow(2,8)+
@@ -160,9 +162,9 @@ var md5=func(){
         var D=0x10325476;
 
         res_size=size(res);
-        for(var i=0;i<res_size;i+=16){
+        for(var i=0;i<res_size;i+=16) {
             var (f,a,b,c,d)=(0,A,B,C,D);
-            for(var j=0;j<64;j+=1){
+            for(var j=0;j<64;j+=1) {
                 f=functions[j](b,c,d);
                 (a,b,c,d)=(d,check(b+rol(a+f+K[j]+res[i+idx[j]],S[j])),b,c);
             }
@@ -173,7 +175,7 @@ var md5=func(){
 }();
 
 # check if md5 runs correctly
-var md5check=func(){
+var md5check = func() {
     var test_set=[
         "md5",
         "github.com",
@@ -200,9 +202,9 @@ var md5check=func(){
         "a7916c5ce54e73b7ddf6a286b36d976d",
         "ec6d5b197ba019db23c719112f3f70b7"
     ];
-    forindex(var i;test_set){
+    forindex(var i;test_set) {
         var res=md5(test_set[i]);
-        if(cmp(res,result[i]))
+        if (cmp(res,result[i]))
             println(
                 "md5 cannot work:\n",
                 "    test \""~test_set[i]~"\"\n",

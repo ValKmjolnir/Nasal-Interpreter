@@ -1,12 +1,9 @@
 # lib.nas
 # 2019 ValKmjolnir
-
-use std.coroutine;
 use std.math;
 use std.string;
 use std.io;
 use std.os;
-use std.bits;
 use std.unix;
 
 # print is used to print all things in nasal, try and see how it works.
@@ -235,7 +232,7 @@ var println = func(elems...) {
 var sort = func() {
     srand();  # be aware! this causes global changes
     var quick_sort_core = func(vec, left, right, cmp) {
-        if(left>=right) return nil;
+        if (left>=right) return nil;
         var base = left+int(rand()*(right-left));
         (vec[left], vec[base]) = (vec[base], vec[left]);
         var (i, j, tmp) = (left, right, vec[left]);
@@ -301,7 +298,7 @@ var ghosttype = func(ghost_object) {
 # get the index of val in the vec
 var vecindex = func(vec, val) {
     forindex(var i; vec) {
-        if(val==vec[i]) {
+        if (val==vec[i]) {
             return i;
         }
     }
@@ -313,11 +310,11 @@ var isa = func(object, class) {
     if (!ishash(object)) {
         return false;
     }
-    if(!contains(object, "parents") or !isvec(object.parents)) {
+    if (!contains(object, "parents") or !isvec(object.parents)) {
         return false;
     }
     foreach(var elem; object.parents) {
-        if(elem==class or isa(elem, class)) {
+        if (elem==class or isa(elem, class)) {
             return true;
         }
     }
