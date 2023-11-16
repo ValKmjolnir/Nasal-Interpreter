@@ -1,4 +1,4 @@
-var student=func(n,a){
+var student = func(n,a) {
     return {
         print_info:func println(n,' ',a),
         set_age:   func(age) a=age,
@@ -19,31 +19,31 @@ s.set_name('Sidi Liang');
 s.print_info();
 println(s.get_age(),' ',s.get_name());
 # flightgear nasal-console cannot use this kind of object initializing
-var m=func(){
+var m = func() {
     var (_1,_2)=(0,1);
     return {
-        a:func(){
+        a:func() {
             print(_1,' ',_2,'\n');
         },
-        b:func(x){
+        b:func(x) {
             _1=x;
         },
-        c:func(x){
+        c:func(x) {
             _2=x;
         },
-        d:func(x){
-            return func{
+        d:func(x) {
+            return func {
                 print(_1,' ',_2,' ',x,'\n');
             };
         },
-        g:func(x){
+        g:func(x) {
             var y=x;
-            return func{
+            return func {
                 print(_1,' ',_2,' ',x,' ',y,'\n');
             }
         },
-        h:func(){
-            return func(x){
+        h:func() {
+            return func(x) {
                 _1=x;
             }
         }

@@ -37,12 +37,13 @@ var RGB = func(h, w) {
     }
 
     var progress = (h*width+w+1)/(width*height);
-    if(progress*100-int(progress*100)==0){
+    if (progress*100-int(progress*100)==0) {
         print(bar.bar(progress), " ", progress*100, "%          \r");
     }
 
     var c = char(res);
     return c~c~c;
 }
+
 ppm("feigenbaum.ppm", width, height, RGB);
 println();

@@ -1,5 +1,6 @@
 # unix.nas
 # 2023 by ValKmjolnir
+use std.bits;
 
 var _S_IFDIR = 0x4000;
 var _S_IFREG = 0x8000;

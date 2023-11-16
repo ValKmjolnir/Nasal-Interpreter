@@ -110,3 +110,15 @@ And we use this bf interpreter to draw a mandelbrot set.
 In 2022/2/17 update we added `\e` into the lexer. And the `bfcolored.nas` uses this special ASCII code. Here is the result:
 
 ![mandelbrot](../doc/pic/mandelbrot.png)
+
+## More nasal generated pictures
+
+![mandelbrotset](../doc/pic/mandelbrotset.png)
+
+![mandelbrotset_reverse](../doc/pic/mandelbrotset_reverse.png)
+
+![burningship](../doc/pic/burningship.png)
+
+![burningship_reverse](../doc/pic/burningship_reverse.png)
+
+![feigenbaum](../doc/pic/feigenbaum.png)

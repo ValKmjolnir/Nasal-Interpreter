@@ -44,7 +44,7 @@ var print_ghost = func(object) {
 }
 
 
-var test_ghost=func() {
+var test_ghost = func() {
     var ghost = create_ghost();
     print_ghost(nil); # err
     print_ghost(ghost); # random

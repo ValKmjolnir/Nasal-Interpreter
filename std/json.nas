@@ -93,7 +93,7 @@ var parse = func() {
             }
             ptr += 1;
         }
-        if(ptr>=text_size) {
+        if (ptr>=text_size) {
             token.content = "eof";
             token.type = _j_eof;
             return;
@@ -167,7 +167,7 @@ var parse = func() {
     }
 
     var match = func(type) {
-        if(token.type!=type) {
+        if (token.type!=type) {
             println("json::parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
             _parse_error += 1;
         }
@@ -237,7 +237,7 @@ var parse = func() {
 
     return func(source) {
         _parse_error = 0;
-        if(typeof(source)!="str") {
+        if (typeof(source)!="str") {
             println("json::parse: must use string but get", typeof(str));
             _parse_error += 1;
             return [];
@@ -260,7 +260,7 @@ var parse = func() {
 var stringify = func(object) {
     _parse_error = 0;
     var object_type = typeof(object);
-    if(object_type!="hash" and object_type!="vec" and object_type!="namespace") {
+    if (object_type!="hash" and object_type!="vec" and object_type!="namespace") {
         _parse_error += 1;
         println("json::stringify: must use hashmap or vector, but get ", typeof(object));
         return "[]";

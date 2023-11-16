@@ -4,16 +4,16 @@ use std.runtime;
 
 var socket = libsock.socket;
 
-var gettime=func(){
+var gettime = func() {
     return split(" ",os.time())[1];
 }
 
-var jsonRPC=func(){
+var jsonRPC = func() {
     var sd=nil;
     return {
         establish:func(ip,port) {
             sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
-            if(socket.bind(sd,ip,port)<0) {
+            if (socket.bind(sd,ip,port)<0) {
                 println("[",gettime(),"] failed to bind socket ",sd," at ",ip,":",port);
                 return 0;
             }
@@ -42,23 +42,23 @@ var jsonRPC=func(){
             println("[",gettime(),"] disconnected");
             return socket.closesocket(client.sd);
         },
-        recv:func(client){
+        recv:func(client) {
             var data=socket.recv(client.sd,2048);
-            if(data.size<=0){
+            if (data.size<=0) {
                 println("[",gettime(),"] closed connection, recv failed");
                 return nil;
             }
             println("[",gettime(),"] receive ",data.str);
             return data.str;
         },
-        send:func(client,content){
+        send:func(client,content) {
             println("[",gettime(),"] sending ",content);
             return socket.send(client.sd,content);
         }
     };
 }();
 
-var server=func(ip,port) {
+var server = func(ip,port) {
     var methods={
         callHello:func(vec) {
             var res="hello ";
@@ -103,7 +103,7 @@ var server=func(ip,port) {
     jsonRPC.disconnect(client);
 }
 
-var client=func(ip,port) {
+var client = func(ip,port) {
     srand();
     var call_id=1;
     var methods=["callHello","notExist","onRandom"];

@@ -1,13 +1,14 @@
 use module.libkey;
 use std.list;
 use std.runtime;
+use std.coroutine;
 
-var game=func(x,y){
+var game = func(x,y) {
     rand(time(0));
     var texture=["  ","██","\e[91m██\e[0m"];
     var edge0="╔";
     var edge1="╚";
-    for(var i=0;i<x;i+=1){
+    for(var i=0;i<x;i+=1) {
         edge0~="══";
         edge1~="══";
     }
@@ -16,7 +17,7 @@ var game=func(x,y){
 
     var vec=[];
     setsize(vec,x);
-    for(var i=0;i<x;i+=1){
+    for(var i=0;i<x;i+=1) {
         vec[i]=[];
         setsize(vec[i],y);
         for(var j=0;j<y;j+=1)
@@ -31,7 +32,7 @@ var game=func(x,y){
 
     var move='w';
     var gameover=0;
-    var setapple=func(){
+    var setapple = func() {
         var (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
         while(vec[cord_x][cord_y]!=0)
             (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
@@ -40,13 +41,13 @@ var game=func(x,y){
     setapple();
 
     return {
-        print:func(){
+        print:func() {
             var s="";
             var (fx,fy)=snake.front();
-            for(var i=0;i<y;i+=1){
+            for(var i=0;i<y;i+=1) {
                 s~="║";
-                for(var j=0;j<x;j+=1){
-                    if(fx==j and fy==i)
+                for(var j=0;j<x;j+=1) {
+                    if (fx==j and fy==i)
                         s~="\e[93m"~texture[vec[j][i]]~"\e[0m";
                     else
                         s~=texture[vec[j][i]];
@@ -55,66 +56,66 @@ var game=func(x,y){
             }
             print('\e[1;1H'~edge0~s~edge1);
         },
-        next:func(){
+        next:func() {
             var (fx,fy)=snake.front();
             var eat=0;
-            if(move=="w" and fy-1>=0){
+            if (move=="w" and fy-1>=0) {
                 snake.push_front([fx,fy-1]);
-                if(vec[fx][fy-1]==1)
+                if (vec[fx][fy-1]==1)
                     gameover=1;
-                elsif(vec[fx][fy-1]==2)
+                elsif (vec[fx][fy-1]==2)
                     eat=1;
                 vec[fx][fy-1]=1;
-            }elsif(move=='a' and fx-1>=0){
+            } elsif (move=='a' and fx-1>=0) {
                 snake.push_front([fx-1,fy]);
-                if(vec[fx-1][fy]==1)
+                if (vec[fx-1][fy]==1)
                     gameover=1;
-                elsif(vec[fx-1][fy]==2)
+                elsif (vec[fx-1][fy]==2)
                     eat=1;
                 vec[fx-1][fy]=1;
-            }elsif(move=='s' and fy+1<y){
+            } elsif (move=='s' and fy+1<y) {
                 snake.push_front([fx,fy+1]);
-                if(vec[fx][fy+1]==1)
+                if (vec[fx][fy+1]==1)
                     gameover=1;
-                elsif(vec[fx][fy+1]==2)
+                elsif (vec[fx][fy+1]==2)
                     eat=1;
                 vec[fx][fy+1]=1;
-            }elsif(move=='d' and fx+1<x){
+            } elsif (move=='d' and fx+1<x) {
                 snake.push_front([fx+1,fy]);
-                if(vec[fx+1][fy]==1)
+                if (vec[fx+1][fy]==1)
                     gameover=1;
-                elsif(vec[fx+1][fy]==2)
+                elsif (vec[fx+1][fy]==2)
                     eat=1;
                 vec[fx+1][fy]=1;
-            }else{
+            } else {
                 gameover=1;
             }
-            if(!gameover and !eat){
+            if (!gameover and !eat) {
                 var (bx,by)=snake.back();
                 vec[bx][by]=0;
                 snake.pop_back();
             }
 
-            if(eat and snake.length()!=x*y)
+            if (eat and snake.length()!=x*y)
                 setapple();
-            elsif(snake.length()==x*y)
+            elsif (snake.length()==x*y)
                 gameover=2;
         },
-        move:func(c){
+        move:func(c) {
             move=c;
         },
-        gameover:func(){
+        gameover:func() {
             return gameover;
         }
     }
 }
 
-var co=coroutine.create(func(){
-    while(1){
+var co=coroutine.create(func() {
+    while(1) {
         var moved=-1;
-        for(var i=0;i<30;i+=1){
+        for(var i=0;i<30;i+=1) {
             var ch=libkey.nonblock();
-            if(moved==-1 and ch!=nil){
+            if (moved==-1 and ch!=nil) {
                 moved=ch;
             }
             coroutine.yield(nil);
@@ -124,43 +125,44 @@ var co=coroutine.create(func(){
     }
 });
 
-var main=func(argv){
+var main = func(argv) {
     var should_skip=(size(argv)!=0 and argv[0]=="--skip");
     # enable unicode
-    if(os.platform()=="windows")
+    if (os.platform()=="windows")
         system("chcp 65001");
     print("\ec");
 
     var g=game(15,10);
     g.print();
     print("\rpress any key to start...");
-    if(!should_skip){
+    if (!should_skip) {
         libkey.getch();
     }
     print("\r                         \r");
     var counter=20;
-    while(1){
+    while(1) {
         while((var ch=coroutine.resume(co)[0])==nil);
-        if(ch!=nil and ch!=-1){
-            if(ch=='q'[0])
+        if (ch!=nil and ch!=-1) {
+            if (ch=='q'[0]) {
                 break;
-            elsif(ch=='p'[0]){
+            } elsif (ch=='p'[0]) {
                 print("\rpress any key to continue...");
                 libkey.getch();
                 print("\r                            \r");
+            } elsif (ch=='w'[0] or ch=='s'[0] or ch=='a'[0] or ch=='d'[0]) {
+                g.move(chr(ch));
             }
-            g.move(chr(ch));
         }
         
         g.next();
-        if(g.gameover())
+        if (g.gameover())
             break;
         g.print();
     }
 
     println(g.gameover()<=1?"game over.":"you win!");
     println("press 'q' to quit.");
-    if(should_skip){
+    if (should_skip) {
         return;
     }
     while(libkey.getch()!='q'[0]);
