@@ -1,7 +1,7 @@
 use std.padding;
 use std.process_bar;
 
-var mess=func(vec) {
+var mess = func(vec) {
     srand();
     var s=size(vec);
     for(var i=s-1;i>=0;i-=1) {
@@ -10,7 +10,7 @@ var mess=func(vec) {
     }
 }
 
-var project=func(n) {
+var project = func(n) {
     # get(s) :- color(_, s, _).
 
     var ts=maketimestamp();
@@ -24,7 +24,7 @@ var project=func(n) {
     for(var i=0;i<n;i+=1) {
         color[i]=[i,"color "~i,i+n*10];
         # generate process bar, every 0.2%
-        if((i-last_step)/n>1/500) {
+        if ((i-last_step)/n>1/500) {
             last_step=i;
             print(" ",bar.bar((i+1)/n)," ",
                 padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");
@@ -45,7 +45,7 @@ var project=func(n) {
     println(padding.rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
-var select=func(n) {
+var select = func(n) {
     # get(s) :- color(_, _, x), message(x, s).
 
     var ts=maketimestamp();
@@ -62,7 +62,7 @@ var select=func(n) {
         color[i]=[i,"color "~i,i+n*10];
         message[i]=[i+n*10,"message "~i];
         # generate process bar, every 0.2%
-        if((i-last_step)/n>1/500) {
+        if ((i-last_step)/n>1/500) {
             last_step=i;
             print(" ",bar.bar((i+1)/n)," ",
                 padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");
@@ -75,8 +75,8 @@ var select=func(n) {
     mess(message);
 
     ts.stamp();
-    sort(color,func(a,b){return a[2]<b[2]});
-    sort(message,func(a,b){return a[0]<b[0]});
+    sort(color,func(a,b) {return a[2]<b[2]});
+    sort(message,func(a,b) {return a[0]<b[0]});
 
     var cnt=0;
     foreach(var c;color) {
@@ -86,10 +86,10 @@ var select=func(n) {
         while(left<=right) {
             var mid=int((left+right)/2);
             var res=message[mid][0];
-            if(data==res) {
+            if (data==res) {
                 cnt+=1;
                 break;
-            } else if(data>res) {
+            } else if (data>res) {
                 left=mid+1;
             } else {
                 right=mid-1;
@@ -100,7 +100,7 @@ var select=func(n) {
     println(padding.rightpad(str(cnt),7)," in ",ts.elapsedMSec()/1000," s");
 }
 
-var cartesian=func(n) {
+var cartesian = func(n) {
     # get(x, y, z, a, b) :- color(x, y, z), message(a, b).
 
     var ts=maketimestamp();
@@ -117,7 +117,7 @@ var cartesian=func(n) {
         color[i]=[i,"color "~i,i+n*10];
         message[i]=[i+n*10,"message "~i];
         # generate process bar, every 0.2%
-        if((i-last_step)/n>1/500) {
+        if ((i-last_step)/n>1/500) {
             last_step=i;
             print(" ",bar.bar((i+1)/n)," ",
                 padding.leftpad(str(int((i+1)/n*100)),3),"% | \r");

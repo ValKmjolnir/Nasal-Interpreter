@@ -31,10 +31,10 @@ var code=[
 ];
 
 # enable unicode
-if(os.platform()=="windows")
+if (os.platform()=="windows")
     system("chcp 65001");
 var texture=["  ","██"];
-for(var i=0;i<size(code);i+=1){
+for(var i=0;i<size(code);i+=1) {
     for(var j=0;j<size(code[i]);j+=1)
         print(texture[code[i][j]]);
     print('\n');

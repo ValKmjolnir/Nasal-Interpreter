@@ -11,8 +11,9 @@ var (
     _j_colon,
     _j_str,
     _j_num,
-    _j_id
-) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    _j_id,
+    _j_bool
+) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 var _j_content = [
     "eof",
@@ -24,11 +25,13 @@ var _j_content = [
     "`:`",
     "string",
     "number",
-    "identifier"
+    "identifier",
+    "boolean"
 ];
 
-var parse = func() {
+var _parse_error = 0;
 
+var parse = func() {
     var text = "";
     var line = 1;
     var text_size = 0;
@@ -75,6 +78,7 @@ var parse = func() {
         init();
         if (!size(str)) {
             println("json::parse: empty string");
+            _parse_error += 1;
             str = "[]";
         }
         text = str;
@@ -89,7 +93,7 @@ var parse = func() {
             }
             ptr += 1;
         }
-        if(ptr>=text_size) {
+        if (ptr>=text_size) {
             token.content = "eof";
             token.type = _j_eof;
             return;
@@ -131,7 +135,13 @@ var parse = func() {
         } elsif (isnum(c)) {
             var s = c;
             ptr += 1;
-            while(ptr<text_size and ((isnum(char(text[ptr])) or char(text[ptr])=='.'))) {
+            while(ptr<text_size and ((
+                isnum(char(text[ptr])) or
+                char(text[ptr])=='.' or
+                char(text[ptr])=='e' or
+                char(text[ptr])=='-' or
+                char(text[ptr])=='+'))
+            ) {
                 s ~= char(text[ptr]);
                 ptr += 1;
             }
@@ -148,14 +158,18 @@ var parse = func() {
             ptr -= 1;
             token.content = s;
             token.type = _j_id;
+            if (s=="true" or s=="false") {
+                token.type = _j_bool;
+            }
         }
         ptr += 1;
         return;
     }
 
     var match = func(type) {
-        if(token.type!=type) {
+        if (token.type!=type) {
             println("json::parse: line ",line,": expect ",_j_content[type]," but get `",token.content,"`.");
+            _parse_error += 1;
         }
         next();
         return;
@@ -176,7 +190,7 @@ var parse = func() {
             hash[name] = hash_gen();
         } elsif (token.type==_j_lbrkt) {
             hash[name] = vec_gen();
-        } elsif (token.type==_j_str or token.type==_j_num) {
+        } elsif (token.type==_j_str or token.type==_j_num or token.type==_j_bool) {
             hash[name] = token.content;
             next();
         }
@@ -222,8 +236,10 @@ var parse = func() {
     }
 
     return func(source) {
-        if(typeof(source)!="str") {
+        _parse_error = 0;
+        if (typeof(source)!="str") {
             println("json::parse: must use string but get", typeof(str));
+            _parse_error += 1;
             return [];
         }
 
@@ -242,8 +258,10 @@ var parse = func() {
 }();
 
 var stringify = func(object) {
+    _parse_error = 0;
     var object_type = typeof(object);
-    if(object_type!="hash" and object_type!="vec" and object_type!="namespace") {
+    if (object_type!="hash" and object_type!="vec" and object_type!="namespace") {
+        _parse_error += 1;
         println("json::stringify: must use hashmap or vector, but get ", typeof(object));
         return "[]";
     }
@@ -281,7 +299,7 @@ var stringify = func(object) {
         var k = keys(h);
         var vsize = size(k);
         for(var i = 0; i<vsize; i += 1) {
-            s ~= k[i]~":";
+            s ~= "\""~k[i]~"\":";
             gen(h[k[i]]);
             if (i!=vsize-1) {
                 s ~= ",";
@@ -296,4 +314,16 @@ var stringify = func(object) {
         hgen(object);
     }
     return s;
+}
+
+var get_error = func() {
+    return _parse_error;
+}
+
+var check_error = func() {
+    if (_parse_error==0) {
+        return;
+    }
+    println("json: encounter ", _parse_error, " error(s), stop.");
+    exit(-1);
 }

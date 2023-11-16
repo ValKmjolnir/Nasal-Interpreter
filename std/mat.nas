@@ -1,5 +1,5 @@
 
-var mat=func(width,height) {
+var mat = func(width,height) {
     var res=[];
     setsize(res,width*height);
     forindex(var i;res) {
@@ -12,14 +12,14 @@ var mat=func(width,height) {
     };
 }
 
-var rand_init=func(a) {
+var rand_init = func(a) {
     var ref=a.mat;
     forindex(var i;ref) {
         ref[i]=rand()*2-1;
     }
 }
 
-var mat_print=func(a) {
+var mat_print = func(a) {
     var (width,height,ref)=(a.width,a.height,a.mat);
     for(var i=0;i<height;i+=1) {
         for(var j=0;j<width;j+=1) {
@@ -29,8 +29,8 @@ var mat_print=func(a) {
     }
 }
 
-var add=func(a,b) {
-    if(a.width!=b.width or a.height!=b.height) {
+var add = func(a,b) {
+    if (a.width!=b.width or a.height!=b.height) {
         println("matrix a: ",a);
         println("matrix b: ",b);
         die("width and height must be the same");
@@ -49,8 +49,8 @@ var add=func(a,b) {
     return res;
 }
 
-var sub=func(a,b) {
-    if(a.width!=b.width or a.height!=b.height) {
+var sub = func(a,b) {
+    if (a.width!=b.width or a.height!=b.height) {
         println("matrix a: ",a);
         println("matrix b: ",b);
         die("width and height must be the same");
@@ -69,8 +69,8 @@ var sub=func(a,b) {
     return res;
 }
 
-var hardamard=func(a,b) {
-    if(a.width!=b.width or a.height!=b.height) {
+var hardamard = func(a,b) {
+    if (a.width!=b.width or a.height!=b.height) {
         println("matrix a: ",a);
         println("matrix b: ",b);
         die("width and height must be the same");
@@ -89,7 +89,7 @@ var hardamard=func(a,b) {
     return res;
 }
 
-var neg=func(a) {
+var neg = func(a) {
     var res=mat(a.width,a.height);
     var (aref,ref)=(a.mat,res.mat);
     forindex(var i;aref) {
@@ -98,7 +98,7 @@ var neg=func(a) {
     return res;
 }
 
-var sum=func(a) {
+var sum = func(a) {
     var res=0;
     var aref=a.mat;
     forindex(var i;aref) {
@@ -107,7 +107,7 @@ var sum=func(a) {
     return res;
 }
 
-var mult_num=func(a,c) {
+var mult_num = func(a,c) {
     var res=mat(a.width,a.height);
     var ref=res.mat;
     var aref=a.mat;
@@ -117,7 +117,7 @@ var mult_num=func(a,c) {
     return res;
 }
 
-var trans=func(a) {
+var trans = func(a) {
     var res=mat(a.height,a.width);
     var ref=res.mat;
     var (a_width,a_height,aref)=(a.width,a.height,a.mat);
@@ -129,7 +129,7 @@ var trans=func(a) {
     return res;
 }
 
-var activate=func(a,f) {
+var activate = func(a,f) {
     var res=mat(a.width,a.height);
     var (aref,ref)=(a.mat,res.mat);
     forindex(var i;aref) {
@@ -138,8 +138,8 @@ var activate=func(a,f) {
     return res;
 }
 
-var mult=func(a,b) {
-    if(a.width!=b.height) {
+var mult = func(a,b) {
+    if (a.width!=b.height) {
         println("matrix a: ",a);
         println("matrix b: ",b);
         die("a.width must equal to b.height, but get a.width:"~str(a.width)~" and b.height"~str(b.height));
@@ -161,28 +161,28 @@ var mult=func(a,b) {
     return res;
 }
 
-var sigmoid=func(x) {
+var sigmoid = func(x) {
     var t=math.exp(-x);
     return 1/(1+t);
 }
 
-var diffsigmoid=func(x) {
+var diffsigmoid = func(x) {
     x=sigmoid(x);
     return x*(1-x);
 }
 
-var tanh=func(x) {
+var tanh = func(x) {
     var t1=math.exp(x);
     var t2=math.exp(-x);
     return (t1-t2)/(t1+t2);
 }
 
-var difftanh=func(x) {
+var difftanh = func(x) {
     x=tanh(x);
     return 1-x*x;
 }
 
-var bp_example=func() {
+var bp_example = func() {
     srand();
     var lr=0.01;
     var input=[
@@ -221,7 +221,7 @@ var bp_example=func() {
     var total=1e6;
     while(total>0.001) {
         epoch+=1;
-        if(epoch>1e4) {
+        if (epoch>1e4) {
             println("Training failed after ",epoch," epoch.");
             break;
         }
@@ -248,7 +248,7 @@ var bp_example=func() {
             total+=sum(mult_num(mult(error,trans(error)),0.5));
         }
     }
-    if(epoch<=1e4) {
+    if (epoch<=1e4) {
         println("Training succeeded after ",epoch," epoch.");
     }
 

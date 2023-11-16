@@ -195,15 +195,15 @@ var Node = {
 
     getPath : func {
         var (name, index, parent) = (me.getName(), me.getIndex(), me.getParent());
-        if(index != 0)    { name ~= "[" ~ index ~ "]"; }
-        if(parent != nil) { name = parent.getPath() ~ "/" ~ name; }
+        if (index != 0)    { name ~= "[" ~ index ~ "]"; }
+        if (parent != nil) { name = parent.getPath() ~ "/" ~ name; }
         return name;
     },
 
     getBoolValue : func {
         var val = me.getValue();
         var mytype = me.getType();
-        if((mytype == "STRING" or mytype == "UNSPECIFIED") and val == "false") return 0;
+        if ((mytype == "STRING" or mytype == "UNSPECIFIED") and val == "false") return 0;
         return !!val;
     },
 
@@ -216,7 +216,7 @@ var Node = {
     },
 
     remove : func {
-        if((var p = me.getParent()) == nil) return nil;
+        if ((var p = me.getParent()) == nil) return nil;
         p.removeChild(me.getName(), me.getIndex());
     },
 
@@ -300,7 +300,7 @@ var Node = {
 #
 Node.new = func(values = nil) {
     var result = wrapNode(_new());
-    if(ishash(values)) {
+    if (ishash(values)) {
         result.setValues(values);
     }
     return result;
@@ -316,18 +316,18 @@ Node.new = func(values = nil) {
 #
 Node.getValues = func {
     var children = me.getChildren();
-    if(!size(children)) return me.getValue();
+    if (!size(children)) return me.getValue();
     var val = {};
     var numchld = {};
     foreach(var c; children) {
         var name = c.getName();
-        if(contains(numchld, name)) { var nc = numchld[name]; }
+        if (contains(numchld, name)) { var nc = numchld[name]; }
         else {
             var nc = size(me.getChildren(name));
             numchld[name] = nc;
-            if(nc > 1 and !contains(val, name)) val[name] = [];
+            if (nc > 1 and !contains(val, name)) val[name] = [];
         }
-        if(nc > 1) append(val[name], c.getValues());
+        if (nc > 1) append(val[name], c.getValues());
         else val[name] = c.getValues();
     }
     return val;
@@ -346,13 +346,13 @@ Node.getValues = func {
 #
 Node.initNode = func(path = nil, value = 0, type = nil, force = 0) {
     var prop = me.getNode(path or "", 1);
-    if(prop.getType() != "NONE") value = prop.getValue();
-    if(force) prop.clearValue();
-    if(type == nil) prop.setValue(value);
-    elsif(type == "DOUBLE") prop.setDoubleValue(value);
-    elsif(type == "INT") prop.setIntValue(value);
-    elsif(type == "BOOL") prop.setBoolValue(value);
-    elsif(type == "STRING") prop.setValue("" ~ value);
+    if (prop.getType() != "NONE") value = prop.getValue();
+    if (force) prop.clearValue();
+    if (type == nil) prop.setValue(value);
+    elsif (type == "DOUBLE") prop.setDoubleValue(value);
+    elsif (type == "INT") prop.setIntValue(value);
+    elsif (type == "BOOL") prop.setBoolValue(value);
+    elsif (type == "STRING") prop.setValue("" ~ value);
     else die("initNode(): unsupported type '" ~ type ~ "'");
     return prop;
 }
@@ -363,7 +363,7 @@ Node.initNode = func(path = nil, value = 0, type = nil, force = 0) {
 # to a key for a fun hack.
 #
 var dump = func {
-    if(size(arg) == 1) { var prefix = "";     var node = arg[0]; }
+    if (size(arg) == 1) { var prefix = "";     var node = arg[0]; }
     else               { var prefix = arg[0]; var node = arg[1]; }
 
     var index = node.getIndex();
@@ -371,13 +371,13 @@ var dump = func {
     var name = node.getName();
     var val = node.getValue();
 
-    if(val == nil) { val = "nil"; }
+    if (val == nil) { val = "nil"; }
     name = prefix ~ name;
-    if(index > 0) { name = name ~ "[" ~ index ~ "]"; }
+    if (index > 0) { name = name ~ "[" ~ index ~ "]"; }
     print(name, " {", type, "} = ", val);
 
     # Don't recurse into aliases, lest we get stuck in a loop
-    if(type != "ALIAS") {
+    if (type != "ALIAS") {
         var children = node.getChildren();
         foreach(var c; children) { dump(name ~ "/", c); }
     }
@@ -413,12 +413,12 @@ var copy = func(src, dest, attr = 0) {
     }
     var type = src.getType();
     var val = src.getValue();
-    if(type == "ALIAS" or type == "NONE") return;
-    elsif(type == "BOOL") dest.setBoolValue(val);
-    elsif(type == "INT" or type == "LONG") dest.setIntValue(val);
-    elsif(type == "FLOAT" or type == "DOUBLE") dest.setDoubleValue(val);
+    if (type == "ALIAS" or type == "NONE") return;
+    elsif (type == "BOOL") dest.setBoolValue(val);
+    elsif (type == "INT" or type == "LONG") dest.setIntValue(val);
+    elsif (type == "FLOAT" or type == "DOUBLE") dest.setDoubleValue(val);
     else dest.setValue(val);
-    if(attr) dest.setAttribute(src.getAttribute());
+    if (attr) dest.setAttribute(src.getAttribute());
 }
 
 ##
@@ -426,9 +426,9 @@ var copy = func(src, dest, attr = 0) {
 # array) into Node objects.
 #
 var wrap = func(node) {
-    if(isghost(node)) {
+    if (isghost(node)) {
         return wrapNode(node);
-    } elsif(isvec(node)) {
+    } elsif (isvec(node)) {
         var v = node;
         var n = size(v);
         for(var i=0; i<n; i+=1) { v[i] = wrapNode(v[i]); }
@@ -468,13 +468,13 @@ var getNode = func return call(props.globals.getNode, arg, props.globals);
 #
 var setAll = func(base, child, value) {
     var node = props.globals.getNode(base);
-    if(node == nil) return;
+    if (node == nil) return;
     var name = node.getName();
     node = node.getParent();
-    if(node == nil) return;
+    if (node == nil) return;
     var children = node.getChildren();
     foreach(var c; children)
-        if(c.getName() == name)
+        if (c.getName() == name)
             c.getNode(child, 1).setValue(value);
 }
 
@@ -513,19 +513,19 @@ var createNodeObjectsFromHash = func (property_list, namespace = nil) {
 var nodeList = func {
     var list = [];
     foreach(var a; arg) {
-        if(isa(a, Node))
+        if (isa(a, Node))
             append(list, a);
-        elsif(isscalar(a))
+        elsif (isscalar(a))
             append(list, props.globals.getNode(a, 1));
-        elsif(isvec(a))
+        elsif (isvec(a))
             foreach(var i; a)
                 list ~= nodeList(i);
-        elsif(ishash(a))
+        elsif (ishash(a))
             foreach(var i; keys(a))
                 list ~= nodeList(a[i]);
-        elsif(isfunc(a))
+        elsif (isfunc(a))
             list ~= nodeList(a());
-        elsif(isghost(a) and ghosttype(a) == "prop")
+        elsif (isghost(a) and ghosttype(a) == "prop")
             append(list, wrapNode(a));
         else
             die("nodeList: invalid nil property");
@@ -541,8 +541,8 @@ var nodeList = func {
 # The function returns nil on error.
 #
 var compileCondition = func(p) {
-    if(p == nil) return nil;
-    if(!isa(p, Node)) p = props.globals.getNode(p);
+    if (p == nil) return nil;
+    if (!isa(p, Node)) p = props.globals.getNode(p);
     return _createCondition(p._g);
 }
 
@@ -553,35 +553,35 @@ var compileCondition = func(p) {
 # branch and returns nil on error.
 #
 var condition = func(p) {
-    if(p == nil) return 1;
-    if(!isa(p, Node)) p = props.globals.getNode(p);
+    if (p == nil) return 1;
+    if (!isa(p, Node)) p = props.globals.getNode(p);
     return _cond_and(p)
 }
 
 var _cond_and = func(p) {
     foreach(var c; p.getChildren())
-        if(!_cond(c)) return 0;
+        if (!_cond(c)) return 0;
     return 1;
 }
 
 var _cond_or = func(p) {
     foreach(var c; p.getChildren())
-        if(_cond(c)) return 1;
+        if (_cond(c)) return 1;
     return 0;
 }
 
 var _cond = func(p) {
     var n = p.getName();
-    if(n == "or") return _cond_or(p);
-    if(n == "and") return _cond_and(p);
-    if(n == "not") return !_cond_and(p);
-    if(n == "equals") return _cond_cmp(p, 0);
-    if(n == "not-equals") return !_cond_cmp(p, 0);
-    if(n == "less-than") return _cond_cmp(p, -1);
-    if(n == "greater-than") return _cond_cmp(p, 1);
-    if(n == "less-than-equals") return !_cond_cmp(p, 1);
-    if(n == "greater-than-equals") return !_cond_cmp(p, -1);
-    if(n == "property") return !!getprop(p.getValue());
+    if (n == "or") return _cond_or(p);
+    if (n == "and") return _cond_and(p);
+    if (n == "not") return !_cond_and(p);
+    if (n == "equals") return _cond_cmp(p, 0);
+    if (n == "not-equals") return !_cond_cmp(p, 0);
+    if (n == "less-than") return _cond_cmp(p, -1);
+    if (n == "greater-than") return _cond_cmp(p, 1);
+    if (n == "less-than-equals") return !_cond_cmp(p, 1);
+    if (n == "greater-than-equals") return !_cond_cmp(p, -1);
+    if (n == "property") return !!getprop(p.getValue());
     logprint(LOG_ALERT, "condition: invalid operator ", n);
     dump(p);
     return nil;
@@ -589,17 +589,17 @@ var _cond = func(p) {
 
 var _cond_cmp = func(p, op) {
     var left = p.getChild("property", 0, 0);
-    if(left != nil) { left = getprop(left.getValue()); }
+    if (left != nil) { left = getprop(left.getValue()); }
     else {
         logprint(LOG_ALERT, "condition: no left value");
         dump(p);
         return nil;
     }
     var right = p.getChild("property", 1, 0);
-    if(right != nil) { right = getprop(right.getValue()); }
+    if (right != nil) { right = getprop(right.getValue()); }
     else {
         right = p.getChild("value", 0, 0);
-        if(right != nil) { right = right.getValue(); }
+        if (right != nil) { right = right.getValue(); }
         else {
             logprint(LOG_ALERT, "condition: no right value");
             dump(p);
@@ -610,8 +610,8 @@ var _cond_cmp = func(p, op) {
     if (left == nil) left = 0.0;
     if (right == nil) right = 0.0;
 
-    if(op < 0) return left < right;
-    if(op > 0) return left > right;
+    if (op < 0) return left < right;
+    if (op > 0) return left > right;
     return left == right;
 }
 
@@ -622,7 +622,7 @@ var _cond_cmp = func(p, op) {
 # in the binding.
 #
 var runBinding = func(node, module = nil) {
-    if(module != nil and node.getNode("module") == nil)
+    if (module != nil and node.getNode("module") == nil)
         node.getNode("module", 1).setValue(module);
     var cmd = node.getNode("command", 1).getValue() or "null";
     condition(node.getNode("condition")) ? fgcommand(cmd, node) : 0;
@@ -702,13 +702,13 @@ var UpdateManager =
                 me.localType = me.property.getType();
                 if (me.localType == "INT" or me.localType == "LONG" or me.localType == "FLOAT" or me.localType == "DOUBLE")
                   {
-                      if(me.lastval == nil or math.abs(me.lastval - me.curval) >= me.delta)
+                      if (me.lastval == nil or math.abs(me.lastval - me.curval) >= me.delta)
                         {
                             me.lastval = me.curval;
                             me.changed(me.curval);
                         }
                   }
-                else if(me.lastval == nil or me.lastval != me.curval)
+                else if (me.lastval == nil or me.lastval != me.curval)
                   {
                       me.lastval = me.curval;
                       me.changed(me.curval);
