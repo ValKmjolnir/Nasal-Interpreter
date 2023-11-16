@@ -44,6 +44,7 @@ In `std/example_module.nas`:
 
 ```nasal
 var a = 1;
+var _a = 1;
 ```
 
 We analysed this file and generated the ast.
@@ -54,16 +55,20 @@ So the result is equal to:
 
 ```nasal
 var example_module = func {
+
     # source code begin
     var a = 1;
+    var _a = 1;
+
     # source code end
     return {
         a: a
+        # _a begins with underscore so do not export
     };
 }();
 ```
 
-## Import a module
+## Import a Module
 
 Here is a module named `std/example_module.nas`:
 
