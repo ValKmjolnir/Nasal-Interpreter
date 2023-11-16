@@ -147,7 +147,7 @@ var mandelbrot=
 
 var (ptr,pc,paper,inum)=(0,0,[],[]);
 
-var character=func() {
+var character = func() {
     var res=[];
     setsize(res,256);
     forindex(var i;res) {
@@ -159,55 +159,55 @@ var character=func() {
 var (add,mov,jt,jf,in,out)=(
     func {paper[ptr]+=inum[pc];},
     func {ptr+=inum[pc];},
-    func {if(paper[ptr])pc=inum[pc];},
-    func {if(!paper[ptr])pc=inum[pc];},
+    func {if (paper[ptr])pc=inum[pc];},
+    func {if (!paper[ptr])pc=inum[pc];},
     func {paper[ptr]=input()[0];},
     func {print(character[paper[ptr]]);}
 );
 
-var codegen=func(program) {
+var codegen = func(program) {
     var (code,stack)=([],[]);
     var len=size(program);
     for(var i=0;i<len;i+=1) {
         var c=chr(program[i]);
-        if(c=='+' or c=='-') {
+        if (c=='+' or c=='-') {
             append(code,add);
             append(inum,0);
             for(;i<len;i+=1) {
-                if(chr(program[i])=='+') {
+                if (chr(program[i])=='+') {
                     inum[-1]+=1;
-                } elsif(chr(program[i])=='-') {
+                } elsif (chr(program[i])=='-') {
                     inum[-1]-=1;
-                } elsif(chr(program[i])!='\n') {
+                } elsif (chr(program[i])!='\n') {
                     i-=1;
                     break;
                 }
             }
-        } elsif(c=='<' or c=='>') {
+        } elsif (c=='<' or c=='>') {
             append(code,mov);
             append(inum,0);
-            for(;i<len;i+=1){
-                if(chr(program[i])=='>') {
+            for(;i<len;i+=1) {
+                if (chr(program[i])=='>') {
                     inum[-1]+=1;
-                } elsif(chr(program[i])=='<') {
+                } elsif (chr(program[i])=='<') {
                     inum[-1]-=1;
-                } elsif(chr(program[i])!='\n') {
+                } elsif (chr(program[i])!='\n') {
                     i-=1;
                     break;
                 }
             }
-        } elsif(c==',') {
+        } elsif (c==',') {
             append(code,in);
             append(inum,0);
-        } elsif(c=='.') {
+        } elsif (c=='.') {
             append(code,out);
             append(inum,0);
-        } elsif(c=='[') {
+        } elsif (c=='[') {
             append(code,jf);
             append(inum,0);
             append(stack,size(code)-1);
-        } elsif(c==']') {
-            if(!size(stack)) {
+        } elsif (c==']') {
+            if (!size(stack)) {
                 die("lack [");
             }
             var label=pop(stack);
@@ -217,7 +217,7 @@ var codegen=func(program) {
         }
     }
 
-    if(size(stack)) {
+    if (size(stack)) {
         die("lack "~size(stack)~" \"]\"");
         return;
     }
@@ -225,9 +225,9 @@ var codegen=func(program) {
     return code;
 }
 
-var bf=func(program) {
+var bf = func(program) {
     # enable ANSI escape sequence
-    if(os.platform()=="windows") {
+    if (os.platform()=="windows") {
         system("color");
     }
 

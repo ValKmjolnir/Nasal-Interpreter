@@ -1,22 +1,22 @@
 var ResultTrait={
-    Ok:func(val){
+    Ok:func(val) {
         me.ok=val;
         me.flag=0;
         return me;
     },
-    Err:func(info){
+    Err:func(info) {
         me.err=info;
         me.flag=1;
         return me;
     },
-    unwrap:func(){
-        if(me.flag)
+    unwrap:func() {
+        if (me.flag)
             die(me.err);
         return me.ok;
     }
 };
 
-var Result=func(){
+var Result = func() {
     return{
         ok:nil,
         err:"",
@@ -25,11 +25,11 @@ var Result=func(){
     };
 };
 
-var a=func(){
+var a = func() {
     return Result().Ok("hello world");
 }
 
-var b=func(){
+var b = func() {
     return Result().Err("exception test");
 }
 

@@ -10,7 +10,7 @@ var new = func() {
                 prev: nil,
                 next: nil
             };
-            if(end!=nil) {
+            if (end!=nil) {
                 end.next = tmp;
                 tmp.prev = end;
                 end = tmp;

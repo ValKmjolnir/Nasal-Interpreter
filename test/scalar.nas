@@ -55,19 +55,19 @@ var hash_4={
 };
 
 # function
-var func_1=func(){return 1;}
-var prt=func(x){println(x);return nil;}
-var func_with_dynamic_id=func(a,b,c,d...){return [a,b,c,d];}
-var func_with_lack_para=func(a,b,c=1,d=2){return a+b+c+d;}
-var func_with_func_para=func(a,f){return f(a);}
+var func_1 = func() {return 1;}
+var prt = func(x) {println(x);return nil;}
+var func_with_dynamic_id = func(a,b,c,d...) {return [a,b,c,d];}
+var func_with_lack_para = func(a,b,c=1,d=2) {return a+b+c+d;}
+var func_with_func_para = func(a,f) {return f(a);}
 
 func_with_lack_para(a:1, b:2, c:3, d:4);
 func_with_lack_para(b:1, c:3, a:4, d:1);
 func_with_func_para(f:func prt,a:1);
-func_with_func_para(func func_1(),func(x){return x;});
+func_with_func_para(func func_1(),func(x) {return x;});
 func_with_func_para(func_1(),func_1);
 prt(func func_1());
-var test_func_ret_number_1=func func_1(); # 1
+var test_func_ret_number_1 = func func_1(); # 1
 var test_func_ret_number_2=func_1();      # 1
 
 var source={
@@ -77,7 +77,7 @@ var source={
 println(source['member_2']());
 println(source.member_2());
 
-var test_func=func{return 1;}
+var test_func = func {return 1;}
 println(func test_func());       # 1
 println(test_func());            # 1
 println(func test_func);         # nothing
@@ -87,9 +87,9 @@ println(({str:"what?"})["str"]); # what?
 println(({str:"what?"}).str);    # what?
 
 # lambda
-(func(x){return x>0? x:0;})(12);
-(func{println("hello world");})();
-(((func(x){return 1.0/math.exp(x);})))(0);
+(func(x) {return x>0? x:0;})(12);
+(func {println("hello world");})();
+(((func(x) {return 1.0/math.exp(x);})))(0);
 
 # flexible definition & assignment
 var (r,g,b)=[0x00,0x10,0xff];
@@ -127,7 +127,7 @@ nil and 1+7*8;
 {num:0}.num or {what_is_the_secret_of_universe:42}["what_is_the_secret_of_universe"];
 "123"~"456"-123456*2/2;
 
-var hash={str:'hello',f:func{return me.str;}};
+var hash={str:'hello',f:func {return me.str;}};
 var tmp_f=hash.f;
 hash=1;
 println(tmp_f());
@@ -136,16 +136,16 @@ println(tmp_f());
 # when generating local_scope for function f,
 # nasal_gc will not count 'me' as one reference of this hash
 
-var h1={str:'hello',f:func{return me.str;}};
-var h2={str:'world',f:func{return nil;}};
+var h1={str:'hello',f:func {return me.str;}};
+var h2={str:'world',f:func {return nil;}};
 h2.f=h1.f;
 println(h2.f());
 # print 'world'
 # this means that 'me' in hash's functions
 # only points to the hash this function belongs to
 
-var f1=func(){println(1);return 1;}
-var f2=func(){println(2);return 0;}
+var f1 = func() {println(1);return 1;}
+var f2 = func() {println(2);return 0;}
 f1() or f2();
 # print '1'
 # this means that when using 'or' or 'and',
@@ -158,12 +158,12 @@ print(
     abs(1),'\n',
     abs(-1),'\n',
     systime(),'\n',
-    isfunc(func{}),' ',isfunc([]),'\n',
+    isfunc(func {}),' ',isfunc([]),'\n',
     ishash({}),' ',ishash([]),'\n',
     isint(114.514),' ',isint(114514),'\n',
     isnum("0xaa55"),' ',isnum("?"),'\n',
     isscalar(0.618),' ',isscalar("hello"),' ',isscalar([]),'\n',
-    isstr("hello"),' ',isstr(func{}),'\n',
+    isstr("hello"),' ',isstr(func {}),'\n',
     isvec([]),' ',isvec("[]"),'\n',
     vecindex([0,1,2,3,4],1),'\n',
     vecindex(["apple","banana"],"apple")!=nil,'\n'
@@ -179,13 +179,13 @@ println(find("x", "abcdef"));  # prints -1
 println(find("cd", "abcdef")); # prints 2
 
 var a={
-    new: func(x=0){
+    new: func(x=0) {
         return {
             x:x,
             parents:[a]
         };
     },
-    new2: func(x=0){
+    new2: func(x=0) {
         return {
             x:x,
             parents:a
@@ -195,17 +195,17 @@ var a={
 println(isa(a.new(),a)); # 1
 println(isa(a.new2(),a));# 0
 
-var a=[10,-10,0,1,2,3,nil,"string","hello",[],[0,1,2,3],{},{a:0,b:1,c:2},func{}];
+var a=[10,-10,0,1,2,3,nil,"string","hello",[],[0,1,2,3],{},{a:0,b:1,c:2},func {}];
 println("type\tsize\tnum\tsrc");
-foreach(var i;a){
+foreach(var i;a) {
     println(typeof(i),'\t',size(i),'\t',num(i),'\t',i);
 }
-foreach(i;a){
+foreach(i;a) {
     ;
 }
 println(runtime.argv());
 println(globals.arg);
-func(a,b,c,d="只有红茶可以吗"){
+func(a,b,c,d="只有红茶可以吗") {
     println(a,' ',b,' ',c,' ',d,' true: ',true,' false: ',false);
 }(c:1919810,b:514,a:114);
 
@@ -220,7 +220,7 @@ var h=split(" ","0 1 2 3 4 5 6 7 8 9 a b c d e f");
 for(var a=0;a<16;a+=1) {
     for(var b=0;b<16;b+=1) {
         for(var c=0;c<16;c+=1) {
-            if(((a^b)&c)!=(a^(b&c))) {
+            if (((a^b)&c)!=(a^(b&c))) {
                 println("0x"~h[a],"^","0x"~h[b],"&","0x"~h[c]," -> a^b&c = 0x",h[a^b&c]," (a^b)&c = 0x",h[(a^b)&c]," a^(b&c) = 0x",h[(a^(b&c))]);
             }
         }

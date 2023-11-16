@@ -1,34 +1,34 @@
 # queue.nas
 # valkmjolnir 2021/3/31
-var new=func(){
-    var (begin,end)=(nil,nil);
+var new = func() {
+    var (begin, end) = (nil, nil);
     return{
-        push:func(elem){
+        push: func(elem) {
             var new_node={
                 elem:elem,
                 next:nil
             };
-            if(begin==nil)
+            if (begin==nil)
                 begin=end=new_node;
-            else{
+            else {
                 end.next=new_node;
                 end=new_node;
             }
         },
-        pop:func(){
-            if(begin!=nil)
+        pop: func() {
+            if (begin!=nil)
                 begin=begin.next;
-            if(begin==nil)
+            if (begin==nil)
                 end=nil;
         },
-        front:func(){
-            if(begin!=nil)
+        front: func() {
+            if (begin!=nil)
                 return begin.elem;
         },
-        clear:func(){
+        clear: func() {
             begin=end=nil;
         },
-        empty:func(){
+        empty: func() {
             return begin==nil;
         }
     };

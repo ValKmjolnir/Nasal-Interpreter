@@ -1,4 +1,4 @@
-# __开发历史记录__
+# __开发日志__
 
 ![buringship](./pic/burningship.png)
 

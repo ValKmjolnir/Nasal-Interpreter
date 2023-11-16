@@ -13,7 +13,7 @@ var ss = json.stringify({
     emptyvec:[],
     empty:[{}],
     empty_an:[[[[[[{}]]]]]],
-    function:func(){}
+    function:func() {}
 });
 
 println(ss, "\n");
@@ -30,7 +30,7 @@ var ss = json.stringify([{
     emptyhash:{},
     emptyvec:[],
     empty_an:[[[[[{}]]]]],
-    function:func(){}
+    function:func() {}
 }]);
 
 println(ss, "\n");
