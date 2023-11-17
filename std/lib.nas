@@ -1,7 +1,6 @@
 # lib.nas
 # 2019 ValKmjolnir
 use std.math;
-use std.string;
 use std.io;
 use std.os;
 use std.unix;
