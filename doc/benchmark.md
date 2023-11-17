@@ -111,14 +111,9 @@ In 2022/2/17 update we added `\e` into the lexer. And the `bfcolored.nas` uses t
 
 ![mandelbrot](../doc/pic/mandelbrot.png)
 
-## More nasal generated pictures
+## More Nasal Generated Pictures
 
-![mandelbrotset](../doc/pic/mandelbrotset.png)
-
-![mandelbrotset_reverse](../doc/pic/mandelbrotset_reverse.png)
-
-![burningship](../doc/pic/burningship.png)
-
-![burningship_reverse](../doc/pic/burningship_reverse.png)
-
-![feigenbaum](../doc/pic/feigenbaum.png)
+|Mandelbrot Set|Mandelbrot Set|Burning Ship|Burning Ship|Feigenbaum|
+|:----:|:----:|:----:|:----:|:----:|
+|[mandelbrotset.nas](../test/mandelbrotset.nas)|[mandelbrotset.nas](../test/mandelbrotset.nas)|[burningship.nas](../test/burningship.nas)|[burningship.nas](../test/burningship.nas)|[feigenbaum.nas](../test/feigenbaum.nas)|
+|![mandelbrotset](../doc/pic/mandelbrotset.png)|![mandelbrotset_reverse](../doc/pic/mandelbrotset_reverse.png)|![burningship](../doc/pic/burningship.png)|![burningship_reverse](../doc/pic/burningship_reverse.png)|![feigenbaum](../doc/pic/feigenbaum.png)|
