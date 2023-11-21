@@ -42,18 +42,37 @@ var quick_fib(var* args, usize size, gc* ngc) {
 
 const auto ghost_for_test = "ghost_for_test";
 
+struct ghost_obj {
+    u32 number = 0;
+    var test_string = nil;
+};
+
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
-    delete static_cast<u32*>(ptr);
+    delete static_cast<ghost_obj*>(ptr);
     std::cout << "    delete 0x" << std::hex;
     std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
     std::cout << "}\n";
 }
 
+void ghost_for_test_gc_marker(void* ptr, std::vector<var>* bfs_queue) {
+    std::cout << "ghost_for_test::mark (0x";
+    std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+    bfs_queue->push_back(static_cast<ghost_obj*>(ptr)->test_string);
+    std::cout << "    mark 0x" << std::hex;
+    std::cout << reinterpret_cast<u64>(ptr) << std::dec << "->test_string;\n";
+    std::cout << "}\n";
+}
+
 var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_obj);
-    res.ghost().set(ghost_for_test, ghost_for_test_destructor, new u32);
+    res.ghost().set(
+        ghost_for_test,
+        ghost_for_test_destructor,
+        ghost_for_test_gc_marker,
+        new ghost_obj
+    );
     return res;
 }
 
@@ -64,8 +83,10 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     f64 num = args[1].num();
-    *(reinterpret_cast<u32*>(res.ghost().pointer)) = static_cast<u32>(num);
-    std::cout << "set_new_ghost: successfully set ghost = " << num << "\n";
+    reinterpret_cast<ghost_obj*>(res.ghost().pointer)->number = static_cast<u32>(num);
+    std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";
+    reinterpret_cast<ghost_obj*>(res.ghost().pointer)->test_string = ngc->newstr("just for test");
+    std::cout << "set_new_ghost: successfully set ghost.test_string = just for test\n";
     return nil;
 }
 
@@ -75,8 +96,11 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
-    std::cout << "print_new_ghost: " << res.ghost() << " result = "
-              << *((u32*)res.ghost().pointer) << "\n";
+    std::cout << "print_new_ghost: " << res.ghost() << " number = "
+              << reinterpret_cast<ghost_obj*>(res.ghost().pointer)->number
+              << " test_string = "
+              << reinterpret_cast<ghost_obj*>(res.ghost().pointer)->test_string
+              << "\n";
     return nil;
 }
 

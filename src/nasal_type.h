@@ -166,21 +166,24 @@ public:
 struct nas_ghost {
 private:
     using destructor = void (*)(void*);
+    using marker = void (*)(void*, std::vector<var>*);
 
 public:
     std::string type_name;
     destructor destructor_function;
+    marker gc_mark_function;
     void* pointer;
 
 public:
     nas_ghost():
-        type_name(""), destructor_function(nullptr), pointer(nullptr) {}
-    ~nas_ghost() {clear();}
-    void set(const std::string&, destructor, void*);
+        type_name(""), destructor_function(nullptr),
+        gc_mark_function(nullptr), pointer(nullptr) {}
+    ~nas_ghost() { clear(); }
+    void set(const std::string&, destructor, marker, void*);
     void clear();
 
 public:
-    const auto& get_ghost_name() const {return type_name;}
+    const auto& get_ghost_name() const { return type_name; }
 };
 
 struct context {

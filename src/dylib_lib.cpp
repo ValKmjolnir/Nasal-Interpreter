@@ -47,6 +47,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     library_object.ghost().set(
         dynamic_library_type_name,
         dynamic_library_destructor,
+        nullptr,
         dynamic_library_pointer
     );
     return_hash.hash().elems["lib"] = library_object;
@@ -75,6 +76,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
         auto function_object = ngc->alloc(vm_obj);
         function_object.ghost().set(
             function_address_type_name,
+            nullptr,
             nullptr,
             function_pointer
         );
