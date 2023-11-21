@@ -105,9 +105,11 @@ void nas_func::clear() {
 void nas_ghost::set(
     const std::string& ghost_type_name,
     destructor destructor_pointer,
+    marker gc_marker_pointer,
     void* ghost_pointer) {
     type_name = ghost_type_name;
     destructor_function = destructor_pointer;
+    gc_mark_function = gc_marker_pointer;
     pointer = ghost_pointer;
 }
 
@@ -129,6 +131,7 @@ void nas_ghost::clear() {
     type_name = "";
     pointer = nullptr;
     destructor_function = nullptr;
+    gc_mark_function = nullptr;
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {

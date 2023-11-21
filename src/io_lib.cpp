@@ -60,7 +60,7 @@ var builtin_open(context* ctx, gc* ngc) {
     }
     var return_object = ngc->alloc(vm_obj);
     return_object.ghost().set(
-        file_type_name, filehandle_destructor, file_descriptor
+        file_type_name, filehandle_destructor, nullptr, file_descriptor
     );
     return return_object;
 }
@@ -206,19 +206,19 @@ var builtin_eof(context* ctx, gc* ngc) {
 
 var builtin_stdin(context* ctx, gc* ngc) {
     auto file_descriptor = ngc->alloc(vm_obj);
-    file_descriptor.ghost().set(file_type_name, nullptr, stdin);
+    file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdin);
     return file_descriptor;
 }
 
 var builtin_stdout(context* ctx, gc* ngc) {
     auto file_descriptor = ngc->alloc(vm_obj);
-    file_descriptor.ghost().set(file_type_name, nullptr, stdout);
+    file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdout);
     return file_descriptor;
 }
 
 var builtin_stderr(context* ctx, gc* ngc) {
     auto file_descriptor = ngc->alloc(vm_obj);
-    file_descriptor.ghost().set(file_type_name, nullptr, stderr);
+    file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stderr);
     return file_descriptor;
 }
 

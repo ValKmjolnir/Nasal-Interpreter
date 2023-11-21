@@ -47,8 +47,17 @@ var print_ghost = func(object) {
 var test_ghost = func() {
     var ghost = create_ghost();
     print_ghost(nil); # err
+    print("\n");
     print_ghost(ghost); # random
+    print("\n");
     set_ghost(nil, 114); # err
+    print("\n");
     set_ghost(ghost, 114); # success
+    print("\n");
+    for(var i = 0; i<256; i+=1) {
+        var temp = []; # try to trigger gc
+    }
+    print("\n");
     print_ghost(ghost); # 114
+    print("\n");
 }

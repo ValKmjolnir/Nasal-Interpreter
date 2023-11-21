@@ -106,6 +106,7 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
         case vm_hash: mark_hash(bfs_queue, value.hash()); break;
         case vm_func: mark_func(bfs_queue, value.func()); break;
         case vm_upval: mark_upval(bfs_queue, value.upval()); break;
+        case vm_obj: mark_ghost(bfs_queue, value.ghost()); break;
         case vm_co: mark_co(bfs_queue, value.co()); break;
         case vm_map: mark_map(bfs_queue, value.map()); break;
         default: break;
@@ -145,6 +146,13 @@ void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
             bfs_queue.push_back(i);
         }
     }
+}
+
+void gc::mark_ghost(std::vector<var>& bfs_queue, nas_ghost& ghost) {
+    if (!ghost.gc_mark_function) {
+        return;
+    }
+    ghost.gc_mark_function(ghost.pointer, &bfs_queue);
 }
 
 void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {

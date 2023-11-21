@@ -78,6 +78,7 @@ private:
     void mark_hash(std::vector<var>&, nas_hash&);
     void mark_func(std::vector<var>&, nas_func&);
     void mark_upval(std::vector<var>&, nas_upval&);
+    void mark_ghost(std::vector<var>&, nas_ghost&);
     void mark_co(std::vector<var>&, nas_co&);
     void mark_map(std::vector<var>&, nas_map&);
     void sweep();

@@ -73,7 +73,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
     }
 #endif
     var ret = ngc->alloc(vm_obj);
-    ret.ghost().set(dir_type_name, dir_entry_destructor, p);
+    ret.ghost().set(dir_type_name, dir_entry_destructor, nullptr, p);
     return ret;
 }
 
