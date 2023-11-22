@@ -91,7 +91,7 @@ void vm::value_info(var& val) {
         case vm_type::vm_hash: std::clog << "| hash | <0x" << std::hex << p
                                          << std::dec << "> {" << val.hash().size()
                                          << " val}"; break;
-        case vm_type::vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
+        case vm_type::vm_ghost:std::clog << "| obj  | <0x" << std::hex << p
                                          << "> obj:0x"
                                          << reinterpret_cast<u64>(val.ghost().pointer)
                                          << std::dec; break;
@@ -139,9 +139,7 @@ void vm::function_call_trace() {
     // generate trace back
     std::stack<const nas_func*> functions;
     for(var* i = bottom; i<=top; ++i) {
-        if (i->type==vm_type::vm_func &&
-            i-1>=bottom &&
-            (i-1)->type==vm_type::vm_ret) {
+        if (i->is_func() && i-1>=bottom && (i-1)->is_ret()) {
             functions.push(&i->func());
         }
     }
@@ -179,7 +177,7 @@ void vm::trace_back() {
     // generate trace back
     std::stack<u32> ret;
     for(var* i = ctx.stack; i<=ctx.top; ++i) {
-        if (i->type==vm_type::vm_ret && i->ret()!=0) {
+        if (i->is_ret() && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
@@ -239,7 +237,7 @@ void vm::register_info() {
 }
 
 void vm::global_state() {
-    if (!global_size || global[0].type==vm_type::vm_none) {
+    if (!global_size || global[0].is_none()) {
         return;
     }
     std::clog << "\nglobal (0x" << std::hex
@@ -269,7 +267,7 @@ void vm::local_state() {
 }
 
 void vm::upvalue_state() {
-    if (ctx.funcr.type==vm_type::vm_nil || ctx.funcr.func().upval.empty()) {
+    if (ctx.funcr.is_nil() || ctx.funcr.func().upval.empty()) {
         return;
     }
     std::clog << "\nupvalue\n";
@@ -329,7 +327,7 @@ std::string vm::report_special_call_lack_arguments(
         argument_list[i.second-1] = i.first;
     }
     for(const auto& key : argument_list) {
-        if (local[func.keys.at(key)].type==vm_type::vm_none) {
+        if (local[func.keys.at(key)].is_none()) {
             result += key + ", ";
         } else {
             result += key + "[get], ";
@@ -380,7 +378,7 @@ std::string vm::type_name_string(const var& value) const {
         case vm_type::vm_hash: return "hash";
         case vm_type::vm_func: return "function";
         case vm_type::vm_upval: return "upvalue";
-        case vm_type::vm_obj: return "ghost type";
+        case vm_type::vm_ghost: return "ghost type";
         case vm_type::vm_co: return "coroutine";
         case vm_type::vm_map: return "namespace";
     }

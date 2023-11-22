@@ -58,7 +58,7 @@ var builtin_open(context* ctx, gc* ngc) {
     if (!file_descriptor) {
         return nas_err("io::open", "failed to open file <" + name.str() + ">");
     }
-    var return_object = ngc->alloc(vm_type::vm_obj);
+    var return_object = ngc->alloc(vm_type::vm_ghost);
     return_object.ghost().set(
         file_type_name, filehandle_destructor, nullptr, file_descriptor
     );
@@ -205,19 +205,19 @@ var builtin_eof(context* ctx, gc* ngc) {
 }
 
 var builtin_stdin(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdin);
     return file_descriptor;
 }
 
 var builtin_stdout(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdout);
     return file_descriptor;
 }
 
 var builtin_stderr(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stderr);
     return file_descriptor;
 }

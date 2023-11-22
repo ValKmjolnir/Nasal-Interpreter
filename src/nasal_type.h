@@ -21,7 +21,7 @@ enum class vm_type: u8 {
     vm_hash,     // hashmap(dict)
     vm_func,     // function(lambda)
     vm_upval,    // upvalue
-    vm_obj,      // ghost type
+    vm_ghost,    // ghost type
     vm_co,       // coroutine
     vm_map,      // for globals and namespaces
     /* mark type range */
@@ -78,6 +78,7 @@ public:
     std::string to_str();
     bool object_check(const std::string&);
 
+public:
     // create new var object
     static var none();
     static var nil();
@@ -87,6 +88,7 @@ public:
     static var gcobj(nas_val*);
     static var addr(var*);
 
+public:
     // get value
     var* addr();
     u32 ret() const;
@@ -100,6 +102,22 @@ public:
     nas_ghost& ghost();
     nas_co& co();
     nas_map& map();
+
+public:
+    bool is_none() const { return type==vm_type::vm_none; }
+    bool is_cnt() const { return type==vm_type::vm_cnt; }
+    bool is_addr() const { return type==vm_type::vm_addr; }
+    bool is_ret() const { return type==vm_type::vm_ret; }
+    bool is_nil() const { return type==vm_type::vm_nil; }
+    bool is_num() const { return type==vm_type::vm_num; }
+    bool is_str() const { return type==vm_type::vm_str; }
+    bool is_vec() const { return type==vm_type::vm_vec; }
+    bool is_hash() const { return type==vm_type::vm_hash; }
+    bool is_func() const { return type==vm_type::vm_func; }
+    bool is_upval() const { return type==vm_type::vm_upval; }
+    bool is_ghost() const { return type==vm_type::vm_ghost; }
+    bool is_coroutine() const { return type==vm_type::vm_co; }
+    bool is_map() const { return type==vm_type::vm_map; }
 };
 
 struct nas_vec {

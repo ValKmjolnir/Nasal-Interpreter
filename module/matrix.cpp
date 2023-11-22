@@ -21,7 +21,7 @@ var nas_vec3(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_add(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -34,7 +34,7 @@ var nas_vec2_add(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_sub(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -47,7 +47,7 @@ var nas_vec2_sub(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_mult(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -60,7 +60,7 @@ var nas_vec2_mult(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_div(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -73,7 +73,7 @@ var nas_vec2_div(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_neg(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=2)
@@ -85,7 +85,7 @@ var nas_vec2_neg(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_norm(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=2)
@@ -100,7 +100,7 @@ var nas_vec2_norm(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_len(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=2)
@@ -111,7 +111,7 @@ var nas_vec2_len(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec2_dot(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -121,7 +121,7 @@ var nas_vec2_dot(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_add(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -135,7 +135,7 @@ var nas_vec3_add(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_sub(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -149,7 +149,7 @@ var nas_vec3_sub(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_mult(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -163,7 +163,7 @@ var nas_vec3_mult(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_div(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;
@@ -177,7 +177,7 @@ var nas_vec3_div(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_neg(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -190,7 +190,7 @@ var nas_vec3_neg(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_norm(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -207,7 +207,7 @@ var nas_vec3_norm(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_len(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -219,7 +219,7 @@ var nas_vec3_len(var* args, usize size, gc* ngc) {
 }
 
 var nas_rotate_x(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -233,7 +233,7 @@ var nas_rotate_x(var* args, usize size, gc* ngc) {
 }
 
 var nas_rotate_y(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -247,7 +247,7 @@ var nas_rotate_y(var* args, usize size, gc* ngc) {
 }
 
 var nas_rotate_z(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec)
+    if (!args[0].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     if (v0.size()!=3)
@@ -261,7 +261,7 @@ var nas_rotate_z(var* args, usize size, gc* ngc) {
 }
 
 var nas_vec3_dot(var* args, usize size, gc* ngc) {
-    if (args[0].type!=vm_type::vm_vec || args[1].type!=vm_type::vm_vec)
+    if (!args[0].is_vec() || !args[1].is_vec())
         return nil;
     auto& v0 = args[0].vec().elems;
     auto& v1 = args[1].vec().elems;

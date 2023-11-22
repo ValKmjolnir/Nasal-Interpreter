@@ -48,11 +48,11 @@ var builtin_fld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (str.type!=vm_type::vm_str || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->unmutable) {
         return nas_err("bits::fld", "\"str\" must be mutable string");
     }
-    if (startbit.type!=vm_type::vm_num || length.type!=vm_type::vm_num) {
-        return nas_err("bits::fld", "\"startbit\",\"len\" must be number");
+    if (!startbit.is_num() || !length.is_num()) {
+        return nas_err("bits::fld", "\"startbit\", \"len\" must be number");
     }
     u32 bit = static_cast<u32>(startbit.num());
     u32 len = static_cast<u32>(length.num());
@@ -78,10 +78,10 @@ var builtin_sfld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (str.type!=vm_type::vm_str || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->unmutable) {
         return nas_err("bits::sfld", "\"str\" must be mutable string");
     }
-    if (startbit.type!=vm_type::vm_num || length.type!=vm_type::vm_num) {
+    if (!startbit.is_num() || !length.is_num()) {
         return nas_err("bits::sfld", "\"startbit\",\"len\" must be number");
     }
     u32 bit = static_cast<u32>(startbit.num());
@@ -112,12 +112,10 @@ var builtin_setfld(context* ctx, gc* ngc) {
     auto startbit = local[2];
     auto length = local[3];
     auto value = local[4];
-    if (str.type!=vm_type::vm_str || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->unmutable) {
         return nas_err("bits::setfld", "\"str\" must be mutable string");
     }
-    if (startbit.type!=vm_type::vm_num ||
-        length.type!=vm_type::vm_num ||
-        value.type!=vm_type::vm_num) {
+    if (!startbit.is_num() || !length.is_num() || !value.is_num()) {
         return nas_err("bits::setfld",
             "\"startbit\", \"len\", \"val\" must be number"
         );
@@ -141,7 +139,7 @@ var builtin_setfld(context* ctx, gc* ngc) {
 
 var builtin_buf(context* ctx, gc* ngc) {
     var length = ctx->localr[1];
-    if (length.type!=vm_type::vm_num || length.num()<=0) {
+    if (!length.is_num() || length.num()<=0) {
         return nas_err("bits::buf", "\"len\" must be number greater than 0");
     }
     var str = ngc->alloc(vm_type::vm_str);

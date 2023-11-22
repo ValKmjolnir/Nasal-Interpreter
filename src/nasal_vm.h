@@ -195,9 +195,9 @@ public:
 };
 
 inline bool vm::cond(var& val) {
-    if (val.type==vm_type::vm_num) {
+    if (val.is_num()) {
         return val.num();
-    } else if (val.type==vm_type::vm_str) {
+    } else if (val.is_str()) {
         const f64 num = str2num(val.str().c_str());
         return std::isnan(num)? !val.str().empty():num;
     }
@@ -268,7 +268,7 @@ inline void vm::o_newf() {
         func.upval = ctx.funcr.func().upval;
         // function created in the same local scope shares one closure
         // so this size & stk setting has no problem
-        var upval = (ctx.upvalr.type==vm_type::vm_nil)?
+        var upval = (ctx.upvalr.is_nil())?
             ngc.alloc(vm_type::vm_upval):
             ctx.upvalr;
         upval.upval().size = ctx.funcr.func().local_size;
@@ -363,7 +363,7 @@ inline void vm::o_mul() {op_calc(*);}
 inline void vm::o_div() {op_calc(/);}
 inline void vm::o_lnk() {
     // concat two vectors into one
-    if (ctx.top[-1].type==vm_type::vm_vec && ctx.top[0].type==vm_type::vm_vec) {
+    if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
         ngc.temp = ngc.alloc(vm_type::vm_vec);
         for(auto i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
@@ -498,11 +498,11 @@ inline void vm::o_meq() {
 inline void vm::o_eq() {
     var val2 = ctx.top[0];
     var val1 = (--ctx.top)[0];
-    if (val1.type==vm_type::vm_nil && val2.type==vm_type::vm_nil) {
+    if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = one;
-    } else if (val1.type==vm_type::vm_str && val2.type==vm_type::vm_str) {
+    } else if (val1.is_str() && val2.is_str()) {
         ctx.top[0] = (val1.str()==val2.str())? one:zero;
-    } else if ((val1.type==vm_type::vm_num || val2.type==vm_type::vm_num)
+    } else if ((val1.is_num() || val2.is_num())
         && val1.type!=vm_type::vm_nil && val2.type!=vm_type::vm_nil) {
         ctx.top[0] = (val1.to_num()==val2.to_num())? one:zero;
     } else {
@@ -513,11 +513,11 @@ inline void vm::o_eq() {
 inline void vm::o_neq() {
     var val2 = ctx.top[0];
     var val1 = (--ctx.top)[0];
-    if (val1.type==vm_type::vm_nil && val2.type==vm_type::vm_nil) {
+    if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = zero;
-    } else if (val1.type==vm_type::vm_str && val2.type==vm_type::vm_str) {
+    } else if (val1.is_str() && val2.is_str()) {
         ctx.top[0] = (val1.str()!=val2.str())? one:zero;
-    } else if ((val1.type==vm_type::vm_num || val2.type==vm_type::vm_num)
+    } else if ((val1.is_num() || val2.is_num())
         && val1.type!=vm_type::vm_nil && val2.type!=vm_type::vm_nil) {
         ctx.top[0] = (val1.to_num()!=val2.to_num())? one:zero;
     } else {
@@ -613,25 +613,25 @@ inline void vm::o_upval() {
 inline void vm::o_callv() {
     var val = ctx.top[0];
     var vec = (--ctx.top)[0];
-    if (vec.type==vm_type::vm_vec) {
+    if (vec.is_vec()) {
         ctx.top[0] = vec.vec().get_value(val.to_num());
-        if (ctx.top[0].type==vm_type::vm_none) {
+        if (ctx.top[0].is_none()) {
             die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
         }
-    } else if (vec.type==vm_type::vm_hash) {
+    } else if (vec.is_hash()) {
         if (val.type!=vm_type::vm_str) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
         ctx.top[0] = vec.hash().get_value(val.str());
-        if (ctx.top[0].type==vm_type::vm_none) {
+        if (ctx.top[0].is_none()) {
             die(report_key_not_found(val.str(), vec.hash()));
             return;
-        } else if (ctx.top[0].type==vm_type::vm_func) {
+        } else if (ctx.top[0].is_func()) {
             ctx.top[0].func().local[0] = val; // 'me'
         }
-    } else if (vec.type==vm_type::vm_str) {
+    } else if (vec.is_str()) {
         const auto& str = vec.str();
         i32 num = val.to_num();
         i32 len = str.length();
@@ -642,13 +642,13 @@ inline void vm::o_callv() {
         ctx.top[0] = var::num(
             static_cast<f64>(static_cast<u8>(str[num>=0? num:num+len]))
         );
-    } else if (vec.type==vm_type::vm_map) {
+    } else if (vec.is_map()) {
         if (val.type!=vm_type::vm_str) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
         ctx.top[0] = vec.map().get_value(val.str());
-        if (ctx.top[0].type==vm_type::vm_none) {
+        if (ctx.top[0].is_none()) {
             die("cannot find symbol \""+val.str()+"\"");
             return;
         }
@@ -666,7 +666,7 @@ inline void vm::o_callvi() {
     }
     // cannot use operator[],because this may cause overflow
     (++ctx.top)[0] = val.vec().get_value(imm[ctx.pc]);
-    if (ctx.top[0].type==vm_type::vm_none) {
+    if (ctx.top[0].is_none()) {
         die(report_out_of_range(imm[ctx.pc], val.vec().size()));
         return;
     }
@@ -679,17 +679,17 @@ inline void vm::o_callh() {
         return;
     }
     const auto& str = const_string[imm[ctx.pc]];
-    if (val.type==vm_type::vm_hash) {
+    if (val.is_hash()) {
         ctx.top[0] = val.hash().get_value(str);
     } else {
         ctx.top[0] = val.map().get_value(str);
     }
-    if (ctx.top[0].type==vm_type::vm_none) {
-        val.type==vm_type::vm_hash? 
+    if (ctx.top[0].is_none()) {
+        val.is_hash()? 
             die(report_key_not_found(str, val.hash())):
             die("cannot find symbol \"" + str + "\"");
         return;
-    } else if (ctx.top[0].type==vm_type::vm_func) {
+    } else if (ctx.top[0].is_func()) {
         ctx.top[0].func().local[0] = val; // 'me'
     }
 }
@@ -715,7 +715,7 @@ inline void vm::o_callfv() {
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
     const u32 parameter_size = func.parameter_size-1;
-    if (argc<parameter_size && func.local[argc+1].type==vm_type::vm_none) {
+    if (argc<parameter_size && func.local[argc+1].is_none()) {
         die(report_lack_arguments(argc, func));
         return;
     }
@@ -799,7 +799,7 @@ inline void vm::o_callfh() {
         const auto& key = i.first;
         if (hash.count(key)) {
             local[i.second] = hash.at(key);
-        } else if (local[i.second].type==vm_type::vm_none) {
+        } else if (local[i.second].is_none()) {
             lack_arguments_flag = true;
         }
     }
@@ -831,7 +831,7 @@ inline void vm::o_callb() {
     ctx.top[0] = result;
 
     // if get none, this means errors occurred when calling this native function
-    if (ctx.top[0].type==vm_type::vm_none) {
+    if (ctx.top[0].is_none()) {
         die("error occurred in native function");
         return;
     }
@@ -858,7 +858,7 @@ inline void vm::o_slcend() {
 inline void vm::o_slc() {
     var val = (ctx.top--)[0];
     var res = ctx.top[-1].vec().get_value(val.to_num());
-    if (res.type==vm_type::vm_none) {
+    if (res.is_none()) {
         die(report_out_of_range(val.to_num(), ctx.top[-1].vec().size()));
         return;
     }
@@ -876,12 +876,12 @@ inline void vm::o_slc2() {
     i32 num1 = val1.to_num();
     i32 num2 = val2.to_num();
     i32 size = ref.size();
-    if (type1==vm_type::vm_nil && type2==vm_type::vm_nil) {
+    if (val1.is_nil() && val2.is_nil()) {
         num1 = 0;
         num2 = size-1;
-    } else if (type1==vm_type::vm_nil && type2!=vm_type::vm_nil) {
+    } else if (val1.is_nil() && type2!=vm_type::vm_nil) {
         num1 = num2<0? -size:0;
-    } else if (type1!=vm_type::vm_nil && type2==vm_type::vm_nil) {
+    } else if (type1!=vm_type::vm_nil && val2.is_nil()) {
         num2 = num1<0? -1:size-1;
     }
 
@@ -926,13 +926,13 @@ inline void vm::o_mupval() {
 inline void vm::o_mcallv() {
     var val = ctx.top[0];     // index
     var vec = (--ctx.top)[0]; // mcall vector, reserved on stack to avoid gc
-    if (vec.type==vm_type::vm_vec) {
+    if (vec.is_vec()) {
         ctx.memr = vec.vec().get_memory(val.to_num());
         if (!ctx.memr) {
             die(report_out_of_range(val.to_num(), vec.vec().size()));
             return;
         }
-    } else if (vec.type==vm_type::vm_hash) { // do mcallh but use the mcallv way
+    } else if (vec.is_hash()) { // do mcallh but use the mcallv way
         if (val.type!=vm_type::vm_str) {
             die("must use string as the key but get "+type_name_string(val));
             return;
@@ -944,7 +944,7 @@ inline void vm::o_mcallv() {
             ref.elems[str] = nil;
             ctx.memr = ref.get_memory(str);
         }
-    } else if (vec.type==vm_type::vm_map) {
+    } else if (vec.is_map()) {
         if (val.type!=vm_type::vm_str) {
             die("must use string as the key but get "+type_name_string(val));
             return;
@@ -968,7 +968,7 @@ inline void vm::o_mcallh() {
         return;
     }
     const auto& str = const_string[imm[ctx.pc]];
-    if (hash.type==vm_type::vm_map) {
+    if (hash.is_map()) {
         ctx.memr = hash.map().get_memory(str);
         if (!ctx.memr) {
             die("cannot find symbol \"" + str + "\"");
@@ -1013,7 +1013,7 @@ inline void vm::o_ret() {
     ctx.top[0] = ret; // rewrite func with returned value
 
     // synchronize upvalue
-    if (up.type==vm_type::vm_upval) {
+    if (up.is_upval()) {
         auto& upval = up.upval();
         auto size = func.func().local_size;
         upval.on_stack = false;
