@@ -8,7 +8,7 @@ var builtin_logprint(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto level = local[1];
     auto elems = local[2];
-    if (elems.type!=vm_vec) {
+    if (elems.type!=vm_type::vm_vec) {
         return nas_err("fg_env::logprint", "received argument is not vector.");
     }
     std::ofstream out("fgfs.log", std::ios::app);

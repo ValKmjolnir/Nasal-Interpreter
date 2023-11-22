@@ -10,7 +10,7 @@ void filehandle_destructor(void* ptr) {
 
 var builtin_readfile(context* ctx, gc* ngc) {
     auto filename = ctx->localr[1];
-    if (filename.type!=vm_str) {
+    if (filename.type!=vm_type::vm_str) {
         return nas_err("io::readfile", "\"filename\" must be string");
     }
     std::ifstream in(filename.str(), std::ios::binary);
@@ -25,7 +25,7 @@ var builtin_fout(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto filename = local[1];
     auto source = local[2];
-    if (filename.type!=vm_str) {
+    if (filename.type!=vm_type::vm_str) {
         return nas_err("io::fout", "\"filename\" must be string");
     }
     std::ofstream out(filename.str());
@@ -38,7 +38,7 @@ var builtin_fout(context* ctx, gc* ngc) {
 
 var builtin_exists(context* ctx, gc* ngc) {
     auto filename = ctx->localr[1];
-    if (filename.type!=vm_str) {
+    if (filename.type!=vm_type::vm_str) {
         return zero;
     }
     return access(filename.str().c_str(), F_OK)!=-1? one:zero;
@@ -48,17 +48,17 @@ var builtin_open(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto name = local[1];
     auto mode = local[2];
-    if (name.type!=vm_str) {
+    if (name.type!=vm_type::vm_str) {
         return nas_err("io::open", "\"filename\" must be string");
     }
-    if (mode.type!=vm_str) {
+    if (mode.type!=vm_type::vm_str) {
         return nas_err("io::open", "\"mode\" must be string");
     }
     auto file_descriptor = fopen(name.str().c_str(), mode.str().c_str());
     if (!file_descriptor) {
         return nas_err("io::open", "failed to open file <" + name.str() + ">");
     }
-    var return_object = ngc->alloc(vm_obj);
+    var return_object = ngc->alloc(vm_type::vm_obj);
     return_object.ghost().set(
         file_type_name, filehandle_destructor, nullptr, file_descriptor
     );
@@ -82,10 +82,10 @@ var builtin_read(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::read", "not a valid filehandle");
     }
-    if (buffer.type!=vm_str || buffer.val.gcobj->unmutable) {
+    if (buffer.type!=vm_type::vm_str || buffer.val.gcobj->unmutable) {
         return nas_err("io::read", "\"buf\" must be mutable string");
     }
-    if (length.type!=vm_num) {
+    if (length.type!=vm_type::vm_num) {
         return nas_err("io::read", "\"len\" must be number");
     }
     if (length.num()<=0 || length.num()>=(1<<30)) {
@@ -112,7 +112,7 @@ var builtin_write(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::write", "not a valid filehandle");
     }
-    if (source.type!=vm_str) {
+    if (source.type!=vm_type::vm_str) {
         return nas_err("io::write", "\"str\" must be string");
     }
     return var::num(static_cast<f64>(fwrite(
@@ -151,7 +151,7 @@ var builtin_readln(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::readln", "not a valid filehandle");
     }
-    auto result = ngc->alloc(vm_str);
+    auto result = ngc->alloc(vm_type::vm_str);
     char c;
     while((c = fgetc(static_cast<FILE*>(file_descriptor.ghost().pointer)))!=EOF) {
         if (c=='\r') {
@@ -170,14 +170,14 @@ var builtin_readln(context* ctx, gc* ngc) {
 
 var builtin_stat(context* ctx, gc* ngc) {
     auto name = ctx->localr[1];
-    if (name.type!=vm_str) {
+    if (name.type!=vm_type::vm_str) {
         return nas_err("io::stat", "\"filename\" must be string");
     }
     struct stat buffer;
     if (stat(name.str().c_str(), &buffer)<0) {
         return nas_err("io::stat", "failed to open file <" + name.str() + ">");
     }
-    auto result = ngc->alloc(vm_vec);
+    auto result = ngc->alloc(vm_type::vm_vec);
     result.vec().elems = {
         var::num(static_cast<f64>(buffer.st_dev)),
         var::num(static_cast<f64>(buffer.st_ino)),
@@ -205,19 +205,19 @@ var builtin_eof(context* ctx, gc* ngc) {
 }
 
 var builtin_stdin(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdin);
     return file_descriptor;
 }
 
 var builtin_stdout(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdout);
     return file_descriptor;
 }
 
 var builtin_stderr(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_obj);
+    auto file_descriptor = ngc->alloc(vm_type::vm_obj);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stderr);
     return file_descriptor;
 }

@@ -15,7 +15,7 @@ void dynamic_library_destructor(void* pointer) {
 
 var builtin_dlopen(context* ctx, gc* ngc) {
     auto dlname = ctx->localr[1];
-    if (dlname.type!=vm_str) {
+    if (dlname.type!=vm_type::vm_str) {
         return nas_err("dylib::dlopen", "\"libname\" must be string");
     }
 
@@ -42,8 +42,8 @@ var builtin_dlopen(context* ctx, gc* ngc) {
             "cannot open dynamic lib <" + dlname.str() + ">"
         );
     }
-    auto return_hash = ngc->temp = ngc->alloc(vm_hash);
-    auto library_object = ngc->alloc(vm_obj);
+    auto return_hash = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    auto library_object = ngc->alloc(vm_type::vm_obj);
     library_object.ghost().set(
         dynamic_library_type_name,
         dynamic_library_destructor,
@@ -73,7 +73,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     }
     for(u32 i = 0; table[i].name; ++i) {
         auto function_pointer = reinterpret_cast<void*>(table[i].fd);
-        auto function_object = ngc->alloc(vm_obj);
+        auto function_object = ngc->alloc(vm_type::vm_obj);
         function_object.ghost().set(
             function_address_type_name,
             nullptr,

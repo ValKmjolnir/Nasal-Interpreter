@@ -84,29 +84,29 @@ private:
     void sweep();
 
 public:
-    void extend(u8);
+    void extend(const vm_type);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
     void info() const;
-    var alloc(const u8);
+    var alloc(const vm_type);
     void context_change(nas_co*);
     void context_reserve();
 
 public:
     var newstr(char c) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = c;
         return s;
     }
 
     var newstr(const char* buff) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = std::string(buff);
         return s;
     }
 
     var newstr(const std::string& buff) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = buff;
         return s;
     }

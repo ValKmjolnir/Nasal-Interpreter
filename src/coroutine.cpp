@@ -18,7 +18,7 @@ var builtin_cocreate(context* ctx, gc* ngc) {
     // +-------------+
     // ```
     auto coroutine_function = ctx->localr[1];
-    if (coroutine_function.type!=vm_func) {
+    if (coroutine_function.type!=vm_type::vm_func) {
         return nas_err(
             "coroutine::create",
             "must use a function to create coroutine"
@@ -30,7 +30,7 @@ var builtin_cocreate(context* ctx, gc* ngc) {
             "cannot create another coroutine in a coroutine"
         );
     }
-    auto coroutine_object = ngc->alloc(vm_co);
+    auto coroutine_object = ngc->alloc(vm_type::vm_co);
     auto& coroutine = coroutine_object.co();
     coroutine.ctx.pc = coroutine_function.func().entry-1;
 
@@ -69,7 +69,7 @@ var builtin_coresume(context* ctx, gc* ngc) {
     auto main_local_frame = ctx->localr;
     auto coroutine_object = main_local_frame[1];
     // return nil if is not a coroutine object or coroutine exited
-    if (coroutine_object.type!=vm_co ||
+    if (coroutine_object.type!=vm_type::vm_co ||
         coroutine_object.co().status==nas_co::status::dead) {
         return nil;
     }
@@ -80,7 +80,7 @@ var builtin_coresume(context* ctx, gc* ngc) {
     // fetch coroutine's stack top and return
     // then coroutine's stack top will catch this return value
     // so the coroutine's stack top in fact is not changed
-    if (ngc->running_context->top[0].type==vm_ret) {
+    if (ngc->running_context->top[0].type==vm_type::vm_ret) {
         // when first calling this coroutine, the stack top must be vm_ret
         return ngc->running_context->top[0];
     }
@@ -114,7 +114,7 @@ var builtin_coyield(context* ctx, gc* ngc) {
 
 var builtin_costatus(context* ctx, gc* ngc) {
     auto coroutine_object = ctx->localr[1];
-    if (coroutine_object.type!=vm_co) {
+    if (coroutine_object.type!=vm_type::vm_co) {
         return ngc->newstr("error");
     }
     switch(coroutine_object.co().status) {
