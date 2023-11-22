@@ -44,14 +44,14 @@ var nas_hash::get_value(const std::string& key) {
     }
     var ret = var::none();
     var val = elems.at("parents");
-    if (val.type!=vm_vec) {
+    if (val.type!=vm_type::vm_vec) {
         return ret;
     }
     for(auto& i : val.vec().elems) {
-        if (i.type==vm_hash) {
+        if (i.type==vm_type::vm_hash) {
             ret = i.hash().get_value(key);
         }
-        if (ret.type!=vm_none) {
+        if (ret.type!=vm_type::vm_none) {
             return ret;
         }
     }
@@ -66,11 +66,11 @@ var* nas_hash::get_memory(const std::string& key) {
     }
     var* addr = nullptr;
     var val = elems.at("parents");
-    if (val.type!=vm_vec) {
+    if (val.type!=vm_type::vm_vec) {
         return addr;
     }
     for(auto& i : val.vec().elems) {
-        if (i.type==vm_hash) {
+        if (i.type==vm_type::vm_hash) {
             addr = i.hash().get_memory(key);
         }
         if (addr) {
@@ -195,57 +195,57 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
     return out;
 }
 
-nas_val::nas_val(u8 val_type) {
+nas_val::nas_val(vm_type val_type) {
     mark = gc_status::collected;
     type = val_type;
     unmutable = 0;
     switch(val_type) {
-        case vm_str:   ptr.str = new std::string; break;
-        case vm_vec:   ptr.vec = new nas_vec;     break;
-        case vm_hash:  ptr.hash = new nas_hash;   break;
-        case vm_func:  ptr.func = new nas_func;   break;
-        case vm_upval: ptr.upval = new nas_upval; break;
-        case vm_obj:   ptr.obj = new nas_ghost;   break;
-        case vm_co:    ptr.co = new nas_co;       break;
-        case vm_map:   ptr.map = new nas_map;     break;
+        case vm_type::vm_str:   ptr.str = new std::string; break;
+        case vm_type::vm_vec:   ptr.vec = new nas_vec;     break;
+        case vm_type::vm_hash:  ptr.hash = new nas_hash;   break;
+        case vm_type::vm_func:  ptr.func = new nas_func;   break;
+        case vm_type::vm_upval: ptr.upval = new nas_upval; break;
+        case vm_type::vm_obj:   ptr.obj = new nas_ghost;   break;
+        case vm_type::vm_co:    ptr.co = new nas_co;       break;
+        case vm_type::vm_map:   ptr.map = new nas_map;     break;
     }
 }
 
 nas_val::~nas_val() {
     switch(type) {
-        case vm_str:  delete ptr.str;   break;
-        case vm_vec:  delete ptr.vec;   break;
-        case vm_hash: delete ptr.hash;  break;
-        case vm_func: delete ptr.func;  break;
-        case vm_upval:delete ptr.upval; break;
-        case vm_obj:  delete ptr.obj;   break;
-        case vm_co:   delete ptr.co;    break;
-        case vm_map:  delete ptr.map;   break;
+        case vm_type::vm_str:  delete ptr.str;   break;
+        case vm_type::vm_vec:  delete ptr.vec;   break;
+        case vm_type::vm_hash: delete ptr.hash;  break;
+        case vm_type::vm_func: delete ptr.func;  break;
+        case vm_type::vm_upval:delete ptr.upval; break;
+        case vm_type::vm_obj:  delete ptr.obj;   break;
+        case vm_type::vm_co:   delete ptr.co;    break;
+        case vm_type::vm_map:  delete ptr.map;   break;
     }
-    type=vm_nil;
+    type = vm_type::vm_nil;
 }
 
 void nas_val::clear() {
     switch(type) {
-        case vm_str:  ptr.str->clear();        break;
-        case vm_vec:  ptr.vec->elems.clear();  break;
-        case vm_hash: ptr.hash->elems.clear(); break;
-        case vm_func: ptr.func->clear();       break;
-        case vm_upval:ptr.upval->clear();      break;
-        case vm_obj:  ptr.obj->clear();        break;
-        case vm_co:   ptr.co->clear();         break;
-        case vm_map:  ptr.map->clear();        break;
+        case vm_type::vm_str:  ptr.str->clear();        break;
+        case vm_type::vm_vec:  ptr.vec->elems.clear();  break;
+        case vm_type::vm_hash: ptr.hash->elems.clear(); break;
+        case vm_type::vm_func: ptr.func->clear();       break;
+        case vm_type::vm_upval:ptr.upval->clear();      break;
+        case vm_type::vm_obj:  ptr.obj->clear();        break;
+        case vm_type::vm_co:   ptr.co->clear();         break;
+        case vm_type::vm_map:  ptr.map->clear();        break;
     }
 }
 
 f64 var::to_num() {
-    return type!=vm_str? val.num:str2num(str().c_str());
+    return type!=vm_type::vm_str? val.num:str2num(str().c_str());
 }
 
 std::string var::to_str() {
-    if (type==vm_str) {
+    if (type==vm_type::vm_str) {
         return str();
-    } else if (type==vm_num) {
+    } else if (type==vm_type::vm_num) {
         std::string tmp = std::to_string(num());
         tmp.erase(tmp.find_last_not_of('0')+1, std::string::npos);
         tmp.erase(tmp.find_last_not_of('.')+1, std::string::npos);
@@ -256,42 +256,42 @@ std::string var::to_str() {
 
 std::ostream& operator<<(std::ostream& out, var& ref) {
     switch(ref.type) {
-        case vm_none: out << "undefined";   break;
-        case vm_nil:  out << "nil";         break;
-        case vm_num:  out << ref.val.num;   break;
-        case vm_str:  out << ref.str();     break;
-        case vm_vec:  out << ref.vec();     break;
-        case vm_hash: out << ref.hash();    break;
-        case vm_func: out << "func(..) {..}"; break;
-        case vm_obj:  out << ref.ghost();   break;
-        case vm_co:   out << ref.co();      break;
-        case vm_map:  out << ref.map();     break;
+        case vm_type::vm_none: out << "undefined";   break;
+        case vm_type::vm_nil:  out << "nil";         break;
+        case vm_type::vm_num:  out << ref.val.num;   break;
+        case vm_type::vm_str:  out << ref.str();     break;
+        case vm_type::vm_vec:  out << ref.vec();     break;
+        case vm_type::vm_hash: out << ref.hash();    break;
+        case vm_type::vm_func: out << "func(..) {..}"; break;
+        case vm_type::vm_obj:  out << ref.ghost();   break;
+        case vm_type::vm_co:   out << ref.co();      break;
+        case vm_type::vm_map:  out << ref.map();     break;
     }
     return out;
 }
 
 bool var::object_check(const std::string& name) {
-    return type==vm_obj && ghost().type_name==name && ghost().pointer;
+    return type==vm_type::vm_obj && ghost().type_name==name && ghost().pointer;
 }
 
 var var::none() {
-    return {vm_none, static_cast<u32>(0)};
+    return {vm_type::vm_none, static_cast<u32>(0)};
 }
 
 var var::nil() {
-    return {vm_nil, static_cast<u32>(0)};
+    return {vm_type::vm_nil, static_cast<u32>(0)};
 }
 
 var var::ret(u32 pc) {
-    return {vm_ret, pc};
+    return {vm_type::vm_ret, pc};
 }
 
 var var::cnt(i64 n) {
-    return {vm_cnt, n};
+    return {vm_type::vm_cnt, n};
 }
 
 var var::num(f64 n) {
-    return {vm_num, n};
+    return {vm_type::vm_num, n};
 }
 
 var var::gcobj(nas_val* p) {
@@ -299,7 +299,7 @@ var var::gcobj(nas_val* p) {
 }
 
 var var::addr(var* p) {
-    return {vm_addr, p};
+    return {vm_type::vm_addr, p};
 }
 
 var* var::addr() {

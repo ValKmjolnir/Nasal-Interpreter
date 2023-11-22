@@ -7,7 +7,7 @@
 
 namespace nasal {
 
-enum vm_type:u8 {
+enum class vm_type: u8 {
     /* none-gc object */
     vm_none = 0, // error type
     vm_cnt,      // counter for forindex/foreach loop
@@ -29,7 +29,9 @@ enum vm_type:u8 {
 };
 
 // size of gc object type
-const u32 gc_type_size = vm_type_size_max-vm_str;
+const u32 gc_type_size =
+    static_cast<u32>(vm_type::vm_type_size_max) -
+    static_cast<u32>(vm_type::vm_str);
 
 // basic types
 struct nas_vec;   // vector
@@ -45,7 +47,7 @@ struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
 public:
-    u8 type = vm_none;
+    vm_type type = vm_type::vm_none;
     union {
         u32 ret;
         i64 cnt;
@@ -55,11 +57,11 @@ public:
     } val;
 
 private:
-    var(u8 t, u32 pc) {type = t; val.ret = pc;}
-    var(u8 t, i64 ct) {type = t; val.cnt = ct;}
-    var(u8 t, f64 n) {type = t; val.num = n;}
-    var(u8 t, var* p) {type = t; val.addr = p;}
-    var(u8 t, nas_val* p) {type = t; val.gcobj = p;}
+    var(vm_type t, u32 pc) {type = t; val.ret = pc;}
+    var(vm_type t, i64 ct) {type = t; val.cnt = ct;}
+    var(vm_type t, f64 n) {type = t; val.num = n;}
+    var(vm_type t, var* p) {type = t; val.addr = p;}
+    var(vm_type t, nas_val* p) {type = t; val.gcobj = p;}
 
 public:
     var() = default;
@@ -237,7 +239,7 @@ struct nas_val {
     };
 
     gc_status mark;
-    u8 type; // value type
+    vm_type type; // value type
     u8 unmutable; // used to mark if a string is unmutable
     union {
         std::string* str;
@@ -250,7 +252,7 @@ struct nas_val {
         nas_map*   map;
     } ptr;
 
-    nas_val(u8);
+    nas_val(vm_type);
     ~nas_val();
     void clear();
 };

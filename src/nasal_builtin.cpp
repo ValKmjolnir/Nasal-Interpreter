@@ -33,7 +33,7 @@ var builtin_append(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var vec = local[1];
     var elem = local[2];
-    if (vec.type!=vm_vec) {
+    if (vec.type!=vm_type::vm_vec) {
         return nas_err("append", "\"vec\" must be vector");
     }
     auto& v = vec.vec().elems;
@@ -47,10 +47,10 @@ var builtin_setsize(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var vec = local[1];
     var size = local[2];
-    if (vec.type!=vm_vec) {
+    if (vec.type!=vm_type::vm_vec) {
         return nas_err("setsize", "\"vec\" must be vector");
     }
-    if (size.type!=vm_num || size.num()<0) {
+    if (size.type!=vm_type::vm_num || size.num()<0) {
         return nil;
     }
     vec.vec().elems.resize(static_cast<i64>(size.num()), nil);
@@ -59,7 +59,7 @@ var builtin_setsize(context* ctx, gc* ngc) {
 
 var builtin_system(context* ctx, gc* ngc) {
     auto str = ctx->localr[1];
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return var::num(-1);
     }
     return var::num(static_cast<f64>(system(str.str().c_str())));
@@ -68,8 +68,8 @@ var builtin_system(context* ctx, gc* ngc) {
 var builtin_input(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var end = local[1];
-    var ret = ngc->alloc(vm_str);
-    if (end.type!=vm_str || end.str().length()>1 || !end.str().length()) {
+    var ret = ngc->alloc(vm_type::vm_str);
+    if (end.type!=vm_type::vm_str || end.str().length()>1 || !end.str().length()) {
         std::cin >> ret.str();
     } else {
         std::getline(std::cin, ret.str(), end.str()[0]);
@@ -81,17 +81,17 @@ var builtin_split(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var delimeter = local[1];
     var str = local[2];
-    if (delimeter.type!=vm_str) {
+    if (delimeter.type!=vm_type::vm_str) {
         return nas_err("split", "\"separator\" must be string");
     }
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return nas_err("split", "\"str\" must be string");
     }
     const auto& deli = delimeter.str();
     const auto& s = str.str();
 
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_vec);
+    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
 
     if (!deli.length()) {
@@ -119,10 +119,10 @@ var builtin_split(context* ctx, gc* ngc) {
 
 var builtin_rand(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type!=vm_num && val.type!=vm_nil) {
+    if (val.type!=vm_type::vm_num && val.type!=vm_type::vm_nil) {
         return nas_err("rand", "\"seed\" must be nil or number");
     }
-    if (val.type==vm_num) {
+    if (val.type==vm_type::vm_num) {
         srand(static_cast<u32>(val.num()));
         return nil;
     }
@@ -137,7 +137,7 @@ var builtin_id(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     std::stringstream ss;
     ss << "0";
-    if (val.type>vm_num) {
+    if (val.type>vm_type::vm_num) {
         ss << "x" << std::hex;
         ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
     }
@@ -146,7 +146,7 @@ var builtin_id(context* ctx, gc* ngc) {
 
 var builtin_int(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type!=vm_num && val.type!=vm_str) {
+    if (val.type!=vm_type::vm_num && val.type!=vm_type::vm_str) {
         return nil;
     }
     return var::num(static_cast<f64>(static_cast<i32>(val.to_num())));
@@ -164,10 +164,10 @@ var builtin_ceil(context* ctx, gc* ngc) {
 
 var builtin_num(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type==vm_num) {
+    if (val.type==vm_type::vm_num) {
         return val;
     }
-    if (val.type!=vm_str) {
+    if (val.type!=vm_type::vm_str) {
         return nil;
     }
     auto res = val.to_num();
@@ -179,7 +179,7 @@ var builtin_num(context* ctx, gc* ngc) {
 
 var builtin_pop(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type!=vm_vec) {
+    if (val.type!=vm_type::vm_vec) {
         return nas_err("pop", "\"vec\" must be vector");
     }
     auto& vec = val.vec().elems;
@@ -199,18 +199,18 @@ var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     f64 num = 0;
     switch(val.type) {
-        case vm_num:  num = val.num(); break;
-        case vm_str:  num = val.str().length(); break;
-        case vm_vec:  num = val.vec().size(); break;
-        case vm_hash: num = val.hash().size(); break;
-        case vm_map:  num = val.map().mapper.size(); break;
+        case vm_type::vm_num:  num = val.num(); break;
+        case vm_type::vm_str:  num = val.str().length(); break;
+        case vm_type::vm_vec:  num = val.vec().size(); break;
+        case vm_type::vm_hash: num = val.hash().size(); break;
+        case vm_type::vm_map:  num = val.map().mapper.size(); break;
     }
     return var::num(num);
 }
 
 var builtin_time(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type!=vm_num) {
+    if (val.type!=vm_type::vm_num) {
         return nas_err("time", "\"begin\" must be number");
     }
     auto begin = static_cast<time_t>(val.num());
@@ -221,7 +221,7 @@ var builtin_contains(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var hash = local[1];
     var key = local[2];
-    if (hash.type!=vm_hash || key.type!=vm_str) {
+    if (hash.type!=vm_type::vm_hash || key.type!=vm_type::vm_str) {
         return zero;
     }
     return hash.hash().elems.count(key.str())? one:zero;
@@ -231,10 +231,10 @@ var builtin_delete(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var hash = local[1];
     var key = local[2];
-    if (hash.type!=vm_hash) {
+    if (hash.type!=vm_type::vm_hash) {
         return nas_err("delete", "\"hash\" must be hash");
     }
-    if (key.type!=vm_str) {
+    if (key.type!=vm_type::vm_str) {
         return nil;
     }
     if (hash.hash().elems.count(key.str())) {
@@ -245,13 +245,13 @@ var builtin_delete(context* ctx, gc* ngc) {
 
 var builtin_keys(context* ctx, gc* ngc) {
     auto hash = ctx->localr[1];
-    if (hash.type!=vm_hash && hash.type!=vm_map) {
+    if (hash.type!=vm_type::vm_hash && hash.type!=vm_type::vm_map) {
         return nas_err("keys", "\"hash\" must be hash");
     }
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_vec);
+    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
-    if (hash.type==vm_hash) {
+    if (hash.type==vm_type::vm_hash) {
         for(const auto& iter : hash.hash().elems) {
             vec.push_back(ngc->newstr(iter.first));
         }
@@ -281,16 +281,16 @@ var builtin_find(context* ctx, gc* ngc) {
 
 var builtin_type(context* ctx, gc* ngc) {
     switch(ctx->localr[1].type) {
-        case vm_none: return ngc->newstr("undefined");
-        case vm_nil: return ngc->newstr("nil");
-        case vm_num: return ngc->newstr("num");
-        case vm_str: return ngc->newstr("str");
-        case vm_vec: return ngc->newstr("vec");
-        case vm_hash: return ngc->newstr("hash");
-        case vm_func: return ngc->newstr("func");
-        case vm_obj: return ngc->newstr("obj");
-        case vm_co: return ngc->newstr("coroutine");
-        case vm_map: return ngc->newstr("namespace");
+        case vm_type::vm_none: return ngc->newstr("undefined");
+        case vm_type::vm_nil: return ngc->newstr("nil");
+        case vm_type::vm_num: return ngc->newstr("num");
+        case vm_type::vm_str: return ngc->newstr("str");
+        case vm_type::vm_vec: return ngc->newstr("vec");
+        case vm_type::vm_hash: return ngc->newstr("hash");
+        case vm_type::vm_func: return ngc->newstr("func");
+        case vm_type::vm_obj: return ngc->newstr("obj");
+        case vm_type::vm_co: return ngc->newstr("coroutine");
+        case vm_type::vm_map: return ngc->newstr("namespace");
     }
     return nil;
 }
@@ -300,13 +300,13 @@ var builtin_substr(context* ctx, gc* ngc) {
     var str = local[1];
     var beg = local[2];
     var len = local[3];
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return nas_err("substr", "\"str\" must be string");
     }
-    if (beg.type!=vm_num || beg.num()<0) {
+    if (beg.type!=vm_type::vm_num || beg.num()<0) {
         return nas_err("substr", "\"begin\" should be number >= 0");
     }
-    if (len.type!=vm_num || len.num()<0) {
+    if (len.type!=vm_type::vm_num || len.num()<0) {
         return nas_err("substr", "\"length\" should be number >= 0");
     }
     auto begin = static_cast<usize>(beg.num());
@@ -322,7 +322,7 @@ var builtin_streq(context* ctx, gc* ngc) {
     var a = local[1];
     var b = local[2];
     return var::num(static_cast<f64>(
-        (a.type!=vm_str || b.type!=vm_str)? 0:(a.str()==b.str())
+        (a.type!=vm_type::vm_str || b.type!=vm_type::vm_str)? 0:(a.str()==b.str())
     ));
 }
 
@@ -330,10 +330,10 @@ var builtin_left(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return nas_err("left", "\"string\" must be string");
     }
-    if (len.type!=vm_num) {
+    if (len.type!=vm_type::vm_num) {
         return nas_err("left", "\"length\" must be number");
     }
     if (len.num()<0) {
@@ -346,10 +346,10 @@ var builtin_right(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return nas_err("right", "\"string\" must be string");
     }
-    if (len.type!=vm_num) {
+    if (len.type!=vm_type::vm_num) {
         return nas_err("right", "\"length\" must be number");
     }
     i32 length = static_cast<i32>(len.num());
@@ -367,7 +367,7 @@ var builtin_cmp(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var a = local[1];
     var b = local[2];
-    if (a.type!=vm_str || b.type!=vm_str) {
+    if (a.type!=vm_type::vm_str || b.type!=vm_type::vm_str) {
         return nas_err("cmp", "\"a\" and \"b\" must be string");
     }
     return var::num(static_cast<f64>(strcmp(
@@ -410,12 +410,12 @@ var builtin_char(context* ctx, gc* ngc) {
 
 var builtin_values(context* ctx, gc* ngc) {
     auto hash = ctx->localr[1];
-    if (hash.type!=vm_hash && hash.type!=vm_map) {
+    if (hash.type!=vm_type::vm_hash && hash.type!=vm_type::vm_map) {
         return nas_err("values", "\"hash\" must be hash or namespace");
     }
-    auto vec = ngc->alloc(vm_vec);
+    auto vec = ngc->alloc(vm_type::vm_vec);
     auto& v = vec.vec().elems;
-    if (hash.type==vm_hash) {
+    if (hash.type==vm_type::vm_hash) {
         for(auto& i : hash.hash().elems) {
             v.push_back(i.second);
         }
@@ -429,7 +429,7 @@ var builtin_values(context* ctx, gc* ngc) {
 
 var builtin_sleep(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type!=vm_num) {
+    if (val.type!=vm_type::vm_num) {
         return nil;
     }
 #if defined(_WIN32) && !defined(_GLIBCXX_HAS_GTHREADS)
@@ -561,7 +561,7 @@ std::string md5(const std::string& src) {
 
 var builtin_md5(context* ctx, gc* ngc) {
     auto str = ctx->localr[1];
-    if (str.type!=vm_str) {
+    if (str.type!=vm_type::vm_str) {
         return nas_err("md5", "\"str\" must be string");
     }
     return ngc->newstr(md5(str.str()));
@@ -576,31 +576,31 @@ var builtin_millisec(context* ctx, gc* ngc) {
 
 var builtin_gcextend(context* ctx, gc* ngc) {
     auto type = ctx->localr[1];
-    if (type.type!=vm_str) {
+    if (type.type!=vm_type::vm_str) {
         return nil;
     }
     const auto& s = type.str();
     if (s=="str") {
-        ngc->extend(vm_str);
+        ngc->extend(vm_type::vm_str);
     } else if (s=="vec") {
-        ngc->extend(vm_vec);
+        ngc->extend(vm_type::vm_vec);
     } else if (s=="hash") {
-        ngc->extend(vm_hash);
+        ngc->extend(vm_type::vm_hash);
     } else if (s=="func") {
-        ngc->extend(vm_func);
+        ngc->extend(vm_type::vm_func);
     } else if (s=="upval") {
-        ngc->extend(vm_upval);
+        ngc->extend(vm_type::vm_upval);
     } else if (s=="obj") {
-        ngc->extend(vm_obj);
+        ngc->extend(vm_type::vm_obj);
     } else if (s=="co") {
-        ngc->extend(vm_co);
+        ngc->extend(vm_type::vm_co);
     }
     return nil;
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
     auto den = std::chrono::high_resolution_clock::duration::period::den;
-    var res = ngc->alloc(vm_hash);
+    var res = ngc->alloc(vm_type::vm_hash);
 
     double total = 0;
     for(u32 i = 0; i<gc_type_size; ++i) {
@@ -634,7 +634,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
 
 var builtin_ghosttype(context* ctx, gc* ngc) {
     auto arg = ctx->localr[1];
-    if (arg.type!=vm_obj) {
+    if (arg.type!=vm_type::vm_obj) {
         return nas_err("ghosttype", "this is not a ghost object.");
     }
     const auto& name = arg.ghost().get_ghost_name();
