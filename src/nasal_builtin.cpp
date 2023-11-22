@@ -122,7 +122,7 @@ var builtin_rand(context* ctx, gc* ngc) {
     if (val.type!=vm_type::vm_num && val.type!=vm_type::vm_nil) {
         return nas_err("rand", "\"seed\" must be nil or number");
     }
-    if (val.type==vm_type::vm_num) {
+    if (val.is_num()) {
         srand(static_cast<u32>(val.num()));
         return nil;
     }
@@ -164,7 +164,7 @@ var builtin_ceil(context* ctx, gc* ngc) {
 
 var builtin_num(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    if (val.type==vm_type::vm_num) {
+    if (val.is_num()) {
         return val;
     }
     if (val.type!=vm_type::vm_str) {
@@ -251,7 +251,7 @@ var builtin_keys(context* ctx, gc* ngc) {
     // avoid being sweeped
     auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
-    if (hash.type==vm_type::vm_hash) {
+    if (hash.is_hash()) {
         for(const auto& iter : hash.hash().elems) {
             vec.push_back(ngc->newstr(iter.first));
         }
@@ -288,7 +288,7 @@ var builtin_type(context* ctx, gc* ngc) {
         case vm_type::vm_vec: return ngc->newstr("vec");
         case vm_type::vm_hash: return ngc->newstr("hash");
         case vm_type::vm_func: return ngc->newstr("func");
-        case vm_type::vm_obj: return ngc->newstr("obj");
+        case vm_type::vm_ghost: return ngc->newstr("ghost");
         case vm_type::vm_co: return ngc->newstr("coroutine");
         case vm_type::vm_map: return ngc->newstr("namespace");
     }
@@ -415,7 +415,7 @@ var builtin_values(context* ctx, gc* ngc) {
     }
     auto vec = ngc->alloc(vm_type::vm_vec);
     auto& v = vec.vec().elems;
-    if (hash.type==vm_type::vm_hash) {
+    if (hash.is_hash()) {
         for(auto& i : hash.hash().elems) {
             v.push_back(i.second);
         }
@@ -590,8 +590,8 @@ var builtin_gcextend(context* ctx, gc* ngc) {
         ngc->extend(vm_type::vm_func);
     } else if (s=="upval") {
         ngc->extend(vm_type::vm_upval);
-    } else if (s=="obj") {
-        ngc->extend(vm_type::vm_obj);
+    } else if (s=="ghost") {
+        ngc->extend(vm_type::vm_ghost);
     } else if (s=="co") {
         ngc->extend(vm_type::vm_co);
     }
@@ -634,7 +634,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
 
 var builtin_ghosttype(context* ctx, gc* ngc) {
     auto arg = ctx->localr[1];
-    if (arg.type!=vm_type::vm_obj) {
+    if (!arg.is_ghost()) {
         return nas_err("ghosttype", "this is not a ghost object.");
     }
     const auto& name = arg.ghost().get_ghost_name();

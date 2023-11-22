@@ -106,7 +106,7 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
         case vm_type::vm_hash: mark_hash(bfs_queue, value.hash()); break;
         case vm_type::vm_func: mark_func(bfs_queue, value.func()); break;
         case vm_type::vm_upval: mark_upval(bfs_queue, value.upval()); break;
-        case vm_type::vm_obj: mark_ghost(bfs_queue, value.ghost()); break;
+        case vm_type::vm_ghost: mark_ghost(bfs_queue, value.ghost()); break;
         case vm_type::vm_co: mark_co(bfs_queue, value.co()); break;
         case vm_type::vm_map: mark_map(bfs_queue, value.map()); break;
         default: break;
@@ -218,7 +218,7 @@ void gc::init(
     strs.resize(constant_strings.size());
     for(u32 i = 0; i<strs.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
-        if (strs[i].type==vm_type::vm_str && strs[i].str()==constant_strings[i]) {
+        if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
             continue;
         }
         strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
@@ -230,7 +230,7 @@ void gc::init(
     env_argv.resize(argv.size());
     for(usize i = 0; i<argv.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
-        if (env_argv[i].type==vm_type::vm_str && env_argv[i].str()==argv[i]) {
+        if (env_argv[i].is_str() && env_argv[i].str()==argv[i]) {
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
@@ -271,7 +271,7 @@ void gc::info() const {
         "hashmap",
         "function",
         "upvalue",
-        "object",
+        "ghost",
         "coroutine",
         "namespace",
         nullptr

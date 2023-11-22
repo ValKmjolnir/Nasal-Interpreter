@@ -40,7 +40,7 @@ var builtin_fork(context* ctx, gc* ngc) {
 var builtin_waitpid(context* ctx, gc* ngc) {
     auto pid = ctx->localr[1];
     auto nohang = ctx->localr[2];
-    if (pid.type!=vm_type::vm_num || nohang.type!=vm_type::vm_num) {
+    if (!pid.is_num() || !nohang.is_num()) {
         return nas_err("unix::waitpid", "pid and nohang must be number");
     }
 #ifndef _WIN32
@@ -56,7 +56,7 @@ var builtin_waitpid(context* ctx, gc* ngc) {
 
 var builtin_opendir(context* ctx, gc* ngc) {
     auto path = ctx->localr[1];
-    if (path.type!=vm_type::vm_str) {
+    if (!path.is_str()) {
         return nas_err("unix::opendir", "\"path\" must be string");
     }
 #ifdef _MSC_VER
@@ -72,7 +72,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
         return nas_err("unix::opendir", "cannot open dir <"+path.str()+">");
     }
 #endif
-    var ret = ngc->alloc(vm_type::vm_obj);
+    var ret = ngc->alloc(vm_type::vm_ghost);
     ret.ghost().set(dir_type_name, dir_entry_destructor, nullptr, p);
     return ret;
 }
@@ -105,7 +105,7 @@ var builtin_closedir(context* ctx, gc* ngc) {
 
 var builtin_chdir(context* ctx, gc* ngc) {
     auto path = ctx->localr[1];
-    if (path.type!=vm_type::vm_str) {
+    if (!path.is_str()) {
         return var::num(-1.0);
     }
     return var::num(static_cast<f64>(chdir(path.str().c_str())));
@@ -131,7 +131,7 @@ var builtin_getcwd(context* ctx, gc* ngc) {
 
 var builtin_getenv(context* ctx, gc* ngc) {
     auto envvar = ctx->localr[1];
-    if (envvar.type!=vm_type::vm_str) {
+    if (!envvar.is_str()) {
         return nas_err("unix::getenv", "\"envvar\" must be string");
     }
     char* res = getenv(envvar.str().c_str());
