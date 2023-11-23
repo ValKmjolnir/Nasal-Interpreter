@@ -42,16 +42,16 @@ var nas_hash::get_value(const std::string& key) {
     } else if (!elems.count("parents")) {
         return var::none();
     }
-    var ret = var::none();
-    var val = elems.at("parents");
-    if (val.type!=vm_type::vm_vec) {
+    auto ret = var::none();
+    auto& val = elems.at("parents");
+    if (!val.is_vec()) {
         return ret;
     }
     for(auto& i : val.vec().elems) {
         if (i.is_hash()) {
             ret = i.hash().get_value(key);
         }
-        if (ret.type!=vm_type::vm_none) {
+        if (!ret.is_none()) {
             return ret;
         }
     }
@@ -65,8 +65,8 @@ var* nas_hash::get_memory(const std::string& key) {
         return nullptr;
     }
     var* addr = nullptr;
-    var val = elems.at("parents");
-    if (val.type!=vm_type::vm_vec) {
+    var& val = elems.at("parents");
+    if (!val.is_vec()) {
         return addr;
     }
     for(auto& i : val.vec().elems) {
@@ -208,6 +208,7 @@ nas_val::nas_val(vm_type val_type) {
         case vm_type::vm_ghost: ptr.obj = new nas_ghost;   break;
         case vm_type::vm_co:    ptr.co = new nas_co;       break;
         case vm_type::vm_map:   ptr.map = new nas_map;     break;
+        default: break;
     }
 }
 
@@ -221,6 +222,7 @@ nas_val::~nas_val() {
         case vm_type::vm_ghost:delete ptr.obj;   break;
         case vm_type::vm_co:   delete ptr.co;    break;
         case vm_type::vm_map:  delete ptr.map;   break;
+        default: break;
     }
     type = vm_type::vm_nil;
 }
@@ -235,6 +237,7 @@ void nas_val::clear() {
         case vm_type::vm_ghost:ptr.obj->clear();        break;
         case vm_type::vm_co:   ptr.co->clear();         break;
         case vm_type::vm_map:  ptr.map->clear();        break;
+        default: break;
     }
 }
 
@@ -266,6 +269,7 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         case vm_type::vm_ghost:out << ref.ghost();   break;
         case vm_type::vm_co:   out << ref.co();      break;
         case vm_type::vm_map:  out << ref.map();     break;
+        default: break;
     }
     return out;
 }

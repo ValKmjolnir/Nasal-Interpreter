@@ -10,7 +10,7 @@ void filehandle_destructor(void* ptr) {
 
 var builtin_readfile(context* ctx, gc* ngc) {
     auto filename = ctx->localr[1];
-    if (filename.type!=vm_type::vm_str) {
+    if (!filename.is_str()) {
         return nas_err("io::readfile", "\"filename\" must be string");
     }
     std::ifstream in(filename.str(), std::ios::binary);
@@ -25,7 +25,7 @@ var builtin_fout(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto filename = local[1];
     auto source = local[2];
-    if (filename.type!=vm_type::vm_str) {
+    if (!filename.is_str()) {
         return nas_err("io::fout", "\"filename\" must be string");
     }
     std::ofstream out(filename.str());
@@ -38,7 +38,7 @@ var builtin_fout(context* ctx, gc* ngc) {
 
 var builtin_exists(context* ctx, gc* ngc) {
     auto filename = ctx->localr[1];
-    if (filename.type!=vm_type::vm_str) {
+    if (!filename.is_str()) {
         return zero;
     }
     return access(filename.str().c_str(), F_OK)!=-1? one:zero;
@@ -48,10 +48,10 @@ var builtin_open(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto name = local[1];
     auto mode = local[2];
-    if (name.type!=vm_type::vm_str) {
+    if (!name.is_str()) {
         return nas_err("io::open", "\"filename\" must be string");
     }
-    if (mode.type!=vm_type::vm_str) {
+    if (!mode.is_str()) {
         return nas_err("io::open", "\"mode\" must be string");
     }
     auto file_descriptor = fopen(name.str().c_str(), mode.str().c_str());
@@ -82,10 +82,10 @@ var builtin_read(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::read", "not a valid filehandle");
     }
-    if (buffer.type!=vm_type::vm_str || buffer.val.gcobj->unmutable) {
+    if (!buffer.is_str() || buffer.val.gcobj->unmutable) {
         return nas_err("io::read", "\"buf\" must be mutable string");
     }
-    if (length.type!=vm_type::vm_num) {
+    if (!length.is_num()) {
         return nas_err("io::read", "\"len\" must be number");
     }
     if (length.num()<=0 || length.num()>=(1<<30)) {
@@ -112,7 +112,7 @@ var builtin_write(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::write", "not a valid filehandle");
     }
-    if (source.type!=vm_type::vm_str) {
+    if (!source.is_str()) {
         return nas_err("io::write", "\"str\" must be string");
     }
     return var::num(static_cast<f64>(fwrite(
@@ -170,7 +170,7 @@ var builtin_readln(context* ctx, gc* ngc) {
 
 var builtin_stat(context* ctx, gc* ngc) {
     auto name = ctx->localr[1];
-    if (name.type!=vm_type::vm_str) {
+    if (!name.is_str()) {
         return nas_err("io::stat", "\"filename\" must be string");
     }
     struct stat buffer;

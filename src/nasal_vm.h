@@ -503,7 +503,7 @@ inline void vm::o_eq() {
     } else if (val1.is_str() && val2.is_str()) {
         ctx.top[0] = (val1.str()==val2.str())? one:zero;
     } else if ((val1.is_num() || val2.is_num())
-        && val1.type!=vm_type::vm_nil && val2.type!=vm_type::vm_nil) {
+        && !val1.is_nil() && !val2.is_nil()) {
         ctx.top[0] = (val1.to_num()==val2.to_num())? one:zero;
     } else {
         ctx.top[0] = (val1==val2)? one:zero;
@@ -518,7 +518,7 @@ inline void vm::o_neq() {
     } else if (val1.is_str() && val2.is_str()) {
         ctx.top[0] = (val1.str()!=val2.str())? one:zero;
     } else if ((val1.is_num() || val2.is_num())
-        && val1.type!=vm_type::vm_nil && val2.type!=vm_type::vm_nil) {
+        && !val1.is_nil() && !val2.is_nil()) {
         ctx.top[0] = (val1.to_num()!=val2.to_num())? one:zero;
     } else {
         ctx.top[0] = (val1!=val2)? one:zero;
@@ -567,7 +567,7 @@ inline void vm::o_jf() {
 }
 
 inline void vm::o_cnt() {
-    if (ctx.top[0].type!=vm_type::vm_vec) {
+    if (!ctx.top[0].is_vec()) {
         die("must use vector in forindex/foreach but get "+
             type_name_string(ctx.top[0])
         );
@@ -620,7 +620,7 @@ inline void vm::o_callv() {
             return;
         }
     } else if (vec.is_hash()) {
-        if (val.type!=vm_type::vm_str) {
+        if (!val.is_str()) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
@@ -643,7 +643,7 @@ inline void vm::o_callv() {
             static_cast<f64>(static_cast<u8>(str[num>=0? num:num+len]))
         );
     } else if (vec.is_map()) {
-        if (val.type!=vm_type::vm_str) {
+        if (!val.is_str()) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
@@ -660,7 +660,7 @@ inline void vm::o_callv() {
 
 inline void vm::o_callvi() {
     var val = ctx.top[0];
-    if (val.type!=vm_type::vm_vec) {
+    if (!val.is_vec()) {
         die("must use a vector but get "+type_name_string(val));
         return;
     }
@@ -674,7 +674,7 @@ inline void vm::o_callvi() {
 
 inline void vm::o_callh() {
     var val = ctx.top[0];
-    if (val.type!=vm_type::vm_hash && val.type!=vm_type::vm_map) {
+    if (!val.is_hash() && !val.is_map()) {
         die("must call a hash but get "+type_name_string(val));
         return;
     }
@@ -697,7 +697,7 @@ inline void vm::o_callh() {
 inline void vm::o_callfv() {
     const u32 argc = imm[ctx.pc]; // arguments counter
     var* local = ctx.top-argc+1; // arguments begin address
-    if (local[-1].type!=vm_type::vm_func) {
+    if (!local[-1].is_func()) {
         die("must call a function but get "+type_name_string(local[-1]));
         return;
     }
@@ -766,7 +766,7 @@ inline void vm::o_callfv() {
 
 inline void vm::o_callfh() {
     const auto& hash = ctx.top[0].hash().elems;
-    if (ctx.top[-1].type!=vm_type::vm_func) {
+    if (!ctx.top[-1].is_func()) {
         die("must call a function but get "+type_name_string(ctx.top[-1]));
         return;
     }
@@ -844,7 +844,7 @@ inline void vm::o_slcbeg() {
     // | resource_vec | <-- top[-1]
     // +--------------+
     (++ctx.top)[0] = ngc.alloc(vm_type::vm_vec);
-    if (ctx.top[-1].type!=vm_type::vm_vec) {
+    if (!ctx.top[-1].is_vec()) {
         die("must slice a vector but get "+type_name_string(ctx.top[-1]));
         return;
     }
@@ -933,7 +933,7 @@ inline void vm::o_mcallv() {
             return;
         }
     } else if (vec.is_hash()) { // do mcallh but use the mcallv way
-        if (val.type!=vm_type::vm_str) {
+        if (!val.is_str()) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
@@ -945,7 +945,7 @@ inline void vm::o_mcallv() {
             ctx.memr = ref.get_memory(str);
         }
     } else if (vec.is_map()) {
-        if (val.type!=vm_type::vm_str) {
+        if (!val.is_str()) {
             die("must use string as the key but get "+type_name_string(val));
             return;
         }
@@ -963,7 +963,7 @@ inline void vm::o_mcallv() {
 
 inline void vm::o_mcallh() {
     var hash = ctx.top[0]; // mcall hash, reserved on stack to avoid gc
-    if (hash.type!=vm_type::vm_hash && hash.type!=vm_type::vm_map) {
+    if (!hash.is_hash() && !hash.is_map()) {
         die("must call a hash/namespace but get "+type_name_string(hash));
         return;
     }

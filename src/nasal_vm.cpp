@@ -381,6 +381,7 @@ std::string vm::type_name_string(const var& value) const {
         case vm_type::vm_ghost: return "ghost type";
         case vm_type::vm_co: return "coroutine";
         case vm_type::vm_map: return "namespace";
+        default: break;
     }
     return "unknown";
 }
