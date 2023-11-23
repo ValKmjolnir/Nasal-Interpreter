@@ -5,7 +5,7 @@ namespace nasal {
 var builtin_pow(context* ctx, gc* ngc) {
     auto x = ctx->localr[1];
     auto y = ctx->localr[2];
-    if (x.type!=vm_type::vm_num || y.type!=vm_type::vm_num) {
+    if (!x.is_num() || !y.is_num()) {
         return var::num(std::nan(""));
     }
     return var::num(std::pow(x.num(), y.num()));
@@ -49,7 +49,7 @@ var builtin_sqrt(context* ctx, gc* ngc) {
 var builtin_atan2(context* ctx, gc* ngc) {
     auto x = ctx->localr[1];
     auto y = ctx->localr[2];
-    if (x.type!=vm_type::vm_num || y.type!=vm_type::vm_num) {
+    if (!x.is_num() || !y.is_num()) {
         return var::num(std::nan(""));
     }
     return var::num(atan2(y.num(), x.num()));
