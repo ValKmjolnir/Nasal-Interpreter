@@ -1,7 +1,7 @@
-.PHONY=clean all winall
+.PHONY = clean all winall
 
-dynamic_libs_so = libfib.so libkey.so libnasock.so libmat.so
-dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll
+dynamic_libs_so = libfib.so libkey.so libnasock.so libmat.so libjson.so
+dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll libjson.dll
 
 used_header = ../src/nasal.h ../src/nasal_type.h ../src/nasal_gc.h
 used_object = ../build/nasal_misc.o ../build/nasal_type.o ../build/nasal_gc.o
@@ -66,12 +66,25 @@ libmat.dll: matrix.cpp $(used_header) $(used_object)
 	@ $(CXX) -shared -o libmat.dll matrix.o $(used_object) -static
 	@ del matrix.o
 
+libjson.so: json.cpp $(used_header) $(used_object)
+	@ echo "[Compiling] libjson.so"
+	@ $(CXX) $(CXXFLAGS) json.cpp -o json.o
+	@ $(CXX) -shared -o libjson.so json.o $(used_object)
+	@ rm json.o
+libjson.dll: json.cpp $(used_header) $(used_object)
+	@ echo [Compiling] libjson.dll
+	@ $(CXX) -std=$(STD) -c -O3 json.cpp -fPIC -o json.o -static
+	@ $(CXX) -shared -o libjson.dll json.o $(used_object) -static
+	@ del json.o
+
 clean:
 	@ echo "[clean] libfib.so" && if [ -e libfib.so ]; then rm libfib.so; fi
 	@ echo "[clean] libkey.so" && if [ -e libkey.so ]; then rm libkey.so; fi
 	@ echo "[clean] libnasock.so" && if [ -e libnasock.so ]; then rm libnasock.so; fi
 	@ echo "[clean] libmat.so" && if [ -e libmat.so ]; then rm libmat.so; fi
+	@ echo "[clean] libjson.so" && if [ -e libjson.so ]; then rm libjson.so; fi
 	@ echo "[clean] libfib.dll" &&if [ -e libfib.dll ]; then rm libfib.dll; fi
 	@ echo "[clean] libkey.dll" &&if [ -e libkey.dll ]; then rm libkey.dll; fi
 	@ echo "[clean] libnasock.dll" &&if [ -e libnasock.dll ]; then rm libnasock.dll; fi
 	@ echo "[clean] libmat.dll" &&if [ -e libmat.dll ]; then rm libmat.dll; fi
+	@ echo "[clean] libjson.dll" && if [ -e libjson.dll ]; then rm libjson.dll; fi
