@@ -7,7 +7,6 @@ var SEEK_CUR = io.SEEK_CUR;
 
 var SEEK_END = io.SEEK_END;
 
-
 var new = func(filename, mode="r") {
     if (!io.exists(filename)) {
         return nil;
