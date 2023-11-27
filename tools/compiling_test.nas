@@ -10,7 +10,7 @@ var check = func(dir_name) {
             println("\e[31merror\e[0m ", f);
             append(res, f);
         }
-        println("compiling ", f, " in \e[32m", ts.elapsedMSec(), "\e[0m ms");
+        println("compiling ", f, " in \e[32m", ts.elapsedUSec()/1000, "\e[0m ms");
     }
     return res;
 }

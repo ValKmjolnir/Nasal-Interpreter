@@ -569,11 +569,71 @@ var builtin_md5(context* ctx, gc* ngc) {
     return ngc->newstr(md5(str.str()));
 }
 
-var builtin_millisec(context* ctx, gc* ngc) {
-    f64 res = std::chrono::duration_cast<std::chrono::milliseconds>
-            (std::chrono::high_resolution_clock::now().time_since_epoch())
-            .count();
-    return var::num(res);
+class time_stamp {
+private:
+    std::chrono::high_resolution_clock::time_point stamp;
+
+public:
+    time_stamp() {
+        stamp = std::chrono::high_resolution_clock::now();
+    }
+
+    void make_stamp() {
+        stamp = std::chrono::high_resolution_clock::now();
+    }
+
+    f64 elapsed_milliseconds() {
+        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+        return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    }
+
+    f64 elapsed_microseconds() {
+        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+        return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+    }
+};
+
+void time_stamp_destructor(void* ptr) {
+    delete static_cast<time_stamp*>(ptr);
+}
+
+var builtin_maketimestamp(context* ctx, gc* ngc) {
+    auto res = ngc->alloc(vm_type::vm_ghost);
+    res.ghost().set(
+        "nasal-time-stamp",
+        time_stamp_destructor,
+        nullptr,
+        new time_stamp
+    );
+    return res;
+}
+
+var builtin_time_stamp(context* ctx, gc* ngc) {
+    auto object = ctx->localr[1];
+    if (!object.object_check("nasal-time-stamp")) {
+        return nil;
+    }
+    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    stamp->make_stamp();
+    return nil;
+}
+
+var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
+    auto object = ctx->localr[1];
+    if (!object.object_check("nasal-time-stamp")) {
+        return var::num(-1);
+    }
+    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    return var::num(stamp->elapsed_milliseconds());
+}
+
+var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
+    auto object = ctx->localr[1];
+    if (!object.object_check("nasal-time-stamp")) {
+        return var::num(-1);
+    }
+    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    return var::num(stamp->elapsed_microseconds());
 }
 
 var builtin_gcextend(context* ctx, gc* ngc) {
@@ -684,7 +744,10 @@ nasal_builtin_table builtin[] = {
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
     {"__md5", builtin_md5},
-    {"__millisec", builtin_millisec},
+    {"__maketimestamp", builtin_maketimestamp},
+    {"__time_stamp", builtin_time_stamp},
+    {"__elapsed_millisecond", builtin_elapsed_millisecond},
+    {"__elapsed_microsecond", builtin_elapsed_microsecond},
     {"__gcextd", builtin_gcextend},
     {"__gcinfo", builtin_gcinfo},
     {"__logtime", builtin_logtime},

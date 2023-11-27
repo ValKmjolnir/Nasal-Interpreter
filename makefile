@@ -9,7 +9,7 @@ else
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
 endif
 
-NASAL_HEADER=\
+NASAL_HEADER = \
 	src/ast_dumper.h\
 	src/ast_visitor.h\
 	src/nasal_ast.h\
@@ -36,7 +36,7 @@ NASAL_HEADER=\
 	src/coroutine.h\
 	src/repl.h
 
-NASAL_OBJECT=\
+NASAL_OBJECT = \
 	build/nasal_err.o\
 	build/nasal_ast.o\
 	build/ast_visitor.o\

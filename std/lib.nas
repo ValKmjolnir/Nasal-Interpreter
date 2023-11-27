@@ -327,11 +327,20 @@ var assert = func(condition, message = "assertion failed!") {
 
 # get time stamp, this will return a timestamp object
 var maketimestamp = func() {
-    var t = 0;
+    var stamp = __maketimestamp();
+    var time_stamp = func(stamp) {
+        return __time_stamp(stamp);
+    }
+    var elapsed_millisecond = func(stamp) {
+        return __elapsed_millisecond(stamp);
+    }
+    var elapsed_microsecond = func(stamp) {
+        return __elapsed_microsecond(stamp);
+    }
     return {
-        stamp: func() {t = __millisec();},
-        elapsedMSec: func() {return __millisec()-t;},
-        elapsedUSec: func() {return (__millisec()-t)*1000;}
+        stamp: func() {return time_stamp(stamp);},
+        elapsedMSec: func() {return elapsed_millisecond(stamp);},
+        elapsedUSec: func() {return elapsed_microsecond(stamp);}
     };
 }
 
