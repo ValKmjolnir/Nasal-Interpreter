@@ -51,6 +51,7 @@ private:
     usize line = 1;
     usize ptr = 0;
     token this_token;
+    var temp_stack = nil;
 
 private:
     std::string var_generate(var&);
@@ -72,7 +73,7 @@ private:
     }
     void next();
     void match(token_type);
-    var vector_member(gc*);
+    void vector_member(nas_vec&, gc*);
     var vector_object_generate(gc*);
     void hash_member(nas_hash&, gc*);
     var hash_object_generate(gc*);
@@ -224,34 +225,31 @@ void json::match(token_type type) {
     return;
 }
 
-var json::vector_member(gc* ngc) {
-    auto result = nil;
+void json::vector_member(nas_vec& vec, gc* ngc) {
     if (this_token.type==token_type::tok_lbrace) {
-        result = hash_object_generate(ngc);   
+        vec.elems.push_back(hash_object_generate(ngc));   
     } else if (this_token.type==token_type::tok_lbrkt) {
-        result = vector_object_generate(ngc);
+        vec.elems.push_back(vector_object_generate(ngc));
     } else if (this_token.type==token_type::tok_str) {
-        result = ngc->newstr(this_token.content);
+        vec.elems.push_back(ngc->newstr(this_token.content));
         next();
     } else if (this_token.type==token_type::tok_num) {
-        result = var::num(str2num(this_token.content.c_str()));
+        vec.elems.push_back(var::num(str2num(this_token.content.c_str())));
         next();
     }
-    return result;
 }
 
 var json::vector_object_generate(gc* ngc) {
     auto vect_object = ngc->alloc(vm_type::vm_vec);
-    auto& vec = vect_object.vec().elems;
-    ngc->temp = vect_object;
+    temp_stack.vec().elems.push_back(vect_object);
     match(token_type::tok_lbrkt);
-    vec.push_back(vector_member(ngc));
+    vector_member(vect_object.vec(), ngc);
     while(this_token.type==token_type::tok_comma) {
         match(token_type::tok_comma);
-        vec.push_back(vector_member(ngc));
+        vector_member(vect_object.vec(), ngc);
     }
     match(token_type::tok_rbrkt);
-    ngc->temp = nil;
+    temp_stack.vec().elems.pop_back();
     return vect_object;
 }
 
@@ -282,7 +280,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
 
 var json::hash_object_generate(gc* ngc) {
     auto hash_object = ngc->alloc(vm_type::vm_hash);
-    ngc->temp = hash_object; // cause problem
+    temp_stack.vec().elems.push_back(hash_object);
     match(token_type::tok_lbrace);
     hash_member(hash_object.hash(), ngc);
     while(this_token.type==token_type::tok_comma) {
@@ -290,7 +288,7 @@ var json::hash_object_generate(gc* ngc) {
         hash_member(hash_object.hash(), ngc);
     }
     match(token_type::tok_rbrace);
-    ngc->temp = nil;
+    temp_stack.vec().elems.pop_back();
     return hash_object;
 }
 
@@ -308,9 +306,17 @@ var json::parse(const std::string& input, gc* ngc) {
     text = input;
     next();
     if (this_token.type==token_type::tok_lbrkt) {
-        return vector_object_generate(ngc);
+        ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
+        auto result = vector_object_generate(ngc);
+        ngc->temp = nil;
+        temp_stack = nil;
+        return result;
     } else {
-        return hash_object_generate(ngc);
+        ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
+        auto result = hash_object_generate(ngc);
+        ngc->temp = nil;
+        temp_stack = nil;
+        return result;
     }
     return nil;
 }
