@@ -37,6 +37,8 @@ std::string get_content(token_type type) {
         case token_type::tok_id: return "identifier";
         case token_type::tok_bool: return "boolean";
     }
+    // unreachable
+    return "";
 }
 
 struct token {
@@ -46,7 +48,6 @@ struct token {
 
 class json {
 private:
-    usize parse_error = 0;
     std::string text = "";
     usize line = 1;
     usize ptr = 0;
@@ -77,11 +78,16 @@ private:
     var vector_object_generate(gc*);
     void hash_member(nas_hash&, gc*);
     var hash_object_generate(gc*);
+    void check_eof();
+    static std::string& error_info() {
+        static std::string info = "";
+        return info;
+    }
 
 public:
     std::string stringify(var&);
     var parse(const std::string&, gc*);
-    bool has_error() const { return parse_error; }
+    static const std::string& get_error() { return error_info(); }
 };
 
 std::string json::var_generate(var& value) {
@@ -152,6 +158,11 @@ void json::next() {
     while(ptr<text.length() && !check(text[ptr])) {
         if (text[ptr]=='\n') {
             ++line;
+        } else if (text[ptr]!=' ' && text[ptr]!='\t') {
+            error_info() += "json::parse: line " + std::to_string(line);
+            error_info() += ": invalid character `";
+            error_info() += text[ptr];
+            error_info() += "`\n";
         }
         ++ptr;
     }
@@ -216,10 +227,9 @@ void json::next() {
 
 void json::match(token_type type) {
     if (this_token.type!=type) {
-        std::cerr << "json::parse: line " << line << ": expect ";
-        std::cerr << get_content(type) << " but get `";
-        std::cerr << this_token.content << "`.\n";
-        ++parse_error;
+        error_info() += "json::parse: line " + std::to_string(line);
+        error_info() += ": expect " + get_content(type) + " but get `";
+        error_info() += this_token.content + "`.\n";
     }
     next();
     return;
@@ -292,14 +302,28 @@ var json::hash_object_generate(gc* ngc) {
     return hash_object;
 }
 
+void json::check_eof() {
+    next();
+    if (this_token.type==token_type::tok_eof) {
+        return;
+    }
+    while (this_token.type!=token_type::tok_eof) {
+        error_info() += "json::parse: line " + std::to_string(line);
+        error_info() += ": expect " + get_content(token_type::tok_eof);
+        error_info() += " but get `" + this_token.content + "`.\n";
+        next();
+    }
+}
+
 var json::parse(const std::string& input, gc* ngc) {
     usize parse_error = 0;
     usize line = 1;
     usize ptr = 0;
     this_token = {token_type::tok_eof, ""};
+    error_info() = "";
 
     if (input.empty()) {
-        std::cerr << "json::parse: empty string.\n";
+        error_info() += "json::parse: empty string.\n";
         ++parse_error;
         return nil;
     }
@@ -308,12 +332,14 @@ var json::parse(const std::string& input, gc* ngc) {
     if (this_token.type==token_type::tok_lbrkt) {
         ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
         auto result = vector_object_generate(ngc);
+        check_eof();
         ngc->temp = nil;
         temp_stack = nil;
         return result;
     } else {
         ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
         auto result = hash_object_generate(ngc);
+        check_eof();
         ngc->temp = nil;
         temp_stack = nil;
         return result;
@@ -334,17 +360,17 @@ var parse(var* args, usize size, gc* ngc) {
     if (!input.is_str()) {
         return nas_err("json::parse", "must use string");
     }
-    json instance;
-    auto result = instance.parse(input.str(), ngc);
-    if (instance.has_error()) {
-        return nas_err("json::parse", "parse error");
-    }
-    return result;
+    return json().parse(input.str(), ngc);
+}
+
+var get_error(var* args, usize size, gc* ngc) {
+    return ngc->newstr(json::get_error());
 }
 
 module_func_info func_tbl[] = {
     {"stringify", stringify},
     {"parse", parse},
+    {"get_error", get_error},
     {nullptr, nullptr}
 };
 
