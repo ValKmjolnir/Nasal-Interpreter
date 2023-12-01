@@ -129,7 +129,8 @@ void vm::function_detail_info(const nas_func& func) {
         std::clog << const_string[func.dynamic_parameter_index] << "...";
     }
     std::clog << ") ";
-    std::clog << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    std::clog << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
 }
 
 void vm::function_call_trace() {

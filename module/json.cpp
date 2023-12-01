@@ -58,7 +58,6 @@ private:
     std::string var_generate(var&);
     std::string vector_generate(nas_vec&);
     std::string hash_generate(nas_hash&);
-    std::string map_generate(nas_map&);
 
 private:
     bool is_num(char c) {
@@ -95,11 +94,23 @@ std::string json::var_generate(var& value) {
         case vm_type::vm_num: {
             std::stringstream out;
             out << value.num();
+            if (std::isnan(value.num())) {
+                error_info() += "json::stringify: cannot generate number nan\n";
+            }
+            if (std::isinf(value.num())) {
+                error_info() += "json::stringify: cannot generate number inf\n";
+            }
             return out.str();
         }
         case vm_type::vm_str: return "\"" + value.str() + "\"";
         case vm_type::vm_vec: return vector_generate(value.vec());
         case vm_type::vm_hash: return hash_generate(value.hash());
+        case vm_type::vm_func:
+            error_info() += "json::stringify: cannot generate function\n"; break;
+        case vm_type::vm_ghost:
+            error_info() += "json::stringify: cannot generate ghost type\n"; break;
+        case vm_type::vm_map:
+            error_info() += "json::stringify: cannot generate namespace type\n"; break;
         default: break;
     }
     return "\"undefined\"";
@@ -130,26 +141,12 @@ std::string json::hash_generate(nas_hash& hash) {
     return out;
 }
 
-std::string json::map_generate(nas_map& nmap) {
-    std::string out = "{";
-    for(auto& i : nmap.mapper) {
-        out += "\"" + i.first + "\":";
-        out += var_generate(*i.second) + ",";
-    }
-    if (out.back()==',') {
-        out.pop_back();
-    }
-    out += "}";
-    return out;
-}
-
 std::string json::stringify(var& object) {
+    error_info() = "";
     if (object.is_vec()) {
         return vector_generate(object.vec());
     } else if (object.is_hash()) {
         return hash_generate(object.hash());
-    } else if (object.is_map()) {
-        return map_generate(object.map());
     }
     return "[]";
 }
@@ -349,7 +346,7 @@ var json::parse(const std::string& input, gc* ngc) {
 
 var stringify(var* args, usize size, gc* ngc) {
     auto object = args[0];
-    if (!object.is_vec() && !object.is_hash() && !object.is_map()) {
+    if (!object.is_vec() && !object.is_hash()) {
         return nas_err("json::stringify", "must use hashmap or vector");
     }
     return ngc->newstr(json().stringify(object));
