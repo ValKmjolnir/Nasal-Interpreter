@@ -29,7 +29,7 @@ __Contact us if having great ideas to share!__
 
   * __lhk101lhk101@qq.com__ (ValKmjolnir)
 
-  * __1467329765@qq.com__ (Sidi762)
+  * __sidi.liang@gmail.com__ (Sidi)
 
 ## __Introduction__
 
