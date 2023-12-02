@@ -8,10 +8,6 @@
 #include <io.h>
 #endif
 
-#ifdef _MSC_VER
-#define F_OK 0
-#endif
-
 #include "nasal.h"
 #include "nasal_ast.h"
 #include "nasal_lexer.h"

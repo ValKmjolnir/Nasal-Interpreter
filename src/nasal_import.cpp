@@ -4,6 +4,10 @@
 #include <memory>
 #include <unordered_set>
 
+#ifdef _MSC_VER
+#define F_OK 0 // fuck msc
+#endif
+
 namespace nasal {
 
 linker::linker(): show_path_flag(false), library_loaded(false), this_file("") {

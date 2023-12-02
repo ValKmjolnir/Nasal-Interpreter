@@ -1,5 +1,11 @@
 #include "io_lib.h"
 
+#ifdef _MSC_VER
+#define F_OK 0 // fuck msc
+#endif
+
+#include <sys/stat.h>
+
 namespace nasal {
 
 const auto file_type_name = "file";
