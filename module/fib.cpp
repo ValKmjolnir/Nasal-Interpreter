@@ -115,7 +115,7 @@ module_func_info func_tbl[] = {
 
 }
 
-extern "C" module_func_info* get() {
+NASAL_EXTERN module_func_info* get() {
     return fib_module::func_tbl;
 }
 

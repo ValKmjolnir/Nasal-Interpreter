@@ -124,4 +124,13 @@ struct module_func_info {
 // module function "get" type
 typedef module_func_info* (*get_func_ptr)();
 
+
+// avoid error loading function bug in MSVC version nasal.exe
+#ifdef _MSC_VER
+    // and fuck MSVC again
+    #define NASAL_EXTERN extern "C" __declspec(dllexport)
+#else
+    #define NASAL_EXTERN extern "C"
+#endif
+
 }
