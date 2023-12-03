@@ -4,14 +4,10 @@
 #include <memory>
 #include <unordered_set>
 
-#ifdef _MSC_VER
-#define F_OK 0 // fuck msc
-#endif
-
 namespace nasal {
 
 linker::linker(): show_path_flag(false), library_loaded(false), this_file("") {
-    const auto seperator= is_windows()? ';':':';
+    const auto seperator = is_windows()? ';':':';
     const auto PATH = std::string(getenv("PATH"));
     usize last = 0, position = PATH.find(seperator, 0);
     while(position!=std::string::npos) {
@@ -48,17 +44,17 @@ std::string linker::get_path(expr* node) {
 std::string linker::find_real_file_path(
     const std::string& filename, const span& location) {
     // first add file name itself into the file path
-    std::vector<std::string> path_list = {filename};
+    std::vector<fs::path> path_list = {filename};
 
     // generate search path from environ path
     for(const auto& p : envpath) {
-        path_list.push_back(p + (is_windows()? "\\":"/") + filename);
+        path_list.push_back(fs::path(p)/filename);
     }
 
     // search file
     for(const auto& path : path_list) {
-        if (access(path.c_str(), F_OK)!=-1) {
-            return path;
+        if (fs::exists(path)) {
+            return path.str();
         }
     }
 
@@ -78,7 +74,7 @@ std::string linker::find_real_file_path(
     }
     auto path_list_info = std::string("");
     for(const auto& path : path_list) {
-        path_list_info += "  -> " + path + "\n";
+        path_list_info += "  -> " + path.str() + "\n";
     }
     err.err("link",
         "in <" + location.file + ">: " +

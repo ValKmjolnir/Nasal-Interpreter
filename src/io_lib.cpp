@@ -1,9 +1,5 @@
 #include "io_lib.h"
 
-#ifdef _MSC_VER
-#define F_OK 0 // fuck msc
-#endif
-
 #include <sys/stat.h>
 
 namespace nasal {
@@ -47,7 +43,7 @@ var builtin_exists(context* ctx, gc* ngc) {
     if (!filename.is_str()) {
         return zero;
     }
-    return access(filename.str().c_str(), F_OK)!=-1? one:zero;
+    return fs::exists(filename.str())? one:zero;
 }
 
 var builtin_open(context* ctx, gc* ngc) {

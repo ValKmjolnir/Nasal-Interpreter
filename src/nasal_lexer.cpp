@@ -76,11 +76,7 @@ void lexer::open(const std::string& file) {
     }
 
     // check file exsits and it is a regular file
-#ifdef _MSC_VER
-    #define S_ISREG(m) (((m)&0xF000)==0x8000)
-#endif
-    struct stat buffer;
-    if (stat(file.c_str(), &buffer)==0 && !S_ISREG(buffer.st_mode)) {
+    if (!fs::is_regular(file)) {
         err.err("lexer", "<"+file+"> is not a regular file");
         err.chkerr();
     }

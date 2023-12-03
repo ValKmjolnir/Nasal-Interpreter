@@ -29,7 +29,7 @@ private:
     error err;
     std::vector<std::string> imported_files;
     std::vector<std::string> module_load_stack;
-    std::vector<std::string> envpath;
+    std::vector<fs::path> envpath;
 
 private:
     bool import_check(expr*);
