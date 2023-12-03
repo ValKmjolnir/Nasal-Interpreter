@@ -10,7 +10,6 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
-#include <sys/stat.h>
 
 #include "nasal.h"
 #include "nasal_err.h"

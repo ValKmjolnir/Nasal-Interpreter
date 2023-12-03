@@ -29,6 +29,7 @@ const u32 VM_DEBUG     = 1<<6;
 const u32 VM_SYMINFO   = 1<<7;
 const u32 VM_PROFILE   = 1<<8;
 const u32 VM_PROF_ALL  = 1<<9;
+const u32 VM_REF_FILE  = 1<<10;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -53,6 +54,7 @@ std::ostream& help(std::ostream& out) {
     << "   -e,   --exec     | execute directly.\n"
     << "   -t,   --time     | show execute time.\n"
     << "   -d,   --detail   | get detail info.\n"
+    << "   -f,   --ref-file | get referenced files.\n"
     << "   -dbg, --debug    | debug mode.\n"
     << "         --prof     | show profiling result, available in debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
@@ -131,6 +133,14 @@ void execute(
 
     // linker gets parser's ast and load import files to this ast
     ld.link(parse, file, cmd&VM_DETAIL).chkerr();
+    if (cmd&VM_REF_FILE) {
+        if (ld.get_file_list().size()) {
+            std::cout << "referenced file(s):\n";
+        }
+        for(const auto& file: ld.get_file_list()) {
+            std::cout << "  " << file << "\n";
+        }
+    }
     
     // optimizer does simple optimization on ast
     auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
@@ -211,7 +221,9 @@ i32 main(i32 argc, const char* argv[]) {
         {"--debug", VM_DEBUG},
         {"-dbg", VM_DEBUG},
         {"--prof", VM_PROFILE},
-        {"--prof-all", VM_PROF_ALL}
+        {"--prof-all", VM_PROF_ALL},
+        {"-f", VM_REF_FILE},
+        {"--ref-file", VM_REF_FILE}
     };
     u32 cmd = 0;
     std::string filename = "";
