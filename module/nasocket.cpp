@@ -6,6 +6,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef _MSC_VER
+#pragma warning (disable:4996)
+#endif
+
 #ifdef _WIN32
 #include <winsock.h>
 #pragma comment(lib,"ws2_32")
