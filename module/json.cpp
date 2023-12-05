@@ -241,7 +241,7 @@ void json::vector_member(nas_vec& vec, gc* ngc) {
         vec.elems.push_back(ngc->newstr(this_token.content));
         next();
     } else if (this_token.type==token_type::tok_num) {
-        vec.elems.push_back(var::num(str2num(this_token.content.c_str())));
+        vec.elems.push_back(var::num(str_to_num(this_token.content.c_str())));
         next();
     }
 }
@@ -280,7 +280,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
         hash.elems.insert({name, ngc->newstr(this_token.content)});
         next();
     } else if (this_token.type==token_type::tok_num) {
-        hash.elems.insert({name, var::num(str2num(this_token.content.c_str()))});
+        hash.elems.insert({name, var::num(str_to_num(this_token.content.c_str()))});
         next();
     }
 }
