@@ -49,7 +49,7 @@ struct gc {
         256, // vm_upval
         16,  // vm_obj
         16,  // vm_co
-        1,   // vm_map
+        2,   // vm_map
     };
 
     /* values for analysis */
