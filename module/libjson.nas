@@ -2,6 +2,7 @@
 # 2023/11/27 ValKmjolnir
 
 use std.dylib;
+use std.os;
 
 var _dynamic_lib = dylib.dlopen("libjson."~(os.platform()=="windows"?"dll":"so"));
 var _stringify = _dynamic_lib.stringify;

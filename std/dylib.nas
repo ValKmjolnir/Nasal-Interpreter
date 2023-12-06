@@ -2,6 +2,9 @@
 # 2023 by ValKmjolnir
 # dylib is the core hashmap for developers to load their own library.
 # for safe using dynamic library, you could use 'module' in stl/module.nas
+use std.os;
+use std.io;
+use std.unix;
 
 # open dynamic lib. return a hash including dl pointer and function pointers
 var dlopen = func(libname) {

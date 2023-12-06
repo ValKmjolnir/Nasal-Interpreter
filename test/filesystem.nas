@@ -1,3 +1,7 @@
+use std.os;
+use std.io;
+use std.unix;
+
 var files = func(path) {
     if (!io.exists(path))
         return [];

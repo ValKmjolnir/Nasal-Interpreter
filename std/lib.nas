@@ -1,9 +1,6 @@
 # lib.nas
 # 2019 ValKmjolnir
 use std.math;
-use std.io;
-use std.os;
-use std.unix;
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
@@ -347,24 +344,6 @@ var maketimestamp = func() {
 # md5
 var md5 = func(str) {
     return __md5(str);
-}
-
-# get file status. using data from io.stat
-var fstat = func(filename) {
-    var s = io.stat(filename);
-    return {
-        st_dev: s[0],
-        st_ino: s[1],
-        st_mode: s[2],
-        st_nlink: s[3],
-        st_uid: s[4],
-        st_gid: s[5],
-        st_rdev: s[6],
-        st_size: s[7],
-        st_atime: s[8],
-        st_mtime: s[9],
-        st_ctime: s[10]
-    };
 }
 
 # important global constants

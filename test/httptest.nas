@@ -1,4 +1,7 @@
 use module.libsock;
+use std.os;
+use std.io;
+use std.unix;
 
 var socket = libsock.socket;
 

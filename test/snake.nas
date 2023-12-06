@@ -2,6 +2,8 @@ use module.libkey;
 use std.list;
 use std.runtime;
 use std.coroutine;
+use std.os;
+use std.unix;
 
 var game = func(x,y) {
     rand(time(0));

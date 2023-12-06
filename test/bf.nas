@@ -1,3 +1,5 @@
+use std.os;
+
 var mandelbrot=
 "[A mandelbrot set fractal viewer in brainf*** written by Erik Bosman]
 +++++++++++++[->++>>>+++++>++>+<<<<<<]>>>>>++++++>--->>>>>>>>>>+++++++++++++++[[

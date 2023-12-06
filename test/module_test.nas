@@ -1,3 +1,4 @@
+use std.os;
 use std.dylib;
 use module.libfib;
 

@@ -1,6 +1,7 @@
 use std.file;
 use std.padding;
 use std.process_bar;
+use std.io;
 
 var tips = func() {
     println("usage:");
@@ -29,7 +30,7 @@ foreach(var f; all_files) {
     }
     var begin = substr(f, 0, pos);
     var end = pos+size(needle)>=size(f)? "":substr(f, pos+size(needle), size(f));
-    var file_size = fstat(f).st_size;
+    var file_size = io.fstat(f).st_size;
     var unit = " b";
     if (file_size>1024) {
         file_size/=1024;

@@ -2,6 +2,7 @@
 # ValKmjolnir 2022
 use std.runtime;
 use std.coroutine;
+use std.os;
 
 println("-------------------------------------------------------------");
 println(" FlightGear simulated-env for developers project, since 2019");

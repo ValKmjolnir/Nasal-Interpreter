@@ -1,4 +1,5 @@
 use std.bits;
+use std.os;
 
 var inst={
     inst_stop:0,

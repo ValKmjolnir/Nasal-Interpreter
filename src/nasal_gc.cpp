@@ -197,7 +197,7 @@ void gc::extend(const vm_type type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
-
+    // if incr[index] = 1, this will always be 1
     incr[index] = incr[index]+incr[index]/2;
 }
 
