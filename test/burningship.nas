@@ -1,6 +1,7 @@
 use std.process_bar;
 use std.os;
 use std.io;
+use std.math;
 
 var ppm = func(filename, width, height, RGB) {
     # P3 use ASCII number

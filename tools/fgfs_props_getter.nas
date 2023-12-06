@@ -1,4 +1,8 @@
 use std.phi;
+use std.math;
+use std.utils;
+
+# if on WSL2, you may need to use `ip route` to see the ip of the host
 
 var tips = func() {
     println("usage:");
@@ -20,7 +24,7 @@ var connect = phi.new(arg[0], num(arg[1]));
 var count = 0;
 var recursive_get_prop = func(path = "/") {
     count += 1;
-    if (math.mod(count, 50)==0) {
+    if (utils.times_trigger(count, 20)) {
         println("get ", count," nodes, now: \"", path, "\"");
     }
     var props = connect.getprop(path);

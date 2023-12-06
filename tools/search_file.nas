@@ -2,6 +2,7 @@ use std.file;
 use std.padding;
 use std.process_bar;
 use std.io;
+use std.math;
 
 var tips = func() {
     println("usage:");

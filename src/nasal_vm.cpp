@@ -314,7 +314,8 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     }
     result += ") ";
     std::stringstream out;
-    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    out << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
     out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     return result + out.str();
 }
@@ -337,7 +338,8 @@ std::string vm::report_special_call_lack_arguments(
     result = result.substr(0, result.length()-2);
     result += ") ";
     std::stringstream out;
-    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    out << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
     out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     return result + out.str();
 }
