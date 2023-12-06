@@ -48,9 +48,10 @@ struct ghost_obj {
 };
 
 void ghost_for_test_destructor(void* ptr) {
+    return;
     std::cout << "ghost_for_test::destructor (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
-    // delete static_cast<ghost_obj*>(ptr);
+    delete static_cast<ghost_obj*>(ptr);
     std::cout << "    delete 0x" << std::hex;
     std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
     std::cout << "}\n";
