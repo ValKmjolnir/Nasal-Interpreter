@@ -69,7 +69,7 @@ var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_type::vm_ghost);
     res.ghost().set(
         ghost_for_test,
-        ghost_for_test_destructor,
+        nullptr,
         ghost_for_test_gc_marker,
         new ghost_obj
     );
