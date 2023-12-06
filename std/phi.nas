@@ -5,6 +5,8 @@
 
 use module.libsock;
 use std.json;
+use std.os;
+use std.unix;
 
 var _raw_str = func(s) {
     var v = split("", s);

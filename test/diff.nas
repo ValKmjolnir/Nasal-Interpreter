@@ -1,3 +1,5 @@
+use std.io;
+
 var myers = func(src,dst,show_table=0) {
     (src,dst)=(split("\n",src),split("\n",dst));
     append(src,"");

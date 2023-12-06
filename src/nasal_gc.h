@@ -45,11 +45,11 @@ struct gc {
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash
-        128, // vm_func
+        256, // vm_func
         256, // vm_upval
         16,  // vm_obj
         16,  // vm_co
-        2,   // vm_map
+        1,   // vm_map
     };
 
     /* values for analysis */

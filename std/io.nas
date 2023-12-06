@@ -72,3 +72,21 @@ var stdin = func() { return __stdin; }();
 var stdout = func() { return __stdout;}();
 
 var stderr = func() { return __stderr; }();
+
+# get file status. using data from stat
+var fstat = func(filename) {
+    var s = stat(filename);
+    return {
+        st_dev: s[0],
+        st_ino: s[1],
+        st_mode: s[2],
+        st_nlink: s[3],
+        st_uid: s[4],
+        st_gid: s[5],
+        st_rdev: s[6],
+        st_size: s[7],
+        st_atime: s[8],
+        st_mtime: s[9],
+        st_ctime: s[10]
+    };
+}

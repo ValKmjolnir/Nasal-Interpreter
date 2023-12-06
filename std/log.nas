@@ -1,5 +1,7 @@
 # log.nas
 # ValKmjolnir 2022/6/14
+use std.os;
+
 var log = func() {
     var (log_date,log_time,prefix)=(1,1,"");
     var os_time="";

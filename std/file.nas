@@ -1,5 +1,7 @@
 # lib file.nas
 # ValKmjolnir 2022/3/6
+use std.io;
+use std.unix;
 
 var SEEK_SET = io.SEEK_SET;
 

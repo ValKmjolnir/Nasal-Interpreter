@@ -1,6 +1,8 @@
 use test.md5_self;
 use std.process_bar;
 use std.file;
+use std.os;
+use std.io;
 
 srand();
 

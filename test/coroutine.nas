@@ -3,6 +3,7 @@
 use std.coroutine;
 use std.process_bar;
 use std.padding;
+use std.os;
 
 if (os.platform()=="windows") {
     system("chcp 65001");

@@ -1,5 +1,7 @@
 use std.padding;
 use std.process_bar;
+use std.os;
+use std.unix;
 
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],

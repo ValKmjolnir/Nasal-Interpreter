@@ -1,6 +1,8 @@
 use module.libsock;
 use std.json;
 use std.runtime;
+use std.os;
+use std.unix;
 
 var socket = libsock.socket;
 

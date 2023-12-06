@@ -1,5 +1,7 @@
 # lib csv.nas
 # ValKmjolnir 2022/10/15
+use std.io;
+
 var read = func(path, delimeter=",", endline="\n") {
     var context = io.readfile(path);
     context = split(endline, context);
