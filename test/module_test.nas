@@ -53,10 +53,10 @@ println("[time  ] ", tm.elapsedMSec()," ms");
 tm.stamp();
 println("[result] ", libfib.qfib(35));
 println("[time  ] ", tm.elapsedMSec()," ms");
-libfib.close();
+# libfib.close();
 println("[result] ", libfib.fib(35));
 println("[result] ", libfib.qfib(35));
-libfib.close();
+# libfib.close();
 
 var speed_test = func() {
     var d = dylib.dlopen("libfib."~(os.platform()=="windows"? "dll":"so"));
