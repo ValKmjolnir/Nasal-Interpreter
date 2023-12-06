@@ -1,5 +1,6 @@
 use std.bits;
 use std.os;
+use std.math;
 
 var inst={
     inst_stop:0,

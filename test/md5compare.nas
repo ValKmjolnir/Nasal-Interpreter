@@ -3,6 +3,7 @@ use std.process_bar;
 use std.file;
 use std.os;
 use std.io;
+use std.math;
 
 srand();
 

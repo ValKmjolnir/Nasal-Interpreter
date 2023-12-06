@@ -1,6 +1,5 @@
 # lib.nas
 # 2019 ValKmjolnir
-use std.math;
 
 # print is used to print all things in nasal, try and see how it works.
 # this function uses std::cout to output logs.
@@ -271,7 +270,14 @@ var isint = func(x) {
 }
 
 var isnum = func(x) {
-    return typeof(x)=="num" or !math.isnan(num(x));
+    if (typeof(x)=="num") {
+        return true;
+    }
+    x = num(x);
+    if (!__isnan(x) and x!=nil) {
+        return true;
+    }
+    return false;
 }
 
 var isscalar = func(s) {
@@ -347,8 +353,8 @@ var md5 = func(str) {
 }
 
 # important global constants
-var D2R = math.pi / 180;         # degree to radian
-var R2D = 180 / math.pi;         # radian to degree
+var D2R = 3.14159265358979323846264338327950288 / 180; # degree to radian
+var R2D = 180 / 3.14159265358979323846264338327950288; # radian to degree
 
 var FT2M = 0.3048;               # feet to meter
 var M2FT = 1 / FT2M;

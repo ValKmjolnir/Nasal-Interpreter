@@ -1,3 +1,4 @@
+use std.math;
 
 var mat = func(width,height) {
     var res=[];

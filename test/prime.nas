@@ -1,3 +1,5 @@
+use std.math;
+
 var is_prime = func(x) {
     for(var i=2;i<x;i+=1)
         if (x/i==int(x/i))

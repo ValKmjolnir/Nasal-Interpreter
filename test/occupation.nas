@@ -5,6 +5,7 @@ use std.runtime;
 use std.os;
 use std.io;
 use std.unix;
+use std.math;
 
 var is_windows_platform=os.platform()=="windows";
 var is_macos_platform=os.platform()=="macOS";

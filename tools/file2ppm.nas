@@ -1,4 +1,5 @@
 use std.io;
+use std.math;
 
 var ppm = func(filename, buffer) {
     # P3 use ASCII number

@@ -69,7 +69,7 @@ private:
     bool check(char c) {
         return c=='{' || c=='}' || c=='[' || c==']' ||
                c==':' || c==',' || c=='"' || c=='\'' ||
-               is_num(c) || is_id(c);
+               c=='-' || c=='+' || is_num(c) || is_id(c);
     }
     void next();
     void match(token_type);
@@ -155,10 +155,10 @@ void json::next() {
     while(ptr<text.length() && !check(text[ptr])) {
         if (text[ptr]=='\n') {
             ++line;
-        } else if (text[ptr]!=' ' && text[ptr]!='\t') {
+        } else if (text[ptr]!=' ' && text[ptr]!='\t' && text[ptr]!='\r') {
             error_info() += "json::parse: line " + std::to_string(line);
-            error_info() += ": invalid character `";
-            error_info() += text[ptr];
+            error_info() += ": invalid character `0x";
+            error_info() += char_to_hex(text[ptr]);
             error_info() += "`\n";
         }
         ++ptr;
@@ -177,7 +177,7 @@ void json::next() {
         case ':': this_token = {token_type::tok_colon, ":"}; ++ptr; return;
         default: break;
     }
-    if (is_num(c)) {
+    if (is_num(c) || c=='-' || c=='+') {
         auto temp = std::string(1, c);
         ++ptr;
         while(ptr<text.length() && (
