@@ -47,6 +47,9 @@ struct ghost_obj {
     var test_string = nil;
 };
 
+// if the dynamic library is closed, the pointer of this function will be unsafe
+// make sure gc deletes the object before closing the dynamic library
+// or just do not close the dynamic library...
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
@@ -69,7 +72,7 @@ var create_new_ghost(var* args, usize size, gc* ngc) {
     var res = ngc->alloc(vm_type::vm_ghost);
     res.ghost().set(
         ghost_for_test,
-        nullptr,
+        ghost_for_test_destructor,
         ghost_for_test_gc_marker,
         new ghost_obj
     );
