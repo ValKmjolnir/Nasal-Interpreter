@@ -19,31 +19,25 @@ var _call = dylib.limitcall(1);
 
 var _test_call = dylib.limitcall(2);
 
-
 var fib = func(x) {
     return _call(_fib, x)
 }
-
 
 var qfib = func(x) {
     return _call(_qfib, x)
 }
 
-
 var create_ghost = func() {
     return _zero_call(_create_ghost)
 }
-
 
 var set_ghost = func(object, x) {
     return _test_call(_set_ghost, object, x)
 }
 
-
 var print_ghost = func(object) {
     return _call(_print_ghost, object)
 }
-
 
 var test_ghost = func() {
     var ghost = create_ghost();
