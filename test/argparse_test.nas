@@ -1,11 +1,7 @@
-# use module.libjson;
-
-# libjson.stringify(math.tan);
-
-# println(libjson.get_error());
 use std.argparse;
 
 var args = argparse.new("test cli");
 args.add_command("--what", "-w", "what-what");
-args.add_subparser("what", "what-what");
+var subparser0 = args.add_subparser("subcommand0", "what-what");
+subparser0.add_command("--sub-what", "-sw", "sub-what-what");
 args.parse();
