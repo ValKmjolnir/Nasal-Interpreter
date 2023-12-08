@@ -4,8 +4,8 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v11.2-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](./LICENSE)
+![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
 
@@ -33,17 +33,21 @@ __Contact us if having great ideas to share!__
 
 ## __Introduction__
 
+![star](https://img.shields.io/github/stars/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![fork](https://img.shields.io/github/forks/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![issue](https://img.shields.io/github/issues/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![pr](https://img.shields.io/github/issues-pr/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
 
-This interpreter is totally rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`)
-without reusing the code in [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
-But we really appreciate that Andy created this amazing programming language.
+This interpreter is rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`).
+We really appreciate that Andy created this amazing programming language: [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 
 This project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5), __GPL v2 license__ (since 2023/6).
 
-### __Why writing this nasal interpreter?__
+### __Why writing this Nasal interpreter?__
 
 2019 summer,
 members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,

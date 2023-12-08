@@ -4,8 +4,8 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
-![in dev](https://img.shields.io/badge/dev-v11.2-blue?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
+![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
@@ -33,15 +33,20 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 ## __简介__
 
+![star](https://img.shields.io/github/stars/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![fork](https://img.shields.io/github/forks/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![issue](https://img.shields.io/github/issues/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+![pr](https://img.shields.io/github/issues-pr/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
-是一款语法与ECMAscript相似的编程语言，并作为运行脚本被著名开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所使用。
+是一款语法与 ECMAscript 相似的编程语言，并作为脚本语言被著名开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所使用。
 该语言的设计者为 [Andy Ross](https://github.com/andyross)。
 
-该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 完全使用 `C++`(`-std=c++17`)重新实现，没有复用 [Andy Ross的nasal解释器](https://github.com/andyross/nasal) 中的任何一行代码。尽管没有参考任何代码，我们依然非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言。
+该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 使用 `C++`(`-std=c++17`)重新实现，我们非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言: [Andy Ross 的 nasal 解释器](https://github.com/andyross/nasal)。
 
 该项目使用 __MIT__ 协议开源 (2019/7 ~ 2021/5/4 ~ 2023/5)，从 2023/6 开始使用 __GPL v2__ 协议。
 
-### __我们为什么想要重新写一个nasal解释器?__
+### __我们为什么想要重新写一个 Nasal 解释器?__
 
 2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误以及运行时错误。
 
