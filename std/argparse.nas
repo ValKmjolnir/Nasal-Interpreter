@@ -11,8 +11,10 @@ var new = func(description) {
         add_subparser: func(name, help) {
             return _add_subparser(parser, name, help);
         },
-        parse: func() {
-            return _parse(parser, _arg);
+        parse_args: func() {
+            var result_hash = {};
+            _parse(parser, _arg, result_hash);
+            return result_hash;
         }
     };
     parser.add_command("--help", "-h", "Get help info and exit");
@@ -52,30 +54,42 @@ var _help = func(parser) {
     }
 }
 
-var _parse = func(parser, args) {
+var _parse = func(parser, args, result_hash) {
     if (size(args)==0) {
+        println("Require more command, use \"--help\" to get help.\n");
         _help(parser);
-        return;
+        exit(0);
     }
     var first_arg = args[0];
     foreach(var subparser; parser.subparser) {
         if (subparser.name==first_arg) {
-            return _parse(subparser.parser, size(args)>1? args[1:]:[]);
+            result_hash[subparser.name] = true;
+            _parse(subparser.parser, size(args)>1? args[1:]:[], result_hash);
+            return;
         }
     }
-    foreach(var cmd; parser.command_list) {
-        if (first_arg=="--help" or first_arg=="-h") {
+    foreach(var this_arg; args) {
+        var find_command_flag = false;
+        foreach(var cmd; parser.command_list) {
+            if (this_arg=="--help" or this_arg=="-h") {
+                _help(parser);
+                exit(0);
+            }
+            if (this_arg==cmd.full_name or this_arg==cmd.short_name) {
+                result_hash[cmd.full_name] = true;
+                find_command_flag = true;
+            }
+        }
+        if (!find_command_flag) {
+            println("Invalid command `", this_arg, "`.\n");
             _help(parser);
             exit(0);
         }
-        if (first_arg==cmd.full_name or first_arg==cmd.short_name) {
-            return "[WIP]";
-        }
     }
     # unreachable
-    println("Invalid command `", first_arg, "`\n");
+    println("Invalid command `", first_arg, "`.\n");
     _help(parser);
-    return;
+    exit(0);
 }
 
 var _add_command = func(parser, long, short, help) {
