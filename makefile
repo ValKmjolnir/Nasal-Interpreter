@@ -32,6 +32,7 @@ NASAL_HEADER = \
 	src/io_lib.h\
 	src/math_lib.h\
 	src/dylib_lib.h\
+	src/json_lib.h\
 	src/unix_lib.h\
 	src/coroutine.h\
 	src/repl.h
@@ -57,6 +58,7 @@ NASAL_OBJECT = \
 	build/math_lib.o\
 	build/unix_lib.o\
 	build/dylib_lib.o\
+	build/json_lib.o\
 	build/coroutine.o\
 	build/nasal_type.o\
 	build/nasal_vm.o\
@@ -160,6 +162,13 @@ build/dylib_lib.o: \
 	src/nasal_gc.h\
 	src/dylib_lib.h src/dylib_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/dylib_lib.cpp -o build/dylib_lib.o
+
+build/json_lib.o: \
+	src/nasal.h\
+	src/nasal_type.h\
+	src/nasal_gc.h\
+	src/json_lib.h src/json_lib.cpp | build
+	$(CXX) $(CXXFLAGS) src/json_lib.cpp -o build/json_lib.o
 
 build/unix_lib.o: \
 	src/nasal.h\

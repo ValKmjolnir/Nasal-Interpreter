@@ -24,6 +24,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/fg_props.cpp
     ${CMAKE_SOURCE_DIR}/src/bits_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/io_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/json_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/math_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/dylib_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/unix_lib.cpp
@@ -85,7 +86,3 @@ target_link_libraries(mat module-used-object)
 add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
 target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nasock module-used-object)
-
-add_library(json SHARED ${CMAKE_SOURCE_DIR}/module/json.cpp)
-target_include_directories(json PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(json module-used-object)
