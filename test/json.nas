@@ -1,5 +1,4 @@
 use std.json;
-use module.libjson;
 use std.process_bar;
 
 var ss = json.stringify({
@@ -19,7 +18,6 @@ var ss = json.stringify({
 
 println(ss, "\n");
 println(json.parse(ss), "\n");
-println(libjson.parse(ss), "\n");
 
 var ss = json.stringify([{
     vec:[0,1,2,3],
@@ -37,11 +35,10 @@ var ss = json.stringify([{
 
 println(ss, "\n");
 println(json.parse(ss), "\n");
-println(libjson.parse(ss), "\n");
 
 var test_func = func(input_string) {
-    var result = libjson.parse(input_string);
-    var errno = libjson.get_error();
+    var result = json.parse(input_string);
+    var errno = json.get_error();
     if (!size(errno)) {
         println("\e[92;1msuccess\e[0m:");
         println("  ", result);
@@ -60,7 +57,7 @@ test_func("{\"1\":1}");
 test_func("[[[}]]]");
 test_func("=-==_+_+_+");
 test_func("123");
-test_func(libjson.stringify({
+test_func(json.stringify({
     a: 0,
     b: nil,
     c: "this is a string",
@@ -100,8 +97,8 @@ var test_json = func(json) {
 };
 
 var stamp = maketimestamp();
-test_json(libjson);
-println("time usage: ", stamp.elapsedUSec()/1000, " ms");
-stamp.stamp();
-test_json(json);
-println("time usage: ", stamp.elapsedUSec()/1000, " ms");
+for(var i = 0; i<10; i += 1) {
+    stamp.stamp();
+    test_json(json);
+    println("time usage: ", stamp.elapsedUSec()/1000, " ms");
+}
