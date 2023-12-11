@@ -115,6 +115,12 @@ std::string json::var_generate(var& value) {
 }
 
 std::string json::vector_generate(nas_vec& vect) {
+    // avoid stackoverflow
+    if (vect.printed) {
+        error_info() += "json::stringify: get vector containing itself\n";
+        return "undefined";
+    }
+    vect.printed = true;
     std::string out = "[";
     for(auto& i : vect.elems) {
         out += var_generate(i) + ",";
@@ -123,10 +129,17 @@ std::string json::vector_generate(nas_vec& vect) {
         out.pop_back();
     }
     out += "]";
+    vect.printed = false;
     return out;
 }
 
 std::string json::hash_generate(nas_hash& hash) {
+    // avoid stackoverflow
+    if (hash.printed) {
+        error_info() += "json::stringify: get hash containing itself\n";
+        return "undefined";
+    }
+    hash.printed = true;
     std::string out = "{";
     for(auto& i : hash.elems) {
         out += "\"" + i.first + "\":";
@@ -136,6 +149,7 @@ std::string json::hash_generate(nas_hash& hash) {
         out.pop_back();
     }
     out += "}";
+    hash.printed = false;
     return out;
 }
 

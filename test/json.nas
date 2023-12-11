@@ -66,6 +66,20 @@ test_func(json.stringify({
 test_func("");
 println();
 
+func {
+    var a = {};
+    a.a = a;
+
+    var b = [];
+    append(b, b);
+
+    println(json.stringify(a));
+    println(json.get_error());
+    println(json.stringify(b));
+    println(json.get_error());
+    println();
+}();
+
 var test_json = func(json) {
     var bar = process_bar.high_resolution_bar(30);
     var tmp = [
