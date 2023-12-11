@@ -1,4 +1,5 @@
 use std.bits;
+use std.math;
 
 var check = func(x) {
     if (x<0x100000000)

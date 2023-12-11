@@ -1,4 +1,6 @@
 use std.process_bar;
+use std.os;
+use std.io;
 
 var ppm = func(filename, width, height, RGB) {
     # P3 use ASCII number
@@ -7,7 +9,7 @@ var ppm = func(filename, width, height, RGB) {
     io.write(fd, "P6\n"~width~" "~height~"\n255\n");
     for(var i = 0; i<height; i += 1) {
         for(var j = 0; j<width; j += 1) {
-            io.write(fd,RGB(i,j));
+            io.write(fd, RGB(i, j));
         }
     }
     io.close(fd);

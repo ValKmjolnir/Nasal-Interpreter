@@ -1,5 +1,8 @@
 use std.process_bar;
 use std.runtime;
+use std.os;
+use std.io;
+use std.unix;
 
 var new_map = func(width,height) {
     var tmp=[];

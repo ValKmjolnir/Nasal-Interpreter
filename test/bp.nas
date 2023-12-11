@@ -1,4 +1,5 @@
 use std.mat;
+use std.math;
 
 rand(time(0));
 

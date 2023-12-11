@@ -1,7 +1,6 @@
 use std.process_bar;
 use std.os;
 use std.io;
-use std.math;
 
 var ppm = func(filename, width, height, RGB) {
     # P3 use ASCII number
@@ -18,20 +17,20 @@ var ppm = func(filename, width, height, RGB) {
 
 var width = 1920;
 var height = 1080;
+var init_x = -0.75;
+var init_y = 0.3;
 var bar = (os.platform()=="windows")?
     process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);
-
 var f = func(i, j) {
-    var (yMin, yMax, xMin, xMax) = (-2, 1.1, -3.2, 2);
+    var (yMin, yMax, xMin, xMax) = (-1.35, 1.35, -2.4, 2.4);
     var (yDel, xDel) = (yMax-yMin, xMax-xMin);
-    var (y, x) = ((i/height)*yDel+yMin, (j/width)*xDel+xMin);
-    var (x0, y0) = (x, y);
+    var (y, x) = (init_y, init_x);
+    var (y0, x0) = ((i/height)*yDel+yMin, (j/width)*xDel+xMin);
     for(var iter = 0; iter<64; iter += 1) {
-        (x0, y0) = (math.abs(x0), math.abs(y0));
         var (x1, y1) = ((x0*x0)-(y0*y0)+x, 2*x0*y0+y);
         (x0, y0) = (x1, y1);
-        if ((x0*x0)+(y0*y0)>8) {
+        if ((x0*x0)+(y0*y0)>4) {
             break;
         }
     }
@@ -44,5 +43,5 @@ var f = func(i, j) {
     return c~c~c;
 }
 
-ppm("burningship.ppm", width, height, f);
+ppm("juliaset.ppm", width, height, f);
 println();

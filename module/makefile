@@ -1,4 +1,4 @@
-.PHONY=clean all winall
+.PHONY = clean all winall
 
 dynamic_libs_so = libfib.so libkey.so libnasock.so libmat.so
 dynamic_libs_dll = libfib.dll libkey.dll libnasock.dll libmat.dll

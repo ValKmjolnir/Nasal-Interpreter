@@ -7,6 +7,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef _MSC_VER
+#pragma warning (disable:4996)
+#endif
+
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -106,7 +110,7 @@ module_func_info func_tbl[] = {
     {nullptr, nullptr}
 };
 
-extern "C" module_func_info* get() {
+NASAL_EXTERN module_func_info* get() {
     return func_tbl;
 }
 

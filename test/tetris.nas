@@ -1,5 +1,7 @@
 use module.libkey;
 use std.runtime;
+use std.os;
+use std.unix;
 
 var color=[
     "\e[31m","\e[32m","\e[33m","\e[34m","\e[35m","\e[36m",

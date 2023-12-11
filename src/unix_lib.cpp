@@ -15,7 +15,7 @@ void dir_entry_destructor(void* ptr) {
 var builtin_pipe(context* ctx, gc* ngc) {
 #ifndef _WIN32
     i32 fd[2];
-    var res = ngc->alloc(vm_vec);
+    var res = ngc->alloc(vm_type::vm_vec);
     if (pipe(fd)==-1) {
         return nas_err("unix::pipe", "failed to create pipe");
     }
@@ -28,7 +28,7 @@ var builtin_pipe(context* ctx, gc* ngc) {
 
 var builtin_fork(context* ctx, gc* ngc) {
 #ifndef _WIN32
-    f64 res=fork();
+    f64 res = fork();
     if (res<0) {
         return nas_err("unix::fork", "failed to fork a process");
     }
@@ -40,13 +40,13 @@ var builtin_fork(context* ctx, gc* ngc) {
 var builtin_waitpid(context* ctx, gc* ngc) {
     auto pid = ctx->localr[1];
     auto nohang = ctx->localr[2];
-    if (pid.type!=vm_num || nohang.type!=vm_num) {
+    if (!pid.is_num() || !nohang.is_num()) {
         return nas_err("unix::waitpid", "pid and nohang must be number");
     }
 #ifndef _WIN32
     i32 ret_pid, status;
     ret_pid = waitpid(pid.num(), &status, nohang.num()==0? 0:WNOHANG);
-    var vec = ngc->alloc(vm_vec);
+    var vec = ngc->alloc(vm_type::vm_vec);
     vec.vec().elems.push_back(var::num(static_cast<f64>(ret_pid)));
     vec.vec().elems.push_back(var::num(static_cast<f64>(status)));
     return vec;
@@ -56,7 +56,7 @@ var builtin_waitpid(context* ctx, gc* ngc) {
 
 var builtin_opendir(context* ctx, gc* ngc) {
     auto path = ctx->localr[1];
-    if (path.type!=vm_str) {
+    if (!path.is_str()) {
         return nas_err("unix::opendir", "\"path\" must be string");
     }
 #ifdef _MSC_VER
@@ -72,8 +72,8 @@ var builtin_opendir(context* ctx, gc* ngc) {
         return nas_err("unix::opendir", "cannot open dir <"+path.str()+">");
     }
 #endif
-    var ret = ngc->alloc(vm_obj);
-    ret.ghost().set(dir_type_name, dir_entry_destructor, p);
+    var ret = ngc->alloc(vm_type::vm_ghost);
+    ret.ghost().set(dir_type_name, dir_entry_destructor, nullptr, p);
     return ret;
 }
 
@@ -105,14 +105,14 @@ var builtin_closedir(context* ctx, gc* ngc) {
 
 var builtin_chdir(context* ctx, gc* ngc) {
     auto path = ctx->localr[1];
-    if (path.type!=vm_str) {
+    if (!path.is_str()) {
         return var::num(-1.0);
     }
     return var::num(static_cast<f64>(chdir(path.str().c_str())));
 }
 
 var builtin_environ(context* ctx, gc* ngc) {
-    var res = ngc->temp = ngc->alloc(vm_vec);
+    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
     for(char** env = environ; *env; ++env) {
         vec.push_back(ngc->newstr(*env));
@@ -131,7 +131,7 @@ var builtin_getcwd(context* ctx, gc* ngc) {
 
 var builtin_getenv(context* ctx, gc* ngc) {
     auto envvar = ctx->localr[1];
-    if (envvar.type!=vm_str) {
+    if (!envvar.is_str()) {
         return nas_err("unix::getenv", "\"envvar\" must be string");
     }
     char* res = getenv(envvar.str().c_str());

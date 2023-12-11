@@ -1,3 +1,5 @@
+use std.io;
+
 var lexer = func(file) {
     var (ptr,token)=(0,[]);
     var s=io.readfile(file);

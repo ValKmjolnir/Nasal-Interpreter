@@ -1,4 +1,5 @@
 use std.dylib;
+use std.os;
 
 var socket = func() {
     var lib = dylib.dlopen("libnasock"~(os.platform()=="windows"? ".dll":".so"));

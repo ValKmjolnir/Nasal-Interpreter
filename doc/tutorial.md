@@ -593,7 +593,7 @@ module_func_info func_tbl[] = {
 // the reason why using this way to get function pointer
 // is because `var` has constructors, which is not compatiable in C
 // so "extern "C" var fib" may get compilation warnings
-extern "C" module_func_info* get() {
+NASAL_EXTERN module_func_info* get() {
     return func_tbl;
 }
 ```

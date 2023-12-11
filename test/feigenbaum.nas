@@ -1,4 +1,7 @@
 use std.process_bar;
+use std.os;
+use std.io;
+use std.math;
 
 var ppm = func(filename, width, height, RGB) {
     # P3 use ASCII number
@@ -13,8 +16,8 @@ var ppm = func(filename, width, height, RGB) {
     io.close(fd);
 }
 
-var width = 1600;
-var height = 900;
+var width = 1920;
+var height = 1080;
 var bar = (os.platform()=="windows")?
     process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);

@@ -1,5 +1,7 @@
 # wave collapse function 2022/4/10
 # by ValKmjolnir
+use std.os;
+
 srand();
 var table=[
     # c ,w,a,s,d

@@ -574,7 +574,7 @@ module_func_info func_tbl[] = {
 // 之所以用这种方式来获取函数指针, 是因为`var`是有构造函数的
 // 有构造函数的类型作为返回值, 和C是不兼容的, 这导致
 // 类似 "extern "C" var fib" 的写法会得到编译错误
-extern "C" module_func_info* get() {
+NASAL_EXTERN module_func_info* get() {
     return func_tbl;
 }
 ```

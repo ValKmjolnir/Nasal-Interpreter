@@ -36,7 +36,51 @@ var ss = json.stringify([{
 println(ss, "\n");
 println(json.parse(ss), "\n");
 
+var test_func = func(input_string) {
+    var result = json.parse(input_string);
+    var errno = json.get_error();
+    if (!size(errno)) {
+        println("\e[92;1msuccess\e[0m:");
+        println("  ", result);
+    } else {
+        println("\e[91;1merror\e[0m:");
+        foreach(var err; split("\n", errno)) {
+            println("  |-> ", err);
+        }
+        println("  +-> generated with error:");
+        println("      +-> ", result);
+    }
+}
+
+test_func("[[]]");
+test_func("{\"1\":1}");
+test_func("[[[}]]]");
+test_func("=-==_+_+_+");
+test_func("123");
+test_func(json.stringify({
+    a: 0,
+    b: nil,
+    c: "this is a string",
+    d: [{}, [[1, 2, 4, 8, 16]]]
+}));
+test_func("");
+println();
+
 func {
+    var a = {};
+    a.a = a;
+
+    var b = [];
+    append(b, b);
+
+    println(json.stringify(a));
+    println(json.get_error());
+    println(json.stringify(b));
+    println(json.get_error());
+    println();
+}();
+
+var test_json = func(json) {
     var bar = process_bar.high_resolution_bar(30);
     var tmp = [
         {t0:nil},
@@ -50,18 +94,25 @@ func {
     ];
 
     srand();
-    foreach(var h; tmp) {
-        var name = keys(h)[0];
-        h[name] = [];
+    foreach(var hash; tmp) {
+        var name = keys(hash)[0];
+        hash[name] = [];
         print("\e[1000D", bar.bar(0));
         for(var i = 0; i<500; i+=1) {
-            append(h[name], {id:i, content:int(rand()*1e7)});
+            append(hash[name], {id:i, content:int(rand()*1e7)});
             print("\e[1000D", bar.bar((i+1)/500));
         }
         print("\e[1000D", bar.bar(1), " executing...\n");
     }
     print("\e[1000D", "\e["~str(size(tmp))~"A");
-    foreach(var h; json.parse(json.stringify(tmp))) {
-        println("\e[1000D", bar.bar(1), " parse done ", keys(h)[0], " ", size(h[keys(h)[0]]));
+    foreach(var hash; json.parse(json.stringify(tmp))) {
+        println("\e[1000D", bar.bar(1), " parse done ", keys(hash)[0], " ", size(hash[keys(hash)[0]]));
     }
-}();
+};
+
+var stamp = maketimestamp();
+for(var i = 0; i<10; i += 1) {
+    stamp.stamp();
+    test_json(json);
+    println("time usage: ", stamp.elapsedUSec()/1000, " ms");
+}

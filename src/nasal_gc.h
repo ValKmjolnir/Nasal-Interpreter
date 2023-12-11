@@ -45,7 +45,7 @@ struct gc {
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash
-        128, // vm_func
+        256, // vm_func
         256, // vm_upval
         16,  // vm_obj
         16,  // vm_co
@@ -78,34 +78,35 @@ private:
     void mark_hash(std::vector<var>&, nas_hash&);
     void mark_func(std::vector<var>&, nas_func&);
     void mark_upval(std::vector<var>&, nas_upval&);
+    void mark_ghost(std::vector<var>&, nas_ghost&);
     void mark_co(std::vector<var>&, nas_co&);
     void mark_map(std::vector<var>&, nas_map&);
     void sweep();
 
 public:
-    void extend(u8);
+    void extend(const vm_type);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
     void info() const;
-    var alloc(const u8);
+    var alloc(const vm_type);
     void context_change(nas_co*);
     void context_reserve();
 
 public:
     var newstr(char c) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = c;
         return s;
     }
 
     var newstr(const char* buff) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = std::string(buff);
         return s;
     }
 
     var newstr(const std::string& buff) {
-        var s = alloc(vm_str);
+        var s = alloc(vm_type::vm_str);
         s.str() = buff;
         return s;
     }
@@ -122,5 +123,14 @@ struct module_func_info {
 
 // module function "get" type
 typedef module_func_info* (*get_func_ptr)();
+
+
+// avoid error loading function bug in MSVC version nasal.exe
+#ifdef _MSC_VER
+    // and fuck MSVC again
+    #define NASAL_EXTERN extern "C" __declspec(dllexport)
+#else
+    #define NASAL_EXTERN extern "C"
+#endif
 
 }

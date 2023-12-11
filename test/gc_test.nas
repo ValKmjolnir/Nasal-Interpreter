@@ -1,4 +1,5 @@
 use std.runtime;
+use std.os;
 
 var test_func = func(test_processes...) {
     var test_process_total = maketimestamp();

@@ -1,4 +1,5 @@
 use std.runtime;
+use std.io;
 
 var to_lower = func(s) {
     var tmp="";

@@ -223,7 +223,7 @@ nil_expr* parse::nil() {
 
 number_literal* parse::num() {
     auto node = new number_literal(toks[ptr].loc,
-        str2num(toks[ptr].str.c_str()));
+        str_to_num(toks[ptr].str.c_str()));
     match(tok::num);
     return node;
 }

@@ -1,4 +1,5 @@
 use std.dylib;
+use std.os;
 
 var (
     kbhit,

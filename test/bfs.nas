@@ -1,4 +1,6 @@
 use std.queue;
+use std.os;
+use std.unix;
 
 rand(time(0));
 var pixel=[' ','#','.','*'];
