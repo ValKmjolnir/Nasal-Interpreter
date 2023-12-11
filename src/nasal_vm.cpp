@@ -31,14 +31,14 @@ void vm::init(
     ngc.init(strs, argv);
 
     /* init vm globals */
-    auto map_instance = ngc.alloc(vm_map);
+    auto map_instance = ngc.alloc(vm_type::vm_map);
     global[global_symbol.at("globals")] = map_instance;
     for(const auto& i : global_symbol) {
         map_instance.map().mapper[i.first] = global+i.second;
     }
 
     /* init vm arg */
-    auto arg_instance = ngc.alloc(vm_vec);
+    auto arg_instance = ngc.alloc(vm_type::vm_vec);
     global[global_symbol.at("arg")] = arg_instance;
     arg_instance.vec().elems = ngc.env_argv;
 }
@@ -67,41 +67,42 @@ void vm::context_and_global_init() {
 void vm::value_info(var& val) {
     const auto p = reinterpret_cast<u64>(val.val.gcobj);
     switch(val.type) {
-        case vm_none: std::clog << "| null |"; break;
-        case vm_ret:  std::clog << "| pc   | 0x" << std::hex
-                                << val.ret() << std::dec; break;
-        case vm_addr: std::clog << "| addr | 0x" << std::hex
-                                << reinterpret_cast<u64>(val.addr())
-                                << std::dec; break;
-        case vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
-        case vm_nil:  std::clog << "| nil  |"; break;
-        case vm_num:  std::clog << "| num  | " << val.num(); break;
-        case vm_str:  std::clog << "| str  | <0x" << std::hex << p
-                                << "> " << rawstr(val.str(), 16)
-                                << std::dec; break;
-        case vm_func: std::clog << "| func | <0x" << std::hex << p
-                                << "> entry:0x" << val.func().entry
-                                << std::dec; break;
-        case vm_upval:std::clog << "| upval| <0x" << std::hex << p
-                                << std::dec << "> [" << val.upval().size
-                                << " val]"; break;
-        case vm_vec:  std::clog << "| vec  | <0x" << std::hex << p
-                                << std::dec << "> [" << val.vec().size()
-                                << " val]"; break;
-        case vm_hash: std::clog << "| hash | <0x" << std::hex << p
-                                << std::dec << "> {" << val.hash().size()
-                                << " val}"; break;
-        case vm_obj:  std::clog << "| obj  | <0x" << std::hex << p
-                                << "> obj:0x"
-                                << reinterpret_cast<u64>(val.ghost().pointer)
-                                << std::dec; break;
-        case vm_co:   std::clog << "| co   | <0x" << std::hex << p
-                                << std::dec << "> coroutine"; break;
-        case vm_map:  std::clog << "| nmspc| <0x" << std::hex << p
-                                << std::dec << "> namespace ["
-                                << val.map().mapper.size() << " val]"; break;
-        default:      std::clog << "| err  | <0x" << std::hex << p
-                                << std::dec << "> unknown object"; break;
+        case vm_type::vm_none: std::clog << "| null |"; break;
+        case vm_type::vm_ret:  std::clog << "| pc   | 0x" << std::hex
+                                         << val.ret() << std::dec; break;
+        case vm_type::vm_addr: std::clog << "| addr | 0x" << std::hex
+                                         << reinterpret_cast<u64>(val.addr())
+                                         << std::dec; break;
+        case vm_type::vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
+        case vm_type::vm_nil:  std::clog << "| nil  |"; break;
+        case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
+        case vm_type::vm_str:  std::clog << "| str  | <0x" << std::hex << p
+                                         << "> " << rawstr(val.str(), 16)
+                                         << std::dec; break;
+        case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
+                                         << "> entry:0x" << val.func().entry
+                                         << std::dec; break;
+        case vm_type::vm_upval:std::clog << "| upval| <0x" << std::hex << p
+                                         << std::dec << "> [" << val.upval().size
+                                         << " val]"; break;
+        case vm_type::vm_vec:  std::clog << "| vec  | <0x" << std::hex << p
+                                         << std::dec << "> [" << val.vec().size()
+                                         << " val]"; break;
+        case vm_type::vm_hash: std::clog << "| hash | <0x" << std::hex << p
+                                         << std::dec << "> {" << val.hash().size()
+                                         << " val}"; break;
+        case vm_type::vm_ghost:std::clog << "| obj  | <0x" << std::hex << p
+                                         << "> obj:0x"
+                                         << reinterpret_cast<u64>(val.ghost().pointer)
+                                         << std::dec; break;
+        case vm_type::vm_co:   std::clog << "| co   | <0x" << std::hex << p
+                                         << std::dec << "> coroutine"; break;
+        case vm_type::vm_map:  std::clog << "| nmspc| <0x" << std::hex << p
+                                         << std::dec << "> namespace ["
+                                         << val.map().mapper.size()
+                                         << " val]"; break;
+        default: std::clog << "| err  | <0x" << std::hex << p
+                           << std::dec << "> unknown object"; break;
     }
     std::clog << "\n";
 }
@@ -128,7 +129,8 @@ void vm::function_detail_info(const nas_func& func) {
         std::clog << const_string[func.dynamic_parameter_index] << "...";
     }
     std::clog << ") ";
-    std::clog << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    std::clog << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
 }
 
 void vm::function_call_trace() {
@@ -138,7 +140,7 @@ void vm::function_call_trace() {
     // generate trace back
     std::stack<const nas_func*> functions;
     for(var* i = bottom; i<=top; ++i) {
-        if (i->type==vm_func && i-1>=bottom && (i-1)->type==vm_ret) {
+        if (i->is_func() && i-1>=bottom && (i-1)->is_ret()) {
             functions.push(&i->func());
         }
     }
@@ -176,7 +178,7 @@ void vm::trace_back() {
     // generate trace back
     std::stack<u32> ret;
     for(var* i = ctx.stack; i<=ctx.top; ++i) {
-        if (i->type==vm_ret && i->ret()!=0) {
+        if (i->is_ret() && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
@@ -236,7 +238,7 @@ void vm::register_info() {
 }
 
 void vm::global_state() {
-    if (!global_size || global[0].type==vm_none) {
+    if (!global_size || global[0].is_none()) {
         return;
     }
     std::clog << "\nglobal (0x" << std::hex
@@ -266,7 +268,7 @@ void vm::local_state() {
 }
 
 void vm::upvalue_state() {
-    if (ctx.funcr.type==vm_nil || ctx.funcr.func().upval.empty()) {
+    if (ctx.funcr.is_nil() || ctx.funcr.func().upval.empty()) {
         return;
     }
     std::clog << "\nupvalue\n";
@@ -312,7 +314,8 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     }
     result += ") ";
     std::stringstream out;
-    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    out << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
     out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     return result + out.str();
 }
@@ -326,7 +329,7 @@ std::string vm::report_special_call_lack_arguments(
         argument_list[i.second-1] = i.first;
     }
     for(const auto& key : argument_list) {
-        if (local[func.keys.at(key)].type==vm_none) {
+        if (local[func.keys.at(key)].is_none()) {
             result += key + ", ";
         } else {
             result += key + "[get], ";
@@ -335,7 +338,8 @@ std::string vm::report_special_call_lack_arguments(
     result = result.substr(0, result.length()-2);
     result += ") ";
     std::stringstream out;
-    out << "{entry: 0x" << std::hex << func.entry << std::dec << "}";
+    const auto& code = bytecode[func.entry];
+    out << "{ entry: " << files[code.fidx] << ":" << code.line << " }";
     out << " @ 0x" << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     return result + out.str();
 }
@@ -366,20 +370,21 @@ std::string vm::report_out_of_range(f64 index, usize real_size) const {
 
 std::string vm::type_name_string(const var& value) const {
     switch(value.type) {
-        case vm_none: return "none";
-        case vm_cnt: return "counter";
-        case vm_addr: return "address";
-        case vm_ret: return "program counter";
-        case vm_nil: return "nil";
-        case vm_num: return "number";
-        case vm_str: return "string";
-        case vm_vec: return "vector";
-        case vm_hash: return "hash";
-        case vm_func: return "function";
-        case vm_upval: return "upvalue";
-        case vm_obj: return "ghost type";
-        case vm_co: return "coroutine";
-        case vm_map: return "namespace";
+        case vm_type::vm_none: return "none";
+        case vm_type::vm_cnt: return "counter";
+        case vm_type::vm_addr: return "address";
+        case vm_type::vm_ret: return "program counter";
+        case vm_type::vm_nil: return "nil";
+        case vm_type::vm_num: return "number";
+        case vm_type::vm_str: return "string";
+        case vm_type::vm_vec: return "vector";
+        case vm_type::vm_hash: return "hash";
+        case vm_type::vm_func: return "function";
+        case vm_type::vm_upval: return "upvalue";
+        case vm_type::vm_ghost: return "ghost type";
+        case vm_type::vm_co: return "coroutine";
+        case vm_type::vm_map: return "namespace";
+        default: break;
     }
     return "unknown";
 }

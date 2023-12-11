@@ -1,6 +1,8 @@
 # process_bar.nas
 # ValKmjolnir 2022/6/14
 # this file is inspired by a Python lib: alive_progress
+use std.os;
+use std.unix;
 
 var bar = func() {
     var bar = {
@@ -240,96 +242,96 @@ var default_bar = func(name = "classic", length = 20) {
     if (typeof(name)!="str")
         name="classic";
     if (name=="classic")
-        return process_bar.bar("sharp","point","bracket",length);
+        return bar("sharp","point","bracket",length);
     elsif (name=="classic2")
-        return process_bar.bar("equal","point","bracket",length);
+        return bar("equal","point","bracket",length);
     elsif (name=="classic3")
-        return process_bar.bar("sharp","point","line",length);
+        return bar("sharp","point","line",length);
     elsif (name=="classic4")
-        return process_bar.bar("equal","point","line",length);
+        return bar("equal","point","line",length);
     elsif (name=="triangle")
-        return process_bar.bar("solid_triangle_right","hollow_triangle_right","angle_bracket",length);
+        return bar("solid_triangle_right","hollow_triangle_right","angle_bracket",length);
     elsif (name=="dots")
-        return process_bar.bar("solid_circle","hollow_circle","curve",length);
+        return bar("solid_circle","hollow_circle","curve",length);
     elsif (name=="ticks")
-        return process_bar.bar("tick","space","line",length);
+        return bar("tick","space","line",length);
     elsif (name=="deep_shadow")
-        return process_bar.bar("deep_shadow","light_shadow","line",length);
+        return bar("deep_shadow","light_shadow","line",length);
     elsif (name=="block")
-        return process_bar.bar("block","light_shadow","line",length);
+        return bar("block","light_shadow","line",length);
     elsif (name=="oneline")
-        return process_bar.bar("line","space","space",length);
+        return bar("line","space","space",length);
     else
-        return process_bar.bar("sharp","point","bracket",length);
+        return bar("sharp","point","bracket",length);
 }
 
 var default_spinner = func(name = "classic", repeat = 1) {
     if (typeof(name)!="str")
         name="classic";
     if (name=="rise")
-        return process_bar.spinner("rise",repeat);
+        return spinner("rise",repeat);
     elsif (name=="vertical")
-        return process_bar.spinner("vertical",repeat);
+        return spinner("vertical",repeat);
     elsif (name=="dot")
-        return process_bar.spinner("dot",repeat);
+        return spinner("dot",repeat);
     elsif (name=="dots")
-        return process_bar.spinner("dots",repeat);
+        return spinner("dots",repeat);
     elsif (name=="arrow")
-        return process_bar.spinner("arrow",repeat);
+        return spinner("arrow",repeat);
     elsif (name=="classic")
-        return process_bar.spinner("classic",repeat);
+        return spinner("classic",repeat);
     elsif (name=="balls")
-        return process_bar.spinner("balls",repeat);
+        return spinner("balls",repeat);
     elsif (name=="dots_wave")
-        return process_bar.spinner("dots_wave",repeat);
+        return spinner("dots_wave",repeat);
     elsif (name=="pulse")
-        return process_bar.spinner("pulse",repeat);
+        return spinner("pulse",repeat);
     elsif (name=="wave")
-        return process_bar.spinner("wave",repeat);
+        return spinner("wave",repeat);
     elsif (name=="short_wave")
-        return process_bar.spinner("short_wave",repeat);
+        return spinner("short_wave",repeat);
     elsif (name=="fish")
-        return process_bar.spinner("fish",repeat);
+        return spinner("fish",repeat);
     elsif (name=="happy")
-        return process_bar.spinner("happy",repeat);
+        return spinner("happy",repeat);
     elsif (name=="wait")
-        return process_bar.spinner("wait",repeat);
+        return spinner("wait",repeat);
     elsif (name=="stars")
-        return process_bar.spinner("stars",repeat);
+        return spinner("stars",repeat);
     else
-        return process_bar.spinner("classic",repeat);
+        return spinner("classic",repeat);
 }
 
 var show = func() {
     print("\ec");
     var bars={
-        "classic    ":process_bar.default_bar("classic",40),
-        "classic2   ":process_bar.default_bar("classic2",40),
-        "classic3   ":process_bar.default_bar("classic3",40),
-        "classic4   ":process_bar.default_bar("classic4",40),
-        "triangle   ":process_bar.default_bar("triangle",40),
-        "dots       ":process_bar.default_bar("dots",40),
-        "ticks      ":process_bar.default_bar("ticks",40),
-        "deep_shadow":process_bar.default_bar("deep_shadow",40),
-        "block      ":process_bar.default_bar("block",40),
-        "oneline    ":process_bar.default_bar("oneline",40)
+        "classic    ":default_bar("classic",40),
+        "classic2   ":default_bar("classic2",40),
+        "classic3   ":default_bar("classic3",40),
+        "classic4   ":default_bar("classic4",40),
+        "triangle   ":default_bar("triangle",40),
+        "dots       ":default_bar("dots",40),
+        "ticks      ":default_bar("ticks",40),
+        "deep_shadow":default_bar("deep_shadow",40),
+        "block      ":default_bar("block",40),
+        "oneline    ":default_bar("oneline",40)
     };
     var spinners={
-        "rise       ":process_bar.default_spinner("rise",16),
-        "vertical   ":process_bar.default_spinner("vertical",16),
-        "dot        ":process_bar.default_spinner("dot",16),
-        "dots       ":process_bar.default_spinner("dots",16),
-        "arrow      ":process_bar.default_spinner("arrow",16),
-        "classic    ":process_bar.default_spinner("classic",16),
-        "balls      ":process_bar.default_spinner("balls",4),
-        "dots_wave  ":process_bar.default_spinner("dots_wave",2),
-        "pulse      ":process_bar.default_spinner("pulse",1),
-        "wave       ":process_bar.default_spinner("wave",2),
-        "short_wave ":process_bar.default_spinner("short_wave",4),
-        "fish       ":process_bar.default_spinner("fish",1),
-        "happy      ":process_bar.default_spinner("happy",1),
-        "wait       ":process_bar.default_spinner("wait",1),
-        "stars      ":process_bar.default_spinner("stars",1)
+        "rise       ":default_spinner("rise",16),
+        "vertical   ":default_spinner("vertical",16),
+        "dot        ":default_spinner("dot",16),
+        "dots       ":default_spinner("dots",16),
+        "arrow      ":default_spinner("arrow",16),
+        "classic    ":default_spinner("classic",16),
+        "balls      ":default_spinner("balls",4),
+        "dots_wave  ":default_spinner("dots_wave",2),
+        "pulse      ":default_spinner("pulse",1),
+        "wave       ":default_spinner("wave",2),
+        "short_wave ":default_spinner("short_wave",4),
+        "fish       ":default_spinner("fish",1),
+        "happy      ":default_spinner("happy",1),
+        "wait       ":default_spinner("wait",1),
+        "stars      ":default_spinner("stars",1)
     };
     var bar_key=keys(bars);
     var spin_key=keys(spinners);

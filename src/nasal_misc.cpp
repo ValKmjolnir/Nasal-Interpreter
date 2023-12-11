@@ -1,5 +1,16 @@
 #include "nasal.h"
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+#include <sys/stat.h>
+
+#ifdef _MSC_VER
+#pragma warning (disable:4996)
+#endif
+
 namespace nasal {
 
 bool is_windows() {
@@ -86,7 +97,7 @@ bool is_superh() {
 #endif
 }
 
-f64 hex2f(const char* str) {
+f64 hex_to_f64(const char* str) {
     f64 ret = 0;
     for(; *str; ++str) {
         if ('0'<=*str && *str<='9') {
@@ -102,7 +113,7 @@ f64 hex2f(const char* str) {
     return ret;
 }
 
-f64 oct2f(const char* str) {
+f64 oct_to_f64(const char* str) {
     f64 ret = 0;
     while('0'<=*str && *str<'8') {
         ret = ret*8+(*str++-'0');
@@ -119,7 +130,7 @@ f64 oct2f(const char* str) {
 // so we write a new function here to convert str to number manually.
 // but this also makes 0.1+0.2==0.3,
 // not another result that you may get in other languages.
-f64 dec2f(const char* str) {
+f64 dec_to_f64(const char* str) {
     f64 ret = 0, num_pow = 0;
     bool negative = false;
     while('0'<=*str && *str<='9') {
@@ -165,7 +176,7 @@ f64 dec2f(const char* str) {
         ret*std::pow(10, num_pow-1)*10;
 }
 
-f64 str2num(const char* str) {
+f64 str_to_num(const char* str) {
     bool negative = false;
     f64 res = 0;
     if (*str=='-' || *str=='+') {
@@ -175,11 +186,11 @@ f64 str2num(const char* str) {
         return nan("");
     }
     if (str[0]=='0' && str[1]=='x') {
-        res = hex2f(str+2);
+        res = hex_to_f64(str+2);
     } else if (str[0]=='0' && str[1]=='o') {
-        res = oct2f(str+2);
+        res = oct_to_f64(str+2);
     } else {
-        res = dec2f(str);
+        res = dec_to_f64(str);
     }
     return negative? -res:res;
 }
@@ -199,7 +210,7 @@ i32 utf8_hdchk(const char head) {
     return 0;
 }
 
-std::string chrhex(const char c) {
+std::string char_to_hex(const char c) {
     const char hextbl[] = "0123456789abcdef";
     return {hextbl[(c&0xf0)>>4], hextbl[c&0x0f]};
 }
@@ -209,7 +220,7 @@ std::string rawstr(const std::string& str, const usize maxlen) {
     for(auto i : str) {
         // windows doesn't output unicode normally, so we output the hex
         if (is_windows() && i<=0) {
-            ret += "\\x"+chrhex(i);
+            ret += "\\x" + char_to_hex(i);
             continue;
         }
         switch(i) {
@@ -232,6 +243,34 @@ std::string rawstr(const std::string& str, const usize maxlen) {
         ret = ret.substr(0, maxlen)+"...";
     }
     return ret;
+}
+
+namespace fs {
+
+path& path::operator/(const path& another) {
+    this->file_system_path += is_windows()? "\\":"/";
+    this->file_system_path += another.file_system_path;
+    return *this;
+}
+
+bool exists(const path& file_path) {
+#ifdef _MSC_VER
+    #define F_OK 0 // fuck msc
+#endif
+    return access(file_path.c_str(), F_OK)==0;
+}
+
+bool is_regular(const path& file_path) {
+#ifdef _MSC_VER
+    #define S_ISREG(m) (((m)&0xF000)==0x8000)
+#endif
+    struct stat buffer;
+    if (stat(file_path.c_str(), &buffer)!=0) {
+        return false;
+    }
+    return S_ISREG(buffer.st_mode);
+}
+
 }
 
 }

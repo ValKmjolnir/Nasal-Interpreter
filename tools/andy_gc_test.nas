@@ -1,3 +1,4 @@
+use std.math;
 
 var REPS = 10;
 var COUNT = 16384;

@@ -2,6 +2,8 @@
 # 2021/8/13
 use std.file;
 use std.runtime;
+use std.os;
+use std.io;
 
 # init
 var hex = func() {

@@ -1,4 +1,5 @@
 use module.libkey;
+use std.unix;
 
 srand();
 

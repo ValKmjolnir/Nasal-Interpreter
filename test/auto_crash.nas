@@ -1,5 +1,6 @@
 # Road check and auto pilot by ValKmjolnir
 use std.fg_env;
+use std.math;
 
 var props = fg_env.props;
 var geodinfo = fg_env.geodinfo;

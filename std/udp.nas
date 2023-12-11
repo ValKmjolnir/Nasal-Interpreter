@@ -1,4 +1,6 @@
 use module.libsock;
+use std.os;
+use std.unix;
 
 var udp_server = func(hostname, port, retry_delay = 5) {
     var socket = libsock.socket;

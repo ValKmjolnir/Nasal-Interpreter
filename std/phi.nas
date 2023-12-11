@@ -5,6 +5,8 @@
 
 use module.libsock;
 use std.json;
+use std.os;
+use std.unix;
 
 var _raw_str = func(s) {
     var v = split("", s);
@@ -86,8 +88,8 @@ var new = func(hostname, port) {
 
         # parse this json and return
         var props = json.parse(data);
-        if (json.get_error()) {
-            println("encounter error when parsing \"", path, "\"");
+        if (size(json.get_error())>0) {
+            println("encounter error when parsing \"", path, "\":\n", json.get_error());
             logprint(LOG_DEBUG, _raw_str(data));
             return {path: path};
         }

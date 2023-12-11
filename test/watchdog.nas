@@ -1,4 +1,7 @@
 use std.runtime;
+use std.os;
+use std.io;
+use std.unix;
 
 var os_time = func() {
     return "[\e[33;1m"~os.time()~"\e[0m] ";
@@ -35,7 +38,7 @@ if (size(argv)==2) {
     args=split(" ",argv[1]);
 }
 
-var modified_time=fstat(filename).st_mtime;
+var modified_time = io.fstat(filename).st_mtime;
 println(os_time(),info_hd(),"\e[1mwatching ",filename," ..\e[0m");
 while(1) {
     unix.sleep(1);
@@ -43,7 +46,7 @@ while(1) {
         println(os_time(),err_hd(),"\e[1mfile <",filename,"> does not exist\e[0m");
         break;
     }
-    var latest_modified_time=fstat(filename).st_mtime;
+    var latest_modified_time = io.fstat(filename).st_mtime;
     if (latest_modified_time!=modified_time) {
         modified_time=latest_modified_time;
         println(os_time(),modified_hd(),"\e[1m",filename,"\e[0m");

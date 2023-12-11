@@ -10,14 +10,9 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
-#include <sys/stat.h>
 
 #include "nasal.h"
 #include "nasal_err.h"
-
-#ifdef _MSC_VER
-#define S_ISREG(m) (((m)&0xF000)==0x8000)
-#endif
 
 namespace nasal {
 

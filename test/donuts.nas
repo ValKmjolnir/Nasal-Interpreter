@@ -1,4 +1,5 @@
 use std.runtime;
+use std.math;
 
 var mod = math.mod;
 

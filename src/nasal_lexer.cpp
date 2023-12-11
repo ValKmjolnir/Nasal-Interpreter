@@ -61,7 +61,7 @@ void lexer::err_char() {
     char c = res[ptr++];
     err.err("lexer",
         {line, column-1, line, column, filename},
-        "invalid character 0x"+chrhex(c)
+        "invalid character 0x" + char_to_hex(c)
     );
     ++invalid_char;
 }
@@ -76,8 +76,7 @@ void lexer::open(const std::string& file) {
     }
 
     // check file exsits and it is a regular file
-    struct stat buffer;
-    if (stat(file.c_str(), &buffer)==0 && !S_ISREG(buffer.st_mode)) {
+    if (!fs::is_regular(file)) {
         err.err("lexer", "<"+file+"> is not a regular file");
         err.chkerr();
     }
@@ -121,9 +120,9 @@ std::string lexer::utf8_gen() {
         // utf8 character's total length is 1+nbytes
         if (tmp.length()!=1+nbytes) {
             ++column;
-            std::string utf_info = "0x"+chrhex(tmp[0]);
+            std::string utf_info = "0x" + char_to_hex(tmp[0]);
             for(u32 i = 1; i<tmp.size(); ++i) {
-                utf_info += " 0x"+chrhex(tmp[i]);
+                utf_info += " 0x" + char_to_hex(tmp[i]);
             }
             err.err("lexer",
                 {line, column-1, line, column, filename},

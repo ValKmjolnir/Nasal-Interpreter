@@ -9,7 +9,7 @@ else
 	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
 endif
 
-NASAL_HEADER=\
+NASAL_HEADER = \
 	src/ast_dumper.h\
 	src/ast_visitor.h\
 	src/nasal_ast.h\
@@ -32,11 +32,12 @@ NASAL_HEADER=\
 	src/io_lib.h\
 	src/math_lib.h\
 	src/dylib_lib.h\
+	src/json_lib.h\
 	src/unix_lib.h\
 	src/coroutine.h\
 	src/repl.h
 
-NASAL_OBJECT=\
+NASAL_OBJECT = \
 	build/nasal_err.o\
 	build/nasal_ast.o\
 	build/ast_visitor.o\
@@ -57,6 +58,7 @@ NASAL_OBJECT=\
 	build/math_lib.o\
 	build/unix_lib.o\
 	build/dylib_lib.o\
+	build/json_lib.o\
 	build/coroutine.o\
 	build/nasal_type.o\
 	build/nasal_vm.o\
@@ -161,6 +163,13 @@ build/dylib_lib.o: \
 	src/dylib_lib.h src/dylib_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/dylib_lib.cpp -o build/dylib_lib.o
 
+build/json_lib.o: \
+	src/nasal.h\
+	src/nasal_type.h\
+	src/nasal_gc.h\
+	src/json_lib.h src/json_lib.cpp | build
+	$(CXX) $(CXXFLAGS) src/json_lib.cpp -o build/json_lib.o
+
 build/unix_lib.o: \
 	src/nasal.h\
 	src/nasal_type.h\
@@ -237,6 +246,7 @@ clean:
 
 .PHONY: test
 test:nasal
+	@ ./nasal test/argparse_test.nas
 	@ ./nasal -e test/ascii-art.nas
 	@ ./nasal -t -d test/bfs.nas
 	@ ./nasal -t test/bigloop.nas

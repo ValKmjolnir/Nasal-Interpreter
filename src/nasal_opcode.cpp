@@ -111,7 +111,7 @@ void codestream::dump(std::ostream& out) const {
             break;
     }
     if (files) {
-        out << "(" << files[code.fidx] << ":" << code.line << ")";
+        out << " (" << files[code.fidx] << ":" << code.line << ")";
     }
 }
 

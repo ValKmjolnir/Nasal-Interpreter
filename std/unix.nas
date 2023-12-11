@@ -1,6 +1,8 @@
 # unix.nas
 # 2023 by ValKmjolnir
 use std.bits;
+use std.os;
+use std.io;
 
 var _S_IFDIR = 0x4000;
 var _S_IFREG = 0x8000;
@@ -70,5 +72,5 @@ var getenv = func(envvar) {
 }
 
 var getpath = func() {
-    return split(os.platform()=="windows"? ";":":", unix.getenv("PATH"));
+    return split(os.platform()=="windows"? ";":":", getenv("PATH"));
 }

@@ -2,15 +2,15 @@ use std.file;
 
 var check = func(dir_name) {
     var ts = maketimestamp();
-    var f = file.find_all_files_with_extension(dir_name, "nas");
+    var files = file.recursive_find_files_with_extension(dir_name, "nas");
     var res = [];
-    foreach(var k; f) {
+    foreach(var f; files) {
         ts.stamp();
-        if (system("nasal -c "~dir_name~"/"~k~" 1>/dev/null 2>/dev/null")!=0) {
-            println("\e[31merror\e[0m ", dir_name, "/", k);
-            append(res, dir_name~"/"~k);
+        if (system("nasal -c "~f~" 1>/dev/null 2>/dev/null")!=0) {
+            println("\e[31merror\e[0m ", f);
+            append(res, f);
         }
-        println("compiling ", dir_name, "/", k, " in \e[32m", ts.elapsedMSec(), "\e[0m ms");
+        println("compiling ", f, " in \e[32m", ts.elapsedUSec()/1000, "\e[0m ms");
     }
     return res;
 }

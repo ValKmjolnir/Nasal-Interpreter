@@ -1,6 +1,8 @@
 use std.file;
 use std.padding;
 use std.process_bar;
+use std.io;
+use std.math;
 
 var tips = func() {
     println("usage:");
@@ -19,33 +21,17 @@ if (size(arg)<1) {
 
 var needle = arg[0];
 
-var do_flat = func(vec) {
-    var flat = [];
-    var bfs = [vec];
-    while(size(bfs)!=0) {
-        var d = pop(bfs);
-        foreach(var f; d.files) {
-            if (ishash(f)) {
-                append(bfs,f);
-                continue;
-            }
-            append(flat, d.dir~"/"~f);
-        }
-    }
-    sort(flat, func(a, b) {return cmp(a, b)<0});
-    return flat;
-}
-
 var result = [];
-var all_files = file.recursive_find_files(".");
-foreach(var f; do_flat(all_files)) {
+var all_files = file.recursive_find_files_flat(".");
+sort(all_files, func(a, b) {return cmp(a, b)<=0;});
+foreach(var f; all_files) {
     var pos = find(needle, f);
     if (pos == -1) {
         continue;
     }
     var begin = substr(f, 0, pos);
     var end = pos+size(needle)>=size(f)? "":substr(f, pos+size(needle), size(f));
-    var file_size = fstat(f).st_size;
+    var file_size = io.fstat(f).st_size;
     var unit = " b";
     if (file_size>1024) {
         file_size/=1024;

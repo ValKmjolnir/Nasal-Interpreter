@@ -8,10 +8,6 @@
 #include <io.h>
 #endif
 
-#ifdef _MSC_VER
-#define F_OK 0
-#endif
-
 #include "nasal.h"
 #include "nasal_ast.h"
 #include "nasal_lexer.h"
@@ -33,7 +29,7 @@ private:
     error err;
     std::vector<std::string> imported_files;
     std::vector<std::string> module_load_stack;
-    std::vector<std::string> envpath;
+    std::vector<fs::path> envpath;
 
 private:
     bool import_check(expr*);

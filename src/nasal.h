@@ -39,20 +39,42 @@ bool is_superh();
 // virtual machine stack depth, both global depth and value stack depth
 const u32 STACK_DEPTH = 4096;
 
-f64 hex2f(const char*);
-f64 oct2f(const char*);
-
+f64 hex_to_f64(const char*);
+f64 oct_to_f64(const char*);
 // we have the same reason not using atof here
 // just as andy's interpreter does.
 // it is not platform independent, and may have strange output.
 // so we write a new function here to convert str to number manually.
 // but this also makes 0.1+0.2==0.3,
 // not another result that you may get in other languages.
-f64 dec2f(const char*);
+f64 dec_to_f64(const char*);
 
-f64 str2num(const char*);
+f64 str_to_num(const char*);
 i32 utf8_hdchk(const char);
-std::string chrhex(const char);
+std::string char_to_hex(const char);
 std::string rawstr(const std::string&, const usize maxlen = 0);
+
+namespace fs {
+
+class path {
+private:
+    std::string file_system_path;
+
+public:
+    path(const path&) = default;
+    path(const std::string& file_path): file_system_path(file_path) {}
+    path& operator/(const path&);
+    const char* c_str() const {
+        return file_system_path.c_str();
+    }
+    std::string str() const {
+        return file_system_path;
+    }
+};
+
+bool exists(const path&);
+bool is_regular(const path&);
+
+}
 
 }

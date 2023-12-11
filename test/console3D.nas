@@ -23,6 +23,7 @@
 # SOFTWARE.
 use module.libmat;
 use std.runtime;
+use std.math;
 
 func() {
     # allocate more spaces

@@ -9,6 +9,8 @@
 # local node, there is no equivalent of the "relative path" variants
 # available in C++; just use node.getNode(path).whatever() instead.
 #
+use std.math;
+use std.string;
 
 var _new = func {
     return {

@@ -15,7 +15,7 @@ namespace repl {
 
 struct info {
     bool in_repl_mode = false;
-    std::string repl_file_name = "<nasal-repl>";
+    const std::string repl_file_name = "<nasal-repl>";
     std::string repl_file_source = "";
 
     // singleton

@@ -2,12 +2,13 @@
 # ValKmjolnir 2022
 use std.runtime;
 use std.coroutine;
+use std.os;
 
 println("-------------------------------------------------------------");
 println(" FlightGear simulated-env for developers project, since 2019");
 println(" Developed by:");
-println(" Sidi Liang (FGPRC-0762)");
-println(" Haokun Lee (FGPRC-0818 aka ValKmjolnir)");
+println(" Sidi762 (FGPRC-0762)");
+println(" ValKmjolnir (FGPRC-0818)");
 println("-------------------------------------------------------------");
 println(" See help using command line argument: --fg-env-help");
 println("-------------------------------------------------------------");

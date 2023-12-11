@@ -7,7 +7,7 @@
 
 namespace nasal {
 
-enum vm_type:u8 {
+enum class vm_type: u8 {
     /* none-gc object */
     vm_none = 0, // error type
     vm_cnt,      // counter for forindex/foreach loop
@@ -21,7 +21,7 @@ enum vm_type:u8 {
     vm_hash,     // hashmap(dict)
     vm_func,     // function(lambda)
     vm_upval,    // upvalue
-    vm_obj,      // ghost type
+    vm_ghost,    // ghost type
     vm_co,       // coroutine
     vm_map,      // for globals and namespaces
     /* mark type range */
@@ -29,7 +29,9 @@ enum vm_type:u8 {
 };
 
 // size of gc object type
-const u32 gc_type_size = vm_type_size_max-vm_str;
+const u32 gc_type_size =
+    static_cast<u32>(vm_type::vm_type_size_max) -
+    static_cast<u32>(vm_type::vm_str);
 
 // basic types
 struct nas_vec;   // vector
@@ -45,7 +47,7 @@ struct nas_val;   // nas_val includes gc-managed types
 
 struct var {
 public:
-    u8 type = vm_none;
+    vm_type type = vm_type::vm_none;
     union {
         u32 ret;
         i64 cnt;
@@ -55,11 +57,11 @@ public:
     } val;
 
 private:
-    var(u8 t, u32 pc) {type = t; val.ret = pc;}
-    var(u8 t, i64 ct) {type = t; val.cnt = ct;}
-    var(u8 t, f64 n) {type = t; val.num = n;}
-    var(u8 t, var* p) {type = t; val.addr = p;}
-    var(u8 t, nas_val* p) {type = t; val.gcobj = p;}
+    var(vm_type t, u32 pc) {type = t; val.ret = pc;}
+    var(vm_type t, i64 ct) {type = t; val.cnt = ct;}
+    var(vm_type t, f64 n) {type = t; val.num = n;}
+    var(vm_type t, var* p) {type = t; val.addr = p;}
+    var(vm_type t, nas_val* p) {type = t; val.gcobj = p;}
 
 public:
     var() = default;
@@ -76,6 +78,7 @@ public:
     std::string to_str();
     bool object_check(const std::string&);
 
+public:
     // create new var object
     static var none();
     static var nil();
@@ -85,6 +88,7 @@ public:
     static var gcobj(nas_val*);
     static var addr(var*);
 
+public:
     // get value
     var* addr();
     u32 ret() const;
@@ -98,6 +102,22 @@ public:
     nas_ghost& ghost();
     nas_co& co();
     nas_map& map();
+
+public:
+    bool is_none() const { return type==vm_type::vm_none; }
+    bool is_cnt() const { return type==vm_type::vm_cnt; }
+    bool is_addr() const { return type==vm_type::vm_addr; }
+    bool is_ret() const { return type==vm_type::vm_ret; }
+    bool is_nil() const { return type==vm_type::vm_nil; }
+    bool is_num() const { return type==vm_type::vm_num; }
+    bool is_str() const { return type==vm_type::vm_str; }
+    bool is_vec() const { return type==vm_type::vm_vec; }
+    bool is_hash() const { return type==vm_type::vm_hash; }
+    bool is_func() const { return type==vm_type::vm_func; }
+    bool is_upval() const { return type==vm_type::vm_upval; }
+    bool is_ghost() const { return type==vm_type::vm_ghost; }
+    bool is_coroutine() const { return type==vm_type::vm_co; }
+    bool is_map() const { return type==vm_type::vm_map; }
 };
 
 struct nas_vec {
@@ -166,21 +186,24 @@ public:
 struct nas_ghost {
 private:
     using destructor = void (*)(void*);
+    using marker = void (*)(void*, std::vector<var>*);
 
 public:
     std::string type_name;
     destructor destructor_function;
+    marker gc_mark_function;
     void* pointer;
 
 public:
     nas_ghost():
-        type_name(""), destructor_function(nullptr), pointer(nullptr) {}
-    ~nas_ghost() {clear();}
-    void set(const std::string&, destructor, void*);
+        type_name(""), destructor_function(nullptr),
+        gc_mark_function(nullptr), pointer(nullptr) {}
+    ~nas_ghost() { clear(); }
+    void set(const std::string&, destructor, marker, void*);
     void clear();
 
 public:
-    const auto& get_ghost_name() const {return type_name;}
+    const auto& get_ghost_name() const { return type_name; }
 };
 
 struct context {
@@ -234,7 +257,7 @@ struct nas_val {
     };
 
     gc_status mark;
-    u8 type; // value type
+    vm_type type; // value type
     u8 unmutable; // used to mark if a string is unmutable
     union {
         std::string* str;
@@ -247,7 +270,7 @@ struct nas_val {
         nas_map*   map;
     } ptr;
 
-    nas_val(u8);
+    nas_val(vm_type);
     ~nas_val();
     void clear();
 };
