@@ -79,7 +79,7 @@ void repl::help() {
 bool repl::run() {
     auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
     auto nasal_parser = std::unique_ptr<parse>(new parse);
-    auto nasal_linker = std::unique_ptr<linker>(new linker);
+    auto nasal_linker = std::unique_ptr<experimental_linker>(new experimental_linker);
     auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
     auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
 
@@ -92,7 +92,7 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_linker->link(*nasal_parser, "<nasal-repl>", true).geterr()) {
+    if (nasal_linker->link(*nasal_parser, true).geterr()) {
         return false;
     }
 

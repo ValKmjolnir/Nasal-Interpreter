@@ -52,4 +52,31 @@ public:
     const auto& get_file_list() const {return imported_files;}
 };
 
+class experimental_linker {
+private:
+    std::string this_file;
+    std::string library_file_path;
+    bool report_show_path_flag;
+    error err;
+    std::vector<std::string> used_files;
+    std::unordered_map<std::string, code_block*> load_mapper;
+    std::vector<fs::path> envpath;
+
+private:
+    std::string get_path(expr*);
+    std::string find_real_file_path(const std::string&, const span&);
+    std::string generate_module_definition_name(const std::string&);
+    std::string generate_module_real_name(const std::string&);
+    return_expr* generate_module_return(code_block*);
+    definition_expr* generate_module_definition(code_block*);
+    code_block* compile_core(const std::string&);
+    code_block* experimental_load_module(expr*);
+    code_block* experimental_load_library();
+
+public:
+    experimental_linker();
+    const error& link(parse&, bool);
+    const auto& get_file_list() const {return used_files;}
+};
+
 }

@@ -1302,7 +1302,7 @@ void codegen::ret_gen(return_expr* node) {
     emit(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse, linker& import, bool repl_flag) {
+const error& codegen::compile(parse& parse, experimental_linker& import, bool repl_flag) {
     init_native_function();
     init_file_map(import.get_file_list());
     need_repl_output = repl_flag;

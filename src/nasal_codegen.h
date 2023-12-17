@@ -141,7 +141,7 @@ public:
 
 public:
     codegen() = default;
-    const error& compile(parse&, linker&, bool);
+    const error& compile(parse&, experimental_linker&, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };

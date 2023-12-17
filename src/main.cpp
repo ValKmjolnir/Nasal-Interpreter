@@ -118,8 +118,9 @@ void execute(
 
     nasal::lexer   lex;
     nasal::parse   parse;
-    nasal::linker  ld;
     nasal::codegen gen;
+
+    nasal::experimental_linker exld;
 
     // lexer scans file to get tokens
     lex.scan(file).chkerr();
@@ -132,12 +133,12 @@ void execute(
     }
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
+    exld.link(parse, cmd&VM_DETAIL);
     if (cmd&VM_REF_FILE) {
-        if (ld.get_file_list().size()) {
+        if (exld.get_file_list().size()) {
             std::cout << "referenced file(s):\n";
         }
-        for(const auto& file: ld.get_file_list()) {
+        for(const auto& file: exld.get_file_list()) {
             std::cout << "  " << file << "\n";
         }
     }
@@ -151,7 +152,7 @@ void execute(
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false).chkerr();
+    gen.compile(parse, exld, false).chkerr();
     if (cmd&VM_CODE) {
         gen.print(std::cout);
     }
@@ -163,11 +164,11 @@ void execute(
     auto start = clk::now();
     if (cmd&VM_DEBUG) {
         auto debugger = std::unique_ptr<nasal::dbg>(new nasal::dbg);
-        debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
+        debugger->run(gen, exld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
         runtime->set_detail_report_info(cmd&VM_DETAIL);
-        runtime->run(gen, ld, argv);
+        runtime->run(gen, exld, argv);
     }
 
     // get running time

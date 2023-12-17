@@ -182,7 +182,7 @@ public:
     /* execution entry */
     void run(
         const codegen&,
-        const linker&,
+        const experimental_linker&,
         const std::vector<std::string>&
     );
 

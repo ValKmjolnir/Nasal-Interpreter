@@ -236,7 +236,7 @@ void dbg::interact() {
 
 void dbg::run(
     const codegen& gen,
-    const linker& linker,
+    const experimental_linker& linker,
     const std::vector<std::string>& argv,
     bool profile,
     bool show_all_prof_result) {

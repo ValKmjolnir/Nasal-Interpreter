@@ -413,7 +413,7 @@ void vm::die(const std::string& str) {
 
 void vm::run(
     const codegen& gen,
-    const linker& linker,
+    const experimental_linker& linker,
     const std::vector<std::string>& argv
 ) {
     init(gen.strs(), gen.nums(), gen.natives(),

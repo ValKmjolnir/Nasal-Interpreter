@@ -163,7 +163,7 @@ public:
         do_profiling(false) {}
     void run(
         const codegen&,
-        const linker&,
+        const experimental_linker&,
         const std::vector<std::string>&,
         bool,
         bool
