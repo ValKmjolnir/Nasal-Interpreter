@@ -132,7 +132,7 @@ void execute(
     }
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
+    ld.link(parse, cmd&VM_DETAIL).chkerr();
     if (cmd&VM_REF_FILE) {
         if (ld.get_file_list().size()) {
             std::cout << "referenced file(s):\n";
