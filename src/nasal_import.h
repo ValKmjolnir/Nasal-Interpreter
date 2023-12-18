@@ -23,6 +23,7 @@ namespace nasal {
 
 class linker {
 private:
+    const u32 MAX_RECURSION_DEPTH = 256;
     bool show_path_flag;
     bool library_loaded;
     std::string this_file;
@@ -48,7 +49,7 @@ private:
 
 public:
     linker();
-    const error& link(parse&, const std::string&, bool);
+    const error& link(parse&, bool);
     const auto& get_file_list() const {return imported_files;}
 };
 
