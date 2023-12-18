@@ -92,7 +92,7 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_linker->link(*nasal_parser, "<nasal-repl>", true).geterr()) {
+    if (nasal_linker->link(*nasal_parser, true).geterr()) {
         return false;
     }
 

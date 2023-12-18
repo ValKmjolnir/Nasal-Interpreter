@@ -179,23 +179,38 @@ code_block* linker::import_regular_file(
     // check self import, avoid infinite loading loop
     if (check_self_import(filename)) {
         err.err("link",
-            "self-referenced module <" + filename + ">:\n" +
-            "    reference path: " + generate_self_import_path(filename)
+            node->get_location(),
+            "self-referenced module <" + filename + ">, " +
+            "reference path: " + generate_self_import_path(filename)
         );
         return new code_block({0, 0, 0, 0, filename});
     }
     check_exist_or_record_file(filename);
     
     module_load_stack.push_back(filename);
+    if (module_load_stack.size()>MAX_RECURSION_DEPTH) {
+        err.err("link",
+            node->get_location(),
+            "too deep module import stack (>" +
+            std::to_string(MAX_RECURSION_DEPTH) + ")."
+        );
+        return new code_block({0, 0, 0, 0, filename});
+    }
     // start importing...
     lexer nasal_lexer;
     parse nasal_parser;
     if (nasal_lexer.scan(filename).geterr()) {
-        err.err("link", "error occurred when analysing <" + filename + ">");
+        err.err("link",
+            node->get_location(),
+            "error occurred when analysing <" + filename + ">"
+        );
         return new code_block({0, 0, 0, 0, filename});
     }
     if (nasal_parser.compile(nasal_lexer).geterr())  {
-        err.err("link", "error occurred when analysing <" + filename + ">");
+        err.err("link",
+            node->get_location(),
+            "error occurred when analysing <" + filename + ">"
+        );
         return new code_block({0, 0, 0, 0, filename});
     }
     // swap result out
@@ -378,19 +393,19 @@ code_block* linker::load(code_block* program_root, const std::string& filename) 
     return tree;
 }
 
-const error& linker::link(
-    parse& parse, const std::string& self, bool spath = false) {
+const error& linker::link(parse& parse, bool spath = false) {
     // switch for showing path when errors occur
     show_path_flag = spath;
 
     // initializing file map
-    this_file = self;
-    imported_files = {self};
-    module_load_stack = {self};
+    this_file = parse.tree()->get_location().file;
+    imported_files = {this_file};
+    module_load_stack = {this_file};
 
     // scan root and import files
     // then generate a new ast and return to import_ast
-    auto new_tree_root = load(parse.tree(), self);
+    // dfs load file
+    auto new_tree_root = load(parse.tree(), this_file);
     auto old_tree_root = parse.swap(new_tree_root);
     delete old_tree_root;
     return err;
