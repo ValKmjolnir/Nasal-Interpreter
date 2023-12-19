@@ -699,6 +699,13 @@ const error& experimental_linker::link(parse& nasal_parser, bool report_show_pat
     }
     library_code_block->get_expressions().clear();
     delete library_code_block;
+
+    // add module hashmap in globals
+    auto def = new definition_expr({0, 0, 0, 0, this_file});
+    def->set_identifier(new identifier({0, 0, 0, 0, this_file}, "nasal@modules"));
+    def->set_value(new hash_expr({0, 0, 0, 0, this_file}));
+    new_code_block->add_expression(def);
+
     // load modules by order
     std::unordered_set<std::string> loaded;
     for(auto iter = load_order.rbegin(); iter!=load_order.rend(); ++iter) {
