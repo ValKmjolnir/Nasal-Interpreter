@@ -6,7 +6,7 @@
 
 namespace nasal {
 
-linker::linker(): show_path_flag(false), library_loaded(false), this_file("") {
+linker::linker(): show_path_flag(false), this_file("") {
     const auto seperator = is_windows()? ';':':';
     const auto PATH = std::string(getenv("PATH"));
     usize last = 0, position = PATH.find(seperator, 0);
@@ -155,7 +155,7 @@ std::string linker::generate_self_import_path(const std::string& filename) {
     return res + "[" + filename + "]";
 }
 
-void linker::link(code_block* new_tree_root, code_block* old_tree_root) {
+void linker::merge_tree(code_block* new_tree_root, code_block* old_tree_root) {
     // add children of add_root to the back of root
     for(auto& i : old_tree_root->get_expressions()) {
         new_tree_root->add_expression(i);
@@ -186,7 +186,7 @@ code_block* linker::import_regular_file(
         return new code_block({0, 0, 0, 0, filename});
     }
     check_exist_or_record_file(filename);
-    
+
     module_load_stack.push_back(filename);
     if (module_load_stack.size()>MAX_RECURSION_DEPTH) {
         err.err("link",
@@ -217,9 +217,9 @@ code_block* linker::import_regular_file(
     auto parse_result = nasal_parser.swap(nullptr);
 
     // check if parse result has 'import'
-    auto result = load(parse_result, filename);
+    load(parse_result, filename);
     module_load_stack.pop_back();
-    return result;
+    return parse_result;
 }
 
 code_block* linker::import_nasal_lib() {
@@ -253,7 +253,8 @@ code_block* linker::import_nasal_lib() {
     // swap result out
     auto parse_result = nasal_parser.swap(nullptr);
     // check if library has 'import' (in fact it should not)
-    return load(parse_result, path);
+    load(parse_result, path);
+    return parse_result;
 }
 
 std::string linker::generate_module_name(const std::string& file_path) {
@@ -348,18 +349,7 @@ definition_expr* linker::generate_module_definition(code_block* block) {
     return def;
 }
 
-code_block* linker::load(code_block* program_root, const std::string& filename) {
-    auto tree = new code_block({0, 0, 0, 0, filename});
-    // load library, this ast will be linked with root directly
-    // so no extra namespace is generated
-    if (!library_loaded) {
-        auto nasal_lib_code_block = import_nasal_lib();
-        // insert nasal lib code to the back of tree
-        link(tree, nasal_lib_code_block);
-        delete nasal_lib_code_block;
-        library_loaded = true;
-    }
-
+void linker::load(code_block* program_root, const std::string& filename) {
     // load imported modules
     std::unordered_set<std::string> used_modules = {};
     for(auto& import_node : program_root->get_expressions()) {
@@ -368,29 +358,25 @@ code_block* linker::load(code_block* program_root, const std::string& filename) 
         }
         // parse file and get ast
         auto module_code_block = import_regular_file(import_node, used_modules);
-        auto replace_node = new null_expr(import_node->get_location());
-        // after importing the regular file as module, delete this node
-        delete import_node;
-        // and replace the node with null_expr node
-        import_node = replace_node;
 
-        // avoid repeatedly importing the same module
+        // avoid repeatedly importing the same module in one file
         const auto& module_path = module_code_block->get_location().file;
         if (used_modules.count(module_path)) {
             delete module_code_block;
+            auto replace_node = new null_expr(import_node->get_location());
+            // after importing the regular file as module, delete this node
+            delete import_node;
+            // and replace the node with null_expr node
+            import_node = replace_node;
             continue;
         }
-        
+        used_modules.insert(module_path);
+        delete import_node;
         // then we generate a function warping the code block,
         // and export the necessary global symbols in this code block
         // by generate a return statement, with a hashmap return value
-        used_modules.insert(module_path);
-        tree->add_expression(generate_module_definition(module_code_block));
+        import_node = generate_module_definition(module_code_block);
     }
-
-    // insert program root to the back of tree
-    link(tree, program_root);
-    return tree;
 }
 
 const error& linker::link(parse& parse, bool spath = false) {
@@ -405,9 +391,10 @@ const error& linker::link(parse& parse, bool spath = false) {
     // scan root and import files
     // then generate a new ast and return to import_ast
     // dfs load file
-    auto new_tree_root = load(parse.tree(), this_file);
-    auto old_tree_root = parse.swap(new_tree_root);
-    delete old_tree_root;
+    auto library = import_nasal_lib();
+    load(parse.tree(), this_file);
+    merge_tree(library, parse.tree());
+    delete parse.swap(library);
     return err;
 }
 
