@@ -21,38 +21,6 @@
 
 namespace nasal {
 
-class linker {
-private:
-    const u32 MAX_RECURSION_DEPTH = 256;
-    bool show_path_flag;
-    bool library_loaded;
-    std::string this_file;
-    error err;
-    std::vector<std::string> imported_files;
-    std::vector<std::string> module_load_stack;
-    std::vector<fs::path> envpath;
-
-private:
-    bool import_check(expr*);
-    bool check_exist_or_record_file(const std::string&);
-    bool check_self_import(const std::string&);
-    std::string generate_self_import_path(const std::string&);
-    void link(code_block*, code_block*);
-    std::string get_path(expr*);
-    std::string find_real_file_path(const std::string&, const span&);
-    code_block* import_regular_file(expr*, std::unordered_set<std::string>&);
-    code_block* import_nasal_lib();
-    std::string generate_module_name(const std::string&);
-    return_expr* generate_module_return(code_block*);
-    definition_expr* generate_module_definition(code_block*);
-    code_block* load(code_block*, const std::string&);
-
-public:
-    linker();
-    const error& link(parse&, bool);
-    const auto& get_file_list() const {return imported_files;}
-};
-
 class experimental_linker {
 private:
     std::string this_file;
@@ -60,13 +28,12 @@ private:
     bool report_show_path_flag;
     error err;
     std::vector<std::string> used_files;
-    std::unordered_map<std::string, code_block*> load_mapper;
     std::vector<fs::path> envpath;
 
 private:
+    bool import_check(expr*);
     std::string get_path(expr*);
     std::string find_real_file_path(const std::string&, const span&);
-    std::string generate_module_definition_name(const std::string&);
     std::string generate_module_real_name(const std::string&);
     return_expr* generate_module_return(code_block*);
     definition_expr* generate_module_definition(code_block*);
