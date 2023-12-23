@@ -75,12 +75,17 @@ std::ostream& logo(std::ostream& out) {
     << "   /  \\/ / _` / __|/ _` | |\n"
     << "  / /\\  / (_| \\__ \\ (_| | |\n"
     << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    << "ver  : " << __nasver << " (" << __DATE__ << " " << __TIME__ << ")\n"
+    << "\n"
+    << "ver  : " << __nasver__
+    << " " << nasal::get_platform() << " " << nasal::get_arch()
+    << " (" << __DATE__ << " " << __TIME__ << ")\n"
     << "std  : c++ " << __cplusplus << "\n"
     << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
     << "repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
+    << "\n"
+    << "presented by fgprc members - http://fgprc.org\n"
     << "\n"
     << "input <nasal -h> to get help .\n\n";
     return out;
@@ -95,7 +100,8 @@ std::ostream& version(std::ostream& out) {
     if (num<0.01) {
         nasal::parse::easter_egg();
     }
-    out << "nasal interpreter version " << __nasver;
+    out << "nasal interpreter version " << __nasver__;
+    out << " " << nasal::get_platform() << " " << nasal::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
 }
