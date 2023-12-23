@@ -97,6 +97,38 @@ bool is_superh() {
 #endif
 }
 
+const char* get_platform() {
+    if (is_windows()) {
+        return "windows";
+    } else if (is_linux()) {
+        return "linux";
+    } else if (is_macos()) {
+        return "macOS";
+    }
+    return "unknown platform";
+}
+
+const char* get_arch() {
+    if (is_x86()) {
+        return "x86";
+    } else if (is_x86_64()) {
+        return "x86-64";
+    } else if (is_amd64()) {
+        return "amd64";
+    } else if (is_arm()) {
+        return "arm";
+    } else if (is_aarch64()) {
+        return "aarch64";
+    } else if (is_ia64()) {
+        return "ia64";
+    } else if (is_powerpc()) {
+        return "powerpc";
+    } else if (is_superh()) {
+        return "superh";
+    }
+    return "unknown arch";
+}
+
 f64 hex_to_f64(const char* str) {
     f64 ret = 0;
     for(; *str; ++str) {

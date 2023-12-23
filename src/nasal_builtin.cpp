@@ -447,35 +447,11 @@ var builtin_sleep(context* ctx, gc* ngc) {
 }
 
 var builtin_platform(context* ctx, gc* ngc) {
-    if (is_windows()) {
-        return ngc->newstr("windows");
-    } else if (is_linux()) {
-        return ngc->newstr("linux");
-    } else if (is_macos()) {
-        return ngc->newstr("macOS");
-    }
-    return ngc->newstr("unknown");
+    return ngc->newstr(get_platform());
 }
 
 var builtin_arch(context* ctx, gc* ngc) {
-    if (is_x86()) {
-        return ngc->newstr("x86");
-    } else if (is_x86_64()) {
-        return ngc->newstr("x86-64");
-    } else if (is_amd64()) {
-        return ngc->newstr("amd64");
-    } else if (is_arm()) {
-        return ngc->newstr("arm");
-    } else if (is_aarch64()) {
-        return ngc->newstr("aarch64");
-    } else if (is_ia64()) {
-        return ngc->newstr("ia64");
-    } else if (is_powerpc()) {
-        return ngc->newstr("powerpc");
-    } else if (is_superh()) {
-        return ngc->newstr("superh");
-    }
-    return ngc->newstr("unknown");
+    return ngc->newstr(get_arch());
 }
 
 // md5 related functions

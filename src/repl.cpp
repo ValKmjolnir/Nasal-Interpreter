@@ -120,7 +120,7 @@ void repl::execute() {
     std::cout << "[nasal-repl] Initialization complete.\n\n";
 
     // finish initialization, output version info
-    std::cout << "Nasal REPL interpreter version " << __nasver;
+    std::cout << "Nasal REPL interpreter version " << __nasver__;
     std::cout << " (" << __DATE__ << " " << __TIME__ << ")\n";
     help();
 
