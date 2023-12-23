@@ -85,7 +85,7 @@ std::ostream& logo(std::ostream& out) {
     << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
     << "\n"
-    << "presented by fgprc members - http://fgprc.org\n"
+    << "presented by fgprc members - http://fgprc.org.cn\n"
     << "\n"
     << "input <nasal -h> to get help .\n\n";
     return out;
@@ -133,8 +133,7 @@ void execute(
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
     if (cmd&VM_RAW_AST) {
-        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
-        dumper->dump(parse.tree());
+        nasal::ast_dumper().dump(parse.tree());
     }
 
     // linker gets parser's ast and load import files to this ast
@@ -152,8 +151,7 @@ void execute(
     auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
     opt->do_optimization(parse.tree());
     if (cmd&VM_AST) {
-        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
-        dumper->dump(parse.tree());
+        nasal::ast_dumper().dump(parse.tree());
     }
 
     // code generator gets parser's ast and import file list to generate code
