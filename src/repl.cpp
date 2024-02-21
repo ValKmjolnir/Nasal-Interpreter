@@ -97,7 +97,7 @@ bool repl::run() {
     }
 
     nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true).geterr()) {
+    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true, false).geterr()) {
         return false;
     }
 

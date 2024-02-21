@@ -30,6 +30,7 @@ const u32 VM_SYMINFO   = 1<<7;
 const u32 VM_PROFILE   = 1<<8;
 const u32 VM_PROF_ALL  = 1<<9;
 const u32 VM_REF_FILE  = 1<<10;
+const u32 VM_LIMIT     = 1<<11;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -59,6 +60,7 @@ std::ostream& help(std::ostream& out) {
     << "         --prof     | show profiling result, available in debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
     << "available under debug mode.\n"
+    << "         --limit    | use limited execution mode."
     << "file:\n"
     << "   <filename>       | execute file.\n"
     << "argv:\n"
@@ -155,7 +157,7 @@ void execute(
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false).chkerr();
+    gen.compile(parse, ld, false, cmd&VM_LIMIT).chkerr();
     if (cmd&VM_CODE) {
         gen.print(std::cout);
     }
@@ -171,6 +173,7 @@ void execute(
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
         runtime->set_detail_report_info(cmd&VM_DETAIL);
+        runtime->set_limit_mode_flag(cmd&VM_LIMIT);
         runtime->run(gen, ld, argv);
     }
 
@@ -227,7 +230,8 @@ i32 main(i32 argc, const char* argv[]) {
         {"--prof", VM_PROFILE},
         {"--prof-all", VM_PROF_ALL},
         {"-f", VM_REF_FILE},
-        {"--ref-file", VM_REF_FILE}
+        {"--ref-file", VM_REF_FILE},
+        {"--limit", VM_LIMIT|VM_EXEC}
     };
     u32 cmd = 0;
     std::string filename = "";

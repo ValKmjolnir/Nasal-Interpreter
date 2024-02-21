@@ -3,6 +3,13 @@
 
 namespace nasal {
 
+var builtin_unsafe(context* ctx, gc* ngc) {
+    return nas_err(
+        "unsafe_redirect",
+        "you are using unsafe system api under limited mode!"
+    );
+}
+
 var builtin_print(context* ctx, gc* ngc) {
     for(auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
@@ -659,7 +666,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
     tm* tm_t = localtime(&t);
     char s[64];
     snprintf(
-        s,64,"%d-%.2d-%.2d %.2d:%.2d:%.2d",
+        s, 64, "%d-%.2d-%.2d %.2d:%.2d:%.2d",
         tm_t->tm_year+1900,
         tm_t->tm_mon+1,
         tm_t->tm_mday,

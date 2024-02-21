@@ -37,6 +37,24 @@ private:
 
     // repl output flag, will generate op_repl to output stack top value if true
     bool need_repl_output;
+    // limit mode flag
+    bool flag_limited_mode;
+    const std::unordered_set<std::string> unsafe_system_api = {
+        // builtin
+        "__system", "__input",
+        // io
+        "__fout", "__open", "__write", "__stat"
+        // bits
+        "__fld", "__sfld", "__setfld",
+        "__buf",
+        // fg
+        "__logprint",
+        // dylib
+        "__dlopen", "__dlclose", "__dlcallv", "__dlcall",
+        // unix
+        "__pipe", "__fork", "__waitpid", "__chdir",
+        "__environ", "__getcwd", "__getenv"
+    };
 
     // file mapper for file -> index
     std::unordered_map<std::string, usize> file_map;
@@ -141,7 +159,7 @@ public:
 
 public:
     codegen() = default;
-    const error& compile(parse&, linker&, bool);
+    const error& compile(parse&, linker&, bool, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };
