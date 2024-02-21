@@ -30,6 +30,7 @@ const u32 VM_SYMINFO   = 1<<7;
 const u32 VM_PROFILE   = 1<<8;
 const u32 VM_PROF_ALL  = 1<<9;
 const u32 VM_REF_FILE  = 1<<10;
+const u32 VM_LIMIT     = 1<<11;
 
 std::ostream& help(std::ostream& out) {
     out
@@ -59,6 +60,7 @@ std::ostream& help(std::ostream& out) {
     << "         --prof     | show profiling result, available in debug mode.\n"
     << "         --prof-all | show profiling result of all files,"
     << "available under debug mode.\n"
+    << "         --limit    | use limited execution mode."
     << "file:\n"
     << "   <filename>       | execute file.\n"
     << "argv:\n"
@@ -75,12 +77,17 @@ std::ostream& logo(std::ostream& out) {
     << "   /  \\/ / _` / __|/ _` | |\n"
     << "  / /\\  / (_| \\__ \\ (_| | |\n"
     << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    << "ver  : " << __nasver << " (" << __DATE__ << " " << __TIME__ << ")\n"
+    << "\n"
+    << "ver  : " << __nasver__
+    << " " << nasal::get_platform() << " " << nasal::get_arch()
+    << " (" << __DATE__ << " " << __TIME__ << ")\n"
     << "std  : c++ " << __cplusplus << "\n"
     << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
     << "repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
     << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
+    << "\n"
+    << "presented by fgprc members - http://fgprc.org.cn\n"
     << "\n"
     << "input <nasal -h> to get help .\n\n";
     return out;
@@ -95,7 +102,8 @@ std::ostream& version(std::ostream& out) {
     if (num<0.01) {
         nasal::parse::easter_egg();
     }
-    out << "nasal interpreter version " << __nasver;
+    out << "nasal interpreter version " << __nasver__;
+    out << " " << nasal::get_platform() << " " << nasal::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
 }
@@ -127,12 +135,11 @@ void execute(
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
     if (cmd&VM_RAW_AST) {
-        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
-        dumper->dump(parse.tree());
+        nasal::ast_dumper().dump(parse.tree());
     }
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse, file, cmd&VM_DETAIL).chkerr();
+    ld.link(parse, cmd&VM_DETAIL).chkerr();
     if (cmd&VM_REF_FILE) {
         if (ld.get_file_list().size()) {
             std::cout << "referenced file(s):\n";
@@ -146,12 +153,11 @@ void execute(
     auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
     opt->do_optimization(parse.tree());
     if (cmd&VM_AST) {
-        auto dumper = std::unique_ptr<nasal::ast_dumper>(new nasal::ast_dumper);
-        dumper->dump(parse.tree());
+        nasal::ast_dumper().dump(parse.tree());
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false).chkerr();
+    gen.compile(parse, ld, false, cmd&VM_LIMIT).chkerr();
     if (cmd&VM_CODE) {
         gen.print(std::cout);
     }
@@ -167,6 +173,7 @@ void execute(
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
         auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
         runtime->set_detail_report_info(cmd&VM_DETAIL);
+        runtime->set_limit_mode_flag(cmd&VM_LIMIT);
         runtime->run(gen, ld, argv);
     }
 
@@ -223,7 +230,8 @@ i32 main(i32 argc, const char* argv[]) {
         {"--prof", VM_PROFILE},
         {"--prof-all", VM_PROF_ALL},
         {"-f", VM_REF_FILE},
-        {"--ref-file", VM_REF_FILE}
+        {"--ref-file", VM_REF_FILE},
+        {"--limit", VM_LIMIT|VM_EXEC}
     };
     u32 cmd = 0;
     std::string filename = "";

@@ -92,12 +92,12 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_linker->link(*nasal_parser, "<nasal-repl>", true).geterr()) {
+    if (nasal_linker->link(*nasal_parser, true).geterr()) {
         return false;
     }
 
     nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true).geterr()) {
+    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true, false).geterr()) {
         return false;
     }
 
@@ -120,7 +120,7 @@ void repl::execute() {
     std::cout << "[nasal-repl] Initialization complete.\n\n";
 
     // finish initialization, output version info
-    std::cout << "Nasal REPL interpreter version " << __nasver;
+    std::cout << "Nasal REPL interpreter version " << __nasver__;
     std::cout << " (" << __DATE__ << " " << __TIME__ << ")\n";
     help();
 

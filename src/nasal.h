@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef __nasver
-#define __nasver "11.1"
+#ifndef __nasver__
+#define __nasver__ "11.1"
 #endif
 
 #include <cstdint>
@@ -34,7 +34,8 @@ bool is_aarch64();
 bool is_ia64();
 bool is_powerpc();
 bool is_superh();
-
+const char* get_platform();
+const char* get_arch();
 
 // virtual machine stack depth, both global depth and value stack depth
 const u32 STACK_DEPTH = 4096;

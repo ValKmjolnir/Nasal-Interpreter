@@ -3,6 +3,13 @@
 
 namespace nasal {
 
+var builtin_unsafe(context* ctx, gc* ngc) {
+    return nas_err(
+        "unsafe_redirect",
+        "you are using unsafe system api under limited mode!"
+    );
+}
+
 var builtin_print(context* ctx, gc* ngc) {
     for(auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
@@ -447,35 +454,11 @@ var builtin_sleep(context* ctx, gc* ngc) {
 }
 
 var builtin_platform(context* ctx, gc* ngc) {
-    if (is_windows()) {
-        return ngc->newstr("windows");
-    } else if (is_linux()) {
-        return ngc->newstr("linux");
-    } else if (is_macos()) {
-        return ngc->newstr("macOS");
-    }
-    return ngc->newstr("unknown");
+    return ngc->newstr(get_platform());
 }
 
 var builtin_arch(context* ctx, gc* ngc) {
-    if (is_x86()) {
-        return ngc->newstr("x86");
-    } else if (is_x86_64()) {
-        return ngc->newstr("x86-64");
-    } else if (is_amd64()) {
-        return ngc->newstr("amd64");
-    } else if (is_arm()) {
-        return ngc->newstr("arm");
-    } else if (is_aarch64()) {
-        return ngc->newstr("aarch64");
-    } else if (is_ia64()) {
-        return ngc->newstr("ia64");
-    } else if (is_powerpc()) {
-        return ngc->newstr("powerpc");
-    } else if (is_superh()) {
-        return ngc->newstr("superh");
-    }
-    return ngc->newstr("unknown");
+    return ngc->newstr(get_arch());
 }
 
 // md5 related functions
@@ -683,7 +666,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
     tm* tm_t = localtime(&t);
     char s[64];
     snprintf(
-        s,64,"%d-%.2d-%.2d %.2d:%.2d:%.2d",
+        s, 64, "%d-%.2d-%.2d %.2d:%.2d:%.2d",
         tm_t->tm_year+1900,
         tm_t->tm_mon+1,
         tm_t->tm_mday,
