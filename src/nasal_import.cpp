@@ -188,6 +188,7 @@ code_block* linker::import_regular_file(
     check_exist_or_record_file(filename);
 
     module_load_stack.push_back(filename);
+    // avoid stack overflow
     if (module_load_stack.size()>MAX_RECURSION_DEPTH) {
         err.err("link",
             node->get_location(),
@@ -258,6 +259,7 @@ code_block* linker::import_nasal_lib() {
 }
 
 std::string linker::generate_module_name(const std::string& file_path) {
+    // import("...") may trigger this error module name
     auto error_name = "module@[" + file_path + "]";
     if (!file_path.length()) {
         return error_name;
@@ -332,13 +334,19 @@ return_expr* linker::generate_module_return(code_block* block) {
 }
 
 definition_expr* linker::generate_module_definition(code_block* block) {
+    // generate ast node like this:
+    // var {module_name} = (func() {
+    //     ... # module itself
+    // })();
     auto def = new definition_expr(block->get_location());
     def->set_identifier(new identifier(
         block->get_location(),
         generate_module_name(block->get_location().file)
     ));
     
+    // (func() {...})();
     auto call = new call_expr(block->get_location());
+    // func() {...}
     auto func = new function(block->get_location());
     func->set_code_block(block);
     func->get_code_block()->add_expression(generate_module_return(block));
@@ -392,8 +400,11 @@ const error& linker::link(parse& parse, bool spath = false) {
     // then generate a new ast and return to import_ast
     // dfs load file
     auto library = import_nasal_lib();
+    // load used modules of this file
     load(parse.tree(), this_file);
+    // then insert the whole tree into library tree root
     merge_tree(library, parse.tree());
+    // swap tree root, and delete old root
     delete parse.swap(library);
     return err;
 }
