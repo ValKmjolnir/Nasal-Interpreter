@@ -23,8 +23,8 @@ namespace nasal {
 
 class linker {
 private:
+    const u32 MAX_RECURSION_DEPTH = 256;
     bool show_path_flag;
-    bool library_loaded;
     std::string this_file;
     error err;
     std::vector<std::string> imported_files;
@@ -36,7 +36,7 @@ private:
     bool check_exist_or_record_file(const std::string&);
     bool check_self_import(const std::string&);
     std::string generate_self_import_path(const std::string&);
-    void link(code_block*, code_block*);
+    void merge_tree(code_block*, code_block*);
     std::string get_path(expr*);
     std::string find_real_file_path(const std::string&, const span&);
     code_block* import_regular_file(expr*, std::unordered_set<std::string>&);
@@ -44,11 +44,11 @@ private:
     std::string generate_module_name(const std::string&);
     return_expr* generate_module_return(code_block*);
     definition_expr* generate_module_definition(code_block*);
-    code_block* load(code_block*, const std::string&);
+    void load(code_block*, const std::string&);
 
 public:
     linker();
-    const error& link(parse&, const std::string&, bool);
+    const error& link(parse&, bool);
     const auto& get_file_list() const {return imported_files;}
 };
 

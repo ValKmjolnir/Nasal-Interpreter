@@ -45,6 +45,9 @@ protected:
     bool first_exec_flag = true;
     bool allow_repl_output = false;
 
+    /* limited mode, will not load unsafe system api if switch on */
+    bool flag_limited_mode = false;
+
     /* vm initializing function */
     void init(
         const std::vector<std::string>&,
@@ -192,6 +195,8 @@ public:
     void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
     /* set repl output flag */
     void set_allow_repl_output_flag(bool flag) {allow_repl_output = flag;}
+    /* set limit mode flag */
+    void set_limit_mode_flag(bool flag) {flag_limited_mode = flag;}
 };
 
 inline bool vm::cond(var& val) {

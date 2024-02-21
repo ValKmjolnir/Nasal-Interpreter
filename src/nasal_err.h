@@ -31,7 +31,7 @@ protected:
     std::vector<std::string> res;
 
 public:
-    flstream():file("") {}
+    flstream(): file("") {}
     void load(const std::string&);
     const std::string& operator[](usize n) const {return res[n];}
     const auto& name() const {return file;}
@@ -39,23 +39,23 @@ public:
     usize size() const {return res.size();}
 };
 
-class error:public flstream {
+class error: public flstream {
 private:
     u32 cnt; // counter for errors
 
     std::string identation(usize len) {
-        return std::string(len,' ');
+        return std::string(len, ' ');
     }
     std::string leftpad(u32 num, usize len) {
         auto tmp = std::to_string(num);
         while(tmp.length()<len) {
-            tmp=" "+tmp;
+            tmp = " "+tmp;
         }
         return tmp;
     }
 
 public:
-    error():cnt(0) {}
+    error(): cnt(0) {}
     void err(const std::string&, const std::string&);
     void warn(const std::string&, const std::string&);
     void err(const std::string&, const span&, const std::string&);

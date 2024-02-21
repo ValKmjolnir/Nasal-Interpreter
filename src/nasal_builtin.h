@@ -29,6 +29,7 @@
 
 namespace nasal {
 
+var builtin_unsafe(context*, gc*);
 var builtin_print(context*, gc*);
 var builtin_println(context*, gc*);
 var builtin_exit(context*, gc*);
