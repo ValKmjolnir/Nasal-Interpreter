@@ -17,6 +17,7 @@
 #include "json_lib.h"
 #include "dylib_lib.h"
 #include "unix_lib.h"
+#include "regex_lib.h"
 
 #include <iomanip>
 #include <list>
