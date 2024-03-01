@@ -4,9 +4,9 @@ ifndef OS
 	OS = $(shell uname)
 endif
 ifeq ($(OS), Darwin)
-	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC -mmacosx-version-min=10.15
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15
 else
-	CXXFLAGS = -std=$(STD) -c -O3 -fno-exceptions -fPIC
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC
 endif
 
 NASAL_HEADER = \
@@ -35,7 +35,8 @@ NASAL_HEADER = \
 	src/json_lib.h\
 	src/unix_lib.h\
 	src/coroutine.h\
-	src/repl.h
+	src/repl.h\
+	src/regex_lib.h
 
 NASAL_OBJECT = \
 	build/nasal_err.o\
@@ -64,6 +65,7 @@ NASAL_OBJECT = \
 	build/nasal_vm.o\
 	build/nasal_dbg.o\
 	build/repl.o\
+	build/regex_lib.o\
 	build/main.o
 
 
@@ -177,6 +179,13 @@ build/unix_lib.o: \
 	src/unix_lib.h src/unix_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/unix_lib.cpp -o build/unix_lib.o
 
+build/regex_lib.o: \
+	src/nasal.h\
+	src/nasal_type.h\
+	src/nasal_gc.h\
+	src/regex_lib.h src/regex_lib.cpp | build
+	$(CXX) $(CXXFLAGS) src/regex_lib.cpp -o build/regex_lib.o
+
 build/fg_props.o: \
 	src/nasal.h\
 	src/nasal_type.h\
@@ -279,6 +288,7 @@ test:nasal
 	@ ./nasal -t -d test/prime.nas
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
+	@ ./nasal -t -d test/regex_test.nas
 	@ ./nasal -e test/scalar.nas hello world
 	@ ./nasal -e test/trait.nas
 	@ ./nasal -t -d test/turingmachine.nas
