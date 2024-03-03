@@ -4,7 +4,7 @@ on:
   schedule:
    - cron: "0 16 * * *"
   push:
-    branches: [ master,develop ]
+    branches: [ master, develop ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
@@ -22,6 +22,7 @@ jobs:
           cd ..
           make test
           tar -czf nasal-mac-nightly.tgz .
+          python3 tools/pack.py
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
@@ -34,7 +35,9 @@ jobs:
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next_macOS
         # File to release
-        files: nasal-mac-nightly.tgz
+        files: |
+          nasal-mac-nightly.tgz
+          nasal-Darwin.tar
     
   linux-x86_64-build:
     runs-on: ubuntu-latest
@@ -48,7 +51,8 @@ jobs:
           cd ..
           make test
           touch nasal-linux-x86_64-nightly.tgz
-          tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz . 
+          tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz .
+          python3 tools/pack.py
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
@@ -61,5 +65,7 @@ jobs:
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next_linux_x86_64
         # File to release
-        files: nasal-linux-x86_64-nightly.tgz
+        files: |
+          nasal-linux-x86_64-nightly.tgz
+          nasal-Linux.tar
 

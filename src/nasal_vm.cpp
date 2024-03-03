@@ -414,10 +414,16 @@ void vm::die(const std::string& str) {
 void vm::run(
     const codegen& gen,
     const linker& linker,
-    const std::vector<std::string>& argv
-) {
-    init(gen.strs(), gen.nums(), gen.natives(),
-         gen.codes(), gen.globals(), linker.get_file_list(), argv);
+    const std::vector<std::string>& argv) {
+    init(
+        gen.strs(),
+        gen.nums(),
+        gen.natives(),
+        gen.codes(),
+        gen.globals(),
+        linker.get_file_list(),
+        argv
+    );
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {

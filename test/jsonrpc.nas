@@ -1,10 +1,10 @@
-use module.libsock;
+use module.libnasock;
 use std.json;
 use std.runtime;
 use std.os;
 use std.unix;
 
-var socket = libsock.socket;
+var socket = libnasock.socket;
 
 var gettime = func() {
     return split(" ",os.time())[1];

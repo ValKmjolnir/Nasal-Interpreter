@@ -1,4 +1,4 @@
-#include "coroutine.h"
+#include "natives/coroutine.h"
 
 namespace nasal {
 
