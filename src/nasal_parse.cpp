@@ -58,7 +58,7 @@ void parse::easter_egg() {
     << "                    `\"`                   `\"`              \n";
 }
 
-void parse::die(const span& loc, std::string info) {
+void parse::die(const span& loc, const std::string& info) {
     err.err("parse", loc, info);
 }
 

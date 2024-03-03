@@ -11,7 +11,9 @@
 
 namespace nasal {
 
-class debug_prof_data {
+// count detail operand calling
+// and show them before each line of the source file
+class operand_line_counter {
 private:
     static const usize operand_size = op_code_type::op_ret + 1;
     u64 operand_counter[operand_size];
@@ -25,8 +27,8 @@ private:
 
 public:
     void init(const std::vector<std::string>&);
-    void dump_counter() const;
-    void dump_code_line_counter(std::ostream&) const;
+    void dump_operand_count() const;
+    void dump_all_code_line_counter(std::ostream&) const;
     void dump_this_file_line_counter(std::ostream&) const;
     void add_operand_counter(usize index) {
         operand_counter[index] += index<operand_size? 1:0;
@@ -88,7 +90,7 @@ private:
     };
 
 private:
-    enum class dbg_cmd {
+    enum class cmd_kind {
         cmd_error,
         cmd_help,
         cmd_backtrace,
@@ -105,35 +107,35 @@ private:
     };
 
 private:
-    const std::unordered_map<std::string, dbg_cmd> command_table = {
-        {"h", dbg_cmd::cmd_help},
-        {"help", dbg_cmd::cmd_help},
-        {"bt", dbg_cmd::cmd_backtrace},
-        {"backtrace", dbg_cmd::cmd_backtrace},
-        {"c", dbg_cmd::cmd_continue},
-        {"continue", dbg_cmd::cmd_continue},
-        {"f", dbg_cmd::cmd_list_file},
-        {"file", dbg_cmd::cmd_list_file},
-        {"g", dbg_cmd::cmd_global},
-        {"global", dbg_cmd::cmd_global},
-        {"l", dbg_cmd::cmd_local},
-        {"local", dbg_cmd::cmd_local},
-        {"u", dbg_cmd::cmd_upval},
-        {"upval", dbg_cmd::cmd_upval},
-        {"r", dbg_cmd::cmd_register},
-        {"register", dbg_cmd::cmd_register},
-        {"a", dbg_cmd::cmd_show_all},
-        {"all", dbg_cmd::cmd_show_all},
-        {"n", dbg_cmd::cmd_next},
-        {"next", dbg_cmd::cmd_next},
-        {"bk", dbg_cmd::cmd_break_point},
-        {"break", dbg_cmd::cmd_break_point},
-        {"q", dbg_cmd::cmd_exit},
-        {"exit", dbg_cmd::cmd_exit}
+    const std::unordered_map<std::string, cmd_kind> command_table = {
+        {"h", cmd_kind::cmd_help},
+        {"help", cmd_kind::cmd_help},
+        {"bt", cmd_kind::cmd_backtrace},
+        {"backtrace", cmd_kind::cmd_backtrace},
+        {"c", cmd_kind::cmd_continue},
+        {"continue", cmd_kind::cmd_continue},
+        {"f", cmd_kind::cmd_list_file},
+        {"file", cmd_kind::cmd_list_file},
+        {"g", cmd_kind::cmd_global},
+        {"global", cmd_kind::cmd_global},
+        {"l", cmd_kind::cmd_local},
+        {"local", cmd_kind::cmd_local},
+        {"u", cmd_kind::cmd_upval},
+        {"upval", cmd_kind::cmd_upval},
+        {"r", cmd_kind::cmd_register},
+        {"register", cmd_kind::cmd_register},
+        {"a", cmd_kind::cmd_show_all},
+        {"all", cmd_kind::cmd_show_all},
+        {"n", cmd_kind::cmd_next},
+        {"next", cmd_kind::cmd_next},
+        {"bk", cmd_kind::cmd_break_point},
+        {"break", cmd_kind::cmd_break_point},
+        {"q", cmd_kind::cmd_exit},
+        {"exit", cmd_kind::cmd_exit}
     };
-    dbg_cmd get_cmd_type(const std::string& cmd) const {
+    cmd_kind get_cmd_type(const std::string& cmd) const {
         return command_table.count(cmd)?
-            command_table.at(cmd):dbg_cmd::cmd_error;
+            command_table.at(cmd):cmd_kind::cmd_error;
     }
 
 private:
@@ -144,8 +146,8 @@ private:
     error src;
 
 private:
-    debug_prof_data data;
-    bool do_profiling;
+    operand_line_counter counter;
+    bool do_operand_count;
 
 private:
     std::vector<std::string> parse(const std::string&);
@@ -160,7 +162,7 @@ public:
     dbg():
         next(true), fsize(0),
         break_file_index(0), break_line(0),
-        do_profiling(false) {}
+        do_operand_count(false) {}
     void run(
         const codegen&,
         const linker&,

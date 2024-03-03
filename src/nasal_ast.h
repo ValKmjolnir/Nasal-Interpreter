@@ -8,7 +8,7 @@
 
 namespace nasal {
 
-enum class expr_type:u32 {
+enum class expr_type: u32 {
     ast_null = 0,    // null node
     ast_use,         // use statement
     ast_block,       // code block 

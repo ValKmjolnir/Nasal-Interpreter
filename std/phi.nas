@@ -3,7 +3,7 @@
 # and use this script to get property tree
 # 2023/11/06 ValKmjolnir
 
-use module.libsock;
+use module.libnasock;
 use std.json;
 use std.os;
 use std.unix;
@@ -30,7 +30,7 @@ var _get_time = func() {
 }
 
 var _connect = func(hostname, port) {
-    var socket = libsock.socket;
+    var socket = libnasock.socket;
     var sd = socket.socket(
         socket.AF_INET,
         socket.SOCK_STREAM,
@@ -46,7 +46,7 @@ var _connect = func(hostname, port) {
 }
 
 var new = func(hostname, port) {
-    var socket = libsock.socket;
+    var socket = libnasock.socket;
     var sd = _connect(hostname, port);
 
     var getprop = func(path) {

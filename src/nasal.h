@@ -68,7 +68,7 @@ public:
     const char* c_str() const {
         return file_system_path.c_str();
     }
-    std::string str() const {
+    const std::string& str() const {
         return file_system_path;
     }
 };
