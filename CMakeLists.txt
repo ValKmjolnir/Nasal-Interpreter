@@ -19,15 +19,16 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_builtin.cpp
-    ${CMAKE_SOURCE_DIR}/src/coroutine.cpp
-    ${CMAKE_SOURCE_DIR}/src/fg_props.cpp
-    ${CMAKE_SOURCE_DIR}/src/bits_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/io_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/json_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/math_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/dylib_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/unix_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/coroutine.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/fg_props.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/bits_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/io_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/json_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/math_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/dylib_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp

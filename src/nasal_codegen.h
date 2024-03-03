@@ -8,16 +8,16 @@
 #include "nasal_parse.h"
 #include "nasal_import.h"
 
-#include "nasal_builtin.h"
-#include "coroutine.h"
-#include "bits_lib.h"
-#include "math_lib.h"
-#include "fg_props.h"
-#include "io_lib.h"
-#include "json_lib.h"
-#include "dylib_lib.h"
-#include "unix_lib.h"
-#include "regex_lib.h"
+#include "natives/nasal_builtin.h"
+#include "natives/coroutine.h"
+#include "natives/bits_lib.h"
+#include "natives/math_lib.h"
+#include "natives/fg_props.h"
+#include "natives/io_lib.h"
+#include "natives/json_lib.h"
+#include "natives/dylib_lib.h"
+#include "natives/regex_lib.h"
+#include "natives/unix_lib.h"
 
 #include <iomanip>
 #include <list>
@@ -37,9 +37,11 @@ private:
     error err;
 
     // repl output flag, will generate op_repl to output stack top value if true
-    bool need_repl_output;
+    bool need_repl_output = false;
+
     // limit mode flag
-    bool flag_limited_mode;
+    bool flag_limited_mode = false;
+    // under limited mode, unsafe system api will be banned
     const std::unordered_set<std::string> unsafe_system_api = {
         // builtin
         "__system", "__input",

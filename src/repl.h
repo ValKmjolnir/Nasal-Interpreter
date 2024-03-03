@@ -33,7 +33,7 @@ private:
 
 private:
     void add_command_history(const std::string&);
-    std::string readline(std::string);
+    std::string readline(const std::string&);
     bool check_need_more_input();
     void update_temp_file();
     void help();

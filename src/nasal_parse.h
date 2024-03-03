@@ -79,9 +79,9 @@ private:
     };
 
 private:
-    void die(const span&,std::string);
+    void die(const span&, const std::string&);
     void next();
-    void match(tok, const char* info=nullptr);
+    void match(tok, const char* info = nullptr);
     bool lookahead(tok);
     bool is_call(tok);
     bool check_comma(const tok*);

@@ -2,13 +2,13 @@
 
 namespace nasal {
 
-void debug_prof_data::init_counter() {
-    for(usize i = 0; i<debug_prof_data::operand_size; ++i) {
+void operand_line_counter::init_counter() {
+    for(usize i = 0; i<operand_line_counter::operand_size; ++i) {
         operand_counter[i] = 0;
     }
 }
 
-void debug_prof_data::load_file_line_counter(
+void operand_line_counter::load_file_line_counter(
     const std::vector<std::string>& file_list) {
     file_name_list = file_list;
     file_line_counter = {};
@@ -22,16 +22,16 @@ void debug_prof_data::load_file_line_counter(
     }
 }
 
-void debug_prof_data::init(const std::vector<std::string>& file_list) {
+void operand_line_counter::init(const std::vector<std::string>& file_list) {
     init_counter();
     load_file_line_counter(file_list);
 }
 
-void debug_prof_data::dump_counter() const {
+void operand_line_counter::dump_operand_count() const {
     typedef std::pair<u32, u64> op_count;
     std::vector<op_count> opcall;
     u64 total = 0;
-    for(usize i = 0; i<debug_prof_data::operand_size; ++i) {
+    for(usize i = 0; i<operand_line_counter::operand_size; ++i) {
         total += operand_counter[i];
         opcall.push_back({i, operand_counter[i]});
     }
@@ -52,7 +52,7 @@ void debug_prof_data::dump_counter() const {
     std::clog << " total  : " << total << '\n';
 }
 
-void debug_prof_data::dump_code_line_counter(std::ostream& os) const {
+void operand_line_counter::dump_all_code_line_counter(std::ostream& os) const {
     u64 max_call_time = 0;
     for(const auto& context : file_line_counter) {
         for(const auto& count : context) {
@@ -73,7 +73,7 @@ void debug_prof_data::dump_code_line_counter(std::ostream& os) const {
     }
 }
 
-void debug_prof_data::dump_this_file_line_counter(std::ostream& os) const {
+void operand_line_counter::dump_this_file_line_counter(std::ostream& os) const {
     u64 max_call_time = 0;
     for(const auto& count : file_line_counter[0]) {
         max_call_time = count>max_call_time? count:max_call_time;
@@ -178,7 +178,7 @@ void dbg::interact() {
     }
 
     // do not need interact while doing profiling
-    if (do_profiling) {
+    if (do_operand_count) {
         return;
     }
 
@@ -199,24 +199,24 @@ void dbg::interact() {
             step_info();
         } else if (res.size()==1) {
             switch(get_cmd_type(res[0])) {
-                case dbg_cmd::cmd_help: help(); break;
-                case dbg_cmd::cmd_backtrace:
+                case cmd_kind::cmd_help: help(); break;
+                case cmd_kind::cmd_backtrace:
                     function_call_trace();
                     trace_back();
                     break;
-                case dbg_cmd::cmd_continue: return;
-                case dbg_cmd::cmd_list_file: list_file(); break;
-                case dbg_cmd::cmd_global: global_state(); break;
-                case dbg_cmd::cmd_local: local_state(); break;
-                case dbg_cmd::cmd_upval: upvalue_state(); break;
-                case dbg_cmd::cmd_register: register_info(); break;
-                case dbg_cmd::cmd_show_all: all_state_detail(); break;
-                case dbg_cmd::cmd_next: next = true; return;
-                case dbg_cmd::cmd_exit: std::exit(0);
+                case cmd_kind::cmd_continue: return;
+                case cmd_kind::cmd_list_file: list_file(); break;
+                case cmd_kind::cmd_global: global_state(); break;
+                case cmd_kind::cmd_local: local_state(); break;
+                case cmd_kind::cmd_upval: upvalue_state(); break;
+                case cmd_kind::cmd_register: register_info(); break;
+                case cmd_kind::cmd_show_all: all_state_detail(); break;
+                case cmd_kind::cmd_next: next = true; return;
+                case cmd_kind::cmd_exit: std::exit(0);
                 default: err(); break;
             }
         } else if (res.size()==3 &&
-            get_cmd_type(res[0])==dbg_cmd::cmd_break_point) {
+            get_cmd_type(res[0])==cmd_kind::cmd_break_point) {
             break_file_index = file_index(res[1]);
             if (break_file_index==65535) {
                 std::clog << "cannot find file named `" << res[1] << "`\n";
@@ -242,7 +242,7 @@ void dbg::run(
     bool show_all_prof_result) {
 
     set_detail_report_info(true);
-    do_profiling = profile || show_all_prof_result;
+    do_operand_count = profile || show_all_prof_result;
 
     const auto& file_list = linker.get_file_list();
     fsize = file_list.size();
@@ -255,7 +255,7 @@ void dbg::run(
         file_list,
         argv
     );
-    data.init(file_list);
+    counter.init(file_list);
 
     std::vector<u32> code;
     std::vector<u16> code_file_index;
@@ -268,8 +268,8 @@ void dbg::run(
     }
     while(operand_function[code[ctx.pc]]) {
         interact();
-        data.add_operand_counter(code[ctx.pc]);
-        data.add_code_line_counter(code_file_index[ctx.pc], code_line[ctx.pc]);
+        counter.add_operand_counter(code[ctx.pc]);
+        counter.add_code_line_counter(code_file_index[ctx.pc], code_line[ctx.pc]);
         (this->*operand_function[code[ctx.pc]])();
         if (ctx.top>=ctx.canary) {
             die("stack overflow");
@@ -277,11 +277,11 @@ void dbg::run(
         ++ctx.pc;
     }
 
-    data.dump_counter();
-    if (do_profiling) {
+    counter.dump_operand_count();
+    if (do_operand_count) {
         show_all_prof_result?
-            data.dump_code_line_counter(std::clog):
-            data.dump_this_file_line_counter(std::clog);
+            counter.dump_all_code_line_counter(std::clog):
+            counter.dump_this_file_line_counter(std::clog);
     }
     ngc.info();
     ngc.clear();

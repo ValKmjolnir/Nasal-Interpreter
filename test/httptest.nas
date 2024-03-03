@@ -1,9 +1,9 @@
-use module.libsock;
+use module.libnasock;
 use std.os;
 use std.io;
 use std.unix;
 
-var socket = libsock.socket;
+var socket = libnasock.socket;
 
 var http = func() {
     var sd=nil;
