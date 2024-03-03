@@ -6,6 +6,7 @@
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 ![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
+[![C/C++ CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 

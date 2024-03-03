@@ -1,4 +1,4 @@
-#include "math_lib.h"
+#include "natives/math_lib.h"
 
 namespace nasal {
 

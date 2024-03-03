@@ -19,10 +19,10 @@ void repl::add_command_history(const std::string& history) {
     }
 }
 
-std::string repl::readline(std::string prompt = ">>> ") {
+std::string repl::readline(const std::string& prompt = ">>> ") {
     auto line = std::string("");
     std::cout << prompt;
-    std::getline(std::cin, line,'\n');
+    std::getline(std::cin, line, '\n');
     return line;
 }
 

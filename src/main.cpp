@@ -19,18 +19,18 @@
 #include <thread>
 #include <cstdlib>
 
-const u32 VM_RAW_AST   = 1;
-const u32 VM_AST       = 1<<1;
-const u32 VM_CODE      = 1<<2;
-const u32 VM_TIME      = 1<<3;
-const u32 VM_EXEC      = 1<<4;
-const u32 VM_DETAIL    = 1<<5;
-const u32 VM_DEBUG     = 1<<6;
-const u32 VM_SYMINFO   = 1<<7;
-const u32 VM_PROFILE   = 1<<8;
-const u32 VM_PROF_ALL  = 1<<9;
-const u32 VM_REF_FILE  = 1<<10;
-const u32 VM_LIMIT     = 1<<11;
+const u32 VM_RAW_AST  = 1;
+const u32 VM_AST      = 1<<1;
+const u32 VM_CODE     = 1<<2;
+const u32 VM_TIME     = 1<<3;
+const u32 VM_EXEC     = 1<<4;
+const u32 VM_DETAIL   = 1<<5;
+const u32 VM_DEBUG    = 1<<6;
+const u32 VM_SYMINFO  = 1<<7;
+const u32 VM_PROFILE  = 1<<8;
+const u32 VM_PROF_ALL = 1<<9;
+const u32 VM_REF_FILE = 1<<10;
+const u32 VM_LIMIT    = 1<<11;
 
 std::ostream& help(std::ostream& out) {
     out

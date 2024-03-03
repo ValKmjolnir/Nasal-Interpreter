@@ -1,4 +1,4 @@
-#include "dylib_lib.h"
+#include "natives/dylib_lib.h"
 
 namespace nasal {
 

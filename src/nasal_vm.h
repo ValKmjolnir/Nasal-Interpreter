@@ -21,7 +21,7 @@ class vm {
 protected:
 
     /* registers of vm */
-    context ctx;
+    context ctx; // running context
 
     /* constants */
     const f64* const_number = nullptr; // constant numbers
@@ -33,8 +33,8 @@ protected:
     gc ngc;
 
     /* main stack */
-    var* global = nullptr;
-    usize global_size = 0;
+    var* global = nullptr; // used to store global variables
+    usize global_size = 0; // mark size of global variables
 
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
@@ -45,7 +45,7 @@ protected:
     bool first_exec_flag = true;
     bool allow_repl_output = false;
 
-    /* limited mode, will not load unsafe system api if switch on */
+    /* limited mode, will not load unsafe system api if switched on */
     bool flag_limited_mode = false;
 
     /* vm initializing function */
@@ -184,9 +184,9 @@ public:
 
     /* execution entry */
     void run(
-        const codegen&,
-        const linker&,
-        const std::vector<std::string>&
+        const codegen&, // get generated code
+        const linker&, // get list of used files
+        const std::vector<std::string>& // get arguments input by command line
     );
 
     /* set detail report info flag */

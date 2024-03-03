@@ -11,6 +11,7 @@
 #endif
 
 #ifdef _WIN32
+// load socket library on windows platform
 #include <winsock.h>
 #pragma comment(lib,"ws2_32")
 
@@ -25,8 +26,9 @@ public:
         WSACleanup();
     }
 };
-
+// use static object to do WSAStartup and WSACleanup
 static WSAmanager win;
+
 #else
 #include <netdb.h>
 #include <sys/socket.h>
