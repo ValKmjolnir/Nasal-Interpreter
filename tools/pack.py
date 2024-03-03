@@ -4,7 +4,13 @@ import os
 import platform
 import shutil
 
+
 nasal_version = "11.1"
+
+build_directory = pathlib.Path("build")
+if not os.path.exists(build_directory):
+    print("pack binaries failed: build directory not found")
+    exit(-1)
 
 nasal_executable = pathlib.Path("nasal")
 nasal_standard_library = pathlib.Path("std")
@@ -15,7 +21,7 @@ if not os.path.exists(nasal_standard_library):
     print("pack binaries failed: nasal standard library not found")
     exit(-1)
 
-nasal_module_directory = pathlib.Path("./module")
+nasal_module_directory = pathlib.Path("module")
 if not os.path.exists(nasal_module_directory):
     print("pack binaries failed: nasal module directory not found")
     exit(-1)
@@ -40,8 +46,9 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
     nasal_modules.append(lib)
 
 
-tar_file_name = "./nasal-{}-{}".format(platform.system(), nasal_version)
-package_directory = pathlib.Path(tar_file_name)
+tar_file_name = "nasal-{}".format(platform.system())
+# create package directory in build directory and copy files needed
+package_directory = build_directory.joinpath(tar_file_name)
 if not os.path.exists(package_directory):
     os.mkdir(package_directory)
     os.mkdir(package_directory.joinpath("module"))
