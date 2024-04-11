@@ -117,10 +117,9 @@ void err() {
     std::exit(1);
 }
 
-void execute(
-    const std::string& file,
-    const std::vector<std::string>& argv,
-    const u32 cmd) {
+void execute(const std::string& file,
+             const std::vector<std::string>& argv,
+             const u32 cmd) {
 
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;

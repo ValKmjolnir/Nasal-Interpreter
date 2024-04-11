@@ -1,6 +1,6 @@
 # __Nasal - Modern Interpreter__
 
-<img src="./doc/pic/header.png" style="width:800px"></img>
+<img src="./doc/pic/header.png" style="width:600px"></img>
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
