@@ -58,9 +58,10 @@ std::ostream& help(std::ostream& out) {
     << "   -f,   --ref-file | get referenced files.\n"
     << "   -dbg, --debug    | debug mode.\n"
     << "         --prof     | show profiling result, available in debug mode.\n"
-    << "         --prof-all | show profiling result of all files,"
+    << "         --prof-all | show profiling result of all files, "
     << "available under debug mode.\n"
-    << "         --limit    | use limited execution mode."
+    << "         --limit    | use limited execution mode "
+    << "(readonly api enabled).\n"
     << "file:\n"
     << "   <filename>       | execute file.\n"
     << "argv:\n"
@@ -116,10 +117,9 @@ void err() {
     std::exit(1);
 }
 
-void execute(
-    const std::string& file,
-    const std::vector<std::string>& argv,
-    const u32 cmd) {
+void execute(const std::string& file,
+             const std::vector<std::string>& argv,
+             const u32 cmd) {
 
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
