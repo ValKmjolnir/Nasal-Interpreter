@@ -222,7 +222,7 @@ void gc::init(
             continue;
         }
         strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
-        strs[i].val.gcobj->unmutable = 1;
+        strs[i].val.gcobj->immutable = 1;
         strs[i].str() = constant_strings[i];
     }
 
@@ -234,7 +234,7 @@ void gc::init(
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
-        env_argv[i].val.gcobj->unmutable = 1;
+        env_argv[i].val.gcobj->immutable = 1;
         env_argv[i].str() = argv[i];
     }
 }
