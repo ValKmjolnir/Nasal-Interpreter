@@ -48,7 +48,7 @@ var builtin_fld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (!str.is_str() || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->immutable) {
         return nas_err("bits::fld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num()) {
@@ -78,7 +78,7 @@ var builtin_sfld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (!str.is_str() || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->immutable) {
         return nas_err("bits::sfld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num()) {
@@ -112,7 +112,7 @@ var builtin_setfld(context* ctx, gc* ngc) {
     auto startbit = local[2];
     auto length = local[3];
     auto value = local[4];
-    if (!str.is_str() || str.val.gcobj->unmutable) {
+    if (!str.is_str() || str.val.gcobj->immutable) {
         return nas_err("bits::setfld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num() || !value.is_num()) {

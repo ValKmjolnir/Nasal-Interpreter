@@ -166,7 +166,7 @@ void execute(const std::string& file,
     }
 
     // run
-    auto start = clk::now();
+    const auto start = clk::now();
     if (cmd&VM_DEBUG) {
         auto debugger = std::unique_ptr<nasal::dbg>(new nasal::dbg);
         debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
@@ -178,7 +178,7 @@ void execute(const std::string& file,
     }
 
     // get running time
-    auto end = clk::now();
+    const auto end = clk::now();
     if (cmd&VM_TIME) {
         std::clog << "process exited after ";
         std::clog << (end-start).count()*1.0/den << "s.\n\n";
@@ -211,7 +211,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // execute with arguments
-    const std::unordered_map<std::string, u32> cmdlst = {
+    const std::unordered_map<std::string, u32> command_list = {
         {"--raw-ast", VM_RAW_AST},
         {"--ast", VM_AST},
         {"-a", VM_AST},
@@ -233,12 +233,13 @@ i32 main(i32 argc, const char* argv[]) {
         {"--ref-file", VM_REF_FILE},
         {"--limit", VM_LIMIT|VM_EXEC}
     };
-    u32 cmd = 0;
+
+    u32 commands = 0;
     std::string filename = "";
     std::vector<std::string> vm_argv;
     for(i32 i = 1; i<argc; ++i) {
-        if (cmdlst.count(argv[i])) {
-            cmd |= cmdlst.at(argv[i]);
+        if (command_list.count(argv[i])) {
+            commands |= command_list.at(argv[i]);
         } else if (!filename.length()) {
             filename = argv[i];
         } else {
@@ -248,6 +249,7 @@ i32 main(i32 argc, const char* argv[]) {
     if (!filename.length()) {
         err();
     }
-    execute(filename, vm_argv, cmd? cmd:VM_EXEC);
+
+    execute(filename, vm_argv, commands? commands:VM_EXEC);
     return 0;
 }

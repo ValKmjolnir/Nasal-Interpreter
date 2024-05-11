@@ -250,7 +250,7 @@ struct nas_map {
 };
 
 struct nas_val {
-    enum class gc_status:u8 {
+    enum class gc_status: u8 {
         uncollected = 0,   
         collected,
         found
@@ -258,7 +258,7 @@ struct nas_val {
 
     gc_status mark;
     vm_type type; // value type
-    u8 unmutable; // used to mark if a string is unmutable
+    u8 immutable; // used to mark if a string is immutable
     union {
         std::string* str;
         nas_vec*   vec;
