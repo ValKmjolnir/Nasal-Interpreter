@@ -113,7 +113,7 @@ u16 dbg::file_index(const std::string& filename) const {
             return i;
         }
     }
-    return 65535;
+    return UINT16_MAX;
 }
 
 void dbg::err() {
@@ -221,7 +221,7 @@ void dbg::interact() {
         } else if (res.size()==3 &&
             get_cmd_type(res[0])==cmd_kind::cmd_break_point) {
             break_file_index = file_index(res[1]);
-            if (break_file_index==65535) {
+            if (break_file_index==UINT16_MAX) {
                 std::clog << "cannot find file named `" << res[1] << "`\n";
                 continue;
             }

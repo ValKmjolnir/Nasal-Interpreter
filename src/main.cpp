@@ -95,7 +95,7 @@ std::ostream& logo(std::ostream& out) {
 }
 
 std::ostream& version(std::ostream& out) {
-    std::srand(static_cast<u16>(std::time(nullptr)));
+    std::srand(static_cast<u32>(std::time(nullptr)));
 
     f64 num = 0;
     for(u32 i = 0; i<5; ++i) {
@@ -152,7 +152,7 @@ void execute(const std::string& file,
     }
     
     // optimizer does simple optimization on ast
-    auto opt = std::unique_ptr<nasal::optimizer>(new nasal::optimizer);
+    auto opt = std::make_unique<nasal::optimizer>();
     opt->do_optimization(parse.tree());
     if (cmd&VM_AST) {
         nasal::ast_dumper().dump(parse.tree());
@@ -170,10 +170,10 @@ void execute(const std::string& file,
     // run
     const auto start = clk::now();
     if (cmd&VM_DEBUG) {
-        auto debugger = std::unique_ptr<nasal::dbg>(new nasal::dbg);
+        auto debugger = std::make_unique<nasal::dbg>();
         debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
     } else if (cmd&VM_TIME || cmd&VM_EXEC) {
-        auto runtime = std::unique_ptr<nasal::vm>(new nasal::vm);
+        auto runtime = std::make_unique<nasal::vm>();
         runtime->set_detail_report_info(cmd&VM_DETAIL);
         runtime->set_limit_mode_flag(cmd&VM_LIMIT);
         runtime->run(gen, ld, argv);
@@ -202,7 +202,7 @@ i32 main(i32 argc, const char* argv[]) {
         } else if (s=="-v" || s=="--version") {
             std::clog << version;
         } else if (s=="-r" || s=="--repl") {
-            auto repl = std::unique_ptr<nasal::repl::repl>(new nasal::repl::repl);
+            auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();
         } else if (s[0]!='-') {
             execute(s, {}, VM_EXEC);

@@ -37,7 +37,7 @@ void repl::update_temp_file() {
 bool repl::check_need_more_input() {
     while(true) {
         update_temp_file();
-        auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
+        auto nasal_lexer = std::make_unique<lexer>();
         if (nasal_lexer->scan("<nasal-repl>").geterr()) {
             return false;
         }
@@ -77,11 +77,11 @@ void repl::help() {
 }
 
 bool repl::run() {
-    auto nasal_lexer = std::unique_ptr<lexer>(new lexer);
-    auto nasal_parser = std::unique_ptr<parse>(new parse);
-    auto nasal_linker = std::unique_ptr<linker>(new linker);
-    auto nasal_opt = std::unique_ptr<optimizer>(new optimizer);
-    auto nasal_codegen = std::unique_ptr<codegen>(new codegen);
+    auto nasal_lexer = std::make_unique<lexer>();
+    auto nasal_parser = std::make_unique<parse>();
+    auto nasal_linker = std::make_unique<linker>();
+    auto nasal_opt = std::make_unique<optimizer>();
+    auto nasal_codegen = std::make_unique<codegen>();
 
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {

@@ -142,7 +142,7 @@ private:
     bool next;
     usize fsize;
     u16 break_file_index;
-    u32 break_line;
+    u64 break_line;
     error src;
 
 private:
