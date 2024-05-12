@@ -316,7 +316,7 @@ std::string linker::generate_module_name(const std::string& file_path) {
 }
 
 return_expr* linker::generate_module_return(code_block* block) {
-    auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
+    auto finder = std::make_unique<symbol_finder>();
     auto result = new return_expr(block->get_location());
     auto value = new hash_expr(block->get_location());
     result->set_value(value);
@@ -406,6 +406,13 @@ const error& linker::link(parse& parse, bool spath = false) {
     merge_tree(library, parse.tree());
     // swap tree root, and delete old root
     delete parse.swap(library);
+
+    if (imported_files.size()>=UINT16_MAX) {
+        err.err("link",
+            "too many imported files: " +
+            std::to_string(imported_files.size())
+        );
+    }
     return err;
 }
 

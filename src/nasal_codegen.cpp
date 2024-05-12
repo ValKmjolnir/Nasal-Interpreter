@@ -87,7 +87,7 @@ void codegen::regist_string(const std::string& str) {
 }
 
 void codegen::find_symbol(code_block* node) {
-    auto finder = std::unique_ptr<symbol_finder>(new symbol_finder);
+    auto finder = std::make_unique<symbol_finder>();
     for(const auto& i : finder->do_find(node)) {
         // check if symbol conflicts with native function name
         if (native_function_mapper.count(i.name)) {
@@ -95,11 +95,11 @@ void codegen::find_symbol(code_block* node) {
             continue;
         }
         // create new namespace with checking existence of location file
-        if (!experimental_namespace.count(i.location.file)) {
-            experimental_namespace[i.location.file] = {};
+        if (!nasal_namespace.count(i.location.file)) {
+            nasal_namespace[i.location.file] = {};
         }
         // if in global scope, load global symbol into this namespace
-        auto& scope = experimental_namespace.at(i.location.file);
+        auto& scope = nasal_namespace.at(i.location.file);
         if (local.empty() && !scope.count(i.name)) {
             scope.insert(i.name);
         }
@@ -126,26 +126,30 @@ void codegen::regist_symbol(const std::string& name) {
     local.back()[name] = index;
 }
 
-i32 codegen::local_symbol_find(const std::string& name) {
+i64 codegen::local_symbol_find(const std::string& name) {
     if (local.empty()) {
         return -1;
     }
     return local.back().count(name)? local.back().at(name):-1;
 }
 
-i32 codegen::global_symbol_find(const std::string& name) {
+i64 codegen::global_symbol_find(const std::string& name) {
     return global.count(name)? global.at(name):-1;
 }
 
-i32 codegen::upvalue_symbol_find(const std::string& name) {
+i64 codegen::upvalue_symbol_find(const std::string& name) {
     // 32768 level 65536 upvalues
-    i32 index = -1;
+    // may cause some errors if local scope depth is too deep or
+    // local scope's symbol list size is greater than 65536,
+    // but we check the local size in codegen::func_gen
+    i64 index = -1;
     usize size = local.size();
     if (size<=1) {
         return -1;
     }
+
     auto iter = local.begin();
-    for(u32 i = 0; i<size-1; ++i, ++iter) {
+    for(u64 i = 0; i<size-1; ++i, ++iter) {
         if (iter->count(name)) {
             index = ((i<<16)|(*iter).at(name));
         }
@@ -301,10 +305,14 @@ void codegen::func_gen(function* node) {
     block_gen(block);
     in_foreach_loop_level.pop_back();
 
+    // we must check the local scope symbol list size
+    // the local scope should not cause stack overflow
+    // and should not greater than upvalue's max size(65536)
     code[lsize].num = local.back().size();
-    if (local.back().size()>=STACK_DEPTH) {
+    if (local.back().size()>=STACK_DEPTH || local.back().size()>=UINT16_MAX) {
         die("too many local variants: " +
-            std::to_string(local.back().size()), block->get_location()
+            std::to_string(local.back().size()),
+            block->get_location()
         );
     }
     local.pop_back();
@@ -350,7 +358,7 @@ void codegen::call_identifier(identifier* node) {
         return;
     }
 
-    i32 index;
+    i64 index;
     if ((index = local_symbol_find(name))>=0) {
         emit(op_calll, index, node->get_location());
         return;
@@ -470,7 +478,7 @@ void codegen::mcall_identifier(identifier* node) {
         return;
     }
 
-    i32 index;
+    i64 index;
     if ((index = local_symbol_find(name))>=0) {
         emit(op_mcalll, index, node->get_location());
         return;
@@ -1428,7 +1436,7 @@ void codegen::print(std::ostream& out) {
 }
 
 void codegen::symbol_dump(std::ostream& out) const {
-    for(const auto& domain : experimental_namespace) {
+    for(const auto& domain : nasal_namespace) {
         out << "<" << domain.first << ">\n";
         for(const auto& i : domain.second) {
             out << "  0x" << std::setw(4) << std::setfill('0');

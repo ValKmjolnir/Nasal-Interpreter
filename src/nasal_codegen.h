@@ -89,7 +89,10 @@ private:
     // symbol table
     // global : max STACK_DEPTH-1 values
     std::unordered_map<std::string, u64> global;
-    std::unordered_map<std::string, std::unordered_set<std::string>> experimental_namespace;
+
+    // nasal namespace
+    // stores all global symbols of each file
+    std::unordered_map<std::string, std::unordered_set<std::string>> nasal_namespace;
 
     // local  : max 32768 upvalues 65536 values
     // but in fact local scope also has less than STACK_DEPTH value
@@ -105,9 +108,9 @@ private:
     void regist_string(const std::string&);
     void find_symbol(code_block*);
     void regist_symbol(const std::string&);
-    i32 local_symbol_find(const std::string&);
-    i32 global_symbol_find(const std::string&);
-    i32 upvalue_symbol_find(const std::string&);
+    i64 local_symbol_find(const std::string&);
+    i64 global_symbol_find(const std::string&);
+    i64 upvalue_symbol_find(const std::string&);
 
     void emit(u8, u64, const span&);
 
@@ -157,9 +160,6 @@ public:
     const auto& natives() const {return native_function;}
     const auto& codes() const {return code;}
     const auto& globals() const {return global;}
-    const auto& get_experimental_namespace() const {
-        return experimental_namespace;
-    }
 
 public:
     codegen() = default;
