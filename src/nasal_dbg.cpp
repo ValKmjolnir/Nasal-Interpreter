@@ -147,12 +147,14 @@ void dbg::list_file() const {
 }
 
 void dbg::step_info() {
-    u32 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
-    u32 begin = (line>>3)==0? 0:((line>>3)<<3);
-    u32 end = (1+(line>>3))<<3;
+    u64 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
+    u64 begin = (line>>3)==0? 0:((line>>3)<<3);
+    u64 end = (1+(line>>3))<<3;
+
     src.load(files[bytecode[ctx.pc].fidx]);
+
     std::clog << "\nsource code:\n";
-    for(u32 i = begin; i<end && i<src.size(); ++i) {
+    for(u64 i = begin; i<end && i<src.size(); ++i) {
         std::clog << (i==line? back_white:reset);
         std::clog << (i==line? "--> ":"    ") << src[i] << reset << "\n";
     }
@@ -160,8 +162,9 @@ void dbg::step_info() {
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
     codestream::set(const_number, const_string, native_function.data(), files);
+
     std::clog << "\nnext bytecode:\n";
-    for(u32 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
+    for(u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
         << (i==ctx.pc? back_white:reset)
         << (i==ctx.pc? "--> ":"    ")
@@ -234,19 +237,18 @@ void dbg::interact() {
     }
 }
 
-void dbg::run(
-    const codegen& gen,
-    const linker& linker,
-    const std::vector<std::string>& argv,
-    bool profile,
-    bool show_all_prof_result) {
+void dbg::run(const codegen& gen,
+              const linker& linker,
+              const std::vector<std::string>& argv,
+              bool profile,
+              bool show_all_prof_result) {
 
     set_detail_report_info(true);
     do_operand_count = profile || show_all_prof_result;
 
     const auto& file_list = linker.get_file_list();
     fsize = file_list.size();
-    init(
+    vm_init_enrty(
         gen.strs(),
         gen.nums(),
         gen.natives(),
@@ -257,9 +259,9 @@ void dbg::run(
     );
     counter.init(file_list);
 
-    std::vector<u32> code;
+    std::vector<u8> code;
     std::vector<u16> code_file_index;
-    std::vector<u32> code_line;
+    std::vector<u64> code_line;
     for(const auto& i : gen.codes()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);

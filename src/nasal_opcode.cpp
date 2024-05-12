@@ -27,11 +27,10 @@ const char* opname[] = {
     "mcallv", "mcallh", "ret   "
 };
 
-void codestream::set(
-    const f64* number_list,
-    const std::string* string_list,
-    const nasal_builtin_table* native_table,
-    const std::string* file_list) {
+void codestream::set(const f64* number_list,
+                     const std::string* string_list,
+                     const nasal_builtin_table* native_table,
+                     const std::string* file_list) {
     const_number = number_list;
     const_string = string_list;
     natives = native_table;
@@ -110,6 +109,8 @@ void codestream::dump(std::ostream& out) const {
             }
             break;
     }
+
+    // if file list is loaded, dump file location info
     if (files) {
         out << " (" << files[code.fidx] << ":" << code.line << ")";
     }

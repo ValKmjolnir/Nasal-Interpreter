@@ -26,7 +26,7 @@ protected:
     /* constants */
     const f64* const_number = nullptr; // constant numbers
     const std::string* const_string = nullptr; // constant symbols and strings
-    std::vector<u32> imm; // immediate number table
+    std::vector<u64> imm; // immediate number table
     std::vector<nasal_builtin_table> native_function;
     
     /* garbage collector */
@@ -49,15 +49,13 @@ protected:
     bool flag_limited_mode = false;
 
     /* vm initializing function */
-    void init(
-        const std::vector<std::string>&,
-        const std::vector<f64>&,
-        const std::vector<nasal_builtin_table>&,
-        const std::vector<opcode>&,
-        const std::unordered_map<std::string, i32>&,
-        const std::vector<std::string>&,
-        const std::vector<std::string>&
-    );
+    void vm_init_enrty(const std::vector<std::string>&,
+                       const std::vector<f64>&,
+                       const std::vector<nasal_builtin_table>&,
+                       const std::vector<opcode>&,
+                       const std::unordered_map<std::string, u64>&,
+                       const std::vector<std::string>&,
+                       const std::vector<std::string>&);
     void context_and_global_init();
 
     /* debug functions */
@@ -183,11 +181,9 @@ public:
     }
 
     /* execution entry */
-    void run(
-        const codegen&, // get generated code
-        const linker&, // get list of used files
-        const std::vector<std::string>& // get arguments input by command line
-    );
+    void run(const codegen&,                   // get generated code
+             const linker&,                    // get list of used files
+             const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */
     void set_detail_report_info(bool flag) {verbose = flag;}
@@ -700,7 +696,7 @@ inline void vm::o_callh() {
 }
 
 inline void vm::o_callfv() {
-    const u32 argc = imm[ctx.pc]; // arguments counter
+    const auto argc = imm[ctx.pc]; // arguments counter
     var* local = ctx.top-argc+1; // arguments begin address
     if (!local[-1].is_func()) {
         die("must call a function but get "+type_name_string(local[-1]));
@@ -719,7 +715,7 @@ inline void vm::o_callfv() {
         return;
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
-    const u32 parameter_size = func.parameter_size-1;
+    const u64 parameter_size = func.parameter_size-1;
     if (argc<parameter_size && func.local[argc+1].is_none()) {
         die(report_lack_arguments(argc, func));
         return;
@@ -730,16 +726,17 @@ inline void vm::o_callfv() {
     if (func.dynamic_parameter_index>=0) {
         // load dynamic argument
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u32 i = parameter_size; i<argc; ++i) {
+        for(u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     } else if (parameter_size<argc) {
         // load arguments to default dynamic argument "arg", located at stack+1
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u32 i = parameter_size; i<argc; ++i) {
+        for(u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
+
     // should reset stack top after allocating vector
     // because this may cause gc
     // then all the available values the vector needs
@@ -747,14 +744,18 @@ inline void vm::o_callfv() {
     // collected incorrectly
     ctx.top = local+func.local_size;
 
-    const u32 min_size = (std::min)(parameter_size, argc); // avoid error in MSVC
-    for(u32 i = min_size; i>=1; --i) { // load arguments
+    // use (std::min) to avoid compilation error in MSVC
+    // MSVC windows.h uses macro std::min
+    const u64 min_size = (std::min)(parameter_size, argc);
+
+    // load arguments
+    for(u64 i = min_size; i>=1; --i) {
         local[i] = local[i-1];
     }
-    local[0] = func.local[0];// load "me"
+    local[0] = func.local[0]; // load "me"
 
     // load local scope & default arguments
-    for(u32 i = min_size+1; i<func.local_size; ++i) {
+    for(u64 i = min_size+1; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
     // load dynamic argument

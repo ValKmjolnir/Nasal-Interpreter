@@ -9,9 +9,11 @@
 
 namespace nasal {
 
-class ast_dumper:public ast_visitor {
+class ast_dumper: public ast_visitor {
 private:
     std::vector<std::string> indent;
+
+private:
     void push_indent() {
         if (indent.size()) {
             if (indent.back()=="|--") {

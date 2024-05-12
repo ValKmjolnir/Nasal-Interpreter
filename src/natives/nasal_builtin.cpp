@@ -204,16 +204,17 @@ var builtin_str(context* ctx, gc* ngc) {
 
 var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    f64 num = 0;
+
+    usize num = 0;
     switch(val.type) {
-        case vm_type::vm_num:  num = val.num(); break;
+        case vm_type::vm_num:  return val;
         case vm_type::vm_str:  num = val.str().length(); break;
         case vm_type::vm_vec:  num = val.vec().size(); break;
         case vm_type::vm_hash: num = val.hash().size(); break;
         case vm_type::vm_map:  num = val.map().mapper.size(); break;
         default: break;
     }
-    return var::num(num);
+    return var::num(static_cast<f64>(num));
 }
 
 var builtin_time(context* ctx, gc* ngc) {
@@ -569,12 +570,12 @@ public:
         stamp = std::chrono::high_resolution_clock::now();
     }
 
-    f64 elapsed_milliseconds() {
+    auto elapsed_milliseconds() const {
         const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     }
 
-    f64 elapsed_microseconds() {
+    auto elapsed_microseconds() const {
         const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     }
@@ -611,7 +612,7 @@ var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
         return var::num(-1);
     }
     auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
-    return var::num(stamp->elapsed_milliseconds());
+    return var::num(static_cast<f64>(stamp->elapsed_milliseconds()));
 }
 
 var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
@@ -620,7 +621,7 @@ var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
         return var::num(-1);
     }
     auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
-    return var::num(stamp->elapsed_microseconds());
+    return var::num(static_cast<f64>(stamp->elapsed_microseconds()));
 }
 
 var builtin_gcextend(context* ctx, gc* ngc) {
@@ -648,20 +649,27 @@ var builtin_gcextend(context* ctx, gc* ngc) {
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
-    auto den = std::chrono::high_resolution_clock::duration::period::den;
+    const auto den = std::chrono::high_resolution_clock::duration::period::den;
     var res = ngc->alloc(vm_type::vm_hash);
 
-    double total = 0;
+    f64 total = 0;
     for(u32 i = 0; i<gc_type_size; ++i) {
-        total += ngc->gcnt[i];
+        total += static_cast<f64>(ngc->gcnt[i]);
     }
-    // using ms
+
+
     auto& map = res.hash().elems;
-    map["total"] = var::num(ngc->worktime*1.0/den*1000);
-    map["average"] = var::num(ngc->worktime*1.0/den*1000/total);
-    map["max_gc"] = var::num(ngc->max_time*1.0/den*1000);
-    map["max_mark"] = var::num(ngc->max_mark_time*1.0/den*1000);
-    map["max_sweep"] = var::num(ngc->max_sweep_time*1.0/den*1000);
+    const auto worktime = static_cast<f64>(ngc->worktime);
+    const auto max_time = static_cast<f64>(ngc->max_time);
+    const auto max_mark_time = static_cast<f64>(ngc->max_mark_time);
+    const auto max_sweep_time = static_cast<f64>(ngc->max_sweep_time);
+
+    // using ms
+    map["total"] = var::num(worktime/den*1000);
+    map["average"] = var::num(worktime/den*1000/total);
+    map["max_gc"] = var::num(max_time/den*1000);
+    map["max_mark"] = var::num(max_mark_time/den*1000);
+    map["max_sweep"] = var::num(max_sweep_time/den*1000);
     return res;
 }
 
@@ -686,9 +694,17 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
     if (!arg.is_ghost()) {
         return nas_err("ghosttype", "this is not a ghost object.");
     }
+
     const auto& name = arg.ghost().get_ghost_name();
+
+    // https://wiki.flightgear.org/Nasal_library#ghosttype()
+    // tolds us if no name has been set,
+    // return a unique id (the pointer to the instance)
     if (!name.length()) {
-        return var::num(reinterpret_cast<u64>(arg.ghost().pointer));
+        std::stringstream ss;
+        ss << "0x" << std::hex;
+        ss << reinterpret_cast<u64>(arg.ghost().pointer) << std::dec;
+        return ngc->newstr(ss.str());
     }
     return ngc->newstr(name);
 }

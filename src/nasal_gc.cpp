@@ -189,7 +189,7 @@ void gc::extend(const vm_type type) {
     const u8 index = static_cast<u8>(type)-static_cast<u8>(vm_type::vm_str);
     size[index] += incr[index];
 
-    for(u32 i = 0; i<incr[index]; ++i) {
+    for(u64 i = 0; i<incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
         nas_val* tmp = new nas_val(type);
 
@@ -197,14 +197,13 @@ void gc::extend(const vm_type type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
+
     // if incr[index] = 1, this will always be 1
     incr[index] = incr[index]+incr[index]/2;
 }
 
-void gc::init(
-    const std::vector<std::string>& constant_strings,
-    const std::vector<std::string>& argv
-) {
+void gc::init(const std::vector<std::string>& constant_strings,
+              const std::vector<std::string>& argv) {
     // initialize counters
     worktime = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -216,7 +215,7 @@ void gc::init(
 
     // init constant strings
     strs.resize(constant_strings.size());
-    for(u32 i = 0; i<strs.size(); ++i) {
+    for(u64 i = 0; i<strs.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
             continue;
@@ -228,7 +227,7 @@ void gc::init(
 
     // record arguments
     env_argv.resize(argv.size());
-    for(usize i = 0; i<argv.size(); ++i) {
+    for(u64 i = 0; i<argv.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (env_argv[i].is_str() && env_argv[i].str()==argv[i]) {
             continue;
@@ -315,7 +314,7 @@ void gc::info() const {
         if (!gcnt[i] && !acnt[i] && !size[i]) {
             continue;
         }
-        total += gcnt[i];
+        total += static_cast<f64>(gcnt[i]);
         std::clog << " " << left << setw(indent) << setfill(' ') << name[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];

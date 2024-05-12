@@ -95,7 +95,8 @@ std::ostream& logo(std::ostream& out) {
 }
 
 std::ostream& version(std::ostream& out) {
-    std::srand(std::time(nullptr));
+    std::srand(static_cast<u16>(std::time(nullptr)));
+
     f64 num = 0;
     for(u32 i = 0; i<5; ++i) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
@@ -103,6 +104,7 @@ std::ostream& version(std::ostream& out) {
     if (num<0.01) {
         nasal::parse::easter_egg();
     }
+
     out << "nasal interpreter version " << __nasver__;
     out << " " << nasal::get_platform() << " " << nasal::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
@@ -181,7 +183,7 @@ void execute(const std::string& file,
     const auto end = clk::now();
     if (cmd&VM_TIME) {
         std::clog << "process exited after ";
-        std::clog << (end-start).count()*1.0/den << "s.\n\n";
+        std::clog << static_cast<f64>((end-start).count())/den << "s.\n\n";
     }
 }
 
