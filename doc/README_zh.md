@@ -13,6 +13,7 @@
 ## __目录__
 
 * [__简介__](#简介)
+* [__下载__](#下载)
 * [__编译__](#编译)
 * [__使用方法__](#使用方法)
 * [__教程__](../doc/tutorial_zh.md)
@@ -42,18 +43,28 @@ __如果有好的意见或建议，欢迎联系我们!__
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 是一款语法与 ECMAscript 相似的编程语言，并作为脚本语言被著名开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所使用。
 该语言的设计者为 [Andy Ross](https://github.com/andyross)。
+该解释器由 [ValKmjolnir](https://github.com/ValKmjolnir) 使用 `C++`(`-std=c++17`)重新实现。非常感谢 Andy 为我们设计了这个神奇且简洁的编程语言: [Andy Ross 的 nasal 解释器](https://github.com/andyross/nasal)。
 
-该解释器项目由 [ValKmjolnir](https://github.com/ValKmjolnir) 使用 `C++`(`-std=c++17`)重新实现，我们非常感谢Andy为我们带来了这样一个神奇且简洁的编程语言: [Andy Ross 的 nasal 解释器](https://github.com/andyross/nasal)。
+该项目旧版本使用 __MIT__ 协议开源 (2019/7 ~ 2021/5/4 ~ 2023/5)，从 2023/6 开始新版本使用 __GPL v2__ 协议。
 
-该项目使用 __MIT__ 协议开源 (2019/7 ~ 2021/5/4 ~ 2023/5)，从 2023/6 开始使用 __GPL v2__ 协议。
+### __为什么重新写 Nasal 解释器?__
 
-### __我们为什么想要重新写一个 Nasal 解释器?__
+2019 年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在 Flightgear 中提供的 nasal 控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误以及运行时错误。
 
-2019年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在Flightgear中提供的nasal控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误以及运行时错误。
+我编写了 nasal 的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行 nasal 程序的调试。我们发现使用这个解释器来检测语法和运行时错误极大的提高了效率。
 
-我编写了nasal的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行nasal程序的调试。我们发现使用这个解释器来检测语法和运行时错误极大的提高了效率。
+你也可以使用这个语言来写一些与 Flightgear 运行环境无关的有趣的程序，并用这个解释器来执行。你也可以让解释器来调用你自己编写的模块，使它成为项目中一个非常有用的工具。
 
-你也可以使用这个语言来写一些与Flightgear运行环境无关的有趣的程序，并用这个解释器来执行。你也可以让解释器来调用你自己编写的模块，使它成为项目中一个非常有用的工具。
+## __下载__
+
+现在支持下载预览版(Nightly Build)。
+Windows 平台的预览版解释器现在还没配置相关流水线，
+请耐心等候或者直接在本地编译。
+我们提供了一份 Cmake 文件，可以很方便地在 Visual Studio 中编译:
+
+* [macOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
+* [linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
+* windows-nightly-build: [施工中...]
 
 ## __编译__
 

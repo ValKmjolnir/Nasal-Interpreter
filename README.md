@@ -13,7 +13,8 @@
 ## __Contents__
 
 * [__Introduction__](#introduction)
-* [__Compile__](#how-to-compile)
+* [__Download__](#download)
+* [__Compile__](#compile)
 * [__Usage__](#how-to-use)
 * [__Tutorial__](./doc/tutorial.md)
 * [__Release Notes__](./doc/dev.md#release-notes)
@@ -42,11 +43,10 @@ __Contact us if having great ideas to share!__
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
-
 This interpreter is rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`).
 We really appreciate that Andy created this amazing programming language: [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 
-This project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5), __GPL v2 license__ (since 2023/6).
+Old version of this project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5). Now it uses __GPL v2 license__ (since 2023/6).
 
 ### __Why writing this Nasal interpreter?__
 
@@ -64,7 +64,17 @@ interesting programs and run them without the lib of Flightgear.
 You could add your own modules to make
 the interpreter a useful tool in your own projects.
 
-## __How to Compile__
+## __Download__
+
+Nightly build could be found here.
+Windows nightly build is not supported yet,
+please wait or just compile it by yourself, a Cmake file is given for Visual Studio to compile this project easily:
+
+* [macOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
+* [linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
+* windows-nightly-build: [WIP]
+
+## __Compile__
 
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
