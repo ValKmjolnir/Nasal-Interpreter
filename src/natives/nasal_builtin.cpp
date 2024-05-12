@@ -339,6 +339,7 @@ var builtin_left(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
+
     if (!str.is_str()) {
         return nas_err("left", "\"string\" must be string");
     }
@@ -355,20 +356,23 @@ var builtin_right(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
+
     if (!str.is_str()) {
         return nas_err("right", "\"string\" must be string");
     }
     if (!len.is_num()) {
         return nas_err("right", "\"length\" must be number");
     }
+
     i32 length = static_cast<i32>(len.num());
-    i32 srclen = str.str().length();
+    i32 srclen = static_cast<i32>(str.str().length());
     if (length>srclen) {
         length = srclen;
     }
     if (length<0) {
         length = 0;
     }
+
     return ngc->newstr(str.str().substr(srclen-length, srclen));
 }
 
@@ -566,12 +570,12 @@ public:
     }
 
     f64 elapsed_milliseconds() {
-        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+        const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     }
 
     f64 elapsed_microseconds() {
-        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+        const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     }
 };

@@ -66,10 +66,12 @@ var builtin_values(context*, gc*);
 var builtin_sleep(context*, gc*);
 var builtin_platform(context*, gc*);
 var builtin_arch(context*, gc*);
+
 // md5 related functions
 std::string tohex(u32);
 std::string md5(const std::string&);
 var builtin_md5(context*, gc*);
+
 var builtin_maketimestamp(context*, gc*);
 var builtin_time_stamp(context*, gc*);
 var builtin_elapsed_millisecond(context*, gc*);

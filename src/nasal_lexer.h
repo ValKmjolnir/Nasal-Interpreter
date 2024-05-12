@@ -88,8 +88,8 @@ struct token {
 
 class lexer {
 private:
-    u32 line;
-    u32 column;
+    u64 line;
+    u64 column;
     usize ptr;
     std::string filename;
     std::string res;
@@ -98,7 +98,7 @@ private:
     u64 invalid_char;
     std::vector<token> toks;
 
-    const std::unordered_map<std::string, tok> typetbl {
+    const std::unordered_map<std::string, tok> token_mapper = {
         {"use"     ,tok::use     },
         {"true"    ,tok::tktrue  },
         {"false"   ,tok::tkfalse },

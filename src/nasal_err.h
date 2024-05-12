@@ -11,11 +11,15 @@
 namespace nasal {
 
 struct span {
-    u32 begin_line;
-    u32 begin_column;
-    u32 end_line;
-    u32 end_column;
+    u64 begin_line;
+    u64 begin_column;
+    u64 end_line;
+    u64 end_column;
     std::string file;
+
+    void dump_begin(std::ostream& out) const {
+        out << file << ":" << begin_line << ":" << begin_column + 1;
+    }
 };
 
 std::ostream& back_white(std::ostream&);
@@ -46,7 +50,7 @@ private:
     std::string identation(usize len) {
         return std::string(len, ' ');
     }
-    std::string leftpad(u32 num, usize len) {
+    std::string leftpad(u64 num, usize len) {
         auto tmp = std::to_string(num);
         while(tmp.length()<len) {
             tmp = " "+tmp;
@@ -65,7 +69,7 @@ public:
             std::exit(1);
         }
     }
-    u32 geterr() const {return cnt;}
+    auto geterr() const { return cnt; }
 };
 
 }

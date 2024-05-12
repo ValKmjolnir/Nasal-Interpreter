@@ -96,7 +96,7 @@ void lexer::open(const std::string& file) {
 }
 
 tok lexer::get_type(const std::string& str) {
-    return typetbl.count(str)? typetbl.at(str):tok::null;
+    return token_mapper.count(str)? token_mapper.at(str):tok::null;
 }
 
 std::string lexer::utf8_gen() {
@@ -138,8 +138,8 @@ std::string lexer::utf8_gen() {
 }
 
 token lexer::id_gen() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     std::string str = "";
     while(ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
@@ -157,8 +157,8 @@ token lexer::id_gen() {
 }
 
 token lexer::num_gen() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     // generate hex number
     if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
         std::string str = "0x";
@@ -239,8 +239,8 @@ token lexer::num_gen() {
 }
 
 token lexer::str_gen() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     std::string str = "";
     const char begin = res[ptr];
     ++column;
@@ -298,8 +298,8 @@ token lexer::str_gen() {
 }
 
 token lexer::single_opr() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     std::string str(1, res[ptr]);
     ++column;
     tok type = get_type(str);
@@ -314,8 +314,8 @@ token lexer::single_opr() {
 }
 
 token lexer::dots() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     std::string str = ".";
     if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
         str += "..";
@@ -326,8 +326,8 @@ token lexer::dots() {
 }
 
 token lexer::calc_opr() {
-    u32 begin_line = line;
-    u32 begin_column = column;
+    u64 begin_line = line;
+    u64 begin_column = column;
     // get calculation operator
     std::string str(1, res[ptr++]);
     if (ptr<res.size() && res[ptr]=='=') {

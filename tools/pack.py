@@ -4,8 +4,6 @@ import os
 import platform
 import shutil
 
-nasal_version = "11.2"
-
 build_directory = pathlib.Path("build")
 if not os.path.exists(build_directory):
     print("pack binaries failed: build directory not found")

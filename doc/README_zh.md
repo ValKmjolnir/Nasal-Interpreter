@@ -2,7 +2,6 @@
 
 <img src="../doc/pic/header.png" style="width:600px"></img>
 
-![GitHub code size](https://img.shields.io/github/languages/code-size/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 ![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)

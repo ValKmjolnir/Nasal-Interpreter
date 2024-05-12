@@ -260,7 +260,7 @@ void dbg::run(
     std::vector<u32> code;
     std::vector<u16> code_file_index;
     std::vector<u32> code_line;
-    for(auto& i : gen.codes()) {
+    for(const auto& i : gen.codes()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);
         code_line.push_back(i.line);
