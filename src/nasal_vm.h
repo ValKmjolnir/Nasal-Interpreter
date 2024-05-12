@@ -20,13 +20,15 @@ namespace nasal {
 class vm {
 protected:
 
-    /* registers of vm */
-    context ctx; // running context
+    /* vm context */
+    context ctx;
 
     /* constants */
-    const f64* const_number = nullptr; // constant numbers
-    const std::string* const_string = nullptr; // constant symbols and strings
+    const f64* const_number = nullptr;
+    const std::string* const_string = nullptr;
     std::vector<u64> imm; // immediate number table
+
+    /* nasal native functions */
     std::vector<nasal_builtin_table> native_function;
     
     /* garbage collector */
@@ -77,9 +79,11 @@ protected:
     std::string type_name_string(const var&) const;
     void die(const std::string&);
 
+protected:
     /* vm calculation functions*/
     inline bool cond(var&);
 
+protected:
     /* vm operands */
     inline void o_repl();
     inline void o_intl();
@@ -247,8 +251,9 @@ inline void vm::o_newv() {
     auto& vec = newv.vec().elems;
     vec.resize(imm[ctx.pc]);
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
-    ctx.top = ctx.top-imm[ctx.pc]+1;
-    for(u32 i = 0; i<imm[ctx.pc]; ++i) {
+    ctx.top = ctx.top - imm[ctx.pc] + 1;
+
+    for(u64 i = 0; i<imm[ctx.pc]; ++i) {
         vec[i] = ctx.top[i];
     }
     ctx.top[0] = newv;
@@ -266,16 +271,21 @@ inline void vm::o_newf() {
 
     /* this means you create a new function in local scope */
     if (ctx.localr) {
+        // copy upval scope list from upper level function
         func.upval = ctx.funcr.func().upval;
-        // function created in the same local scope shares one closure
-        // so this size & stk setting has no problem
+
+        // function created in the same local scope shares same closure
         var upval = (ctx.upvalr.is_nil())?
             ngc.alloc(vm_type::vm_upval):
             ctx.upvalr;
-        upval.upval().size = ctx.funcr.func().local_size;
-        upval.upval().stack_frame_offset = ctx.localr;
+        // if no upval scope exists, now it's time to create one
+        if (ctx.upvalr.is_nil()) {
+            upval.upval().size = ctx.funcr.func().local_size;
+            upval.upval().stack_frame_offset = ctx.localr;
+            ctx.upvalr = upval;
+        }
+
         func.upval.push_back(upval);
-        ctx.upvalr = upval;
     }
 }
 
@@ -679,6 +689,7 @@ inline void vm::o_callh() {
         die("must call a hash but get "+type_name_string(val));
         return;
     }
+
     const auto& str = const_string[imm[ctx.pc]];
     if (val.is_hash()) {
         ctx.top[0] = val.hash().get_value(str);
@@ -968,25 +979,31 @@ inline void vm::o_mcallv() {
 }
 
 inline void vm::o_mcallh() {
-    var hash = ctx.top[0]; // mcall hash, reserved on stack to avoid gc
+    // mcall hash, reserved on stack to avoid gc, so do not do ctx.top--
+    var hash = ctx.top[0];
     if (!hash.is_hash() && !hash.is_map()) {
-        die("must call a hash/namespace but get "+type_name_string(hash));
+        die("must call a hash/namespace but get " + type_name_string(hash));
         return;
     }
-    const auto& str = const_string[imm[ctx.pc]];
+
+    const auto& key = const_string[imm[ctx.pc]];
+
+    // map is for nasal namespace type, for example `globals`
     if (hash.is_map()) {
-        ctx.memr = hash.map().get_memory(str);
+        ctx.memr = hash.map().get_memory(key);
         if (!ctx.memr) {
-            die("cannot find symbol \"" + str + "\"");
+            die("cannot find symbol \"" + key + "\"");
         }
         return;
     }
+
+    // call hash member
     auto& ref = hash.hash();
-    ctx.memr = ref.get_memory(str);
-    // create a new key
+    ctx.memr = ref.get_memory(key);
+    // create a new key if not exists
     if (!ctx.memr) {
-        ref.elems[str] = nil;
-        ctx.memr = ref.get_memory(str);
+        ref.elems[key] = nil;
+        ctx.memr = ref.get_memory(key);
     }
 }
 
@@ -1024,7 +1041,7 @@ inline void vm::o_ret() {
         auto size = func.func().local_size;
         upval.on_stack = false;
         upval.elems.resize(size);
-        for(u32 i = 0; i<size; ++i) {
+        for(u64 i = 0; i<size; ++i) {
             upval.elems[i] = local[i];
         }
     }
