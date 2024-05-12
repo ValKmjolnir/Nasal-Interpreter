@@ -6,7 +6,7 @@ endif
 ifeq ($(OS), Darwin)
 	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15 -I src
 else
-	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -I src
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -I src -Wconversion -Wno-float-conversion
 endif
 
 NASAL_HEADER = \

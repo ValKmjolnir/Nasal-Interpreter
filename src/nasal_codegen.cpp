@@ -70,7 +70,8 @@ void codegen::regist_number(const f64 num) {
     if (const_number_map.count(num)) {
         return;
     }
-    u32 size = const_number_map.size();
+
+    auto size = const_number_map.size();
     const_number_map[num] = size;
     const_number_table.push_back(num);
 }
@@ -79,7 +80,8 @@ void codegen::regist_string(const std::string& str) {
     if (const_string_map.count(str)) {
         return;
     }
-    u32 size = const_string_map.size();
+
+    auto size = const_string_map.size();
     const_string_map[str] = size;
     const_string_table.push_back(str);
 }
@@ -107,18 +109,20 @@ void codegen::find_symbol(code_block* node) {
 }
 
 void codegen::regist_symbol(const std::string& name) {
+    // regist global if local scope list is empty
     if (local.empty()) {
         if (global.count(name)) {
             return;
         }
-        i32 index = global.size();
+        auto index = global.size();
         global[name] = index;
         return;
     }
+
     if (local.back().count(name)) {
         return;
     }
-    i32 index = local.back().size();
+    auto index = local.back().size();
     local.back()[name] = index;
 }
 
@@ -149,7 +153,7 @@ i32 codegen::upvalue_symbol_find(const std::string& name) {
     return index;
 }
 
-void codegen::emit(u8 operation_code, u32 immediate_num, const span& location) {
+void codegen::emit(u8 operation_code, u64 immediate_num, const span& location) {
     code.push_back({
         operation_code,
         static_cast<u16>(file_map.at(location.file)),
@@ -505,7 +509,7 @@ void codegen::single_def(definition_expr* node) {
     const auto& str = node->get_variable_name()->get_name();
     calc_gen(node->get_value());
     // only generate in repl mode and in global scope
-    if (need_repl_output && local.empty()) {
+    if (flag_need_repl_output && local.empty()) {
         emit(op_repl, 0, node->get_location());
     }
     if (local.empty()) {
@@ -752,16 +756,16 @@ void codegen::multi_assign_gen(multi_assign* node) {
         }
     }
 
-    i32 size = tuple_node->get_elements().size();
+    i64 size = static_cast<i64>(tuple_node->get_elements().size());
     // generate multiple assignment: (a, b, c) = (1, 2, 3);
     if (value_node->get_type()==expr_type::ast_tuple) {
         const auto& value_tuple = reinterpret_cast<tuple_expr*>(value_node)
                                   ->get_elements();
-        for(i32 i = size-1; i>=0; --i) {
+        for(i64 i = size-1; i>=0; --i) {
             calc_gen(value_tuple[i]);
         }
         auto& tuple = tuple_node->get_elements();
-        for(i32 i = 0; i<size; ++i) {
+        for(i64 i = 0; i<size; ++i) {
             mcall(tuple[i]);
             // use load operands to avoid meq's pop operand
             // and this operation changes local and global value directly
@@ -773,13 +777,14 @@ void codegen::multi_assign_gen(multi_assign* node) {
     // generate multiple assignment: (a, b, c) = [1, 2, 3];
     calc_gen(value_node);
     auto& tuple = tuple_node->get_elements();
-    for(i32 i = 0; i<size; ++i) {
+    for(i64 i = 0; i<size; ++i) {
         emit(op_callvi, i, value_node->get_location());
         mcall(tuple[i]);
         // use load operands to avoid meq's pop operand
         // and this operation changes local and global value directly
         replace_left_assignment_with_load(tuple[i]->get_location());
     }
+
     // pop source vector
     emit(op_pop, 0, node->get_location());
 }
@@ -834,7 +839,7 @@ void codegen::loop_gen(expr* node) {
     }
 }
 
-void codegen::load_continue_break(i32 continue_place, i32 break_place) {
+void codegen::load_continue_break(u64 continue_place, u64 break_place) {
     for(auto i : continue_ptr.front()) {
         code[i].num = continue_place;
     }
@@ -943,7 +948,7 @@ void codegen::statement_generation(expr* node) {
         case expr_type::ast_ternary:
             calc_gen(node);
             // only generate in repl mode and in global scope
-            if (need_repl_output && local.empty()) {
+            if (flag_need_repl_output && local.empty()) {
                 emit(op_repl, 0, node->get_location());
             }
             emit(op_pop, 0, node->get_location());
@@ -1254,7 +1259,7 @@ void codegen::block_gen(code_block* node) {
                 break;
             case expr_type::ast_null: break;
             case expr_type::ast_id:
-                if (need_repl_output && local.empty()) {
+                if (flag_need_repl_output && local.empty()) {
                     repl_mode_info_output_gen(tmp);
                 } else {
                     check_id_exist(reinterpret_cast<identifier*>(tmp));
@@ -1264,7 +1269,7 @@ void codegen::block_gen(code_block* node) {
             case expr_type::ast_num:
             case expr_type::ast_str:
             case expr_type::ast_bool:
-                if (need_repl_output && local.empty()) {
+                if (flag_need_repl_output && local.empty()) {
                     repl_mode_info_output_gen(tmp);
                 }
                 break;
@@ -1313,7 +1318,7 @@ const error& codegen::compile(parse& parse,
                               linker& import,
                               bool repl_flag,
                               bool limit_mode) {
-    need_repl_output = repl_flag;
+    flag_need_repl_output = repl_flag;
     flag_limited_mode = limit_mode;
     init_native_function();
     init_file_map(import.get_file_list());
@@ -1334,13 +1339,13 @@ const error& codegen::compile(parse& parse,
     emit(op_exit, 0, parse.tree()->get_location());
 
     // size out of bound check
-    if (const_number_table.size()>0xffffff) {
+    if (const_number_table.size()>INT64_MAX) {
         err.err("code",
             "too many constant numbers: " +
             std::to_string(const_number_table.size())
         );
     }
-    if (const_string_table.size()>0xffffff) {
+    if (const_string_table.size()>INT64_MAX) {
         err.err("code",
             "too many constant strings: " +
             std::to_string(const_string_table.size())
@@ -1356,7 +1361,7 @@ const error& codegen::compile(parse& parse,
     }
 
     // check generated code size
-    if (code.size()>0xffffff) {
+    if (code.size()>INT64_MAX) {
         err.err("code",
             "bytecode size overflow: " +
             std::to_string(code.size())
@@ -1367,8 +1372,8 @@ const error& codegen::compile(parse& parse,
 
 void codegen::print(std::ostream& out) {
     // func end stack, reserved for code print
-    std::stack<u32> func_begin_stack;
-    std::stack<u32> func_end_stack;
+    std::stack<u64> func_begin_stack;
+    std::stack<u64> func_end_stack;
 
     // print const numbers
     for(auto num : const_number_table) {
@@ -1391,7 +1396,8 @@ void codegen::print(std::ostream& out) {
         const_string_table.data(),
         native_function.data()
     );
-    for(u32 i = 0; i<code.size(); ++i) {
+
+    for(u64 i = 0; i<code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];
         if (!func_end_stack.empty() && i==func_end_stack.top()) {
@@ -1407,7 +1413,7 @@ void codegen::print(std::ostream& out) {
         // get function begin index and end index
         if (c.op==op_newf) {
             out << std::hex << "\nfunc <0x" << i << std::dec << ">:\n";
-            for(u32 j = i; j<code.size(); ++j) {
+            for(u64 j = i; j<code.size(); ++j) {
                 if (code[j].op==op_jmp) {
                     func_begin_stack.push(i);
                     func_end_stack.push(code[j].num);

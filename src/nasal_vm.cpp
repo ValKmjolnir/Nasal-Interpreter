@@ -2,15 +2,13 @@
 
 namespace nasal {
 
-void vm::init(
-    const std::vector<std::string>& strs,
-    const std::vector<f64>& nums,
-    const std::vector<nasal_builtin_table>& natives,
-    const std::vector<opcode>& code,
-    const std::unordered_map<std::string, i32>& global_symbol,
-    const std::vector<std::string>& filenames,
-    const std::vector<std::string>& argv
-) {
+void vm::vm_init_enrty(const std::vector<std::string>& strs,
+                       const std::vector<f64>& nums,
+                       const std::vector<nasal_builtin_table>& natives,
+                       const std::vector<opcode>& code,
+                       const std::unordered_map<std::string, u64>& global_symbol,
+                       const std::vector<std::string>& filenames,
+                       const std::vector<std::string>& argv) {
     const_number = nums.data();
     const_string = strs.data();
     bytecode = code.data();
@@ -411,11 +409,10 @@ void vm::die(const std::string& str) {
     }
 }
 
-void vm::run(
-    const codegen& gen,
-    const linker& linker,
-    const std::vector<std::string>& argv) {
-    init(
+void vm::run(const codegen& gen,
+             const linker& linker,
+             const std::vector<std::string>& argv) {
+    vm_init_enrty(
         gen.strs(),
         gen.nums(),
         gen.natives(),
@@ -424,6 +421,7 @@ void vm::run(
         linker.get_file_list(),
         argv
     );
+
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {

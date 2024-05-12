@@ -279,14 +279,14 @@ bool var::object_check(const std::string& name) {
 }
 
 var var::none() {
-    return {vm_type::vm_none, static_cast<u32>(0)};
+    return {vm_type::vm_none, static_cast<u64>(0)};
 }
 
 var var::nil() {
-    return {vm_type::vm_nil, static_cast<u32>(0)};
+    return {vm_type::vm_nil, static_cast<u64>(0)};
 }
 
-var var::ret(u32 pc) {
+var var::ret(u64 pc) {
     return {vm_type::vm_ret, pc};
 }
 
@@ -310,7 +310,7 @@ var* var::addr() {
     return val.addr;
 }
 
-u32 var::ret() const {
+u64 var::ret() const {
     return val.ret;
 }
 

@@ -41,7 +41,7 @@ struct gc {
     std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
     /* heap increase size */
-    u32 incr[gc_type_size] = {
+    u64 incr[gc_type_size] = {
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash

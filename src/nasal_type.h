@@ -49,7 +49,7 @@ struct var {
 public:
     vm_type type = vm_type::vm_none;
     union {
-        u32 ret;
+        u64 ret;
         i64 cnt;
         f64 num;
         var* addr;
@@ -57,7 +57,7 @@ public:
     } val;
 
 private:
-    var(vm_type t, u32 pc) {type = t; val.ret = pc;}
+    var(vm_type t, u64 pc) {type = t; val.ret = pc;}
     var(vm_type t, i64 ct) {type = t; val.cnt = ct;}
     var(vm_type t, f64 n) {type = t; val.num = n;}
     var(vm_type t, var* p) {type = t; val.addr = p;}
@@ -82,7 +82,7 @@ public:
     // create new var object
     static var none();
     static var nil();
-    static var ret(u32);
+    static var ret(u64);
     static var cnt(i64);
     static var num(f64);
     static var gcobj(nas_val*);
@@ -91,7 +91,7 @@ public:
 public:
     // get value
     var* addr();
-    u32 ret() const;
+    u64 ret() const;
     i64& cnt();
     f64 num() const;
     std::string& str();
@@ -143,10 +143,10 @@ struct nas_hash {
 };
 
 struct nas_func {
-    i32 dynamic_parameter_index; // dynamic parameter name index in hash.
-    u32 entry; // pc will set to entry-1 to call this function
+    i64 dynamic_parameter_index; // dynamic parameter name index in hash.
+    u64 entry; // pc will set to entry-1 to call this function
     u32 parameter_size; // used to load default parameters to a new function
-    u32 local_size; // used to expand memory space for local values on stack
+    u64 local_size; // used to expand memory space for local values on stack
     std::vector<var> local; // local scope with default value(var)
     std::vector<var> upval; // closure
 
@@ -163,7 +163,7 @@ struct nas_upval {
 public:
     /* on stack, use these variables */
     bool on_stack;
-    u32 size;
+    u64 size;
     var* stack_frame_offset;
 
     /* not on stack, use this */
@@ -207,7 +207,7 @@ public:
 };
 
 struct context {
-    u32  pc = 0;
+    u64  pc = 0;
     var* localr = nullptr;
     var* memr = nullptr;
     var  funcr = var::nil();
