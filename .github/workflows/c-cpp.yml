@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Nasal Interpreter Build/Test/Package CI
 
 on:
   schedule:
@@ -20,9 +20,10 @@ jobs:
           cd module
           make all -j4
           cd ..
-          make test
-          tar -czf nasal-mac-nightly.tgz .
-          python3 tools/pack.py
+    - name: test
+      run: make test
+    - name: package
+      run: python3 tools/pack.py
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
@@ -36,7 +37,6 @@ jobs:
         automatic_release_tag: next_macOS
         # File to release
         files: |
-          nasal-mac-nightly.tgz
           nasal-Darwin.tar
     
   linux-x86_64-build:
@@ -49,10 +49,10 @@ jobs:
           cd module
           make all -j4
           cd ..
-          make test
-          touch nasal-linux-x86_64-nightly.tgz
-          tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz .
-          python3 tools/pack.py
+    - name: test
+      run: make test
+    - name: package
+      run: python3 tools/pack.py
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
@@ -66,6 +66,5 @@ jobs:
         automatic_release_tag: next_linux_x86_64
         # File to release
         files: |
-          nasal-linux-x86_64-nightly.tgz
           nasal-Linux.tar
 
