@@ -105,7 +105,7 @@ bool parse::check_comma(const tok* panic_set) {
 }
 
 bool parse::check_tuple() {
-    u32 check_ptr=ptr, curve=1, bracket=0, brace=0;
+    u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::lcurve:   ++curve;   break;
@@ -157,7 +157,7 @@ bool parse::check_in_curve_multi_definition() {
 
 bool parse::check_special_call() {
     // special call means like this: function_name(a:1,b:2,c:3);
-    u32 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
+    u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::lcurve:   ++curve;  break;

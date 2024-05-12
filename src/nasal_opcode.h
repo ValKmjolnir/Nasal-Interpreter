@@ -101,7 +101,7 @@ struct opcode {
     u8  op;   // opcode
     u16 fidx; // source code file index
     u32 num;  // immediate num
-    u32 line; // location line of source code
+    u64 line; // location line of source code
     opcode() = default;
     opcode(const opcode&) = default;
     opcode& operator=(const opcode&) = default;

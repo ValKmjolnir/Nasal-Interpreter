@@ -451,7 +451,7 @@ void vm::run(
         &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
-    for(auto& i : gen.codes()) {
+    for(const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -506,7 +506,7 @@ void vm::run(
         &vm::o_ret
     };
     std::vector<nafunc> code;
-    for(auto& i : gen.codes()) {
+    for(const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
