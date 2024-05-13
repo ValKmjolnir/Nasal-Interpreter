@@ -1,5 +1,4 @@
 #include "nasal_gc.h"
-#include <omp.h>
 
 namespace nasal {
 
