@@ -1,4 +1,5 @@
 #include "nasal_gc.h"
+#include <omp.h>
 
 namespace nasal {
 
@@ -22,7 +23,10 @@ void gc::do_mark_sweep() {
 void gc::mark() {
     std::vector<var> bfs;
     mark_context_root(bfs);
-    if (memory.size()>8192 && bfs.size()>4) {
+
+    // concurrent mark, experimental
+    if (memory.size()>UINT16_MAX && bfs.size()>8192) {
+        flag_concurrent_mark_triggered = true;
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
@@ -34,7 +38,8 @@ void gc::mark() {
         t3.join();
         return;
     }
-    
+
+    // normal mark
     while(!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
@@ -340,6 +345,8 @@ void gc::info() const {
     std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
     std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
     std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "concurrent";
+    std::clog << " | " << (flag_concurrent_mark_triggered? "true\n":"false\n");
     std::clog << last_line << "\n";
 }
 

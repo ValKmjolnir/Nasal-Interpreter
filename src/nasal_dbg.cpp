@@ -108,7 +108,7 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
 }
 
 u16 dbg::file_index(const std::string& filename) const {
-    for(u16 i = 0; i<fsize; ++i) {
+    for(u16 i = 0; i<file_list_size; ++i) {
         if (filename==files[i]) {
             return i;
         }
@@ -116,13 +116,13 @@ u16 dbg::file_index(const std::string& filename) const {
     return UINT16_MAX;
 }
 
-void dbg::err() {
+void dbg::err() const {
     std::cerr
     << "incorrect command\n"
     << "input \'h\' to get help\n";
 }
 
-void dbg::help() {
+void dbg::help() const {
     std::clog
     << "<option>\n"
     << "  h,   help      | get help\n"
@@ -141,7 +141,7 @@ void dbg::help() {
 }
 
 void dbg::list_file() const {
-    for(usize i = 0; i<fsize; ++i) {
+    for(usize i = 0; i<file_list_size; ++i) {
         std::clog << "[" << i << "] " << files[i] << "\n";
     }
 }
@@ -247,7 +247,8 @@ void dbg::run(const codegen& gen,
     do_operand_count = profile || show_all_prof_result;
 
     const auto& file_list = linker.get_file_list();
-    fsize = file_list.size();
+    file_list_size = file_list.size();
+
     vm_init_enrty(
         gen.strs(),
         gen.nums(),

@@ -60,6 +60,7 @@ struct gc {
     i64 max_time = 0;
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
+    bool flag_concurrent_mark_triggered = false;
 
     void set(context* _ctx, var* _global, usize _size) {
         running_context = _ctx;
