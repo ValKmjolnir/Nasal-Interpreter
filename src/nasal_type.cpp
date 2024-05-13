@@ -98,6 +98,30 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, nas_func& func) {
+    out << "func(";
+    
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& key : func.keys) {
+        argument_list[key.second-1] = key.first;
+    }
+
+    for(const auto& key : argument_list) {
+        out << key;
+        if (key != argument_list.back()) {
+            out << ", ";
+        }
+    }
+    if (func.dynamic_parameter_index>=0) {
+        out << (argument_list.size()? ", ":"");
+        out << func.dynamic_parameter_name << "...";
+    }
+
+    out << ") {..}";
+    return out;
+}
+
 void nas_func::clear() {
     dynamic_parameter_index = -1;
     local.clear();
@@ -256,21 +280,24 @@ std::string var::to_str() {
         tmp.erase(tmp.find_last_not_of('.')+1, std::string::npos);
         return tmp;
     }
-    return "";
+
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
 }
 
 std::ostream& operator<<(std::ostream& out, var& ref) {
     switch(ref.type) {
-        case vm_type::vm_none:  out << "undefined";   break;
-        case vm_type::vm_nil:   out << "nil";         break;
-        case vm_type::vm_num:   out << ref.val.num;   break;
-        case vm_type::vm_str:   out << ref.str();     break;
-        case vm_type::vm_vec:   out << ref.vec();     break;
-        case vm_type::vm_hash:  out << ref.hash();    break;
-        case vm_type::vm_func:  out << "func(..) {..}"; break;
-        case vm_type::vm_ghost: out << ref.ghost();   break;
-        case vm_type::vm_co:    out << ref.co();      break;
-        case vm_type::vm_map:   out << ref.map();     break;
+        case vm_type::vm_none:  out << "undefined"; break;
+        case vm_type::vm_nil:   out << "nil";       break;
+        case vm_type::vm_num:   out << ref.val.num; break;
+        case vm_type::vm_str:   out << ref.str();   break;
+        case vm_type::vm_vec:   out << ref.vec();   break;
+        case vm_type::vm_hash:  out << ref.hash();  break;
+        case vm_type::vm_func:  out << ref.func();  break;
+        case vm_type::vm_ghost: out << ref.ghost(); break;
+        case vm_type::vm_co:    out << ref.co();    break;
+        case vm_type::vm_map:   out << ref.map();   break;
         default: break;
     }
     return out;

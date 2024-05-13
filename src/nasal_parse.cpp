@@ -254,11 +254,11 @@ vector_expr* parse::vec() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new vector_expr(toks[ptr].loc);
     match(tok::lbracket);
@@ -713,11 +713,11 @@ call_vector* parse::callv() {
     // panic set for this token is not ','
     // this is the FIRST set of subvec
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::colon,tok::null
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::colon, tok::null
     };
     auto node = new call_vector(toks[ptr].loc);
     match(tok::lbracket);
@@ -743,11 +743,11 @@ call_function* parse::callf() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    const tok panic[] = {
+        tok::id, tok::str,tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new call_function(toks[ptr].loc);
     bool special_call=check_special_call();
@@ -802,7 +802,7 @@ expr* parse::definition() {
 }
 
 multi_identifier* parse::incurve_def() {
-    const auto& loc=toks[ptr].loc;
+    const auto& loc = toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
     auto node = multi_id();
@@ -813,7 +813,7 @@ multi_identifier* parse::incurve_def() {
 }
 
 multi_identifier* parse::outcurve_def() {
-    const auto& loc=toks[ptr].loc;
+    const auto& loc = toks[ptr].loc;
     match(tok::lcurve);
     auto node = multi_id();
     update_location(node);
@@ -840,12 +840,13 @@ multi_identifier* parse::multi_id() {
 }
 
 tuple_expr* parse::multi_scalar() {
-    // if check_call_memory is true,we will check if value called here can reach a memory space
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    // if check_call_memory is true,
+    // we will check if value called here can reach a memory space
+    const tok panic[] = {
+        tok::id, tok::str,tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new tuple_expr(toks[ptr].loc);
     match(tok::lcurve);

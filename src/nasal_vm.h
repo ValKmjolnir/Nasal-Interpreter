@@ -311,6 +311,7 @@ inline void vm::o_deft() {
 
 inline void vm::o_dyn() {
     ctx.top[0].func().dynamic_parameter_index = imm[ctx.pc];
+    ctx.top[0].func().dynamic_parameter_name = const_string[imm[ctx.pc]];
 }
 
 inline void vm::o_lnot() {

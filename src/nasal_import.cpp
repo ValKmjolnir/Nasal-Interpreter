@@ -41,8 +41,8 @@ std::string linker::get_path(expr* node) {
     return content->get_content();
 }
 
-std::string linker::find_real_file_path(
-    const std::string& filename, const span& location) {
+std::string linker::find_real_file_path(const std::string& filename,
+                                        const span& location) {
     // first add file name itself into the file path
     std::vector<fs::path> path_list = {filename};
 

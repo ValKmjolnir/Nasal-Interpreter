@@ -15,6 +15,7 @@ enum class vm_type: u8 {
     vm_ret,      // return addres(program counter) 
     vm_nil,      // nil
     vm_num,      // number
+
     /* gc object */
     vm_str,      // string
     vm_vec,      // vector
@@ -24,6 +25,7 @@ enum class vm_type: u8 {
     vm_ghost,    // ghost type
     vm_co,       // coroutine
     vm_map,      // for globals and namespaces
+
     /* mark type range */
     vm_type_size_max
 };
@@ -153,9 +155,13 @@ struct nas_func {
     // parameter table, u32 begins from 1
     std::unordered_map<std::string, u32> keys;
 
+    // dynamic parameter name
+    std::string dynamic_parameter_name;
+
     nas_func():
         dynamic_parameter_index(-1), entry(0),
-        parameter_size(0), local_size(0) {}
+        parameter_size(0), local_size(0),
+        dynamic_parameter_name("") {}
     void clear();
 };
 
@@ -277,6 +283,7 @@ struct nas_val {
 
 std::ostream& operator<<(std::ostream&, nas_vec&);
 std::ostream& operator<<(std::ostream&, nas_hash&);
+std::ostream& operator<<(std::ostream&, nas_func&);
 std::ostream& operator<<(std::ostream&, nas_map&);
 std::ostream& operator<<(std::ostream&, const nas_ghost&);
 std::ostream& operator<<(std::ostream&, const nas_co&);
