@@ -41,7 +41,7 @@ var builtin_u32not(context* ctx, gc* ngc) {
 }
 
 var builtin_fld(context* ctx, gc* ngc) {
-    // bits.fld(s,0,3);
+    // bits.fld(s, 0, 3);
     // if s stores 10100010(162)
     // will get 101(5)
     auto local = ctx->localr;
@@ -70,7 +70,7 @@ var builtin_fld(context* ctx, gc* ngc) {
 }
 
 var builtin_sfld(context* ctx, gc* ngc) {
-    // bits.sfld(s,0,3);
+    // bits.sfld(s, 0, 3);
     // if s stores 10100010(162)
     // will get 101(5) then this will be signed extended to
     // 11111101(-3)
@@ -103,7 +103,7 @@ var builtin_sfld(context* ctx, gc* ngc) {
 }
 
 var builtin_setfld(context* ctx, gc* ngc) {
-    // bits.setfld(s,0,8,69);
+    // bits.setfld(s, 0, 8, 69);
     // set 01000101(69) to string will get this:
     // 10100010(162)
     // so s[0]=162

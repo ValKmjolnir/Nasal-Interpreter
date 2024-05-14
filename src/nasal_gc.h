@@ -116,7 +116,7 @@ public:
 // module function type
 typedef var (*module_func)(var*, usize, gc*);
 
-// module function stores in tables with this type, end with {nullptr,nullptr}
+// module function stores in tables with this type, end with {nullptr, nullptr}
 struct module_func_info {
     const char* name;
     module_func fd;

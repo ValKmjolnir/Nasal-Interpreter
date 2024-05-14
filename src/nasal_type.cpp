@@ -384,7 +384,7 @@ nas_map& var::map() {
 }
 
 var nas_err(const std::string& error_function_name, const std::string& info) {
-    std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
+    std::cerr << "\n[vm] " << error_function_name << ": " << info << "\n";
     return var::none();
 }
 

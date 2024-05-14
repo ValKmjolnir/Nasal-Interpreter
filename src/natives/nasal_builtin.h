@@ -82,7 +82,7 @@ var builtin_logtime(context*, gc*);
 var builtin_ghosttype(context*, gc*);
 
 // register builtin function's name and it's address here in this table below
-// this table must end with {nullptr,nullptr}
+// this table must end with {nullptr, nullptr}
 struct nasal_builtin_table {
     const char* name;
     var (*func)(context*, gc*);

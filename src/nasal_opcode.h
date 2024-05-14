@@ -71,8 +71,8 @@ enum op_code_type: u8 {
     op_geqc,    // >= const compare operator
     op_pop,     // pop a value out of stack top
     op_jmp,     // jump absolute address with no condition
-    op_jt,      // used in operator and/or,jmp when condition is true and DO NOT POP
-    op_jf,      // used in conditional/loop,jmp when condition is false and POP STACK
+    op_jt,      // used in operator and/or, jmp when condition is true and DO NOT POP
+    op_jf,      // used in conditional/loop, jmp when condition is false and POP STACK
     op_cnt,     // add counter for forindex/foreach
     op_findex,  // index counter on the top of forindex_stack plus 1
     op_feach,   // index counter on the top of forindex_stack plus 1 and get the value in vector
@@ -127,6 +127,6 @@ public:
 
 std::ostream& operator<<(std::ostream&, const codestream&);
 
-extern const char* opname[];
+extern const char* oprand_name_table[];
 
 }

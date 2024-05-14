@@ -46,7 +46,7 @@ void operand_line_counter::dump_operand_count() const {
         if (!rate) {
             break;
         }
-        std::clog << " " << opname[i.first] << " : ";
+        std::clog << " " << oprand_name_table[i.first] << " : ";
         std::clog << i.second << " (" << rate << "%)\n";
     }
     std::clog << " total  : " << total << '\n';
@@ -133,7 +133,7 @@ void dbg::help() const {
     << "  l,   local     | see local values\n"
     << "  u,   upval     | see upvalue\n"
     << "  r,   register  | show vm register detail\n"
-    << "  a,   all       | show global,local and upvalue\n"
+    << "  a,   all       | show global, local and upvalue\n"
     << "  n,   next      | execute next bytecode\n"
     << "  q,   exit      | exit debugger\n"
     << "<option> <filename> <line>\n"
@@ -171,7 +171,7 @@ void dbg::step_info() {
         << codestream(bytecode[i], i)
         << reset << "\n";
     }
-    stack_info(10);
+    stack_info(16);
 }
 
 void dbg::interact() {
