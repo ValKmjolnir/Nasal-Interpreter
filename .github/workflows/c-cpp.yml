@@ -1,4 +1,4 @@
-name: Nasal Interpreter Build/Test/Package CI
+name: Build/Test/Package CI
 
 on:
   schedule:
@@ -13,7 +13,7 @@ jobs:
   mac-build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: make
       run: |
           make -j4
@@ -42,7 +42,7 @@ jobs:
   linux-x86_64-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: make
       run: |
           make -j4
