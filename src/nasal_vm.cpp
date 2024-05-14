@@ -78,8 +78,8 @@ void vm::value_info(var& val) {
                                          << "> " << rawstr(val.str(), 16)
                                          << std::dec; break;
         case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
-                                         << "> entry:0x" << val.func().entry
-                                         << std::dec; break;
+                                         << std::dec << "> " << val.func();
+                                         break;
         case vm_type::vm_upval:std::clog << "| upval| <0x" << std::hex << p
                                          << std::dec << "> [" << val.upval().size
                                          << " val]"; break;
@@ -124,7 +124,7 @@ void vm::function_detail_info(const nas_func& func) {
     }
     if (func.dynamic_parameter_index>=0) {
         std::clog << (argument_list.size()? ", ":"");
-        std::clog << const_string[func.dynamic_parameter_index] << "...";
+        std::clog << func.dynamic_parameter_name << "...";
     }
     std::clog << ") ";
     const auto& code = bytecode[func.entry];
@@ -192,7 +192,7 @@ void vm::trace_back() {
         if (same) {
             std::clog << "  0x" << std::hex
                       << std::setw(6) << std::setfill('0')
-                      << prev << std::dec << "     "
+                      << prev << std::dec << "    "
                       << same << " same call(s)\n";
             same = 0;
         }
@@ -201,12 +201,15 @@ void vm::trace_back() {
     // the first called place has no same calls
 }
 
-void vm::stack_info(const u32 limit = 10) {
+void vm::stack_info(const u64 limit = 16) {
     var* top = ctx.top;
     var* bottom = ctx.stack;
-    std::clog << "\nstack (0x" << std::hex << reinterpret_cast<u64>(bottom);
-    std::clog << std::dec << ", limit " << limit << ", total ";
+    const auto stack_address = reinterpret_cast<u64>(bottom);
+
+    std::clog << "\nvm stack (0x" << std::hex << stack_address << std::dec;
+    std::clog << ", limit " << limit << ", total ";
     std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
+
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
@@ -388,7 +391,7 @@ std::string vm::type_name_string(const var& value) const {
 }
 
 void vm::die(const std::string& str) {
-    std::cerr << "[vm] error: " << str << "\n";
+    std::cerr << "\n[vm] error: " << str << "\n";
     function_call_trace();
     trace_back();
     stack_info();

@@ -156,7 +156,7 @@ bool parse::check_in_curve_multi_definition() {
 }
 
 bool parse::check_special_call() {
-    // special call means like this: function_name(a:1,b:2,c:3);
+    // special call means like this: function_name(a:1, b:2, c:3);
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
@@ -744,7 +744,7 @@ call_function* parse::callf() {
     // this is the FIRST set of calculation/hashmember
     // array end with tok::null=0
     const tok panic[] = {
-        tok::id, tok::str,tok::num, tok::tktrue,
+        tok::id, tok::str, tok::num, tok::tktrue,
         tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::null
@@ -843,7 +843,7 @@ tuple_expr* parse::multi_scalar() {
     // if check_call_memory is true,
     // we will check if value called here can reach a memory space
     const tok panic[] = {
-        tok::id, tok::str,tok::num, tok::tktrue,
+        tok::id, tok::str, tok::num, tok::tktrue,
         tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::null

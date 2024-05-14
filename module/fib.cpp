@@ -25,7 +25,7 @@ var fib(var* args, usize size, gc* ngc) {
 
 var quick_fib(var* args, usize size, gc* ngc) {
     if (!size) {
-        return nas_err("quick_fib","lack arguments");
+        return nas_err("quick_fib", "lack arguments");
     }
     double num = args[0].to_num();
     if (num<2) {

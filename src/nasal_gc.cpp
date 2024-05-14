@@ -24,7 +24,7 @@ void gc::mark() {
     mark_context_root(bfs);
 
     // concurrent mark, experimental
-    if (memory.size()>UINT16_MAX && bfs.size()>8192) {
+    if (memory.size()>UINT16_MAX && bfs.size()>32) {
         flag_concurrent_mark_triggered = true;
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);

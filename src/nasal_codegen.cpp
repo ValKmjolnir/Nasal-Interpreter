@@ -530,7 +530,7 @@ void codegen::single_def(definition_expr* node) {
 void codegen::multi_def(definition_expr* node) {
     auto& identifiers = node->get_variables()->get_variables();
     usize size = identifiers.size();
-    // (var a,b,c) = (c,b,a);
+    // (var a, b, c) = (c, b, a);
     if (node->get_tuple()) {
         auto& vals = node->get_tuple()->get_elements();
         if (identifiers.size()>vals.size()) {
@@ -557,7 +557,7 @@ void codegen::multi_def(definition_expr* node) {
         }
         return;
     }
-    // (var a,b,c) = [0,1,2];
+    // (var a, b, c) = [0, 1, 2];
     calc_gen(node->get_value());
     for(usize i = 0; i<size; ++i) {
         emit(op_callvi, i, node->get_value()->get_location());

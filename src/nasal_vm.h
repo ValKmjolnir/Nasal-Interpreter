@@ -66,7 +66,7 @@ protected:
     void function_detail_info(const nas_func&);
     void function_call_trace();
     void trace_back();
-    void stack_info(const u32);
+    void stack_info(const u64);
     void register_info();
     void global_state();
     void local_state();
@@ -676,7 +676,7 @@ inline void vm::o_callvi() {
         die("must use a vector but get "+type_name_string(val));
         return;
     }
-    // cannot use operator[],because this may cause overflow
+    // cannot use operator[], because this may cause overflow
     (++ctx.top)[0] = val.vec().get_value(imm[ctx.pc]);
     if (ctx.top[0].is_none()) {
         die(report_out_of_range(imm[ctx.pc], val.vec().size()));
