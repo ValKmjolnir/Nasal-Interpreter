@@ -27,7 +27,7 @@ jobs:
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-      uses: marvinpinto/action-automatic-releases@v1.2.1
+      uses: ValKmjolnir/action-automatic-releases@v1
       with:
         # GitHub auth token
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,15 +36,6 @@ jobs:
         # Name of the tag for the release (will be associated with current branch)
         automatic_release_tag: next_macOS
         # File to release
-        files: |
-          nasal-Darwin.tar
-    - name: Release
-      uses: elgohr/Github-Release-Action@v5
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: macOS Nightly build
-        automatic_release_tag: next_macOS
         files: |
           nasal-Darwin.tar
     
@@ -65,7 +56,7 @@ jobs:
     - name: Release file
       # You may pin to the exact commit or the version.
       # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-      uses: marvinpinto/action-automatic-releases@v1.2.1
+      uses: ValKmjolnir/action-automatic-releases@v1
       with:
         # GitHub auth token
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -76,13 +67,3 @@ jobs:
         # File to release
         files: |
           nasal-Linux.tar
-    - name: Release
-      uses: elgohr/Github-Release-Action@v5
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: Linux Nightly build
-        automatic_release_tag: next_linux_x86_64
-        files: |
-          nasal-Linux.tar
-
