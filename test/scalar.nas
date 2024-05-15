@@ -251,3 +251,19 @@ var test_single_id_iterator = 0;
 foreach(test_single_id_iterator; [0, 1, 2, 3]) {
     println(test_single_id_iterator);
 }
+
+# simple closure test, make sure two functions share the same closure
+var closure_tester = func() {
+    var b = 0;
+    return [
+        func { b += 1; },
+        func { return b; }
+    ];
+}();
+
+for(var i = 1; i<=10; i += 1) {
+    closure_tester[0]();
+    if (closure_tester[1]()!=i) {
+        die("test failed: expect " ~ i ~ ", but get " ~ closure_tester[1]());
+    }
+}

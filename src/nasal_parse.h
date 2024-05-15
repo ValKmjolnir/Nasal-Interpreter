@@ -15,9 +15,9 @@ class parse {
 #define prevspan (ptr!=0? toks[ptr-1].loc:toks[ptr].loc)
 
 private:
-    u32 ptr;
-    u32 in_func; // count function block
-    u32 in_loop; // count loop block
+    u64 ptr;
+    u64 in_func; // count function block
+    u64 in_loop; // count loop block
     const token* toks;
     code_block* root;
     error err;
@@ -37,7 +37,7 @@ private:
         {tok::rif     ,"if"      },
         {tok::elsif   ,"elsif"   },
         {tok::relse   ,"else"    },
-        {tok::tknil   ,"nil"     },
+        {tok::nil     ,"nil"     },
         {tok::lcurve  ,"("       },
         {tok::rcurve  ,")"       },
         {tok::lbracket,"["       },

@@ -25,7 +25,7 @@ var fib(var* args, usize size, gc* ngc) {
 
 var quick_fib(var* args, usize size, gc* ngc) {
     if (!size) {
-        return nas_err("quick_fib","lack arguments");
+        return nas_err("quick_fib", "lack arguments");
     }
     double num = args[0].to_num();
     if (num<2) {
@@ -53,7 +53,9 @@ struct ghost_obj {
 void ghost_for_test_destructor(void* ptr) {
     std::cout << "ghost_for_test::destructor (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+
     delete static_cast<ghost_obj*>(ptr);
+
     std::cout << "    delete 0x" << std::hex;
     std::cout << reinterpret_cast<u64>(ptr) << std::dec << ";\n";
     std::cout << "}\n";
@@ -62,7 +64,9 @@ void ghost_for_test_destructor(void* ptr) {
 void ghost_for_test_gc_marker(void* ptr, std::vector<var>* bfs_queue) {
     std::cout << "ghost_for_test::mark (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
+
     bfs_queue->push_back(static_cast<ghost_obj*>(ptr)->test_string);
+
     std::cout << "    mark 0x" << std::hex;
     std::cout << reinterpret_cast<u64>(ptr) << std::dec << "->test_string;\n";
     std::cout << "}\n";
@@ -86,8 +90,10 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     f64 num = args[1].num();
+
     reinterpret_cast<ghost_obj*>(res.ghost().pointer)->number = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";
+
     reinterpret_cast<ghost_obj*>(res.ghost().pointer)->test_string = ngc->newstr("just for test");
     std::cout << "set_new_ghost: successfully set ghost.test_string = just for test\n";
     return nil;

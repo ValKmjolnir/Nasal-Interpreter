@@ -36,7 +36,7 @@ enum class tok:u32 {
     rif,      // condition expression keyword if
     elsif,    // condition expression keyword elsif
     relse,    // condition expression keyword else
-    tknil,    // nil literal
+    nil,      // nil literal
     lcurve,   // (
     rcurve,   // )
     lbracket, // [
@@ -88,8 +88,8 @@ struct token {
 
 class lexer {
 private:
-    u32 line;
-    u32 column;
+    u64 line;
+    u64 column;
     usize ptr;
     std::string filename;
     std::string res;
@@ -98,7 +98,7 @@ private:
     u64 invalid_char;
     std::vector<token> toks;
 
-    const std::unordered_map<std::string, tok> typetbl {
+    const std::unordered_map<std::string, tok> token_mapper = {
         {"use"     ,tok::use     },
         {"true"    ,tok::tktrue  },
         {"false"   ,tok::tkfalse },
@@ -114,7 +114,7 @@ private:
         {"if"      ,tok::rif     },
         {"elsif"   ,tok::elsif   },
         {"else"    ,tok::relse   },
-        {"nil"     ,tok::tknil   },
+        {"nil"     ,tok::nil     },
         {"("       ,tok::lcurve  },
         {")"       ,tok::rcurve  },
         {"["       ,tok::lbracket},
@@ -177,7 +177,8 @@ private:
     token dots();
     token calc_opr();
 public:
-    lexer(): line(1), column(0), ptr(0), filename(""), res(""), invalid_char(0) {}
+    lexer(): line(1), column(0), ptr(0),
+             filename(""), res(""), invalid_char(0) {}
     const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };

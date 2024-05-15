@@ -8,7 +8,7 @@
 
 namespace nasal {
 
-enum class expr_type: u32 {
+enum class expr_type {
     ast_null = 0,    // null node
     ast_use,         // use statement
     ast_block,       // code block 
@@ -65,13 +65,13 @@ public:
     expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type) {}
     virtual ~expr() = default;
-    void set_begin(u32 line, u32 column) {
+    void set_begin(u64 line, u64 column) {
         nd_loc.begin_line = line;
         nd_loc.begin_column = column;
     }
-    const span& get_location() const {return nd_loc;}
-    const u32 get_line() const {return nd_loc.begin_line;}
-    expr_type get_type() const {return nd_type;}
+    const auto& get_location() const { return nd_loc; }
+    const auto get_line() const { return nd_loc.begin_line; }
+    auto get_type() const { return nd_type; }
     void update_location(const span& location) {
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;

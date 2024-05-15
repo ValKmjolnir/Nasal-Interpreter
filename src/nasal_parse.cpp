@@ -105,7 +105,7 @@ bool parse::check_comma(const tok* panic_set) {
 }
 
 bool parse::check_tuple() {
-    u32 check_ptr=ptr, curve=1, bracket=0, brace=0;
+    u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::lcurve:   ++curve;   break;
@@ -156,8 +156,8 @@ bool parse::check_in_curve_multi_definition() {
 }
 
 bool parse::check_special_call() {
-    // special call means like this: function_name(a:1,b:2,c:3);
-    u32 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
+    // special call means like this: function_name(a:1, b:2, c:3);
+    u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while(toks[++check_ptr].type!=tok::eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::lcurve:   ++curve;  break;
@@ -254,11 +254,11 @@ vector_expr* parse::vec() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new vector_expr(toks[ptr].loc);
     match(tok::lbracket);
@@ -372,7 +372,7 @@ expr* parse::expression() {
     }
     switch(type) {
         case tok::use: return use_stmt_gen();
-        case tok::tknil:
+        case tok::nil:
         case tok::num:
         case tok::str:
         case tok::id:
@@ -637,9 +637,9 @@ unary_operator* parse::unary() {
 
 expr* parse::scalar() {
     expr* node = nullptr;
-    if (lookahead(tok::tknil)) {
+    if (lookahead(tok::nil)) {
         node = nil();
-        match(tok::tknil);
+        match(tok::nil);
     } else if (lookahead(tok::num)) {
         node = num();
     } else if (lookahead(tok::str)) {
@@ -713,11 +713,11 @@ call_vector* parse::callv() {
     // panic set for this token is not ','
     // this is the FIRST set of subvec
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::colon,tok::null
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::colon, tok::null
     };
     auto node = new call_vector(toks[ptr].loc);
     match(tok::lbracket);
@@ -743,11 +743,11 @@ call_function* parse::callf() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
     // array end with tok::null=0
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new call_function(toks[ptr].loc);
     bool special_call=check_special_call();
@@ -802,7 +802,7 @@ expr* parse::definition() {
 }
 
 multi_identifier* parse::incurve_def() {
-    const auto& loc=toks[ptr].loc;
+    const auto& loc = toks[ptr].loc;
     match(tok::lcurve);
     match(tok::var);
     auto node = multi_id();
@@ -813,7 +813,7 @@ multi_identifier* parse::incurve_def() {
 }
 
 multi_identifier* parse::outcurve_def() {
-    const auto& loc=toks[ptr].loc;
+    const auto& loc = toks[ptr].loc;
     match(tok::lcurve);
     auto node = multi_id();
     update_location(node);
@@ -840,12 +840,13 @@ multi_identifier* parse::multi_id() {
 }
 
 tuple_expr* parse::multi_scalar() {
-    // if check_call_memory is true,we will check if value called here can reach a memory space
-    const tok panic[]={
-        tok::id,tok::str,tok::num,tok::tktrue,
-        tok::tkfalse,tok::opnot,tok::sub,tok::tknil,
-        tok::func,tok::var,tok::lcurve,tok::floater,
-        tok::lbrace,tok::lbracket,tok::null
+    // if check_call_memory is true,
+    // we will check if value called here can reach a memory space
+    const tok panic[] = {
+        tok::id, tok::str, tok::num, tok::tktrue,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
+        tok::func, tok::var, tok::lcurve, tok::floater,
+        tok::lbrace, tok::lbracket, tok::null
     };
     auto node = new tuple_expr(toks[ptr].loc);
     match(tok::lcurve);
@@ -1069,7 +1070,7 @@ return_expr* parse::return_expression() {
     auto node = new return_expr(toks[ptr].loc);
     match(tok::ret);
     tok type = toks[ptr].type;
-    if (type==tok::tknil || type==tok::num ||
+    if (type==tok::nil || type==tok::num ||
         type==tok::str || type==tok::id ||
         type==tok::func || type==tok::sub ||
         type==tok::opnot || type==tok::lcurve ||

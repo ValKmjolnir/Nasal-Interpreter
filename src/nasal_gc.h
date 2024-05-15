@@ -41,7 +41,7 @@ struct gc {
     std::vector<nas_val*> unused[gc_type_size]; // gc free list
 
     /* heap increase size */
-    u32 incr[gc_type_size] = {
+    u64 incr[gc_type_size] = {
         128, // vm_str
         128, // vm_vec
         64,  // vm_hash
@@ -60,6 +60,7 @@ struct gc {
     i64 max_time = 0;
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
+    bool flag_concurrent_mark_triggered = false;
 
     void set(context* _ctx, var* _global, usize _size) {
         running_context = _ctx;
@@ -115,7 +116,7 @@ public:
 // module function type
 typedef var (*module_func)(var*, usize, gc*);
 
-// module function stores in tables with this type, end with {nullptr,nullptr}
+// module function stores in tables with this type, end with {nullptr, nullptr}
 struct module_func_info {
     const char* name;
     module_func fd;

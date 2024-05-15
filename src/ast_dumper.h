@@ -9,9 +9,11 @@
 
 namespace nasal {
 
-class ast_dumper:public ast_visitor {
+class ast_dumper: public ast_visitor {
 private:
     std::vector<std::string> indent;
+
+private:
     void push_indent() {
         if (indent.size()) {
             if (indent.back()=="|--") {
@@ -35,8 +37,7 @@ private:
     std::string format_location(const span& location) {
         std::stringstream ss;
         ss << " -> ";
-        ss << location.file << ":";
-        ss << location.begin_line << ":" << location.begin_column + 1;
+        location.dump_begin(ss);
         ss << "\n";
         return ss.str();
     }

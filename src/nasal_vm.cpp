@@ -2,15 +2,13 @@
 
 namespace nasal {
 
-void vm::init(
-    const std::vector<std::string>& strs,
-    const std::vector<f64>& nums,
-    const std::vector<nasal_builtin_table>& natives,
-    const std::vector<opcode>& code,
-    const std::unordered_map<std::string, i32>& global_symbol,
-    const std::vector<std::string>& filenames,
-    const std::vector<std::string>& argv
-) {
+void vm::vm_init_enrty(const std::vector<std::string>& strs,
+                       const std::vector<f64>& nums,
+                       const std::vector<nasal_builtin_table>& natives,
+                       const std::vector<opcode>& code,
+                       const std::unordered_map<std::string, u64>& global_symbol,
+                       const std::vector<std::string>& filenames,
+                       const std::vector<std::string>& argv) {
     const_number = nums.data();
     const_string = strs.data();
     bytecode = code.data();
@@ -51,14 +49,14 @@ void vm::context_and_global_init() {
     ctx.funcr = nil;
     ctx.upvalr = nil;
 
-    /* set canary = stack[STACK_DEPTH-1] */
-    ctx.canary = ctx.stack+STACK_DEPTH-1;
+    /* set canary = stack[VM_STACK_DEPTH-1] */
+    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
 
     /* nothing is on stack */
     ctx.top = ctx.stack - 1;
 
     /* clear main stack and global */
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = nil;
         global[i] = nil;
     }
@@ -80,8 +78,8 @@ void vm::value_info(var& val) {
                                          << "> " << rawstr(val.str(), 16)
                                          << std::dec; break;
         case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
-                                         << "> entry:0x" << val.func().entry
-                                         << std::dec; break;
+                                         << std::dec << "> " << val.func();
+                                         break;
         case vm_type::vm_upval:std::clog << "| upval| <0x" << std::hex << p
                                          << std::dec << "> [" << val.upval().size
                                          << " val]"; break;
@@ -126,7 +124,7 @@ void vm::function_detail_info(const nas_func& func) {
     }
     if (func.dynamic_parameter_index>=0) {
         std::clog << (argument_list.size()? ", ":"");
-        std::clog << const_string[func.dynamic_parameter_index] << "...";
+        std::clog << func.dynamic_parameter_name << "...";
     }
     std::clog << ") ";
     const auto& code = bytecode[func.entry];
@@ -194,7 +192,7 @@ void vm::trace_back() {
         if (same) {
             std::clog << "  0x" << std::hex
                       << std::setw(6) << std::setfill('0')
-                      << prev << std::dec << "     "
+                      << prev << std::dec << "    "
                       << same << " same call(s)\n";
             same = 0;
         }
@@ -203,12 +201,15 @@ void vm::trace_back() {
     // the first called place has no same calls
 }
 
-void vm::stack_info(const u32 limit = 10) {
+void vm::stack_info(const u64 limit = 16) {
     var* top = ctx.top;
     var* bottom = ctx.stack;
-    std::clog << "\nstack (0x" << std::hex << reinterpret_cast<u64>(bottom);
-    std::clog << std::dec << ", limit " << limit << ", total ";
+    const auto stack_address = reinterpret_cast<u64>(bottom);
+
+    std::clog << "\nvm stack (0x" << std::hex << stack_address << std::dec;
+    std::clog << ", limit " << limit << ", total ";
     std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
+
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(6) << std::setfill('0')
@@ -390,7 +391,7 @@ std::string vm::type_name_string(const var& value) const {
 }
 
 void vm::die(const std::string& str) {
-    std::cerr << "[vm] error: " << str << "\n";
+    std::cerr << "\n[vm] error: " << str << "\n";
     function_call_trace();
     trace_back();
     stack_info();
@@ -411,11 +412,10 @@ void vm::die(const std::string& str) {
     }
 }
 
-void vm::run(
-    const codegen& gen,
-    const linker& linker,
-    const std::vector<std::string>& argv) {
-    init(
+void vm::run(const codegen& gen,
+             const linker& linker,
+             const std::vector<std::string>& argv) {
+    vm_init_enrty(
         gen.strs(),
         gen.nums(),
         gen.natives(),
@@ -424,6 +424,7 @@ void vm::run(
         linker.get_file_list(),
         argv
     );
+
 #ifndef _MSC_VER
     // using labels as values/computed goto
     const void* oprs[] = {
@@ -451,7 +452,7 @@ void vm::run(
         &&mcallv, &&mcallh, &&ret
     };
     std::vector<const void*> code;
-    for(auto& i : gen.codes()) {
+    for(const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -506,7 +507,7 @@ void vm::run(
         &vm::o_ret
     };
     std::vector<nafunc> code;
-    for(auto& i : gen.codes()) {
+    for(const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }

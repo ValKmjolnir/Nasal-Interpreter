@@ -42,6 +42,7 @@ var nas_hash::get_value(const std::string& key) {
     } else if (!elems.count("parents")) {
         return var::none();
     }
+
     auto ret = var::none();
     auto& val = elems.at("parents");
     if (!val.is_vec()) {
@@ -64,12 +65,14 @@ var* nas_hash::get_memory(const std::string& key) {
     } else if (!elems.count("parents")) {
         return nullptr;
     }
+
     var* addr = nullptr;
     var& val = elems.at("parents");
     if (!val.is_vec()) {
         return addr;
     }
     for(auto& i : val.vec().elems) {
+        // recursively search key in `parents`
         if (i.is_hash()) {
             addr = i.hash().get_memory(key);
         }
@@ -95,6 +98,30 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, nas_func& func) {
+    out << "func(";
+    
+    std::vector<std::string> argument_list = {};
+    argument_list.resize(func.keys.size());
+    for(const auto& key : func.keys) {
+        argument_list[key.second-1] = key.first;
+    }
+
+    for(const auto& key : argument_list) {
+        out << key;
+        if (key != argument_list.back()) {
+            out << ", ";
+        }
+    }
+    if (func.dynamic_parameter_index>=0) {
+        out << (argument_list.size()? ", ":"");
+        out << func.dynamic_parameter_name << "...";
+    }
+
+    out << ") {..}";
+    return out;
+}
+
 void nas_func::clear() {
     dynamic_parameter_index = -1;
     local.clear();
@@ -102,11 +129,10 @@ void nas_func::clear() {
     keys.clear();
 }
 
-void nas_ghost::set(
-    const std::string& ghost_type_name,
-    destructor destructor_pointer,
-    marker gc_marker_pointer,
-    void* ghost_pointer) {
+void nas_ghost::set(const std::string& ghost_type_name,
+                    destructor destructor_pointer,
+                    marker gc_marker_pointer,
+                    void* ghost_pointer) {
     type_name = ghost_type_name;
     destructor_function = destructor_pointer;
     gc_mark_function = gc_marker_pointer;
@@ -145,14 +171,14 @@ void nas_co::clear() {
     if (!ctx.stack) {
         return;
     }
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = var::nil();
     }
 
     ctx.pc = 0;
     ctx.localr = nullptr;
     ctx.memr = nullptr;
-    ctx.canary = ctx.stack+STACK_DEPTH-1;
+    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
     ctx.top = ctx.stack;
     ctx.funcr = var::nil();
     ctx.upvalr = var::nil();
@@ -198,7 +224,7 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
 nas_val::nas_val(vm_type val_type) {
     mark = gc_status::collected;
     type = val_type;
-    unmutable = 0;
+    immutable = 0;
     switch(val_type) {
         case vm_type::vm_str:   ptr.str = new std::string; break;
         case vm_type::vm_vec:   ptr.vec = new nas_vec;     break;
@@ -214,14 +240,14 @@ nas_val::nas_val(vm_type val_type) {
 
 nas_val::~nas_val() {
     switch(type) {
-        case vm_type::vm_str:  delete ptr.str;   break;
-        case vm_type::vm_vec:  delete ptr.vec;   break;
-        case vm_type::vm_hash: delete ptr.hash;  break;
-        case vm_type::vm_func: delete ptr.func;  break;
-        case vm_type::vm_upval:delete ptr.upval; break;
-        case vm_type::vm_ghost:delete ptr.obj;   break;
-        case vm_type::vm_co:   delete ptr.co;    break;
-        case vm_type::vm_map:  delete ptr.map;   break;
+        case vm_type::vm_str:   delete ptr.str;   break;
+        case vm_type::vm_vec:   delete ptr.vec;   break;
+        case vm_type::vm_hash:  delete ptr.hash;  break;
+        case vm_type::vm_func:  delete ptr.func;  break;
+        case vm_type::vm_upval: delete ptr.upval; break;
+        case vm_type::vm_ghost: delete ptr.obj;   break;
+        case vm_type::vm_co:    delete ptr.co;    break;
+        case vm_type::vm_map:   delete ptr.map;   break;
         default: break;
     }
     type = vm_type::vm_nil;
@@ -229,14 +255,14 @@ nas_val::~nas_val() {
 
 void nas_val::clear() {
     switch(type) {
-        case vm_type::vm_str:  ptr.str->clear();        break;
-        case vm_type::vm_vec:  ptr.vec->elems.clear();  break;
-        case vm_type::vm_hash: ptr.hash->elems.clear(); break;
-        case vm_type::vm_func: ptr.func->clear();       break;
-        case vm_type::vm_upval:ptr.upval->clear();      break;
-        case vm_type::vm_ghost:ptr.obj->clear();        break;
-        case vm_type::vm_co:   ptr.co->clear();         break;
-        case vm_type::vm_map:  ptr.map->clear();        break;
+        case vm_type::vm_str:   ptr.str->clear();        break;
+        case vm_type::vm_vec:   ptr.vec->elems.clear();  break;
+        case vm_type::vm_hash:  ptr.hash->elems.clear(); break;
+        case vm_type::vm_func:  ptr.func->clear();       break;
+        case vm_type::vm_upval: ptr.upval->clear();      break;
+        case vm_type::vm_ghost: ptr.obj->clear();        break;
+        case vm_type::vm_co:    ptr.co->clear();         break;
+        case vm_type::vm_map:   ptr.map->clear();        break;
         default: break;
     }
 }
@@ -254,21 +280,24 @@ std::string var::to_str() {
         tmp.erase(tmp.find_last_not_of('.')+1, std::string::npos);
         return tmp;
     }
-    return "";
+
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
 }
 
 std::ostream& operator<<(std::ostream& out, var& ref) {
     switch(ref.type) {
-        case vm_type::vm_none: out << "undefined";   break;
-        case vm_type::vm_nil:  out << "nil";         break;
-        case vm_type::vm_num:  out << ref.val.num;   break;
-        case vm_type::vm_str:  out << ref.str();     break;
-        case vm_type::vm_vec:  out << ref.vec();     break;
-        case vm_type::vm_hash: out << ref.hash();    break;
-        case vm_type::vm_func: out << "func(..) {..}"; break;
-        case vm_type::vm_ghost:out << ref.ghost();   break;
-        case vm_type::vm_co:   out << ref.co();      break;
-        case vm_type::vm_map:  out << ref.map();     break;
+        case vm_type::vm_none:  out << "undefined"; break;
+        case vm_type::vm_nil:   out << "nil";       break;
+        case vm_type::vm_num:   out << ref.val.num; break;
+        case vm_type::vm_str:   out << ref.str();   break;
+        case vm_type::vm_vec:   out << ref.vec();   break;
+        case vm_type::vm_hash:  out << ref.hash();  break;
+        case vm_type::vm_func:  out << ref.func();  break;
+        case vm_type::vm_ghost: out << ref.ghost(); break;
+        case vm_type::vm_co:    out << ref.co();    break;
+        case vm_type::vm_map:   out << ref.map();   break;
         default: break;
     }
     return out;
@@ -279,14 +308,14 @@ bool var::object_check(const std::string& name) {
 }
 
 var var::none() {
-    return {vm_type::vm_none, static_cast<u32>(0)};
+    return {vm_type::vm_none, static_cast<u64>(0)};
 }
 
 var var::nil() {
-    return {vm_type::vm_nil, static_cast<u32>(0)};
+    return {vm_type::vm_nil, static_cast<u64>(0)};
 }
 
-var var::ret(u32 pc) {
+var var::ret(u64 pc) {
     return {vm_type::vm_ret, pc};
 }
 
@@ -310,7 +339,7 @@ var* var::addr() {
     return val.addr;
 }
 
-u32 var::ret() const {
+u64 var::ret() const {
     return val.ret;
 }
 
@@ -355,7 +384,7 @@ nas_map& var::map() {
 }
 
 var nas_err(const std::string& error_function_name, const std::string& info) {
-    std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
+    std::cerr << "\n[vm] " << error_function_name << ": " << info << "\n";
     return var::none();
 }
 
