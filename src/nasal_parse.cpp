@@ -256,7 +256,7 @@ vector_expr* parse::vec() {
     // array end with tok::null=0
     const tok panic[] = {
         tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::null
     };
@@ -372,7 +372,7 @@ expr* parse::expression() {
     }
     switch(type) {
         case tok::use: return use_stmt_gen();
-        case tok::tknil:
+        case tok::nil:
         case tok::num:
         case tok::str:
         case tok::id:
@@ -637,9 +637,9 @@ unary_operator* parse::unary() {
 
 expr* parse::scalar() {
     expr* node = nullptr;
-    if (lookahead(tok::tknil)) {
+    if (lookahead(tok::nil)) {
         node = nil();
-        match(tok::tknil);
+        match(tok::nil);
     } else if (lookahead(tok::num)) {
         node = num();
     } else if (lookahead(tok::str)) {
@@ -715,7 +715,7 @@ call_vector* parse::callv() {
     // array end with tok::null=0
     const tok panic[] = {
         tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::colon, tok::null
     };
@@ -745,7 +745,7 @@ call_function* parse::callf() {
     // array end with tok::null=0
     const tok panic[] = {
         tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::null
     };
@@ -844,7 +844,7 @@ tuple_expr* parse::multi_scalar() {
     // we will check if value called here can reach a memory space
     const tok panic[] = {
         tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::tknil,
+        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
         tok::func, tok::var, tok::lcurve, tok::floater,
         tok::lbrace, tok::lbracket, tok::null
     };
@@ -1070,7 +1070,7 @@ return_expr* parse::return_expression() {
     auto node = new return_expr(toks[ptr].loc);
     match(tok::ret);
     tok type = toks[ptr].type;
-    if (type==tok::tknil || type==tok::num ||
+    if (type==tok::nil || type==tok::num ||
         type==tok::str || type==tok::id ||
         type==tok::func || type==tok::sub ||
         type==tok::opnot || type==tok::lcurve ||

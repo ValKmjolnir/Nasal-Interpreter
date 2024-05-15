@@ -37,7 +37,7 @@ private:
         {tok::rif     ,"if"      },
         {tok::elsif   ,"elsif"   },
         {tok::relse   ,"else"    },
-        {tok::tknil   ,"nil"     },
+        {tok::nil     ,"nil"     },
         {tok::lcurve  ,"("       },
         {tok::rcurve  ,")"       },
         {tok::lbracket,"["       },
