@@ -44,7 +44,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        # tag_name: v${{steps.version.outputs.value}}
+        tag_name: macOS Nightly build
         release_name: v${{steps.version.outputs.value}}
         draft: true
         prerelease: false
@@ -83,7 +83,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        # tag_name: v${{steps.version.outputs.value}}
+        tag_name: Linux Nightly build
         release_name: v${{steps.version.outputs.value}}
         draft: true
         prerelease: false
