@@ -13,7 +13,7 @@ jobs:
   mac-build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: make
       run: |
           make -j4
@@ -38,11 +38,21 @@ jobs:
         # File to release
         files: |
           nasal-Darwin.tar
+    - name: Release
+      id: create_release
+      uses: actions/create-release@latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # tag_name: v${{steps.version.outputs.value}}
+        release_name: v${{steps.version.outputs.value}}
+        draft: true
+        prerelease: false
     
   linux-x86_64-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: make
       run: |
           make -j4
@@ -67,4 +77,14 @@ jobs:
         # File to release
         files: |
           nasal-Linux.tar
+    - name: Release
+      id: create_release
+      uses: actions/create-release@latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # tag_name: v${{steps.version.outputs.value}}
+        release_name: v${{steps.version.outputs.value}}
+        draft: true
+        prerelease: false
 
