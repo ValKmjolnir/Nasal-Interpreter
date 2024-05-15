@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  mac-build:
+  mac-aarch64-build:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
@@ -39,15 +39,14 @@ jobs:
         files: |
           nasal-Darwin.tar
     - name: Release
-      id: create_release
-      uses: actions/create-release@latest
+      uses: elgohr/Github-Release-Action@v5
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: macOS Nightly build
-        release_name: v${{steps.version.outputs.value}}
-        draft: true
-        prerelease: false
+        title: macOS Nightly build
+        automatic_release_tag: next_macOS
+        files: |
+          nasal-Darwin.tar
     
   linux-x86_64-build:
     runs-on: ubuntu-latest
@@ -78,13 +77,12 @@ jobs:
         files: |
           nasal-Linux.tar
     - name: Release
-      id: create_release
-      uses: actions/create-release@latest
+      uses: elgohr/Github-Release-Action@v5
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: Linux Nightly build
-        release_name: v${{steps.version.outputs.value}}
-        draft: true
-        prerelease: false
+        title: Linux Nightly build
+        automatic_release_tag: next_linux_x86_64
+        files: |
+          nasal-Linux.tar
 
