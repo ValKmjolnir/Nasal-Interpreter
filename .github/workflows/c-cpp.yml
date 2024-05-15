@@ -14,35 +14,22 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
-    - name: make
+    - name: Build
       run: |
           make -j4
           cd module
           make all -j4
           cd ..
-    - name: test
+    - name: Test
       run: make test
-    - name: package
+    - name: Package
       run: python3 tools/pack.py
-    # - name: Release file
-    #   # You may pin to the exact commit or the version.
-    #   # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-    #   uses: ValKmjolnir/action-automatic-releases@v1
-    #   with:
-    #     # GitHub auth token
-    #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-    #     # Name of Release to add file to
-    #     title: macOS Nightly build
-    #     # Name of the tag for the release (will be associated with current branch)
-    #     automatic_release_tag: next_macOS
-    #     # File to release
-    #     files: |
-    #       nasal-Darwin.tar
     - name: Release
       uses: softprops/action-gh-release@v2.0.5
       with:
         name: macOS nightly build
         tag_name: next_macOS
+        prerelease: true
         files: |
           nasal-Darwin.tar
     
@@ -50,34 +37,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: make
+    - name: Build
       run: |
           make -j4
           cd module
           make all -j4
           cd ..
-    - name: test
+    - name: Test
       run: make test
-    - name: package
+    - name: Package
       run: python3 tools/pack.py
-    # - name: Release file
-    #   # You may pin to the exact commit or the version.
-    #   # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-    #   uses: ValKmjolnir/action-automatic-releases@v1
-    #   with:
-    #     # GitHub auth token
-    #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-    #     # Name of Release to add file to
-    #     title: Linux Nightly build
-    #     # Name of the tag for the release (will be associated with current branch)
-    #     automatic_release_tag: next_linux_x86_64
-    #     # File to release
-    #     files: |
-    #       nasal-Linux.tar
     - name: Release
       uses: softprops/action-gh-release@v2.0.5
       with:
         name: linux nightly build
         tag_name: next_linux_x86_64
+        prerelease: true
         files: |
           nasal-Linux.tar
