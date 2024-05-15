@@ -40,7 +40,6 @@ jobs:
     #       nasal-Darwin.tar
     - name: Release
       uses: softprops/action-gh-release@v2.0.5
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         name: macOS nightly build
         tag_name: next_macOS
@@ -77,7 +76,6 @@ jobs:
     #       nasal-Linux.tar
     - name: Release
       uses: softprops/action-gh-release@v2.0.5
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         name: linux nightly build
         tag_name: next_linux_x86_64
