@@ -204,16 +204,17 @@ var builtin_str(context* ctx, gc* ngc) {
 
 var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
-    f64 num = 0;
+
+    usize num = 0;
     switch(val.type) {
-        case vm_type::vm_num:  num = val.num(); break;
+        case vm_type::vm_num:  return val;
         case vm_type::vm_str:  num = val.str().length(); break;
         case vm_type::vm_vec:  num = val.vec().size(); break;
         case vm_type::vm_hash: num = val.hash().size(); break;
         case vm_type::vm_map:  num = val.map().mapper.size(); break;
         default: break;
     }
-    return var::num(num);
+    return var::num(static_cast<f64>(num));
 }
 
 var builtin_time(context* ctx, gc* ngc) {
@@ -323,7 +324,7 @@ var builtin_substr(context* ctx, gc* ngc) {
     if (begin>=str.str().length()) {
         return nas_err("susbtr", "begin index out of range: "+std::to_string(begin));
     }
-    return ngc->newstr(str.str().substr(begin,length));
+    return ngc->newstr(str.str().substr(begin, length));
 }
 
 var builtin_streq(context* ctx, gc* ngc) {
@@ -339,6 +340,7 @@ var builtin_left(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
+
     if (!str.is_str()) {
         return nas_err("left", "\"string\" must be string");
     }
@@ -355,20 +357,23 @@ var builtin_right(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var str = local[1];
     var len = local[2];
+
     if (!str.is_str()) {
         return nas_err("right", "\"string\" must be string");
     }
     if (!len.is_num()) {
         return nas_err("right", "\"length\" must be number");
     }
+
     i32 length = static_cast<i32>(len.num());
-    i32 srclen = str.str().length();
+    i32 srclen = static_cast<i32>(str.str().length());
     if (length>srclen) {
         length = srclen;
     }
     if (length<0) {
         length = 0;
     }
+
     return ngc->newstr(str.str().substr(srclen-length, srclen));
 }
 
@@ -387,22 +392,22 @@ var builtin_cmp(context* ctx, gc* ngc) {
 
 var builtin_chr(context* ctx, gc* ngc) {
     const char* extend[] = {
-        "€"," ","‚","ƒ","„","…","†","‡",
-        "ˆ","‰","Š","‹","Œ"," ","Ž"," ",
-        " ","‘","’","“","”","•","–","—",
-        "˜","™","š","›","œ"," ","ž","Ÿ",
-        " ","¡","¢","£","¤","¥","¦","§",
-        "¨","©","ª","«","¬"," ","®","¯",
-        "°","±","²","³","´","µ","¶","·",
-        "¸","¹","º","»","¼","½","¾","¿",
-        "À","Á","Â","Ã","Ä","Å","Æ","Ç",
-        "È","É","Ê","Ë","Ì","Í","Î","Ï",
-        "Ð","Ñ","Ò","Ó","Ô","Õ","Ö","×",
-        "Ø","Ù","Ú","Û","Ü","Ý","Þ","ß",
-        "à","á","â","ã","ä","å","æ","ç",
-        "è","é","ê","ë","ì","í","î","ï",
-        "ð","ñ","ò","ó","ô","õ","ö","÷",
-        "ø","ù","ú","û","ü","ý","þ","ÿ"
+        "€", " ", "‚", "ƒ", "„", "…", "†", "‡",
+        "ˆ", "‰", "Š", "‹", "Œ", " ", "Ž", " ",
+        " ", "‘", "’", "“", "”", "•", "–", "—",
+        "˜", "™", "š", "›", "œ", " ", "ž", "Ÿ",
+        " ", "¡", "¢", "£", "¤", "¥", "¦", "§",
+        "¨", "©", "ª", "«", "¬", " ", "®", "¯",
+        "°", "±", "²", "³", "´", "µ", "¶", "·",
+        "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
+        "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç",
+        "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
+        "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×",
+        "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+        "à", "á", "â", "ã", "ä", "å", "æ", "ç",
+        "è", "é", "ê", "ë", "ì", "í", "î", "ï",
+        "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷",
+        "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
     };
     auto num = static_cast<i32>(ctx->localr[1].num());
     if (0<=num && num<128) {
@@ -479,7 +484,7 @@ std::string md5(const std::string& src) {
     std::vector<u32> buff;
     usize num = ((src.length()+8)>>6)+1;
     usize buffsize = num<<4;
-    buff.resize(buffsize,0);
+    buff.resize(buffsize, 0);
     for(usize i = 0; i<src.length(); i++) {
         buff[i>>2] |= (static_cast<u8>(src[i]))<<((i&0x3)<<3);
     }
@@ -489,37 +494,45 @@ std::string md5(const std::string& src) {
 
     // u32(abs(sin(i+1))*(2pow32))
     const u32 k[] = {
-        0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
-        0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
-        0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
-        0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
-        0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
-        0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
-        0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
-        0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
+        0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
+        0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
+        0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+        0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa,
+        0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+        0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
+        0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+        0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
+        0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+        0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05,
+        0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+        0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039,
+        0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
+        0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
     };
 
     // left shift bits
     const u32 s[] = {
-        7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
-        5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
-        4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
-        6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21
+        7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+        5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
+        4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+        6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
     };
 
     // index
     const u32 idx[] = {
-        0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, // g=i
-        1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12, // g=(5*i+1)%16;
-        5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2, // g=(3*i+5)%16;
-        0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9  // g=(7*i)%16;
+        0, 1, 2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, // g=i
+        1, 6, 11, 0,  5,  10, 15, 4,  9,  14, 3,  8,  13, 2,  7,  12, // g=(5*i+1)%16;
+        5, 8, 11, 14, 1,  4,  7,  10, 13, 0,  3,  6,  9,  12, 15, 2,  // g=(3*i+5)%16;
+        0, 7, 14, 5,  12, 3,  10, 1,  8,  15, 6,  13, 4,  11, 2,  9   // g=(7*i)%16;
     };
     
-#define shift(x,n)  (((x)<<(n))|((x)>>(32-(n)))) // cycle left shift
-#define md5f(x,y,z) (((x)&(y))|((~x)&(z)))    
-#define md5g(x,y,z) (((x)&(z))|((y)&(~z)))
-#define md5h(x,y,z) ((x)^(y)^(z))
-#define md5i(x,y,z) ((y)^((x)|(~z)))
+#define shift(x, n)  (((x)<<(n))|((x)>>(32-(n)))) // cycle left shift
+#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))    
+#define md5g(x, y, z) (((x)&(z))|((y)&(~z)))
+#define md5h(x, y, z) ((x)^(y)^(z))
+#define md5i(x, y, z) ((y)^((x)|(~z)))
     
     u32 atmp = 0x67452301, btmp = 0xefcdab89;
     u32 ctmp = 0x98badcfe, dtmp = 0x10325476;
@@ -533,7 +546,7 @@ std::string md5(const std::string& src) {
             u32 tmp = d;
             d = c;
             c = b;
-            b = b+shift((a+f+k[j]+buff[i+idx[j]]),s[j]);
+            b = b+shift((a+f+k[j]+buff[i+idx[j]]), s[j]);
             a = tmp;
         }
         atmp += a;
@@ -565,13 +578,13 @@ public:
         stamp = std::chrono::high_resolution_clock::now();
     }
 
-    f64 elapsed_milliseconds() {
-        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+    auto elapsed_milliseconds() const {
+        const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     }
 
-    f64 elapsed_microseconds() {
-        auto duration = std::chrono::high_resolution_clock::now() - stamp;
+    auto elapsed_microseconds() const {
+        const auto duration = std::chrono::high_resolution_clock::now() - stamp;
         return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     }
 };
@@ -607,7 +620,7 @@ var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
         return var::num(-1);
     }
     auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
-    return var::num(stamp->elapsed_milliseconds());
+    return var::num(static_cast<f64>(stamp->elapsed_milliseconds()));
 }
 
 var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
@@ -616,7 +629,7 @@ var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
         return var::num(-1);
     }
     auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
-    return var::num(stamp->elapsed_microseconds());
+    return var::num(static_cast<f64>(stamp->elapsed_microseconds()));
 }
 
 var builtin_gcextend(context* ctx, gc* ngc) {
@@ -644,20 +657,27 @@ var builtin_gcextend(context* ctx, gc* ngc) {
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
-    auto den = std::chrono::high_resolution_clock::duration::period::den;
+    const auto den = std::chrono::high_resolution_clock::duration::period::den;
     var res = ngc->alloc(vm_type::vm_hash);
 
-    double total = 0;
+    f64 total = 0;
     for(u32 i = 0; i<gc_type_size; ++i) {
-        total += ngc->gcnt[i];
+        total += static_cast<f64>(ngc->gcnt[i]);
     }
-    // using ms
+
+
     auto& map = res.hash().elems;
-    map["total"] = var::num(ngc->worktime*1.0/den*1000);
-    map["average"] = var::num(ngc->worktime*1.0/den*1000/total);
-    map["max_gc"] = var::num(ngc->max_time*1.0/den*1000);
-    map["max_mark"] = var::num(ngc->max_mark_time*1.0/den*1000);
-    map["max_sweep"] = var::num(ngc->max_sweep_time*1.0/den*1000);
+    const auto worktime = static_cast<f64>(ngc->worktime);
+    const auto max_time = static_cast<f64>(ngc->max_time);
+    const auto max_mark_time = static_cast<f64>(ngc->max_mark_time);
+    const auto max_sweep_time = static_cast<f64>(ngc->max_sweep_time);
+
+    // using ms
+    map["total"] = var::num(worktime/den*1000);
+    map["average"] = var::num(worktime/den*1000/total);
+    map["max_gc"] = var::num(max_time/den*1000);
+    map["max_mark"] = var::num(max_mark_time/den*1000);
+    map["max_sweep"] = var::num(max_sweep_time/den*1000);
     return res;
 }
 
@@ -682,9 +702,17 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
     if (!arg.is_ghost()) {
         return nas_err("ghosttype", "this is not a ghost object.");
     }
+
     const auto& name = arg.ghost().get_ghost_name();
+
+    // https://wiki.flightgear.org/Nasal_library#ghosttype()
+    // tolds us if no name has been set,
+    // return a unique id (the pointer to the instance)
     if (!name.length()) {
-        return var::num(reinterpret_cast<u64>(arg.ghost().pointer));
+        std::stringstream ss;
+        ss << "0x" << std::hex;
+        ss << reinterpret_cast<u64>(arg.ghost().pointer) << std::dec;
+        return ngc->newstr(ss.str());
     }
     return ngc->newstr(name);
 }

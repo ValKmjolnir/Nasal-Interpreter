@@ -140,9 +140,9 @@ private:
 
 private:
     bool next;
-    usize fsize;
+    usize file_list_size;
     u16 break_file_index;
-    u32 break_line;
+    u64 break_line;
     error src;
 
 private:
@@ -152,24 +152,21 @@ private:
 private:
     std::vector<std::string> parse(const std::string&);
     u16 file_index(const std::string&) const;
-    void err();
-    void help();
+    void err() const;
+    void help() const;
     void list_file() const;
     void step_info();
     void interact();
 
 public:
-    dbg():
-        next(true), fsize(0),
-        break_file_index(0), break_line(0),
-        do_operand_count(false) {}
-    void run(
-        const codegen&,
-        const linker&,
-        const std::vector<std::string>&,
-        bool,
-        bool
-    );
+    dbg(): next(true), file_list_size(0),
+           break_file_index(0), break_line(0),
+           do_operand_count(false) {}
+    void run(const codegen&,
+             const linker&,
+             const std::vector<std::string>&,
+             bool,
+             bool);
 };
 
 }

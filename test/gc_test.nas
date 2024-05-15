@@ -17,7 +17,7 @@ var test_func = func(test_processes...) {
         info = runtime.gc.info();
         println("[", os.time(), "] ", duration, " ms, gc ",
             (info.total-gc_total)*100/duration, "%, ",
-            int(1000/duration), " cps");
+            1000/duration, " cps");
         gc_total = info.total;
     }
 

@@ -46,7 +46,7 @@ void operand_line_counter::dump_operand_count() const {
         if (!rate) {
             break;
         }
-        std::clog << " " << opname[i.first] << " : ";
+        std::clog << " " << oprand_name_table[i.first] << " : ";
         std::clog << i.second << " (" << rate << "%)\n";
     }
     std::clog << " total  : " << total << '\n';
@@ -108,21 +108,21 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
 }
 
 u16 dbg::file_index(const std::string& filename) const {
-    for(u16 i = 0; i<fsize; ++i) {
+    for(u16 i = 0; i<file_list_size; ++i) {
         if (filename==files[i]) {
             return i;
         }
     }
-    return 65535;
+    return UINT16_MAX;
 }
 
-void dbg::err() {
+void dbg::err() const {
     std::cerr
     << "incorrect command\n"
     << "input \'h\' to get help\n";
 }
 
-void dbg::help() {
+void dbg::help() const {
     std::clog
     << "<option>\n"
     << "  h,   help      | get help\n"
@@ -133,7 +133,7 @@ void dbg::help() {
     << "  l,   local     | see local values\n"
     << "  u,   upval     | see upvalue\n"
     << "  r,   register  | show vm register detail\n"
-    << "  a,   all       | show global,local and upvalue\n"
+    << "  a,   all       | show global, local and upvalue\n"
     << "  n,   next      | execute next bytecode\n"
     << "  q,   exit      | exit debugger\n"
     << "<option> <filename> <line>\n"
@@ -141,18 +141,20 @@ void dbg::help() {
 }
 
 void dbg::list_file() const {
-    for(usize i = 0; i<fsize; ++i) {
+    for(usize i = 0; i<file_list_size; ++i) {
         std::clog << "[" << i << "] " << files[i] << "\n";
     }
 }
 
 void dbg::step_info() {
-    u32 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
-    u32 begin = (line>>3)==0? 0:((line>>3)<<3);
-    u32 end = (1+(line>>3))<<3;
+    u64 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
+    u64 begin = (line>>3)==0? 0:((line>>3)<<3);
+    u64 end = (1+(line>>3))<<3;
+
     src.load(files[bytecode[ctx.pc].fidx]);
+
     std::clog << "\nsource code:\n";
-    for(u32 i = begin; i<end && i<src.size(); ++i) {
+    for(u64 i = begin; i<end && i<src.size(); ++i) {
         std::clog << (i==line? back_white:reset);
         std::clog << (i==line? "--> ":"    ") << src[i] << reset << "\n";
     }
@@ -160,15 +162,16 @@ void dbg::step_info() {
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
     codestream::set(const_number, const_string, native_function.data(), files);
+
     std::clog << "\nnext bytecode:\n";
-    for(u32 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
+    for(u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
         << (i==ctx.pc? back_white:reset)
         << (i==ctx.pc? "--> ":"    ")
         << codestream(bytecode[i], i)
         << reset << "\n";
     }
-    stack_info(10);
+    stack_info(16);
 }
 
 void dbg::interact() {
@@ -218,7 +221,7 @@ void dbg::interact() {
         } else if (res.size()==3 &&
             get_cmd_type(res[0])==cmd_kind::cmd_break_point) {
             break_file_index = file_index(res[1]);
-            if (break_file_index==65535) {
+            if (break_file_index==UINT16_MAX) {
                 std::clog << "cannot find file named `" << res[1] << "`\n";
                 continue;
             }
@@ -234,19 +237,19 @@ void dbg::interact() {
     }
 }
 
-void dbg::run(
-    const codegen& gen,
-    const linker& linker,
-    const std::vector<std::string>& argv,
-    bool profile,
-    bool show_all_prof_result) {
+void dbg::run(const codegen& gen,
+              const linker& linker,
+              const std::vector<std::string>& argv,
+              bool profile,
+              bool show_all_prof_result) {
 
     set_detail_report_info(true);
     do_operand_count = profile || show_all_prof_result;
 
     const auto& file_list = linker.get_file_list();
-    fsize = file_list.size();
-    init(
+    file_list_size = file_list.size();
+
+    vm_init_enrty(
         gen.strs(),
         gen.nums(),
         gen.natives(),
@@ -257,10 +260,10 @@ void dbg::run(
     );
     counter.init(file_list);
 
-    std::vector<u32> code;
+    std::vector<u8> code;
     std::vector<u16> code_file_index;
-    std::vector<u32> code_line;
-    for(auto& i : gen.codes()) {
+    std::vector<u64> code_line;
+    for(const auto& i : gen.codes()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);
         code_line.push_back(i.line);

@@ -255,6 +255,7 @@ clean:
 
 .PHONY: test
 test:nasal
+	@ ./nasal -t -d test/andy_gc_test.nas
 	@ ./nasal test/argparse_test.nas
 	@ ./nasal -e test/ascii-art.nas
 	@ ./nasal -t -d test/bfs.nas

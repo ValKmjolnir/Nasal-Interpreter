@@ -22,7 +22,10 @@ void gc::do_mark_sweep() {
 void gc::mark() {
     std::vector<var> bfs;
     mark_context_root(bfs);
-    if (memory.size()>8192 && bfs.size()>4) {
+
+    // concurrent mark, experimental
+    if (memory.size()>UINT16_MAX && bfs.size()>32) {
+        flag_concurrent_mark_triggered = true;
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
@@ -34,7 +37,8 @@ void gc::mark() {
         t3.join();
         return;
     }
-    
+
+    // normal mark
     while(!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
@@ -189,7 +193,7 @@ void gc::extend(const vm_type type) {
     const u8 index = static_cast<u8>(type)-static_cast<u8>(vm_type::vm_str);
     size[index] += incr[index];
 
-    for(u32 i = 0; i<incr[index]; ++i) {
+    for(u64 i = 0; i<incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
         nas_val* tmp = new nas_val(type);
 
@@ -197,14 +201,13 @@ void gc::extend(const vm_type type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
+
     // if incr[index] = 1, this will always be 1
     incr[index] = incr[index]+incr[index]/2;
 }
 
-void gc::init(
-    const std::vector<std::string>& constant_strings,
-    const std::vector<std::string>& argv
-) {
+void gc::init(const std::vector<std::string>& constant_strings,
+              const std::vector<std::string>& argv) {
     // initialize counters
     worktime = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -216,25 +219,25 @@ void gc::init(
 
     // init constant strings
     strs.resize(constant_strings.size());
-    for(u32 i = 0; i<strs.size(); ++i) {
+    for(u64 i = 0; i<strs.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
             continue;
         }
         strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
-        strs[i].val.gcobj->unmutable = 1;
+        strs[i].val.gcobj->immutable = 1;
         strs[i].str() = constant_strings[i];
     }
 
     // record arguments
     env_argv.resize(argv.size());
-    for(usize i = 0; i<argv.size(); ++i) {
+    for(u64 i = 0; i<argv.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (env_argv[i].is_str() && env_argv[i].str()==argv[i]) {
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
-        env_argv[i].val.gcobj->unmutable = 1;
+        env_argv[i].val.gcobj->immutable = 1;
         env_argv[i].str() = argv[i];
     }
 }
@@ -315,7 +318,7 @@ void gc::info() const {
         if (!gcnt[i] && !acnt[i] && !size[i]) {
             continue;
         }
-        total += gcnt[i];
+        total += static_cast<f64>(gcnt[i]);
         std::clog << " " << left << setw(indent) << setfill(' ') << name[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];
@@ -341,6 +344,8 @@ void gc::info() const {
     std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
     std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
     std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
+    std::clog << " " << left << setw(indent) << setfill(' ') << "concurrent";
+    std::clog << " | " << (flag_concurrent_mark_triggered? "true\n":"false\n");
     std::clog << last_line << "\n";
 }
 

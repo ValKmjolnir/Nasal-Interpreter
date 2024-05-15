@@ -84,7 +84,7 @@ var builtin_read(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::read", "not a valid filehandle");
     }
-    if (!buffer.is_str() || buffer.val.gcobj->unmutable) {
+    if (!buffer.is_str() || buffer.val.gcobj->immutable) {
         return nas_err("io::read", "\"buf\" must be mutable string");
     }
     if (!length.is_num()) {
@@ -102,7 +102,7 @@ var builtin_read(context* ctx, gc* ngc) {
         static_cast<FILE*>(file_descriptor.ghost().pointer)
     );
     buffer.str() = temp_buffer;
-    buffer.val.gcobj->unmutable = true;
+    buffer.val.gcobj->immutable = true;
     delete []temp_buffer;
     return var::num(read_size);
 }

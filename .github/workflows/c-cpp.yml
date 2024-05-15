@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build/Test/Package CI
 
 on:
   schedule:
@@ -10,62 +10,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  mac-build:
+  mac-aarch64-build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: make
+    - uses: actions/checkout@v4
+    - name: Build
       run: |
           make -j4
           cd module
           make all -j4
           cd ..
-          make test
-          tar -czf nasal-mac-nightly.tgz .
-          python3 tools/pack.py
-    - name: Release file
-      # You may pin to the exact commit or the version.
-      # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-      uses: marvinpinto/action-automatic-releases@v1.2.1
+    - name: Test
+      run: make test
+    - name: Package
+      run: python3 tools/pack.py
+    - name: Release
+      uses: softprops/action-gh-release@v2.0.5
       with:
-        # GitHub auth token
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        # Name of Release to add file to
-        title: macOS Nightly build
-        # Name of the tag for the release (will be associated with current branch)
-        automatic_release_tag: next_macOS
-        # File to release
+        name: macOS nightly build
+        tag_name: next_macOS
+        prerelease: true
         files: |
-          nasal-mac-nightly.tgz
           nasal-Darwin.tar
     
   linux-x86_64-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: make
+    - uses: actions/checkout@v4
+    - name: Build
       run: |
           make -j4
           cd module
           make all -j4
           cd ..
-          make test
-          touch nasal-linux-x86_64-nightly.tgz
-          tar -czf nasal-linux-x86_64-nightly.tgz --exclude=nasal-linux-x86_64-nightly.tgz .
-          python3 tools/pack.py
-    - name: Release file
-      # You may pin to the exact commit or the version.
-      # uses: djnicholson/release-action@e9a535b3eced09c460e07a84118fb74ae9b53236
-      uses: marvinpinto/action-automatic-releases@v1.2.1
+    - name: Test
+      run: make test
+    - name: Package
+      run: python3 tools/pack.py
+    - name: Release
+      uses: softprops/action-gh-release@v2.0.5
       with:
-        # GitHub auth token
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        # Name of Release to add file to
-        title: Linux Nightly build
-        # Name of the tag for the release (will be associated with current branch)
-        automatic_release_tag: next_linux_x86_64
-        # File to release
+        name: linux nightly build
+        tag_name: next_linux_x86_64
+        prerelease: true
         files: |
-          nasal-linux-x86_64-nightly.tgz
           nasal-Linux.tar
-

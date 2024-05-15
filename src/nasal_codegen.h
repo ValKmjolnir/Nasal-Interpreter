@@ -37,10 +37,11 @@ private:
     error err;
 
     // repl output flag, will generate op_repl to output stack top value if true
-    bool need_repl_output = false;
+    bool flag_need_repl_output = false;
 
     // limit mode flag
     bool flag_limited_mode = false;
+
     // under limited mode, unsafe system api will be banned
     const std::unordered_set<std::string> unsafe_system_api = {
         // builtin
@@ -67,8 +68,8 @@ private:
     std::vector<u32> in_foreach_loop_level;
 
     // constant numbers and strings
-    std::unordered_map<f64, u32> const_number_map;
-    std::unordered_map<std::string, u32> const_string_map;
+    std::unordered_map<f64, u64> const_number_map;
+    std::unordered_map<std::string, u64> const_string_map;
     std::vector<f64> const_number_table;
     std::vector<std::string> const_string_table;
 
@@ -82,17 +83,20 @@ private:
     std::vector<opcode> code;
 
     // used to store jmp operands index, to fill the jump address back
-    std::list<std::vector<i32>> continue_ptr;
-    std::list<std::vector<i32>> break_ptr;
+    std::list<std::vector<u64>> continue_ptr;
+    std::list<std::vector<u64>> break_ptr;
 
     // symbol table
-    // global : max STACK_DEPTH-1 values
-    std::unordered_map<std::string, i32> global;
-    std::unordered_map<std::string, std::unordered_set<std::string>> experimental_namespace;
+    // global : max VM_STACK_DEPTH-1 values
+    std::unordered_map<std::string, u64> global;
+
+    // nasal namespace
+    // stores all global symbols of each file
+    std::unordered_map<std::string, std::unordered_set<std::string>> nasal_namespace;
 
     // local  : max 32768 upvalues 65536 values
-    // but in fact local scope also has less than STACK_DEPTH value
-    std::list<std::unordered_map<std::string, i32>> local;
+    // but in fact local scope also has less than VM_STACK_DEPTH value
+    std::list<std::unordered_map<std::string, u64>> local;
 
     void check_id_exist(identifier*);
     
@@ -104,11 +108,11 @@ private:
     void regist_string(const std::string&);
     void find_symbol(code_block*);
     void regist_symbol(const std::string&);
-    i32 local_symbol_find(const std::string&);
-    i32 global_symbol_find(const std::string&);
-    i32 upvalue_symbol_find(const std::string&);
+    i64 local_symbol_find(const std::string&);
+    i64 global_symbol_find(const std::string&);
+    i64 upvalue_symbol_find(const std::string&);
 
-    void emit(u8, u32, const span&);
+    void emit(u8, u64, const span&);
 
     void number_gen(number_literal*);
     void string_gen(string_literal*);
@@ -135,7 +139,7 @@ private:
     void multi_assign_gen(multi_assign*);
     void cond_gen(condition_expr*);
     void loop_gen(expr*);
-    void load_continue_break(i32, i32);
+    void load_continue_break(u64, u64);
     void while_gen(while_expr*);
     void for_gen(for_expr*);
     void forei_gen(forei_expr*);
@@ -156,9 +160,6 @@ public:
     const auto& natives() const {return native_function;}
     const auto& codes() const {return code;}
     const auto& globals() const {return global;}
-    const auto& get_experimental_namespace() const {
-        return experimental_namespace;
-    }
 
 public:
     codegen() = default;

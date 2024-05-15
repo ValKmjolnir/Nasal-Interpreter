@@ -20,13 +20,15 @@ namespace nasal {
 class vm {
 protected:
 
-    /* registers of vm */
-    context ctx; // running context
+    /* vm context */
+    context ctx;
 
     /* constants */
-    const f64* const_number = nullptr; // constant numbers
-    const std::string* const_string = nullptr; // constant symbols and strings
-    std::vector<u32> imm; // immediate number table
+    const f64* const_number = nullptr;
+    const std::string* const_string = nullptr;
+    std::vector<u64> imm; // immediate number table
+
+    /* nasal native functions */
     std::vector<nasal_builtin_table> native_function;
     
     /* garbage collector */
@@ -49,15 +51,13 @@ protected:
     bool flag_limited_mode = false;
 
     /* vm initializing function */
-    void init(
-        const std::vector<std::string>&,
-        const std::vector<f64>&,
-        const std::vector<nasal_builtin_table>&,
-        const std::vector<opcode>&,
-        const std::unordered_map<std::string, i32>&,
-        const std::vector<std::string>&,
-        const std::vector<std::string>&
-    );
+    void vm_init_enrty(const std::vector<std::string>&,
+                       const std::vector<f64>&,
+                       const std::vector<nasal_builtin_table>&,
+                       const std::vector<opcode>&,
+                       const std::unordered_map<std::string, u64>&,
+                       const std::vector<std::string>&,
+                       const std::vector<std::string>&);
     void context_and_global_init();
 
     /* debug functions */
@@ -66,7 +66,7 @@ protected:
     void function_detail_info(const nas_func&);
     void function_call_trace();
     void trace_back();
-    void stack_info(const u32);
+    void stack_info(const u64);
     void register_info();
     void global_state();
     void local_state();
@@ -79,9 +79,11 @@ protected:
     std::string type_name_string(const var&) const;
     void die(const std::string&);
 
+protected:
     /* vm calculation functions*/
     inline bool cond(var&);
 
+protected:
     /* vm operands */
     inline void o_repl();
     inline void o_intl();
@@ -174,8 +176,8 @@ public:
 
     /* constructor of vm instance */
     vm() {
-        ctx.stack = new var[STACK_DEPTH];
-        global = new var[STACK_DEPTH];
+        ctx.stack = new var[VM_STACK_DEPTH];
+        global = new var[VM_STACK_DEPTH];
     }
     ~vm() {
         delete[] ctx.stack;
@@ -183,11 +185,9 @@ public:
     }
 
     /* execution entry */
-    void run(
-        const codegen&, // get generated code
-        const linker&, // get list of used files
-        const std::vector<std::string>& // get arguments input by command line
-    );
+    void run(const codegen&,                   // get generated code
+             const linker&,                    // get list of used files
+             const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */
     void set_detail_report_info(bool flag) {verbose = flag;}
@@ -251,8 +251,9 @@ inline void vm::o_newv() {
     auto& vec = newv.vec().elems;
     vec.resize(imm[ctx.pc]);
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
-    ctx.top = ctx.top-imm[ctx.pc]+1;
-    for(u32 i = 0; i<imm[ctx.pc]; ++i) {
+    ctx.top = ctx.top - imm[ctx.pc] + 1;
+
+    for(u64 i = 0; i<imm[ctx.pc]; ++i) {
         vec[i] = ctx.top[i];
     }
     ctx.top[0] = newv;
@@ -270,16 +271,21 @@ inline void vm::o_newf() {
 
     /* this means you create a new function in local scope */
     if (ctx.localr) {
+        // copy upval scope list from upper level function
         func.upval = ctx.funcr.func().upval;
-        // function created in the same local scope shares one closure
-        // so this size & stk setting has no problem
+
+        // function created in the same local scope shares same closure
         var upval = (ctx.upvalr.is_nil())?
             ngc.alloc(vm_type::vm_upval):
             ctx.upvalr;
-        upval.upval().size = ctx.funcr.func().local_size;
-        upval.upval().stack_frame_offset = ctx.localr;
+        // if no upval scope exists, now it's time to create one
+        if (ctx.upvalr.is_nil()) {
+            upval.upval().size = ctx.funcr.func().local_size;
+            upval.upval().stack_frame_offset = ctx.localr;
+            ctx.upvalr = upval;
+        }
+
         func.upval.push_back(upval);
-        ctx.upvalr = upval;
     }
 }
 
@@ -305,6 +311,7 @@ inline void vm::o_deft() {
 
 inline void vm::o_dyn() {
     ctx.top[0].func().dynamic_parameter_index = imm[ctx.pc];
+    ctx.top[0].func().dynamic_parameter_name = const_string[imm[ctx.pc]];
 }
 
 inline void vm::o_lnot() {
@@ -669,7 +676,7 @@ inline void vm::o_callvi() {
         die("must use a vector but get "+type_name_string(val));
         return;
     }
-    // cannot use operator[],because this may cause overflow
+    // cannot use operator[], because this may cause overflow
     (++ctx.top)[0] = val.vec().get_value(imm[ctx.pc]);
     if (ctx.top[0].is_none()) {
         die(report_out_of_range(imm[ctx.pc], val.vec().size()));
@@ -683,6 +690,7 @@ inline void vm::o_callh() {
         die("must call a hash but get "+type_name_string(val));
         return;
     }
+
     const auto& str = const_string[imm[ctx.pc]];
     if (val.is_hash()) {
         ctx.top[0] = val.hash().get_value(str);
@@ -700,7 +708,7 @@ inline void vm::o_callh() {
 }
 
 inline void vm::o_callfv() {
-    const u32 argc = imm[ctx.pc]; // arguments counter
+    const auto argc = imm[ctx.pc]; // arguments counter
     var* local = ctx.top-argc+1; // arguments begin address
     if (!local[-1].is_func()) {
         die("must call a function but get "+type_name_string(local[-1]));
@@ -719,7 +727,7 @@ inline void vm::o_callfv() {
         return;
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
-    const u32 parameter_size = func.parameter_size-1;
+    const u64 parameter_size = func.parameter_size-1;
     if (argc<parameter_size && func.local[argc+1].is_none()) {
         die(report_lack_arguments(argc, func));
         return;
@@ -730,16 +738,17 @@ inline void vm::o_callfv() {
     if (func.dynamic_parameter_index>=0) {
         // load dynamic argument
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u32 i = parameter_size; i<argc; ++i) {
+        for(u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     } else if (parameter_size<argc) {
         // load arguments to default dynamic argument "arg", located at stack+1
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u32 i = parameter_size; i<argc; ++i) {
+        for(u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
+
     // should reset stack top after allocating vector
     // because this may cause gc
     // then all the available values the vector needs
@@ -747,14 +756,18 @@ inline void vm::o_callfv() {
     // collected incorrectly
     ctx.top = local+func.local_size;
 
-    const u32 min_size = (std::min)(parameter_size, argc); // avoid error in MSVC
-    for(u32 i = min_size; i>=1; --i) { // load arguments
+    // use (std::min) to avoid compilation error in MSVC
+    // MSVC windows.h uses macro std::min
+    const u64 min_size = (std::min)(parameter_size, argc);
+
+    // load arguments
+    for(u64 i = min_size; i>=1; --i) {
         local[i] = local[i-1];
     }
-    local[0] = func.local[0];// load "me"
+    local[0] = func.local[0]; // load "me"
 
     // load local scope & default arguments
-    for(u32 i = min_size+1; i<func.local_size; ++i) {
+    for(u64 i = min_size+1; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
     // load dynamic argument
@@ -967,25 +980,31 @@ inline void vm::o_mcallv() {
 }
 
 inline void vm::o_mcallh() {
-    var hash = ctx.top[0]; // mcall hash, reserved on stack to avoid gc
+    // mcall hash, reserved on stack to avoid gc, so do not do ctx.top--
+    var hash = ctx.top[0];
     if (!hash.is_hash() && !hash.is_map()) {
-        die("must call a hash/namespace but get "+type_name_string(hash));
+        die("must call a hash/namespace but get " + type_name_string(hash));
         return;
     }
-    const auto& str = const_string[imm[ctx.pc]];
+
+    const auto& key = const_string[imm[ctx.pc]];
+
+    // map is for nasal namespace type, for example `globals`
     if (hash.is_map()) {
-        ctx.memr = hash.map().get_memory(str);
+        ctx.memr = hash.map().get_memory(key);
         if (!ctx.memr) {
-            die("cannot find symbol \"" + str + "\"");
+            die("cannot find symbol \"" + key + "\"");
         }
         return;
     }
+
+    // call hash member
     auto& ref = hash.hash();
-    ctx.memr = ref.get_memory(str);
-    // create a new key
+    ctx.memr = ref.get_memory(key);
+    // create a new key if not exists
     if (!ctx.memr) {
-        ref.elems[str] = nil;
-        ctx.memr = ref.get_memory(str);
+        ref.elems[key] = nil;
+        ctx.memr = ref.get_memory(key);
     }
 }
 
@@ -1023,7 +1042,7 @@ inline void vm::o_ret() {
         auto size = func.func().local_size;
         upval.on_stack = false;
         upval.elems.resize(size);
-        for(u32 i = 0; i<size; ++i) {
+        for(u64 i = 0; i<size; ++i) {
             upval.elems[i] = local[i];
         }
     }
