@@ -39,13 +39,13 @@ jobs:
     #     files: |
     #       nasal-Darwin.tar
     - name: Release
-        uses: softprops/action-gh-release@v2.0.5
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          name: macOS nightly build
-          tag_name: next_macOS
-          files: |
-            nasal-Darwin.tar
+      uses: softprops/action-gh-release@v2.0.5
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: macOS nightly build
+        tag_name: next_macOS
+        files: |
+          nasal-Darwin.tar
     
   linux-x86_64-build:
     runs-on: ubuntu-latest
@@ -76,10 +76,10 @@ jobs:
     #     files: |
     #       nasal-Linux.tar
     - name: Release
-        uses: softprops/action-gh-release@v2.0.5
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          name: linux nightly build
-          tag_name: next_linux_x86_64
-          files: |
-            nasal-Linux.tar
+      uses: softprops/action-gh-release@v2.0.5
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: linux nightly build
+        tag_name: next_linux_x86_64
+        files: |
+          nasal-Linux.tar
