@@ -309,7 +309,7 @@ void codegen::func_gen(function* node) {
     // the local scope should not cause stack overflow
     // and should not greater than upvalue's max size(65536)
     code[lsize].num = local.back().size();
-    if (local.back().size()>=STACK_DEPTH || local.back().size()>=UINT16_MAX) {
+    if (local.back().size()>=VM_STACK_DEPTH || local.back().size()>=UINT16_MAX) {
         die("too many local variants: " +
             std::to_string(local.back().size()),
             block->get_location()
@@ -1361,7 +1361,7 @@ const error& codegen::compile(parse& parse,
     }
 
     // check global variables size
-    if (global.size()>=STACK_DEPTH/2) {
+    if (global.size()>=VM_STACK_DEPTH) {
         err.err("code",
             "too many global variables: " +
             std::to_string(global.size())

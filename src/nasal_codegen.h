@@ -87,7 +87,7 @@ private:
     std::list<std::vector<u64>> break_ptr;
 
     // symbol table
-    // global : max STACK_DEPTH-1 values
+    // global : max VM_STACK_DEPTH-1 values
     std::unordered_map<std::string, u64> global;
 
     // nasal namespace
@@ -95,7 +95,7 @@ private:
     std::unordered_map<std::string, std::unordered_set<std::string>> nasal_namespace;
 
     // local  : max 32768 upvalues 65536 values
-    // but in fact local scope also has less than STACK_DEPTH value
+    // but in fact local scope also has less than VM_STACK_DEPTH value
     std::list<std::unordered_map<std::string, u64>> local;
 
     void check_id_exist(identifier*);

@@ -38,7 +38,7 @@ const char* get_platform();
 const char* get_arch();
 
 // virtual machine stack depth, both global depth and value stack depth
-const u32 STACK_DEPTH = 4096;
+const u32 VM_STACK_DEPTH = UINT16_MAX;
 
 f64 hex_to_f64(const char*);
 f64 oct_to_f64(const char*);

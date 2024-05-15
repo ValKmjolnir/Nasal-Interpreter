@@ -176,8 +176,8 @@ public:
 
     /* constructor of vm instance */
     vm() {
-        ctx.stack = new var[STACK_DEPTH];
-        global = new var[STACK_DEPTH];
+        ctx.stack = new var[VM_STACK_DEPTH];
+        global = new var[VM_STACK_DEPTH];
     }
     ~vm() {
         delete[] ctx.stack;

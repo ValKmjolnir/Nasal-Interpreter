@@ -171,14 +171,14 @@ void nas_co::clear() {
     if (!ctx.stack) {
         return;
     }
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = var::nil();
     }
 
     ctx.pc = 0;
     ctx.localr = nullptr;
     ctx.memr = nullptr;
-    ctx.canary = ctx.stack+STACK_DEPTH-1;
+    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
     ctx.top = ctx.stack;
     ctx.funcr = var::nil();
     ctx.upvalr = var::nil();

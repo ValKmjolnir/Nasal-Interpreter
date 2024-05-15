@@ -234,7 +234,7 @@ struct nas_co {
     status status;
 
     nas_co() {
-        ctx.stack = new var[STACK_DEPTH];
+        ctx.stack = new var[VM_STACK_DEPTH];
         clear();
     }
     ~nas_co() {

@@ -36,7 +36,7 @@ enum class tok:u32 {
     rif,      // condition expression keyword if
     elsif,    // condition expression keyword elsif
     relse,    // condition expression keyword else
-    tknil,    // nil literal
+    nil,      // nil literal
     lcurve,   // (
     rcurve,   // )
     lbracket, // [
@@ -114,7 +114,7 @@ private:
         {"if"      ,tok::rif     },
         {"elsif"   ,tok::elsif   },
         {"else"    ,tok::relse   },
-        {"nil"     ,tok::tknil   },
+        {"nil"     ,tok::nil     },
         {"("       ,tok::lcurve  },
         {")"       ,tok::rcurve  },
         {"["       ,tok::lbracket},

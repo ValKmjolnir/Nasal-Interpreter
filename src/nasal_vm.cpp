@@ -49,14 +49,14 @@ void vm::context_and_global_init() {
     ctx.funcr = nil;
     ctx.upvalr = nil;
 
-    /* set canary = stack[STACK_DEPTH-1] */
-    ctx.canary = ctx.stack+STACK_DEPTH-1;
+    /* set canary = stack[VM_STACK_DEPTH-1] */
+    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
 
     /* nothing is on stack */
     ctx.top = ctx.stack - 1;
 
     /* clear main stack and global */
-    for(u32 i = 0; i<STACK_DEPTH; ++i) {
+    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = nil;
         global[i] = nil;
     }
