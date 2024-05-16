@@ -322,9 +322,8 @@ local (0x55dcb5b43190 <+7>)
 
 ```javascript
 source code:
---> var fib=func(x)
-    {
-        if(x<2) return x;
+--> var fib = func(x) {
+        if (x<2) return x;
         return fib(x-1)+fib(x-2);
     }
     for(var i=0;i<31;i+=1)
@@ -332,16 +331,16 @@ source code:
 
 
 next bytecode:
-    0x000848     4a 00 00 01     callfv  0x1(std/lib.nas:427)
-    0x000849     3d 00 00 00     pop     0x0(std/lib.nas:427)
-    0x00084a     07 00 00 00     pnil    0x0(std/lib.nas:423)
-    0x00084b     56 00 00 00     ret     0x0(std/lib.nas:423)
-    0x00084c     03 00 00 5e     loadg   0x5e(std/lib.nas:423)
---> 0x00084d     0b 00 08 51     newf    0x851(test/fib.nas:1)
-    0x00084e     02 00 00 03     intl    0x3(test/fib.nas:1)
-    0x00084f     0d 00 00 08     para    0x8 (x)(test/fib.nas:1)
+    0x0003a8    07:00 00 00 00 00 00 00 00     pnil    0x0 (std/lib.nas:413)
+    0x0003a9    56:00 00 00 00 00 00 00 00     ret     0x0 (std/lib.nas:413)
+    0x0003aa    03:00 00 00 00 00 00 00 56     loadg   0x56 (std/lib.nas:413)
+--> 0x0003ab    0b:00 00 00 00 00 00 03 af     newf    0x3af (test/fib.nas:1)
+    0x0003ac    02:00 00 00 00 00 00 00 03     intl    0x3 (test/fib.nas:1)
+    0x0003ad    0d:00 00 00 00 00 00 00 22     para    0x22 (x) (test/fib.nas:1)
+    0x0003ae    3e:00 00 00 00 00 00 03 be     jmp     0x3be (test/fib.nas:1)
+    0x0003af    45:00 00 00 00 00 00 00 01     calll   0x1 (test/fib.nas:2)
 
-stack (0x55ccd0a1b9d0, limit 10, total 0)
+vm stack (0x7fca7e9f1010, limit 16, total 0)
 >>
 ```
 
@@ -356,9 +355,8 @@ stack (0x55ccd0a1b9d0, limit 10, total 0)
 
 ```javascript
 source code:
-    var fib=func(x)
-    {
--->     if(x<2) return x;
+    var fib = func(x) {
+-->     if (x<2) return x;
         return fib(x-1)+fib(x-2);
     }
     for(var i=0;i<31;i+=1)
@@ -366,24 +364,24 @@ source code:
 
 
 next bytecode:
-    0x000850     3e 00 08 60     jmp     0x860(test/fib.nas:1)
---> 0x000851     45 00 00 01     calll   0x1(test/fib.nas:3)
-    0x000852     39 00 00 07     lessc   0x7 (2)(test/fib.nas:3)
-    0x000853     40 00 08 56     jf      0x856(test/fib.nas:3)
-    0x000854     45 00 00 01     calll   0x1(test/fib.nas:3)
-    0x000855     56 00 00 00     ret     0x0(test/fib.nas:3)
-    0x000856     44 00 00 5f     callg   0x5f(test/fib.nas:4)
-    0x000857     45 00 00 01     calll   0x1(test/fib.nas:4)
+    0x0003a8    07:00 00 00 00 00 00 00 00     pnil    0x0 (std/lib.nas:413)
+    0x0003a9    56:00 00 00 00 00 00 00 00     ret     0x0 (std/lib.nas:413)
+    0x0003aa    03:00 00 00 00 00 00 00 56     loadg   0x56 (std/lib.nas:413)
+    0x0003ab    0b:00 00 00 00 00 00 03 af     newf    0x3af (test/fib.nas:1)
+    0x0003ac    02:00 00 00 00 00 00 00 03     intl    0x3 (test/fib.nas:1)
+    0x0003ad    0d:00 00 00 00 00 00 00 22     para    0x22 (x) (test/fib.nas:1)
+    0x0003ae    3e:00 00 00 00 00 00 03 be     jmp     0x3be (test/fib.nas:1)
+--> 0x0003af    45:00 00 00 00 00 00 00 01     calll   0x1 (test/fib.nas:2)
 
-stack (0x55ccd0a1b9d0, limit 10, total 8)
-  0x000007    | pc   | 0x869
+vm stack (0x7fca7e9f1010, limit 16, total 8)
+  0x000007    | pc   | 0x3c7
   0x000006    | addr | 0x0
   0x000005    | nil  |
   0x000004    | nil  |
   0x000003    | num  | 0
   0x000002    | nil  |
   0x000001    | nil  |
-  0x000000    | func | <0x55ccd0a58fa0> entry:0x487
+  0x000000    | func | <0x5573f66ef5f0> func(elems...) {..}
 >>
 ```
 
