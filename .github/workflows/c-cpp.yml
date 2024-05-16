@@ -14,12 +14,17 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Update Tag
+      run: |
+        git fetch --tags origin
+        git tag -f next_macOS
+        git push -f origin next_macOS
     - name: Build
       run: |
-          make -j4
-          cd module
-          make all -j4
-          cd ..
+        make -j4
+        cd module
+        make all -j4
+        cd ..
     - name: Test
       run: make test
     - name: Package
@@ -30,6 +35,7 @@ jobs:
         name: macOS nightly build
         tag_name: next_macOS
         prerelease: true
+        draft: false
         files: |
           nasal-Darwin.tar
     
@@ -37,12 +43,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Update Tag
+      run: |
+        git fetch --tags origin
+        git tag -f next_linux_x86_64
+        git push -f origin next_linux_x86_64
     - name: Build
       run: |
-          make -j4
-          cd module
-          make all -j4
-          cd ..
+        make -j4
+        cd module
+        make all -j4
+        cd ..
     - name: Test
       run: make test
     - name: Package
@@ -53,5 +64,6 @@ jobs:
         name: linux nightly build
         tag_name: next_linux_x86_64
         prerelease: true
+        draft: false
         files: |
           nasal-Linux.tar
