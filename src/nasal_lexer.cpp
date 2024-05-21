@@ -96,7 +96,7 @@ void lexer::open(const std::string& file) {
 }
 
 tok lexer::get_type(const std::string& str) {
-    return token_mapper.count(str)? token_mapper.at(str):tok::null;
+    return token_mapper.count(str)? token_mapper.at(str):tok::tk_null;
 }
 
 std::string lexer::utf8_gen() {
@@ -152,7 +152,8 @@ token lexer::id_gen() {
     tok type = get_type(str);
     return {
         {begin_line, begin_column, line, column, filename},
-        (type!=tok::null)? type:tok::id, str
+        (type!=tok::tk_null)? type:tok::tk_id,
+        str
     };
 }
 
@@ -174,7 +175,11 @@ token lexer::num_gen() {
                 "invalid number `"+str+"`"
             );
         }
-        return {{begin_line, begin_column, line, column, filename}, tok::num, str};
+        return {
+            {begin_line, begin_column, line, column, filename},
+            tok::tk_num,
+            str
+        };
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
         std::string str = "0o";
         ptr += 2;
@@ -193,7 +198,11 @@ token lexer::num_gen() {
                 "invalid number `"+str+"`"
             );
         }
-        return {{begin_line, begin_column, line, column, filename}, tok::num, str};
+        return {
+            {begin_line, begin_column, line, column, filename},
+            tok::tk_num,
+            str
+        };
     }
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
@@ -213,7 +222,11 @@ token lexer::num_gen() {
                 {begin_line, begin_column, line, column, filename},
                 "invalid number `"+str+"`"
             );
-            return {{begin_line, begin_column, line, column, filename}, tok::num, "0"};
+            return {
+                {begin_line, begin_column, line, column, filename},
+                tok::tk_num,
+                "0"
+            };
         }
     }
     if (ptr<res.size() && (res[ptr]=='e' || res[ptr]=='E')) {
@@ -231,11 +244,19 @@ token lexer::num_gen() {
                 {begin_line, begin_column, line, column, filename},
                 "invalid number `"+str+"`"
             );
-            return {{begin_line, begin_column, line, column, filename}, tok::num, "0"};
+            return {
+                {begin_line, begin_column, line, column, filename},
+                tok::tk_num,
+                "0"
+            };
         }
     }
     column += str.length();
-    return {{begin_line, begin_column, line, column, filename}, tok::num, str};
+    return {
+        {begin_line, begin_column, line, column, filename},
+        tok::tk_num,
+        str
+    };
 }
 
 token lexer::str_gen() {
@@ -283,7 +304,11 @@ token lexer::str_gen() {
             {begin_line, begin_column, line, column, filename},
             "get EOF when generating string"
         );
-        return {{begin_line, begin_column, line, column, filename}, tok::str, str};
+        return {
+            {begin_line, begin_column, line, column, filename},
+            tok::tk_str,
+            str
+        };
     }
     ++column;
 
@@ -294,7 +319,11 @@ token lexer::str_gen() {
             "\'`\' is used for string including one character"
         );
     }
-    return {{begin_line, begin_column, line, column, filename}, tok::str, str};
+    return {
+        {begin_line, begin_column, line, column, filename},
+        tok::tk_str,
+        str
+    };
 }
 
 token lexer::single_opr() {
@@ -303,7 +332,7 @@ token lexer::single_opr() {
     std::string str(1, res[ptr]);
     ++column;
     tok type = get_type(str);
-    if (type==tok::null) {
+    if (type==tok::tk_null) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "invalid operator `"+str+"`"
@@ -380,10 +409,14 @@ const error& lexer::scan(const std::string& file) {
     }
     if (toks.size()) {
         // eof token's location is the last token's location
-        toks.push_back({toks.back().loc, tok::eof, "<eof>"});
+        toks.push_back({toks.back().loc, tok::tk_eof, "<eof>"});
     } else {
         // if token sequence is empty, generate a default location
-        toks.push_back({{line, column, line, column, filename}, tok::eof, "<eof>"});
+        toks.push_back({
+            {line, column, line, column, filename},
+            tok::tk_eof,
+            "<eof>"
+        });
     }
     res = "";
     return err;
