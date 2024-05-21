@@ -105,7 +105,7 @@ const char* get_platform() {
     } else if (is_macos()) {
         return "macOS";
     }
-    return "unknown platform";
+    return "unknown";
 }
 
 const char* get_arch() {
@@ -126,7 +126,7 @@ const char* get_arch() {
     } else if (is_superh()) {
         return "superh";
     }
-    return "unknown arch";
+    return "unknown";
 }
 
 f64 hex_to_f64(const char* str) {

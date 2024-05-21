@@ -13,7 +13,7 @@ void operand_line_counter::load_file_line_counter(
     file_name_list = file_list;
     file_line_counter = {};
     file_contents = {};
-    flstream fs;
+    filestream fs;
     for(usize i =0; i<file_list.size(); ++i) {
         fs.load(file_list[i]);
         file_contents.push_back(fs.file_content());
