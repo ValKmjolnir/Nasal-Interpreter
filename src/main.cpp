@@ -45,7 +45,7 @@ std::ostream& help(std::ostream& out) {
     << "option:\n"
     << "   -h,   --help     | get help.\n"
     << "   -v,   --version  | get version.\n"
-    << "   -r,   --repl     | use repl interpreter(experimental).\n"
+    << "   -r,   --repl     | use repl interpreter.\n"
     << "\nnasal [option] <file> [argv]\n"
     << "option:\n"
     << "   -a,   --ast      | view ast after link/optimize process.\n"
@@ -101,11 +101,12 @@ std::ostream& version(std::ostream& out) {
     for(u32 i = 0; i<5; ++i) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
     }
-    if (num<0.01) {
+    // give you 5% to see this easter egg
+    if (num<0.05) {
         nasal::parse::easter_egg();
     }
 
-    out << "nasal interpreter version " << __nasver__;
+    out << "nasal version " << __nasver__;
     out << " " << nasal::get_platform() << " " << nasal::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
