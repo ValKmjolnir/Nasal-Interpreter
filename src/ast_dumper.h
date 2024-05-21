@@ -16,29 +16,37 @@ private:
 private:
     void push_indent() {
         if (indent.size()) {
-            if (indent.back()=="|--") {
-                indent.back() = "|  ";
-            } else if (indent.back()=="+--") {
+            if (indent.back()=="├──") {
+                indent.back() = "│  ";
+            } else if (indent.back()=="└──") {
                 indent.back() = "   ";
             }
         }
-        indent.push_back("|--");
+        indent.push_back("├──");
     }
-    void pop_indent() {indent.pop_back();}
-    void set_last() {indent.back() = "+--";}
+
+    void pop_indent() {
+        indent.pop_back();
+    }
+
+    void set_last() {
+        indent.back() = "└──";
+    }
+
     void dump_indent() {
-        if (indent.size() && indent.back()=="|  ") {
-            indent.back() = "|--";
+        if (indent.size() && indent.back()=="│  ") {
+            indent.back() = "├──";
         }
         for(const auto& i : indent) {
             std::cout << i;
         }
     }
-    std::string format_location(const span& location) {
+
+    std::string format_location(expr* node) {
         std::stringstream ss;
-        ss << " -> ";
-        location.dump_begin(ss);
-        ss << "\n";
+        ss << " → [";
+        node->get_location().dump_begin(ss);
+        ss << "]\n";
         return ss.str();
     }
 
