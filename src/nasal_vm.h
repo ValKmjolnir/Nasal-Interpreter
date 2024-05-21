@@ -50,6 +50,7 @@ protected:
     /* limited mode, will not load unsafe system api if switched on */
     bool flag_limited_mode = false;
 
+protected:
     /* vm initializing function */
     void vm_init_enrty(const std::vector<std::string>&,
                        const std::vector<f64>&,
@@ -60,6 +61,7 @@ protected:
                        const std::vector<std::string>&);
     void context_and_global_init();
 
+protected:
     /* debug functions */
     bool verbose = false;
     void value_info(var&);
@@ -190,13 +192,24 @@ public:
              const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */
-    void set_detail_report_info(bool flag) {verbose = flag;}
+    void set_detail_report_info(bool flag) {
+        verbose = flag;
+    }
+
     /* set repl mode flag */
-    void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
+    void set_repl_mode_flag(bool flag) {
+        is_repl_mode = flag;
+    }
+
     /* set repl output flag */
-    void set_allow_repl_output_flag(bool flag) {allow_repl_output = flag;}
+    void set_allow_repl_output_flag(bool flag) {
+        allow_repl_output = flag;
+    }
+
     /* set limit mode flag */
-    void set_limit_mode_flag(bool flag) {flag_limited_mode = flag;}
+    void set_limit_mode_flag(bool flag) {
+        flag_limited_mode = flag;
+    }
 };
 
 inline bool vm::cond(var& val) {

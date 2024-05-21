@@ -4,16 +4,17 @@
 namespace nasal {
 
 const error& parse::compile(const lexer& lexer) {
-    toks=lexer.result().data();
-    ptr=in_func=in_loop=0;
+    toks = lexer.result().data();
+    ptr = in_func_depth = in_loop_depth = 0;
 
     root = new code_block(toks[0].loc);
 
-    while(!lookahead(tok::eof)) {
+    while(!lookahead(tok::tk_eof)) {
         root->add_expression(expression());
-        if (lookahead(tok::semi)) {
-            match(tok::semi);
-        } else if (need_semi_check(root->get_expressions().back()) && !lookahead(tok::eof)) {
+        if (lookahead(tok::tk_semi)) {
+            match(tok::tk_semi);
+        } else if (need_semi_check(root->get_expressions().back()) &&
+                   !lookahead(tok::tk_eof)) {
             // the last expression can be recognized without semi
             die(prevspan, "expected \";\" after this token");
         }
@@ -23,6 +24,7 @@ const error& parse::compile(const lexer& lexer) {
 }
 
 void parse::easter_egg() {
+    // do you remember this text drawing in old versions?
     std::clog
     << "              _,,,_                                          \n"
     << "            .'     `'.                                       \n"
@@ -63,7 +65,7 @@ void parse::die(const span& loc, const std::string& info) {
 }
 
 void parse::next() {
-    if (lookahead(tok::eof)) {
+    if (lookahead(tok::tk_eof)) {
         return;
     }
     ++ptr;
@@ -76,10 +78,10 @@ void parse::match(tok type, const char* info) {
             return;
         }
         switch(type) {
-            case tok::num:die(thisspan, "expected number");    break;
-            case tok::str:die(thisspan, "expected string");    break;
-            case tok::id: die(thisspan, "expected identifier");break;
-            default:      die(thisspan, "expected \""+tokname.at(type)+"\""); break;
+            case tok::tk_num: die(thisspan, "expected number"); break;
+            case tok::tk_str: die(thisspan, "expected string"); break;
+            case tok::tk_id: die(thisspan, "expected identifier"); break;
+            default: die(thisspan, "expected \""+tokname.at(type)+"\""); break;
         }
         return;
     }
@@ -91,11 +93,11 @@ bool parse::lookahead(tok type) {
 }
 
 bool parse::is_call(tok type) {
-    return type==tok::lcurve || type==tok::lbracket || type==tok::dot;
+    return type==tok::tk_lcurve || type==tok::tk_lbracket || type==tok::tk_dot;
 }
 
 bool parse::check_comma(const tok* panic_set) {
-    for(u32 i=0;panic_set[i]!=tok::null;++i) {
+    for(u32 i = 0; panic_set[i]!=tok::tk_null; ++i) {
         if (lookahead(panic_set[i])) {
             die(prevspan, "expected \",\" between scalars");
             return true;
@@ -106,17 +108,18 @@ bool parse::check_comma(const tok* panic_set) {
 
 bool parse::check_tuple() {
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
-    while(toks[++check_ptr].type!=tok::eof && curve) {
+    while(toks[++check_ptr].type!=tok::tk_eof && curve) {
         switch(toks[check_ptr].type) {
-            case tok::lcurve:   ++curve;   break;
-            case tok::lbracket: ++bracket; break;
-            case tok::lbrace:   ++brace;   break;
-            case tok::rcurve:   --curve;   break;
-            case tok::rbracket: --bracket; break;
-            case tok::rbrace:   --brace;   break;
+            case tok::tk_lcurve:   ++curve;   break;
+            case tok::tk_lbracket: ++bracket; break;
+            case tok::tk_lbrace:   ++brace;   break;
+            case tok::tk_rcurve:   --curve;   break;
+            case tok::tk_rbracket: --bracket; break;
+            case tok::tk_rbrace:   --brace;   break;
             default: break;
         }
-        if (curve==1 && !bracket && !brace && toks[check_ptr].type==tok::comma) {
+        if (curve==1 && !bracket && !brace &&
+            toks[check_ptr].type==tok::tk_comma) {
             return true;
         }
     }
@@ -128,7 +131,7 @@ bool parse::check_func_end(expr* node) {
     if (!node) {
         return true;
     }
-    auto type = node->get_type();
+    const auto type = node->get_type();
     if (type==expr_type::ast_func) {
         return true;
     } else if (type==expr_type::ast_def) {
@@ -149,30 +152,32 @@ bool parse::check_in_curve_multi_definition() {
     // but we still allow syntax like:
     //   func {}(var a = 1)
     // in fact, this syntax is not recommended
-    if (!lookahead(tok::lcurve) || toks[ptr+1].type!=tok::var) {
+    if (!lookahead(tok::tk_lcurve) || toks[ptr+1].type!=tok::tk_var) {
         return false;
     }
-    return toks[ptr+2].type==tok::id && toks[ptr+3].type==tok::comma;
+    return toks[ptr+2].type==tok::tk_id && toks[ptr+3].type==tok::tk_comma;
 }
 
 bool parse::check_special_call() {
     // special call means like this: function_name(a:1, b:2, c:3);
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
-    while(toks[++check_ptr].type!=tok::eof && curve) {
+    while(toks[++check_ptr].type!=tok::tk_eof && curve) {
         switch(toks[check_ptr].type) {
-            case tok::lcurve:   ++curve;  break;
-            case tok::lbracket: ++bracket;break;
-            case tok::lbrace:   ++brace;  break;
-            case tok::rcurve:   --curve;  break;
-            case tok::rbracket: --bracket;break;
-            case tok::rbrace:   --brace;  break;
+            case tok::tk_lcurve:   ++curve;  break;
+            case tok::tk_lbracket: ++bracket;break;
+            case tok::tk_lbrace:   ++brace;  break;
+            case tok::tk_rcurve:   --curve;  break;
+            case tok::tk_rbracket: --bracket;break;
+            case tok::tk_rbrace:   --brace;  break;
             default: break;
         }
         // m?1:0 will be recognized as normal parameter
-        if (curve==1 && !bracket && !brace && toks[check_ptr].type==tok::quesmark) {
+        if (curve==1 && !bracket && !brace &&
+            toks[check_ptr].type==tok::tk_quesmark) {
             return false;
         }
-        if (curve==1 && !bracket && !brace && toks[check_ptr].type==tok::colon) {
+        if (curve==1 && !bracket && !brace &&
+            toks[check_ptr].type==tok::tk_colon) {
             return true;
         }
     }
@@ -203,10 +208,10 @@ void parse::update_location(expr* node) {
 
 use_stmt* parse::use_stmt_gen() {
     auto node = new use_stmt(toks[ptr].loc);
-    match(tok::use);
+    match(tok::tk_use);
     node->add_path(id());
-    while(lookahead(tok::dot)) {
-        match(tok::dot);
+    while(lookahead(tok::tk_dot)) {
+        match(tok::tk_dot);
         node->add_path(id());
     }
     update_location(node);
@@ -224,28 +229,28 @@ nil_expr* parse::nil() {
 number_literal* parse::num() {
     auto node = new number_literal(toks[ptr].loc,
         str_to_num(toks[ptr].str.c_str()));
-    match(tok::num);
+    match(tok::tk_num);
     return node;
 }
 
 string_literal* parse::str() {
     auto node = new string_literal(toks[ptr].loc, toks[ptr].str);
-    match(tok::str);
+    match(tok::tk_str);
     return node;
 }
 
 identifier* parse::id() {
     auto node = new identifier(toks[ptr].loc, toks[ptr].str);
-    match(tok::id);
+    match(tok::tk_id);
     return node;
 }
 
 bool_literal* parse::bools() {
     auto node = new bool_literal(toks[ptr].loc, toks[ptr].str=="true");
-    if (lookahead(tok::tktrue)) {
-        match(tok::tktrue);
+    if (lookahead(tok::tk_true)) {
+        match(tok::tk_true);
     } else {
-        match(tok::tkfalse);
+        match(tok::tk_false);
     }
     return node;
 }
@@ -253,148 +258,149 @@ bool_literal* parse::bools() {
 vector_expr* parse::vec() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation
-    // array end with tok::null=0
+    // array end with tok::tk_null = 0
     const tok panic[] = {
-        tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
-        tok::func, tok::var, tok::lcurve, tok::floater,
-        tok::lbrace, tok::lbracket, tok::null
+        tok::tk_id, tok::tk_str, tok::tk_num, tok::tk_true,
+        tok::tk_false, tok::tk_not, tok::tk_sub, tok::tk_nil,
+        tok::tk_func, tok::tk_var, tok::tk_lcurve, tok::tk_floater,
+        tok::tk_lbrace, tok::tk_lbracket, tok::tk_null
     };
     auto node = new vector_expr(toks[ptr].loc);
-    match(tok::lbracket);
-    while(!lookahead(tok::rbracket)) {
+    match(tok::tk_lbracket);
+    while(!lookahead(tok::tk_rbracket)) {
         node->add_element(calc());
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::eof)) {
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_eof)) {
             break;
-        } else if (!lookahead(tok::rbracket) && !check_comma(panic)) {
+        } else if (!lookahead(tok::tk_rbracket) && !check_comma(panic)) {
             break;
         }
     }
     update_location(node);
-    match(tok::rbracket, "expected \"]\" when generating vector");
+    match(tok::tk_rbracket, "expected \"]\" when generating vector");
     return node;
 }
 
 hash_expr* parse::hash() {
     auto node = new hash_expr(toks[ptr].loc);
-    match(tok::lbrace);
-    while(!lookahead(tok::rbrace)) {
+    match(tok::tk_lbrace);
+    while(!lookahead(tok::tk_rbrace)) {
         node->add_member(pair());
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::id) || lookahead(tok::str)) { // first set of hashmember
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_id) || lookahead(tok::tk_str)) {
+            // first set of hashmember
             die(prevspan, "expected \",\" between hash members");
         } else {
             break;
         }
     }
     update_location(node);
-    match(tok::rbrace, "expected \"}\" when generating hash");
+    match(tok::tk_rbrace, "expected \"}\" when generating hash");
     return node;
 }
 
 hash_pair* parse::pair() {
     auto node = new hash_pair(toks[ptr].loc);
-    if (lookahead(tok::id)) {
+    if (lookahead(tok::tk_id)) {
         node->set_name(toks[ptr].str);
-        match(tok::id);
-    } else if (lookahead(tok::str)) {
+        match(tok::tk_id);
+    } else if (lookahead(tok::tk_str)) {
         node->set_name(toks[ptr].str);
-        match(tok::str);
+        match(tok::tk_str);
     } else {
-        match(tok::id, "expected hashmap key");
+        match(tok::tk_id, "expected hashmap key");
     }
-    match(tok::colon);
+    match(tok::tk_colon);
     node->set_value(calc());
     update_location(node);
     return node;
 }
 
 function* parse::func() {
-    ++in_func;
+    ++in_func_depth;
     auto node = new function(toks[ptr].loc);
-    match(tok::func);
-    if (lookahead(tok::lcurve)) {
+    match(tok::tk_func);
+    if (lookahead(tok::tk_lcurve)) {
         params(node);
     }
     node->set_code_block(expression_block());
-    --in_func;
+    --in_func_depth;
     update_location(node);
     return node;
 }
 
 void parse::params(function* func_node) {
-    match(tok::lcurve);
-    while(!lookahead(tok::rcurve)) {
+    match(tok::tk_lcurve);
+    while(!lookahead(tok::tk_rcurve)) {
         auto param = new parameter(toks[ptr].loc);
         param->set_parameter_name(toks[ptr].str);
-        match(tok::id);
-        if (lookahead(tok::eq)) {
-            match(tok::eq);
+        match(tok::tk_id);
+        if (lookahead(tok::tk_eq)) {
+            match(tok::tk_eq);
             param->set_parameter_type(parameter::param_type::default_parameter);
             param->set_default_value(calc());
-        } else if (lookahead(tok::ellipsis)) {
-            match(tok::ellipsis);
+        } else if (lookahead(tok::tk_ellipsis)) {
+            match(tok::tk_ellipsis);
             param->set_parameter_type(parameter::param_type::dynamic_parameter);
         } else {
             param->set_parameter_type(parameter::param_type::normal_parameter);
         }
         update_location(param);
         func_node->add_parameter(param);
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::id)) { // first set of identifier
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_id)) { // first set of identifier
             die(prevspan, "expected \",\" between identifiers");
         } else {
             break;
         }
     }
     update_location(func_node);
-    match(tok::rcurve, "expected \")\" after parameter list");
+    match(tok::tk_rcurve, "expected \")\" after parameter list");
     return;
 }
 
 expr* parse::lcurve_expr() {
-    if (toks[ptr+1].type==tok::var)
+    if (toks[ptr+1].type==tok::tk_var)
         return definition();
     return check_tuple()? multi_assignment():calc();
 }
 
 expr* parse::expression() {
     tok type=toks[ptr].type;
-    if ((type==tok::brk || type==tok::cont) && !in_loop) {
+    if ((type==tok::tk_brk || type==tok::tk_cont) && !in_loop_depth) {
         die(thisspan, "must use break/continue in loops");
     }
-    if (type==tok::ret && !in_func) {
+    if (type==tok::tk_ret && !in_func_depth) {
         die(thisspan, "must use return in functions");
     }
     switch(type) {
-        case tok::use: return use_stmt_gen();
-        case tok::nil:
-        case tok::num:
-        case tok::str:
-        case tok::id:
-        case tok::tktrue:
-        case tok::tkfalse:
-        case tok::func:
-        case tok::lbracket:
-        case tok::lbrace:
-        case tok::sub:
-        case tok::floater:
-        case tok::opnot:   return calc();
-        case tok::var:     return definition();
-        case tok::lcurve:  return lcurve_expr();
-        case tok::rfor:
-        case tok::forindex:
-        case tok::foreach:
-        case tok::rwhile:  return loop();
-        case tok::rif:     return cond();
-        case tok::cont:    return continue_expression();
-        case tok::brk:     return break_expression();
-        case tok::ret:     return return_expression();
-        case tok::semi:    break;
+        case tok::tk_use: return use_stmt_gen();
+        case tok::tk_nil:
+        case tok::tk_num:
+        case tok::tk_str:
+        case tok::tk_id:
+        case tok::tk_true:
+        case tok::tk_false:
+        case tok::tk_func:
+        case tok::tk_lbracket:
+        case tok::tk_lbrace:
+        case tok::tk_sub:
+        case tok::tk_floater:
+        case tok::tk_not: return calc();
+        case tok::tk_var: return definition();
+        case tok::tk_lcurve: return lcurve_expr();
+        case tok::tk_for:
+        case tok::tk_forindex:
+        case tok::tk_foreach:
+        case tok::tk_while: return loop();
+        case tok::tk_if: return cond();
+        case tok::tk_cont: return continue_expression();
+        case tok::tk_brk: return break_expression();
+        case tok::tk_ret: return return_expression();
+        case tok::tk_semi: break;
         default:
             die(thisspan, "incorrect token <"+toks[ptr].str+">");
             next();
@@ -406,27 +412,28 @@ expr* parse::expression() {
 }
 
 code_block* parse::expression_block() {
-    if (lookahead(tok::eof)) {
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected expression block");
         return new code_block(toks[ptr].loc);
     }
     auto node = new code_block(toks[ptr].loc);
-    if (lookahead(tok::lbrace)) {
-        match(tok::lbrace);
-        while(!lookahead(tok::rbrace) && !lookahead(tok::eof)) {
+    if (lookahead(tok::tk_lbrace)) {
+        match(tok::tk_lbrace);
+        while(!lookahead(tok::tk_rbrace) && !lookahead(tok::tk_eof)) {
             node->add_expression(expression());
-            if (lookahead(tok::semi)) {
-                match(tok::semi);
-            } else if (need_semi_check(node->get_expressions().back()) && !lookahead(tok::rbrace)) {
+            if (lookahead(tok::tk_semi)) {
+                match(tok::tk_semi);
+            } else if (need_semi_check(node->get_expressions().back()) &&
+                       !lookahead(tok::tk_rbrace)) {
                 // the last expression can be recognized without semi
                 die(prevspan, "expected \";\" after this token");
             }
         }
-        match(tok::rbrace, "expected \"}\" when generating expressions");
+        match(tok::tk_rbrace, "expected \"}\" when generating expressions");
     } else {
         node->add_expression(expression());
-        if (lookahead(tok::semi)) {
-            match(tok::semi);
+        if (lookahead(tok::tk_semi)) {
+            match(tok::tk_semi);
         }
     }
     update_location(node);
@@ -435,36 +442,38 @@ code_block* parse::expression_block() {
 
 expr* parse::calc() {
     auto node = bitwise_or();
-    if (lookahead(tok::quesmark)) {
+    if (lookahead(tok::tk_quesmark)) {
         // trinocular calculation
         auto tmp = new ternary_operator(toks[ptr].loc);
-        match(tok::quesmark);
+        match(tok::tk_quesmark);
         tmp->set_condition(node);
         tmp->set_left(calc());
-        match(tok::colon);
+        match(tok::tk_colon);
         tmp->set_right(calc());
         node = tmp;
-    } else if (tok::eq<=toks[ptr].type && toks[ptr].type<=tok::lnkeq) {
+    } else if (tok::tk_eq<=toks[ptr].type && toks[ptr].type<=tok::tk_lnkeq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::eq: tmp->set_assignment_type(assignment_expr::assign_type::equal); break;
-            case tok::addeq: tmp->set_assignment_type(assignment_expr::assign_type::add_equal); break;
-            case tok::subeq: tmp->set_assignment_type(assignment_expr::assign_type::sub_equal); break;
-            case tok::multeq: tmp->set_assignment_type(assignment_expr::assign_type::mult_equal); break;
-            case tok::diveq: tmp->set_assignment_type(assignment_expr::assign_type::div_equal); break;
-            case tok::lnkeq: tmp->set_assignment_type(assignment_expr::assign_type::concat_equal); break;
+            case tok::tk_eq: tmp->set_assignment_type(assignment_expr::assign_type::equal); break;
+            case tok::tk_addeq: tmp->set_assignment_type(assignment_expr::assign_type::add_equal); break;
+            case tok::tk_subeq: tmp->set_assignment_type(assignment_expr::assign_type::sub_equal); break;
+            case tok::tk_multeq: tmp->set_assignment_type(assignment_expr::assign_type::mult_equal); break;
+            case tok::tk_diveq: tmp->set_assignment_type(assignment_expr::assign_type::div_equal); break;
+            case tok::tk_lnkeq: tmp->set_assignment_type(assignment_expr::assign_type::concat_equal); break;
             default: break;
         }
         tmp->set_left(node);
         match(toks[ptr].type);
         tmp->set_right(calc());
         node = tmp;
-    } else if (toks[ptr].type==tok::btandeq || toks[ptr].type==tok::btoreq || toks[ptr].type==tok::btxoreq) {
+    } else if (toks[ptr].type==tok::tk_btandeq ||
+               toks[ptr].type==tok::tk_btoreq ||
+               toks[ptr].type==tok::tk_btxoreq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::btandeq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_and_equal); break;
-            case tok::btoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_or_equal); break;
-            case tok::btxoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_xor_equal); break;
+            case tok::tk_btandeq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_and_equal); break;
+            case tok::tk_btoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_or_equal); break;
+            case tok::tk_btxoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_xor_equal); break;
             default: break;
         }
         tmp->set_left(node);
@@ -478,11 +487,11 @@ expr* parse::calc() {
 
 expr* parse::bitwise_or() {
     auto node = bitwise_xor();
-    while(lookahead(tok::btor)) {
+    while(lookahead(tok::tk_btor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::binary_type::bitwise_or);
         tmp->set_left(node);
-        match(tok::btor);
+        match(tok::tk_btor);
         tmp->set_right(bitwise_xor());
         update_location(tmp);
         node = tmp;
@@ -493,11 +502,11 @@ expr* parse::bitwise_or() {
 
 expr* parse::bitwise_xor() {
     auto node = bitwise_and();
-    while(lookahead(tok::btxor)) {
+    while(lookahead(tok::tk_btxor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::binary_type::bitwise_xor);
         tmp->set_left(node);
-        match(tok::btxor);
+        match(tok::tk_btxor);
         tmp->set_right(bitwise_and());
         update_location(tmp);
         node = tmp;
@@ -508,11 +517,11 @@ expr* parse::bitwise_xor() {
 
 expr* parse::bitwise_and() {
     auto node = or_expr();
-    while(lookahead(tok::btand)) {
+    while(lookahead(tok::tk_btand)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::binary_type::bitwise_and);
         tmp->set_left(node);
-        match(tok::btand);
+        match(tok::tk_btand);
         tmp->set_right(or_expr());
         update_location(tmp);
         node = tmp;
@@ -523,11 +532,11 @@ expr* parse::bitwise_and() {
 
 expr* parse::or_expr() {
     auto node = and_expr();
-    while(lookahead(tok::opor)) {
+    while(lookahead(tok::tk_or)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::binary_type::condition_or);
         tmp->set_left(node);
-        match(tok::opor);
+        match(tok::tk_or);
         tmp->set_right(and_expr());
         update_location(tmp);
         node = tmp;
@@ -538,11 +547,11 @@ expr* parse::or_expr() {
 
 expr* parse::and_expr() {
     auto node = cmp_expr();
-    while(lookahead(tok::opand)) {
+    while(lookahead(tok::tk_and)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::binary_type::condition_and);
         tmp->set_left(node);
-        match(tok::opand);
+        match(tok::tk_and);
         tmp->set_right(cmp_expr());
         update_location(tmp);
         node = tmp;
@@ -553,15 +562,15 @@ expr* parse::and_expr() {
 
 expr* parse::cmp_expr() {
     auto node = additive_expr();
-    while(tok::cmpeq<=toks[ptr].type && toks[ptr].type<=tok::geq) {
+    while(tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::cmpeq: tmp->set_operator_type(binary_operator::binary_type::cmpeq); break;
-            case tok::neq: tmp->set_operator_type(binary_operator::binary_type::cmpneq); break;
-            case tok::less: tmp->set_operator_type(binary_operator::binary_type::less); break;
-            case tok::leq: tmp->set_operator_type(binary_operator::binary_type::leq); break;
-            case tok::grt: tmp->set_operator_type(binary_operator::binary_type::grt); break;
-            case tok::geq: tmp->set_operator_type(binary_operator::binary_type::geq); break;
+            case tok::tk_cmpeq: tmp->set_operator_type(binary_operator::binary_type::cmpeq); break;
+            case tok::tk_neq: tmp->set_operator_type(binary_operator::binary_type::cmpneq); break;
+            case tok::tk_less: tmp->set_operator_type(binary_operator::binary_type::less); break;
+            case tok::tk_leq: tmp->set_operator_type(binary_operator::binary_type::leq); break;
+            case tok::tk_grt: tmp->set_operator_type(binary_operator::binary_type::grt); break;
+            case tok::tk_geq: tmp->set_operator_type(binary_operator::binary_type::geq); break;
             default: break;
         }
         tmp->set_left(node);
@@ -576,12 +585,14 @@ expr* parse::cmp_expr() {
 
 expr* parse::additive_expr() {
     auto node = multive_expr();
-    while(lookahead(tok::add) || lookahead(tok::sub) || lookahead(tok::floater)) {
+    while(lookahead(tok::tk_add) ||
+          lookahead(tok::tk_sub) ||
+          lookahead(tok::tk_floater)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::add: tmp->set_operator_type(binary_operator::binary_type::add); break;
-            case tok::sub: tmp->set_operator_type(binary_operator::binary_type::sub); break;
-            case tok::floater: tmp->set_operator_type(binary_operator::binary_type::concat); break;
+            case tok::tk_add: tmp->set_operator_type(binary_operator::binary_type::add); break;
+            case tok::tk_sub: tmp->set_operator_type(binary_operator::binary_type::sub); break;
+            case tok::tk_floater: tmp->set_operator_type(binary_operator::binary_type::concat); break;
             default: break;
         }
         tmp->set_left(node);
@@ -595,17 +606,23 @@ expr* parse::additive_expr() {
 }
 
 expr* parse::multive_expr() {
-    expr* node=(lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar();
-    while(lookahead(tok::mult) || lookahead(tok::div)) {
+    expr* node=(lookahead(tok::tk_sub) ||
+                lookahead(tok::tk_not) ||
+                lookahead(tok::tk_floater))? unary():scalar();
+    while(lookahead(tok::tk_mult) || lookahead(tok::tk_div)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        if (lookahead(tok::mult)) {
+        if (lookahead(tok::tk_mult)) {
             tmp->set_operator_type(binary_operator::binary_type::mult);
         } else {
             tmp->set_operator_type(binary_operator::binary_type::div);
         }
         tmp->set_left(node);
         match(toks[ptr].type);
-        tmp->set_right((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
+        tmp->set_right(
+            (lookahead(tok::tk_sub) ||
+             lookahead(tok::tk_not) ||
+             lookahead(tok::tk_floater))? unary():scalar()
+        );
         update_location(tmp);
         node = tmp;
     }
@@ -616,56 +633,60 @@ expr* parse::multive_expr() {
 unary_operator* parse::unary() {
     auto node = new unary_operator(toks[ptr].loc);
     switch(toks[ptr].type) {
-        case tok::sub:
+        case tok::tk_sub:
             node->set_operator_type(unary_operator::unary_type::negative);
-            match(tok::sub);
+            match(tok::tk_sub);
             break;
-        case tok::opnot:
+        case tok::tk_not:
             node->set_operator_type(unary_operator::unary_type::logical_not);
-            match(tok::opnot);
+            match(tok::tk_not);
             break;
-        case tok::floater:
+        case tok::tk_floater:
             node->set_operator_type(unary_operator::unary_type::bitwise_not);
-            match(tok::floater);
+            match(tok::tk_floater);
             break;
         default: break;
     }
-    node->set_value((lookahead(tok::sub) || lookahead(tok::opnot) || lookahead(tok::floater))?unary():scalar());
+    node->set_value(
+        (lookahead(tok::tk_sub) ||
+         lookahead(tok::tk_not) ||
+         lookahead(tok::tk_floater))? unary():scalar()
+    );
     update_location(node);
     return node;
 }
 
 expr* parse::scalar() {
     expr* node = nullptr;
-    if (lookahead(tok::nil)) {
+    if (lookahead(tok::tk_nil)) {
         node = nil();
-        match(tok::nil);
-    } else if (lookahead(tok::num)) {
+        match(tok::tk_nil);
+    } else if (lookahead(tok::tk_num)) {
         node = num();
-    } else if (lookahead(tok::str)) {
+    } else if (lookahead(tok::tk_str)) {
         node = str();
-    } else if (lookahead(tok::id)) {
+    } else if (lookahead(tok::tk_id)) {
         node = id();
-    } else if (lookahead(tok::tktrue) || lookahead(tok::tkfalse)) {
+    } else if (lookahead(tok::tk_true) || lookahead(tok::tk_false)) {
         node = bools();
-    } else if (lookahead(tok::func)) {
+    } else if (lookahead(tok::tk_func)) {
         node = func();
-    } else if (lookahead(tok::lbracket)) {
+    } else if (lookahead(tok::tk_lbracket)) {
         node = vec();
-    } else if (lookahead(tok::lbrace)) {
+    } else if (lookahead(tok::tk_lbrace)) {
         node = hash();
-    } else if (lookahead(tok::lcurve)) {
+    } else if (lookahead(tok::tk_lcurve)) {
         const auto& loc = toks[ptr].loc;
-        match(tok::lcurve);
+        match(tok::tk_lcurve);
         node = calc();
         node->set_begin(loc.begin_line, loc.begin_column);
         update_location(node);
-        match(tok::rcurve);
-    } else if (lookahead(tok::var)) {
-        match(tok::var);
+        match(tok::tk_rcurve);
+    } else if (lookahead(tok::tk_var)) {
+        match(tok::tk_var);
         auto def_node = new definition_expr(toks[ptr].loc);
         def_node->set_identifier(id());
-        match(tok::eq);
+        match(tok::tk_eq);
         def_node->set_value(calc());
         node = def_node;
     } else {
@@ -691,9 +712,9 @@ expr* parse::scalar() {
 
 call* parse::call_scalar() {
     switch(toks[ptr].type) {
-        case tok::lcurve:   return callf(); break;
-        case tok::lbracket: return callv(); break;
-        case tok::dot:      return callh(); break;
+        case tok::tk_lcurve:   return callf(); break;
+        case tok::tk_lbracket: return callv(); break;
+        case tok::tk_dot:      return callh(); break;
         default: break;
     }
     // unreachable
@@ -702,32 +723,32 @@ call* parse::call_scalar() {
 
 call_hash* parse::callh() {
     const auto& begin_loc = toks[ptr].loc;
-    match(tok::dot);
+    match(tok::tk_dot);
     auto node = new call_hash(begin_loc, toks[ptr].str);
     update_location(node);
-    match(tok::id, "expected hashmap key"); // get key
+    match(tok::tk_id, "expected hashmap key"); // get key
     return node;
 }
 
 call_vector* parse::callv() {
     // panic set for this token is not ','
     // this is the FIRST set of subvec
-    // array end with tok::null=0
+    // array end with tok::tk_null = 0
     const tok panic[] = {
-        tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
-        tok::func, tok::var, tok::lcurve, tok::floater,
-        tok::lbrace, tok::lbracket, tok::colon, tok::null
+        tok::tk_id, tok::tk_str, tok::tk_num, tok::tk_true,
+        tok::tk_false, tok::tk_not, tok::tk_sub, tok::tk_nil,
+        tok::tk_func, tok::tk_var, tok::tk_lcurve, tok::tk_floater,
+        tok::tk_lbrace, tok::tk_lbracket, tok::tk_colon, tok::tk_null
     };
     auto node = new call_vector(toks[ptr].loc);
-    match(tok::lbracket);
-    while(!lookahead(tok::rbracket)) {
+    match(tok::tk_lbracket);
+    while(!lookahead(tok::tk_rbracket)) {
         node->add_slice(subvec());
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::eof)) {
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_eof)) {
             break;
-        } else if (!lookahead(tok::rbracket) && !check_comma(panic)) {
+        } else if (!lookahead(tok::tk_rbracket) && !check_comma(panic)) {
             break;
         }
     }
@@ -735,43 +756,47 @@ call_vector* parse::callv() {
         die(thisspan, "expected index value");
     }
     update_location(node);
-    match(tok::rbracket, "expected \"]\" when calling vector");
+    match(tok::tk_rbracket, "expected \"]\" when calling vector");
     return node;
 }
 
 call_function* parse::callf() {
     // panic set for this token is not ','
     // this is the FIRST set of calculation/hashmember
-    // array end with tok::null=0
+    // array end with tok::tk_null = 0
     const tok panic[] = {
-        tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
-        tok::func, tok::var, tok::lcurve, tok::floater,
-        tok::lbrace, tok::lbracket, tok::null
+        tok::tk_id, tok::tk_str, tok::tk_num, tok::tk_true,
+        tok::tk_false, tok::tk_not, tok::tk_sub, tok::tk_nil,
+        tok::tk_func, tok::tk_var, tok::tk_lcurve, tok::tk_floater,
+        tok::tk_lbrace, tok::tk_lbracket, tok::tk_null
     };
     auto node = new call_function(toks[ptr].loc);
     bool special_call=check_special_call();
-    match(tok::lcurve);
-    while(!lookahead(tok::rcurve)) {
+    match(tok::tk_lcurve);
+    while(!lookahead(tok::tk_rcurve)) {
         node->add_argument(special_call?pair():calc());
-        if (lookahead(tok::comma))
-            match(tok::comma);
-        else if (lookahead(tok::eof))
+        if (lookahead(tok::tk_comma))
+            match(tok::tk_comma);
+        else if (lookahead(tok::tk_eof))
             break;
-        else if (!lookahead(tok::rcurve) && !check_comma(panic))
+        else if (!lookahead(tok::tk_rcurve) && !check_comma(panic))
             break;
     }
     update_location(node);
-    match(tok::rcurve, "expected \")\" when calling function");
+    match(tok::tk_rcurve, "expected \")\" when calling function");
     return node;
 }
 
 slice_vector* parse::subvec() {
     auto node = new slice_vector(toks[ptr].loc);
-    node->set_begin(lookahead(tok::colon)?nil():calc());
-    if (lookahead(tok::colon)) {
-        match(tok::colon);
-        node->set_end((lookahead(tok::comma) || lookahead(tok::rbracket))?nil():calc());
+    node->set_begin(lookahead(tok::tk_colon)?nil():calc());
+    if (lookahead(tok::tk_colon)) {
+        match(tok::tk_colon);
+        node->set_end(
+            (lookahead(tok::tk_comma) || lookahead(tok::tk_rbracket))?
+                nil():
+                calc()
+        );
     }
     update_location(node);
     return node;
@@ -779,18 +804,18 @@ slice_vector* parse::subvec() {
 
 expr* parse::definition() {
     auto node = new definition_expr(toks[ptr].loc);
-    if (lookahead(tok::var)) {
-        match(tok::var);
+    if (lookahead(tok::tk_var)) {
+        match(tok::tk_var);
         switch(toks[ptr].type) {
-            case tok::id: node->set_identifier(id());break;
-            case tok::lcurve: node->set_multi_define(outcurve_def());break;
+            case tok::tk_id: node->set_identifier(id());break;
+            case tok::tk_lcurve: node->set_multi_define(outcurve_def());break;
             default: die(thisspan, "expected identifier");break;
         }
-    } else if (lookahead(tok::lcurve)) {
+    } else if (lookahead(tok::tk_lcurve)) {
         node->set_multi_define(incurve_def());
     }
-    match(tok::eq);
-    if (lookahead(tok::lcurve)) {
+    match(tok::tk_eq);
+    if (lookahead(tok::tk_lcurve)) {
         check_tuple()?
             node->set_tuple(multi_scalar()):
             node->set_value(calc());
@@ -803,33 +828,33 @@ expr* parse::definition() {
 
 multi_identifier* parse::incurve_def() {
     const auto& loc = toks[ptr].loc;
-    match(tok::lcurve);
-    match(tok::var);
+    match(tok::tk_lcurve);
+    match(tok::tk_var);
     auto node = multi_id();
     update_location(node);
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     node->set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
 multi_identifier* parse::outcurve_def() {
     const auto& loc = toks[ptr].loc;
-    match(tok::lcurve);
+    match(tok::tk_lcurve);
     auto node = multi_id();
     update_location(node);
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     node->set_begin(loc.begin_line, loc.begin_column);
     return node;
 }
 
 multi_identifier* parse::multi_id() {
     auto node = new multi_identifier(toks[ptr].loc);
-    while(!lookahead(tok::eof)) {
+    while(!lookahead(tok::tk_eof)) {
         // only identifier is allowed here
         node->add_var(id());
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::id)) { // first set of identifier
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_id)) { // first set of identifier
             die(prevspan, "expected \",\" between identifiers");
         } else {
             break;
@@ -843,37 +868,37 @@ tuple_expr* parse::multi_scalar() {
     // if check_call_memory is true,
     // we will check if value called here can reach a memory space
     const tok panic[] = {
-        tok::id, tok::str, tok::num, tok::tktrue,
-        tok::tkfalse, tok::opnot, tok::sub, tok::nil,
-        tok::func, tok::var, tok::lcurve, tok::floater,
-        tok::lbrace, tok::lbracket, tok::null
+        tok::tk_id, tok::tk_str, tok::tk_num, tok::tk_true,
+        tok::tk_false, tok::tk_not, tok::tk_sub, tok::tk_nil,
+        tok::tk_func, tok::tk_var, tok::tk_lcurve, tok::tk_floater,
+        tok::tk_lbrace, tok::tk_lbracket, tok::tk_null
     };
     auto node = new tuple_expr(toks[ptr].loc);
-    match(tok::lcurve);
-    while(!lookahead(tok::rcurve)) {
+    match(tok::tk_lcurve);
+    while(!lookahead(tok::tk_rcurve)) {
         node->add_element(calc());
-        if (lookahead(tok::comma)) {
-            match(tok::comma);
-        } else if (lookahead(tok::eof)) {
+        if (lookahead(tok::tk_comma)) {
+            match(tok::tk_comma);
+        } else if (lookahead(tok::tk_eof)) {
             break;
-        } else if (!lookahead(tok::rcurve) && !check_comma(panic)) {
+        } else if (!lookahead(tok::tk_rcurve) && !check_comma(panic)) {
             break;
         }
     }
     update_location(node);
-    match(tok::rcurve, "expected \")\" after multi-scalar");
+    match(tok::tk_rcurve, "expected \")\" after multi-scalar");
     return node;
 }
 
 multi_assign* parse::multi_assignment() {
     auto node = new multi_assign(toks[ptr].loc);
     node->set_tuple(multi_scalar());
-    match(tok::eq);
-    if (lookahead(tok::eof)) {
+    match(tok::tk_eq);
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected value list");
         return node;
     }
-    if (lookahead(tok::lcurve)) {
+    if (lookahead(tok::tk_lcurve)) {
         node->set_value(check_tuple()?multi_scalar():calc());
     } else {
         node->set_value(calc());
@@ -883,28 +908,28 @@ multi_assign* parse::multi_assignment() {
 }
 
 expr* parse::loop() {
-    ++in_loop;
+    ++in_loop_depth;
     expr* node = nullptr;
     switch(toks[ptr].type) {
-        case tok::rwhile:  node = while_loop(); break;
-        case tok::rfor:    node = for_loop();   break;
-        case tok::forindex:
-        case tok::foreach: node = forei_loop(); break;
+        case tok::tk_while:   node = while_loop(); break;
+        case tok::tk_for:     node = for_loop();   break;
+        case tok::tk_forindex:
+        case tok::tk_foreach: node = forei_loop(); break;
         default:
             die(thisspan, "unreachable");
             node = null();
             break;
     }
-    --in_loop;
+    --in_loop_depth;
     return node;
 }
 
 while_expr* parse::while_loop() {
     auto node = new while_expr(toks[ptr].loc);
-    match(tok::rwhile);
-    match(tok::lcurve);
+    match(tok::tk_while);
+    match(tok::tk_lcurve);
     node->set_condition(calc());
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     node->set_code_block(expression_block());
     update_location(node);
     return node;
@@ -912,45 +937,45 @@ while_expr* parse::while_loop() {
 
 for_expr* parse::for_loop() {
     auto node = new for_expr(toks[ptr].loc);
-    match(tok::rfor);
-    match(tok::lcurve);
+    match(tok::tk_for);
+    match(tok::tk_lcurve);
 
     // first expression
-    if (lookahead(tok::eof)) {
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected definition");
     }
-    if (lookahead(tok::semi)) {
+    if (lookahead(tok::tk_semi)) {
         node->set_initial(null());
-    } else if (lookahead(tok::var)) {
+    } else if (lookahead(tok::tk_var)) {
         node->set_initial(definition());
-    } else if (lookahead(tok::lcurve)) {
+    } else if (lookahead(tok::tk_lcurve)) {
         node->set_initial(lcurve_expr());
     } else {
         node->set_initial(calc());
     }
-    match(tok::semi, "expected \";\" in for(;;)");
+    match(tok::tk_semi, "expected \";\" in for(;;)");
 
     // conditional expression
-    if (lookahead(tok::eof)) {
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected conditional expr");
     }
-    if (lookahead(tok::semi)) {
+    if (lookahead(tok::tk_semi)) {
         node->set_condition(null());
     } else {
         node->set_condition(calc());
     }
-    match(tok::semi, "expected \";\" in for(;;)");
+    match(tok::tk_semi, "expected \";\" in for(;;)");
 
     //after loop expression
-    if (lookahead(tok::eof)) {
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected calculation");
     }
-    if (lookahead(tok::rcurve)) {
+    if (lookahead(tok::tk_rcurve)) {
         node->set_step(null());
     } else {
         node->set_step(calc());
     }
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     node->set_code_block(expression_block());
     update_location(node);
     return node;
@@ -959,29 +984,29 @@ for_expr* parse::for_loop() {
 forei_expr* parse::forei_loop() {
     auto node = new forei_expr(toks[ptr].loc);
     switch(toks[ptr].type) {
-        case tok::forindex:
+        case tok::tk_forindex:
             node->set_loop_type(forei_expr::forei_loop_type::forindex);
-            match(tok::forindex);
+            match(tok::tk_forindex);
             break;
-        case tok::foreach: 
+        case tok::tk_foreach: 
             node->set_loop_type(forei_expr::forei_loop_type::foreach);
-            match(tok::foreach);
+            match(tok::tk_foreach);
             break;
         default: break;
     }
-    match(tok::lcurve);
+    match(tok::tk_lcurve);
     // first expression
     // foreach/forindex must have an iterator to loop through
-    if (!lookahead(tok::var) && !lookahead(tok::id)) {
+    if (!lookahead(tok::tk_var) && !lookahead(tok::tk_id)) {
         die(thisspan, "expected iterator");
     }
     node->set_iterator(iter_gen());
-    match(tok::semi, "expected \";\" in foreach/forindex(iter;vector)");
-    if (lookahead(tok::eof)) {
+    match(tok::tk_semi, "expected \";\" in foreach/forindex(iter;vector)");
+    if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected vector");
     }
     node->set_value(calc());
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     node->set_code_block(expression_block());
     update_location(node);
     return node;
@@ -990,8 +1015,8 @@ forei_expr* parse::forei_loop() {
 iter_expr* parse::iter_gen() {
     auto node = new iter_expr(toks[ptr].loc);
     // definition
-    if (lookahead(tok::var)) {
-        match(tok::var);
+    if (lookahead(tok::tk_var)) {
+        match(tok::tk_var);
         node->set_name(id());
         node->set_is_definition(true);
         update_location(node);
@@ -1022,30 +1047,30 @@ condition_expr* parse::cond() {
 
     // generate if
     auto ifnode = new if_expr(toks[ptr].loc);
-    match(tok::rif);
-    match(tok::lcurve);
+    match(tok::tk_if);
+    match(tok::tk_lcurve);
     ifnode->set_condition(calc());
-    match(tok::rcurve);
+    match(tok::tk_rcurve);
     ifnode->set_code_block(expression_block());
     update_location(ifnode);
     node->set_if_statement(ifnode);
 
     // generate elsif
-    while(lookahead(tok::elsif)) {
+    while(lookahead(tok::tk_elsif)) {
         auto elsifnode = new if_expr(toks[ptr].loc);
-        match(tok::elsif);
-        match(tok::lcurve);
+        match(tok::tk_elsif);
+        match(tok::tk_lcurve);
         elsifnode->set_condition(calc());
-        match(tok::rcurve);
+        match(tok::tk_rcurve);
         elsifnode->set_code_block(expression_block());
         update_location(elsifnode);
         node->add_elsif_statement(elsifnode);
     }
 
     // generate else
-    if (lookahead(tok::relse)) {
+    if (lookahead(tok::tk_else)) {
         auto elsenode = new if_expr(toks[ptr].loc);
-        match(tok::relse);
+        match(tok::tk_else);
         elsenode->set_code_block(expression_block());
         update_location(elsenode);
         node->set_else_statement(elsenode);
@@ -1056,26 +1081,26 @@ condition_expr* parse::cond() {
 
 continue_expr* parse::continue_expression() {
     auto node = new continue_expr(toks[ptr].loc);
-    match(tok::cont);
+    match(tok::tk_cont);
     return node;
 }
 
 break_expr* parse::break_expression() {
     auto node = new break_expr(toks[ptr].loc);
-    match(tok::brk);
+    match(tok::tk_brk);
     return node;
 }
 
 return_expr* parse::return_expression() {
     auto node = new return_expr(toks[ptr].loc);
-    match(tok::ret);
+    match(tok::tk_ret);
     tok type = toks[ptr].type;
-    if (type==tok::nil || type==tok::num ||
-        type==tok::str || type==tok::id ||
-        type==tok::func || type==tok::sub ||
-        type==tok::opnot || type==tok::lcurve ||
-        type==tok::lbracket || type==tok::lbrace ||
-        type==tok::tktrue || type==tok::tkfalse) {
+    if (type==tok::tk_nil || type==tok::tk_num ||
+        type==tok::tk_str || type==tok::tk_id ||
+        type==tok::tk_func || type==tok::tk_sub ||
+        type==tok::tk_not || type==tok::tk_lcurve ||
+        type==tok::tk_lbracket || type==tok::tk_lbrace ||
+        type==tok::tk_true || type==tok::tk_false) {
         node->set_value(calc());
     } else {
         node->set_value(nil());

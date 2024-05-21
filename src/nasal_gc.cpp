@@ -380,7 +380,7 @@ void gc::context_change(nas_co* co) {
 }
 
 void gc::context_reserve() {
-    // pc=0 means this coroutine is finished
+    // pc = 0 means this coroutine is finished
     cort->status = running_context->pc?
         nas_co::status::suspended:
         nas_co::status::dead;

@@ -239,9 +239,9 @@ void codegen::func_gen(function* node) {
         }
     }
 
-    usize newf=code.size();
+    const auto newf = code.size();
     emit(op_newf, 0, node->get_location());
-    usize lsize=code.size();
+    const auto lsize = code.size();
     emit(op_intl, 0, node->get_location());
     
     // add special keyword 'me' into symbol table

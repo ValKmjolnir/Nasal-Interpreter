@@ -16,66 +16,66 @@
 
 namespace nasal {
 
-enum class tok:u32 {
-    null=0,   // null token (default token type)
-    num,      // number literal
-    str,      // string literal
-    id,       // identifier
-    tktrue,   // keyword true
-    tkfalse,  // keyword false
-    use,      // keyword use
-    rfor,     // loop keyword for
-    forindex, // loop keyword forindex
-    foreach,  // loop keyword foreach
-    rwhile,   // loop keyword while
-    var,      // keyword for definition
-    func,     // keyword for definition of function
-    brk,      // loop keyword break
-    cont,     // loop keyword continue
-    ret,      // function keyword return
-    rif,      // condition expression keyword if
-    elsif,    // condition expression keyword elsif
-    relse,    // condition expression keyword else
-    nil,      // nil literal
-    lcurve,   // (
-    rcurve,   // )
-    lbracket, // [
-    rbracket, // ]
-    lbrace,   // {
-    rbrace,   // }
-    semi,     // ;
-    opand,    // operator and
-    opor,     // operator or
-    comma,    // ,
-    dot,      // .
-    ellipsis, // ...
-    quesmark, // ?
-    colon,    // :
-    add,      // operator +
-    sub,      // operator -
-    mult,     // operator *
-    div,      // operator /
-    floater,  // operator ~ and binary operator ~
-    btand,    // bitwise operator &
-    btor,     // bitwise operator |
-    btxor,    // bitwise operator ^
-    opnot,    // operator !
-    eq,       // operator =
-    addeq,    // operator +=
-    subeq,    // operator -=
-    multeq,   // operator *=
-    diveq,    // operator /=
-    lnkeq,    // operator ~=
-    btandeq,  // operator &=
-    btoreq,   // operator |=
-    btxoreq,  // operator ^=
-    cmpeq,    // operator ==
-    neq,      // operator !=
-    less,     // operator <
-    leq,      // operator <=
-    grt,      // operator >
-    geq,      // operator >=
-    eof       // <eof> end of token list
+enum class tok {
+    tk_null = 0, // null token (default token type)
+    tk_num,      // number literal
+    tk_str,      // string literal
+    tk_id,       // identifier
+    tk_true,     // keyword true
+    tk_false,    // keyword false
+    tk_use,      // keyword use
+    tk_for,      // loop keyword for
+    tk_forindex, // loop keyword forindex
+    tk_foreach,  // loop keyword foreach
+    tk_while,    // loop keyword while
+    tk_var,      // keyword for definition
+    tk_func,     // keyword for definition of function
+    tk_brk,      // loop keyword break
+    tk_cont,     // loop keyword continue
+    tk_ret,      // function keyword return
+    tk_if,       // condition expression keyword if
+    tk_elsif,    // condition expression keyword elsif
+    tk_else,     // condition expression keyword else
+    tk_nil,      // nil literal
+    tk_lcurve,   // (
+    tk_rcurve,   // )
+    tk_lbracket, // [
+    tk_rbracket, // ]
+    tk_lbrace,   // {
+    tk_rbrace,   // }
+    tk_semi,     // ;
+    tk_and,      // operator and
+    tk_or,       // operator or
+    tk_comma,    // ,
+    tk_dot,      // .
+    tk_ellipsis, // ...
+    tk_quesmark, // ?
+    tk_colon,    // :
+    tk_add,      // operator +
+    tk_sub,      // operator -
+    tk_mult,     // operator *
+    tk_div,      // operator /
+    tk_floater,  // operator ~ and binary operator ~
+    tk_btand,    // bitwise operator &
+    tk_btor,     // bitwise operator |
+    tk_btxor,    // bitwise operator ^
+    tk_not,      // operator !
+    tk_eq,       // operator =
+    tk_addeq,    // operator +=
+    tk_subeq,    // operator -=
+    tk_multeq,   // operator *=
+    tk_diveq,    // operator /=
+    tk_lnkeq,    // operator ~=
+    tk_btandeq,  // operator &=
+    tk_btoreq,   // operator |=
+    tk_btxoreq,  // operator ^=
+    tk_cmpeq,    // operator ==
+    tk_neq,      // operator !=
+    tk_less,     // operator <
+    tk_leq,      // operator <=
+    tk_grt,      // operator >
+    tk_geq,      // operator >=
+    tk_eof       // <eof> end of token list
 };
 
 struct token {
@@ -99,60 +99,60 @@ private:
     std::vector<token> toks;
 
     const std::unordered_map<std::string, tok> token_mapper = {
-        {"use"     ,tok::use     },
-        {"true"    ,tok::tktrue  },
-        {"false"   ,tok::tkfalse },
-        {"for"     ,tok::rfor    },
-        {"forindex",tok::forindex},
-        {"foreach" ,tok::foreach },
-        {"while"   ,tok::rwhile  },
-        {"var"     ,tok::var     },
-        {"func"    ,tok::func    },
-        {"break"   ,tok::brk     },
-        {"continue",tok::cont    },
-        {"return"  ,tok::ret     },
-        {"if"      ,tok::rif     },
-        {"elsif"   ,tok::elsif   },
-        {"else"    ,tok::relse   },
-        {"nil"     ,tok::nil     },
-        {"("       ,tok::lcurve  },
-        {")"       ,tok::rcurve  },
-        {"["       ,tok::lbracket},
-        {"]"       ,tok::rbracket},
-        {"{"       ,tok::lbrace  },
-        {"}"       ,tok::rbrace  },
-        {";"       ,tok::semi    },
-        {"and"     ,tok::opand   },
-        {"or"      ,tok::opor    },
-        {","       ,tok::comma   },
-        {"."       ,tok::dot     },
-        {"..."     ,tok::ellipsis},
-        {"?"       ,tok::quesmark},
-        {":"       ,tok::colon   },
-        {"+"       ,tok::add     },
-        {"-"       ,tok::sub     },
-        {"*"       ,tok::mult    },
-        {"/"       ,tok::div     },
-        {"~"       ,tok::floater },
-        {"&"       ,tok::btand   },
-        {"|"       ,tok::btor    },
-        {"^"       ,tok::btxor   },
-        {"!"       ,tok::opnot   },
-        {"="       ,tok::eq      },
-        {"+="      ,tok::addeq   },
-        {"-="      ,tok::subeq   },
-        {"*="      ,tok::multeq  },
-        {"/="      ,tok::diveq   },
-        {"~="      ,tok::lnkeq   },
-        {"&="      ,tok::btandeq },
-        {"|="      ,tok::btoreq  },
-        {"^="      ,tok::btxoreq },
-        {"=="      ,tok::cmpeq   },
-        {"!="      ,tok::neq     },
-        {"<"       ,tok::less    },
-        {"<="      ,tok::leq     },
-        {">"       ,tok::grt     },
-        {">="      ,tok::geq     }
+        {"use"     , tok::tk_use     },
+        {"true"    , tok::tk_true    },
+        {"false"   , tok::tk_false   },
+        {"for"     , tok::tk_for     },
+        {"forindex", tok::tk_forindex},
+        {"foreach" , tok::tk_foreach },
+        {"while"   , tok::tk_while   },
+        {"var"     , tok::tk_var     },
+        {"func"    , tok::tk_func    },
+        {"break"   , tok::tk_brk     },
+        {"continue", tok::tk_cont    },
+        {"return"  , tok::tk_ret     },
+        {"if"      , tok::tk_if      },
+        {"elsif"   , tok::tk_elsif   },
+        {"else"    , tok::tk_else    },
+        {"nil"     , tok::tk_nil     },
+        {"("       , tok::tk_lcurve  },
+        {")"       , tok::tk_rcurve  },
+        {"["       , tok::tk_lbracket},
+        {"]"       , tok::tk_rbracket},
+        {"{"       , tok::tk_lbrace  },
+        {"}"       , tok::tk_rbrace  },
+        {";"       , tok::tk_semi    },
+        {"and"     , tok::tk_and     },
+        {"or"      , tok::tk_or      },
+        {","       , tok::tk_comma   },
+        {"."       , tok::tk_dot     },
+        {"..."     , tok::tk_ellipsis},
+        {"?"       , tok::tk_quesmark},
+        {":"       , tok::tk_colon   },
+        {"+"       , tok::tk_add     },
+        {"-"       , tok::tk_sub     },
+        {"*"       , tok::tk_mult    },
+        {"/"       , tok::tk_div     },
+        {"~"       , tok::tk_floater },
+        {"&"       , tok::tk_btand   },
+        {"|"       , tok::tk_btor    },
+        {"^"       , tok::tk_btxor   },
+        {"!"       , tok::tk_not     },
+        {"="       , tok::tk_eq      },
+        {"+="      , tok::tk_addeq   },
+        {"-="      , tok::tk_subeq   },
+        {"*="      , tok::tk_multeq  },
+        {"/="      , tok::tk_diveq   },
+        {"~="      , tok::tk_lnkeq   },
+        {"&="      , tok::tk_btandeq },
+        {"|="      , tok::tk_btoreq  },
+        {"^="      , tok::tk_btxoreq },
+        {"=="      , tok::tk_cmpeq   },
+        {"!="      , tok::tk_neq     },
+        {"<"       , tok::tk_less    },
+        {"<="      , tok::tk_leq     },
+        {">"       , tok::tk_grt     },
+        {">="      , tok::tk_geq     }
     };
 
     tok get_type(const std::string&);
