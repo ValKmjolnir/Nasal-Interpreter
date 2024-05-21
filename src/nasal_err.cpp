@@ -71,7 +71,7 @@ std::ostream& reset(std::ostream& s) {
     return s;
 }
 
-void flstream::load(const std::string& f) {
+void filestream::load(const std::string& f) {
     if (file==f) { // don't need to load a loaded file
         return;
     }

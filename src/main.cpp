@@ -88,7 +88,9 @@ std::ostream& logo(std::ostream& out) {
     << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
     << "\n"
-    << "presented by fgprc members - http://fgprc.org.cn\n"
+    << "presented by fgprc members\n"
+    << "  - fgprc    : http://fgprc.org\n"
+    << "  - fgprc.cn : http://fgprc.org.cn\n"
     << "\n"
     << "input <nasal -h> to get help .\n\n";
     return out;
