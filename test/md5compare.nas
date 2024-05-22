@@ -1,7 +1,7 @@
 use test.md5_self;
 use std.process_bar;
 use std.file;
-use std.os;
+use std.runtime;
 use std.io;
 use std.math;
 
@@ -101,8 +101,6 @@ var randomchecksum = func() {
     }
 }
 
-if (os.platform()=="windows") {
-    system("chcp 65001");
-}
+runtime.windows.set_utf8_output();
 filechecksum();
 randomchecksum();

@@ -2,7 +2,6 @@ use module.libkey;
 use std.list;
 use std.runtime;
 use std.coroutine;
-use std.os;
 use std.unix;
 
 var game = func(x,y) {
@@ -130,8 +129,7 @@ var co=coroutine.create(func() {
 var main = func(argv) {
     var should_skip=(size(argv)!=0 and argv[0]=="--skip");
     # enable unicode
-    if (os.platform()=="windows")
-        system("chcp 65001");
+    runtime.windows.set_utf8_output();
     print("\ec");
 
     var g=game(15,10);
