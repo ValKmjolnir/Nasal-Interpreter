@@ -2,6 +2,10 @@
 
 #include "ast_visitor.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <iostream>
 #include <cstring>
 #include <sstream>
@@ -89,7 +93,19 @@ public:
 
 public:
     void dump(code_block* root) {
+#ifdef _WIN32
+        // store previous code page
+        auto cp = GetConsoleOutputCP();
+        // allow 65001 code page
+        SetConsoleOutputCP(CP_UTF8);
+#endif
+
         root->accept(this);
+
+#ifdef _WIN32
+        // restore previous code page
+        SetConsoleOutputCP(cp);
+#endif
     }
 };
 

@@ -27,3 +27,9 @@ var gc = {
     },
     info: func() {return __gcinfo;}
 };
+
+var windows = {
+    set_utf8_output: func() {
+        return __set_utf8_output;
+    }
+};
