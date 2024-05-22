@@ -103,12 +103,20 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 
 ![usage](../doc/gif/help.gif)
 
-如果你是 `Windows` 用户且想正常输出unicode，在nasal代码里写这个来开启unicode代码页:
+如果你是 `Windows` 用户且想正常输出 unicode，可以这样开启 unicode 代码页:
 
 ```javascript
 if (os.platform()=="windows") {
     system("chcp 65001");
 }
+```
+
+或者使用 `std.runtime.windows.set_utf8_output()`:
+
+```javascript
+use std.runtime;
+
+runtime.windows.set_utf8_output();
 ```
 
 ## __与andy解释器的不同之处__
