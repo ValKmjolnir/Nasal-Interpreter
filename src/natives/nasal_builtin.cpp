@@ -1,6 +1,10 @@
 ﻿#include "natives/nasal_builtin.h"
 #include <chrono>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace nasal {
 
 var builtin_unsafe(context* ctx, gc* ngc) {
@@ -717,6 +721,15 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
     return ngc->newstr(name);
 }
 
+var builtin_set_utf8_output(context* ctx, gc* ngc) {
+#ifdef _WIN32
+    // allow 65001 code page
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+    // do nothing on other platforms
+    return nil;
+}
+
 nasal_builtin_table builtin[] = {
     {"__print", builtin_print},
     {"__println", builtin_println},
@@ -763,6 +776,7 @@ nasal_builtin_table builtin[] = {
     {"__gcinfo", builtin_gcinfo},
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
+    {"__set_utf8_output", builtin_set_utf8_output},
     {nullptr, nullptr}
 };
 

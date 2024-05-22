@@ -81,6 +81,9 @@ var builtin_gcinfo(context*, gc*);
 var builtin_logtime(context*, gc*);
 var builtin_ghosttype(context*, gc*);
 
+// only useful on windows platform
+var builtin_set_utf8_output(context*, gc*);
+
 // register builtin function's name and it's address here in this table below
 // this table must end with {nullptr, nullptr}
 struct nasal_builtin_table {
