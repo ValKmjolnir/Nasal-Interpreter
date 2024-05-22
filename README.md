@@ -117,6 +117,14 @@ if (os.platform()=="windows") {
 }
 ```
 
+Or use `std.runtime.windows.set_utf8_output()`:
+
+```javascript
+use std.runtime;
+
+runtime.windows.set_utf8_output();
+```
+
 ## __Difference Between Andy's and This Interpreter__
 
 ![error](./doc/gif/error.gif)
