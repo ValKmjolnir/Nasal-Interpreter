@@ -1,4 +1,5 @@
-use std.os;
+use std.runtime;
+
 var code=[
     [1,1,1,1,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,1,0,0,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,1,1,1,0,1,0,0,0,0,0,1],
@@ -32,8 +33,7 @@ var code=[
 ];
 
 # enable unicode
-if (os.platform()=="windows")
-    system("chcp 65001");
+runtime.windows.set_utf8_output();
 var texture=["  ","██"];
 for(var i=0;i<size(code);i+=1) {
     for(var j=0;j<size(code[i]);j+=1)

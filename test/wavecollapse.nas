@@ -1,6 +1,6 @@
 # wave collapse function 2022/4/10
 # by ValKmjolnir
-use std.os;
+use std.runtime;
 
 srand();
 var table=[
@@ -96,8 +96,7 @@ var map = func() {
 }();
 
 # enable unicode
-if (os.platform()=="windows")
-    system("chcp 65001");
+runtime.windows.set_utf8_output();
 map.new(90);
 
 for(var iter=0;iter<40;iter+=1) {

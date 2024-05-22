@@ -1,7 +1,7 @@
 use std.padding;
 use std.process_bar;
-use std.os;
 use std.unix;
+use std.runtime;
 
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],
@@ -196,9 +196,7 @@ var ansi_escape_sequence = func() {
 }
 
 # enable unicode
-if (os.platform()=="windows") {
-    system("chcp 65001");
-}
+runtime.windows.set_utf8_output();
 
 trans_ttf("just for test");
 trans_ttf(" ValKmjolnir ");

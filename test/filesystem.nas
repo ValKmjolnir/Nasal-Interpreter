@@ -1,4 +1,4 @@
-use std.os;
+use std.runtime;
 use std.io;
 use std.unix;
 
@@ -35,7 +35,7 @@ var prt = func(s,path) {
 }
 
 # enable unicode
-if (os.platform()=="windows")
-    system("chcp 65001");
+runtime.windows.set_utf8_output();
+
 println("\e[33m[",unix.getcwd(),"]\e[36m>\e[0m");
 prt([""],".");
