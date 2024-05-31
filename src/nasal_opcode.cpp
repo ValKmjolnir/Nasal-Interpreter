@@ -48,7 +48,7 @@ void codestream::dump(std::ostream& out) const {
 
     // dump operand index and bytecode(hex format)
     out << hex << "0x"
-        << setw(6) << setfill('0') << index << "    "
+        << setw(8) << setfill('0') << index << "    "
         << setw(2) << setfill('0') << static_cast<u32>(op) << ":" << dec;
 
     // dump immediate number(hex format)
