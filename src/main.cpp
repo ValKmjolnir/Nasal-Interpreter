@@ -15,6 +15,8 @@
 #include "nasal_dbg.h"
 #include "repl.h"
 
+#include "cli/cli.h"
+
 #include <unordered_map>
 #include <thread>
 #include <cstdlib>
@@ -86,8 +88,8 @@ std::ostream& logo(std::ostream& out) {
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
     << "\n"
     << "presented by fgprc members\n"
-    << "  - fgprc    : http://fgprc.org\n"
-    << "  - fgprc.cn : http://fgprc.org.cn\n"
+    << "  - http://fgprc.org\n"
+    << "  - http://fgprc.org.cn\n"
     << "\n"
     << "input <nasal -h> to get help .\n\n";
     return out;
@@ -113,9 +115,7 @@ std::ostream& version(std::ostream& out) {
 
 [[noreturn]]
 void err() {
-    std::cerr
-    << "invalid argument(s).\n"
-    << "use <nasal -h> to get help.\n";
+    std::cerr << "invalid argument(s), use <nasal -h> to get help.\n";
     std::exit(1);
 }
 
