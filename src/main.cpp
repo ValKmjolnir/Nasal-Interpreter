@@ -119,10 +119,8 @@ void err() {
     std::exit(1);
 }
 
-void execute(const std::string& file,
-             const std::vector<std::string>& argv,
-             const u32 cmd) {
-
+void execute(const nasal::cli::cli_config& config) {
+    using option = nasal::cli::option;
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
@@ -132,17 +130,17 @@ void execute(const std::string& file,
     nasal::codegen gen;
 
     // lexer scans file to get tokens
-    lex.scan(file).chkerr();
+    lex.scan(config.input_file_path).chkerr();
 
     // parser gets lexer's token list to compile
     parse.compile(lex).chkerr();
-    if (cmd&VM_RAW_AST) {
+    if (config.has(option::cli_view_raw_ast)) {
         nasal::ast_dumper().dump(parse.tree());
     }
 
     // linker gets parser's ast and load import files to this ast
-    ld.link(parse, cmd&VM_DETAIL).chkerr();
-    if (cmd&VM_REF_FILE) {
+    ld.link(parse, config.has(option::cli_detail_info)).chkerr();
+    if (config.has(option::cli_show_referenced_file)) {
         if (ld.get_file_list().size()) {
             std::cout << "referenced file(s):\n";
         }
@@ -154,34 +152,43 @@ void execute(const std::string& file,
     // optimizer does simple optimization on ast
     auto opt = std::make_unique<nasal::optimizer>();
     opt->do_optimization(parse.tree());
-    if (cmd&VM_AST) {
+    if (config.has(option::cli_view_ast)) {
         nasal::ast_dumper().dump(parse.tree());
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false, cmd&VM_LIMIT).chkerr();
-    if (cmd&VM_CODE) {
+    gen.compile(parse, ld, false, config.has(option::cli_limit_mode)).chkerr();
+    if (config.has(option::cli_view_code)) {
         gen.print(std::cout);
     }
-    if (cmd&VM_SYMINFO) {
+    if (config.has(option::cli_show_symbol)) {
         gen.symbol_dump(std::cout);
     }
 
     // run
     const auto start = clk::now();
-    if (cmd&VM_DEBUG) {
+    if (config.has(option::cli_debug_mode)) {
         auto debugger = std::make_unique<nasal::dbg>();
-        debugger->run(gen, ld, argv, cmd&VM_PROFILE, cmd&VM_PROF_ALL);
-    } else if (cmd&VM_TIME || cmd&VM_EXEC) {
+        debugger->run(
+            gen,
+            ld,
+            config.nasal_vm_args,
+            config.has(option::cli_profile),
+            config.has(option::cli_profile_all)
+        );
+    } else if (config.has(option::cli_show_execute_time) ||
+               config.has(option::cli_detail_info) ||
+               config.has(option::cli_limit_mode) ||
+               config.has(option::cli_execute)) {
         auto runtime = std::make_unique<nasal::vm>();
-        runtime->set_detail_report_info(cmd&VM_DETAIL);
-        runtime->set_limit_mode_flag(cmd&VM_LIMIT);
-        runtime->run(gen, ld, argv);
+        runtime->set_detail_report_info(config.has(option::cli_detail_info));
+        runtime->set_limit_mode_flag(config.has(option::cli_limit_mode));
+        runtime->run(gen, ld, config.nasal_vm_args);
     }
 
     // get running time
     const auto end = clk::now();
-    if (cmd&VM_TIME) {
+    if (config.has(option::cli_show_execute_time)) {
         std::clog << "process exited after ";
         std::clog << static_cast<f64>((end-start).count())/den << "s.\n\n";
     }
@@ -194,18 +201,20 @@ i32 main(i32 argc, const char* argv[]) {
         return 0;
     }
 
+    // the first argument is the executable itself, ignore it
+    const auto config = nasal::cli::parse({argv+1, argv+argc});
+
     // run directly or show help
     if (argc==2) {
-        std::string s(argv[1]);
-        if (s=="-h" || s=="--help") {
+        if (config.has(nasal::cli::option::cli_help)) {
             std::clog << help;
-        } else if (s=="-v" || s=="--version") {
+        } else if (config.has(nasal::cli::option::cli_version)) {
             std::clog << version;
-        } else if (s=="-r" || s=="--repl") {
+        } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();
-        } else if (s[0]!='-') {
-            execute(s, {}, VM_EXEC);
+        } else if (config.input_file_path.size()) {
+            execute(config);
         } else {
             err();
         }
@@ -213,45 +222,6 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // execute with arguments
-    const std::unordered_map<std::string, u32> command_list = {
-        {"--raw-ast", VM_RAW_AST},
-        {"--ast", VM_AST},
-        {"-a", VM_AST},
-        {"--code", VM_CODE},
-        {"-c", VM_CODE},
-        {"--symbol", VM_SYMINFO},
-        {"-s", VM_SYMINFO},
-        {"--exec", VM_EXEC},
-        {"-e", VM_EXEC},
-        {"--time", VM_TIME|VM_EXEC},
-        {"-t", VM_TIME|VM_EXEC},
-        {"--detail", VM_DETAIL|VM_EXEC},
-        {"-d", VM_DETAIL|VM_EXEC},
-        {"--debug", VM_DEBUG},
-        {"-dbg", VM_DEBUG},
-        {"--prof", VM_PROFILE},
-        {"--prof-all", VM_PROF_ALL},
-        {"-f", VM_REF_FILE},
-        {"--ref-file", VM_REF_FILE},
-        {"--limit", VM_LIMIT|VM_EXEC}
-    };
-
-    u32 commands = 0;
-    std::string filename = "";
-    std::vector<std::string> vm_argv;
-    for(i32 i = 1; i<argc; ++i) {
-        if (command_list.count(argv[i])) {
-            commands |= command_list.at(argv[i]);
-        } else if (!filename.length()) {
-            filename = argv[i];
-        } else {
-            vm_argv.push_back(argv[i]);
-        }
-    }
-    if (!filename.length()) {
-        err();
-    }
-
-    execute(filename, vm_argv, commands? commands:VM_EXEC);
+    execute(config);
     return 0;
 }

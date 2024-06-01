@@ -3,6 +3,8 @@
 #include <cstring>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace nasal::cli {
 
@@ -16,7 +18,7 @@ enum class option {
     cli_show_symbol,
     cli_execute,
     cli_show_execute_time,
-    cli_show_detail_info,
+    cli_detail_info,
     cli_show_referenced_file,
     cli_debug_mode,
     cli_profile,
@@ -24,9 +26,17 @@ enum class option {
     cli_limit_mode
 };
 
-using config = std::unordered_map<option, std::string>;
+struct cli_config {
+    std::string input_file_path = "";
+    std::unordered_set<option> options = {};
+    std::vector<std::string> nasal_vm_args = {};
 
-const std::unordered_map<std::string, option> options = {
+    bool has(option opt) const {
+        return options.count(opt);
+    }
+};
+
+const std::unordered_map<std::string, option> cli_options = {
     {"-h", option::cli_help},
     {"--help", option::cli_help},
     {"-v", option::cli_version},
@@ -44,6 +54,8 @@ const std::unordered_map<std::string, option> options = {
     {"--exec", option::cli_execute},
     {"-t", option::cli_show_execute_time},
     {"--time", option::cli_show_execute_time},
+    {"-d", option::cli_detail_info},
+    {"--detail", option::cli_detail_info},
     {"-f", option::cli_show_referenced_file},
     {"--ref-file", option::cli_show_referenced_file},
     {"-dbg", option::cli_debug_mode},
@@ -52,5 +64,7 @@ const std::unordered_map<std::string, option> options = {
     {"--prof-all", option::cli_profile_all},
     {"--limit", option::cli_limit_mode}
 };
+
+cli_config parse(const std::vector<std::string>&);
 
 }
