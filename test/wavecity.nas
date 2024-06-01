@@ -1,3 +1,7 @@
+use std.runtime;
+
+runtime.windows.set_utf8_output();
+
 var table_character_set = [
     "─", "━", "│", "┃", "╌", "╍", "╎", "╏", "┄", "┅",
     "┆", "┇", "┈", "┉", "┊", "┋", "┌", "┍", "┎", "┏",
@@ -82,6 +86,9 @@ var choice = func(above_block_char,
             }
             append(possible, bcs);
         }
+    }
+    if (!size(possible)) {
+        return " ";
     }
 
     func() {

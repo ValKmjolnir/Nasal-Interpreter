@@ -75,6 +75,11 @@ void lexer::open(const std::string& file) {
         return;
     }
 
+    if (file.empty()) {
+        err.err("lexer", "empty input file");
+        err.chkerr();
+    }
+
     // check file exsits and it is a regular file
     if (!fs::is_regular(file)) {
         err.err("lexer", "<"+file+"> is not a regular file");
