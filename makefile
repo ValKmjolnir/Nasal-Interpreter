@@ -27,6 +27,7 @@ NASAL_HEADER = \
 	src/nasal.h\
 	src/optimizer.h\
 	src/symbol_finder.h\
+	src/cli/cli.h\
 	src/natives/fg_props.h\
 	src/natives/bits_lib.h\
 	src/natives/io_lib.h\
@@ -66,6 +67,7 @@ NASAL_OBJECT = \
 	build/nasal_dbg.o\
 	build/repl.o\
 	build/regex_lib.o\
+	build/cli.o\
 	build/main.o
 
 
@@ -88,6 +90,9 @@ build/main.o: $(NASAL_HEADER) src/main.cpp | build
 
 build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_misc.cpp -o build/nasal_misc.o
+
+build/cli.o: src/cli/cli.h src/cli/cli.cpp | build
+	$(CXX) $(CXXFLAGS) src/cli/cli.cpp -o build/cli.o
 
 build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
 	$(CXX) $(CXXFLAGS) src/repl.cpp -o build/repl.o
@@ -294,5 +299,6 @@ test:nasal
 	@ ./nasal -e test/trait.nas
 	@ ./nasal -t -d test/turingmachine.nas
 	@ ./nasal -d test/wavecollapse.nas
+	@ ./nasal -d test/wavecity.nas
 	@ ./nasal test/word_collector.nas test/md5compare.nas
 	@ ./nasal -t -d test/ycombinator.nas

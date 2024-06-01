@@ -4,16 +4,16 @@ use std.io;
 use std.unix;
 
 var os_time = func() {
-    return "[\e[33;1m"~os.time()~"\e[0m] ";
+    return "\e[33;1m["~os.time()~"]\e[0m ";
 }
 var err_hd = func() {
-    return "[\e[91;1merror\e[0m] ";
+    return "\e[91;1m[error]\e[0m ";
 }
 var info_hd = func() {
-    return "[\e[96;1minfo\e[0m] ";
+    return "\e[96;1m[info]\e[0m ";
 }
 var modified_hd = func() {
-    return "[\e[92;1mmodified\e[0m] ";
+    return "\e[92;1m[modified]\e[0m ";
 }
 var usage = func() {
     println(os_time(),info_hd(),"\e[1musage: nasal watchdog.nas <filename> [\"argv\"]\e[0m");
@@ -41,7 +41,7 @@ if (size(argv)==2) {
 var modified_time = io.fstat(filename).st_mtime;
 println(os_time(),info_hd(),"\e[1mwatching ",filename," ..\e[0m");
 while(1) {
-    unix.sleep(1);
+    unix.sleep(5);
     if (!io.exists(filename)) {
         println(os_time(),err_hd(),"\e[1mfile <",filename,"> does not exist\e[0m");
         break;
