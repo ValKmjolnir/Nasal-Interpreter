@@ -1,4 +1,5 @@
 #include "nasal_codegen.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -1390,7 +1391,7 @@ void codegen::print(std::ostream& out) {
 
     // print const strings
     for(const auto& str : const_string_table) {
-        out << "  .symbol \"" << rawstr(str) << "\"\n";
+        out << "  .symbol \"" << util::rawstr(str) << "\"\n";
     }
     
     // print blank line

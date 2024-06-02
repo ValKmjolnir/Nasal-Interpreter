@@ -1,4 +1,5 @@
 #include "nasal_vm.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -75,7 +76,7 @@ void vm::value_info(var& val) {
         case vm_type::vm_nil:  std::clog << "| nil  |"; break;
         case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
         case vm_type::vm_str:  std::clog << "| str  | <0x" << std::hex << p
-                                         << "> \"" << rawstr(val.str(), 16)
+                                         << "> \"" << util::rawstr(val.str(), 16)
                                          << "\"" << std::dec; break;
         case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
                                          << std::dec << "> " << val.func();

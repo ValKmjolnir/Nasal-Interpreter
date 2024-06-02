@@ -8,6 +8,7 @@
 #include "nasal_import.h"
 #include "nasal_gc.h"
 #include "nasal_codegen.h"
+#include "util/util.h"
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
@@ -216,7 +217,7 @@ inline bool vm::cond(var& val) {
     if (val.is_num()) {
         return val.num();
     } else if (val.is_str()) {
-        const f64 num = str_to_num(val.str().c_str());
+        const f64 num = util::str_to_num(val.str().c_str());
         return std::isnan(num)? !val.str().empty():num;
     }
     return false;
@@ -333,7 +334,7 @@ inline void vm::o_lnot() {
         case vm_type::vm_nil: ctx.top[0] = one; break;
         case vm_type::vm_num: ctx.top[0] = val.num()? zero:one; break;
         case vm_type::vm_str: {
-            const f64 num = str_to_num(val.str().c_str());
+            const f64 num = util::str_to_num(val.str().c_str());
             if (std::isnan(num)) {
                 ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
             } else {

@@ -1,5 +1,6 @@
 #include "nasal_ast.h"
 #include "nasal_parse.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -227,8 +228,10 @@ nil_expr* parse::nil() {
 }
 
 number_literal* parse::num() {
-    auto node = new number_literal(toks[ptr].loc,
-        str_to_num(toks[ptr].str.c_str()));
+    auto node = new number_literal(
+        toks[ptr].loc,
+        util::str_to_num(toks[ptr].str.c_str())
+    );
     match(tok::tk_num);
     return node;
 }

@@ -39,7 +39,6 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_import.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
