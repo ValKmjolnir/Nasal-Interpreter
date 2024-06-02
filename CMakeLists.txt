@@ -71,10 +71,12 @@ endif()
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
+target_include_directories(module-used-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)
 target_include_directories(fib PRIVATE ${CMAKE_SOURCE_DIR}/src)
