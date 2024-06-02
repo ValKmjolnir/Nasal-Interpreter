@@ -92,7 +92,7 @@ build:
 build/main.o: $(NASAL_HEADER) src/main.cpp | build
 	$(CXX) $(CXXFLAGS) src/main.cpp -o build/main.o
 
-build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
+build/nasal_misc.o: src/nasal.h src/util/util.h src/nasal_misc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_misc.cpp -o build/nasal_misc.o
 
 build/cli.o: src/cli/cli.h src/cli/cli.cpp | build
@@ -101,7 +101,7 @@ build/cli.o: src/cli/cli.h src/cli/cli.cpp | build
 build/util.o: src/util/util.h src/util/util.cpp | build
 	$(CXX) $(CXXFLAGS) src/util/util.cpp -o build/util.o
 
-build/fs.o: src/nasal.h src/util/fs.h src/util/fs.cpp | build
+build/fs.o: src/nasal.h src/util/util.h src/util/fs.h src/util/fs.cpp | build
 	$(CXX) $(CXXFLAGS) src/util/fs.cpp -o build/fs.o
 
 build/repl.o: $(NASAL_HEADER) src/repl/repl.h src/repl/repl.cpp | build
@@ -121,6 +121,7 @@ build/nasal_import.o: \
 	src/nasal_ast.h\
 	src/nasal_lexer.h\
 	src/nasal_parse.h\
+	src/util/util.h\
 	src/util/fs.h\
 	src/nasal_import.h src/nasal_import.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_import.cpp -o build/nasal_import.o
@@ -143,7 +144,9 @@ build/builtin.o: \
 	src/nasal.h\
 	src/nasal_type.h\
 	src/nasal_gc.h\
-	src/natives/builtin.h src/natives/builtin.cpp | build
+	src/util/util.h\
+	src/natives/builtin.h\
+	src/natives/builtin.cpp | build
 	$(CXX) $(CXXFLAGS) src/natives/builtin.cpp -o build/builtin.o
 
 build/coroutine.o: \

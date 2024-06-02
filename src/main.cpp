@@ -14,6 +14,7 @@
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
 
+#include "util/util.h"
 #include "repl/repl.h"
 #include "cli/cli.h"
 
@@ -66,7 +67,7 @@ std::ostream& logo(std::ostream& out) {
     << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
     << "\n"
     << "ver  : " << __nasver__
-    << " " << nasal::get_platform() << " " << nasal::get_arch()
+    << " " << nasal::util::get_platform() << " " << nasal::util::get_arch()
     << " (" << __DATE__ << " " << __TIME__ << ")\n"
     << "std  : c++ " << __cplusplus << "\n"
     << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
@@ -95,7 +96,7 @@ std::ostream& version(std::ostream& out) {
     }
 
     out << "nasal version " << __nasver__;
-    out << " " << nasal::get_platform() << " " << nasal::get_arch();
+    out << " " << nasal::util::get_platform() << " " << nasal::util::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
 }

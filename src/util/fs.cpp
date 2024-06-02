@@ -4,15 +4,20 @@
 #include <io.h>
 #endif
 
+#ifdef _MSC_VER
+#pragma warning (disable:4996)
+#endif
+
 #include <sys/stat.h>
 
+#include "util/util.h"
 #include "util/fs.h"
 #include "nasal.h"
 
 namespace nasal::fs {
 
 path& path::operator/(const path& another) {
-    this->file_system_path += is_windows()? "\\":"/";
+    this->file_system_path += util::is_windows()? "\\":"/";
     this->file_system_path += another.file_system_path;
     return *this;
 }
