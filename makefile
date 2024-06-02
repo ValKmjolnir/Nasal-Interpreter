@@ -36,7 +36,7 @@ NASAL_HEADER = \
 	src/natives/json_lib.h\
 	src/natives/unix_lib.h\
 	src/natives/coroutine.h\
-	src/repl.h\
+	src/repl/repl.h\
 	src/natives/regex_lib.h
 
 NASAL_OBJECT = \
@@ -94,10 +94,10 @@ build/nasal_misc.o: src/nasal.h src/nasal_misc.cpp | build
 build/cli.o: src/cli/cli.h src/cli/cli.cpp | build
 	$(CXX) $(CXXFLAGS) src/cli/cli.cpp -o build/cli.o
 
-build/repl.o: $(NASAL_HEADER) src/repl.h src/repl.cpp | build
-	$(CXX) $(CXXFLAGS) src/repl.cpp -o build/repl.o
+build/repl.o: $(NASAL_HEADER) src/repl/repl.h src/repl/repl.cpp | build
+	$(CXX) $(CXXFLAGS) src/repl/repl.cpp -o build/repl.o
 
-build/nasal_err.o: src/nasal.h src/repl.h src/nasal_err.h src/nasal_err.cpp | build
+build/nasal_err.o: src/nasal.h src/repl/repl.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_err.cpp -o build/nasal_err.o
 
 build/nasal_type.o: src/nasal.h src/nasal_type.h src/nasal_type.cpp | build
@@ -116,7 +116,7 @@ build/nasal_import.o: \
 
 build/nasal_lexer.o: \
 	src/nasal.h\
-	src/repl.h\
+	src/repl/repl.h\
 	src/nasal_err.h\
 	src/nasal_lexer.h src/nasal_lexer.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_lexer.cpp -o build/nasal_lexer.o

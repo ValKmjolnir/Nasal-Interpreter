@@ -13,8 +13,8 @@
 #include "nasal_codegen.h"
 #include "nasal_vm.h"
 #include "nasal_dbg.h"
-#include "repl.h"
 
+#include "repl/repl.h"
 #include "cli/cli.h"
 
 #include <unordered_map>
