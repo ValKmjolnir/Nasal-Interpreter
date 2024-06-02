@@ -1,5 +1,5 @@
 #include "nasal_err.h"
-#include "repl.h"
+#include "repl/repl.h"
 
 namespace nasal {
 

@@ -5,7 +5,7 @@
 #endif
 
 #include "nasal_lexer.h"
-#include "repl.h"
+#include "repl/repl.h"
 
 namespace nasal {
 

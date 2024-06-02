@@ -27,6 +27,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/dylib_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
@@ -42,8 +43,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
-    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp
-    ${CMAKE_SOURCE_DIR}/src/repl.cpp)
+    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
