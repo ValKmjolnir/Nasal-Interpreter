@@ -1,5 +1,6 @@
 #include "nasal_import.h"
 #include "symbol_finder.h"
+#include "util/fs.h"
 
 #include <memory>
 #include <unordered_set>

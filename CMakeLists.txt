@@ -28,6 +28,8 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp

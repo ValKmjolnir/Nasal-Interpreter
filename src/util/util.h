@@ -1,0 +1,3 @@
+#pragma
+
+namespace nasal::util {}

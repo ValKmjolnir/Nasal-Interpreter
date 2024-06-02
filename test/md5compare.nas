@@ -47,6 +47,12 @@ var compare = func() {
     };
 }();
 
+var add_all_cpp_files = func(vec, path) {
+    foreach(var p; file.find_all_files_with_extension(path,"cpp","h")) {
+        append(vec, path~"/"~p);
+    }
+}
+
 var filechecksum = func() {
     var files = [];
     foreach(var p; file.find_all_files_with_extension("./test","nas")) {
@@ -61,9 +67,11 @@ var filechecksum = func() {
     foreach(var p; file.find_all_files_with_extension(".","md")) {
         append(files, "./"~p);
     }
-    foreach(var p; file.find_all_files_with_extension("./src","cpp","h")) {
-        append(files, "./src/"~p);
-    }
+    add_all_cpp_files(files, "./src");
+    add_all_cpp_files(files, "./src/cli");
+    add_all_cpp_files(files, "./src/natives");
+    add_all_cpp_files(files, "./src/repl");
+    add_all_cpp_files(files, "./src/util");
     foreach(var p; file.find_all_files_with_extension("./doc","md")) {
         append(files, "./doc/"~p);
     }
