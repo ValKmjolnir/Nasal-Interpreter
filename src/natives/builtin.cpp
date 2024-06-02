@@ -1,4 +1,6 @@
 ﻿#include "natives/builtin.h"
+#include "util/util.h"
+
 #include <chrono>
 
 #ifdef _WIN32
@@ -463,11 +465,11 @@ var builtin_sleep(context* ctx, gc* ngc) {
 }
 
 var builtin_platform(context* ctx, gc* ngc) {
-    return ngc->newstr(get_platform());
+    return ngc->newstr(util::get_platform());
 }
 
 var builtin_arch(context* ctx, gc* ngc) {
-    return ngc->newstr(get_arch());
+    return ngc->newstr(util::get_arch());
 }
 
 // md5 related functions
