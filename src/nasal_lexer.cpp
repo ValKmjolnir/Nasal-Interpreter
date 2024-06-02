@@ -6,6 +6,7 @@
 
 #include "nasal_lexer.h"
 #include "repl/repl.h"
+#include "util/fs.h"
 
 namespace nasal {
 

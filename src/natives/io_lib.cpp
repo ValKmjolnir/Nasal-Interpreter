@@ -1,4 +1,5 @@
 #include "natives/io_lib.h"
+#include "util/fs.h"
 
 #include <sys/stat.h>
 
