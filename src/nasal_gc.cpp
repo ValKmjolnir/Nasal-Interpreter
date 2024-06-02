@@ -335,17 +335,29 @@ void gc::info() const {
     std::clog << " |\n+" << indent_string << "+\n";
 
     std::clog << "| " << left << setw(indent) << setfill(' ') << "gc time";
-    std::clog << " | " << worktime*1.0/den*1000 << " ms\n";
+    std::clog << " | " << setw(indent-3) << std::setprecision(4) << worktime*1.0/den*1000 << " ms";
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << "| " << left << setw(indent) << setfill(' ') << "avg time";
-    std::clog << " | " << worktime*1.0/den*1000/total << " ms\n";
+    std::clog << " | " << setw(indent-3) << std::setprecision(4) << worktime*1.0/den*1000/total << " ms";
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << "| " << left << setw(indent) << setfill(' ') << "max gc";
-    std::clog << " | " << max_time*1.0/den*1000 << " ms\n";
+    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_time*1.0/den*1000 << " ms";
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << "| " << left << setw(indent) << setfill(' ') << "max mark";
-    std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
+    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_mark_time*1.0/den*1000 << " ms";
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << "| " << left << setw(indent) << setfill(' ') << "max sweep";
-    std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
+    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_sweep_time*1.0/den*1000 << " ms";
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << "| " << left << setw(indent) << setfill(' ') << "concurrent";
-    std::clog << " | " << (flag_concurrent_mark_triggered? "true\n":"false\n");
+    std::clog << " | " << setw(indent) << (flag_concurrent_mark_triggered? "true":"false");
+    std::clog << setw(indent*2+7) << " " << "|\n";
+
     std::clog << last_line << "\n";
 }
 
