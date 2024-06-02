@@ -112,7 +112,12 @@ build/nasal_type.o:\
 	src/nasal_type.h src/nasal_type.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_type.cpp -o build/nasal_type.o
 
-build/nasal_gc.o: src/nasal.h src/nasal_type.h src/nasal_gc.h src/nasal_gc.cpp | build
+build/nasal_gc.o:\
+	src/nasal.h\
+	src/util/util.h\
+	src/nasal_type.h\
+	src/nasal_gc.h\
+	src/nasal_gc.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_gc.cpp -o build/nasal_gc.o
 
 build/nasal_import.o: \

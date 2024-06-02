@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <iostream>
 
 namespace nasal::cli {
 
@@ -66,5 +67,7 @@ const std::unordered_map<std::string, option> cli_options = {
 };
 
 cli_config parse(const std::vector<std::string>&);
+
+std::ostream& help(std::ostream&);
 
 }
