@@ -1,10 +1,7 @@
 ﻿#pragma once
 
 #include "ast_visitor.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
+#include "util/util.h"
 
 #include <iostream>
 #include <cstring>
@@ -93,19 +90,10 @@ public:
 
 public:
     void dump(code_block* root) {
-#ifdef _WIN32
-        // store previous code page
-        auto cp = GetConsoleOutputCP();
-        // allow 65001 code page
-        SetConsoleOutputCP(CP_UTF8);
-#endif
-
+        util::windows_code_page_manager wcpm;
+        wcpm.set_utf8_output();
         root->accept(this);
-
-#ifdef _WIN32
-        // restore previous code page
-        SetConsoleOutputCP(cp);
-#endif
+        wcpm.restore_code_page();
     }
 };
 

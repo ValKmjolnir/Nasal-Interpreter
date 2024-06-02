@@ -2,6 +2,10 @@
 
 #include "nasal.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <cstring>
 #include <sstream>
 
@@ -37,5 +41,33 @@ f64 oct_to_f64(const char*);
 f64 dec_to_f64(const char*);
 
 f64 str_to_num(const char*);
+
+class windows_code_page_manager {
+private:
+    u32 code_page;
+
+public:
+    windows_code_page_manager() {
+#ifdef _WIN32
+        code_page = GetConsoleOutputCP();
+#endif
+    }
+
+    void set_utf8_output() {
+#ifdef _WIN32
+        // store previous code page
+        code_page = GetConsoleOutputCP();
+        // allow 65001 code page
+        SetConsoleOutputCP(CP_UTF8);
+#endif
+    }
+
+    void restore_code_page() {
+#ifdef _WIN32
+        // restore previous code page
+        SetConsoleOutputCP(code_page);
+#endif
+    }
+};
 
 }
