@@ -4,6 +4,7 @@
 #define __nasver__ "11.2"
 #endif
 
+#include <cstddef>
 #include <cstdint>
 
 // abbreviation of some useful basic type
