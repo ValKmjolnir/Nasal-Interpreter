@@ -4,7 +4,7 @@
 
 #include "nasal.h"
 #include "nasal_gc.h"
-#include "natives/nasal_builtin.h"
+#include "natives/builtin.h"
 
 namespace nasal {
 

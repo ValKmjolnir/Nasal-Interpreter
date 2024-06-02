@@ -34,7 +34,8 @@ public:
         tcgetattr(0, &init_termios);
         new_termios = init_termios;
         new_termios.c_lflag &= ~(ICANON|ECHO|ECHONL|ECHOE);
-        // vmin=0 is nonblock input, but in wsl there is a bug that will block input
+        // vmin = 0 is nonblock input,
+        // but in wsl1 there is a bug that will block input
         // so we use fcntl to write the nonblock input
         new_termios.c_cc[VMIN] = 1;
         new_termios.c_cc[VTIME] = 0;

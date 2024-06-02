@@ -1,4 +1,5 @@
 #include "nasal_vm.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -75,8 +76,8 @@ void vm::value_info(var& val) {
         case vm_type::vm_nil:  std::clog << "| nil  |"; break;
         case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
         case vm_type::vm_str:  std::clog << "| str  | <0x" << std::hex << p
-                                         << "> " << rawstr(val.str(), 16)
-                                         << std::dec; break;
+                                         << "> \"" << util::rawstr(val.str(), 16)
+                                         << "\"" << std::dec; break;
         case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
                                          << std::dec << "> " << val.func();
                                          break;
@@ -191,7 +192,7 @@ void vm::trace_back() {
         }
         if (same) {
             std::clog << "  0x" << std::hex
-                      << std::setw(6) << std::setfill('0')
+                      << std::setw(8) << std::setfill('0')
                       << prev << std::dec << "    "
                       << same << " same call(s)\n";
             same = 0;
@@ -212,7 +213,7 @@ void vm::stack_info(const u64 limit = 16) {
 
     for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
-                  << std::setw(6) << std::setfill('0')
+                  << std::setw(8) << std::setfill('0')
                   << static_cast<u64>(top-bottom) << std::dec
                   << "    ";
         value_info(top[0]);
@@ -220,22 +221,22 @@ void vm::stack_info(const u64 limit = 16) {
 }
 
 void vm::register_info() {
-    std::clog << "\nregisters (" << (ngc.cort? "coroutine":"main")
-              << ")\n" << std::hex
-              << "  [pc    ]    | pc   | 0x" << ctx.pc << "\n"
-              << "  [global]    | addr | 0x"
+    std::clog << "\nregisters (" << (ngc.cort? "coroutine":"main") << ")\n";
+    std::clog << std::hex
+              << "  [ pc     ]    | pc   | 0x" << ctx.pc << "\n"
+              << "  [ global ]    | addr | 0x"
               << reinterpret_cast<u64>(global) << "\n"
-              << "  [local ]    | addr | 0x"
+              << "  [ local  ]    | addr | 0x"
               << reinterpret_cast<u64>(ctx.localr) << "\n"
-              << "  [memr  ]    | addr | 0x"
+              << "  [ memr   ]    | addr | 0x"
               << reinterpret_cast<u64>(ctx.memr) << "\n"
-              << "  [canary]    | addr | 0x"
+              << "  [ canary ]    | addr | 0x"
               << reinterpret_cast<u64>(ctx.canary) << "\n"
-              << "  [top   ]    | addr | 0x"
+              << "  [ top    ]    | addr | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
-    std::clog << "  [funcr ]    "; value_info(ctx.funcr);
-    std::clog << "  [upval ]    "; value_info(ctx.upvalr);
+    std::clog << "  [ funcr  ]    "; value_info(ctx.funcr);
+    std::clog << "  [ upval  ]    "; value_info(ctx.upvalr);
 }
 
 void vm::global_state() {
@@ -245,7 +246,7 @@ void vm::global_state() {
     std::clog << "\nglobal (0x" << std::hex
               << reinterpret_cast<u64>(global) << ")\n" << std::dec;
     for(usize i = 0; i<global_size; ++i) {
-        std::clog << "  0x" << std::hex << std::setw(6)
+        std::clog << "  0x" << std::hex << std::setw(8)
                   << std::setfill('0') << i << std::dec
                   << "    ";
         value_info(global[i]);
@@ -261,7 +262,7 @@ void vm::local_state() {
               << " <+" << static_cast<u64>(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
     for(u32 i = 0; i<lsize; ++i) {
-        std::clog << "  0x" << std::hex << std::setw(6)
+        std::clog << "  0x" << std::hex << std::setw(8)
                   << std::setfill('0') << i << std::dec
                   << "    ";
         value_info(ctx.localr[i]);
@@ -278,7 +279,7 @@ void vm::upvalue_state() {
         std::clog << "  -> upval[" << i << "]:\n";
         auto& uv = upval[i].upval();
         for(u32 j = 0; j<uv.size; ++j) {
-            std::clog << "     0x" << std::hex << std::setw(6)
+            std::clog << "     0x" << std::hex << std::setw(8)
                       << std::setfill('0') << j << std::dec
                       << " ";
             value_info(uv[j]);
@@ -391,7 +392,7 @@ std::string vm::type_name_string(const var& value) const {
 }
 
 void vm::die(const std::string& str) {
-    std::cerr << "\n[vm] error: " << str << "\n";
+    std::cerr << "[vm] error: " << str << "\n";
     function_call_trace();
     trace_back();
     stack_info();

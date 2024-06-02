@@ -1,5 +1,7 @@
 #include "natives/io_lib.h"
+#include "util/fs.h"
 
+#include <fstream>
 #include <sys/stat.h>
 
 namespace nasal {

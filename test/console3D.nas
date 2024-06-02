@@ -27,10 +27,8 @@ use std.math;
 
 func() {
     # allocate more spaces
-    for(var i = 0; i<10; i+=1) {
-        runtime.gc.extend("str");
-        runtime.gc.extend("vec");
-    }
+    runtime.gc.extend("str", 8);
+    runtime.gc.extend("vec", 8);
 }();
 
 var (max,min,sqrt,sin,cos,abs)=(

@@ -1,6 +1,5 @@
 use module.libkey;
 use std.runtime;
-use std.os;
 use std.unix;
 
 var color=[
@@ -277,9 +276,9 @@ var mapgen = func(mapx,mapy) {
 var main = func(argv) {
     var should_skip=(size(argv)!=0 and argv[0]=="--skip");
     var init_counter=should_skip?5:30;
-    # windows use chcp 65001 to output unicode
-    if (os.platform()=="windows")
-        system("chcp 65001");
+
+    # windows use 65001 to output unicode
+    runtime.windows.set_utf8_output();
     
     print(
         "\ec\e[1:1H",

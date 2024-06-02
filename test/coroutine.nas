@@ -4,9 +4,10 @@ use std.coroutine;
 use std.process_bar;
 use std.padding;
 use std.os;
+use std.runtime;
 
 if (os.platform()=="windows") {
-    system("chcp 65001");
+    runtime.windows.set_utf8_output();
     system("color");
 }
 

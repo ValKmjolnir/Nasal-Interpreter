@@ -8,6 +8,7 @@
 #include "nasal_import.h"
 #include "nasal_gc.h"
 #include "nasal_codegen.h"
+#include "util/util.h"
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
@@ -50,6 +51,7 @@ protected:
     /* limited mode, will not load unsafe system api if switched on */
     bool flag_limited_mode = false;
 
+protected:
     /* vm initializing function */
     void vm_init_enrty(const std::vector<std::string>&,
                        const std::vector<f64>&,
@@ -60,6 +62,7 @@ protected:
                        const std::vector<std::string>&);
     void context_and_global_init();
 
+protected:
     /* debug functions */
     bool verbose = false;
     void value_info(var&);
@@ -190,20 +193,31 @@ public:
              const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */
-    void set_detail_report_info(bool flag) {verbose = flag;}
+    void set_detail_report_info(bool flag) {
+        verbose = flag;
+    }
+
     /* set repl mode flag */
-    void set_repl_mode_flag(bool flag) {is_repl_mode = flag;}
+    void set_repl_mode_flag(bool flag) {
+        is_repl_mode = flag;
+    }
+
     /* set repl output flag */
-    void set_allow_repl_output_flag(bool flag) {allow_repl_output = flag;}
+    void set_allow_repl_output_flag(bool flag) {
+        allow_repl_output = flag;
+    }
+
     /* set limit mode flag */
-    void set_limit_mode_flag(bool flag) {flag_limited_mode = flag;}
+    void set_limit_mode_flag(bool flag) {
+        flag_limited_mode = flag;
+    }
 };
 
 inline bool vm::cond(var& val) {
     if (val.is_num()) {
         return val.num();
     } else if (val.is_str()) {
-        const f64 num = str_to_num(val.str().c_str());
+        const f64 num = util::str_to_num(val.str().c_str());
         return std::isnan(num)? !val.str().empty():num;
     }
     return false;
@@ -320,7 +334,7 @@ inline void vm::o_lnot() {
         case vm_type::vm_nil: ctx.top[0] = one; break;
         case vm_type::vm_num: ctx.top[0] = val.num()? zero:one; break;
         case vm_type::vm_str: {
-            const f64 num = str_to_num(val.str().c_str());
+            const f64 num = util::str_to_num(val.str().c_str());
             if (std::isnan(num)) {
                 ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
             } else {

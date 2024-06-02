@@ -1,4 +1,5 @@
 #include "nasal_codegen.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -239,9 +240,9 @@ void codegen::func_gen(function* node) {
         }
     }
 
-    usize newf=code.size();
+    const auto newf = code.size();
     emit(op_newf, 0, node->get_location());
-    usize lsize=code.size();
+    const auto lsize = code.size();
     emit(op_intl, 0, node->get_location());
     
     // add special keyword 'me' into symbol table
@@ -1390,7 +1391,7 @@ void codegen::print(std::ostream& out) {
 
     // print const strings
     for(const auto& str : const_string_table) {
-        out << "  .symbol \"" << rawstr(str) << "\"\n";
+        out << "  .symbol \"" << util::rawstr(str) << "\"\n";
     }
     
     // print blank line

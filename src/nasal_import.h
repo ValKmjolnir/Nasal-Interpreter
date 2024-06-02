@@ -13,6 +13,7 @@
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
 #include "symbol_finder.h"
+#include "util/fs.h"
 
 #include <cstring>
 #include <sstream>

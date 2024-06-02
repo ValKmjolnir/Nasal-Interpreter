@@ -1,5 +1,7 @@
 #include "nasal_import.h"
 #include "symbol_finder.h"
+#include "util/util.h"
+#include "util/fs.h"
 
 #include <memory>
 #include <unordered_set>
@@ -7,7 +9,7 @@
 namespace nasal {
 
 linker::linker(): show_path_flag(false), this_file("") {
-    const auto seperator = is_windows()? ';':':';
+    const auto seperator = util::is_windows()? ';':':';
     const auto PATH = std::string(getenv("PATH"));
     usize last = 0, position = PATH.find(seperator, 0);
     while(position!=std::string::npos) {
@@ -30,7 +32,7 @@ std::string linker::get_path(expr* node) {
         for(auto i : path) {
             file_relative_path += i->get_name();
             if (i!=path.back()) {
-                file_relative_path += (is_windows()? "\\":"/");
+                file_relative_path += (util::is_windows()? "\\":"/");
             }
         }
         return file_relative_path + ".nas";
@@ -60,7 +62,7 @@ std::string linker::find_real_file_path(const std::string& filename,
 
     // we will find lib.nas in nasal std directory
     if (filename=="lib.nas") {
-        return is_windows()?
+        return util::is_windows()?
             find_real_file_path("std\\lib.nas", location):
             find_real_file_path("std/lib.nas", location);
     }
