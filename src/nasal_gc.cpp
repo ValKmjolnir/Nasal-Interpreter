@@ -301,17 +301,17 @@ void gc::info() const {
     for(usize i = 0; i<indent; ++i) {
         indent_string += "-";
     }
-    auto last_line = indent_string + "+" +
-        indent_string + "-" + indent_string + "-" + indent_string;
+    const auto last_line = "+" + indent_string + "+" +
+        indent_string + "-" + indent_string + "-" + indent_string + "+";
     indent_string = indent_string + "+" +
         indent_string + "+" + indent_string + "+" + indent_string;
 
-    std::clog << "\n" << indent_string << "\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "object type";
+    std::clog << "\n+" << indent_string << "+\n";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "object type";
     std::clog << " | " << left << setw(indent) << setfill(' ') << "gc count";
     std::clog << " | " << left << setw(indent) << setfill(' ') << "alloc count";
     std::clog << " | " << left << setw(indent) << setfill(' ') << "memory size";
-    std::clog << "\n" << indent_string << "\n";
+    std::clog << " |\n+" << indent_string << "+\n";
 
     double total = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -319,32 +319,32 @@ void gc::info() const {
             continue;
         }
         total += static_cast<f64>(gcnt[i]);
-        std::clog << " " << left << setw(indent) << setfill(' ') << name[i];
+        std::clog << "| " << left << setw(indent) << setfill(' ') << name[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];
         std::clog << " | " << left << setw(indent) << setfill(' ') << size[i];
-        std::clog << "\n";
+        std::clog << " |\n";
     }
-    std::clog << indent_string << "\n";
+    std::clog << "+" << indent_string << "+\n";
 
     auto den = std::chrono::high_resolution_clock::duration::period::den;
-    std::clog << " " << left << setw(indent) << setfill(' ') << "detail";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "detail";
     std::clog << " | " << left << setw(indent) << setfill(' ') << "time spend";
     std::clog << " | " << left << setw(indent) << setfill('x') << "x";
     std::clog << " | " << left << setw(indent) << setfill('x') << "x";
-    std::clog << "\n" << indent_string << "\n";
+    std::clog << " |\n+" << indent_string << "+\n";
 
-    std::clog << " " << left << setw(indent) << setfill(' ') << "gc time";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "gc time";
     std::clog << " | " << worktime*1.0/den*1000 << " ms\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "avg time";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "avg time";
     std::clog << " | " << worktime*1.0/den*1000/total << " ms\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "max gc";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "max gc";
     std::clog << " | " << max_time*1.0/den*1000 << " ms\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "max mark";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "max mark";
     std::clog << " | " << max_mark_time*1.0/den*1000 << " ms\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "max sweep";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "max sweep";
     std::clog << " | " << max_sweep_time*1.0/den*1000 << " ms\n";
-    std::clog << " " << left << setw(indent) << setfill(' ') << "concurrent";
+    std::clog << "| " << left << setw(indent) << setfill(' ') << "concurrent";
     std::clog << " | " << (flag_concurrent_mark_triggered? "true\n":"false\n");
     std::clog << last_line << "\n";
 }
