@@ -47,12 +47,12 @@ bool repl::check_need_more_input() {
         i64 in_brace = 0;
         for(const auto& t : nasal_lexer->result()) {
             switch(t.type) {
-                case tok::lcurve: ++in_curve; break;
-                case tok::rcurve: --in_curve; break;
-                case tok::lbracket: ++in_bracket; break;
-                case tok::rbracket: --in_bracket; break;
-                case tok::lbrace: ++in_brace; break;
-                case tok::rbrace: --in_brace; break;
+                case tok::tk_lcurve: ++in_curve; break;
+                case tok::tk_rcurve: --in_curve; break;
+                case tok::tk_lbracket: ++in_bracket; break;
+                case tok::tk_rbracket: --in_bracket; break;
+                case tok::tk_lbrace: ++in_brace; break;
+                case tok::tk_rbrace: --in_brace; break;
                 default: break;
             }
         }

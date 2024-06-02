@@ -11,7 +11,7 @@ var is_windows_platform=os.platform()=="windows";
 var is_macos_platform=os.platform()=="macOS";
 
 if (is_windows_platform) {
-    system("chcp 65001");
+    runtime.windows.set_utf8_output();
 }
 
 var cpu_stat = func() {

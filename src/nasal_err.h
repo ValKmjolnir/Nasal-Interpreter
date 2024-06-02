@@ -29,13 +29,13 @@ std::ostream& orange(std::ostream&);
 std::ostream& white(std::ostream&);
 std::ostream& reset(std::ostream&);
 
-class flstream {
+class filestream {
 protected:
     std::string file;
     std::vector<std::string> res;
 
 public:
-    flstream(): file("") {}
+    filestream(): file("") {}
     void load(const std::string&);
     const std::string& operator[](usize n) const {return res[n];}
     const auto& name() const {return file;}
@@ -43,7 +43,7 @@ public:
     usize size() const {return res.size();}
 };
 
-class error: public flstream {
+class error: public filestream {
 private:
     u32 cnt; // counter for errors
 

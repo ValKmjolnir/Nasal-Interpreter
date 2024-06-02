@@ -1,17 +1,8 @@
-#include "nasal.h"
+#include "util/util.h"
 
-#ifndef _MSC_VER
-#include <unistd.h>
-#else
-#include <io.h>
-#endif
-#include <sys/stat.h>
+#include <cmath>
 
-#ifdef _MSC_VER
-#pragma warning (disable:4996)
-#endif
-
-namespace nasal {
+namespace nasal::util {
 
 bool is_windows() {
 #if defined(_WIN32) || defined(_WIN64)
@@ -105,7 +96,7 @@ const char* get_platform() {
     } else if (is_macos()) {
         return "macOS";
     }
-    return "unknown platform";
+    return "unknown";
 }
 
 const char* get_arch() {
@@ -126,7 +117,57 @@ const char* get_arch() {
     } else if (is_superh()) {
         return "superh";
     }
-    return "unknown arch";
+    return "unknown";
+}
+
+u32 utf8_hdchk(const char head) {
+    // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
+    const auto c = static_cast<u8>(head);
+    if ((c>>5)==0x06) { // 110x xxxx (10xx xxxx)^1
+        return 1;
+    }
+    if ((c>>4)==0x0e) { // 1110 xxxx (10xx xxxx)^2
+        return 2;
+    }
+    if ((c>>3)==0x1e) { // 1111 0xxx (10xx xxxx)^3
+        return 3;
+    }
+    return 0;
+}
+
+std::string char_to_hex(const char c) {
+    const char hextbl[] = "0123456789abcdef";
+    return {hextbl[(c&0xf0)>>4], hextbl[c&0x0f]};
+}
+
+std::string rawstr(const std::string& str, const usize maxlen) {
+    std::string ret("");
+    for(auto i : str) {
+        // windows doesn't output unicode normally, so we output the hex
+        if (util::is_windows() && i<=0) {
+            ret += "\\x" + char_to_hex(i);
+            continue;
+        }
+        switch(i) {
+            case '\0':  ret += "\\0";  break;
+            case '\a':  ret += "\\a";  break;
+            case '\b':  ret += "\\b";  break;
+            case '\t':  ret += "\\t";  break;
+            case '\n':  ret += "\\n";  break;
+            case '\v':  ret += "\\v";  break;
+            case '\f':  ret += "\\f";  break;
+            case '\r':  ret += "\\r";  break;
+            case '\033':ret += "\\e";  break;
+            case '\"':  ret += "\\\""; break;
+            case '\'':  ret += "\\\'"; break;
+            case '\\':  ret += "\\\\"; break;
+            default:    ret += i;      break;
+        }
+    }
+    if (maxlen && ret.length()>maxlen) {
+        ret = ret.substr(0, maxlen)+"...";
+    }
+    return ret;
 }
 
 f64 hex_to_f64(const char* str) {
@@ -225,84 +266,6 @@ f64 str_to_num(const char* str) {
         res = dec_to_f64(str);
     }
     return negative? -res:res;
-}
-
-i32 utf8_hdchk(const char head) {
-    // RFC-2279 but now we use RFC-3629 so nbytes is less than 4
-    const auto c = static_cast<u8>(head);
-    if ((c>>5)==0x06) { // 110x xxxx (10xx xxxx)^1
-        return 1;
-    }
-    if ((c>>4)==0x0e) { // 1110 xxxx (10xx xxxx)^2
-        return 2;
-    }
-    if ((c>>3)==0x1e) { // 1111 0xxx (10xx xxxx)^3
-        return 3;
-    }
-    return 0;
-}
-
-std::string char_to_hex(const char c) {
-    const char hextbl[] = "0123456789abcdef";
-    return {hextbl[(c&0xf0)>>4], hextbl[c&0x0f]};
-}
-
-std::string rawstr(const std::string& str, const usize maxlen) {
-    std::string ret("");
-    for(auto i : str) {
-        // windows doesn't output unicode normally, so we output the hex
-        if (is_windows() && i<=0) {
-            ret += "\\x" + char_to_hex(i);
-            continue;
-        }
-        switch(i) {
-            case '\0':  ret += "\\0";  break;
-            case '\a':  ret += "\\a";  break;
-            case '\b':  ret += "\\b";  break;
-            case '\t':  ret += "\\t";  break;
-            case '\n':  ret += "\\n";  break;
-            case '\v':  ret += "\\v";  break;
-            case '\f':  ret += "\\f";  break;
-            case '\r':  ret += "\\r";  break;
-            case '\033':ret += "\\e";  break;
-            case '\"':  ret += "\\\""; break;
-            case '\'':  ret += "\\\'"; break;
-            case '\\':  ret += "\\\\"; break;
-            default:    ret += i;      break;
-        }
-    }
-    if (maxlen && ret.length()>maxlen) {
-        ret = ret.substr(0, maxlen)+"...";
-    }
-    return ret;
-}
-
-namespace fs {
-
-path& path::operator/(const path& another) {
-    this->file_system_path += is_windows()? "\\":"/";
-    this->file_system_path += another.file_system_path;
-    return *this;
-}
-
-bool exists(const path& file_path) {
-#ifdef _MSC_VER
-    #define F_OK 0 // fuck msc
-#endif
-    return access(file_path.c_str(), F_OK)==0;
-}
-
-bool is_regular(const path& file_path) {
-#ifdef _MSC_VER
-    #define S_ISREG(m) (((m)&0xF000)==0x8000)
-#endif
-    struct stat buffer;
-    if (stat(file_path.c_str(), &buffer)!=0) {
-        return false;
-    }
-    return S_ISREG(buffer.st_mode);
-}
-
 }
 
 }

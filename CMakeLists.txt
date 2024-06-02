@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(nasal VERSION 10.1)
+project(nasal VERSION 11.2)
 
 message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
 
@@ -16,10 +16,8 @@ set(CMAKE_BUILD_TYPE "Release")
 
 # build nasal used object
 set(NASAL_OBJECT_SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
-    ${CMAKE_SOURCE_DIR}/src/natives/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/builtin.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/coroutine.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/fg_props.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/bits_lib.cpp
@@ -29,31 +27,37 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/dylib_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
+    ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_import.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
     ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
-    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp
-    ${CMAKE_SOURCE_DIR}/src/repl.cpp)
+    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # build nasal
 add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
+# link ldl and lpthread
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
     target_link_libraries(nasal pthread)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
+# copy nasal from build dir to the outside dir
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     add_custom_command(
         TARGET nasal POST_BUILD
@@ -67,10 +71,12 @@ endif()
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/nasal_misc.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
+target_include_directories(module-used-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 add_library(fib SHARED ${CMAKE_SOURCE_DIR}/module/fib.cpp)
 target_include_directories(fib PRIVATE ${CMAKE_SOURCE_DIR}/src)

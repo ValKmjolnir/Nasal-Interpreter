@@ -16,66 +16,68 @@ class parse {
 
 private:
     u64 ptr;
-    u64 in_func; // count function block
-    u64 in_loop; // count loop block
+    u64 in_func_depth; // count function block
+    u64 in_loop_depth; // count loop block
     const token* toks;
     code_block* root;
     error err;
 
 private:
-    const std::unordered_map<tok, std::string> tokname {
-        {tok::use     ,"use"     },
-        {tok::rfor    ,"for"     },
-        {tok::forindex,"forindex"},
-        {tok::foreach ,"foreach" },
-        {tok::rwhile  ,"while"   },
-        {tok::var     ,"var"     },
-        {tok::func    ,"func"    },
-        {tok::brk     ,"break"   },
-        {tok::cont    ,"continue"},
-        {tok::ret     ,"return"  },
-        {tok::rif     ,"if"      },
-        {tok::elsif   ,"elsif"   },
-        {tok::relse   ,"else"    },
-        {tok::nil     ,"nil"     },
-        {tok::lcurve  ,"("       },
-        {tok::rcurve  ,")"       },
-        {tok::lbracket,"["       },
-        {tok::rbracket,"]"       },
-        {tok::lbrace  ,"{"       },
-        {tok::rbrace  ,"}"       },
-        {tok::semi    ,";"       },
-        {tok::opand   ,"and"     },
-        {tok::opor    ,"or"      },
-        {tok::comma   ,","       },
-        {tok::dot     ,"."       },
-        {tok::ellipsis,"..."     },
-        {tok::quesmark,"?"       },
-        {tok::colon   ,":"       },
-        {tok::add     ,"+"       },
-        {tok::sub     ,"-"       },
-        {tok::mult    ,"*"       },
-        {tok::div     ,"/"       },
-        {tok::floater ,"~"       },
-        {tok::btand   ,"&"       },
-        {tok::btor    ,"|"       },
-        {tok::btxor   ,"^"       },
-        {tok::opnot   ,"!"       },
-        {tok::eq      ,"="       },
-        {tok::addeq   ,"+="      },
-        {tok::subeq   ,"-="      },
-        {tok::multeq  ,"*="      },
-        {tok::diveq   ,"/="      },
-        {tok::lnkeq   ,"~="      },
-        {tok::btandeq ,"&="      },
-        {tok::btoreq  ,"|="      },
-        {tok::btxoreq ,"^="      },
-        {tok::cmpeq   ,"=="      },
-        {tok::neq     ,"!="      },
-        {tok::less    ,"<"       },
-        {tok::leq     ,"<="      },
-        {tok::grt     ,">"       },
-        {tok::geq     ,">="      }
+    const std::unordered_map<tok, std::string> tokname = {
+        {tok::tk_true    , "true"    },
+        {tok::tk_false   , "false"   },
+        {tok::tk_use     , "use"     },
+        {tok::tk_for     , "for"     },
+        {tok::tk_forindex, "forindex"},
+        {tok::tk_foreach , "foreach" },
+        {tok::tk_while   , "while"   },
+        {tok::tk_var     , "var"     },
+        {tok::tk_func    , "func"    },
+        {tok::tk_brk     , "break"   },
+        {tok::tk_cont    , "continue"},
+        {tok::tk_ret     , "return"  },
+        {tok::tk_if      , "if"      },
+        {tok::tk_elsif   , "elsif"   },
+        {tok::tk_else    , "else"    },
+        {tok::tk_nil     , "nil"     },
+        {tok::tk_lcurve  , "("       },
+        {tok::tk_rcurve  , ")"       },
+        {tok::tk_lbracket, "["       },
+        {tok::tk_rbracket, "]"       },
+        {tok::tk_lbrace  , "{"       },
+        {tok::tk_rbrace  , "}"       },
+        {tok::tk_semi    , ";"       },
+        {tok::tk_and     , "and"     },
+        {tok::tk_or      , "or"      },
+        {tok::tk_comma   , ","       },
+        {tok::tk_dot     , "."       },
+        {tok::tk_ellipsis, "..."     },
+        {tok::tk_quesmark, "?"       },
+        {tok::tk_colon   , ":"       },
+        {tok::tk_add     , "+"       },
+        {tok::tk_sub     , "-"       },
+        {tok::tk_mult    , "*"       },
+        {tok::tk_div     , "/"       },
+        {tok::tk_floater , "~"       },
+        {tok::tk_btand   , "&"       },
+        {tok::tk_btor    , "|"       },
+        {tok::tk_btxor   , "^"       },
+        {tok::tk_not     , "!"       },
+        {tok::tk_eq      , "="       },
+        {tok::tk_addeq   , "+="      },
+        {tok::tk_subeq   , "-="      },
+        {tok::tk_multeq  , "*="      },
+        {tok::tk_diveq   , "/="      },
+        {tok::tk_lnkeq   , "~="      },
+        {tok::tk_btandeq , "&="      },
+        {tok::tk_btoreq  , "|="      },
+        {tok::tk_btxoreq , "^="      },
+        {tok::tk_cmpeq   , "=="      },
+        {tok::tk_neq     , "!="      },
+        {tok::tk_less    , "<"       },
+        {tok::tk_leq     , "<="      },
+        {tok::tk_grt     , ">"       },
+        {tok::tk_geq     , ">="      }
     };
 
 private:
@@ -151,7 +153,8 @@ public:
     }
 
 public:
-    parse(): ptr(0), in_func(0), in_loop(0), toks(nullptr), root(nullptr) {}
+    parse(): ptr(0), in_func_depth(0), in_loop_depth(0),
+             toks(nullptr), root(nullptr) {}
     ~parse() {delete root;}
     const error& compile(const lexer&);
     static void easter_egg();

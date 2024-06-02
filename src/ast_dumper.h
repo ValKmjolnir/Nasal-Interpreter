@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 
 #include "ast_visitor.h"
+#include "util/util.h"
 
 #include <iostream>
 #include <cstring>
@@ -16,29 +17,37 @@ private:
 private:
     void push_indent() {
         if (indent.size()) {
-            if (indent.back()=="|--") {
-                indent.back() = "|  ";
-            } else if (indent.back()=="+--") {
+            if (indent.back()=="├──") {
+                indent.back() = "│  ";
+            } else if (indent.back()=="╰──") {
                 indent.back() = "   ";
             }
         }
-        indent.push_back("|--");
+        indent.push_back("├──");
     }
-    void pop_indent() {indent.pop_back();}
-    void set_last() {indent.back() = "+--";}
+
+    void pop_indent() {
+        indent.pop_back();
+    }
+
+    void set_last() {
+        indent.back() = "╰──";
+    }
+
     void dump_indent() {
-        if (indent.size() && indent.back()=="|  ") {
-            indent.back() = "|--";
+        if (indent.size() && indent.back()=="│  ") {
+            indent.back() = "├──";
         }
         for(const auto& i : indent) {
             std::cout << i;
         }
     }
-    std::string format_location(const span& location) {
+
+    std::string format_location(expr* node) {
         std::stringstream ss;
-        ss << " -> ";
-        location.dump_begin(ss);
-        ss << "\n";
+        ss << " → [";
+        node->get_location().dump_begin(ss);
+        ss << "]\n";
         return ss.str();
     }
 
@@ -81,7 +90,10 @@ public:
 
 public:
     void dump(code_block* root) {
+        util::windows_code_page_manager wcpm;
+        wcpm.set_utf8_output();
         root->accept(this);
+        wcpm.restore_code_page();
     }
 };
 

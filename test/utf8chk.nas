@@ -1,11 +1,16 @@
+use std.runtime;
+
+# do nothing if platform is not windows
+runtime.windows.set_utf8_output();
+
 var unicode测试 = func() {
     var 输出=print;
     var 测试成功=[
-        "unicode: utf-8支持测试成功",
-        "目前仅支持utf-8以及ascii格式文件",
-        "注意: windows系统请开启chcp 65001代码页"
+        "unicode: utf-8 支持测试成功",
+        "目前仅支持 utf-8 以及 ascii 格式文件",
+        "注意: windows 系统请开启 chcp 65001 代码页"
     ];
-    foreach(var 内容;测试成功)
+    foreach(var 内容; 测试成功)
         输出(内容~"\n");
 }
 
@@ -41,10 +46,10 @@ var emoji测试 = func() {
         🍾:🍾,
         🐘:🐘
     };
-    foreach(var 📄;📁)
-        💻(📄,🎤);
-    foreach(var 📄;keys(🗄️))
-        💻(📄,🗄️[📄],🎤);
+    foreach(var 📄; 📁)
+        💻(📄, 🎤);
+    foreach(var 📄; keys(🗄️))
+        💻(📄, 🗄️[📄], 🎤);
 }
 
 var dotsgen = func() {
