@@ -1,4 +1,4 @@
-﻿#include "natives/nasal_builtin.h"
+﻿#include "natives/builtin.h"
 #include <chrono>
 
 #ifdef _WIN32
@@ -45,7 +45,7 @@ var builtin_append(context* ctx, gc* ngc) {
     var vec = local[1];
     var elem = local[2];
     if (!vec.is_vec()) {
-        return nas_err("append", "\"vec\" must be vector");
+        return nas_err("native::append", "\"vec\" must be vector");
     }
     auto& v = vec.vec().elems;
     for(auto& i : elem.vec().elems) {
@@ -59,7 +59,7 @@ var builtin_setsize(context* ctx, gc* ngc) {
     var vec = local[1];
     var size = local[2];
     if (!vec.is_vec()) {
-        return nas_err("setsize", "\"vec\" must be vector");
+        return nas_err("native::setsize", "\"vec\" must be vector");
     }
     if (!size.is_num() || size.num()<0) {
         return nil;
@@ -93,10 +93,10 @@ var builtin_split(context* ctx, gc* ngc) {
     var delimeter = local[1];
     var str = local[2];
     if (!delimeter.is_str()) {
-        return nas_err("split", "\"separator\" must be string");
+        return nas_err("native::split", "\"separator\" must be string");
     }
     if (!str.is_str()) {
-        return nas_err("split", "\"str\" must be string");
+        return nas_err("native::split", "\"str\" must be string");
     }
     const auto& deli = delimeter.str();
     const auto& s = str.str();
@@ -131,7 +131,7 @@ var builtin_split(context* ctx, gc* ngc) {
 var builtin_rand(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     if (!val.is_num() && !val.is_nil()) {
-        return nas_err("rand", "\"seed\" must be nil or number");
+        return nas_err("native::rand", "\"seed\" must be nil or number");
     }
     if (val.is_num()) {
         srand(static_cast<u32>(val.num()));
@@ -191,7 +191,7 @@ var builtin_num(context* ctx, gc* ngc) {
 var builtin_pop(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     if (!val.is_vec()) {
-        return nas_err("pop", "\"vec\" must be vector");
+        return nas_err("native::pop", "\"vec\" must be vector");
     }
     auto& vec = val.vec().elems;
     if (vec.size()) {
@@ -224,7 +224,7 @@ var builtin_size(context* ctx, gc* ngc) {
 var builtin_time(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     if (!val.is_num()) {
-        return nas_err("time", "\"begin\" must be number");
+        return nas_err("native::time", "\"begin\" must be number");
     }
     auto begin = static_cast<time_t>(val.num());
     return var::num(static_cast<f64>(time(&begin)));
@@ -245,7 +245,7 @@ var builtin_delete(context* ctx, gc* ngc) {
     var hash = local[1];
     var key = local[2];
     if (!hash.is_hash()) {
-        return nas_err("delete", "\"hash\" must be hash");
+        return nas_err("native::delete", "\"hash\" must be hash");
     }
     if (!key.is_str()) {
         return nil;
@@ -259,7 +259,7 @@ var builtin_delete(context* ctx, gc* ngc) {
 var builtin_keys(context* ctx, gc* ngc) {
     auto hash = ctx->localr[1];
     if (!hash.is_hash() && !hash.is_map()) {
-        return nas_err("keys", "\"hash\" must be hash");
+        return nas_err("native::keys", "\"hash\" must be hash");
     }
     // avoid being sweeped
     auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
@@ -278,7 +278,7 @@ var builtin_keys(context* ctx, gc* ngc) {
 }
 
 var builtin_die(context* ctx, gc* ngc) {
-    return nas_err("error", ctx->localr[1].to_str());
+    return nas_err("native::error", ctx->localr[1].to_str());
 }
 
 var builtin_find(context* ctx, gc* ngc) {
@@ -315,18 +315,18 @@ var builtin_substr(context* ctx, gc* ngc) {
     var beg = local[2];
     var len = local[3];
     if (!str.is_str()) {
-        return nas_err("substr", "\"str\" must be string");
+        return nas_err("native::substr", "\"str\" must be string");
     }
     if (!beg.is_num() || beg.num()<0) {
-        return nas_err("substr", "\"begin\" should be number >= 0");
+        return nas_err("native::substr", "\"begin\" should be number >= 0");
     }
     if (!len.is_num() || len.num()<0) {
-        return nas_err("substr", "\"length\" should be number >= 0");
+        return nas_err("native::substr", "\"length\" should be number >= 0");
     }
     auto begin = static_cast<usize>(beg.num());
     auto length = static_cast<usize>(len.num());
     if (begin>=str.str().length()) {
-        return nas_err("susbtr", "begin index out of range: "+std::to_string(begin));
+        return nas_err("native::susbtr", "begin index out of range: "+std::to_string(begin));
     }
     return ngc->newstr(str.str().substr(begin, length));
 }
@@ -346,10 +346,10 @@ var builtin_left(context* ctx, gc* ngc) {
     var len = local[2];
 
     if (!str.is_str()) {
-        return nas_err("left", "\"string\" must be string");
+        return nas_err("native::left", "\"string\" must be string");
     }
     if (!len.is_num()) {
-        return nas_err("left", "\"length\" must be number");
+        return nas_err("native::left", "\"length\" must be number");
     }
     if (len.num()<0) {
         return ngc->newstr("");
@@ -363,10 +363,10 @@ var builtin_right(context* ctx, gc* ngc) {
     var len = local[2];
 
     if (!str.is_str()) {
-        return nas_err("right", "\"string\" must be string");
+        return nas_err("native::right", "\"string\" must be string");
     }
     if (!len.is_num()) {
-        return nas_err("right", "\"length\" must be number");
+        return nas_err("native::right", "\"length\" must be number");
     }
 
     i32 length = static_cast<i32>(len.num());
@@ -386,7 +386,7 @@ var builtin_cmp(context* ctx, gc* ngc) {
     var a = local[1];
     var b = local[2];
     if (!a.is_str() || !b.is_str()) {
-        return nas_err("cmp", "\"a\" and \"b\" must be string");
+        return nas_err("native::cmp", "\"a\" and \"b\" must be string");
     }
     return var::num(static_cast<f64>(strcmp(
         a.str().c_str(),
@@ -429,7 +429,7 @@ var builtin_char(context* ctx, gc* ngc) {
 var builtin_values(context* ctx, gc* ngc) {
     auto hash = ctx->localr[1];
     if (!hash.is_hash() && !hash.is_map()) {
-        return nas_err("values", "\"hash\" must be hash or namespace");
+        return nas_err("native::values", "\"hash\" must be hash or namespace");
     }
     auto vec = ngc->alloc(vm_type::vm_vec);
     auto& v = vec.vec().elems;
@@ -564,7 +564,7 @@ std::string md5(const std::string& src) {
 var builtin_md5(context* ctx, gc* ngc) {
     auto str = ctx->localr[1];
     if (!str.is_str()) {
-        return nas_err("md5", "\"str\" must be string");
+        return nas_err("native::md5", "\"str\" must be string");
     }
     return ngc->newstr(md5(str.str()));
 }
@@ -704,7 +704,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
 var builtin_ghosttype(context* ctx, gc* ngc) {
     auto arg = ctx->localr[1];
     if (!arg.is_ghost()) {
-        return nas_err("ghosttype", "this is not a ghost object.");
+        return nas_err("native::ghosttype", "this is not a ghost object.");
     }
 
     const auto& name = arg.ghost().get_ghost_name();

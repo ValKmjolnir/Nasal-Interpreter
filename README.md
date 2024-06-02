@@ -26,11 +26,9 @@
 
 __Contact us if having great ideas to share!__
 
-* __E-mail__:
+* __lhk101lhk101@qq.com__ (ValKmjolnir)
 
-  * __lhk101lhk101@qq.com__ (ValKmjolnir)
-
-  * __sidi.liang@gmail.com__ (Sidi)
+* __sidi.liang@gmail.com__ (Sidi)
 
 ## __Introduction__
 

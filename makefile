@@ -13,7 +13,7 @@ NASAL_HEADER = \
 	src/ast_dumper.h\
 	src/ast_visitor.h\
 	src/nasal_ast.h\
-	src/natives/nasal_builtin.h\
+	src/natives/builtin.h\
 	src/nasal_codegen.h\
 	src/nasal_dbg.h\
 	src/nasal_err.h\
@@ -54,7 +54,7 @@ NASAL_OBJECT = \
 	build/nasal_codegen.o\
 	build/nasal_misc.o\
 	build/nasal_gc.o\
-	build/nasal_builtin.o\
+	build/builtin.o\
 	build/fg_props.o\
 	build/io_lib.o\
 	build/math_lib.o\
@@ -127,12 +127,12 @@ build/nasal_ast.o: \
 	src/nasal_ast.h src/nasal_ast.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_ast.cpp -o build/nasal_ast.o
 
-build/nasal_builtin.o: \
+build/builtin.o: \
 	src/nasal.h\
 	src/nasal_type.h\
 	src/nasal_gc.h\
-	src/natives/nasal_builtin.h src/natives/nasal_builtin.cpp | build
-	$(CXX) $(CXXFLAGS) src/natives/nasal_builtin.cpp -o build/nasal_builtin.o
+	src/natives/builtin.h src/natives/builtin.cpp | build
+	$(CXX) $(CXXFLAGS) src/natives/builtin.cpp -o build/builtin.o
 
 build/coroutine.o: \
 	src/nasal.h\
@@ -203,7 +203,7 @@ build/nasal_codegen.o: $(NASAL_HEADER) src/nasal_codegen.h src/nasal_codegen.cpp
 
 build/nasal_opcode.o: \
 	src/nasal.h\
-	src/natives/nasal_builtin.h\
+	src/natives/builtin.h\
 	src/nasal_opcode.h src/nasal_opcode.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_opcode.cpp -o build/nasal_opcode.o
 

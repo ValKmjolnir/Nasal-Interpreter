@@ -75,8 +75,8 @@ void vm::value_info(var& val) {
         case vm_type::vm_nil:  std::clog << "| nil  |"; break;
         case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
         case vm_type::vm_str:  std::clog << "| str  | <0x" << std::hex << p
-                                         << "> " << rawstr(val.str(), 16)
-                                         << std::dec; break;
+                                         << "> \"" << rawstr(val.str(), 16)
+                                         << "\"" << std::dec; break;
         case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
                                          << std::dec << "> " << val.func();
                                          break;
@@ -391,7 +391,7 @@ std::string vm::type_name_string(const var& value) const {
 }
 
 void vm::die(const std::string& str) {
-    std::cerr << "\n[vm] error: " << str << "\n";
+    std::cerr << "[vm] error: " << str << "\n";
     function_call_trace();
     trace_back();
     stack_info();

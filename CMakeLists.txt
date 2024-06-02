@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE "Release")
 # build nasal used object
 set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
-    ${CMAKE_SOURCE_DIR}/src/natives/nasal_builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/builtin.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/coroutine.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/fg_props.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/bits_lib.cpp
