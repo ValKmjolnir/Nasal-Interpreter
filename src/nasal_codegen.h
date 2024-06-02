@@ -8,7 +8,7 @@
 #include "nasal_parse.h"
 #include "nasal_import.h"
 
-#include "natives/nasal_builtin.h"
+#include "natives/builtin.h"
 #include "natives/coroutine.h"
 #include "natives/bits_lib.h"
 #include "natives/math_lib.h"
