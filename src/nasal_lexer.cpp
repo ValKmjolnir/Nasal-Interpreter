@@ -6,6 +6,7 @@
 
 #include "nasal_lexer.h"
 #include "repl/repl.h"
+#include "util/util.h"
 #include "util/fs.h"
 
 namespace nasal {
@@ -62,7 +63,7 @@ void lexer::err_char() {
     char c = res[ptr++];
     err.err("lexer",
         {line, column-1, line, column, filename},
-        "invalid character 0x" + char_to_hex(c)
+        "invalid character 0x" + util::char_to_hex(c)
     );
     ++invalid_char;
 }
@@ -109,7 +110,7 @@ std::string lexer::utf8_gen() {
     std::string str = "";
     while(ptr<res.size() && res[ptr]<0) {
         std::string tmp = "";
-        u32 nbytes = utf8_hdchk(res[ptr]);
+        u32 nbytes = util::utf8_hdchk(res[ptr]);
         if (!nbytes) {
             ++ptr;
             ++column;
@@ -126,9 +127,9 @@ std::string lexer::utf8_gen() {
         // utf8 character's total length is 1+nbytes
         if (tmp.length()!=1+nbytes) {
             ++column;
-            std::string utf_info = "0x" + char_to_hex(tmp[0]);
+            std::string utf_info = "0x" + util::char_to_hex(tmp[0]);
             for(u32 i = 1; i<tmp.size(); ++i) {
-                utf_info += " 0x" + char_to_hex(tmp[i]);
+                utf_info += " 0x" + util::char_to_hex(tmp[i]);
             }
             err.err("lexer",
                 {line, column-1, line, column, filename},
@@ -319,7 +320,7 @@ token lexer::str_gen() {
     ++column;
 
     // if is not utf8, 1+utf8_hdchk should be 1
-    if (begin=='`' && str.length()!=1+utf8_hdchk(str[0])) {
+    if (begin=='`' && str.length()!=1+util::utf8_hdchk(str[0])) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "\'`\' is used for string including one character"

@@ -1,4 +1,5 @@
 #include "nasal_type.h"
+#include "util/util.h"
 
 #include <cstring>
 #include <sstream>
@@ -268,7 +269,7 @@ void nas_val::clear() {
 }
 
 f64 var::to_num() {
-    return type!=vm_type::vm_str? val.num:str_to_num(str().c_str());
+    return type!=vm_type::vm_str? val.num:util::str_to_num(str().c_str());
 }
 
 std::string var::to_str() {

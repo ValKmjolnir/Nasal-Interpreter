@@ -1,4 +1,5 @@
 #include "natives/json_lib.h"
+#include "util/util.h"
 
 #include <iostream>
 #include <cstring>
@@ -170,7 +171,7 @@ void json::next() {
         } else if (text[ptr]!=' ' && text[ptr]!='\t' && text[ptr]!='\r') {
             error_info() += "json::parse: line " + std::to_string(line);
             error_info() += ": invalid character `0x";
-            error_info() += char_to_hex(text[ptr]);
+            error_info() += util::char_to_hex(text[ptr]);
             error_info() += "`\n";
         }
         ++ptr;
@@ -253,7 +254,7 @@ void json::vector_member(nas_vec& vec, gc* ngc) {
         vec.elems.push_back(ngc->newstr(this_token.content));
         next();
     } else if (this_token.type==json_token_type::tok_num) {
-        vec.elems.push_back(var::num(str_to_num(this_token.content.c_str())));
+        vec.elems.push_back(var::num(util::str_to_num(this_token.content.c_str())));
         next();
     }
 }
@@ -292,7 +293,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
         hash.elems.insert({name, ngc->newstr(this_token.content)});
         next();
     } else if (this_token.type==json_token_type::tok_num) {
-        hash.elems.insert({name, var::num(str_to_num(this_token.content.c_str()))});
+        hash.elems.insert({name, var::num(util::str_to_num(this_token.content.c_str()))});
         next();
     }
 }

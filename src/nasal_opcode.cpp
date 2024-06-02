@@ -1,4 +1,5 @@
 #include "nasal_opcode.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -80,7 +81,7 @@ void codestream::dump(std::ostream& out) const {
             break;
         case op_lnkeqc:
             out << hex << "0x" << num << dec;
-            out << " (" << rawstr(const_string[num], 16) << ")";
+            out << " (" << util::rawstr(const_string[num], 16) << ")";
             break;
         case op_addecp:
         case op_subecp:
@@ -91,7 +92,7 @@ void codestream::dump(std::ostream& out) const {
             break;
         case op_lnkecp:
             out << hex << "0x" << num << dec;
-            out << " (" << rawstr(const_string[num], 16) << ") sp-1";
+            out << " (" << util::rawstr(const_string[num], 16) << ") sp-1";
             break;
         case op_addc:
         case op_subc:
@@ -141,7 +142,7 @@ void codestream::dump(std::ostream& out) const {
         case op_deft:
         case op_dyn:
             out << hex << "0x" << num << dec;
-            out << " (" << rawstr(const_string[num], 16) << ")";
+            out << " (" << util::rawstr(const_string[num], 16) << ")";
             break;
         default:
             if (files) {

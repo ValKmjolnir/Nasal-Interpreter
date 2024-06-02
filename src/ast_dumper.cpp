@@ -1,4 +1,5 @@
 #include "ast_dumper.h"
+#include "util/util.h"
 
 #include <iostream>
 
@@ -39,7 +40,7 @@ bool ast_dumper::visit_number_literal(number_literal* node) {
 
 bool ast_dumper::visit_string_literal(string_literal* node) {
     dump_indent();
-    std::cout << "string \"" << rawstr(node->get_content()) << "\"";
+    std::cout << "string \"" << util::rawstr(node->get_content()) << "\"";
     std::cout << format_location(node);
     return true;
 }

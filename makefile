@@ -54,7 +54,6 @@ NASAL_OBJECT = \
 	build/nasal_opcode.o\
 	build/symbol_finder.o\
 	build/nasal_codegen.o\
-	build/nasal_misc.o\
 	build/nasal_gc.o\
 	build/builtin.o\
 	build/fg_props.o\
@@ -92,9 +91,6 @@ build:
 build/main.o: $(NASAL_HEADER) src/main.cpp | build
 	$(CXX) $(CXXFLAGS) src/main.cpp -o build/main.o
 
-build/nasal_misc.o: src/nasal.h src/util/util.h src/nasal_misc.cpp | build
-	$(CXX) $(CXXFLAGS) src/nasal_misc.cpp -o build/nasal_misc.o
-
 build/cli.o: src/cli/cli.h src/cli/cli.cpp | build
 	$(CXX) $(CXXFLAGS) src/cli/cli.cpp -o build/cli.o
 
@@ -110,7 +106,10 @@ build/repl.o: $(NASAL_HEADER) src/repl/repl.h src/repl/repl.cpp | build
 build/nasal_err.o: src/nasal.h src/repl/repl.h src/nasal_err.h src/nasal_err.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_err.cpp -o build/nasal_err.o
 
-build/nasal_type.o: src/nasal.h src/nasal_type.h src/nasal_type.cpp | build
+build/nasal_type.o:\
+	src/nasal.h\
+	src/util/util.h\
+	src/nasal_type.h src/nasal_type.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_type.cpp -o build/nasal_type.o
 
 build/nasal_gc.o: src/nasal.h src/nasal_type.h src/nasal_gc.h src/nasal_gc.cpp | build
@@ -129,6 +128,7 @@ build/nasal_import.o: \
 build/nasal_lexer.o: \
 	src/nasal.h\
 	src/repl/repl.h\
+	src/util/util.h\
 	src/util/fs.h\
 	src/nasal_err.h\
 	src/nasal_lexer.h src/nasal_lexer.cpp | build
@@ -163,7 +163,6 @@ build/bits_lib.o: \
 	src/natives/bits_lib.h src/natives/bits_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/natives/bits_lib.cpp -o build/bits_lib.o
 
-
 build/math_lib.o: \
 	src/nasal.h\
 	src/nasal_type.h\
@@ -190,6 +189,7 @@ build/json_lib.o: \
 	src/nasal.h\
 	src/nasal_type.h\
 	src/nasal_gc.h\
+	src/util/util.h\
 	src/natives/json_lib.h src/natives/json_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/natives/json_lib.cpp -o build/json_lib.o
 
@@ -220,6 +220,7 @@ build/nasal_codegen.o: $(NASAL_HEADER) src/nasal_codegen.h src/nasal_codegen.cpp
 build/nasal_opcode.o: \
 	src/nasal.h\
 	src/natives/builtin.h\
+	src/util/util.h\
 	src/nasal_opcode.h src/nasal_opcode.cpp | build
 	$(CXX) $(CXXFLAGS) src/nasal_opcode.cpp -o build/nasal_opcode.o
 
@@ -228,6 +229,7 @@ build/nasal_parse.o: \
 	src/nasal_ast.h\
 	src/nasal_lexer.h\
 	src/nasal_err.h\
+	src/util/util.h\
 	src/nasal_parse.h src/nasal_parse.cpp src/nasal_ast.h | build
 	$(CXX) $(CXXFLAGS) src/nasal_parse.cpp -o build/nasal_parse.o
 
@@ -259,6 +261,7 @@ build/ast_dumper.o: \
 	src/nasal_err.h\
 	src/nasal_ast.h\
 	src/ast_visitor.h\
+	src/util/util.h\
 	src/ast_dumper.h src/ast_dumper.cpp | build
 	$(CXX) $(CXXFLAGS) src/ast_dumper.cpp -o build/ast_dumper.o
 

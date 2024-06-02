@@ -2,6 +2,9 @@
 
 #include "nasal.h"
 
+#include <cstring>
+#include <sstream>
+#include <iostream>
 #include <vector>
 #include <unordered_map>
 

@@ -13,6 +13,7 @@
 #include <thread>
 #include <cstring>
 #include <sstream>
+#include <iostream>
 
 #include "nasal.h"
 #include "nasal_type.h"
