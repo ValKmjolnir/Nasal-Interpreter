@@ -45,7 +45,7 @@ private:
 
     std::string format_location(expr* node) {
         std::stringstream ss;
-        ss << " → [";
+        ss << " ⇒ [";
         node->get_location().dump_begin(ss);
         ss << "]\n";
         return ss.str();
@@ -90,10 +90,10 @@ public:
 
 public:
     void dump(code_block* root) {
-        util::windows_code_page_manager wcpm;
-        wcpm.set_utf8_output();
+        util::windows_code_page_manager wm;
+        wm.set_utf8_output();
         root->accept(this);
-        wcpm.restore_code_page();
+        wm.restore_code_page();
     }
 };
 
