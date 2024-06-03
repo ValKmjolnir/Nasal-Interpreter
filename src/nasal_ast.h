@@ -23,6 +23,7 @@ enum class expr_type {
     ast_pair,        // pair of key and value in hashmap
     ast_call,        // mark a sub-tree of calling an identifier
     ast_callh,       // id.name
+    ast_nullaccess,  // id?.name
     ast_callv,       // id[index]
     ast_callf,       // id()
     ast_subvec,      // id[index:index]
@@ -302,7 +303,8 @@ public:
         bitwise_xor,
         bitwise_and,
         condition_and,
-        condition_or
+        condition_or,
+        nullchain
     };
 
 private:
@@ -385,6 +387,19 @@ public:
         call(location, expr_type::ast_callh),
         field(name) {}
     ~call_hash() override = default;
+    const std::string& get_field() const {return field;}
+    void accept(ast_visitor*) override;
+};
+
+class null_access: public call {
+private:
+    std::string field;
+
+public:
+    null_access(const span& location, const std::string& name):
+        call(location, expr_type::ast_nullaccess),
+        field(name) {}
+    ~null_access() override = default;
     const std::string& get_field() const {return field;}
     void accept(ast_visitor*) override;
 };

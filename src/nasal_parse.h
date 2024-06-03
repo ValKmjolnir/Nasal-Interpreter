@@ -119,12 +119,14 @@ private:
     expr* or_expr();
     expr* and_expr();
     expr* cmp_expr();
+    expr* null_chain_expr();
     expr* additive_expr();
     expr* multive_expr();
     unary_operator* unary();
     expr* scalar();
     call* call_scalar();
     call_hash* callh();
+    null_access* null_access_call();
     call_vector* callv();
     call_function* callf();
     slice_vector* subvec();
