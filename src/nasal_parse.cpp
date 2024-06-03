@@ -82,7 +82,11 @@ void parse::match(tok type, const char* info) {
             case tok::tk_num: die(thisspan, "expected number"); break;
             case tok::tk_str: die(thisspan, "expected string"); break;
             case tok::tk_id: die(thisspan, "expected identifier"); break;
-            default: die(thisspan, "expected \""+tokname.at(type)+"\""); break;
+            default:
+                die(thisspan,
+                    "expected \"" + token_name_mapper.at(type)+"\""
+                );
+                break;
         }
         return;
     }
