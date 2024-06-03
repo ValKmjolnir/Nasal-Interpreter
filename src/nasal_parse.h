@@ -53,6 +53,8 @@ private:
         {tok::tk_dot     , "."       },
         {tok::tk_ellipsis, "..."     },
         {tok::tk_quesmark, "?"       },
+        {tok::tk_quesques, "??"      },
+        {tok::tk_quesdot , "?."      },
         {tok::tk_colon   , ":"       },
         {tok::tk_add     , "+"       },
         {tok::tk_sub     , "-"       },
