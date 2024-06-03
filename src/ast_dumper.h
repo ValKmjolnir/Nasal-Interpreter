@@ -70,6 +70,7 @@ public:
     bool visit_unary_operator(unary_operator*) override;
     bool visit_call_expr(call_expr*) override;
     bool visit_call_hash(call_hash*) override;
+    bool visit_null_access(null_access*) override;
     bool visit_call_vector(call_vector*) override;
     bool visit_call_function(call_function*) override;
     bool visit_slice_vector(slice_vector*) override;

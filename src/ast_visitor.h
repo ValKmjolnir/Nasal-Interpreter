@@ -26,6 +26,7 @@ public:
     virtual bool visit_unary_operator(unary_operator*);
     virtual bool visit_call_expr(call_expr*);
     virtual bool visit_call_hash(call_hash*);
+    virtual bool visit_null_access(null_access*);
     virtual bool visit_call_vector(call_vector*);
     virtual bool visit_call_function(call_function*);
     virtual bool visit_slice_vector(slice_vector*);
