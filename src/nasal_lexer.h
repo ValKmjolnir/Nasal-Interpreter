@@ -97,10 +97,12 @@ private:
     std::string filename;
     std::string res;
 
+private:
     error err;
     u64 invalid_char;
     std::vector<token> toks;
 
+private:
     const std::unordered_map<std::string, tok> token_mapper = {
         {"use"     , tok::tk_use     },
         {"true"    , tok::tk_true    },
@@ -160,6 +162,7 @@ private:
         {">="      , tok::tk_geq     }
     };
 
+private:
     tok get_type(const std::string&);
     bool skip(char);
     bool is_id(char);
@@ -183,9 +186,11 @@ private:
     token single_opr();
     token dots();
     token calc_opr();
+
 public:
     lexer(): line(1), column(0), ptr(0),
-             filename(""), res(""), invalid_char(0) {}
+             filename(""), res(""),
+             invalid_char(0) {}
     const error& scan(const std::string&);
     const std::vector<token>& result() const {return toks;}
 };

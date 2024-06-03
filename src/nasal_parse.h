@@ -23,7 +23,7 @@ private:
     error err;
 
 private:
-    const std::unordered_map<tok, std::string> tokname = {
+    const std::unordered_map<tok, std::string> token_name_mapper = {
         {tok::tk_true    , "true"    },
         {tok::tk_false   , "false"   },
         {tok::tk_use     , "use"     },
@@ -155,8 +155,9 @@ public:
     }
 
 public:
-    parse(): ptr(0), in_func_depth(0), in_loop_depth(0),
-             toks(nullptr), root(nullptr) {}
+    parse(): ptr(0), in_func_depth(0),
+             in_loop_depth(0), toks(nullptr),
+             root(nullptr) {}
     ~parse() {delete root;}
     const error& compile(const lexer&);
     static void easter_egg();
