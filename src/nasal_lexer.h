@@ -50,6 +50,8 @@ enum class tok {
     tk_dot,      // .
     tk_ellipsis, // ...
     tk_quesmark, // ?
+    tk_quesques, // ??
+    tk_quesdot,  // ?.
     tk_colon,    // :
     tk_add,      // operator +
     tk_sub,      // operator -
@@ -79,9 +81,10 @@ enum class tok {
 };
 
 struct token {
-    span loc; // location
-    tok type; // token type
+    span loc;        // location
+    tok type;        // token type
     std::string str; // content
+
     token() = default;
     token(const token&) = default;
 };
@@ -128,6 +131,8 @@ private:
         {"."       , tok::tk_dot     },
         {"..."     , tok::tk_ellipsis},
         {"?"       , tok::tk_quesmark},
+        {"??"      , tok::tk_quesques},
+        {"?."      , tok::tk_quesdot },
         {":"       , tok::tk_colon   },
         {"+"       , tok::tk_add     },
         {"-"       , tok::tk_sub     },
@@ -162,6 +167,7 @@ private:
     bool is_oct(char);
     bool is_dec(char);
     bool is_str(char);
+    bool is_quesmark(char);
     bool is_single_opr(char);
     bool is_calc_opr(char);
 
@@ -173,6 +179,7 @@ private:
     token id_gen();
     token num_gen();
     token str_gen();
+    token quesmark_gen();
     token single_opr();
     token dots();
     token calc_opr();

@@ -35,12 +35,16 @@ bool lexer::is_str(char c) {
     return c=='\'' || c=='\"' || c=='`';
 }
 
+bool lexer::is_quesmark(char c) {
+    return c=='?';
+}
+
 bool lexer::is_single_opr(char c) {
     return (
         c=='(' || c==')' || c=='[' || c==']' ||
         c=='{' || c=='}' || c==',' || c==';' ||
-        c==':' || c=='?' || c=='`' || c=='@' ||
-        c=='%' || c=='$' || c=='\\'
+        c==':' || c=='`' || c=='@' || c=='%' ||
+        c=='$' || c=='\\'
     );
 }
 
@@ -103,6 +107,8 @@ void lexer::open(const std::string& file) {
 }
 
 tok lexer::get_type(const std::string& str) {
+    // search token type from mapper
+    // if cannot find, just return null
     return token_mapper.count(str)? token_mapper.at(str):tok::tk_null;
 }
 
@@ -333,6 +339,24 @@ token lexer::str_gen() {
     };
 }
 
+token lexer::quesmark_gen() {
+    u64 begin_line = line;
+    u64 begin_column = column;
+    std::string str(1, res[ptr]);
+    ++column;
+    ++ptr;
+    if (ptr < res.size() && (res[ptr]=='?' || res[ptr]=='.')) {
+        str += res[ptr];
+        ++column;
+        ++ptr;
+    }
+    return {
+        {begin_line, begin_column, line, column, filename},
+        get_type(str),
+        str
+    };
+}
+
 token lexer::single_opr() {
     u64 begin_line = line;
     u64 begin_column = column;
@@ -398,6 +422,8 @@ const error& lexer::scan(const std::string& file) {
             toks.push_back(num_gen());
         } else if (is_str(res[ptr])) {
             toks.push_back(str_gen());
+        } else if (is_quesmark(res[ptr])) {
+            toks.push_back(quesmark_gen());
         } else if (is_single_opr(res[ptr])) {
             toks.push_back(single_opr());
         } else if (res[ptr]=='.') {
