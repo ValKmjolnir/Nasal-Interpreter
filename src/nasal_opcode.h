@@ -14,6 +14,7 @@ enum op_code_type: u8 {
     op_loadg,   // load global value
     op_loadl,   // load local value
     op_loadu,   // load upvalue
+    op_dup,     // copy value on stack top
     op_pnum,    // push constant number to the stack
     op_pnil,    // push constant nil to the stack
     op_pstr,    // push constant std::string to the stack

@@ -339,6 +339,8 @@ void codegen::call_gen(call_expr* node) {
                 call_vector_gen(reinterpret_cast<call_vector*>(i)); break;
             case expr_type::ast_callf:
                 call_func_gen(reinterpret_cast<call_function*>(i)); break;
+            case expr_type::ast_nullaccess:
+                null_access_gen(reinterpret_cast<null_access*>(i)); break;
             default: break;
         }
     }
@@ -380,6 +382,24 @@ void codegen::call_identifier(identifier* node) {
 void codegen::call_hash_gen(call_hash* node) {
     regist_string(node->get_field());
     emit(op_callh, const_string_map.at(node->get_field()), node->get_location());
+}
+
+void codegen::null_access_gen(null_access* node) {
+    regist_string(node->get_field());
+
+    emit(op_dup, 0, node->get_location());
+    emit(op_pnil, 0, node->get_location());
+    emit(op_eq, 0, node->get_location());
+
+    const auto jmp_false_point = code.size();
+    emit(op_jf, 0, node->get_location());
+
+    const auto jmp_direct_point = code.size();
+    emit(op_jmp, 0, node->get_location());
+
+    code[jmp_false_point].num = code.size();
+    emit(op_callh, const_string_map.at(node->get_field()), node->get_location());
+    code[jmp_direct_point].num = code.size();
 }
 
 void codegen::call_vector_gen(call_vector* node) {
@@ -455,6 +475,8 @@ void codegen::mcall(expr* node) {
                 call_vector_gen(reinterpret_cast<call_vector*>(tmp)); break;
             case expr_type::ast_callf:
                 call_func_gen(reinterpret_cast<call_function*>(tmp)); break;
+            case expr_type::ast_nullaccess:
+                null_access_gen(reinterpret_cast<null_access*>(tmp)); break;
             default: break;
         }
     }
@@ -467,6 +489,8 @@ void codegen::mcall(expr* node) {
             mcall_vec(reinterpret_cast<call_vector*>(tmp)); break;
         case expr_type::ast_callf:
             die("bad left-value: function call", tmp->get_location()); break;
+        case expr_type::ast_nullaccess:
+            die("bad left-value: null access test", tmp->get_location()); break;
         default:
             die("bad left-value: unknown call", tmp->get_location()); break;
     }

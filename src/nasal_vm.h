@@ -93,6 +93,7 @@ protected:
     inline void o_loadg();
     inline void o_loadl();
     inline void o_loadu();
+    inline void o_dup();
     inline void o_pnum();
     inline void o_pnil();
     inline void o_pstr();
@@ -246,6 +247,11 @@ inline void vm::o_loadl() {
 inline void vm::o_loadu() {
     ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
                     .upval()[imm[ctx.pc]&0xffff] = (ctx.top--)[0];
+}
+
+inline void vm::o_dup() {
+    ctx.top[1] = ctx.top[0];
+    ++ctx.top;
 }
 
 inline void vm::o_pnum() {
