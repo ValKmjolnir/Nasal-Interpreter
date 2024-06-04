@@ -1059,6 +1059,9 @@ void codegen::binary_gen(binary_operator* node) {
             calc_gen(node->get_right());
             emit(op_btand, 0, node->get_location());
             return;
+        case binary_operator::binary_type::nullchain:
+            null_chain_gen(node);
+            return;
         default: break;
     }
     switch(node->get_operator_type()) {
@@ -1172,6 +1175,23 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         default: break;
     }
+}
+
+void codegen::null_chain_gen(binary_operator* node) {
+    calc_gen(node->get_left());
+    emit(op_pnil, 0, node->get_location());
+    emit(op_eq, 0, node->get_location());
+
+    const auto jmp_false_point = code.size();
+    emit(op_jf, 0, node->get_location());
+
+    calc_gen(node->get_right());
+    const auto jmp_direct_point = code.size();
+    emit(op_jmp, 0, node->get_location());
+
+    code[jmp_false_point].num = code.size();
+    emit(op_pop, 0, node->get_location());
+    code[jmp_direct_point].num = code.size();
 }
 
 void codegen::trino_gen(ternary_operator* node) {
