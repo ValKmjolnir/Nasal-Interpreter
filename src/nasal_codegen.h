@@ -123,6 +123,7 @@ private:
     void call_gen(call_expr*);
     void call_identifier(identifier*);
     void call_hash_gen(call_hash*);
+    void null_access_gen(null_access*);
     void call_vector_gen(call_vector*);
     void call_func_gen(call_function*);
     void mcall(expr*);
