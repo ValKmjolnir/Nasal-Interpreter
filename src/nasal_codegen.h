@@ -148,6 +148,7 @@ private:
     void and_gen(binary_operator*);
     void unary_gen(unary_operator*);
     void binary_gen(binary_operator*);
+    void null_chain_gen(binary_operator*);
     void trino_gen(ternary_operator*);
     void calc_gen(expr*);
     void repl_mode_info_output_gen(expr*);

@@ -267,3 +267,10 @@ for(var i = 1; i<=10; i += 1) {
         die("test failed: expect " ~ i ~ ", but get " ~ closure_tester[1]());
     }
 }
+
+func() {
+    var a = nil;
+    var b = nil;
+    var c = nil;
+    println(a??b??c??"a??b??c?? -> should print this text");
+}();
