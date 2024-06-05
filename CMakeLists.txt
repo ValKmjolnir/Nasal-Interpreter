@@ -10,6 +10,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
 add_compile_options(-fPIC)
+# MSVC needs this command option to really enable utf-8 output
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
 
 # generate release executables
 set(CMAKE_BUILD_TYPE "Release")
