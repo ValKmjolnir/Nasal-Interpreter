@@ -82,7 +82,11 @@ void parse::match(tok type, const char* info) {
             case tok::tk_num: die(thisspan, "expected number"); break;
             case tok::tk_str: die(thisspan, "expected string"); break;
             case tok::tk_id: die(thisspan, "expected identifier"); break;
-            default: die(thisspan, "expected \""+tokname.at(type)+"\""); break;
+            default:
+                die(thisspan,
+                    "expected \"" + token_name_mapper.at(type)+"\""
+                );
+                break;
         }
         return;
     }
@@ -94,7 +98,8 @@ bool parse::lookahead(tok type) {
 }
 
 bool parse::is_call(tok type) {
-    return type==tok::tk_lcurve || type==tok::tk_lbracket || type==tok::tk_dot;
+    return type==tok::tk_lcurve || type==tok::tk_lbracket ||
+           type==tok::tk_dot || type==tok::tk_quesdot;
 }
 
 bool parse::check_comma(const tok* panic_set) {
@@ -564,7 +569,7 @@ expr* parse::and_expr() {
 }
 
 expr* parse::cmp_expr() {
-    auto node = additive_expr();
+    auto node = null_chain_expr();
     while(tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
@@ -578,6 +583,21 @@ expr* parse::cmp_expr() {
         }
         tmp->set_left(node);
         match(toks[ptr].type);
+        tmp->set_right(null_chain_expr());
+        update_location(tmp);
+        node = tmp;
+    }
+    update_location(node);
+    return node;
+}
+
+expr* parse::null_chain_expr() {
+    auto node = additive_expr();
+    while(lookahead(tok::tk_quesques)) {
+        auto tmp = new binary_operator(toks[ptr].loc);
+        tmp->set_operator_type(binary_operator::binary_type::null_chain);
+        tmp->set_left(node);
+        match(tok::tk_quesques);
         tmp->set_right(additive_expr());
         update_location(tmp);
         node = tmp;
@@ -718,6 +738,7 @@ call* parse::call_scalar() {
         case tok::tk_lcurve:   return callf(); break;
         case tok::tk_lbracket: return callv(); break;
         case tok::tk_dot:      return callh(); break;
+        case tok::tk_quesdot:  return null_access_call(); break;
         default: break;
     }
     // unreachable
@@ -728,6 +749,15 @@ call_hash* parse::callh() {
     const auto& begin_loc = toks[ptr].loc;
     match(tok::tk_dot);
     auto node = new call_hash(begin_loc, toks[ptr].str);
+    update_location(node);
+    match(tok::tk_id, "expected hashmap key"); // get key
+    return node;
+}
+
+null_access* parse::null_access_call() {
+    const auto& begin_loc = toks[ptr].loc;
+    match(tok::tk_quesdot);
+    auto node = new null_access(begin_loc, toks[ptr].str);
     update_location(node);
     match(tok::tk_id, "expected hashmap key"); // get key
     return node;

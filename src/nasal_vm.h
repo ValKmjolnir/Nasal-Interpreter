@@ -93,6 +93,7 @@ protected:
     inline void o_loadg();
     inline void o_loadl();
     inline void o_loadu();
+    inline void o_dup();
     inline void o_pnum();
     inline void o_pnil();
     inline void o_pstr();
@@ -175,6 +176,100 @@ protected:
     inline void o_mcallh();
     inline void o_ret();
 
+protected:
+    // for debugger and MSVC(does not support labels as values)
+    typedef void (vm::*nasal_vm_func)();
+    const nasal_vm_func operand_function[op_ret + 1] = {
+        nullptr,
+        &vm::o_repl,
+        &vm::o_intl,
+        &vm::o_loadg,
+        &vm::o_loadl,
+        &vm::o_loadu,
+        &vm::o_dup,
+        &vm::o_pnum,
+        &vm::o_pnil,
+        &vm::o_pstr,
+        &vm::o_newv,
+        &vm::o_newh,
+        &vm::o_newf,
+        &vm::o_happ,
+        &vm::o_para,
+        &vm::o_deft,
+        &vm::o_dyn,
+        &vm::o_lnot,
+        &vm::o_usub,
+        &vm::o_bnot,
+        &vm::o_btor,
+        &vm::o_btxor,
+        &vm::o_btand,
+        &vm::o_add,
+        &vm::o_sub,
+        &vm::o_mul,
+        &vm::o_div,
+        &vm::o_lnk,
+        &vm::o_addc,
+        &vm::o_subc,
+        &vm::o_mulc,
+        &vm::o_divc,
+        &vm::o_lnkc,
+        &vm::o_addeq,
+        &vm::o_subeq,
+        &vm::o_muleq,
+        &vm::o_diveq,
+        &vm::o_lnkeq,
+        &vm::o_bandeq,
+        &vm::o_boreq,
+        &vm::o_bxoreq,
+        &vm::o_addeqc,
+        &vm::o_subeqc,
+        &vm::o_muleqc,
+        &vm::o_diveqc,
+        &vm::o_lnkeqc,
+        &vm::o_addecp,
+        &vm::o_subecp,
+        &vm::o_mulecp,
+        &vm::o_divecp,
+        &vm::o_lnkecp,
+        &vm::o_meq,
+        &vm::o_eq,
+        &vm::o_neq,
+        &vm::o_less,
+        &vm::o_leq,
+        &vm::o_grt,
+        &vm::o_geq,
+        &vm::o_lessc,
+        &vm::o_leqc,
+        &vm::o_grtc,
+        &vm::o_geqc,
+        &vm::o_pop,
+        &vm::o_jmp,
+        &vm::o_jt,
+        &vm::o_jf,
+        &vm::o_cnt,
+        &vm::o_findex,
+        &vm::o_feach,
+        &vm::o_callg,
+        &vm::o_calll,
+        &vm::o_upval,
+        &vm::o_callv,
+        &vm::o_callvi,
+        &vm::o_callh,
+        &vm::o_callfv,
+        &vm::o_callfh,
+        &vm::o_callb,
+        &vm::o_slcbeg,
+        &vm::o_slcend,
+        &vm::o_slc,
+        &vm::o_slc2,
+        &vm::o_mcallg,
+        &vm::o_mcalll,
+        &vm::o_mupval,
+        &vm::o_mcallv,
+        &vm::o_mcallh,
+        &vm::o_ret
+    };
+
 public:
 
     /* constructor of vm instance */
@@ -246,6 +341,11 @@ inline void vm::o_loadl() {
 inline void vm::o_loadu() {
     ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
                     .upval()[imm[ctx.pc]&0xffff] = (ctx.top--)[0];
+}
+
+inline void vm::o_dup() {
+    ctx.top[1] = ctx.top[0];
+    ++ctx.top;
 }
 
 inline void vm::o_pnum() {

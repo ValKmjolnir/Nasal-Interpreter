@@ -14,6 +14,7 @@ enum op_code_type: u8 {
     op_loadg,   // load global value
     op_loadl,   // load local value
     op_loadu,   // load upvalue
+    op_dup,     // copy value on stack top
     op_pnum,    // push constant number to the stack
     op_pnil,    // push constant nil to the stack
     op_pstr,    // push constant std::string to the stack
@@ -97,6 +98,97 @@ enum op_code_type: u8 {
     op_ret      // return
 };
 
+static std::unordered_map<op_code_type, std::string> operand_name_table = {
+    {op_code_type::op_exit, "exit  "},
+    {op_code_type::op_repl, "repl  "},
+    {op_code_type::op_intl, "intl  "},
+    {op_code_type::op_loadg, "loadg "},
+    {op_code_type::op_loadl, "loadl "},
+    {op_code_type::op_loadu, "loadu "},
+    {op_code_type::op_dup, "dup   "},
+    {op_code_type::op_pnum, "pnum  "},
+    {op_code_type::op_pnil, "pnil  "},
+    {op_code_type::op_pstr, "pstr  "},
+    {op_code_type::op_newv, "newv  "},
+    {op_code_type::op_newh, "newh  "},
+    {op_code_type::op_newf, "newf  "},
+    {op_code_type::op_happ, "happ  "},
+    {op_code_type::op_para, "para  "},
+    {op_code_type::op_deft, "def   "},
+    {op_code_type::op_dyn, "dyn   "},
+    {op_code_type::op_lnot, "lnot  "},
+    {op_code_type::op_usub, "usub  "},
+    {op_code_type::op_bnot, "bitnot"},
+    {op_code_type::op_btor, "bitor "},
+    {op_code_type::op_btxor, "bitxor"},
+    {op_code_type::op_btand, "bitand"},
+    {op_code_type::op_add, "add   "},
+    {op_code_type::op_sub, "sub   "},
+    {op_code_type::op_mul, "mult  "},
+    {op_code_type::op_div, "div   "},
+    {op_code_type::op_lnk, "lnk   "},
+    {op_code_type::op_addc, "addc  "},
+    {op_code_type::op_subc, "subc  "},
+    {op_code_type::op_mulc, "multc "},
+    {op_code_type::op_divc, "divc  "},
+    {op_code_type::op_lnkc, "lnkc  "},
+    {op_code_type::op_addeq, "addeq "},
+    {op_code_type::op_subeq, "subeq "},
+    {op_code_type::op_muleq, "muleq "},
+    {op_code_type::op_diveq, "diveq "},
+    {op_code_type::op_lnkeq, "lnkeq "},
+    {op_code_type::op_btandeq, "bandeq"},
+    {op_code_type::op_btoreq, "boreq "},
+    {op_code_type::op_btxoreq, "bxoreq"},
+    {op_code_type::op_addeqc, "addeqc"},
+    {op_code_type::op_subeqc, "subeqc"},
+    {op_code_type::op_muleqc, "muleqc"},
+    {op_code_type::op_diveqc, "diveqc"},
+    {op_code_type::op_lnkeqc, "lnkeqc"},
+    {op_code_type::op_addecp, "addecp"},
+    {op_code_type::op_subecp, "subecp"},
+    {op_code_type::op_mulecp, "mulecp"},
+    {op_code_type::op_divecp, "divecp"},
+    {op_code_type::op_lnkecp, "lnkecp"},
+    {op_code_type::op_meq, "meq   "},
+    {op_code_type::op_eq, "eq    "},
+    {op_code_type::op_neq, "neq   "},
+    {op_code_type::op_less, "less  "},
+    {op_code_type::op_leq, "leq   "},
+    {op_code_type::op_grt, "grt   "},
+    {op_code_type::op_geq, "geq   "},
+    {op_code_type::op_lessc, "lessc "},
+    {op_code_type::op_leqc, "leqc  "},
+    {op_code_type::op_grtc, "grtc  "},
+    {op_code_type::op_geqc, "geqc  "},
+    {op_code_type::op_pop, "pop   "},
+    {op_code_type::op_jmp, "jmp   "},
+    {op_code_type::op_jt, "jt    "},
+    {op_code_type::op_jf, "jf    "},
+    {op_code_type::op_cnt, "cnt   "},
+    {op_code_type::op_findex, "findx "},
+    {op_code_type::op_feach, "feach "},
+    {op_code_type::op_callg, "callg "},
+    {op_code_type::op_calll, "calll "},
+    {op_code_type::op_upval, "upval "},
+    {op_code_type::op_callv, "callv "},
+    {op_code_type::op_callvi, "callvi"},
+    {op_code_type::op_callh, "callh "},
+    {op_code_type::op_callfv, "callfv"},
+    {op_code_type::op_callfh, "callfh"},
+    {op_code_type::op_callb, "callb "},
+    {op_code_type::op_slcbeg, "slcbeg"},
+    {op_code_type::op_slcend, "slcend"},
+    {op_code_type::op_slc, "slice "},
+    {op_code_type::op_slc2, "slice2"},
+    {op_code_type::op_mcallg, "mcallg"},
+    {op_code_type::op_mcalll, "mcalll"},
+    {op_code_type::op_mupval, "mupval"},
+    {op_code_type::op_mcallv, "mcallv"},
+    {op_code_type::op_mcallh, "mcallh"},
+    {op_code_type::op_ret, "ret   "}
+};
+
 struct opcode {
     u8  op;   // opcode
     u16 fidx; // source code file index
@@ -126,7 +218,5 @@ public:
 };
 
 std::ostream& operator<<(std::ostream&, const codestream&);
-
-extern const char* oprand_name_table[];
 
 }

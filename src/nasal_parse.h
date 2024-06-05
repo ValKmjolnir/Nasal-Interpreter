@@ -23,7 +23,7 @@ private:
     error err;
 
 private:
-    const std::unordered_map<tok, std::string> tokname = {
+    const std::unordered_map<tok, std::string> token_name_mapper = {
         {tok::tk_true    , "true"    },
         {tok::tk_false   , "false"   },
         {tok::tk_use     , "use"     },
@@ -53,6 +53,8 @@ private:
         {tok::tk_dot     , "."       },
         {tok::tk_ellipsis, "..."     },
         {tok::tk_quesmark, "?"       },
+        {tok::tk_quesques, "??"      },
+        {tok::tk_quesdot , "?."      },
         {tok::tk_colon   , ":"       },
         {tok::tk_add     , "+"       },
         {tok::tk_sub     , "-"       },
@@ -117,12 +119,14 @@ private:
     expr* or_expr();
     expr* and_expr();
     expr* cmp_expr();
+    expr* null_chain_expr();
     expr* additive_expr();
     expr* multive_expr();
     unary_operator* unary();
     expr* scalar();
     call* call_scalar();
     call_hash* callh();
+    null_access* null_access_call();
     call_vector* callv();
     call_function* callf();
     slice_vector* subvec();
@@ -153,8 +157,9 @@ public:
     }
 
 public:
-    parse(): ptr(0), in_func_depth(0), in_loop_depth(0),
-             toks(nullptr), root(nullptr) {}
+    parse(): ptr(0), in_func_depth(0),
+             in_loop_depth(0), toks(nullptr),
+             root(nullptr) {}
     ~parse() {delete root;}
     const error& compile(const lexer&);
     static void easter_egg();

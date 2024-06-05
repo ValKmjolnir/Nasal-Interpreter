@@ -45,7 +45,7 @@ private:
 
     std::string format_location(expr* node) {
         std::stringstream ss;
-        ss << " → [";
+        ss << " ⇒ [";
         node->get_location().dump_begin(ss);
         ss << "]\n";
         return ss.str();
@@ -70,6 +70,7 @@ public:
     bool visit_unary_operator(unary_operator*) override;
     bool visit_call_expr(call_expr*) override;
     bool visit_call_hash(call_hash*) override;
+    bool visit_null_access(null_access*) override;
     bool visit_call_vector(call_vector*) override;
     bool visit_call_function(call_function*) override;
     bool visit_slice_vector(slice_vector*) override;
@@ -90,10 +91,10 @@ public:
 
 public:
     void dump(code_block* root) {
-        util::windows_code_page_manager wcpm;
-        wcpm.set_utf8_output();
+        util::windows_code_page_manager wm;
+        wm.set_utf8_output();
         root->accept(this);
-        wcpm.restore_code_page();
+        wm.restore_code_page();
     }
 };
 

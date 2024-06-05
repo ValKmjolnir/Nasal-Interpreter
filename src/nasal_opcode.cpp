@@ -3,31 +3,6 @@
 
 namespace nasal {
 
-const char* oprand_name_table[] = {
-    "exit  ", "repl  ", "intl  ", "loadg ",
-    "loadl ", "loadu ", "pnum  ", "pnil  ",
-    "pstr  ", "newv  ", "newh  ", "newf  ",
-    "happ  ", "para  ", "def   ", "dyn   ",
-    "lnot  ", "usub  ", "bitnot", "bitor ",
-    "bitxor", "bitand", "add   ", "sub   ",
-    "mult  ", "div   ", "lnk   ", "addc  ",
-    "subc  ", "multc ", "divc  ", "lnkc  ",
-    "addeq ", "subeq ", "muleq ", "diveq ",
-    "lnkeq ", "bandeq", "boreq ", "bxoreq",
-    "addeqc", "subeqc", "muleqc", "diveqc",
-    "lnkeqc", "addecp", "subecp", "mulecp",
-    "divecp", "lnkecp", "meq   ", "eq    ",
-    "neq   ", "less  ", "leq   ", "grt   ",
-    "geq   ", "lessc ", "leqc  ", "grtc  ",
-    "geqc  ", "pop   ", "jmp   ", "jt    ",
-    "jf    ", "cnt   ", "findx ", "feach ",
-    "callg ", "calll ", "upval ", "callv ",
-    "callvi", "callh ", "callfv", "callfh",
-    "callb ", "slcbeg", "slcend", "slice ",
-    "slice2", "mcallg", "mcalll", "mupval",
-    "mcallv", "mcallh", "ret   "
-};
-
 void codestream::set(const f64* number_list,
                      const std::string* string_list,
                      const nasal_builtin_table* native_table,
@@ -58,7 +33,7 @@ void codestream::dump(std::ostream& out) const {
     }
 
     // dump operand name
-    out << "    " << oprand_name_table[op] << "  ";
+    out << "    " << operand_name_table.at(static_cast<op_code_type>(op)) << "  ";
 
     switch(op) {
         case op_addeq:

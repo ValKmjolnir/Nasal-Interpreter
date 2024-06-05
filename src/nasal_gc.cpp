@@ -1,4 +1,5 @@
-#include "nasal_gc.h"
+﻿#include "nasal_gc.h"
+#include "util/util.h"
 
 namespace nasal {
 
@@ -258,15 +259,27 @@ void gc::clear() {
 }
 
 void gc::info() const {
+    util::windows_code_page_manager wm;
+    wm.set_utf8_output();
 
     using std::left;
     using std::setw;
     using std::setfill;
+    using std::setprecision;
 
     const char* used_table_name[] = {
-        "object type", "gc count", "alloc count", "memory size",
-        "detail", "time spend", "gc time", "avg time", "max gc",
-        "max mark", "max sweep", nullptr
+        "object type",
+        "gc count",
+        "alloc count",
+        "memory size",
+        "detail",
+        "time spend",
+        "gc time",
+        "avg time",
+        "max gc",
+        "max mark",
+        "max sweep",
+        nullptr
     };
     const char* name[] = {
         "string",
@@ -297,21 +310,33 @@ void gc::info() const {
         len = std::to_string(size[i]).length();
         indent = indent<len? len:indent;
     }
-    auto indent_string = std::string("--");
+    auto indent_string = std::string("──");
     for(usize i = 0; i<indent; ++i) {
-        indent_string += "-";
+        indent_string += "─";
     }
-    const auto last_line = "+" + indent_string + "+" +
-        indent_string + "-" + indent_string + "-" + indent_string + "+";
-    indent_string = indent_string + "+" +
-        indent_string + "+" + indent_string + "+" + indent_string;
+    const auto first_line = "╭" + indent_string + "┬" +
+                            indent_string + "─" +
+                            indent_string + "─" +
+                            indent_string + "╮";
+    const auto mid_line = "├" + indent_string + "┼" +
+                          indent_string + "┼" +
+                          indent_string + "┼" +
+                          indent_string + "┤";
+    const auto another_mid_line = "├" + indent_string + "┼" +
+                                  indent_string + "┴" +
+                                  indent_string + "┴" +
+                                  indent_string + "┤";
+    const auto last_line = "╰" + indent_string + "┴" +
+                           indent_string + "─" +
+                           indent_string + "─" +
+                           indent_string + "╯";
 
-    std::clog << "\n+" << indent_string << "+\n";
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "object type";
-    std::clog << " | " << left << setw(indent) << setfill(' ') << "gc count";
-    std::clog << " | " << left << setw(indent) << setfill(' ') << "alloc count";
-    std::clog << " | " << left << setw(indent) << setfill(' ') << "memory size";
-    std::clog << " |\n+" << indent_string << "+\n";
+    std::clog << "\n" << first_line << "\n";
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "object type";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc count";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "alloc count";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "memory size";
+    std::clog << " │\n" << mid_line << "\n";
 
     double total = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -319,46 +344,54 @@ void gc::info() const {
             continue;
         }
         total += static_cast<f64>(gcnt[i]);
-        std::clog << "| " << left << setw(indent) << setfill(' ') << name[i];
-        std::clog << " | " << left << setw(indent) << setfill(' ') << gcnt[i];
-        std::clog << " | " << left << setw(indent) << setfill(' ') << acnt[i];
-        std::clog << " | " << left << setw(indent) << setfill(' ') << size[i];
-        std::clog << " |\n";
+        std::clog << "│ " << left << setw(indent) << setfill(' ') << name[i];
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << gcnt[i];
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << acnt[i];
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << size[i];
+        std::clog << " │\n";
     }
-    std::clog << "+" << indent_string << "+\n";
+    std::clog << mid_line << "\n";
 
-    auto den = std::chrono::high_resolution_clock::duration::period::den;
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "detail";
-    std::clog << " | " << left << setw(indent) << setfill(' ') << "time spend";
-    std::clog << " | " << left << setw(indent) << setfill('x') << "x";
-    std::clog << " | " << left << setw(indent) << setfill('x') << "x";
-    std::clog << " |\n+" << indent_string << "+\n";
+    const auto den = std::chrono::high_resolution_clock::duration::period::den;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "detail";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "time spend";
+    std::clog << " │ " << left << setw(indent) << setfill('x') << "x";
+    std::clog << " │ " << left << setw(indent) << setfill('x') << "x";
+    std::clog << " │\n" << another_mid_line << "\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "gc time";
-    std::clog << " | " << setw(indent-3) << std::setprecision(4) << worktime*1.0/den*1000 << " ms";
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    const auto gc_time = worktime*1.0/den*1000;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "gc time";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << gc_time << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "avg time";
-    std::clog << " | " << setw(indent-3) << std::setprecision(4) << worktime*1.0/den*1000/total << " ms";
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    const auto avg_time = worktime*1.0/den*1000/total;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg time";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << avg_time << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "max gc";
-    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_time*1.0/den*1000 << " ms";
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    const auto max_gc = max_time*1.0/den*1000;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max gc";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_gc << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "max mark";
-    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_mark_time*1.0/den*1000 << " ms";
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    const auto max_mark = max_mark_time*1.0/den*1000;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max mark";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_mark << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "max sweep";
-    std::clog << " | " << setw(indent-3) << std::setprecision(4) << max_sweep_time*1.0/den*1000 << " ms";
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    const auto max_sweep = max_sweep_time*1.0/den*1000;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max sweep";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_sweep << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << "| " << left << setw(indent) << setfill(' ') << "concurrent";
-    std::clog << " | " << setw(indent) << (flag_concurrent_mark_triggered? "true":"false");
-    std::clog << setw(indent*2+7) << " " << "|\n";
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "concurrent";
+    std::clog << " │ " << setw(indent)
+              << (flag_concurrent_mark_triggered? "true":"false");
+    std::clog << setw(indent*2+7) << " " << "│\n";
 
     std::clog << last_line << "\n";
+
+    wm.restore_code_page();
 }
 
 var gc::alloc(const vm_type type) {
