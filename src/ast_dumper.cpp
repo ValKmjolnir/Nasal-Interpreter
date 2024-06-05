@@ -185,6 +185,7 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
         case binary_operator::binary_type::leq: std::cout << "<="; break;
         case binary_operator::binary_type::condition_and: std::cout << "and"; break;
         case binary_operator::binary_type::condition_or: std::cout << "or"; break;
+        case binary_operator::binary_type::null_chain: std::cout << "??"; break;
     }
     std::cout << "\"" << format_location(node);
     push_indent();
@@ -237,6 +238,13 @@ bool ast_dumper::visit_call_expr(call_expr* node) {
 bool ast_dumper::visit_call_hash(call_hash* node) {
     dump_indent();
     std::cout << "call_hash " << node->get_field();
+    std::cout << format_location(node);
+    return true;
+}
+
+bool ast_dumper::visit_null_access(null_access* node) {
+    dump_indent();
+    std::cout << "null_access " << node->get_field();
     std::cout << format_location(node);
     return true;
 }

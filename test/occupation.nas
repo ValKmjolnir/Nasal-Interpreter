@@ -7,8 +7,8 @@ use std.io;
 use std.unix;
 use std.math;
 
-var is_windows_platform=os.platform()=="windows";
-var is_macos_platform=os.platform()=="macOS";
+var is_windows_platform = os.platform()=="windows";
+var is_macos_platform = os.platform()=="macOS";
 
 if (is_windows_platform) {
     runtime.windows.set_utf8_output();
@@ -17,72 +17,72 @@ if (is_windows_platform) {
 var cpu_stat = func() {
     if (is_windows_platform or is_macos_platform)
         return nil;
-    var cpu=split("\n",io.readfile("/proc/stat"))[0];
-    cpu=split(" ",cpu);
-    cpu={
-        name:cpu[0],
-        user:cpu[1],
-        nice:cpu[2],
-        system:cpu[3],
-        idle:cpu[4],
-        iowait:cpu[5],
-        irq:cpu[6],
-        softirq:cpu[7],
+    var cpu = split("\n", io.readfile("/proc/stat"))[0];
+    cpu = split(" ", cpu);
+    cpu = {
+        name: cpu[0],
+        user: cpu[1],
+        nice: cpu[2],
+        system: cpu[3],
+        idle: cpu[4],
+        iowait: cpu[5],
+        irq: cpu[6],
+        softirq: cpu[7],
     };
     return cpu;
 }
 
 var cpu_occupation = func() {
-    var first_in=1;
+    var first_in = 1;
     while(1) {
-        var cpu0=cpu_stat();
+        var cpu0 = cpu_stat();
         if (first_in) {
             unix.sleep(0.1);
-            first_in=0;
+            first_in = 0;
         } else {
-            for(var i=0;i<10;i+=1) {
+            for(var i = 0; i < 10; i += 1) {
                 unix.sleep(0.1);
                 coroutine.yield(nil);
             }
         }
-        var cpu1=cpu_stat();
+        var cpu1 = cpu_stat();
         if (is_windows_platform or is_macos_platform) {
             coroutine.yield(0);
             continue;
         }
-        var t0=cpu0.user+cpu0.nice+cpu0.system+cpu0.idle+cpu0.iowait+cpu0.irq+cpu0.softirq;
-        var t1=cpu1.user+cpu1.nice+cpu1.system+cpu1.idle+cpu1.iowait+cpu1.irq+cpu1.softirq;
-        var interval=cpu1.idle-cpu0.idle;
-        coroutine.yield(t0==t1?0:(1-interval/(t1-t0))*100);
+        var t0 = cpu0.user+cpu0.nice+cpu0.system+cpu0.idle+cpu0.iowait+cpu0.irq+cpu0.softirq;
+        var t1 = cpu1.user+cpu1.nice+cpu1.system+cpu1.idle+cpu1.iowait+cpu1.irq+cpu1.softirq;
+        var interval = cpu1.idle-cpu0.idle;
+        coroutine.yield(t0==t1? 0:(1-interval/(t1-t0))*100);
     }
 }
 
 var mem_occupation = func() {
     if (is_windows_platform or is_macos_platform)
         return {MemTotal:math.inf,MemFree:math.inf};
-    var meminfo=split("\n",io.readfile("/proc/meminfo"));
-    var mem_res={};
-    forindex(var i;meminfo) {
-        var tmp=split(" ",meminfo[i])[0:1];
-        tmp[0]=substr(tmp[0],0,size(tmp[0])-1);
-        mem_res[tmp[0]]=num(tmp[1]);
+    var meminfo = split("\n",io.readfile("/proc/meminfo"));
+    var mem_res = {};
+    forindex(var i; meminfo) {
+        var tmp = split(" ", meminfo[i])[0:1];
+        tmp[0] = substr(tmp[0], 0, size(tmp[0])-1);
+        mem_res[tmp[0]] = num(tmp[1]);
     }
     return mem_res;
 }
 
 var random_generator = func() {
-    var rise=[" ","▁","▂","▃","▄","▅","▆","▇","█"];
-    var total=0;
-    var statistics=[];
-    setsize(statistics,70);
+    var rise = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+    var total = 0;
+    var statistics = [];
+    setsize(statistics, 70);
     while(1) {
         for(var i=0;i<10;i+=1) {
             total+=1;
             var u=rand()*rand()*(rand()>0.5?-1:1);
             statistics[int(size(statistics)/2+u*size(statistics)/2)]+=1;
         }
-        var s=["","",""];
-        foreach(var st;statistics) {
+        var s = ["", "", ""];
+        foreach(var st; statistics) {
             var max_rate=100/size(statistics);
             var rate=st/total*100;
             for(var i=size(s)-1;i>=0;i-=1) {
@@ -97,12 +97,12 @@ var random_generator = func() {
         }
         var tmp="";
         for(var i=0;i<size(statistics);i+=1) {
-            tmp~="-";
+            tmp~="─";
         }
-        println("\e[16;1H \e[32m|",s[0],"|\e[0m");
-        println("\e[17;1H \e[32m|",s[1],"|\e[0m");
-        println("\e[18;1H \e[32m|",s[2],"|\e[0m");
-        println("\e[19;1H \e[32m+"~tmp~"+\e[0m");
+        println("\e[16;1H \e[32m│", s[0], "│\e[0m");
+        println("\e[17;1H \e[32m│", s[1], "│\e[0m");
+        println("\e[18;1H \e[32m│", s[2], "│\e[0m");
+        println("\e[19;1H \e[32m╰", tmp, "╯\e[0m");
         coroutine.yield();
     }
 }
@@ -164,7 +164,7 @@ func() {
 
         var tmp="";
         for(var i=0;i<70;i+=1) {
-            tmp~="-";
+            tmp~="─";
         }
 
         var s=["","",""];
@@ -181,11 +181,11 @@ func() {
                 }
             }
         }
-        println("\e[7;1H \e[32m+"~tmp~"+\e[0m");
-        println("\e[8;1H \e[32m|",s[0],"|\e[0m");
-        println("\e[9;1H \e[32m|",s[1],"|\e[0m");
-        println("\e[10;1H \e[32m|",s[2],"|\e[0m");
-        println("\e[11;1H \e[32m+"~tmp~"+\e[0m");
+        println("\e[7;1H \e[32m╭"~tmp~"╮\e[0m");
+        println("\e[8;1H \e[32m│",s[0],"│\e[0m");
+        println("\e[9;1H \e[32m│",s[1],"│\e[0m");
+        println("\e[10;1H \e[32m│",s[2],"│\e[0m");
+        println("\e[11;1H \e[32m├"~tmp~"┤\e[0m");
 
         var s=["","",""];
         foreach(var occ;mem_occupation_log) {
@@ -201,10 +201,10 @@ func() {
                 }
             }
         }
-        println("\e[12;1H \e[32m|",s[0],"|\e[0m");
-        println("\e[13;1H \e[32m|",s[1],"|\e[0m");
-        println("\e[14;1H \e[32m|",s[2],"|\e[0m");
-        println("\e[15;1H \e[32m+"~tmp~"+\e[0m");
+        println("\e[12;1H \e[32m│",s[0],"│\e[0m");
+        println("\e[13;1H \e[32m│",s[1],"│\e[0m");
+        println("\e[14;1H \e[32m│",s[2],"│\e[0m");
+        println("\e[15;1H \e[32m├"~tmp~"┤\e[0m");
 
         println("\e[20;1H Press 'q' to quit.");
     }

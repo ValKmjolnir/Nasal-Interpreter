@@ -173,6 +173,10 @@ void call_hash::accept(ast_visitor* visitor) {
     visitor->visit_call_hash(this);
 }
 
+void null_access::accept(ast_visitor* visitor) {
+    visitor->visit_null_access(this);
+}
+
 call_vector::~call_vector() {
     for(auto i : calls) {
         delete i;

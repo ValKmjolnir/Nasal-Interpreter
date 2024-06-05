@@ -116,6 +116,10 @@ bool ast_visitor::visit_call_hash(call_hash* node) {
     return true;
 }
 
+bool ast_visitor::visit_null_access(null_access* node) {
+    return true;
+}
+
 bool ast_visitor::visit_call_vector(call_vector* node) {
     for(auto i : node->get_slices()) {
         i->accept(this);

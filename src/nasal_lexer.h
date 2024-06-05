@@ -50,6 +50,8 @@ enum class tok {
     tk_dot,      // .
     tk_ellipsis, // ...
     tk_quesmark, // ?
+    tk_quesques, // ??
+    tk_quesdot,  // ?.
     tk_colon,    // :
     tk_add,      // operator +
     tk_sub,      // operator -
@@ -79,9 +81,10 @@ enum class tok {
 };
 
 struct token {
-    span loc; // location
-    tok type; // token type
+    span loc;        // location
+    tok type;        // token type
     std::string str; // content
+
     token() = default;
     token(const token&) = default;
 };
@@ -94,10 +97,12 @@ private:
     std::string filename;
     std::string res;
 
+private:
     error err;
     u64 invalid_char;
     std::vector<token> toks;
 
+private:
     const std::unordered_map<std::string, tok> token_mapper = {
         {"use"     , tok::tk_use     },
         {"true"    , tok::tk_true    },
@@ -128,6 +133,8 @@ private:
         {"."       , tok::tk_dot     },
         {"..."     , tok::tk_ellipsis},
         {"?"       , tok::tk_quesmark},
+        {"??"      , tok::tk_quesques},
+        {"?."      , tok::tk_quesdot },
         {":"       , tok::tk_colon   },
         {"+"       , tok::tk_add     },
         {"-"       , tok::tk_sub     },
@@ -155,6 +162,7 @@ private:
         {">="      , tok::tk_geq     }
     };
 
+private:
     tok get_type(const std::string&);
     bool skip(char);
     bool is_id(char);
@@ -162,6 +170,7 @@ private:
     bool is_oct(char);
     bool is_dec(char);
     bool is_str(char);
+    bool is_quesmark(char);
     bool is_single_opr(char);
     bool is_calc_opr(char);
 
@@ -173,14 +182,17 @@ private:
     token id_gen();
     token num_gen();
     token str_gen();
+    token quesmark_gen();
     token single_opr();
     token dots();
     token calc_opr();
+
 public:
     lexer(): line(1), column(0), ptr(0),
-             filename(""), res(""), invalid_char(0) {}
+             filename(""), res(""),
+             invalid_char(0) {}
     const error& scan(const std::string&);
-    const std::vector<token>& result() const {return toks;}
+    const auto& result() const {return toks;}
 };
 
 }

@@ -18,7 +18,7 @@ var table_character_set = [
     "┷", "┳", "⊥", "﹃", "﹄", "╮", "╭", "╯", "╰", "╳"
 ];
 
-var selection_box = ["○", "◉", "☐", "▣"];
+var selection_box = ["○", "◉", "☐", "▣", "☑", "☒"];
 
 var char_ttf=[
     ["    ","    ","    ","    ","    ","    "],
