@@ -128,6 +128,6 @@ public:
 
 std::ostream& operator<<(std::ostream&, const codestream&);
 
-extern const char* oprand_name_table[];
+extern const char* operand_name_table[];
 
 }

@@ -3,7 +3,7 @@
 
 namespace nasal {
 
-const char* oprand_name_table[] = {
+const char* operand_name_table[] = {
     "exit  ",
     "repl  ",
     "intl  ",
@@ -124,7 +124,7 @@ void codestream::dump(std::ostream& out) const {
     }
 
     // dump operand name
-    out << "    " << oprand_name_table[op] << "  ";
+    out << "    " << operand_name_table[op] << "  ";
 
     switch(op) {
         case op_addeq:
