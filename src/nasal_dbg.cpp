@@ -46,7 +46,7 @@ void operand_line_counter::dump_operand_count() const {
         if (!rate) {
             break;
         }
-        std::clog << " " << oprand_name_table[i.first] << " : ";
+        std::clog << " " << operand_name_table[i.first] << " : ";
         std::clog << i.second << " (" << rate << "%)\n";
     }
     std::clog << " total  : " << total << '\n';
