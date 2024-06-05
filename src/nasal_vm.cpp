@@ -528,7 +528,7 @@ void vm::run(const codegen& gen,
 #else
     std::vector<nasal_vm_func> code;
     for(const auto& i : gen.codes()) {
-        code.push_back(oprs[i.op]);
+        code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
     }
     while(code[ctx.pc]) {
