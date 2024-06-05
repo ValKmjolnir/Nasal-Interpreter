@@ -339,7 +339,7 @@ void codegen::call_gen(call_expr* node) {
                 call_vector_gen(reinterpret_cast<call_vector*>(i)); break;
             case expr_type::ast_callf:
                 call_func_gen(reinterpret_cast<call_function*>(i)); break;
-            case expr_type::ast_nullaccess:
+            case expr_type::ast_null_access:
                 null_access_gen(reinterpret_cast<null_access*>(i)); break;
             default: break;
         }
@@ -475,7 +475,7 @@ void codegen::mcall(expr* node) {
                 call_vector_gen(reinterpret_cast<call_vector*>(tmp)); break;
             case expr_type::ast_callf:
                 call_func_gen(reinterpret_cast<call_function*>(tmp)); break;
-            case expr_type::ast_nullaccess:
+            case expr_type::ast_null_access:
                 null_access_gen(reinterpret_cast<null_access*>(tmp)); break;
             default: break;
         }
@@ -489,7 +489,7 @@ void codegen::mcall(expr* node) {
             mcall_vec(reinterpret_cast<call_vector*>(tmp)); break;
         case expr_type::ast_callf:
             die("bad left-value: function call", tmp->get_location()); break;
-        case expr_type::ast_nullaccess:
+        case expr_type::ast_null_access:
             die("bad left-value: null access test", tmp->get_location()); break;
         default:
             die("bad left-value: unknown call", tmp->get_location()); break;
@@ -1083,7 +1083,7 @@ void codegen::binary_gen(binary_operator* node) {
             calc_gen(node->get_right());
             emit(op_btand, 0, node->get_location());
             return;
-        case binary_operator::binary_type::nullchain:
+        case binary_operator::binary_type::null_chain:
             null_chain_gen(node);
             return;
         default: break;

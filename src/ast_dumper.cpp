@@ -185,7 +185,7 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
         case binary_operator::binary_type::leq: std::cout << "<="; break;
         case binary_operator::binary_type::condition_and: std::cout << "and"; break;
         case binary_operator::binary_type::condition_or: std::cout << "or"; break;
-        case binary_operator::binary_type::nullchain: std::cout << "??"; break;
+        case binary_operator::binary_type::null_chain: std::cout << "??"; break;
     }
     std::cout << "\"" << format_location(node);
     push_indent();

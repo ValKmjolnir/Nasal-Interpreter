@@ -595,7 +595,7 @@ expr* parse::null_chain_expr() {
     auto node = additive_expr();
     while(lookahead(tok::tk_quesques)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::nullchain);
+        tmp->set_operator_type(binary_operator::binary_type::null_chain);
         tmp->set_left(node);
         match(tok::tk_quesques);
         tmp->set_right(additive_expr());
