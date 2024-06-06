@@ -159,6 +159,25 @@ a &= 0xca;
 a |= 0xba;
 ```
 
+`??` 运算符用于检查左侧值是否为 `nil`，如果不是则返回右侧的值：
+
+```javascript
+print(nil??"should get this string");
+```
+
+上面的例子会输出 `should get this string`。
+
+`?.` 运算符用于先检查左侧不为 `nil`，如果左侧不是 `nil` 则尝试获取 hash 的字段。
+当然如果左侧此时也不是 `hash` 类型，则报错退出。
+
+```javascript
+var a = nil;
+print(a?.try_get); # nil
+
+var a = {try_get: "congrats!"};
+print(a?.try_get); # "congrats!"
+```
+
 ## 定义变量
 
 如下所示。
