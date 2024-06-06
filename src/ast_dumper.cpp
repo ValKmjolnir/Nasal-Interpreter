@@ -133,7 +133,13 @@ bool ast_dumper::visit_code_block(code_block* node) {
 
 bool ast_dumper::visit_parameter(parameter* node) {
     dump_indent();
-    std::cout << "parameter " << node->get_parameter_name();
+    std::cout << "parameter ";
+    switch(node->get_parameter_type()) {
+        case parameter::kind::normal_parameter: std::cout << "[normal]"; break;
+        case parameter::kind::dynamic_parameter: std::cout << "[dynamic]"; break;
+        case parameter::kind::default_parameter: std::cout << "[default]"; break;
+    }
+    std::cout << " " << node->get_parameter_name();
     std::cout << format_location(node);
     if (node->get_default_value()) {
         push_indent();
@@ -169,23 +175,23 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
     dump_indent();
     std::cout << "binary_operator \"";
     switch(node->get_operator_type()) {
-        case binary_operator::binary_type::add: std::cout << "+"; break;
-        case binary_operator::binary_type::sub: std::cout << "-"; break;
-        case binary_operator::binary_type::mult: std::cout << "*"; break;
-        case binary_operator::binary_type::div: std::cout << "/"; break;
-        case binary_operator::binary_type::concat: std::cout << "~"; break;
-        case binary_operator::binary_type::bitwise_and: std::cout << "&"; break;
-        case binary_operator::binary_type::bitwise_or: std::cout << "|"; break;
-        case binary_operator::binary_type::bitwise_xor: std::cout << "^"; break;
-        case binary_operator::binary_type::cmpeq: std::cout << "=="; break;
-        case binary_operator::binary_type::cmpneq: std::cout << "!="; break;
-        case binary_operator::binary_type::grt: std::cout << ">"; break;
-        case binary_operator::binary_type::geq: std::cout << ">="; break;
-        case binary_operator::binary_type::less: std::cout << "<"; break;
-        case binary_operator::binary_type::leq: std::cout << "<="; break;
-        case binary_operator::binary_type::condition_and: std::cout << "and"; break;
-        case binary_operator::binary_type::condition_or: std::cout << "or"; break;
-        case binary_operator::binary_type::null_chain: std::cout << "??"; break;
+        case binary_operator::kind::add: std::cout << "+"; break;
+        case binary_operator::kind::sub: std::cout << "-"; break;
+        case binary_operator::kind::mult: std::cout << "*"; break;
+        case binary_operator::kind::div: std::cout << "/"; break;
+        case binary_operator::kind::concat: std::cout << "~"; break;
+        case binary_operator::kind::bitwise_and: std::cout << "&"; break;
+        case binary_operator::kind::bitwise_or: std::cout << "|"; break;
+        case binary_operator::kind::bitwise_xor: std::cout << "^"; break;
+        case binary_operator::kind::cmpeq: std::cout << "=="; break;
+        case binary_operator::kind::cmpneq: std::cout << "!="; break;
+        case binary_operator::kind::grt: std::cout << ">"; break;
+        case binary_operator::kind::geq: std::cout << ">="; break;
+        case binary_operator::kind::less: std::cout << "<"; break;
+        case binary_operator::kind::leq: std::cout << "<="; break;
+        case binary_operator::kind::condition_and: std::cout << "and"; break;
+        case binary_operator::kind::condition_or: std::cout << "or"; break;
+        case binary_operator::kind::null_chain: std::cout << "??"; break;
     }
     std::cout << "\"" << format_location(node);
     push_indent();
@@ -204,9 +210,9 @@ bool ast_dumper::visit_unary_operator(unary_operator* node) {
     dump_indent();
     std::cout << "unary_operator \"";
     switch(node->get_operator_type()) {
-        case unary_operator::unary_type::negative: std::cout << "-"; break;
-        case unary_operator::unary_type::logical_not: std::cout << "!"; break;
-        case unary_operator::unary_type::bitwise_not: std::cout << "~"; break;
+        case unary_operator::kind::negative: std::cout << "-"; break;
+        case unary_operator::kind::logical_not: std::cout << "!"; break;
+        case unary_operator::kind::bitwise_not: std::cout << "~"; break;
     }
     std::cout << "\"" << format_location(node);
     push_indent();
@@ -320,15 +326,15 @@ bool ast_dumper::visit_assignment_expr(assignment_expr* node) {
     dump_indent();
     std::cout << "assignment ";
     switch(node->get_assignment_type()) {
-        case assignment_expr::assign_type::add_equal: std::cout << "+="; break;
-        case assignment_expr::assign_type::sub_equal: std::cout << "-="; break;
-        case assignment_expr::assign_type::mult_equal: std::cout << "*="; break;
-        case assignment_expr::assign_type::div_equal: std::cout << "/="; break;
-        case assignment_expr::assign_type::concat_equal: std::cout << "~="; break;
-        case assignment_expr::assign_type::equal: std::cout << "="; break;
-        case assignment_expr::assign_type::bitwise_and_equal: std::cout << "&="; break;
-        case assignment_expr::assign_type::bitwise_or_equal: std::cout << "|="; break;
-        case assignment_expr::assign_type::bitwise_xor_equal: std::cout << "^="; break;
+        case assignment_expr::kind::add_equal: std::cout << "+="; break;
+        case assignment_expr::kind::sub_equal: std::cout << "-="; break;
+        case assignment_expr::kind::mult_equal: std::cout << "*="; break;
+        case assignment_expr::kind::div_equal: std::cout << "/="; break;
+        case assignment_expr::kind::concat_equal: std::cout << "~="; break;
+        case assignment_expr::kind::equal: std::cout << "="; break;
+        case assignment_expr::kind::bitwise_and_equal: std::cout << "&="; break;
+        case assignment_expr::kind::bitwise_or_equal: std::cout << "|="; break;
+        case assignment_expr::kind::bitwise_xor_equal: std::cout << "^="; break;
     }
     std::cout << format_location(node);
     push_indent();
@@ -428,7 +434,7 @@ bool ast_dumper::visit_iter_expr(iter_expr* node) {
 
 bool ast_dumper::visit_forei_expr(forei_expr* node) {
     dump_indent();
-    if (node->get_loop_type()==forei_expr::forei_loop_type::foreach) {
+    if (node->get_loop_type()==forei_expr::kind::foreach) {
         std::cout << "foreach";
     } else {
         std::cout << "forindex";

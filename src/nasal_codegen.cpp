@@ -209,16 +209,16 @@ void codegen::func_gen(function* node) {
     std::unordered_map<std::string, bool> argname;
     for(auto tmp : node->get_parameter_list()) {
         if (tmp->get_parameter_type()==
-            parameter::param_type::default_parameter) {
+            parameter::kind::default_parameter) {
             checked_default = true;
         } else if (tmp->get_parameter_type()==
-            parameter::param_type::dynamic_parameter) {
+            parameter::kind::dynamic_parameter) {
             checked_dynamic = true;
         }
         // check default parameter and dynamic parameter
         if (checked_default &&
             tmp->get_parameter_type()!=
-            parameter::param_type::default_parameter) {
+            parameter::kind::default_parameter) {
             die("must use default parameter here",
                 tmp->get_location()
             );
@@ -262,14 +262,14 @@ void codegen::func_gen(function* node) {
         }
         regist_string(name);
         switch(tmp->get_parameter_type()) {
-            case parameter::param_type::normal_parameter:
+            case parameter::kind::normal_parameter:
                 emit(op_para, const_string_map.at(name), tmp->get_location());
                 break;
-            case parameter::param_type::default_parameter:
+            case parameter::kind::default_parameter:
                 calc_gen(tmp->get_default_value());
                 emit(op_deft, const_string_map.at(name), tmp->get_location());
                 break;
-            case parameter::param_type::dynamic_parameter:
+            case parameter::kind::dynamic_parameter:
                 emit(op_dyn, const_string_map.at(name), tmp->get_location());
                 break;
         }
@@ -603,12 +603,12 @@ void codegen::definition_gen(definition_expr* node) {
 
 void codegen::assignment_expression(assignment_expr* node) {
     switch(node->get_assignment_type()) {
-        case assignment_expr::assign_type::equal:
+        case assignment_expr::kind::equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
             emit(op_meq, 0, node->get_location());
             break;
-        case assignment_expr::assign_type::add_equal:
+        case assignment_expr::kind::add_equal:
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
@@ -622,7 +622,7 @@ void codegen::assignment_expression(assignment_expr* node) {
                 emit(op_addeqc, const_number_map[num], node->get_location());
             }
             break;
-        case assignment_expr::assign_type::sub_equal:
+        case assignment_expr::kind::sub_equal:
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
@@ -636,7 +636,7 @@ void codegen::assignment_expression(assignment_expr* node) {
                 emit(op_subeqc, const_number_map[num], node->get_location());
             }
             break;
-        case assignment_expr::assign_type::mult_equal:
+        case assignment_expr::kind::mult_equal:
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
@@ -650,7 +650,7 @@ void codegen::assignment_expression(assignment_expr* node) {
                 emit(op_muleqc, const_number_map[num], node->get_location());
             }
             break;
-        case assignment_expr::assign_type::div_equal:
+        case assignment_expr::kind::div_equal:
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
@@ -664,7 +664,7 @@ void codegen::assignment_expression(assignment_expr* node) {
                 emit(op_diveqc, const_number_map[num], node->get_location());
             }
             break;
-        case assignment_expr::assign_type::concat_equal:
+        case assignment_expr::kind::concat_equal:
             if (node->get_right()->get_type()!=expr_type::ast_str) {
                 calc_gen(node->get_right());
             }
@@ -678,17 +678,17 @@ void codegen::assignment_expression(assignment_expr* node) {
                 emit(op_lnkeqc, const_string_map[str], node->get_location());
             }
             break;
-        case assignment_expr::assign_type::bitwise_and_equal:
+        case assignment_expr::kind::bitwise_and_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
             emit(op_btandeq, 0, node->get_location());
             break;
-        case assignment_expr::assign_type::bitwise_or_equal:
+        case assignment_expr::kind::bitwise_or_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
             emit(op_btoreq, 0, node->get_location());
             break;
-        case assignment_expr::assign_type::bitwise_xor_equal:
+        case assignment_expr::kind::bitwise_xor_equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
             emit(op_btxoreq, 0, node->get_location());
@@ -740,17 +740,17 @@ void codegen::replace_left_assignment_with_load(const span& location) {
 
 void codegen::assignment_statement(assignment_expr* node) {
     switch(node->get_assignment_type()) {
-        case assignment_expr::assign_type::equal:
+        case assignment_expr::kind::equal:
             gen_assignment_equal_statement(node);
             break;
-        case assignment_expr::assign_type::add_equal:
-        case assignment_expr::assign_type::sub_equal:
-        case assignment_expr::assign_type::mult_equal:
-        case assignment_expr::assign_type::div_equal:
-        case assignment_expr::assign_type::concat_equal:
-        case assignment_expr::assign_type::bitwise_and_equal:
-        case assignment_expr::assign_type::bitwise_or_equal:
-        case assignment_expr::assign_type::bitwise_xor_equal:
+        case assignment_expr::kind::add_equal:
+        case assignment_expr::kind::sub_equal:
+        case assignment_expr::kind::mult_equal:
+        case assignment_expr::kind::div_equal:
+        case assignment_expr::kind::concat_equal:
+        case assignment_expr::kind::bitwise_and_equal:
+        case assignment_expr::kind::bitwise_or_equal:
+        case assignment_expr::kind::bitwise_xor_equal:
             calc_gen(node);
             if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
                 code.back().num = 1;
@@ -920,7 +920,7 @@ void codegen::forei_gen(forei_expr* node) {
     calc_gen(node->get_value());
     emit(op_cnt, 0, node->get_value()->get_location());
     usize loop_begin = code.size();
-    if (node->get_loop_type()==forei_expr::forei_loop_type::forindex) {
+    if (node->get_loop_type()==forei_expr::kind::forindex) {
         emit(op_findex, 0, node->get_location());
     } else {
         emit(op_feach, 0, node->get_location());
@@ -1032,11 +1032,11 @@ void codegen::unary_gen(unary_operator* node) {
 
     calc_gen(node->get_value());
     switch(node->get_operator_type()) {
-        case unary_operator::unary_type::negative:
+        case unary_operator::kind::negative:
             emit(op_usub, 0, node->get_location()); break;
-        case unary_operator::unary_type::logical_not:
+        case unary_operator::kind::logical_not:
             emit(op_lnot, 0, node->get_location()); break;
-        case unary_operator::unary_type::bitwise_not:
+        case unary_operator::kind::bitwise_not:
             emit(op_bnot, 0, node->get_location()); break;
     }
 }
@@ -1053,43 +1053,43 @@ void codegen::binary_gen(binary_operator* node) {
     }
 
     switch(node->get_operator_type()) {
-        case binary_operator::binary_type::condition_or: or_gen(node); return;
-        case binary_operator::binary_type::condition_and: and_gen(node); return;
+        case binary_operator::kind::condition_or: or_gen(node); return;
+        case binary_operator::kind::condition_and: and_gen(node); return;
         default: break;
     }
     switch(node->get_operator_type()) {
-        case binary_operator::binary_type::cmpeq:
+        case binary_operator::kind::cmpeq:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
             emit(op_eq, 0, node->get_location());
             return;
-        case binary_operator::binary_type::cmpneq:
+        case binary_operator::kind::cmpneq:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
             emit(op_neq, 0, node->get_location());
             return;
-        case binary_operator::binary_type::bitwise_or:
+        case binary_operator::kind::bitwise_or:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
             emit(op_btor, 0, node->get_location());
             return;
-        case binary_operator::binary_type::bitwise_xor:
+        case binary_operator::kind::bitwise_xor:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
             emit(op_btxor, 0, node->get_location());
             return;
-        case binary_operator::binary_type::bitwise_and:
+        case binary_operator::kind::bitwise_and:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
             emit(op_btand, 0, node->get_location());
             return;
-        case binary_operator::binary_type::null_chain:
+        case binary_operator::kind::null_chain:
             null_chain_gen(node);
             return;
         default: break;
     }
     switch(node->get_operator_type()) {
-        case binary_operator::binary_type::add:
+        case binary_operator::kind::add:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1101,7 +1101,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_addc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::sub:
+        case binary_operator::kind::sub:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1113,7 +1113,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_subc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::mult:
+        case binary_operator::kind::mult:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1125,7 +1125,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_mulc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::div:
+        case binary_operator::kind::div:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1137,7 +1137,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_divc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::concat:
+        case binary_operator::kind::concat:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_str) {
                 calc_gen(node->get_right());
@@ -1149,7 +1149,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_lnkc, const_string_map.at(str), node->get_location());
             }
             break;
-        case binary_operator::binary_type::less:
+        case binary_operator::kind::less:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1161,7 +1161,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_lessc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::leq:
+        case binary_operator::kind::leq:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1173,7 +1173,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_leqc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::grt:
+        case binary_operator::kind::grt:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
@@ -1185,7 +1185,7 @@ void codegen::binary_gen(binary_operator* node) {
                 emit(op_grtc, const_number_map.at(num), node->get_location());
             }
             return;
-        case binary_operator::binary_type::geq:
+        case binary_operator::kind::geq:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
                 calc_gen(node->get_right());
