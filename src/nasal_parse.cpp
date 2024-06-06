@@ -347,13 +347,13 @@ void parse::params(function* func_node) {
         match(tok::tk_id);
         if (lookahead(tok::tk_eq)) {
             match(tok::tk_eq);
-            param->set_parameter_type(parameter::param_type::default_parameter);
+            param->set_parameter_type(parameter::kind::default_parameter);
             param->set_default_value(calc());
         } else if (lookahead(tok::tk_ellipsis)) {
             match(tok::tk_ellipsis);
-            param->set_parameter_type(parameter::param_type::dynamic_parameter);
+            param->set_parameter_type(parameter::kind::dynamic_parameter);
         } else {
-            param->set_parameter_type(parameter::param_type::normal_parameter);
+            param->set_parameter_type(parameter::kind::normal_parameter);
         }
         update_location(param);
         func_node->add_parameter(param);
@@ -462,12 +462,12 @@ expr* parse::calc() {
     } else if (tok::tk_eq<=toks[ptr].type && toks[ptr].type<=tok::tk_lnkeq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::tk_eq: tmp->set_assignment_type(assignment_expr::assign_type::equal); break;
-            case tok::tk_addeq: tmp->set_assignment_type(assignment_expr::assign_type::add_equal); break;
-            case tok::tk_subeq: tmp->set_assignment_type(assignment_expr::assign_type::sub_equal); break;
-            case tok::tk_multeq: tmp->set_assignment_type(assignment_expr::assign_type::mult_equal); break;
-            case tok::tk_diveq: tmp->set_assignment_type(assignment_expr::assign_type::div_equal); break;
-            case tok::tk_lnkeq: tmp->set_assignment_type(assignment_expr::assign_type::concat_equal); break;
+            case tok::tk_eq: tmp->set_assignment_type(assignment_expr::kind::equal); break;
+            case tok::tk_addeq: tmp->set_assignment_type(assignment_expr::kind::add_equal); break;
+            case tok::tk_subeq: tmp->set_assignment_type(assignment_expr::kind::sub_equal); break;
+            case tok::tk_multeq: tmp->set_assignment_type(assignment_expr::kind::mult_equal); break;
+            case tok::tk_diveq: tmp->set_assignment_type(assignment_expr::kind::div_equal); break;
+            case tok::tk_lnkeq: tmp->set_assignment_type(assignment_expr::kind::concat_equal); break;
             default: break;
         }
         tmp->set_left(node);
@@ -479,9 +479,9 @@ expr* parse::calc() {
                toks[ptr].type==tok::tk_btxoreq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::tk_btandeq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_and_equal); break;
-            case tok::tk_btoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_or_equal); break;
-            case tok::tk_btxoreq: tmp->set_assignment_type(assignment_expr::assign_type::bitwise_xor_equal); break;
+            case tok::tk_btandeq: tmp->set_assignment_type(assignment_expr::kind::bitwise_and_equal); break;
+            case tok::tk_btoreq: tmp->set_assignment_type(assignment_expr::kind::bitwise_or_equal); break;
+            case tok::tk_btxoreq: tmp->set_assignment_type(assignment_expr::kind::bitwise_xor_equal); break;
             default: break;
         }
         tmp->set_left(node);
@@ -497,7 +497,7 @@ expr* parse::bitwise_or() {
     auto node = bitwise_xor();
     while(lookahead(tok::tk_btor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::bitwise_or);
+        tmp->set_operator_type(binary_operator::kind::bitwise_or);
         tmp->set_left(node);
         match(tok::tk_btor);
         tmp->set_right(bitwise_xor());
@@ -512,7 +512,7 @@ expr* parse::bitwise_xor() {
     auto node = bitwise_and();
     while(lookahead(tok::tk_btxor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::bitwise_xor);
+        tmp->set_operator_type(binary_operator::kind::bitwise_xor);
         tmp->set_left(node);
         match(tok::tk_btxor);
         tmp->set_right(bitwise_and());
@@ -527,7 +527,7 @@ expr* parse::bitwise_and() {
     auto node = or_expr();
     while(lookahead(tok::tk_btand)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::bitwise_and);
+        tmp->set_operator_type(binary_operator::kind::bitwise_and);
         tmp->set_left(node);
         match(tok::tk_btand);
         tmp->set_right(or_expr());
@@ -542,7 +542,7 @@ expr* parse::or_expr() {
     auto node = and_expr();
     while(lookahead(tok::tk_or)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::condition_or);
+        tmp->set_operator_type(binary_operator::kind::condition_or);
         tmp->set_left(node);
         match(tok::tk_or);
         tmp->set_right(and_expr());
@@ -557,7 +557,7 @@ expr* parse::and_expr() {
     auto node = cmp_expr();
     while(lookahead(tok::tk_and)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::condition_and);
+        tmp->set_operator_type(binary_operator::kind::condition_and);
         tmp->set_left(node);
         match(tok::tk_and);
         tmp->set_right(cmp_expr());
@@ -573,12 +573,12 @@ expr* parse::cmp_expr() {
     while(tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::tk_cmpeq: tmp->set_operator_type(binary_operator::binary_type::cmpeq); break;
-            case tok::tk_neq: tmp->set_operator_type(binary_operator::binary_type::cmpneq); break;
-            case tok::tk_less: tmp->set_operator_type(binary_operator::binary_type::less); break;
-            case tok::tk_leq: tmp->set_operator_type(binary_operator::binary_type::leq); break;
-            case tok::tk_grt: tmp->set_operator_type(binary_operator::binary_type::grt); break;
-            case tok::tk_geq: tmp->set_operator_type(binary_operator::binary_type::geq); break;
+            case tok::tk_cmpeq: tmp->set_operator_type(binary_operator::kind::cmpeq); break;
+            case tok::tk_neq: tmp->set_operator_type(binary_operator::kind::cmpneq); break;
+            case tok::tk_less: tmp->set_operator_type(binary_operator::kind::less); break;
+            case tok::tk_leq: tmp->set_operator_type(binary_operator::kind::leq); break;
+            case tok::tk_grt: tmp->set_operator_type(binary_operator::kind::grt); break;
+            case tok::tk_geq: tmp->set_operator_type(binary_operator::kind::geq); break;
             default: break;
         }
         tmp->set_left(node);
@@ -595,7 +595,7 @@ expr* parse::null_chain_expr() {
     auto node = additive_expr();
     while(lookahead(tok::tk_quesques)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        tmp->set_operator_type(binary_operator::binary_type::null_chain);
+        tmp->set_operator_type(binary_operator::kind::null_chain);
         tmp->set_left(node);
         match(tok::tk_quesques);
         tmp->set_right(additive_expr());
@@ -613,9 +613,9 @@ expr* parse::additive_expr() {
           lookahead(tok::tk_floater)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
-            case tok::tk_add: tmp->set_operator_type(binary_operator::binary_type::add); break;
-            case tok::tk_sub: tmp->set_operator_type(binary_operator::binary_type::sub); break;
-            case tok::tk_floater: tmp->set_operator_type(binary_operator::binary_type::concat); break;
+            case tok::tk_add: tmp->set_operator_type(binary_operator::kind::add); break;
+            case tok::tk_sub: tmp->set_operator_type(binary_operator::kind::sub); break;
+            case tok::tk_floater: tmp->set_operator_type(binary_operator::kind::concat); break;
             default: break;
         }
         tmp->set_left(node);
@@ -635,9 +635,9 @@ expr* parse::multive_expr() {
     while(lookahead(tok::tk_mult) || lookahead(tok::tk_div)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         if (lookahead(tok::tk_mult)) {
-            tmp->set_operator_type(binary_operator::binary_type::mult);
+            tmp->set_operator_type(binary_operator::kind::mult);
         } else {
-            tmp->set_operator_type(binary_operator::binary_type::div);
+            tmp->set_operator_type(binary_operator::kind::div);
         }
         tmp->set_left(node);
         match(toks[ptr].type);
@@ -657,15 +657,15 @@ unary_operator* parse::unary() {
     auto node = new unary_operator(toks[ptr].loc);
     switch(toks[ptr].type) {
         case tok::tk_sub:
-            node->set_operator_type(unary_operator::unary_type::negative);
+            node->set_operator_type(unary_operator::kind::negative);
             match(tok::tk_sub);
             break;
         case tok::tk_not:
-            node->set_operator_type(unary_operator::unary_type::logical_not);
+            node->set_operator_type(unary_operator::kind::logical_not);
             match(tok::tk_not);
             break;
         case tok::tk_floater:
-            node->set_operator_type(unary_operator::unary_type::bitwise_not);
+            node->set_operator_type(unary_operator::kind::bitwise_not);
             match(tok::tk_floater);
             break;
         default: break;
@@ -1018,11 +1018,11 @@ forei_expr* parse::forei_loop() {
     auto node = new forei_expr(toks[ptr].loc);
     switch(toks[ptr].type) {
         case tok::tk_forindex:
-            node->set_loop_type(forei_expr::forei_loop_type::forindex);
+            node->set_loop_type(forei_expr::kind::forindex);
             match(tok::tk_forindex);
             break;
         case tok::tk_foreach: 
-            node->set_loop_type(forei_expr::forei_loop_type::foreach);
+            node->set_loop_type(forei_expr::kind::foreach);
             match(tok::tk_foreach);
             break;
         default: break;
