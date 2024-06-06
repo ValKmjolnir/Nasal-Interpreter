@@ -240,14 +240,14 @@ public:
 
 class parameter: public expr {
 public:
-    enum class param_type {
+    enum class kind {
         normal_parameter,
         default_parameter,
         dynamic_parameter
     };
 
 private:
-    param_type type;
+    kind type;
     std::string name;
     expr* default_value;
 
@@ -256,12 +256,12 @@ public:
         expr(location, expr_type::ast_param),
         name(""), default_value(nullptr) {}
     ~parameter() override;
-    void set_parameter_type(param_type pt) {type = pt;}
+    void set_parameter_type(kind pt) {type = pt;}
     void set_parameter_name(const std::string& pname) {name = pname;}
     void set_default_value(expr* node) {default_value = node;}
-    param_type get_parameter_type() {return type;}
-    const std::string& get_parameter_name() const {return name;}
-    expr* get_default_value() {return default_value;}
+    auto get_parameter_type() {return type;}
+    const auto& get_parameter_name() const {return name;}
+    auto get_default_value() {return default_value;}
     void accept(ast_visitor*) override;
 };
 
@@ -287,7 +287,7 @@ public:
 
 class binary_operator: public expr {
 public:
-    enum class binary_type {
+    enum class kind {
         add,
         sub,
         mult,
@@ -308,7 +308,7 @@ public:
     };
 
 private:
-    binary_type type;
+    kind type;
     expr* left;
     expr* right;
     number_literal* optimized_const_number;
@@ -321,29 +321,29 @@ public:
         optimized_const_number(nullptr),
         optimized_const_string(nullptr) {}
     ~binary_operator() override;
-    void set_operator_type(binary_type operator_type) {type = operator_type;}
+    void set_operator_type(kind operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
     void set_optimized_number(number_literal* node) {optimized_const_number = node;}
     void set_optimized_string(string_literal* node) {optimized_const_string = node;}
-    binary_type get_operator_type() const {return type;}
-    expr* get_left() {return left;}
-    expr* get_right() {return right;}
-    number_literal* get_optimized_number() {return optimized_const_number;}
-    string_literal* get_optimized_string() {return optimized_const_string;}
+    auto get_operator_type() const {return type;}
+    auto get_left() {return left;}
+    auto get_right() {return right;}
+    auto get_optimized_number() {return optimized_const_number;}
+    auto get_optimized_string() {return optimized_const_string;}
     void accept(ast_visitor*) override;
 };
 
 class unary_operator: public expr {
 public:
-    enum class unary_type {
+    enum class kind {
         negative,
         logical_not,
         bitwise_not
     };
 
 private:
-    unary_type type;
+    kind type;
     expr* value;
     number_literal* optimized_number;
 
@@ -352,12 +352,12 @@ public:
         expr(location, expr_type::ast_unary),
         value(nullptr), optimized_number(nullptr) {}
     ~unary_operator() override;
-    void set_operator_type(unary_type operator_type) {type = operator_type;}
+    void set_operator_type(kind operator_type) {type = operator_type;}
     void set_value(expr* node) {value = node;}
     void set_optimized_number(number_literal* node) {optimized_number = node;}
-    unary_type get_operator_type() const {return type;}
-    expr* get_value() {return value;}
-    number_literal* get_optimized_number() {return optimized_number;}
+    auto get_operator_type() const {return type;}
+    auto get_value() {return value;}
+    auto get_optimized_number() {return optimized_number;}
     void accept(ast_visitor*) override;
 };
 
@@ -473,7 +473,7 @@ public:
 
 class assignment_expr: public expr {
 public:
-    enum class assign_type {
+    enum class kind {
         equal,
         add_equal,
         sub_equal,
@@ -486,7 +486,7 @@ public:
     };
 
 private:
-    assign_type type;
+    kind type;
     expr* left;
     expr* right;
 
@@ -495,12 +495,12 @@ public:
         expr(location, expr_type::ast_assign),
         left(nullptr), right(nullptr) {}
     ~assignment_expr() override;
-    void set_assignment_type(assign_type operator_type) {type = operator_type;}
+    void set_assignment_type(kind operator_type) {type = operator_type;}
     void set_left(expr* node) {left = node;}
     void set_right(expr* node) {right = node;}
-    assign_type get_assignment_type() const {return type;}
-    expr* get_left() {return left;}
-    expr* get_right() {return right;}
+    auto get_assignment_type() const {return type;}
+    auto get_left() {return left;}
+    auto get_right() {return right;}
     void accept(ast_visitor*) override;
 };
 
@@ -611,13 +611,13 @@ public:
 
 class forei_expr: public expr {
 public:
-    enum class forei_loop_type {
+    enum class kind {
         foreach,
         forindex
     };
 
 private:
-    forei_loop_type type;
+    kind type;
     iter_expr* iterator;
     expr* vector_node;
     code_block* block;
@@ -625,17 +625,17 @@ private:
 public:
     forei_expr(const span& location):
         expr(location, expr_type::ast_forei),
-        type(forei_loop_type::foreach), iterator(nullptr),
+        type(kind::foreach), iterator(nullptr),
         vector_node(nullptr), block(nullptr) {}
     ~forei_expr() override;
-    void set_loop_type(forei_loop_type ft) {type = ft;}
+    void set_loop_type(kind ft) {type = ft;}
     void set_iterator(iter_expr* node) {iterator = node;}
     void set_value(expr* node) {vector_node = node;}
     void set_code_block(code_block* node) {block = node;}
-    forei_loop_type get_loop_type() const {return type;}
-    iter_expr* get_iterator() {return iterator;}
-    expr* get_value() {return vector_node;}
-    code_block* get_code_block() {return block;}
+    auto get_loop_type() const {return type;}
+    auto get_iterator() {return iterator;}
+    auto get_value() {return vector_node;}
+    auto get_code_block() {return block;}
     void accept(ast_visitor*) override;
 };
 
