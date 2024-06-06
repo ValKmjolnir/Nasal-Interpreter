@@ -164,6 +164,27 @@ a &= 0xca;
 a |= 0xba;
 ```
 
+Operator `??` is used to check left hand side value is `nil` or not, if not,
+return the right hand side value:
+
+```javascript
+print(nil??"should get this string");
+```
+
+The example above will print `should get this string`.
+
+Operator `?.` is used to get hash member if left hand side value is not `nil`.
+And if left hand side value is not `nil` and not `hash`,
+will cause error and exit.
+
+```javascript
+var a = nil;
+print(a?.try_get); # nil
+
+var a = {try_get: "congrats!"};
+print(a?.try_get); # "congrats!"
+```
+
 ## Definition
 
 As follows.

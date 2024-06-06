@@ -6,7 +6,7 @@ void optimizer::const_string(
     binary_operator* node,
     string_literal* left_node,
     string_literal* right_node) {
-    if (node->get_operator_type()!=binary_operator::binary_type::concat) {
+    if (node->get_operator_type()!=binary_operator::kind::concat) {
         return;
     }
     const auto& left = left_node->get_content();
@@ -24,19 +24,19 @@ void optimizer::const_number(
     const auto right = right_node->get_number();
     f64 res;
     switch(node->get_operator_type()) {
-        case binary_operator::binary_type::add: res = left+right; break;
-        case binary_operator::binary_type::sub: res = left-right; break;
-        case binary_operator::binary_type::mult: res = left*right; break;
-        case binary_operator::binary_type::div: res = left/right; break;
-        case binary_operator::binary_type::less: res = left<right; break;
-        case binary_operator::binary_type::leq: res = left<=right; break;
-        case binary_operator::binary_type::grt: res = left>right; break;
-        case binary_operator::binary_type::geq: res = left>=right; break;
-        case binary_operator::binary_type::bitwise_or:
+        case binary_operator::kind::add: res = left+right; break;
+        case binary_operator::kind::sub: res = left-right; break;
+        case binary_operator::kind::mult: res = left*right; break;
+        case binary_operator::kind::div: res = left/right; break;
+        case binary_operator::kind::less: res = left<right; break;
+        case binary_operator::kind::leq: res = left<=right; break;
+        case binary_operator::kind::grt: res = left>right; break;
+        case binary_operator::kind::geq: res = left>=right; break;
+        case binary_operator::kind::bitwise_or:
             res = static_cast<i32>(left)|static_cast<i32>(right); break;
-        case binary_operator::binary_type::bitwise_xor:
+        case binary_operator::kind::bitwise_xor:
             res = static_cast<i32>(left)^static_cast<i32>(right); break;
-        case binary_operator::binary_type::bitwise_and:
+        case binary_operator::kind::bitwise_and:
             res = static_cast<i32>(left)&static_cast<i32>(right); break;
         default: return;
     }
@@ -53,11 +53,11 @@ void optimizer::const_number(
     number_literal* value_node) {
     auto res = value_node->get_number();
     switch(node->get_operator_type()) {
-        case unary_operator::unary_type::negative:
+        case unary_operator::kind::negative:
             res = -res; break;
-        case unary_operator::unary_type::bitwise_not:
+        case unary_operator::kind::bitwise_not:
             res = ~static_cast<i32>(res); break;
-        case unary_operator::unary_type::logical_not:
+        case unary_operator::kind::logical_not:
             res = !res; break;
     }
     if (std::isinf(res) || std::isnan(res)) {
