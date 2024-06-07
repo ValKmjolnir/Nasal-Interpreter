@@ -63,45 +63,74 @@ void vm::context_and_global_init() {
     }
 }
 
+void vm::hash_value_info(var& val) {
+    std::clog << "{";
+    usize count = 0;
+    for(const auto& i : val.hash().elems) {
+        ++count;
+        if (count>3) {
+            break;
+        }
+
+        std::clog << i.first;
+        if (count!=val.hash().size()) {
+            std::clog << ", ";
+        }
+    }
+    if (val.hash().size()>3) {
+        std::clog << "...";
+    }
+    std::clog << "}";
+}
+
 void vm::value_info(var& val) {
     const auto p = reinterpret_cast<u64>(val.val.gcobj);
     switch(val.type) {
         case vm_type::vm_none: std::clog << "| null |"; break;
-        case vm_type::vm_ret:  std::clog << "| pc   | 0x" << std::hex
-                                         << val.ret() << std::dec; break;
-        case vm_type::vm_addr: std::clog << "| addr | 0x" << std::hex
-                                         << reinterpret_cast<u64>(val.addr())
-                                         << std::dec; break;
+        case vm_type::vm_ret:
+            std::clog << "| pc   | 0x" << std::hex << val.ret() << std::dec;
+            break;
+        case vm_type::vm_addr:
+            std::clog << "| addr | 0x";
+            std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
+            break;
         case vm_type::vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
         case vm_type::vm_nil:  std::clog << "| nil  |"; break;
         case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
-        case vm_type::vm_str:  std::clog << "| str  | <0x" << std::hex << p
-                                         << "> \"" << util::rawstr(val.str(), 16)
-                                         << "\"" << std::dec; break;
-        case vm_type::vm_func: std::clog << "| func | <0x" << std::hex << p
-                                         << std::dec << "> " << val.func();
-                                         break;
-        case vm_type::vm_upval:std::clog << "| upval| <0x" << std::hex << p
-                                         << std::dec << "> [" << val.upval().size
-                                         << " val]"; break;
-        case vm_type::vm_vec:  std::clog << "| vec  | <0x" << std::hex << p
-                                         << std::dec << "> [" << val.vec().size()
-                                         << " val]"; break;
-        case vm_type::vm_hash: std::clog << "| hash | <0x" << std::hex << p
-                                         << std::dec << "> {" << val.hash().size()
-                                         << " val}"; break;
-        case vm_type::vm_ghost:std::clog << "| obj  | <0x" << std::hex << p
-                                         << "> obj:0x"
-                                         << reinterpret_cast<u64>(val.ghost().pointer)
-                                         << std::dec; break;
-        case vm_type::vm_co:   std::clog << "| co   | <0x" << std::hex << p
-                                         << std::dec << "> coroutine"; break;
-        case vm_type::vm_map:  std::clog << "| nmspc| <0x" << std::hex << p
-                                         << std::dec << "> namespace ["
-                                         << val.map().mapper.size()
-                                         << " val]"; break;
-        default: std::clog << "| err  | <0x" << std::hex << p
-                           << std::dec << "> unknown object"; break;
+        case vm_type::vm_str:
+            std::clog << "| str  | <0x" << std::hex << p << "> " << std::dec;
+            std::clog << "\"" << util::rawstr(val.str(), 16) << "\"";
+            break;
+        case vm_type::vm_func:
+            std::clog << "| func | <0x" << std::hex << p << std::dec << "> ";
+            std::clog << val.func();
+            break;
+        case vm_type::vm_upval:
+            std::clog << "| upval| <0x" << std::hex << p << std::dec;
+            std::clog << "> [" << val.upval().size << " val]"; break;
+        case vm_type::vm_vec:
+            std::clog << "| vec  | <0x" << std::hex << p << std::dec;
+            std::clog << "> [" << val.vec().size() << " val]"; break;
+        case vm_type::vm_hash:
+            std::clog << "| hash | <0x" << std::hex << p << std::dec << "> ";
+            hash_value_info(val);
+            break;
+        case vm_type::vm_ghost:
+            std::clog << "| obj  | <0x" << std::hex << p << "> " << std::dec;
+            std::clog << "obj:" << val.ghost().type_name;
+            break;
+        case vm_type::vm_co:
+            std::clog << "| co   | <0x" << std::hex << p << std::dec;
+            std::clog << "> coroutine";
+            break;
+        case vm_type::vm_map:
+            std::clog << "| nmspc| <0x" << std::hex << p << std::dec;
+            std::clog << "> namespace [" << val.map().mapper.size() << " val]";
+            break;
+        default:
+            std::clog << "| err  | <0x" << std::hex << p << std::dec;
+            std::clog << "> unknown object";
+            break;
     }
     std::clog << "\n";
 }

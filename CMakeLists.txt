@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(nasal VERSION 11.2)
+project(nasal VERSION 11.3)
 
 message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
 
