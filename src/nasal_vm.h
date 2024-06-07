@@ -65,6 +65,7 @@ protected:
 protected:
     /* debug functions */
     bool verbose = false;
+    void hash_value_info(var&);
     void value_info(var&);
     void function_detail_info(const nas_func&);
     void function_call_trace();
