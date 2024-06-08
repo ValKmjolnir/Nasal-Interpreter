@@ -18,6 +18,7 @@
 #include "natives/dylib_lib.h"
 #include "natives/regex_lib.h"
 #include "natives/unix_lib.h"
+#include "natives/subprocess.h"
 
 #include <iomanip>
 #include <list>
@@ -57,7 +58,9 @@ private:
         "__dlopen", "__dlclose", "__dlcallv", "__dlcall",
         // unix
         "__pipe", "__fork", "__waitpid", "__chdir",
-        "__environ", "__getcwd", "__getenv"
+        "__environ", "__getcwd", "__getenv",
+        // subprocess
+        "__subprocess_run"
     };
 
     // file mapper for file -> index

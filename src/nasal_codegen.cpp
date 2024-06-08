@@ -39,6 +39,7 @@ void codegen::init_native_function() {
     load_native_function_table(unix_lib_native);
     load_native_function_table(json_lib_native);
     load_native_function_table(regex_lib_native);
+    load_native_function_table(subprocess_native);
 }
 
 void codegen::check_id_exist(identifier* node) {
