@@ -1,5 +1,11 @@
 #include "natives/subprocess.h"
 
+// if you ask why, i will say: only MSVC
+#ifdef _MSC_VER
+#define popen _popen
+#define pclose _pclose
+#endif
+
 #include <cstdio>
 
 namespace nasal {
