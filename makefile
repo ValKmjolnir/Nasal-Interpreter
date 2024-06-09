@@ -37,6 +37,7 @@ NASAL_HEADER = \
 	src/natives/unix_lib.h\
 	src/natives/coroutine.h\
 	src/natives/regex_lib.h\
+	src/natives/subprocess.h\
 	src/repl/repl.h\
 	src/util/fs.h\
 	src/util/util.h
@@ -61,6 +62,7 @@ NASAL_OBJECT = \
 	build/math_lib.o\
 	build/unix_lib.o\
 	build/dylib_lib.o\
+	build/subprocess.o\
 	build/json_lib.o\
 	build/coroutine.o\
 	build/nasal_type.o\
@@ -211,6 +213,14 @@ build/regex_lib.o: \
 	src/nasal_gc.h\
 	src/natives/regex_lib.h src/natives/regex_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/natives/regex_lib.cpp -o build/regex_lib.o
+
+build/subprocess.o: \
+	src/nasal.h\
+	src/nasal_type.h\
+	src/nasal_gc.h\
+	src/natives/subprocess.h src/natives/subprocess.cpp | build
+	$(CXX) $(CXXFLAGS) src/natives/subprocess.cpp -o build/subprocess.o
+
 
 build/fg_props.o: \
 	src/nasal.h\
