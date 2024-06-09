@@ -60,7 +60,9 @@ private:
         "__pipe", "__fork", "__waitpid", "__chdir",
         "__environ", "__getcwd", "__getenv",
         // subprocess
-        "__subprocess_run"
+        "__subprocess_popen",
+        "__subprocess_pclose",
+        "__subprocess_read_stdout"
     };
 
     // file mapper for file -> index
