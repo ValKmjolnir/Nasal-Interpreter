@@ -13,7 +13,7 @@ var dlopen = func(libname) {
     if (io.exists(libname))
         return __dlopen(libname);
     # find dynamic lib through PATH
-    var envpath = split(os.platform()=="windows"? ";":":",unix.getenv("PATH"));
+    var envpath = split(os.platform()=="windows"? ";":":", unix.getenv("PATH"));
     # first find ./module
     append(envpath, ".");
     var path = os.platform()=="windows"? "\\module\\":"/module/";

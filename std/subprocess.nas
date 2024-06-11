@@ -9,3 +9,11 @@ var pclose = func(subproc) {
 var read = func(subproc) {
     return __subprocess_read_stdout(subproc);
 }
+
+var fork = func(vec) {
+    return __subprocess_fork(vec);
+}
+
+var kill = func(pid) {
+    return __subprocess_kill(pid);
+}

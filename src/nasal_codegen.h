@@ -62,7 +62,9 @@ private:
         // subprocess
         "__subprocess_popen",
         "__subprocess_pclose",
-        "__subprocess_read_stdout"
+        "__subprocess_read_stdout",
+        "__subprocess_fork",
+        "__subprocess_kill"
     };
 
     // file mapper for file -> index
