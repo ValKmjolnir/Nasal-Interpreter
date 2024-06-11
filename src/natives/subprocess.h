@@ -11,6 +11,9 @@ void subprocess_destructor(void*);
 var builtin_subprocess_popen(context*, gc*);
 var builtin_subprocess_pclose(context*, gc*);
 var builtin_subprocess_read_stdout(context*, gc*);
+
+var builtin_subprocess_fork(context*, gc*);
+var builtin_subprocess_kill(context*, gc*);
 extern nasal_builtin_table subprocess_native[];
 
 }
