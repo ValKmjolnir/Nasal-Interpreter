@@ -17,101 +17,106 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cwchar>
+#include <clocale>
 #include <vector>
 #include <csignal>
 
 namespace nasal {
 
-const auto subprocess_object_name = "subprocess";
+const auto subproc_desc_name = "subprocess_descriptor";
 
-void subprocess_destructor(void* ptr) {
-    pclose(static_cast<FILE*>(ptr));
+void subprocess_desc_dtor(void* ptr) {
+#ifdef WIN32
+    auto pi = &static_cast<subprocess_descriptor*>(ptr)->pi;
+
+    WaitForSingleObject(pi->hProcess, 0);
+    TerminateProcess(pi->hProcess, 0);
+    CloseHandle(pi->hProcess);
+    CloseHandle(pi->hThread);
+#else
+    auto pid = static_cast<subprocess_descriptor*>(ptr)->pid;
+
+    int status;
+    pid_t result = waitpid(pid, &status, WNOHANG);
+
+    // child process running
+    if (result==0) {
+        kill(pid, SIGTERM);
+    }
+#endif
 }
 
-var builtin_subprocess_popen(context* ctx, gc* ngc) {
-    auto command = ctx->localr[1];
-    if (!command.is_str()) {
-        return nas_err("subprocess::popen", "expect a string as the command");
-    }
-
-    auto fd = popen(command.str().c_str(), "r");
-    if (fd == nullptr) {
-        return nas_err("subprocess::popen", "failed to create sub-process");
-    }
-
-    var ret = ngc->alloc(vm_type::vm_ghost);
-    ret.ghost().set(subprocess_object_name, subprocess_destructor, nullptr, fd);
-    return ret;
-}
-
-var builtin_subprocess_pclose(context* ctx, gc* ngc) {
-    auto fd = ctx->localr[1];
-    if (!fd.object_check(subprocess_object_name)) {
-        return nas_err("subprocess::pclose", "not a valid subprocess");
-    }
-    auto res = pclose(static_cast<FILE*>(fd.ghost().pointer));
-    fd.ghost().pointer = nullptr;
-    fd.ghost().clear();
-    return var::num(res);
-}
-
-var builtin_subprocess_read_stdout(context* ctx, gc* ngc) {
-    auto fd = ctx->localr[1];
-    if (!fd.object_check(subprocess_object_name)) {
-        return nas_err("subprocess::pclose", "not a valid subprocess");
-    }
-    char buffer[1025];
-    auto res = ngc->alloc(vm_type::vm_str);
-    while(fgets(
-        buffer,
-        sizeof(buffer)-1,
-        static_cast<FILE*>(fd.ghost().pointer))!=nullptr) {
-        res.str() += buffer;
-    }
-    return res;
-}
-
-var builtin_subprocess_fork(context* ctx, gc* ngc) {
+var builtin_subprocess_create(context* ctx, gc* ngc) {
     auto cmd = ctx->localr[1];
     if (!cmd.is_vec()) {
-        return nas_err("subprocess::fork", "expect a string as the command");
+        return nas_err("subprocess::create", "expect a string as the command");
     }
 
+    for(const auto& v : cmd.vec().elems) {
+        if (!v.is_str()) {
+            return nas_err("subprocess::create", "non-string arguments");
+        }
+    }
+
+    auto obj = ngc->alloc(vm_type::vm_ghost);
+    obj.ghost().set(
+        subproc_desc_name,
+        subprocess_desc_dtor,
+        nullptr,
+        new subprocess_descriptor
+    );
+
 #ifdef WIN32
-    // STARTUPINFO si;
-    // PROCESS_INFORMATION pi;
+    auto si = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->si;
+    auto pi = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pi;
 
-    // // init STARTUPINFO
-    // ZeroMemory(&si, sizeof(si));
-    // si.cb = sizeof(si);
-    // si.dwFlags = STARTF_USESHOWWINDOW;
-    // si.wShowWindow = SW_SHOW;
+    // init STARTUPINFO
+    ZeroMemory(si, sizeof(STARTUPINFOW));
+    si->cb = sizeof(STARTUPINFOW);
+    si->dwFlags = STARTF_USESHOWWINDOW;
+    si->wShowWindow = SW_SHOW;
 
-    // // init PROCESS_INFORMATION
-    // ZeroMemory(&pi, sizeof(pi));
+    // init PROCESS_INFORMATION
+    ZeroMemory(pi, sizeof(PROCESS_INFORMATION));
 
-    // auto len = MultiByteToWideChar(CP_UTF8, 0, cmd.str().c_str(), -1, nullptr, 0);
+    auto command = cmd.vec().elems[0].str();
+    for(usize i = 1; i<cmd.vec().elems.size(); ++i) {
+        command += " " + cmd.vec().elems[i].str();
+    }
 
-    // auto res = CreateProcess(
-    //     nullptr,
-    //     cmd.str().c_str(),
-    //     nullptr,
-    //     nullptr,
-    //     false,
-    //     0,
-    //     nullptr,
-    //     nullptr,
-    //     &si,
-    //     &pi
-    // );
+    std::setlocale(LC_ALL, ".UTF8");
+    auto str_length = 1 + (command.length()<<1);
+    auto buffer = new wchar_t[str_length];
+    auto converted = mbstowcs(buffer, command.c_str(), str_length);
+    if (converted == size_t(-1)) {
+        delete[] buffer;
+        return nas_err("subprocess::create", "failed to convert wchat_t*");
+    }
+
+    buffer[converted] = L'\0';
+
+    if (!CreateProcessW(
+        nullptr,
+        buffer,
+        nullptr,
+        nullptr,
+        false,
+        0,
+        nullptr,
+        nullptr,
+        si,
+        pi
+    )) {
+        return nas_err("subprocess::create",
+            "failed to create subprocess: " +
+            std::to_string(GetLastError())
+        );
+    }
+    delete[] buffer;
 #else
     // create argv
     char** argv = new char*[cmd.vec().elems.size()+1];
-    for(const auto& v : cmd.vec().elems) {
-        if (!v.is_str()) {
-            return nas_err("subprocess::fork", "non-string arguments");
-        }
-    }
     for(usize i = 0; i<cmd.vec().elems.size(); ++i) {
         argv[i] = strdup(cmd.vec().elems[i].str().c_str());
     }
@@ -120,51 +125,60 @@ var builtin_subprocess_fork(context* ctx, gc* ngc) {
     // create child process
     auto pid = fork();
     if (pid < 0) {
-        return nas_err("subprocess::fork", "failed to create sub-process");
+        return nas_err("subprocess::create", "failed to create sub-process");
     }
     // child process
     if (pid==0) {
-        execve(argv[0], argv, environ);
+        execvp(argv[0], argv);
+        nas_err("subprocess::create", "failed to execute command");
         _exit(-1);
     }
 
     // parent process
+    static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pid = pid;
     for(usize i = 0; argv[i]; ++i) {
         delete argv[i];
     }
     delete[] argv;
 
-    return var::num(pid);
 #endif
 
-    return nil;
+    return obj;
 }
 
-var builtin_subprocess_kill(context* ctx, gc* ngc) {
-#ifdef WIN32
-    // TODO
-#else
-    auto pid = ctx->localr[1];
-    if (!pid.is_num()) {
-        return nas_err("subprocess::kill", "need numeral pid");
+var builtin_subprocess_terminate(context* ctx, gc* ngc) {
+    auto obj = ctx->localr[1];
+    if (!obj.object_check(subproc_desc_name)) {
+        return nas_err("subprocess::terminate",
+            "need correct subprocess descriptor"
+        );
     }
 
+#ifdef WIN32
+    auto pi = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pi;
+
+    WaitForSingleObject(pi->hProcess, 0);
+    TerminateProcess(pi->hProcess, 0);
+    CloseHandle(pi->hProcess);
+    CloseHandle(pi->hThread);
+#else
+    auto pid = static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pid;
+
     int status;
-    pid_t result = waitpid(pid.num(), &status, WNOHANG);
+    pid_t result = waitpid(pid, &status, WNOHANG);
+
     // child process running
     if (result==0) {
-        kill(pid.num(), SIGTERM);
+        kill(pid, SIGTERM);
     }
 #endif
+
     return nil;
 }
 
 nasal_builtin_table subprocess_native[] = {
-    {"__subprocess_popen", builtin_subprocess_popen},
-    {"__subprocess_pclose", builtin_subprocess_pclose},
-    {"__subprocess_read_stdout", builtin_subprocess_read_stdout},
-    {"__subprocess_fork", builtin_subprocess_fork},
-    {"__subprocess_kill", builtin_subprocess_kill},
+    {"__subprocess_create", builtin_subprocess_create},
+    {"__subprocess_terminate", builtin_subprocess_terminate},
     {nullptr, nullptr}
 };
 
