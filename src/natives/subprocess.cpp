@@ -9,12 +9,16 @@
 
 #ifndef _MSC_VER
 #include <unistd.h>
+#endif
+
+#ifndef WIN32
 #include <sys/wait.h>
 #endif
 
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <csignal>
 
 namespace nasal {
 
@@ -113,17 +117,6 @@ var builtin_subprocess_fork(context* ctx, gc* ngc) {
     }
     argv[cmd.vec().elems.size()] = nullptr;
 
-    // use the same env of parent process
-    char** env = nullptr;
-    if (getenv("PATH")) {
-        env = new char*[2];
-        env[0] = strdup((std::string("PATH=") + getenv("PATH")).c_str());
-        env[1] = nullptr;
-    } else {
-        env = new char*[1];
-        env[0] = nullptr;
-    }
-
     // create child process
     auto pid = fork();
     if (pid < 0) {
@@ -131,7 +124,7 @@ var builtin_subprocess_fork(context* ctx, gc* ngc) {
     }
     // child process
     if (pid==0) {
-        execve("nasal", argv, env);
+        execve(argv[0], argv, environ);
         _exit(-1);
     }
 
@@ -140,10 +133,7 @@ var builtin_subprocess_fork(context* ctx, gc* ngc) {
         delete argv[i];
     }
     delete[] argv;
-    for(usize i = 0; env[i]; ++i) {
-        delete env[i];
-    }
-    delete[] env;
+
     return var::num(pid);
 #endif
 
