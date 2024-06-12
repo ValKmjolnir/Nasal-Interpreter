@@ -70,7 +70,7 @@ if (size(argv)==2) {
 var modified_time = io.fstat(filename).st_mtime;
 println(os_time(), info_hd(), "\e[1mwatching ", filename, " ..\e[0m");
 while(1) {
-    unix.sleep(5);
+    unix.sleep(1);
     if (!io.exists(filename)) {
         println(
             os_time(),
@@ -91,7 +91,6 @@ while(1) {
         foreach(var i; args) {
             cmd ~= " " ~ i;
         }
-        cmd ~= " 2>&1";
         println(
             os_time(),
             info_hd(),
@@ -100,12 +99,11 @@ while(1) {
             "\"\e[0m"
         );
 
-        var subproc = subprocess.popen(cmd);
-        var stdout_info = subprocess.read(subproc);
-        var ret = subprocess.pclose(subproc);
-        if (size(stdout_info)>0) {
-            println(stdout_info);
-        }
+        var subproc = subprocess.create(["nasal", filename]~args);
+
+        unix.sleep(2);
+        var ret = subprocess.terminate(subproc);
+
         println(
             os_time(),
             ret!=0? err_hd():info_hd(),
