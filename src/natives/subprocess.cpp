@@ -158,7 +158,11 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     auto pi = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pi;
 
     WaitForSingleObject(pi->hProcess, 0);
-    TerminateProcess(pi->hProcess, 0);
+    TerminateProcess(pi->hProcess, -1);
+
+    DWORD res;
+    GetExitCodeProcess(pi->hProcess, &res);
+
     CloseHandle(pi->hProcess);
     CloseHandle(pi->hThread);
 #else
@@ -171,9 +175,11 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     if (result==0) {
         kill(pid, SIGTERM);
     }
+
+    auto res = WIFEXITED(status)? WEXITSTATUS(status):-1;
 #endif
 
-    return nil;
+    return var::num(res);
 }
 
 nasal_builtin_table subprocess_native[] = {
