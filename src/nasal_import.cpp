@@ -9,8 +9,15 @@
 namespace nasal {
 
 linker::linker(): show_path_flag(false), this_file("") {
+    const auto env_get_path = getenv("PATH");
+    if (!env_get_path) {
+        err.warn("link", "cannot get env \"PATH\".");
+        envpath = {};
+        return;
+    }
+
     const auto seperator = util::is_windows()? ';':':';
-    const auto PATH = std::string(getenv("PATH"));
+    const auto PATH = std::string(env_get_path);
     usize last = 0, position = PATH.find(seperator, 0);
     while(position!=std::string::npos) {
         std::string dirpath = PATH.substr(last, position-last);
