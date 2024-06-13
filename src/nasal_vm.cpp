@@ -98,34 +98,30 @@ void vm::value_info(var& val) {
         case vm_type::vm_nil:  std::clog << "| nil  |"; break;
         case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
         case vm_type::vm_str:
-            std::clog << "| str  | <0x" << std::hex << p << "> " << std::dec;
-            std::clog << "\"" << util::rawstr(val.str(), 16) << "\"";
+            std::clog << "| str  | \"" << util::rawstr(val.str(), 16) << "\"";
             break;
         case vm_type::vm_func:
-            std::clog << "| func | <0x" << std::hex << p << std::dec << "> ";
-            std::clog << val.func();
+            std::clog << "| func | " << val.func();
             break;
         case vm_type::vm_upval:
             std::clog << "| upval| <0x" << std::hex << p << std::dec;
             std::clog << "> [" << val.upval().size << " val]"; break;
         case vm_type::vm_vec:
-            std::clog << "| vec  | <0x" << std::hex << p << std::dec;
-            std::clog << "> [" << val.vec().size() << " val]"; break;
+            std::clog << "| vec  | [" << val.vec().size() << " val]"; break;
         case vm_type::vm_hash:
-            std::clog << "| hash | <0x" << std::hex << p << std::dec << "> ";
+            std::clog << "| hash | ";
             hash_value_info(val);
             break;
         case vm_type::vm_ghost:
             std::clog << "| obj  | <0x" << std::hex << p << "> " << std::dec;
-            std::clog << "obj:" << val.ghost().type_name;
+            std::clog << "object:" << val.ghost().type_name;
             break;
         case vm_type::vm_co:
-            std::clog << "| co   | <0x" << std::hex << p << std::dec;
-            std::clog << "> coroutine";
+            std::clog << "| co   | coroutine@0x" << std::hex << p << std::dec;
             break;
         case vm_type::vm_map:
-            std::clog << "| nmspc| <0x" << std::hex << p << std::dec;
-            std::clog << "> namespace [" << val.map().mapper.size() << " val]";
+            std::clog << "| nmspc| [";
+            std::clog << val.map().mapper.size() << " val]";
             break;
         default:
             std::clog << "| err  | <0x" << std::hex << p << std::dec;
@@ -136,8 +132,7 @@ void vm::value_info(var& val) {
 }
 
 void vm::function_detail_info(const nas_func& func) {
-    std::clog << "func@0x";
-    std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
+    std::clog << "func";
     
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -212,7 +207,7 @@ void vm::trace_back() {
     }
     ret.push(ctx.pc); // store the position program crashed
 
-    std::clog << "\ntrace back " << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    std::clog << "\nback trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
     codestream::set(const_number, const_string, native_function.data(), files);
     for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
@@ -236,7 +231,7 @@ void vm::stack_info(const u64 limit = 16) {
     var* bottom = ctx.stack;
     const auto stack_address = reinterpret_cast<u64>(bottom);
 
-    std::clog << "\nvm stack (0x" << std::hex << stack_address << std::dec;
+    std::clog << "\nstack (0x" << std::hex << stack_address << std::dec;
     std::clog << ", limit " << limit << ", total ";
     std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
 
@@ -250,7 +245,7 @@ void vm::stack_info(const u64 limit = 16) {
 }
 
 void vm::register_info() {
-    std::clog << "\nregisters (" << (ngc.cort? "coroutine":"main") << ")\n";
+    std::clog << "\nregister (" << (ngc.cort? "coroutine":"main") << ")\n";
     std::clog << std::hex
               << "  [ pc     ]    | pc   | 0x" << ctx.pc << "\n"
               << "  [ global ]    | addr | 0x"
