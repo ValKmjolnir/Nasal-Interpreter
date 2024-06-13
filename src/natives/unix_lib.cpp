@@ -89,7 +89,7 @@ var builtin_readdir(context* ctx, gc* ngc) {
     }
     return ngc->newstr(data.cFileName);
 #else
-    dirent* p = readdir(static_cast<DIR*>(handle.ghost().pointer));
+    dirent* p = readdir(handle.ghost().get<DIR>());
     return p? ngc->newstr(p->d_name):nil;
 #endif
 }

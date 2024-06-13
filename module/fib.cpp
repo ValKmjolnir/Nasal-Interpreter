@@ -91,10 +91,10 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
     }
     f64 num = args[1].num();
 
-    reinterpret_cast<ghost_obj*>(res.ghost().pointer)->number = static_cast<u32>(num);
+    res.ghost().get<ghost_obj>()->number = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";
 
-    reinterpret_cast<ghost_obj*>(res.ghost().pointer)->test_string = ngc->newstr("just for test");
+    res.ghost().get<ghost_obj>()->test_string = ngc->newstr("just for test");
     std::cout << "set_new_ghost: successfully set ghost.test_string = just for test\n";
     return nil;
 }
@@ -106,9 +106,9 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
         return nil;
     }
     std::cout << "print_new_ghost: " << res.ghost() << " number = "
-              << reinterpret_cast<ghost_obj*>(res.ghost().pointer)->number
+              << res.ghost().get<ghost_obj>()->number
               << " test_string = "
-              << reinterpret_cast<ghost_obj*>(res.ghost().pointer)->test_string
+              << res.ghost().get<ghost_obj>()->test_string
               << "\n";
     return nil;
 }

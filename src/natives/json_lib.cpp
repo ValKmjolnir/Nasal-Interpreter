@@ -369,7 +369,7 @@ var builtin_json_stringify(context* ctx, gc* ngc) {
     if (!json_object.object_check("nasal::json")) {
         return nas_err("json::stringify", "expect a json object.");
     }
-    auto json_ptr = static_cast<json*>(json_object.ghost().pointer);
+    auto json_ptr = json_object.ghost().get<json>();
     return ngc->newstr(json_ptr->stringify(object));
 }
 
@@ -382,7 +382,7 @@ var builtin_json_parse(context* ctx, gc* ngc) {
     if (!input_string.is_str()) {
         return nas_err("json::parse", "require string as the input.");
     }
-    auto json_ptr = static_cast<json*>(json_object.ghost().pointer);
+    auto json_ptr = json_object.ghost().get<json>();
     return json_ptr->parse(input_string.str(), ngc);
 }
 
@@ -391,7 +391,7 @@ var builtin_json_get_error(context* ctx, gc* ngc) {
     if (!json_object.object_check("nasal::json")) {
         return nas_err("json::get_error", "expect a json object.");
     }
-    auto json_ptr = static_cast<json*>(json_object.ghost().pointer);
+    auto json_ptr = json_object.ghost().get<json>();
     return ngc->newstr(json_ptr->get_error());
 }
 

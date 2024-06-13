@@ -14,13 +14,18 @@
 
 namespace nasal {
 
-struct subprocess_descriptor {
+struct subprocess {
 #ifndef WIN32
     pid_t pid;
 #else
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 #endif
+
+public:
+    static const char* name() {
+        return "nasal::subprocess";
+    }
 };
 
 void subprocess_desc_dtor(void*);
