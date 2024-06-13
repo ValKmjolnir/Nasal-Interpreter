@@ -24,18 +24,16 @@
 
 namespace nasal {
 
-const auto subproc_desc_name = "subprocess_descriptor";
-
 void subprocess_desc_dtor(void* ptr) {
 #ifdef WIN32
-    auto pi = &static_cast<subprocess_descriptor*>(ptr)->pi;
+    auto pi = &static_cast<subprocess*>(ptr)->pi;
 
     WaitForSingleObject(pi->hProcess, 0);
     TerminateProcess(pi->hProcess, 0);
     CloseHandle(pi->hProcess);
     CloseHandle(pi->hThread);
 #else
-    auto pid = static_cast<subprocess_descriptor*>(ptr)->pid;
+    auto pid = static_cast<subprocess*>(ptr)->pid;
 
     int status;
     pid_t result = waitpid(pid, &status, WNOHANG);
@@ -50,26 +48,30 @@ void subprocess_desc_dtor(void* ptr) {
 var builtin_subprocess_create(context* ctx, gc* ngc) {
     auto cmd = ctx->localr[1];
     if (!cmd.is_vec()) {
-        return nas_err("subprocess::create", "expect a string as the command");
+        return nas_err("subprocess::create",
+            "expect string vector as the command"
+        );
     }
 
     for(const auto& v : cmd.vec().elems) {
         if (!v.is_str()) {
-            return nas_err("subprocess::create", "non-string arguments");
+            return nas_err("subprocess::create",
+                "non-string argument found"
+            );
         }
     }
 
     auto obj = ngc->alloc(vm_type::vm_ghost);
     obj.ghost().set(
-        subproc_desc_name,
+        subprocess::name(),
         subprocess_desc_dtor,
         nullptr,
-        new subprocess_descriptor
+        new subprocess
     );
 
 #ifdef WIN32
-    auto si = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->si;
-    auto pi = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pi;
+    auto si = &obj.ghost().get<subprocess>()->si;
+    auto pi = &obj.ghost().get<subprocess>()->pi;
 
     // init STARTUPINFO
     ZeroMemory(si, sizeof(STARTUPINFOW));
@@ -135,7 +137,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
     }
 
     // parent process
-    static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pid = pid;
+    obj.ghost().get<subprocess>()->pid = pid;
     for(usize i = 0; argv[i]; ++i) {
         delete argv[i];
     }
@@ -148,14 +150,14 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
 
 var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     auto obj = ctx->localr[1];
-    if (!obj.object_check(subproc_desc_name)) {
+    if (!obj.object_check(subprocess::name())) {
         return nas_err("subprocess::terminate",
-            "need correct subprocess descriptor"
+            "need correct subprocess object"
         );
     }
 
 #ifdef WIN32
-    auto pi = &static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pi;
+    auto pi = &obj.ghost().get<subprocess>()->pi;
 
     WaitForSingleObject(pi->hProcess, 0);
     TerminateProcess(pi->hProcess, -1);
@@ -166,7 +168,7 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     CloseHandle(pi->hProcess);
     CloseHandle(pi->hThread);
 #else
-    auto pid = static_cast<subprocess_descriptor*>(obj.ghost().pointer)->pid;
+    auto pid = obj.ghost().get<subprocess>()->pid;
 
     int status;
     pid_t result = waitpid(pid, &status, WNOHANG);

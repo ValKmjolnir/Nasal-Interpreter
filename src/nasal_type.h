@@ -213,6 +213,12 @@ public:
 
 public:
     const auto& get_ghost_name() const { return type_name; }
+
+public:
+    template<typename T>
+    T* get() { return static_cast<T*>(pointer); }
+    template<typename T>
+    T convert() const { return reinterpret_cast<T>(pointer); }
 };
 
 struct context {

@@ -164,7 +164,7 @@ void nas_ghost::clear() {
 std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     out << "<object " << ghost.get_ghost_name();
     out << " at 0x" << std::hex;
-    out << reinterpret_cast<u64>(ghost.pointer) << std::dec << ">";
+    out << ghost.convert<u64>() << std::dec << ">";
     return out;
 }
 
