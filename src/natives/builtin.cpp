@@ -615,7 +615,7 @@ var builtin_time_stamp(context* ctx, gc* ngc) {
     if (!object.object_check("nasal-time-stamp")) {
         return nil;
     }
-    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    auto stamp = object.ghost().get<time_stamp>();
     stamp->make_stamp();
     return nil;
 }
@@ -625,7 +625,7 @@ var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
     if (!object.object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
-    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    auto stamp = object.ghost().get<time_stamp>();
     return var::num(static_cast<f64>(stamp->elapsed_milliseconds()));
 }
 
@@ -634,7 +634,7 @@ var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
     if (!object.object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
-    auto stamp = static_cast<time_stamp*>(object.ghost().pointer);
+    auto stamp = object.ghost().get<time_stamp>();
     return var::num(static_cast<f64>(stamp->elapsed_microseconds()));
 }
 
@@ -717,7 +717,7 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
     if (!name.length()) {
         std::stringstream ss;
         ss << "0x" << std::hex;
-        ss << reinterpret_cast<u64>(arg.ghost().pointer) << std::dec;
+        ss << arg.ghost().convert<u64>() << std::dec;
         return ngc->newstr(ss.str());
     }
     return ngc->newstr(name);
