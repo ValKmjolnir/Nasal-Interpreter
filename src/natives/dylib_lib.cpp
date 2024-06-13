@@ -55,7 +55,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     // get "get" function, to get the register table
 #ifdef _WIN32
     void* register_table_get_function = reinterpret_cast<void*>(GetProcAddress(
-        static_cast<HMODULE>(library_object.ghost().pointer), "get"
+        library_object.ghost().convert<HMODULE>(), "get"
     ));
 #else
     void* register_table_get_function = dlsym(
@@ -105,7 +105,7 @@ var builtin_dlcallv(context* ctx, gc* ngc) {
         );
     }
     auto& vec = arguments.vec().elems;
-    return reinterpret_cast<module_func>(function_object.ghost().pointer)(
+    return function_object.ghost().convert<module_func>()(
         vec.data(),
         vec.size(),
         ngc
@@ -124,7 +124,7 @@ var builtin_dlcall(context* ctx, gc* ngc) {
     // so arguments starts from ctx->localr[2]
     var* local_frame_start = ctx->localr + 2;
     usize local_frame_size = ngc->running_context->top - local_frame_start;
-    return reinterpret_cast<module_func>(function_object.ghost().pointer)(
+    return function_object.ghost().convert<module_func>()(
         local_frame_start,
         local_frame_size,
         ngc

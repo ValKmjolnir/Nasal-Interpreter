@@ -101,7 +101,7 @@ var builtin_read(context* ctx, gc* ngc) {
     }
     auto read_size = fread(
         temp_buffer, 1, length.num(),
-        static_cast<FILE*>(file_descriptor.ghost().pointer)
+        file_descriptor.ghost().get<FILE>()
     );
     buffer.str() = temp_buffer;
     buffer.val.gcobj->immutable = true;
@@ -121,7 +121,7 @@ var builtin_write(context* ctx, gc* ngc) {
     }
     return var::num(static_cast<f64>(fwrite(
         source.str().c_str(), 1, source.str().length(),
-        static_cast<FILE*>(file_descriptor.ghost().pointer)
+        file_descriptor.ghost().get<FILE>()
     )));
 }
 
@@ -134,7 +134,7 @@ var builtin_seek(context* ctx, gc* ngc) {
         return nas_err("io::seek", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(fseek(
-        static_cast<FILE*>(file_descriptor.ghost().pointer),
+        file_descriptor.ghost().get<FILE>(),
         position.num(),
         whence.num()
     )));
@@ -146,7 +146,7 @@ var builtin_tell(context* ctx, gc* ngc) {
         return nas_err("io::tell", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(
-        ftell(static_cast<FILE*>(file_descriptor.ghost().pointer))
+        ftell(file_descriptor.ghost().get<FILE>())
     ));
 }
 
@@ -157,7 +157,7 @@ var builtin_readln(context* ctx, gc* ngc) {
     }
     auto result = ngc->alloc(vm_type::vm_str);
     char c;
-    while((c = fgetc(static_cast<FILE*>(file_descriptor.ghost().pointer)))!=EOF) {
+    while((c = fgetc(file_descriptor.ghost().get<FILE>()))!=EOF) {
         if (c=='\r') {
             continue;
         }
@@ -204,7 +204,7 @@ var builtin_eof(context* ctx, gc* ngc) {
         return nas_err("io::readln", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(
-        feof(static_cast<FILE*>(file_descriptor.ghost().pointer))
+        feof(file_descriptor.ghost().get<FILE>())
     ));
 }
 
