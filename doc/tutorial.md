@@ -113,11 +113,12 @@ This type is created by native-function of nasal. If want to define a new data t
 
 ## Operators
 
-Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that joints strings.
+Nasal has basic math operators `+` `-` `*` `/` and a special operator `~` that joints strings or vectors.
 
 ```javascript
 1+2-(1+3)*(2+4)/(16-9);
 "str1"~"str2";
+[0]~[1]; # should be [0, 1]
 ```
 
 For conditional expressions, operators `==` `!=` `<` `>` `<=` `>=` are used to compare two values.
@@ -162,6 +163,9 @@ a ~= "string";
 a ^= 0xff;
 a &= 0xca;
 a |= 0xba;
+
+a = [0];
+a ~= [1]; # should be [0, 1]
 ```
 
 Operator `??` is used to check left hand side value is `nil` or not, if not,

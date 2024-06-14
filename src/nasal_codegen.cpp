@@ -17,13 +17,16 @@ void codegen::load_native_function_table(nasal_builtin_table* table) {
             err.err("code", "\"" + std::string(table[i].name) + "\" conflicts.");
             continue;
         }
+
+        // replace unsafe native functions with redirect function in limit mode
         if (flag_limited_mode && unsafe_system_api.count(table[i].name)) {
             native_function.push_back({"__unsafe_redirect", builtin_unsafe});
         } else {
             native_function.push_back(table[i]);
         }
-        auto index = native_function_mapper.size();
+
         // insert into mapper
+        auto index = native_function_mapper.size();
         native_function_mapper[table[i].name] = index;
     }
 }
