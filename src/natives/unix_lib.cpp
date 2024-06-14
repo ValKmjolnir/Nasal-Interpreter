@@ -12,48 +12,6 @@ void dir_entry_destructor(void* ptr) {
 #endif
 }
 
-var builtin_pipe(context* ctx, gc* ngc) {
-#ifndef _WIN32
-    i32 fd[2];
-    var res = ngc->alloc(vm_type::vm_vec);
-    if (pipe(fd)==-1) {
-        return nas_err("unix::pipe", "failed to create pipe");
-    }
-    res.vec().elems.push_back(var::num(static_cast<f64>(fd[0])));
-    res.vec().elems.push_back(var::num(static_cast<f64>(fd[1])));
-    return res;
-#endif
-    return nas_err("unix::pipe", "not supported on windows");
-}
-
-var builtin_fork(context* ctx, gc* ngc) {
-#ifndef _WIN32
-    f64 res = fork();
-    if (res<0) {
-        return nas_err("unix::fork", "failed to fork a process");
-    }
-    return var::num(static_cast<f64>(res));
-#endif
-    return nas_err("unix::fork", "not supported on windows");
-}
-
-var builtin_waitpid(context* ctx, gc* ngc) {
-    auto pid = ctx->localr[1];
-    auto nohang = ctx->localr[2];
-    if (!pid.is_num() || !nohang.is_num()) {
-        return nas_err("unix::waitpid", "pid and nohang must be number");
-    }
-#ifndef _WIN32
-    i32 ret_pid, status;
-    ret_pid = waitpid(pid.num(), &status, nohang.num()==0? 0:WNOHANG);
-    var vec = ngc->alloc(vm_type::vm_vec);
-    vec.vec().elems.push_back(var::num(static_cast<f64>(ret_pid)));
-    vec.vec().elems.push_back(var::num(static_cast<f64>(status)));
-    return vec;
-#endif
-    return nas_err("unix::waitpid", "not supported on windows");
-}
-
 var builtin_opendir(context* ctx, gc* ngc) {
     auto path = ctx->localr[1];
     if (!path.is_str()) {
@@ -139,9 +97,6 @@ var builtin_getenv(context* ctx, gc* ngc) {
 }
 
 nasal_builtin_table unix_lib_native[] = {
-    {"__pipe", builtin_pipe},
-    {"__fork", builtin_fork},
-    {"__waitpid", builtin_waitpid},
     {"__opendir", builtin_opendir},
     {"__readdir", builtin_readdir},
     {"__closedir", builtin_closedir},

@@ -24,9 +24,6 @@ namespace nasal {
 
 void dir_entry_destructor(void*);
 
-var builtin_pipe(context*, gc*);
-var builtin_fork(context*, gc*);
-var builtin_waitpid(context*, gc*);
 var builtin_opendir(context*, gc*);
 var builtin_readdir(context*, gc*);
 var builtin_closedir(context*, gc*);

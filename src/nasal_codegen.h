@@ -57,8 +57,7 @@ private:
         // dylib
         "__dlopen", "__dlclose", "__dlcallv", "__dlcall",
         // unix
-        "__pipe", "__fork", "__waitpid", "__chdir",
-        "__environ", "__getcwd", "__getenv",
+        "__chdir", "__environ", "__getcwd", "__getenv",
         // subprocess
         "__subprocess_create",
         "__subprocess_terminate"
