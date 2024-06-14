@@ -7,26 +7,6 @@ use std.io;
 var _S_IFDIR = 0x4000;
 var _S_IFREG = 0x8000;
 
-var pipe = func() {
-    return __pipe;
-}
-
-var fork = func() {
-    return __fork;
-}
-
-var dup2 = func(fd0, fd1) {
-    die("not supported yet");
-}
-
-var exec = func(filename, argv, envp) {
-    die("not supported yet");
-}
-
-var waitpid = func(pid, nohang = 0) {
-    return __waitpid;
-}
-
 var isdir = func(path) {
     return !!bits.u32_and(io.stat(path)[2], _S_IFDIR);
 }

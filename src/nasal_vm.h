@@ -536,6 +536,22 @@ inline void vm::o_subeq() {op_calc_eq(-);}
 inline void vm::o_muleq() {op_calc_eq(*);}
 inline void vm::o_diveq() {op_calc_eq(/);}
 inline void vm::o_lnkeq() {
+    // concat two vectors into one
+    if (ctx.top[-1].is_vec() && ctx.memr[0].is_vec()) {
+        ngc.temp = ngc.alloc(vm_type::vm_vec);
+        for(auto i : ctx.memr[0].vec().elems) {
+            ngc.temp.vec().elems.push_back(i);
+        }
+        for(auto i : ctx.top[-1].vec().elems) {
+            ngc.temp.vec().elems.push_back(i);
+        }
+        ctx.top[-1] = ctx.memr[0] = ngc.temp;
+        ngc.temp = nil;
+        ctx.memr = nullptr;
+        ctx.top -= imm[ctx.pc]+1;
+        return;
+    }
+
     ctx.top[-1] = ctx.memr[0] = ngc.newstr(
         ctx.memr[0].to_str()+ctx.top[-1].to_str()
     );
