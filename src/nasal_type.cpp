@@ -89,12 +89,18 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
         out << (hash.elems.size()? "{..}":"{}");
         return out;
     }
+
+    // mark print, to avoid infinite recursion
     hash.printed = true;
+
+    static const char* sep[] = {", ", "}"};
     usize iter = 0, size = hash.elems.size();
     out << "{";
     for(auto& i : hash.elems) {
-        out << i.first << ":" << i.second << ",}"[(++iter)==size];
+        out << i.first << ": " << i.second << sep[(++iter)==size];
     }
+
+    // restore flag
     hash.printed = false;
     return out;
 }
@@ -212,12 +218,18 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
         out << (mp.mapper.size()? "{..}":"{}");
         return out;
     }
+
+    // mark print, to avoid infinite recursion
     mp.printed = true;
+
+    static const char* sep[] = {", ", "}"};
     usize iter = 0, size = mp.mapper.size();
     out << "{";
     for(auto& i : mp.mapper) {
-        out << i.first << ":" << *i.second << ",}"[(++iter)==size];
+        out << i.first << ": " << *i.second << sep[(++iter)==size];
     }
+
+    // restore flag
     mp.printed = false;
     return out;
 }

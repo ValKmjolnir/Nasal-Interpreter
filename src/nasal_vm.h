@@ -65,7 +65,9 @@ protected:
 protected:
     /* debug functions */
     bool verbose = false;
-    void hash_value_info(var&);
+    void hash_value_info(var&, const usize);
+    void namespace_value_info(var&, const usize);
+    void value_name_form(const var&);
     void value_info(var&);
     void function_detail_info(const nas_func&);
     void function_call_trace();
@@ -76,6 +78,8 @@ protected:
     void local_state();
     void upvalue_state();
     void all_state_detail();
+
+protected:
     std::string report_lack_arguments(u32, const nas_func&) const;
     std::string report_special_call_lack_arguments(var*, const nas_func&) const;
     std::string report_key_not_found(const std::string&, const nas_hash&) const;
