@@ -63,12 +63,12 @@ void vm::context_and_global_init() {
     }
 }
 
-void vm::hash_value_info(var& val) {
+void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
     for(const auto& i : val.hash().elems) {
         ++count;
-        if (count>3) {
+        if (count>max_show_elems) {
             break;
         }
 
@@ -77,55 +77,92 @@ void vm::hash_value_info(var& val) {
             std::clog << ", ";
         }
     }
-    if (val.hash().size()>3) {
+    if (val.hash().size()>max_show_elems) {
         std::clog << "...";
     }
     std::clog << "}";
 }
 
+void vm::namespace_value_info(var& val, const usize max_show_elems) {
+    std::clog << "{";
+    usize count = 0;
+    for(const auto& i : val.map().mapper) {
+        ++count;
+        if (count>max_show_elems) {
+            break;
+        }
+
+        std::clog << i.first;
+        if (count!=val.map().size()) {
+            std::clog << ", ";
+        }
+    }
+    if (val.map().size()>max_show_elems) {
+        std::clog << "...";
+    }
+    std::clog << "}";
+}
+
+void vm::value_name_form(const var& val) {
+    std::clog << "| ";
+    switch(val.type) {
+        case vm_type::vm_none:  std::clog << "null     "; break;
+        case vm_type::vm_ret:   std::clog << "return   "; break;
+        case vm_type::vm_addr:  std::clog << "address  "; break;
+        case vm_type::vm_cnt:   std::clog << "counter  "; break;
+        case vm_type::vm_nil:   std::clog << "nil      "; break;
+        case vm_type::vm_num:   std::clog << "number   "; break;
+        case vm_type::vm_str:   std::clog << "string   "; break;
+        case vm_type::vm_func:  std::clog << "function "; break;
+        case vm_type::vm_upval: std::clog << "upvalue  "; break;
+        case vm_type::vm_vec:   std::clog << "vector   "; break;
+        case vm_type::vm_hash:  std::clog << "hash     "; break;
+        case vm_type::vm_ghost: std::clog << "ghost    "; break;
+        case vm_type::vm_co:    std::clog << "coroutine"; break;
+        case vm_type::vm_map:   std::clog << "namespace"; break;
+        default:                std::clog << "error    "; break;
+    }
+    std::clog << " | ";
+}
+
 void vm::value_info(var& val) {
     const auto p = reinterpret_cast<u64>(val.val.gcobj);
+
+    value_name_form(val);
+
     switch(val.type) {
-        case vm_type::vm_none: std::clog << "| null |"; break;
+        case vm_type::vm_none: std::clog << "null"; break;
         case vm_type::vm_ret:
-            std::clog << "| pc   | 0x" << std::hex << val.ret() << std::dec;
+            std::clog << "0x" << std::hex << val.ret() << std::dec;
             break;
         case vm_type::vm_addr:
-            std::clog << "| addr | 0x";
+            std::clog << "0x";
             std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
             break;
-        case vm_type::vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
-        case vm_type::vm_nil:  std::clog << "| nil  |"; break;
-        case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
+        case vm_type::vm_cnt: std::clog << val.cnt(); break;
+        case vm_type::vm_nil: std::clog << "nil"; break;
+        case vm_type::vm_num: std::clog << val.num(); break;
         case vm_type::vm_str:
-            std::clog << "| str  | \"" << util::rawstr(val.str(), 16) << "\"";
+            std::clog << "\"" << util::rawstr(val.str(), 16) << "\"";
             break;
-        case vm_type::vm_func:
-            std::clog << "| func | " << val.func();
-            break;
+        case vm_type::vm_func: std::clog << val.func(); break;
         case vm_type::vm_upval:
-            std::clog << "| upval| <0x" << std::hex << p << std::dec;
-            std::clog << "> [" << val.upval().size << " val]"; break;
-        case vm_type::vm_vec:
-            std::clog << "| vec  | [" << val.vec().size() << " val]"; break;
-        case vm_type::vm_hash:
-            std::clog << "| hash | ";
-            hash_value_info(val);
+            std::clog << "<0x" << std::hex << p << std::dec;
+            std::clog << "> [" << val.upval().size << " val]";
             break;
+        case vm_type::vm_vec:
+            std::clog << "[" << val.vec().size() << " val]"; break;
+        case vm_type::vm_hash: hash_value_info(val, 4); break;
         case vm_type::vm_ghost:
-            std::clog << "| obj  | <0x" << std::hex << p << "> " << std::dec;
+            std::clog << "<0x" << std::hex << p << "> " << std::dec;
             std::clog << "object:" << val.ghost().type_name;
             break;
         case vm_type::vm_co:
-            std::clog << "| co   | coroutine@0x" << std::hex << p << std::dec;
+            std::clog << "coroutine@0x" << std::hex << p << std::dec;
             break;
-        case vm_type::vm_map:
-            std::clog << "| nmspc| [";
-            std::clog << val.map().mapper.size() << " val]";
-            break;
+        case vm_type::vm_map: namespace_value_info(val, 4); break;
         default:
-            std::clog << "| err  | <0x" << std::hex << p << std::dec;
-            std::clog << "> unknown object";
+            std::clog << "<0x" << std::hex << p << std::dec << "> unknown";
             break;
     }
     std::clog << "\n";
@@ -247,16 +284,16 @@ void vm::stack_info(const u64 limit = 16) {
 void vm::register_info() {
     std::clog << "\nregister (" << (ngc.cort? "coroutine":"main") << ")\n";
     std::clog << std::hex
-              << "  [ pc     ]    | pc   | 0x" << ctx.pc << "\n"
-              << "  [ global ]    | addr | 0x"
+              << "  [ pc     ]    | pc        | 0x" << ctx.pc << "\n"
+              << "  [ global ]    | address   | 0x"
               << reinterpret_cast<u64>(global) << "\n"
-              << "  [ local  ]    | addr | 0x"
+              << "  [ local  ]    | address   | 0x"
               << reinterpret_cast<u64>(ctx.localr) << "\n"
-              << "  [ memr   ]    | addr | 0x"
+              << "  [ memr   ]    | address   | 0x"
               << reinterpret_cast<u64>(ctx.memr) << "\n"
-              << "  [ canary ]    | addr | 0x"
+              << "  [ canary ]    | address   | 0x"
               << reinterpret_cast<u64>(ctx.canary) << "\n"
-              << "  [ top    ]    | addr | 0x"
+              << "  [ top    ]    | address   | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
     std::clog << "  [ funcr  ]    "; value_info(ctx.funcr);

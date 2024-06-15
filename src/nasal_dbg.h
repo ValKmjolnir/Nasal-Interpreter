@@ -15,7 +15,7 @@ namespace nasal {
 // and show them before each line of the source file
 class operand_line_counter {
 private:
-    static const usize operand_size = op_code_type::op_ret + 1;
+    static const usize operand_size = opcode_type::op_ret + 1;
     u64 operand_counter[operand_size];
     std::vector<std::string> file_name_list;
     std::vector<std::vector<u64>> file_line_counter;
