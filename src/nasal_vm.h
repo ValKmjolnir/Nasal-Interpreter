@@ -66,6 +66,7 @@ protected:
     /* debug functions */
     bool verbose = false;
     void hash_value_info(var&, const usize);
+    void coroutine_value_info(var&);
     void namespace_value_info(var&, const usize);
     void value_name_form(const var&);
     void value_info(var&);
