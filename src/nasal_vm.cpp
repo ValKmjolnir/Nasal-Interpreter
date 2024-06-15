@@ -83,6 +83,17 @@ void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "}";
 }
 
+void vm::coroutine_value_info(var& val) {
+    std::clog << "[ ";
+    switch(val.co().status) {
+        case nas_co::status::dead: std::clog << "dead"; break;
+        case nas_co::status::running: std::clog << "running"; break;
+        case nas_co::status::suspended: std::clog << "suspended"; break;
+    }
+    std::clog << " ] @0x";
+    std::clog << std::hex << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
+}
+
 void vm::namespace_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
@@ -157,9 +168,7 @@ void vm::value_info(var& val) {
             std::clog << "<0x" << std::hex << p << "> " << std::dec;
             std::clog << "object:" << val.ghost().type_name;
             break;
-        case vm_type::vm_co:
-            std::clog << "coroutine@0x" << std::hex << p << std::dec;
-            break;
+        case vm_type::vm_co: coroutine_value_info(val); break;
         case vm_type::vm_map: namespace_value_info(val, 4); break;
         default:
             std::clog << "<0x" << std::hex << p << std::dec << "> unknown";
@@ -383,8 +392,8 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     return result + out.str();
 }
 
-std::string vm::report_special_call_lack_arguments(
-    var* local, const nas_func& func) const {
+std::string vm::report_special_call_lack_arguments(var* local,
+                                                   const nas_func& func) const {
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -407,8 +416,8 @@ std::string vm::report_special_call_lack_arguments(
     return result + out.str();
 }
 
-std::string vm::report_key_not_found(
-    const std::string& not_found, const nas_hash& hash) const {
+std::string vm::report_key_not_found(const std::string& not_found,
+                                     const nas_hash& hash) const {
     auto result = "member \"" + not_found + "\" doesn't exist in hash {";
     for(const auto& i : hash.elems) {
         result += i.first + ", ";
