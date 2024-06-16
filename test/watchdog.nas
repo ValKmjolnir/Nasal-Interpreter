@@ -27,87 +27,68 @@ var usage = func() {
     println(
         os_time(),
         info_hd(),
-        "\e[1musage: nasal watchdog.nas <filename> [\"argv\"]\e[0m"
+        "usage: nasal watchdog.nas <filename> [\"argv\"]"
     );
 }
 
 var argv = runtime.argv();
 if (size(argv)<1) {
-    println(
-        os_time(),
-        err_hd(),
-        "\e[1mneed correct file path to watch\e[0m"
-    );
+    println(os_time(), err_hd(), "need correct file path to watch");
     usage();
     exit(-1);
 }
 
 var filename = argv[0];
 if (!io.exists(filename)) {
-    println(
-        os_time(),
-        err_hd(),
-        "\e[1mfile <",
-        filename,
-        "> does not exist\e[0m"
-    );
+    println(os_time(), err_hd(), "file <", filename, "> does not exist");
     usage();
     exit(-1);
 }
 
 var args = [];
 if (size(argv)==2) {
-    println(
-        os_time(),
-        info_hd(),
-        "\e[1mwith argument(s) ",
-        argv[1],
-        "\e[0m"
-    );
+    println(os_time(), info_hd(), "with argument(s) ", argv[1]);
     args = split(" ", argv[1]);
 }
 
 var modified_time = io.fstat(filename).st_mtime;
-println(os_time(), info_hd(), "\e[1mwatching ", filename, " ..\e[0m");
+println(os_time(), info_hd(), "watching ", filename, " ..");
 while(1) {
     unix.sleep(1);
     if (!io.exists(filename)) {
-        println(
-            os_time(),
-            err_hd(),
-            "\e[1mfile <",
-            filename,
-            "> does not exist\e[0m"
-        );
+        println(os_time(), err_hd(), "file <", filename, "> does not exist");
         break;
     }
 
     var latest_modified_time = io.fstat(filename).st_mtime;
     if (latest_modified_time!=modified_time) {
         modified_time = latest_modified_time;
-        println(os_time(), modified_hd(), "\e[1m", filename, "\e[0m");
+        println(os_time(), modified_hd(), filename);
 
         var cmd = (os.platform()=="windows"?"":"./") ~ "nasal " ~ filename;
         foreach(var i; args) {
             cmd ~= " " ~ i;
         }
-        println(
-            os_time(),
-            info_hd(),
-            "\e[1mexecuting command \"",
-            cmd,
-            "\"\e[0m"
-        );
+        println(os_time(), info_hd(), "executing command \"", cmd, "\"");
 
-        var subproc = subprocess.create(["nasal", filename]~args);
+        var subproc = subprocess.create(["nasal", filename] ~ args);
 
-        unix.sleep(2);
+        # check if active every 0.5s
+        var exited = false;
+        for(var t = 0; t<=4; t+=0.1) {
+            unix.sleep(0.1);
+            if (!subprocess.active(subproc)) {
+                exited = true;
+                break;
+            }
+            if (io.fstat(filename).st_mtime!=modified_time) {
+                println(os_time(), modified_hd(), "file changed, reloading..");
+                break;
+            }
+        }
+
+        # get return value
         var ret = subprocess.terminate(subproc);
-
-        println(
-            os_time(),
-            ret!=0? err_hd():info_hd(),
-            "\e[1mprocess returned " ~ ret ~ "\e[0m"
-        );
+        println(os_time(), ret!=0? err_hd():info_hd(), "process returned ", ret);
     }
 }

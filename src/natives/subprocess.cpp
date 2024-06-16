@@ -148,6 +148,31 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
     return obj;
 }
 
+var builtin_subprocess_active(context* ctx, gc* ngc) {
+    auto obj = ctx->localr[1];
+    if (!obj.object_check(subprocess::name())) {
+        return nas_err("subprocess::active",
+            "need correct subprocess object"
+        );
+    }
+
+#ifdef WIN32
+    auto pi = &obj.ghost().get<subprocess>()->pi;
+
+    DWORD res;
+    GetExitCodeProcess(pi->hProcess, &res);
+
+    return res==STILL_ACTIVE? one:zero;
+#else
+    auto pid = obj.ghost().get<subprocess>()->pid;
+
+    int status;
+    pid_t result = waitpid(pid, &status, WNOHANG);
+
+    return result==0? one:zero;
+#endif
+}
+
 var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     auto obj = ctx->localr[1];
     if (!obj.object_check(subprocess::name())) {
@@ -186,6 +211,7 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
 
 nasal_builtin_table subprocess_native[] = {
     {"__subprocess_create", builtin_subprocess_create},
+    {"__subprocess_active", builtin_subprocess_active},
     {"__subprocess_terminate", builtin_subprocess_terminate},
     {nullptr, nullptr}
 };
