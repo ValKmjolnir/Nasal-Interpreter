@@ -95,7 +95,7 @@ public:
 
 public:
     // get value
-    var* addr();
+    var* addr() const;
     u64 ret() const;
     i64& cnt();
     f64 num() const;

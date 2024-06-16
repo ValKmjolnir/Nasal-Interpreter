@@ -348,7 +348,7 @@ var var::addr(var* p) {
     return {vm_type::vm_addr, p};
 }
 
-var* var::addr() {
+var* var::addr() const {
     return val.addr;
 }
 

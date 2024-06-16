@@ -65,7 +65,13 @@ protected:
 protected:
     /* debug functions */
     bool verbose = false;
+    void return_address_info(const var&);
+    void memory_address_info(const var&);
+    void raw_string_info(var&);
+    void upvalue_info(var&);
+    void vector_value_info(var&);
     void hash_value_info(var&, const usize);
+    void ghost_type_info(var&);
     void coroutine_value_info(var&);
     void namespace_value_info(var&, const usize);
     void value_name_form(const var&);
