@@ -31,6 +31,7 @@ public:
 void subprocess_desc_dtor(void*);
 
 var builtin_subprocess_create(context*, gc*);
+var builtin_subprocess_active(context*, gc*);
 var builtin_subprocess_terminate(context*, gc*);
 extern nasal_builtin_table subprocess_native[];
 
