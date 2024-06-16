@@ -63,6 +63,33 @@ void vm::context_and_global_init() {
     }
 }
 
+void vm::return_address_info(const var& val) {
+    std::clog << "0x";
+    std::clog << std::hex << val.ret() << std::dec;
+}
+
+void vm::memory_address_info(const var& val) {
+    std::clog << "0x";
+    std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
+}
+
+void vm::raw_string_info(var& val) {
+    std::clog << "\"" << util::rawstr(val.str(), 24) << "\"";
+}
+
+void vm::upvalue_info(var& val) {
+    std::clog << "[" << val.upval().size << " val] ";
+    if (val.upval().on_stack) {
+        std::clog << "offset:0x" << std::hex;
+        std::clog << reinterpret_cast<u64>(val.upval().stack_frame_offset);
+        std::clog << std::dec;
+    }
+}
+
+void vm::vector_value_info(var& val) {
+    std::clog << "[" << val.vec().size() << " val]";
+}
+
 void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
@@ -81,6 +108,11 @@ void vm::hash_value_info(var& val, const usize max_show_elems) {
         std::clog << "...";
     }
     std::clog << "}";
+}
+
+void vm::ghost_type_info(var& val) {
+    std::clog << "<object:" << val.ghost().type_name;
+    std::clog << "@0x" << std::hex << val.ghost().pointer << ">" << std::dec;
 }
 
 void vm::coroutine_value_info(var& val) {
@@ -117,68 +149,51 @@ void vm::namespace_value_info(var& val, const usize max_show_elems) {
 void vm::value_name_form(const var& val) {
     std::clog << "| ";
     switch(val.type) {
-        case vm_type::vm_none:  std::clog << "null     "; break;
-        case vm_type::vm_ret:   std::clog << "return   "; break;
-        case vm_type::vm_addr:  std::clog << "address  "; break;
-        case vm_type::vm_cnt:   std::clog << "counter  "; break;
-        case vm_type::vm_nil:   std::clog << "nil      "; break;
-        case vm_type::vm_num:   std::clog << "number   "; break;
-        case vm_type::vm_str:   std::clog << "string   "; break;
-        case vm_type::vm_func:  std::clog << "function "; break;
-        case vm_type::vm_upval: std::clog << "upvalue  "; break;
-        case vm_type::vm_vec:   std::clog << "vector   "; break;
-        case vm_type::vm_hash:  std::clog << "hash     "; break;
-        case vm_type::vm_ghost: std::clog << "ghost    "; break;
-        case vm_type::vm_co:    std::clog << "coroutine"; break;
-        case vm_type::vm_map:   std::clog << "namespace"; break;
-        default:                std::clog << "error    "; break;
+        case vm_type::vm_none:  std::clog << "null  "; break;
+        case vm_type::vm_ret:   std::clog << "ret   "; break;
+        case vm_type::vm_addr:  std::clog << "addr  "; break;
+        case vm_type::vm_cnt:   std::clog << "cnt   "; break;
+        case vm_type::vm_nil:   std::clog << "nil   "; break;
+        case vm_type::vm_num:   std::clog << "num   "; break;
+        case vm_type::vm_str:   std::clog << "str   "; break;
+        case vm_type::vm_func:  std::clog << "func  "; break;
+        case vm_type::vm_upval: std::clog << "upval "; break;
+        case vm_type::vm_vec:   std::clog << "vec   "; break;
+        case vm_type::vm_hash:  std::clog << "hash  "; break;
+        case vm_type::vm_ghost: std::clog << "ghost "; break;
+        case vm_type::vm_co:    std::clog << "co    "; break;
+        case vm_type::vm_map:   std::clog << "map   "; break;
+        default:                std::clog << "err   "; break;
     }
     std::clog << " | ";
 }
 
 void vm::value_info(var& val) {
-    const auto p = reinterpret_cast<u64>(val.val.gcobj);
-
     value_name_form(val);
 
     switch(val.type) {
-        case vm_type::vm_none: std::clog << "null"; break;
-        case vm_type::vm_ret:
-            std::clog << "0x" << std::hex << val.ret() << std::dec;
-            break;
-        case vm_type::vm_addr:
-            std::clog << "0x";
-            std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
-            break;
+        case vm_type::vm_none: break;
+        case vm_type::vm_ret: return_address_info(val); break;
+        case vm_type::vm_addr: memory_address_info(val); break;
         case vm_type::vm_cnt: std::clog << val.cnt(); break;
-        case vm_type::vm_nil: std::clog << "nil"; break;
+        case vm_type::vm_nil: break;
         case vm_type::vm_num: std::clog << val.num(); break;
-        case vm_type::vm_str:
-            std::clog << "\"" << util::rawstr(val.str(), 16) << "\"";
-            break;
+        case vm_type::vm_str: raw_string_info(val); break;
         case vm_type::vm_func: std::clog << val.func(); break;
-        case vm_type::vm_upval:
-            std::clog << "<0x" << std::hex << p << std::dec;
-            std::clog << "> [" << val.upval().size << " val]";
-            break;
-        case vm_type::vm_vec:
-            std::clog << "[" << val.vec().size() << " val]"; break;
+        case vm_type::vm_upval: upvalue_info(val); break;
+        case vm_type::vm_vec: vector_value_info(val); break;
         case vm_type::vm_hash: hash_value_info(val, 4); break;
-        case vm_type::vm_ghost:
-            std::clog << "<0x" << std::hex << p << "> " << std::dec;
-            std::clog << "object:" << val.ghost().type_name;
-            break;
+        case vm_type::vm_ghost: ghost_type_info(val); break;
         case vm_type::vm_co: coroutine_value_info(val); break;
         case vm_type::vm_map: namespace_value_info(val, 4); break;
-        default:
-            std::clog << "<0x" << std::hex << p << std::dec << "> unknown";
-            break;
+        default: std::clog << "unknown"; break;
     }
     std::clog << "\n";
 }
 
 void vm::function_detail_info(const nas_func& func) {
-    std::clog << "func";
+    std::clog << "func@";
+    std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -203,47 +218,86 @@ void vm::function_detail_info(const nas_func& func) {
 }
 
 void vm::function_call_trace() {
+    util::windows_code_page_manager cp;
+    cp.set_utf8_output();
+
     var* bottom = ctx.stack;
     var* top = ctx.top;
 
     // generate trace back
     std::stack<const nas_func*> functions;
+    std::stack<u64> callsite;
+
+    // load call trace
     for(var* i = bottom; i<=top; ++i) {
+        // i-1 is the callsite program counter of this function
         if (i->is_func() && i-1>=bottom && (i-1)->is_ret()) {
             functions.push(&i->func());
+            callsite.push((i-1)->ret());
         }
     }
-    if (functions.empty()) {
+
+    // function register stores the latest-called function
+    if (functions.empty() && !ctx.funcr.is_func()) {
+        cp.restore_code_page();
         return;
     }
 
-    std::clog << "\ncall trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
-    const nas_func* last = nullptr;
-    u32 same = 0;
-    for(auto func = last; !functions.empty(); functions.pop()) {
-        func = functions.top();
-        if (last==func) {
-            ++same;
-            continue;
-        } else if (same) {
-            std::clog << "   --> " << same << " same call(s)\n";
-            same = 0;
-        }
+    std::clog << "\ncall trace ";
+    std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    std::clog << "  crash occurred in\n       ";
+    function_detail_info(ctx.funcr.func());
+    std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
+    std::clog << bytecode[ctx.pc].line << "\n";
 
+    // another condition may exist:
+    // have ret pc on stack, but no function at the top of the ret pc
+    for(var* i = top; i>=bottom; --i) {
+        if (i->is_ret() && i->ret()!=callsite.top()) {
+            std::clog << "  call ";
+            function_detail_info(ctx.funcr.func());
+            std::clog << " from ";
+            std::clog << files[bytecode[i->ret()].fidx] << ":";
+            std::clog << bytecode[i->ret()].line << "\n";
+            break;
+        }
+    }
+
+    const nas_func* last = nullptr;
+    u64 last_callsite = SIZE_MAX;
+    u64 same_count = 0;
+    for(; !functions.empty() && !callsite.empty(); functions.pop(), callsite.pop()) {
+        auto func = functions.top();
+        auto place = callsite.top();
+
+        if (last==func && last_callsite==place) {
+            ++same_count;
+            continue;
+        } else if (same_count) {
+            std::clog << "  `--> " << same_count << " same call(s)\n";
+            same_count = 0;
+        }
+        
         last = func;
+        last_callsite = place;
+
+        // output called function
         std::clog << "  call ";
         function_detail_info(*func);
-        std::clog << "\n";
+
+        // output callsite
+        std::clog << " from ";
+        std::clog << files[bytecode[place].fidx] << ":";
+        std::clog << bytecode[place].line << "\n";
     }
-    if (same) {
-        std::clog << "   --> " << same << " same call(s)\n";
+    if (same_count) {
+        std::clog << "  `--> " << same_count << " same call(s)\n";
     }
+
+    cp.restore_code_page();
 }
 
 void vm::trace_back() {
-    // var* bottom = ctx.stack;
-    // var* top = ctx.top;
-
     // generate trace back
     std::stack<u32> ret;
     for(var* i = ctx.stack; i<=ctx.top; ++i) {
@@ -251,10 +305,14 @@ void vm::trace_back() {
             ret.push(i->ret());
         }
     }
-    ret.push(ctx.pc); // store the position program crashed
 
-    std::clog << "\nback trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    // store the position program crashed
+    ret.push(ctx.pc);
+
+    std::clog << "\nback trace ";
+    std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
     codestream::set(const_number, const_string, native_function.data(), files);
+
     for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
@@ -293,16 +351,16 @@ void vm::stack_info(const u64 limit = 16) {
 void vm::register_info() {
     std::clog << "\nregister (" << (ngc.cort? "coroutine":"main") << ")\n";
     std::clog << std::hex
-              << "  [ pc     ]    | pc        | 0x" << ctx.pc << "\n"
-              << "  [ global ]    | address   | 0x"
+              << "  [ pc     ]    | pc     | 0x" << ctx.pc << "\n"
+              << "  [ global ]    | addr   | 0x"
               << reinterpret_cast<u64>(global) << "\n"
-              << "  [ local  ]    | address   | 0x"
+              << "  [ local  ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.localr) << "\n"
-              << "  [ memr   ]    | address   | 0x"
+              << "  [ memr   ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.memr) << "\n"
-              << "  [ canary ]    | address   | 0x"
+              << "  [ canary ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.canary) << "\n"
-              << "  [ top    ]    | address   | 0x"
+              << "  [ top    ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
     std::clog << "  [ funcr  ]    "; value_info(ctx.funcr);

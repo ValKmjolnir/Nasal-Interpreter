@@ -73,7 +73,7 @@ println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
 println("coroutine yield: ",coroutine.resume(co));
 println("coroutine state:\e[91m ",coroutine.status(co),"\e[0m");
 
-var co=coroutine.create(func {
+var co = coroutine.create(func {
     var a=1;
     var b = func() {
         b();
