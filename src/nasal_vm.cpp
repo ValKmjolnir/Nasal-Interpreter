@@ -231,9 +231,21 @@ void vm::function_call_trace() {
     // load call trace
     for(var* i = bottom; i<=top; ++i) {
         // i-1 is the callsite program counter of this function
-        if (i->is_func() && i-1>=bottom && (i-1)->is_ret()) {
-            functions.push(&i->func());
-            callsite.push((i-1)->ret());
+        if (i->is_addr() && i+2<=top &&
+            (i+1)->is_ret() && (i+1)->ret()>0 &&
+            (i+2)->is_func()) {
+            functions.push(&(i+2)->func());
+            callsite.push((i+1)->ret());
+        }
+    }
+
+    // another condition may exist
+    // have ret pc on stack, but no function at the top of the ret pc
+    for(var * i = top; i>=bottom; --i) {
+        if ((i->is_addr() && i+2<=top && (i+1)->is_ret() && !(i+2)->is_func()) ||
+            (i->is_addr() && i+1<=top && i+2>top && (i+1)->is_ret())) {
+            functions.push(&ctx.funcr.func());
+            callsite.push((i+1)->ret());
         }
     }
 
@@ -249,19 +261,6 @@ void vm::function_call_trace() {
     function_detail_info(ctx.funcr.func());
     std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
     std::clog << bytecode[ctx.pc].line << "\n";
-
-    // another condition may exist:
-    // have ret pc on stack, but no function at the top of the ret pc
-    for(var* i = top; i>=bottom; --i) {
-        if (i->is_ret() && i->ret()!=callsite.top()) {
-            std::clog << "  call ";
-            function_detail_info(ctx.funcr.func());
-            std::clog << " from ";
-            std::clog << files[bytecode[i->ret()].fidx] << ":";
-            std::clog << bytecode[i->ret()].line << "\n";
-            break;
-        }
-    }
 
     const nas_func* last = nullptr;
     u64 last_callsite = SIZE_MAX;
@@ -299,7 +298,7 @@ void vm::function_call_trace() {
 
 void vm::trace_back() {
     // generate trace back
-    std::stack<u32> ret;
+    std::stack<u64> ret;
     for(var* i = ctx.stack; i<=ctx.top; ++i) {
         if (i->is_ret() && i->ret()!=0) {
             ret.push(i->ret());
@@ -313,12 +312,11 @@ void vm::trace_back() {
     std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
     codestream::set(const_number, const_string, native_function.data(), files);
 
-    for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
+    for(u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
             continue;
-        }
-        if (same) {
+        } else if (same) {
             std::clog << "  0x" << std::hex
                       << std::setw(8) << std::setfill('0')
                       << prev << std::dec << "    "
