@@ -65,7 +65,7 @@ while(1) {
         modified_time = latest_modified_time;
         println(os_time(), modified_hd(), filename);
 
-        var cmd = (os.platform()=="windows"?"":"./") ~ "nasal " ~ filename;
+        var cmd = "nasal " ~ filename;
         foreach(var i; args) {
             cmd ~= " " ~ i;
         }
