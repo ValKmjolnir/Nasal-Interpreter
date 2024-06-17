@@ -17,6 +17,7 @@ namespace nasal {
 struct subprocess {
 #ifndef WIN32
     pid_t pid;
+    int status = 0;
 #else
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
