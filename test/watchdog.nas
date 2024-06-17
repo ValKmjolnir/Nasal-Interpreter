@@ -75,8 +75,8 @@ while(1) {
 
         # check if active every 0.5s
         var exited = false;
-        for(var t = 0; t<=4; t+=0.1) {
-            unix.sleep(0.1);
+        while(1) {
+            unix.sleep(0.5);
             if (!subprocess.active(subproc)) {
                 exited = true;
                 break;

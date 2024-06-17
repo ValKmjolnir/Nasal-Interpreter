@@ -102,9 +102,9 @@ void codestream::dump(std::ostream& out) const {
             out << hex << "0x" << num << dec; break;
         case op_callb:
             out << hex << "0x" << num << dec;
-            out << " [" << natives[num].name << "@0x";
+            out << " <" << natives[num].name << "@0x";
             out << hex << reinterpret_cast<u64>(natives[num].func) << dec;
-            out << "]";
+            out << ">";
             break;
         case op_upval:
         case op_mupval:
