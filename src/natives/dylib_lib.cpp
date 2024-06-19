@@ -28,7 +28,7 @@ std::string search_dynamic_library_path(const std::string& dlname) {
     const auto sep = (util::is_windows()? ";":":");
 
     // do split string
-    std::vector<std::string> env_path_vec = {};
+    std::vector<std::string> env_path_vec = {"."};
     usize last = 0;
     usize pos = env_path.find(sep, 0);
     while(pos!=std::string::npos) {
