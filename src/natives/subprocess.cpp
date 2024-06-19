@@ -148,6 +148,36 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
     return obj;
 }
 
+var builtin_subprocess_active(context* ctx, gc* ngc) {
+    auto obj = ctx->localr[1];
+    if (!obj.object_check(subprocess::name())) {
+        return nas_err("subprocess::active",
+            "need correct subprocess object"
+        );
+    }
+
+#ifdef WIN32
+    auto pi = &obj.ghost().get<subprocess>()->pi;
+
+    DWORD res;
+    GetExitCodeProcess(pi->hProcess, &res);
+
+    return res==STILL_ACTIVE? one:zero;
+#else
+    auto pid = obj.ghost().get<subprocess>()->pid;
+
+    int status;
+    pid_t result = waitpid(pid, &status, WNOHANG);
+
+    // this means the child process is returned
+    if (result==pid) {
+        obj.ghost().get<subprocess>()->status = status;
+    } 
+
+    return result==0? one:zero;
+#endif
+}
+
 var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     auto obj = ctx->localr[1];
     if (!obj.object_check(subprocess::name())) {
@@ -167,25 +197,36 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
 
     CloseHandle(pi->hProcess);
     CloseHandle(pi->hThread);
+
+    return var::num(res);
 #else
     auto pid = obj.ghost().get<subprocess>()->pid;
 
     int status;
     pid_t result = waitpid(pid, &status, WNOHANG);
 
-    // child process running
-    if (result==0) {
-        kill(pid, SIGTERM);
+    if (result<0) {
+        auto pstat = obj.ghost().get<subprocess>()->status;
+        // if pstat is not 0, means child process already exited
+        auto res = WIFEXITED(pstat)? WEXITSTATUS(pstat):-1;
+        return var::num(res);
     }
 
-    auto res = WIFEXITED(status)? WEXITSTATUS(status):-1;
-#endif
+    // child process is still running
+    if (result==0) {
+        kill(pid, SIGTERM);
+        return var::num(-1);
+    }
 
+    // child process exited when calling the waitpid above
+    auto res = WIFEXITED(status)? WEXITSTATUS(status):-1;
     return var::num(res);
+#endif
 }
 
 nasal_builtin_table subprocess_native[] = {
     {"__subprocess_create", builtin_subprocess_create},
+    {"__subprocess_active", builtin_subprocess_active},
     {"__subprocess_terminate", builtin_subprocess_terminate},
     {nullptr, nullptr}
 };

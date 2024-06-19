@@ -1,9 +1,14 @@
 #include "natives/dylib_lib.h"
+#include "util/util.h"
+#include "util/fs.h"
+
+#include <cstdlib>
+#include <vector>
 
 namespace nasal {
 
-const auto dynamic_library_type_name = "dylib";
-const auto function_address_type_name = "faddr";
+const auto dynamic_library_type_name = "nasal::dynamic_library";
+const auto function_address_type_name = "nasal::function_address";
 
 void dynamic_library_destructor(void* pointer) {
 #ifdef _WIN32
@@ -13,33 +18,74 @@ void dynamic_library_destructor(void* pointer) {
 #endif
 }
 
+std::string search_dynamic_library_path(const std::string& dlname) {
+    const auto ext = (util::is_windows()? ".dll":".so");
+    const auto lib_path = (util::is_windows()? ".\\":"./") + dlname + ext;
+    if (fs::exists(lib_path)) {
+        return lib_path;
+    }
+    const auto env_path = std::string(getenv("PATH"));
+    const auto sep = (util::is_windows()? ";":":");
+
+    // do split string
+    std::vector<std::string> env_path_vec = {"."};
+    usize last = 0;
+    usize pos = env_path.find(sep, 0);
+    while(pos!=std::string::npos) {
+        if (pos>last) {
+            env_path_vec.push_back(env_path.substr(last, pos-last));
+        }
+        last = pos + 1;
+        pos = env_path.find(sep, last);
+    }
+    if (last!=env_path.length()) {
+        env_path_vec.push_back(env_path.substr(last));
+    }
+
+    const auto path_front = util::is_windows()? "\\module\\":"/module/";
+    for(auto& p : env_path_vec) {
+        p += path_front + lib_path;
+        if (fs::exists(p)) {
+            return p;
+        }
+    }
+    return "";
+}
+
 var builtin_dlopen(context* ctx, gc* ngc) {
-    auto dlname = ctx->localr[1];
-    if (!dlname.is_str()) {
+    auto dl = ctx->localr[1];
+    if (!dl.is_str()) {
         return nas_err("dylib::dlopen", "\"libname\" must be string");
+    }
+
+    const auto dlname = search_dynamic_library_path(dl.str());
+    if (dlname.empty()) {
+        return nas_err("dylib::dlopen",
+            "cannot find dynamic lib <" + dl.str() + ">"
+        );
     }
 
     // get library pointer
 #ifdef _WIN32
-    wchar_t* wide_string = new wchar_t[dlname.str().size()+1];
+    wchar_t* wide_string = new wchar_t[dlname.size()+1];
     if (!wide_string) {
         return nas_err("dylib::dlopen", "malloc failed");
     }
-    memset(wide_string, 0, sizeof(wchar_t) * dlname.str().size() + 1);
-    mbstowcs(wide_string, dlname.str().c_str(), dlname.str().size() + 1);
+    memset(wide_string, 0, sizeof(wchar_t) * dlname.size() + 1);
+    mbstowcs(wide_string, dlname.c_str(), dlname.size() + 1);
     // load library by using wide string name
-    void* dynamic_library_pointer = LoadLibraryA(dlname.str().c_str());
+    void* dynamic_library_pointer = LoadLibraryA(dlname.c_str());
     delete []wide_string;
 #else
     void* dynamic_library_pointer = dlopen(
-        dlname.str().c_str(), RTLD_LOCAL|RTLD_LAZY
+        dlname.c_str(), RTLD_LOCAL|RTLD_LAZY
     );
 #endif
     
     // check library pointer and insert into returned hashmap
     if (!dynamic_library_pointer) {
         return nas_err("dylib::dlopen",
-            "cannot open dynamic lib <" + dlname.str() + ">"
+            "cannot open dynamic lib <" + dl.str() + ">"
         );
     }
     auto return_hash = ngc->temp = ngc->alloc(vm_type::vm_hash);

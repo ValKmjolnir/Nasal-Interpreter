@@ -17,6 +17,7 @@ namespace nasal {
 struct subprocess {
 #ifndef WIN32
     pid_t pid;
+    int status = 0;
 #else
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
@@ -31,6 +32,7 @@ public:
 void subprocess_desc_dtor(void*);
 
 var builtin_subprocess_create(context*, gc*);
+var builtin_subprocess_active(context*, gc*);
 var builtin_subprocess_terminate(context*, gc*);
 extern nasal_builtin_table subprocess_native[];
 

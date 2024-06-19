@@ -6,7 +6,7 @@
 
 namespace nasal {
 
-const auto file_type_name = "file";
+const auto file_type_name = "nasal::FILE";
 
 void filehandle_destructor(void* ptr) {
     fclose(static_cast<FILE*>(ptr));

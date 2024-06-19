@@ -189,6 +189,8 @@ build/dylib_lib.o: \
 	src/nasal.h\
 	src/nasal_type.h\
 	src/nasal_gc.h\
+	src/util/util.h\
+	src/util/fs.h\
 	src/natives/dylib_lib.h src/natives/dylib_lib.cpp | build
 	$(CXX) $(CXXFLAGS) src/natives/dylib_lib.cpp -o build/dylib_lib.o
 

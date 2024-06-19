@@ -23,7 +23,7 @@ func() {
 }();
 
 var speed_test = func() {
-    var dd = dylib.dlopen("libfib."~(os.platform()=="windows"? "dll":"so"));
+    var dd = dylib.dlopen("libfib");
     println("[dylib ] ", dd);
     var fd = dd.quick_fib;
     var vec_call = dylib.dlcall;

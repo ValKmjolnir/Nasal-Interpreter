@@ -315,16 +315,20 @@ void gc::info() const {
         indent_string += "─";
     }
     const auto first_line = "╭" + indent_string + "┬" +
-                            indent_string + "─" +
-                            indent_string + "─" +
+                            indent_string + "┬" +
+                            indent_string + "┬" +
                             indent_string + "╮";
+    const auto second_line = "├" + indent_string + "┼" +
+                             indent_string + "┼" +
+                             indent_string + "┼" +
+                             indent_string + "┤";
     const auto mid_line = "├" + indent_string + "┼" +
-                          indent_string + "┼" +
-                          indent_string + "┼" +
+                          indent_string + "┴" +
+                          indent_string + "┴" +
                           indent_string + "┤";
     const auto another_mid_line = "├" + indent_string + "┼" +
-                                  indent_string + "┴" +
-                                  indent_string + "┴" +
+                                  indent_string + "─" +
+                                  indent_string + "─" +
                                   indent_string + "┤";
     const auto last_line = "╰" + indent_string + "┴" +
                            indent_string + "─" +
@@ -336,7 +340,7 @@ void gc::info() const {
     std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc count";
     std::clog << " │ " << left << setw(indent) << setfill(' ') << "alloc count";
     std::clog << " │ " << left << setw(indent) << setfill(' ') << "memory size";
-    std::clog << " │\n" << mid_line << "\n";
+    std::clog << " │\n" << second_line << "\n";
 
     double total = 0;
     for(u8 i = 0; i<gc_type_size; ++i) {
@@ -355,8 +359,8 @@ void gc::info() const {
     const auto den = std::chrono::high_resolution_clock::duration::period::den;
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "detail";
     std::clog << " │ " << left << setw(indent) << setfill(' ') << "time spend";
-    std::clog << " │ " << left << setw(indent) << setfill('x') << "x";
-    std::clog << " │ " << left << setw(indent) << setfill('x') << "x";
+    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
+    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
     std::clog << " │\n" << another_mid_line << "\n";
 
     const auto gc_time = worktime*1.0/den*1000;

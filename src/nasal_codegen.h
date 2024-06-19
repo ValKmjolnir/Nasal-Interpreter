@@ -60,6 +60,7 @@ private:
         "__chdir", "__environ", "__getcwd", "__getenv",
         // subprocess
         "__subprocess_create",
+        "__subprocess_active",
         "__subprocess_terminate"
     };
 
