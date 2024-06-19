@@ -1,7 +1,7 @@
 use std.dylib;
 use std.os;
 
-var _dl = dylib.dlopen("libmat."~(os.platform()=="windows"?"dll":"so"));
+var _dl = dylib.dlopen("libmat");
 
 var _vec2 = _dl.nas_vec2;
 

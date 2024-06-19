@@ -6,7 +6,7 @@ var (
     getch,
     nonblock
 ) = func {
-    var lib = dylib.dlopen("libkey"~(os.platform()=="windows"? ".dll":".so"));
+    var lib = dylib.dlopen("libkey");
     var kb = lib.nas_kbhit;
     var gt = lib.nas_getch;
     var nb = lib.nas_noblock;

@@ -2,7 +2,7 @@
 
 namespace nasal {
 
-const auto dir_type_name = "dir";
+const auto dir_type_name = "nasal::DIR";
 
 void dir_entry_destructor(void* ptr) {
 #ifndef _MSC_VER
