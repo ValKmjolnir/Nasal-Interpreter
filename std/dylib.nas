@@ -8,22 +8,6 @@ use std.unix;
 
 # open dynamic lib. return a hash including dl pointer and function pointers
 var dlopen = func(libname) {
-    # find dynamic lib from local dir first
-    libname = (os.platform()=="windows"? ".\\":"./")~libname;
-    if (io.exists(libname))
-        return __dlopen(libname);
-    # find dynamic lib through PATH
-    var envpath = split(os.platform()=="windows"? ";":":", unix.getenv("PATH"));
-    # first find ./module
-    append(envpath, ".");
-    var path = os.platform()=="windows"? "\\module\\":"/module/";
-    foreach(var p;envpath) {
-        p ~= path~libname;
-        if (io.exists(p)) {
-            libname = p;
-            break;
-        }
-    }
     return __dlopen(libname);
 }
 

@@ -618,12 +618,11 @@ Windows(`.dll`):
 
 `g++ -shared -o libfib.dll fib.o`
 
-好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了。
-下面例子中`os.platform()`是用来检测当前运行的系统环境的，这样可以实现跨平台:
+好了，那么我们可以写一个测试用的nasal代码来运行这个斐波那契函数了:
 
 ```javascript
 use std.dylib;
-var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
 for(var i = 1; i<30; i += 1)
     println(dylib.dlcall(fib, i));
@@ -640,7 +639,7 @@ dylib.dlclose(dlhandle.lib);
 
 ```javascript
 use std.dylib;
-var dlhandle = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
 for(var i = 1; i<30; i += 1)
