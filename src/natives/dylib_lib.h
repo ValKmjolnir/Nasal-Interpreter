@@ -11,9 +11,14 @@
 #include <sys/wait.h>
 #endif
 
+#include <cstring>
+#include <sstream>
+
 namespace nasal {
 
 void dynamic_library_destructor(void*);
+
+std::string search_dynamic_library_path(const std::string&);
 
 var builtin_dlopen(context*, gc*);
 var builtin_dlclose(context*, gc*);

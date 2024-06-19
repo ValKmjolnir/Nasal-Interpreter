@@ -95,7 +95,7 @@ public:
 
 public:
     // get value
-    var* addr();
+    var* addr() const;
     u64 ret() const;
     i64& cnt();
     f64 num() const;
@@ -131,7 +131,7 @@ struct nas_vec {
     // mark if this is printed, avoid stack overflow
     bool printed = false;
 
-    usize size() const {return elems.size();}
+    auto size() const { return elems.size(); }
     var get_value(const i32);
     var* get_memory(const i32);
 };
@@ -142,7 +142,7 @@ struct nas_hash {
     // mark if this is printed, avoid stack overflow
     bool printed = false;
 
-    usize size() const {return elems.size();}
+    auto size() const { return elems.size(); }
     var get_value(const std::string&);
     var* get_memory(const std::string&);
 };
@@ -256,9 +256,11 @@ struct nas_map {
     bool printed = false;
     std::unordered_map<std::string, var*> mapper;
 
+public:
     void clear() {
         mapper.clear();
     }
+    auto size() const { return mapper.size(); }
 
     var get_value(const std::string&);
     var* get_memory(const std::string&);

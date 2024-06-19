@@ -1,7 +1,7 @@
 use std.dylib;
 use std.os;
 
-var _dl = dylib.dlopen("libfib."~(os.platform()=="windows"?"dll":"so"));
+var _dl = dylib.dlopen("libfib");
 
 var _fib = _dl.fib;
 

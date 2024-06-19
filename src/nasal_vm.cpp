@@ -63,12 +63,39 @@ void vm::context_and_global_init() {
     }
 }
 
-void vm::hash_value_info(var& val) {
+void vm::return_address_info(const var& val) {
+    std::clog << "0x";
+    std::clog << std::hex << val.ret() << std::dec;
+}
+
+void vm::memory_address_info(const var& val) {
+    std::clog << "0x";
+    std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
+}
+
+void vm::raw_string_info(var& val) {
+    std::clog << "\"" << util::rawstr(val.str(), 24) << "\"";
+}
+
+void vm::upvalue_info(var& val) {
+    std::clog << "[" << val.upval().size << " val] ";
+    if (val.upval().on_stack) {
+        std::clog << "offset:0x" << std::hex;
+        std::clog << reinterpret_cast<u64>(val.upval().stack_frame_offset);
+        std::clog << std::dec;
+    }
+}
+
+void vm::vector_value_info(var& val) {
+    std::clog << "[" << val.vec().size() << " val]";
+}
+
+void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
     for(const auto& i : val.hash().elems) {
         ++count;
-        if (count>3) {
+        if (count>max_show_elems) {
             break;
         }
 
@@ -77,62 +104,96 @@ void vm::hash_value_info(var& val) {
             std::clog << ", ";
         }
     }
-    if (val.hash().size()>3) {
+    if (val.hash().size()>max_show_elems) {
         std::clog << "...";
     }
     std::clog << "}";
 }
 
-void vm::value_info(var& val) {
-    const auto p = reinterpret_cast<u64>(val.val.gcobj);
+void vm::ghost_type_info(var& val) {
+    std::clog << "<object:" << val.ghost().type_name;
+    std::clog << "@0x" << std::hex << val.ghost().pointer << ">" << std::dec;
+}
+
+void vm::coroutine_value_info(var& val) {
+    std::clog << "[ ";
+    switch(val.co().status) {
+        case nas_co::status::dead: std::clog << "dead"; break;
+        case nas_co::status::running: std::clog << "running"; break;
+        case nas_co::status::suspended: std::clog << "suspended"; break;
+    }
+    std::clog << " ] @0x";
+    std::clog << std::hex << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
+}
+
+void vm::namespace_value_info(var& val, const usize max_show_elems) {
+    std::clog << "{";
+    usize count = 0;
+    for(const auto& i : val.map().mapper) {
+        ++count;
+        if (count>max_show_elems) {
+            break;
+        }
+
+        std::clog << i.first;
+        if (count!=val.map().size()) {
+            std::clog << ", ";
+        }
+    }
+    if (val.map().size()>max_show_elems) {
+        std::clog << "...";
+    }
+    std::clog << "}";
+}
+
+void vm::value_name_form(const var& val) {
+    std::clog << "| ";
     switch(val.type) {
-        case vm_type::vm_none: std::clog << "| null |"; break;
-        case vm_type::vm_ret:
-            std::clog << "| pc   | 0x" << std::hex << val.ret() << std::dec;
-            break;
-        case vm_type::vm_addr:
-            std::clog << "| addr | 0x";
-            std::clog << std::hex << reinterpret_cast<u64>(val.addr()) << std::dec;
-            break;
-        case vm_type::vm_cnt:  std::clog << "| cnt  | " << val.cnt(); break;
-        case vm_type::vm_nil:  std::clog << "| nil  |"; break;
-        case vm_type::vm_num:  std::clog << "| num  | " << val.num(); break;
-        case vm_type::vm_str:
-            std::clog << "| str  | \"" << util::rawstr(val.str(), 16) << "\"";
-            break;
-        case vm_type::vm_func:
-            std::clog << "| func | " << val.func();
-            break;
-        case vm_type::vm_upval:
-            std::clog << "| upval| <0x" << std::hex << p << std::dec;
-            std::clog << "> [" << val.upval().size << " val]"; break;
-        case vm_type::vm_vec:
-            std::clog << "| vec  | [" << val.vec().size() << " val]"; break;
-        case vm_type::vm_hash:
-            std::clog << "| hash | ";
-            hash_value_info(val);
-            break;
-        case vm_type::vm_ghost:
-            std::clog << "| obj  | <0x" << std::hex << p << "> " << std::dec;
-            std::clog << "object:" << val.ghost().type_name;
-            break;
-        case vm_type::vm_co:
-            std::clog << "| co   | coroutine@0x" << std::hex << p << std::dec;
-            break;
-        case vm_type::vm_map:
-            std::clog << "| nmspc| [";
-            std::clog << val.map().mapper.size() << " val]";
-            break;
-        default:
-            std::clog << "| err  | <0x" << std::hex << p << std::dec;
-            std::clog << "> unknown object";
-            break;
+        case vm_type::vm_none:  std::clog << "null  "; break;
+        case vm_type::vm_ret:   std::clog << "ret   "; break;
+        case vm_type::vm_addr:  std::clog << "addr  "; break;
+        case vm_type::vm_cnt:   std::clog << "cnt   "; break;
+        case vm_type::vm_nil:   std::clog << "nil   "; break;
+        case vm_type::vm_num:   std::clog << "num   "; break;
+        case vm_type::vm_str:   std::clog << "str   "; break;
+        case vm_type::vm_func:  std::clog << "func  "; break;
+        case vm_type::vm_upval: std::clog << "upval "; break;
+        case vm_type::vm_vec:   std::clog << "vec   "; break;
+        case vm_type::vm_hash:  std::clog << "hash  "; break;
+        case vm_type::vm_ghost: std::clog << "ghost "; break;
+        case vm_type::vm_co:    std::clog << "co    "; break;
+        case vm_type::vm_map:   std::clog << "map   "; break;
+        default:                std::clog << "err   "; break;
+    }
+    std::clog << " | ";
+}
+
+void vm::value_info(var& val) {
+    value_name_form(val);
+
+    switch(val.type) {
+        case vm_type::vm_none: break;
+        case vm_type::vm_ret: return_address_info(val); break;
+        case vm_type::vm_addr: memory_address_info(val); break;
+        case vm_type::vm_cnt: std::clog << val.cnt(); break;
+        case vm_type::vm_nil: break;
+        case vm_type::vm_num: std::clog << val.num(); break;
+        case vm_type::vm_str: raw_string_info(val); break;
+        case vm_type::vm_func: std::clog << val.func(); break;
+        case vm_type::vm_upval: upvalue_info(val); break;
+        case vm_type::vm_vec: vector_value_info(val); break;
+        case vm_type::vm_hash: hash_value_info(val, 4); break;
+        case vm_type::vm_ghost: ghost_type_info(val); break;
+        case vm_type::vm_co: coroutine_value_info(val); break;
+        case vm_type::vm_map: namespace_value_info(val, 4); break;
+        default: std::clog << "unknown"; break;
     }
     std::clog << "\n";
 }
 
 void vm::function_detail_info(const nas_func& func) {
-    std::clog << "func";
+    std::clog << "func@";
+    std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
     
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -157,64 +218,105 @@ void vm::function_detail_info(const nas_func& func) {
 }
 
 void vm::function_call_trace() {
+    util::windows_code_page_manager cp;
+    cp.set_utf8_output();
+
     var* bottom = ctx.stack;
     var* top = ctx.top;
 
     // generate trace back
     std::stack<const nas_func*> functions;
+    std::stack<u64> callsite;
+
+    // load call trace
     for(var* i = bottom; i<=top; ++i) {
-        if (i->is_func() && i-1>=bottom && (i-1)->is_ret()) {
-            functions.push(&i->func());
+        // i-1 is the callsite program counter of this function
+        if (i->is_addr() && i+2<=top &&
+            (i+1)->is_ret() && (i+1)->ret()>0 &&
+            (i+2)->is_func()) {
+            functions.push(&(i+2)->func());
+            callsite.push((i+1)->ret());
         }
     }
-    if (functions.empty()) {
+
+    // another condition may exist
+    // have ret pc on stack, but no function at the top of the ret pc
+    for(var * i = top; i>=bottom; --i) {
+        if ((i->is_addr() && i+2<=top && (i+1)->is_ret() && !(i+2)->is_func()) ||
+            (i->is_addr() && i+1<=top && i+2>top && (i+1)->is_ret())) {
+            functions.push(&ctx.funcr.func());
+            callsite.push((i+1)->ret());
+        }
+    }
+
+    // function register stores the latest-called function
+    if (functions.empty() && !ctx.funcr.is_func()) {
+        cp.restore_code_page();
         return;
     }
 
-    std::clog << "\ncall trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
-    const nas_func* last = nullptr;
-    u32 same = 0;
-    for(auto func = last; !functions.empty(); functions.pop()) {
-        func = functions.top();
-        if (last==func) {
-            ++same;
-            continue;
-        } else if (same) {
-            std::clog << "   --> " << same << " same call(s)\n";
-            same = 0;
-        }
+    std::clog << "\ncall trace ";
+    std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    std::clog << "  crash occurred in\n       ";
+    function_detail_info(ctx.funcr.func());
+    std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
+    std::clog << bytecode[ctx.pc].line << "\n";
 
+    const nas_func* last = nullptr;
+    u64 last_callsite = SIZE_MAX;
+    u64 same_count = 0;
+    for(; !functions.empty() && !callsite.empty(); functions.pop(), callsite.pop()) {
+        auto func = functions.top();
+        auto place = callsite.top();
+
+        if (last==func && last_callsite==place) {
+            ++same_count;
+            continue;
+        } else if (same_count) {
+            std::clog << "  `--> " << same_count << " same call(s)\n";
+            same_count = 0;
+        }
+        
         last = func;
+        last_callsite = place;
+
+        // output called function
         std::clog << "  call ";
         function_detail_info(*func);
-        std::clog << "\n";
+
+        // output callsite
+        std::clog << " from ";
+        std::clog << files[bytecode[place].fidx] << ":";
+        std::clog << bytecode[place].line << "\n";
     }
-    if (same) {
-        std::clog << "   --> " << same << " same call(s)\n";
+    if (same_count) {
+        std::clog << "  `--> " << same_count << " same call(s)\n";
     }
+
+    cp.restore_code_page();
 }
 
 void vm::trace_back() {
-    // var* bottom = ctx.stack;
-    // var* top = ctx.top;
-
     // generate trace back
-    std::stack<u32> ret;
+    std::stack<u64> ret;
     for(var* i = ctx.stack; i<=ctx.top; ++i) {
         if (i->is_ret() && i->ret()!=0) {
             ret.push(i->ret());
         }
     }
-    ret.push(ctx.pc); // store the position program crashed
 
-    std::clog << "\nback trace " << (ngc.cort? "(coroutine)":"(main)") << "\n";
+    // store the position program crashed
+    ret.push(ctx.pc);
+
+    std::clog << "\nback trace ";
+    std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
     codestream::set(const_number, const_string, native_function.data(), files);
-    for(u32 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
+
+    for(u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
             continue;
-        }
-        if (same) {
+        } else if (same) {
             std::clog << "  0x" << std::hex
                       << std::setw(8) << std::setfill('0')
                       << prev << std::dec << "    "
@@ -247,16 +349,16 @@ void vm::stack_info(const u64 limit = 16) {
 void vm::register_info() {
     std::clog << "\nregister (" << (ngc.cort? "coroutine":"main") << ")\n";
     std::clog << std::hex
-              << "  [ pc     ]    | pc   | 0x" << ctx.pc << "\n"
-              << "  [ global ]    | addr | 0x"
+              << "  [ pc     ]    | pc     | 0x" << ctx.pc << "\n"
+              << "  [ global ]    | addr   | 0x"
               << reinterpret_cast<u64>(global) << "\n"
-              << "  [ local  ]    | addr | 0x"
+              << "  [ local  ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.localr) << "\n"
-              << "  [ memr   ]    | addr | 0x"
+              << "  [ memr   ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.memr) << "\n"
-              << "  [ canary ]    | addr | 0x"
+              << "  [ canary ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.canary) << "\n"
-              << "  [ top    ]    | addr | 0x"
+              << "  [ top    ]    | addr   | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
     std::clog << "  [ funcr  ]    "; value_info(ctx.funcr);
@@ -346,8 +448,8 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     return result + out.str();
 }
 
-std::string vm::report_special_call_lack_arguments(
-    var* local, const nas_func& func) const {
+std::string vm::report_special_call_lack_arguments(var* local,
+                                                   const nas_func& func) const {
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -370,8 +472,8 @@ std::string vm::report_special_call_lack_arguments(
     return result + out.str();
 }
 
-std::string vm::report_key_not_found(
-    const std::string& not_found, const nas_hash& hash) const {
+std::string vm::report_key_not_found(const std::string& not_found,
+                                     const nas_hash& hash) const {
     auto result = "member \"" + not_found + "\" doesn't exist in hash {";
     for(const auto& i : hash.elems) {
         result += i.first + ", ";

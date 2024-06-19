@@ -2,7 +2,7 @@ use std.dylib;
 use std.os;
 
 var socket = func() {
-    var lib = dylib.dlopen("libnasock"~(os.platform()=="windows"? ".dll":".so"));
+    var lib = dylib.dlopen("libnasock");
     
     var sock = lib.nas_socket;
     var closesocket = lib.nas_closesocket;

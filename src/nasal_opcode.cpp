@@ -29,11 +29,12 @@ void codestream::dump(std::ostream& out) const {
 
     // dump immediate number(hex format)
     for(i32 i = 64-8; i>=0; i -= 8) {
-        out << hex << setw(2) << setfill('0') << ((num>>i)&0xff) << dec << " ";
+        auto this_byte = ((num>>i)&0xff);
+        out << hex << setw(2) << setfill('0') << this_byte << dec << " ";
     }
 
     // dump operand name
-    out << "    " << operand_name_table.at(static_cast<op_code_type>(op)) << "  ";
+    out << "    " << operand_name_table.at(static_cast<opcode_type>(op)) << "  ";
 
     switch(op) {
         case op_addeq:
@@ -56,7 +57,7 @@ void codestream::dump(std::ostream& out) const {
             break;
         case op_lnkeqc:
             out << hex << "0x" << num << dec;
-            out << " (" << util::rawstr(const_string[num], 16) << ")";
+            out << " (\"" << util::rawstr(const_string[num], 32) << "\")";
             break;
         case op_addecp:
         case op_subecp:
@@ -67,7 +68,7 @@ void codestream::dump(std::ostream& out) const {
             break;
         case op_lnkecp:
             out << hex << "0x" << num << dec;
-            out << " (" << util::rawstr(const_string[num], 16) << ") sp-1";
+            out << " (\"" << util::rawstr(const_string[num], 32) << "\") sp-1";
             break;
         case op_addc:
         case op_subc:
@@ -100,8 +101,11 @@ void codestream::dump(std::ostream& out) const {
         case op_loadl:
             out << hex << "0x" << num << dec; break;
         case op_callb:
-            out << hex << "0x" << num << dec << " ["
-                << natives[num].name << "]"; break;
+            out << hex << "0x" << num << dec;
+            out << " <" << natives[num].name << "@0x";
+            out << hex << reinterpret_cast<u64>(natives[num].func) << dec;
+            out << ">";
+            break;
         case op_upval:
         case op_mupval:
         case op_loadu:
@@ -116,7 +120,7 @@ void codestream::dump(std::ostream& out) const {
         case op_deft:
         case op_dyn:
             out << hex << "0x" << num << dec;
-            out << " (" << util::rawstr(const_string[num], 16) << ")";
+            out << " (\"" << util::rawstr(const_string[num], 32) << "\")";
             break;
         default:
             if (files) {
