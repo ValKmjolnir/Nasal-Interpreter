@@ -33,3 +33,15 @@ var windows = {
         return __set_utf8_output;
     }
 };
+
+var version = func() {
+    return __version;
+}
+
+var major_version = func() {
+    return split(".", version())[0];
+}
+
+var minor_version = func() {
+    return split(".", version())[1];
+}
