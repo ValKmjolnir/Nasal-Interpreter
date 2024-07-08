@@ -468,6 +468,10 @@ var builtin_platform(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_platform());
 }
 
+var builtin_version(context* ctx, gc* ngc) {
+    return ngc->newstr(__nasver__);
+}
+
 var builtin_arch(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_arch());
 }
@@ -769,6 +773,7 @@ nasal_builtin_table builtin[] = {
     {"__sleep", builtin_sleep},
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
+    {"__version", builtin_version},
     {"__md5", builtin_md5},
     {"__maketimestamp", builtin_maketimestamp},
     {"__time_stamp", builtin_time_stamp},
