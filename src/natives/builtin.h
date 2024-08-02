@@ -39,6 +39,7 @@ var builtin_setsize(context*, gc*);
 var builtin_system(context*, gc*);
 var builtin_input(context*, gc*);
 var builtin_split(context*, gc*);
+var builtin_split_with_empty_substr(context*, gc*);
 var builtin_rand(context*, gc*);
 var builtin_id(context*, gc*);
 var builtin_int(context*, gc*);
@@ -66,6 +67,7 @@ var builtin_values(context*, gc*);
 var builtin_sleep(context*, gc*);
 var builtin_platform(context*, gc*);
 var builtin_arch(context*, gc*);
+var builtin_version(context*, gc*);
 
 // md5 related functions
 std::string tohex(u32);
@@ -83,6 +85,7 @@ var builtin_ghosttype(context*, gc*);
 
 // only useful on windows platform
 var builtin_set_utf8_output(context*, gc*);
+var builtin_terminal_size(context*, gc*);
 
 // register builtin function's name and it's address here in this table below
 // this table must end with {nullptr, nullptr}

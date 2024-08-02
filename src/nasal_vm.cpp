@@ -110,11 +110,6 @@ void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "}";
 }
 
-void vm::ghost_type_info(var& val) {
-    std::clog << "<object:" << val.ghost().type_name;
-    std::clog << "@0x" << std::hex << val.ghost().pointer << ">" << std::dec;
-}
-
 void vm::coroutine_value_info(var& val) {
     std::clog << "[ ";
     switch(val.co().status) {
@@ -183,7 +178,7 @@ void vm::value_info(var& val) {
         case vm_type::vm_upval: upvalue_info(val); break;
         case vm_type::vm_vec: vector_value_info(val); break;
         case vm_type::vm_hash: hash_value_info(val, 4); break;
-        case vm_type::vm_ghost: ghost_type_info(val); break;
+        case vm_type::vm_ghost: std::clog << val.ghost(); break;
         case vm_type::vm_co: coroutine_value_info(val); break;
         case vm_type::vm_map: namespace_value_info(val, 4); break;
         default: std::clog << "unknown"; break;

@@ -331,6 +331,7 @@ test:nasal
 	@ ./nasal -e test/qrcode.nas
 	@ ./nasal -t -d test/quick_sort.nas
 	@ ./nasal -t -d test/regex_test.nas
+	@ ./nasal -t -d test/replace_test.nas
 	@ ./nasal -e test/scalar.nas hello world
 	@ ./nasal test/subprocess_test.nas
 	@ ./nasal -e test/trait.nas
