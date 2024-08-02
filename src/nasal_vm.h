@@ -71,7 +71,6 @@ protected:
     void upvalue_info(var&);
     void vector_value_info(var&);
     void hash_value_info(var&, const usize);
-    void ghost_type_info(var&);
     void coroutine_value_info(var&);
     void namespace_value_info(var&, const usize);
     void value_name_form(const var&);

@@ -14,6 +14,52 @@ struct for_reset {
 static for_reset windows_system_set;
 #endif
 
+std::ostream& clear_screen(std::ostream& s) {
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) {
+        return s;
+    }
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        return s;
+    }
+
+    auto rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    auto cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    DWORD dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+    COORD coord = { 0, 0 };
+    DWORD dwCharsWritten;
+
+    FillConsoleOutputCharacter(hConsole, ' ', dwConSize, coord, &dwCharsWritten);
+
+    // set raw attribute
+    FillConsoleOutputAttribute(
+        hConsole,
+        csbi.wAttributes,
+        dwConSize,
+        coord,
+        &dwCharsWritten
+    );
+
+    // set cursor position
+    SetConsoleCursorPosition(hConsole, coord);
+#else
+    s << "\033c";
+#endif
+    return s;
+}
+
+std::ostream& set_cursor(std::ostream& s) {
+#ifdef _WIN32
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), {0, 0});
+#else
+    s << "\033[0;0H";
+#endif
+    return s;
+}
+
 std::ostream& back_white(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xf0);

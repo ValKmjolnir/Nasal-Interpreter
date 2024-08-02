@@ -85,8 +85,9 @@ private:
         {"exit", cmd_kind::cmd_exit}
     };
     cmd_kind get_cmd_type(const std::string& cmd) const {
-        return command_table.count(cmd)?
-            command_table.at(cmd):cmd_kind::cmd_error;
+        return command_table.count(cmd)
+                ? command_table.at(cmd)
+                : cmd_kind::cmd_error;
     }
 
 private:

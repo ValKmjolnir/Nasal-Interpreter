@@ -46,7 +46,7 @@ private:
     // under limited mode, unsafe system api will be banned
     const std::unordered_set<std::string> unsafe_system_api = {
         // builtin
-        "__system", "__input",
+        "__system", "__input", "__terminal_size",
         // io
         "__fout", "__open", "__write", "__stat"
         // bits

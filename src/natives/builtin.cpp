@@ -5,6 +5,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
 #endif
 
 namespace nasal {
@@ -92,38 +95,88 @@ var builtin_input(context* ctx, gc* ngc) {
 
 var builtin_split(context* ctx, gc* ngc) {
     auto local = ctx->localr;
-    var delimeter = local[1];
+    var separator = local[1];
     var str = local[2];
-    if (!delimeter.is_str()) {
+    if (!separator.is_str()) {
         return nas_err("native::split", "\"separator\" must be string");
     }
     if (!str.is_str()) {
         return nas_err("native::split", "\"str\" must be string");
     }
-    const auto& deli = delimeter.str();
+    const auto& sep = separator.str();
     const auto& s = str.str();
 
     // avoid being sweeped
     auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
 
-    if (!deli.length()) {
+    // empty separator means split every char
+    if (!sep.length()) {
         for(auto i : s) {
             vec.push_back(ngc->newstr(i));
         }
         ngc->temp = nil;
         return res;
     }
+
     usize last = 0;
-    usize pos = s.find(deli, 0);
+    usize pos = s.find(sep, 0);
     while(pos!=std::string::npos) {
         if (pos>last) {
             vec.push_back(ngc->newstr(s.substr(last, pos-last)));
         }
-        last = pos+deli.length();
-        pos = s.find(deli, last);
+        last = pos + sep.length();
+        pos = s.find(sep, last);
     }
     if (last!=s.length()) {
+        vec.push_back(ngc->newstr(s.substr(last)));
+    }
+    ngc->temp = nil;
+    return res;
+}
+
+var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    var separator = local[1];
+    var str = local[2];
+    if (!separator.is_str()) {
+        return nas_err(
+            "native::split_with_empty_substr",
+            "\"separator\" must be string"
+        );
+    }
+    if (!str.is_str()) {
+        return nas_err(
+            "native::split_with_empty_substr",
+            "\"str\" must be string"
+        );
+    }
+    const auto& sep = separator.str();
+    const auto& s = str.str();
+
+    // avoid being sweeped
+    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto& vec = res.vec().elems;
+
+    // empty separator means split every char
+    if (!sep.length()) {
+        for(auto i : s) {
+            vec.push_back(ngc->newstr(i));
+        }
+        ngc->temp = nil;
+        return res;
+    }
+
+    usize last = 0;
+    usize pos = s.find(sep, 0);
+    while(pos!=std::string::npos) {
+        if (pos>=last) {
+            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+        }
+        last = pos + sep.length();
+        pos = s.find(sep, last);
+    }
+    if (last<=s.length()) {
         vec.push_back(ngc->newstr(s.substr(last)));
     }
     ngc->temp = nil;
@@ -468,6 +521,10 @@ var builtin_platform(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_platform());
 }
 
+var builtin_version(context* ctx, gc* ngc) {
+    return ngc->newstr(__nasver__);
+}
+
 var builtin_arch(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_arch());
 }
@@ -732,6 +789,25 @@ var builtin_set_utf8_output(context* ctx, gc* ngc) {
     return nil;
 }
 
+var builtin_terminal_size(context* ctx, gc* ngc) {
+    var res = ngc->alloc(vm_type::vm_hash);
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        auto rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        auto cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        res.hash().elems["rows"] = var::num(rows);
+        res.hash().elems["cols"] = var::num(cols);
+    }
+#else
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    res.hash().elems["rows"] = var::num(w.ws_row);
+    res.hash().elems["cols"] = var::num(w.ws_col);
+#endif
+    return res;
+}
+
 nasal_builtin_table builtin[] = {
     {"__print", builtin_print},
     {"__println", builtin_println},
@@ -742,6 +818,7 @@ nasal_builtin_table builtin[] = {
     {"__system", builtin_system},
     {"__input", builtin_input},
     {"__split", builtin_split},
+    {"__split_with_empty_substr", builtin_split_with_empty_substr},
     {"__rand", builtin_rand},
     {"__id", builtin_id},
     {"__int", builtin_int},
@@ -769,6 +846,7 @@ nasal_builtin_table builtin[] = {
     {"__sleep", builtin_sleep},
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
+    {"__version", builtin_version},
     {"__md5", builtin_md5},
     {"__maketimestamp", builtin_maketimestamp},
     {"__time_stamp", builtin_time_stamp},
@@ -779,6 +857,7 @@ nasal_builtin_table builtin[] = {
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
     {"__set_utf8_output", builtin_set_utf8_output},
+    {"__terminal_size", builtin_terminal_size},
     {nullptr, nullptr}
 };
 
