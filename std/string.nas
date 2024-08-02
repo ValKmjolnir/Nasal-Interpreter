@@ -39,3 +39,28 @@ var to_char = func(number) {
 var to_num = func(character) {
     return __temp_contains(__char_to_num, character)? __char_to_num[character]:-1;
 }
+
+var __string_split_with_empty_substr = func(separator, str) {
+    return __split_with_empty_substr(separator, str);
+}
+
+var replace = func(needle, haystack, replacement) {
+    var needle_size = size(needle);
+    var haystack_size = size(haystack);
+    var replacement_size = size(replacement);
+
+    if (needle_size == 0 or
+        haystack_size == 0 or
+        replacement_size == 0 or
+        needle_size > haystack_size
+    ) {
+        return haystack;
+    }
+    if (needle == haystack) {
+        return replacement;
+    }
+
+    var vec = __string_split_with_empty_substr(needle, haystack);
+
+    return join(replacement, vec);
+}
