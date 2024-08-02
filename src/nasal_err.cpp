@@ -14,6 +14,21 @@ struct for_reset {
 static for_reset windows_system_set;
 #endif
 
+std::ostream& clear_screen(std::ostream& s) {
+    // TODO: winapi clear screen
+    s << "\033c";
+    return s;
+}
+
+std::ostream& set_cursor(std::ostream& s) {
+#ifdef _WIN32
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), {0, 0});
+#else
+    s << "\033[0;0H";
+#endif
+    return s;
+}
+
 std::ostream& back_white(std::ostream& s) {
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xf0);

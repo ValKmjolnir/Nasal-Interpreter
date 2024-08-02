@@ -39,6 +39,7 @@ var builtin_setsize(context*, gc*);
 var builtin_system(context*, gc*);
 var builtin_input(context*, gc*);
 var builtin_split(context*, gc*);
+var builtin_split_with_empty_substr(context*, gc*);
 var builtin_rand(context*, gc*);
 var builtin_id(context*, gc*);
 var builtin_int(context*, gc*);

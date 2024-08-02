@@ -92,38 +92,88 @@ var builtin_input(context* ctx, gc* ngc) {
 
 var builtin_split(context* ctx, gc* ngc) {
     auto local = ctx->localr;
-    var delimeter = local[1];
+    var separator = local[1];
     var str = local[2];
-    if (!delimeter.is_str()) {
+    if (!separator.is_str()) {
         return nas_err("native::split", "\"separator\" must be string");
     }
     if (!str.is_str()) {
         return nas_err("native::split", "\"str\" must be string");
     }
-    const auto& deli = delimeter.str();
+    const auto& sep = separator.str();
     const auto& s = str.str();
 
     // avoid being sweeped
     auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
 
-    if (!deli.length()) {
+    // empty separator means split every char
+    if (!sep.length()) {
         for(auto i : s) {
             vec.push_back(ngc->newstr(i));
         }
         ngc->temp = nil;
         return res;
     }
+
     usize last = 0;
-    usize pos = s.find(deli, 0);
+    usize pos = s.find(sep, 0);
     while(pos!=std::string::npos) {
         if (pos>last) {
             vec.push_back(ngc->newstr(s.substr(last, pos-last)));
         }
-        last = pos+deli.length();
-        pos = s.find(deli, last);
+        last = pos + sep.length();
+        pos = s.find(sep, last);
     }
     if (last!=s.length()) {
+        vec.push_back(ngc->newstr(s.substr(last)));
+    }
+    ngc->temp = nil;
+    return res;
+}
+
+var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
+    auto local = ctx->localr;
+    var separator = local[1];
+    var str = local[2];
+    if (!separator.is_str()) {
+        return nas_err(
+            "native::split_with_empty_substr",
+            "\"separator\" must be string"
+        );
+    }
+    if (!str.is_str()) {
+        return nas_err(
+            "native::split_with_empty_substr",
+            "\"str\" must be string"
+        );
+    }
+    const auto& sep = separator.str();
+    const auto& s = str.str();
+
+    // avoid being sweeped
+    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto& vec = res.vec().elems;
+
+    // empty separator means split every char
+    if (!sep.length()) {
+        for(auto i : s) {
+            vec.push_back(ngc->newstr(i));
+        }
+        ngc->temp = nil;
+        return res;
+    }
+
+    usize last = 0;
+    usize pos = s.find(sep, 0);
+    while(pos!=std::string::npos) {
+        if (pos>=last) {
+            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+        }
+        last = pos + sep.length();
+        pos = s.find(sep, last);
+    }
+    if (last<=s.length()) {
         vec.push_back(ngc->newstr(s.substr(last)));
     }
     ngc->temp = nil;
@@ -746,6 +796,7 @@ nasal_builtin_table builtin[] = {
     {"__system", builtin_system},
     {"__input", builtin_input},
     {"__split", builtin_split},
+    {"__split_with_empty_substr", builtin_split_with_empty_substr},
     {"__rand", builtin_rand},
     {"__id", builtin_id},
     {"__int", builtin_int},

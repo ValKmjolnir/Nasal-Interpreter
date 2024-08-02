@@ -154,6 +154,7 @@ void dbg::step_info() {
 
     src.load(files[bytecode[ctx.pc].fidx]);
 
+    std::clog << clear_screen << set_cursor;
     std::clog << "\nsource code:\n";
     for(u64 i = begin; i<end && i<src.size(); ++i) {
         std::clog << (i==line? back_white:reset);
@@ -200,7 +201,9 @@ void dbg::interact() {
         std::getline(std::cin, cmd);
         auto res = parse(cmd);
         if (res.size()==0) {
-            step_info();
+            // enter key without input using cmd_next by default
+            next = true;
+            return;
         } else if (res.size()==1) {
             switch(get_cmd_type(res[0])) {
                 case cmd_kind::cmd_help: help(); break;
