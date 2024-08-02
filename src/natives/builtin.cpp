@@ -5,6 +5,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
 #endif
 
 namespace nasal {
@@ -786,6 +789,25 @@ var builtin_set_utf8_output(context* ctx, gc* ngc) {
     return nil;
 }
 
+var builtin_terminal_size(context* ctx, gc* ngc) {
+    var res = ngc->alloc(vm_type::vm_hash);
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        auto rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        auto cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        res.hash().elems["rows"] = var::num(rows);
+        res.hash().elems["cols"] = var::num(cols);
+    }
+#else
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    res.hash().elems["rows"] = var::num(w.ws_row);
+    res.hash().elems["cols"] = var::num(w.ws_col);
+#endif
+    return res;
+}
+
 nasal_builtin_table builtin[] = {
     {"__print", builtin_print},
     {"__println", builtin_println},
@@ -835,6 +857,7 @@ nasal_builtin_table builtin[] = {
     {"__logtime", builtin_logtime},
     {"__ghosttype", builtin_ghosttype},
     {"__set_utf8_output", builtin_set_utf8_output},
+    {"__terminal_size", builtin_terminal_size},
     {nullptr, nullptr}
 };
 
