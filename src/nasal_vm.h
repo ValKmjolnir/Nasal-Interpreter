@@ -42,6 +42,7 @@ protected:
     /* values used for debugger */
     const std::string* files = nullptr; // file name list
     const opcode* bytecode = nullptr; // bytecode buffer address
+    std::vector<std::string> global_symbol_name; // global symbol name
 
     /* variables for repl mode */
     bool is_repl_mode = false;
