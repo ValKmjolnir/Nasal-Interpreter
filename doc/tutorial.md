@@ -517,7 +517,7 @@ nasal_builtin_table builtin[] = {
 };
 ```
 
-At last,warp the `__print` in a nasal file:
+At last, wrap the `__print` up in a nasal file:
 
 ```javascript
 var print = func(elems...) {
@@ -534,7 +534,7 @@ var print = func(elems...) {
 };
 ```
 
-If you don't warp built-in function in a normal nasal function,
+If you don't wrap built-in function up in a normal nasal function,
 this native function may cause __segmentation fault__ when searching arguments.
 
 Use `import("filename.nas")` to get the nasal file including your built-in functions, then you could use it.

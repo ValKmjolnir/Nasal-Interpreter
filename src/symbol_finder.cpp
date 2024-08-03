@@ -8,16 +8,13 @@ bool symbol_finder::visit_definition_expr(definition_expr* node) {
         // example: var a = 1;
         symbols.push_back({
             node->get_variable_name()->get_name(),
-            node->get_variable_name()->get_location()
+            node->get_variable_name()
         });
     } else {
         // multiple variable definition
         // example: var (a, b, c) = (0, 1, 2);
         for(auto i : node->get_variables()->get_variables()) {
-            symbols.push_back({
-                i->get_name(),
-                i->get_location()
-            });
+            symbols.push_back({i->get_name(), i});
         }
     }
     if (node->get_tuple()) {
@@ -37,7 +34,7 @@ bool symbol_finder::visit_iter_expr(iter_expr* node) {
     if (node->is_definition() && node->get_name()) {
         symbols.push_back({
             node->get_name()->get_name(),
-            node->get_name()->get_location()
+            node->get_name()
         });
     }
     return true;
