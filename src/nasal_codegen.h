@@ -104,8 +104,8 @@ private:
 
     void check_id_exist(identifier*);
     
-    void die(const std::string& info, const span& loc) {
-        err.err("code", loc, info);
+    void die(const std::string& info, expr* node) {
+        err.err("code", node->get_location(), info);
     }
 
     void regist_number(const f64);
