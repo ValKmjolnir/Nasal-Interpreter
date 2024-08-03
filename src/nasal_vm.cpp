@@ -31,9 +31,11 @@ void vm::vm_init_enrty(const std::vector<std::string>& strs,
 
     /* init vm globals */
     auto map_instance = ngc.alloc(vm_type::vm_map);
+    global_symbol_name.resize(global_symbol.size());
     global[global_symbol.at("globals")] = map_instance;
     for(const auto& i : global_symbol) {
-        map_instance.map().mapper[i.first] = global+i.second;
+        map_instance.map().mapper[i.first] = global + i.second;
+        global_symbol_name[i.second] = i.first;
     }
 
     /* init vm arg */
@@ -144,21 +146,21 @@ void vm::namespace_value_info(var& val, const usize max_show_elems) {
 void vm::value_name_form(const var& val) {
     std::clog << "| ";
     switch(val.type) {
-        case vm_type::vm_none:  std::clog << "null  "; break;
-        case vm_type::vm_ret:   std::clog << "ret   "; break;
-        case vm_type::vm_addr:  std::clog << "addr  "; break;
-        case vm_type::vm_cnt:   std::clog << "cnt   "; break;
-        case vm_type::vm_nil:   std::clog << "nil   "; break;
-        case vm_type::vm_num:   std::clog << "num   "; break;
-        case vm_type::vm_str:   std::clog << "str   "; break;
-        case vm_type::vm_func:  std::clog << "func  "; break;
-        case vm_type::vm_upval: std::clog << "upval "; break;
-        case vm_type::vm_vec:   std::clog << "vec   "; break;
-        case vm_type::vm_hash:  std::clog << "hash  "; break;
-        case vm_type::vm_ghost: std::clog << "ghost "; break;
-        case vm_type::vm_co:    std::clog << "co    "; break;
-        case vm_type::vm_map:   std::clog << "map   "; break;
-        default:                std::clog << "err   "; break;
+        case vm_type::vm_none:  std::clog << "null "; break;
+        case vm_type::vm_ret:   std::clog << "ret  "; break;
+        case vm_type::vm_addr:  std::clog << "addr "; break;
+        case vm_type::vm_cnt:   std::clog << "cnt  "; break;
+        case vm_type::vm_nil:   std::clog << "nil  "; break;
+        case vm_type::vm_num:   std::clog << "num  "; break;
+        case vm_type::vm_str:   std::clog << "str  "; break;
+        case vm_type::vm_func:  std::clog << "func "; break;
+        case vm_type::vm_upval: std::clog << "upval"; break;
+        case vm_type::vm_vec:   std::clog << "vec  "; break;
+        case vm_type::vm_hash:  std::clog << "hash "; break;
+        case vm_type::vm_ghost: std::clog << "ghost"; break;
+        case vm_type::vm_co:    std::clog << "co   "; break;
+        case vm_type::vm_map:   std::clog << "map  "; break;
+        default:                std::clog << "err  "; break;
     }
     std::clog << " | ";
 }
@@ -344,16 +346,16 @@ void vm::stack_info(const u64 limit = 16) {
 void vm::register_info() {
     std::clog << "\nregister (" << (ngc.cort? "coroutine":"main") << ")\n";
     std::clog << std::hex
-              << "  [ pc     ]    | pc     | 0x" << ctx.pc << "\n"
-              << "  [ global ]    | addr   | 0x"
+              << "  [ pc     ]    | pc    | 0x" << ctx.pc << "\n"
+              << "  [ global ]    | addr  | 0x"
               << reinterpret_cast<u64>(global) << "\n"
-              << "  [ local  ]    | addr   | 0x"
+              << "  [ local  ]    | addr  | 0x"
               << reinterpret_cast<u64>(ctx.localr) << "\n"
-              << "  [ memr   ]    | addr   | 0x"
+              << "  [ memr   ]    | addr  | 0x"
               << reinterpret_cast<u64>(ctx.memr) << "\n"
-              << "  [ canary ]    | addr   | 0x"
+              << "  [ canary ]    | addr  | 0x"
               << reinterpret_cast<u64>(ctx.canary) << "\n"
-              << "  [ top    ]    | addr   | 0x"
+              << "  [ top    ]    | addr  | 0x"
               << reinterpret_cast<u64>(ctx.top) << "\n"
               << std::dec;
     std::clog << "  [ funcr  ]    "; value_info(ctx.funcr);
@@ -370,6 +372,14 @@ void vm::global_state() {
         std::clog << "  0x" << std::hex << std::setw(8)
                   << std::setfill('0') << i << std::dec
                   << "    ";
+        auto name = global_symbol_name[i];
+        if (name.length()>=10) {
+            name = name.substr(0, 7) + "...";
+        } else {
+            
+        }
+        std::clog << "| " << std::left << std::setw(10)
+                  << std::setfill(' ') << name << " ";
         value_info(global[i]);
     }
 }
