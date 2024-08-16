@@ -49,9 +49,7 @@ void codegen::check_id_exist(identifier* node) {
     const auto& name = node->get_name();
     if (native_function_mapper.count(name)) {
         if (local.empty()) {
-            die("native function should not be used in global scope",
-                node->get_location()
-            );
+            die("native function should not be used in global scope", node);
         }
         return;
     }
@@ -65,9 +63,9 @@ void codegen::check_id_exist(identifier* node) {
     if (global_symbol_find(name)>=0) {
         return;
     }
-    die("undefined symbol \"" + name +
-        "\", and this symbol is useless here",
-        node->get_location()
+    die("undefined symbol \""
+        + name + "\", and this symbol is useless here",
+        node
     );
 }
 
@@ -94,17 +92,18 @@ void codegen::regist_string(const std::string& str) {
 void codegen::find_symbol(code_block* node) {
     auto finder = std::make_unique<symbol_finder>();
     for(const auto& i : finder->do_find(node)) {
+        const auto& file = i.pos_node->get_location().file;
         // check if symbol conflicts with native function name
         if (native_function_mapper.count(i.name)) {
-            die("symbol conflicts with native function", i.location);
+            die("symbol conflicts with native function", i.pos_node);
             continue;
         }
         // create new namespace with checking existence of location file
-        if (!nasal_namespace.count(i.location.file)) {
-            nasal_namespace[i.location.file] = {};
+        if (!nasal_namespace.count(file)) {
+            nasal_namespace[file] = {};
         }
         // if in global scope, load global symbol into this namespace
-        auto& scope = nasal_namespace.at(i.location.file);
+        auto& scope = nasal_namespace.at(file);
         if (local.empty() && !scope.count(i.name)) {
             scope.insert(i.name);
         }
@@ -223,22 +222,16 @@ void codegen::func_gen(function* node) {
         if (checked_default &&
             tmp->get_parameter_type()!=
             parameter::kind::default_parameter) {
-            die("must use default parameter here",
-                tmp->get_location()
-            );
+            die("must use default parameter here", tmp);
         }
         if (checked_dynamic &&
             tmp!=node->get_parameter_list().back()) {
-            die("dynamic parameter must be the last one",
-                tmp->get_location()
-            );
+            die("dynamic parameter must be the last one", tmp);
         }
         // check redefinition
         const auto& name = tmp->get_parameter_name();
         if (argname.count(name)) {
-            die("redefinition of parameter: " + name,
-                tmp->get_location()
-            );
+            die("redefinition of parameter: " + name, tmp);
         } else {
             argname[name] = true;
         }
@@ -260,9 +253,7 @@ void codegen::func_gen(function* node) {
     for(auto tmp : node->get_parameter_list()) {
         const auto& name = tmp->get_parameter_name();
         if (name=="me") {
-            die("\"me\" should not be a parameter",
-                tmp->get_location()
-            );
+            die("\"me\" should not be parameter", tmp);
         }
         regist_string(name);
         switch(tmp->get_parameter_type()) {
@@ -317,7 +308,7 @@ void codegen::func_gen(function* node) {
     if (local.back().size()>=VM_STACK_DEPTH || local.back().size()>=UINT16_MAX) {
         die("too many local variants: " +
             std::to_string(local.back().size()),
-            block->get_location()
+            block
         );
     }
     local.pop_back();
@@ -358,9 +349,7 @@ void codegen::call_identifier(identifier* node) {
             node->get_location()
         );
         if (local.empty()) {
-            die("should warp native function in local scope",
-                node->get_location()
-            );
+            die("should wrap up native function in local scope", node);
         }
         return;
     }
@@ -378,7 +367,7 @@ void codegen::call_identifier(identifier* node) {
         emit(op_callg, index, node->get_location());
         return;
     }
-    die("undefined symbol \"" + name + "\"", node->get_location());
+    die("undefined symbol \"" + name + "\"", node);
     // generation failed, put a push nil operand here to fill the space
     emit(op_pnil, index, node->get_location());
 }
@@ -459,7 +448,7 @@ void codegen::call_func_gen(call_function* node) {
 void codegen::mcall(expr* node) {
     if (node->get_type()!=expr_type::ast_id &&
         node->get_type()!=expr_type::ast_call) {
-        die("bad left-value: cannot get memory space", node->get_location());
+        die("bad left-value: cannot get memory space", node);
         return;
     }
     // generate symbol call if node is just ast_id and return
@@ -492,18 +481,18 @@ void codegen::mcall(expr* node) {
         case expr_type::ast_callv:
             mcall_vec(reinterpret_cast<call_vector*>(tmp)); break;
         case expr_type::ast_callf:
-            die("bad left-value: function call", tmp->get_location()); break;
+            die("bad left-value: function call", tmp); break;
         case expr_type::ast_null_access:
-            die("bad left-value: null access test", tmp->get_location()); break;
+            die("bad left-value: null access test", tmp); break;
         default:
-            die("bad left-value: unknown call", tmp->get_location()); break;
+            die("bad left-value: unknown call", tmp); break;
     }
 }
 
 void codegen::mcall_identifier(identifier* node) {
     const auto& name = node->get_name();
     if (native_function_mapper.count(name)) {
-        die("cannot modify native function", node->get_location());
+        die("cannot modify native function", node);
         return;
     }
 
@@ -520,17 +509,17 @@ void codegen::mcall_identifier(identifier* node) {
         emit(op_mcallg, index, node->get_location());
         return;
     }
-    die("undefined symbol \"" + name + "\"", node->get_location());
+    die("undefined symbol \"" + name + "\"", node);
 }
 
 void codegen::mcall_vec(call_vector* node) {
     if (node->get_slices().size()>1) {
-        die("bad left-value: subvec call", node->get_location());
+        die("bad left-value: subvec call", node);
         return;
     }
     auto call = node->get_slices()[0];
     if (call->get_end()) {
-        die("bad left-value: subvec call", node->get_location());
+        die("bad left-value: subvec call", node);
         return;
     }
     calc_gen(call->get_begin());
@@ -566,14 +555,14 @@ void codegen::multi_def(definition_expr* node) {
             die("lack values in multi-definition, expect " +
                 std::to_string(identifiers.size()) + " but get " +
                 std::to_string(vals.size()),
-                node->get_tuple()->get_location()
+                node->get_tuple()
             );
             return;
         } else if (identifiers.size()<vals.size()) {
             die("too many values in multi-definition, expect " +
                 std::to_string(identifiers.size()) + " but get " +
                 std::to_string(vals.size()),
-                node->get_tuple()->get_location()
+                node->get_tuple()
             );
             return;
         }
@@ -600,7 +589,7 @@ void codegen::multi_def(definition_expr* node) {
 
 void codegen::definition_gen(definition_expr* node) {
     if (node->get_variable_name() && node->get_tuple()) {
-        die("cannot accept too many values", node->get_value()->get_location());
+        die("cannot accept too many values", node->get_value());
     }
     node->get_variable_name()? single_def(node):multi_def(node);
 }
@@ -724,7 +713,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
         case op_mcallg: code.back().op = op_loadg; break;
         case op_mcalll: code.back().op = op_loadl; break;
         case op_mupval: code.back().op = op_loadu; break;
-        default: die("unexpected operand to replace", node->get_location());
+        default: die("unexpected operand to replace", node);
     }
 }
 
@@ -779,7 +768,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
                 "lack value(s) in multi-assignment, expect " +
                 std::to_string(tuple_size) + " but get " +
                 std::to_string(value_size),
-                value_node->get_location()
+                value_node
             );
             return;
         } else if (tuple_size<value_size) {
@@ -787,7 +776,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
                 "too many values in multi-assignment, expect " +
                 std::to_string(tuple_size) + " but get " +
                 std::to_string(value_size),
-                value_node->get_location()
+                value_node
             );
             return;
         }
@@ -1305,13 +1294,9 @@ void codegen::block_gen(code_block* node) {
         switch(tmp->get_type()) {
             case expr_type::ast_use:
                 if (!local.empty()) {
-                    die("module import is not allowed here.",
-                        tmp->get_location()
-                    );
+                    die("module import is not allowed here.", tmp);
                 } else if (!is_use_statement) {
-                    die("module import should be used at the top of the file.",
-                        tmp->get_location()
-                    );
+                    die("module import should be used at top of file.", tmp);
                 }
                 break;
             case expr_type::ast_null: break;

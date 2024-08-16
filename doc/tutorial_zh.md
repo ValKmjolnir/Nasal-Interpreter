@@ -1,4 +1,4 @@
-# __教程__
+# <img src="./svg/nasal_transparent.svg" height="50px"/> __教程__
 
 ![mandelbrotset](../doc/pic/mandelbrotset.png)
 
