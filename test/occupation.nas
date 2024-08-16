@@ -37,11 +37,11 @@ var cpu_occupation = func() {
     while(1) {
         var cpu0 = cpu_stat();
         if (first_in) {
-            unix.sleep(0.1);
+            unix.sleep(0.05);
             first_in = 0;
         } else {
             for(var i = 0; i < 10; i += 1) {
-                unix.sleep(0.1);
+                unix.sleep(0.05);
                 coroutine.yield(nil);
             }
         }

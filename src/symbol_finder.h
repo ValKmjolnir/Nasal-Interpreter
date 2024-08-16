@@ -13,7 +13,7 @@ class symbol_finder: public ast_visitor {
 public:
     struct symbol_info {
         std::string name;
-        span location;
+        identifier* pos_node;
     };
 
 private:
