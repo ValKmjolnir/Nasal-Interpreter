@@ -1,4 +1,4 @@
-# __Tutorial__
+# <img src="./svg/nasal_transparent.svg" height="50px"/> __Tutorial__
 
 ![mandelbrotset](../doc/pic/mandelbrotset.png)
 
