@@ -1,4 +1,4 @@
-# <img src="./doc/svg/nasal_transparent.svg" height="50px"/> __Nasal - Modern Interpreter__
+# <img src="./doc/svg/nasal_transparent.svg" height="40px"/> __Nasal - Modern Interpreter__
 
 <img src="./doc/pic/header.png" style="width:600px"></img>
 
@@ -50,7 +50,7 @@ Old version of this project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5). N
 2019 summer,
 members in [FGPRC](https://www.fgprc.org/) told me that it is hard to debug with nasal-console in Flightgear,
 especially when checking syntax errors.
-So i wrote a new interpreter to help checking syntax error and  runtime error.
+So i wrote a new interpreter to help checking syntax error and runtime error.
 
 I wrote the lexer, parser and
 bytecode virtual machine to help checking errors.
@@ -67,29 +67,23 @@ Nightly build could be found here.
 Windows nightly build is not supported yet,
 please wait or just compile it by yourself, a Cmake file is given for Visual Studio to compile this project easily:
 
-* [macOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
-* [linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
-* windows-nightly-build: [WIP]
+* [MacOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
+* [Linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
+* [Windows-nightly-build](#download) [WIP]
 
 ## __Compile__
 
-![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU)
-![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
-![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
+![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU) ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM) ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Better download the latest update source of the interpreter and build it! It's quite easy to build this interpreter, what you need are only two things: C++ compiler and the `make`. There is no third-party library used in this project.
+Download the latest source of the interpreter and build it! It's quite easy to build, what you need are only two things: C++ compiler and the `make`. There is no third-party library used in this project.
 
 ### __Windows (MinGW-w64)__
-
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 Make sure thread model is `posix thread model`, otherwise no thread library exists.
 
 > mingw32-make nasal.exe -j4
 
 ### __Windows (Visual Studio)__
-
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 There is a [__CMakelists.txt__](./CMakeLists.txt) to create project.
 
