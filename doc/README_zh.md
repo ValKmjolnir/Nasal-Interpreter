@@ -1,4 +1,4 @@
-# <img src="./svg/nasal_transparent.svg" height="50px"/> __Nasal - Modern Interpreter__
+# <img src="./svg/nasal_transparent.svg" height="40px"/> __Nasal - Modern Interpreter__
 
 <img src="../doc/pic/header.png" style="width:600px"></img>
 
