@@ -4,15 +4,16 @@
     <g fill="#1d2c4e">
       <!-- left side -->
       <path d="M 10 10 L 10 80 L 20 90 L 25 90 L 25 20 L 15 10 Z"/>
-      <path d="M 10 10 L 85 85 L 85 90 L 70 90 L 10 30 Z"/>
+      <path d="M 10 10 L 84 84 L 84 90 L 70 90 L 10 30 Z"/>
       <!-- right-up corner -->
       <path d="M 30 10 L 70 50 L 70 55 L 30 15 Z" />
-      <path d="M 30 10 L 40 10 L 70 40 L 70 55 Z" />
-      <path d="M 30 10 L 80 10 L 80 15 L 30 15 Z" />
-      <path d="M 72 10 L 72 55 L 65 55 L 65 10 Z" />
-      <path d="M 55 10 L 70 25 L 70 35 L 45 10 Z"/>
-      <path d="M 70 55 L 65 55 L 55 45 L 55 35 Z"/>
-      <path d="M 70 10 L 80 10 L 80 15 L 70 25 Z"/>
-      </g>
+      <path d="M 30 10 L 43 10 L 70 37 L 70 55 Z" />
+      <path d="M 68 10 L 68 55 L 83 55 L 83 18 L 75 10 Z" />
+      <path d="M 70 50 L 70 55 L 65 55 L 55 45 L 55 35 Z"/>
+    </g>
+    <g fill="#97363a">
+      <!-- right-down corner -->
+      <path d="M 83 60 L 83 75 L 68 60 Z" />
+    </g>
   </g>
 </svg>
