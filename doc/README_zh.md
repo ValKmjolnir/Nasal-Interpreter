@@ -46,7 +46,7 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 ### __为什么重新写 Nasal 解释器?__
 
-2019 年暑假，[FGPRC](https://www.fgprc.org.cn/) 的成员告诉我，在 Flightgear 中提供的 nasal 控制台窗口中进行调试很不方便，仅仅是想检查语法错误，也得花时间打开软件等待加载进去后进行调试。所以我就写了一个全新的解释器来帮助他们检查语法错误以及运行时错误。
+2019 年夏天，[FGPRC](https://www.fgprc.org.cn/) 的成员吐槽，在 Flightgear 中提供的 nasal 控制台中进行调试很不方便，仅仅是想检查语法错误，也要花时间打开软件等待加载进去后调试。所以我就写了一个新的解释器来帮助检查语法错误和运行时错误。
 
 我编写了 nasal 的词法分析器和语法分析器，以及一个全新的字节码虚拟机，并用这个运行时来进行 nasal 程序的调试。我们发现使用这个解释器来检测语法和运行时错误极大的提高了效率。
 
@@ -59,9 +59,9 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 请耐心等候或者直接在本地编译。
 我们提供了一份 Cmake 文件，可以很方便地在 Visual Studio 中编译:
 
-* [macOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
-* [linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
-* windows-nightly-build: [施工中...]
+* [MacOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
+* [Linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
+* [Windows-nightly-build](#下载) [施工中]
 
 ## __编译__
 
@@ -69,20 +69,15 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-推荐下载最新代码包编译，这个项目非常小巧, 没有使用任何第三方库，因此编译起来非常轻松，
-只需要这两样东西: C++ 编译器以及make程序。
+下载最新代码包编译，项目非常小巧, 没有使用任何第三方库，只需要这两样即可编译: C++ 编译器以及 make 程序。
 
 ### __Windows 平台 (MinGW-w64)__
-
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 确保 thread model 是 `posix thread model`, 否则没有 thread 库。
 
 > mingw32-make nasal.exe -j4
 
 ### __Windows 平台 (Vistual Studio)__
-
-![windows](https://img.shields.io/badge/Microsoft-Windows-green?style=flat-square&logo=windows)
 
 项目提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于在`Visual Studio`中创建项目。
 
