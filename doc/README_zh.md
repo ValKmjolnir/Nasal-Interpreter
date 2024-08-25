@@ -75,6 +75,7 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 
 确保 thread model 是 `posix thread model`, 否则没有 thread 库。
 
+> mkdir build;
 > mingw32-make nasal.exe -j4
 
 ### __Windows 平台 (Vistual Studio)__

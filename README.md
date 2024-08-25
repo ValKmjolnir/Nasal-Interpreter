@@ -81,6 +81,7 @@ Download the latest source of the interpreter and build it! It's quite easy to b
 
 Make sure thread model is `posix thread model`, otherwise no thread library exists.
 
+> mkdir build;
 > mingw32-make nasal.exe -j4
 
 ### __Windows (Visual Studio)__
