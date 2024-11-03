@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <stdexcept>
+#include <chrono>
 
 struct NasalContext {
     std::unique_ptr<nasal::vm> vm_instance;
@@ -32,7 +33,10 @@ void nasal_cleanup(void* context) {
     delete static_cast<NasalContext*>(context);
 }
 
-const char* nasal_eval(void* context, const char* code) {
+const char* nasal_eval(void* context, const char* code, int show_time) {
+    using clk = std::chrono::high_resolution_clock;
+    const auto den = clk::duration::period::den;
+    
     auto* ctx = static_cast<NasalContext*>(context);
     
     try {
@@ -89,16 +93,31 @@ const char* nasal_eval(void* context, const char* code) {
         opt->do_optimization(parse.tree());
         gen.compile(parse, ld, false, true).chkerr(); // enable limit_mode for safety
 
-        // Run the code
+        // Run the code with optional timing
+        const auto start = show_time ? clk::now() : clk::time_point();
         ctx->vm_instance->run(gen, ld, {});
-
+        const auto end = show_time ? clk::now() : clk::time_point();
+        
         // Restore stdout and stderr and get the outputs
         std::cout.rdbuf(old_cout);
         std::cerr.rdbuf(old_cerr);
-        ctx->last_result = output.str() + error_output.str();
-        if (ctx->last_result.empty()) {
-            ctx->last_result = "Execution completed successfully.";
+        
+        std::stringstream result;
+        result << output.str();
+        if (!error_output.str().empty()) {
+            result << error_output.str();
         }
+        if (result.str().empty()) {
+            result << "Execution completed successfully.\n";
+        }
+        
+        // Add execution time if requested
+        if (show_time) {
+            double execution_time = static_cast<double>((end-start).count())/den;
+            result << "\nExecution time: " << execution_time << "s";
+        }
+        
+        ctx->last_result = result.str();
 
         // Remove the temporary file
         std::remove(temp_filename);
