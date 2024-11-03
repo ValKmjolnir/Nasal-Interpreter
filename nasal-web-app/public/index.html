@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasal Interpreter Web Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 30px;
+            background: linear-gradient(145deg, #2c3e50, #3498db);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            margin-bottom: 20px;
+        }
+
+        .ascii-art {
+            font-family: 'Monaco', monospace;
+            color: #ecf0f1;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            margin: 0;
+            line-height: 1.2;
+            user-select: none;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #ecf0f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #ecf0f1;
+            margin: 0 0 25px 0;
+            opacity: 0.9;
+        }
+
+        .credits {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .credit-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .credit-label {
+            color: #bdc3c7;
+            font-size: 0.9em;
+        }
+
+        .credit-link {
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .credit-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .highlight {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .author {
+            color: #bdc3c7;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .credits {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .code-section, .output-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .CodeMirror {
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-success {
+            background-color: #2ecc71;
+        }
+
+        .status-error {
+            background-color: #e74c3c;
+        }
+
+        #output {
+            height: 400px;
+            background: #282c34;
+            color: #abb2bf;
+            padding: 10px;
+            border-radius: 4px;
+            border: none;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.5;
+        }
+
+        .message {
+            margin: 4px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background: #2c313a;
+        }
+
+        .error-message {
+            border-left: 3px solid #e06c75;
+        }
+
+        .success-message {
+            border-left: 3px solid #98c379;
+        }
+
+        .timestamp {
+            color: #5c6370;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+
+        .terminal-output {
+            margin: 8px 0 0 0;
+            padding: 8px;
+            background: #21252b;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.5;
+        }
+
+        .terminal-output:empty {
+            display: none;
+        }
+
+        .message + .message {
+            margin-top: 8px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-success {
+            background-color: #98c379;
+        }
+
+        .status-error {
+            background-color: #e06c75;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 10px;
+        }
+
+        .output-header h2 {
+            margin: 0;
+            color: #abb2bf;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .examples {
+            margin-top: 20px;
+        }
+
+        .example-btn {
+            background-color: #27ae60;
+            margin: 0 5px;
+        }
+
+        .example-btn:hover {
+            background-color: #219a52;
+        }
+
+        .terminal-output {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            margin: 0;
+            padding: 8px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 4px;
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+        }
+
+        .terminal-red-bold {
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        .terminal-cyan-bold {
+            color: #8be9fd;
+            font-weight: bold;
+        }
+
+        .terminal-bold {
+            font-weight: bold;
+        }
+
+        .terminal-caret {
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        .error-message {
+            background: #2c3e50;
+            border-left: 4px solid #e74c3c;
+            padding: 10px;
+            margin: 5px 0;
+            color: #ecf0f1;
+        }
+
+        .success-message {
+            background: #2c3e50;
+            border-left: 4px solid #2ecc71;
+            padding: 10px;
+            margin: 5px 0;
+            color: #ecf0f1;
+        }
+
+        #output {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            border: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .error-message pre, .success-message pre {
+            margin: 0;
+        }
+
+        /* Error message styling */
+        .error-type {
+            color: #e06c75;
+            font-weight: bold;
+        }
+
+        .error-desc {
+            color: #abb2bf;
+            font-weight: bold;
+        }
+
+        .error-arrow {
+            color: #56b6c2;
+            font-weight: bold;
+        }
+
+        .error-file {
+            color: #e06c75;
+            font-weight: bold;
+        }
+
+        .error-loc {
+            color: #abb2bf;
+        }
+
+        .error-line-number {
+            color: #56b6c2;
+            user-select: none;
+        }
+
+        .error-code {
+            color: #abb2bf;
+            margin-left: 8px;
+        }
+
+        .error-pointer-space {
+            color: #abb2bf;
+            white-space: pre;
+        }
+
+        .error-pointer {
+            color: #e06c75;
+            font-weight: bold;
+        }
+
+        .terminal-output {
+            margin: 8px 0 0 0;
+            padding: 8px;
+            background: #21252b;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <pre class="ascii-art">
+       __                _
+    /\ \ \__ _ ___  __ _| |
+   /  \/ / _` / __|/ _` | |
+  / /\  / (_| \__ \ (_| | |
+  \_\ \/ \__,_|___/\__,_|_|
+        </pre>
+            </div>
+            <h1>Nasal Interpreter Web Demo</h1>
+            <p class="subtitle">Write and execute Nasal code directly in your browser</p>
+            <div class="credits">
+                <div class="credit-item">
+                    <span class="credit-label">Powered by</span>
+                    <a href="https://www.fgprc.org.cn/nasal_interpreter.html" class="credit-link">
+                        <span class="highlight">Nasal Interpreter</span>
+                        <span class="author">by ValKmjolnir</span>
+                    </a>
+                </div>
+                <div class="credit-item">
+                    <span class="credit-label">Web App by</span>
+                    <a href="https://sidi762.github.io" class="credit-link">
+                        <span class="highlight">LIANG Sidi</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="code-section">
+                <h2>Code Editor</h2>
+                <textarea id="code">var x = 1 + 2;
+println(x);</textarea>
+            </div>
+            <div class="output-section">
+                <div class="output-header">
+                    <h2>Output</h2>
+                    <div id="status"></div>
+                </div>
+                <div id="output"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="runBtn" onclick="runCode()">Run Code</button>
+            <button id="clearBtn" onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div class="examples">
+            <h3>Example Programs:</h3>
+            <button class="example-btn" onclick="loadExample('basic')">Basic Math</button>
+            <button class="example-btn" onclick="loadExample('loops')">Loops</button>
+            <button class="example-btn" onclick="loadExample('functions')">Functions</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script>
+        // Initialize CodeMirror
+        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            lineNumbers: true,
+            mode: "javascript", // Using JavaScript mode as it's close enough to Nasal
+            theme: "monokai",
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            lineWrapping: true
+        });
+
+        // Example programs
+        const examples = {
+            basic: `# Basic math operations
+var a = 10;
+var b = 5;
+
+println("Addition: ", a + b);
+println("Subtraction: ", a - b);
+println("Multiplication: ", a * b);
+println("Division: ", a / b);`,
+
+            loops: `# Loop example
+var sum = 0;
+for(var i = 1; i <= 5; i += 1) {
+    sum += i;
+    println("Current sum: ", sum);
+}
+println("Final sum: ", sum);`,
+
+            functions: `# Function example
+var factorial = func(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+for(var i = 0; i <= 5; i += 1) {
+    println("Factorial of ", i, " is ", factorial(i));
+}`
+        };
+
+        function loadExample(type) {
+            editor.setValue(examples[type]);
+        }
+
+        function formatTerminalOutput(text) {
+            // Remove the output/error message header if present
+            text = text.replace(/^\[(.*?)\] (Output|Error):\s*\n/, '');
+            
+            // Convert ANSI color codes to CSS classes
+            const colorMap = {
+                '\u001b[91;1m': '<span class="terminal-red-bold">',    // bright red bold
+                '\u001b[36;1m': '<span class="terminal-cyan-bold">',   // bright cyan bold
+                '\u001b[0m': '</span>',                                // reset
+                '\u001b[1m': '<span class="terminal-bold">'           // bold
+            };
+
+            // Replace ANSI codes with HTML spans
+            Object.entries(colorMap).forEach(([code, html]) => {
+                text = text.replace(new RegExp(escapeRegExp(code), 'g'), html);
+            });
+
+            // Preserve whitespace and arrow formatting
+            text = text.replace(/\^/g, '<span class="terminal-caret">^</span>');
+            
+            return text;
+        }
+
+        // Utility function to escape special characters in strings for RegExp
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function formatErrorMessage(text) {
+            // Replace ANSI escape codes with CSS classes
+            return text
+                // Remove any existing formatting first
+                .replace(/\u001b\[\d+(?:;\d+)*m/g, '')
+                // Format the error line
+                .replace(/^parse: (.+)$/m, '<span class="error-type">parse:</span> <span class="error-desc">$1</span>')
+                // Format the file location
+                .replace(/^\s*--> (.+?)(\d+):(\d+)$/m, '<span class="error-arrow">--></span> <span class="error-file">$1</span><span class="error-loc">$2:$3</span>')
+                // Format the code line
+                .replace(/^(\d+ \|)(.*)$/m, '<span class="error-line-number">$1</span><span class="error-code">$2</span>')
+                // Format the error pointer
+                .replace(/^(\s*\|)(\s*)(\^+)$/m, '<span class="error-line-number">$1</span><span class="error-pointer-space">$2</span><span class="error-pointer">$3</span>');
+        }
+
+        async function runCode() {
+            const runBtn = document.getElementById('runBtn');
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            
+            try {
+                runBtn.disabled = true;
+                const code = editor.getValue();
+                
+                const response = await fetch('/eval', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                const timestamp = new Date().toLocaleTimeString();
+                
+                if (data.error) {
+                    status.innerHTML = '<span class="status-indicator status-error"></span>';
+                    output.innerHTML += `<div class="message error-message">
+                        <span class="timestamp">[${timestamp}]</span>
+                        <pre class="terminal-output">${formatErrorMessage(data.error)}</pre>
+                    </div>`;
+                } else {
+                    status.innerHTML = '<span class="status-indicator status-success"></span>';
+                    output.innerHTML += `<div class="message success-message">
+                        <span class="timestamp">[${timestamp}]</span>
+                        <pre class="terminal-output">${data.result.trim()}</pre>
+                    </div>`;
+                }
+                
+                output.scrollTop = output.scrollHeight;
+            } catch (err) {
+                status.innerHTML = '<span class="status-indicator status-error"></span>';
+                output.innerHTML += `<div class="message error-message">
+                    <span class="timestamp">[${new Date().toLocaleTimeString()}]</span>
+                    <pre class="terminal-output">Server Error: ${err.message}</pre>
+                </div>`;
+            } finally {
+                runBtn.disabled = false;
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('status').innerHTML = '';
+        }
+
+        // Utility function to escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
