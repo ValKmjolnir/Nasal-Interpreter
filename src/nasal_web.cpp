@@ -3,8 +3,10 @@
 #include "nasal_parse.h"
 #include "nasal_codegen.h"
 #include "nasal_import.h"
+#include "optimizer.h"
 #include "nasal_err.h"
 #include "nasal_lexer.h"
+
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -83,7 +85,10 @@ const char* nasal_eval(void* context, const char* code) {
         }
 
         ld.link(parse, false).chkerr();
-        gen.compile(parse, ld, false, false).chkerr();
+        // optimizer does simple optimization on ast
+        auto opt = std::make_unique<nasal::optimizer>();
+        opt->do_optimization(parse.tree());
+        gen.compile(parse, ld, false, true).chkerr(); // enable limit_mode for safety
 
         // Run the code
         ctx->vm_instance->run(gen, ld, {});
