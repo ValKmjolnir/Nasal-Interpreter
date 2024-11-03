@@ -15,7 +15,6 @@
 #include <stdexcept>
 
 struct NasalContext {
-    nasal::gc gc_instance;
     std::unique_ptr<nasal::vm> vm_instance;
     std::string last_result;
     std::string last_error;
