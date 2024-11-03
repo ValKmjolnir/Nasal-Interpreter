@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.1",
-    "ffi-napi": "^4.0.3"
+    "ffi-napi": "^4.0.3",
+    "yargs": "^17.7.2"
   }
 }
