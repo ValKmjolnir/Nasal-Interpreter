@@ -30,7 +30,7 @@
         }
 
         .logo {
-            margin-bottom: 20px;
+            margin-bottom: 2px;
         }
 
         .ascii-art {
@@ -400,6 +400,17 @@
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             line-height: 1.5;
         }
+
+        .timing-checkbox {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            color: #abb2bf;
+        }
+
+        .timing-checkbox input {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -449,8 +460,11 @@ println(x);</textarea>
         </div>
 
         <div class="controls">
-            <button id="runBtn" onclick="runCode()">Run Code</button>
-            <button id="clearBtn" onclick="clearOutput()">Clear Output</button>
+            <button id="runBtn" onclick="runCode()">Run</button>
+            <button onclick="clearOutput()">Clear Output</button>
+            <label class="timing-checkbox">
+                <input type="checkbox" id="showTime"> Show execution time
+            </label>
         </div>
 
         <div class="examples">
@@ -557,6 +571,7 @@ for(var i = 0; i <= 5; i += 1) {
             const runBtn = document.getElementById('runBtn');
             const output = document.getElementById('output');
             const status = document.getElementById('status');
+            const showTime = document.getElementById('showTime').checked;
             
             try {
                 runBtn.disabled = true;
@@ -567,7 +582,10 @@ for(var i = 0; i <= 5; i += 1) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ code })
+                    body: JSON.stringify({ 
+                        code,
+                        showTime 
+                    })
                 });
                 
                 const data = await response.json();
