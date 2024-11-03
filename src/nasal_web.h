@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __NASAL_WEB_H__
+#define __NASAL_WEB_H__
 
 #include "nasal.h"
 
@@ -15,9 +16,11 @@ extern "C" {
 // Main API functions
 NASAL_EXPORT void* nasal_init();
 NASAL_EXPORT void nasal_cleanup(void* context);
-NASAL_EXPORT const char* nasal_eval(void* context, const char* code);
+NASAL_EXPORT const char* nasal_eval(void* context, const char* code, int show_time);
 NASAL_EXPORT const char* nasal_get_error(void* context);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
