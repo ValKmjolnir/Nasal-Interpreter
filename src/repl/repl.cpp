@@ -34,6 +34,14 @@ void repl::update_temp_file() {
     info::instance()->repl_file_source = content + " ";
 }
 
+void repl::update_temp_file(const std::vector<std::string>& src) {
+    auto content = std::string("");
+    for(const auto& i : src) {
+        content += i + "\n";
+    }
+    info::instance()->repl_file_source = content + " ";
+}
+
 bool repl::check_need_more_input() {
     while(true) {
         update_temp_file();
@@ -66,6 +74,34 @@ bool repl::check_need_more_input() {
     }
     return true;
 }
+
+int repl::check_need_more_input(std::vector<std::string>& src) {
+    update_temp_file(src);
+    auto nasal_lexer = std::make_unique<lexer>();
+    if (nasal_lexer->scan("<nasal-repl>").geterr()) {
+        return -1;
+    }
+
+    i64 in_curve = 0;
+    i64 in_bracket = 0;
+    i64 in_brace = 0;
+    for(const auto& t : nasal_lexer->result()) {
+        switch(t.type) {
+            case tok::tk_lcurve: ++in_curve; break;
+            case tok::tk_rcurve: --in_curve; break;
+            case tok::tk_lbracket: ++in_bracket; break;
+            case tok::tk_rbracket: --in_bracket; break;
+            case tok::tk_lbrace: ++in_brace; break;
+            case tok::tk_rbrace: --in_brace; break;
+            default: break;
+        }
+    }
+    if (in_curve > 0 || in_bracket > 0 || in_brace > 0) {
+        return 1;  // More input needed
+    }
+    return 0;  // Input is complete
+}
+
 
 void repl::help() {
     std::cout << ".h, .help   | show help\n";
@@ -150,7 +186,7 @@ void repl::execute() {
             std::cout << "\", input \".help\" for help\n";
             continue;
         }
-
+        
         source.push_back(line);
         if (!check_need_more_input()) {
             source.pop_back();
