@@ -274,16 +274,6 @@ const char* nasal_repl_eval(void* context, const char* line) {
             return ctx->last_error.c_str();
         }
 
-        // // Process output
-        // auto lines = split_string(result, '\n');
-        // if (!lines.empty()) {
-        //     // Remove empty lines from the end
-        //     while (!lines.empty() && lines.back().empty()) {
-        //         lines.pop_back();
-        //     }
-        //     result = join_string(lines, "\n");
-        // }
-
         ctx->last_result = result;
         return ctx->last_result.c_str();
 
@@ -296,21 +286,28 @@ const char* nasal_repl_eval(void* context, const char* line) {
 
 int nasal_repl_is_complete(void* context, const char* line) {
     auto* ctx = static_cast<WebReplContext*>(context);
-    std::string input_line(line);
     
-    // Handle empty input or single semicolon
-    if (input_line.empty() || input_line == ";") {
-        return 1;  // Input is complete
+    if (!ctx->initialized) {
+        return -1;  // Error state
     }
-    
-    // Add the new line to source
-    ctx->source.push_back(input_line);
-    
-    // Use existing REPL check_need_more_input functionality
-    bool needs_more = ctx->repl_instance->check_need_more_input(ctx->source);
-    
-    ctx->source.pop_back();
-    return needs_more;
+
+    // Handle empty input
+    if (!line || strlen(line) == 0) {
+        return 0;  // Complete
+    }
+
+    // Handle REPL commands
+    if (line[0] == '.') {
+        return 0;  // Commands are always complete
+    }
+
+    // Create a temporary source vector with existing source plus new line
+    std::vector<std::string> temp_source = ctx->source;
+    temp_source.push_back(line);
+
+    // Use the REPL's check_need_more_input method
+    int result = ctx->repl_instance->check_need_more_input(temp_source);
+    return result;  // Ensure a return value is provided
 }
 
 // Add this function to expose version info
