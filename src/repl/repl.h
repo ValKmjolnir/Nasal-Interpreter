@@ -36,8 +36,8 @@ private:
     std::string readline(const std::string&);
     bool check_need_more_input();
     void update_temp_file();
+    void update_temp_file(const std::vector<std::string>& src);
     void help();
-    bool run();
 
 public:
     repl() {
@@ -48,7 +48,20 @@ public:
         // set empty history
         command_history = {""};
     }
+    
+    // Make these methods public for web REPL
+    bool run();
     void execute();
+    int check_need_more_input(std::vector<std::string>& src);
+    // Add method to access source
+    void set_source(const std::vector<std::string>& src) {
+        source = src;
+    }
+
+    // Add method to access runtime
+    vm& get_runtime() {
+        return runtime;
+    }
 };
 
 }
