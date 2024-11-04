@@ -19,6 +19,13 @@ NASAL_EXPORT void nasal_cleanup(void* context);
 NASAL_EXPORT const char* nasal_eval(void* context, const char* code, int show_time);
 NASAL_EXPORT const char* nasal_get_error(void* context);
 
+// REPL 
+NASAL_EXPORT void* nasal_repl_init();
+NASAL_EXPORT void nasal_repl_cleanup(void* repl_context);
+NASAL_EXPORT const char* nasal_repl_eval(void* repl_context, const char* line);
+NASAL_EXPORT int nasal_repl_is_complete(void* repl_context, const char* line);
+NASAL_EXPORT const char* nasal_repl_get_version();
+
 #ifdef __cplusplus
 }
 #endif
