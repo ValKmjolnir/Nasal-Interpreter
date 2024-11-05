@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <vector>
+#include <future>
 
 namespace {
     // Helper function implementations inside anonymous namespace
@@ -44,6 +45,7 @@ struct NasalContext {
     std::unique_ptr<nasal::vm> vm_instance;
     std::string last_result;
     std::string last_error;
+    std::chrono::seconds timeout{5}; // Default 5 second timeout
 
     NasalContext() {
         vm_instance = std::make_unique<nasal::vm>();
@@ -71,6 +73,12 @@ void nasal_cleanup(void* context) {
     delete static_cast<NasalContext*>(context);
 }
 
+// Add new function to set timeout
+void nasal_set_timeout(void* context, int seconds) {
+    auto* ctx = static_cast<NasalContext*>(context);
+    ctx->timeout = std::chrono::seconds(seconds);
+}
+
 const char* nasal_eval(void* context, const char* code, int show_time) {
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
@@ -85,7 +93,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         
         // Create a unique temporary file
         char temp_filename[256];
-        snprintf(temp_filename, sizeof(temp_filename), "/tmp/nasal_eval_%d.nasal", getpid());
+        snprintf(temp_filename, sizeof(temp_filename), "/tmp/nasal_eval_%ld.nasal", std::time(nullptr));
         int fd = mkstemp(temp_filename);
         if (fd == -1) {
             throw std::runtime_error("Failed to create temporary file");
@@ -130,7 +138,20 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         gen.compile(parse, ld, false, true).chkerr();
 
         const auto start = show_time ? clk::now() : clk::time_point();
-        ctx->vm_instance->run(gen, ld, {});
+        
+        // Create a future for the VM execution
+        auto future = std::async(std::launch::async, [&]() {
+            ctx->vm_instance->run(gen, ld, {});
+        });
+
+        // Wait for completion or timeout
+        auto status = future.wait_for(ctx->timeout);
+        if (status == std::future_status::timeout) {
+            std::remove(temp_filename);
+            throw std::runtime_error("Execution timed out after " + 
+                std::to_string(ctx->timeout.count()) + " seconds");
+        }
+
         const auto end = show_time ? clk::now() : clk::time_point();
         
         std::cout.rdbuf(old_cout);
