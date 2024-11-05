@@ -16,6 +16,7 @@ extern "C" {
 // Main API functions
 NASAL_EXPORT void* nasal_init();
 NASAL_EXPORT void nasal_cleanup(void* context);
+NASAL_EXPORT void nasal_set_timeout(void* context, int seconds);
 NASAL_EXPORT const char* nasal_eval(void* context, const char* code, int show_time);
 NASAL_EXPORT const char* nasal_get_error(void* context);
 
