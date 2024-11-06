@@ -1,8 +1,8 @@
 const express = require('express');
-const ffi = require('ffi-napi');
 const path = require('path');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
+const koffi = require('koffi');
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
@@ -33,12 +33,23 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-const nasalLib = ffi.Library(path.join(__dirname, '../module/libnasal-web'), {
-    'nasal_init': ['pointer', []],
-    'nasal_cleanup': ['void', ['pointer']],
-    'nasal_eval': ['string', ['pointer', 'string', 'int']],
-    'nasal_get_error': ['string', ['pointer']]
-});
+let nasalLib;
+try {
+    // First load the library
+    const lib = koffi.load(path.join(__dirname, '../module/libnasal-web.dylib'));
+    
+    // Then declare the functions explicitly
+    nasalLib = {
+        nasal_init: lib.func('nasal_init', 'void*', []),
+        nasal_cleanup: lib.func('nasal_cleanup', 'void', ['void*']),
+        nasal_eval: lib.func('nasal_eval', 'const char*', ['void*', 'const char*', 'int']),
+        nasal_get_error: lib.func('nasal_get_error', 'const char*', ['void*'])
+    };
+    
+} catch (err) {
+    console.error('Failed to load nasal library:', err);
+    process.exit(1);
+}
 
 app.post('/eval', (req, res) => {
     const { code, showTime = false } = req.body;
