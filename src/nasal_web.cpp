@@ -93,7 +93,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         
         // Create a unique temporary file
         char temp_filename[256];
-        snprintf(temp_filename, sizeof(temp_filename), "/tmp/nasal_eval_%ld.nasal", std::time(nullptr));
+        snprintf(temp_filename, sizeof(temp_filename), "/tmp/nasal_eval_%ld_XXXXXX", std::time(nullptr));
         int fd = mkstemp(temp_filename);
         if (fd == -1) {
             throw std::runtime_error("Failed to create temporary file");
