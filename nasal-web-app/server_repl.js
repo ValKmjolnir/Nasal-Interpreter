@@ -1,8 +1,8 @@
 const express = require('express');
-const ffi = require('ffi-napi');
 const path = require('path');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
+const koffi = require('koffi');
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
@@ -34,13 +34,25 @@ app.use(express.static('public'));
 
 
 // Load Nasal REPL library functions
-const nasalLib = ffi.Library(path.join(__dirname, '../module/libnasal-web'), {
-    'nasal_repl_init': ['pointer', []],
-    'nasal_repl_cleanup': ['void', ['pointer']],
-    'nasal_repl_eval': ['string', ['pointer', 'string']],
-    'nasal_repl_is_complete': ['int', ['pointer', 'string']],
-    'nasal_repl_get_version': ['string', []],
-});
+let nasalLib;
+try {
+    const lib = koffi.load(path.join(__dirname, '../module/libnasal-web.dylib'));
+    
+    nasalLib = {
+        nasal_repl_init: lib.func('nasal_repl_init', 'void*', []),
+        nasal_repl_cleanup: lib.func('nasal_repl_cleanup', 'void', ['void*']),
+        nasal_repl_eval: lib.func('nasal_repl_eval', 'const char*', ['void*', 'const char*']),
+        nasal_repl_is_complete: lib.func('nasal_repl_is_complete', 'int', ['void*', 'const char*']),
+        nasal_repl_get_version: lib.func('nasal_repl_get_version', 'const char*', [])
+    };
+
+    if (argv.verbose) {
+        console.log('REPL Library loaded successfully');
+    }
+} catch (err) {
+    console.error('Failed to load REPL library:', err);
+    process.exit(1);
+}
 
 // Store active REPL sessions
 const replSessions = new Map();
