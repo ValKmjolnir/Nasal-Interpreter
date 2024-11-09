@@ -59,6 +59,7 @@ struct WebReplContext {
     std::string last_error;
     bool allow_output;
     bool initialized;
+    std::chrono::seconds timeout{1}; // Default 1 second timeout
 
     WebReplContext() : allow_output(false), initialized(false) {
         repl_instance = std::make_unique<nasal::repl::repl>();
@@ -217,6 +218,12 @@ void nasal_repl_cleanup(void* context) {
     delete static_cast<WebReplContext*>(context);
 }
 
+// Add new function to set REPL timeout
+void nasal_repl_set_timeout(void* context, int seconds) {
+    auto* ctx = static_cast<WebReplContext*>(context);
+    ctx->timeout = std::chrono::seconds(seconds);
+}
+
 const char* nasal_repl_eval(void* context, const char* line) {
     auto* ctx = static_cast<WebReplContext*>(context);
     
@@ -276,17 +283,37 @@ const char* nasal_repl_eval(void* context, const char* line) {
         auto old_cout = std::cout.rdbuf(output.rdbuf());
         auto old_cerr = std::cerr.rdbuf(output.rdbuf());
 
-        // Update source in repl instance and run
-        ctx->repl_instance->get_runtime().set_repl_mode_flag(true);
-        ctx->repl_instance->get_runtime().set_allow_repl_output_flag(true);
-        ctx->repl_instance->set_source(ctx->source);
-        bool success = ctx->repl_instance->run();
+        // Create a copy of the source for the async task
+        auto source_copy = ctx->source;
 
-        // Restore output streams
+        // Create a future for the REPL execution using the existing instance
+        auto future = std::async(std::launch::async, [repl = ctx->repl_instance.get(), source_copy]() {
+            repl->get_runtime().set_repl_mode_flag(true);
+            repl->get_runtime().set_allow_repl_output_flag(true);
+            repl->set_source(source_copy);
+            return repl->run();
+        });
+
+        // Wait for completion or timeout
+        auto status = future.wait_for(ctx->timeout);
+        
+        // Restore output streams first
         std::cout.rdbuf(old_cout);
         std::cerr.rdbuf(old_cerr);
 
-        // Get the output
+        if (status == std::future_status::timeout) {
+            ctx->source.pop_back(); // Remove the line that caused timeout
+            
+            // Reset the REPL instance state
+            ctx->repl_instance->get_runtime().set_repl_mode_flag(true);
+            ctx->repl_instance->get_runtime().set_allow_repl_output_flag(true);
+            ctx->repl_instance->set_source(ctx->source);
+            
+            throw std::runtime_error("Execution timed out after " + 
+                std::to_string(ctx->timeout.count()) + " seconds");
+        }
+
+        bool success = future.get();
         std::string result = output.str();
 
         if (!success) {
