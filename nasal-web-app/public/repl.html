@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasal Interpreter Web REPL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .repl-container {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 8px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .repl-output {
+            flex-grow: 1;
+            background: #21252b;
+            color: #abb2bf;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .repl-input-container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .repl-prompt {
+            color: #3498db;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            padding: 5px;
+            user-select: none;
+        }
+
+        .repl-input {
+            flex-grow: 1;
+            background: #21252b;
+            border: none;
+            color: #abb2bf;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            padding: 5px;
+            outline: none;
+            resize: none;
+            min-height: 24px;
+            overflow-y: hidden;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .examples {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .example-btn {
+            background-color: #27ae60;
+            margin: 0 5px;
+        }
+
+        .example-btn:hover {
+            background-color: #219a52;
+        }
+
+        .output-line {
+            margin: 2px 0;
+            min-height: 1.2em;
+        }
+
+        .input-line {
+            color: #3498db;
+            white-space: pre;
+        }
+
+        .error-line {
+            color: #e74c3c;
+            white-space: pre;
+        }
+
+        .result-line {
+            color: #2ecc71;
+            white-space: pre;
+            margin-left: 4px;  /* Slight indent for results */
+        }
+
+        .system-message {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .help-text {
+            color: #95a5a6;
+            white-space: pre;
+            font-family: monospace;
+        }
+
+        .error-type {
+            color: #ff5f5f;
+            font-weight: bold;
+        }
+
+        .error-desc {
+            color: #abb2bf;
+            font-weight: bold;
+        }
+
+        .error-arrow, .error-line-number {
+            color: #56b6c2;
+            font-weight: bold;
+        }
+
+        .error-file {
+            color: #ff5f5f;
+            font-weight: bold;
+        }
+
+        .error-code {
+            color: #abb2bf;
+        }
+
+        .error-pointer-space {
+            white-space: pre;
+        }
+
+        .error-pointer {
+            color: #ff5f5f;
+            font-weight: bold;
+        }
+
+        .error-red-bold {
+            color: #e06c75;
+            font-weight: bold;
+        }
+
+        .error-cyan-bold {
+            color: #56b6c2;
+            font-weight: bold;
+        }
+
+        .error-bold {
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .repl-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Nasal Interpreter Web REPL</h1>
+            <p>Interactive Read-Eval-Print Loop for Nasal</p>
+            <p>Powered by ValKmjolnir's <a href="https://www.fgprc.org.cn/nasal_interpreter.html">Nasal Interpreter</a>, Web App by <a href="https://sidi762.github.io">LIANG Sidi</a></p>
+        </div>
+
+        <div class="repl-container">
+            <div id="repl-output" class="repl-output">
+                <div class="output-line">Welcome to Nasal Web REPL Demo!</div>
+            </div>
+            <div class="repl-input-container">
+                <span class="repl-prompt">>>></span>
+                <textarea id="repl-input" class="repl-input" rows="1" 
+                    placeholder="Enter Nasal code here..."></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="clearREPL()">Clear REPL</button>
+        </div>
+
+        <div class="examples">
+            <h3>Example Commands:</h3>
+            <button class="example-btn" onclick="insertExample('basic')">Basic Math</button>
+            <button class="example-btn" onclick="insertExample('loops')">Loops</button>
+            <button class="example-btn" onclick="insertExample('functions')">Functions</button>
+        </div>
+    </div>
+
+    <script src="repl.js"></script>
+</body>
+</html> 
