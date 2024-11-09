@@ -23,6 +23,7 @@
 * [__Trace Back Info__](#trace-back-info)
 * [__Debugger__](#debugger)
 * [__REPL__](#repl)
+* [__Web Interface__](#web-interface)
 
 __Contact us if having great ideas to share!__
 
@@ -121,7 +122,7 @@ runtime.windows.set_utf8_output();
 
 ![error](./doc/gif/error.gif)
 
-<details><summary>Must use `var` to define variables</summary> 
+<details><summary>Must use `var` to define variables</summary>
 
 This interpreter uses more strict syntax to make sure it is easier for you to program and debug.
 And flightgear's nasal interpreter also has the same rule.
@@ -146,13 +147,13 @@ If you forget to add the keyword `var`, you will get this:
 ```javascript
 code: undefined symbol "i"
  --> test.nas:1:9
-  | 
+  |
 1 | foreach(i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"
  --> test.nas:2:11
-  | 
+  |
 2 |     print(i)
   |           ^ undefined symbol "i"
 ```
@@ -441,5 +442,51 @@ Nasal REPL interpreter version 11.1 (Nov  1 2023 23:37:30)
 >>> use std.json;
 {stringify:func(..) {..},parse:func(..) {..}}
 
->>> 
+>>>
 ```
+
+## __Web Interface__
+
+A web-based interface is now available for trying out Nasal code directly in your browser. It includes both a code editor and an interactive REPL (WIP).
+
+### Web Code Editor
+- Syntax highlighting using CodeMirror
+- Error highlighting and formatting
+- Example programs
+- Execution time display option
+- Configurable execution time limits
+- Notice: The security of the online interpreter is not well tested, please use it with sandbox mechanism or other security measures.
+
+### Web REPL
+- ** IMPORTANT: The time limit in REPL is not correctly implemented yet. Thus this REPL web binding is not considered finished. Do not use it in production before it's fixed. **
+- Interactive command-line style interface in browser
+- Multi-line input support with proper prompts (`>>>` and `...`)
+- Command history navigation
+- Error handling with formatted error messages
+- Example snippets for quick testing
+
+### Running the Web Interface
+
+1. Build the Nasal shared library:
+```bash
+cmake -DBUILD_SHARED_LIBS=ON .
+make nasal-web
+```
+
+2. Set up and run the web application:
+
+For the code editor:
+```bash
+cd nasal-web-app
+npm install
+node server.js
+```
+Visit `http://127.0.0.1:3000/`
+
+For the REPL:
+```bash
+cd nasal-web-app
+npm install
+node server_repl.js
+```
+Visit `http://127.0.0.1:3001/repl.html`
