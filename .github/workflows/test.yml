@@ -1,4 +1,4 @@
-name: Nightly Build
+name: Nasal Interpreter Test
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  mac-aarch64-build:
+  mac-aarch64:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
     - name: Test
       run: make test
     
-  linux-x86_64-build:
+  linux-x86_64:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
