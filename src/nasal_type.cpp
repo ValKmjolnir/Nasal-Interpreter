@@ -279,8 +279,10 @@ void nas_val::clear() {
     }
 }
 
-f64 var::to_num() {
-    return type!=vm_type::vm_str? val.num:util::str_to_num(str().c_str());
+f64 var::to_num() const {
+    return type != vm_type::vm_str
+        ? val.num
+        : util::str_to_num(str().c_str());
 }
 
 std::string var::to_str() {
@@ -288,8 +290,8 @@ std::string var::to_str() {
         return str();
     } else if (type==vm_type::vm_num) {
         auto tmp = std::to_string(num());
-        tmp.erase(tmp.find_last_not_of('0')+1, std::string::npos);
-        tmp.erase(tmp.find_last_not_of('.')+1, std::string::npos);
+        tmp.erase(tmp.find_last_not_of('0') + 1, std::string::npos);
+        tmp.erase(tmp.find_last_not_of('.') + 1, std::string::npos);
         return tmp;
     }
 
@@ -315,8 +317,8 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
     return out;
 }
 
-bool var::object_check(const std::string& name) {
-    return is_ghost() && ghost().type_name==name && ghost().pointer;
+bool var::object_check(const std::string& name) const {
+    return is_ghost() && ghost().type_name == name && ghost().pointer;
 }
 
 var var::none() {
@@ -345,54 +347,6 @@ var var::gcobj(nas_val* p) {
 
 var var::addr(var* p) {
     return {vm_type::vm_addr, p};
-}
-
-var* var::addr() const {
-    return val.addr;
-}
-
-u64 var::ret() const {
-    return val.ret;
-}
-
-i64& var::cnt() {
-    return val.cnt;
-}
-
-f64 var::num() const {
-    return val.num;
-}
-
-std::string& var::str() {
-    return *val.gcobj->ptr.str;
-}
-
-nas_vec& var::vec() {
-    return *val.gcobj->ptr.vec;
-}
-
-nas_hash& var::hash() {
-    return *val.gcobj->ptr.hash;
-}
-
-nas_func& var::func() {
-    return *val.gcobj->ptr.func;
-}
-
-nas_upval& var::upval() {
-    return *val.gcobj->ptr.upval;
-}
-
-nas_ghost& var::ghost() {
-    return *val.gcobj->ptr.obj;
-}
-
-nas_co& var::co() {
-    return *val.gcobj->ptr.co;
-}
-
-nas_map& var::map() {
-    return *val.gcobj->ptr.map;
 }
 
 var nas_err(const std::string& error_function_name, const std::string& info) {
