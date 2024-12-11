@@ -96,7 +96,7 @@ protected:
 
 protected:
     /* vm calculation functions*/
-    inline bool cond(var&);
+    inline bool boolify(const var&);
 
 protected:
     /* vm operands */
@@ -320,12 +320,20 @@ public:
     }
 };
 
-inline bool vm::cond(var& val) {
+inline bool vm::boolify(const var& val) {
     if (val.is_num()) {
         return val.num();
     } else if (val.is_str()) {
         const f64 num = util::str_to_num(val.str().c_str());
-        return std::isnan(num)? !val.str().empty():num;
+        return std::isnan(num)? !val.str().empty() : num;
+    } else if (val.is_vec()) {
+        return val.vec().size() > 0;
+    } else if (val.is_hash()) {
+        return val.hash().size() > 0;
+    } else if (val.is_func() || val.is_ghost() || val.is_coroutine()) {
+        return true;
+    } else if (val.is_map()) {
+        return val.map().size() > 0;
     }
     return false;
 }
@@ -707,14 +715,14 @@ inline void vm::o_jmp() {
 inline void vm::o_jt() {
     // jump true needs to reserve the result on stack
     // because conditional expression in nasal has return value
-    if (cond(ctx.top[0])) {
+    if (boolify(ctx.top[0])) {
         ctx.pc = imm[ctx.pc]-1;
     }
 }
 
 inline void vm::o_jf() {
     // jump false doesn't need to reserve result
-    if (!cond(ctx.top[0])) {
+    if (!boolify(ctx.top[0])) {
         ctx.pc = imm[ctx.pc]-1;
     }
     --ctx.top;
