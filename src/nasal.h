@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __nasver__
-#define __nasver__ "11.3"
+#define __nasver__ "11.3.1"
 #endif
 
 #include <cstddef>
@@ -19,3 +19,11 @@ using f64 = double;
 
 // virtual machine stack depth, both global depth and value stack depth
 const u32 VM_STACK_DEPTH = UINT16_MAX;
+
+// avoid error loading function bug in MSVC version nasal.exe
+#ifdef _MSC_VER
+    // and fuck MSVC again
+    #define NASAL_EXPORT extern "C" __declspec(dllexport)
+#else
+    #define NASAL_EXPORT extern "C" __attribute__((visibility("default")))
+#endif

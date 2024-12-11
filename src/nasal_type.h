@@ -47,8 +47,32 @@ struct nas_ghost; // objects
 struct nas_co;    // coroutine
 struct nas_map;   // mapper
 
-// union type
-struct nas_val;   // nas_val includes gc-managed types
+// nas_val includes gc-managed types
+struct nas_val {
+    enum class gc_status: u8 {
+        uncollected = 0,   
+        collected,
+        found
+    };
+
+    gc_status mark;
+    vm_type type; // value type
+    u8 immutable; // used to mark if a string is immutable
+    union elem {
+        std::string* str;
+        nas_vec*   vec;
+        nas_hash*  hash;
+        nas_func*  func;
+        nas_upval* upval;
+        nas_ghost* obj;
+        nas_co*    co;
+        nas_map*   map;
+    } ptr;
+
+    nas_val(vm_type);
+    ~nas_val();
+    void clear();
+};
 
 struct var {
 public:
@@ -78,11 +102,6 @@ public:
         return type!=nr.type || val.gcobj!=nr.val.gcobj;
     }
 
-    // number and string can be translated to each other
-    f64 to_num();
-    std::string to_str();
-    bool object_check(const std::string&);
-
 public:
     // create new var object
     static var none();
@@ -95,18 +114,33 @@ public:
 
 public:
     // get value
-    var* addr() const;
-    u64 ret() const;
-    i64& cnt();
-    f64 num() const;
-    std::string& str();
-    nas_vec& vec();
-    nas_hash& hash();
-    nas_func& func();
-    nas_upval& upval();
-    nas_ghost& ghost();
-    nas_co& co();
-    nas_map& map();
+    var* addr() const { return val.addr; }
+    u64 ret() const { return val.ret; }
+    i64& cnt() { return val.cnt; }
+    f64 num() const { return val.num; }
+
+public:
+    // get gc object
+    std::string& str() { return *val.gcobj->ptr.str; }
+    nas_vec& vec() { return *val.gcobj->ptr.vec; }
+    nas_hash& hash() { return *val.gcobj->ptr.hash; }
+    nas_func& func() { return *val.gcobj->ptr.func; }
+    nas_upval& upval() { return *val.gcobj->ptr.upval; }
+    nas_ghost& ghost() { return *val.gcobj->ptr.obj; }
+    nas_co& co() { return *val.gcobj->ptr.co; }
+    nas_map& map() { return *val.gcobj->ptr.map; }
+    
+
+public:
+    // get const gc object
+    const std::string& str() const { return *val.gcobj->ptr.str; }
+    const nas_vec& vec() const { return *val.gcobj->ptr.vec; }
+    const nas_hash& hash() const { return *val.gcobj->ptr.hash; }
+    const nas_func& func() const { return *val.gcobj->ptr.func; }
+    const nas_upval& upval() const { return *val.gcobj->ptr.upval; }
+    const nas_ghost& ghost() const { return *val.gcobj->ptr.obj; }
+    const nas_co& co() const { return *val.gcobj->ptr.co; }
+    const nas_map& map() const { return *val.gcobj->ptr.map; }
 
 public:
     bool is_none() const { return type==vm_type::vm_none; }
@@ -123,6 +157,12 @@ public:
     bool is_ghost() const { return type==vm_type::vm_ghost; }
     bool is_coroutine() const { return type==vm_type::vm_co; }
     bool is_map() const { return type==vm_type::vm_map; }
+
+public:
+    // number and string can be translated to each other
+    f64 to_num() const;
+    std::string to_str();
+    bool object_check(const std::string&) const;
 };
 
 struct nas_vec {
@@ -264,32 +304,6 @@ public:
 
     var get_value(const std::string&);
     var* get_memory(const std::string&);
-};
-
-struct nas_val {
-    enum class gc_status: u8 {
-        uncollected = 0,   
-        collected,
-        found
-    };
-
-    gc_status mark;
-    vm_type type; // value type
-    u8 immutable; // used to mark if a string is immutable
-    union {
-        std::string* str;
-        nas_vec*   vec;
-        nas_hash*  hash;
-        nas_func*  func;
-        nas_upval* upval;
-        nas_ghost* obj;
-        nas_co*    co;
-        nas_map*   map;
-    } ptr;
-
-    nas_val(vm_type);
-    ~nas_val();
-    void clear();
 };
 
 std::ostream& operator<<(std::ostream&, nas_vec&);
