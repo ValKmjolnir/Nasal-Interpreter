@@ -6,6 +6,7 @@
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](./LICENSE)
 ![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
 [![C/C++ CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml)
+[![Test CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml)
 
 > This document is also available in: [__中文__](./doc/README_zh.md) | [__English__](./README.md)
 

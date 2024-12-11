@@ -1,0 +1,35 @@
+name: Nightly Build
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  mac-aarch64-build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: |
+        make -j4
+        cd module
+        make all -j4
+        cd ..
+    - name: Test
+      run: make test
+    
+  linux-x86_64-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: |
+        make -j4
+        cd module
+        make all -j4
+        cd ..
+    - name: Test
+      run: make test
