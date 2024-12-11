@@ -3,12 +3,6 @@
 
 #include "nasal.h"
 
-#ifdef _WIN32
-    #define NASAL_EXPORT __declspec(dllexport)
-#else
-    #define NASAL_EXPORT __attribute__((visibility("default")))
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

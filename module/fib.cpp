@@ -124,7 +124,7 @@ module_func_info func_tbl[] = {
 
 }
 
-NASAL_EXTERN module_func_info* get() {
+NASAL_EXPORT module_func_info* get() {
     return fib_module::func_tbl;
 }
 
