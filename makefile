@@ -295,7 +295,7 @@ clean:
 	@ rm $(NASAL_OBJECT)
 
 .PHONY: test
-test:nasal
+test:
 	@ ./nasal -t -d test/andy_gc_test.nas
 	@ ./nasal test/argparse_test.nas
 	@ ./nasal -e test/ascii-art.nas
