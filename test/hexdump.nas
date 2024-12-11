@@ -37,7 +37,7 @@ var s = func() {
     }
     var ret="";
     foreach(var elem;filename)
-        ret~=io.readfile(elem);
+        ret~=io.readfile("./src/" ~ elem);
     return ret;
 }();
 
