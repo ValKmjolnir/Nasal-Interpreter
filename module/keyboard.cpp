@@ -111,7 +111,7 @@ module_func_info func_tbl[] = {
     {nullptr, nullptr}
 };
 
-NASAL_EXTERN module_func_info* get() {
+NASAL_EXPORT module_func_info* get() {
     return func_tbl;
 }
 
