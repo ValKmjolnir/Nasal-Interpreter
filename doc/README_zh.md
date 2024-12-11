@@ -6,6 +6,7 @@
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 ![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
 [![C/C++ CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml)
+[![Test CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml)
 
 > 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
 
@@ -74,6 +75,7 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 
 确保 thread model 是 `posix thread model`, 否则没有 thread 库。
 
+> mkdir build;
 > mingw32-make nasal.exe -j4
 
 ### __Windows 平台 (Vistual Studio)__

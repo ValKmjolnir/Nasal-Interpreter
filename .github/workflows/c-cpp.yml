@@ -1,12 +1,8 @@
-name: Build/Test/Package CI
+name: Nightly Build
 
 on:
   schedule:
    - cron: "0 16 * * *"
-  push:
-    branches: [ master, develop ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:

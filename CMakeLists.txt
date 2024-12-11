@@ -15,6 +15,10 @@ if(MSVC)
     add_compile_options(/utf-8)
 endif()
 
+if (APPLE)
+    add_compile_options(-mmacosx-version-min=10.15)
+endif()
+
 # generate release executables
 set(CMAKE_BUILD_TYPE "Release")
 
