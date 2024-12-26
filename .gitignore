@@ -2,7 +2,8 @@
 build/
 out/
 dist/
-cmake-build-*/
+cmake-build-*
+cmake-windows-*
 
 # IDE and editor files
 .vscode/

@@ -4,32 +4,32 @@ var new = func() {
     var (begin, end) = (nil, nil);
     return{
         push: func(elem) {
-            var new_node={
+            var new_node = {
                 elem:elem,
                 next:nil
             };
-            if (begin==nil)
-                begin=end=new_node;
+            if (begin == nil)
+                begin = end = new_node;
             else {
-                end.next=new_node;
-                end=new_node;
+                end.next = new_node;
+                end = new_node;
             }
         },
         pop: func() {
-            if (begin!=nil)
-                begin=begin.next;
-            if (begin==nil)
-                end=nil;
+            if (begin != nil)
+                begin = begin.next;
+            if (begin == nil)
+                end = nil;
         },
         front: func() {
-            if (begin!=nil)
+            if (begin != nil)
                 return begin.elem;
         },
         clear: func() {
-            begin=end=nil;
+            begin = end = nil;
         },
         empty: func() {
-            return begin==nil;
+            return begin == nil;
         }
     };
 }
