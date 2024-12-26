@@ -359,8 +359,8 @@ inline void vm::o_loadl() {
 }
 
 inline void vm::o_loadu() {
-    ctx.funcr.func().upval[(imm[ctx.pc]>>16)&0xffff]
-                    .upval()[imm[ctx.pc]&0xffff] = (ctx.top--)[0];
+    ctx.funcr.func().upval[(imm[ctx.pc]>>16) & 0xffff]
+                    .upval()[imm[ctx.pc] & 0xffff] = (ctx.top--)[0];
 }
 
 inline void vm::o_dup() {
@@ -452,7 +452,7 @@ inline void vm::o_lnot() {
     var val = ctx.top[0];
     switch(val.type) {
         case vm_type::vm_nil: ctx.top[0] = one; break;
-        case vm_type::vm_num: ctx.top[0] = val.num()? zero:one; break;
+        case vm_type::vm_num: ctx.top[0] = val.num()? zero : one; break;
         case vm_type::vm_str: {
             const f64 num = util::str_to_num(val.str().c_str());
             if (std::isnan(num)) {
@@ -462,7 +462,7 @@ inline void vm::o_lnot() {
             }
         } break;
         default:
-            die("cannot do not-operation on "+type_name_string(val));
+            die("cannot do not-operation on " + type_name_string(val));
             return;
     }
 }
@@ -477,7 +477,7 @@ inline void vm::o_bnot() {
 
 inline void vm::o_btor() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].to_num())|
+        static_cast<i32>(ctx.top[-1].to_num()) |
         static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
@@ -485,7 +485,7 @@ inline void vm::o_btor() {
 
 inline void vm::o_btxor() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].to_num())^
+        static_cast<i32>(ctx.top[-1].to_num()) ^
         static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
@@ -493,7 +493,7 @@ inline void vm::o_btxor() {
 
 inline void vm::o_btand() {
     ctx.top[-1] = var::num(
-        static_cast<i32>(ctx.top[-1].to_num())&
+        static_cast<i32>(ctx.top[-1].to_num()) &
         static_cast<i32>(ctx.top[0].to_num())
     );
     --ctx.top;
@@ -503,10 +503,10 @@ inline void vm::o_btand() {
     ctx.top[-1] = var::num(ctx.top[-1].to_num() type ctx.top[0].to_num());\
     --ctx.top;
 
-inline void vm::o_add() {op_calc(+);}
-inline void vm::o_sub() {op_calc(-);}
-inline void vm::o_mul() {op_calc(*);}
-inline void vm::o_div() {op_calc(/);}
+inline void vm::o_add() { op_calc(+); }
+inline void vm::o_sub() { op_calc(-); }
+inline void vm::o_mul() { op_calc(*); }
+inline void vm::o_div() { op_calc(/); }
 inline void vm::o_lnk() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
@@ -535,7 +535,7 @@ inline void vm::o_subc() {op_calc_const(-);}
 inline void vm::o_mulc() {op_calc_const(*);}
 inline void vm::o_divc() {op_calc_const(/);}
 inline void vm::o_lnkc() {
-    ctx.top[0] = ngc.newstr(ctx.top[0].to_str()+const_string[imm[ctx.pc]]);
+    ctx.top[0] = ngc.newstr(ctx.top[0].to_str() + const_string[imm[ctx.pc]]);
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -575,7 +575,7 @@ inline void vm::o_lnkeq() {
         ctx.memr[0].to_str()+ctx.top[-1].to_str()
     );
     ctx.memr = nullptr;
-    ctx.top -= imm[ctx.pc]+1;
+    ctx.top -= imm[ctx.pc] + 1;
 }
 
 inline void vm::o_bandeq() {
@@ -598,11 +598,11 @@ inline void vm::o_boreq() {
 
 inline void vm::o_bxoreq() {
     ctx.top[-1] = ctx.memr[0] = var::num(
-        static_cast<i32>(ctx.memr[0].to_num())^
+        static_cast<i32>(ctx.memr[0].to_num()) ^
         static_cast<i32>(ctx.top[-1].to_num())
     );
     ctx.memr = nullptr;
-    ctx.top -= imm[ctx.pc]+1;
+    ctx.top -= imm[ctx.pc] + 1;
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
@@ -1083,8 +1083,8 @@ inline void vm::o_mcalll() {
 inline void vm::o_mupval() {
     ctx.memr = &(
         ctx.funcr.func()
-           .upval[(imm[ctx.pc]>>16)&0xffff]
-           .upval()[imm[ctx.pc]&0xffff]
+           .upval[(imm[ctx.pc]>>16) & 0xffff]
+           .upval()[imm[ctx.pc] & 0xffff]
     );
     (++ctx.top)[0] = ctx.memr[0];
     // push value in this memory space on stack
@@ -1102,7 +1102,7 @@ inline void vm::o_mcallv() {
         }
     } else if (vec.is_hash()) { // do mcallh but use the mcallv way
         if (!val.is_str()) {
-            die("must use string as the key but get "+type_name_string(val));
+            die("must use string as the key but get " + type_name_string(val));
             return;
         }
         auto& ref = vec.hash();
@@ -1114,7 +1114,7 @@ inline void vm::o_mcallv() {
         }
     } else if (vec.is_map()) {
         if (!val.is_str()) {
-            die("must use string as the key but get "+type_name_string(val));
+            die("must use string as the key but get " + type_name_string(val));
             return;
         }
         auto& ref = vec.map();
@@ -1192,7 +1192,7 @@ inline void vm::o_ret() {
         auto size = func.func().local_size;
         upval.on_stack = false;
         upval.elems.resize(size);
-        for(u64 i = 0; i<size; ++i) {
+        for(u64 i = 0; i < size; ++i) {
             upval.elems[i] = local[i];
         }
     }

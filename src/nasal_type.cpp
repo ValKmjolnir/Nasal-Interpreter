@@ -317,41 +317,4 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
     return out;
 }
 
-bool var::object_check(const std::string& name) const {
-    return is_ghost() && ghost().type_name == name && ghost().pointer;
-}
-
-var var::none() {
-    return {vm_type::vm_none, static_cast<u64>(0)};
-}
-
-var var::nil() {
-    return {vm_type::vm_nil, static_cast<u64>(0)};
-}
-
-var var::ret(u64 pc) {
-    return {vm_type::vm_ret, pc};
-}
-
-var var::cnt(i64 n) {
-    return {vm_type::vm_cnt, n};
-}
-
-var var::num(f64 n) {
-    return {vm_type::vm_num, n};
-}
-
-var var::gcobj(nas_val* p) {
-    return {p->type, p};
-}
-
-var var::addr(var* p) {
-    return {vm_type::vm_addr, p};
-}
-
-var nas_err(const std::string& error_function_name, const std::string& info) {
-    std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
-    return var::none();
-}
-
 }
