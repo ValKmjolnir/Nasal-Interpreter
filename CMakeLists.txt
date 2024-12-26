@@ -11,7 +11,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
 add_compile_options(-fPIC)
 # MSVC needs this command option to really enable utf-8 output
-if(MSVC)
+if (MSVC)
     add_compile_options(/utf-8)
 endif()
 
@@ -103,16 +103,21 @@ target_link_libraries(mat module-used-object)
 
 add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
 target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR}/src)
+if (WIN32)
+    target_link_libraries(nasock ws2_32)
+endif()
 target_link_libraries(nasock module-used-object)
 
-# Add web library
-add_library(nasal-web SHARED
-    src/nasal_web.cpp
-    ${NASAL_OBJECT_SOURCE_FILE}
-)
-target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
-set_target_properties(nasal-web PROPERTIES
-    C_VISIBILITY_PRESET hidden
-    CXX_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN ON
-)
+# Add web library, not for MSVC now
+if (NOT MSVC)
+    add_library(nasal-web SHARED
+        src/nasal_web.cpp
+        ${NASAL_OBJECT_SOURCE_FILE}
+    )
+    target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(nasal-web PROPERTIES
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+    )
+endif()

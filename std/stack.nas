@@ -10,7 +10,7 @@ var stack = func() {
             return pop(vec);
         },
         top: func() {
-            if (size(vec)!=0) {
+            if (size(vec) != 0) {
                 return vec[-1];
             }
         },
@@ -18,7 +18,7 @@ var stack = func() {
             vec = [];
         },
         empty: func() {
-            return size(vec)==0;
+            return size(vec) == 0;
         }
     };
 }
