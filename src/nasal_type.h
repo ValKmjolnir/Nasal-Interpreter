@@ -86,31 +86,45 @@ public:
     } val;
 
 private:
-    var(vm_type t, u64 pc) {type = t; val.ret = pc;}
-    var(vm_type t, i64 ct) {type = t; val.cnt = ct;}
-    var(vm_type t, f64 n) {type = t; val.num = n;}
-    var(vm_type t, var* p) {type = t; val.addr = p;}
-    var(vm_type t, nas_val* p) {type = t; val.gcobj = p;}
+    var(vm_type t, u64 pc) { type = t; val.ret = pc; }
+    var(vm_type t, i64 ct) { type = t; val.cnt = ct; }
+    var(vm_type t, f64 n) { type = t; val.num = n; }
+    var(vm_type t, var* p) { type = t; val.addr = p; }
+    var(vm_type t, nas_val* p) { type = t; val.gcobj = p; }
 
 public:
     var() = default;
     var(const var&) = default;
     bool operator==(const var& nr) const {
-        return type==nr.type && val.gcobj==nr.val.gcobj;
+        return type == nr.type && val.gcobj == nr.val.gcobj;
     }
     bool operator!=(const var& nr) const {
-        return type!=nr.type || val.gcobj!=nr.val.gcobj;
+        return type != nr.type || val.gcobj != nr.val.gcobj;
     }
 
 public:
     // create new var object
-    static var none();
-    static var nil();
-    static var ret(u64);
-    static var cnt(i64);
-    static var num(f64);
-    static var gcobj(nas_val*);
-    static var addr(var*);
+    static var none() {
+        return var(vm_type::vm_none, static_cast<u64>(0));
+    }
+    static var nil() {
+        return var(vm_type::vm_nil, static_cast<u64>(0));
+    }
+    static var ret(u64 pc) {
+        return var(vm_type::vm_ret, pc);
+    }
+    static var cnt(i64 n) {
+        return var(vm_type::vm_cnt, n);
+    }
+    static var num(f64 n) {
+        return var(vm_type::vm_num, n);
+    }
+    static var gcobj(nas_val* p) {
+        return var(p->type, p);
+    }
+    static var addr(var* p) {
+        return var(vm_type::vm_addr, p);
+    }
 
 public:
     // get value
@@ -143,26 +157,27 @@ public:
     const nas_map& map() const { return *val.gcobj->ptr.map; }
 
 public:
-    bool is_none() const { return type==vm_type::vm_none; }
-    bool is_cnt() const { return type==vm_type::vm_cnt; }
-    bool is_addr() const { return type==vm_type::vm_addr; }
-    bool is_ret() const { return type==vm_type::vm_ret; }
-    bool is_nil() const { return type==vm_type::vm_nil; }
-    bool is_num() const { return type==vm_type::vm_num; }
-    bool is_str() const { return type==vm_type::vm_str; }
-    bool is_vec() const { return type==vm_type::vm_vec; }
-    bool is_hash() const { return type==vm_type::vm_hash; }
-    bool is_func() const { return type==vm_type::vm_func; }
-    bool is_upval() const { return type==vm_type::vm_upval; }
-    bool is_ghost() const { return type==vm_type::vm_ghost; }
-    bool is_coroutine() const { return type==vm_type::vm_co; }
-    bool is_map() const { return type==vm_type::vm_map; }
+    bool is_none() const { return type == vm_type::vm_none; }
+    bool is_cnt() const { return type == vm_type::vm_cnt; }
+    bool is_addr() const { return type == vm_type::vm_addr; }
+    bool is_ret() const { return type == vm_type::vm_ret; }
+    bool is_nil() const { return type == vm_type::vm_nil; }
+    bool is_num() const { return type == vm_type::vm_num; }
+    bool is_str() const { return type == vm_type::vm_str; }
+    bool is_vec() const { return type == vm_type::vm_vec; }
+    bool is_hash() const { return type == vm_type::vm_hash; }
+    bool is_func() const { return type == vm_type::vm_func; }
+    bool is_upval() const { return type == vm_type::vm_upval; }
+    bool is_ghost() const { return type == vm_type::vm_ghost; }
+    bool is_coroutine() const { return type == vm_type::vm_co; }
+    bool is_map() const { return type == vm_type::vm_map; }
 
 public:
     // number and string can be translated to each other
     f64 to_num() const;
     std::string to_str();
-    bool object_check(const std::string&) const;
+    inline bool object_check(const std::string&) const;
+    friend std::ostream& operator<<(std::ostream&, var&);
 };
 
 struct nas_vec {
@@ -174,6 +189,7 @@ struct nas_vec {
     auto size() const { return elems.size(); }
     var get_value(const i32);
     var* get_memory(const i32);
+    friend std::ostream& operator<<(std::ostream&, nas_vec&);
 };
 
 struct nas_hash {
@@ -185,6 +201,7 @@ struct nas_hash {
     auto size() const { return elems.size(); }
     var get_value(const std::string&);
     var* get_memory(const std::string&);
+    friend std::ostream& operator<<(std::ostream&, nas_hash&);
 };
 
 struct nas_func {
@@ -206,6 +223,7 @@ struct nas_func {
         parameter_size(0), local_size(0),
         dynamic_parameter_name("") {}
     void clear();
+    friend std::ostream& operator<<(std::ostream&, nas_func&);
 };
 
 struct nas_upval {
@@ -222,7 +240,7 @@ public:
     nas_upval(): on_stack(true), size(0), stack_frame_offset(nullptr) {}
 
     var& operator[](usize n) {
-        return on_stack? stack_frame_offset[n]:elems[n];
+        return on_stack? stack_frame_offset[n] : elems[n];
     }
 
     void clear() {
@@ -250,6 +268,7 @@ public:
     ~nas_ghost() { clear(); }
     void set(const std::string&, destructor, marker, void*);
     void clear();
+    friend std::ostream& operator<<(std::ostream&, const nas_ghost&);
 
 public:
     const auto& get_ghost_name() const { return type_name; }
@@ -290,6 +309,7 @@ struct nas_co {
         delete[] ctx.stack;
     }
     void clear();
+    friend std::ostream& operator<<(std::ostream&, const nas_co&);
 };
 
 struct nas_map {
@@ -304,21 +324,21 @@ public:
 
     var get_value(const std::string&);
     var* get_memory(const std::string&);
+    friend std::ostream& operator<<(std::ostream&, nas_map&);
 };
-
-std::ostream& operator<<(std::ostream&, nas_vec&);
-std::ostream& operator<<(std::ostream&, nas_hash&);
-std::ostream& operator<<(std::ostream&, nas_func&);
-std::ostream& operator<<(std::ostream&, nas_map&);
-std::ostream& operator<<(std::ostream&, const nas_ghost&);
-std::ostream& operator<<(std::ostream&, const nas_co&);
-std::ostream& operator<<(std::ostream&, var&);
 
 const var zero = var::num(0);
 const var one = var::num(1);
 const var nil = var::nil();
 
+inline bool var::object_check(const std::string& name) const {
+    return is_ghost() && ghost().type_name == name && ghost().pointer;
+}
+
 // use to print error log and return error value
-var nas_err(const std::string&, const std::string&);
+static var nas_err(const std::string& func, const std::string& info) {
+    std::cerr << "[vm] " << func << ": " << info << "\n";
+    return var::none();
+}
 
 }

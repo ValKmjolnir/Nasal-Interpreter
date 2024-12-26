@@ -536,12 +536,12 @@ void vm::die(const std::string& str) {
     if (!ngc.cort) {
         // in main context, exit directly
         std::exit(1);
-    } else {
-        // in coroutine, shut down the coroutine and return to main context
-        ctx.pc = 0; // mark coroutine 'dead'
-        ngc.context_reserve(); // switch context to main
-        ctx.top[0] = nil; // generate return value 'nil'
     }
+
+    // in coroutine, shut down the coroutine and return to main context
+    ctx.pc = 0; // mark coroutine 'dead'
+    ngc.context_reserve(); // switch context to main
+    ctx.top[0] = nil; // generate return value 'nil'
 }
 
 void vm::run(const codegen& gen,
