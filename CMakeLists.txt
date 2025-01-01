@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
-add_compile_options(-fPIC)
+# MSVC does not need -fPIC
+if (NOT MSVC)
+    add_compile_options(-fPIC)
+endif()
+
 # MSVC needs this command option to really enable utf-8 output
 if (MSVC)
     add_compile_options(/utf-8)
@@ -18,9 +22,6 @@ endif()
 if (APPLE)
     add_compile_options(-mmacosx-version-min=10.15)
 endif()
-
-# generate release executables
-set(CMAKE_BUILD_TYPE "Release")
 
 # build nasal used object
 set(NASAL_OBJECT_SOURCE_FILE
