@@ -16,25 +16,29 @@ var ppm = func(filename, width, height, RGB) {
     io.close(fd);
 }
 
-var width = 1920;
-var height = 1080;
+var width = 1920 * 2;
+var height = 1080 * 2;
 var bar = (os.platform()=="windows")?
     process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);
+var abs = math.abs; # alias
 
 var RGB = func(h, w) {
     var r = 2+w*2/width;
     var x = (height-h)/height;
 
-    var res = 0;
+    var (R, G, B) = (0, 0, 0);
+
     var tmp = 0.5;
     for(var i = 0; i<50; i+=1) {
         tmp = r*tmp*(1-tmp);
     }
-    for(var i = 0; i<100; i+=1) {
+    for(var i = 0; i<150; i+=1) {
         tmp = r*tmp*(1-tmp);
-        if (math.abs(tmp-x)<0.001) {
-            res = 255;
+        if (abs(tmp-x)<0.0005) {
+            R = int(255*(150 - i)/150);
+            G = int(255*(150 - i)/150);
+            B = 255;
             break;
         }
     }
@@ -44,8 +48,7 @@ var RGB = func(h, w) {
         print(bar.bar(progress), " ", progress*100, "%          \r");
     }
 
-    var c = char(res);
-    return c~c~c;
+    return char(R) ~ char(G) ~ char(B);
 }
 
 ppm("feigenbaum.ppm", width, height, RGB);
