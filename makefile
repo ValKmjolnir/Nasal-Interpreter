@@ -333,10 +333,10 @@ test:
 	@ ./nasal -t -d test/regex_test.nas
 	@ ./nasal -t -d test/replace_test.nas
 	@ ./nasal -e test/scalar.nas hello world
-	@ ./nasal test/subprocess_test.nas
-	@ ./nasal -e test/trait.nas
+	@ ./nasal -t test/subprocess_test.nas
+	@ ./nasal -t test/trait.nas
 	@ ./nasal -t -d test/turingmachine.nas
-	@ ./nasal -d test/wavecollapse.nas
-	@ ./nasal -d test/wavecity.nas
-	@ ./nasal test/word_collector.nas test/md5compare.nas
+	@ ./nasal -t -d test/wavecollapse.nas
+	@ ./nasal -t -d test/wavecity.nas
+	@ ./nasal -t test/word_collector.nas test/md5compare.nas
 	@ ./nasal -t -d test/ycombinator.nas

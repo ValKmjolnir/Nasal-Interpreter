@@ -15,8 +15,8 @@ var ppm = func(filename, width, height, RGB) {
     io.close(fd);
 }
 
-var width = 1920;
-var height = 1080;
+var width = 1920 * 2;
+var height = 1080 * 2;
 var bar = (os.platform()=="windows")?
     process_bar.bar(front:"sharp", back:"point", sep:"line", length:50):
     process_bar.high_resolution_bar(50);

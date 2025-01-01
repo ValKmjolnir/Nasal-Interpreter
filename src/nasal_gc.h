@@ -95,6 +95,12 @@ public:
     void context_reserve();
 
 public:
+    double get_gc_time_ms() const {
+        const auto den = std::chrono::high_resolution_clock::duration::period::den;
+        return worktime * 1.0 / den * 1000.0;
+    }
+
+public:
     var newstr(char c) {
         var s = alloc(vm_type::vm_str);
         s.str() = c;

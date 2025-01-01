@@ -318,6 +318,10 @@ public:
     void set_limit_mode_flag(bool flag) {
         flag_limited_mode = flag;
     }
+
+    auto get_gc_time_ms() const {
+        return ngc.get_gc_time_ms();
+    }
 };
 
 inline bool vm::boolify(const var& val) {
