@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nasal.h"
+#include "util/util.h"
 
 #include <cstring>
 #include <sstream>
@@ -173,8 +174,13 @@ public:
     bool is_map() const { return type == vm_type::vm_map; }
 
 public:
-    // number and string can be translated to each other
-    f64 to_num() const;
+    // convert to number
+    f64 to_num() const {
+        return type != vm_type::vm_str
+            ? val.num
+            : util::str_to_num(str().c_str());
+    }
+    // convert to string
     std::string to_str();
     inline bool object_check(const std::string&) const;
     friend std::ostream& operator<<(std::ostream&, var&);
@@ -187,8 +193,20 @@ struct nas_vec {
     bool printed = false;
 
     auto size() const { return elems.size(); }
-    var get_value(const i32);
-    var* get_memory(const i32);
+    var get_value(const i32 index) {
+        i32 size = elems.size();
+        if (index < -size || index >= size) {
+            return var::none();
+        }
+        return elems[index >= 0 ? index : index + size];
+    }
+    var* get_memory(const i32 index) {
+        i32 size = elems.size();
+        if (index < -size || index >= size) {
+            return nullptr;
+        }
+        return &elems[index >= 0 ? index : index + size];
+    }
     friend std::ostream& operator<<(std::ostream&, nas_vec&);
 };
 
