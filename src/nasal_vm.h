@@ -97,6 +97,7 @@ protected:
 protected:
     /* vm calculation functions*/
     inline bool boolify(const var&);
+    inline void set_frame(const nas_func&, var*);
 
 protected:
     /* vm operands */
@@ -340,6 +341,15 @@ inline bool vm::boolify(const var& val) {
         return val.map().size() > 0;
     }
     return false;
+}
+
+inline void vm::set_frame(const nas_func& func, var* local) {
+    ctx.top[0] = ctx.upvalr;
+    (++ctx.top)[0] = var::addr(ctx.localr);
+    (++ctx.top)[0] = var::ret(ctx.pc); // rewrite top with vm_ret
+    ctx.pc = func.entry - 1;
+    ctx.localr = local;
+    ctx.upvalr = nil;
 }
 
 inline void vm::o_repl() {
@@ -935,12 +945,7 @@ inline void vm::o_callfv() {
             ? parameter_size + 1
             : func.local_size - 1] = dynamic;
 
-    ctx.top[0] = ctx.upvalr;
-    (++ctx.top)[0] = var::addr(ctx.localr);
-    (++ctx.top)[0] = var::ret(ctx.pc);
-    ctx.pc = func.entry-1;
-    ctx.localr = local;
-    ctx.upvalr = nil;
+    set_frame(func, local);
 }
 
 inline void vm::o_callfh() {
@@ -987,12 +992,7 @@ inline void vm::o_callfh() {
         return;
     }
 
-    ctx.top[0] = ctx.upvalr;
-    (++ctx.top)[0] = var::addr(ctx.localr);
-    (++ctx.top)[0] = var::ret(ctx.pc); // rewrite top with vm_ret
-    ctx.pc=func.entry-1;
-    ctx.localr = local;
-    ctx.upvalr = nil;
+    set_frame(func, local);
 }
 
 inline void vm::o_callb() {
