@@ -24,45 +24,45 @@ winall: $(dynamic_libs_dll)
 
 libfib.so: fib.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libfib.so"
-	@ $(CXX) $(CXXFLAGS) fib.cpp -o fib.o
+	@ $(CXX) $(CXXFLAGS) fib.cpp -o fib.o -I ../src
 	@ $(CXX) -shared -o libfib.so fib.o $(used_object)
 	@ rm fib.o
 libfib.dll: fib.cpp $(used_header) $(used_object)
 	@ echo [Compiling] libfib.dll
-	@ $(CXX) -std=$(STD) -c -O3 fib.cpp -fPIC -o fib.o
+	@ $(CXX) -std=$(STD) -c -O3 fib.cpp -fPIC -o fib.o -I ../src
 	@ $(CXX) -shared -o libfib.dll fib.o $(used_object) -static
 	@ del fib.o
 
 libkey.so: keyboard.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libkey.so"
-	@ $(CXX) $(CXXFLAGS) keyboard.cpp -o keyboard.o
+	@ $(CXX) $(CXXFLAGS) keyboard.cpp -o keyboard.o -I ../src
 	@ $(CXX) -shared -o libkey.so keyboard.o $(used_object)
 	@ rm keyboard.o
 libkey.dll: keyboard.cpp $(used_header) $(used_object)
 	@ echo [Compiling] libkey.dll
-	@ $(CXX) -std=$(STD) -c -O3 keyboard.cpp -fPIC -o keyboard.o -static
+	@ $(CXX) -std=$(STD) -c -O3 keyboard.cpp -fPIC -o keyboard.o -static -I ../src
 	@ $(CXX) -shared -o libkey.dll keyboard.o $(used_object) -static
 	@ del keyboard.o
 
 libnasock.so: nasocket.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libnasock.so"
-	@ $(CXX) $(CXXFLAGS) nasocket.cpp -o nasocket.o
+	@ $(CXX) $(CXXFLAGS) nasocket.cpp -o nasocket.o -I ../src
 	@ $(CXX) -shared -o libnasock.so nasocket.o $(used_object)
 	@ rm nasocket.o
 libnasock.dll: nasocket.cpp $(used_header) $(used_object)
 	@ echo [Compiling] libnasock.dll
-	@ $(CXX) -std=$(STD) -c -O3 nasocket.cpp -fPIC -o nasocket.o -lwsock32 -static
+	@ $(CXX) -std=$(STD) -c -O3 nasocket.cpp -fPIC -I ../src -o nasocket.o -lwsock32 -static
 	@ $(CXX) -shared -o libnasock.dll nasocket.o $(used_object) -lwsock32 -static
 	@ del nasocket.o
 
 libmat.so: matrix.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libmat.so"
-	@ $(CXX) $(CXXFLAGS) matrix.cpp -o matrix.o
+	@ $(CXX) $(CXXFLAGS) matrix.cpp -o matrix.o -I ../src
 	@ $(CXX) -shared -o libmat.so matrix.o $(used_object)
 	@ rm matrix.o
 libmat.dll: matrix.cpp $(used_header) $(used_object)
 	@ echo [Compiling] libmat.dll
-	@ $(CXX) -std=$(STD) -c -O3 matrix.cpp -fPIC -o matrix.o -static
+	@ $(CXX) -std=$(STD) -c -O3 matrix.cpp -fPIC -I ../src -o matrix.o -static
 	@ $(CXX) -shared -o libmat.dll matrix.o $(used_object) -static
 	@ del matrix.o
 
