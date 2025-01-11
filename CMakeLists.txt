@@ -41,6 +41,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast_format.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
@@ -62,12 +63,18 @@ target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
 
+# build nasal-format
+add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/format.cpp)
+target_link_libraries(nasal-format nasal-object)
+
 # link ldl and lpthread
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
     target_link_libraries(nasal pthread)
+    target_link_libraries(nasal-format pthread)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(nasal-format PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # copy nasal from build dir to the outside dir
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
@@ -76,6 +83,12 @@ if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/build/nasal
                 ${CMAKE_SOURCE_DIR}/nasal
+    )
+    add_custom_command(
+        TARGET nasal-format POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/build/nasal-format
+                ${CMAKE_SOURCE_DIR}/nasal-format
     )
 endif()
 

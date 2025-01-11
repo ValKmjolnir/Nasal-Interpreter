@@ -50,7 +50,9 @@ cmake-windows-*
 *.out
 *.app
 nasal
+nasal-format
 nasal.exe
+nasal-format.exe
 
 # Visual Studio specific
 *.sln
