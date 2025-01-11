@@ -10,9 +10,13 @@ if not os.path.exists(build_directory):
     exit(-1)
 
 nasal_executable = pathlib.Path("nasal")
+nasal_format_executable = pathlib.Path("nasal-format")
 nasal_standard_library = pathlib.Path("std")
 if not os.path.exists(nasal_executable):
     print("pack binaries failed: nasal executable not found")
+    exit(-1)
+if not os.path.exists(nasal_format_executable):
+    print("pack binaries failed: nasal-format executable not found")
     exit(-1)
 if not os.path.exists(nasal_standard_library):
     print("pack binaries failed: nasal standard library not found")
@@ -61,6 +65,7 @@ if not os.path.exists(package_directory):
 
 print("pack nasal executable")
 shutil.copy(nasal_executable, package_directory.joinpath(nasal_executable))
+shutil.copy(nasal_format_executable, package_directory.joinpath(nasal_format_executable))
 
 print("pack nasal standard library")
 shutil.copytree(nasal_standard_library, package_directory.joinpath(nasal_standard_library))
