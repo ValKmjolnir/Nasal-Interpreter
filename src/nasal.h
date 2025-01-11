@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __nasver__
-#define __nasver__ "11.3.1"
+#define __nasver__ "11.3.2"
 #endif
 
 #include <cstddef>
