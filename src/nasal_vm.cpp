@@ -226,7 +226,7 @@ void vm::function_call_trace() {
     std::stack<u64> callsite;
 
     // load call trace
-    for(var* i = bottom; i<=top; ++i) {
+    for(var* i = bottom; i <= top; ++i) {
         // i-1 is the callsite program counter of this function
         if (i->is_addr() && i+2<=top &&
             (i+1)->is_ret() && (i+1)->ret()>0 &&
@@ -238,7 +238,7 @@ void vm::function_call_trace() {
 
     // another condition may exist
     // have ret pc on stack, but no function at the top of the ret pc
-    for(var * i = top; i>=bottom; --i) {
+    for(var * i = top; i >= bottom; --i) {
         if ((i->is_addr() && i+2<=top && (i+1)->is_ret() && !(i+2)->is_func()) ||
             (i->is_addr() && i+1<=top && i+2>top && (i+1)->is_ret())) {
             functions.push(&ctx.funcr.func());
@@ -254,7 +254,7 @@ void vm::function_call_trace() {
 
     std::clog << "\ncall trace ";
     std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
-    std::clog << "  crash occurred in\n       ";
+    std::clog << "  crash occurred at\n       ";
     function_detail_info(ctx.funcr.func());
     std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
     std::clog << bytecode[ctx.pc].line << "\n";
@@ -325,7 +325,7 @@ void vm::trace_back() {
     // the first called place has no same calls
 }
 
-void vm::stack_info(const u64 limit = 16) {
+void vm::stack_info(const u64 limit) {
     var* top = ctx.top;
     var* bottom = ctx.stack;
     const auto stack_address = reinterpret_cast<u64>(bottom);
@@ -525,8 +525,16 @@ std::string vm::type_name_string(const var& value) const {
 void vm::die(const std::string& str) {
     std::cerr << "[vm] error: " << str << "\n";
     function_call_trace();
-    trace_back();
-    stack_info();
+
+    // trace back contains bytecode info, dump in verbose mode
+    if (verbose) {
+        trace_back();
+    }
+
+    // verbose will dump more values on stack
+    if (verbose) {
+        stack_info(64);
+    }
 
     // show verbose crash info
     if (verbose) {
@@ -534,6 +542,9 @@ void vm::die(const std::string& str) {
     }
 
     if (!ngc.cort) {
+        if (!verbose) {
+            std::cerr << "\n[vm] use <-d> for detailed crash info.\n\n";
+        }
         // in main context, exit directly
         std::exit(1);
     }

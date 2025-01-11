@@ -97,6 +97,7 @@ protected:
 protected:
     /* vm calculation functions*/
     inline bool boolify(const var&);
+    inline void set_frame(const nas_func&, var*);
 
 protected:
     /* vm operands */
@@ -318,6 +319,10 @@ public:
     void set_limit_mode_flag(bool flag) {
         flag_limited_mode = flag;
     }
+
+    auto get_gc_time_ms() const {
+        return ngc.get_gc_time_ms();
+    }
 };
 
 inline bool vm::boolify(const var& val) {
@@ -336,6 +341,15 @@ inline bool vm::boolify(const var& val) {
         return val.map().size() > 0;
     }
     return false;
+}
+
+inline void vm::set_frame(const nas_func& func, var* local) {
+    ctx.top[0] = ctx.upvalr;
+    (++ctx.top)[0] = var::addr(ctx.localr);
+    (++ctx.top)[0] = var::ret(ctx.pc); // rewrite top with vm_ret
+    ctx.pc = func.entry - 1;
+    ctx.localr = local;
+    ctx.upvalr = nil;
 }
 
 inline void vm::o_repl() {
@@ -511,10 +525,10 @@ inline void vm::o_lnk() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
         ngc.temp = ngc.alloc(vm_type::vm_vec);
-        for(auto i : ctx.top[-1].vec().elems) {
+        for(auto& i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
-        for(auto i : ctx.top[0].vec().elems) {
+        for(auto& i : ctx.top[0].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
         ctx.top[-1] = ngc.temp;
@@ -523,17 +537,17 @@ inline void vm::o_lnk() {
         return;
     }
     // concat strings
-    ctx.top[-1] = ngc.newstr(ctx.top[-1].to_str()+ctx.top[0].to_str());
+    ctx.top[-1] = ngc.newstr(ctx.top[-1].to_str() + ctx.top[0].to_str());
     --ctx.top;
 }
 
 #define op_calc_const(type)\
     ctx.top[0] = var::num(ctx.top[0].to_num() type const_number[imm[ctx.pc]]);
 
-inline void vm::o_addc() {op_calc_const(+);}
-inline void vm::o_subc() {op_calc_const(-);}
-inline void vm::o_mulc() {op_calc_const(*);}
-inline void vm::o_divc() {op_calc_const(/);}
+inline void vm::o_addc() { op_calc_const(+); }
+inline void vm::o_subc() { op_calc_const(-); }
+inline void vm::o_mulc() { op_calc_const(*); }
+inline void vm::o_divc() { op_calc_const(/); }
 inline void vm::o_lnkc() {
     ctx.top[0] = ngc.newstr(ctx.top[0].to_str() + const_string[imm[ctx.pc]]);
 }
@@ -548,12 +562,12 @@ inline void vm::o_lnkc() {
         ctx.memr[0].to_num() type ctx.top[-1].to_num()\
     );\
     ctx.memr = nullptr;\
-    ctx.top -= imm[ctx.pc]+1;
+    ctx.top -= imm[ctx.pc] + 1;
 
-inline void vm::o_addeq() {op_calc_eq(+);}
-inline void vm::o_subeq() {op_calc_eq(-);}
-inline void vm::o_muleq() {op_calc_eq(*);}
-inline void vm::o_diveq() {op_calc_eq(/);}
+inline void vm::o_addeq() { op_calc_eq(+); }
+inline void vm::o_subeq() { op_calc_eq(-); }
+inline void vm::o_muleq() { op_calc_eq(*); }
+inline void vm::o_diveq() { op_calc_eq(/); }
 inline void vm::o_lnkeq() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.memr[0].is_vec()) {
@@ -572,7 +586,7 @@ inline void vm::o_lnkeq() {
     }
 
     ctx.top[-1] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].to_str()+ctx.top[-1].to_str()
+        ctx.memr[0].to_str() + ctx.top[-1].to_str()
     );
     ctx.memr = nullptr;
     ctx.top -= imm[ctx.pc] + 1;
@@ -616,13 +630,13 @@ inline void vm::o_bxoreq() {
     );\
     ctx.memr = nullptr;
 
-inline void vm::o_addeqc() {op_calc_eq_const(+);}
-inline void vm::o_subeqc() {op_calc_eq_const(-);}
-inline void vm::o_muleqc() {op_calc_eq_const(*);}
-inline void vm::o_diveqc() {op_calc_eq_const(/);}
+inline void vm::o_addeqc() { op_calc_eq_const(+); }
+inline void vm::o_subeqc() { op_calc_eq_const(-); }
+inline void vm::o_muleqc() { op_calc_eq_const(*); }
+inline void vm::o_diveqc() { op_calc_eq_const(/); }
 inline void vm::o_lnkeqc() {
     ctx.top[0] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].to_str()+const_string[imm[ctx.pc]]
+        ctx.memr[0].to_str() + const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
 }
@@ -634,13 +648,13 @@ inline void vm::o_lnkeqc() {
     ctx.memr = nullptr;\
     --ctx.top;
 
-inline void vm::o_addecp() {op_calc_eq_const_and_pop(+);}
-inline void vm::o_subecp() {op_calc_eq_const_and_pop(-);}
-inline void vm::o_mulecp() {op_calc_eq_const_and_pop(*);}
-inline void vm::o_divecp() {op_calc_eq_const_and_pop(/);}
+inline void vm::o_addecp() { op_calc_eq_const_and_pop(+); }
+inline void vm::o_subecp() { op_calc_eq_const_and_pop(-); }
+inline void vm::o_mulecp() { op_calc_eq_const_and_pop(*); }
+inline void vm::o_divecp() { op_calc_eq_const_and_pop(/); }
 inline void vm::o_lnkecp() {
     ctx.top[0] = ctx.memr[0] = ngc.newstr(
-        ctx.memr[0].to_str()+const_string[imm[ctx.pc]]
+        ctx.memr[0].to_str() + const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
     --ctx.top;
@@ -663,12 +677,12 @@ inline void vm::o_eq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = one;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()==val2.str())? one:zero;
+        ctx.top[0] = (val1.str()==val2.str())? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()==val2.to_num())? one:zero;
+        ctx.top[0] = (val1.to_num()==val2.to_num())? one : zero;
     } else {
-        ctx.top[0] = (val1==val2)? one:zero;
+        ctx.top[0] = (val1==val2)? one : zero;
     }
 }
 
@@ -678,59 +692,59 @@ inline void vm::o_neq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = zero;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()!=val2.str())? one:zero;
+        ctx.top[0] = (val1.str()!=val2.str())? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()!=val2.to_num())? one:zero;
+        ctx.top[0] = (val1.to_num()!=val2.to_num())? one : zero;
     } else {
-        ctx.top[0] = (val1!=val2)? one:zero;
+        ctx.top[0] = (val1!=val2)? one : zero;
     }
 }
 
 #define op_cmp(type)\
     --ctx.top;\
-    ctx.top[0] = (ctx.top[0].to_num() type ctx.top[1].to_num())? one:zero;
+    ctx.top[0] = (ctx.top[0].to_num() type ctx.top[1].to_num())? one : zero;
 
-inline void vm::o_less() {op_cmp(<);}
-inline void vm::o_leq() {op_cmp(<=);}
-inline void vm::o_grt() {op_cmp(>);}
-inline void vm::o_geq() {op_cmp(>=);}
+inline void vm::o_less() { op_cmp(<); }
+inline void vm::o_leq() { op_cmp(<=); }
+inline void vm::o_grt() { op_cmp(>); }
+inline void vm::o_geq() { op_cmp(>=); }
 
 #define op_cmp_const(type)\
-    ctx.top[0] = (ctx.top[0].to_num() type const_number[imm[ctx.pc]])? one:zero;
+    ctx.top[0] = (ctx.top[0].to_num() type const_number[imm[ctx.pc]])? one : zero;
 
-inline void vm::o_lessc() {op_cmp_const(<);}
-inline void vm::o_leqc() {op_cmp_const(<=);}
-inline void vm::o_grtc() {op_cmp_const(>);}
-inline void vm::o_geqc() {op_cmp_const(>=);}
+inline void vm::o_lessc() { op_cmp_const(<); }
+inline void vm::o_leqc() { op_cmp_const(<=); }
+inline void vm::o_grtc() { op_cmp_const(>); }
+inline void vm::o_geqc() { op_cmp_const(>=); }
 
 inline void vm::o_pop() {
     --ctx.top;
 }
 
 inline void vm::o_jmp() {
-    ctx.pc = imm[ctx.pc]-1;
+    ctx.pc = imm[ctx.pc] - 1;
 }
 
 inline void vm::o_jt() {
     // jump true needs to reserve the result on stack
     // because conditional expression in nasal has return value
     if (boolify(ctx.top[0])) {
-        ctx.pc = imm[ctx.pc]-1;
+        ctx.pc = imm[ctx.pc] - 1;
     }
 }
 
 inline void vm::o_jf() {
     // jump false doesn't need to reserve result
     if (!boolify(ctx.top[0])) {
-        ctx.pc = imm[ctx.pc]-1;
+        ctx.pc = imm[ctx.pc] - 1;
     }
     --ctx.top;
 }
 
 inline void vm::o_cnt() {
     if (!ctx.top[0].is_vec()) {
-        die("must use vector in forindex/foreach but get "+
+        die("must use vector in forindex/foreach but get " +
             type_name_string(ctx.top[0])
         );
         return;
@@ -768,8 +782,8 @@ inline void vm::o_calll() {
 
 inline void vm::o_upval() {
     (++ctx.top)[0] = ctx.funcr.func()
-        .upval[(imm[ctx.pc]>>16)&0xffff]
-        .upval()[imm[ctx.pc]&0xffff];
+        .upval[(imm[ctx.pc] >> 16) & 0xffff]
+        .upval()[imm[ctx.pc] & 0xffff];
 }
 
 inline void vm::o_callv() {
@@ -783,7 +797,7 @@ inline void vm::o_callv() {
         }
     } else if (vec.is_hash()) {
         if (!val.is_str()) {
-            die("must use string as the key but get "+type_name_string(val));
+            die("must use string as the key but get " + type_name_string(val));
             return;
         }
         ctx.top[0] = vec.hash().get_value(val.str());
@@ -802,20 +816,20 @@ inline void vm::o_callv() {
             return;
         }
         ctx.top[0] = var::num(
-            static_cast<f64>(static_cast<u8>(str[num>=0? num:num+len]))
+            static_cast<f64>(static_cast<u8>(str[num>=0? num : num + len]))
         );
     } else if (vec.is_map()) {
         if (!val.is_str()) {
-            die("must use string as the key but get "+type_name_string(val));
+            die("must use string as the key but get " + type_name_string(val));
             return;
         }
         ctx.top[0] = vec.map().get_value(val.str());
         if (ctx.top[0].is_none()) {
-            die("cannot find symbol \""+val.str()+"\"");
+            die("cannot find symbol \"" + val.str() + "\"");
             return;
         }
     } else {
-        die("must call a vector/hash/string but get "+type_name_string(vec));
+        die("must call a vector/hash/string but get " + type_name_string(vec));
         return;
     }
 }
@@ -823,7 +837,7 @@ inline void vm::o_callv() {
 inline void vm::o_callvi() {
     var val = ctx.top[0];
     if (!val.is_vec()) {
-        die("must use a vector but get "+type_name_string(val));
+        die("must use a vector but get " + type_name_string(val));
         return;
     }
     // cannot use operator[], because this may cause overflow
@@ -837,7 +851,7 @@ inline void vm::o_callvi() {
 inline void vm::o_callh() {
     var val = ctx.top[0];
     if (!val.is_hash() && !val.is_map()) {
-        die("must call a hash but get "+type_name_string(val));
+        die("must call a hash but get " + type_name_string(val));
         return;
     }
 
@@ -847,21 +861,26 @@ inline void vm::o_callh() {
     } else {
         ctx.top[0] = val.map().get_value(str);
     }
+
+    // report key not found if get_value returns none
     if (ctx.top[0].is_none()) {
-        val.is_hash()? 
-            die(report_key_not_found(str, val.hash())):
-            die("cannot find symbol \"" + str + "\"");
+        val.is_hash()
+            ? die(report_key_not_found(str, val.hash()))
+            : die("cannot find symbol \"" + str + "\"");
         return;
-    } else if (ctx.top[0].is_func()) {
+    }
+
+    // if get function from hash, set 'me'
+    if (ctx.top[0].is_func() && val.is_hash()) {
         ctx.top[0].func().local[0] = val; // 'me'
     }
 }
 
 inline void vm::o_callfv() {
     const auto argc = imm[ctx.pc]; // arguments counter
-    var* local = ctx.top-argc+1; // arguments begin address
+    var* local = ctx.top - argc + 1; // arguments begin address
     if (!local[-1].is_func()) {
-        die("must call a function but get "+type_name_string(local[-1]));
+        die("must call a function but get " + type_name_string(local[-1]));
         return;
     }
     const auto& func = local[-1].func();
@@ -904,7 +923,7 @@ inline void vm::o_callfv() {
     // then all the available values the vector needs
     // are all outside the stack top and may be
     // collected incorrectly
-    ctx.top = local+func.local_size;
+    ctx.top = local + func.local_size;
 
     // use (std::min) to avoid compilation error in MSVC
     // MSVC windows.h uses macro std::min
@@ -917,25 +936,22 @@ inline void vm::o_callfv() {
     local[0] = func.local[0]; // load "me"
 
     // load local scope & default arguments
-    for(u64 i = min_size+1; i<func.local_size; ++i) {
+    for(u64 i = min_size + 1; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
-    // load dynamic argument
-    local[func.dynamic_parameter_index>=0?
-          parameter_size+1:func.local_size-1] = dynamic;
 
-    ctx.top[0] = ctx.upvalr;
-    (++ctx.top)[0] = var::addr(ctx.localr);
-    (++ctx.top)[0] = var::ret(ctx.pc);
-    ctx.pc = func.entry-1;
-    ctx.localr = local;
-    ctx.upvalr = nil;
+    // load dynamic argument
+    local[func.dynamic_parameter_index >= 0
+            ? parameter_size + 1
+            : func.local_size - 1] = dynamic;
+
+    set_frame(func, local);
 }
 
 inline void vm::o_callfh() {
     const auto& hash = ctx.top[0].hash().elems;
     if (!ctx.top[-1].is_func()) {
-        die("must call a function but get "+type_name_string(ctx.top[-1]));
+        die("must call a function but get " + type_name_string(ctx.top[-1]));
         return;
     }
     const auto& func = ctx.top[-1].func();
@@ -976,12 +992,7 @@ inline void vm::o_callfh() {
         return;
     }
 
-    ctx.top[0] = ctx.upvalr;
-    (++ctx.top)[0] = var::addr(ctx.localr);
-    (++ctx.top)[0] = var::ret(ctx.pc); // rewrite top with vm_ret
-    ctx.pc=func.entry-1;
-    ctx.localr = local;
-    ctx.upvalr = nil;
+    set_frame(func, local);
 }
 
 inline void vm::o_callb() {
@@ -1013,7 +1024,7 @@ inline void vm::o_slcbeg() {
     // +--------------+
     (++ctx.top)[0] = ngc.alloc(vm_type::vm_vec);
     if (!ctx.top[-1].is_vec()) {
-        die("must slice a vector but get "+type_name_string(ctx.top[-1]));
+        die("must slice a vector but get " + type_name_string(ctx.top[-1]));
         return;
     }
 }

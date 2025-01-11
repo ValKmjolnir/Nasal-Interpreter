@@ -18,35 +18,64 @@ void dynamic_library_destructor(void* pointer) {
 #endif
 }
 
+std::vector<std::string> possible_dylib_path() {
+    const auto env_path = std::string(getenv("PATH"));
+    const auto sep = (util::is_windows()? ";":":");
+    const auto path_front = util::is_windows()? "\\module\\":"/module/";
+
+    // do split string
+    std::vector<std::string> env_path_vec = {"."};
+    usize last = 0;
+    usize pos = env_path.find(sep, 0);
+    while(pos != std::string::npos) {
+        if (pos > last) {
+            env_path_vec.push_back(env_path.substr(last, pos - last));
+        }
+        last = pos + 1;
+        pos = env_path.find(sep, last);
+    }
+    if (last != env_path.length()) {
+        env_path_vec.push_back(env_path.substr(last));
+    }
+
+    for (auto& p : env_path_vec) {
+        p += path_front;
+    }
+
+    return env_path_vec;
+}
+
 std::string search_dynamic_library_path(const std::string& dlname) {
     const auto ext = (util::is_windows()? ".dll":".so");
     const auto lib_path = (util::is_windows()? ".\\":"./") + dlname + ext;
     if (fs::exists(lib_path)) {
         return lib_path;
     }
-    const auto env_path = std::string(getenv("PATH"));
-    const auto sep = (util::is_windows()? ";":":");
-
-    // do split string
-    std::vector<std::string> env_path_vec = {"."};
-    usize last = 0;
-    usize pos = env_path.find(sep, 0);
-    while(pos!=std::string::npos) {
-        if (pos>last) {
-            env_path_vec.push_back(env_path.substr(last, pos-last));
+    // macos may use .dylib as extension
+    if (util::is_macos()) {
+        const auto dylib_path = "./" + dlname + ".dylib";
+        if (fs::exists(dylib_path)) {
+            return dylib_path;
         }
-        last = pos + 1;
-        pos = env_path.find(sep, last);
-    }
-    if (last!=env_path.length()) {
-        env_path_vec.push_back(env_path.substr(last));
     }
 
-    const auto path_front = util::is_windows()? "\\module\\":"/module/";
-    for(auto& p : env_path_vec) {
-        p += path_front + lib_path;
-        if (fs::exists(p)) {
-            return p;
+    // search library in PATH
+    const auto possible_path = possible_dylib_path();
+    for(const auto& p : possible_path) {
+        const auto env_p = p + lib_path;
+        if (fs::exists(env_p)) {
+            return env_p;
+        }
+    }
+
+    // macos may use .dylib as extension
+    if (util::is_macos()) {
+        const auto dylib_path = "./" + dlname + ".dylib";
+        for(const auto& p : possible_path) {
+            const auto env_p = p + dylib_path;
+            if (fs::exists(env_p)) {
+                return env_p;
+            }
         }
     }
     return "";
@@ -61,7 +90,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     const auto dlname = search_dynamic_library_path(dl.str());
     if (dlname.empty()) {
         return nas_err("dylib::dlopen",
-            "cannot find dynamic lib <" + dl.str() + ">"
+            "cannot find dynamic library <" + dl.str() + ">"
         );
     }
 

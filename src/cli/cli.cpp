@@ -1,6 +1,12 @@
+#include "nasal.h"
 #include "cli/cli.h"
+#include "util/util.h"
+#include "nasal_parse.h"
 
 #include <iostream>
+#include <thread>
+#include <cstdlib>
+#include <ctime>
 
 namespace nasal::cli {
 
@@ -56,6 +62,77 @@ std::ostream& help(std::ostream& out) {
     << "argv:\n"
     << "   <args>           | cmd arguments used in program.\n"
     << "\n";
+    return out;
+}
+
+std::ostream& nasal_format_help(std::ostream& out) {
+    out
+    << "\n"
+    << "     ,--#-,\n"
+    << "<3  / \\____\\  <3\n"
+    << "    |_|__A_|\n"
+    << "\nnasal-format <option>\n"
+    << "option:\n"
+    << "   -h,   --help     | get help.\n"
+    << "   -v,   --version  | get version.\n"
+    << "\nnasal-format <file>\n"
+    << "file:\n"
+    << "   <filename>       | file to be formatted.\n"
+    << "\n";
+    return out;
+}
+
+std::ostream& logo(std::ostream& out) {
+    out
+    << "\n"
+    << "       __                _\n"
+    << "    /\\ \\ \\__ _ ___  __ _| |\n"
+    << "   /  \\/ / _` / __|/ _` | |\n"
+    << "  / /\\  / (_| \\__ \\ (_| | |\n"
+    << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
+    << "\n"
+    << "ver  : " << __nasver__
+    << " " << nasal::util::get_platform()
+    << " " << nasal::util::get_arch()
+    << " (" << __DATE__ << " " << __TIME__ << ")\n"
+    << "std  : c++ " << __cplusplus << "\n"
+    << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
+    << "repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
+    << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
+    << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
+    << "\n"
+    << "presented by fgprc members:\n"
+    << " - http://fgprc.org\n"
+    << " - http://fgprc.org.cn\n"
+    << "\n"
+    << "input <nasal-format -h> to get help.\n\n";
+    return out;
+}
+
+std::ostream& version(std::ostream& out) {
+    std::srand(static_cast<u32>(std::time(nullptr)));
+
+    f64 num = 0;
+    for(u32 i = 0; i<5; ++i) {
+        num = (num+rand())*(1.0/(RAND_MAX+1.0));
+    }
+    // give you 5% to see this easter egg
+    if (num<0.05) {
+        nasal::parse::easter_egg();
+    }
+
+    out << "nasal version " << __nasver__;
+    out << " " << nasal::util::get_platform();
+    out << " " << nasal::util::get_arch();
+    out << " (" << __DATE__ << " " << __TIME__ << ")\n";
+    return out;
+}
+
+std::ostream& nasal_format_version(std::ostream& out) {
+    out << "nasal-format version " << __nasver__ << "-beta";
+    out << " " << nasal::util::get_platform();
+    out << " " << nasal::util::get_arch();
+    out << " (" << __DATE__ << " " << __TIME__ << ")\n";
     return out;
 }
 
