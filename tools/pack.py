@@ -30,8 +30,12 @@ if not os.path.exists(nasal_module_directory):
 dynamic_library_suffix = ""
 if platform.system()=="Windows":
     dynamic_library_suffix = ".dll"
-else:
+elif platform.system()=="Linux":
     dynamic_library_suffix = ".so"
+elif platform.system()=="Darwin":
+    dynamic_library_suffix = ".dylib"
+else:
+    print("pack binaries failed: unsupported platform")
 
 nasal_modules = []
 for m in ["libfib", "libkey", "libmat", "libnasock"]:
