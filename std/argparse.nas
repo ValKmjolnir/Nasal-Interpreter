@@ -151,7 +151,7 @@ var _parse = func(parser, args, result_hash) {
     return;
 }
 
-var _add_command = func(parser, long, short, help, need_arg , need_nargs) {
+var _add_command = func(parser, long, short, help, need_arg, need_nargs) {
     var new_command = {
         full_name: long,
         short_name: short,

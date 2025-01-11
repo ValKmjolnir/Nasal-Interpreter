@@ -10,7 +10,7 @@ Valid on powershell:
 mkdir cmake-windows-msvc
 cd cmake-windows-msvc
 cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
-MSbuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
 ```
 
 ## MingW-W64

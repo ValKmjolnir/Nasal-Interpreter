@@ -6,22 +6,6 @@
 
 namespace nasal {
 
-var nas_vec::get_value(const i32 index) {
-    i32 size = elems.size();
-    if (index<-size || index>=size) {
-        return var::none();
-    }
-    return elems[index>=0? index:index+size];
-}
-
-var* nas_vec::get_memory(const i32 index) {
-    i32 size = elems.size();
-    if (index<-size || index>=size) {
-        return nullptr;
-    }
-    return &elems[index>=0? index:index+size];
-}
-
 std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     if (!vec.elems.size() || vec.printed) {
         out << (vec.elems.size()? "[..]":"[]");
@@ -40,7 +24,8 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
 var nas_hash::get_value(const std::string& key) {
     if (elems.count(key)) {
         return elems.at(key);
-    } else if (!elems.count("parents")) {
+    }
+    if (!elems.count("parents")) {
         return var::none();
     }
 
@@ -63,7 +48,8 @@ var nas_hash::get_value(const std::string& key) {
 var* nas_hash::get_memory(const std::string& key) {
     if (elems.count(key)) {
         return &elems.at(key);
-    } else if (!elems.count("parents")) {
+    }
+    if (!elems.count("parents")) {
         return nullptr;
     }
 
@@ -277,12 +263,6 @@ void nas_val::clear() {
         case vm_type::vm_map:   ptr.map->clear();        break;
         default: break;
     }
-}
-
-f64 var::to_num() const {
-    return type != vm_type::vm_str
-        ? val.num
-        : util::str_to_num(str().c_str());
 }
 
 std::string var::to_str() {
