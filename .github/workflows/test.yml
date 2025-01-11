@@ -14,10 +14,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: |
-        make -j4
-        cd module
-        make all -j4
-        cd ..
+        mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j6
     - name: Test
       run: make test
     
@@ -27,9 +25,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: |
-        make -j4
-        cd module
-        make all -j4
-        cd ..
+        mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j6
     - name: Test
       run: make test

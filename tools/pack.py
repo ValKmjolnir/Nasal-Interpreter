@@ -43,7 +43,15 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
     nasal_modules.append(lib)
 
 
-tar_file_name = "nasal-{}".format(platform.system())
+tar_file_name = "nasal"
+if platform.system()=="Windows":
+    tar_file_name += "-windows-x86_64"
+elif platform.system()=="Linux":
+    tar_file_name += "-linux-x86_64"
+elif platform.system()=="Darwin":
+    tar_file_name += "-macos-aarch64"
+else:
+    print("pack binaries failed: unsupported platform")
 
 # create package directory in build directory and copy files needed
 package_directory = build_directory.joinpath(tar_file_name)
