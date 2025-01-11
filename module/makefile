@@ -12,9 +12,9 @@ ifndef OS
 	OS = $(shell uname)
 endif
 ifeq ($(OS), Darwin)
-	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15 -I ../src
 else
-	CXXFLAGS = -std=$(STD) -c -O3 -fPIC
+	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -I ../src
 endif
 
 all: $(dynamic_libs_so)
@@ -24,7 +24,7 @@ winall: $(dynamic_libs_dll)
 
 libfib.so: fib.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libfib.so"
-	@ $(CXX) $(CXXFLAGS) fib.cpp -o fib.o -I ../src
+	@ $(CXX) $(CXXFLAGS) fib.cpp -o fib.o
 	@ $(CXX) -shared -o libfib.so fib.o $(used_object)
 	@ rm fib.o
 libfib.dll: fib.cpp $(used_header) $(used_object)
@@ -35,7 +35,7 @@ libfib.dll: fib.cpp $(used_header) $(used_object)
 
 libkey.so: keyboard.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libkey.so"
-	@ $(CXX) $(CXXFLAGS) keyboard.cpp -o keyboard.o -I ../src
+	@ $(CXX) $(CXXFLAGS) keyboard.cpp -o keyboard.o
 	@ $(CXX) -shared -o libkey.so keyboard.o $(used_object)
 	@ rm keyboard.o
 libkey.dll: keyboard.cpp $(used_header) $(used_object)
@@ -46,7 +46,7 @@ libkey.dll: keyboard.cpp $(used_header) $(used_object)
 
 libnasock.so: nasocket.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libnasock.so"
-	@ $(CXX) $(CXXFLAGS) nasocket.cpp -o nasocket.o -I ../src
+	@ $(CXX) $(CXXFLAGS) nasocket.cpp -o nasocket.o
 	@ $(CXX) -shared -o libnasock.so nasocket.o $(used_object)
 	@ rm nasocket.o
 libnasock.dll: nasocket.cpp $(used_header) $(used_object)
@@ -57,7 +57,7 @@ libnasock.dll: nasocket.cpp $(used_header) $(used_object)
 
 libmat.so: matrix.cpp $(used_header) $(used_object)
 	@ echo "[Compiling] libmat.so"
-	@ $(CXX) $(CXXFLAGS) matrix.cpp -o matrix.o -I ../src
+	@ $(CXX) $(CXXFLAGS) matrix.cpp -o matrix.o
 	@ $(CXX) -shared -o libmat.so matrix.o $(used_object)
 	@ rm matrix.o
 libmat.dll: matrix.cpp $(used_header) $(used_object)
