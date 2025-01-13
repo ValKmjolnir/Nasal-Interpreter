@@ -44,7 +44,11 @@ private:
             case expr_type::ast_bool:
             case expr_type::ast_vec:
             case expr_type::ast_hash:
-            case expr_type::ast_call: return true;
+            case expr_type::ast_call:
+            case expr_type::ast_multi_assign:
+            case expr_type::ast_unary:
+            case expr_type::ast_binary:
+            case expr_type::ast_ternary: return true;
             case expr_type::ast_def: {
                 auto dn = reinterpret_cast<definition_expr*>(n);
                 if (dn->get_value() &&
