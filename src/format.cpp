@@ -40,17 +40,14 @@ int main(i32 argc, const char* argv[]) {
     const auto config = nasal::cli::parse({argv+1, argv+argc});
 
     // run directly or show help
-    if (argc == 2) {
-        if (config.has(nasal::cli::option::cli_help)) {
-            std::clog << nasal::cli::nasal_format_help;
-        } else if (config.has(nasal::cli::option::cli_version)) {
-            std::clog << nasal::cli::nasal_format_version;
-        } else if (config.input_file_path.size()) {
-            execute(config);
-        } else {
-            err();
-        }
-        return 0;
+    if (config.has(nasal::cli::option::cli_help)) {
+        std::clog << nasal::cli::nasal_format_help;
+    } else if (config.has(nasal::cli::option::cli_version)) {
+        std::clog << nasal::cli::nasal_format_version;
+    } else if (config.input_file_path.size()) {
+        execute(config);
+    } else {
+        err();
     }
     return 0;
 }
