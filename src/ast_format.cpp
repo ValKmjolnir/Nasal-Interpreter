@@ -19,7 +19,6 @@ bool ast_format::visit_use_stmt(use_stmt* node) {
 
 bool ast_format::visit_null_expr(null_expr* node) {
     dump_formating_node_info(node, "null expression");
-    out << "null";
     return true;
 }
 
@@ -31,7 +30,7 @@ bool ast_format::visit_nil_expr(nil_expr* node) {
 
 bool ast_format::visit_number_literal(number_literal* node) {
     dump_formating_node_info(node, "number expression");
-    out << node->get_number();
+    out << node->get_raw_text();
     return true;
 }
 
@@ -81,7 +80,17 @@ bool ast_format::visit_hash_expr(hash_expr* node) {
 
 bool ast_format::visit_hash_pair(hash_pair* node) {
     dump_formating_node_info(node, "hash pair");
-    out << node->get_name();
+    bool contain_not_identifier = false;
+    for (auto c : node->get_name()) {
+        if (!(std::isdigit(c) || std::isalpha(c) || c == '_')) {
+            contain_not_identifier = true;
+        }
+    }
+    if (contain_not_identifier) {
+        out << "\"" << node->get_name() << "\"";
+    } else {
+        out << node->get_name();
+    }
     if (node->get_value()) {
         out << " : ";
         node->get_value()->accept(this);
@@ -99,6 +108,10 @@ bool ast_format::visit_function(function* node) {
         }
     }
     out << ") ";
+    if (node->get_code_block()->get_expressions().empty()) {
+        out << "{}";
+        return true;
+    }
     node->get_code_block()->accept(this);
     return true;
 }
@@ -138,11 +151,13 @@ bool ast_format::visit_parameter(parameter* node) {
 
 bool ast_format::visit_ternary_operator(ternary_operator* node) {
     dump_formating_node_info(node, "ternary operator");
+    out << "(";
     node->get_condition()->accept(this);
     out << " ? ";
     node->get_left()->accept(this);
     out << " : ";
     node->get_right()->accept(this);
+    out << ")";
     return true;
 }
 

@@ -120,12 +120,14 @@ public:
 class number_literal: public expr {
 private:
     f64 number;
+    std::string raw_text;
 
 public:
-    number_literal(const span& location, const f64 num):
-        expr(location, expr_type::ast_num), number(num) {}
+    number_literal(const span& location, const f64 num, const std::string& raw):
+        expr(location, expr_type::ast_num), number(num), raw_text(raw) {}
     ~number_literal() override = default;
-    f64 get_number() const {return number;}
+    f64 get_number() const { return number; }
+    const std::string& get_raw_text() const { return raw_text; }
     void accept(ast_visitor*) override;
 };
 
