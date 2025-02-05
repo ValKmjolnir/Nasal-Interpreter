@@ -17,6 +17,7 @@
 #include <chrono>
 #include <vector>
 #include <future>
+#include <atomic>
 
 namespace {
     // Helper function implementations inside anonymous namespace
@@ -46,9 +47,15 @@ struct NasalContext {
     std::string last_result;
     std::string last_error;
     std::chrono::seconds timeout{5}; // Default 5 second timeout
+    std::atomic<bool> interrupted{false};
 
     NasalContext() {
         vm_instance = std::make_unique<nasal::vm>();
+        vm_instance->set_interrupt_ptr(&interrupted);
+    }
+
+    ~NasalContext() {
+        vm_instance.reset(); // Reset explicitly
     }
 };
 
@@ -71,7 +78,9 @@ void* nasal_init() {
 }
 
 void nasal_cleanup(void* context) {
-    delete static_cast<NasalContext*>(context);
+    auto* ctx = static_cast<NasalContext*>(context);
+    ctx->vm_instance.reset(); 
+    delete ctx;
 }
 
 // Add new function to set timeout
@@ -148,6 +157,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         // Wait for completion or timeout
         auto status = future.wait_for(ctx->timeout);
         if (status == std::future_status::timeout) {
+            ctx->interrupted.store(true);
             std::remove(temp_filename);
             throw std::runtime_error("Execution timed out after " + 
                 std::to_string(ctx->timeout.count()) + " seconds");
