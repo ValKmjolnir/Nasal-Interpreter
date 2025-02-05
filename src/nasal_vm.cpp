@@ -569,15 +569,15 @@ void vm::run(const codegen& gen,
     );
 
 #ifndef _MSC_VER
+
+// interrupt check macro for computed goto mode.
+#define CHECK_INTERRUPT { \
+    if (interrupt_ptr && interrupt_ptr->load()) { \
+        throw std::runtime_error("VM execution interrupted by timeout"); \
+    } \
+}
+
     // using labels as values/computed goto
-
-    // Define an interrupt check macro for computed goto mode.
-    #define CHECK_INTERRUPT { \
-        if (interrupt_ptr && interrupt_ptr->load()) { \
-            throw std::runtime_error("VM execution interrupted by timeout"); \
-        } \
-    }
-
     const void* oprs[] = {
         &&vmexit,
         &&repl,
@@ -705,15 +705,16 @@ vmexit:
     return;
 
 #ifndef _MSC_VER
-// may cause stackoverflow
+// IR which may cause stackoverflow
 #define exec_check(op) {\
     op();\
+    CHECK_INTERRUPT;\
     if (ctx.top<ctx.canary)\
         goto *code[++ctx.pc];\
     die("stack overflow");\
     goto *code[++ctx.pc];\
 }
-// do not cause stackoverflow
+// IR which does not cause stackoverflow
 #define exec_nodie(op) {\
     op();\
     CHECK_INTERRUPT;\
