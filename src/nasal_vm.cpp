@@ -559,6 +559,14 @@ void vm::run(const codegen& gen,
 
 #ifndef _MSC_VER
     // using labels as values/computed goto
+
+    // Define an interrupt check macro for computed goto mode.
+    #define CHECK_INTERRUPT { \
+        if (interrupt_ptr && interrupt_ptr->load()) { \
+            throw std::runtime_error("VM execution interrupted by timeout"); \
+        } \
+    }
+
     const void* oprs[] = {
         &&vmexit,
         &&repl,
@@ -654,7 +662,7 @@ void vm::run(const codegen& gen,
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
-    // goto the first operand
+    CHECK_INTERRUPT;
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
@@ -663,6 +671,9 @@ void vm::run(const codegen& gen,
         imm.push_back(i.num);
     }
     while(code[ctx.pc]) {
+        if (interrupt_ptr && interrupt_ptr->load()) {
+            throw std::runtime_error("VM execution interrupted by timeout");
+        }
         (this->*code[ctx.pc])();
         if (ctx.top>=ctx.canary) {
             die("stack overflow");
@@ -693,6 +704,7 @@ vmexit:
 // do not cause stackoverflow
 #define exec_nodie(op) {\
     op();\
+    CHECK_INTERRUPT;\
     goto *code[++ctx.pc];\
 }
 

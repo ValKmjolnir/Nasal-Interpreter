@@ -318,6 +318,13 @@ public:
     void set_limit_mode_flag(bool flag) {
         flag_limited_mode = flag;
     }
+
+    void set_interrupt_ptr(std::atomic<bool>* p) {
+        interrupt_ptr = p;
+    }
+
+private:
+    std::atomic<bool>* interrupt_ptr = nullptr;
 };
 
 inline bool vm::boolify(const var& val) {
