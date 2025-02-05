@@ -52,6 +52,8 @@ struct gc {
         16,  // vm_co
         2,   // vm_map
     };
+    // total memory usage, not very accurate
+    u64 total_memory_usage = 0;
 
     /* values for analysis */
     u64 size[gc_type_size];
@@ -98,6 +100,10 @@ public:
     double get_gc_time_ms() const {
         const auto den = std::chrono::high_resolution_clock::duration::period::den;
         return worktime * 1.0 / den * 1000.0;
+    }
+
+    double get_total_memory() const {
+        return total_memory_usage * 1.0 / 1024.0 / 1024.0;
     }
 
 public:
