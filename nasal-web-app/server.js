@@ -3,6 +3,7 @@ const path = require('path');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const koffi = require('koffi');
+require('expose-gc');
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
@@ -37,7 +38,7 @@ let nasalLib;
 try {
     // First load the library
     const lib = koffi.load(path.join(__dirname, '../module/libnasal-web.dylib'));
-    
+
     // Then declare the functions explicitly
     nasalLib = {
         nasal_init: lib.func('nasal_init', 'void*', []),
@@ -45,7 +46,7 @@ try {
         nasal_eval: lib.func('nasal_eval', 'const char*', ['void*', 'const char*', 'int']),
         nasal_get_error: lib.func('nasal_get_error', 'const char*', ['void*'])
     };
-    
+
 } catch (err) {
     console.error('Failed to load nasal library:', err);
     process.exit(1);
@@ -66,7 +67,7 @@ app.post('/eval', (req, res) => {
     try {
         const result = nasalLib.nasal_eval(ctx, code, showTime ? 1 : 0);
         const error = nasalLib.nasal_get_error(ctx);
-        
+
         if (error && error !== 'null') {
             if (argv.verbose) console.log('Nasal error:', error);
             res.json({ error: error });
@@ -83,6 +84,7 @@ app.post('/eval', (req, res) => {
     } finally {
         if (argv.verbose) console.log('Cleaning up Nasal context');
         nasalLib.nasal_cleanup(ctx);
+        global.gc()
     }
 });
 
@@ -91,4 +93,4 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Visit http://localhost:${PORT} to use the Nasal interpreter`);
     if (argv.verbose) console.log('Verbose logging enabled');
-}); 
+});
