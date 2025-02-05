@@ -2,14 +2,14 @@
 # ValKmjolnir 2022/10/15
 use std.io;
 
-var read = func(path, delimeter=",", endline="\n") {
+var read = func(path, delimeter = ",", endline = "\n") {
     var context = io.readfile(path);
     context = split(endline, context);
-    forindex(var i;context) {
-        context[i] = split(delimeter,context[i]);
+    forindex(var i; context) {
+        context[i] = split(delimeter, context[i]);
     }
-    if (size(context)<=1) {
-        die("incorrect csv file <"~path~">: "~size(context)~" line(s).");
+    if (size(context) <= 1) {
+        die("incorrect csv file <" ~ path ~ ">: " ~ size(context) ~ " line(s).");
     }
     return {
         property: context[0],

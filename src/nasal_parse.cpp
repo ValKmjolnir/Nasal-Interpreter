@@ -235,7 +235,8 @@ nil_expr* parse::nil() {
 number_literal* parse::num() {
     auto node = new number_literal(
         toks[ptr].loc,
-        util::str_to_num(toks[ptr].str.c_str())
+        util::str_to_num(toks[ptr].str.c_str()),
+        toks[ptr].str
     );
     match(tok::tk_num);
     return node;

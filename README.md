@@ -88,7 +88,7 @@ Make sure thread model is `posix thread model`, otherwise no thread library exis
 
 ### __Windows (Visual Studio)__
 
-There is a [__CMakelists.txt__](./CMakeLists.txt) to create project.
+There is a [__CMakelists.txt__](./CMakeLists.txt) to create project. Recently we find how to build it with command line tools: [__Build Nasal-Interpreter on Windows__](./doc/windows-build.md).
 
 ### __Linux / macOS / Unix__
 

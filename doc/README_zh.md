@@ -81,6 +81,7 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 ### __Windows 平台 (Vistual Studio)__
 
 项目提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于在`Visual Studio`中创建项目。
+最近我们总结了命令行编译的方法 [__如何在 Windows 平台编译 Nasal-Interpreter__](./windows-build.md)。
 
 ### __Linux / macOS / Unix 平台__
 

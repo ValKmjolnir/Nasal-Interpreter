@@ -9,18 +9,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wshadow -Wall")
 
-add_compile_options(-fPIC)
+# MSVC does not need -fPIC
+if (NOT MSVC)
+    add_compile_options(-fPIC)
+endif()
+
 # MSVC needs this command option to really enable utf-8 output
-if(MSVC)
+if (MSVC)
     add_compile_options(/utf-8)
 endif()
 
 if (APPLE)
     add_compile_options(-mmacosx-version-min=10.15)
 endif()
-
-# generate release executables
-set(CMAKE_BUILD_TYPE "Release")
 
 # build nasal used object
 set(NASAL_OBJECT_SOURCE_FILE
@@ -40,6 +41,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast_format.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
@@ -61,12 +63,18 @@ target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
 
+# build nasal-format
+add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/format.cpp)
+target_link_libraries(nasal-format nasal-object)
+
 # link ldl and lpthread
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
     target_link_libraries(nasal pthread)
+    target_link_libraries(nasal-format pthread)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(nasal-format PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # copy nasal from build dir to the outside dir
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
@@ -75,6 +83,12 @@ if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/build/nasal
                 ${CMAKE_SOURCE_DIR}/nasal
+    )
+    add_custom_command(
+        TARGET nasal-format POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/build/nasal-format
+                ${CMAKE_SOURCE_DIR}/nasal-format
     )
 endif()
 
@@ -103,16 +117,21 @@ target_link_libraries(mat module-used-object)
 
 add_library(nasock SHARED ${CMAKE_SOURCE_DIR}/module/nasocket.cpp)
 target_include_directories(nasock PRIVATE ${CMAKE_SOURCE_DIR}/src)
+if (WIN32)
+    target_link_libraries(nasock ws2_32)
+endif()
 target_link_libraries(nasock module-used-object)
 
-# Add web library
-add_library(nasal-web SHARED
-    src/nasal_web.cpp
-    ${NASAL_OBJECT_SOURCE_FILE}
-)
-target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
-set_target_properties(nasal-web PROPERTIES
-    C_VISIBILITY_PRESET hidden
-    CXX_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN ON
-)
+# Add web library, not for MSVC now
+if (NOT MSVC)
+    add_library(nasal-web SHARED
+        src/nasal_web.cpp
+        ${NASAL_OBJECT_SOURCE_FILE}
+    )
+    target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(nasal-web PROPERTIES
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+    )
+endif()

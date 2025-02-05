@@ -6,22 +6,6 @@
 
 namespace nasal {
 
-var nas_vec::get_value(const i32 index) {
-    i32 size = elems.size();
-    if (index<-size || index>=size) {
-        return var::none();
-    }
-    return elems[index>=0? index:index+size];
-}
-
-var* nas_vec::get_memory(const i32 index) {
-    i32 size = elems.size();
-    if (index<-size || index>=size) {
-        return nullptr;
-    }
-    return &elems[index>=0? index:index+size];
-}
-
 std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     if (!vec.elems.size() || vec.printed) {
         out << (vec.elems.size()? "[..]":"[]");
@@ -40,7 +24,8 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
 var nas_hash::get_value(const std::string& key) {
     if (elems.count(key)) {
         return elems.at(key);
-    } else if (!elems.count("parents")) {
+    }
+    if (!elems.count("parents")) {
         return var::none();
     }
 
@@ -63,7 +48,8 @@ var nas_hash::get_value(const std::string& key) {
 var* nas_hash::get_memory(const std::string& key) {
     if (elems.count(key)) {
         return &elems.at(key);
-    } else if (!elems.count("parents")) {
+    }
+    if (!elems.count("parents")) {
         return nullptr;
     }
 
@@ -279,12 +265,6 @@ void nas_val::clear() {
     }
 }
 
-f64 var::to_num() const {
-    return type != vm_type::vm_str
-        ? val.num
-        : util::str_to_num(str().c_str());
-}
-
 std::string var::to_str() {
     if (type==vm_type::vm_str) {
         return str();
@@ -315,43 +295,6 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         default: break;
     }
     return out;
-}
-
-bool var::object_check(const std::string& name) const {
-    return is_ghost() && ghost().type_name == name && ghost().pointer;
-}
-
-var var::none() {
-    return {vm_type::vm_none, static_cast<u64>(0)};
-}
-
-var var::nil() {
-    return {vm_type::vm_nil, static_cast<u64>(0)};
-}
-
-var var::ret(u64 pc) {
-    return {vm_type::vm_ret, pc};
-}
-
-var var::cnt(i64 n) {
-    return {vm_type::vm_cnt, n};
-}
-
-var var::num(f64 n) {
-    return {vm_type::vm_num, n};
-}
-
-var var::gcobj(nas_val* p) {
-    return {p->type, p};
-}
-
-var var::addr(var* p) {
-    return {vm_type::vm_addr, p};
-}
-
-var nas_err(const std::string& error_function_name, const std::string& info) {
-    std::cerr << "[vm] " << error_function_name << ": " << info << "\n";
-    return var::none();
 }
 
 }
