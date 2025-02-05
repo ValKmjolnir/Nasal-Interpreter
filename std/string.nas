@@ -33,11 +33,13 @@ func() {
 }();
 
 var to_char = func(number) {
-    return 0<=number and number<256? __num_to_char[number]:"";
+    return 0 <= number and number < 256? __num_to_char[number] : "";
 }
 
 var to_num = func(character) {
-    return __temp_contains(__char_to_num, character)? __char_to_num[character]:-1;
+    return __temp_contains(__char_to_num, character)
+        ? __char_to_num[character]
+        : -1;
 }
 
 var __string_split_with_empty_substr = func(separator, str) {

@@ -10,9 +10,13 @@ if not os.path.exists(build_directory):
     exit(-1)
 
 nasal_executable = pathlib.Path("nasal")
+nasal_format_executable = pathlib.Path("nasal-format")
 nasal_standard_library = pathlib.Path("std")
 if not os.path.exists(nasal_executable):
     print("pack binaries failed: nasal executable not found")
+    exit(-1)
+if not os.path.exists(nasal_format_executable):
+    print("pack binaries failed: nasal-format executable not found")
     exit(-1)
 if not os.path.exists(nasal_standard_library):
     print("pack binaries failed: nasal standard library not found")
@@ -26,8 +30,12 @@ if not os.path.exists(nasal_module_directory):
 dynamic_library_suffix = ""
 if platform.system()=="Windows":
     dynamic_library_suffix = ".dll"
-else:
+elif platform.system()=="Linux":
     dynamic_library_suffix = ".so"
+elif platform.system()=="Darwin":
+    dynamic_library_suffix = ".dylib"
+else:
+    print("pack binaries failed: unsupported platform")
 
 nasal_modules = []
 for m in ["libfib", "libkey", "libmat", "libnasock"]:
@@ -43,7 +51,15 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
     nasal_modules.append(lib)
 
 
-tar_file_name = "nasal-{}".format(platform.system())
+tar_file_name = "nasal"
+if platform.system()=="Windows":
+    tar_file_name += "-windows-x86_64"
+elif platform.system()=="Linux":
+    tar_file_name += "-linux-x86_64"
+elif platform.system()=="Darwin":
+    tar_file_name += "-macos-aarch64"
+else:
+    print("pack binaries failed: unsupported platform")
 
 # create package directory in build directory and copy files needed
 package_directory = build_directory.joinpath(tar_file_name)
@@ -53,6 +69,7 @@ if not os.path.exists(package_directory):
 
 print("pack nasal executable")
 shutil.copy(nasal_executable, package_directory.joinpath(nasal_executable))
+shutil.copy(nasal_format_executable, package_directory.joinpath(nasal_format_executable))
 
 print("pack nasal standard library")
 shutil.copytree(nasal_standard_library, package_directory.joinpath(nasal_standard_library))

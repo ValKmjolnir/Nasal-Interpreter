@@ -38,7 +38,7 @@ private:
         if (indent.size() && indent.back()=="│  ") {
             indent.back() = "├──";
         }
-        for(const auto& i : indent) {
+        for (const auto& i : indent) {
             std::cout << i;
         }
     }

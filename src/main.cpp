@@ -18,54 +18,7 @@
 #include "repl/repl.h"
 #include "cli/cli.h"
 
-#include <thread>
 #include <cstdlib>
-
-std::ostream& logo(std::ostream& out) {
-    out
-    << "\n"
-    << "       __                _\n"
-    << "    /\\ \\ \\__ _ ___  __ _| |\n"
-    << "   /  \\/ / _` / __|/ _` | |\n"
-    << "  / /\\  / (_| \\__ \\ (_| | |\n"
-    << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    << "\n"
-    << "ver  : " << __nasver__
-    << " " << nasal::util::get_platform()
-    << " " << nasal::util::get_arch()
-    << " (" << __DATE__ << " " << __TIME__ << ")\n"
-    << "std  : c++ " << __cplusplus << "\n"
-    << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
-    << "repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
-    << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
-    << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
-    << "\n"
-    << "presented by fgprc members:\n"
-    << " - http://fgprc.org\n"
-    << " - http://fgprc.org.cn\n"
-    << "\n"
-    << "input <nasal -h> to get help.\n\n";
-    return out;
-}
-
-std::ostream& version(std::ostream& out) {
-    std::srand(static_cast<u32>(std::time(nullptr)));
-
-    f64 num = 0;
-    for(u32 i = 0; i<5; ++i) {
-        num = (num+rand())*(1.0/(RAND_MAX+1.0));
-    }
-    // give you 5% to see this easter egg
-    if (num<0.05) {
-        nasal::parse::easter_egg();
-    }
-
-    out << "nasal version " << __nasver__;
-    out << " " << nasal::util::get_platform();
-    out << " " << nasal::util::get_arch();
-    out << " (" << __DATE__ << " " << __TIME__ << ")\n";
-    return out;
-}
 
 [[noreturn]]
 void err() {
@@ -121,6 +74,7 @@ void execute(const nasal::cli::cli_config& config) {
 
     // run
     const auto start = clk::now();
+    double gc_time_ms = 0.0;
     if (config.has(option::cli_debug_mode)) {
         auto debugger = std::make_unique<nasal::dbg>();
         debugger->run(
@@ -130,6 +84,7 @@ void execute(const nasal::cli::cli_config& config) {
             config.has(option::cli_profile),
             config.has(option::cli_profile_all)
         );
+        gc_time_ms = debugger->get_gc_time_ms();
     } else if (config.has(option::cli_show_execute_time) ||
                config.has(option::cli_detail_info) ||
                config.has(option::cli_limit_mode) ||
@@ -138,20 +93,25 @@ void execute(const nasal::cli::cli_config& config) {
         runtime->set_detail_report_info(config.has(option::cli_detail_info));
         runtime->set_limit_mode_flag(config.has(option::cli_limit_mode));
         runtime->run(gen, ld, config.nasal_vm_args);
+        gc_time_ms = runtime->get_gc_time_ms();
     }
 
     // get running time
     const auto end = clk::now();
     if (config.has(option::cli_show_execute_time)) {
+        double execute_time_sec = static_cast<f64>((end - start).count())/den;
+        double gc_time_sec = gc_time_ms / 1000.0;
         std::clog << "process exited after ";
-        std::clog << static_cast<f64>((end-start).count())/den << "s.\n\n";
+        std::clog << execute_time_sec << "s, gc time: ";
+        std::clog << gc_time_sec << "s (";
+        std::clog << gc_time_sec / execute_time_sec * 100.0 << "%)\n\n";
     }
 }
 
 i32 main(i32 argc, const char* argv[]) {
     // output version info
-    if (argc<=1) {
-        std::clog << logo;
+    if (argc <= 1) {
+        std::clog << nasal::cli::logo;
         return 0;
     }
 
@@ -159,11 +119,11 @@ i32 main(i32 argc, const char* argv[]) {
     const auto config = nasal::cli::parse({argv+1, argv+argc});
 
     // run directly or show help
-    if (argc==2) {
+    if (argc == 2) {
         if (config.has(nasal::cli::option::cli_help)) {
             std::clog << nasal::cli::help;
         } else if (config.has(nasal::cli::option::cli_version)) {
-            std::clog << version;
+            std::clog << nasal::cli::version;
         } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();

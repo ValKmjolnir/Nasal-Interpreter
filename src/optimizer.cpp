@@ -44,7 +44,7 @@ void optimizer::const_number(
         return;
     }
     node->set_optimized_number(
-        new number_literal(node->get_location(), res)
+        new number_literal(node->get_location(), res, "")
     );
 }
 
@@ -64,7 +64,7 @@ void optimizer::const_number(
         return;
     }
     node->set_optimized_number(
-        new number_literal(node->get_location(), res)
+        new number_literal(node->get_location(), res, "")
     );
 }
 

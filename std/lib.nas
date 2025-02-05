@@ -380,7 +380,7 @@ var bind = func(function, locals, outer_scope = nil) {
     die("this runtime does not support bind");
 }
 
-var call = func(function ,args = nil, _me = nil, locals = nil, error = nil) {
+var call = func(function, args = nil, _me = nil, locals = nil, error = nil) {
     die("this runtime does not support call");
 }
 

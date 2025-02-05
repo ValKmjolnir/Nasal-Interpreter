@@ -13,11 +13,13 @@
 
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 namespace nasal {
 
 void dynamic_library_destructor(void*);
 
+std::vector<std::string> possible_dylib_path();
 std::string search_dynamic_library_path(const std::string&);
 
 var builtin_dlopen(context*, gc*);
