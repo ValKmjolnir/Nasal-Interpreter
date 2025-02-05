@@ -4,6 +4,7 @@
 #include <stack>
 #include <cstring>
 #include <sstream>
+#include <atomic>
 
 #include "nasal_import.h"
 #include "nasal_gc.h"
