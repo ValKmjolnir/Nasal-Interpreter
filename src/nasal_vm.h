@@ -325,6 +325,10 @@ public:
         return ngc.get_gc_time_ms();
     }
 
+    auto get_total_memory() const {
+        return ngc.get_total_memory();
+    }
+
     void set_interrupt_ptr(std::atomic<bool>* p) {
         interrupt_ptr = p;
     }

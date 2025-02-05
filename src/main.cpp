@@ -75,6 +75,7 @@ void execute(const nasal::cli::cli_config& config) {
     // run
     const auto start = clk::now();
     double gc_time_ms = 0.0;
+    double gc_total_memory = 0.0;
     if (config.has(option::cli_debug_mode)) {
         auto debugger = std::make_unique<nasal::dbg>();
         debugger->run(
@@ -85,6 +86,7 @@ void execute(const nasal::cli::cli_config& config) {
             config.has(option::cli_profile_all)
         );
         gc_time_ms = debugger->get_gc_time_ms();
+        gc_total_memory = debugger->get_total_memory();
     } else if (config.has(option::cli_show_execute_time) ||
                config.has(option::cli_detail_info) ||
                config.has(option::cli_limit_mode) ||
@@ -94,6 +96,7 @@ void execute(const nasal::cli::cli_config& config) {
         runtime->set_limit_mode_flag(config.has(option::cli_limit_mode));
         runtime->run(gen, ld, config.nasal_vm_args);
         gc_time_ms = runtime->get_gc_time_ms();
+        gc_total_memory = runtime->get_total_memory();
     }
 
     // get running time
@@ -104,7 +107,8 @@ void execute(const nasal::cli::cli_config& config) {
         std::clog << "process exited after ";
         std::clog << execute_time_sec << "s, gc time: ";
         std::clog << gc_time_sec << "s (";
-        std::clog << gc_time_sec / execute_time_sec * 100.0 << "%)\n\n";
+        std::clog << gc_time_sec / execute_time_sec * 100.0 << "%), ";
+        std::clog << "memory usage: " << gc_total_memory << "MB\n\n";
     }
 }
 
