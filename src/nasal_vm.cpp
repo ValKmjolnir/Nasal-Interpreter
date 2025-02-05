@@ -191,7 +191,7 @@ void vm::value_info(var& val) {
 void vm::function_detail_info(const nas_func& func) {
     std::clog << "func@";
     std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
-    
+
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
     for(const auto& key : func.keys) {
@@ -273,7 +273,7 @@ void vm::function_call_trace() {
             std::clog << "  `--> " << same_count << " same call(s)\n";
             same_count = 0;
         }
-        
+
         last = func;
         last_callsite = place;
 
@@ -376,7 +376,7 @@ void vm::global_state() {
         if (name.length()>=10) {
             name = name.substr(0, 7) + "...";
         } else {
-            
+
         }
         std::clog << "| " << std::left << std::setw(10)
                   << std::setfill(' ') << name << " ";
@@ -674,6 +674,7 @@ void vm::run(const codegen& gen,
         imm.push_back(i.num);
     }
     CHECK_INTERRUPT;
+    // goto the first operand
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
