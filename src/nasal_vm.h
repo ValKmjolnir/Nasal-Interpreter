@@ -4,6 +4,7 @@
 #include <stack>
 #include <cstring>
 #include <sstream>
+#include <atomic>
 
 #include "nasal_import.h"
 #include "nasal_gc.h"
@@ -31,7 +32,7 @@ protected:
 
     /* nasal native functions */
     std::vector<nasal_builtin_table> native_function;
-    
+
     /* garbage collector */
     gc ngc;
 
@@ -323,6 +324,13 @@ public:
     auto get_gc_time_ms() const {
         return ngc.get_gc_time_ms();
     }
+
+    void set_interrupt_ptr(std::atomic<bool>* p) {
+        interrupt_ptr = p;
+    }
+
+private:
+    std::atomic<bool>* interrupt_ptr = nullptr;
 };
 
 inline bool vm::boolify(const var& val) {
@@ -977,7 +985,7 @@ inline void vm::o_callfh() {
     for(u32 i = 0; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
-    
+
     bool lack_arguments_flag = false;
     for(const auto& i : func.keys) {
         const auto& key = i.first;

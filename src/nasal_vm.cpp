@@ -191,7 +191,7 @@ void vm::value_info(var& val) {
 void vm::function_detail_info(const nas_func& func) {
     std::clog << "func@";
     std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
-    
+
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
     for(const auto& key : func.keys) {
@@ -273,7 +273,7 @@ void vm::function_call_trace() {
             std::clog << "  `--> " << same_count << " same call(s)\n";
             same_count = 0;
         }
-        
+
         last = func;
         last_callsite = place;
 
@@ -376,7 +376,7 @@ void vm::global_state() {
         if (name.length()>=10) {
             name = name.substr(0, 7) + "...";
         } else {
-            
+
         }
         std::clog << "| " << std::left << std::setw(10)
                   << std::setfill(' ') << name << " ";
@@ -570,6 +570,14 @@ void vm::run(const codegen& gen,
 
 #ifndef _MSC_VER
     // using labels as values/computed goto
+
+    // Define an interrupt check macro for computed goto mode.
+    #define CHECK_INTERRUPT { \
+        if (interrupt_ptr && interrupt_ptr->load()) { \
+            throw std::runtime_error("VM execution interrupted by timeout"); \
+        } \
+    }
+
     const void* oprs[] = {
         &&vmexit,
         &&repl,
@@ -665,6 +673,7 @@ void vm::run(const codegen& gen,
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
+    CHECK_INTERRUPT;
     // goto the first operand
     goto *code[ctx.pc];
 #else
@@ -674,6 +683,9 @@ void vm::run(const codegen& gen,
         imm.push_back(i.num);
     }
     while(code[ctx.pc]) {
+        if (interrupt_ptr && interrupt_ptr->load()) {
+            throw std::runtime_error("VM execution interrupted by timeout");
+        }
         (this->*code[ctx.pc])();
         if (ctx.top>=ctx.canary) {
             die("stack overflow");
@@ -704,6 +716,7 @@ vmexit:
 // do not cause stackoverflow
 #define exec_nodie(op) {\
     op();\
+    CHECK_INTERRUPT;\
     goto *code[++ctx.pc];\
 }
 
