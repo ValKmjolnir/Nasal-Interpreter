@@ -142,16 +142,38 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
             return ctx->last_error.c_str();
         }
 
-        ld.link(parse, false).chkerr();
+        if (ld.link(parse, false).geterr()) {
+            ctx->last_error = error_output.str();
+            std::cout.rdbuf(old_cout);
+            std::cerr.rdbuf(old_cerr);
+            std::remove(temp_filename);
+            return ctx->last_error.c_str();
+        }
         auto opt = std::make_unique<nasal::optimizer>();
         opt->do_optimization(parse.tree());
-        gen.compile(parse, ld, false, true).chkerr();
+        
+        if (gen.compile(parse, ld, false, true).geterr()) {
+            ctx->last_error = error_output.str();
+            std::cout.rdbuf(old_cout);
+            std::cerr.rdbuf(old_cerr);
+            std::remove(temp_filename);
+            return ctx->last_error.c_str();
+        }
 
         const auto start = show_time ? clk::now() : clk::time_point();
         
         // Create a future for the VM execution
         auto future = std::async(std::launch::async, [&]() {
-            ctx->vm_instance->run(gen, ld, {});
+            // Wrap VM execution in try/catch
+            try {
+                ctx->vm_instance->run(gen, ld, {});
+            } catch (const std::exception& e) {
+                ctx->last_error = e.what();
+                throw std::runtime_error(ctx->last_error);
+            } catch (...) {
+                ctx->last_error = "Unknown error in VM run()";
+                throw std::runtime_error(ctx->last_error);
+            }
         });
 
         // Wait for completion or timeout
