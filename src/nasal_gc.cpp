@@ -202,9 +202,28 @@ void gc::extend(const vm_type type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
+    switch(type) {
+        case vm_type::vm_str:
+            total_memory_usage += incr[index] * sizeof(std::string); break;
+        case vm_type::vm_vec:
+            total_memory_usage += incr[index] * sizeof(nas_vec); break;
+        case vm_type::vm_hash:
+            total_memory_usage += incr[index] * sizeof(nas_hash); break;
+        case vm_type::vm_func:
+            total_memory_usage += incr[index] * sizeof(nas_func); break;
+        case vm_type::vm_upval:
+            total_memory_usage += incr[index] * sizeof(nas_upval); break;
+        case vm_type::vm_ghost:
+            total_memory_usage += incr[index] * sizeof(nas_ghost); break;
+        case vm_type::vm_co:
+            total_memory_usage += incr[index] * sizeof(nas_co); break;
+        case vm_type::vm_map:
+            total_memory_usage += incr[index] * sizeof(nas_map); break;
+        default: break;
+    }
 
     // if incr[index] = 1, this will always be 1
-    incr[index] = incr[index]+incr[index]/2;
+    incr[index] = incr[index] + incr[index]/2;
 }
 
 void gc::init(const std::vector<std::string>& constant_strings,
@@ -220,7 +239,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
 
     // init constant strings
     strs.resize(constant_strings.size());
-    for(u64 i = 0; i<strs.size(); ++i) {
+    for (u64 i = 0; i < strs.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
             continue;
@@ -228,11 +247,13 @@ void gc::init(const std::vector<std::string>& constant_strings,
         strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
         strs[i].val.gcobj->immutable = 1;
         strs[i].str() = constant_strings[i];
+        total_memory_usage += strs[i].str().size();
+        total_memory_usage += sizeof(std::string);
     }
 
     // record arguments
     env_argv.resize(argv.size());
-    for(u64 i = 0; i<argv.size(); ++i) {
+    for (u64 i = 0; i < argv.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
         if (env_argv[i].is_str() && env_argv[i].str()==argv[i]) {
             continue;
@@ -240,6 +261,8 @@ void gc::init(const std::vector<std::string>& constant_strings,
         env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
         env_argv[i].val.gcobj->immutable = 1;
         env_argv[i].str() = argv[i];
+        total_memory_usage += env_argv[i].str().size();
+        total_memory_usage += sizeof(std::string);
     }
 }
 
