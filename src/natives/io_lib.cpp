@@ -178,8 +178,9 @@ var builtin_stat(context* ctx, gc* ngc) {
         return nas_err("io::stat", "\"filename\" must be string");
     }
     struct stat buffer;
-    if (stat(name.str().c_str(), &buffer)<0) {
-        return nas_err("io::stat", "failed to open file <" + name.str() + ">");
+    // if failed to stat, return nil
+    if (stat(name.str().c_str(), &buffer) < 0) {
+        return nil;
     }
     auto result = ngc->alloc(vm_type::vm_vec);
     result.vec().elems = {
