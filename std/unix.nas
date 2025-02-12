@@ -8,11 +8,19 @@ var _S_IFDIR = 0x4000;
 var _S_IFREG = 0x8000;
 
 var isdir = func(path) {
-    return !!bits.u32_and(io.stat(path)[2], _S_IFDIR);
+    var s = io.stat(path);
+    if (s == nil) {
+        return false;
+    }
+    return !!bits.u32_and(s[2], _S_IFDIR);
 }
 
 var isfile = func(path) {
-    return !!bits.u32_and(io.stat(path)[2], _S_IFREG);
+    var s = io.stat(path);
+    if (s == nil) {
+        return false;
+    }
+    return !!bits.u32_and(s[2], _S_IFREG);
 }
 
 var opendir = func(path) {
