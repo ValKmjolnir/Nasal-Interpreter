@@ -76,6 +76,9 @@ var stderr = func() { return __stderr; }();
 # get file status. using data from stat
 var fstat = func(filename) {
     var s = stat(filename);
+    if (s == nil) {
+        return nil;
+    }
     return {
         st_dev: s[0],
         st_ino: s[1],
