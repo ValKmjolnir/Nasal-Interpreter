@@ -380,8 +380,11 @@ var builtin_substr(context* ctx, gc* ngc) {
     }
     auto begin = static_cast<usize>(beg.num());
     auto length = static_cast<usize>(len.num());
-    if (begin>=str.str().length()) {
-        return nas_err("native::susbtr", "begin index out of range: "+std::to_string(begin));
+    if (begin >= str.str().length()) {
+        return nas_err(
+            "native::susbtr",
+            "begin index out of range: " + std::to_string(begin)
+        );
     }
     return ngc->newstr(str.str().substr(begin, length));
 }
@@ -406,7 +409,7 @@ var builtin_left(context* ctx, gc* ngc) {
     if (!len.is_num()) {
         return nas_err("native::left", "\"length\" must be number");
     }
-    if (len.num()<0) {
+    if (len.num() < 0) {
         return ngc->newstr("");
     }
     return ngc->newstr(str.str().substr(0, len.num()));
@@ -426,14 +429,14 @@ var builtin_right(context* ctx, gc* ngc) {
 
     i32 length = static_cast<i32>(len.num());
     i32 srclen = static_cast<i32>(str.str().length());
-    if (length>srclen) {
+    if (length > srclen) {
         length = srclen;
     }
-    if (length<0) {
+    if (length < 0) {
         length = 0;
     }
 
-    return ngc->newstr(str.str().substr(srclen-length, srclen));
+    return ngc->newstr(str.str().substr(srclen - length, srclen));
 }
 
 var builtin_cmp(context* ctx, gc* ngc) {

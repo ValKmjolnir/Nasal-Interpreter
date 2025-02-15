@@ -59,8 +59,9 @@ var builtin_open(context* ctx, gc* ngc) {
         return nas_err("io::open", "\"mode\" must be string");
     }
     auto file_descriptor = fopen(name.str().c_str(), mode.str().c_str());
+    // if failed to open, just return nil for check
     if (!file_descriptor) {
-        return nas_err("io::open", "failed to open file <" + name.str() + ">");
+        return nil;
     }
     var return_object = ngc->alloc(vm_type::vm_ghost);
     return_object.ghost().set(
