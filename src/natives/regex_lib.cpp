@@ -2,7 +2,7 @@
 
 namespace nasal {
 
-var builtin_regex_match(context* ctx, gc* ngc) {
+var builtin_regex_match(context* ctx, gc* ngc) noexcept {
     auto source = ctx->localr[1];
     auto reg_str = ctx->localr[2];
     if (!source.is_str()) {
@@ -20,7 +20,7 @@ var builtin_regex_match(context* ctx, gc* ngc) {
     return zero;
 }
 
-var builtin_regex_search(context* ctx, gc* ngc) {
+var builtin_regex_search(context* ctx, gc* ngc) noexcept {
     auto source = ctx->localr[1];
     auto reg_str = ctx->localr[2];
     if (!source.is_str()) {
@@ -38,7 +38,7 @@ var builtin_regex_search(context* ctx, gc* ngc) {
     return nil;
 }
 
-var builtin_regex_replace(context* ctx, gc* ngc) {
+var builtin_regex_replace(context* ctx, gc* ngc) noexcept {
     auto source = ctx->localr[1];
     auto reg_str = ctx->localr[2];
     auto fmt = ctx->localr[3];
@@ -64,7 +64,7 @@ var builtin_regex_replace(context* ctx, gc* ngc) {
     return ngc->newstr(source.str());
 }
 
-var builtin_regex_match_all(context* ctx, gc* ngc) {
+var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
     auto source = ctx->localr[1];
     auto reg_str = ctx->localr[2];
     if (!source.is_str()) {
