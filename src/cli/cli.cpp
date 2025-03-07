@@ -105,7 +105,7 @@ std::ostream& logo(std::ostream& out) {
     << " - http://fgprc.org\n"
     << " - http://fgprc.org.cn\n"
     << "\n"
-    << "input <nasal-format -h> to get help.\n\n";
+    << "input <nasal -h> to get help.\n\n";
     return out;
 }
 
