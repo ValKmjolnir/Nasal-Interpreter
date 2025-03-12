@@ -225,12 +225,24 @@ void vm::function_call_trace() {
     std::stack<const nas_func*> functions;
     std::stack<u64> callsite;
 
-    // load call trace
+    // load call trace, from bottom to top
     for(var* i = bottom; i <= top; ++i) {
         // i-1 is the callsite program counter of this function
-        if (i->is_addr() && i+2<=top &&
-            (i+1)->is_ret() && (i+1)->ret()>0 &&
-            (i+2)->is_func()) {
+        //   +-------+----------------+
+        //   | func  | func() {..}    | <-- i + 2
+        //   +-------+----------------+
+        //   | ret   | 0x3bf          | <-- i + 1 (value should not be 0x0)
+        //   +-------+----------------+
+        //   | addr  | 0x7ff5f61ae020 | <-- i
+        //   +-------+----------------+
+        // TODO: op_cnt may destroy the order, so maybe this need refact
+        if (i + 2 > top) {
+            continue;
+        }
+        if (!i->is_addr()) {
+            continue;
+        }
+        if ((i+1)->is_ret() && (i+1)->ret()>0 && (i+2)->is_func()) {
             functions.push(&(i+2)->func());
             callsite.push((i+1)->ret());
         }
@@ -239,10 +251,18 @@ void vm::function_call_trace() {
     // another condition may exist
     // have ret pc on stack, but no function at the top of the ret pc
     for(var * i = top; i >= bottom; --i) {
+        //   +-------+----------------+
+        //   | xxxx  | xxxx           | <-- i + 2 (not function or not exist)
+        //   +-------+----------------+
+        //   | ret   | 0x3bf          | <-- i + 1 (value should not be 0x0)
+        //   +-------+----------------+
+        //   | addr  | 0x7ff5f61ae020 | <-- i
+        //   +-------+----------------+
         if ((i->is_addr() && i+2<=top && (i+1)->is_ret() && !(i+2)->is_func()) ||
             (i->is_addr() && i+1<=top && i+2>top && (i+1)->is_ret())) {
             functions.push(&ctx.funcr.func());
             callsite.push((i+1)->ret());
+            break;
         }
     }
 
@@ -370,7 +390,7 @@ void vm::global_state() {
               << reinterpret_cast<u64>(global) << ")\n" << std::dec;
     for(usize i = 0; i<global_size; ++i) {
         std::clog << "  0x" << std::hex << std::setw(8)
-                  << std::setfill('0') << i << std::dec
+                  << std::setfill('0') << static_cast<u64>(i) << std::dec
                   << "    ";
         auto name = global_symbol_name[i];
         if (name.length()>=10) {
@@ -379,7 +399,8 @@ void vm::global_state() {
 
         }
         std::clog << "| " << std::left << std::setw(10)
-                  << std::setfill(' ') << name << " ";
+                  << std::setfill(' ') << name << " "
+                  << std::internal;
         value_info(global[i]);
     }
 }
