@@ -25,7 +25,7 @@ void gc::mark() {
     mark_context_root(bfs);
 
     // concurrent mark, experimental
-    if (memory.size()>UINT16_MAX && bfs.size()>32) {
+    if (memory.size() > gc::concurrent_threshold() && bfs.size() > 16) {
         flag_concurrent_mark_triggered = true;
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
@@ -179,10 +179,46 @@ void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
 }
 
 void gc::sweep() {
+    if (memory.size() > gc::concurrent_threshold()) {
+        flag_concurrent_mark_triggered = true;
+        usize size = memory.size();
+        std::vector<free_list> collect = {{}, {}, {}, {}};
+        std::thread t0(&gc::concurrent_sweep, this, std::ref(collect[0]), 0, size/4);
+        std::thread t1(&gc::concurrent_sweep, this, std::ref(collect[1]), size/4, size/2);
+        std::thread t2(&gc::concurrent_sweep, this, std::ref(collect[2]), size/2, size/4*3);
+        std::thread t3(&gc::concurrent_sweep, this, std::ref(collect[3]), size/4*3, size);
+        t0.join();
+        t1.join();
+        t2.join();
+        t3.join();
+
+        for (auto& i : collect) {
+            for (int j = 0; j < gc_type_size; ++j) {
+                for (auto ptr : i[j]) {
+                    unused[j].push_back(ptr);
+                }
+            }
+        }
+        return;
+    }
+
     for(auto i : memory) {
         if (i->mark==nas_val::gc_status::uncollected) {
             i->clear();
             unused[static_cast<u8>(i->type)-static_cast<u8>(vm_type::vm_str)].push_back(i);
+            i->mark = nas_val::gc_status::collected;
+        } else if (i->mark==nas_val::gc_status::found) {
+            i->mark = nas_val::gc_status::uncollected;
+        }
+    }
+}
+
+void gc::concurrent_sweep(free_list& collect, usize begin, usize end) {
+    for (usize iter = begin; iter < end; ++ iter) {
+        auto i = memory[iter];
+        if (i->mark==nas_val::gc_status::uncollected) {
+            i->clear();
+            collect[static_cast<u8>(i->type)-static_cast<u8>(vm_type::vm_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
         } else if (i->mark==nas_val::gc_status::found) {
             i->mark = nas_val::gc_status::uncollected;
@@ -223,7 +259,7 @@ void gc::extend(const vm_type type) {
     }
 
     // if incr[index] = 1, this will always be 1
-    incr[index] = incr[index] + incr[index]/2;
+    incr[index] = incr[index] + incr[index];
 }
 
 void gc::init(const std::vector<std::string>& constant_strings,

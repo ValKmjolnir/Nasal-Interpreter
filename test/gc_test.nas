@@ -17,9 +17,9 @@ var test_func = func(test_processes...) {
         f();
         duration = time_stamp.elapsedMSec();
         info = runtime.gc.info();
-        println(duration, " ms, gc ",
-            (info.total-gc_total)*100/duration, "%, ",
-            1000/duration, " count/sec"
+        println(duration, " ms,\tgc ",
+            (info.total-gc_total)*100/duration, "%,\t",
+            1000/duration, " loop/sec"
         );
         gc_total = info.total;
     }
@@ -28,13 +28,13 @@ var test_func = func(test_processes...) {
         test_process_total.elapsedMSec(), " ms");
     
     info = runtime.gc.info();
-    println("##-gc----------------");
-    println("total    : ", info.total, " ms");
-    println("average  : ", info.average, " ms");
-    println("max gc   : ", info.max_gc, " ms");
-    println("max mark : ", info.max_mark, " ms");
-    println("max sweep: ", info.max_sweep, " ms");
-    println("---------------------");
+    println("+##-gc-----------------");
+    println("| total    : ", info.total, " ms");
+    println("| average  : ", info.average, " ms");
+    println("| max gc   : ", info.max_gc, " ms");
+    println("| max mark : ", info.max_mark, " ms");
+    println("| max sweep: ", info.max_sweep, " ms");
+    println("+----------------------");
 }
 
 var MAX_ITER_NUM = 2e5;
@@ -92,12 +92,12 @@ var append_hash_in_hash = func {
 
 for (var i = 0; i < 10; i += 1) {
     test_func(
-        ["vec", append_vec],
-        ["hash", append_hash],
-        ["func", append_func],
-        ["vec<vec>", append_vec_in_vec],
-        ["vec<hash>", append_hash_in_vec],
-        ["hash<str, vec>", append_vec_in_hash],
+        ["vec            ", append_vec],
+        ["hash           ", append_hash],
+        ["func           ", append_func],
+        ["vec<vec>       ", append_vec_in_vec],
+        ["vec<hash>      ", append_hash_in_vec],
+        ["hash<str, vec> ", append_vec_in_hash],
         ["hash<str, hash>", append_hash_in_hash]
     );
 }
