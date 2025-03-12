@@ -20,6 +20,14 @@
 
 namespace nasal {
 
+struct free_list {
+    std::vector<nas_val*> elem[gc_type_size];
+
+    auto& operator[](i64 index) {
+        return elem[index];
+    }
+};
+
 struct gc {
     /* main context temporary storage */
     context main_context;
@@ -39,18 +47,18 @@ struct gc {
     std::vector<var> strs = {};        // reserved address for const vm_str
     std::vector<var> env_argv = {};    // command line arguments
     std::vector<nas_val*> memory;      // gc memory
-    std::vector<nas_val*> unused[gc_type_size]; // gc free list
+    free_list unused; // gc free list
 
     /* heap increase size */
     u64 incr[gc_type_size] = {
-        128, // vm_str
-        128, // vm_vec
-        64,  // vm_hash
+        256, // vm_str
+        512, // vm_vec
+        512, // vm_hash
         256, // vm_func
         256, // vm_upval
-        16,  // vm_obj
-        16,  // vm_co
-        2,   // vm_map
+        4,   // vm_obj
+        4,   // vm_co
+        1,   // vm_map
     };
     // total memory usage, not very accurate
     u64 total_memory_usage = 0;
@@ -86,6 +94,11 @@ private:
     void mark_co(std::vector<var>&, nas_co&);
     void mark_map(std::vector<var>&, nas_map&);
     void sweep();
+    void concurrent_sweep(free_list&, usize, usize);
+
+    static const auto concurrent_threshold() {
+        return UINT16_MAX * 16;
+    }
 
 public:
     void extend(const vm_type);
