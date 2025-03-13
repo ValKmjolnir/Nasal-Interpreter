@@ -38,16 +38,16 @@ struct gc {
 
     /* runtime context */
     context* running_context = nullptr;
-    nas_co* cort = nullptr; // running coroutine
+    nas_co* cort = nullptr;         // running coroutine
 
-    /*  temporary space used in native/module functions */
+    /*  temporary space used in native / module functions */
     var temp = nil;
 
     /* constants and memory pool */
-    std::vector<var> strs = {};        // reserved address for const vm_str
-    std::vector<var> env_argv = {};    // command line arguments
-    std::vector<nas_val*> memory;      // gc memory
-    free_list unused; // gc free list
+    std::vector<var> strs = {};     // reserved address for const vm_str
+    std::vector<var> env_argv = {}; // command line arguments
+    std::vector<nas_val*> memory;   // gc memory
+    free_list unused;               // gc free list
 
     /* heap increase size */
     u64 incr[gc_type_size] = {
@@ -60,8 +60,9 @@ struct gc {
         4,   // vm_co
         1,   // vm_map
     };
-    // total memory usage, not very accurate
-    u64 total_memory_usage = 0;
+
+    // total object count
+    u64 total_object_count = 0;
 
     /* values for analysis */
     u64 size[gc_type_size];
@@ -115,8 +116,9 @@ public:
         return worktime * 1.0 / den * 1000.0;
     }
 
+    // not very accurate
     double get_total_memory() const {
-        return total_memory_usage * 1.0 / 1024.0 / 1024.0;
+        return total_object_count * 3.5 / 1024.0 / 1024.0;
     }
 
 public:

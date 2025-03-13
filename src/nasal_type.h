@@ -51,7 +51,7 @@ struct nas_map;   // mapper
 // nas_val includes gc-managed types
 struct nas_val {
     enum class gc_status: u8 {
-        uncollected = 0,   
+        uncollected = 0,
         collected,
         found
     };
