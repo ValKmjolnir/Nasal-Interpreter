@@ -13,14 +13,14 @@ void gc::do_mark_sweep() {
     }
     auto mark_end = clk::now();
     sweep();
+    // if (!in_sweep_stage) {
+    //     for (auto i : memory) {
+    //         if (i->mark == nas_val::gc_status::found) {
+    //             i->mark = nas_val::gc_status::uncollected;
+    //         }
+    //     }
+    // }
     auto sweep_end = clk::now();
-    if (!in_sweep_stage) {
-        for (auto i : memory) {
-            if (i->mark == nas_val::gc_status::found) {
-                i->mark = nas_val::gc_status::uncollected;
-            }
-        }
-    }
     
     auto total_time = (sweep_end-begin).count();
     auto mark_time = (mark_end-begin).count();
@@ -208,6 +208,7 @@ void gc::sweep() {
         in_sweep_stage = false;
         current_sweep_index = 0;
     }
+    return;
 }
 
 void gc::extend(const vm_type type) {
@@ -444,13 +445,18 @@ void gc::info() const {
 var gc::alloc(const vm_type type) {
     const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
     ++alloc_count[index];
-    if (unused[index].empty()) {
+    // if still in incremental sweep stage? do it
+    // if not in incremental sweep stage, run a new gc cycle
+    if (in_sweep_stage || unused[index].empty()) {
         ++gc_count[index];
         do_mark_sweep();
     }
+    // if in incremental sweep stage, but the unused list is empty,
+    // do it until the unused list has something
     while (unused[index].empty() && in_sweep_stage) {
         do_mark_sweep();
     }
+    // after all gc stages, still get empty list, extend
     if (unused[index].empty()) {
         extend(type);
     }
