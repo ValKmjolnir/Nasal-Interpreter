@@ -31,7 +31,7 @@ var test_func = func(test_processes...) {
     println("+----------------------");
 }
 
-var MAX_ITER_NUM = 5e4;
+var MAX_ITER_NUM = 1e5;
 
 var append_vec = func {
     var res = [];
@@ -128,6 +128,22 @@ for (var i = 0; i < 10; i += 1) {
         append_tree,
         append_tree,
 
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+
+        append_tree,
+        append_tree,
+        append_tree,
+        
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+
+        append_tree,
+        append_tree,
+        append_tree,
+        
         append_hash_vec_hash,
         append_hash_vec_hash,
         append_hash_vec_hash,
