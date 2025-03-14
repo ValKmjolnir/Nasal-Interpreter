@@ -728,7 +728,7 @@ var builtin_gcinfo(context* ctx, gc* ngc) {
 
     f64 total = 0;
     for(u32 i = 0; i<gc_type_size; ++i) {
-        total += static_cast<f64>(ngc->gcnt[i]);
+        total += ngc->gc_count[i];
     }
 
 
