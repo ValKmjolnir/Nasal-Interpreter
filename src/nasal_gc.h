@@ -52,8 +52,8 @@ struct gc {
     /* heap increase size */
     u64 incr[gc_type_size] = {
         256, // vm_str
-        512, // vm_vec
-        512, // vm_hash
+        256, // vm_vec
+        256, // vm_hash
         256, // vm_func
         256, // vm_upval
         4,   // vm_obj
@@ -65,14 +65,17 @@ struct gc {
     u64 total_object_count = 0;
 
     /* values for analysis */
-    u64 size[gc_type_size];
-    u64 gcnt[gc_type_size];
-    u64 acnt[gc_type_size];
+    u64 object_size[gc_type_size];
+    u64 gc_count[gc_type_size];
+    u64 alloc_count[gc_type_size];
     i64 worktime = 0;
     i64 max_time = 0;
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
     bool flag_concurrent_mark_triggered = false;
+
+    bool in_sweep_stage = false;
+    i64 current_sweep_index = 0;
 
     void set(context* _ctx, var* _global, usize _size) {
         running_context = _ctx;
@@ -95,7 +98,6 @@ private:
     void mark_co(std::vector<var>&, nas_co&);
     void mark_map(std::vector<var>&, nas_map&);
     void sweep();
-    void concurrent_sweep(free_list&, usize, usize);
 
     static const auto concurrent_threshold() {
         return UINT16_MAX * 16;

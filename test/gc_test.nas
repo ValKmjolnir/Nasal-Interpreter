@@ -6,30 +6,24 @@ var test_func = func(test_processes...) {
     test_process_total.stamp();
 
     var time_stamp = maketimestamp();
-    var info = runtime.gc.info();
-    var gc_total = info.total;
-    var duration = 0;
-    foreach (var t; test_processes) {
-        var name = t[0];
-        var f = t[1];
-        print("[", os.time(), "] testing ", name, " : ");
-        time_stamp.stamp();
+    var begin_info = runtime.gc.info();
+    var gc_total_begin = begin_info.total;
+
+    foreach (var f; test_processes) {
         f();
-        duration = time_stamp.elapsedMSec();
-        info = runtime.gc.info();
-        println(duration, " ms,\tgc ",
-            (info.total-gc_total)*100/duration, "%,\t",
-            1000/duration, " loop/sec"
-        );
-        gc_total = info.total;
+        print(".");
     }
 
-    println("[", os.time(), "] test time: ",
-        test_process_total.elapsedMSec(), " ms");
-    
-    info = runtime.gc.info();
+    var end_info = runtime.gc.info();
+    var gc_total_end = end_info.total;
+    var duration = time_stamp.elapsedMSec();
+    println(" ", duration, " ms,\tgc ",
+        int((gc_total_end-gc_total_begin)*100/duration), "%,\t",
+        int(1000/(duration/size(test_processes))*10)/10, " test(s)/sec"
+    );
+
+    var info = runtime.gc.info();
     println("+##-gc-----------------");
-    println("| total    : ", info.total, " ms");
     println("| average  : ", info.average, " ms");
     println("| max gc   : ", info.max_gc, " ms");
     println("| max mark : ", info.max_mark, " ms");
@@ -37,7 +31,7 @@ var test_func = func(test_processes...) {
     println("+----------------------");
 }
 
-var MAX_ITER_NUM = 2e5;
+var MAX_ITER_NUM = 5e4;
 
 var append_vec = func {
     var res = [];
@@ -72,7 +66,7 @@ var append_vec_in_vec = func {
 var append_hash_in_vec = func {
     var res = [];
     for(var i=0; i<MAX_ITER_NUM; i+=1) {
-        append(res, {a:{}, b:{}, c:{}, d:{}});
+        append(res, [{}, {}, {}, {}]);
     }
 }
 
@@ -90,14 +84,56 @@ var append_hash_in_hash = func {
     }
 }
 
+var append_hash_vec_hash = func {
+    var res = [];
+    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+        append(res, {a:[{}], b:[{}], c:[{}], d:[{}]});
+    }
+}
+
+var append_tree = func {
+    var res = [];
+    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+        append(res, {
+            a: {b: {c:[]}},
+            d: {e: {}},
+            j: {k: {l:{m:[{a:{b:{c:[{}]}}}]}}}
+        });
+    }
+}
+
 for (var i = 0; i < 10; i += 1) {
     test_func(
-        ["vec            ", append_vec],
-        ["hash           ", append_hash],
-        ["func           ", append_func],
-        ["vec<vec>       ", append_vec_in_vec],
-        ["vec<hash>      ", append_hash_in_vec],
-        ["hash<str, vec> ", append_vec_in_hash],
-        ["hash<str, hash>", append_hash_in_hash]
+        append_vec,
+        append_hash,
+        append_func,
+        append_vec_in_vec,
+        append_hash_in_vec,
+        append_vec_in_hash,
+        append_hash_in_hash,
+
+        append_vec,
+        append_hash,
+        append_func,
+        append_vec_in_vec,
+        append_hash_in_vec,
+        append_vec_in_hash,
+        append_hash_in_hash,
+
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+
+        append_tree,
+        append_tree,
+        append_tree,
+
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+        append_hash_vec_hash,
+
+        append_tree,
+        append_tree,
+        append_tree
     );
 }
