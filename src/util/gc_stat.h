@@ -1,3 +1,5 @@
+#pragma once
+
 #include "nasal.h"
 #include "nasal_type.h"
 
