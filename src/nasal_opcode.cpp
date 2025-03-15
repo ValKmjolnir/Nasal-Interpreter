@@ -5,12 +5,31 @@ namespace nasal {
 
 void codestream::set(const f64* number_list,
                      const std::string* string_list,
+                     const std::unordered_map<std::string, u64>& globals,
                      const nasal_builtin_table* native_table,
                      const std::string* file_list) {
     const_number = number_list;
     const_string = string_list;
     natives = native_table;
     files = file_list;
+
+    global_variable.resize(globals.size());
+    for(auto& [name, index]: globals) {
+        global_variable[index] = name;
+    }
+}
+
+void codestream::set(const f64* number_list,
+                     const std::string* string_list,
+                     const std::vector<std::string>& globals,
+                     const nasal_builtin_table* native_table,
+                     const std::string* file_list) {
+    const_number = number_list;
+    const_string = string_list;
+    natives = native_table;
+    files = file_list;
+
+    global_variable = globals;
 }
 
 void codestream::dump(std::ostream& out) const {
@@ -93,13 +112,16 @@ void codestream::dump(std::ostream& out) const {
         case op_jmp:
         case op_jt:
         case op_jf:
-        case op_callg:
         case op_mcallg:
         case op_loadg:
         case op_calll:
         case op_mcalll:
         case op_loadl:
             out << hex << "0x" << num << dec; break;
+        case op_callg:
+            out << hex << "0x" << num << dec;
+            out << " (" << util::rawstr(global_variable[num], 32) << ")";
+            break;
         case op_callb:
             out << hex << "0x" << num << dec;
             out << " <" << natives[num].name << "@0x";

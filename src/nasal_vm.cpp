@@ -327,7 +327,13 @@ void vm::trace_back() {
 
     std::clog << "\nback trace ";
     std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
-    codestream::set(const_number, const_string, native_function.data(), files);
+    codestream::set(
+        const_number,
+        const_string,
+        global_symbol_name,
+        native_function.data(),
+        files
+    );
 
     for(u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {

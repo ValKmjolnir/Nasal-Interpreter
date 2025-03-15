@@ -163,7 +163,13 @@ void dbg::step_info() {
 
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
-    codestream::set(const_number, const_string, native_function.data(), files);
+    codestream::set(
+        const_number,
+        const_string,
+        global_symbol_name,
+        native_function.data(),
+        files
+    );
 
     std::clog << "\nnext bytecode:\n";
     for(u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {

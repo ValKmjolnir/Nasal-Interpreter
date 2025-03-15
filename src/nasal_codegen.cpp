@@ -1436,6 +1436,7 @@ void codegen::print(std::ostream& out) {
     codestream::set(
         const_number_table.data(),
         const_string_table.data(),
+        global,
         native_function.data()
     );
 
