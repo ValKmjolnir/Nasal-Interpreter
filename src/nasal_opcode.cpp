@@ -112,12 +112,12 @@ void codestream::dump(std::ostream& out) const {
         case op_jmp:
         case op_jt:
         case op_jf:
-        case op_mcallg:
         case op_loadg:
         case op_calll:
         case op_mcalll:
         case op_loadl:
             out << hex << "0x" << num << dec; break;
+        case op_mcallg:
         case op_callg:
             out << hex << "0x" << num << dec;
             out << " (" << util::rawstr(global_variable[num], 32) << ")";
