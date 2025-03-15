@@ -19,8 +19,6 @@ struct gc_stat {
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
 
-    bool flag_concurrent_mark_triggered = false;
-
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
     void stamp() {
@@ -50,6 +48,8 @@ struct gc_stat {
     f64 avg_sweep_time_ms() const;
     f64 max_mark_time_ms() const;
     f64 max_sweep_time_ms() const;
+
+    void dump_info() const;
 };
 
 }

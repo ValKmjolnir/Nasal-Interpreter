@@ -717,7 +717,7 @@ void vm::run(const codegen& gen,
 // all nasal programs should end here
 vmexit:
     if (verbose) {
-        ngc.info();
+        ngc.status.dump_info();
     }
     imm.clear();
     if (!is_repl_mode) {
