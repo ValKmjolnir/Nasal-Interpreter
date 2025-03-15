@@ -17,11 +17,12 @@
 
 #include "nasal.h"
 #include "nasal_type.h"
+#include "util/gc_stat.h"
 
 namespace nasal {
 
 struct free_list {
-    std::vector<nas_val*> elem[gc_type_size];
+    std::vector<nas_val*> elem[GC_TYPE_SIZE];
 
     auto& operator[](i64 index) {
         return elem[index];
@@ -50,7 +51,7 @@ struct gc {
     free_list unused;               // gc free list
 
     /* heap increase size */
-    u64 incr[gc_type_size] = {
+    u64 incr[GC_TYPE_SIZE] = {
         256, // vm_str
         256, // vm_vec
         256, // vm_hash
@@ -65,16 +66,9 @@ struct gc {
     u64 total_object_count = 0;
 
     /* values for analysis */
-    u64 object_size[gc_type_size];
-    u64 gc_count[gc_type_size];
-    u64 alloc_count[gc_type_size];
-    i64 worktime = 0;
-    i64 max_time = 0;
-    i64 max_mark_time = 0;
-    i64 max_sweep_time = 0;
-    bool flag_concurrent_mark_triggered = false;
+    gc_stat status;
 
-    bool in_sweep_stage = false;
+    bool in_incremental_sweep_stage = false;
     i64 current_sweep_index = 0;
 
     void set(context* _ctx, var* _global, usize _size) {
@@ -86,6 +80,8 @@ struct gc {
 private:
     /* gc functions */
     void do_mark_sweep();
+    void count_mark_time();
+    void count_sweep_time();
     void mark();
     void concurrent_mark(std::vector<var>&, usize, usize);
     void mark_context_root(std::vector<var>&);
@@ -113,13 +109,12 @@ public:
     void context_reserve();
 
 public:
-    double get_gc_time_ms() const {
-        const auto den = std::chrono::high_resolution_clock::duration::period::den;
-        return worktime * 1.0 / den * 1000.0;
+    f64 get_gc_time_ms() const {
+        return status.gc_time_ms();
     }
 
     // not very accurate
-    double get_total_memory() const {
+    f64 get_total_memory() const {
         return total_object_count * 3.5 / 1024.0 / 1024.0;
     }
 

@@ -39,6 +39,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
     ${CMAKE_SOURCE_DIR}/src/ast_format.cpp
