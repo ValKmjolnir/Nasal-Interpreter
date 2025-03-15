@@ -98,6 +98,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
