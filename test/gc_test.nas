@@ -23,15 +23,18 @@ var test_func = func(test_processes...) {
     );
 
     var info = runtime.gc.info();
-    println("+##-gc-----------------");
-    println("| average  : ", info.average, " ms");
-    println("| max gc   : ", info.max_gc, " ms");
-    println("| max mark : ", info.max_mark, " ms");
-    println("| max sweep: ", info.max_sweep, " ms");
-    println("+----------------------");
+    println("+##-gc----------------------");
+    println("| avg gc cycle : ", int(1000 / info.average), " exec/sec");
+    println("| avg mark     : ", int(1000 / info.avg_mark), " exec/sec");
+    println("| avg sweep    : ", int(1000 / info.avg_sweep), " exec/sec");
+    println("| mark count   : ", info.mark_count);
+    println("| sweep count  : ", info.sweep_count);
+    println("| max mark     : ", info.max_mark, " ms");
+    println("| max sweep    : ", info.max_sweep, " ms");
+    println("+---------------------------");
 }
 
-var MAX_ITER_NUM = 1e5;
+var MAX_ITER_NUM = 0.5e5;
 
 var append_vec = func {
     var res = [];

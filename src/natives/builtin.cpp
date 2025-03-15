@@ -723,27 +723,17 @@ var builtin_gcextend(context* ctx, gc* ngc) {
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
-    const auto den = std::chrono::high_resolution_clock::duration::period::den;
     var res = ngc->alloc(vm_type::vm_hash);
-
-    f64 total = 0;
-    for(u32 i = 0; i<gc_type_size; ++i) {
-        total += ngc->gc_count[i];
-    }
-
-
     auto& map = res.hash().elems;
-    const auto worktime = static_cast<f64>(ngc->worktime);
-    const auto max_time = static_cast<f64>(ngc->max_time);
-    const auto max_mark_time = static_cast<f64>(ngc->max_mark_time);
-    const auto max_sweep_time = static_cast<f64>(ngc->max_sweep_time);
-
     // using ms
-    map["total"] = var::num(worktime/den*1000);
-    map["average"] = var::num(worktime/den*1000/total);
-    map["max_gc"] = var::num(max_time/den*1000);
-    map["max_mark"] = var::num(max_mark_time/den*1000);
-    map["max_sweep"] = var::num(max_sweep_time/den*1000);
+    map["total"] = var::num(ngc->status.gc_time_ms());
+    map["average"] = var::num(ngc->status.avg_time_ms());
+    map["mark_count"] = var::num(ngc->status.total_mark_count);
+    map["sweep_count"] = var::num(ngc->status.total_sweep_count);
+    map["avg_mark"] = var::num(ngc->status.avg_mark_time_ms());
+    map["avg_sweep"] = var::num(ngc->status.avg_sweep_time_ms());
+    map["max_mark"] = var::num(ngc->status.max_mark_time_ms());
+    map["max_sweep"] = var::num(ngc->status.max_sweep_time_ms());
     return res;
 }
 

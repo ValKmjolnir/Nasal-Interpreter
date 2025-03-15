@@ -4,31 +4,27 @@
 namespace nasal {
 
 void gc::do_mark_sweep() {
-    using clk = std::chrono::high_resolution_clock;
-    auto begin = clk::now();
-    if (!in_sweep_stage) {
-        mark();
-        in_sweep_stage = true;
-        current_sweep_index = memory.size() - 1;
+    count_mark_time();
+    count_sweep_time();
+}
+
+void gc::count_mark_time() {
+    if (in_incremental_sweep_stage) {
+        return;
     }
-    auto mark_end = clk::now();
+
+    status.stamp();
+    mark();
+    status.elapsed_mark_time();
+
+    in_incremental_sweep_stage = true;
+    current_sweep_index = memory.size() - 1;
+}
+
+void gc::count_sweep_time() {
+    status.stamp();
     sweep();
-    // if (!in_sweep_stage) {
-    //     for (auto i : memory) {
-    //         if (i->mark == nas_val::gc_status::found) {
-    //             i->mark = nas_val::gc_status::uncollected;
-    //         }
-    //     }
-    // }
-    auto sweep_end = clk::now();
-    
-    auto total_time = (sweep_end-begin).count();
-    auto mark_time = (mark_end-begin).count();
-    auto sweep_time = (sweep_end-mark_end).count();
-    worktime += total_time;
-    max_time = max_time<total_time? total_time:max_time;
-    max_mark_time = max_mark_time<mark_time? mark_time:max_mark_time;
-    max_sweep_time = max_sweep_time<sweep_time? sweep_time:max_sweep_time;
+    status.elapsed_sweep_time();
 }
 
 void gc::mark() {
@@ -37,7 +33,7 @@ void gc::mark() {
 
     // concurrent mark, experimental
     if (memory.size() > gc::concurrent_threshold() && bfs.size() > 16) {
-        flag_concurrent_mark_triggered = true;
+        status.flag_concurrent_mark_triggered = true;
         usize size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
@@ -190,14 +186,17 @@ void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
 }
 
 void gc::sweep() {
-    const i64 threshold = 65536 / 4;
+    // if threshold is too small, too many allocated objects will be marked as "found"
+    // objects with "found" will be marked to "uncollected" in the next gc cycle
+    // this will cause memory wasting.
+    const i64 threshold = 4096;
     for (i64 it = 0; it < threshold; ++it) {
         if (current_sweep_index - it < 0) {
             break;
         }
         auto i = memory[current_sweep_index - it];
         if (i->mark==nas_val::gc_status::uncollected) {
-            unused[static_cast<u8>(i->type)-static_cast<u8>(vm_type::vm_str)].push_back(i);
+            unused[static_cast<u32>(i->type)-static_cast<u32>(vm_type::vm_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
         } else if (i->mark==nas_val::gc_status::found) {
             i->mark = nas_val::gc_status::uncollected;
@@ -205,15 +204,14 @@ void gc::sweep() {
     }
     current_sweep_index -= threshold;
     if (current_sweep_index < 0) {
-        in_sweep_stage = false;
+        in_incremental_sweep_stage = false;
         current_sweep_index = 0;
     }
-    return;
 }
 
 void gc::extend(const vm_type type) {
-    const u8 index = static_cast<u8>(type)-static_cast<u8>(vm_type::vm_str);
-    object_size[index] += incr[index];
+    const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
+    status.object_size[index] += incr[index];
 
     for(u64 i = 0; i<incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
@@ -249,11 +247,8 @@ void gc::extend(const vm_type type) {
 
 void gc::init(const std::vector<std::string>& constant_strings,
               const std::vector<std::string>& argv) {
-    // initialize counters
-    worktime = 0;
-    for(u8 i = 0; i<gc_type_size; ++i) {
-        object_size[i] = gc_count[i] = alloc_count[i] = 0;
-    }
+    // initialize gc status recorder
+    status.init();
 
     // coroutine pointer set to nullptr
     cort = nullptr;
@@ -292,7 +287,7 @@ void gc::clear() {
         delete i;
     }
     memory.clear();
-    for(u8 i = 0; i<gc_type_size; ++i) {
+    for(u32 i = 0; i<GC_TYPE_SIZE; ++i) {
         unused[i].clear();
     }
     for(auto& i : strs) {
@@ -313,9 +308,9 @@ void gc::info() const {
 
     const char* used_table_name[] = {
         "object type",
-        "gc count",
+        "gc cycle",
         "alloc count",
-        "memory size",
+        "object count",
         "detail",
         "time spend",
         "gc time",
@@ -346,12 +341,12 @@ void gc::info() const {
         len = std::string(name[i]).length();
         indent = indent<len? len:indent;
     }
-    for(u32 i = 0; i<gc_type_size; ++i) {
-        len = std::to_string(gc_count[i]).length();
+    for(u32 i = 0; i<GC_TYPE_SIZE; ++i) {
+        len = std::to_string(status.gc_cycle_trigger_count[i]).length();
         indent = indent<len? len:indent;
-        len = std::to_string(alloc_count[i]).length();
+        len = std::to_string(status.alloc_count[i]).length();
         indent = indent<len? len:indent;
-        len = std::to_string(object_size[i]).length();
+        len = std::to_string(status.object_size[i]).length();
         indent = indent<len? len:indent;
     }
     auto indent_string = std::string("──");
@@ -381,22 +376,24 @@ void gc::info() const {
 
     std::clog << "\n" << first_line << "\n";
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "object type";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc count";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc cycle";
     std::clog << " │ " << left << setw(indent) << setfill(' ') << "alloc count";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "memory size";
-    std::clog << " │\n" << second_line << "\n";
+    std::clog << " │ " << left << setw(indent) << setfill(' ') << "object count";
+    std::clog << " │\n" << second_line << "\n" << std::internal;
 
     double total = 0;
-    for(u8 i = 0; i<gc_type_size; ++i) {
-        if (!gc_count[i] && !alloc_count[i] && !object_size[i]) {
+    for(u8 i = 0; i<GC_TYPE_SIZE; ++i) {
+        if (!status.gc_cycle_trigger_count[i] &&
+            !status.alloc_count[i] &&
+            !status.object_size[i]) {
             continue;
         }
-        total += static_cast<f64>(gc_count[i]);
+        total += static_cast<f64>(status.gc_cycle_trigger_count[i]);
         std::clog << "│ " << left << setw(indent) << setfill(' ') << name[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << gc_count[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << alloc_count[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << object_size[i];
-        std::clog << " │\n";
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.gc_cycle_trigger_count[i];
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.alloc_count[i];
+        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.object_size[i];
+        std::clog << " │\n" << std::internal;
     }
     std::clog << mid_line << "\n";
 
@@ -407,62 +404,67 @@ void gc::info() const {
     std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
     std::clog << " │\n" << another_mid_line << "\n";
 
-    const auto gc_time = worktime*1.0/den*1000;
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "gc time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << gc_time << " ms";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.gc_time_ms() << " ms";
     std::clog << setw(indent*2+7) << " " << "│\n";
 
-    const auto avg_time = worktime*1.0/den*1000/total;
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << avg_time << " ms";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_time_ms() << " ms";
     std::clog << setw(indent*2+7) << " " << "│\n";
 
-    const auto max_gc = max_time*1.0/den*1000;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max gc";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_gc << " ms";
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg mark";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_mark_time_ms() << " ms";
     std::clog << setw(indent*2+7) << " " << "│\n";
 
-    const auto max_mark = max_mark_time*1.0/den*1000;
+    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg sweep";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_sweep_time_ms() << " ms";
+    std::clog << setw(indent*2+7) << " " << "│\n";
+
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "max mark";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_mark << " ms";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.max_mark_time_ms() << " ms";
     std::clog << setw(indent*2+7) << " " << "│\n";
 
-    const auto max_sweep = max_sweep_time*1.0/den*1000;
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "max sweep";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_sweep << " ms";
+    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.max_sweep_time_ms() << " ms";
     std::clog << setw(indent*2+7) << " " << "│\n";
 
     std::clog << "│ " << left << setw(indent) << setfill(' ') << "concurrent";
     std::clog << " │ " << setw(indent)
-              << (flag_concurrent_mark_triggered? "true":"false");
+              << (status.flag_concurrent_mark_triggered? "true":"false");
     std::clog << setw(indent*2+7) << " " << "│\n";
 
-    std::clog << last_line << "\n";
+    std::clog << last_line << "\n" << std::internal;
 
     wm.restore_code_page();
 }
 
 var gc::alloc(const vm_type type) {
     const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
-    ++alloc_count[index];
+    ++status.alloc_count[index];
     // if still in incremental sweep stage? do it
     // if not in incremental sweep stage, run a new gc cycle
-    if (in_sweep_stage || unused[index].empty()) {
-        ++gc_count[index];
+    if (in_incremental_sweep_stage) {
+        do_mark_sweep();
+    } else if (unused[index].empty()) {
+        ++status.gc_cycle_trigger_count[index];
         do_mark_sweep();
     }
     // if in incremental sweep stage, but the unused list is empty,
     // do it until the unused list has something
-    while (unused[index].empty() && in_sweep_stage) {
+    while (unused[index].empty() && in_incremental_sweep_stage) {
         do_mark_sweep();
     }
     // after all gc stages, still get empty list, extend
     if (unused[index].empty()) {
         extend(type);
     }
+
     var ret = var::gcobj(unused[index].back());
     ret.val.gcobj->clear();
-    ret.val.gcobj->mark = in_sweep_stage
+
+    // if incremental sweep stage, mark it as found
+    // but be aware that it may be collected in next gc cycle
+    ret.val.gcobj->mark = in_incremental_sweep_stage
         ? nas_val::gc_status::found
         : nas_val::gc_status::uncollected;
     unused[index].pop_back();
@@ -485,9 +487,9 @@ void gc::context_change(nas_co* co) {
 
 void gc::context_reserve() {
     // pc = 0 means this coroutine is finished
-    cort->status = running_context->pc?
-        nas_co::status::suspended:
-        nas_co::status::dead;
+    cort->status = running_context->pc
+        ? nas_co::status::suspended
+        : nas_co::status::dead;
 
     // store running state to coroutine
     cort->ctx = *running_context;
