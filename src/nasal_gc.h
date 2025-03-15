@@ -95,15 +95,10 @@ private:
     void mark_map(std::vector<var>&, nas_map&);
     void sweep();
 
-    static const auto concurrent_threshold() {
-        return UINT16_MAX * 16;
-    }
-
 public:
     void extend(const vm_type);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
-    void info() const;
     var alloc(const vm_type);
     void context_change(nas_co*);
     void context_reserve();

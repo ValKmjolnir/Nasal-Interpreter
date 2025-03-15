@@ -1,5 +1,4 @@
 ﻿#include "nasal_gc.h"
-#include "util/util.h"
 
 namespace nasal {
 
@@ -31,10 +30,9 @@ void gc::mark() {
     std::vector<var> bfs;
     mark_context_root(bfs);
 
-    // concurrent mark, experimental
-    if (memory.size() > gc::concurrent_threshold() && bfs.size() > 16) {
-        status.flag_concurrent_mark_triggered = true;
-        usize size = bfs.size();
+    // concurrent mark
+    if (memory.size() > UINT16_MAX * 16 && bfs.size() > 16) {
+        auto size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
         std::thread t2(&gc::concurrent_mark, this, std::ref(bfs), size/2, size/4*3);
@@ -295,147 +293,6 @@ void gc::clear() {
     }
     strs.clear();
     env_argv.clear();
-}
-
-void gc::info() const {
-    util::windows_code_page_manager wm;
-    wm.set_utf8_output();
-
-    using std::left;
-    using std::setw;
-    using std::setfill;
-    using std::setprecision;
-
-    const char* used_table_name[] = {
-        "object type",
-        "gc cycle",
-        "alloc count",
-        "object count",
-        "detail",
-        "time spend",
-        "gc time",
-        "avg time",
-        "max gc",
-        "max mark",
-        "max sweep",
-        nullptr
-    };
-    const char* name[] = {
-        "string",
-        "vector",
-        "hashmap",
-        "function",
-        "upvalue",
-        "ghost",
-        "coroutine",
-        "namespace",
-        nullptr
-    };
-
-    usize indent = 0, len = 0;
-    for(usize i = 0; used_table_name[i]; ++i) {
-        len = std::string(used_table_name[i]).length();
-        indent = indent<len? len:indent;
-    }
-    for(usize i = 0; name[i]; ++i) {
-        len = std::string(name[i]).length();
-        indent = indent<len? len:indent;
-    }
-    for(u32 i = 0; i<GC_TYPE_SIZE; ++i) {
-        len = std::to_string(status.gc_cycle_trigger_count[i]).length();
-        indent = indent<len? len:indent;
-        len = std::to_string(status.alloc_count[i]).length();
-        indent = indent<len? len:indent;
-        len = std::to_string(status.object_size[i]).length();
-        indent = indent<len? len:indent;
-    }
-    auto indent_string = std::string("──");
-    for(usize i = 0; i<indent; ++i) {
-        indent_string += "─";
-    }
-    const auto first_line = "╭" + indent_string + "┬" +
-                            indent_string + "┬" +
-                            indent_string + "┬" +
-                            indent_string + "╮";
-    const auto second_line = "├" + indent_string + "┼" +
-                             indent_string + "┼" +
-                             indent_string + "┼" +
-                             indent_string + "┤";
-    const auto mid_line = "├" + indent_string + "┼" +
-                          indent_string + "┴" +
-                          indent_string + "┴" +
-                          indent_string + "┤";
-    const auto another_mid_line = "├" + indent_string + "┼" +
-                                  indent_string + "─" +
-                                  indent_string + "─" +
-                                  indent_string + "┤";
-    const auto last_line = "╰" + indent_string + "┴" +
-                           indent_string + "─" +
-                           indent_string + "─" +
-                           indent_string + "╯";
-
-    std::clog << "\n" << first_line << "\n";
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "object type";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc cycle";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "alloc count";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "object count";
-    std::clog << " │\n" << second_line << "\n" << std::internal;
-
-    double total = 0;
-    for(u8 i = 0; i<GC_TYPE_SIZE; ++i) {
-        if (!status.gc_cycle_trigger_count[i] &&
-            !status.alloc_count[i] &&
-            !status.object_size[i]) {
-            continue;
-        }
-        total += static_cast<f64>(status.gc_cycle_trigger_count[i]);
-        std::clog << "│ " << left << setw(indent) << setfill(' ') << name[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.gc_cycle_trigger_count[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.alloc_count[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << status.object_size[i];
-        std::clog << " │\n" << std::internal;
-    }
-    std::clog << mid_line << "\n";
-
-    const auto den = std::chrono::high_resolution_clock::duration::period::den;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "detail";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "time spend";
-    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
-    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
-    std::clog << " │\n" << another_mid_line << "\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "gc time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.gc_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg mark";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_mark_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg sweep";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.avg_sweep_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max mark";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.max_mark_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max sweep";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << status.max_sweep_time_ms() << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "concurrent";
-    std::clog << " │ " << setw(indent)
-              << (status.flag_concurrent_mark_triggered? "true":"false");
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << last_line << "\n" << std::internal;
-
-    wm.restore_code_page();
 }
 
 var gc::alloc(const vm_type type) {

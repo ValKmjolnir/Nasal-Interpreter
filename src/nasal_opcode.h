@@ -215,8 +215,7 @@ public:
                     const nasal_builtin_table*,
                     const std::string* file_list = nullptr);
     void dump(std::ostream&) const;
+    friend std::ostream& operator<<(std::ostream&, const codestream&);
 };
-
-std::ostream& operator<<(std::ostream&, const codestream&);
 
 }

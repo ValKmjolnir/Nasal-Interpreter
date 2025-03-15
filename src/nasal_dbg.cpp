@@ -290,7 +290,7 @@ void dbg::run(const codegen& gen,
             counter.dump_all_code_line_counter(std::clog):
             counter.dump_this_file_line_counter(std::clog);
     }
-    ngc.info();
+    ngc.status.dump_info();
     ngc.clear();
     imm.clear();
     return;
