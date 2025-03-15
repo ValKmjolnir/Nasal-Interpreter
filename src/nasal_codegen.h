@@ -161,11 +161,11 @@ private:
     void ret_gen(return_expr*);
 
 public:
-    const auto& strs() const {return const_string_table;}
-    const auto& nums() const {return const_number_table;}
-    const auto& natives() const {return native_function;}
-    const auto& codes() const {return code;}
-    const auto& globals() const {return global;}
+    const auto& strs() const { return const_string_table; }
+    const auto& nums() const { return const_number_table; }
+    const auto& natives() const { return native_function; }
+    const auto& codes() const { return code; }
+    const auto& globals() const { return global; }
 
 public:
     codegen() = default;
