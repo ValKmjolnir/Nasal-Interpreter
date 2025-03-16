@@ -17,8 +17,17 @@
 
 #include "nasal.h"
 #include "nasal_type.h"
+#include "util/gc_stat.h"
 
 namespace nasal {
+
+struct free_list {
+    std::vector<nas_val*> elem[GC_TYPE_SIZE];
+
+    auto& operator[](i64 index) {
+        return elem[index];
+    }
+};
 
 struct gc {
     /* main context temporary storage */
@@ -30,40 +39,37 @@ struct gc {
 
     /* runtime context */
     context* running_context = nullptr;
-    nas_co* cort = nullptr; // running coroutine
+    nas_co* cort = nullptr;         // running coroutine
 
-    /*  temporary space used in native/module functions */
+    /*  temporary space used in native / module functions */
     var temp = nil;
 
     /* constants and memory pool */
-    std::vector<var> strs = {};        // reserved address for const vm_str
-    std::vector<var> env_argv = {};    // command line arguments
-    std::vector<nas_val*> memory;      // gc memory
-    std::vector<nas_val*> unused[gc_type_size]; // gc free list
+    std::vector<var> strs = {};     // reserved address for const vm_str
+    std::vector<var> env_argv = {}; // command line arguments
+    std::vector<nas_val*> memory;   // gc memory
+    free_list unused;               // gc free list
 
     /* heap increase size */
-    u64 incr[gc_type_size] = {
-        128, // vm_str
-        128, // vm_vec
-        64,  // vm_hash
+    u64 incr[GC_TYPE_SIZE] = {
+        256, // vm_str
+        256, // vm_vec
+        256, // vm_hash
         256, // vm_func
         256, // vm_upval
-        16,  // vm_obj
-        16,  // vm_co
-        2,   // vm_map
+        4,   // vm_obj
+        4,   // vm_co
+        1,   // vm_map
     };
-    // total memory usage, not very accurate
-    u64 total_memory_usage = 0;
+
+    // total object count
+    u64 total_object_count = 0;
 
     /* values for analysis */
-    u64 size[gc_type_size];
-    u64 gcnt[gc_type_size];
-    u64 acnt[gc_type_size];
-    i64 worktime = 0;
-    i64 max_time = 0;
-    i64 max_mark_time = 0;
-    i64 max_sweep_time = 0;
-    bool flag_concurrent_mark_triggered = false;
+    gc_stat status;
+
+    bool in_incremental_sweep_stage = false;
+    i64 current_sweep_index = 0;
 
     void set(context* _ctx, var* _global, usize _size) {
         running_context = _ctx;
@@ -74,6 +80,8 @@ struct gc {
 private:
     /* gc functions */
     void do_mark_sweep();
+    void count_mark_time();
+    void count_sweep_time();
     void mark();
     void concurrent_mark(std::vector<var>&, usize, usize);
     void mark_context_root(std::vector<var>&);
@@ -91,19 +99,18 @@ public:
     void extend(const vm_type);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
-    void info() const;
     var alloc(const vm_type);
     void context_change(nas_co*);
     void context_reserve();
 
 public:
-    double get_gc_time_ms() const {
-        const auto den = std::chrono::high_resolution_clock::duration::period::den;
-        return worktime * 1.0 / den * 1000.0;
+    f64 get_gc_time_ms() const {
+        return status.gc_time_ms();
     }
 
-    double get_total_memory() const {
-        return total_memory_usage * 1.0 / 1024.0 / 1024.0;
+    // not very accurate
+    f64 get_total_memory() const {
+        return total_object_count * 3.5 / 1024.0 / 1024.0;
     }
 
 public:

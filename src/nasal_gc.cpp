@@ -1,33 +1,38 @@
 ﻿#include "nasal_gc.h"
-#include "util/util.h"
 
 namespace nasal {
 
 void gc::do_mark_sweep() {
-    using clk = std::chrono::high_resolution_clock;
-    auto begin = clk::now();
+    count_mark_time();
+    count_sweep_time();
+}
+
+void gc::count_mark_time() {
+    if (in_incremental_sweep_stage) {
+        return;
+    }
+
+    status.stamp();
     mark();
-    auto mark_end = clk::now();
+    status.elapsed_mark_time();
+
+    in_incremental_sweep_stage = true;
+    current_sweep_index = memory.size() - 1;
+}
+
+void gc::count_sweep_time() {
+    status.stamp();
     sweep();
-    auto sweep_end = clk::now();
-    
-    auto total_time = (sweep_end-begin).count();
-    auto mark_time = (mark_end-begin).count();
-    auto sweep_time = (sweep_end-mark_end).count();
-    worktime += total_time;
-    max_time = max_time<total_time? total_time:max_time;
-    max_mark_time = max_mark_time<mark_time? mark_time:max_mark_time;
-    max_sweep_time = max_sweep_time<sweep_time? sweep_time:max_sweep_time;
+    status.elapsed_sweep_time();
 }
 
 void gc::mark() {
     std::vector<var> bfs;
     mark_context_root(bfs);
 
-    // concurrent mark, experimental
-    if (memory.size()>UINT16_MAX && bfs.size()>32) {
-        flag_concurrent_mark_triggered = true;
-        usize size = bfs.size();
+    // concurrent mark
+    if (memory.size() > UINT16_MAX * 16 && bfs.size() > 16) {
+        auto size = bfs.size();
         std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
         std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
         std::thread t2(&gc::concurrent_mark, this, std::ref(bfs), size/2, size/4*3);
@@ -74,15 +79,15 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
 
 void gc::mark_context_root(std::vector<var>& bfs_queue) {
     // scan global
-    for(usize i = 0; i<main_context_global_size; ++i) {
+    for(usize i = 0; i < main_context_global_size; ++i) {
         auto& val = main_context_global[i];
-        if (val.type>vm_type::vm_num) {
+        if (val.type > vm_type::vm_num) {
             bfs_queue.push_back(val);
         }
     }
     // scan now running context, this context maybe related to coroutine or main
-    for(var* i = running_context->stack; i<=running_context->top; ++i) {
-        if (i->type>vm_type::vm_num) {
+    for(var* i = running_context->stack; i <= running_context->top; ++i) {
+        if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
     }
@@ -95,8 +100,8 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
     }
 
     // coroutine is running, so scan main process stack from mctx
-    for(var* i = main_context.stack; i<=main_context.top; ++i) {
-        if (i->type>vm_type::vm_num) {
+    for(var* i = main_context.stack; i <= main_context.top; ++i) {
+        if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
     }
@@ -120,7 +125,7 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
 
 void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
     for(auto& i : vec.elems) {
-        if (i.type>vm_type::vm_num) {
+        if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
     }
@@ -128,7 +133,7 @@ void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
 
 void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
     for(auto& i : hash.elems) {
-        if (i.second.type>vm_type::vm_num) {
+        if (i.second.type > vm_type::vm_num) {
             bfs_queue.push_back(i.second);
         }
     }
@@ -136,7 +141,7 @@ void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
 
 void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
     for(auto& i : function.local) {
-        if (i.type>vm_type::vm_num) {
+        if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
     }
@@ -147,7 +152,7 @@ void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
 
 void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
     for(auto& i : upval.elems) {
-        if (i.type>vm_type::vm_num) {
+        if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
     }
@@ -164,7 +169,7 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
     for(var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
-        if (i->type>vm_type::vm_num) {
+        if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
     }
@@ -172,27 +177,39 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
 
 void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
     for(const auto& i : mp.mapper) {
-        if (i.second->type>vm_type::vm_num) {
+        if (i.second->type > vm_type::vm_num) {
             bfs_queue.push_back(*i.second);
         }
     }
 }
 
 void gc::sweep() {
-    for(auto i : memory) {
+    // if threshold is too small, too many allocated objects will be marked as "found"
+    // objects with "found" will be marked to "uncollected" in the next gc cycle
+    // this will cause memory wasting.
+    const i64 threshold = 4096;
+    for (i64 it = 0; it < threshold; ++it) {
+        if (current_sweep_index - it < 0) {
+            break;
+        }
+        auto i = memory[current_sweep_index - it];
         if (i->mark==nas_val::gc_status::uncollected) {
-            i->clear();
-            unused[static_cast<u8>(i->type)-static_cast<u8>(vm_type::vm_str)].push_back(i);
+            unused[static_cast<u32>(i->type)-static_cast<u32>(vm_type::vm_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
         } else if (i->mark==nas_val::gc_status::found) {
             i->mark = nas_val::gc_status::uncollected;
         }
     }
+    current_sweep_index -= threshold;
+    if (current_sweep_index < 0) {
+        in_incremental_sweep_stage = false;
+        current_sweep_index = 0;
+    }
 }
 
 void gc::extend(const vm_type type) {
-    const u8 index = static_cast<u8>(type)-static_cast<u8>(vm_type::vm_str);
-    size[index] += incr[index];
+    const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
+    status.object_size[index] += incr[index];
 
     for(u64 i = 0; i<incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
@@ -204,35 +221,32 @@ void gc::extend(const vm_type type) {
     }
     switch(type) {
         case vm_type::vm_str:
-            total_memory_usage += incr[index] * sizeof(std::string); break;
+            total_object_count += incr[index] * sizeof(std::string); break;
         case vm_type::vm_vec:
-            total_memory_usage += incr[index] * sizeof(nas_vec); break;
+            total_object_count += incr[index] * sizeof(nas_vec); break;
         case vm_type::vm_hash:
-            total_memory_usage += incr[index] * sizeof(nas_hash); break;
+            total_object_count += incr[index] * sizeof(nas_hash); break;
         case vm_type::vm_func:
-            total_memory_usage += incr[index] * sizeof(nas_func); break;
+            total_object_count += incr[index] * sizeof(nas_func); break;
         case vm_type::vm_upval:
-            total_memory_usage += incr[index] * sizeof(nas_upval); break;
+            total_object_count += incr[index] * sizeof(nas_upval); break;
         case vm_type::vm_ghost:
-            total_memory_usage += incr[index] * sizeof(nas_ghost); break;
+            total_object_count += incr[index] * sizeof(nas_ghost); break;
         case vm_type::vm_co:
-            total_memory_usage += incr[index] * sizeof(nas_co); break;
+            total_object_count += incr[index] * sizeof(nas_co); break;
         case vm_type::vm_map:
-            total_memory_usage += incr[index] * sizeof(nas_map); break;
+            total_object_count += incr[index] * sizeof(nas_map); break;
         default: break;
     }
 
     // if incr[index] = 1, this will always be 1
-    incr[index] = incr[index] + incr[index]/2;
+    incr[index] = incr[index] + incr[index];
 }
 
 void gc::init(const std::vector<std::string>& constant_strings,
               const std::vector<std::string>& argv) {
-    // initialize counters
-    worktime = 0;
-    for(u8 i = 0; i<gc_type_size; ++i) {
-        size[i] = gcnt[i] = acnt[i] = 0;
-    }
+    // initialize gc status recorder
+    status.init();
 
     // coroutine pointer set to nullptr
     cort = nullptr;
@@ -247,22 +261,22 @@ void gc::init(const std::vector<std::string>& constant_strings,
         strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
         strs[i].val.gcobj->immutable = 1;
         strs[i].str() = constant_strings[i];
-        total_memory_usage += strs[i].str().size();
-        total_memory_usage += sizeof(std::string);
+        total_object_count += strs[i].str().size();
+        total_object_count += sizeof(std::string);
     }
 
     // record arguments
     env_argv.resize(argv.size());
     for (u64 i = 0; i < argv.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
-        if (env_argv[i].is_str() && env_argv[i].str()==argv[i]) {
+        if (env_argv[i].is_str() && env_argv[i].str() == argv[i]) {
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
         env_argv[i].val.gcobj->immutable = 1;
         env_argv[i].str() = argv[i];
-        total_memory_usage += env_argv[i].str().size();
-        total_memory_usage += sizeof(std::string);
+        total_object_count += env_argv[i].str().size();
+        total_object_count += sizeof(std::string);
     }
 }
 
@@ -271,7 +285,7 @@ void gc::clear() {
         delete i;
     }
     memory.clear();
-    for(u8 i = 0; i<gc_type_size; ++i) {
+    for(u32 i = 0; i<GC_TYPE_SIZE; ++i) {
         unused[i].clear();
     }
     for(auto& i : strs) {
@@ -281,158 +295,35 @@ void gc::clear() {
     env_argv.clear();
 }
 
-void gc::info() const {
-    util::windows_code_page_manager wm;
-    wm.set_utf8_output();
-
-    using std::left;
-    using std::setw;
-    using std::setfill;
-    using std::setprecision;
-
-    const char* used_table_name[] = {
-        "object type",
-        "gc count",
-        "alloc count",
-        "memory size",
-        "detail",
-        "time spend",
-        "gc time",
-        "avg time",
-        "max gc",
-        "max mark",
-        "max sweep",
-        nullptr
-    };
-    const char* name[] = {
-        "string",
-        "vector",
-        "hashmap",
-        "function",
-        "upvalue",
-        "ghost",
-        "coroutine",
-        "namespace",
-        nullptr
-    };
-
-    usize indent = 0, len = 0;
-    for(usize i = 0; used_table_name[i]; ++i) {
-        len = std::string(used_table_name[i]).length();
-        indent = indent<len? len:indent;
-    }
-    for(usize i = 0; name[i]; ++i) {
-        len = std::string(name[i]).length();
-        indent = indent<len? len:indent;
-    }
-    for(u32 i = 0; i<gc_type_size; ++i) {
-        len = std::to_string(gcnt[i]).length();
-        indent = indent<len? len:indent;
-        len = std::to_string(acnt[i]).length();
-        indent = indent<len? len:indent;
-        len = std::to_string(size[i]).length();
-        indent = indent<len? len:indent;
-    }
-    auto indent_string = std::string("──");
-    for(usize i = 0; i<indent; ++i) {
-        indent_string += "─";
-    }
-    const auto first_line = "╭" + indent_string + "┬" +
-                            indent_string + "┬" +
-                            indent_string + "┬" +
-                            indent_string + "╮";
-    const auto second_line = "├" + indent_string + "┼" +
-                             indent_string + "┼" +
-                             indent_string + "┼" +
-                             indent_string + "┤";
-    const auto mid_line = "├" + indent_string + "┼" +
-                          indent_string + "┴" +
-                          indent_string + "┴" +
-                          indent_string + "┤";
-    const auto another_mid_line = "├" + indent_string + "┼" +
-                                  indent_string + "─" +
-                                  indent_string + "─" +
-                                  indent_string + "┤";
-    const auto last_line = "╰" + indent_string + "┴" +
-                           indent_string + "─" +
-                           indent_string + "─" +
-                           indent_string + "╯";
-
-    std::clog << "\n" << first_line << "\n";
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "object type";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "gc count";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "alloc count";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "memory size";
-    std::clog << " │\n" << second_line << "\n";
-
-    double total = 0;
-    for(u8 i = 0; i<gc_type_size; ++i) {
-        if (!gcnt[i] && !acnt[i] && !size[i]) {
-            continue;
-        }
-        total += static_cast<f64>(gcnt[i]);
-        std::clog << "│ " << left << setw(indent) << setfill(' ') << name[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << gcnt[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << acnt[i];
-        std::clog << " │ " << left << setw(indent) << setfill(' ') << size[i];
-        std::clog << " │\n";
-    }
-    std::clog << mid_line << "\n";
-
-    const auto den = std::chrono::high_resolution_clock::duration::period::den;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "detail";
-    std::clog << " │ " << left << setw(indent) << setfill(' ') << "time spend";
-    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
-    std::clog << "   " << left << setw(indent) << setfill(' ') << " ";
-    std::clog << " │\n" << another_mid_line << "\n";
-
-    const auto gc_time = worktime*1.0/den*1000;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "gc time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << gc_time << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    const auto avg_time = worktime*1.0/den*1000/total;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "avg time";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << avg_time << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    const auto max_gc = max_time*1.0/den*1000;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max gc";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_gc << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    const auto max_mark = max_mark_time*1.0/den*1000;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max mark";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_mark << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    const auto max_sweep = max_sweep_time*1.0/den*1000;
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "max sweep";
-    std::clog << " │ " << setw(indent-3) << setprecision(4) << max_sweep << " ms";
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << "│ " << left << setw(indent) << setfill(' ') << "concurrent";
-    std::clog << " │ " << setw(indent)
-              << (flag_concurrent_mark_triggered? "true":"false");
-    std::clog << setw(indent*2+7) << " " << "│\n";
-
-    std::clog << last_line << "\n";
-
-    wm.restore_code_page();
-}
-
 var gc::alloc(const vm_type type) {
-    const u8 index = static_cast<u8>(type)-static_cast<u8>(vm_type::vm_str);
-    ++acnt[index];
-    if (unused[index].empty()) {
-        ++gcnt[index];
+    const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
+    ++status.alloc_count[index];
+    // if still in incremental sweep stage? do it
+    // if not in incremental sweep stage, run a new gc cycle
+    if (in_incremental_sweep_stage) {
+        do_mark_sweep();
+    } else if (unused[index].empty()) {
+        ++status.gc_cycle_trigger_count[index];
         do_mark_sweep();
     }
+    // if in incremental sweep stage, but the unused list is empty,
+    // do it until the unused list has something
+    while (unused[index].empty() && in_incremental_sweep_stage) {
+        do_mark_sweep();
+    }
+    // after all gc stages, still get empty list, extend
     if (unused[index].empty()) {
         extend(type);
     }
+
     var ret = var::gcobj(unused[index].back());
-    ret.val.gcobj->mark = nas_val::gc_status::uncollected;
+    ret.val.gcobj->clear();
+
+    // if incremental sweep stage, mark it as found
+    // but be aware that it may be collected in next gc cycle
+    ret.val.gcobj->mark = in_incremental_sweep_stage
+        ? nas_val::gc_status::found
+        : nas_val::gc_status::uncollected;
     unused[index].pop_back();
     return ret;
 }
@@ -453,9 +344,9 @@ void gc::context_change(nas_co* co) {
 
 void gc::context_reserve() {
     // pc = 0 means this coroutine is finished
-    cort->status = running_context->pc?
-        nas_co::status::suspended:
-        nas_co::status::dead;
+    cort->status = running_context->pc
+        ? nas_co::status::suspended
+        : nas_co::status::dead;
 
     // store running state to coroutine
     cort->ctx = *running_context;

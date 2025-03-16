@@ -35,7 +35,7 @@ enum class vm_type: u8 {
 };
 
 // size of gc object type
-const u32 gc_type_size =
+const u32 GC_TYPE_SIZE =
     static_cast<u32>(vm_type::vm_type_size_max) -
     static_cast<u32>(vm_type::vm_str);
 
@@ -51,7 +51,7 @@ struct nas_map;   // mapper
 // nas_val includes gc-managed types
 struct nas_val {
     enum class gc_status: u8 {
-        uncollected = 0,   
+        uncollected = 0,
         collected,
         found
     };
