@@ -4,7 +4,7 @@ use std.process_bar;
 var mess = func(vec) {
     srand();
     var s=size(vec);
-    for(var i=s-1;i>=0;i-=1) {
+    for (var i=s-1;i>=0;i-=1) {
         var r=int(rand()*i);
         (vec[r],vec[i])=(vec[i],vec[r]);
     }
@@ -21,7 +21,7 @@ var project = func(n) {
 
     var last_step=0;
     ts.stamp();
-    for(var i=0;i<n;i+=1) {
+    for (var i=0;i<n;i+=1) {
         color[i]=[i,"color "~i,i+n*10];
         # generate process bar, every 0.2%
         if ((i-last_step)/n>1/500) {
@@ -58,7 +58,7 @@ var select = func(n) {
 
     var last_step=0;
     ts.stamp();
-    for(var i=0;i<n;i+=1) {
+    for (var i=0;i<n;i+=1) {
         color[i]=[i,"color "~i,i+n*10];
         message[i]=[i+n*10,"message "~i];
         # generate process bar, every 0.2%
@@ -113,7 +113,7 @@ var cartesian = func(n) {
 
     var last_step=0;
     ts.stamp();
-    for(var i=0;i<n;i+=1) {
+    for (var i=0;i<n;i+=1) {
         color[i]=[i,"color "~i,i+n*10];
         message[i]=[i+n*10,"message "~i];
         # generate process bar, every 0.2%
@@ -149,15 +149,15 @@ var cartesian = func(n) {
 }
 
 println("project");
-for(var i=10;i<1e6;i*=10) {
+for (var i=10;i<1e6;i*=10) {
     project(i);
 }
 println("select");
-for(var i=10;i<1e6;i*=10) {
+for (var i=10;i<1e6;i*=10) {
     select(i);
 }
 println("cartesian");
-for(var i=100;i<600;i+=100) {
+for (var i=100;i<600;i+=100) {
     cartesian(i);
 }
 

@@ -23,13 +23,13 @@ var hex32str = func() {
     var ch=["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
     var tbl=[];
     setsize(tbl,256);
-    for(var i=0;i<16;i+=1) {
-        for(var j=0;j<16;j+=1)
+    for (var i=0;i<16;i+=1) {
+        for (var j=0;j<16;j+=1)
             tbl[i*16+j]=ch[i]~ch[j];
     }
     return func(num) {
         var res="";
-        for(var i=0;i<4;i+=1) {
+        for (var i=0;i<4;i+=1) {
             res~=tbl[u32_bits_and(num,0xff)];
             num=floor(num/256);
         }
@@ -63,14 +63,14 @@ var md5 = func() {
     ];
 
     var l = func(num,cx) {
-        for(var i=0;i<cx;i+=1) {
+        for (var i=0;i<cx;i+=1) {
             num=check(num*2);
         }
         return num;
     }
     var r = func(num,cx) {
         num=check(num);
-        for(var i=0;i<cx;i+=1) {
+        for (var i=0;i<cx;i+=1) {
             num=num/2;
         }
         return floor(num);
@@ -113,7 +113,7 @@ var md5 = func() {
     return func(s) {
         var (s_size,len,res)=(size(s),size(s)*8,[]);
         setsize(res,s_size);
-        for(var i=0;i<s_size;i+=1) {
+        for (var i=0;i<s_size;i+=1) {
             res[i]=s[i];
         }
         # +------len------+--1~512--+--64--+
@@ -129,17 +129,17 @@ var md5 = func() {
         }
         setsize(res,res_size);
         res[s_size]=0x80;
-        for(var i=s_size+1;i<res_size;i+=1)
+        for (var i=s_size+1;i<res_size;i+=1)
             res[i]=0;
 
         # little endian
         setsize(res,size(res)+8);
         var (s_size,lower32,higher32)=(size(res),check(len),check(len/math.pow(2,32)));
-        for(var i=4;i>0;i-=1) {
+        for (var i=4;i>0;i-=1) {
             res[s_size-4-i]=floor(lower32-floor(lower32/256)*256);
             lower32=floor(lower32/256);
         }
-        for(var i=4;i>0;i-=1) {
+        for (var i=4;i>0;i-=1) {
             res[s_size-i]=floor(higher32-floor(higher32/256)*256);
             higher32=floor(higher32/256);
         }
@@ -149,7 +149,7 @@ var md5 = func() {
         # this may only work when string's length is under 1<<51
         var tmp=[];
         setsize(tmp,size(res)/4);
-        for(var i=0;i<size(res);i+=4) {
+        for (var i=0;i<size(res);i+=4) {
             tmp[i/4]=res[i+3]*math.pow(2,24)+
                 res[i+2]*math.pow(2,16)+
                 res[i+1]*math.pow(2,8)+
@@ -163,9 +163,9 @@ var md5 = func() {
         var D=0x10325476;
 
         res_size=size(res);
-        for(var i=0;i<res_size;i+=16) {
+        for (var i=0;i<res_size;i+=16) {
             var (f,a,b,c,d)=(0,A,B,C,D);
-            for(var j=0;j<64;j+=1) {
+            for (var j=0;j<64;j+=1) {
                 f=functions[j](b,c,d);
                 (a,b,c,d)=(d,check(b+rol(a+f+K[j]+res[i+idx[j]],S[j])),b,c);
             }

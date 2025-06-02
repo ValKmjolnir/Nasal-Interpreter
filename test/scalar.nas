@@ -218,17 +218,17 @@ println("~ 0x8000000000000000: ",~0x8000000000000000);
 println(~0x80000000==~0x8000000000000000);
 
 var h=split(" ","0 1 2 3 4 5 6 7 8 9 a b c d e f");
-for(var a=0;a<16;a+=1) {
-    for(var b=0;b<16;b+=1) {
-        for(var c=0;c<16;c+=1) {
+for (var a=0;a<16;a+=1) {
+    for (var b=0;b<16;b+=1) {
+        for (var c=0;c<16;c+=1) {
             if (((a^b)&c)!=(a^(b&c))) {
                 println("0x"~h[a],"^","0x"~h[b],"&","0x"~h[c]," -> a^b&c = 0x",h[a^b&c]," (a^b)&c = 0x",h[(a^b)&c]," a^(b&c) = 0x",h[(a^(b&c))]);
             }
         }
     }
 }
-for(var a=0;a<16;a+=1) {
-    for(var b=0;b<16;b+=1) {
+for (var a=0;a<16;a+=1) {
+    for (var b=0;b<16;b+=1) {
         var temp=b;
         println("temp^=0x"~h[a]~" -> 0x",h[temp^=a]," temp&=0x"~h[a]~" -> 0x",h[temp&=a]," temp|=0x"~h[a]~" -> 0x",h[temp|=a]);
     }
@@ -261,7 +261,7 @@ var closure_tester = func() {
     ];
 }();
 
-for(var i = 1; i<=10; i += 1) {
+for (var i = 1; i<=10; i += 1) {
     closure_tester[0]();
     if (closure_tester[1]()!=i) {
         die("test failed: expect " ~ i ~ ", but get " ~ closure_tester[1]());

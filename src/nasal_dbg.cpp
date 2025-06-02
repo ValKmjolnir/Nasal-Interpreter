@@ -3,7 +3,7 @@
 namespace nasal {
 
 void operand_line_counter::init_counter() {
-    for(usize i = 0; i<operand_line_counter::operand_size; ++i) {
+    for (usize i = 0; i<operand_line_counter::operand_size; ++i) {
         operand_counter[i] = 0;
     }
 }
@@ -14,7 +14,7 @@ void operand_line_counter::load_file_line_counter(
     file_line_counter = {};
     file_contents = {};
     filestream fs;
-    for(usize i =0; i<file_list.size(); ++i) {
+    for (usize i =0; i<file_list.size(); ++i) {
         fs.load(file_list[i]);
         file_contents.push_back(fs.file_content());
         file_line_counter.push_back({});
@@ -31,7 +31,7 @@ void operand_line_counter::dump_operand_count() const {
     typedef std::pair<u32, u64> op_count;
     std::vector<op_count> opcall;
     u64 total = 0;
-    for(usize i = 0; i<operand_line_counter::operand_size; ++i) {
+    for (usize i = 0; i<operand_line_counter::operand_size; ++i) {
         total += operand_counter[i];
         opcall.push_back({i, operand_counter[i]});
     }
@@ -41,7 +41,7 @@ void operand_line_counter::dump_operand_count() const {
         }
     );
     std::clog << "\noperands call info (<1% ignored)\n";
-    for(const auto& i : opcall) {
+    for (const auto& i : opcall) {
         u64 rate = i.second*100/total;
         if (!rate) {
             break;
@@ -55,17 +55,17 @@ void operand_line_counter::dump_operand_count() const {
 
 void operand_line_counter::dump_all_code_line_counter(std::ostream& os) const {
     u64 max_call_time = 0;
-    for(const auto& context : file_line_counter) {
-        for(const auto& count : context) {
+    for (const auto& context : file_line_counter) {
+        for (const auto& count : context) {
             max_call_time = count>max_call_time? count:max_call_time;
         }
     }
     auto pad_length = std::to_string(max_call_time).length();
-    for(usize i = 0; i<file_name_list.size(); ++i) {
+    for (usize i = 0; i<file_name_list.size(); ++i) {
         os << "\ncode profiling data of " << file_name_list[i] << ":\n";
         const auto& context = file_contents[i];
         const auto& counter = file_line_counter[i];
-        for(usize j = 0; j<context.size(); ++j) {
+        for (usize j = 0; j<context.size(); ++j) {
             os << " " << std::right << std::setw(pad_length);
             os << std::setfill(' ');
             os << (counter[j]==0? "":std::to_string(counter[j]));
@@ -76,7 +76,7 @@ void operand_line_counter::dump_all_code_line_counter(std::ostream& os) const {
 
 void operand_line_counter::dump_this_file_line_counter(std::ostream& os) const {
     u64 max_call_time = 0;
-    for(const auto& count : file_line_counter[0]) {
+    for (const auto& count : file_line_counter[0]) {
         max_call_time = count>max_call_time? count:max_call_time;
     }
     auto pad_length = std::to_string(max_call_time).length();
@@ -84,7 +84,7 @@ void operand_line_counter::dump_this_file_line_counter(std::ostream& os) const {
     os << "\ncode profiling data of " << file_name_list[0] << ":\n";
     const auto& context = file_contents[0];
     const auto& counter = file_line_counter[0];
-    for(usize i = 0; i<context.size(); ++i) {
+    for (usize i = 0; i<context.size(); ++i) {
         os << " " << std::right << std::setw(pad_length);
         os << std::setfill(' ');
         os << (counter[i]==0? "":std::to_string(counter[i]));
@@ -109,7 +109,7 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
 }
 
 u16 dbg::file_index(const std::string& filename) const {
-    for(u16 i = 0; i<file_list_size; ++i) {
+    for (u16 i = 0; i<file_list_size; ++i) {
         if (filename==files[i]) {
             return i;
         }
@@ -142,7 +142,7 @@ void dbg::help() const {
 }
 
 void dbg::list_file() const {
-    for(usize i = 0; i<file_list_size; ++i) {
+    for (usize i = 0; i<file_list_size; ++i) {
         std::clog << "[" << i << "] " << files[i] << "\n";
     }
 }
@@ -156,7 +156,7 @@ void dbg::step_info() {
 
     std::clog << clear_screen << set_cursor;
     std::clog << "\nsource code:\n";
-    for(u64 i = begin; i<end && i<src.size(); ++i) {
+    for (u64 i = begin; i<end && i<src.size(); ++i) {
         std::clog << (i==line? back_white:reset);
         std::clog << (i==line? "--> ":"    ") << src[i] << reset << "\n";
     }
@@ -172,7 +172,7 @@ void dbg::step_info() {
     );
 
     std::clog << "\nnext bytecode:\n";
-    for(u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
+    for (u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
         std::clog
         << (i==ctx.pc? back_white:reset)
         << (i==ctx.pc? "--> ":"    ")
@@ -273,7 +273,7 @@ void dbg::run(const codegen& gen,
     std::vector<u8> code;
     std::vector<u16> code_file_index;
     std::vector<u64> code_line;
-    for(const auto& i : gen.codes()) {
+    for (const auto& i : gen.codes()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);
         code_line.push_back(i.line);

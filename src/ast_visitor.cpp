@@ -8,7 +8,7 @@ bool ast_visitor::visit_expr(expr* node) {
 }
 
 bool ast_visitor::visit_use_stmt(use_stmt* node) {
-    for(auto i : node->get_path()) {
+    for (auto i : node->get_path()) {
         i->accept(this);
     }
     return true;
@@ -44,14 +44,14 @@ bool ast_visitor::visit_bool_literal(bool_literal* node) {
 }
 
 bool ast_visitor::visit_vector_expr(vector_expr* node) {
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         i->accept(this);
     }
     return true;
 }
 
 bool ast_visitor::visit_hash_expr(hash_expr* node) {
-    for(auto i : node->get_members()) {
+    for (auto i : node->get_members()) {
         i->accept(this);
     }
     return true;
@@ -65,7 +65,7 @@ bool ast_visitor::visit_hash_pair(hash_pair* node) {
 }
 
 bool ast_visitor::visit_function(function* node) {
-    for(auto i : node->get_parameter_list()) {
+    for (auto i : node->get_parameter_list()) {
         i->accept(this);
     }
     node->get_code_block()->accept(this);
@@ -73,7 +73,7 @@ bool ast_visitor::visit_function(function* node) {
 }
 
 bool ast_visitor::visit_code_block(code_block* node) {
-    for(auto i : node->get_expressions()) {
+    for (auto i : node->get_expressions()) {
         i->accept(this);
     }
     return true;
@@ -106,7 +106,7 @@ bool ast_visitor::visit_unary_operator(unary_operator* node) {
 
 bool ast_visitor::visit_call_expr(call_expr* node) {
     node->get_first()->accept(this);
-    for(auto i : node->get_calls()) {
+    for (auto i : node->get_calls()) {
         i->accept(this);
     }
     return true;
@@ -121,14 +121,14 @@ bool ast_visitor::visit_null_access(null_access* node) {
 }
 
 bool ast_visitor::visit_call_vector(call_vector* node) {
-    for(auto i : node->get_slices()) {
+    for (auto i : node->get_slices()) {
         i->accept(this);
     }
     return true;
 }
 
 bool ast_visitor::visit_call_function(call_function* node) {
-    for(auto i : node->get_argument()) {
+    for (auto i : node->get_argument()) {
         i->accept(this);
     }
     return true;
@@ -163,14 +163,14 @@ bool ast_visitor::visit_assignment_expr(assignment_expr* node) {
 }
 
 bool ast_visitor::visit_multi_identifier(multi_identifier* node) {
-    for(auto i : node->get_variables()) {
+    for (auto i : node->get_variables()) {
         i->accept(this);
     }
     return true;
 }
 
 bool ast_visitor::visit_tuple_expr(tuple_expr* node) {
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         i->accept(this);
     }
     return true;
@@ -214,7 +214,7 @@ bool ast_visitor::visit_forei_expr(forei_expr* node) {
 
 bool ast_visitor::visit_condition_expr(condition_expr* node) {
     node->get_if_statement()->accept(this);
-    for(auto i : node->get_elsif_stataments()) {
+    for (auto i : node->get_elsif_stataments()) {
         i->accept(this);
     }
     if (node->get_else_statement()) {

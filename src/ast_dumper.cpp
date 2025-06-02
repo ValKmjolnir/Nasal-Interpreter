@@ -9,7 +9,7 @@ bool ast_dumper::visit_use_stmt(use_stmt* node) {
     dump_indent();
     std::cout << "use" << format_location(node);
     push_indent();
-    for(auto i : node->get_path()) {
+    for (auto i : node->get_path()) {
         if (i==node->get_path().back()) {
             set_last();
         }
@@ -64,7 +64,7 @@ bool ast_dumper::visit_vector_expr(vector_expr* node) {
     std::cout << "vector";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         if (i==node->get_elements().back()) {
             set_last();
         }
@@ -79,7 +79,7 @@ bool ast_dumper::visit_hash_expr(hash_expr* node) {
     std::cout << "hash";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_members()) {
+    for (auto i : node->get_members()) {
         if (i==node->get_members().back()) {
             set_last();
         }
@@ -107,7 +107,7 @@ bool ast_dumper::visit_function(function* node) {
     std::cout << "function";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_parameter_list()) {
+    for (auto i : node->get_parameter_list()) {
         i->accept(this);
     }
     set_last();
@@ -121,7 +121,7 @@ bool ast_dumper::visit_code_block(code_block* node) {
     std::cout << "block";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_expressions()) {
+    for (auto i : node->get_expressions()) {
         if (i==node->get_expressions().back()) {
             set_last();
         }
@@ -231,7 +231,7 @@ bool ast_dumper::visit_call_expr(call_expr* node) {
         set_last();
     }
     node->get_first()->accept(this);
-    for(auto i : node->get_calls()) {
+    for (auto i : node->get_calls()) {
         if (i==node->get_calls().back()) {
             set_last();
         }
@@ -260,7 +260,7 @@ bool ast_dumper::visit_call_vector(call_vector* node) {
     std::cout << "call_vector";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_slices()) {
+    for (auto i : node->get_slices()) {
         if (i==node->get_slices().back()) {
             set_last();
         }
@@ -275,7 +275,7 @@ bool ast_dumper::visit_call_function(call_function* node) {
     std::cout << "call_function";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_argument()) {
+    for (auto i : node->get_argument()) {
         if (i==node->get_argument().back()) {
             set_last();
         }
@@ -350,7 +350,7 @@ bool ast_dumper::visit_multi_identifier(multi_identifier* node) {
     std::cout << "multiple_identifier";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_variables()) {
+    for (auto i : node->get_variables()) {
         if (i==node->get_variables().back()) {
             set_last();
         }
@@ -365,7 +365,7 @@ bool ast_dumper::visit_tuple_expr(tuple_expr* node) {
     std::cout << "tuple";
     std::cout << format_location(node);
     push_indent();
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         if (i==node->get_elements().back()) {
             set_last();
         }
@@ -459,7 +459,7 @@ bool ast_dumper::visit_condition_expr(condition_expr* node) {
         set_last();
     }
     node->get_if_statement()->accept(this);
-    for(auto i : node->get_elsif_stataments()) {
+    for (auto i : node->get_elsif_stataments()) {
         if (i==node->get_elsif_stataments().back() &&
             !node->get_else_statement()) {
             set_last();

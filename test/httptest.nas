@@ -301,7 +301,7 @@ while(1) {
         if (size(args)==2) {
             path=args[0];
             args=split("=",args[1]);
-            for(var i=0;i<size(args);i+=2)
+            for (var i=0;i<size(args);i+=2)
                 tmp[args[i]]=args[i+1];
         }
         if (path=="/" or path=="/index") {

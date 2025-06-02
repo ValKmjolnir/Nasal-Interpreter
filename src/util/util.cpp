@@ -142,7 +142,7 @@ std::string char_to_hex(const char c) {
 
 std::string rawstr(const std::string& str, const usize maxlen) {
     std::string ret("");
-    for(auto i : str) {
+    for (auto i : str) {
         // windows doesn't output unicode normally, so we output the hex
         if (util::is_windows() && i<=0) {
             ret += "\\x" + char_to_hex(i);
@@ -172,7 +172,7 @@ std::string rawstr(const std::string& str, const usize maxlen) {
 
 f64 hex_to_f64(const char* str) {
     f64 ret = 0;
-    for(; *str; ++str) {
+    for (; *str; ++str) {
         if ('0'<=*str && *str<='9') {
             ret = ret*16+(*str-'0');
         } else if ('a'<=*str && *str<='f') {

@@ -62,23 +62,23 @@ func() {
     var f2 = func() {var a=1;return a+1;}
     var f3 = func() {var (a,b)=(1,1);return a+b+1;}
     tm.stamp();
-    for(var i=0;i<1e6;i+=1);
+    for (var i=0;i<1e6;i+=1);
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)f1();
+    for (var i=0;i<1e6;i+=1)f1();
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)func {}();
+    for (var i=0;i<1e6;i+=1)func {}();
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)f2();
+    for (var i=0;i<1e6;i+=1)f2();
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)
+    for (var i=0;i<1e6;i+=1)
         func {
             var a=1;
             return a+1;
@@ -86,11 +86,11 @@ func() {
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)f3();
+    for (var i=0;i<1e6;i+=1)f3();
     duration=tm.elapsedMSec();
     println(str(int(1e6/duration))," calc/ms");
     tm.stamp();
-    for(var i=0;i<1e6;i+=1)
+    for (var i=0;i<1e6;i+=1)
         func {
             var (a,b)=(1,1);
             return a+b+1;

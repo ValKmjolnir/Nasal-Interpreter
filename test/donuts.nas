@@ -15,14 +15,14 @@ var main = func(run_time) {
     setsize(b,1760);
 
     print("\e[2J");
-    for(var run=0;run<run_time;run+=1) {
+    for (var run=0;run<run_time;run+=1) {
         ts.stamp();
         forindex(var i;b) {
             b[i]=" ";
             z[i]=0;
         }
-        for(var j=0;j<6.28;j+=0.07) {
-            for(var i=0;i<6.28;i+=0.02) {
+        for (var j=0;j<6.28;j+=0.07) {
+            for (var i=0;i<6.28;i+=0.02) {
                 var (c,d,e,f,g)=(sin(i),cos(j),sin(A),sin(j),cos(A));
                 var h=d+2;
                 var D=1/(c*h*e+f*g+5);
@@ -40,7 +40,7 @@ var main = func(run_time) {
         }
         print("\e[H");
         var screen="";
-        for(var k=0;k<1761;k+=1) {
+        for (var k=0;k<1761;k+=1) {
             screen~=(mod(k,80)?b[k]:"\n");
             A+=0.00004;
             B+=0.00002;

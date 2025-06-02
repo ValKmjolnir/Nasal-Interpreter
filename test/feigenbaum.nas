@@ -8,8 +8,8 @@ var ppm = func(filename, width, height, RGB) {
     # P6 use binary character
     var fd = io.open(filename, "wb");
     io.write(fd, "P6\n"~width~" "~height~"\n255\n");
-    for(var i = 0; i<height; i+=1) {
-        for(var j = 0; j<width; j+=1) {
+    for (var i = 0; i<height; i+=1) {
+        for (var j = 0; j<width; j+=1) {
             io.write(fd, RGB(i, j));
         }
     }
@@ -30,10 +30,10 @@ var RGB = func(h, w) {
     var (R, G, B) = (0, 0, 0);
 
     var tmp = 0.5;
-    for(var i = 0; i<50; i+=1) {
+    for (var i = 0; i<50; i+=1) {
         tmp = r*tmp*(1-tmp);
     }
-    for(var i = 0; i<150; i+=1) {
+    for (var i = 0; i<150; i+=1) {
         tmp = r*tmp*(1-tmp);
         if (abs(tmp-x)<0.0005) {
             R = int(255*(150 - i)/150);

@@ -22,7 +22,7 @@ var fib = func() {
     return;
 }
 var co = [coroutine.create(fib), coroutine.create(fib)];
-for(var i = 0; i < 45; i += 1) {
+for (var i = 0; i < 45; i += 1) {
     var res = [coroutine.resume(co[0]), coroutine.resume(co[1])];
     if (res[0] == nil or res[1] == nil or res[0][0] != res[1][0])
         die("different coroutines don't share the same local scope");
@@ -32,12 +32,12 @@ for(var i = 0; i < 45; i += 1) {
 func() {
     var x = 1;
     var co = coroutine.create(func() {
-        for(var j = 0; j < 128; j += 1) {
+        for (var j = 0; j < 128; j += 1) {
             coroutine.yield(x, i, j);
             x += 1;
         }
     });
-    for(var i = 0; i < 16; i += 1) {
+    for (var i = 0; i < 16; i += 1) {
         var res = coroutine.resume(co);
         if (res == nil or res[0] != x or res[1] != i)
             die("coroutine should have the ability to get upvalues");
@@ -54,7 +54,7 @@ func {
         return "end";
     });
 
-    for(var i = 0; i < 5; i += 1)
+    for (var i = 0; i < 5; i += 1)
         println("[0] coroutine.resume get ", coroutine.resume(co, i, i + 1));
     print("\n");
 }();
@@ -93,7 +93,7 @@ println("[2] coroutine state:\e[91m ", coroutine.status(co), "\e[0m");
 println("[2] ok\n");
 
 # pressure test
-for(var t = 0; t < 10; t += 1) {
+for (var t = 0; t < 10; t += 1) {
     var productor = func() {
         while(1) {
             coroutine.yield(i);
@@ -107,7 +107,7 @@ for(var t = 0; t < 10; t += 1) {
     var bar = process_bar.high_resolution_bar(40);
     var consumer = func() {
         counter += 1;
-        for(var i = 0; i < t + 1; i += 1)
+        for (var i = 0; i < t + 1; i += 1)
             coroutine.resume(co);
         if (counter - int(counter / 1000) * 1000 == 0) {
             var rate = counter / 2e5;
@@ -120,7 +120,7 @@ for(var t = 0; t < 10; t += 1) {
     }
 
     tm.stamp();
-    for(var i = 0; i < 1e5; i += 1)
+    for (var i = 0; i < 1e5; i += 1)
         consumer();
     println(" ", bar.bar(1), " 100% | ",
         str(int(1e3 * counter / tm.elapsedMSec())),

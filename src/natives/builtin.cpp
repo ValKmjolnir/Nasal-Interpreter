@@ -20,7 +20,7 @@ var builtin_unsafe(context* ctx, gc* ngc) {
 }
 
 var builtin_print(context* ctx, gc* ngc) {
-    for(auto& i : ctx->localr[1].vec().elems) {
+    for (auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
     }
     std::cout << std::flush;
@@ -28,7 +28,7 @@ var builtin_print(context* ctx, gc* ngc) {
 }
 
 var builtin_println(context* ctx, gc* ngc) {
-    for(auto& i : ctx->localr[1].vec().elems) {
+    for (auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
     }
     std::cout << std::endl;
@@ -53,7 +53,7 @@ var builtin_append(context* ctx, gc* ngc) {
         return nas_err("native::append", "\"vec\" must be vector");
     }
     auto& v = vec.vec().elems;
-    for(auto& i : elem.vec().elems) {
+    for (auto& i : elem.vec().elems) {
         v.push_back(i);
     }
     return nil;
@@ -112,7 +112,7 @@ var builtin_split(context* ctx, gc* ngc) {
 
     // empty separator means split every char
     if (!sep.length()) {
-        for(auto i : s) {
+        for (auto i : s) {
             vec.push_back(ngc->newstr(i));
         }
         ngc->temp = nil;
@@ -160,7 +160,7 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
 
     // empty separator means split every char
     if (!sep.length()) {
-        for(auto i : s) {
+        for (auto i : s) {
             vec.push_back(ngc->newstr(i));
         }
         ngc->temp = nil;
@@ -193,7 +193,7 @@ var builtin_rand(context* ctx, gc* ngc) {
         return nil;
     }
     f64 num = 0;
-    for(u32 i = 0; i<5; ++i) {
+    for (u32 i = 0; i<5; ++i) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
     }
     return var::num(num);
@@ -320,11 +320,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
     if (hash.is_hash()) {
-        for(const auto& iter : hash.hash().elems) {
+        for (const auto& iter : hash.hash().elems) {
             vec.push_back(ngc->newstr(iter.first));
         }
     } else {
-        for(const auto& iter : hash.map().mapper) {
+        for (const auto& iter : hash.map().mapper) {
             vec.push_back(ngc->newstr(iter.first));
         }
     }
@@ -492,11 +492,11 @@ var builtin_values(context* ctx, gc* ngc) {
     auto vec = ngc->alloc(vm_type::vm_vec);
     auto& v = vec.vec().elems;
     if (hash.is_hash()) {
-        for(auto& i : hash.hash().elems) {
+        for (auto& i : hash.hash().elems) {
             v.push_back(i.second);
         }
     } else {
-        for(auto& i : hash.map().mapper) {
+        for (auto& i : hash.map().mapper) {
             v.push_back(*i.second);
         }
     }
@@ -513,7 +513,7 @@ var builtin_sleep(context* ctx, gc* ngc) {
     // also msvc will use this
     Sleep(static_cast<i64>(val.num()*1e3));
 #else
-    std::this_thread::sleep_for(
+    std::this_thread::sleep_for (
         std::chrono::microseconds(static_cast<i64>(val.num()*1e6))
     );
 #endif
@@ -536,9 +536,9 @@ var builtin_arch(context* ctx, gc* ngc) {
 std::string tohex(u32 num) {
     const char str16[] = "0123456789abcdef";
     std::string str = "";
-    for(u32 i = 0; i<4; i++, num >>= 8) {
+    for (u32 i = 0; i<4; i++, num >>= 8) {
         std::string tmp = "";
-        for(u32 j = 0, b = num&0xff; j<2; j++, b >>= 4) {
+        for (u32 j = 0, b = num&0xff; j<2; j++, b >>= 4) {
             tmp.insert(0, 1, str16[b&0xf]);
         }
         str += tmp;
@@ -551,7 +551,7 @@ std::string md5(const std::string& src) {
     usize num = ((src.length()+8)>>6)+1;
     usize buffsize = num<<4;
     buff.resize(buffsize, 0);
-    for(usize i = 0; i<src.length(); i++) {
+    for (usize i = 0; i<src.length(); i++) {
         buff[i>>2] |= (static_cast<u8>(src[i]))<<((i&0x3)<<3);
     }
     buff[src.length()>>2] |= 0x80<<(((src.length()%4))<<3);
@@ -602,9 +602,9 @@ std::string md5(const std::string& src) {
     
     u32 atmp = 0x67452301, btmp = 0xefcdab89;
     u32 ctmp = 0x98badcfe, dtmp = 0x10325476;
-    for(u32 i = 0; i<buffsize; i += 16) {
+    for (u32 i = 0; i<buffsize; i += 16) {
         u32 f, a = atmp, b = btmp, c = ctmp, d = dtmp;
-        for(u32 j = 0; j<64; j++) {
+        for (u32 j = 0; j<64; j++) {
             if (j<16)      f = md5f(b, c, d);
             else if (j<32) f = md5g(b, c, d);
             else if (j<48) f = md5h(b, c, d);

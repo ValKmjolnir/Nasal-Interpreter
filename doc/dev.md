@@ -124,7 +124,7 @@ Hope you could help me! :)
 There's an example of byte code below:
 
 ```javascript
-for(var i=0;i<4000000;i+=1);
+for (var i=0;i<4000000;i+=1);
 ```
 
 ```x86asm
@@ -175,7 +175,7 @@ In this update i changed global and local scope from `unordered_map` to `vector`
 So the bytecode generator changed a lot.
 
 ```javascript
-for(var i=0;i<4000000;i+=1);
+for (var i=0;i<4000000;i+=1);
 ```
 
 ```x86asm

@@ -124,7 +124,7 @@ std::string lexer::utf8_gen() {
         }
 
         tmp += res[ptr++];
-        for(u32 i = 0; i<nbytes; ++i, ++ptr) {
+        for (u32 i = 0; i<nbytes; ++i, ++ptr) {
             if (ptr<res.size() && (res[ptr]&0xc0)==0x80) {
                 tmp += res[ptr];
             }
@@ -134,7 +134,7 @@ std::string lexer::utf8_gen() {
         if (tmp.length()!=1+nbytes) {
             ++column;
             std::string utf_info = "0x" + util::char_to_hex(tmp[0]);
-            for(u32 i = 1; i<tmp.size(); ++i) {
+            for (u32 i = 1; i<tmp.size(); ++i) {
                 utf_info += " 0x" + util::char_to_hex(tmp[i]);
             }
             err.err("lexer",

@@ -37,7 +37,7 @@ screen_state.put_pixel = func(x, y, c) {
 
 var test_flush = func() {
     screen_state.clear_screen();
-    for(var i=0; i<1e6; i+=1) {
+    for (var i=0; i<1e6; i+=1) {
         unix.sleep(0.001);
         screen_state.update();
         screen_state.put_pixel(

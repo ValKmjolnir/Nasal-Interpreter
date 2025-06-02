@@ -32,7 +32,7 @@ var quick_fib(var* args, usize size, gc* ngc) {
         return var::num(num);
     }
     double a = 1, b = 1, res = 0;
-    for(double i = 1; i<num; ++i) {
+    for (double i = 1; i<num; ++i) {
         res = a+b;
         a = b;
         b = res;

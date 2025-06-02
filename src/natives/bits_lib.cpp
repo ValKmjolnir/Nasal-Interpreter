@@ -61,7 +61,7 @@ var builtin_fld(context* ctx, gc* ngc) {
     }
     u32 res = 0;
     auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
+    for (u32 i = bit; i<bit+len; ++i) {
         if (s[i>>3]&(1<<(7-(i&7)))) {
             res |= 1<<(bit+len-i-1);
         }
@@ -91,7 +91,7 @@ var builtin_sfld(context* ctx, gc* ngc) {
     }
     u32 res = 0;
     auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
+    for (u32 i = bit; i<bit+len; ++i) {
         if (s[i>>3]&(1<<(7-(i&7)))) {
             res |= 1<<(bit+len-i-1);
         }
@@ -127,7 +127,7 @@ var builtin_setfld(context* ctx, gc* ngc) {
         return nas_err("bits::setfld", "bitfield out of bounds");
     }
     auto& s = str.str();
-    for(u32 i = bit; i<bit+len; ++i) {
+    for (u32 i = bit; i<bit+len; ++i) {
         if (val&(1<<(i-bit))) {
             s[i>>3] |= (1<<(7-(i&7)));
         } else {

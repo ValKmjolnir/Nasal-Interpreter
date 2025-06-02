@@ -13,7 +13,7 @@ bool symbol_finder::visit_definition_expr(definition_expr* node) {
     } else {
         // multiple variable definition
         // example: var (a, b, c) = (0, 1, 2);
-        for(auto i : node->get_variables()->get_variables()) {
+        for (auto i : node->get_variables()->get_variables()) {
             symbols.push_back({i->get_name(), i});
         }
     }
