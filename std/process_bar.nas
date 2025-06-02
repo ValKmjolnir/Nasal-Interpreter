@@ -112,11 +112,11 @@ var spinner = func() {
         for (var i=0;i<len;i+=1) {
             tmp=pop(vec)~tmp;
             append(res,tmp);
-            while(size(res[-1])!=16)
+            while (size(res[-1])!=16)
                 res[-1]~=" ";
         }
         tmp=res[-1];
-        while(tmp!="                ") {
+        while (tmp!="                ") {
             tmp=" "~substr(tmp,0,15);
             append(res,tmp);
         }

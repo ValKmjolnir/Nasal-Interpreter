@@ -40,15 +40,15 @@ These two expressions have the same first set,so `LL(1)` is useless for this lan
 Problems mentioned above have been solved for a long time, but recently i found a new problem here:
 
 ```javascript
-var f=func(x,y,z){return x+y+z}
-(a,b,c)=(0,1,2);
+var f = func(x, y, z) { return x + y + z }
+(a, b, c) = (0, 1, 2);
 ```
 
 This will be recognized as this:
 
 ```javascript
-var f=func(x,y,z){return x+y+z}(a,b,c)
-=(0,1,2);
+var f = func(x, y, z) { return x + y + z }(a, b, c)
+= (0, 1, 2);
 ```
 
 and causes fatal syntax error.
@@ -58,9 +58,9 @@ I think this is a serious design fault.
 To avoid this syntax error, change program like this, just add a semicolon:
 
 ```javascript
-var f=func(x,y,z){return x+y+z};
-                               ^ here
-(a,b,c)=(0,1,2);
+var f = func(x, y, z) { return x + y + z };
+                                          ^ here
+(a, b, c) = (0, 1, 2);
 ```
 
 ### version 1.0 parser (last update 2019/10/14)
@@ -222,8 +222,8 @@ Better use `callfv` instead of `callfh`,
 making this process slow.
 
 ```javascript
-var f=func(x,y){return x+y;}
-f(1024,2048);
+var f = func(x, y) { return x + y; }
+f(1024, 2048);
 ```
 
 ```x86asm
@@ -530,12 +530,12 @@ func <0x2a3>:
 Now we add coroutine in this runtime:
 
 ```javascript
-var coroutine={
-    create: func(function){return __cocreate;},
-    resume: func(co)      {return __coresume;},
-    yield:  func(args...) {return __coyield; },
-    status: func(co)      {return __costatus;},
-    running:func()        {return __corun;   }
+var coroutine = {
+    create:  func(function) { return __cocreate; },
+    resume:  func(co)       { return __coresume; },
+    yield:   func(args...)  { return __coyield;  },
+    status:  func(co)       { return __costatus; },
+    running: func()         { return __corun;    }
 };
 ```
 

@@ -10,7 +10,7 @@ const error& parse::compile(const lexer& lexer) {
 
     root = new code_block(toks[0].loc);
 
-    while(!lookahead(tok::tk_eof)) {
+    while (!lookahead(tok::tk_eof)) {
         root->add_expression(expression());
         if (lookahead(tok::tk_semi)) {
             match(tok::tk_semi);
@@ -114,7 +114,7 @@ bool parse::check_comma(const tok* panic_set) {
 
 bool parse::check_tuple() {
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
-    while(toks[++check_ptr].type!=tok::tk_eof && curve) {
+    while (toks[++check_ptr].type!=tok::tk_eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::tk_lcurve:   ++curve;   break;
             case tok::tk_lbracket: ++bracket; break;
@@ -167,7 +167,7 @@ bool parse::check_in_curve_multi_definition() {
 bool parse::check_special_call() {
     // special call means like this: function_name(a:1, b:2, c:3);
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
-    while(toks[++check_ptr].type!=tok::tk_eof && curve) {
+    while (toks[++check_ptr].type!=tok::tk_eof && curve) {
         switch(toks[check_ptr].type) {
             case tok::tk_lcurve:   ++curve;  break;
             case tok::tk_lbracket: ++bracket;break;
@@ -216,7 +216,7 @@ use_stmt* parse::use_stmt_gen() {
     auto node = new use_stmt(toks[ptr].loc);
     match(tok::tk_use);
     node->add_path(id());
-    while(lookahead(tok::tk_dot)) {
+    while (lookahead(tok::tk_dot)) {
         match(tok::tk_dot);
         node->add_path(id());
     }
@@ -276,7 +276,7 @@ vector_expr* parse::vec() {
     };
     auto node = new vector_expr(toks[ptr].loc);
     match(tok::tk_lbracket);
-    while(!lookahead(tok::tk_rbracket)) {
+    while (!lookahead(tok::tk_rbracket)) {
         node->add_element(calc());
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
@@ -294,7 +294,7 @@ vector_expr* parse::vec() {
 hash_expr* parse::hash() {
     auto node = new hash_expr(toks[ptr].loc);
     match(tok::tk_lbrace);
-    while(!lookahead(tok::tk_rbrace)) {
+    while (!lookahead(tok::tk_rbrace)) {
         node->add_member(pair());
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
@@ -342,7 +342,7 @@ function* parse::func() {
 
 void parse::params(function* func_node) {
     match(tok::tk_lcurve);
-    while(!lookahead(tok::tk_rcurve)) {
+    while (!lookahead(tok::tk_rcurve)) {
         auto param = new parameter(toks[ptr].loc);
         param->set_parameter_name(toks[ptr].str);
         match(tok::tk_id);
@@ -428,7 +428,7 @@ code_block* parse::expression_block() {
     auto node = new code_block(toks[ptr].loc);
     if (lookahead(tok::tk_lbrace)) {
         match(tok::tk_lbrace);
-        while(!lookahead(tok::tk_rbrace) && !lookahead(tok::tk_eof)) {
+        while (!lookahead(tok::tk_rbrace) && !lookahead(tok::tk_eof)) {
             node->add_expression(expression());
             if (lookahead(tok::tk_semi)) {
                 match(tok::tk_semi);
@@ -496,7 +496,7 @@ expr* parse::calc() {
 
 expr* parse::bitwise_or() {
     auto node = bitwise_xor();
-    while(lookahead(tok::tk_btor)) {
+    while (lookahead(tok::tk_btor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::bitwise_or);
         tmp->set_left(node);
@@ -511,7 +511,7 @@ expr* parse::bitwise_or() {
 
 expr* parse::bitwise_xor() {
     auto node = bitwise_and();
-    while(lookahead(tok::tk_btxor)) {
+    while (lookahead(tok::tk_btxor)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::bitwise_xor);
         tmp->set_left(node);
@@ -526,7 +526,7 @@ expr* parse::bitwise_xor() {
 
 expr* parse::bitwise_and() {
     auto node = or_expr();
-    while(lookahead(tok::tk_btand)) {
+    while (lookahead(tok::tk_btand)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::bitwise_and);
         tmp->set_left(node);
@@ -541,7 +541,7 @@ expr* parse::bitwise_and() {
 
 expr* parse::or_expr() {
     auto node = and_expr();
-    while(lookahead(tok::tk_or)) {
+    while (lookahead(tok::tk_or)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::condition_or);
         tmp->set_left(node);
@@ -556,7 +556,7 @@ expr* parse::or_expr() {
 
 expr* parse::and_expr() {
     auto node = cmp_expr();
-    while(lookahead(tok::tk_and)) {
+    while (lookahead(tok::tk_and)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::condition_and);
         tmp->set_left(node);
@@ -571,7 +571,7 @@ expr* parse::and_expr() {
 
 expr* parse::cmp_expr() {
     auto node = null_chain_expr();
-    while(tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
+    while (tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch(toks[ptr].type) {
             case tok::tk_cmpeq: tmp->set_operator_type(binary_operator::kind::cmpeq); break;
@@ -594,7 +594,7 @@ expr* parse::cmp_expr() {
 
 expr* parse::null_chain_expr() {
     auto node = additive_expr();
-    while(lookahead(tok::tk_quesques)) {
+    while (lookahead(tok::tk_quesques)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         tmp->set_operator_type(binary_operator::kind::null_chain);
         tmp->set_left(node);
@@ -609,7 +609,7 @@ expr* parse::null_chain_expr() {
 
 expr* parse::additive_expr() {
     auto node = multive_expr();
-    while(lookahead(tok::tk_add) ||
+    while (lookahead(tok::tk_add) ||
           lookahead(tok::tk_sub) ||
           lookahead(tok::tk_floater)) {
         auto tmp = new binary_operator(toks[ptr].loc);
@@ -633,7 +633,7 @@ expr* parse::multive_expr() {
     expr* node=(lookahead(tok::tk_sub) ||
                 lookahead(tok::tk_not) ||
                 lookahead(tok::tk_floater))? unary():scalar();
-    while(lookahead(tok::tk_mult) || lookahead(tok::tk_div)) {
+    while (lookahead(tok::tk_mult) || lookahead(tok::tk_div)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         if (lookahead(tok::tk_mult)) {
             tmp->set_operator_type(binary_operator::kind::mult);
@@ -718,14 +718,14 @@ expr* parse::scalar() {
         return null();
     }
     // check call and avoid ambiguous syntax:
-    //   var f = func(){}
+    //   var f = func() {}
     //   (var a, b, c) = (1, 2, 3);
     // will be incorrectly recognized like:
-    //   var f = func(){}(var a, b, c)
+    //   var f = func() {}(var a, b, c)
     if (is_call(toks[ptr].type) && !check_in_curve_multi_definition()) {
         auto call_node = new call_expr(toks[ptr].loc);
         call_node->set_first(node);
-        while(is_call(toks[ptr].type)) {
+        while (is_call(toks[ptr].type)) {
             call_node->add_call(call_scalar());
         }
         node = call_node;
@@ -776,7 +776,7 @@ call_vector* parse::callv() {
     };
     auto node = new call_vector(toks[ptr].loc);
     match(tok::tk_lbracket);
-    while(!lookahead(tok::tk_rbracket)) {
+    while (!lookahead(tok::tk_rbracket)) {
         node->add_slice(subvec());
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
@@ -807,7 +807,7 @@ call_function* parse::callf() {
     auto node = new call_function(toks[ptr].loc);
     bool special_call=check_special_call();
     match(tok::tk_lcurve);
-    while(!lookahead(tok::tk_rcurve)) {
+    while (!lookahead(tok::tk_rcurve)) {
         node->add_argument(special_call?pair():calc());
         if (lookahead(tok::tk_comma))
             match(tok::tk_comma);
@@ -883,7 +883,7 @@ multi_identifier* parse::outcurve_def() {
 
 multi_identifier* parse::multi_id() {
     auto node = new multi_identifier(toks[ptr].loc);
-    while(!lookahead(tok::tk_eof)) {
+    while (!lookahead(tok::tk_eof)) {
         // only identifier is allowed here
         node->add_var(id());
         if (lookahead(tok::tk_comma)) {
@@ -909,7 +909,7 @@ tuple_expr* parse::multi_scalar() {
     };
     auto node = new tuple_expr(toks[ptr].loc);
     match(tok::tk_lcurve);
-    while(!lookahead(tok::tk_rcurve)) {
+    while (!lookahead(tok::tk_rcurve)) {
         node->add_element(calc());
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
@@ -1068,7 +1068,7 @@ iter_expr* parse::iter_gen() {
     // call expression
     auto tmp = new call_expr(id_node->get_location());
     tmp->set_first(id_node);
-    while(is_call(toks[ptr].type)) {
+    while (is_call(toks[ptr].type)) {
         tmp->add_call(call_scalar());
     }
     node->set_call(tmp);
@@ -1090,7 +1090,7 @@ condition_expr* parse::cond() {
     node->set_if_statement(ifnode);
 
     // generate elsif
-    while(lookahead(tok::tk_elsif)) {
+    while (lookahead(tok::tk_elsif)) {
         auto elsifnode = new if_expr(toks[ptr].loc);
         match(tok::tk_elsif);
         match(tok::tk_lcurve);

@@ -64,7 +64,7 @@ __`vec`__ 有不受限制的长度并且可以存储所有类型的数据。(当
 
 ```javascript
 var vec = [];
-var vec = [0, nil, {}, [], func(){return 0}];
+var vec = [0, nil, {}, [], func() { return 0 }];
 append(vec, 0, 1, 2);
 ```
 
@@ -247,7 +247,7 @@ if (1) {
 while循环和for循环大体上与C/C++是一致的。
 
 ```javascript
-while(condition) {
+while (condition) {
     continue;
 }
 for (var i = 0; i<10; i += 1) {
@@ -314,7 +314,7 @@ var fib = func(f) {
 }(
     func(f) {
         return func(x) {
-            if(x<2) return x;
+            if (x<2) return x;
             return f(f)(x-1)+f(f)(x-2);
         }
     }
@@ -579,7 +579,7 @@ var fib(var* args, usize size, gc* ngc) {
     var num = args[0];
     // 如果你想让这个函数有更强的稳定性，那么一定要进行合法性检查
     // nas_err会输出错误信息并返回错误类型让虚拟机终止执行
-    if(num.type!=vm_num) {
+    if (num.type!=vm_num) {
         return nas_err("extern_fib", "\"num\" must be number");
     }
     // vm_num作为普通的数字类型，不是内存管理的对象，所以无需申请

@@ -43,7 +43,7 @@ void repl::update_temp_file(const std::vector<std::string>& src) {
 }
 
 bool repl::check_need_more_input() {
-    while(true) {
+    while (true) {
         update_temp_file();
         auto nasal_lexer = std::make_unique<lexer>();
         if (nasal_lexer->scan("<nasal-repl>").geterr()) {
@@ -160,7 +160,7 @@ void repl::execute() {
     std::cout << " (" << __DATE__ << " " << __TIME__ << ")\n";
     help();
 
-    while(true) {
+    while (true) {
         auto line = readline();
         if (!line.length()) {
             continue;

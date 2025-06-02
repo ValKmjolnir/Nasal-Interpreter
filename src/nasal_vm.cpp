@@ -709,7 +709,7 @@ void vm::run(const codegen& gen,
         code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
     }
-    while(code[ctx.pc]) {
+    while (code[ctx.pc]) {
         if (interrupt_ptr && interrupt_ptr->load()) {
             throw std::runtime_error("VM execution interrupted by timeout");
         }

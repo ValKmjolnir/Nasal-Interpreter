@@ -10,7 +10,7 @@ var chars = "abcdefghijklmnopqrstuvwxyz" ~
 chars = split("", chars);
 
 print("\ec");
-while(1) {
+while (1) {
     var key = libkey.nonblock();
     if (key!=nil and chr(key)=="q") {
         break;

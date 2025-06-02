@@ -45,7 +45,7 @@ void gc::mark() {
     }
 
     // normal mark
-    while(!bfs.empty()) {
+    while (!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_type::vm_num ||
@@ -66,7 +66,7 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
         }
         mark_var(bfs, value);
     }
-    while(!bfs.empty()) {
+    while (!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_type::vm_num ||

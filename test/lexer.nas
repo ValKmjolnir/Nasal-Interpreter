@@ -13,7 +13,7 @@ var lexer = func(file) {
     }
     return {
         jmp_note:func() {
-            while(ptr<len and s[ptr]!='\n'[0])
+            while (ptr<len and s[ptr]!='\n'[0])
                 ptr+=1;
             if (ptr<len and s[ptr]=='\n'[0])
                 line+=1;
@@ -21,7 +21,7 @@ var lexer = func(file) {
         },
         id_gen:func() {
             var tmp="";
-            while(ptr<len) {
+            while (ptr<len) {
                 var c=s[ptr];
                 if (('a'[0]<=c and c<='z'[0])
                 or ('A'[0]<=c and c<='Z'[0])
@@ -38,7 +38,7 @@ var lexer = func(file) {
             var str="";
             var mark=chr(s[ptr]);
             ptr+=1;
-            while(ptr<len and chr(s[ptr])!=mark) {
+            while (ptr<len and chr(s[ptr])!=mark) {
                 if (chr(s[ptr])=='\\') {
                     ptr+=1;
                     var c=chr(s[ptr]);
@@ -73,7 +73,7 @@ var lexer = func(file) {
             ptr+=1;
             if (ptr<len and chr(s[ptr])=='x') {
                 ptr+=1;
-                while(ptr<len and
+                while (ptr<len and
                 ('a'[0]<=s[ptr] and s[ptr]<='f'[0]
                 or '0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
                     number~=chr(s[ptr]);
@@ -83,21 +83,21 @@ var lexer = func(file) {
                 return;
             } elsif (ptr<len and chr(s[ptr])=='o') {
                 ptr+=1;
-                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='7'[0])) {
+                while (ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='7'[0])) {
                     number~=chr(s[ptr]);
                     ptr+=1;
                 }
                 gen(num(number));
                 return;
             }
-            while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
+            while (ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
                 number~=chr(s[ptr]);
                 ptr+=1;
             }
             if (ptr<len and chr(s[ptr])=='.') {
                 number~=chr(s[ptr]);
                 ptr+=1;
-                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
+                while (ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
                     number~=chr(s[ptr]);
                     ptr+=1;
                 }
@@ -109,7 +109,7 @@ var lexer = func(file) {
                     number~=chr(s[ptr]);
                     ptr+=1;
                 }
-                while(ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
+                while (ptr<len and ('0'[0]<=s[ptr] and s[ptr]<='9'[0])) {
                     number~=chr(s[ptr]);
                     ptr+=1;
                 }
@@ -148,7 +148,7 @@ var lexer = func(file) {
         },
         compile:func() {
             line=1;
-            while(ptr<len) {
+            while (ptr<len) {
                 var c=s[ptr];
                 if (c=='#'[0])
                     me.jmp_note();

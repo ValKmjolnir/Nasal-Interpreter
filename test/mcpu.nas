@@ -91,7 +91,7 @@ var ctx_info = func() {
 }
 var exec = func(info=1) {
     println("[",os.time(),"] executing ...");
-    while(1) {
+    while (1) {
         ir=[mem[pc],mem[pc+1],mem[pc+2],mem[pc+3]];
         if (info)ctx_info();
         var op=ir[0];

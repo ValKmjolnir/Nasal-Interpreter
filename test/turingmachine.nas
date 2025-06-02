@@ -68,7 +68,7 @@ var run = func(table,start,stop) {
     var (state,pointer)=(start,0);
 
     prt(state,pointer,paper);
-    while(state!=stop) {
+    while (state!=stop) {
         if (!contains(machine.states,state))
             die("no matching function for state:"~state);
         var found=0;

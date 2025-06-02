@@ -42,7 +42,7 @@ var myers = func(src,dst,show_table=0) {
 
     var (total,path,vec)=([],[],[[0,0,-1]]);
     visited[0]=1;
-    while(size(vec)) {
+    while (size(vec)) {
         append(total,vec);
         var tmp=[];
         forindex(var i;vec) {

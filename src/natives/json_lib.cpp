@@ -165,7 +165,7 @@ std::string json::stringify(var& object) {
 }
 
 void json::next() {
-    while(ptr<text.length() && !check(text[ptr])) {
+    while (ptr<text.length() && !check(text[ptr])) {
         if (text[ptr]=='\n') {
             ++line;
         } else if (text[ptr]!=' ' && text[ptr]!='\t' && text[ptr]!='\r') {
@@ -193,7 +193,7 @@ void json::next() {
     if (is_num(c) || c=='-' || c=='+') {
         auto temp = std::string(1, c);
         ++ptr;
-        while(ptr<text.length() && (
+        while (ptr<text.length() && (
             is_num(text[ptr]) ||
             text[ptr]=='.' ||
             text[ptr]=='e' ||
@@ -207,7 +207,7 @@ void json::next() {
     } else if (is_id(c)) {
         auto temp = std::string(1, c);
         ++ptr;
-        while(ptr<text.length() && (is_id(text[ptr]) || is_num(text[ptr]))) {
+        while (ptr<text.length() && (is_id(text[ptr]) || is_num(text[ptr]))) {
             temp += text[ptr];
             ++ptr;
         }
@@ -221,7 +221,7 @@ void json::next() {
         auto begin = c;
         auto temp = std::string("");
         ++ptr;
-        while(ptr<text.length() && text[ptr]!=begin) {
+        while (ptr<text.length() && text[ptr]!=begin) {
             temp += text[ptr];
             ++ptr;
             if (text[ptr-1]=='\\' && ptr<text.length()) {
@@ -264,7 +264,7 @@ var json::vector_object_generate(gc* ngc) {
     temp_stack.vec().elems.push_back(vect_object);
     match(json_token_type::tok_lbrkt);
     vector_member(vect_object.vec(), ngc);
-    while(this_token.type==json_token_type::tok_comma) {
+    while (this_token.type==json_token_type::tok_comma) {
         match(json_token_type::tok_comma);
         vector_member(vect_object.vec(), ngc);
     }
@@ -303,7 +303,7 @@ var json::hash_object_generate(gc* ngc) {
     temp_stack.vec().elems.push_back(hash_object);
     match(json_token_type::tok_lbrace);
     hash_member(hash_object.hash(), ngc);
-    while(this_token.type==json_token_type::tok_comma) {
+    while (this_token.type==json_token_type::tok_comma) {
         match(json_token_type::tok_comma);
         hash_member(hash_object.hash(), ngc);
     }

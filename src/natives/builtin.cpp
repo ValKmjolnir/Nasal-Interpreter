@@ -121,7 +121,7 @@ var builtin_split(context* ctx, gc* ngc) {
 
     usize last = 0;
     usize pos = s.find(sep, 0);
-    while(pos!=std::string::npos) {
+    while (pos!=std::string::npos) {
         if (pos>last) {
             vec.push_back(ngc->newstr(s.substr(last, pos-last)));
         }
@@ -169,7 +169,7 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
 
     usize last = 0;
     usize pos = s.find(sep, 0);
-    while(pos!=std::string::npos) {
+    while (pos!=std::string::npos) {
         if (pos>=last) {
             vec.push_back(ngc->newstr(s.substr(last, pos-last)));
         }

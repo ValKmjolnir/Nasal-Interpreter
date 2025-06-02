@@ -150,7 +150,7 @@ void filestream::load(const std::string& f) {
         std::exit(1);
     }
     
-    while(!in.eof()) {
+    while (!in.eof()) {
         std::string line;
         std::getline(in, line);
         res.push_back(line);

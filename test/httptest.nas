@@ -10,7 +10,7 @@ var http = func() {
     return {
         establish:func(ip,port) {
             sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
-            while(socket.bind(sd,ip,port)<0) {
+            while (socket.bind(sd,ip,port)<0) {
                 println("[",os.time(),"] failed to bind socket "~sd~" at IP: "~ip~" port: "~port~".");
                 unix.sleep(5);
                 println("[",os.time(),"] retrying...");
@@ -98,7 +98,7 @@ var html_read_file = func(filename) {
         s=char(file_text[index]);
     }
 
-    while(1) {
+    while (1) {
         if (next()>=len)
             break;
         if (s==">")
@@ -111,7 +111,7 @@ var html_read_file = func(filename) {
             content~="<code class=\"opr\">"~s~"</code>";
         elsif (s=="_" or ("a"[0]<=s[0] and s[0]<="z"[0]) or ("A"[0]<=s[0] and s[0]<="Z"[0]) or s[0]<0 or s[0]>=128) {
             var tmp=""~s; # generate a new string
-            while(1) {
+            while (1) {
                 if (next()>=len)
                     break;
                 if (s=="_" or ("a"[0]<=s[0] and s[0]<="z"[0]) or ("A"[0]<=s[0] and s[0]<="Z"[0]) or ("0"[0]<=s[0] and s[0]<="9"[0]) or s[0]<0 or s[0]>=128)
@@ -138,7 +138,7 @@ var html_read_file = func(filename) {
             }
             if (s=="o") {
                 content~="o";
-                while(1) {
+                while (1) {
                     if (next()>=len)
                         break;
                     if ("0"[0]<=s[0] and s[0]<="7"[0])
@@ -150,7 +150,7 @@ var html_read_file = func(filename) {
                 prev();
             } elsif (s=="x") {
                 content~="x";
-                while(1) {
+                while (1) {
                     if (next()>=len)
                         break;
                     if (("0"[0]<=s[0] and s[0]<="9"[0]) or ("a"[0]<=s[0] and s[0]<='f') or ("A"[0]<=s[0] or s[0]<="F"))
@@ -161,7 +161,7 @@ var html_read_file = func(filename) {
                 content~="</code>";
                 prev();
             } elsif (("0"[0]<=s[0] and s[0]<="9"[0]) or s=="." or s=="e") {
-                while("0"[0]<=s[0] and s[0]<="9"[0]) {
+                while ("0"[0]<=s[0] and s[0]<="9"[0]) {
                     content~=s;
                     if (next()>=len)
                         break;
@@ -171,7 +171,7 @@ var html_read_file = func(filename) {
                     if (next()>=len)
                         break;
                 }
-                while("0"[0]<=s[0] and s[0]<="9"[0]) {
+                while ("0"[0]<=s[0] and s[0]<="9"[0]) {
                     content~=s;
                     if (next()>=len)
                         break;
@@ -186,7 +186,7 @@ var html_read_file = func(filename) {
                             break;
                     }
                 }
-                while("0"[0]<=s[0] and s[0]<="9"[0]) {
+                while ("0"[0]<=s[0] and s[0]<="9"[0]) {
                     content~=s;
                     if (next()>=len)
                         break;
@@ -200,7 +200,7 @@ var html_read_file = func(filename) {
         } elsif (s=="\"" or s=="'" or s=="`") {
             var quot=s~""; # generate a new string
             content~="<code class=\"str\">"~s;
-            while(1) {
+            while (1) {
                 if (next()>=len)
                     break;
                 if (s==quot) {
@@ -221,7 +221,7 @@ var html_read_file = func(filename) {
             }
         } elsif (s=="#") {
             content~="<code class=\"note\">"~s;
-            while(1) {
+            while (1) {
                 if (next()>=len)
                     break;
                 if (s=="\n" or s=="\r") {
@@ -282,12 +282,12 @@ var respond={
 var files = func() {
     var res={};
     var dd=unix.opendir("./test");
-    while((var name=unix.readdir(dd))!=nil)
+    while ((var name=unix.readdir(dd))!=nil)
         res[name]=1;
     return res;
 }();
 
-while(1) {
+while (1) {
     var client=http.accept();
     var data=http.recv(client);
     if (data==nil) {

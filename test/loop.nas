@@ -8,9 +8,9 @@ for (var i=1;;i+=1)break;
 for (var i=1;i<10;i+=1)
     print(i," ");
 print("\n");
-while(1)break;
+while (1)break;
 var j=0;
-while(j<10) {
+while (j<10) {
     print(j," ");
     j+=1;
 }

@@ -188,7 +188,7 @@ f64 hex_to_f64(const char* str) {
 
 f64 oct_to_f64(const char* str) {
     f64 ret = 0;
-    while('0'<=*str && *str<'8') {
+    while ('0'<=*str && *str<'8') {
         ret = ret*8+(*str++-'0');
     }
     if (*str) {
@@ -206,7 +206,7 @@ f64 oct_to_f64(const char* str) {
 f64 dec_to_f64(const char* str) {
     f64 ret = 0, num_pow = 0;
     bool negative = false;
-    while('0'<=*str && *str<='9') {
+    while ('0'<=*str && *str<='9') {
         ret = ret*10+(*str++-'0');
     }
     if (!*str) {
@@ -217,7 +217,7 @@ f64 dec_to_f64(const char* str) {
             return nan("");
         }
         num_pow = 0.1;
-        while('0'<=*str && *str<='9') {
+        while ('0'<=*str && *str<='9') {
             ret += num_pow*(*str++-'0');
             num_pow *= 0.1;
         }
@@ -238,7 +238,7 @@ f64 dec_to_f64(const char* str) {
         return nan("");
     }
     num_pow = 0;
-    while('0'<=*str && *str<='9') {
+    while ('0'<=*str && *str<='9') {
         num_pow = num_pow*10+(*str++-'0');
     }
     if (*str) {

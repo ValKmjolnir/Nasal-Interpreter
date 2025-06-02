@@ -6,11 +6,11 @@ var var_sort = func() {
         var base=left+int(rand()*(right-left));
         (vec[left],vec[base])=(vec[base],vec[left]);
         var (i,j,tmp)=(left,right,vec[left]);
-        while(i<j) {
-            while(i<j and tmp<vec[j])
+        while (i<j) {
+            while (i<j and tmp<vec[j])
                 j-=1;
             vec[i]=vec[j];
-            while(i<j and vec[i]<tmp)
+            while (i<j and vec[i]<tmp)
                 i+=1;
             vec[j]=vec[i];
             j-=1;

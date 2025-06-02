@@ -67,7 +67,7 @@ __`vec`__ has unlimited length and can store all types of values.
 
 ```javascript
 var vec = [];
-var vec = [0, nil, {}, [], func(){return 0}];
+var vec = [0, nil, {}, [], func() { return 0 }];
 append(vec, 0, 1, 2);
 ```
 
@@ -255,7 +255,7 @@ if (1) {
 While loop and for loop is simalar to C/C++.
 
 ```javascript
-while(condition) {
+while (condition) {
     continue;
 }
 for (var i = 0; i<10; i += 1) {
@@ -327,7 +327,7 @@ var fib = func(f) {
 }(
     func(f) {
         return func(x) {
-            if(x<2) return x;
+            if (x<2) return x;
             return f(f)(x-1)+f(f)(x-2);
         }
     }
@@ -597,7 +597,7 @@ var fib(var* args, usize size, gc* ngc) {
     // if you want your function safer, try this
     // nas_err will print the error info on screen
     // and return vm_null for runtime to interrupt
-    if(num.type!=vm_num) {
+    if (num.type!=vm_num) {
         return nas_err("extern_fib", "\"num\" must be number");
     }
     // ok, you must know that vm_num now is not managed by gc
