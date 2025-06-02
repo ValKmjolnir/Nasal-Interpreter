@@ -4,7 +4,7 @@
 var join = func(sep, vec) {
     var len = size(vec);
     var res = "";
-    for(var i = 0; i<len; i += 1) {
+    for (var i = 0; i<len; i += 1) {
         res ~= vec[i];
         res ~= (i==len-1? "":sep);
     }
@@ -26,7 +26,7 @@ var __temp_contains = func(hash, key) {
 var __num_to_char = [];
 var __char_to_num = {};
 func() {
-    for(var i = 0; i<256; i += 1) {
+    for (var i = 0; i<256; i += 1) {
         __temp_append(__num_to_char, __temp_char(i));
         __char_to_num[__temp_char(i)] = i;
     }

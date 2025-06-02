@@ -3,7 +3,7 @@ use std.io;
 
 var to_lower = func(s) {
     var tmp="";
-    for(var i=0;i<size(s);i+=1) {
+    for (var i=0;i<size(s);i+=1) {
         var c=s[i];
         if ('a'[0]<=c and c<='z'[0])
             tmp~=chr(c);
@@ -19,7 +19,7 @@ var spliter = func(content) {
     var token={};
     var len=size(content);
     var s="";
-    for(var i=0;i<len;i+=1) {
+    for (var i=0;i<len;i+=1) {
         var n=content[i];
         var c=chr(n);
         if (('a'[0]<=n and n<='z'[0]) or ('A'[0]<=n and n<='Z'[0])) {

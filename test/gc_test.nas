@@ -38,21 +38,21 @@ var MAX_ITER_NUM = 0.5e5;
 
 var append_vec = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, [1, 2, 3, 4]);
     }
 }
 
 var append_hash = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, {a:1, b:2, c:3, d:4});
     }
 }
 
 var append_func = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, func {
             println(arg);
         });
@@ -61,42 +61,42 @@ var append_func = func {
 
 var append_vec_in_vec = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, [[], [], [], []]);
     }
 }
 
 var append_hash_in_vec = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, [{}, {}, {}, {}]);
     }
 }
 
 var append_vec_in_hash = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, {a:[], b:[], c:[], d:[]});
     }
 }
 
 var append_hash_in_hash = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, {a:{}, b:{}, c:{}, d:{}});
     }
 }
 
 var append_hash_vec_hash = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, {a:[{}], b:[{}], c:[{}], d:[{}]});
     }
 }
 
 var append_tree = func {
     var res = [];
-    for(var i=0; i<MAX_ITER_NUM; i+=1) {
+    for (var i=0; i<MAX_ITER_NUM; i+=1) {
         append(res, {
             a: {b: {c:[]}},
             d: {e: {}},

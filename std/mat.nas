@@ -22,8 +22,8 @@ var rand_init = func(a) {
 
 var mat_print = func(a) {
     var (width,height,ref)=(a.width,a.height,a.mat);
-    for(var i=0;i<height;i+=1) {
-        for(var j=0;j<width;j+=1) {
+    for (var i=0;i<height;i+=1) {
+        for (var j=0;j<width;j+=1) {
             print(ref[i*width+j]," ");
         }
         println();
@@ -42,8 +42,8 @@ var add = func(a,b) {
     var (width,height,ref)=(res.width,res.height,res.mat);
     var (aref,bref)=(a.mat,b.mat);
 
-    for(var i=0;i<height;i+=1) {
-        for(var j=0;j<width;j+=1) {
+    for (var i=0;i<height;i+=1) {
+        for (var j=0;j<width;j+=1) {
             ref[i*width+j]=aref[i*width+j]+bref[i*width+j];
         }
     }
@@ -62,8 +62,8 @@ var sub = func(a,b) {
     var (width,height,ref)=(res.width,res.height,res.mat);
     var (aref,bref)=(a.mat,b.mat);
 
-    for(var i=0;i<height;i+=1) {
-        for(var j=0;j<width;j+=1) {
+    for (var i=0;i<height;i+=1) {
+        for (var j=0;j<width;j+=1) {
             ref[i*width+j]=aref[i*width+j]-bref[i*width+j];
         }
     }
@@ -82,8 +82,8 @@ var hardamard = func(a,b) {
     var (width,height,ref)=(res.width,res.height,res.mat);
     var (aref,bref)=(a.mat,b.mat);
 
-    for(var i=0;i<height;i+=1) {
-        for(var j=0;j<width;j+=1) {
+    for (var i=0;i<height;i+=1) {
+        for (var j=0;j<width;j+=1) {
             ref[i*width+j]=aref[i*width+j]*bref[i*width+j];
         }
     }
@@ -122,8 +122,8 @@ var trans = func(a) {
     var res=mat(a.height,a.width);
     var ref=res.mat;
     var (a_width,a_height,aref)=(a.width,a.height,a.mat);
-    for(var i=0;i<a_width;i+=1) {
-        for(var j=0;j<a_height;j+=1) {
+    for (var i=0;i<a_width;i+=1) {
+        for (var j=0;j<a_height;j+=1) {
             ref[i*a_height+j]=aref[j*a_width+i];
         }
     }
@@ -152,9 +152,9 @@ var mult = func(a,b) {
     var (a_width,aref)=(a.width,a.mat);
     var (b_width,bref)=(b.width,b.mat);
 
-    for(var i=0;i<res_width;i+=1) {
-        for(var j=0;j<res_height;j+=1) {
-            for(var k=0;k<a_width;k+=1) {
+    for (var i=0;i<res_width;i+=1) {
+        for (var j=0;j<res_height;j+=1) {
+            for (var k=0;k<a_width;k+=1) {
                 ref[j*res_width+i]+=aref[j*a_width+k]*bref[k*b_width+i];
             }
         }

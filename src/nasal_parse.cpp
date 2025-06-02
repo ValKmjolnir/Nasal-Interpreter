@@ -103,7 +103,7 @@ bool parse::is_call(tok type) {
 }
 
 bool parse::check_comma(const tok* panic_set) {
-    for(u32 i = 0; panic_set[i]!=tok::tk_null; ++i) {
+    for (u32 i = 0; panic_set[i]!=tok::tk_null; ++i) {
         if (lookahead(panic_set[i])) {
             die(prevspan, "expected \",\" between scalars");
             return true;
@@ -987,7 +987,7 @@ for_expr* parse::for_loop() {
     } else {
         node->set_initial(calc());
     }
-    match(tok::tk_semi, "expected \";\" in for(;;)");
+    match(tok::tk_semi, "expected \";\" in for (;;)");
 
     // conditional expression
     if (lookahead(tok::tk_eof)) {
@@ -998,7 +998,7 @@ for_expr* parse::for_loop() {
     } else {
         node->set_condition(calc());
     }
-    match(tok::tk_semi, "expected \";\" in for(;;)");
+    match(tok::tk_semi, "expected \";\" in for (;;)");
 
     //after loop expression
     if (lookahead(tok::tk_eof)) {

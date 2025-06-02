@@ -250,7 +250,7 @@ while循环和for循环大体上与C/C++是一致的。
 while(condition) {
     continue;
 }
-for(var i = 0; i<10; i += 1) {
+for (var i = 0; i<10; i += 1) {
     break;
 }
 ```
@@ -457,7 +457,7 @@ var builtin_print(context*, gc*);
 var builtin_print(context* ctx, gc* ngc) {
     // 局部变量的下标其实是从 1 开始的
     // 因为 local[0] 是保留给 'me' 的空间
-    for(auto& i : ctx->localr[1].vec().elems) {
+    for (auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
     }
     std::cout << std::flush;
@@ -483,11 +483,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto res = ngc->temp = ngc->alloc(vm_vec);
     auto& vec = res.vec().elems;
     if (hash.type==vm_hash) {
-        for(const auto& iter : hash.hash().elems) {
+        for (const auto& iter : hash.hash().elems) {
             vec.push_back(ngc->newstr(iter.first));
         }
     } else {
-        for(const auto& iter : hash.map().mapper) {
+        for (const auto& iter : hash.map().mapper) {
             vec.push_back(ngc->newstr(iter.first));
         }
     }
@@ -624,7 +624,7 @@ Windows(`.dll`):
 use std.dylib;
 var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
-for(var i = 1; i<30; i += 1)
+for (var i = 1; i<30; i += 1)
     println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -642,7 +642,7 @@ use std.dylib;
 var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
-for(var i = 1; i<30; i += 1)
+for (var i = 1; i<30; i += 1)
     println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```

@@ -123,7 +123,7 @@ std::string json::vector_generate(nas_vec& vect) {
     }
     vect.printed = true;
     std::string out = "[";
-    for(auto& i : vect.elems) {
+    for (auto& i : vect.elems) {
         out += var_generate(i) + ",";
     }
     if (out.back()==',') {
@@ -142,7 +142,7 @@ std::string json::hash_generate(nas_hash& hash) {
     }
     hash.printed = true;
     std::string out = "{";
-    for(auto& i : hash.elems) {
+    for (auto& i : hash.elems) {
         out += "\"" + i.first + "\":";
         out += var_generate(i.second) + ",";
     }

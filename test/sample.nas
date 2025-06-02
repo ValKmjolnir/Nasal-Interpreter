@@ -88,7 +88,7 @@ listify(1, 2, 3, 4); # returns a list: [1, 2, 3, 4]
 # this is not a "declaration", just a qualifier on the "=" operator.
 #
 var innerFunc = func {
-    for(var dist=0; dist<100; dist += 1) {
+    for (var dist=0; dist<100; dist += 1) {
         # Does not interfere with the "dist" symbol defined above
     }
 }
@@ -134,7 +134,7 @@ var doSomething = dummyFunc;
 var stillGoing = 0;
 while(stillGoing) { doSomething(); }
 
-for(var i=0; i < 3; i = i+1) {
+for (var i=0; i < 3; i = i+1) {
     elem = list1[i];
     doSomething(elem);
 }
@@ -208,7 +208,7 @@ var Class2 = {
 #
 var string = "abcdefghijklmnopqrstuvwxyz";
 var ascii_sum = 0;
-for(var i=0; i<size(string); i+=1) { ascii_sum += string[i]; }
+for (var i=0; i<size(string); i+=1) { ascii_sum += string[i]; }
 
 #
 # You can use backquotes to write UTF8 character constants
@@ -224,7 +224,7 @@ if (`©` != 169) { print("Unicode violation bug!\n"); }
 #
 var ascii_lc = func(string) {
     var mutable = string ~ "";
-    for(var i=0; i<size(mutable); i+=1) {
+    for (var i=0; i<size(mutable); i+=1) {
         if (mutable[i] >= `A` and mutable[i] <= `Z`) {
             mutable[i] += (`a` - `A`);
         }
@@ -257,7 +257,7 @@ print(joined_list, "\n");
 #
 var invert = func(vec) {
     var hash = {};
-    for(var i=0; i<size(vec); i = i+1) {
+    for (var i=0; i<size(vec); i = i+1) {
         hash[vec[i]] = i;
     }
     return hash;
@@ -287,9 +287,9 @@ var join = func {
 var doneWithInnerLoopEarly = dummyFunc;
 var completelyDone = dummyFunc;
 # not supported now
-for(#OUTER;
+for (#OUTER;
     var i=0; i<100; i = i+1) {
-    for(var j=0; j<100; j = j+1) {
+    for (var j=0; j<100; j = j+1) {
         if (doneWithInnerLoopEarly()) {
             break;
         } elsif (completelyDone()) {
@@ -315,7 +315,7 @@ var dump = func(o) {
     } elsif (typeof(o) == "vector") {
         result = result ~ "[ ";
         if (size(o) > 0) { result = result ~ dump(o[0]); }
-        for(i=1; i<size(o); i=i+1) {
+        for (i=1; i<size(o); i=i+1) {
             result = result ~ ", " ~ dump(o[i]);
         }
         result = result ~ " ]";
@@ -326,7 +326,7 @@ var dump = func(o) {
             var k = ks[0];
             result = result ~ k ~ ":" ~ dump(o[k]);
         }
-        for(i=1; i<size(o); i=i+1) {
+        for (i=1; i<size(o); i=i+1) {
             var k = ks[i];
             result = result ~ ", " ~ k ~ " : " ~ dump(o[k]);
         }

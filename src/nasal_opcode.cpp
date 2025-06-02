@@ -14,7 +14,7 @@ void codestream::set(const f64* number_list,
     files = file_list;
 
     global_variable.resize(globals.size());
-    for(auto& [name, index]: globals) {
+    for (auto& [name, index]: globals) {
         global_variable[index] = name;
     }
 }
@@ -47,7 +47,7 @@ void codestream::dump(std::ostream& out) const {
         << setw(2) << setfill('0') << static_cast<u32>(op) << ":" << dec;
 
     // dump immediate number(hex format)
-    for(i32 i = 64-8; i>=0; i -= 8) {
+    for (i32 i = 64-8; i>=0; i -= 8) {
         auto this_byte = ((num>>i)&0xff);
         out << hex << setw(2) << setfill('0') << this_byte << dec << " ";
     }

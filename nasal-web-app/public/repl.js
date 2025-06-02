@@ -200,7 +200,7 @@ const examples = {
 println("x = ", x);`,
     
     loops: `var sum = 0;
-for(var i = 1; i <= 5; i += 1) {
+for (var i = 1; i <= 5; i += 1) {
     sum += i;
 }
 println("Sum:", sum);`,

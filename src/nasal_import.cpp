@@ -36,7 +36,7 @@ std::string linker::get_path(expr* node) {
     if (node->get_type()==expr_type::ast_use) {
         auto file_relative_path = std::string("");
         const auto& path = reinterpret_cast<use_stmt*>(node)->get_path();
-        for(auto i : path) {
+        for (auto i : path) {
             file_relative_path += i->get_name();
             if (i!=path.back()) {
                 file_relative_path += (util::is_windows()? "\\":"/");
@@ -56,12 +56,12 @@ std::string linker::find_real_file_path(const std::string& filename,
     std::vector<fs::path> path_list = {filename};
 
     // generate search path from environ path
-    for(const auto& p : envpath) {
+    for (const auto& p : envpath) {
         path_list.push_back(fs::path(p)/filename);
     }
 
     // search file
-    for(const auto& path : path_list) {
+    for (const auto& path : path_list) {
         if (fs::exists(path)) {
             return path.str();
         }
@@ -82,7 +82,7 @@ std::string linker::find_real_file_path(const std::string& filename,
         return "";
     }
     auto path_list_info = std::string("");
-    for(const auto& path : path_list) {
+    for (const auto& path : path_list) {
         path_list_info += "  -> " + path.str() + "\n";
     }
     err.err("link",
@@ -138,7 +138,7 @@ bool linker::import_check(expr* node) {
 
 bool linker::check_exist_or_record_file(const std::string& file) {
     // avoid importing the same file
-    for(const auto& name : imported_files) {
+    for (const auto& name : imported_files) {
         if (file==name) {
             return true;
         }
@@ -148,7 +148,7 @@ bool linker::check_exist_or_record_file(const std::string& file) {
 }
 
 bool linker::check_self_import(const std::string& file) {
-    for(const auto& name : module_load_stack) {
+    for (const auto& name : module_load_stack) {
         if (file==name) {
             return true;
         }
@@ -158,7 +158,7 @@ bool linker::check_self_import(const std::string& file) {
 
 std::string linker::generate_self_import_path(const std::string& filename) {
     std::string res = "";
-    for(const auto& i : module_load_stack) {
+    for (const auto& i : module_load_stack) {
         res += "[" + i + "] -> ";
     }
     return res + "[" + filename + "]";
@@ -166,7 +166,7 @@ std::string linker::generate_self_import_path(const std::string& filename) {
 
 void linker::merge_tree(code_block* new_tree_root, code_block* old_tree_root) {
     // add children of add_root to the back of root
-    for(auto& i : old_tree_root->get_expressions()) {
+    for (auto& i : old_tree_root->get_expressions()) {
         new_tree_root->add_expression(i);
     }
     // clean old root
@@ -329,7 +329,7 @@ return_expr* linker::generate_module_return(code_block* block) {
     auto result = new return_expr(block->get_location());
     auto value = new hash_expr(block->get_location());
     result->set_value(value);
-    for(const auto& i : finder->do_find(block)) {
+    for (const auto& i : finder->do_find(block)) {
         auto pair = new hash_pair(block->get_location());
         // do not export symbol begins with '_'
         if (i.name.length() && i.name[0]=='_') {
@@ -369,7 +369,7 @@ definition_expr* linker::generate_module_definition(code_block* block) {
 void linker::load(code_block* program_root, const std::string& filename) {
     // load imported modules
     std::unordered_set<std::string> used_modules = {};
-    for(auto& import_node : program_root->get_expressions()) {
+    for (auto& import_node : program_root->get_expressions()) {
         if (!import_check(import_node)) {
             break;
         }

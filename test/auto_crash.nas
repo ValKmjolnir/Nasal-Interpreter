@@ -34,7 +34,7 @@ var road_check_func = func() {
         var left_range  = 0;
         var right_range = 0;
 
-        for(var i=0;i>-0.00005;i-=0.000001) {
+        for (var i=0;i>-0.00005;i-=0.000001) {
             car_heading = props.getNode("/orientation/heading-deg",1).getValue();
             lat_change  = math.sin(D2R*car_heading);
             lon_change  = -math.cos(D2R*car_heading);
@@ -47,7 +47,7 @@ var road_check_func = func() {
             else
                 break;
         }
-        for(var i=0;i<0.00005;i+=0.000001) {
+        for (var i=0;i<0.00005;i+=0.000001) {
             car_heading = props.getNode("/orientation/heading-deg",1).getValue();
             lat_change  = math.sin(D2R*car_heading);
             lon_change  = -math.cos(D2R*car_heading);

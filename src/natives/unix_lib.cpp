@@ -72,7 +72,7 @@ var builtin_chdir(context* ctx, gc* ngc) {
 var builtin_environ(context* ctx, gc* ngc) {
     var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
     auto& vec = res.vec().elems;
-    for(char** env = environ; *env; ++env) {
+    for (char** env = environ; *env; ++env) {
         vec.push_back(ngc->newstr(*env));
     }
     ngc->temp = nil;

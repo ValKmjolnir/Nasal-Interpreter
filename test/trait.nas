@@ -24,11 +24,11 @@ var class2={
 };
 
 var class_obj=[];
-for(var i=0;i<10;i+=1) {
+for (var i=0;i<10;i+=1) {
     append(class_obj,class.new());
     class_obj[i].set(i);
 }
-for(var i=0;i<10;i+=1) {
+for (var i=0;i<10;i+=1) {
     append(class_obj,class2.new());
     class_obj[10+i].set(i);
 }

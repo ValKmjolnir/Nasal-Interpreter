@@ -26,7 +26,7 @@ var builtin_logprint(context* ctx, gc* ngc) {
                 "incorrect log level " + std::to_string(level.num())
             );
     }
-    for(auto& value : elems.vec().elems) {
+    for (auto& value : elems.vec().elems) {
         out << value << " ";
     }
     out << "\n";

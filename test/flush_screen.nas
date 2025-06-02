@@ -16,8 +16,8 @@ while(1) {
         break;
     }
     var res = "\e[1;1H";
-    for(var i = 0; i<20; i+=1) {
-        for(var j = 0; j<40; j+=1) {
+    for (var i = 0; i<20; i+=1) {
+        for (var j = 0; j<40; j+=1) {
             res ~= "\e[38;5;" ~ int(rand()*256) ~ ";1m";
             res ~= chars[int(rand()*size(chars))];
             res ~= "\e[0m ";
