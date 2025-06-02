@@ -9,7 +9,7 @@ var game = func(x,y) {
     var texture=["  ","██","\e[91m██\e[0m"];
     var edge0="╔";
     var edge1="╚";
-    for(var i=0;i<x;i+=1) {
+    for (var i=0;i<x;i+=1) {
         edge0~="══";
         edge1~="══";
     }
@@ -18,10 +18,10 @@ var game = func(x,y) {
 
     var vec=[];
     setsize(vec,x);
-    for(var i=0;i<x;i+=1) {
+    for (var i=0;i<x;i+=1) {
         vec[i]=[];
         setsize(vec[i],y);
-        for(var j=0;j<y;j+=1)
+        for (var j=0;j<y;j+=1)
             vec[i][j]=0;
     }
 
@@ -35,7 +35,7 @@ var game = func(x,y) {
     var gameover=0;
     var setapple = func() {
         var (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
-        while(vec[cord_x][cord_y]!=0)
+        while (vec[cord_x][cord_y]!=0)
             (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
         vec[cord_x][cord_y]=2;
     }
@@ -45,9 +45,9 @@ var game = func(x,y) {
         print:func() {
             var s="";
             var (fx,fy)=snake.front();
-            for(var i=0;i<y;i+=1) {
+            for (var i=0;i<y;i+=1) {
                 s~="║";
-                for(var j=0;j<x;j+=1) {
+                for (var j=0;j<x;j+=1) {
                     if (fx==j and fy==i)
                         s~="\e[93m"~texture[vec[j][i]]~"\e[0m";
                     else
@@ -112,9 +112,9 @@ var game = func(x,y) {
 }
 
 var co=coroutine.create(func() {
-    while(1) {
+    while (1) {
         var moved=-1;
-        for(var i=0;i<30;i+=1) {
+        for (var i=0;i<30;i+=1) {
             var ch=libkey.nonblock();
             if (moved==-1 and ch!=nil) {
                 moved=ch;
@@ -140,8 +140,8 @@ var main = func(argv) {
     }
     print("\r                         \r");
     var counter=20;
-    while(1) {
-        while((var ch=coroutine.resume(co)[0])==nil);
+    while (1) {
+        while ((var ch=coroutine.resume(co)[0])==nil);
         if (ch!=nil and ch!=-1) {
             if (ch=='q'[0]) {
                 break;
@@ -165,7 +165,7 @@ var main = func(argv) {
     if (should_skip) {
         return;
     }
-    while(libkey.getch()!='q'[0]);
+    while (libkey.getch()!='q'[0]);
 }
 
 main(runtime.argv());

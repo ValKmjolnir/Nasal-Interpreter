@@ -64,7 +64,7 @@ var bit = func() {
     var append = func(vec, arg...) {
         return __append;
     }
-    for(var i = 1; i<32; i += 1) {
+    for (var i = 1; i<32; i += 1) {
         append(res, __ += __);
     }
     return res;

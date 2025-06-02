@@ -170,12 +170,12 @@ var (add,mov,jt,jf,in,out)=(
 var codegen = func(program) {
     var (code,stack)=([],[]);
     var len=size(program);
-    for(var i=0;i<len;i+=1) {
+    for (var i=0;i<len;i+=1) {
         var c=chr(program[i]);
         if (c=='+' or c=='-') {
             append(code,add);
             append(inum,0);
-            for(;i<len;i+=1) {
+            for (;i<len;i+=1) {
                 if (chr(program[i])=='+') {
                     inum[-1]+=1;
                 } elsif (chr(program[i])=='-') {
@@ -188,7 +188,7 @@ var codegen = func(program) {
         } elsif (c=='<' or c=='>') {
             append(code,mov);
             append(inum,0);
-            for(;i<len;i+=1) {
+            for (;i<len;i+=1) {
                 if (chr(program[i])=='>') {
                     inum[-1]+=1;
                 } elsif (chr(program[i])=='<') {
@@ -239,7 +239,7 @@ var bf = func(program) {
     # execute
     setsize(paper,131072);
     var len=size(code);
-    for(pc=0;pc<len;pc+=1) {
+    for (pc=0;pc<len;pc+=1) {
         code[pc]();
     }
     return;

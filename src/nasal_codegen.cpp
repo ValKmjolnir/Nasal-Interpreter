@@ -5,13 +5,13 @@ namespace nasal {
 
 void codegen::init_file_map(const std::vector<std::string>& file_list) {
     file_map = {};
-    for(usize i = 0; i<file_list.size(); ++i) {
+    for (usize i = 0; i<file_list.size(); ++i) {
         file_map.insert({file_list[i], i});
     }
 }
 
 void codegen::load_native_function_table(nasal_builtin_table* table) {
-    for(usize i = 0; table[i].func; ++i) {
+    for (usize i = 0; table[i].func; ++i) {
         // check confliction
         if (native_function_mapper.count(table[i].name)) {
             err.err("code", "\"" + std::string(table[i].name) + "\" conflicts.");
@@ -91,7 +91,7 @@ void codegen::regist_string(const std::string& str) {
 
 void codegen::find_symbol(code_block* node) {
     auto finder = std::make_unique<symbol_finder>();
-    for(const auto& i : finder->do_find(node)) {
+    for (const auto& i : finder->do_find(node)) {
         const auto& file = i.pos_node->get_location().file;
         // check if symbol conflicts with native function name
         if (native_function_mapper.count(i.name)) {
@@ -153,7 +153,7 @@ i64 codegen::upvalue_symbol_find(const std::string& name) {
     }
 
     auto iter = local.begin();
-    for(u64 i = 0; i<size-1; ++i, ++iter) {
+    for (u64 i = 0; i<size-1; ++i, ++iter) {
         if (iter->count(name)) {
             index = ((i<<16)|(*iter).at(name));
         }
@@ -189,7 +189,7 @@ void codegen::bool_gen(bool_literal* node) {
 }
 
 void codegen::vector_gen(vector_expr* node) {
-    for(auto child : node->get_elements()) {
+    for (auto child : node->get_elements()) {
         calc_gen(child);
     }
     emit(op_newv, node->get_elements().size(), node->get_location());
@@ -197,7 +197,7 @@ void codegen::vector_gen(vector_expr* node) {
 
 void codegen::hash_gen(hash_expr* node) {
     emit(op_newh, 0, node->get_location());
-    for(auto child : node->get_members()) {
+    for (auto child : node->get_members()) {
         calc_gen(child->get_value());
         const auto& field_name = child->get_name();
         regist_string(field_name);
@@ -210,7 +210,7 @@ void codegen::func_gen(function* node) {
     bool checked_default = false;
     bool checked_dynamic = false;
     std::unordered_map<std::string, bool> argname;
-    for(auto tmp : node->get_parameter_list()) {
+    for (auto tmp : node->get_parameter_list()) {
         if (tmp->get_parameter_type()==
             parameter::kind::default_parameter) {
             checked_default = true;
@@ -250,7 +250,7 @@ void codegen::func_gen(function* node) {
     local.push_back({{"me", 0}});
 
     // generate parameter list
-    for(auto tmp : node->get_parameter_list()) {
+    for (auto tmp : node->get_parameter_list()) {
         const auto& name = tmp->get_parameter_name();
         if (name=="me") {
             die("\"me\" should not be parameter", tmp);
@@ -291,7 +291,7 @@ void codegen::func_gen(function* node) {
     //     var f = func(a, arg...) {return(arg)}
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
-    while(local_symbol_find(arg)>=0) {
+    while (local_symbol_find(arg)>=0) {
         arg = "0" + arg;
     }
     regist_symbol(arg);
@@ -326,7 +326,7 @@ void codegen::call_gen(call_expr* node) {
     if (code.size() && code.back().op==op_callb) {
         return;
     }
-    for(auto i : node->get_calls()) {
+    for (auto i : node->get_calls()) {
         switch(i->get_type()) {
             case expr_type::ast_callh:
                 call_hash_gen(reinterpret_cast<call_hash*>(i)); break;
@@ -404,7 +404,7 @@ void codegen::call_vector_gen(call_vector* node) {
         return;
     }
     emit(op_slcbeg, 0, node->get_location());
-    for(auto tmp : node->get_slices()) {
+    for (auto tmp : node->get_slices()) {
         if (!tmp->get_end()) {
             calc_gen(tmp->get_begin());
             emit(op_slc, 0, tmp->get_location());
@@ -421,7 +421,7 @@ void codegen::call_func_gen(call_function* node) {
     if (node->get_argument().size() &&
         node->get_argument()[0]->get_type()==expr_type::ast_pair) {
         emit(op_newh, 0, node->get_location());
-        for(auto child : node->get_argument()) {
+        for (auto child : node->get_argument()) {
             auto pair_node = reinterpret_cast<hash_pair*>(child);
             calc_gen(pair_node->get_value());
             const auto& field_name = pair_node->get_name();
@@ -430,7 +430,7 @@ void codegen::call_func_gen(call_function* node) {
         }
         emit(op_callfh, 0, node->get_location());
     } else {
-        for(auto child : node->get_argument()) {
+        for (auto child : node->get_argument()) {
             calc_gen(child);
         }
         emit(op_callfv, node->get_argument().size(), node->get_location());
@@ -459,7 +459,7 @@ void codegen::mcall(expr* node) {
     // generate call expression until the last sub-node
     auto call_node = static_cast<call_expr*>(node);
     calc_gen(call_node->get_first());
-    for(usize i = 0; i<call_node->get_calls().size()-1; ++i) {
+    for (usize i = 0; i<call_node->get_calls().size()-1; ++i) {
         auto tmp = call_node->get_calls()[i];
         switch(tmp->get_type()) {
             case expr_type::ast_callh:
@@ -566,7 +566,7 @@ void codegen::multi_def(definition_expr* node) {
             );
             return;
         }
-        for(usize i = 0; i<size; ++i) {
+        for (usize i = 0; i<size; ++i) {
             calc_gen(vals[i]);
             const auto& name = identifiers[i]->get_name();
             local.empty()?
@@ -577,7 +577,7 @@ void codegen::multi_def(definition_expr* node) {
     }
     // (var a, b, c) = [0, 1, 2];
     calc_gen(node->get_value());
-    for(usize i = 0; i<size; ++i) {
+    for (usize i = 0; i<size; ++i) {
         emit(op_callvi, i, node->get_value()->get_location());
         const auto& name = identifiers[i]->get_name();
         local.empty()?
@@ -787,11 +787,11 @@ void codegen::multi_assign_gen(multi_assign* node) {
     if (value_node->get_type()==expr_type::ast_tuple) {
         const auto& value_tuple = reinterpret_cast<tuple_expr*>(value_node)
                                   ->get_elements();
-        for(i64 i = size-1; i>=0; --i) {
+        for (i64 i = size-1; i>=0; --i) {
             calc_gen(value_tuple[i]);
         }
         auto& tuple = tuple_node->get_elements();
-        for(i64 i = 0; i<size; ++i) {
+        for (i64 i = 0; i<size; ++i) {
             mcall(tuple[i]);
             // use load operands to avoid meq's pop operand
             // and this operation changes local and global value directly
@@ -803,7 +803,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
     // generate multiple assignment: (a, b, c) = [1, 2, 3];
     calc_gen(value_node);
     auto& tuple = tuple_node->get_elements();
-    for(i64 i = 0; i<size; ++i) {
+    for (i64 i = 0; i<size; ++i) {
         emit(op_callvi, i, value_node->get_location());
         mcall(tuple[i]);
         // use load operands to avoid meq's pop operand
@@ -828,7 +828,7 @@ void codegen::cond_gen(condition_expr* node) {
     }
     code[ptr].num = code.size();
 
-    for(auto tmp : node->get_elsif_stataments()) {
+    for (auto tmp : node->get_elsif_stataments()) {
         calc_gen(tmp->get_condition());
         ptr = code.size();
         emit(op_jf, 0, tmp->get_location());
@@ -845,7 +845,7 @@ void codegen::cond_gen(condition_expr* node) {
     if (node->get_else_statement()) {
         block_gen(node->get_else_statement()->get_code_block());
     }
-    for(auto i:jmp_label) {
+    for (auto i:jmp_label) {
         code[i].num = code.size();
     }
 }
@@ -866,10 +866,10 @@ void codegen::loop_gen(expr* node) {
 }
 
 void codegen::load_continue_break(u64 continue_place, u64 break_place) {
-    for(auto i : continue_ptr.front()) {
+    for (auto i : continue_ptr.front()) {
         code[i].num = continue_place;
     }
-    for(auto i : break_ptr.front()) {
+    for (auto i : break_ptr.front()) {
         code[i].num = break_place;
     }
     continue_ptr.pop_front();
@@ -1287,7 +1287,7 @@ void codegen::repl_mode_info_output_gen(expr* node) {
 
 void codegen::block_gen(code_block* node) {
     bool is_use_statement = true;
-    for(auto tmp : node->get_expressions()) {
+    for (auto tmp : node->get_expressions()) {
         if (tmp->get_type()!=expr_type::ast_use) {
             is_use_statement = false;
         }
@@ -1348,7 +1348,7 @@ void codegen::block_gen(code_block* node) {
 }
 
 void codegen::ret_gen(return_expr* node) {
-    for(u32 i = 0; i<in_foreach_loop_level.back(); ++i) {
+    for (u32 i = 0; i<in_foreach_loop_level.back(); ++i) {
         emit(op_pop, 0, node->get_location());
         emit(op_pop, 0, node->get_location());
     }
@@ -1418,12 +1418,12 @@ void codegen::print(std::ostream& out) {
     std::stack<u64> func_end_stack;
 
     // print const numbers
-    for(auto num : const_number_table) {
+    for (auto num : const_number_table) {
         out << "  .number " << num << "\n";
     }
 
     // print const strings
-    for(const auto& str : const_string_table) {
+    for (const auto& str : const_string_table) {
         out << "  .symbol \"" << util::rawstr(str) << "\"\n";
     }
     
@@ -1440,7 +1440,7 @@ void codegen::print(std::ostream& out) {
         native_function.data()
     );
 
-    for(u64 i = 0; i<code.size(); ++i) {
+    for (u64 i = 0; i<code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];
         if (!func_end_stack.empty() && i==func_end_stack.top()) {
@@ -1456,7 +1456,7 @@ void codegen::print(std::ostream& out) {
         // get function begin index and end index
         if (c.op==op_newf) {
             out << std::hex << "\nfunc <0x" << i << std::dec << ">:\n";
-            for(u64 j = i; j<code.size(); ++j) {
+            for (u64 j = i; j<code.size(); ++j) {
                 if (code[j].op==op_jmp) {
                     func_begin_stack.push(i);
                     func_end_stack.push(code[j].num);
@@ -1471,9 +1471,9 @@ void codegen::print(std::ostream& out) {
 }
 
 void codegen::symbol_dump(std::ostream& out) const {
-    for(const auto& domain : nasal_namespace) {
+    for (const auto& domain : nasal_namespace) {
         out << "<" << domain.first << ">\n";
-        for(const auto& i : domain.second) {
+        for (const auto& i : domain.second) {
             out << "  0x" << std::setw(4) << std::setfill('0');
             out << std::hex << global.at(i) << std::dec << " ";
             out << i << std::endl;

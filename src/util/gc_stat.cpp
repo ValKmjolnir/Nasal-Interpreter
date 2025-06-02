@@ -99,7 +99,7 @@ void gc_stat::dump_info() const {
         auto len = strlen(n);
         indent = indent<len? len:indent;
     }
-    for(u32 i = 0; i < GC_TYPE_SIZE; ++i) {
+    for (u32 i = 0; i < GC_TYPE_SIZE; ++i) {
         auto len = std::to_string(gc_cycle_trigger_count[i]).length();
         indent = indent<len? len:indent;
         len = std::to_string(alloc_count[i]).length();
@@ -109,7 +109,7 @@ void gc_stat::dump_info() const {
     }
 
     auto indent_string = std::string("──");
-    for(usize i = 0; i < indent; ++i) {
+    for (usize i = 0; i < indent; ++i) {
         indent_string += "─";
     }
 

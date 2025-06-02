@@ -38,7 +38,7 @@ var map = func() {
                 append(tmp,elem);
         vec[1][0]=tmp[rand()*size(tmp)];
 
-        for(var j=1;j<x;j+=1) {
+        for (var j=1;j<x;j+=1) {
             if (vec[0][j][3]==0 and vec[1][j-1][4]==0 and rand()>0.5) {
                 vec[1][j]=table[-1];
                 continue;
@@ -57,9 +57,9 @@ var map = func() {
         new:func(_x=10) {
             x=_x;
             vec=[[],[]];
-            for(var i=0;i<2;i+=1) {
+            for (var i=0;i<2;i+=1) {
                 setsize(vec[i],x);
-                for(var j=0;j<x;j+=1)
+                for (var j=0;j<x;j+=1)
                     vec[i][j]=table[-1];
             }
 
@@ -69,7 +69,7 @@ var map = func() {
                     append(tmp,elem);
             vec[0][0]=tmp[rand()*size(tmp)];
 
-            for(var i=1;i<x;i+=1) {
+            for (var i=1;i<x;i+=1) {
                 tmp=[];
                 foreach(var elem;table)
                     if (elem[2]==vec[0][i-1][4] and elem[1]==0) {
@@ -99,7 +99,7 @@ var map = func() {
 runtime.windows.set_utf8_output();
 map.new(90);
 
-for(var iter=0;iter<40;iter+=1) {
+for (var iter=0;iter<40;iter+=1) {
     map.print(1);
     map.next();
 }

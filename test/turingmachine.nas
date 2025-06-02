@@ -48,8 +48,8 @@ var prt = func(state,pointer,paper,act=nil) {
     foreach(var i;paper)
         s~=i;
     s~='\n\t';
-    for(var i=0;i<pointer;i+=1)
-        for(var j=0;j<size(paper[i]);j+=1)
+    for (var i=0;i<pointer;i+=1)
+        for (var j=0;j<size(paper[i]);j+=1)
             s~=' ';
     print(s,'^\n',state," ");
 }
@@ -68,7 +68,7 @@ var run = func(table,start,stop) {
     var (state,pointer)=(start,0);
 
     prt(state,pointer,paper);
-    while(state!=stop) {
+    while (state!=stop) {
         if (!contains(machine.states,state))
             die("no matching function for state:"~state);
         var found=0;

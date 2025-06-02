@@ -3,7 +3,7 @@ var n=4;
 var input=[[0,1],[0,2],[1,2]];
 
 var find_root = func(x,parent) {
-    while(parent[x]!=nil)
+    while (parent[x]!=nil)
         x=parent[x];
     return x;
 }

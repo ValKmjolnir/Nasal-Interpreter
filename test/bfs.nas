@@ -5,17 +5,17 @@ use std.unix;
 rand(time(0));
 var pixel=[' ','#','.','*'];
 var map=[];
-for(var i=0;i<10;i+=1) {
+for (var i=0;i<10;i+=1) {
     append(map,[]);
-    for(var j=0;j<20;j+=1)
+    for (var j=0;j<20;j+=1)
         append(map[i],(rand()>0.7));
 }
 
 var prt = func() {
     var s="\e[0;0H+--------------------+\n";
-    for(var i=0;i<10;i+=1) {
+    for (var i=0;i<10;i+=1) {
         s~="|";
-        for(var j=0;j<20;j+=1)
+        for (var j=0;j<20;j+=1)
             s~=pixel[map[i][j]];
         s~='|\n';
     }
@@ -32,7 +32,7 @@ var bfs = func(begin,end) {
     map[end[0]][end[1]]=0;
     if (map[1][0]==1 and map[0][1]==1)
         map[1][0]=0;
-    while(!que.empty()) {
+    while (!que.empty()) {
         var vertex=que.front();
         que.pop();
         foreach(var i;move) {

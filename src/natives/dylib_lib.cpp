@@ -27,7 +27,7 @@ std::vector<std::string> possible_dylib_path() {
     std::vector<std::string> env_path_vec = {"."};
     usize last = 0;
     usize pos = env_path.find(sep, 0);
-    while(pos != std::string::npos) {
+    while (pos != std::string::npos) {
         if (pos > last) {
             env_path_vec.push_back(env_path.substr(last, pos - last));
         }
@@ -61,7 +61,7 @@ std::string search_dynamic_library_path(const std::string& dlname) {
 
     // search library in PATH
     const auto possible_path = possible_dylib_path();
-    for(const auto& p : possible_path) {
+    for (const auto& p : possible_path) {
         const auto env_p = p + lib_path;
         if (fs::exists(env_p)) {
             return env_p;
@@ -71,7 +71,7 @@ std::string search_dynamic_library_path(const std::string& dlname) {
     // macos may use .dylib as extension
     if (util::is_macos()) {
         const auto dylib_path = "./" + dlname + ".dylib";
-        for(const auto& p : possible_path) {
+        for (const auto& p : possible_path) {
             const auto env_p = p + dylib_path;
             if (fs::exists(env_p)) {
                 return env_p;
@@ -146,7 +146,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     if (!table) {
         return nas_err("dylib::dlopen", "failed to get module functions");
     }
-    for(u32 i = 0; table[i].name; ++i) {
+    for (u32 i = 0; table[i].name; ++i) {
         auto function_pointer = reinterpret_cast<void*>(table[i].fd);
         auto function_object = ngc->alloc(vm_type::vm_ghost);
         function_object.ghost().set(

@@ -76,7 +76,7 @@ var choice = func(above_block_char,
 
     func() {
         if (vecindex(possible, " ")!=nil) {
-            for(var i = 0; i < 64; i+= 1) {
+            for (var i = 0; i < 64; i+= 1) {
                 append(possible, " ");
             }
         }
@@ -94,14 +94,14 @@ var print_whole_line = func(this_line) {
 
 srand();
 var last_line = [];
-for(var i = 0; i<100; i+=1) {
+for (var i = 0; i<100; i+=1) {
     append(last_line, " ");
 }
 
-for(var iteration_times = 0; iteration_times < 25; iteration_times += 1) {
+for (var iteration_times = 0; iteration_times < 25; iteration_times += 1) {
     var this_line = [];
     var left_block = " ";
-    for(var i = 0; i < 100; i += 1) {
+    for (var i = 0; i < 100; i += 1) {
         var this_block = choice(
             last_line[i],
             left_block,

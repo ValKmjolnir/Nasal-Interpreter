@@ -62,7 +62,7 @@ var color_count=0;
 var counter=0;
 var package=[0,1,2,3,4,5,6];
 var exchange = func() {
-    for(var i=6;i>=0;i-=1) {
+    for (var i=6;i>=0;i-=1) {
         var index=int(i*rand());
         (package[i],package[index])=(package[index],package[i]);
     }
@@ -105,16 +105,16 @@ var mapgen = func(mapx,mapy) {
     
     # use in print
     var line="";
-    for(var i=0;i<mapx;i+=1)
+    for (var i=0;i<mapx;i+=1)
         line~="══";
     var head="\e[32m╔"~line~"╗\e[0m\n";
     var tail="\e[32m╚"~line~"╝\e[0m\n";
 
     # generate new map
     var map=[];
-    for(var y=0;y<mapy;y+=1) {
+    for (var y=0;y<mapy;y+=1) {
         var tmp=[];
-        for(var x=0;x<mapx;x+=1)
+        for (var x=0;x<mapx;x+=1)
             append(tmp,empty);
         append(map,tmp);
     }
@@ -138,9 +138,9 @@ var mapgen = func(mapx,mapy) {
     # color print
     var map_print = func() {
         var s="\e[1;1H"~head;
-        for(var y=0;y<mapy;y+=1) {
+        for (var y=0;y<mapy;y+=1) {
             s~="\e[32m║\e[0m";
-            for(var x=0;x<mapx;x+=1) {
+            for (var x=0;x<mapx;x+=1) {
                 var c=map[y][x];
                 if (c==empty)
                     s~="  ";
@@ -239,10 +239,10 @@ var mapgen = func(mapx,mapy) {
 
     var checkmap = func() {
         var lines=1;
-        for(var y=mapy-1;y>=0;y-=1) {
+        for (var y=mapy-1;y>=0;y-=1) {
             # check if this line is full of blocks
             var tmp=0;
-            for(var x=0;x<mapx;x+=1) {
+            for (var x=0;x<mapx;x+=1) {
                 if (map[y][x]<full)
                     break;
                 tmp+=map[y][x];
@@ -252,10 +252,10 @@ var mapgen = func(mapx,mapy) {
             if (x==mapx) {
                 score+=lines*tmp;
                 lines*=2;
-                for(var t=y;t>=1;t-=1)
-                    for(var x=0;x<mapx;x+=1)
+                for (var t=y;t>=1;t-=1)
+                    for (var x=0;x<mapx;x+=1)
                         map[t][x]=map[t-1][x];
-                for(var x=0;x<mapx;x+=1)
+                for (var x=0;x<mapx;x+=1)
                     map[0][x]=empty;
                 y+=1;
             }
@@ -304,7 +304,7 @@ var main = func(argv) {
     map.print();
 
     var counter=init_counter;
-    while(1) {
+    while (1) {
         # nonblock input one character
         var ch=libkey.nonblock();
         if (ch) {
@@ -350,7 +350,7 @@ var main = func(argv) {
         "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
     );
     if (!should_skip) {
-        while(libkey.getch()!='q'[0]);
+        while (libkey.getch()!='q'[0]);
     }
 };
 

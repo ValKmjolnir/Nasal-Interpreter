@@ -413,7 +413,7 @@ inline void vm::o_newv() {
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
     ctx.top = ctx.top - imm[ctx.pc] + 1;
 
-    for(u64 i = 0; i<imm[ctx.pc]; ++i) {
+    for (u64 i = 0; i<imm[ctx.pc]; ++i) {
         vec[i] = ctx.top[i];
     }
     ctx.top[0] = newv;
@@ -537,10 +537,10 @@ inline void vm::o_lnk() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
         ngc.temp = ngc.alloc(vm_type::vm_vec);
-        for(auto& i : ctx.top[-1].vec().elems) {
+        for (auto& i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
-        for(auto& i : ctx.top[0].vec().elems) {
+        for (auto& i : ctx.top[0].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
         ctx.top[-1] = ngc.temp;
@@ -584,10 +584,10 @@ inline void vm::o_lnkeq() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.memr[0].is_vec()) {
         ngc.temp = ngc.alloc(vm_type::vm_vec);
-        for(auto i : ctx.memr[0].vec().elems) {
+        for (auto i : ctx.memr[0].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
-        for(auto i : ctx.top[-1].vec().elems) {
+        for (auto i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
         ctx.top[-1] = ctx.memr[0] = ngc.temp;
@@ -919,13 +919,13 @@ inline void vm::o_callfv() {
     if (func.dynamic_parameter_index>=0) {
         // load dynamic argument
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u64 i = parameter_size; i<argc; ++i) {
+        for (u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     } else if (parameter_size<argc) {
         // load arguments to default dynamic argument "arg", located at stack+1
         dynamic = ngc.alloc(vm_type::vm_vec);
-        for(u64 i = parameter_size; i<argc; ++i) {
+        for (u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
@@ -942,13 +942,13 @@ inline void vm::o_callfv() {
     const u64 min_size = (std::min)(parameter_size, argc);
 
     // load arguments
-    for(u64 i = min_size; i>=1; --i) {
+    for (u64 i = min_size; i>=1; --i) {
         local[i] = local[i-1];
     }
     local[0] = func.local[0]; // load "me"
 
     // load local scope & default arguments
-    for(u64 i = min_size + 1; i<func.local_size; ++i) {
+    for (u64 i = min_size + 1; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
 
@@ -986,12 +986,12 @@ inline void vm::o_callfh() {
 
     var* local = ctx.top;
     ctx.top += func.local_size;
-    for(u32 i = 0; i<func.local_size; ++i) {
+    for (u32 i = 0; i<func.local_size; ++i) {
         local[i] = func.local[i];
     }
 
     bool lack_arguments_flag = false;
-    for(const auto& i : func.keys) {
+    for (const auto& i : func.keys) {
         const auto& key = i.first;
         if (hash.count(key)) {
             local[i.second] = hash.at(key);
@@ -1083,7 +1083,7 @@ inline void vm::o_slc2() {
         );
         return;
     } else if (num1<=num2) {
-        for(i32 i = num1; i<=num2; ++i) {
+        for (i32 i = num1; i<=num2; ++i) {
             aim.push_back(i>=0? ref[i]:ref[i+size]);
         }
     }
@@ -1215,7 +1215,7 @@ inline void vm::o_ret() {
         auto size = func.func().local_size;
         upval.on_stack = false;
         upval.elems.resize(size);
-        for(u64 i = 0; i < size; ++i) {
+        for (u64 i = 0; i < size; ++i) {
             upval.elems[i] = local[i];
         }
     }

@@ -433,7 +433,7 @@ var wrap = func(node) {
     } elsif (isvec(node)) {
         var v = node;
         var n = size(v);
-        for(var i=0; i<n; i+=1) { v[i] = wrapNode(v[i]); }
+        for (var i=0; i<n; i+=1) { v[i] = wrapNode(v[i]); }
         return v;
     }
     return node;

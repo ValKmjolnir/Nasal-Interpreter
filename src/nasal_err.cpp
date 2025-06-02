@@ -150,7 +150,7 @@ void filestream::load(const std::string& f) {
         std::exit(1);
     }
     
-    while(!in.eof()) {
+    while (!in.eof()) {
         std::string line;
         std::getline(in, line);
         res.push_back(line);
@@ -182,7 +182,7 @@ void error::err(const std::string& stage,
     const usize maxlen = std::to_string(loc.end_line).length();
     const std::string iden = identation(maxlen);
 
-    for(u64 line = loc.begin_line; line<=loc.end_line; ++line) {
+    for (u64 line = loc.begin_line; line<=loc.end_line; ++line) {
         // skip line 0
         if (!line) {
             continue;
@@ -211,25 +211,25 @@ void error::err(const std::string& stage,
         // output underline
         std::cerr << cyan << iden << " | " << reset;
         if (loc.begin_line==loc.end_line) {
-            for(u64 i = 0; i<loc.begin_column; ++i) {
+            for (u64 i = 0; i<loc.begin_column; ++i) {
                 std::cerr << char(" \t"[code[i]=='\t']);
             }
-            for(u64 i = loc.begin_column; i<loc.end_column; ++i) {
+            for (u64 i = loc.begin_column; i<loc.end_column; ++i) {
                 std::cerr << red << (code[i]=='\t'? "^^^^":"^") << reset;
             }
         } else if (line==loc.begin_line) {
-            for(u64 i = 0; i<loc.begin_column; ++i) {
+            for (u64 i = 0; i<loc.begin_column; ++i) {
                 std::cerr << char(" \t"[code[i]=='\t']);
             }
-            for(u64 i = loc.begin_column; i<code.size(); ++i) {
+            for (u64 i = loc.begin_column; i<code.size(); ++i) {
                 std::cerr << red << (code[i]=='\t'? "^^^^":"^") << reset;
             }
         } else if (loc.begin_line<line && line<loc.end_line) {
-            for(u64 i = 0; i<code.size(); ++i) {
+            for (u64 i = 0; i<code.size(); ++i) {
                 std::cerr << red << (code[i]=='\t'? "^^^^":"^");
             }
         } else {
-            for(u64 i = 0; i<loc.end_column; ++i) {
+            for (u64 i = 0; i<loc.end_column; ++i) {
                 std::cerr << red << (code[i]=='\t'? "^^^^":"^");
             }
         }

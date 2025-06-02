@@ -49,7 +49,7 @@ var test_ghost = func() {
     print("\n");
     set_ghost(ghost, 114); # success
     print("\n");
-    for(var i = 0; i<256; i+=1) {
+    for (var i = 0; i<256; i+=1) {
         var temp = []; # try to trigger gc
     }
     print("\n");

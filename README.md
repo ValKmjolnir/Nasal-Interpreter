@@ -36,6 +36,7 @@ __Contact us if having great ideas to share!__
 
 ![star](https://img.shields.io/github/stars/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![fork](https://img.shields.io/github/forks/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ValKmjolnir/Nasal-Interpreter)
 ![issue](https://img.shields.io/github/issues/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 ![pr](https://img.shields.io/github/issues-pr/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 
@@ -344,7 +345,7 @@ source code:
         if (x<2) return x;
         return fib(x-1)+fib(x-2);
     }
-    for(var i=0;i<31;i+=1)
+    for (var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
 
@@ -377,7 +378,7 @@ source code:
 -->     if (x<2) return x;
         return fib(x-1)+fib(x-2);
     }
-    for(var i=0;i<31;i+=1)
+    for (var i=0;i<31;i+=1)
         print(fib(i),'\n');
 
 

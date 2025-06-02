@@ -53,7 +53,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
         );
     }
 
-    for(const auto& v : cmd.vec().elems) {
+    for (const auto& v : cmd.vec().elems) {
         if (!v.is_str()) {
             return nas_err("subprocess::create",
                 "non-string argument found"
@@ -83,7 +83,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
     ZeroMemory(pi, sizeof(PROCESS_INFORMATION));
 
     auto command = cmd.vec().elems[0].str();
-    for(usize i = 1; i<cmd.vec().elems.size(); ++i) {
+    for (usize i = 1; i<cmd.vec().elems.size(); ++i) {
         command += " " + cmd.vec().elems[i].str();
     }
 
@@ -119,7 +119,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
 #else
     // create argv
     char** argv = new char*[cmd.vec().elems.size()+1];
-    for(usize i = 0; i<cmd.vec().elems.size(); ++i) {
+    for (usize i = 0; i<cmd.vec().elems.size(); ++i) {
         argv[i] = strdup(cmd.vec().elems[i].str().c_str());
     }
     argv[cmd.vec().elems.size()] = nullptr;
@@ -138,7 +138,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
 
     // parent process
     obj.ghost().get<subprocess>()->pid = pid;
-    for(usize i = 0; argv[i]; ++i) {
+    for (usize i = 0; argv[i]; ++i) {
         delete argv[i];
     }
     delete[] argv;

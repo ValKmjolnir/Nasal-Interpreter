@@ -58,11 +58,11 @@ var mem_size=1024*1024*4; # memory size, byte
 var init = func() {
     println("[",os.time(),"] init ",reg_size," registers.");
     setsize(reg,reg_size); # 8 bit address wire
-    for(var i=0;i<reg_size;i+=1)
+    for (var i=0;i<reg_size;i+=1)
         reg[i]=0;
     println("[",os.time(),"] init memory, memory size: ",mem_size/1024/1024," MB.");
     setsize(mem,mem_size);
-    for(var i=0;i<mem_size;i+=1)
+    for (var i=0;i<mem_size;i+=1)
         mem[i]=0;
     println("[",os.time(),"] init completed.");
 }
@@ -79,7 +79,7 @@ var ctx_info = func() {
     var cnt=0;
     println("pc    : 0x",hex32(pc));
     println("instr : 0x",hex(ir[0]),hex(ir[1]),hex(ir[2]),hex(ir[3]));
-    for(var i=0;i<reg_size;i+=1) {
+    for (var i=0;i<reg_size;i+=1) {
         print("reg[",hex(i),"]: 0x",hex32(reg[i])," ");
         if (cnt==3) {
             print("\n");
@@ -91,7 +91,7 @@ var ctx_info = func() {
 }
 var exec = func(info=1) {
     println("[",os.time(),"] executing ...");
-    while(1) {
+    while (1) {
         ir=[mem[pc],mem[pc+1],mem[pc+2],mem[pc+3]];
         if (info)ctx_info();
         var op=ir[0];

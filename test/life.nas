@@ -45,10 +45,10 @@ var run = func(width,height) {
         forindex(var j;map[i])
             map[i][j]=rand()<0.45?'O':'.';
 
-    for(var r=0;r<100;r+=1) {
+    for (var r=0;r<100;r+=1) {
         prt(map);
-        for(var i=0;i<height;i+=1)
-            for(var j=0;j<width;j+=1) {
+        for (var i=0;i<height;i+=1)
+            for (var j=0;j<width;j+=1) {
                 var cnt=check(j,i+1)+check(j+1,i)+check(j,i-1)+check(j-1,i)+check(j+1,i+1)+check(j-1,i-1)+check(j+1,i-1)+check(j-1,i+1);
                 if (cnt==2)    tmp[i][j]=map[i][j];
                 elsif (cnt==3) tmp[i][j]='O';
@@ -81,17 +81,17 @@ var ppm_gen = func(width,height) {
             iter_to_print=num(vec[2]);
             var data=vec[3];
             var n="1"[0];
-            for(var i=0;i<pixels;i+=1) {
+            for (var i=0;i<pixels;i+=1) {
                 res[i]=data[i]==n?1:0;
             }
             return res;
         }
 
         rand(time(0));
-        for(var i=0;i<pixels;i+=1)
+        for (var i=0;i<pixels;i+=1)
             res[i]=0;
         
-        for(var i=int(height/5*2);i<int(height/5*3);i+=1)
+        for (var i=int(height/5*2);i<int(height/5*3);i+=1)
             forindex(var j;res[i])
                 res[i*width+j]=rand()<0.5?1:0;
         return res;
@@ -100,7 +100,7 @@ var ppm_gen = func(width,height) {
     var store = func() {
         var fd=io.open(".life_data","w");
         io.write(fd,str(width)~"\n"~str(height)~"\n"~str(iter_to_print)~"\n");
-        for(var i=0;i<pixels;i+=1) {
+        for (var i=0;i<pixels;i+=1) {
             io.write(fd,map[i]==1?"1":"0");
         }
         io.close(fd);
@@ -113,7 +113,7 @@ var ppm_gen = func(width,height) {
         io.write(fd,"P6\n"~width~" "~height~"\n255\n");
         var white=char(255)~char(255)~char(255);
         var black=char(0)~char(0)~char(0);
-        for(var i=0;i<pixels;i+=1) {
+        for (var i=0;i<pixels;i+=1) {
             io.write(fd,map[i]==1?white:black);
         }
         io.close(fd);
@@ -130,10 +130,10 @@ var ppm_gen = func(width,height) {
         return map[_height*width+_width]==1;
     }
 
-    for(var r=0;r<1001;r+=1) {
+    for (var r=0;r<1001;r+=1) {
         ts.stamp();
-        for(var i=0;i<height;i+=1) {
-            for(var j=0;j<width;j+=1) {
+        for (var i=0;i<height;i+=1) {
+            for (var j=0;j<width;j+=1) {
                 var cnt=check(j,i+1)+check(j+1,i)+check(j,i-1)+check(j-1,i)+check(j+1,i+1)+check(j-1,i-1)+check(j+1,i-1)+check(j-1,i+1);
                 if (cnt==2)    tmp[i*width+j]=map[i*width+j];
                 elsif (cnt==3) tmp[i*width+j]=1;

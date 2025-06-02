@@ -34,13 +34,13 @@ var cpu_stat = func() {
 
 var cpu_occupation = func() {
     var first_in = 1;
-    while(1) {
+    while (1) {
         var cpu0 = cpu_stat();
         if (first_in) {
             unix.sleep(0.05);
             first_in = 0;
         } else {
-            for(var i = 0; i < 10; i += 1) {
+            for (var i = 0; i < 10; i += 1) {
                 unix.sleep(0.05);
                 coroutine.yield(nil);
             }
@@ -75,8 +75,8 @@ var random_generator = func() {
     var total = 0;
     var statistics = [];
     setsize(statistics, 70);
-    while(1) {
-        for(var i=0;i<10;i+=1) {
+    while (1) {
+        for (var i=0;i<10;i+=1) {
             total+=1;
             var u=rand()*rand()*(rand()>0.5?-1:1);
             statistics[int(size(statistics)/2+u*size(statistics)/2)]+=1;
@@ -85,7 +85,7 @@ var random_generator = func() {
         foreach(var st; statistics) {
             var max_rate=100/size(statistics);
             var rate=st/total*100;
-            for(var i=size(s)-1;i>=0;i-=1) {
+            for (var i=size(s)-1;i>=0;i-=1) {
                 if (rate>=max_rate) {
                     s[i]~="█";
                     rate-=max_rate;
@@ -96,7 +96,7 @@ var random_generator = func() {
             }
         }
         var tmp="";
-        for(var i=0;i<size(statistics);i+=1) {
+        for (var i=0;i<size(statistics);i+=1) {
             tmp~="─";
         }
         println("\e[16;1H \e[32m│", s[0], "│\e[0m");
@@ -127,7 +127,7 @@ func() {
 
     var bar=process_bar.high_resolution_bar(48);
     print("\ec");
-    while(limited_loop!=0) {
+    while (limited_loop!=0) {
         limited_loop=limited_loop<0?limited_loop:limited_loop-1;
         var mem=mem_occupation();
         var mem_occ=(mem.MemTotal-mem.MemFree)/mem.MemTotal*100;
@@ -135,7 +135,7 @@ func() {
             mem_occ=0;
         }
         var cpu_occ=nil;
-        while((cpu_occ=coroutine.resume(co)[0])==nil) {
+        while ((cpu_occ=coroutine.resume(co)[0])==nil) {
             var key=libkey.nonblock();
             coroutine.resume(rd);
             if (key!=nil and chr(key)=="q")
@@ -148,7 +148,7 @@ func() {
             mem_occ=rand()*10+40;
         }
 
-        for(var i=0;i<size(cpu_occupation_log)-1;i+=1) {
+        for (var i=0;i<size(cpu_occupation_log)-1;i+=1) {
             cpu_occupation_log[i]=cpu_occupation_log[i+1];
             mem_occupation_log[i]=mem_occupation_log[i+1];
         }
@@ -163,7 +163,7 @@ func() {
         println("\e[6;1H\e[1m CPU occupation(%)   : \e[0m",cpu_occ>90?"\e[91m":"\e[32m",bar.bar(cpu_occ/100)~" ",cpu_occ,"\e[0m         ");
 
         var tmp="";
-        for(var i=0;i<70;i+=1) {
+        for (var i=0;i<70;i+=1) {
             tmp~="─";
         }
 
@@ -171,7 +171,7 @@ func() {
         foreach(var occ;cpu_occupation_log) {
             var max_rate=50/size(s);
             var rate=occ;
-            for(var i=size(s)-1;i>=0;i-=1) {
+            for (var i=size(s)-1;i>=0;i-=1) {
                 if (rate>=max_rate) {
                     s[i]~="█";
                     rate-=max_rate;
@@ -191,7 +191,7 @@ func() {
         foreach(var occ;mem_occupation_log) {
             var max_rate=100/size(s);
             var rate=occ;
-            for(var i=size(s)-1;i>=0;i-=1) {
+            for (var i=size(s)-1;i>=0;i-=1) {
                 if (rate>=max_rate) {
                     s[i]~="█";
                     rate-=max_rate;

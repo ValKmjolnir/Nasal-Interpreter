@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     vec.printed = true;
     usize iter = 0, size = vec.elems.size();
     out << "[";
-    for(auto& i:vec.elems) {
+    for (auto& i:vec.elems) {
         out << i << ",]"[(++iter)==size];
     }
     vec.printed = false;
@@ -34,7 +34,7 @@ var nas_hash::get_value(const std::string& key) {
     if (!val.is_vec()) {
         return ret;
     }
-    for(auto& i : val.vec().elems) {
+    for (auto& i : val.vec().elems) {
         if (i.is_hash()) {
             ret = i.hash().get_value(key);
         }
@@ -58,7 +58,7 @@ var* nas_hash::get_memory(const std::string& key) {
     if (!val.is_vec()) {
         return addr;
     }
-    for(auto& i : val.vec().elems) {
+    for (auto& i : val.vec().elems) {
         // recursively search key in `parents`
         if (i.is_hash()) {
             addr = i.hash().get_memory(key);
@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     static const char* sep[] = {", ", "}"};
     usize iter = 0, size = hash.elems.size();
     out << "{";
-    for(auto& i : hash.elems) {
+    for (auto& i : hash.elems) {
         out << i.first << ": " << i.second << sep[(++iter)==size];
     }
 
@@ -96,11 +96,11 @@ std::ostream& operator<<(std::ostream& out, nas_func& func) {
     
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
-    for(const auto& key : func.keys) {
+    for (const auto& key : func.keys) {
         argument_list[key.second-1] = key.first;
     }
 
-    for(const auto& key : argument_list) {
+    for (const auto& key : argument_list) {
         out << key;
         if (key != argument_list.back()) {
             out << ", ";
@@ -163,7 +163,7 @@ void nas_co::clear() {
     if (!ctx.stack) {
         return;
     }
-    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
+    for (u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = var::nil();
     }
 
@@ -210,7 +210,7 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
     static const char* sep[] = {", ", "}"};
     usize iter = 0, size = mp.mapper.size();
     out << "{";
-    for(auto& i : mp.mapper) {
+    for (auto& i : mp.mapper) {
         out << i.first << ": " << *i.second << sep[(++iter)==size];
     }
 

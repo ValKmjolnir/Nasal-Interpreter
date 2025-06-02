@@ -59,7 +59,7 @@ bool lexer::is_calc_opr(char c) {
 void lexer::skip_note() {
     // avoid note, after this process ptr will point to '\n'
     // so next loop line counter+1
-    while(++ptr<res.size() && res[ptr]!='\n') {}
+    while (++ptr<res.size() && res[ptr]!='\n') {}
 }
 
 void lexer::err_char() {
@@ -114,7 +114,7 @@ tok lexer::get_type(const std::string& str) {
 
 std::string lexer::utf8_gen() {
     std::string str = "";
-    while(ptr<res.size() && res[ptr]<0) {
+    while (ptr<res.size() && res[ptr]<0) {
         std::string tmp = "";
         u32 nbytes = util::utf8_hdchk(res[ptr]);
         if (!nbytes) {
@@ -124,7 +124,7 @@ std::string lexer::utf8_gen() {
         }
 
         tmp += res[ptr++];
-        for(u32 i = 0; i<nbytes; ++i, ++ptr) {
+        for (u32 i = 0; i<nbytes; ++i, ++ptr) {
             if (ptr<res.size() && (res[ptr]&0xc0)==0x80) {
                 tmp += res[ptr];
             }
@@ -134,7 +134,7 @@ std::string lexer::utf8_gen() {
         if (tmp.length()!=1+nbytes) {
             ++column;
             std::string utf_info = "0x" + util::char_to_hex(tmp[0]);
-            for(u32 i = 1; i<tmp.size(); ++i) {
+            for (u32 i = 1; i<tmp.size(); ++i) {
                 utf_info += " 0x" + util::char_to_hex(tmp[i]);
             }
             err.err("lexer",
@@ -154,7 +154,7 @@ token lexer::id_gen() {
     u64 begin_line = line;
     u64 begin_column = column;
     std::string str = "";
-    while(ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
+    while (ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
         if (res[ptr]<0) { // utf-8
             str += utf8_gen();
         } else { // ascii
@@ -177,7 +177,7 @@ token lexer::num_gen() {
     if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
         std::string str = "0x";
         ptr += 2;
-        while(ptr<res.size() && is_hex(res[ptr])) {
+        while (ptr<res.size() && is_hex(res[ptr])) {
             str += res[ptr++];
         }
         column += str.length();
@@ -196,11 +196,11 @@ token lexer::num_gen() {
     } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
         std::string str = "0o";
         ptr += 2;
-        while(ptr<res.size() && is_oct(res[ptr])) {
+        while (ptr<res.size() && is_oct(res[ptr])) {
             str += res[ptr++];
         }
         bool erfmt = false;
-        while(ptr<res.size() && (is_dec(res[ptr]) || is_hex(res[ptr]))) {
+        while (ptr<res.size() && (is_dec(res[ptr]) || is_hex(res[ptr]))) {
             erfmt = true;
             str += res[ptr++];
         }
@@ -220,12 +220,12 @@ token lexer::num_gen() {
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
     std::string str = "";
-    while(ptr<res.size() && is_dec(res[ptr])) {
+    while (ptr<res.size() && is_dec(res[ptr])) {
         str += res[ptr++];
     }
     if (ptr<res.size() && res[ptr]=='.') {
         str += res[ptr++];
-        while(ptr<res.size() && is_dec(res[ptr])) {
+        while (ptr<res.size() && is_dec(res[ptr])) {
             str += res[ptr++];
         }
         // "xxxx." is not a correct number
@@ -247,7 +247,7 @@ token lexer::num_gen() {
         if (ptr<res.size() && (res[ptr]=='-' || res[ptr]=='+')) {
             str += res[ptr++];
         }
-        while(ptr<res.size() && is_dec(res[ptr])) {
+        while (ptr<res.size() && is_dec(res[ptr])) {
             str += res[ptr++];
         }
         // "xxxe(-|+)" is not a correct number
@@ -278,7 +278,7 @@ token lexer::str_gen() {
     std::string str = "";
     const char begin = res[ptr];
     ++column;
-    while(++ptr<res.size() && res[ptr]!=begin) {
+    while (++ptr<res.size() && res[ptr]!=begin) {
         ++column;
         if (res[ptr]=='\n') {
             column = 0;
@@ -404,8 +404,8 @@ const error& lexer::scan(const std::string& file) {
     toks = {};
     open(file);
 
-    while(ptr<res.size()) {
-        while(ptr<res.size() && skip(res[ptr])) {
+    while (ptr<res.size()) {
+        while (ptr<res.size() && skip(res[ptr])) {
             // these characters will be ignored, and '\n' will cause ++line
             ++column;
             if (res[ptr++]=='\n') {

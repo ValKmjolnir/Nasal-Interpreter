@@ -202,10 +202,10 @@ var main = func(frame) {
 
     print("\e[2J");
     var stamp = maketimestamp();
-    for(var t = 0; t < frame; t += 1) {
+    for (var t = 0; t < frame; t += 1) {
         stamp.stamp();
-        for(var i = 0; i < width; i += 1) {
-            for(var j = 0; j < height; j += 1) {
+        for (var i = 0; i < width; i += 1) {
+            for (var j = 0; j < height; j += 1) {
                 var uv=vec2sub(vec2mul(vec2div([i,j],[width,height]),vec2_2_2),vec2_1_1);
                 uv[0]*=aspect*pixelAspect;
                 var ro=[-6,0,0];

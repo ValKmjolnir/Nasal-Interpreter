@@ -33,7 +33,7 @@ void vm::vm_init_enrty(const std::vector<std::string>& strs,
     auto map_instance = ngc.alloc(vm_type::vm_map);
     global_symbol_name.resize(global_symbol.size());
     global[global_symbol.at("globals")] = map_instance;
-    for(const auto& i : global_symbol) {
+    for (const auto& i : global_symbol) {
         map_instance.map().mapper[i.first] = global + i.second;
         global_symbol_name[i.second] = i.first;
     }
@@ -59,7 +59,7 @@ void vm::context_and_global_init() {
     ctx.top = ctx.stack - 1;
 
     /* clear main stack and global */
-    for(u32 i = 0; i<VM_STACK_DEPTH; ++i) {
+    for (u32 i = 0; i<VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = nil;
         global[i] = nil;
     }
@@ -95,7 +95,7 @@ void vm::vector_value_info(var& val) {
 void vm::hash_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
-    for(const auto& i : val.hash().elems) {
+    for (const auto& i : val.hash().elems) {
         ++count;
         if (count>max_show_elems) {
             break;
@@ -126,7 +126,7 @@ void vm::coroutine_value_info(var& val) {
 void vm::namespace_value_info(var& val, const usize max_show_elems) {
     std::clog << "{";
     usize count = 0;
-    for(const auto& i : val.map().mapper) {
+    for (const auto& i : val.map().mapper) {
         ++count;
         if (count>max_show_elems) {
             break;
@@ -194,12 +194,12 @@ void vm::function_detail_info(const nas_func& func) {
 
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
-    for(const auto& key : func.keys) {
+    for (const auto& key : func.keys) {
         argument_list[key.second-1] = key.first;
     }
 
     std::clog << "(";
-    for(const auto& key : argument_list) {
+    for (const auto& key : argument_list) {
         std::clog << key;
         if (key != argument_list.back()) {
             std::clog << ", ";
@@ -226,7 +226,7 @@ void vm::function_call_trace() {
     std::stack<u64> callsite;
 
     // load call trace, from bottom to top
-    for(var* i = bottom; i <= top; ++i) {
+    for (var* i = bottom; i <= top; ++i) {
         // i-1 is the callsite program counter of this function
         //   +-------+----------------+
         //   | func  | func() {..}    | <-- i + 2
@@ -250,7 +250,7 @@ void vm::function_call_trace() {
 
     // another condition may exist
     // have ret pc on stack, but no function at the top of the ret pc
-    for(var * i = top; i >= bottom; --i) {
+    for (var * i = top; i >= bottom; --i) {
         //   +-------+----------------+
         //   | xxxx  | xxxx           | <-- i + 2 (not function or not exist)
         //   +-------+----------------+
@@ -282,7 +282,7 @@ void vm::function_call_trace() {
     const nas_func* last = nullptr;
     u64 last_callsite = SIZE_MAX;
     u64 same_count = 0;
-    for(; !functions.empty() && !callsite.empty(); functions.pop(), callsite.pop()) {
+    for (; !functions.empty() && !callsite.empty(); functions.pop(), callsite.pop()) {
         auto func = functions.top();
         auto place = callsite.top();
 
@@ -316,7 +316,7 @@ void vm::function_call_trace() {
 void vm::trace_back() {
     // generate trace back
     std::stack<u64> ret;
-    for(var* i = ctx.stack; i<=ctx.top; ++i) {
+    for (var* i = ctx.stack; i<=ctx.top; ++i) {
         if (i->is_ret() && i->ret()!=0) {
             ret.push(i->ret());
         }
@@ -335,7 +335,7 @@ void vm::trace_back() {
         files
     );
 
-    for(u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
+    for (u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
         if ((p = ret.top())==prev) {
             ++same;
             continue;
@@ -360,7 +360,7 @@ void vm::stack_info(const u64 limit) {
     std::clog << ", limit " << limit << ", total ";
     std::clog << (top<bottom? 0:static_cast<i64>(top-bottom+1)) << ")\n";
 
-    for(u32 i = 0; i<limit && top>=bottom; ++i, --top) {
+    for (u32 i = 0; i<limit && top>=bottom; ++i, --top) {
         std::clog << "  0x" << std::hex
                   << std::setw(8) << std::setfill('0')
                   << static_cast<u64>(top-bottom) << std::dec
@@ -394,7 +394,7 @@ void vm::global_state() {
     }
     std::clog << "\nglobal (0x" << std::hex
               << reinterpret_cast<u64>(global) << ")\n" << std::dec;
-    for(usize i = 0; i<global_size; ++i) {
+    for (usize i = 0; i<global_size; ++i) {
         std::clog << "  0x" << std::hex << std::setw(8)
                   << std::setfill('0') << static_cast<u64>(i) << std::dec
                   << "    ";
@@ -419,7 +419,7 @@ void vm::local_state() {
     std::clog << "\nlocal (0x" << std::hex << reinterpret_cast<u64>(ctx.localr)
               << " <+" << static_cast<u64>(ctx.localr-ctx.stack)
               << ">)\n" << std::dec;
-    for(u32 i = 0; i<lsize; ++i) {
+    for (u32 i = 0; i<lsize; ++i) {
         std::clog << "  0x" << std::hex << std::setw(8)
                   << std::setfill('0') << i << std::dec
                   << "    ";
@@ -433,10 +433,10 @@ void vm::upvalue_state() {
     }
     std::clog << "\nupvalue\n";
     auto& upval = ctx.funcr.func().upval;
-    for(u32 i = 0; i<upval.size(); ++i) {
+    for (u32 i = 0; i<upval.size(); ++i) {
         std::clog << "  -> upval[" << i << "]:\n";
         auto& uv = upval[i].upval();
-        for(u32 j = 0; j<uv.size; ++j) {
+        for (u32 j = 0; j<uv.size; ++j) {
             std::clog << "     0x" << std::hex << std::setw(8)
                       << std::setfill('0') << j << std::dec
                       << " ";
@@ -456,10 +456,10 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
-    for(const auto& i : func.keys) {
+    for (const auto& i : func.keys) {
         argument_list[i.second-1] = i.first;
     }
-    for(u32 i = 0; i<argument_list.size(); ++i) {
+    for (u32 i = 0; i<argument_list.size(); ++i) {
         result += argument_list[i];
         if (i<argc) {
             result += "[get]";
@@ -485,10 +485,10 @@ std::string vm::report_special_call_lack_arguments(var* local,
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
-    for(const auto& i : func.keys) {
+    for (const auto& i : func.keys) {
         argument_list[i.second-1] = i.first;
     }
-    for(const auto& key : argument_list) {
+    for (const auto& key : argument_list) {
         if (local[func.keys.at(key)].is_none()) {
             result += key + ", ";
         } else {
@@ -507,7 +507,7 @@ std::string vm::report_special_call_lack_arguments(var* local,
 std::string vm::report_key_not_found(const std::string& not_found,
                                      const nas_hash& hash) const {
     auto result = "member \"" + not_found + "\" doesn't exist in hash {";
-    for(const auto& i : hash.elems) {
+    for (const auto& i : hash.elems) {
         result += i.first + ", ";
     }
     if (hash.elems.size()) {
@@ -696,7 +696,7 @@ void vm::run(const codegen& gen,
         &&ret
     };
     std::vector<const void*> code;
-    for(const auto& i : gen.codes()) {
+    for (const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -705,11 +705,11 @@ void vm::run(const codegen& gen,
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
-    for(const auto& i : gen.codes()) {
+    for (const auto& i : gen.codes()) {
         code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
     }
-    while(code[ctx.pc]) {
+    while (code[ctx.pc]) {
         if (interrupt_ptr && interrupt_ptr->load()) {
             throw std::runtime_error("VM execution interrupted by timeout");
         }
