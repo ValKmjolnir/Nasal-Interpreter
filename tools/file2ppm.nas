@@ -21,7 +21,7 @@ if (size(arg)<1) {
 
 var content = io.readfile(arg[0], "r");
 var tail_len = 0;
-while(math.mod(size(content), 256*3)!=0) {
+while (math.mod(size(content), 256*3)!=0) {
     content ~= "A";
     tail_len += 1;
 }

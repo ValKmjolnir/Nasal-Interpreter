@@ -19,9 +19,9 @@ var compare = func() {
         var timestamp = maketimestamp();
         timestamp.stamp();
         var bar = process_bar.high_resolution_bar(40);
-        for(var i = begin; i<end; i += 1) {
+        for (var i = begin; i<end; i += 1) {
             var s = "";
-            for(var j = 0; j<i; j += 1) {
+            for (var j = 0; j<i; j += 1) {
                 s ~= ch[rand()*size(ch)];
             }
             byte += size(s);
@@ -104,7 +104,7 @@ var filechecksum = func() {
 }
 
 var randomchecksum = func() {
-    for(var i = 0; i<2048; i += 256) {
+    for (var i = 0; i<2048; i += 256) {
         compare(i, i+256);
     }
 }

@@ -104,7 +104,7 @@ var _parse = func(parser, args, result_hash) {
             return;
         }
     }
-    for(var i = 0; i<size(args); i += 1) {
+    for (var i = 0; i<size(args); i += 1) {
         var this_arg = args[i];
         var find_command_flag = false;
         foreach(var cmd; parser.command_list) {

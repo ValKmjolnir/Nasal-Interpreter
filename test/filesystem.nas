@@ -7,7 +7,7 @@ var files = func(path) {
         return [];
     var dd=unix.opendir(path);
     var res=[];
-    while(var n=unix.readdir(dd))
+    while (var n=unix.readdir(dd))
         append(res,n);
     unix.closedir(dd);
     return res;

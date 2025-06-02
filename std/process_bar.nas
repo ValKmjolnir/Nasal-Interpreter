@@ -51,9 +51,9 @@ var bar = func() {
                 var finish_length=int(number*length);
                 var other=length-finish_length;
                 var s="";
-                for(var i=0;i<finish_length;i+=1)
+                for (var i=0;i<finish_length;i+=1)
                     s~=front;
-                for(var i=0;i<other;i+=1)
+                for (var i=0;i<other;i+=1)
                     s~=back;
                 return sep[0]~s~sep[1];
             }
@@ -64,7 +64,7 @@ var bar = func() {
 # return a high resolution progress bar
 # example:
 # var bar=process_bar.high_resolution_bar(40);
-# for(var i=0;i<=1;i+=0.001) {
+# for (var i=0;i<=1;i+=0.001) {
 #     print(bar.bar(i,40),'\r');
 #     unix.sleep(0.001);
 # }
@@ -83,13 +83,13 @@ var high_resolution_bar = func() {
                 var decimal=block_len-complete_block;
                 var progress=complete_block+(decimal!=0);
                 var s="|";
-                for(var i=0;i<complete_block;i+=1) {
+                for (var i=0;i<complete_block;i+=1) {
                     s~="█";
                 }
                 if (decimal!=0) {
                     s~=block[int(decimal*10)/10*size(block)];
                 }
-                for(var i=0;i<length-progress;i+=1) {
+                for (var i=0;i<length-progress;i+=1) {
                     s~=" ";
                 }
                 s~="|";
@@ -109,14 +109,14 @@ var spinner = func() {
         var res=[];
         var len=size(vec);
         var tmp="";
-        for(var i=0;i<len;i+=1) {
+        for (var i=0;i<len;i+=1) {
             tmp=pop(vec)~tmp;
             append(res,tmp);
-            while(size(res[-1])!=16)
+            while (size(res[-1])!=16)
                 res[-1]~=" ";
         }
         tmp=res[-1];
-        while(tmp!="                ") {
+        while (tmp!="                ") {
             tmp=" "~substr(tmp,0,15);
             append(res,tmp);
         }
@@ -227,7 +227,7 @@ var spinner = func() {
         return {
             next: func() {
                 var s="";
-                for(var i=0;i<repeat;i+=1)
+                for (var i=0;i<repeat;i+=1)
                     s~=type[counter];
                 counter+=1;
                 if (counter>=size(type))
@@ -335,7 +335,7 @@ var show = func() {
     };
     var bar_key=keys(bars);
     var spin_key=keys(spinners);
-    for(var i=0; i<40; i+=1) {
+    for (var i=0; i<40; i+=1) {
         forindex(var j; bar_key) {
             var k=bar_key[j];
             print("\e["~(j+1)~";1H["~k~"] "~bars[k].bar((i+1)/40));

@@ -63,7 +63,7 @@ var add_event = func(name,interval,function) {
     fg_globals.event[name]=coroutine.create(func {
         var timestamp=maketimestamp();
         timestamp.stamp();
-        while(timestamp.elapsedMSec()<interval*1000)
+        while (timestamp.elapsedMSec()<interval*1000)
             coroutine.yield();
         println("[\e[32m",name,"\e[0m] [",os.time(),"]  type:\e[33mevent\e[0m  interval:\e[34m",interval,"\e[0m");
         function();
@@ -75,10 +75,10 @@ var add_task = func(name,interval,function) {
     fg_globals.task[name]=coroutine.create(func {
         var counter=0;
         var timestamp=maketimestamp();
-        while(1) {
+        while (1) {
             counter+=1;
             timestamp.stamp();
-            while(timestamp.elapsedMSec()<interval*1000)
+            while (timestamp.elapsedMSec()<interval*1000)
                 coroutine.yield();
             println("[\e[32m",name,"\e[0m] [",os.time(),"]  type:\e[34mtask\e[0m  interval:\e[34m",interval,"\e[0m  invoke-time:\e[96m",counter,"\e[0m");
             function();
@@ -145,7 +145,7 @@ var settimer = func() {
 println("[\e[32m maketimer \e[0m] [",os.time(),"] test func simulation()");
 var simulation = func() {
     var running=1;
-    while(running) {
+    while (running) {
         running=0;
         foreach(var i;keys(fg_globals.task)) {
             if (!contains(fg_globals.task,i))
@@ -225,7 +225,7 @@ var props={
         path=split('/',path);
         var tmp=me.globals;
         var path_size=size(path);
-        for(var i=0;i<path_size-1;i+=1)
+        for (var i=0;i<path_size-1;i+=1)
             tmp=tmp.val[path[i]];
         if (path_size>0) {
             if (contains(tmp.val,path[i]~'['~index~']'))
@@ -260,7 +260,7 @@ props.Node={
         return 0;
     },
     addChildren:func(name,cnt=0) {
-        for(var i=0;i<cnt;i+=1) {
+        for (var i=0;i<cnt;i+=1) {
             var label=name~'['~i~']';
             me.val[label]=props.Node.new();
             me.val[label].parent=me;
@@ -344,7 +344,7 @@ foreach(var i;c)
 props.getNode('/ai',1).addChildren('ai',4);
 props.getNode('/aircraft',1).setValue('/','IDG MD-11');
 props.getNode('/models',1).addChildren('building',4);
-for(var i=0;i<4;i+=1)
+for (var i=0;i<4;i+=1)
     props.getNode('/models/building['~i~']',1).setIntValue(i);
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /consumables");
@@ -354,7 +354,7 @@ props.getNode("/consumables/fuel",1).addChild("total-gal_us");
 props.getNode("/consumables/fuel/total-fuel-lbs",1).setValue('/',0);
 props.getNode("/consumables/fuel/total-gal_us",1).setValue('/',0);
 props.getNode("/consumables/fuel",1).addChildren("tank",4);
-for(var i=0;i<4;i+=1) {
+for (var i=0;i<4;i+=1) {
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-lb");
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-lbs");
     props.getNode("/consumables/fuel/tank["~i~"]",1).addChild("level-gal_us");
@@ -376,7 +376,7 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/anti-ice");
 foreach(var i;['wing-heat','pitot-heat','wiper','window-heat'])
     props.getNode("/controls/anti-ice",1).addChild(i);
 props.getNode("/controls/anti-ice",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1) {
+for (var i=0;i<2;i+=1) {
     props.getNode("/controls/anti-ice/engine["~i~"]",1).addChild("carb-heat");
     props.getNode("/controls/anti-ice/engine["~i~"]",1).addChild("inlet-heat");
 }
@@ -390,7 +390,7 @@ props.getNode("/controls/armament",1).addChild("master-arm");
 props.getNode("/controls/armament",1).addChild("station-select");
 props.getNode("/controls/armament",1).addChild("release-all");
 props.getNode("/controls/armament",1).addChildren("station",4);
-for(var i=0;i<4;i+=1) {
+for (var i=0;i<4;i+=1) {
     props.getNode("/controls/armament/station["~i~"]",1).addChild("stick-size");
     props.getNode("/controls/armament/station["~i~"]",1).addChild("release-stick");
     props.getNode("/controls/armament/station["~i~"]",1).addChild("release-all");
@@ -401,14 +401,14 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/autoflight");
 foreach(var i;['autothrottle-arm','autothrottle-engage','heading-select','altitude-select','bank-angle-select','vertical-speed-select','speed-select','mach-select','vertical-mode','lateral-mode'])
     props.getNode("/controls/autoflight",1).addChild(i);
 props.getNode("/controls/autoflight",1).addChildren("autopilot",2);
-for(var i=0;i<2;i+=1)
+for (var i=0;i<2;i+=1)
     props.getNode("/controls/autoflight/autopilot["~i~"]",1).addChild("engage");
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/electric");
 foreach(var i;['battery-switch','external-power','APU-generator'])
     props.getNode("/controls/electric",1).addChild(i);
 props.getNode("/controls/electric",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1) {
+for (var i=0;i<2;i+=1) {
     props.getNode("/controls/electric/engine["~i~"]",1).addChild("generator");
     props.getNode("/controls/electric/engine["~i~"]",1).addChild("bus-tie");
 }
@@ -416,7 +416,7 @@ for(var i=0;i<2;i+=1) {
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/engines");
 props.getNode("/controls/engines",1).addChild("throttle-idle");
 props.getNode("/controls/engines",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1)
+for (var i=0;i<2;i+=1)
     foreach(var j;['throttle','starter','fuel-pump','fire-switch','fire-bottle-discharge','cutoff','mixture','propeller-pitch','magnetos','boost','WEP','cowl-flaps-norm','feather','ignition','augmentation','afterburner','reverser','water-injection','condition'])
         props.getNode("/controls/engines/engine["~i~"]",1).addChild(j);
 
@@ -427,7 +427,7 @@ foreach(var i;['aileron','aileron-trim','elevator','elevator-trim','rudder','rud
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/fuel");
 props.getNode("/controls/fuel",1).addChild("dump-value");
 props.getNode("/controls/fuel",1).addChildren("tank",4);
-for(var i=0;i<4;i+=1) {
+for (var i=0;i<4;i+=1) {
     foreach(var j;['fuel-selector','to_engine','to_tank'])
         props.getNode("/controls/fuel/tank["~i~"]",1).addChild(j);
     props.getNode("/controls/fuel/tank["~i~"]",1).addChildren("boost-pump",4);
@@ -437,12 +437,12 @@ println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/gear");
 foreach(var i;['brake-left','brake-right','brake-parking','steering','gear-down','antiskid','tailhook','tailwheel-lock'])
     props.getNode("/controls/gear",1).addChild(i);
 props.getNode("/controls/gear",1).addChildren("wheel",4);
-for(var i=0;i<4;i+=1)
+for (var i=0;i<4;i+=1)
     props.getNode("/controls/gear/wheel["~i~"]",1).addChild("alternate-extension");
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/hydraulic");
 props.getNode("/controls/hydraulic",1).addChildren("system",2);
-for(var i=0;i<2;i+=1) {
+for (var i=0;i<2;i+=1) {
     props.getNode("/controls/hydraulic/system["~i~"]",1).addChild("engine-pump");
     props.getNode("/controls/hydraulic/system["~i~"]",1).addChild("electric-pump");
 }
@@ -454,28 +454,28 @@ foreach(var i;['landing-lights','turn-off-lights','formation-lights','taxi-light
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/pneumatic");
 props.getNode("/controls/pneumatic",1).addChild("APU-bleed");
 props.getNode("/controls/pneumatic",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1)
+for (var i=0;i<2;i+=1)
     props.getNode("/controls/pneumatic/engine["~i~"]",1).addChild("bleed");
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/pressurization");
 foreach(var i;['mode','dump','outflow-valve'])
     props.getNode("/controls/pressurization",1).addChild(i);
 props.getNode("/controls/pressurization",1).addChildren("pack",4);
-for(var i=0;i<4;i+=1)
+for (var i=0;i<4;i+=1)
     props.getNode("/controls/pressurization/pack["~i~"]",1).addChild("pack-on");
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /controls/seat");
 foreach(var i;['vertical-adjust','fore-aft-adjust','cmd_selector_valve'])
     props.getNode("/controls/seat",1).addChild(i);
 props.getNode("/controls/seat",1).addChildren("eject",3);
-for(var i=0;i<3;i+=1) {
+for (var i=0;i<3;i+=1) {
     props.getNode("/controls/seat/eject["~i~"]",1).addChild("initiate");
     props.getNode("/controls/seat/eject["~i~"]",1).addChild("status");
 }
 
 println("[\e[32m props     \e[0m] [",os.time(),"] init /engines");
 props.getNode("/engines",1).addChildren("engine",2);
-for(var i=0;i<2;i+=1)
+for (var i=0;i<2;i+=1)
     foreach(var j;
         ['fuel-flow-gph','fuel-flow-pph','thrust_lb','running','starter','cranking',
         'n1','n2','epr','augmentation','water-injection','ignition','nozzle-pos-norm',
@@ -506,7 +506,7 @@ foreach(var i;['x-accel-fps_sec','y-accel-fps_sec','z-accel-fps_sec'])
 println("[\e[32m props     \e[0m] [",os.time(),"] init /gear");
 props.getNode("/gear",1).addChild("serviceable");
 props.getNode("/gear",1).addChildren("gear",4);
-for(var i=0;i<4;i+=1)
+for (var i=0;i<4;i+=1)
     foreach(var j;['cast-angle-deg','compression-m','compression-norm','ground-friction-factor','ground-is-solid','has-brake','rollspeed-ms','wow','xoffset-in','yoffset-in','zoffset-in'])
         props.getNode("/gear/gear["~i~"]",1).addChild(j);
 
@@ -522,7 +522,7 @@ foreach(var i;['torque-sound-filtered','total-torque'])
 foreach(var i;['balance','bladesvisible','cone-deg','cone2-deg','roll-deg','rpm','stall','stall-filtered','tilt','torque','yaw-deg'])
     props.getNode("/rotors/{name}",1).addChild(i);
 props.getNode("/rotors/{name}",1).addChildren("blade",8);
-for(var i=0;i<8;i+=1)
+for (var i=0;i<8;i+=1)
     foreach(var j;['flap-deg','incidence-deg','position-deg'])
         props.getNode("/rotors/{name}/blade["~i~"]",1).addChild(j);
 
@@ -542,7 +542,7 @@ func() {
     srand();
     var tmp=nil;
     var vec=[props.globals];
-    while(size(vec)) {
+    while (size(vec)) {
         tmp=[];
         foreach(var i;vec) {
             if (typeof(i.val)=="hash") {

@@ -28,7 +28,7 @@ var blank = func(s) {
         return 1;
     }
     var space = [" "[0],"\n"[0],"\t"[0],"\r"[0]];
-    for(var i = 0; i<size(s); i+=1) {
+    for (var i = 0; i<size(s); i+=1) {
         var flag = 0;
         foreach(var j; space) {
             if (s[i]==j) {

@@ -42,7 +42,7 @@ var myers = func(src,dst,show_table=0) {
 
     var (total,path,vec)=([],[],[[0,0,-1]]);
     visited[0]=1;
-    while(size(vec)) {
+    while (size(vec)) {
         append(total,vec);
         var tmp=[];
         forindex(var i;vec) {
@@ -52,23 +52,23 @@ var myers = func(src,dst,show_table=0) {
             # find solution
             if (x==src_len-1 and y==dst_len-1) {
                 append(path,vec[i]);
-                for(var (prev,iter)=(elem[2],size(total)-1);iter>0;iter-=1) {
+                for (var (prev,iter)=(elem[2],size(total)-1);iter>0;iter-=1) {
                     var t=total[iter-1][prev];
                     append(path,t);
                     prev=t[2];
                 }
 
                 if (show_table) {
-                    for(var t=size(path)-1;t>=0;t-=1)
+                    for (var t=size(path)-1;t>=0;t-=1)
                         print("("~path[t][1]~","~path[t][0]~")",t==0?"":"->");
                     println();
                 }
 
                 # reverse path
-                for(var t=0;t<size(path)/2;t+=1)
+                for (var t=0;t<size(path)/2;t+=1)
                     (path[t],path[-1-t])=(path[-1-t],path[t]);
                 # print diff
-                for(var t=1;t<size(path);t+=1) {
+                for (var t=1;t<size(path);t+=1) {
                     var (prev_x,prev_y)=(path[t-1][1],path[t-1][0]);
                     var (x,y)=(path[t][1],path[t][0]);
                     var (sub_x,sub_y)=(x-prev_x,y-prev_y);

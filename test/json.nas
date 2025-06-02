@@ -98,7 +98,7 @@ var test_json = func(json) {
         var name = keys(hash)[0];
         hash[name] = [];
         print("\e[1000D", bar.bar(0));
-        for(var i = 0; i<500; i+=1) {
+        for (var i = 0; i<500; i+=1) {
             append(hash[name], {id:i, content:int(rand()*1e7)});
             print("\e[1000D", bar.bar((i+1)/500));
         }
@@ -111,7 +111,7 @@ var test_json = func(json) {
 };
 
 var stamp = maketimestamp();
-for(var i = 0; i<10; i += 1) {
+for (var i = 0; i<10; i += 1) {
     stamp.stamp();
     test_json(json);
     println("time usage: ", stamp.elapsedUSec()/1000, " ms");

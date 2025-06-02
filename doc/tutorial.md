@@ -67,7 +67,7 @@ __`vec`__ has unlimited length and can store all types of values.
 
 ```javascript
 var vec = [];
-var vec = [0, nil, {}, [], func(){return 0}];
+var vec = [0, nil, {}, [], func() { return 0 }];
 append(vec, 0, 1, 2);
 ```
 
@@ -255,10 +255,10 @@ if (1) {
 While loop and for loop is simalar to C/C++.
 
 ```javascript
-while(condition) {
+while (condition) {
     continue;
 }
-for(var i = 0; i<10; i += 1) {
+for (var i = 0; i<10; i += 1) {
     break;
 }
 ```
@@ -327,7 +327,7 @@ var fib = func(f) {
 }(
     func(f) {
         return func(x) {
-            if(x<2) return x;
+            if (x<2) return x;
             return f(f)(x-1)+f(f)(x-2);
         }
     }
@@ -469,7 +469,7 @@ Then complete this function using C++:
 var builtin_print(context* ctx, gc* ngc) {
     // find value with index begin from 1
     // because local[0] is reserved for value 'me'
-    for(auto& i : ctx->localr[1].vec().elems) {
+    for (auto& i : ctx->localr[1].vec().elems) {
         std::cout << i;
     }
     std::cout << std::flush;
@@ -495,11 +495,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto res = ngc->temp = ngc->alloc(vm_vec);
     auto& vec = res.vec().elems;
     if (hash.type==vm_hash) {
-        for(const auto& iter : hash.hash().elems) {
+        for (const auto& iter : hash.hash().elems) {
             vec.push_back(ngc->newstr(iter.first));
         }
     } else {
-        for(const auto& iter : hash.map().mapper) {
+        for (const auto& iter : hash.map().mapper) {
             vec.push_back(ngc->newstr(iter.first));
         }
     }
@@ -597,7 +597,7 @@ var fib(var* args, usize size, gc* ngc) {
     // if you want your function safer, try this
     // nas_err will print the error info on screen
     // and return vm_null for runtime to interrupt
-    if(num.type!=vm_num) {
+    if (num.type!=vm_num) {
         return nas_err("extern_fib", "\"num\" must be number");
     }
     // ok, you must know that vm_num now is not managed by gc
@@ -645,7 +645,7 @@ Then we write a test nasal file to run this fib function:
 use std.dylib;
 var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
-for(var i = 1; i<30; i += 1)
+for (var i = 1; i<30; i += 1)
     println(dylib.dlcall(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```
@@ -663,7 +663,7 @@ use std.dylib;
 var dlhandle = dylib.dlopen("libfib");
 var fib = dlhandle.fib;
 var invoke = dylib.limitcall(1); # this means the called function has only one parameter
-for(var i = 1; i<30; i += 1)
+for (var i = 1; i<30; i += 1)
     println(invoke(fib, i));
 dylib.dlclose(dlhandle.lib);
 ```

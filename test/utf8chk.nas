@@ -55,7 +55,7 @@ var emoji测试 = func() {
 var dotsgen = func() {
     var dots=[];
     var s="⠀";
-    for(var i=0;i<256;i+=1) {
+    for (var i=0;i<256;i+=1) {
         var v0=s[0];
         var v1=s[1]+int(i/64);
         var v2=s[2]+i;

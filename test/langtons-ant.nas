@@ -39,8 +39,8 @@ foreach(var a; ants) {
 var print_map = func {
     var pics = ["  ", "[]"];
     var res = "\e[1;1H";
-    for(var y = 0; y<30; y += 1) {
-        for(var x = 0; x<60; x += 1) {
+    for (var y = 0; y<30; y += 1) {
+        for (var x = 0; x<60; x += 1) {
             res ~= "\e[38;5;"~map_color[x + y*60]~";1m";
             res ~= pics[map[x + y*60]] ~ "\e[0m";
         }
@@ -91,7 +91,7 @@ var move = func {
     map = temp_map;
 }
 
-while(1) {
+while (1) {
     print_map();
     move();
     unix.sleep(1/24);

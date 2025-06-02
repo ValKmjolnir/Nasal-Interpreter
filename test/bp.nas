@@ -34,32 +34,32 @@ var training_set=[[0,0],[0,1],[1,0],[1,1]];
 var expect=[0,1,1,0];
 
 var hidden=[];
-for(var i=0;i<hnum;i+=1) {
+for (var i=0;i<hnum;i+=1) {
     append(hidden,new_neuron());
-    for(var j=0;j<inum;j+=1)
+    for (var j=0;j<inum;j+=1)
         append(hidden[i].w,rand()>0.5?-2*rand():2*rand());
     hidden[i].bia=rand()>0.5?-5*rand():5*rand();
 }
 
 var output=[];
-for(var i=0;i<onum;i+=1) {
+for (var i=0;i<onum;i+=1) {
     append(output,new_neuron());
-    for(var j=0;j<hnum;j+=1)
+    for (var j=0;j<hnum;j+=1)
         append(output[i].w,rand()>0.5?-2*rand():2*rand());
     output[i].bia=rand()>0.5?-5*rand():5*rand();
 }
 
 var forward = func(x) {
     var input=training_set[x];
-    for(var i=0;i<hnum;i+=1) {
+    for (var i=0;i<hnum;i+=1) {
         hidden[i].in=hidden[i].bia;
-        for(var j=0;j<inum;j+=1)
+        for (var j=0;j<inum;j+=1)
             hidden[i].in+=hidden[i].w[j]*input[j];
         hidden[i].out=tanh(hidden[i].in);
     }
-    for(var i=0;i<onum;i+=1) {
+    for (var i=0;i<onum;i+=1) {
         output[i].in=output[i].bia;
-        for(var j=0;j<hnum;j+=1)
+        for (var j=0;j<hnum;j+=1)
             output[i].in+=output[i].w[j]*hidden[j].out;
         output[i].out=sigmoid(output[i].in);
     }
@@ -67,15 +67,15 @@ var forward = func(x) {
 }
 var run = func(vec) {
     var input=vec;
-    for(var i=0;i<hnum;i+=1) {
+    for (var i=0;i<hnum;i+=1) {
         hidden[i].in=hidden[i].bia;
-        for(var j=0;j<inum;j+=1)
+        for (var j=0;j<inum;j+=1)
             hidden[i].in+=hidden[i].w[j]*input[j];
         hidden[i].out=tanh(hidden[i].in);
     }
-    for(var i=0;i<onum;i+=1) {
+    for (var i=0;i<onum;i+=1) {
         output[i].in=output[i].bia;
-        for(var j=0;j<hnum;j+=1)
+        for (var j=0;j<hnum;j+=1)
             output[i].in+=output[i].w[j]*hidden[j].out;
         output[i].out=sigmoid(output[i].in);
     }
@@ -87,29 +87,29 @@ var get_error = func(x) {
 var backward = func(x) {
     var input=training_set[x];
     output[0].diff=(expect[x]-output[0].out)*diffsigmoid(output[0].in);
-    for(var i=0;i<hnum;i+=1) {
+    for (var i=0;i<hnum;i+=1) {
         hidden[i].diff=0;
-        for(var j=0;j<onum;j+=1)
+        for (var j=0;j<onum;j+=1)
             hidden[i].diff+=output[j].w[i]*output[j].diff;
         hidden[i].diff*=difftanh(hidden[i].in);
     }
-    for(var i=0;i<hnum;i+=1) {
+    for (var i=0;i<hnum;i+=1) {
         hidden[i].bia+=hidden[i].diff;
-        for(var j=0;j<inum;j+=1)
+        for (var j=0;j<inum;j+=1)
             hidden[i].w[j]+=hidden[i].diff*input[j];
     }
-    for(var i=0;i<onum;i+=1) {
+    for (var i=0;i<onum;i+=1) {
         output[i].bia+=output[i].diff;
-        for(var j=0;j<hnum;j+=1)
+        for (var j=0;j<hnum;j+=1)
             output[i].w[j]+=output[i].diff*hidden[j].out;
     }
     return;
 }
 
 var (cnt,error)=(0,100);
-while(error>0.0005) {
+while (error>0.0005) {
     error=0;
-    for(var i=0;i<4;i+=1) {
+    for (var i=0;i<4;i+=1) {
         forward(i);
         error+=get_error(i);
         backward(i);

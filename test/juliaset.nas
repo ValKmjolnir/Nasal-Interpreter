@@ -7,8 +7,8 @@ var ppm = func(filename, width, height, RGB) {
     # P6 use binary character
     var fd = io.open(filename, "wb");
     io.write(fd, "P6\n"~width~" "~height~"\n255\n");
-    for(var i = 0; i<height; i += 1) {
-        for(var j = 0; j<width; j += 1) {
+    for (var i = 0; i<height; i += 1) {
+        for (var j = 0; j<width; j += 1) {
             io.write(fd, RGB(i, j));
         }
     }
@@ -27,7 +27,7 @@ var f = func(i, j) {
     var (yDel, xDel) = (yMax-yMin, xMax-xMin);
     var (y, x) = (init_y, init_x);
     var (y0, x0) = ((i/height)*yDel+yMin, (j/width)*xDel+xMin);
-    for(var iter = 0; iter<64; iter += 1) {
+    for (var iter = 0; iter<64; iter += 1) {
         var (x1, y1) = ((x0*x0)-(y0*y0)+x, 2*x0*y0+y);
         (x0, y0) = (x1, y1);
         if ((x0*x0)+(y0*y0)>4) {

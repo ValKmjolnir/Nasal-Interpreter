@@ -8,7 +8,7 @@ namespace nasal {
 bool ast_format::visit_use_stmt(use_stmt* node) {
     dump_formating_node_info(node, "use statement");
     out << "use ";
-    for(auto i : node->get_path()) {
+    for (auto i : node->get_path()) {
         i->accept(this);
         if (i != node->get_path().back()) {
             out << ".";
@@ -55,7 +55,7 @@ bool ast_format::visit_bool_literal(bool_literal* node) {
 bool ast_format::visit_vector_expr(vector_expr* node) {
     dump_formating_node_info(node, "vector expression");
     out << "[";
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         i->accept(this);
         if (i != node->get_elements().back()) {
             out << ", ";
@@ -68,7 +68,7 @@ bool ast_format::visit_vector_expr(vector_expr* node) {
 bool ast_format::visit_hash_expr(hash_expr* node) {
     dump_formating_node_info(node, "hash expression");
     out << "{";
-    for(auto i : node->get_members()) {
+    for (auto i : node->get_members()) {
         i->accept(this);
         if (i != node->get_members().back()) {
             out << ", ";
@@ -101,7 +101,7 @@ bool ast_format::visit_hash_pair(hash_pair* node) {
 bool ast_format::visit_function(function* node) {
     dump_formating_node_info(node, "function");
     out << "func(";
-    for(auto i : node->get_parameter_list()) {
+    for (auto i : node->get_parameter_list()) {
         i->accept(this);
         if (i != node->get_parameter_list().back()) {
             out << ", ";
@@ -120,7 +120,7 @@ bool ast_format::visit_code_block(code_block* node) {
     dump_formating_node_info(node, "code block");
     out << "{\n";
     push_indent();
-    for(auto i : node->get_expressions()) {
+    for (auto i : node->get_expressions()) {
         dump_indent();
         i->accept(this);
         if (need_dump_semi(i)) {
@@ -203,7 +203,7 @@ bool ast_format::visit_unary_operator(unary_operator* node) {
 bool ast_format::visit_call_expr(call_expr* node) {
     dump_formating_node_info(node, "call expression");
     node->get_first()->accept(this);
-    for(auto i : node->get_calls()) {
+    for (auto i : node->get_calls()) {
         i->accept(this);
     }
     return true;
@@ -224,7 +224,7 @@ bool ast_format::visit_null_access(null_access* node) {
 bool ast_format::visit_call_vector(call_vector* node) {
     dump_formating_node_info(node, "call vector");
     out << "[";
-    for(auto i : node->get_slices()) {
+    for (auto i : node->get_slices()) {
         i->accept(this);
         if (i != node->get_slices().back()) {
             out << ", ";
@@ -237,7 +237,7 @@ bool ast_format::visit_call_vector(call_vector* node) {
 bool ast_format::visit_call_function(call_function* node) {
     dump_formating_node_info(node, "call function");
     out << "(";
-    for(auto i : node->get_argument()) {
+    for (auto i : node->get_argument()) {
         i->accept(this);
         if (i != node->get_argument().back()) {
             out << ", ";
@@ -295,7 +295,7 @@ bool ast_format::visit_assignment_expr(assignment_expr* node) {
 bool ast_format::visit_multi_identifier(multi_identifier* node) {
     dump_formating_node_info(node, "multi identifier");
     out << "(";
-    for(auto i : node->get_variables()) {
+    for (auto i : node->get_variables()) {
         i->accept(this);
         if (i != node->get_variables().back()) {
             out << ", ";
@@ -308,7 +308,7 @@ bool ast_format::visit_multi_identifier(multi_identifier* node) {
 bool ast_format::visit_tuple_expr(tuple_expr* node) {
     dump_formating_node_info(node, "tuple expression");
     out << "(";
-    for(auto i : node->get_elements()) {
+    for (auto i : node->get_elements()) {
         i->accept(this);
         if (i != node->get_elements().back()) {
             out << ", ";

@@ -45,7 +45,7 @@ void gc::mark() {
     }
 
     // normal mark
-    while(!bfs.empty()) {
+    while (!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_type::vm_num ||
@@ -58,7 +58,7 @@ void gc::mark() {
 
 void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
     std::vector<var> bfs;
-    for(auto i = begin; i<end; ++i) {
+    for (auto i = begin; i<end; ++i) {
         var value = vec[i];
         if (value.type<=vm_type::vm_num ||
             value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
@@ -66,7 +66,7 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
         }
         mark_var(bfs, value);
     }
-    while(!bfs.empty()) {
+    while (!bfs.empty()) {
         var value = bfs.back();
         bfs.pop_back();
         if (value.type<=vm_type::vm_num ||
@@ -79,14 +79,14 @@ void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
 
 void gc::mark_context_root(std::vector<var>& bfs_queue) {
     // scan global
-    for(usize i = 0; i < main_context_global_size; ++i) {
+    for (usize i = 0; i < main_context_global_size; ++i) {
         auto& val = main_context_global[i];
         if (val.type > vm_type::vm_num) {
             bfs_queue.push_back(val);
         }
     }
     // scan now running context, this context maybe related to coroutine or main
-    for(var* i = running_context->stack; i <= running_context->top; ++i) {
+    for (var* i = running_context->stack; i <= running_context->top; ++i) {
         if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
@@ -100,7 +100,7 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
     }
 
     // coroutine is running, so scan main process stack from mctx
-    for(var* i = main_context.stack; i <= main_context.top; ++i) {
+    for (var* i = main_context.stack; i <= main_context.top; ++i) {
         if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
@@ -124,7 +124,7 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
 }
 
 void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
-    for(auto& i : vec.elems) {
+    for (auto& i : vec.elems) {
         if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
@@ -132,7 +132,7 @@ void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
 }
 
 void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
-    for(auto& i : hash.elems) {
+    for (auto& i : hash.elems) {
         if (i.second.type > vm_type::vm_num) {
             bfs_queue.push_back(i.second);
         }
@@ -140,18 +140,18 @@ void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
 }
 
 void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
-    for(auto& i : function.local) {
+    for (auto& i : function.local) {
         if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
     }
-    for(auto& i : function.upval) {
+    for (auto& i : function.upval) {
         bfs_queue.push_back(i);
     }
 }
 
 void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
-    for(auto& i : upval.elems) {
+    for (auto& i : upval.elems) {
         if (i.type > vm_type::vm_num) {
             bfs_queue.push_back(i);
         }
@@ -168,7 +168,7 @@ void gc::mark_ghost(std::vector<var>& bfs_queue, nas_ghost& ghost) {
 void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
     bfs_queue.push_back(co.ctx.funcr);
     bfs_queue.push_back(co.ctx.upvalr);
-    for(var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
+    for (var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
         if (i->type > vm_type::vm_num) {
             bfs_queue.push_back(*i);
         }
@@ -176,7 +176,7 @@ void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
 }
 
 void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
-    for(const auto& i : mp.mapper) {
+    for (const auto& i : mp.mapper) {
         if (i.second->type > vm_type::vm_num) {
             bfs_queue.push_back(*i.second);
         }
@@ -211,7 +211,7 @@ void gc::extend(const vm_type type) {
     const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
     status.object_size[index] += incr[index];
 
-    for(u64 i = 0; i<incr[index]; ++i) {
+    for (u64 i = 0; i<incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
         nas_val* tmp = new nas_val(type);
 
@@ -281,14 +281,14 @@ void gc::init(const std::vector<std::string>& constant_strings,
 }
 
 void gc::clear() {
-    for(auto i : memory) {
+    for (auto i : memory) {
         delete i;
     }
     memory.clear();
-    for(u32 i = 0; i<GC_TYPE_SIZE; ++i) {
+    for (u32 i = 0; i<GC_TYPE_SIZE; ++i) {
         unused[i].clear();
     }
-    for(auto& i : strs) {
+    for (auto& i : strs) {
         delete i.val.gcobj;
     }
     strs.clear();

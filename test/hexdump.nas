@@ -51,13 +51,13 @@ var hex_index=[0,0,0,0];
 var textprint = func(index) {
     var info="";
     if (os.platform()=="windows") {
-        for(var i=index-cnt;i<index;i+=1)
+        for (var i=index-cnt;i<index;i+=1)
             info~=(s[i]<32 or s[i]>=127)?".":chr(s[i]);
     } else {
-        for(var i=index-cnt;i<index;i+=1)
+        for (var i=index-cnt;i<index;i+=1)
             info~=(s[i]<32 or s[i]==127)?".":chr(s[i]);
     }
-    for(var i=cnt;i<16;i+=1) {
+    for (var i=cnt;i<16;i+=1) {
         info~=".";
     }
     return " |"~info~"|\n";
@@ -70,7 +70,7 @@ var indexprint = func(index) {
         index=int(index/256);
     }
     var info="";
-    for(var i=3;i>=0;i-=1)
+    for (var i=3;i>=0;i-=1)
         info~=hex[hex_index[i]];
     return info~"  ";
 }
@@ -81,7 +81,7 @@ func() {
         return;
     }
     var info=indexprint(0);
-    for(var i=0;i<size(s);i+=1) {
+    for (var i=0;i<size(s);i+=1) {
         if (cnt==16) {
             info~=textprint(i);
             print(info);
@@ -92,7 +92,7 @@ func() {
         cnt+=1;
         info~=hex[s[i]]~" ";
     }
-    for(var l=cnt;l<16;l+=1)
+    for (var l=cnt;l<16;l+=1)
         info~="   ";
     if (cnt<=8)
         info~=" ";

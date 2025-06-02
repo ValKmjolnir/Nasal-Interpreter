@@ -8,7 +8,7 @@ void expr::accept(ast_visitor* visitor) {
 }
 
 use_stmt::~use_stmt() {
-    for(auto i : path) {
+    for (auto i : path) {
         delete i;
     }
 }
@@ -46,7 +46,7 @@ void bool_literal::accept(ast_visitor* visitor) {
 }
 
 vector_expr::~vector_expr() {
-    for(auto i : elements) {
+    for (auto i : elements) {
         delete i;
     }
 }
@@ -56,7 +56,7 @@ void vector_expr::accept(ast_visitor* visitor) {
 }
 
 hash_expr::~hash_expr() {
-    for(auto i : members) {
+    for (auto i : members) {
         delete i;
     }
 }
@@ -76,7 +76,7 @@ void hash_pair::accept(ast_visitor* visitor) {
 }
 
 function::~function() {
-    for(auto i : parameter_list) {
+    for (auto i : parameter_list) {
         delete i;
     }
     if (block) {
@@ -89,7 +89,7 @@ void function::accept(ast_visitor* visitor) {
 }
 
 code_block::~code_block() {
-    for(auto i : expressions) {
+    for (auto i : expressions) {
         delete i;
     }
 }
@@ -157,10 +157,10 @@ void unary_operator::accept(ast_visitor* visitor) {
 }
 
 call_expr::~call_expr() {
-    if(first) {
+    if (first) {
         delete first;
     }
-    for(auto i : calls) {
+    for (auto i : calls) {
         delete i;
     }
 }
@@ -178,7 +178,7 @@ void null_access::accept(ast_visitor* visitor) {
 }
 
 call_vector::~call_vector() {
-    for(auto i : calls) {
+    for (auto i : calls) {
         delete i;
     }
 }
@@ -188,7 +188,7 @@ void call_vector::accept(ast_visitor* visitor) {
 }
 
 call_function::~call_function() {
-    for(auto i : args) {
+    for (auto i : args) {
         delete i;
     }
 }
@@ -243,7 +243,7 @@ void assignment_expr::accept(ast_visitor* visitor) {
 }
 
 multi_identifier::~multi_identifier() {
-    for(auto i : variables) {
+    for (auto i : variables) {
         delete i;
     }
 }
@@ -253,7 +253,7 @@ void multi_identifier::accept(ast_visitor* visitor) {
 }
 
 tuple_expr::~tuple_expr() {
-    for(auto i : elements) {
+    for (auto i : elements) {
         delete i;
     }
 }
@@ -340,7 +340,7 @@ condition_expr::~condition_expr() {
     if (if_stmt) {
         delete if_stmt;
     }
-    for(auto i : elsif_stmt) {
+    for (auto i : elsif_stmt) {
         delete i;
     }
     if (else_stmt) {

@@ -13,7 +13,7 @@ namespace nasal::cli {
 cli_config parse(const std::vector<std::string>& args) {
     cli_config result;
 
-    for(const auto& arg : args) {
+    for (const auto& arg : args) {
         if (cli_options.count(arg)) {
             result.options.insert(cli_options.at(arg));
         } else if (!result.input_file_path.length()) {
@@ -113,7 +113,7 @@ std::ostream& version(std::ostream& out) {
     std::srand(static_cast<u32>(std::time(nullptr)));
 
     f64 num = 0;
-    for(u32 i = 0; i<5; ++i) {
+    for (u32 i = 0; i<5; ++i) {
         num = (num+rand())*(1.0/(RAND_MAX+1.0));
     }
     // give you 5% to see this easter egg

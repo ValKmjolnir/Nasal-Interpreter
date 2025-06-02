@@ -53,7 +53,7 @@ var find_all_files = func(path) {
     }
     var dd = unix.opendir(path);
     var res = [];
-    while(var n = unix.readdir(dd)) {
+    while (var n = unix.readdir(dd)) {
         if (unix.isfile(path ~ "/" ~ n)) {
             append(res, n);
         }
@@ -71,7 +71,7 @@ var recursive_find_files = func(path) {
         dir: path,
         files: []
     };
-    while(var n = unix.readdir(dd)) {
+    while (var n = unix.readdir(dd)) {
         if (unix.isfile(path ~ "/" ~ n)) {
             append(res.files, n);
         } elsif (unix.isdir(path ~ "/" ~ n) and n != "." and n != "..") {
@@ -92,7 +92,7 @@ var recursive_find_files_flat = func(path) {
     }
     var flat = [];
     var bfs = [tree_files];
-    while(size(bfs) != 0) {
+    while (size(bfs) != 0) {
         var first = pop(bfs);
         foreach(var file_record; first.files) {
             if (ishash(file_record)) {

@@ -51,7 +51,7 @@ void execute(const nasal::cli::cli_config& config) {
         if (ld.get_file_list().size()) {
             std::cout << "referenced file(s):\n";
         }
-        for(const auto& file: ld.get_file_list()) {
+        for (const auto& file: ld.get_file_list()) {
             std::cout << "  " << file << "\n";
         }
     }

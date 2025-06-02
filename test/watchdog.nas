@@ -53,7 +53,7 @@ if (size(argv)==2) {
 
 var modified_time = io.fstat(filename).st_mtime;
 println(os_time(), info_hd(), "watching ", filename, " ..");
-while(1) {
+while (1) {
     unix.sleep(1);
     if (!io.exists(filename)) {
         println(os_time(), err_hd(), "file <", filename, "> does not exist");
@@ -75,7 +75,7 @@ while(1) {
 
         # check if active every 0.5s
         var exited = false;
-        while(1) {
+        while (1) {
             unix.sleep(0.5);
             if (!subprocess.active(subproc)) {
                 exited = true;

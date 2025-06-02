@@ -20,7 +20,7 @@ var gc = {
             times = 16;
         }
 
-        for(var i = 0; i<times; i+=1) {
+        for (var i = 0; i<times; i+=1) {
             _gc_extend(type);
         }
         return nil;
