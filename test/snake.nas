@@ -35,7 +35,7 @@ var game = func(x,y) {
     var gameover=0;
     var setapple = func() {
         var (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
-        while(vec[cord_x][cord_y]!=0)
+        while (vec[cord_x][cord_y]!=0)
             (cord_x,cord_y)=(int(rand()*x),int(rand()*y));
         vec[cord_x][cord_y]=2;
     }
@@ -112,7 +112,7 @@ var game = func(x,y) {
 }
 
 var co=coroutine.create(func() {
-    while(1) {
+    while (1) {
         var moved=-1;
         for (var i=0;i<30;i+=1) {
             var ch=libkey.nonblock();
@@ -140,8 +140,8 @@ var main = func(argv) {
     }
     print("\r                         \r");
     var counter=20;
-    while(1) {
-        while((var ch=coroutine.resume(co)[0])==nil);
+    while (1) {
+        while ((var ch=coroutine.resume(co)[0])==nil);
         if (ch!=nil and ch!=-1) {
             if (ch=='q'[0]) {
                 break;
@@ -165,7 +165,7 @@ var main = func(argv) {
     if (should_skip) {
         return;
     }
-    while(libkey.getch()!='q'[0]);
+    while (libkey.getch()!='q'[0]);
 }
 
 main(runtime.argv());

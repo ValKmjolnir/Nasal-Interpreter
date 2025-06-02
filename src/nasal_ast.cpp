@@ -157,7 +157,7 @@ void unary_operator::accept(ast_visitor* visitor) {
 }
 
 call_expr::~call_expr() {
-    if(first) {
+    if (first) {
         delete first;
     }
     for (auto i : calls) {

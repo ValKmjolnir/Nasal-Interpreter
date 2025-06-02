@@ -63,7 +63,7 @@ var add_event = func(name,interval,function) {
     fg_globals.event[name]=coroutine.create(func {
         var timestamp=maketimestamp();
         timestamp.stamp();
-        while(timestamp.elapsedMSec()<interval*1000)
+        while (timestamp.elapsedMSec()<interval*1000)
             coroutine.yield();
         println("[\e[32m",name,"\e[0m] [",os.time(),"]  type:\e[33mevent\e[0m  interval:\e[34m",interval,"\e[0m");
         function();
@@ -75,10 +75,10 @@ var add_task = func(name,interval,function) {
     fg_globals.task[name]=coroutine.create(func {
         var counter=0;
         var timestamp=maketimestamp();
-        while(1) {
+        while (1) {
             counter+=1;
             timestamp.stamp();
-            while(timestamp.elapsedMSec()<interval*1000)
+            while (timestamp.elapsedMSec()<interval*1000)
                 coroutine.yield();
             println("[\e[32m",name,"\e[0m] [",os.time(),"]  type:\e[34mtask\e[0m  interval:\e[34m",interval,"\e[0m  invoke-time:\e[96m",counter,"\e[0m");
             function();
@@ -145,7 +145,7 @@ var settimer = func() {
 println("[\e[32m maketimer \e[0m] [",os.time(),"] test func simulation()");
 var simulation = func() {
     var running=1;
-    while(running) {
+    while (running) {
         running=0;
         foreach(var i;keys(fg_globals.task)) {
             if (!contains(fg_globals.task,i))
@@ -542,7 +542,7 @@ func() {
     srand();
     var tmp=nil;
     var vec=[props.globals];
-    while(size(vec)) {
+    while (size(vec)) {
         tmp=[];
         foreach(var i;vec) {
             if (typeof(i.val)=="hash") {

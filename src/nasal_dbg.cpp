@@ -95,7 +95,7 @@ void operand_line_counter::dump_this_file_line_counter(std::ostream& os) const {
 std::vector<std::string> dbg::parse(const std::string& cmd) {
     std::vector<std::string> res;
     usize last = 0, pos = cmd.find(" ", 0);
-    while(pos!=std::string::npos) {
+    while (pos!=std::string::npos) {
         if (pos>last) {
             res.push_back(cmd.substr(last, pos-last));
         }
@@ -202,7 +202,7 @@ void dbg::interact() {
     next = false;
     std::string cmd;
     step_info();
-    while(true) {
+    while (true) {
         std::clog << ">> ";
         std::getline(std::cin, cmd);
         auto res = parse(cmd);
@@ -279,7 +279,7 @@ void dbg::run(const codegen& gen,
         code_line.push_back(i.line);
         imm.push_back(i.num);
     }
-    while(operand_function[code[ctx.pc]]) {
+    while (operand_function[code[ctx.pc]]) {
         interact();
         counter.add_operand_counter(code[ctx.pc]);
         counter.add_code_line_counter(code_file_index[ctx.pc], code_line[ctx.pc]);

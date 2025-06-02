@@ -40,23 +40,23 @@
 上面这个问题已经解决很久了，不过我最近发现了一个新的语法问题:
 
 ```javascript
-var f=func(x,y,z){return x+y+z}
-(a,b,c)=(0,1,2);
+var f = func(x, y, z) { return x + y + z }
+(a, b, c) = (0, 1, 2);
 ```
 
 这种写法会被错误识别合并成下面这种:
 
 ```javascript
-var f=func(x,y,z){return x+y+z}(a,b,c)
-=(0,1,2);
+var f = func(x, y, z) { return x + y + z }(a, b, c)
+= (0, 1, 2);
 ```
 
 语法分析器会认为这是个严重的语法错误。我在Flightgear中也测试了这个代码，它内置的语法分析器也认为这是错误语法。当然我认为这是语法设计中的一个比较严重的缺漏。为了避免这个语法问题，只需要添加一个分号就可以了:
 
 ```javascript
-var f=func(x,y,z){return x+y+z};
-                               ^ 就是这里
-(a,b,c)=(0,1,2);
+var f = func(x, y, z) { return x + y + z };
+                                          ^ 就是这里
+(a, b, c) = (0, 1, 2);
 ```
 
 ### version 1.0 parser (last update 2019/10/14)
@@ -193,15 +193,15 @@ for (var i=0;i<4000000;i+=1);
 
 2021/6/3 update:
 
-修复了垃圾收集器还是他妈的会重复收集的bug，这次我设计了三个标记状态来保证垃圾是被正确收集了。
+修复了垃圾收集器还是会重复收集的bug，这次我设计了三个标记状态来保证垃圾是被正确收集了。
 
 将`callf`指令拆分为`callfv`和`callfh`。并且`callfv`将直接从`val_stack`获取传参，而不是先通过一个`vm_vec`把参数收集起来再传入，后者是非常低效的做法。
 
 建议更多使用`callfv`而不是`callfh`，因为`callfh`只能从栈上获取参数并整合为`vm_hash`之后才能传给该指令进行处理，拖慢执行速度。
 
 ```javascript
-var f=func(x,y){return x+y;}
-f(1024,2048);
+var f = func(x, y) { return x + y; }
+f(1024, 2048);
 ```
 
 ```x86asm
@@ -475,12 +475,12 @@ func <0x2a3>:
 在这个版本中我们给nasal加入了协程:
 
 ```javascript
-var coroutine={
-    create: func(function){return __cocreate;},
-    resume: func(co)      {return __coresume;},
-    yield:  func(args...) {return __coyield; },
-    status: func(co)      {return __costatus;},
-    running:func()        {return __corun;   }
+var coroutine = {
+    create:  func(function) { return __cocreate; },
+    resume:  func(co)       { return __coresume; },
+    yield:   func(args...)  { return __coyield;  },
+    status:  func(co)       { return __costatus; },
+    running: func()         { return __corun;    }
 };
 ```
 

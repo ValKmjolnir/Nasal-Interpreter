@@ -209,7 +209,7 @@ var bf = func(program) {
             f~="print(chr(paper[ptr]));\n";
         } elsif (c=='[') {
             f~=padding(size(stack));
-            f~="while(paper[ptr]) {\n";
+            f~="while (paper[ptr]) {\n";
             append(stack,0);
         } elsif (c==']') {
             if (!size(stack)) {

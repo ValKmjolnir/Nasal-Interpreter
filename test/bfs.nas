@@ -32,7 +32,7 @@ var bfs = func(begin,end) {
     map[end[0]][end[1]]=0;
     if (map[1][0]==1 and map[0][1]==1)
         map[1][0]=0;
-    while(!que.empty()) {
+    while (!que.empty()) {
         var vertex=que.front();
         que.pop();
         foreach(var i;move) {

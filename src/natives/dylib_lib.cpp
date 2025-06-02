@@ -27,7 +27,7 @@ std::vector<std::string> possible_dylib_path() {
     std::vector<std::string> env_path_vec = {"."};
     usize last = 0;
     usize pos = env_path.find(sep, 0);
-    while(pos != std::string::npos) {
+    while (pos != std::string::npos) {
         if (pos > last) {
             env_path_vec.push_back(env_path.substr(last, pos - last));
         }

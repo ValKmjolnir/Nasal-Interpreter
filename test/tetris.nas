@@ -304,7 +304,7 @@ var main = func(argv) {
     map.print();
 
     var counter=init_counter;
-    while(1) {
+    while (1) {
         # nonblock input one character
         var ch=libkey.nonblock();
         if (ch) {
@@ -350,7 +350,7 @@ var main = func(argv) {
         "\e[35mt\e[36mo \e[94mq\e[95mu\e[91mi\e[92mt\e[0m\n"
     );
     if (!should_skip) {
-        while(libkey.getch()!='q'[0]);
+        while (libkey.getch()!='q'[0]);
     }
 };
 

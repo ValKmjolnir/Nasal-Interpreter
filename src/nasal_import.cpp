@@ -19,7 +19,7 @@ linker::linker(): show_path_flag(false), this_file("") {
     const auto seperator = util::is_windows()? ';':':';
     const auto PATH = std::string(env_get_path);
     usize last = 0, position = PATH.find(seperator, 0);
-    while(position!=std::string::npos) {
+    while (position!=std::string::npos) {
         std::string dirpath = PATH.substr(last, position-last);
         if (dirpath.length()) {
             envpath.push_back(dirpath);

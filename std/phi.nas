@@ -37,7 +37,7 @@ var _connect = func(hostname, port) {
         socket.IPPROTO_TCP
     );
     var ip_info = hostname~":"~port;
-    while((var err = socket.connect(sd, hostname, port))==socket.SOCKET_ERROR) {
+    while ((var err = socket.connect(sd, hostname, port))==socket.SOCKET_ERROR) {
         println(_get_time(), " failed to connect ", ip_info, ": ", socket.errno());
         unix.sleep(1);
     }
@@ -67,7 +67,7 @@ var new = func(hostname, port) {
         # get total message
         var total_source = message.str;
         # 0\r\n\r\n is the tail of chunked http info
-        while(find("0\r\n\r\n", total_source)<0) {
+        while (find("0\r\n\r\n", total_source)<0) {
             message = socket.recv(sd, 1024);
             total_source ~= message.str;
         }

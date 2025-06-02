@@ -83,7 +83,7 @@ var select = func(n) {
         var left=0;
         var right=size(message)-1;
         var data=c[2];
-        while(left<=right) {
+        while (left<=right) {
             var mid=int((left+right)/2);
             var res=message[mid][0];
             if (data==res) {

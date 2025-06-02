@@ -34,7 +34,7 @@ var cpu_stat = func() {
 
 var cpu_occupation = func() {
     var first_in = 1;
-    while(1) {
+    while (1) {
         var cpu0 = cpu_stat();
         if (first_in) {
             unix.sleep(0.05);
@@ -75,7 +75,7 @@ var random_generator = func() {
     var total = 0;
     var statistics = [];
     setsize(statistics, 70);
-    while(1) {
+    while (1) {
         for (var i=0;i<10;i+=1) {
             total+=1;
             var u=rand()*rand()*(rand()>0.5?-1:1);
@@ -127,7 +127,7 @@ func() {
 
     var bar=process_bar.high_resolution_bar(48);
     print("\ec");
-    while(limited_loop!=0) {
+    while (limited_loop!=0) {
         limited_loop=limited_loop<0?limited_loop:limited_loop-1;
         var mem=mem_occupation();
         var mem_occ=(mem.MemTotal-mem.MemFree)/mem.MemTotal*100;
@@ -135,7 +135,7 @@ func() {
             mem_occ=0;
         }
         var cpu_occ=nil;
-        while((cpu_occ=coroutine.resume(co)[0])==nil) {
+        while ((cpu_occ=coroutine.resume(co)[0])==nil) {
             var key=libkey.nonblock();
             coroutine.resume(rd);
             if (key!=nil and chr(key)=="q")

@@ -125,14 +125,14 @@ if (a and a.field == 42) {
 
 #
 # Looping constructs are mostly C-like.  The differences are that
-# there is no do{}while(); construct, and there is a foreach, which
+# there is no do {} while (); construct, and there is a foreach, which
 # takes a local variable name as its first argument and a vector as
 # its second.
 #
 var doSomething = dummyFunc;
 
 var stillGoing = 0;
-while(stillGoing) { doSomething(); }
+while (stillGoing) { doSomething(); }
 
 for (var i=0; i < 3; i = i+1) {
     elem = list1[i];

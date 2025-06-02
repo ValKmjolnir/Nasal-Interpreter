@@ -25,7 +25,7 @@ var jsonRPC = func() {
         },
         connect:func(ip,port) {
             sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
-            while(socket.connect(sd,ip,port)<0) {
+            while (socket.connect(sd,ip,port)<0) {
                 println("[",gettime(),"] failed to connect socket ",sd," to ",ip,":",port);
                 unix.sleep(5);
             }
@@ -75,9 +75,9 @@ var server = func(ip,port) {
     };
 
     jsonRPC.establish(ip,port);
-    while(1) {
+    while (1) {
         var client=jsonRPC.accept();
-        while(1) {
+        while (1) {
             var data=jsonRPC.recv(client);
             if (data!=nil) {
                 data=json.parse(data);
@@ -112,7 +112,7 @@ var client = func(ip,port) {
     var params=[["a","b"],["1","2"]];
 
     var server=jsonRPC.connect(ip,port);
-    while(1) {
+    while (1) {
         unix.sleep(5);
         var data=json.stringify({jsonrpc:2.0, id:call_id, method:methods[rand()*size(methods)],params:params[rand()*size(params)]});
         jsonRPC.send(server, data);

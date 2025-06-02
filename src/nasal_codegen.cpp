@@ -291,7 +291,7 @@ void codegen::func_gen(function* node) {
     //     var f = func(a, arg...) {return(arg)}
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
-    while(local_symbol_find(arg)>=0) {
+    while (local_symbol_find(arg)>=0) {
         arg = "0" + arg;
     }
     regist_symbol(arg);
