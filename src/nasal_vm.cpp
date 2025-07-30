@@ -222,54 +222,33 @@ void vm::function_call_trace() {
     var* top = ctx.top;
 
     // generate trace back
-    std::stack<const nas_func*> functions;
-    std::stack<u64> callsite;
+    std::vector<const nas_func*> functions;
+    std::vector<u64> callsite;
 
-    // load call trace, from bottom to top
-    for (var* i = bottom; i <= top; ++i) {
-        // i-1 is the callsite program counter of this function
-        //   +-------+----------------+
-        //   | func  | func() {..}    | <-- i + 2
-        //   +-------+----------------+
-        //   | ret   | 0x3bf          | <-- i + 1 (value should not be 0x0)
-        //   +-------+----------------+
-        //   | addr  | 0x7ff5f61ae020 | <-- i
-        //   +-------+----------------+
-        // TODO: op_cnt may destroy the order, so maybe this need refact
-        if (i + 2 > top) {
-            continue;
+    var* prev_func = &ctx.funcr;
+    functions.push_back(&prev_func->func());
+    for (var* i = top; i >= bottom; i--) {
+        // +-------+------------------+
+        // | ret   | 0x3bf            | <-- i + 1 (should not be 0, except coroutine)
+        // +-------+------------------+
+        // | addr  | 0x7ff5f61ae020   | <-- i
+        // +-------+------------------+
+        // | upval | ...              | <-- i - 1
+        // +-------+------------------+
+        // | locals| ...              |
+        // +-------+------------------+
+        // | func  | function         | <-- i - 1 - prev_func->local_size - 1
+        if (i + 1 <= top && i[0].is_addr() && i[1].is_ret()) {
+            auto r_addr = i[1].ret();
+            callsite.push_back(r_addr);
+            i--;
+            i -= prev_func->func().local_size;
+            i--;
+            if (i >= bottom && i[0].is_func()) {
+                prev_func = i;
+                functions.push_back(&prev_func->func());
+            }
         }
-        if (!i->is_addr()) {
-            continue;
-        }
-        if ((i+1)->is_ret() && (i+1)->ret()>0 && (i+2)->is_func()) {
-            functions.push(&(i+2)->func());
-            callsite.push((i+1)->ret());
-        }
-    }
-
-    // another condition may exist
-    // have ret pc on stack, but no function at the top of the ret pc
-    for (var * i = top; i >= bottom; --i) {
-        //   +-------+----------------+
-        //   | xxxx  | xxxx           | <-- i + 2 (not function or not exist)
-        //   +-------+----------------+
-        //   | ret   | 0x3bf          | <-- i + 1 (value should not be 0x0)
-        //   +-------+----------------+
-        //   | addr  | 0x7ff5f61ae020 | <-- i
-        //   +-------+----------------+
-        if ((i->is_addr() && i+2<=top && (i+1)->is_ret() && !(i+2)->is_func()) ||
-            (i->is_addr() && i+1<=top && i+2>top && (i+1)->is_ret())) {
-            functions.push(&ctx.funcr.func());
-            callsite.push((i+1)->ret());
-            break;
-        }
-    }
-
-    // function register stores the latest-called function
-    if (functions.empty() && !ctx.funcr.is_func()) {
-        cp.restore_code_page();
-        return;
     }
 
     std::clog << "\ncall trace ";
@@ -279,35 +258,35 @@ void vm::function_call_trace() {
     std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
     std::clog << bytecode[ctx.pc].line << "\n";
 
-    const nas_func* last = nullptr;
-    u64 last_callsite = SIZE_MAX;
-    u64 same_count = 0;
-    for (; !functions.empty() && !callsite.empty(); functions.pop(), callsite.pop()) {
-        auto func = functions.top();
-        auto place = callsite.top();
-
-        if (last==func && last_callsite==place) {
-            ++same_count;
+    const nas_func* prev = nullptr;
+    u64 prev_addr = 0;
+    u64 same_call_count = 0;
+    for (int i = 0; i < functions.size(); ++i) {
+        if (functions[i] == prev && callsite[i] == prev_addr) {
+            same_call_count++;
             continue;
-        } else if (same_count) {
-            std::clog << "  `--> " << same_count << " same call(s)\n";
-            same_count = 0;
+        } else if (same_call_count) {
+            std::clog << "  `--> " << same_call_count << " same call(s)\n";
+            same_call_count = 0;
         }
 
-        last = func;
-        last_callsite = place;
+        // in coroutine
+        if (callsite[i] == 0 && ngc.cort) {
+            std::clog << "  call by coroutine\n";
+            break;
+        }
 
-        // output called function
         std::clog << "  call ";
-        function_detail_info(*func);
+        function_detail_info(*functions[i]);
+        auto r_addr = callsite[i];
+        std::clog << " from " << files[bytecode[r_addr].fidx] << ":";
+        std::clog << bytecode[r_addr].line << "\n";
 
-        // output callsite
-        std::clog << " from ";
-        std::clog << files[bytecode[place].fidx] << ":";
-        std::clog << bytecode[place].line << "\n";
+        prev = functions[i];
+        prev_addr = r_addr;
     }
-    if (same_count) {
-        std::clog << "  `--> " << same_count << " same call(s)\n";
+    if (same_call_count) {
+        std::clog << "  `--> " << same_call_count << " same call(s)\n";
     }
 
     cp.restore_code_page();
