@@ -128,9 +128,9 @@ target_link_libraries(nasock module-used-object)
 if (NOT MSVC)
     add_library(nasal-web SHARED
         src/nasal_web.cpp
-        ${NASAL_OBJECT_SOURCE_FILE}
     )
     target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(nasal-web nasal-object)
     set_target_properties(nasal-web PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
