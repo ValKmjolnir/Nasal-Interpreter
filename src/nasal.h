@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __nasver__
-#define __nasver__ "11.3.2"
+#define __nasver__ "11.3.3"
 #endif
 
 #include <cstddef>
@@ -18,7 +18,7 @@ using usize = std::size_t;
 using f64 = double;
 
 // virtual machine stack depth, both global depth and value stack depth
-const u32 VM_STACK_DEPTH = UINT16_MAX;
+const u32 VM_STACK_DEPTH = UINT16_MAX + 1;
 
 // avoid error loading function bug in MSVC version nasal.exe
 #ifdef _MSC_VER
