@@ -189,8 +189,7 @@ void vm::value_info(var& val) {
 }
 
 void vm::function_detail_info(const nas_func& func) {
-    std::clog << "func@";
-    std::clog << std::hex << reinterpret_cast<u64>(&func) << std::dec;
+    std::clog << "func ";
 
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
@@ -238,6 +237,7 @@ void vm::function_call_trace() {
         // | locals| ...              |
         // +-------+------------------+
         // | func  | function         | <-- i - 1 - prev_func->local_size - 1
+        // +-------+------------------+
         if (i + 1 <= top && i[0].is_addr() && i[1].is_ret()) {
             auto r_addr = i[1].ret();
             callsite.push_back(r_addr);
