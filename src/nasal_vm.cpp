@@ -214,6 +214,11 @@ void vm::function_detail_info(const nas_func& func) {
 }
 
 void vm::function_call_trace() {
+    // no function is called when error ocurred
+    if (!ctx.funcr.is_func()) {
+        return;
+    }
+
     util::windows_code_page_manager cp;
     cp.set_utf8_output();
 
@@ -529,7 +534,10 @@ std::string vm::type_name_string(const var& value) const {
 }
 
 void vm::die(const std::string& str) {
-    std::cerr << "[vm] error: " << str << "\n";
+    const auto& file = files[bytecode[ctx.pc].fidx];
+    const auto line = bytecode[ctx.pc].line;
+    std::cerr << "[vm] error occurred at " << file << ":" << line << ": ";
+    std::cerr << str << "\n";
     function_call_trace();
 
     // trace back contains bytecode info, dump in verbose mode
