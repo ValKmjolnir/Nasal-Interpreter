@@ -263,6 +263,11 @@ void vm::function_call_trace() {
     std::clog << " at " << files[bytecode[ctx.pc].fidx] << ":";
     std::clog << bytecode[ctx.pc].line << "\n";
 
+    if (callsite.empty()) {
+        cp.restore_code_page();
+        return;
+    }
+
     const nas_func* prev = nullptr;
     u64 prev_addr = 0;
     u64 same_call_count = 0;
