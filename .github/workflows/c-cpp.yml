@@ -120,7 +120,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v2.0.5
       with:
-        name: windows MSVC nightly build
+        name: windows MINGW nightly build
         tag_name: next_windows_x86_64_mingw
         prerelease: true
         draft: false
