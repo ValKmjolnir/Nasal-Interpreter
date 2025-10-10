@@ -66,9 +66,7 @@ the interpreter a useful tool in your own projects.
 
 ## __Download__
 
-Nightly build could be found here.
-Windows nightly build is not supported yet,
-please wait or just compile it by yourself, a Cmake file is given for Visual Studio to compile this project easily:
+Nightly build could be found here:
 
 * [MacOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
 * [Linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
