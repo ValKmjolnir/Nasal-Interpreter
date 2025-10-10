@@ -59,3 +59,70 @@ jobs:
         draft: false
         files: |
           nasal-linux-x86_64.tar
+    
+  windows-x86_64-build-msvc:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch Deps
+      run: |
+          choco install -y cmake
+    - name: Update Tag
+      run: |
+        git fetch --tags origin
+        git tag -f next_windows_x86_64_msvc
+        git push -f origin next_windows_x86_64_msvc
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v2
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+        MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+    - name: Package
+      run: |
+        python3 tools/msvc_move_file.py
+        python3 tools/pack.py msvc
+    - name: Release
+      uses: softprops/action-gh-release@v2.0.5
+      with:
+        name: windows MSVC nightly build
+        tag_name: next_windows_x86_64_msvc
+        prerelease: true
+        draft: false
+        files: |
+          nasal-windows-x86_64-msvc.tar
+  
+  windows-x86_64-build-mingw:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch Deps
+      run: |
+          choco install -y cmake
+          choco install -y mingw
+    - name: Update Tag
+      run: |
+        git fetch --tags origin
+        git tag -f next_windows_x86_64_mingw
+        git push -f origin next_windows_x86_64_mingw
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        mingw32-make.exe -j4
+    - name: Package
+      run: |
+        python3 tools/mingw_move_file.py
+        python3 tools/pack.py mingw
+    - name: Release
+      uses: softprops/action-gh-release@v2.0.5
+      with:
+        name: windows MINGW nightly build
+        tag_name: next_windows_x86_64_mingw
+        prerelease: true
+        draft: false
+        files: |
+          nasal-windows-x86_64-mingw.tar

@@ -72,7 +72,8 @@ please wait or just compile it by yourself, a Cmake file is given for Visual Stu
 
 * [MacOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
 * [Linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
-* [Windows-nightly-build](#download) [WIP]
+* [Windows-MSVC-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_windows_x86_64_msvc)
+* [Windows-MINGW-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_windows_x86_64_mingw)
 
 ## __Compile__
 

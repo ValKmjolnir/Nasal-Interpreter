@@ -3,6 +3,7 @@ import pathlib
 import os
 import platform
 import shutil
+import sys
 
 build_directory = pathlib.Path("build")
 if not os.path.exists(build_directory):
@@ -10,7 +11,11 @@ if not os.path.exists(build_directory):
     exit(-1)
 
 nasal_executable = pathlib.Path("nasal")
+if platform.system() == "Windows":
+    nasal_executable = pathlib.Path("nasal.exe")
 nasal_format_executable = pathlib.Path("nasal-format")
+if platform.system() == "Windows":
+    nasal_format_executable = pathlib.Path("nasal-format.exe")
 nasal_standard_library = pathlib.Path("std")
 if not os.path.exists(nasal_executable):
     print("pack binaries failed: nasal executable not found")
@@ -54,6 +59,10 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
 tar_file_name = "nasal"
 if platform.system()=="Windows":
     tar_file_name += "-windows-x86_64"
+    if len(sys.argv) == 2 and sys.argv[1] == "msvc":
+        tar_file_name += "-msvc"
+    else:
+        tar_file_name += "-mingw"
 elif platform.system()=="Linux":
     tar_file_name += "-linux-x86_64"
 elif platform.system()=="Darwin":
