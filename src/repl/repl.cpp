@@ -194,6 +194,9 @@ void repl::execute() {
         }
 
         // run program
+        if (source.back().back() != ';') {
+            source.back() += ";";
+        }
         if (!run()) {
             source.pop_back();
         }
