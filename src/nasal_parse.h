@@ -87,6 +87,7 @@ private:
     void next();
     void match(tok, const char* info = nullptr);
     bool lookahead(tok);
+    bool lookahead_expression();
     bool is_call(tok);
     bool check_comma(const tok*);
     bool check_tuple();

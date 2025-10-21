@@ -94,7 +94,36 @@ void parse::match(tok type, const char* info) {
 }
 
 bool parse::lookahead(tok type) {
-    return toks[ptr].type==type;
+    return toks[ptr].type == type;
+}
+
+bool parse::lookahead_expression() {
+    switch (toks[ptr].type) {
+        case tok::tk_nil:
+        case tok::tk_num:
+        case tok::tk_str:
+        case tok::tk_id:
+        case tok::tk_true:
+        case tok::tk_false:
+        case tok::tk_func:
+        case tok::tk_lbracket:
+        case tok::tk_lbrace:
+        case tok::tk_sub:
+        case tok::tk_floater:
+        case tok::tk_not:
+        case tok::tk_var:
+        case tok::tk_lcurve:
+        case tok::tk_for:
+        case tok::tk_forindex:
+        case tok::tk_foreach:
+        case tok::tk_while:
+        case tok::tk_if:
+        case tok::tk_cont:
+        case tok::tk_brk:
+        case tok::tk_ret: return true;
+        default: return false;
+    }
+    return false;
 }
 
 bool parse::is_call(tok type) {
@@ -378,14 +407,11 @@ expr* parse::lcurve_expr() {
 }
 
 expr* parse::expression() {
-    tok type=toks[ptr].type;
-    if ((type==tok::tk_brk || type==tok::tk_cont) && !in_loop_depth) {
+    tok type = toks[ptr].type;
+    if ((type == tok::tk_brk || type == tok::tk_cont) && !in_loop_depth) {
         die(thisspan, "must use break/continue in loops");
     }
-    if (type==tok::tk_ret && !in_func_depth) {
-        die(thisspan, "must use return in functions");
-    }
-    switch(type) {
+    switch (type) {
         case tok::tk_use: return use_stmt_gen();
         case tok::tk_nil:
         case tok::tk_num:
@@ -439,7 +465,7 @@ code_block* parse::expression_block() {
             }
         }
         match(tok::tk_rbrace, "expected \"}\" when generating expressions");
-    } else {
+    } else if (lookahead_expression()) {
         node->add_expression(expression());
         if (lookahead(tok::tk_semi)) {
             match(tok::tk_semi);

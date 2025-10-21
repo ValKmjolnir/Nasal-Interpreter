@@ -1181,6 +1181,11 @@ inline void vm::o_mcallh() {
 }
 
 inline void vm::o_ret() {
+    // return statement outside any other functions
+    // directly exit the program
+    if (ctx.funcr.is_nil()) {
+        std::exit(0);
+    }
 /*  +-------------+
 *   | return value| <- top[0]
 *   +-------------+
