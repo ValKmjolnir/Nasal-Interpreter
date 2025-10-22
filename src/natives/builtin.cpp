@@ -528,6 +528,19 @@ var builtin_version(context* ctx, gc* ngc) {
     return ngc->newstr(__nasver__);
 }
 
+var builtin_caller(context* ctx, gc* ngc) {
+    auto level = ctx->localr[1];
+    if (!level.is_num()) {
+        return nil;
+    }
+
+    auto level_num = static_cast<i64>(level.num());
+    if (ctx->func_top - level_num - 1 < ctx->func_stack) {
+        return nil;
+    }
+    return ctx->func_top[-level_num - 1];
+}
+
 var builtin_arch(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_arch());
 }
@@ -840,6 +853,7 @@ nasal_builtin_table builtin[] = {
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
     {"__version", builtin_version},
+    {"__caller", builtin_caller},
     {"__md5", builtin_md5},
     {"__maketimestamp", builtin_maketimestamp},
     {"__time_stamp", builtin_time_stamp},

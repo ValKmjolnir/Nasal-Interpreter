@@ -305,8 +305,12 @@ struct context {
     var  funcr = var::nil();
     var  upvalr = var::nil();
     var* canary = nullptr;
+
     var* stack = nullptr;
     var* top = nullptr;
+
+    var* func_stack = nullptr;
+    var* func_top = nullptr;
 };
 
 struct nas_co {
@@ -321,10 +325,12 @@ struct nas_co {
 
     nas_co() {
         ctx.stack = new var[VM_STACK_DEPTH];
+        ctx.func_stack = new var[VM_STACK_DEPTH];
         clear();
     }
     ~nas_co() {
         delete[] ctx.stack;
+        delete[] ctx.func_stack;
     }
     void clear();
     friend std::ostream& operator<<(std::ostream&, const nas_co&);

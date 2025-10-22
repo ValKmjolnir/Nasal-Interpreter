@@ -288,10 +288,12 @@ public:
     /* constructor of vm instance */
     vm() {
         ctx.stack = new var[VM_STACK_DEPTH];
+        ctx.func_stack = new var[VM_STACK_DEPTH];
         global = new var[VM_STACK_DEPTH];
     }
     ~vm() {
         delete[] ctx.stack;
+        delete[] ctx.func_stack;
         delete[] global;
     }
 
@@ -900,6 +902,7 @@ inline void vm::o_callfv() {
     var tmp = local[-1];
     local[-1] = ctx.funcr;
     ctx.funcr = tmp;
+    (++ctx.func_top)[0] = tmp;
 
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (ctx.top-argc+func.local_size+3>=ctx.canary) {
@@ -969,6 +972,7 @@ inline void vm::o_callfh() {
     var tmp = ctx.top[-1];
     ctx.top[-1] = ctx.funcr;
     ctx.funcr = tmp;
+    (++ctx.func_top)[0] = tmp;
 
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (ctx.top+func.local_size+2>= ctx.canary) {
@@ -1212,6 +1216,7 @@ inline void vm::o_ret() {
     ctx.top = local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
+    ctx.func_top--;
 
     // synchronize upvalue
     if (up.is_upval()) {

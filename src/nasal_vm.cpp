@@ -57,9 +57,10 @@ void vm::context_and_global_init() {
 
     /* nothing is on stack */
     ctx.top = ctx.stack - 1;
+    ctx.func_top = ctx.func_stack - 1;
 
     /* clear main stack and global */
-    for (u32 i = 0; i<VM_STACK_DEPTH; ++i) {
+    for (u32 i = 0; i < VM_STACK_DEPTH; ++i) {
         ctx.stack[i] = nil;
         global[i] = nil;
     }
