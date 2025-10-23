@@ -298,6 +298,12 @@ public:
     T convert() const { return reinterpret_cast<T>(pointer); }
 };
 
+struct callsite {
+    var caller;
+    u64 file_index = 0;
+    u64 line = 0;
+};
+
 struct context {
     u64  pc = 0;
     var* localr = nullptr;
@@ -309,8 +315,39 @@ struct context {
     var* stack = nullptr;
     var* top = nullptr;
 
-    var* func_stack = nullptr;
-    var* func_top = nullptr;
+    callsite* func_stack = nullptr;
+    callsite* func_top = nullptr;
+
+    const std::string* files = nullptr;
+
+    void ctor() {
+        stack = new var[VM_STACK_DEPTH];
+        func_stack = new callsite[VM_STACK_DEPTH];
+    }
+    void dtor() {
+        delete[] stack;
+        delete[] func_stack;
+    }
+    void clear() {
+        /* set canary and program counter */
+        pc = 0;
+        localr = nullptr;
+        memr = nullptr;
+        funcr = var::nil();
+        upvalr = var::nil();
+
+        /* set canary = stack[VM_STACK_DEPTH-1] */
+        canary = stack + VM_STACK_DEPTH - 1;
+
+        /* nothing is on stack */
+        top = stack;
+        func_top = func_stack - 1;
+
+        /* clear main stack */
+        for (u32 i = 0; i < VM_STACK_DEPTH; ++i) {
+            stack[i] = var::nil();
+        }
+    }
 };
 
 struct nas_co {
@@ -323,16 +360,9 @@ struct nas_co {
     context ctx;
     status status;
 
-    nas_co() {
-        ctx.stack = new var[VM_STACK_DEPTH];
-        ctx.func_stack = new var[VM_STACK_DEPTH];
-        clear();
-    }
-    ~nas_co() {
-        delete[] ctx.stack;
-        delete[] ctx.func_stack;
-    }
-    void clear();
+    nas_co() { ctx.ctor(); }
+    ~nas_co() { ctx.dtor(); }
+    void clear() { ctx.clear(); status = status::suspended; }
     friend std::ostream& operator<<(std::ostream&, const nas_co&);
 };
 

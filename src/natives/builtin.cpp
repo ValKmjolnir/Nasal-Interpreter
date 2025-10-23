@@ -538,7 +538,14 @@ var builtin_caller(context* ctx, gc* ngc) {
     if (ctx->func_top - level_num - 1 < ctx->func_stack) {
         return nil;
     }
-    return ctx->func_top[-level_num - 1];
+    const auto& cs = ctx->func_top[-level_num - 1];
+    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    res.vec().elems.push_back(ngc->alloc(vm_type::vm_hash));
+    res.vec().elems.push_back(cs.caller);
+    res.vec().elems.push_back(ngc->newstr(ctx->files[cs.file_index]));
+    res.vec().elems.push_back(var::num(cs.line));
+    ngc->temp = nil;
+    return res;
 }
 
 var builtin_arch(context* ctx, gc* ngc) {

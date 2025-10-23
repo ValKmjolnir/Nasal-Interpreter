@@ -159,26 +159,6 @@ std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     return out;
 }
 
-void nas_co::clear() {
-    if (!ctx.stack) {
-        return;
-    }
-    for (u32 i = 0; i < VM_STACK_DEPTH; ++i) {
-        ctx.stack[i] = var::nil();
-    }
-
-    ctx.pc = 0;
-    ctx.localr = nullptr;
-    ctx.memr = nullptr;
-    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
-    ctx.top = ctx.stack;
-    ctx.func_top = ctx.func_stack;
-    ctx.funcr = var::nil();
-    ctx.upvalr = var::nil();
-
-    status = status::suspended;
-}
-
 std::ostream& operator<<(std::ostream& out, const nas_co& co) {
     out << "<coroutine at 0x" << std::hex;
     out << reinterpret_cast<u64>(&co) << std::dec << ">";

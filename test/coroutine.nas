@@ -109,7 +109,7 @@ for (var t = 0; t < 10; t += 1) {
         counter += 1;
         for (var i = 0; i < t + 1; i += 1)
             coroutine.resume(co);
-        if (counter - int(counter / 1000) * 1000 == 0) {
+        if (counter - int(counter / 2500) * 2500 == 0) {
             var rate = counter / 2e5;
             print(" ", bar.bar(rate), " ",
                 padding.leftpad(str(int(rate*100)),3), "% | ",
@@ -120,7 +120,7 @@ for (var t = 0; t < 10; t += 1) {
     }
 
     tm.stamp();
-    for (var i = 0; i < 1e5; i += 1)
+    for (var i = 0; i < 2e5; i += 1)
         consumer();
     println(" ", bar.bar(1), " 100% | ",
         str(int(1e3 * counter / tm.elapsedMSec())),
