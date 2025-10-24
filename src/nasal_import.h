@@ -9,7 +9,7 @@
 #endif
 
 #include "nasal.h"
-#include "nasal_ast.h"
+#include "ast/ast.h"
 #include "nasal_lexer.h"
 #include "nasal_parse.h"
 #include "symbol_finder.h"

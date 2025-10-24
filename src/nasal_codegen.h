@@ -2,8 +2,8 @@
 
 #include "nasal_err.h"
 #include "nasal_opcode.h"
-#include "nasal_ast.h"
-#include "ast_visitor.h"
+#include "ast/ast.h"
+#include "ast/ast_visitor.h"
 #include "symbol_finder.h"
 #include "nasal_parse.h"
 #include "nasal_import.h"

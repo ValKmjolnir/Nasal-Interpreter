@@ -41,10 +41,10 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast_dumper.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast_format.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast_visitor.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_ast.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/ast_dumper.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/ast_format.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/ast_visitor.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp

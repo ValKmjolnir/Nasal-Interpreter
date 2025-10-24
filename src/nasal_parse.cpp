@@ -1,4 +1,4 @@
-#include "nasal_ast.h"
+#include "ast/ast.h"
 #include "nasal_parse.h"
 #include "util/util.h"
 
