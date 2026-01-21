@@ -61,15 +61,18 @@ class expr {
 protected:
     span nd_loc;
     expr_type nd_type;
+    bool in_curve;
 
 public:
     expr(const span& location, expr_type node_type):
-        nd_loc(location), nd_type(node_type) {}
+        nd_loc(location), nd_type(node_type), in_curve(false) {}
     virtual ~expr() = default;
     void set_begin(u64 line, u64 column) {
         nd_loc.begin_line = line;
         nd_loc.begin_column = column;
     }
+    void set_in_curve() { in_curve = true; }
+    auto get_in_curve() const { return in_curve; }
     const auto& get_location() const { return nd_loc; }
     const auto get_line() const { return nd_loc.begin_line; }
     auto get_type() const { return nd_type; }

@@ -730,6 +730,7 @@ expr* parse::scalar() {
         match(tok::tk_lcurve);
         node = calc();
         node->set_begin(loc.begin_line, loc.begin_column);
+        node->set_in_curve();
         update_location(node);
         match(tok::tk_rcurve);
     } else if (lookahead(tok::tk_var)) {
