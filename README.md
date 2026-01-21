@@ -453,6 +453,7 @@ Nasal REPL interpreter version 11.1 (Nov  1 2023 23:37:30)
 A web-based interface is now available for trying out Nasal code directly in your browser. It includes both a code editor and an interactive REPL (WIP).
 
 ### Web Code Editor
+
 - Syntax highlighting using CodeMirror
 - Error highlighting and formatting
 - Example programs
@@ -461,7 +462,7 @@ A web-based interface is now available for trying out Nasal code directly in you
 - Notice: The security of the online interpreter is not well tested, please use it with sandbox mechanism or other security measures.
 
 ### Web REPL
-- ** IMPORTANT: The time limit in REPL is not correctly implemented yet. Thus this REPL web binding is not considered finished. Do not use it in production before it's fixed. **
+
 - Interactive command-line style interface in browser
 - Multi-line input support with proper prompts (`>>>` and `...`)
 - Command history navigation
