@@ -1,14 +1,15 @@
-# <img src="./svg/nasal_transparent.svg" height="40px"/> __Nasal - Modern Interpreter__
+# <img src="doc/svg/nasal_transparent.svg" height="40px"/> __Nasal - Modern Interpreter__
 
-<img src="../doc/pic/header.png" style="width:600px"></img>
+<img src="doc/pic/header.png" style="width:600px"></img>
 
 ![GitHub release(latest by date)](https://img.shields.io/github/v/release/ValKmjolnir/Nasal-Interpreter?style=flat-square&logo=github)
 [![license](https://img.shields.io/badge/license-GPLv2-green?style=flat-square&logo=github)](../LICENSE)
 ![downloads](https://img.shields.io/github/downloads/ValKmjolnir/Nasal-Interpreter/total.svg?style=flat-square&logo=github)
 [![C/C++ CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/c-cpp.yml)
 [![Test CI](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml/badge.svg)](https://github.com/ValKmjolnir/Nasal-Interpreter/actions/workflows/test.yml)
+![star](https://gitcode.com/ValKmjolnir/Nasal-Interpreter/star/badge.svg)
 
-> 这篇文档包含多语言版本: [__中文__](../doc/README_zh.md) | [__English__](../README.md)
+> 这篇文档包含多语言版本: [__中文__](./README_zh.md) | [__English__](./README.md)
 
 ## __目录__
 
@@ -16,10 +17,10 @@
 * [__下载__](#下载)
 * [__编译__](#编译)
 * [__使用方法__](#使用方法)
-* [__教程__](../doc/tutorial_zh.md)
-* [__发行日志__](../doc/dev_zh.md#发行日志)
-* [__开发历史__](../doc/dev_zh.md)
-* [__测试数据__](../doc/benchmark.md)
+* [__教程__](doc/tutorial_zh.md)
+* [__发行日志__](doc/dev_zh.md#发行日志)
+* [__开发历史__](doc/dev_zh.md)
+* [__测试数据__](doc/benchmark.md)
 * [__特殊之处__](#与andy解释器的不同之处)
 * [__堆栈追踪信息__](#堆栈追踪信息)
 * [__调试器__](#调试器)
@@ -96,7 +97,7 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 
 ## __使用方法__
 
-![usage](../doc/gif/help.gif)
+![usage](doc/gif/help.gif)
 
 如果你是 `Windows` 用户且想正常输出 unicode，可以这样开启 unicode 代码页:
 
@@ -116,7 +117,7 @@ runtime.windows.set_utf8_output();
 
 ## __与andy解释器的不同之处__
 
-![error](../doc/gif/error.gif)
+![error](doc/gif/error.gif)
 
 <details><summary>必须用 var 定义变量</summary>
 
@@ -151,7 +152,7 @@ code: undefined symbol "i"
 
 ## __堆栈追踪信息__
 
-![stackoverflow](../doc/gif/stackoverflow.gif)
+![stackoverflow](doc/gif/stackoverflow.gif)
 
 当解释器崩溃时,它会反馈错误产生过程的堆栈追踪信息:
 
@@ -316,7 +317,7 @@ local (0x55dcb5b43190 <+7>)
 
 ## __调试器__
 
-![dbg](../doc/gif/dbg.gif)
+![dbg](doc/gif/dbg.gif)
 
 在`v8.0`版本中我们添加了调试器。
 使用这个命令`./nasal -dbg xxx.nas`来启用调试器，接下来调试器会打开文件并输出以下内容:
