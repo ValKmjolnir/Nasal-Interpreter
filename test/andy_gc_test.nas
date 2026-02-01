@@ -25,32 +25,32 @@ func {
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
             if (obj.fieldd != i) { print("Ack!\n"); return; }
-            
+
             if (obj.fielda != i) { print("Ack!\n"); return; }
             if (obj.fieldb != i) { print("Ack!\n"); return; }
             if (obj.fieldc != i) { print("Ack!\n"); return; }
@@ -69,7 +69,7 @@ print("sin(32) = ", math.sin(angle), "\n");
 print("cos(32) = ", math.cos(angle), "\n");
 print("s^2 + c^s = ",
        math.sin(angle)*math.sin(angle)+math.cos(angle)*math.cos(angle), "\n");
-    
+
 func {for (var j=0; j<10; j=j+1) {
     print(j, "/10\n");
 

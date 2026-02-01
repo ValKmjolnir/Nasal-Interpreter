@@ -84,14 +84,14 @@ var block={
             exchange();
             counter=0;
         }
-        
+
         me.shape=blockshape[me.type[me.rotate]];
 
         me.color=color_count;
         color_count+=1;
         if (color_count>=size(color))
             color_count=0;
-        
+
         return {parents:[block]};
     }
 };
@@ -102,7 +102,7 @@ var mapgen = func(mapx,mapy) {
 
     if (mapx<1 or mapy<1)
         die("map_x or map_y must be greater than 1");
-    
+
     # use in print
     var line="";
     for (var i=0;i<mapx;i+=1)
@@ -279,7 +279,7 @@ var main = func(argv) {
 
     # windows use 65001 to output unicode
     runtime.windows.set_utf8_output();
-    
+
     print(
         "\ec\e[1:1H",
         "╔═════════════════════════╗\n",

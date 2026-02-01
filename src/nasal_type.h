@@ -16,7 +16,7 @@ enum class vm_type: u8 {
     vm_none = 0, // error type
     vm_cnt,      // counter for forindex/foreach loop
     vm_addr,     // var* address
-    vm_ret,      // return addres(program counter) 
+    vm_ret,      // return addres(program counter)
     vm_nil,      // nil
     vm_num,      // number
 
@@ -144,7 +144,6 @@ public:
     nas_ghost& ghost() { return *val.gcobj->ptr.obj; }
     nas_co& co() { return *val.gcobj->ptr.co; }
     nas_map& map() { return *val.gcobj->ptr.map; }
-    
 
 public:
     // get const gc object

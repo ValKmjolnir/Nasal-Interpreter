@@ -99,7 +99,7 @@ var server = func(ip,port) {
                     result:"null"
                 }));
             }
-            
+
         }
     }
     jsonRPC.disconnect(client);

@@ -90,7 +90,7 @@ var ppm_gen = func(width,height) {
         rand(time(0));
         for (var i=0;i<pixels;i+=1)
             res[i]=0;
-        
+
         for (var i=int(height/5*2);i<int(height/5*3);i+=1)
             forindex(var j;res[i])
                 res[i*width+j]=rand()<0.5?1:0;
@@ -123,7 +123,7 @@ var ppm_gen = func(width,height) {
     var bar=process_bar.high_resolution_bar(50);
     var map=init();
     var tmp=new_map();
-    
+
     var check = func(_width,_height) {
         if (_height>=height) _height=0;
         if (_width>=width) _width=0;

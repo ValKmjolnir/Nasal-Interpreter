@@ -247,7 +247,7 @@ void json::match(json_token_type type) {
 
 void json::vector_member(nas_vec& vec, gc* ngc) {
     if (this_token.type==json_token_type::tok_lbrace) {
-        vec.elems.push_back(hash_object_generate(ngc));   
+        vec.elems.push_back(hash_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_lbrkt) {
         vec.elems.push_back(vector_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_str) {
@@ -285,7 +285,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
     }
     match(json_token_type::tok_colon);
     if (this_token.type==json_token_type::tok_lbrace) {
-        hash.elems.insert({name, hash_object_generate(ngc)});   
+        hash.elems.insert({name, hash_object_generate(ngc)});
     } else if (this_token.type==json_token_type::tok_lbrkt) {
         hash.elems.insert({name, vector_object_generate(ngc)});
     } else if (this_token.type==json_token_type::tok_str ||

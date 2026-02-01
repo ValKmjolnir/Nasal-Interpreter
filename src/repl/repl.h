@@ -48,7 +48,7 @@ public:
         // set empty history
         command_history = {""};
     }
-    
+
     // Make these methods public for web REPL
     bool run();
     void execute();

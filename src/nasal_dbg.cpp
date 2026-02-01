@@ -68,7 +68,7 @@ void operand_line_counter::dump_all_code_line_counter(std::ostream& os) const {
         for (usize j = 0; j<context.size(); ++j) {
             os << " " << std::right << std::setw(pad_length);
             os << std::setfill(' ');
-            os << (counter[j]==0? "":std::to_string(counter[j]));
+            os << (counter[j] == 0 ? "" : std::to_string(counter[j]));
             os << " " << context[j] << "\n";
         }
     }
@@ -87,7 +87,7 @@ void operand_line_counter::dump_this_file_line_counter(std::ostream& os) const {
     for (usize i = 0; i<context.size(); ++i) {
         os << " " << std::right << std::setw(pad_length);
         os << std::setfill(' ');
-        os << (counter[i]==0? "":std::to_string(counter[i]));
+        os << (counter[i] == 0 ? "" : std::to_string(counter[i]));
         os << " " << context[i] << "\n";
     }
 }
@@ -97,9 +97,9 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
     usize last = 0, pos = cmd.find(" ", 0);
     while (pos!=std::string::npos) {
         if (pos>last) {
-            res.push_back(cmd.substr(last, pos-last));
+            res.push_back(cmd.substr(last, pos - last));
         }
-        last = pos+1;
+        last = pos + 1;
         pos = cmd.find(" ", last);
     }
     if (last<cmd.length()) {

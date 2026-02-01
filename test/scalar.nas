@@ -133,7 +133,7 @@ var tmp_f=hash.f;
 hash=1;
 println(tmp_f());
 # undefined symbol 'me'
-# this means that 
+# this means that
 # when generating local_scope for function f,
 # nasal_gc will not count 'me' as one reference of this hash
 

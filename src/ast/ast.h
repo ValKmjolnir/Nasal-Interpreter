@@ -11,7 +11,7 @@ namespace nasal {
 enum class expr_type {
     ast_null = 0,    // null node
     ast_use,         // use statement
-    ast_block,       // code block 
+    ast_block,       // code block
     ast_nil,         // nil keyword
     ast_num,         // number, basic value type
     ast_str,         // string, basic value type

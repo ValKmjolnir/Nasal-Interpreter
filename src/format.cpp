@@ -37,7 +37,7 @@ int main(i32 argc, const char* argv[]) {
     }
 
     // the first argument is the executable itself, ignore it
-    const auto config = nasal::cli::parse({argv+1, argv+argc});
+    const auto config = nasal::cli::parse({argv + 1, argv + argc});
 
     // run directly or show help
     if (config.has(nasal::cli::option::cli_help)) {

@@ -43,7 +43,7 @@ var map = func() {
                 vec[1][j]=table[-1];
                 continue;
             }
-            
+
             tmp=[];
             foreach(var elem;table)
                 if (elem[2]==vec[1][j-1][4] and elem[1]==vec[0][j][3]) {

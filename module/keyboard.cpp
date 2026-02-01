@@ -54,14 +54,14 @@ public:
 #ifndef _WIN32
         unsigned char ch = 0;
         int nread = 0;
-        if (peek_char!=-1) {
+        if (peek_char != -1) {
             return 1;
         }
         int flag = fcntl(0, F_GETFL);
         fcntl(0, F_SETFL, flag|O_NONBLOCK);
         nread = read(0, &ch, 1);
         fcntl(0, F_SETFL, flag);
-        if (nread==1) {
+        if (nread == 1) {
             peek_char = ch;
             return 1;
         }
@@ -74,7 +74,7 @@ public:
     int noecho_getch() {
 #ifndef _WIN32
         int ch = 0;
-        if (peek_char!=-1) {
+        if (peek_char != -1) {
             ch = peek_char;
             peek_char = -1;
             return ch;

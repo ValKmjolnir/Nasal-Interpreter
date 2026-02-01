@@ -613,13 +613,13 @@ std::string md5(const std::string& src) {
         5, 8, 11, 14, 1,  4,  7,  10, 13, 0,  3,  6,  9,  12, 15, 2,  // g=(3*i+5)%16;
         0, 7, 14, 5,  12, 3,  10, 1,  8,  15, 6,  13, 4,  11, 2,  9   // g=(7*i)%16;
     };
-    
+
 #define shift(x, n)  (((x)<<(n))|((x)>>(32-(n)))) // cycle left shift
-#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))    
+#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))
 #define md5g(x, y, z) (((x)&(z))|((y)&(~z)))
 #define md5h(x, y, z) ((x)^(y)^(z))
 #define md5i(x, y, z) ((y)^((x)|(~z)))
-    
+
     u32 atmp = 0x67452301, btmp = 0xefcdab89;
     u32 ctmp = 0x98badcfe, dtmp = 0x10325476;
     for (u32 i = 0; i<buffsize; i += 16) {

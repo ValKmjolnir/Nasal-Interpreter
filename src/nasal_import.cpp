@@ -244,7 +244,7 @@ code_block* linker::import_nasal_lib() {
     if (check_exist_or_record_file(path)) {
         return new code_block({0, 0, 0, 0, path});
     }
-    
+
     // start importing...
     lexer nasal_lexer;
     parse nasal_parser;
@@ -304,7 +304,7 @@ std::string linker::generate_module_name(const std::string& file_path) {
     auto module_name = split_position==std::string::npos?
         file_path.substr(0, suffix_position):
         file_path.substr(split_position+1, suffix_position-split_position-1);
-    
+
     // check validation of module name
     if (!module_name.length()) {
         err.warn("link",
@@ -352,7 +352,7 @@ definition_expr* linker::generate_module_definition(code_block* block) {
         block->get_location(),
         generate_module_name(block->get_location().file)
     ));
-    
+
     // (func() {...})();
     auto call = new call_expr(block->get_location());
     // func() {...}

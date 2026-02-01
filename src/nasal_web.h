@@ -14,7 +14,7 @@ NASAL_EXPORT void nasal_set_timeout(void* context, int seconds);
 NASAL_EXPORT const char* nasal_eval(void* context, const char* code, int show_time);
 NASAL_EXPORT const char* nasal_get_error(void* context);
 
-// REPL 
+// REPL
 NASAL_EXPORT void* nasal_repl_init();
 NASAL_EXPORT void nasal_repl_cleanup(void* repl_context);
 NASAL_EXPORT void nasal_repl_set_timeout(void* repl_context, int seconds);

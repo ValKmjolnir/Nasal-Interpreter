@@ -64,7 +64,7 @@ var run = func(table,start,stop) {
         die(start~" is not a valid node");
     if (!contains(machine.states,stop))
         die(stop~" is not a valid node");
-    
+
     var (state,pointer)=(start,0);
 
     prt(state,pointer,paper);

@@ -16,7 +16,7 @@ bool lexer::skip(char c) {
 }
 
 bool lexer::is_id(char c) {
-    return (c=='_') || std::isalpha(c) || (c<0);   
+    return (c=='_') || std::isalpha(c) || (c<0);
 }
 
 bool lexer::is_hex(char c) {

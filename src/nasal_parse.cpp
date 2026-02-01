@@ -1049,7 +1049,7 @@ forei_expr* parse::forei_loop() {
             node->set_loop_type(forei_expr::kind::forindex);
             match(tok::tk_forindex);
             break;
-        case tok::tk_foreach: 
+        case tok::tk_foreach:
             node->set_loop_type(forei_expr::kind::foreach);
             match(tok::tk_foreach);
             break;

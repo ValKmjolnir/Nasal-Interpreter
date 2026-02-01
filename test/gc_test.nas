@@ -138,7 +138,7 @@ for (var i = 0; i < 10; i += 1) {
         append_tree,
         append_tree,
         append_tree,
-        
+
         append_hash_vec_hash,
         append_hash_vec_hash,
         append_hash_vec_hash,
@@ -146,7 +146,7 @@ for (var i = 0; i < 10; i += 1) {
         append_tree,
         append_tree,
         append_tree,
-        
+
         append_hash_vec_hash,
         append_hash_vec_hash,
         append_hash_vec_hash,

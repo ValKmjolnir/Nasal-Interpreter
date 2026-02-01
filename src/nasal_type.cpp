@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
 
 std::ostream& operator<<(std::ostream& out, nas_func& func) {
     out << "func(";
-    
+
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
     for (const auto& key : func.keys) {

@@ -212,7 +212,7 @@ private:
     inline static const nasal_builtin_table* natives = nullptr;
     inline static const std::string* files = nullptr;
     inline static std::vector<std::string> global_variable;
-    
+
 public:
     codestream(const opcode& c, const u64 i): code(c), index(i) {}
     static void set(const f64*,

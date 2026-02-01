@@ -103,7 +103,7 @@ private:
     std::list<std::unordered_map<std::string, u64>> local;
 
     void check_id_exist(identifier*);
-    
+
     void die(const std::string& info, expr* node) {
         err.err("code", node->get_location(), info);
     }

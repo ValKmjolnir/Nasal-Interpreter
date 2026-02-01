@@ -110,7 +110,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
         dlname.c_str(), RTLD_LOCAL|RTLD_LAZY
     );
 #endif
-    
+
     // check library pointer and insert into returned hashmap
     if (!dynamic_library_pointer) {
         return nas_err("dylib::dlopen",

@@ -153,7 +153,7 @@ var main = func(argv) {
                 g.move(chr(ch));
             }
         }
-        
+
         g.next();
         if (g.gameover())
             break;

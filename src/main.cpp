@@ -55,7 +55,7 @@ void execute(const nasal::cli::cli_config& config) {
             std::cout << "  " << file << "\n";
         }
     }
-    
+
     // optimizer does simple optimization on ast
     auto opt = std::make_unique<nasal::optimizer>();
     opt->do_optimization(parse.tree());
@@ -120,7 +120,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // the first argument is the executable itself, ignore it
-    const auto config = nasal::cli::parse({argv+1, argv+argc});
+    const auto config = nasal::cli::parse({argv + 1, argv + argc});
 
     // run directly or show help
     if (argc == 2) {
