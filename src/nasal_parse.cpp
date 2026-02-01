@@ -1,4 +1,4 @@
-#include "nasal_ast.h"
+#include "ast/ast.h"
 #include "nasal_parse.h"
 #include "util/util.h"
 
@@ -730,6 +730,7 @@ expr* parse::scalar() {
         match(tok::tk_lcurve);
         node = calc();
         node->set_begin(loc.begin_line, loc.begin_column);
+        node->set_in_curve();
         update_location(node);
         match(tok::tk_rcurve);
     } else if (lookahead(tok::tk_var)) {
@@ -1048,7 +1049,7 @@ forei_expr* parse::forei_loop() {
             node->set_loop_type(forei_expr::kind::forindex);
             match(tok::tk_forindex);
             break;
-        case tok::tk_foreach: 
+        case tok::tk_foreach:
             node->set_loop_type(forei_expr::kind::foreach);
             match(tok::tk_foreach);
             break;

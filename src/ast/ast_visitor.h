@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal_ast.h"
+#include "ast.h"
 
 namespace nasal {
 

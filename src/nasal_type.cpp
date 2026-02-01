@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
 
 std::ostream& operator<<(std::ostream& out, nas_func& func) {
     out << "func(";
-    
+
     std::vector<std::string> argument_list = {};
     argument_list.resize(func.keys.size());
     for (const auto& key : func.keys) {
@@ -157,25 +157,6 @@ std::ostream& operator<<(std::ostream& out, const nas_ghost& ghost) {
     out << "<" << ghost.get_ghost_name();
     out << "@0x" << std::hex << ghost.convert<u64>() << std::dec << ">";
     return out;
-}
-
-void nas_co::clear() {
-    if (!ctx.stack) {
-        return;
-    }
-    for (u32 i = 0; i<VM_STACK_DEPTH; ++i) {
-        ctx.stack[i] = var::nil();
-    }
-
-    ctx.pc = 0;
-    ctx.localr = nullptr;
-    ctx.memr = nullptr;
-    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
-    ctx.top = ctx.stack;
-    ctx.funcr = var::nil();
-    ctx.upvalr = var::nil();
-
-    status = status::suspended;
 }
 
 std::ostream& operator<<(std::ostream& out, const nas_co& co) {

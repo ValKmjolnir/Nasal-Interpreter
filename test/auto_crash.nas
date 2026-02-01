@@ -71,7 +71,7 @@ var road_check_func = func() {
             props.getNode("/", 1).setValue("/controls/flight/rudder",Kp*error*error+Ki*intergral+Kd*derivative);
         else
             props.getNode("/", 1).setValue("/controls/flight/rudder",0);
-        
+
         # for simulation test, in fg these three lines are deleted
         println(" rudder :",props.getNode("/controls/flight/rudder",1).getValue());
         println(" dt :",dt,'\tintergral :',intergral,'\tderivative :',derivative);

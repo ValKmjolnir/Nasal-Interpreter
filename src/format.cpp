@@ -1,10 +1,10 @@
 #include "nasal.h"
 #include "nasal_lexer.h"
-#include "nasal_ast.h"
+#include "ast/ast.h"
 #include "nasal_parse.h"
 #include "util/util.h"
 #include "cli/cli.h"
-#include "ast_format.h"
+#include "ast/ast_format.h"
 
 #include <iostream>
 #include <thread>
@@ -37,7 +37,7 @@ int main(i32 argc, const char* argv[]) {
     }
 
     // the first argument is the executable itself, ignore it
-    const auto config = nasal::cli::parse({argv+1, argv+argc});
+    const auto config = nasal::cli::parse({argv + 1, argv + argc});
 
     // run directly or show help
     if (config.has(nasal::cli::option::cli_help)) {

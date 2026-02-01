@@ -69,6 +69,8 @@ var builtin_platform(context*, gc*);
 var builtin_arch(context*, gc*);
 var builtin_version(context*, gc*);
 
+var builtin_caller(context*, gc*);
+
 // md5 related functions
 std::string tohex(u32);
 std::string md5(const std::string&);

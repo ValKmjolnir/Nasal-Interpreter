@@ -9,10 +9,10 @@ namespace nasal {
 namespace fib_module {
 
 double fibonaci(double x) {
-    if (x<=2) {
+    if (x <= 2) {
         return x;
     }
-    return fibonaci(x-1)+fibonaci(x-2);
+    return fibonaci(x - 1) + fibonaci(x - 2);
 }
 
 var fib(var* args, usize size, gc* ngc) {
@@ -33,7 +33,7 @@ var quick_fib(var* args, usize size, gc* ngc) {
     }
     double a = 1, b = 1, res = 0;
     for (double i = 1; i<num; ++i) {
-        res = a+b;
+        res = a + b;
         a = b;
         b = res;
     }

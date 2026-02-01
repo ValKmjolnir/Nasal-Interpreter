@@ -54,13 +54,13 @@ void codegen::check_id_exist(identifier* node) {
         return;
     }
 
-    if (local_symbol_find(name)>=0) {
+    if (local_symbol_find(name) >= 0) {
         return;
     }
-    if (upvalue_symbol_find(name)>=0) {
+    if (upvalue_symbol_find(name) >= 0) {
         return;
     }
-    if (global_symbol_find(name)>=0) {
+    if (global_symbol_find(name) >= 0) {
         return;
     }
     die("undefined symbol \""
@@ -148,7 +148,7 @@ i64 codegen::upvalue_symbol_find(const std::string& name) {
     // but we check the local size in codegen::func_gen
     i64 index = -1;
     usize size = local.size();
-    if (size<=1) {
+    if (size <= 1) {
         return -1;
     }
 
@@ -211,21 +211,18 @@ void codegen::func_gen(function* node) {
     bool checked_dynamic = false;
     std::unordered_map<std::string, bool> argname;
     for (auto tmp : node->get_parameter_list()) {
-        if (tmp->get_parameter_type()==
-            parameter::kind::default_parameter) {
+        if (tmp->get_parameter_type() == parameter::kind::default_parameter) {
             checked_default = true;
-        } else if (tmp->get_parameter_type()==
-            parameter::kind::dynamic_parameter) {
+        } else if (tmp->get_parameter_type() == parameter::kind::dynamic_parameter) {
             checked_dynamic = true;
         }
         // check default parameter and dynamic parameter
         if (checked_default &&
-            tmp->get_parameter_type()!=
-            parameter::kind::default_parameter) {
+            tmp->get_parameter_type() != parameter::kind::default_parameter) {
             die("must use default parameter here", tmp);
         }
         if (checked_dynamic &&
-            tmp!=node->get_parameter_list().back()) {
+            tmp != node->get_parameter_list().back()) {
             die("dynamic parameter must be the last one", tmp);
         }
         // check redefinition
@@ -241,7 +238,7 @@ void codegen::func_gen(function* node) {
     emit(op_newf, 0, node->get_location());
     const auto lsize = code.size();
     emit(op_intl, 0, node->get_location());
-    
+
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
     // this keyword is set to nil as default value
@@ -305,7 +302,7 @@ void codegen::func_gen(function* node) {
     // the local scope should not cause stack overflow
     // and should not greater than upvalue's max size(65536)
     code[lsize].num = local.back().size();
-    if (local.back().size()>=VM_STACK_DEPTH || local.back().size()>=UINT16_MAX) {
+    if (local.back().size() >= VM_STACK_DEPTH || local.back().size() >= UINT16_MAX) {
         die("too many local variants: " +
             std::to_string(local.back().size()),
             block
@@ -314,7 +311,7 @@ void codegen::func_gen(function* node) {
     local.pop_back();
 
     if (!block->get_expressions().size() ||
-        block->get_expressions().back()->get_type()!=expr_type::ast_ret) {
+        block->get_expressions().back()->get_type() != expr_type::ast_ret) {
         emit(op_pnil, 0, block->get_location());
         emit(op_ret, 0, block->get_location());
     }
@@ -323,7 +320,7 @@ void codegen::func_gen(function* node) {
 
 void codegen::call_gen(call_expr* node) {
     calc_gen(node->get_first());
-    if (code.size() && code.back().op==op_callb) {
+    if (code.size() && code.back().op == op_callb) {
         return;
     }
     for (auto i : node->get_calls()) {
@@ -355,15 +352,15 @@ void codegen::call_identifier(identifier* node) {
     }
 
     i64 index;
-    if ((index = local_symbol_find(name))>=0) {
+    if ((index = local_symbol_find(name)) >= 0) {
         emit(op_calll, index, node->get_location());
         return;
     }
-    if ((index = upvalue_symbol_find(name))>=0) {
+    if ((index = upvalue_symbol_find(name)) >= 0) {
         emit(op_upval, index, node->get_location());
         return;
     }
-    if ((index = global_symbol_find(name))>=0) {
+    if ((index = global_symbol_find(name)) >= 0) {
         emit(op_callg, index, node->get_location());
         return;
     }
@@ -703,7 +700,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
         }
         return;
     }
-    
+
     // generate symbol load
     calc_gen(node->get_right());
     // get memory space of left identifier
@@ -1426,7 +1423,7 @@ void codegen::print(std::ostream& out) {
     for (const auto& str : const_string_table) {
         out << "  .symbol \"" << util::rawstr(str) << "\"\n";
     }
-    
+
     // print blank line
     if (const_number_table.size() || const_string_table.size()) {
         out << "\n";

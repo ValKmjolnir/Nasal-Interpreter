@@ -385,7 +385,8 @@ var call = func(function, args = nil, _me = nil, locals = nil, error = nil) {
 }
 
 var caller = func(level = 1) {
-    die("this runtime does not support caller");
+    # TODO: caller should return [scope, func, call location file, call location line]
+    return __caller(level);
 }
 
 var closure = func(function, level = 1) {

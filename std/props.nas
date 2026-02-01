@@ -187,7 +187,7 @@ var Node = {
     setBoolValue   : func _setBoolValue(me._g, arg),
     toggleBoolValue: func _toggleBoolValue(me._g, arg),
     setDoubleValue : func _setDoubleValue(me._g, arg),
-    # adjustValue works like setDoubleValue but adds the argument to the 
+    # adjustValue works like setDoubleValue but adds the argument to the
     # current value of the node
     adjustValue    : func _adjustValue(me._g, arg),
     unalias        : func _unalias(me._g, arg),
@@ -237,7 +237,7 @@ var Node = {
         }
         return p;
     },
-    
+
     # add n to int property, do nothing, if prop type is not int
     # n will be integer and defaults to 1
     increment: func(n = 1) {
@@ -251,7 +251,7 @@ var Node = {
             return nil;
         }
     },
-    
+
     # sub n from int property, do nothing, if prop type is not int
     # n will be integer and defaults to 1
     decrement: func(n = 1) {
@@ -264,10 +264,10 @@ var Node = {
             return 0;
         }
     },
-    
+
     # checks if a string can be used as a prop name
     # returns 0 (invalid) or 1 (valid)
-    # as string operations are expensive, use this only when necessary, 
+    # as string operations are expensive, use this only when necessary,
     # especially do not use in update loops
     isValidPropName: func(s) {
         if (!size(s)) return 0;
@@ -281,7 +281,7 @@ var Node = {
     },
 
     # replaces any invalid char by "_"
-    # as string operations are expensive, use this only when necessary, 
+    # as string operations are expensive, use this only when necessary,
     # especially do not use in update loops
     makeValidPropName: func(s) {
         if (!size(s)) return nil;
@@ -293,7 +293,7 @@ var Node = {
             rv ~= (_ispropname(s[i])) ? chr(s[i]) : "_";
         }
         return rv;
-    },    
+    },
 };
 
 ##
@@ -393,8 +393,8 @@ var dump = func {
 var copy = func(src, dest, attr = 0) {
     var sp = src.getPath() or "";
     var dp = dest.getPath() or "";
-    
-    # sp and dp may be equal but on different trees! 
+
+    # sp and dp may be equal but on different trees!
     # check if dest is sub node of source
     sp = split("/", sp);
     dp = split("/", dp);
@@ -402,7 +402,7 @@ var copy = func(src, dest, attr = 0) {
         sp = subvec(sp, 1);
         dp = subvec(dp, 1);
     }
-    
+
     foreach(var c; src.getChildren()) {
         var name = c.getName();
         var i = c.getIndex();

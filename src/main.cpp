@@ -3,11 +3,11 @@
 #include "nasal_gc.h"
 #include "nasal_err.h"
 #include "nasal_lexer.h"
-#include "nasal_ast.h"
+#include "ast/ast.h"
+#include "ast/ast_visitor.h"
+#include "ast/ast_dumper.h"
 #include "nasal_parse.h"
 #include "nasal_import.h"
-#include "ast_visitor.h"
-#include "ast_dumper.h"
 #include "symbol_finder.h"
 #include "optimizer.h"
 #include "nasal_codegen.h"
@@ -55,7 +55,7 @@ void execute(const nasal::cli::cli_config& config) {
             std::cout << "  " << file << "\n";
         }
     }
-    
+
     // optimizer does simple optimization on ast
     auto opt = std::make_unique<nasal::optimizer>();
     opt->do_optimization(parse.tree());
@@ -120,7 +120,7 @@ i32 main(i32 argc, const char* argv[]) {
     }
 
     // the first argument is the executable itself, ignore it
-    const auto config = nasal::cli::parse({argv+1, argv+argc});
+    const auto config = nasal::cli::parse({argv + 1, argv + argc});
 
     // run directly or show help
     if (argc == 2) {

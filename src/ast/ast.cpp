@@ -1,4 +1,4 @@
-#include "nasal_ast.h"
+#include "ast.h"
 #include "ast_visitor.h"
 
 namespace nasal {

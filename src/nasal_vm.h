@@ -287,11 +287,11 @@ public:
 
     /* constructor of vm instance */
     vm() {
-        ctx.stack = new var[VM_STACK_DEPTH];
+        ctx.ctor();
         global = new var[VM_STACK_DEPTH];
     }
     ~vm() {
-        delete[] ctx.stack;
+        ctx.dtor();
         delete[] global;
     }
 
@@ -900,6 +900,11 @@ inline void vm::o_callfv() {
     var tmp = local[-1];
     local[-1] = ctx.funcr;
     ctx.funcr = tmp;
+    (++ctx.func_top)[0] = {
+        tmp,
+        bytecode[ctx.pc].fidx,
+        bytecode[ctx.pc].line
+    };
 
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (ctx.top-argc+func.local_size+3>=ctx.canary) {
@@ -969,6 +974,11 @@ inline void vm::o_callfh() {
     var tmp = ctx.top[-1];
     ctx.top[-1] = ctx.funcr;
     ctx.funcr = tmp;
+    (++ctx.func_top)[0] = {
+        tmp,
+        bytecode[ctx.pc].fidx,
+        bytecode[ctx.pc].line
+    };
 
     // top -1(hash) +lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
     if (ctx.top+func.local_size+2>= ctx.canary) {
@@ -1010,6 +1020,9 @@ inline void vm::o_callb() {
     // reserve place for native function return,
     // this code is written for coroutine
     (++ctx.top)[0] = nil;
+
+    // set file list into ctx
+    ctx.files = files;
 
     // if running a native function about coroutine
     // (top) will be set to another context.top, instead of main_context.top
@@ -1212,6 +1225,7 @@ inline void vm::o_ret() {
     ctx.top = local-1;
     ctx.funcr = ctx.top[0];
     ctx.top[0] = ret; // rewrite func with returned value
+    ctx.func_top--;
 
     // synchronize upvalue
     if (up.is_upval()) {

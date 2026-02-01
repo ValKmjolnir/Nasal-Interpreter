@@ -172,7 +172,7 @@ var builtin_subprocess_active(context* ctx, gc* ngc) {
     // this means the child process is returned
     if (result==pid) {
         obj.ghost().get<subprocess>()->status = status;
-    } 
+    }
 
     return result==0? one:zero;
 #endif

@@ -186,7 +186,7 @@ void repl::execute() {
             std::cout << "\", input \".help\" for help\n";
             continue;
         }
-        
+
         source.push_back(line);
         if (!check_need_more_input()) {
             source.pop_back();

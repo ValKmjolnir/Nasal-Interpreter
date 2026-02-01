@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal_ast.h"
-#include "ast_visitor.h"
+#include "ast/ast.h"
+#include "ast/ast_visitor.h"
 
 #include <cstring>
 #include <sstream>

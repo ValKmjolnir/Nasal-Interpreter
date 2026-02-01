@@ -528,6 +528,26 @@ var builtin_version(context* ctx, gc* ngc) {
     return ngc->newstr(__nasver__);
 }
 
+var builtin_caller(context* ctx, gc* ngc) {
+    auto level = ctx->localr[1];
+    if (!level.is_num()) {
+        return nil;
+    }
+
+    auto level_num = static_cast<i64>(level.num());
+    if (ctx->func_top - level_num - 1 < ctx->func_stack) {
+        return nil;
+    }
+    const auto& cs = ctx->func_top[-level_num - 1];
+    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    res.vec().elems.push_back(ngc->alloc(vm_type::vm_hash));
+    res.vec().elems.push_back(cs.caller);
+    res.vec().elems.push_back(ngc->newstr(ctx->files[cs.file_index]));
+    res.vec().elems.push_back(var::num(cs.line));
+    ngc->temp = nil;
+    return res;
+}
+
 var builtin_arch(context* ctx, gc* ngc) {
     return ngc->newstr(util::get_arch());
 }
@@ -593,13 +613,13 @@ std::string md5(const std::string& src) {
         5, 8, 11, 14, 1,  4,  7,  10, 13, 0,  3,  6,  9,  12, 15, 2,  // g=(3*i+5)%16;
         0, 7, 14, 5,  12, 3,  10, 1,  8,  15, 6,  13, 4,  11, 2,  9   // g=(7*i)%16;
     };
-    
+
 #define shift(x, n)  (((x)<<(n))|((x)>>(32-(n)))) // cycle left shift
-#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))    
+#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))
 #define md5g(x, y, z) (((x)&(z))|((y)&(~z)))
 #define md5h(x, y, z) ((x)^(y)^(z))
 #define md5i(x, y, z) ((y)^((x)|(~z)))
-    
+
     u32 atmp = 0x67452301, btmp = 0xefcdab89;
     u32 ctmp = 0x98badcfe, dtmp = 0x10325476;
     for (u32 i = 0; i<buffsize; i += 16) {
@@ -840,6 +860,7 @@ nasal_builtin_table builtin[] = {
     {"__platform", builtin_platform},
     {"__arch", builtin_arch},
     {"__version", builtin_version},
+    {"__caller", builtin_caller},
     {"__md5", builtin_md5},
     {"__maketimestamp", builtin_maketimestamp},
     {"__time_stamp", builtin_time_stamp},

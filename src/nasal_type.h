@@ -16,7 +16,7 @@ enum class vm_type: u8 {
     vm_none = 0, // error type
     vm_cnt,      // counter for forindex/foreach loop
     vm_addr,     // var* address
-    vm_ret,      // return addres(program counter) 
+    vm_ret,      // return addres(program counter)
     vm_nil,      // nil
     vm_num,      // number
 
@@ -144,7 +144,6 @@ public:
     nas_ghost& ghost() { return *val.gcobj->ptr.obj; }
     nas_co& co() { return *val.gcobj->ptr.co; }
     nas_map& map() { return *val.gcobj->ptr.map; }
-    
 
 public:
     // get const gc object
@@ -298,6 +297,12 @@ public:
     T convert() const { return reinterpret_cast<T>(pointer); }
 };
 
+struct callsite {
+    var caller;
+    u64 file_index = 0;
+    u64 line = 0;
+};
+
 struct context {
     u64  pc = 0;
     var* localr = nullptr;
@@ -305,8 +310,43 @@ struct context {
     var  funcr = var::nil();
     var  upvalr = var::nil();
     var* canary = nullptr;
+
     var* stack = nullptr;
     var* top = nullptr;
+
+    callsite* func_stack = nullptr;
+    callsite* func_top = nullptr;
+
+    const std::string* files = nullptr;
+
+    void ctor() {
+        stack = new var[VM_STACK_DEPTH];
+        func_stack = new callsite[VM_STACK_DEPTH];
+    }
+    void dtor() {
+        delete[] stack;
+        delete[] func_stack;
+    }
+    void clear() {
+        /* set canary and program counter */
+        pc = 0;
+        localr = nullptr;
+        memr = nullptr;
+        funcr = var::nil();
+        upvalr = var::nil();
+
+        /* set canary = stack[VM_STACK_DEPTH-1] */
+        canary = stack + VM_STACK_DEPTH - 1;
+
+        /* nothing is on stack */
+        top = stack;
+        func_top = func_stack - 1;
+
+        /* clear main stack */
+        for (u32 i = 0; i < VM_STACK_DEPTH; ++i) {
+            stack[i] = var::nil();
+        }
+    }
 };
 
 struct nas_co {
@@ -319,14 +359,9 @@ struct nas_co {
     context ctx;
     status status;
 
-    nas_co() {
-        ctx.stack = new var[VM_STACK_DEPTH];
-        clear();
-    }
-    ~nas_co() {
-        delete[] ctx.stack;
-    }
-    void clear();
+    nas_co() { ctx.ctor(); }
+    ~nas_co() { ctx.dtor(); }
+    void clear() { ctx.clear(); status = status::suspended; }
     friend std::ostream& operator<<(std::ostream&, const nas_co&);
 };
 

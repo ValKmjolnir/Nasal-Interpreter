@@ -27,7 +27,7 @@ var sgn = func(x) {
 
 # floor will get the integral number of input argument
 # which is less than or equal to this argument.
-# this is basic native function in old nasal, 
+# this is basic native function in old nasal,
 # but we think it should have a copy in math module.
 var floor = func(x) {
     return __floor(x);

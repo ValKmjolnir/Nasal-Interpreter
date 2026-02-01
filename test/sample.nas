@@ -274,7 +274,7 @@ var vecfind = func(vec, elem) { return invert(vec)[elem]; }
 # Note use of "~" operator to do string concatenation (Nasal's only
 # funny syntax).
 #
-var join = func { 
+var join = func {
     var s = "";
     foreach(var elem; arg) { s = s ~ elem; }
     return s;

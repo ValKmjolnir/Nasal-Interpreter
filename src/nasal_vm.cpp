@@ -45,22 +45,11 @@ void vm::vm_init_enrty(const std::vector<std::string>& strs,
 }
 
 void vm::context_and_global_init() {
-    /* set canary and program counter */
-    ctx.pc = 0;
-    ctx.localr = nullptr;
-    ctx.memr = nullptr;
-    ctx.funcr = nil;
-    ctx.upvalr = nil;
-
-    /* set canary = stack[VM_STACK_DEPTH-1] */
-    ctx.canary = ctx.stack+VM_STACK_DEPTH-1;
-
-    /* nothing is on stack */
-    ctx.top = ctx.stack - 1;
+    /* clear context status */
+    ctx.clear();
 
     /* clear main stack and global */
-    for (u32 i = 0; i<VM_STACK_DEPTH; ++i) {
-        ctx.stack[i] = nil;
+    for (u32 i = 0; i < VM_STACK_DEPTH; ++i) {
         global[i] = nil;
     }
 }

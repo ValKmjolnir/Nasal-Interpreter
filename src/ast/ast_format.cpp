@@ -151,19 +151,25 @@ bool ast_format::visit_parameter(parameter* node) {
 
 bool ast_format::visit_ternary_operator(ternary_operator* node) {
     dump_formating_node_info(node, "ternary operator");
-    out << "(";
+    if (node->get_in_curve()) {
+        out << "(";
+    }
     node->get_condition()->accept(this);
     out << " ? ";
     node->get_left()->accept(this);
     out << " : ";
     node->get_right()->accept(this);
-    out << ")";
+    if (node->get_in_curve()) {
+        out << ")";
+    }
     return true;
 }
 
 bool ast_format::visit_binary_operator(binary_operator* node) {
     dump_formating_node_info(node, "binary operator");
-    out << "(";
+    if (node->get_in_curve()) {
+        out << "(";
+    }
     node->get_left()->accept(this);
     switch(node->get_operator_type()) {
         case binary_operator::kind::add: out << " + "; break;
@@ -185,18 +191,26 @@ bool ast_format::visit_binary_operator(binary_operator* node) {
         case binary_operator::kind::null_chain: out << " ?? "; break;
     }
     node->get_right()->accept(this);
-    out << ")";
+    if (node->get_in_curve()) {
+        out << ")";
+    }
     return true;
 }
 
 bool ast_format::visit_unary_operator(unary_operator* node) {
     dump_formating_node_info(node, "unary operator");
+    if (node->get_in_curve()) {
+        out << "(";
+    }
     switch(node->get_operator_type()) {
         case unary_operator::kind::negative: out << "-"; break;
         case unary_operator::kind::logical_not: out << "!"; break;
         case unary_operator::kind::bitwise_not: out << "~"; break;
     }
     node->get_value()->accept(this);
+    if (node->get_in_curve()) {
+        out << ")";
+    }
     return true;
 }
 
