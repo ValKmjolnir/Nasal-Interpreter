@@ -840,7 +840,7 @@ inline void vm::o_callv() {
             return;
         }
     } else {
-        die("must call a vector/hash/string but get " + type_name_string(vec));
+        die("must get element from vector/hash/string, but get " + type_name_string(vec));
         return;
     }
 }
@@ -862,7 +862,7 @@ inline void vm::o_callvi() {
 inline void vm::o_callh() {
     var val = ctx.top[0];
     if (!val.is_hash() && !val.is_map()) {
-        die("must call a hash but get " + type_name_string(val));
+        die("must get element from hash, but get " + type_name_string(val));
         return;
     }
 
