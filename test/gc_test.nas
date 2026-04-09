@@ -17,13 +17,14 @@ var test_func = func(test_processes...) {
     var end_info = runtime.gc.info();
     var gc_total_end = end_info.total;
     var duration = time_stamp.elapsedMSec();
-    println(" ", duration, " ms,\tgc ",
+    print(" ", duration, " ms,\tgc ",
         int((gc_total_end-gc_total_begin)*100/duration), "%,\t",
-        int(1000/(duration/size(test_processes))*10)/10, " test(s)/sec"
+        int(1000/(duration/size(test_processes))*10)/10, " test(s)/sec",
+        "\n"
     );
 
     var info = runtime.gc.info();
-    println("+##-gc----------------------");
+    println("+----##-gc----------------------------");
     println("| avg gc cycle : ", int(1000 / info.average), " exec/sec");
     println("| avg mark     : ", int(1000 / info.avg_mark), " exec/sec");
     println("| avg sweep    : ", int(1000 / info.avg_sweep), " exec/sec");
@@ -31,7 +32,7 @@ var test_func = func(test_processes...) {
     println("| sweep count  : ", info.sweep_count);
     println("| max mark     : ", info.max_mark, " ms");
     println("| max sweep    : ", info.max_sweep, " ms");
-    println("+---------------------------");
+    println("+-------------------------------------");
 }
 
 var MAX_ITER_NUM = 0.5e5;

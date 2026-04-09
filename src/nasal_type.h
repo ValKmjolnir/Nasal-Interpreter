@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <unordered_map>
 
 namespace nasal {
@@ -270,7 +271,7 @@ public:
 struct nas_ghost {
 private:
     using destructor = void (*)(void*);
-    using marker = void (*)(void*, std::vector<var>*);
+    using marker = void (*)(void*, std::queue<var>*);
 
 public:
     std::string type_name;

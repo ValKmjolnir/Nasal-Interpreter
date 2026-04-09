@@ -27,73 +27,37 @@ void gc::count_sweep_time() {
 }
 
 void gc::mark() {
-    std::vector<var> bfs;
+    std::queue<var> bfs;
     mark_context_root(bfs);
 
-    // concurrent mark
-    if (memory.size() > UINT16_MAX * 16 && bfs.size() > 16) {
-        auto size = bfs.size();
-        std::thread t0(&gc::concurrent_mark, this, std::ref(bfs), 0, size/4);
-        std::thread t1(&gc::concurrent_mark, this, std::ref(bfs), size/4, size/2);
-        std::thread t2(&gc::concurrent_mark, this, std::ref(bfs), size/2, size/4*3);
-        std::thread t3(&gc::concurrent_mark, this, std::ref(bfs), size/4*3, size);
-        t0.join();
-        t1.join();
-        t2.join();
-        t3.join();
-        return;
-    }
-
-    // normal mark
     while (!bfs.empty()) {
-        var value = bfs.back();
-        bfs.pop_back();
-        if (value.type<=vm_type::vm_num ||
-            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
+        var value = bfs.front();
+        bfs.pop();
+        if (value.type <= vm_type::vm_num ||
+            value.val.gcobj->mark != nas_val::gc_status::uncollected) {
             continue;
         }
         mark_var(bfs, value);
     }
 }
 
-void gc::concurrent_mark(std::vector<var>& vec, usize begin, usize end) {
-    std::vector<var> bfs;
-    for (auto i = begin; i<end; ++i) {
-        var value = vec[i];
-        if (value.type<=vm_type::vm_num ||
-            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
-            continue;
-        }
-        mark_var(bfs, value);
-    }
-    while (!bfs.empty()) {
-        var value = bfs.back();
-        bfs.pop_back();
-        if (value.type<=vm_type::vm_num ||
-            value.val.gcobj->mark!=nas_val::gc_status::uncollected) {
-            continue;
-        }
-        mark_var(bfs, value);
-    }
-}
-
-void gc::mark_context_root(std::vector<var>& bfs_queue) {
+void gc::mark_context_root(std::queue<var>& bfs_queue) {
     // scan global
     for (usize i = 0; i < main_context_global_size; ++i) {
         auto& val = main_context_global[i];
         if (val.type > vm_type::vm_num) {
-            bfs_queue.push_back(val);
+            bfs_queue.push(val);
         }
     }
     // scan now running context, this context maybe related to coroutine or main
     for (var* i = running_context->stack; i <= running_context->top; ++i) {
         if (i->type > vm_type::vm_num) {
-            bfs_queue.push_back(*i);
+            bfs_queue.push(*i);
         }
     }
-    bfs_queue.push_back(running_context->funcr);
-    bfs_queue.push_back(running_context->upvalr);
-    bfs_queue.push_back(temp);
+    bfs_queue.push(running_context->funcr);
+    bfs_queue.push(running_context->upvalr);
+    bfs_queue.push(temp);
 
     if (!cort) {
         return;
@@ -102,14 +66,14 @@ void gc::mark_context_root(std::vector<var>& bfs_queue) {
     // coroutine is running, so scan main process stack from mctx
     for (var* i = main_context.stack; i <= main_context.top; ++i) {
         if (i->type > vm_type::vm_num) {
-            bfs_queue.push_back(*i);
+            bfs_queue.push(*i);
         }
     }
-    bfs_queue.push_back(main_context.funcr);
-    bfs_queue.push_back(main_context.upvalr);
+    bfs_queue.push(main_context.funcr);
+    bfs_queue.push(main_context.upvalr);
 }
 
-void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
+void gc::mark_var(std::queue<var>& bfs_queue, var& value) {
     value.val.gcobj->mark = nas_val::gc_status::found;
     switch(value.type) {
         case vm_type::vm_vec: mark_vec(bfs_queue, value.vec()); break;
@@ -123,62 +87,62 @@ void gc::mark_var(std::vector<var>& bfs_queue, var& value) {
     }
 }
 
-void gc::mark_vec(std::vector<var>& bfs_queue, nas_vec& vec) {
+void gc::mark_vec(std::queue<var>& bfs_queue, nas_vec& vec) {
     for (auto& i : vec.elems) {
         if (i.type > vm_type::vm_num) {
-            bfs_queue.push_back(i);
+            bfs_queue.push(i);
         }
     }
 }
 
-void gc::mark_hash(std::vector<var>& bfs_queue, nas_hash& hash) {
+void gc::mark_hash(std::queue<var>& bfs_queue, nas_hash& hash) {
     for (auto& i : hash.elems) {
         if (i.second.type > vm_type::vm_num) {
-            bfs_queue.push_back(i.second);
+            bfs_queue.push(i.second);
         }
     }
 }
 
-void gc::mark_func(std::vector<var>& bfs_queue, nas_func& function) {
+void gc::mark_func(std::queue<var>& bfs_queue, nas_func& function) {
     for (auto& i : function.local) {
         if (i.type > vm_type::vm_num) {
-            bfs_queue.push_back(i);
+            bfs_queue.push(i);
         }
     }
     for (auto& i : function.upval) {
-        bfs_queue.push_back(i);
+        bfs_queue.push(i);
     }
 }
 
-void gc::mark_upval(std::vector<var>& bfs_queue, nas_upval& upval) {
+void gc::mark_upval(std::queue<var>& bfs_queue, nas_upval& upval) {
     for (auto& i : upval.elems) {
         if (i.type > vm_type::vm_num) {
-            bfs_queue.push_back(i);
+            bfs_queue.push(i);
         }
     }
 }
 
-void gc::mark_ghost(std::vector<var>& bfs_queue, nas_ghost& ghost) {
+void gc::mark_ghost(std::queue<var>& bfs_queue, nas_ghost& ghost) {
     if (!ghost.gc_mark_function) {
         return;
     }
     ghost.gc_mark_function(ghost.pointer, &bfs_queue);
 }
 
-void gc::mark_co(std::vector<var>& bfs_queue, nas_co& co) {
-    bfs_queue.push_back(co.ctx.funcr);
-    bfs_queue.push_back(co.ctx.upvalr);
+void gc::mark_co(std::queue<var>& bfs_queue, nas_co& co) {
+    bfs_queue.push(co.ctx.funcr);
+    bfs_queue.push(co.ctx.upvalr);
     for (var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
         if (i->type > vm_type::vm_num) {
-            bfs_queue.push_back(*i);
+            bfs_queue.push(*i);
         }
     }
 }
 
-void gc::mark_map(std::vector<var>& bfs_queue, nas_map& mp) {
+void gc::mark_map(std::queue<var>& bfs_queue, nas_map& mp) {
     for (const auto& i : mp.mapper) {
         if (i.second->type > vm_type::vm_num) {
-            bfs_queue.push_back(*i.second);
+            bfs_queue.push(*i.second);
         }
     }
 }
@@ -189,17 +153,19 @@ void gc::sweep() {
     // this will cause memory wasting.
     const i64 threshold = 4096;
     for (i64 it = 0; it < threshold; ++it) {
-        if (current_sweep_index - it < 0) {
+        const auto index = current_sweep_index - it;
+        if (index < 0) {
             break;
         }
-        auto i = memory[current_sweep_index - it];
-        if (i->mark==nas_val::gc_status::uncollected) {
-            unused[static_cast<u32>(i->type)-static_cast<u32>(vm_type::vm_str)].push_back(i);
+        auto i = memory[index];
+        if (i->mark == nas_val::gc_status::uncollected) {
+            unused[static_cast<u32>(i->type) - static_cast<u32>(vm_type::vm_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
-        } else if (i->mark==nas_val::gc_status::found) {
+        } else if (i->mark == nas_val::gc_status::found) {
             i->mark = nas_val::gc_status::uncollected;
         }
     }
+
     current_sweep_index -= threshold;
     if (current_sweep_index < 0) {
         in_incremental_sweep_stage = false;
@@ -208,10 +174,10 @@ void gc::sweep() {
 }
 
 void gc::extend(const vm_type type) {
-    const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
+    const u32 index = static_cast<u32>(type) - static_cast<u32>(vm_type::vm_str);
     status.object_size[index] += incr[index];
 
-    for (u64 i = 0; i<incr[index]; ++i) {
+    for (u64 i = 0; i < incr[index]; ++i) {
         // no need to check, will be killed if memory is not enough
         nas_val* tmp = new nas_val(type);
 
@@ -239,8 +205,10 @@ void gc::extend(const vm_type type) {
         default: break;
     }
 
-    // if incr[index] = 1, this will always be 1
     incr[index] = incr[index] + incr[index];
+    if (incr[index] > max_incr[index]) {
+        incr[index] = max_incr[index];
+    }
 }
 
 void gc::init(const std::vector<std::string>& constant_strings,
@@ -296,8 +264,9 @@ void gc::clear() {
 }
 
 var gc::alloc(const vm_type type) {
-    const u32 index = static_cast<u32>(type)-static_cast<u32>(vm_type::vm_str);
+    const u32 index = static_cast<u32>(type) - static_cast<u32>(vm_type::vm_str);
     ++status.alloc_count[index];
+
     // if still in incremental sweep stage? do it
     // if not in incremental sweep stage, run a new gc cycle
     if (in_incremental_sweep_stage) {
