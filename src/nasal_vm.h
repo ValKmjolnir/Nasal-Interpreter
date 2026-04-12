@@ -760,25 +760,27 @@ inline void vm::o_cnt() {
         );
         return;
     }
-    (++ctx.top)[0] = var::cnt(-1);
+    (++ctx.top)[0] = var::num(-1.0f);
 }
 
 inline void vm::o_findex() {
-    if ((usize)(++ctx.top[0].cnt())>=ctx.top[-1].vec().size()) {
-        ctx.pc = imm[ctx.pc]-1;
+    ctx.top[0] = var::num(ctx.top[0].num() + 1.0f);
+    if ((usize)ctx.top[0].num() >= ctx.top[-1].vec().size()) {
+        ctx.pc = imm[ctx.pc] - 1;
         return;
     }
-    ctx.top[1] = var::num(ctx.top[0].cnt());
+    ctx.top[1] = ctx.top[0];
     ++ctx.top;
 }
 
 inline void vm::o_feach() {
+    ctx.top[0] = var::num(ctx.top[0].num() + 1.0f);
     auto& ref = ctx.top[-1].vec().elems;
-    if ((usize)(++ctx.top[0].cnt())>=ref.size()) {
+    if ((usize)ctx.top[0].num() >= ref.size()) {
         ctx.pc = imm[ctx.pc]-1;
         return;
     }
-    ctx.top[1] = ref[ctx.top[0].cnt()];
+    ctx.top[1] = ref[ctx.top[0].num()];
     ++ctx.top;
 }
 
