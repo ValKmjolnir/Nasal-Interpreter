@@ -250,13 +250,22 @@ public:
     nas_upval(): on_stack(true), size(0), stack_frame_offset(nullptr) {}
 
     var& operator[](usize n) {
-        return on_stack? stack_frame_offset[n] : elems[n];
+        return on_stack ? stack_frame_offset[n] : elems[n];
     }
 
     void clear() {
         on_stack = true;
         elems.clear();
         size = 0;
+        stack_frame_offset = nullptr;
+    }
+
+    void move_from_stack() {
+        on_stack = false;
+        elems.resize(size);
+        for (u64 i = 0; i < size; ++i) {
+            elems[i] = stack_frame_offset[i];
+        }
     }
 };
 

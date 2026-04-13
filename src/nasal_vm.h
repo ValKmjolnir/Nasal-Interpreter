@@ -434,9 +434,9 @@ inline void vm::o_newf() {
         func.upval = ctx.funcr.func().upval;
 
         // function created in the same local scope shares same closure
-        var upval = (ctx.upvalr.is_nil())?
-            ngc.alloc(vm_type::vm_upval):
-            ctx.upvalr;
+        var upval = (ctx.upvalr.is_nil())
+            ? ngc.alloc(vm_type::vm_upval)
+            : ctx.upvalr;
         // if no upval scope exists, now it's time to create one
         if (ctx.upvalr.is_nil()) {
             upval.upval().size = ctx.funcr.func().local_size;
@@ -1231,13 +1231,7 @@ inline void vm::o_ret() {
 
     // synchronize upvalue
     if (up.is_upval()) {
-        auto& upval = up.upval();
-        auto size = func.func().local_size;
-        upval.on_stack = false;
-        upval.elems.resize(size);
-        for (u64 i = 0; i < size; ++i) {
-            upval.elems[i] = local[i];
-        }
+        up.upval().move_from_stack();
     }
 
     // cannot use gc.cort to judge,

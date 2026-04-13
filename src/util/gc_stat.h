@@ -20,6 +20,7 @@ struct gc_stat {
 
     i64 max_mark_time = 0;
     i64 max_sweep_time = 0;
+    i64 last_sweep_threshold = 512;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
@@ -50,6 +51,7 @@ struct gc_stat {
     f64 avg_sweep_time_ms() const;
     f64 max_mark_time_ms() const;
     f64 max_sweep_time_ms() const;
+    i64 calc_sweep_threshold();
 
     void dump_info() const;
 };

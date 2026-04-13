@@ -56,6 +56,20 @@ f64 gc_stat::max_sweep_time_ms() const {
     return (max_sweep_time * 1000.0) / den;
 }
 
+i64 gc_stat::calc_sweep_threshold() {
+    const i64 min_threshold = 4096;
+    if (!total_sweep_count) {
+        return min_threshold;
+    }
+
+    // expect max sweep time = 0.1 ms
+    last_sweep_threshold = static_cast<i64>(0.1f / avg_sweep_time_ms() * last_sweep_threshold);
+    if (last_sweep_threshold < min_threshold) {
+        last_sweep_threshold = min_threshold;
+    }
+    return last_sweep_threshold;
+}
+
 void gc_stat::dump_info() const {
     util::windows_code_page_manager wm;
     wm.set_utf8_output();

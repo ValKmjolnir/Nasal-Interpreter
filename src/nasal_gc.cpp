@@ -115,6 +115,15 @@ void gc::mark_func(std::queue<var>& bfs_queue, nas_func& function) {
 }
 
 void gc::mark_upval(std::queue<var>& bfs_queue, nas_upval& upval) {
+    if (upval.on_stack) {
+        for (u64 i = 0; i < upval.size; ++i) {
+            if (upval.stack_frame_offset[i].type > vm_type::vm_num) {
+                bfs_queue.push(upval.stack_frame_offset[i]);
+            }
+        }
+        return;
+    }
+
     for (auto& i : upval.elems) {
         if (i.type > vm_type::vm_num) {
             bfs_queue.push(i);
@@ -132,7 +141,7 @@ void gc::mark_ghost(std::queue<var>& bfs_queue, nas_ghost& ghost) {
 void gc::mark_co(std::queue<var>& bfs_queue, nas_co& co) {
     bfs_queue.push(co.ctx.funcr);
     bfs_queue.push(co.ctx.upvalr);
-    for (var* i = co.ctx.stack; i<=co.ctx.top; ++i) {
+    for (var* i = co.ctx.stack; i <= co.ctx.top; ++i) {
         if (i->type > vm_type::vm_num) {
             bfs_queue.push(*i);
         }
@@ -151,7 +160,7 @@ void gc::sweep() {
     // if threshold is too small, too many allocated objects will be marked as "found"
     // objects with "found" will be marked to "uncollected" in the next gc cycle
     // this will cause memory wasting.
-    const i64 threshold = 4096;
+    const i64 threshold = status.calc_sweep_threshold();
     for (i64 it = 0; it < threshold; ++it) {
         const auto index = current_sweep_index - it;
         if (index < 0) {
