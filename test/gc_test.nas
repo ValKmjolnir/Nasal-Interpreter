@@ -24,10 +24,7 @@ var test_func = func(test_processes...) {
     var end_info = runtime.gc.info();
     var gc_total_end = end_info.total;
     var duration = time_stamp.elapsedMSec();
-    if (duration == nil) {
-        println(time_stamp.elapsedMSec);
-        die("remaining issue: time_stamp.elapsedMSec() entry = 0x559.");
-    }
+
     print(" ", duration, " ms,\tgc ",
         int((gc_total_end-gc_total_begin)*100/duration), "%,\t",
         int(1000/(duration/size(test_processes))*10)/10, " test(s)/sec",
@@ -113,7 +110,8 @@ var append_tree = func {
         append(res, {
             a: {b: {c:[1, 2, 3, 4]}},
             d: {e: {}},
-            j: {k: {l:{m:[{a:{b:{c:[{}, {}]}}}]}}}
+            j: {k: {l:{m:[{a:{b:{c:[{}, {}]}}}]}}},
+            n: [[], []]
         });
     }
 }
@@ -122,12 +120,12 @@ var append_deep_tree = func {
     var res = {};
     var tmp = [];
     for (var i = 0; i < MAX_ITER_NUM; i += 1) {
-        tmp = [[[tmp]]];
+        tmp = [[[tmp, tmp]]];
     }
     res["vec"] = tmp;
     tmp = {};
     for (var i = 0; i < MAX_ITER_NUM; i += 1) {
-        tmp = {a : {a : {a : tmp}}};
+        tmp = {a : {a : {a : tmp, b : tmp}}};
     }
     res["hash"] = tmp;
     return res;

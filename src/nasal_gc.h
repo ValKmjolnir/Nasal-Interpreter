@@ -66,7 +66,7 @@ struct gc {
     const u64 max_incr[GC_TYPE_SIZE] = {
         8192, // vm_str
         8192, // vm_vec
-        4096, // vm_hash
+        8192, // vm_hash
         2048, // vm_func
         2048, // vm_upval
         256,  // vm_obj

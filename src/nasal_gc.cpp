@@ -33,8 +33,11 @@ void gc::mark() {
     while (!bfs.empty()) {
         var value = bfs.front();
         bfs.pop();
-        if (value.type <= vm_type::vm_num ||
-            value.val.gcobj->mark != nas_val::gc_status::uncollected) {
+        if (value.type <= vm_type::vm_num) {
+            continue;
+        }
+        if (value.val.gcobj->mark != nas_val::gc_status::uncollected &&
+            value.val.gcobj->mark != nas_val::gc_status::alloc_in_sweep_stage) {
             continue;
         }
         mark_var(bfs, value);
@@ -170,7 +173,8 @@ void gc::sweep() {
         if (i->mark == nas_val::gc_status::uncollected) {
             unused[static_cast<u32>(i->type) - static_cast<u32>(vm_type::vm_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
-        } else if (i->mark == nas_val::gc_status::found) {
+        } else if (i->mark == nas_val::gc_status::found ||
+                   i->mark == nas_val::gc_status::alloc_in_sweep_stage) {
             i->mark = nas_val::gc_status::uncollected;
         }
     }
@@ -297,10 +301,14 @@ var gc::alloc(const vm_type type) {
     var ret = var::gcobj(unused[index].back());
     ret.val.gcobj->clear();
 
-    // if incremental sweep stage, mark it as found
-    // but be aware that it may be collected in next gc cycle
+    // if incremental sweep stage, mark it with special state.
+    // to avoid miss-marking objects inside them, because mark stage
+    // will skip scanning objects with "found" mark
+    // if we mark it with "found" mark, objects inside it will not be marked
+    // so they may be treated as unreferenced, which is not expected.
+    // be aware that it will be collected in next gc cycle
     ret.val.gcobj->mark = in_incremental_sweep_stage
-        ? nas_val::gc_status::found
+        ? nas_val::gc_status::alloc_in_sweep_stage
         : nas_val::gc_status::uncollected;
     unused[index].pop_back();
     return ret;

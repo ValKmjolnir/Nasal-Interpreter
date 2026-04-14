@@ -51,9 +51,12 @@ struct nas_map;   // mapper
 // nas_val includes gc-managed types
 struct nas_val {
     enum class gc_status: u8 {
-        uncollected = 0,
-        collected,
-        found
+        uncollected = 0,     // will be collected by sweep
+        collected,           // already collected and put into unused list
+        found,               // marked as referenced
+        alloc_in_sweep_stage // mark it allocated in incremental sweep stage
+                             // still scan in mark stage
+                             // but do not sweep in this gc cycle
     };
 
     gc_status mark;
