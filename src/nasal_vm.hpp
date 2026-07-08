@@ -4,11 +4,13 @@
 #include <cstring>
 #include <sstream>
 #include <atomic>
+#include <cmath>
 
 #include "nasal_import.hpp"
 #include "nasal_gc.hpp"
 #include "nasal_codegen.hpp"
 #include "util/util.hpp"
+#include "natives/registry.hpp"
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)
@@ -30,7 +32,7 @@ protected:
     std::vector<u64> imm; // immediate number table
 
     /* nasal native functions */
-    std::vector<nasal_builtin_table> native_function;
+    std::vector<nasal_builtin_info> native_function;
 
     /* garbage collector */
     gc ngc;
@@ -56,7 +58,7 @@ protected:
     /* vm initializing function */
     void vm_init_enrty(const std::vector<std::string>&,
                        const std::vector<f64>&,
-                       const std::vector<nasal_builtin_table>&,
+                       const std::vector<nasal_builtin_info>&,
                        const std::vector<opcode>&,
                        const std::unordered_map<std::string, u64>&,
                        const std::vector<std::string>&,

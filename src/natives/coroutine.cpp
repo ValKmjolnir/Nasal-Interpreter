@@ -1,4 +1,6 @@
-#include "natives/coroutine.hpp"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -126,16 +128,21 @@ var builtin_costatus(context* ctx, gc* ngc) {
 }
 
 var builtin_corun(context* ctx, gc* ngc) {
-    return ngc->cort? one:zero;
+    return ngc->cort ? one : zero;
 }
 
-nasal_builtin_table coroutine_native[] = {
-    {"__cocreate", builtin_cocreate},
-    {"__coresume", builtin_coresume},
-    {"__coyield", builtin_coyield},
-    {"__costatus", builtin_costatus},
-    {"__corun", builtin_corun},
-    {nullptr, nullptr}
-};
+void load_coroutine_builtin() {
+    nasal_builtin_info coroutine_native[] = {
+        {"__cocreate", builtin_cocreate},
+        {"__coresume", builtin_coresume},
+        {"__coyield", builtin_coyield},
+        {"__costatus", builtin_costatus},
+        {"__corun", builtin_corun}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : coroutine_native) {
+        registry.regist(i);
+    }
+}
 
 }

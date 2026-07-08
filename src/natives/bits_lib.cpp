@@ -1,4 +1,6 @@
-#include "natives/bits_lib.hpp"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -148,17 +150,23 @@ var builtin_buf(context* ctx, gc* ngc) {
     return str;
 }
 
-nasal_builtin_table bits_native[] = {
-    {"__u32xor", builtin_u32xor},
-    {"__u32and", builtin_u32and},
-    {"__u32or", builtin_u32or},
-    {"__u32nand", builtin_u32nand},
-    {"__u32not", builtin_u32not},
-    {"__fld", builtin_fld},
-    {"__sfld", builtin_sfld},
-    {"__setfld", builtin_setfld},
-    {"__buf", builtin_buf},
-    {nullptr, nullptr}
-};
+void load_bits_builtin() {
+    nasal_builtin_info bits_native[] = {
+        {"__u32xor", builtin_u32xor},
+        {"__u32and", builtin_u32and},
+        {"__u32or", builtin_u32or},
+        {"__u32nand", builtin_u32nand},
+        {"__u32not", builtin_u32not},
+        {"__fld", builtin_fld},
+        {"__sfld", builtin_sfld},
+        {"__setfld", builtin_setfld},
+        {"__buf", builtin_buf}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : bits_native) {
+        registry.regist(i);
+    }
+}
+
 
 }

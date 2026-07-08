@@ -1,4 +1,13 @@
-#include "natives/io_lib.hpp"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #include "util/fs.hpp"
 
 #include <fstream>
@@ -228,24 +237,28 @@ var builtin_stderr(context* ctx, gc* ngc) {
     return file_descriptor;
 }
 
-
-nasal_builtin_table io_lib_native[] = {
-    {"__readfile", builtin_readfile},
-    {"__fout", builtin_fout},
-    {"__exists", builtin_exists},
-    {"__open", builtin_open},
-    {"__close", builtin_close},
-    {"__read", builtin_read},
-    {"__write", builtin_write},
-    {"__seek", builtin_seek},
-    {"__tell", builtin_tell},
-    {"__readln", builtin_readln},
-    {"__stat", builtin_stat},
-    {"__eof", builtin_eof},
-    {"__stdin", builtin_stdin},
-    {"__stdout", builtin_stdout},
-    {"__stderr", builtin_stderr},
-    {nullptr, nullptr}
-};
+void load_io_builtin() {
+    nasal_builtin_info io_lib_native[] = {
+        {"__readfile", builtin_readfile},
+        {"__fout", builtin_fout},
+        {"__exists", builtin_exists},
+        {"__open", builtin_open},
+        {"__close", builtin_close},
+        {"__read", builtin_read},
+        {"__write", builtin_write},
+        {"__seek", builtin_seek},
+        {"__tell", builtin_tell},
+        {"__readln", builtin_readln},
+        {"__stat", builtin_stat},
+        {"__eof", builtin_eof},
+        {"__stdin", builtin_stdin},
+        {"__stdout", builtin_stdout},
+        {"__stderr", builtin_stderr}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : io_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

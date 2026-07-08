@@ -1,4 +1,8 @@
-#include "natives/regex_lib.hpp"
+#include <regex>
+
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -88,12 +92,17 @@ var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
     return res;
 }
 
-nasal_builtin_table regex_lib_native[] = {
-    {"__regex_match", builtin_regex_match},
-    {"__regex_search", builtin_regex_search},
-    {"__regex_replace", builtin_regex_replace},
-    {"__regex_match_all", builtin_regex_match_all},
-    {nullptr, nullptr}
-};
+void load_regex_builtin() {
+    nasal_builtin_info regex_lib_native[] = {
+        {"__regex_match", builtin_regex_match},
+        {"__regex_search", builtin_regex_search},
+        {"__regex_replace", builtin_regex_replace},
+        {"__regex_match_all", builtin_regex_match_all}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : regex_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

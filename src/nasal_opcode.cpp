@@ -6,7 +6,7 @@ namespace nasal {
 void codestream::set(const f64* number_list,
                      const std::string* string_list,
                      const std::unordered_map<std::string, u64>& globals,
-                     const nasal_builtin_table* native_table,
+                     const nasal_builtin_info* native_table,
                      const std::string* file_list) {
     const_number = number_list;
     const_string = string_list;
@@ -22,7 +22,7 @@ void codestream::set(const f64* number_list,
 void codestream::set(const f64* number_list,
                      const std::string* string_list,
                      const std::vector<std::string>& globals,
-                     const nasal_builtin_table* native_table,
+                     const nasal_builtin_info* native_table,
                      const std::string* file_list) {
     const_number = number_list;
     const_string = string_list;

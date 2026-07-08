@@ -1,5 +1,27 @@
-﻿#include "natives/builtin.hpp"
+﻿#include "nasal.hpp"
+#include "nasal_type.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
 #include "util/util.hpp"
+
+#ifdef _MSC_VER
+#pragma warning (disable:4566) // i know i'm using utf-8
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4996)
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
+
+#include <sstream>
+#include <cmath>
+#include <thread>
+
+// for environ
+#if defined __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
 
 #include <chrono>
 
@@ -821,58 +843,74 @@ var builtin_terminal_size(context* ctx, gc* ngc) {
     return res;
 }
 
-nasal_builtin_table builtin[] = {
-    {"__print", builtin_print},
-    {"__println", builtin_println},
-    {"__exit", builtin_exit},
-    {"__abort", builtin_abort},
-    {"__append", builtin_append},
-    {"__setsize", builtin_setsize},
-    {"__system", builtin_system},
-    {"__input", builtin_input},
-    {"__split", builtin_split},
-    {"__split_with_empty_substr", builtin_split_with_empty_substr},
-    {"__rand", builtin_rand},
-    {"__id", builtin_id},
-    {"__int", builtin_int},
-    {"__floor", builtin_floor},
-    {"__ceil", builtin_ceil},
-    {"__num", builtin_num},
-    {"__pop", builtin_pop},
-    {"__str", builtin_str},
-    {"__size", builtin_size},
-    {"__time", builtin_time},
-    {"__contains", builtin_contains},
-    {"__delete", builtin_delete},
-    {"__keys", builtin_keys},
-    {"__die", builtin_die},
-    {"__find", builtin_find},
-    {"__type", builtin_type},
-    {"__substr", builtin_substr},
-    {"__streq", builtin_streq},
-    {"__left", builtin_left},
-    {"__right", builtin_right},
-    {"__cmp", builtin_cmp},
-    {"__chr", builtin_chr},
-    {"__char", builtin_char},
-    {"__values", builtin_values},
-    {"__sleep", builtin_sleep},
-    {"__platform", builtin_platform},
-    {"__arch", builtin_arch},
-    {"__version", builtin_version},
-    {"__caller", builtin_caller},
-    {"__md5", builtin_md5},
-    {"__maketimestamp", builtin_maketimestamp},
-    {"__time_stamp", builtin_time_stamp},
-    {"__elapsed_millisecond", builtin_elapsed_millisecond},
-    {"__elapsed_microsecond", builtin_elapsed_microsecond},
-    {"__gcextd", builtin_gcextend},
-    {"__gcinfo", builtin_gcinfo},
-    {"__logtime", builtin_logtime},
-    {"__ghosttype", builtin_ghosttype},
-    {"__set_utf8_output", builtin_set_utf8_output},
-    {"__terminal_size", builtin_terminal_size},
-    {nullptr, nullptr}
-};
+nasal_builtin_info unsafe_builtin_info() {
+    return {
+        "__unsafe_redirect",
+        builtin_unsafe
+    };
+}
+
+void load_standard_builtin() {
+    nasal_builtin_info builtin[] = {
+        {"__print", builtin_print},
+        {"__println", builtin_println},
+        {"__exit", builtin_exit},
+        {"__abort", builtin_abort},
+        {"__append", builtin_append},
+        {"__setsize", builtin_setsize},
+        {"__system", builtin_system},
+        {"__input", builtin_input},
+        {"__split", builtin_split},
+        {"__split_with_empty_substr", builtin_split_with_empty_substr},
+        {"__rand", builtin_rand},
+        {"__id", builtin_id},
+        {"__int", builtin_int},
+        {"__floor", builtin_floor},
+        {"__ceil", builtin_ceil},
+        {"__num", builtin_num},
+        {"__pop", builtin_pop},
+        {"__str", builtin_str},
+        {"__size", builtin_size},
+        {"__time", builtin_time},
+        {"__contains", builtin_contains},
+        {"__delete", builtin_delete},
+        {"__keys", builtin_keys},
+        {"__die", builtin_die},
+        {"__find", builtin_find},
+        {"__type", builtin_type},
+        {"__substr", builtin_substr},
+        {"__streq", builtin_streq},
+        {"__left", builtin_left},
+        {"__right", builtin_right},
+        {"__cmp", builtin_cmp},
+        {"__chr", builtin_chr},
+        {"__char", builtin_char},
+        {"__values", builtin_values},
+        {"__sleep", builtin_sleep},
+        {"__platform", builtin_platform},
+        {"__arch", builtin_arch},
+        {"__version", builtin_version},
+        {"__caller", builtin_caller},
+        {"__md5", builtin_md5},
+        {"__maketimestamp", builtin_maketimestamp},
+        {"__time_stamp", builtin_time_stamp},
+        {"__elapsed_millisecond", builtin_elapsed_millisecond},
+        {"__elapsed_microsecond", builtin_elapsed_microsecond},
+        {"__gcextd", builtin_gcextend},
+        {"__gcinfo", builtin_gcinfo},
+        {"__logtime", builtin_logtime},
+        {"__ghosttype", builtin_ghosttype},
+        {"__set_utf8_output", builtin_set_utf8_output},
+        {"__terminal_size", builtin_terminal_size}
+    };
+
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& info: builtin) {
+        if (info.name) {
+            registry.registered_builtin.insert(info.name);
+            registry.builtin_table.push_back(info);
+        }
+    }
+}
 
 }

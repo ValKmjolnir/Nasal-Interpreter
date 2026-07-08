@@ -10,39 +10,38 @@ void codegen::init_file_map(const std::vector<std::string>& file_list) {
     }
 }
 
-void codegen::load_native_function_table(nasal_builtin_table* table) {
-    for (usize i = 0; table[i].func; ++i) {
+void codegen::init_native_function() {
+    load_standard_builtin();
+    load_io_builtin();
+    load_math_builtin();
+    load_bits_builtin();
+    load_coroutine_builtin();
+    load_flightgear_builtin();
+    load_dylib_builtin();
+    load_unix_builtin();
+    load_json_builtin();
+    load_regex_builtin();
+    load_subprocess_builtin();
+
+    auto& registry = nasal_builtin_registry::get();
+    for (const auto& intrinsic : registry.builtin_table) {
         // check confliction
-        if (native_function_mapper.count(table[i].name)) {
-            err.err("code", "\"" + std::string(table[i].name) + "\" conflicts.");
+        if (native_function_mapper.count(intrinsic.name)) {
+            err.err("code", "\"" + std::string(intrinsic.name) + "\" conflicts.");
             continue;
         }
 
         // replace unsafe native functions with redirect function in limit mode
-        if (flag_limited_mode && unsafe_system_api.count(table[i].name)) {
-            native_function.push_back({"__unsafe_redirect", builtin_unsafe});
+        if (flag_limited_mode && unsafe_system_api.count(intrinsic.name)) {
+            native_function.push_back(unsafe_builtin_info());
         } else {
-            native_function.push_back(table[i]);
+            native_function.push_back(intrinsic);
         }
 
         // insert into mapper
         auto index = native_function_mapper.size();
-        native_function_mapper[table[i].name] = index;
+        native_function_mapper[intrinsic.name] = index;
     }
-}
-
-void codegen::init_native_function() {
-    load_native_function_table(builtin);
-    load_native_function_table(io_lib_native);
-    load_native_function_table(math_lib_native);
-    load_native_function_table(bits_native);
-    load_native_function_table(coroutine_native);
-    load_native_function_table(flight_gear_native);
-    load_native_function_table(dylib_lib_native);
-    load_native_function_table(unix_lib_native);
-    load_native_function_table(json_lib_native);
-    load_native_function_table(regex_lib_native);
-    load_native_function_table(subprocess_native);
 }
 
 void codegen::check_id_exist(identifier* node) {

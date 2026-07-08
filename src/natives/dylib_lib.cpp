@@ -1,4 +1,18 @@
-#include "natives/dylib_lib.hpp"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#include <sys/wait.h>
+#endif
+
+#include <cstring>
+#include <sstream>
+#include <vector>
+
 #include "util/util.hpp"
 #include "util/fs.hpp"
 
@@ -206,12 +220,17 @@ var builtin_dlcall(context* ctx, gc* ngc) {
     );
 }
 
-nasal_builtin_table dylib_lib_native[] = {
-    {"__dlopen", builtin_dlopen},
-    {"__dlclose", builtin_dlclose},
-    {"__dlcallv", builtin_dlcallv},
-    {"__dlcall", builtin_dlcall},
-    {nullptr, nullptr}
-};
+void load_dylib_builtin() {
+    nasal_builtin_info dylib_lib_native[] = {
+        {"__dlopen", builtin_dlopen},
+        {"__dlclose", builtin_dlclose},
+        {"__dlcallv", builtin_dlcallv},
+        {"__dlcall", builtin_dlcall}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : dylib_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

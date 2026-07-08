@@ -8,17 +8,7 @@
 #include "nasal_parse.hpp"
 #include "nasal_import.hpp"
 
-#include "natives/builtin.hpp"
-#include "natives/coroutine.hpp"
-#include "natives/bits_lib.hpp"
-#include "natives/math_lib.hpp"
-#include "natives/fg_props.hpp"
-#include "natives/io_lib.hpp"
-#include "natives/json_lib.hpp"
-#include "natives/dylib_lib.hpp"
-#include "natives/regex_lib.hpp"
-#include "natives/unix_lib.hpp"
-#include "natives/subprocess.hpp"
+#include "natives/registry.hpp"
 
 #include <iomanip>
 #include <list>
@@ -78,9 +68,8 @@ private:
     std::vector<std::string> const_string_table;
 
     // native functions
-    std::vector<nasal_builtin_table> native_function;
+    std::vector<nasal_builtin_info> native_function;
     std::unordered_map<std::string, usize> native_function_mapper;
-    void load_native_function_table(nasal_builtin_table*);
     void init_native_function();
 
     // generated opcodes

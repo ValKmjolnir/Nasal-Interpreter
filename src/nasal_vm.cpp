@@ -5,7 +5,7 @@ namespace nasal {
 
 void vm::vm_init_enrty(const std::vector<std::string>& strs,
                        const std::vector<f64>& nums,
-                       const std::vector<nasal_builtin_table>& natives,
+                       const std::vector<nasal_builtin_info>& natives,
                        const std::vector<opcode>& code,
                        const std::unordered_map<std::string, u64>& global_symbol,
                        const std::vector<std::string>& filenames,

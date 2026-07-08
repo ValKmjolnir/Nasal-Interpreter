@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal.hpp"
-#include "natives/builtin.hpp"
+#include "natives/registry.hpp"
 
 #include <iostream>
 #include <vector>
@@ -209,7 +209,7 @@ private:
     const u64 index;
     inline static const f64* const_number = nullptr;
     inline static const std::string* const_string = nullptr;
-    inline static const nasal_builtin_table* natives = nullptr;
+    inline static const nasal_builtin_info* natives = nullptr;
     inline static const std::string* files = nullptr;
     inline static std::vector<std::string> global_variable;
 
@@ -218,12 +218,12 @@ public:
     static void set(const f64*,
                     const std::string*,
                     const std::unordered_map<std::string, u64>&,
-                    const nasal_builtin_table*,
+                    const nasal_builtin_info*,
                     const std::string* file_list = nullptr);
     static void set(const f64*,
                     const std::string*,
                     const std::vector<std::string>&,
-                    const nasal_builtin_table*,
+                    const nasal_builtin_info*,
                     const std::string* file_list = nullptr);
     void dump(std::ostream&) const;
     friend std::ostream& operator<<(std::ostream&, const codestream&);

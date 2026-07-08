@@ -1,10 +1,13 @@
-#include "natives/json_lib.hpp"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/registry.hpp"
 #include "util/util.hpp"
 
 #include <iostream>
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 namespace nasal {
 
@@ -395,12 +398,17 @@ var builtin_json_get_error(context* ctx, gc* ngc) {
     return ngc->newstr(json_ptr->get_error());
 }
 
-nasal_builtin_table json_lib_native[] = {
-    {"_json_new", builtin_json_new},
-    {"_json_stringify", builtin_json_stringify},
-    {"_json_parse", builtin_json_parse},
-    {"_json_get_error", builtin_json_get_error},
-    {nullptr, nullptr}
-};
+void load_json_builtin() {
+    nasal_builtin_info json_lib_native[] = {
+        {"_json_new", builtin_json_new},
+        {"_json_stringify", builtin_json_stringify},
+        {"_json_parse", builtin_json_parse},
+        {"_json_get_error", builtin_json_get_error}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : json_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

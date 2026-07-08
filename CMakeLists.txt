@@ -46,6 +46,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/math_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/dylib_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/registry.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/subprocess.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp

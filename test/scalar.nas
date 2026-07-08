@@ -272,7 +272,7 @@ func() {
     var a = nil;
     var b = nil;
     var c = nil;
-    println(a??b??c??"a??b??c?? -> should print this text");
+    println(a ?? b ?? c ?? "a ?? b ?? c ?? -> should print this text");
 
     var a = {b: 2};
     println(a?.b); # should be 2
