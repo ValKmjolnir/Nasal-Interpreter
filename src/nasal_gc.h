@@ -53,9 +53,9 @@ struct gc {
 
     /* heap increase size */
     u64 incr[GC_TYPE_SIZE] = {
-        4,   // vm_str
-        4,   // vm_vec
-        2,   // vm_hash
+        8,   // vm_str
+        128, // vm_vec
+        8,   // vm_hash
         256, // vm_func
         256, // vm_upval
         4,   // vm_obj
