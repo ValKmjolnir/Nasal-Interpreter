@@ -1,4 +1,4 @@
-#include "symbol_finder.hpp"
+#include "ast/symbol_finder.hpp"
 
 namespace nasal {
 

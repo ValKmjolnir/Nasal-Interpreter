@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include "ast/ast.hpp"
-#include "ast/ast_visitor.hpp"
+#include "ast/visitor.hpp"
 
 namespace nasal {
 

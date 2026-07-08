@@ -1,5 +1,5 @@
 #include "nasal_import.hpp"
-#include "symbol_finder.hpp"
+#include "ast/symbol_finder.hpp"
 #include "util/util.hpp"
 #include "util/fs.hpp"
 

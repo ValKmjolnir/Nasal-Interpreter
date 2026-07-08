@@ -3,13 +3,15 @@
 #include "nasal_gc.hpp"
 #include "nasal_err.hpp"
 #include "nasal_lexer.hpp"
+
 #include "ast/ast.hpp"
-#include "ast/ast_visitor.hpp"
-#include "ast/ast_dumper.hpp"
+#include "ast/visitor.hpp"
+#include "ast/dumper.hpp"
+#include "ast/symbol_finder.hpp"
+#include "ast/optimizer.hpp"
+
 #include "nasal_parse.hpp"
 #include "nasal_import.hpp"
-#include "symbol_finder.hpp"
-#include "optimizer.hpp"
 #include "nasal_codegen.hpp"
 #include "nasal_vm.hpp"
 #include "nasal_dbg.hpp"
@@ -102,7 +104,7 @@ void execute(const nasal::cli::cli_config& config) {
     // get running time
     const auto end = clk::now();
     if (config.has(option::cli_show_execute_time)) {
-        double execute_time_sec = static_cast<f64>((end - start).count())/den;
+        double execute_time_sec = static_cast<f64>((end - start).count()) / den;
         double gc_time_sec = gc_time_ms / 1000.0;
         std::clog << "process exited after ";
         std::clog << execute_time_sec << "s, gc time: ";

@@ -12,7 +12,7 @@
 #include "ast/ast.hpp"
 #include "nasal_lexer.hpp"
 #include "nasal_parse.hpp"
-#include "symbol_finder.hpp"
+#include "ast/symbol_finder.hpp"
 #include "util/fs.hpp"
 
 #include <cstring>

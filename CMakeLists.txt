@@ -24,6 +24,17 @@ if (APPLE)
 endif()
 
 # build nasal used object
+
+set(NASAL_AST_MODULE_FILE
+    ${CMAKE_SOURCE_DIR}/src/ast/ast.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/dumper.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/format.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/optimizer.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/symbol_finder.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/visitor.cpp)
+add_library(nasal-ast STATIC ${NASAL_AST_MODULE_FILE})
+target_include_directories(nasal-ast PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/builtin.cpp
@@ -41,10 +52,6 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast/ast_dumper.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast/ast_format.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast/ast_visitor.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast/ast.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_err.cpp
@@ -54,11 +61,10 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp
-    ${CMAKE_SOURCE_DIR}/src/optimizer.cpp
-    ${CMAKE_SOURCE_DIR}/src/symbol_finder.cpp)
+    ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(nasal-object nasal-ast)
 
 # build nasal
 add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)

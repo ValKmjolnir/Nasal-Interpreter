@@ -1,4 +1,4 @@
-#include "ast_visitor.hpp"
+#include "visitor.hpp"
 
 namespace nasal {
 

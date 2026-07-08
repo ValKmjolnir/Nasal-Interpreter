@@ -3,7 +3,7 @@
 #include "nasal_parse.hpp"
 #include "nasal_codegen.hpp"
 #include "nasal_import.hpp"
-#include "optimizer.hpp"
+#include "ast/optimizer.hpp"
 #include "nasal_err.hpp"
 #include "nasal_lexer.hpp"
 #include "repl/repl.hpp"

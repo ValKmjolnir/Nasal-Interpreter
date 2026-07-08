@@ -1,4 +1,4 @@
-#include "ast_dumper.hpp"
+#include "dumper.hpp"
 #include "util/util.hpp"
 
 #include <iostream>

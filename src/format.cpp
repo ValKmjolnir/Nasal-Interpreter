@@ -4,7 +4,7 @@
 #include "nasal_parse.hpp"
 #include "util/util.hpp"
 #include "cli/cli.hpp"
-#include "ast/ast_format.hpp"
+#include "ast/format.hpp"
 
 #include <iostream>
 #include <thread>
