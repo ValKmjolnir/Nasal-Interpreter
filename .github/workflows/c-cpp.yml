@@ -9,7 +9,7 @@ jobs:
   mac-aarch64-build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Update Tag
       run: |
         git fetch --tags origin
@@ -36,7 +36,7 @@ jobs:
   linux-x86_64-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Update Tag
       run: |
         git fetch --tags origin
@@ -63,7 +63,7 @@ jobs:
   windows-x86_64-build-msvc:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Fetch Deps
       run: |
           choco install -y cmake
@@ -97,7 +97,7 @@ jobs:
   windows-x86_64-build-mingw:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Fetch Deps
       run: |
           choco install -y cmake
