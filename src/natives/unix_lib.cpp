@@ -18,6 +18,12 @@
 #include <sys/wait.h>
 #endif
 
+// for environ
+#if defined __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
+
 namespace nasal {
 
 const auto dir_type_name = "nasal::DIR";
