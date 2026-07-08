@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <unordered_map>
 
 namespace nasal {
@@ -14,7 +15,6 @@ namespace nasal {
 enum class vm_type: u8 {
     /* none-gc object */
     vm_none = 0, // error type
-    vm_cnt,      // counter for forindex/foreach loop
     vm_addr,     // var* address
     vm_ret,      // return addres(program counter)
     vm_nil,      // nil
@@ -51,9 +51,12 @@ struct nas_map;   // mapper
 // nas_val includes gc-managed types
 struct nas_val {
     enum class gc_status: u8 {
-        uncollected = 0,
-        collected,
-        found
+        uncollected = 0,     // will be collected by sweep
+        collected,           // already collected and put into unused list
+        found,               // marked as referenced
+        alloc_in_sweep_stage // mark it allocated in incremental sweep stage
+                             // still scan in mark stage
+                             // but do not sweep in this gc cycle
     };
 
     gc_status mark;
@@ -80,7 +83,6 @@ public:
     vm_type type = vm_type::vm_none;
     union {
         u64 ret;
-        i64 cnt;
         f64 num;
         var* addr;
         nas_val* gcobj;
@@ -88,7 +90,6 @@ public:
 
 private:
     var(vm_type t, u64 pc) { type = t; val.ret = pc; }
-    var(vm_type t, i64 ct) { type = t; val.cnt = ct; }
     var(vm_type t, f64 n) { type = t; val.num = n; }
     var(vm_type t, var* p) { type = t; val.addr = p; }
     var(vm_type t, nas_val* p) { type = t; val.gcobj = p; }
@@ -114,9 +115,6 @@ public:
     static var ret(u64 pc) {
         return var(vm_type::vm_ret, pc);
     }
-    static var cnt(i64 n) {
-        return var(vm_type::vm_cnt, n);
-    }
     static var num(f64 n) {
         return var(vm_type::vm_num, n);
     }
@@ -131,7 +129,6 @@ public:
     // get value
     var* addr() const { return val.addr; }
     u64 ret() const { return val.ret; }
-    i64& cnt() { return val.cnt; }
     f64 num() const { return val.num; }
 
 public:
@@ -158,7 +155,6 @@ public:
 
 public:
     bool is_none() const { return type == vm_type::vm_none; }
-    bool is_cnt() const { return type == vm_type::vm_cnt; }
     bool is_addr() const { return type == vm_type::vm_addr; }
     bool is_ret() const { return type == vm_type::vm_ret; }
     bool is_nil() const { return type == vm_type::vm_nil; }
@@ -257,20 +253,29 @@ public:
     nas_upval(): on_stack(true), size(0), stack_frame_offset(nullptr) {}
 
     var& operator[](usize n) {
-        return on_stack? stack_frame_offset[n] : elems[n];
+        return on_stack ? stack_frame_offset[n] : elems[n];
     }
 
     void clear() {
         on_stack = true;
         elems.clear();
         size = 0;
+        stack_frame_offset = nullptr;
+    }
+
+    void move_from_stack() {
+        on_stack = false;
+        elems.resize(size);
+        for (u64 i = 0; i < size; ++i) {
+            elems[i] = stack_frame_offset[i];
+        }
     }
 };
 
 struct nas_ghost {
 private:
     using destructor = void (*)(void*);
-    using marker = void (*)(void*, std::vector<var>*);
+    using marker = void (*)(void*, std::queue<var>*);
 
 public:
     std::string type_name;

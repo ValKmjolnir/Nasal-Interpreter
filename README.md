@@ -265,7 +265,7 @@ func() {
 ```
 
 ```javascript
-[vm] error: must call a vector/hash/string but get number
+[vm] error: must get element from vector/hash/string, but get number
 
 trace back (main)
   0x000854     47 00 00 00     callv   0x0(a.nas:3)

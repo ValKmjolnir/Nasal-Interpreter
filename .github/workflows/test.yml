@@ -11,7 +11,7 @@ jobs:
   mac-aarch64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Build
       run: |
         mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -22,7 +22,7 @@ jobs:
   linux-x86_64:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Build
       run: |
         mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release

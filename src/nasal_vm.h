@@ -434,9 +434,9 @@ inline void vm::o_newf() {
         func.upval = ctx.funcr.func().upval;
 
         // function created in the same local scope shares same closure
-        var upval = (ctx.upvalr.is_nil())?
-            ngc.alloc(vm_type::vm_upval):
-            ctx.upvalr;
+        var upval = (ctx.upvalr.is_nil())
+            ? ngc.alloc(vm_type::vm_upval)
+            : ctx.upvalr;
         // if no upval scope exists, now it's time to create one
         if (ctx.upvalr.is_nil()) {
             upval.upval().size = ctx.funcr.func().local_size;
@@ -760,25 +760,27 @@ inline void vm::o_cnt() {
         );
         return;
     }
-    (++ctx.top)[0] = var::cnt(-1);
+    (++ctx.top)[0] = var::num(-1.0f);
 }
 
 inline void vm::o_findex() {
-    if ((usize)(++ctx.top[0].cnt())>=ctx.top[-1].vec().size()) {
-        ctx.pc = imm[ctx.pc]-1;
+    ctx.top[0] = var::num(ctx.top[0].num() + 1.0f);
+    if ((usize)ctx.top[0].num() >= ctx.top[-1].vec().size()) {
+        ctx.pc = imm[ctx.pc] - 1;
         return;
     }
-    ctx.top[1] = var::num(ctx.top[0].cnt());
+    ctx.top[1] = ctx.top[0];
     ++ctx.top;
 }
 
 inline void vm::o_feach() {
+    ctx.top[0] = var::num(ctx.top[0].num() + 1.0f);
     auto& ref = ctx.top[-1].vec().elems;
-    if ((usize)(++ctx.top[0].cnt())>=ref.size()) {
+    if ((usize)ctx.top[0].num() >= ref.size()) {
         ctx.pc = imm[ctx.pc]-1;
         return;
     }
-    ctx.top[1] = ref[ctx.top[0].cnt()];
+    ctx.top[1] = ref[ctx.top[0].num()];
     ++ctx.top;
 }
 
@@ -840,7 +842,7 @@ inline void vm::o_callv() {
             return;
         }
     } else {
-        die("must call a vector/hash/string but get " + type_name_string(vec));
+        die("must get element from vector/hash/string, but get " + type_name_string(vec));
         return;
     }
 }
@@ -862,7 +864,7 @@ inline void vm::o_callvi() {
 inline void vm::o_callh() {
     var val = ctx.top[0];
     if (!val.is_hash() && !val.is_map()) {
-        die("must call a hash but get " + type_name_string(val));
+        die("must get element from hash, but get " + type_name_string(val));
         return;
     }
 
@@ -1229,13 +1231,7 @@ inline void vm::o_ret() {
 
     // synchronize upvalue
     if (up.is_upval()) {
-        auto& upval = up.upval();
-        auto size = func.func().local_size;
-        upval.on_stack = false;
-        upval.elems.resize(size);
-        for (u64 i = 0; i < size; ++i) {
-            upval.elems[i] = local[i];
-        }
+        up.upval().move_from_stack();
     }
 
     // cannot use gc.cort to judge,

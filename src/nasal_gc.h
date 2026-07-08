@@ -9,6 +9,7 @@
 
 #include <iomanip>
 #include <vector>
+#include <queue>
 #include <chrono>
 #include <thread>
 #include <cstring>
@@ -52,14 +53,25 @@ struct gc {
 
     /* heap increase size */
     u64 incr[GC_TYPE_SIZE] = {
-        256, // vm_str
-        256, // vm_vec
-        256, // vm_hash
+        8,   // vm_str
+        128, // vm_vec
+        8,   // vm_hash
         256, // vm_func
         256, // vm_upval
         4,   // vm_obj
         4,   // vm_co
         1,   // vm_map
+    };
+
+    const u64 max_incr[GC_TYPE_SIZE] = {
+        8192, // vm_str
+        8192, // vm_vec
+        8192, // vm_hash
+        2048, // vm_func
+        2048, // vm_upval
+        256,  // vm_obj
+        256,  // vm_co
+        64,   // vm_map
     };
 
     // total object count
@@ -83,16 +95,15 @@ private:
     void count_mark_time();
     void count_sweep_time();
     void mark();
-    void concurrent_mark(std::vector<var>&, usize, usize);
-    void mark_context_root(std::vector<var>&);
-    void mark_var(std::vector<var>&, var&);
-    void mark_vec(std::vector<var>&, nas_vec&);
-    void mark_hash(std::vector<var>&, nas_hash&);
-    void mark_func(std::vector<var>&, nas_func&);
-    void mark_upval(std::vector<var>&, nas_upval&);
-    void mark_ghost(std::vector<var>&, nas_ghost&);
-    void mark_co(std::vector<var>&, nas_co&);
-    void mark_map(std::vector<var>&, nas_map&);
+    void mark_context_root(std::queue<var>&);
+    void mark_var(std::queue<var>&, var&);
+    void mark_vec(std::queue<var>&, nas_vec&);
+    void mark_hash(std::queue<var>&, nas_hash&);
+    void mark_func(std::queue<var>&, nas_func&);
+    void mark_upval(std::queue<var>&, nas_upval&);
+    void mark_ghost(std::queue<var>&, nas_ghost&);
+    void mark_co(std::queue<var>&, nas_co&);
+    void mark_map(std::queue<var>&, nas_map&);
     void sweep();
 
 public:

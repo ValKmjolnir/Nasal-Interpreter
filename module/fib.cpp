@@ -61,11 +61,11 @@ void ghost_for_test_destructor(void* ptr) {
     std::cout << "}\n";
 }
 
-void ghost_for_test_gc_marker(void* ptr, std::vector<var>* bfs_queue) {
+void ghost_for_test_gc_marker(void* ptr, std::queue<var>* bfs_queue) {
     std::cout << "ghost_for_test::mark (0x";
     std::cout << std::hex << reinterpret_cast<u64>(ptr) << std::dec << ") {\n";
 
-    bfs_queue->push_back(static_cast<ghost_obj*>(ptr)->test_string);
+    bfs_queue->push(static_cast<ghost_obj*>(ptr)->test_string);
 
     std::cout << "    mark 0x" << std::hex;
     std::cout << reinterpret_cast<u64>(ptr) << std::dec << "->test_string;\n";

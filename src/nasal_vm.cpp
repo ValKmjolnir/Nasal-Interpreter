@@ -138,7 +138,6 @@ void vm::value_name_form(const var& val) {
         case vm_type::vm_none:  std::clog << "null "; break;
         case vm_type::vm_ret:   std::clog << "ret  "; break;
         case vm_type::vm_addr:  std::clog << "addr "; break;
-        case vm_type::vm_cnt:   std::clog << "cnt  "; break;
         case vm_type::vm_nil:   std::clog << "nil  "; break;
         case vm_type::vm_num:   std::clog << "num  "; break;
         case vm_type::vm_str:   std::clog << "str  "; break;
@@ -161,7 +160,6 @@ void vm::value_info(var& val) {
         case vm_type::vm_none: break;
         case vm_type::vm_ret: return_address_info(val); break;
         case vm_type::vm_addr: memory_address_info(val); break;
-        case vm_type::vm_cnt: std::clog << val.cnt(); break;
         case vm_type::vm_nil: break;
         case vm_type::vm_num: std::clog << val.num(); break;
         case vm_type::vm_str: raw_string_info(val); break;
@@ -509,7 +507,6 @@ std::string vm::report_out_of_range(f64 index, usize real_size) const {
 std::string vm::type_name_string(const var& value) const {
     switch(value.type) {
         case vm_type::vm_none: return "none";
-        case vm_type::vm_cnt: return "counter";
         case vm_type::vm_addr: return "address";
         case vm_type::vm_ret: return "program counter";
         case vm_type::vm_nil: return "nil";

@@ -112,10 +112,12 @@ std::ostream& operator<<(std::ostream& out, nas_func& func) {
     }
 
     out << ") {..}";
+    out << " entry: 0x" << std::hex << func.entry << std::dec;
     return out;
 }
 
 void nas_func::clear() {
+    entry = 0;
     dynamic_parameter_index = -1;
     local.clear();
     upval.clear();
