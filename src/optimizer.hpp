@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include "ast/ast.h"
-#include "ast/ast_visitor.h"
+#include "ast/ast.hpp"
+#include "ast/ast_visitor.hpp"
 
 namespace nasal {
 

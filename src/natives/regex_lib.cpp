@@ -1,4 +1,4 @@
-#include "natives/regex_lib.h"
+#include "natives/regex_lib.hpp"
 
 namespace nasal {
 

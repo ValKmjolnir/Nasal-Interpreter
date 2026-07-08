@@ -1,7 +1,7 @@
 #ifndef __NASAL_WEB_H__
 #define __NASAL_WEB_H__
 
-#include "nasal.h"
+#include "nasal.hpp"
 
 #ifdef __cplusplus
 extern "C" {

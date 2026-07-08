@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal.h"
-#include "util/util.h"
+#include "nasal.hpp"
+#include "util/util.hpp"
 
 #include <cstring>
 #include <sstream>

@@ -4,10 +4,10 @@
 #pragma warning (disable:4102)
 #endif
 
-#include "nasal_lexer.h"
-#include "repl/repl.h"
-#include "util/util.h"
-#include "util/fs.h"
+#include "nasal_lexer.hpp"
+#include "repl/repl.hpp"
+#include "util/util.hpp"
+#include "util/fs.hpp"
 
 namespace nasal {
 

@@ -1,7 +1,7 @@
-#include "nasal_import.h"
-#include "symbol_finder.h"
-#include "util/util.h"
-#include "util/fs.h"
+#include "nasal_import.hpp"
+#include "symbol_finder.hpp"
+#include "util/util.hpp"
+#include "util/fs.hpp"
 
 #include <memory>
 #include <unordered_set>

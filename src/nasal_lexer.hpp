@@ -11,8 +11,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "nasal.h"
-#include "nasal_err.h"
+#include "nasal.hpp"
+#include "nasal_err.hpp"
 
 namespace nasal {
 

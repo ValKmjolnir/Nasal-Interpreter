@@ -10,9 +10,9 @@
 
 #include <sys/stat.h>
 
-#include "util/util.h"
-#include "util/fs.h"
-#include "nasal.h"
+#include "util/util.hpp"
+#include "util/fs.hpp"
+#include "nasal.hpp"
 
 namespace nasal::fs {
 

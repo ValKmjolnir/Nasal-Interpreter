@@ -2,9 +2,9 @@
 
 #include <regex>
 
-#include "nasal.h"
-#include "nasal_gc.h"
-#include "natives/builtin.h"
+#include "nasal.hpp"
+#include "nasal_gc.hpp"
+#include "natives/builtin.hpp"
 
 namespace nasal {
 

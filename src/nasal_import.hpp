@@ -8,12 +8,12 @@
 #include <io.h>
 #endif
 
-#include "nasal.h"
-#include "ast/ast.h"
-#include "nasal_lexer.h"
-#include "nasal_parse.h"
-#include "symbol_finder.h"
-#include "util/fs.h"
+#include "nasal.hpp"
+#include "ast/ast.hpp"
+#include "nasal_lexer.hpp"
+#include "nasal_parse.hpp"
+#include "symbol_finder.hpp"
+#include "util/fs.hpp"
 
 #include <cstring>
 #include <sstream>

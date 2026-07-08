@@ -1,6 +1,6 @@
-#include "natives/dylib_lib.h"
-#include "util/util.h"
-#include "util/fs.h"
+#include "natives/dylib_lib.hpp"
+#include "util/util.hpp"
+#include "util/fs.hpp"
 
 #include <cstdlib>
 #include <vector>

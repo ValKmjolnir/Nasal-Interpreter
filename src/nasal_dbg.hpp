@@ -1,9 +1,9 @@
 #pragma once
 
-#include "nasal_import.h"
-#include "nasal_err.h"
-#include "nasal_opcode.h"
-#include "nasal_vm.h"
+#include "nasal_import.hpp"
+#include "nasal_err.hpp"
+#include "nasal_opcode.hpp"
+#include "nasal_vm.hpp"
 
 #include <cstring>
 #include <algorithm>

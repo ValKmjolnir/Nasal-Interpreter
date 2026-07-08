@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal.h"
-#include "nasal_vm.h"
+#include "nasal.hpp"
+#include "nasal_vm.hpp"
 
 #include <iostream>
 #include <fstream>

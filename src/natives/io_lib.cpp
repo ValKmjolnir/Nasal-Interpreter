@@ -1,5 +1,5 @@
-#include "natives/io_lib.h"
-#include "util/fs.h"
+#include "natives/io_lib.hpp"
+#include "util/fs.hpp"
 
 #include <fstream>
 #include <sys/stat.h>

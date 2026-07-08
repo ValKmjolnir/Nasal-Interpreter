@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "nasal.h"
-#include "nasal_type.h"
-#include "nasal_gc.h"
+#include "nasal.hpp"
+#include "nasal_type.hpp"
+#include "nasal_gc.hpp"
 
 #ifdef _WIN32
 #include <windows.h>

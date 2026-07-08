@@ -1,5 +1,5 @@
-#include "ast_dumper.h"
-#include "util/util.h"
+#include "ast_dumper.hpp"
+#include "util/util.hpp"
 
 #include <iostream>
 

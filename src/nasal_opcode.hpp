@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nasal.h"
-#include "natives/builtin.h"
+#include "nasal.hpp"
+#include "natives/builtin.hpp"
 
 #include <iostream>
 #include <vector>

@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include "nasal.h"
+#include "nasal.hpp"
 
 namespace nasal {
 

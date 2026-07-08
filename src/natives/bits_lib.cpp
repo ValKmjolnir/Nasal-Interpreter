@@ -1,4 +1,4 @@
-#include "natives/bits_lib.h"
+#include "natives/bits_lib.hpp"
 
 namespace nasal {
 

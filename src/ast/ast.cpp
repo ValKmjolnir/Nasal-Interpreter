@@ -1,5 +1,5 @@
-#include "ast.h"
-#include "ast_visitor.h"
+#include "ast.hpp"
+#include "ast_visitor.hpp"
 
 namespace nasal {
 

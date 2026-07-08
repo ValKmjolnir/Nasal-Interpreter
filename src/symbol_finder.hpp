@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ast/ast.h"
-#include "ast/ast_visitor.h"
+#include "ast/ast.hpp"
+#include "ast/ast_visitor.hpp"
 
 #include <cstring>
 #include <sstream>

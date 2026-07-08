@@ -2,10 +2,10 @@
 
 #include <unordered_map>
 
-#include "nasal.h"
-#include "ast/ast.h"
-#include "nasal_lexer.h"
-#include "nasal_err.h"
+#include "nasal.hpp"
+#include "ast/ast.hpp"
+#include "nasal_lexer.hpp"
+#include "nasal_err.hpp"
 
 namespace nasal {
 

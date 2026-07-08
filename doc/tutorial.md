@@ -579,7 +579,7 @@ First, write a cpp file that you want to generate the dynamic lib, take the `fib
 
 ```C++
 // add header file nasal.h to get api
-#include "nasal.h"
+#include "nasal.hpp"
 double fibonaci(double x) {
     if (x<=2) {
         return x;

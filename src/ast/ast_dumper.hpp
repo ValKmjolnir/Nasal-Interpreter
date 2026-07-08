@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "ast_visitor.h"
-#include "util/util.h"
+#include "ast_visitor.hpp"
+#include "util/util.hpp"
 
 #include <iostream>
 #include <cstring>

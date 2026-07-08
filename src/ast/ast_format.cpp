@@ -1,5 +1,5 @@
-#include "ast_format.h"
-#include "util/util.h"
+#include "ast_format.hpp"
+#include "util/util.hpp"
 
 #include <iostream>
 

@@ -1,10 +1,10 @@
-#include "nasal.h"
-#include "nasal_lexer.h"
-#include "ast/ast.h"
-#include "nasal_parse.h"
-#include "util/util.h"
-#include "cli/cli.h"
-#include "ast/ast_format.h"
+#include "nasal.hpp"
+#include "nasal_lexer.hpp"
+#include "ast/ast.hpp"
+#include "nasal_parse.hpp"
+#include "util/util.hpp"
+#include "cli/cli.hpp"
+#include "ast/ast_format.hpp"
 
 #include <iostream>
 #include <thread>

@@ -1,9 +1,9 @@
 // module for test
 
 #include <iostream>
-#include "../src/nasal.h"
-#include "../src/nasal_type.h"
-#include "../src/nasal_gc.h"
+#include "../src/nasal.hpp"
+#include "../src/nasal_type.hpp"
+#include "../src/nasal_gc.hpp"
 
 namespace nasal {
 namespace fib_module {

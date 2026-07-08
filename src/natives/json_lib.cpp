@@ -1,5 +1,5 @@
-#include "natives/json_lib.h"
-#include "util/util.h"
+#include "natives/json_lib.hpp"
+#include "util/util.hpp"
 
 #include <iostream>
 #include <cstring>

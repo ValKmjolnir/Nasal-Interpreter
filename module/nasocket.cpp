@@ -1,6 +1,6 @@
-#include "../src/nasal.h"
-#include "../src/nasal_type.h"
-#include "../src/nasal_gc.h"
+#include "../src/nasal.hpp"
+#include "../src/nasal_type.hpp"
+#include "../src/nasal_gc.hpp"
 
 #ifndef _MSC_VER
 #include <unistd.h>

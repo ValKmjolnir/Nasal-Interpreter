@@ -1,5 +1,5 @@
-#include "nasal_type.h"
-#include "util/util.h"
+#include "nasal_type.hpp"
+#include "util/util.hpp"
 
 #include <cstring>
 #include <sstream>

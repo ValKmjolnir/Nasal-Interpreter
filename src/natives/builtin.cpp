@@ -1,5 +1,5 @@
-﻿#include "natives/builtin.h"
-#include "util/util.h"
+﻿#include "natives/builtin.hpp"
+#include "util/util.hpp"
 
 #include <chrono>
 

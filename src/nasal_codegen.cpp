@@ -1,5 +1,5 @@
-#include "nasal_codegen.h"
-#include "util/util.h"
+#include "nasal_codegen.hpp"
+#include "util/util.hpp"
 
 namespace nasal {
 

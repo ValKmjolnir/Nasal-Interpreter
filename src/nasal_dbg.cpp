@@ -1,4 +1,4 @@
-#include "nasal_dbg.h"
+#include "nasal_dbg.hpp"
 
 namespace nasal {
 

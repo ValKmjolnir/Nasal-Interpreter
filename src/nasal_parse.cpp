@@ -1,6 +1,6 @@
-#include "ast/ast.h"
-#include "nasal_parse.h"
-#include "util/util.h"
+#include "ast/ast.hpp"
+#include "nasal_parse.hpp"
+#include "util/util.hpp"
 
 namespace nasal {
 

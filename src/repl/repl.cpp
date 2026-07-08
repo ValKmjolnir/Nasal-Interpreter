@@ -1,10 +1,10 @@
-#include "repl.h"
-#include "nasal_lexer.h"
-#include "nasal_parse.h"
-#include "nasal_import.h"
-#include "optimizer.h"
-#include "nasal_codegen.h"
-#include "nasal_vm.h"
+#include "repl.hpp"
+#include "nasal_lexer.hpp"
+#include "nasal_parse.hpp"
+#include "nasal_import.hpp"
+#include "optimizer.hpp"
+#include "nasal_codegen.hpp"
+#include "nasal_vm.hpp"
 
 namespace nasal {
 namespace repl {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal.h"
+#include "nasal.hpp"
 
 #ifdef _WIN32
 #include <windows.h>

@@ -5,10 +5,10 @@
 #include <sstream>
 #include <atomic>
 
-#include "nasal_import.h"
-#include "nasal_gc.h"
-#include "nasal_codegen.h"
-#include "util/util.h"
+#include "nasal_import.hpp"
+#include "nasal_gc.hpp"
+#include "nasal_codegen.hpp"
+#include "util/util.hpp"
 
 #ifdef _MSC_VER
 #pragma warning (disable:4244)

@@ -562,7 +562,7 @@ var limitcall = func(arg_size = 0) {
 
 ```C++
 // 这个头文件得加上，因为我们需要拿到nasal的api
-#include "nasal.h"
+#include "nasal.hpp"
 double fibonaci(double x) {
     if (x<=2) {
         return x;

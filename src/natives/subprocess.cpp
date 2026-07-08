@@ -1,4 +1,4 @@
-#include "natives/subprocess.h"
+#include "natives/subprocess.hpp"
 
 // if you ask why, i will say: only MSVC
 #ifdef _MSC_VER

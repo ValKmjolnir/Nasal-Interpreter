@@ -1,4 +1,4 @@
-#include "natives/fg_props.h"
+#include "natives/fg_props.hpp"
 
 #include <fstream>
 

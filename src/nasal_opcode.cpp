@@ -1,5 +1,5 @@
-#include "nasal_opcode.h"
-#include "util/util.h"
+#include "nasal_opcode.hpp"
+#include "util/util.hpp"
 
 namespace nasal {
 
