@@ -34,9 +34,9 @@ var code=[
 
 # enable unicode
 runtime.windows.set_utf8_output();
-var texture=["  ","██"];
-for (var i=0;i<size(code);i+=1) {
-    for (var j=0;j<size(code[i]);j+=1)
+var texture = ["  ", "██"];
+for (var i = 0; i < size(code); i += 1) {
+    for (var j = 0;j < size(code[i]); j += 1)
         print(texture[code[i][j]]);
     print('\n');
 }

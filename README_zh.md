@@ -335,11 +335,11 @@ local (0x55dcb5b43190 <+7>)
 ```javascript
 source code:
 --> var fib = func(x) {
-        if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+        if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i +=1 )
+        print(fib(i), '\n');
 
 
 next bytecode:
@@ -368,11 +368,11 @@ vm stack (0x7fca7e9f1010, limit 16, total 0)
 ```javascript
 source code:
     var fib = func(x) {
--->     if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+-->     if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:

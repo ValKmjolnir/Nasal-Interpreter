@@ -96,35 +96,35 @@ var block={
     }
 };
 
-var mapgen = func(mapx,mapy) {
-    var (score,gameover)=(0,0);
-    var (empty,unset,full)=(0,1,2);
+var mapgen = func(mapx, mapy) {
+    var (score, gameover) = (0, 0);
+    var (empty, unset, full)=(0, 1, 2);
 
-    if (mapx<1 or mapy<1)
+    if (mapx < 1 or mapy < 1)
         die("map_x or map_y must be greater than 1");
 
     # use in print
-    var line="";
-    for (var i=0;i<mapx;i+=1)
-        line~="══";
-    var head="\e[32m╔"~line~"╗\e[0m\n";
-    var tail="\e[32m╚"~line~"╝\e[0m\n";
+    var line = "";
+    for (var i = 0; i < mapx; i += 1)
+        line ~= "══";
+    var head = "\e[32m╔"~line~"╗\e[0m\n";
+    var tail = "\e[32m╚"~line~"╝\e[0m\n";
 
     # generate new map
-    var map=[];
-    for (var y=0;y<mapy;y+=1) {
-        var tmp=[];
-        for (var x=0;x<mapx;x+=1)
-            append(tmp,empty);
-        append(map,tmp);
+    var map = [];
+    for (var y = 0; y < mapy; y += 1) {
+        var tmp = [];
+        for (var x = 0; x < mapx; x += 1)
+            append(tmp, empty);
+        append(map, tmp);
     }
 
-    var blk=nil;
+    var blk = nil;
     var new_block = func() {
-        blk=block.new(int(mapx/2),0);
+        blk = block.new(int(mapx / 2), 0);
 
         # check if has enough place to place a new block
-        foreach (var i;blk.shape)
+        foreach (var i; blk.shape)
             if (map[blk.y+i[1]][blk.x+i[0]]>=full) {
                 gameover=1;
                 return;

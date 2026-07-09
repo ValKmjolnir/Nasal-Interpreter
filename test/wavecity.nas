@@ -94,7 +94,7 @@ var print_whole_line = func(this_line) {
 
 srand();
 var last_line = [];
-for (var i = 0; i<100; i+=1) {
+for (var i = 0; i < 100; i += 1) {
     append(last_line, " ");
 }
 

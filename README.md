@@ -351,11 +351,11 @@ and the debugger will print this:
 ```javascript
 source code:
 --> var fib = func(x) {
-        if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+        if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:
@@ -384,11 +384,11 @@ This will help you debugging or learning how the vm works:
 ```javascript
 source code:
     var fib = func(x) {
--->     if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+-->     if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:

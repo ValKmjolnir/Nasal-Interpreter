@@ -63,13 +63,13 @@ struct nas_val {
     u8 immutable; // used to mark if a string is immutable
     union elem {
         std::string* str;
-        nas_vec*   vec;
-        nas_hash*  hash;
-        nas_func*  func;
-        nas_upval* upval;
-        nas_ghost* obj;
-        nas_co*    co;
-        nas_map*   map;
+        nas_vec*     vec;
+        nas_hash*    hash;
+        nas_func*    func;
+        nas_upval*   upval;
+        nas_ghost*   obj;
+        nas_co*      co;
+        nas_map*     map;
     } ptr;
 
     nas_val(gc_type);

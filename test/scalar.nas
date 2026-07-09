@@ -261,9 +261,9 @@ var closure_tester = func() {
     ];
 }();
 
-for (var i = 1; i<=10; i += 1) {
+for (var i = 1; i <= 10; i += 1) {
     closure_tester[0]();
-    if (closure_tester[1]()!=i) {
+    if (closure_tester[1]() != i) {
         die("test failed: expect " ~ i ~ ", but get " ~ closure_tester[1]());
     }
 }
