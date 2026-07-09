@@ -128,7 +128,7 @@ var nas_accept(var* args, usize size, gc* ngc) {
         reinterpret_cast<socklen_t*>(&socklen)
     );
 #endif
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     hash["sd"] = var::num(static_cast<double>(client_sd));
     hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));
@@ -187,7 +187,7 @@ var nas_recv(var* args, usize size, gc* ngc) {
         return nas_err("recv", "\"len\" out of range");
     if (!args[2].is_num())
         return nas_err("recv", "\"flags\" muse be a number");
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     char* buf = new char[static_cast<int>(args[1].num())];
     auto recvsize = recv(args[0].num(), buf, args[1].num(), args[2].num());
@@ -210,7 +210,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
         return nas_err("recvfrom", "\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen = sizeof(sockaddr_in);
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     char* buf = new char[static_cast<int>(args[1].num()+1)];
 #ifdef _WIN32

@@ -33,7 +33,7 @@ var module = {
                 return fp;
             },
             close: func() {
-                foreach(var i; keys(f))
+                foreach (var i; keys(f))
                     f[i].close();
                 dylib.dlclose(lib);
             }

@@ -33,6 +33,6 @@ for (var i=0;i<10;i+=1) {
     class_obj[10+i].set(i);
 }
 
-foreach(var object;class_obj) {
+foreach (var object;class_obj) {
     println(object.get(),' ',keys(object));
 }

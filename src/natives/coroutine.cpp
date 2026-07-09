@@ -32,7 +32,7 @@ var builtin_cocreate(context* ctx, gc* ngc) {
             "cannot create another coroutine in a coroutine"
         );
     }
-    auto coroutine_object = ngc->alloc(vm_type::vm_co);
+    auto coroutine_object = ngc->alloc(gc_type::gc_co);
     auto& coroutine = coroutine_object.co();
     coroutine.ctx.pc = coroutine_function.func().entry-1;
 
@@ -119,7 +119,7 @@ var builtin_costatus(context* ctx, gc* ngc) {
     if (!coroutine_object.is_coroutine()) {
         return ngc->newstr("error");
     }
-    switch(coroutine_object.co().status) {
+    switch (coroutine_object.co().status) {
         case nas_co::status::suspended: return ngc->newstr("suspended");
         case nas_co::status::running:   return ngc->newstr("running");
         case nas_co::status::dead:      return ngc->newstr("dead");

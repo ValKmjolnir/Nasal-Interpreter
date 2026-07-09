@@ -54,7 +54,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
         return nas_err("unix::opendir", "cannot open dir <"+path.str()+">");
     }
 #endif
-    var ret = ngc->alloc(vm_type::vm_ghost);
+    var ret = ngc->alloc(gc_type::gc_ghost);
     ret.ghost().set(dir_type_name, dir_entry_destructor, nullptr, p);
     return ret;
 }
@@ -94,7 +94,7 @@ var builtin_chdir(context* ctx, gc* ngc) {
 }
 
 var builtin_environ(context* ctx, gc* ngc) {
-    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
     for (char** env = environ; *env; ++env) {
         vec.push_back(ngc->newstr(*env));

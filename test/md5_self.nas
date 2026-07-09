@@ -203,7 +203,7 @@ var md5check = func() {
         "a7916c5ce54e73b7ddf6a286b36d976d",
         "ec6d5b197ba019db23c719112f3f70b7"
     ];
-    forindex(var i;test_set) {
+    forindex (var i;test_set) {
         var res=md5(test_set[i]);
         if (cmp(res,result[i]))
             println(

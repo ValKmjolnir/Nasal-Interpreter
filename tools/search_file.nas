@@ -24,7 +24,7 @@ var needle = arg[0];
 var result = [];
 var all_files = file.recursive_find_files_flat(".");
 sort(all_files, func(a, b) {return cmp(a, b)<=0;});
-foreach(var f; all_files) {
+foreach (var f; all_files) {
     var pos = find(needle, f);
     if (pos == -1) {
         continue;
@@ -54,11 +54,11 @@ foreach(var f; all_files) {
 }
 
 var max_len = 0;
-foreach(var elem; result) {
+foreach (var elem; result) {
     var temp = size(str(elem.size)~" "~elem.unit);
     max_len = math.max(max_len, temp);
 }
-foreach(var elem; result) {
+foreach (var elem; result) {
     var temp = padding.leftpad(str(elem.size)~" "~elem.unit, max_len);
     println(temp, " | ", elem.info);
 }

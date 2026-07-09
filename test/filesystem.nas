@@ -15,11 +15,11 @@ var files = func(path) {
 var prt = func(s,path) {
     var vec=files(path);
     var last=size(vec)-1;
-    forindex(var i;vec) {
+    forindex (var i;vec) {
         var f=vec[i];
         if (f=="." or f=="..")
             continue;
-        foreach(var j;s)
+        foreach (var j;s)
             print("\e[34m",j,"\e[0m");
         if (unix.isdir(path~"/"~f)) {
             println("\e[34m",i==last?" └─":" ├─","\e[0m\e[33m[",f,"]\e[36m>\e[0m");

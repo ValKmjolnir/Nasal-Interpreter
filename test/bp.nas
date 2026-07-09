@@ -123,7 +123,7 @@ if (cnt>=3e5) {
 } else {
     print('finished after ',cnt,' epoch.\n');
 }
-foreach(var v;training_set) {
+foreach (var v;training_set) {
     run(v);
     print(v,': ',output[0].out,'\n');
 }

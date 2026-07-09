@@ -124,13 +124,13 @@ var mapgen = func(mapx,mapy) {
         blk=block.new(int(mapx/2),0);
 
         # check if has enough place to place a new block
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             if (map[blk.y+i[1]][blk.x+i[0]]>=full) {
                 gameover=1;
                 return;
             }
         # update map
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
     }
     new_block(); # initialize the first block
@@ -157,34 +157,34 @@ var mapgen = func(mapx,mapy) {
 
     var moveleft = func() {
         var (x,y)=(blk.x-1,blk.y);
-        foreach(var i;blk.shape) {
+        foreach (var i;blk.shape) {
             if (x+i[0]<0)
                 return;
             if (map[y+i[1]][x+i[0]]>=full)
                 return;
         }
         # update block state and map
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.x=x;
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
         map_print();
     }
 
     var moveright = func() {
         var (x,y)=(blk.x+1,blk.y);
-        foreach(var i;blk.shape) {
+        foreach (var i;blk.shape) {
             if (x+i[0]>=mapx)
                 return;
             if (map[y+i[1]][x+i[0]]>=full)
                 return;
         }
         # update block state and map
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.x=x;
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
         map_print();
     }
@@ -193,7 +193,7 @@ var mapgen = func(mapx,mapy) {
         var (r,x,y)=(blk.rotate,blk.x,blk.y);
         r=(r+1>=size(blk.type))?0:r+1;
         var shape=blockshape[blk.type[r]];
-        foreach(var i;shape) {
+        foreach (var i;shape) {
             if (x+i[0]>=mapx or x+i[0]<0 or y+i[1]>=mapy or y+i[1]<0)
                 return;
             if (map[y+i[1]][x+i[0]]>=full)
@@ -201,11 +201,11 @@ var mapgen = func(mapx,mapy) {
         }
 
         # update block state and map
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.rotate=r;
         blk.shape=shape;
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
         map_print();
     }
@@ -214,14 +214,14 @@ var mapgen = func(mapx,mapy) {
         var (x,y)=(blk.x,blk.y+1);
         # check if falls to the edge of other blocks or map
         var sethere=0;
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             if (y+i[1]>=mapy or map[y+i[1]][x+i[0]]>=full) {
                 sethere=1;
                 break;
             }
         # set block here and generate a new block
         if (sethere) {
-            foreach(var i;blk.shape)
+            foreach (var i;blk.shape)
                 map[blk.y+i[1]][blk.x+i[0]]=blk.color+full;
             checkmap();
             new_block();
@@ -229,10 +229,10 @@ var mapgen = func(mapx,mapy) {
             return;
         }
         # update block state and map
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=empty;
         blk.y=y;
-        foreach(var i;blk.shape)
+        foreach (var i;blk.shape)
             map[blk.y+i[1]][blk.x+i[0]]=unset;
         map_print();
     }

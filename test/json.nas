@@ -44,7 +44,7 @@ var test_func = func(input_string) {
         println("  ", result);
     } else {
         println("\e[91;1merror\e[0m:");
-        foreach(var err; split("\n", errno)) {
+        foreach (var err; split("\n", errno)) {
             println("  |-> ", err);
         }
         println("  +-> generated with error:");
@@ -94,7 +94,7 @@ var test_json = func(json) {
     ];
 
     srand();
-    foreach(var hash; tmp) {
+    foreach (var hash; tmp) {
         var name = keys(hash)[0];
         hash[name] = [];
         print("\e[1000D", bar.bar(0));
@@ -105,7 +105,7 @@ var test_json = func(json) {
         print("\e[1000D", bar.bar(1), " executing...\n");
     }
     print("\e[1000D", "\e["~str(size(tmp))~"A");
-    foreach(var hash; json.parse(json.stringify(tmp))) {
+    foreach (var hash; json.parse(json.stringify(tmp))) {
         println("\e[1000D", bar.bar(1), " parse done ", keys(hash)[0], " ", size(hash[keys(hash)[0]]));
     }
 };

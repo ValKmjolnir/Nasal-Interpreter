@@ -100,7 +100,7 @@ var builtin_system(context* ctx, gc* ngc) {
 var builtin_input(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var end = local[1];
-    var ret = ngc->alloc(vm_type::vm_str);
+    var ret = ngc->alloc(gc_type::gc_str);
     if (!end.is_str() || end.str().length()>1 || !end.str().length()) {
         std::cin >> ret.str();
     } else {
@@ -123,7 +123,7 @@ var builtin_split(context* ctx, gc* ngc) {
     const auto& s = str.str();
 
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
 
     // empty separator means split every char
@@ -171,7 +171,7 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
     const auto& s = str.str();
 
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
 
     // empty separator means split every char
@@ -281,14 +281,18 @@ var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
 
     usize num = 0;
-    switch(val.type) {
-        case vm_type::vm_num:  return val;
-        case vm_type::vm_str:  num = val.str().length(); break;
-        case vm_type::vm_vec:  num = val.vec().size(); break;
-        case vm_type::vm_hash: num = val.hash().size(); break;
-        case vm_type::vm_map:  num = val.map().mapper.size(); break;
+    switch (val.type) {
+        case vm_type::vm_num: return val;
+        case vm_type::vm_gcobj:
+            switch (val.val.gcobj->type) {
+                case gc_type::gc_str:  num = val.str().length(); break;
+                case gc_type::gc_vec:  num = val.vec().size(); break;
+                case gc_type::gc_hash: num = val.hash().size(); break;
+                case gc_type::gc_map:  num = val.map().mapper.size(); break;
+            } break;
         default: break;
     }
+
     return var::num(static_cast<f64>(num));
 }
 
@@ -333,7 +337,7 @@ var builtin_keys(context* ctx, gc* ngc) {
         return nas_err("native::keys", "\"hash\" must be hash");
     }
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
     if (hash.is_hash()) {
         for (const auto& iter : hash.hash().elems) {
@@ -364,17 +368,21 @@ var builtin_find(context* ctx, gc* ngc) {
 }
 
 var builtin_type(context* ctx, gc* ngc) {
-    switch(ctx->localr[1].type) {
+    switch (ctx->localr[1].type) {
         case vm_type::vm_none: return ngc->newstr("undefined");
         case vm_type::vm_nil: return ngc->newstr("nil");
         case vm_type::vm_num: return ngc->newstr("num");
-        case vm_type::vm_str: return ngc->newstr("str");
-        case vm_type::vm_vec: return ngc->newstr("vec");
-        case vm_type::vm_hash: return ngc->newstr("hash");
-        case vm_type::vm_func: return ngc->newstr("func");
-        case vm_type::vm_ghost: return ngc->newstr("ghost");
-        case vm_type::vm_co: return ngc->newstr("coroutine");
-        case vm_type::vm_map: return ngc->newstr("namespace");
+        case vm_type::vm_gcobj:
+            switch (ctx->localr[1].val.gcobj->type) {
+                case gc_type::gc_str: return ngc->newstr("str");
+                case gc_type::gc_vec: return ngc->newstr("vec");
+                case gc_type::gc_hash: return ngc->newstr("hash");
+                case gc_type::gc_func: return ngc->newstr("func");
+                case gc_type::gc_upval: return ngc->newstr("upvalue");
+                case gc_type::gc_ghost: return ngc->newstr("ghost");
+                case gc_type::gc_co: return ngc->newstr("coroutine");
+                case gc_type::gc_map: return ngc->newstr("namespace");
+            } break;
         default: break;
     }
     return nil;
@@ -505,7 +513,7 @@ var builtin_values(context* ctx, gc* ngc) {
     if (!hash.is_hash() && !hash.is_map()) {
         return nas_err("native::values", "\"hash\" must be hash or namespace");
     }
-    auto vec = ngc->alloc(vm_type::vm_vec);
+    auto vec = ngc->alloc(gc_type::gc_vec);
     auto& v = vec.vec().elems;
     if (hash.is_hash()) {
         for (auto& i : hash.hash().elems) {
@@ -555,8 +563,8 @@ var builtin_caller(context* ctx, gc* ngc) {
         return nil;
     }
     const auto& cs = ctx->func_top[-level_num - 1];
-    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
-    res.vec().elems.push_back(ngc->alloc(vm_type::vm_hash));
+    var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
+    res.vec().elems.push_back(ngc->alloc(gc_type::gc_hash));
     res.vec().elems.push_back(cs.caller);
     res.vec().elems.push_back(ngc->newstr(ctx->files[cs.file_index]));
     res.vec().elems.push_back(var::num(cs.line));
@@ -696,7 +704,7 @@ void time_stamp_destructor(void* ptr) {
 }
 
 var builtin_maketimestamp(context* ctx, gc* ngc) {
-    auto res = ngc->alloc(vm_type::vm_ghost);
+    auto res = ngc->alloc(gc_type::gc_ghost);
     res.ghost().set(
         "nasal-time-stamp",
         time_stamp_destructor,
@@ -741,25 +749,25 @@ var builtin_gcextend(context* ctx, gc* ngc) {
     }
     const auto& s = type.str();
     if (s=="str") {
-        ngc->extend(vm_type::vm_str);
+        ngc->extend(gc_type::gc_str);
     } else if (s=="vec") {
-        ngc->extend(vm_type::vm_vec);
+        ngc->extend(gc_type::gc_vec);
     } else if (s=="hash") {
-        ngc->extend(vm_type::vm_hash);
+        ngc->extend(gc_type::gc_hash);
     } else if (s=="func") {
-        ngc->extend(vm_type::vm_func);
+        ngc->extend(gc_type::gc_func);
     } else if (s=="upval") {
-        ngc->extend(vm_type::vm_upval);
+        ngc->extend(gc_type::gc_upval);
     } else if (s=="ghost") {
-        ngc->extend(vm_type::vm_ghost);
+        ngc->extend(gc_type::gc_ghost);
     } else if (s=="co") {
-        ngc->extend(vm_type::vm_co);
+        ngc->extend(gc_type::gc_co);
     }
     return nil;
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->alloc(gc_type::gc_hash);
     auto& map = res.hash().elems;
     // using ms
     map["total"] = var::num(ngc->status.gc_time_ms());
@@ -819,7 +827,7 @@ var builtin_set_utf8_output(context* ctx, gc* ngc) {
 }
 
 var builtin_terminal_size(context* ctx, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->alloc(gc_type::gc_hash);
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {

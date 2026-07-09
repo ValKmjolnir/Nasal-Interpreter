@@ -45,7 +45,7 @@ func(argv) {
         exit(-1);
     }
     var all_exists=1;
-    foreach(var f;argv) {
+    foreach (var f;argv) {
         if (!io.exists(f)) {
             println("cannot open file <",f,">");
             all_exists=0;
@@ -55,7 +55,7 @@ func(argv) {
         exit(-1);
     }
     var file_content="";
-    foreach(var f;argv)
+    foreach (var f;argv)
         file_content~=io.readfile(f)~" ";
     var vec=keys(spliter(file_content));
     sort(vec,func(a,b) {return cmp(a,b)<=0;});

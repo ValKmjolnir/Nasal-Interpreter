@@ -198,10 +198,10 @@ println(isa(a.new2(),a));# 0
 
 var a=[10,-10,0,1,2,3,nil,"string","hello",[],[0,1,2,3],{},{a:0,b:1,c:2},func {}];
 println("type\tsize\tnum\tsrc");
-foreach(var i;a) {
+foreach (var i;a) {
     println(typeof(i),'\t',size(i),'\t',num(i),'\t',i);
 }
-foreach(i;a) {
+foreach (i;a) {
     ;
 }
 println(runtime.argv());
@@ -242,13 +242,13 @@ print(num("4.94065645841246544176568792868e-324"), "\n");
 
 var test_call_iterator = {iter: 0};
 
-foreach(test_call_iterator.iter; [0, 1, 2, 3]) {
+foreach (test_call_iterator.iter; [0, 1, 2, 3]) {
     println(test_call_iterator);
 }
 
 var test_single_id_iterator = 0;
 
-foreach(test_single_id_iterator; [0, 1, 2, 3]) {
+foreach (test_single_id_iterator; [0, 1, 2, 3]) {
     println(test_single_id_iterator);
 }
 

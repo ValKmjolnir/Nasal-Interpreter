@@ -29,7 +29,7 @@ var recursive_get_prop = func(path = "/") {
     }
     var props = connect.getprop(path);
     var tree = {};
-    foreach(var key; keys(props)) {
+    foreach (var key; keys(props)) {
         if (key=="children") {
             tree.children = [];
             continue;
@@ -40,7 +40,7 @@ var recursive_get_prop = func(path = "/") {
         return tree;
     }
 
-    foreach(var child; props.children) {
+    foreach (var child; props.children) {
         var node = recursive_get_prop(child.path);
         append(tree.children, node);
     }

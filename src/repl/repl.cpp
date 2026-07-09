@@ -54,7 +54,7 @@ bool repl::check_need_more_input() {
         i64 in_bracket = 0;
         i64 in_brace = 0;
         for (const auto& t : nasal_lexer->result()) {
-            switch(t.type) {
+            switch (t.type) {
                 case tok::tk_lcurve: ++in_curve; break;
                 case tok::tk_rcurve: --in_curve; break;
                 case tok::tk_lbracket: ++in_bracket; break;
@@ -86,7 +86,7 @@ int repl::check_need_more_input(std::vector<std::string>& src) {
     i64 in_bracket = 0;
     i64 in_brace = 0;
     for (const auto& t : nasal_lexer->result()) {
-        switch(t.type) {
+        switch (t.type) {
             case tok::tk_lcurve: ++in_curve; break;
             case tok::tk_rcurve: --in_curve; break;
             case tok::tk_lbracket: ++in_bracket; break;

@@ -96,7 +96,7 @@ var f = func(x, y, z, deft = 1) {
 }
 var f = func(args...) {
     var sum = 0;
-    foreach(var i; args) {
+    foreach (var i; args) {
         sum += i;
     }
     return sum;
@@ -260,7 +260,7 @@ for (var i = 0; i<10; i += 1) {
 `forindex` 会获取列表的下标，依次递增. 下标会从`0`递增到`size(elem)-1`结束。
 
 ```javascript
-forindex(var i; elem) {
+forindex (var i; elem) {
     print(elem[i]);
 }
 ```
@@ -268,7 +268,7 @@ forindex(var i; elem) {
 `foreach`会依次直接获取列表中的数据. 这些数据会从`elem[0]`依次获取到`elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i; elem) {
+foreach (var i; elem) {
     print(i);
 }
 ```

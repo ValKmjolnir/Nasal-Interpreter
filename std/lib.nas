@@ -299,7 +299,7 @@ var ghosttype = func(ghost_object) {
 
 # get the index of val in the vec
 var vecindex = func(vec, val) {
-    forindex(var i; vec) {
+    forindex (var i; vec) {
         if (val==vec[i]) {
             return i;
         }
@@ -315,7 +315,7 @@ var isa = func(object, class) {
     if (!contains(object, "parents") or !isvec(object.parents)) {
         return false;
     }
-    foreach(var elem; object.parents) {
+    foreach (var elem; object.parents) {
         if (elem==class or isa(elem, class)) {
             return true;
         }

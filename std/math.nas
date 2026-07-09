@@ -80,7 +80,7 @@ var isnan = func(x) {
 
 var max = func(x, arg...) {
     var res = x;
-    foreach(var i;arg) {
+    foreach (var i;arg) {
         if (i>res) {
             res = i;
         }
@@ -90,7 +90,7 @@ var max = func(x, arg...) {
 
 var min = func(x, arg...) {
     var res = x;
-    foreach(var i;arg) {
+    foreach (var i;arg) {
         if (i<res) {
             res = i;
         }
@@ -100,7 +100,7 @@ var min = func(x, arg...) {
 
 var avg = func(arg...) {
     var x = 0;
-    foreach(var i;arg) {
+    foreach (var i;arg) {
         x += i;
     }
     return x/size(arg);

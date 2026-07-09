@@ -14,8 +14,8 @@ var hex = func() {
         'c','d','e','f'
     ];
     var res=[];
-    foreach(var i;hex_num) {
-        foreach(var j;hex_num) {
+    foreach (var i;hex_num) {
+        foreach (var j;hex_num) {
             append(res,i~j);
         }
     }
@@ -36,7 +36,7 @@ var s = func() {
         return io.readfile(argv[0]);
     }
     var ret="";
-    foreach(var elem;filename)
+    foreach (var elem;filename)
         ret~=io.readfile("./src/" ~ elem);
     return ret;
 }();
@@ -65,7 +65,7 @@ var textprint = func(index) {
 
 # print index
 var indexprint = func(index) {
-    forindex(var i;hex_index) {
+    forindex (var i;hex_index) {
         hex_index[i]=index-int(index/256)*256;
         index=int(index/256);
     }

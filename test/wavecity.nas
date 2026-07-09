@@ -57,7 +57,7 @@ var choice = func(above_block_char,
     var block_char_set = keys(block);
 
     var possible = [];
-    foreach(var bcs; block_char_set) {
+    foreach (var bcs; block_char_set) {
         var this_block = block[bcs];
         if (this_block[0] == above_block[2] and
             this_block[3] == left_block[1]) {
@@ -86,7 +86,7 @@ var choice = func(above_block_char,
 
 var print_whole_line = func(this_line) {
     var res = "";
-    foreach(var i; this_line) {
+    foreach (var i; this_line) {
         res ~= i;
     }
     println(res);

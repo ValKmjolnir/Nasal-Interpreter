@@ -336,11 +336,11 @@ var show = func() {
     var bar_key=keys(bars);
     var spin_key=keys(spinners);
     for (var i=0; i<40; i+=1) {
-        forindex(var j; bar_key) {
+        forindex (var j; bar_key) {
             var k=bar_key[j];
             print("\e["~(j+1)~";1H["~k~"] "~bars[k].bar((i+1)/40));
         }
-        forindex(var j; spin_key) {
+        forindex (var j; spin_key) {
             var k=spin_key[j];
             print("\e["~(j+1+size(bars))~";1H["~k~"] |"~spinners[k].next()~"|");
         }

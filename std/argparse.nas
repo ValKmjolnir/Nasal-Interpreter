@@ -47,13 +47,13 @@ var _help = func(parser) {
         println("Subcommand:");
         var max_pad_length = 0;
         var info_pairs = [];
-        foreach(var cmd; parser.subparser) {
+        foreach (var cmd; parser.subparser) {
             var info = "  "~cmd.name;
             append(info_pairs, {info: info, help: cmd.parser.description});
             info_length = size(info);
             max_pad_length = max_pad_length>info_length? max_pad_length:info_length;
         }
-        foreach(var pair; info_pairs) {
+        foreach (var pair; info_pairs) {
             println(padding.rightpad(pair.info, max_pad_length), "    ", pair.help);
         }
         println();
@@ -62,7 +62,7 @@ var _help = func(parser) {
         println("Options:");
         var max_pad_length = 0;
         var info_pairs = [];
-        foreach(var cmd; parser.command_list) {
+        foreach (var cmd; parser.command_list) {
             if (cmd.need_nargs) {
                 var info = "  "~cmd.full_name~" [args...] "~cmd.short_name~" [args...]";
                 append(info_pairs, {info: info, help: cmd.help});
@@ -76,14 +76,14 @@ var _help = func(parser) {
             var info_length = size(info);
             max_pad_length = max_pad_length>info_length? max_pad_length:info_length;
         }
-        foreach(var pair; info_pairs) {
+        foreach (var pair; info_pairs) {
             println(padding.rightpad(pair.info, max_pad_length), "    ", pair.help);
         }
     }
 }
 
 var _in_list = func(arginfo, command_list) {
-    foreach(var cmd; command_list) {
+    foreach (var cmd; command_list) {
         if (arginfo==cmd.full_name or arginfo==cmd.short_name) {
             return true;
         }
@@ -97,7 +97,7 @@ var _parse = func(parser, args, result_hash) {
         _help(parser);
         exit(0);
     }
-    foreach(var subparser; parser.subparser) {
+    foreach (var subparser; parser.subparser) {
         if (subparser.name==args[0]) {
             result_hash[subparser.name] = true;
             _parse(subparser.parser, size(args)>1? args[1:]:[], result_hash);
@@ -107,7 +107,7 @@ var _parse = func(parser, args, result_hash) {
     for (var i = 0; i<size(args); i += 1) {
         var this_arg = args[i];
         var find_command_flag = false;
-        foreach(var cmd; parser.command_list) {
+        foreach (var cmd; parser.command_list) {
             if (this_arg=="--help" or this_arg=="-h") {
                 _help(parser);
                 exit(0);

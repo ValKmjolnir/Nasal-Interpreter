@@ -251,7 +251,7 @@ var main = func(frame) {
             }
         }
         var s="";
-        forindex(var index;screen) {
+        forindex (var index;screen) {
             s~=screen[index];
             if (index+1-int((index+1)/width)*width==0)
                 s~="\n";

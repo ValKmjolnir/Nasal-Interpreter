@@ -131,8 +131,8 @@ var builtin_dlopen(context* ctx, gc* ngc) {
             "cannot open dynamic lib <" + dl.str() + ">"
         );
     }
-    auto return_hash = ngc->temp = ngc->alloc(vm_type::vm_hash);
-    auto library_object = ngc->alloc(vm_type::vm_ghost);
+    auto return_hash = ngc->temp = ngc->alloc(gc_type::gc_hash);
+    auto library_object = ngc->alloc(gc_type::gc_ghost);
     library_object.ghost().set(
         dynamic_library_type_name,
         dynamic_library_destructor,
@@ -162,7 +162,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     }
     for (u32 i = 0; table[i].name; ++i) {
         auto function_pointer = reinterpret_cast<void*>(table[i].fd);
-        auto function_object = ngc->alloc(vm_type::vm_ghost);
+        auto function_object = ngc->alloc(gc_type::gc_ghost);
         function_object.ghost().set(
             function_address_type_name,
             nullptr,

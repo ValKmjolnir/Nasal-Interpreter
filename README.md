@@ -143,7 +143,7 @@ So do not use variable without using `var` to declare it.
 In Andy's interpreter:
 
 ```javascript
-foreach(i; [0, 1, 2, 3])
+foreach (i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -158,9 +158,9 @@ If you forget to add the keyword `var`, you will get this:
 
 ```javascript
 code: undefined symbol "i"
- --> test.nas:1:9
+ --> test.nas:1:10
   |
-1 | foreach(i; [0, 1, 2, 3])
+1 | foreach (i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"

@@ -252,7 +252,7 @@ void codegen::func_gen(function* node) {
             die("\"me\" should not be parameter", tmp);
         }
         regist_string(name);
-        switch(tmp->get_parameter_type()) {
+        switch (tmp->get_parameter_type()) {
             case parameter::kind::normal_parameter:
                 emit(op_para, const_string_map.at(name), tmp->get_location());
                 break;
@@ -323,7 +323,7 @@ void codegen::call_gen(call_expr* node) {
         return;
     }
     for (auto i : node->get_calls()) {
-        switch(i->get_type()) {
+        switch (i->get_type()) {
             case expr_type::ast_callh:
                 call_hash_gen(reinterpret_cast<call_hash*>(i)); break;
             case expr_type::ast_callv:
@@ -457,7 +457,7 @@ void codegen::mcall(expr* node) {
     calc_gen(call_node->get_first());
     for (usize i = 0; i<call_node->get_calls().size()-1; ++i) {
         auto tmp = call_node->get_calls()[i];
-        switch(tmp->get_type()) {
+        switch (tmp->get_type()) {
             case expr_type::ast_callh:
                 call_hash_gen(reinterpret_cast<call_hash*>(tmp)); break;
             case expr_type::ast_callv:
@@ -471,7 +471,7 @@ void codegen::mcall(expr* node) {
     }
     // the last sub-node will be used to generate memory call expression
     auto tmp = call_node->get_calls().back();
-    switch(tmp->get_type()) {
+    switch (tmp->get_type()) {
         case expr_type::ast_callh:
             mcall_hash(reinterpret_cast<call_hash*>(tmp)); break;
         case expr_type::ast_callv:
@@ -591,7 +591,7 @@ void codegen::definition_gen(definition_expr* node) {
 }
 
 void codegen::assignment_expression(assignment_expr* node) {
-    switch(node->get_assignment_type()) {
+    switch (node->get_assignment_type()) {
         case assignment_expr::kind::equal:
             calc_gen(node->get_right());
             mcall(node->get_left());
@@ -705,7 +705,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     // get memory space of left identifier
     mcall_identifier(reinterpret_cast<identifier*>(node->get_left()));
     // check memory get operand type and replace it with load operand
-    switch(code.back().op) {
+    switch (code.back().op) {
         case op_mcallg: code.back().op = op_loadg; break;
         case op_mcalll: code.back().op = op_loadl; break;
         case op_mupval: code.back().op = op_loadu; break;
@@ -718,7 +718,7 @@ void codegen::replace_left_assignment_with_load(const span& location) {
     // because mcall needs meq(1) (meq-pop) after it to load,
     // but load to mcall-meq-pop in one operand.
     // if is not mcall operand, emit meq(1) (meq-pop).
-    switch(code.back().op) {
+    switch (code.back().op) {
         case op_mcallg: code.back().op = op_loadg; break;
         case op_mcalll: code.back().op = op_loadl; break;
         case op_mupval: code.back().op = op_loadu; break;
@@ -728,7 +728,7 @@ void codegen::replace_left_assignment_with_load(const span& location) {
 }
 
 void codegen::assignment_statement(assignment_expr* node) {
-    switch(node->get_assignment_type()) {
+    switch (node->get_assignment_type()) {
         case assignment_expr::kind::equal:
             gen_assignment_equal_statement(node);
             break;
@@ -850,7 +850,7 @@ void codegen::loop_gen(expr* node) {
     continue_ptr.push_front({});
     break_ptr.push_front({});
 
-    switch(node->get_type()) {
+    switch (node->get_type()) {
         case expr_type::ast_while:
             while_gen(reinterpret_cast<while_expr*>(node)); break;
         case expr_type::ast_for:
@@ -949,7 +949,7 @@ void codegen::forei_gen(forei_expr* node) {
 }
 
 void codegen::statement_generation(expr* node) {
-    switch(node->get_type()) {
+    switch (node->get_type()) {
         case expr_type::ast_null: break;
         case expr_type::ast_def:
             definition_gen(reinterpret_cast<definition_expr*>(node)); break;
@@ -1020,7 +1020,7 @@ void codegen::unary_gen(unary_operator* node) {
     }
 
     calc_gen(node->get_value());
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case unary_operator::kind::negative:
             emit(op_usub, 0, node->get_location()); break;
         case unary_operator::kind::logical_not:
@@ -1041,12 +1041,12 @@ void codegen::binary_gen(binary_operator* node) {
         return;
     }
 
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case binary_operator::kind::condition_or: or_gen(node); return;
         case binary_operator::kind::condition_and: and_gen(node); return;
         default: break;
     }
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case binary_operator::kind::cmpeq:
             calc_gen(node->get_left());
             calc_gen(node->get_right());
@@ -1077,7 +1077,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         default: break;
     }
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case binary_operator::kind::add:
             calc_gen(node->get_left());
             if (node->get_right()->get_type()!=expr_type::ast_num) {
@@ -1220,7 +1220,7 @@ void codegen::trino_gen(ternary_operator* node) {
 }
 
 void codegen::calc_gen(expr* node) {
-    switch(node->get_type()) {
+    switch (node->get_type()) {
         case expr_type::ast_nil:
             emit(op_pnil, 0, node->get_location()); break;
         case expr_type::ast_num:
@@ -1262,7 +1262,7 @@ void codegen::calc_gen(expr* node) {
 }
 
 void codegen::repl_mode_info_output_gen(expr* node) {
-    switch(node->get_type()) {
+    switch (node->get_type()) {
         case expr_type::ast_id:
             call_identifier(reinterpret_cast<identifier*>(node)); break;
         case expr_type::ast_nil:
@@ -1287,7 +1287,7 @@ void codegen::block_gen(code_block* node) {
         if (tmp->get_type()!=expr_type::ast_use) {
             is_use_statement = false;
         }
-        switch(tmp->get_type()) {
+        switch (tmp->get_type()) {
             case expr_type::ast_use:
                 if (!local.empty()) {
                     die("module import is not allowed here.", tmp);

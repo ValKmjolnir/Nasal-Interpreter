@@ -55,7 +55,7 @@ void codestream::dump(std::ostream& out) const {
     // dump operand name
     out << "    " << operand_name_table.at(static_cast<opcode_type>(op)) << "  ";
 
-    switch(op) {
+    switch (op) {
         case op_addeq:
         case op_subeq:
         case op_muleq:

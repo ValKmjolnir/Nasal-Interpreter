@@ -107,10 +107,10 @@ private:
     void sweep();
 
 public:
-    void extend(const vm_type);
+    void extend(const gc_type);
     void init(const std::vector<std::string>&, const std::vector<std::string>&);
     void clear();
-    var alloc(const vm_type);
+    var alloc(const gc_type);
     void context_change(nas_co*);
     void context_reserve();
 
@@ -126,19 +126,19 @@ public:
 
 public:
     var newstr(char c) {
-        var s = alloc(vm_type::vm_str);
+        var s = alloc(gc_type::gc_str);
         s.str() = c;
         return s;
     }
 
     var newstr(const char* buff) {
-        var s = alloc(vm_type::vm_str);
+        var s = alloc(gc_type::gc_str);
         s.str() = std::string(buff);
         return s;
     }
 
     var newstr(const std::string& buff) {
-        var s = alloc(vm_type::vm_str);
+        var s = alloc(gc_type::gc_str);
         s.str() = buff;
         return s;
     }

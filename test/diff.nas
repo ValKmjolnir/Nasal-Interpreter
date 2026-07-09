@@ -8,17 +8,17 @@ var myers = func(src,dst,show_table=0) {
 
     var mat=[];
     setsize(mat,dst_len*src_len);
-    forindex(var i;mat) {
+    forindex (var i;mat) {
         mat[i]=0;
     }
     var visited=[];
     setsize(visited,dst_len*src_len);
-    forindex(var i;visited) {
+    forindex (var i;visited) {
         visited[i]=0;
     }
 
-    forindex(var y;dst)
-        forindex(var x;src)
+    forindex (var y;dst)
+        forindex (var x;src)
             mat[y*src_len+x]=(src[x]==dst[y]);
 
     if (show_table) {
@@ -27,15 +27,15 @@ var myers = func(src,dst,show_table=0) {
             ["+---","| \\ "]
         ];
         var s="";
-        forindex(var y;dst) {
-            forindex(var t;curve[0]) {
-                forindex(var x;src) {
+        forindex (var y;dst) {
+            forindex (var t;curve[0]) {
+                forindex (var x;src) {
                     s~=curve[mat[y*src_len+x]][t];
                 }
                 s~=["+","|"][t]~"\n";
             }
         }
-        forindex(var i;src)
+        forindex (var i;src)
             s~="+---";
         print(s~"+\n");
     }
@@ -45,7 +45,7 @@ var myers = func(src,dst,show_table=0) {
     while (size(vec)) {
         append(total,vec);
         var tmp=[];
-        forindex(var i;vec) {
+        forindex (var i;vec) {
             var elem=vec[i];
             var (x,y)=(elem[1],elem[0]);
 

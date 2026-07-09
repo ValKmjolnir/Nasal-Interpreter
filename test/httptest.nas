@@ -122,7 +122,7 @@ var html_read_file = func(filename) {
                 }
             }
             var is_key=0;
-            foreach(var i;keyword)
+            foreach (var i;keyword)
                 if (tmp==i) {
                     is_key=1;
                     content~="<code class=\"key\">"~tmp~"</code>";

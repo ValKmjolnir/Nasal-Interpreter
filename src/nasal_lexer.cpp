@@ -287,7 +287,7 @@ token lexer::str_gen() {
         if (res[ptr]=='\\' && ptr+1<res.size()) {
             ++column;
             ++ptr;
-            switch(res[ptr]) {
+            switch (res[ptr]) {
                 case '0': str += '\0';    break;
                 case 'a': str += '\a';    break;
                 case 'b': str += '\b';    break;

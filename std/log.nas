@@ -17,7 +17,7 @@ var log = func() {
             if (log_time)
                 print(s[1]," ");
         }
-        foreach(var i;elem)
+        foreach (var i;elem)
             print(i);
         print("\n");
     }

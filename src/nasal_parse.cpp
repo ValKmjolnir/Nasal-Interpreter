@@ -78,7 +78,7 @@ void parse::match(tok type, const char* info) {
             die(thisspan, info);
             return;
         }
-        switch(type) {
+        switch (type) {
             case tok::tk_num: die(thisspan, "expected number"); break;
             case tok::tk_str: die(thisspan, "expected string"); break;
             case tok::tk_id: die(thisspan, "expected identifier"); break;
@@ -144,7 +144,7 @@ bool parse::check_comma(const tok* panic_set) {
 bool parse::check_tuple() {
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while (toks[++check_ptr].type!=tok::tk_eof && curve) {
-        switch(toks[check_ptr].type) {
+        switch (toks[check_ptr].type) {
             case tok::tk_lcurve:   ++curve;   break;
             case tok::tk_lbracket: ++bracket; break;
             case tok::tk_lbrace:   ++brace;   break;
@@ -197,7 +197,7 @@ bool parse::check_special_call() {
     // special call means like this: function_name(a:1, b:2, c:3);
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
     while (toks[++check_ptr].type!=tok::tk_eof && curve) {
-        switch(toks[check_ptr].type) {
+        switch (toks[check_ptr].type) {
             case tok::tk_lcurve:   ++curve;  break;
             case tok::tk_lbracket: ++bracket;break;
             case tok::tk_lbrace:   ++brace;  break;
@@ -488,7 +488,7 @@ expr* parse::calc() {
         node = tmp;
     } else if (tok::tk_eq<=toks[ptr].type && toks[ptr].type<=tok::tk_lnkeq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
-        switch(toks[ptr].type) {
+        switch (toks[ptr].type) {
             case tok::tk_eq: tmp->set_assignment_type(assignment_expr::kind::equal); break;
             case tok::tk_addeq: tmp->set_assignment_type(assignment_expr::kind::add_equal); break;
             case tok::tk_subeq: tmp->set_assignment_type(assignment_expr::kind::sub_equal); break;
@@ -505,7 +505,7 @@ expr* parse::calc() {
                toks[ptr].type==tok::tk_btoreq ||
                toks[ptr].type==tok::tk_btxoreq) {
         auto tmp = new assignment_expr(toks[ptr].loc);
-        switch(toks[ptr].type) {
+        switch (toks[ptr].type) {
             case tok::tk_btandeq: tmp->set_assignment_type(assignment_expr::kind::bitwise_and_equal); break;
             case tok::tk_btoreq: tmp->set_assignment_type(assignment_expr::kind::bitwise_or_equal); break;
             case tok::tk_btxoreq: tmp->set_assignment_type(assignment_expr::kind::bitwise_xor_equal); break;
@@ -599,7 +599,7 @@ expr* parse::cmp_expr() {
     auto node = null_chain_expr();
     while (tok::tk_cmpeq<=toks[ptr].type && toks[ptr].type<=tok::tk_geq) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        switch(toks[ptr].type) {
+        switch (toks[ptr].type) {
             case tok::tk_cmpeq: tmp->set_operator_type(binary_operator::kind::cmpeq); break;
             case tok::tk_neq: tmp->set_operator_type(binary_operator::kind::cmpneq); break;
             case tok::tk_less: tmp->set_operator_type(binary_operator::kind::less); break;
@@ -639,7 +639,7 @@ expr* parse::additive_expr() {
           lookahead(tok::tk_sub) ||
           lookahead(tok::tk_floater)) {
         auto tmp = new binary_operator(toks[ptr].loc);
-        switch(toks[ptr].type) {
+        switch (toks[ptr].type) {
             case tok::tk_add: tmp->set_operator_type(binary_operator::kind::add); break;
             case tok::tk_sub: tmp->set_operator_type(binary_operator::kind::sub); break;
             case tok::tk_floater: tmp->set_operator_type(binary_operator::kind::concat); break;
@@ -682,7 +682,7 @@ expr* parse::multive_expr() {
 
 unary_operator* parse::unary() {
     auto node = new unary_operator(toks[ptr].loc);
-    switch(toks[ptr].type) {
+    switch (toks[ptr].type) {
         case tok::tk_sub:
             node->set_operator_type(unary_operator::kind::negative);
             match(tok::tk_sub);
@@ -762,7 +762,7 @@ expr* parse::scalar() {
 }
 
 call* parse::call_scalar() {
-    switch(toks[ptr].type) {
+    switch (toks[ptr].type) {
         case tok::tk_lcurve:   return callf(); break;
         case tok::tk_lbracket: return callv(); break;
         case tok::tk_dot:      return callh(); break;
@@ -867,7 +867,7 @@ expr* parse::definition() {
     auto node = new definition_expr(toks[ptr].loc);
     if (lookahead(tok::tk_var)) {
         match(tok::tk_var);
-        switch(toks[ptr].type) {
+        switch (toks[ptr].type) {
             case tok::tk_id: node->set_identifier(id());break;
             case tok::tk_lcurve: node->set_multi_define(outcurve_def());break;
             default: die(thisspan, "expected identifier");break;
@@ -971,7 +971,7 @@ multi_assign* parse::multi_assignment() {
 expr* parse::loop() {
     ++in_loop_depth;
     expr* node = nullptr;
-    switch(toks[ptr].type) {
+    switch (toks[ptr].type) {
         case tok::tk_while:   node = while_loop(); break;
         case tok::tk_for:     node = for_loop();   break;
         case tok::tk_forindex:
@@ -1044,7 +1044,7 @@ for_expr* parse::for_loop() {
 
 forei_expr* parse::forei_loop() {
     auto node = new forei_expr(toks[ptr].loc);
-    switch(toks[ptr].type) {
+    switch (toks[ptr].type) {
         case tok::tk_forindex:
             node->set_loop_type(forei_expr::kind::forindex);
             match(tok::tk_forindex);
@@ -1062,7 +1062,7 @@ forei_expr* parse::forei_loop() {
         die(thisspan, "expected iterator");
     }
     node->set_iterator(iter_gen());
-    match(tok::tk_semi, "expected \";\" in foreach/forindex(iter;vector)");
+    match(tok::tk_semi, "expected \";\" in foreach/forindex (iter;vector)");
     if (lookahead(tok::tk_eof)) {
         die(thisspan, "expected vector");
     }

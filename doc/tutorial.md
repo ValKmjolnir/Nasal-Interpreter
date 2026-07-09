@@ -99,7 +99,7 @@ var f = func(x, y, z, deft = 1) {
 }
 var f = func(args...) {
     var sum = 0;
-    foreach(var i; args) {
+    foreach (var i; args) {
         sum += i;
     }
     return sum;
@@ -268,7 +268,7 @@ Nasal has another two kinds of loops that iterates through a vector:
 `forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
 
 ```javascript
-forindex(var i; elem) {
+forindex (var i; elem) {
     print(elem[i]);
 }
 ```
@@ -276,7 +276,7 @@ forindex(var i; elem) {
 `foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i; elem) {
+foreach (var i; elem) {
     print(i);
 }
 ```

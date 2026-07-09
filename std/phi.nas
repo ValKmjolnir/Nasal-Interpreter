@@ -11,7 +11,7 @@ use std.unix;
 var _raw_str = func(s) {
     var v = split("", s);
     var res = "";
-    foreach(var i; v) {
+    foreach (var i; v) {
         if (i=="\r") {
             res ~= "\\r";
             continue;
@@ -130,7 +130,7 @@ var dump = func(tree, indent = "") {
     println(indent, "-------------------");
     var tree_keys = keys(tree);
     sort(tree_keys, func(a,b) {return cmp(a, b)<0;});
-    foreach(var key; tree_keys) {
+    foreach (var key; tree_keys) {
         if (key == "children") {
             continue;
         }
@@ -139,7 +139,7 @@ var dump = func(tree, indent = "") {
     println(indent, "-------------------");
 
     if (contains(tree, "children")) {
-        foreach(var i; tree.children) {
+        foreach (var i; tree.children) {
             dump(i, indent~"    ");
         }
     }

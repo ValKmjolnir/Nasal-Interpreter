@@ -30,7 +30,7 @@ void vm::vm_init_enrty(const std::vector<std::string>& strs,
     ngc.init(strs, argv);
 
     /* init vm globals */
-    auto map_instance = ngc.alloc(vm_type::vm_map);
+    auto map_instance = ngc.alloc(gc_type::gc_map);
     global_symbol_name.resize(global_symbol.size());
     global[global_symbol.at("globals")] = map_instance;
     for (const auto& i : global_symbol) {
@@ -39,7 +39,7 @@ void vm::vm_init_enrty(const std::vector<std::string>& strs,
     }
 
     /* init vm arg */
-    auto arg_instance = ngc.alloc(vm_type::vm_vec);
+    auto arg_instance = ngc.alloc(gc_type::gc_vec);
     global[global_symbol.at("arg")] = arg_instance;
     arg_instance.vec().elems = ngc.env_argv;
 }
@@ -86,16 +86,16 @@ void vm::hash_value_info(var& val, const usize max_show_elems) {
     usize count = 0;
     for (const auto& i : val.hash().elems) {
         ++count;
-        if (count>max_show_elems) {
+        if (count > max_show_elems) {
             break;
         }
 
         std::clog << i.first;
-        if (count!=val.hash().size()) {
+        if (count != val.hash().size()) {
             std::clog << ", ";
         }
     }
-    if (val.hash().size()>max_show_elems) {
+    if (val.hash().size() > max_show_elems) {
         std::clog << "...";
     }
     std::clog << "}";
@@ -103,7 +103,7 @@ void vm::hash_value_info(var& val, const usize max_show_elems) {
 
 void vm::coroutine_value_info(var& val) {
     std::clog << "[ ";
-    switch(val.co().status) {
+    switch (val.co().status) {
         case nas_co::status::dead: std::clog << "dead"; break;
         case nas_co::status::running: std::clog << "running"; break;
         case nas_co::status::suspended: std::clog << "suspended"; break;
@@ -117,16 +117,16 @@ void vm::namespace_value_info(var& val, const usize max_show_elems) {
     usize count = 0;
     for (const auto& i : val.map().mapper) {
         ++count;
-        if (count>max_show_elems) {
+        if (count > max_show_elems) {
             break;
         }
 
         std::clog << i.first;
-        if (count!=val.map().size()) {
+        if (count != val.map().size()) {
             std::clog << ", ";
         }
     }
-    if (val.map().size()>max_show_elems) {
+    if (val.map().size() > max_show_elems) {
         std::clog << "...";
     }
     std::clog << "}";
@@ -134,21 +134,24 @@ void vm::namespace_value_info(var& val, const usize max_show_elems) {
 
 void vm::value_name_form(const var& val) {
     std::clog << "| ";
-    switch(val.type) {
-        case vm_type::vm_none:  std::clog << "null "; break;
-        case vm_type::vm_ret:   std::clog << "ret  "; break;
-        case vm_type::vm_addr:  std::clog << "addr "; break;
-        case vm_type::vm_nil:   std::clog << "nil  "; break;
-        case vm_type::vm_num:   std::clog << "num  "; break;
-        case vm_type::vm_str:   std::clog << "str  "; break;
-        case vm_type::vm_func:  std::clog << "func "; break;
-        case vm_type::vm_upval: std::clog << "upval"; break;
-        case vm_type::vm_vec:   std::clog << "vec  "; break;
-        case vm_type::vm_hash:  std::clog << "hash "; break;
-        case vm_type::vm_ghost: std::clog << "ghost"; break;
-        case vm_type::vm_co:    std::clog << "co   "; break;
-        case vm_type::vm_map:   std::clog << "map  "; break;
-        default:                std::clog << "err  "; break;
+    switch (val.type) {
+        case vm_type::vm_none: std::clog << "null "; break;
+        case vm_type::vm_ret:  std::clog << "ret  "; break;
+        case vm_type::vm_addr: std::clog << "addr "; break;
+        case vm_type::vm_nil:  std::clog << "nil  "; break;
+        case vm_type::vm_num:  std::clog << "num  "; break;
+        case vm_type::vm_gcobj:
+            switch (val.val.gcobj->type) {
+                case gc_type::gc_str:   std::clog << "str  "; break;
+                case gc_type::gc_func:  std::clog << "func "; break;
+                case gc_type::gc_upval: std::clog << "upval"; break;
+                case gc_type::gc_vec:   std::clog << "vec  "; break;
+                case gc_type::gc_hash:  std::clog << "hash "; break;
+                case gc_type::gc_ghost: std::clog << "ghost"; break;
+                case gc_type::gc_co:    std::clog << "co   "; break;
+                case gc_type::gc_map:   std::clog << "map  "; break;
+            } break;
+        default:               std::clog << "err  "; break;
     }
     std::clog << " | ";
 }
@@ -156,20 +159,23 @@ void vm::value_name_form(const var& val) {
 void vm::value_info(var& val) {
     value_name_form(val);
 
-    switch(val.type) {
+    switch (val.type) {
         case vm_type::vm_none: break;
         case vm_type::vm_ret: return_address_info(val); break;
         case vm_type::vm_addr: memory_address_info(val); break;
         case vm_type::vm_nil: break;
         case vm_type::vm_num: std::clog << val.num(); break;
-        case vm_type::vm_str: raw_string_info(val); break;
-        case vm_type::vm_func: std::clog << val.func(); break;
-        case vm_type::vm_upval: upvalue_info(val); break;
-        case vm_type::vm_vec: vector_value_info(val); break;
-        case vm_type::vm_hash: hash_value_info(val, 4); break;
-        case vm_type::vm_ghost: std::clog << val.ghost(); break;
-        case vm_type::vm_co: coroutine_value_info(val); break;
-        case vm_type::vm_map: namespace_value_info(val, 4); break;
+        case vm_type::vm_gcobj:
+            switch (val.val.gcobj->type) {
+                case gc_type::gc_str: raw_string_info(val); break;
+                case gc_type::gc_func: std::clog << val.func(); break;
+                case gc_type::gc_upval: upvalue_info(val); break;
+                case gc_type::gc_vec: vector_value_info(val); break;
+                case gc_type::gc_hash: hash_value_info(val, 4); break;
+                case gc_type::gc_ghost: std::clog << val.ghost(); break;
+                case gc_type::gc_co: coroutine_value_info(val); break;
+                case gc_type::gc_map: namespace_value_info(val, 4); break;
+            } break;
         default: std::clog << "unknown"; break;
     }
     std::clog << "\n";
@@ -505,20 +511,23 @@ std::string vm::report_out_of_range(f64 index, usize real_size) const {
 }
 
 std::string vm::type_name_string(const var& value) const {
-    switch(value.type) {
+    switch (value.type) {
         case vm_type::vm_none: return "none";
         case vm_type::vm_addr: return "address";
         case vm_type::vm_ret: return "program counter";
         case vm_type::vm_nil: return "nil";
         case vm_type::vm_num: return "number";
-        case vm_type::vm_str: return "string";
-        case vm_type::vm_vec: return "vector";
-        case vm_type::vm_hash: return "hash";
-        case vm_type::vm_func: return "function";
-        case vm_type::vm_upval: return "upvalue";
-        case vm_type::vm_ghost: return "ghost type";
-        case vm_type::vm_co: return "coroutine";
-        case vm_type::vm_map: return "namespace";
+        case vm_type::vm_gcobj:
+            switch (value.val.gcobj->type) {
+                case gc_type::gc_str: return "string";
+                case gc_type::gc_vec: return "vector";
+                case gc_type::gc_hash: return "hash";
+                case gc_type::gc_func: return "function";
+                case gc_type::gc_upval: return "upvalue";
+                case gc_type::gc_ghost: return "ghost type";
+                case gc_type::gc_co: return "coroutine";
+                case gc_type::gc_map: return "namespace";
+            } break;
         default: break;
     }
     return "unknown";

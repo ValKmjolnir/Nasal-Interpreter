@@ -134,7 +134,7 @@ bool ast_dumper::visit_code_block(code_block* node) {
 bool ast_dumper::visit_parameter(parameter* node) {
     dump_indent();
     std::cout << "parameter ";
-    switch(node->get_parameter_type()) {
+    switch (node->get_parameter_type()) {
         case parameter::kind::normal_parameter: std::cout << "[normal]"; break;
         case parameter::kind::dynamic_parameter: std::cout << "[dynamic]"; break;
         case parameter::kind::default_parameter: std::cout << "[default]"; break;
@@ -174,7 +174,7 @@ bool ast_dumper::visit_binary_operator(binary_operator* node) {
     }
     dump_indent();
     std::cout << "binary_operator \"";
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case binary_operator::kind::add: std::cout << "+"; break;
         case binary_operator::kind::sub: std::cout << "-"; break;
         case binary_operator::kind::mult: std::cout << "*"; break;
@@ -209,7 +209,7 @@ bool ast_dumper::visit_unary_operator(unary_operator* node) {
     }
     dump_indent();
     std::cout << "unary_operator \"";
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case unary_operator::kind::negative: std::cout << "-"; break;
         case unary_operator::kind::logical_not: std::cout << "!"; break;
         case unary_operator::kind::bitwise_not: std::cout << "~"; break;
@@ -325,7 +325,7 @@ bool ast_dumper::visit_definition_expr(definition_expr* node) {
 bool ast_dumper::visit_assignment_expr(assignment_expr* node) {
     dump_indent();
     std::cout << "assignment ";
-    switch(node->get_assignment_type()) {
+    switch (node->get_assignment_type()) {
         case assignment_expr::kind::add_equal: std::cout << "+="; break;
         case assignment_expr::kind::sub_equal: std::cout << "-="; break;
         case assignment_expr::kind::mult_equal: std::cout << "*="; break;

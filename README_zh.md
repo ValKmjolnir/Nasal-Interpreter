@@ -135,7 +135,7 @@ runtime.windows.set_utf8_output();
 在Andy的解释器中:
 
 ```javascript
-foreach(i; [0, 1, 2, 3])
+foreach (i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -145,9 +145,9 @@ foreach(i; [0, 1, 2, 3])
 
 ```javascript
 code: undefined symbol "i"
- --> test.nas:1:9
+ --> test.nas:1:10
   | 
-1 | foreach(i; [0, 1, 2, 3])
+1 | foreach (i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"

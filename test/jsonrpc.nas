@@ -64,7 +64,7 @@ var server = func(ip,port) {
     var methods={
         callHello:func(vec) {
             var res="hello ";
-            foreach(var i;vec) {
+            foreach (var i;vec) {
                 res~=i~" ";
             }
             return res;

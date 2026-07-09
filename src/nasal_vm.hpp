@@ -408,7 +408,7 @@ inline void vm::o_pstr() {
 }
 
 inline void vm::o_newv() {
-    var newv = ngc.alloc(vm_type::vm_vec);
+    var newv = ngc.alloc(gc_type::gc_vec);
     auto& vec = newv.vec().elems;
     vec.resize(imm[ctx.pc]);
     // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
@@ -421,11 +421,11 @@ inline void vm::o_newv() {
 }
 
 inline void vm::o_newh() {
-    (++ctx.top)[0] = ngc.alloc(vm_type::vm_hash);
+    (++ctx.top)[0] = ngc.alloc(gc_type::gc_hash);
 }
 
 inline void vm::o_newf() {
-    (++ctx.top)[0] = ngc.alloc(vm_type::vm_func);
+    (++ctx.top)[0] = ngc.alloc(gc_type::gc_func);
     auto& func = ctx.top[0].func();
     func.entry = imm[ctx.pc];
     func.parameter_size = 1;
@@ -437,7 +437,7 @@ inline void vm::o_newf() {
 
         // function created in the same local scope shares same closure
         var upval = (ctx.upvalr.is_nil())
-            ? ngc.alloc(vm_type::vm_upval)
+            ? ngc.alloc(gc_type::gc_upval)
             : ctx.upvalr;
         // if no upval scope exists, now it's time to create one
         if (ctx.upvalr.is_nil()) {
@@ -477,20 +477,19 @@ inline void vm::o_dyn() {
 
 inline void vm::o_lnot() {
     var val = ctx.top[0];
-    switch(val.type) {
-        case vm_type::vm_nil: ctx.top[0] = one; break;
-        case vm_type::vm_num: ctx.top[0] = val.num()? zero : one; break;
-        case vm_type::vm_str: {
-            const f64 num = util::str_to_num(val.str().c_str());
-            if (std::isnan(num)) {
-                ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
-            } else {
-                ctx.top[0] = num? zero:one;
-            }
-        } break;
-        default:
-            die("cannot do not-operation on " + type_name_string(val));
-            return;
+    if (val.is_nil()) {
+        ctx.top[0] = one;
+    } else if (val.is_num()) {
+        ctx.top[0] = val.num() ? zero : one;
+    } else if (val.is_str()) {
+        const auto num = util::str_to_num(val.str().c_str());
+        if (std::isnan(num)) {
+            ctx.top[0] = var::num(static_cast<f64>(val.str().empty()));
+        } else {
+            ctx.top[0] = num ? zero : one;
+        }
+    } else {
+        die("cannot do not-operation on " + type_name_string(val));
     }
 }
 
@@ -537,7 +536,7 @@ inline void vm::o_div() { op_calc(/); }
 inline void vm::o_lnk() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
-        ngc.temp = ngc.alloc(vm_type::vm_vec);
+        ngc.temp = ngc.alloc(gc_type::gc_vec);
         for (auto& i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
@@ -584,7 +583,7 @@ inline void vm::o_diveq() { op_calc_eq(/); }
 inline void vm::o_lnkeq() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.memr[0].is_vec()) {
-        ngc.temp = ngc.alloc(vm_type::vm_vec);
+        ngc.temp = ngc.alloc(gc_type::gc_vec);
         for (auto i : ctx.memr[0].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
@@ -926,13 +925,13 @@ inline void vm::o_callfv() {
     var dynamic = nil;
     if (func.dynamic_parameter_index>=0) {
         // load dynamic argument
-        dynamic = ngc.alloc(vm_type::vm_vec);
+        dynamic = ngc.alloc(gc_type::gc_vec);
         for (u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     } else if (parameter_size<argc) {
         // load arguments to default dynamic argument "arg", located at stack+1
-        dynamic = ngc.alloc(vm_type::vm_vec);
+        dynamic = ngc.alloc(gc_type::gc_vec);
         for (u64 i = parameter_size; i<argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
@@ -1050,7 +1049,7 @@ inline void vm::o_slcbeg() {
     // +--------------+
     // | resource_vec | <-- top[-1]
     // +--------------+
-    (++ctx.top)[0] = ngc.alloc(vm_type::vm_vec);
+    (++ctx.top)[0] = ngc.alloc(gc_type::gc_vec);
     if (!ctx.top[-1].is_vec()) {
         die("must slice a vector but get " + type_name_string(ctx.top[-1]));
         return;

@@ -2,7 +2,7 @@
 
 println(globals);
 println(keys(globals));
-foreach(var i; keys(globals)) {
+foreach (var i; keys(globals)) {
     println("var ", i, " = ", typeof(globals[i]), ";");
 }
 

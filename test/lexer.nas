@@ -175,5 +175,5 @@ var lexer = func(file) {
 
 var lex=lexer("std/fg_env.nas");
 lex.compile();
-foreach(var tok;lex.get_token())
+foreach (var tok;lex.get_token())
     print('(',tok.line,' | ',tok.token,')\n');

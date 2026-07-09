@@ -77,7 +77,7 @@ var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
     if (!reg_str.is_str()) {
         return nas_err("regex::match_all", "\"reg\" must be a format string");
     }
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     try {
         const auto& src = source.str();
         auto words_regex = std::regex(reg_str.str());

@@ -86,7 +86,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
         }
     }
 
-    auto obj = ngc->alloc(vm_type::vm_ghost);
+    auto obj = ngc->alloc(gc_type::gc_ghost);
     obj.ghost().set(
         subprocess::name(),
         subprocess_desc_dtor,

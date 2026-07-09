@@ -73,7 +73,7 @@ void ghost_for_test_gc_marker(void* ptr, std::queue<var>* bfs_queue) {
 }
 
 var create_new_ghost(var* args, usize size, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_ghost);
+    var res = ngc->alloc(gc_type::gc_ghost);
     res.ghost().set(
         ghost_for_test,
         ghost_for_test_destructor,

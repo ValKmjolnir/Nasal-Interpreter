@@ -26,7 +26,7 @@ var machine={
         if (!contains(me.states,state))
             me.states[state]=[operand];
         else {
-            foreach(var i;me.states[state])
+            foreach (var i;me.states[state])
                 if (i.symbol==operand.symbol or i.symbol==nil) {
                     println(i);
                     die("conflict operand");
@@ -35,7 +35,7 @@ var machine={
         }
     },
     load:func(data) {
-        foreach(var opr;data) {
+        foreach (var opr;data) {
             var (nstat,sym,csym,move,nextstat)=opr;
             me.add(nstat,operand.new(sym,csym,move,nextstat));
         }
@@ -45,7 +45,7 @@ var machine={
 var prt = func(state,pointer,paper,act=nil) {
     print(act!=nil?act:'','\n\t');
     var s='';
-    foreach(var i;paper)
+    foreach (var i;paper)
         s~=i;
     s~='\n\t';
     for (var i=0;i<pointer;i+=1)
@@ -72,7 +72,7 @@ var run = func(table,start,stop) {
         if (!contains(machine.states,state))
             die("no matching function for state:"~state);
         var found=0;
-        foreach(var action;machine.states[state]) {
+        foreach (var action;machine.states[state]) {
             var (sym,csym,move,next)=(
                 action.symbol,
                 action.changed_symbol,

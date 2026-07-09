@@ -72,7 +72,7 @@ var builtin_open(context* ctx, gc* ngc) {
     if (!file_descriptor) {
         return nil;
     }
-    var return_object = ngc->alloc(vm_type::vm_ghost);
+    var return_object = ngc->alloc(gc_type::gc_ghost);
     return_object.ghost().set(
         file_type_name, filehandle_destructor, nullptr, file_descriptor
     );
@@ -165,7 +165,7 @@ var builtin_readln(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::readln", "not a valid filehandle");
     }
-    auto result = ngc->alloc(vm_type::vm_str);
+    auto result = ngc->alloc(gc_type::gc_str);
     char c;
     while ((c = fgetc(file_descriptor.ghost().get<FILE>()))!=EOF) {
         if (c=='\r') {
@@ -192,7 +192,7 @@ var builtin_stat(context* ctx, gc* ngc) {
     if (stat(name.str().c_str(), &buffer) < 0) {
         return nil;
     }
-    auto result = ngc->alloc(vm_type::vm_vec);
+    auto result = ngc->alloc(gc_type::gc_vec);
     result.vec().elems = {
         var::num(static_cast<f64>(buffer.st_dev)),
         var::num(static_cast<f64>(buffer.st_ino)),
@@ -220,19 +220,19 @@ var builtin_eof(context* ctx, gc* ngc) {
 }
 
 var builtin_stdin(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdin);
     return file_descriptor;
 }
 
 var builtin_stdout(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdout);
     return file_descriptor;
 }
 
 var builtin_stderr(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stderr);
     return file_descriptor;
 }

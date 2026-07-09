@@ -30,7 +30,7 @@ var new = func(filename, mode = "r") {
 
 var find_all_files_with_extension = func(path, extensions...) {
     var in_vec = func(ext) {
-        foreach(var i; extensions) {
+        foreach (var i; extensions) {
             if (ext==i) {
                 return 1;
             }
@@ -38,7 +38,7 @@ var find_all_files_with_extension = func(path, extensions...) {
         return 0;
     }
     var res = [];
-    foreach(var f; find_all_files(path)) {
+    foreach (var f; find_all_files(path)) {
         var tmp = split('.', f);
         if (size(tmp)>1 and in_vec(tmp[-1])) {
             append(res, f);
@@ -94,7 +94,7 @@ var recursive_find_files_flat = func(path) {
     var bfs = [tree_files];
     while (size(bfs) != 0) {
         var first = pop(bfs);
-        foreach(var file_record; first.files) {
+        foreach (var file_record; first.files) {
             if (ishash(file_record)) {
                 append(bfs, file_record);
                 continue;
@@ -107,7 +107,7 @@ var recursive_find_files_flat = func(path) {
 
 var recursive_find_files_with_extension = func(path, extensions...) {
     var in_vec = func(ext) {
-        foreach(var i; extensions) {
+        foreach (var i; extensions) {
             if (ext == i) {
                 return 1;
             }
@@ -117,7 +117,7 @@ var recursive_find_files_with_extension = func(path, extensions...) {
 
     var files = recursive_find_files_flat(path);
     var res = [];
-    foreach(var filename; files) {
+    foreach (var filename; files) {
         var tmp = split('.', filename);
         if (size(tmp) > 1 and in_vec(tmp[-1])) {
             append(res, filename);

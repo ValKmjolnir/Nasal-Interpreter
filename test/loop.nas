@@ -16,18 +16,18 @@ while (j<10) {
 }
 print("\n");
 
-forindex(var j;[0,1,2,3])
+forindex (var j;[0,1,2,3])
     print(j," ");
 print("\n");
-forindex(var j;[0,1,2,3]) {
+forindex (var j;[0,1,2,3]) {
     var a=j;
     print(a*a," ");
 }
 print("\n");
-foreach(var j;[0,1,2,3])
+foreach (var j;[0,1,2,3])
     print([0,1,2,3][j]," ");
 print("\n");
-foreach(var j;[0,1,2,3]) {
+foreach (var j;[0,1,2,3]) {
     var a=[0,1,2,3][j];
     print(a*a-1," ");
 }

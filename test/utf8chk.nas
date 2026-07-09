@@ -10,7 +10,7 @@ var unicode测试 = func() {
         "目前仅支持 utf-8 以及 ascii 格式文件",
         "注意: windows 系统请开启 chcp 65001 代码页"
     ];
-    foreach(var 内容; 测试成功)
+    foreach (var 内容; 测试成功)
         输出(内容~"\n");
 }
 
@@ -46,9 +46,9 @@ var emoji测试 = func() {
         🍾:🍾,
         🐘:🐘
     };
-    foreach(var 📄; 📁)
+    foreach (var 📄; 📁)
         💻(📄, 🎤);
-    foreach(var 📄; keys(🗄️))
+    foreach (var 📄; keys(🗄️))
         💻(📄, 🗄️[📄], 🎤);
 }
 
@@ -66,7 +66,7 @@ var dotsgen = func() {
         append(dots,tmp);
     }
 
-    forindex(var i;dots) {
+    forindex (var i;dots) {
         print(dots[i],(i+1-int((i+1)/32)*32==0)?"\n":"");
     }
     return dots;

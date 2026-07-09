@@ -144,7 +144,7 @@ var builtin_buf(context* ctx, gc* ngc) {
     if (!length.is_num() || length.num()<=0) {
         return nas_err("bits::buf", "\"len\" must be number greater than 0");
     }
-    var str = ngc->alloc(vm_type::vm_str);
+    var str = ngc->alloc(gc_type::gc_str);
     auto& s = str.str();
     s.resize(length.num(), '\0');
     return str;

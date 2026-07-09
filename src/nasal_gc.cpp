@@ -33,7 +33,7 @@ void gc::mark() {
     while (!bfs.empty()) {
         var value = bfs.front();
         bfs.pop();
-        if (value.type <= vm_type::vm_num) {
+        if (value.type != vm_type::vm_gcobj) {
             continue;
         }
         if (value.val.gcobj->mark != nas_val::gc_status::uncollected &&
@@ -78,14 +78,14 @@ void gc::mark_context_root(std::queue<var>& bfs_queue) {
 
 void gc::mark_var(std::queue<var>& bfs_queue, var& value) {
     value.val.gcobj->mark = nas_val::gc_status::found;
-    switch(value.type) {
-        case vm_type::vm_vec: mark_vec(bfs_queue, value.vec()); break;
-        case vm_type::vm_hash: mark_hash(bfs_queue, value.hash()); break;
-        case vm_type::vm_func: mark_func(bfs_queue, value.func()); break;
-        case vm_type::vm_upval: mark_upval(bfs_queue, value.upval()); break;
-        case vm_type::vm_ghost: mark_ghost(bfs_queue, value.ghost()); break;
-        case vm_type::vm_co: mark_co(bfs_queue, value.co()); break;
-        case vm_type::vm_map: mark_map(bfs_queue, value.map()); break;
+    switch (value.val.gcobj->type) {
+        case gc_type::gc_vec: mark_vec(bfs_queue, value.vec()); break;
+        case gc_type::gc_hash: mark_hash(bfs_queue, value.hash()); break;
+        case gc_type::gc_func: mark_func(bfs_queue, value.func()); break;
+        case gc_type::gc_upval: mark_upval(bfs_queue, value.upval()); break;
+        case gc_type::gc_ghost: mark_ghost(bfs_queue, value.ghost()); break;
+        case gc_type::gc_co: mark_co(bfs_queue, value.co()); break;
+        case gc_type::gc_map: mark_map(bfs_queue, value.map()); break;
         default: break;
     }
 }
@@ -171,7 +171,7 @@ void gc::sweep() {
         }
         auto i = memory[index];
         if (i->mark == nas_val::gc_status::uncollected) {
-            unused[static_cast<u32>(i->type) - static_cast<u32>(vm_type::vm_str)].push_back(i);
+            unused[static_cast<u32>(i->type) - static_cast<u32>(gc_type::gc_str)].push_back(i);
             i->mark = nas_val::gc_status::collected;
         } else if (i->mark == nas_val::gc_status::found ||
                    i->mark == nas_val::gc_status::alloc_in_sweep_stage) {
@@ -186,8 +186,8 @@ void gc::sweep() {
     }
 }
 
-void gc::extend(const vm_type type) {
-    const u32 index = static_cast<u32>(type) - static_cast<u32>(vm_type::vm_str);
+void gc::extend(const gc_type type) {
+    const u32 index = static_cast<u32>(type);
     status.object_size[index] += incr[index];
 
     for (u64 i = 0; i < incr[index]; ++i) {
@@ -198,22 +198,22 @@ void gc::extend(const vm_type type) {
         memory.push_back(tmp);
         unused[index].push_back(tmp);
     }
-    switch(type) {
-        case vm_type::vm_str:
+    switch (type) {
+        case gc_type::gc_str:
             total_object_count += incr[index] * sizeof(std::string); break;
-        case vm_type::vm_vec:
+        case gc_type::gc_vec:
             total_object_count += incr[index] * sizeof(nas_vec); break;
-        case vm_type::vm_hash:
+        case gc_type::gc_hash:
             total_object_count += incr[index] * sizeof(nas_hash); break;
-        case vm_type::vm_func:
+        case gc_type::gc_func:
             total_object_count += incr[index] * sizeof(nas_func); break;
-        case vm_type::vm_upval:
+        case gc_type::gc_upval:
             total_object_count += incr[index] * sizeof(nas_upval); break;
-        case vm_type::vm_ghost:
+        case gc_type::gc_ghost:
             total_object_count += incr[index] * sizeof(nas_ghost); break;
-        case vm_type::vm_co:
+        case gc_type::gc_co:
             total_object_count += incr[index] * sizeof(nas_co); break;
-        case vm_type::vm_map:
+        case gc_type::gc_map:
             total_object_count += incr[index] * sizeof(nas_map); break;
         default: break;
     }
@@ -239,7 +239,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
         if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
             continue;
         }
-        strs[i] = var::gcobj(new nas_val(vm_type::vm_str));
+        strs[i] = var::gcobj(new nas_val(gc_type::gc_str));
         strs[i].val.gcobj->immutable = 1;
         strs[i].str() = constant_strings[i];
         total_object_count += strs[i].str().size();
@@ -253,7 +253,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
         if (env_argv[i].is_str() && env_argv[i].str() == argv[i]) {
             continue;
         }
-        env_argv[i] = var::gcobj(new nas_val(vm_type::vm_str));
+        env_argv[i] = var::gcobj(new nas_val(gc_type::gc_str));
         env_argv[i].val.gcobj->immutable = 1;
         env_argv[i].str() = argv[i];
         total_object_count += env_argv[i].str().size();
@@ -276,8 +276,8 @@ void gc::clear() {
     env_argv.clear();
 }
 
-var gc::alloc(const vm_type type) {
-    const u32 index = static_cast<u32>(type) - static_cast<u32>(vm_type::vm_str);
+var gc::alloc(const gc_type type) {
+    const u32 index = static_cast<u32>(type);
     ++status.alloc_count[index];
 
     // if still in incremental sweep stage? do it

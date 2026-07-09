@@ -211,7 +211,7 @@ void dbg::interact() {
             next = true;
             return;
         } else if (res.size()==1) {
-            switch(get_cmd_type(res[0])) {
+            switch (get_cmd_type(res[0])) {
                 case cmd_kind::cmd_help: help(); break;
                 case cmd_kind::cmd_backtrace:
                     function_call_trace();

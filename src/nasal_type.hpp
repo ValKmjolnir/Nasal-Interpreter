@@ -16,33 +16,32 @@ enum class vm_type: u8 {
     /* none-gc object */
     vm_none = 0, // error type
     vm_addr,     // var* address
-    vm_ret,      // return addres(program counter)
+    vm_ret,      // return address (program counter)
     vm_nil,      // nil
     vm_num,      // number
 
     /* gc object */
-    vm_str,      // string
-    vm_vec,      // vector
-    vm_hash,     // hashmap(dict)
-    vm_func,     // function(lambda)
-    vm_upval,    // upvalue
-    vm_ghost,    // ghost type
-    vm_co,       // coroutine
-    vm_map,      // for globals and namespaces
+    vm_gcobj
+};
 
-    /* mark type range */
-    vm_type_size_max
+enum class gc_type: u8 {
+    gc_str,   // string
+    gc_vec,   // vector
+    gc_hash,  // hashmap (dict)
+    gc_func,  // function (lambda)
+    gc_upval, // upvalue
+    gc_ghost, // ghost type
+    gc_co,    // coroutine
+    gc_map    // for globals and namespaces
 };
 
 // size of gc object type
-const u32 GC_TYPE_SIZE =
-    static_cast<u32>(vm_type::vm_type_size_max) -
-    static_cast<u32>(vm_type::vm_str);
+const u32 GC_TYPE_SIZE = static_cast<u32>(gc_type::gc_map) + 1;
 
 // basic types
 struct nas_vec;   // vector
-struct nas_hash;  // hashmap(dict)
-struct nas_func;  // function(lambda)
+struct nas_hash;  // hashmap (dict)
+struct nas_func;  // function (lambda)
 struct nas_upval; // upvalue
 struct nas_ghost; // objects
 struct nas_co;    // coroutine
@@ -60,7 +59,7 @@ struct nas_val {
     };
 
     gc_status mark;
-    vm_type type; // value type
+    gc_type type; // value type
     u8 immutable; // used to mark if a string is immutable
     union elem {
         std::string* str;
@@ -73,7 +72,7 @@ struct nas_val {
         nas_map*   map;
     } ptr;
 
-    nas_val(vm_type);
+    nas_val(gc_type);
     ~nas_val();
     void clear();
 };
@@ -119,7 +118,7 @@ public:
         return var(vm_type::vm_num, n);
     }
     static var gcobj(nas_val* p) {
-        return var(p->type, p);
+        return var(vm_type::vm_gcobj, p);
     }
     static var addr(var* p) {
         return var(vm_type::vm_addr, p);
@@ -159,21 +158,43 @@ public:
     bool is_ret() const { return type == vm_type::vm_ret; }
     bool is_nil() const { return type == vm_type::vm_nil; }
     bool is_num() const { return type == vm_type::vm_num; }
-    bool is_str() const { return type == vm_type::vm_str; }
-    bool is_vec() const { return type == vm_type::vm_vec; }
-    bool is_hash() const { return type == vm_type::vm_hash; }
-    bool is_func() const { return type == vm_type::vm_func; }
-    bool is_upval() const { return type == vm_type::vm_upval; }
-    bool is_ghost() const { return type == vm_type::vm_ghost; }
-    bool is_coroutine() const { return type == vm_type::vm_co; }
-    bool is_map() const { return type == vm_type::vm_map; }
+    bool is_str() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_str;
+    }
+    bool is_vec() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_vec;
+    }
+    bool is_hash() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_hash;
+    }
+    bool is_func() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_func;
+    }
+    bool is_upval() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_upval;
+    }
+    bool is_ghost() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_ghost;
+    }
+    bool is_coroutine() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_co;
+    }
+    bool is_map() const {
+        return type == vm_type::vm_gcobj &&
+               val.gcobj->type == gc_type::gc_map;
+    }
 
 public:
     // convert to number
     f64 to_num() const {
-        return type != vm_type::vm_str
-            ? val.num
-            : util::str_to_num(str().c_str());
+        return !is_str() ? val.num : util::str_to_num(str().c_str());
     }
     // convert to string
     std::string to_str();

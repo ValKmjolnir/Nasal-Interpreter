@@ -171,7 +171,7 @@ bool ast_format::visit_binary_operator(binary_operator* node) {
         out << "(";
     }
     node->get_left()->accept(this);
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case binary_operator::kind::add: out << " + "; break;
         case binary_operator::kind::sub: out << " - "; break;
         case binary_operator::kind::mult: out << " * "; break;
@@ -202,7 +202,7 @@ bool ast_format::visit_unary_operator(unary_operator* node) {
     if (node->get_in_curve()) {
         out << "(";
     }
-    switch(node->get_operator_type()) {
+    switch (node->get_operator_type()) {
         case unary_operator::kind::negative: out << "-"; break;
         case unary_operator::kind::logical_not: out << "!"; break;
         case unary_operator::kind::bitwise_not: out << "~"; break;
@@ -291,7 +291,7 @@ bool ast_format::visit_definition_expr(definition_expr* node) {
 bool ast_format::visit_assignment_expr(assignment_expr* node) {
     dump_formating_node_info(node, "assignment");
     node->get_left()->accept(this);
-    switch(node->get_assignment_type()) {
+    switch (node->get_assignment_type()) {
         case assignment_expr::kind::add_equal: out << " += "; break;
         case assignment_expr::kind::sub_equal: out << " -= "; break;
         case assignment_expr::kind::mult_equal: out << " *= "; break;
