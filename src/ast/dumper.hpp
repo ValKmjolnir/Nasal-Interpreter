@@ -10,7 +10,7 @@
 
 namespace nasal {
 
-class ast_dumper: public ast_visitor {
+class ast_dumper: public visitor {
 private:
     std::vector<std::string> indent;
 

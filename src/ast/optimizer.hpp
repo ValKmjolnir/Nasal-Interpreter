@@ -8,7 +8,7 @@
 namespace nasal {
 
 // experimental optimizer for constant calculation
-class optimizer: public ast_visitor {
+class optimizer: public visitor {
 private:
     void const_string(binary_operator*, string_literal*, string_literal*);
     void const_number(binary_operator*, number_literal*, number_literal*);

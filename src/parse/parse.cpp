@@ -234,6 +234,13 @@ bool parse::need_semi_check(expr* node) {
     return !check_func_end(node);
 }
 
+void parse::update_begin_location(expr* node, expr* source) {
+    if (!node || !source) {
+        return;
+    }
+    node->update_begin_location(source->get_location());
+}
+
 void parse::update_location(expr* node) {
     if (!ptr) {
         return;
@@ -528,6 +535,7 @@ expr* parse::bitwise_or() {
         tmp->set_left(node);
         match(tok::tk_btor);
         tmp->set_right(bitwise_xor());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -543,6 +551,7 @@ expr* parse::bitwise_xor() {
         tmp->set_left(node);
         match(tok::tk_btxor);
         tmp->set_right(bitwise_and());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -558,6 +567,7 @@ expr* parse::bitwise_and() {
         tmp->set_left(node);
         match(tok::tk_btand);
         tmp->set_right(or_expr());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -573,6 +583,7 @@ expr* parse::or_expr() {
         tmp->set_left(node);
         match(tok::tk_or);
         tmp->set_right(and_expr());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -588,6 +599,7 @@ expr* parse::and_expr() {
         tmp->set_left(node);
         match(tok::tk_and);
         tmp->set_right(cmp_expr());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -611,6 +623,7 @@ expr* parse::cmp_expr() {
         tmp->set_left(node);
         match(toks[ptr].type);
         tmp->set_right(null_chain_expr());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -626,6 +639,7 @@ expr* parse::null_chain_expr() {
         tmp->set_left(node);
         match(tok::tk_quesques);
         tmp->set_right(additive_expr());
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -636,8 +650,8 @@ expr* parse::null_chain_expr() {
 expr* parse::additive_expr() {
     auto node = multive_expr();
     while (lookahead(tok::tk_add) ||
-          lookahead(tok::tk_sub) ||
-          lookahead(tok::tk_floater)) {
+           lookahead(tok::tk_sub) ||
+           lookahead(tok::tk_floater)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         switch (toks[ptr].type) {
             case tok::tk_add: tmp->set_operator_type(binary_operator::kind::add); break;
@@ -647,6 +661,7 @@ expr* parse::additive_expr() {
         }
         tmp->set_left(node);
         match(toks[ptr].type);
+        update_begin_location(tmp, node);
         tmp->set_right(multive_expr());
         update_location(tmp);
         node = tmp;
@@ -656,9 +671,9 @@ expr* parse::additive_expr() {
 }
 
 expr* parse::multive_expr() {
-    expr* node=(lookahead(tok::tk_sub) ||
-                lookahead(tok::tk_not) ||
-                lookahead(tok::tk_floater))? unary():scalar();
+    expr* node = (lookahead(tok::tk_sub) ||
+                  lookahead(tok::tk_not) ||
+                  lookahead(tok::tk_floater)) ? unary() : scalar();
     while (lookahead(tok::tk_mult) || lookahead(tok::tk_div)) {
         auto tmp = new binary_operator(toks[ptr].loc);
         if (lookahead(tok::tk_mult)) {
@@ -671,8 +686,9 @@ expr* parse::multive_expr() {
         tmp->set_right(
             (lookahead(tok::tk_sub) ||
              lookahead(tok::tk_not) ||
-             lookahead(tok::tk_floater))? unary():scalar()
+             lookahead(tok::tk_floater)) ? unary() : scalar()
         );
+        update_begin_location(tmp, node);
         update_location(tmp);
         node = tmp;
     }
@@ -700,7 +716,7 @@ unary_operator* parse::unary() {
     node->set_value(
         (lookahead(tok::tk_sub) ||
          lookahead(tok::tk_not) ||
-         lookahead(tok::tk_floater))? unary():scalar()
+         lookahead(tok::tk_floater)) ? unary() : scalar()
     );
     update_location(node);
     return node;

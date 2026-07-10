@@ -97,6 +97,7 @@ private:
     bool check_in_curve_multi_definition();
     bool check_special_call();
     bool need_semi_check(expr*);
+    void update_begin_location(expr*, expr*);
     void update_location(expr*);
 
 private:

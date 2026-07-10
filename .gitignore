@@ -52,8 +52,10 @@ cmake-windows-*
 *.app
 nasal
 nasal-format
+nasal-linter
 nasal.exe
 nasal-format.exe
+nasal-linter.exe
 
 # Visual Studio specific
 *.sln

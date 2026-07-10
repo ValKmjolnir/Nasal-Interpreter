@@ -47,7 +47,7 @@ enum class expr_type {
     ast_ret          // return keyword, only used in function block
 };
 
-class ast_visitor;
+class visitor;
 class identifier;
 class hash_pair;
 class parameter;
@@ -76,11 +76,15 @@ public:
     const auto& get_location() const { return nd_loc; }
     const auto get_line() const { return nd_loc.begin_line; }
     auto get_type() const { return nd_type; }
+    void update_begin_location(const span& location) {
+        nd_loc.begin_line = location.begin_line;
+        nd_loc.begin_column = location.begin_column;
+    }
     void update_location(const span& location) {
         nd_loc.end_line = location.end_line;
         nd_loc.end_column = location.end_column;
     }
-    virtual void accept(ast_visitor*);
+    virtual void accept(visitor*);
 };
 
 class use_stmt: public expr {
@@ -91,7 +95,7 @@ public:
     use_stmt(const span& location):
         expr(location, expr_type::ast_use) {}
     ~use_stmt() override;
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
     void add_path(identifier* node) {path.push_back(node);}
     const auto& get_path() const {return path;}
 };
@@ -101,7 +105,7 @@ public:
     call(const span& location, expr_type node_type):
         expr(location, node_type) {}
     virtual ~call() = default;
-    virtual void accept(ast_visitor*);
+    virtual void accept(visitor*);
 };
 
 class null_expr: public expr {
@@ -109,7 +113,7 @@ public:
     null_expr(const span& location):
         expr(location, expr_type::ast_null) {}
     ~null_expr() override = default;
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class nil_expr: public expr {
@@ -117,7 +121,7 @@ public:
     nil_expr(const span& location):
         expr(location, expr_type::ast_nil) {}
     ~nil_expr() override = default;
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class number_literal: public expr {
@@ -131,7 +135,7 @@ public:
     ~number_literal() override = default;
     f64 get_number() const { return number; }
     const std::string& get_raw_text() const { return raw_text; }
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class string_literal: public expr {
@@ -143,7 +147,7 @@ public:
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() override = default;
     const std::string& get_content() const {return content;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class identifier: public expr {
@@ -155,7 +159,7 @@ public:
         expr(location, expr_type::ast_id), name(str) {}
     ~identifier() override = default;
     const std::string& get_name() const {return name;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class bool_literal: public expr {
@@ -167,7 +171,7 @@ public:
         expr(location, expr_type::ast_bool), flag(bool_flag) {}
     ~bool_literal() override = default;
     bool get_flag() const {return flag;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class vector_expr: public expr {
@@ -180,7 +184,7 @@ public:
     ~vector_expr() override;
     void add_element(expr* node) {elements.push_back(node);}
     std::vector<expr*>& get_elements() {return elements;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class hash_expr: public expr {
@@ -193,7 +197,7 @@ public:
     ~hash_expr() override;
     void add_member(hash_pair* node) {members.push_back(node);}
     std::vector<hash_pair*>& get_members() {return members;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class hash_pair: public expr {
@@ -210,7 +214,7 @@ public:
     void set_value(expr* node) {value = node;}
     const std::string& get_name() const {return name;}
     expr* get_value() {return value;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class function: public expr {
@@ -227,7 +231,7 @@ public:
     void set_code_block(code_block* node) {block = node;}
     std::vector<parameter*>& get_parameter_list() {return parameter_list;}
     code_block* get_code_block() {return block;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class code_block: public expr {
@@ -240,7 +244,7 @@ public:
     ~code_block() override;
     void add_expression(expr* node) {expressions.push_back(node);}
     std::vector<expr*>& get_expressions() {return expressions;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class parameter: public expr {
@@ -267,7 +271,7 @@ public:
     auto get_parameter_type() {return type;}
     const auto& get_parameter_name() const {return name;}
     auto get_default_value() {return default_value;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class ternary_operator: public expr {
@@ -287,7 +291,7 @@ public:
     expr* get_condition() {return condition;}
     expr* get_left() {return left;}
     expr* get_right() {return right;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class binary_operator: public expr {
@@ -336,7 +340,7 @@ public:
     auto get_right() {return right;}
     auto get_optimized_number() {return optimized_const_number;}
     auto get_optimized_string() {return optimized_const_string;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class unary_operator: public expr {
@@ -363,7 +367,7 @@ public:
     auto get_operator_type() const {return type;}
     auto get_value() {return value;}
     auto get_optimized_number() {return optimized_number;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class call_expr: public expr {
@@ -380,7 +384,7 @@ public:
     void add_call(call* node) {calls.push_back(node);}
     expr* get_first() {return first;}
     auto& get_calls() {return calls;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class call_hash: public call {
@@ -393,7 +397,7 @@ public:
         field(name) {}
     ~call_hash() override = default;
     const std::string& get_field() const {return field;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class null_access: public call {
@@ -406,7 +410,7 @@ public:
         field(name) {}
     ~null_access() override = default;
     const std::string& get_field() const {return field;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class call_vector: public call {
@@ -419,7 +423,7 @@ public:
     ~call_vector() override;
     void add_slice(slice_vector* node) {calls.push_back(node);}
     std::vector<slice_vector*>& get_slices() {return calls;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class call_function: public call {
@@ -432,7 +436,7 @@ public:
     ~call_function() override;
     void add_argument(expr* node) {args.push_back(node);}
     std::vector<expr*>& get_argument() {return args;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class slice_vector: public expr {
@@ -449,7 +453,7 @@ public:
     void set_end(expr* node) {end = node;}
     expr* get_begin() {return begin;}
     expr* get_end() {return end;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class definition_expr: public expr {
@@ -473,7 +477,7 @@ public:
     multi_identifier* get_variables() {return variables;}
     tuple_expr* get_tuple() {return tuple;}
     expr* get_value() {return value;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class assignment_expr: public expr {
@@ -506,7 +510,7 @@ public:
     auto get_assignment_type() const {return type;}
     auto get_left() {return left;}
     auto get_right() {return right;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class multi_identifier: public expr {
@@ -519,7 +523,7 @@ public:
     ~multi_identifier() override;
     void add_var(identifier* node) {variables.push_back(node);}
     std::vector<identifier*>& get_variables() {return variables;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class tuple_expr: public expr {
@@ -532,7 +536,7 @@ public:
     ~tuple_expr() override;
     void add_element(expr* node) {elements.push_back(node);}
     std::vector<expr*>& get_elements() {return elements;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class multi_assign: public expr {
@@ -549,7 +553,7 @@ public:
     void set_value(expr* node) {value = node;}
     tuple_expr* get_tuple() {return tuple;}
     expr* get_value() {return value;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class while_expr: public expr {
@@ -566,7 +570,7 @@ public:
     void set_code_block (code_block* node) {block = node;}
     expr* get_condition() {return condition;}
     code_block* get_code_block() {return block;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class for_expr: public expr {
@@ -590,7 +594,7 @@ public:
     expr* get_condition() {return condition;}
     expr* get_step() {return step;}
     code_block* get_code_block() {return block;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class iter_expr: public expr {
@@ -611,7 +615,7 @@ public:
     identifier* get_name() {return name;}
     call_expr* get_call() {return call;}
     bool is_definition() const {return is_iterator_definition;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class forei_expr: public expr {
@@ -641,7 +645,7 @@ public:
     auto get_iterator() {return iterator;}
     auto get_value() {return vector_node;}
     auto get_code_block() {return block;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class condition_expr: public expr {
@@ -661,7 +665,7 @@ public:
     if_expr* get_if_statement() {return if_stmt;}
     std::vector<if_expr*>& get_elsif_stataments() {return elsif_stmt;}
     if_expr* get_else_statement() {return else_stmt;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class if_expr: public expr {
@@ -678,7 +682,7 @@ public:
     void set_code_block(code_block* node) {block = node;}
     expr* get_condition() {return condition;}
     code_block* get_code_block() {return block;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class continue_expr: public expr {
@@ -686,7 +690,7 @@ public:
     continue_expr(const span& location):
         expr(location, expr_type::ast_continue) {}
     ~continue_expr() override = default;
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class break_expr: public expr {
@@ -694,7 +698,7 @@ public:
     break_expr(const span& location):
         expr(location, expr_type::ast_break) {}
     ~break_expr() = default;
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 class return_expr: public expr {
@@ -708,7 +712,7 @@ public:
     ~return_expr() override;
     void set_value(expr* node) {value = node;}
     expr* get_value() {return value;}
-    void accept(ast_visitor*) override;
+    void accept(visitor*) override;
 };
 
 }

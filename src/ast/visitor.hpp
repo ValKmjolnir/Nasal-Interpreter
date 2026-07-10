@@ -4,7 +4,7 @@
 
 namespace nasal {
 
-class ast_visitor {
+class visitor {
 public:
     virtual bool visit_expr(expr*);
     virtual bool visit_use_stmt(use_stmt*);

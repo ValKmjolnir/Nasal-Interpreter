@@ -77,14 +77,20 @@ target_link_libraries(nasal nasal-object)
 add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/format.cpp)
 target_link_libraries(nasal-format nasal-object)
 
+# build nasal-linter
+add_executable(nasal-linter ${CMAKE_SOURCE_DIR}/src/linter/linter.cpp)
+target_link_libraries(nasal-linter nasal-object)
+
 # link ldl and lpthread
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     target_link_libraries(nasal dl)
     target_link_libraries(nasal pthread)
     target_link_libraries(nasal-format pthread)
+    target_link_libraries(nasal-linter pthread)
 endif()
 target_include_directories(nasal PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_include_directories(nasal-format PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(nasal-linter PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # copy nasal from build dir to the outside dir
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
@@ -99,6 +105,12 @@ if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/build/nasal-format
                 ${CMAKE_SOURCE_DIR}/nasal-format
+    )
+    add_custom_command(
+        TARGET nasal-linter POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/build/nasal-linter
+                ${CMAKE_SOURCE_DIR}/nasal-linter
     )
 endif()
 

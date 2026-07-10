@@ -11,7 +11,7 @@
 
 namespace nasal {
 
-class ast_format: public ast_visitor {
+class ast_format: public visitor {
 private:
     std::ofstream out;
     std::vector<std::string> indent;
