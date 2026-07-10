@@ -131,7 +131,7 @@ var nas_accept(var* args, usize size, gc* ngc) {
     var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     hash["sd"] = var::num(static_cast<double>(client_sd));
-    hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));
+    hash["ip"] = ngc->alloc_str(inet_ntoa(client.sin_addr));
     ngc->temp = nil;
     return res;
 }
@@ -193,7 +193,7 @@ var nas_recv(var* args, usize size, gc* ngc) {
     auto recvsize = recv(args[0].num(), buf, args[1].num(), args[2].num());
     hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
-    hash["str"] = ngc->newstr(buf);
+    hash["str"] = ngc->alloc_str(buf);
     delete[] buf;
     ngc->temp = nil;
     return res;
@@ -234,16 +234,16 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
 #endif
     hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
-    hash["str"] = ngc->newstr(buf);
+    hash["str"] = ngc->alloc_str(buf);
     delete[] buf;
-    hash["fromip"] = ngc->newstr(inet_ntoa(addr.sin_addr));
+    hash["fromip"] = ngc->alloc_str(inet_ntoa(addr.sin_addr));
     hash["port"] = var::num(ntohs(addr.sin_port));
     ngc->temp = nil;
     return res;
 }
 
 var nas_errno(var* args, usize size, gc* ngc) {
-    return ngc->newstr(strerror(errno));
+    return ngc->alloc_str(strerror(errno));
 }
 
 module_func_info func_tbl[] = {

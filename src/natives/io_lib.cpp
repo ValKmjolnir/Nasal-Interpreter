@@ -31,7 +31,7 @@ var builtin_readfile(context* ctx, gc* ngc) {
     if (!in.fail()) {
         rd << in.rdbuf();
     }
-    return ngc->newstr(rd.str());
+    return ngc->alloc_str(rd.str());
 }
 
 var builtin_fout(context* ctx, gc* ngc) {

@@ -94,7 +94,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
     res.ghost().get<ghost_obj>()->number = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";
 
-    res.ghost().get<ghost_obj>()->test_string = ngc->newstr("just for test");
+    res.ghost().get<ghost_obj>()->test_string = ngc->alloc_str("just for test");
     std::cout << "set_new_ghost: successfully set ghost.test_string = just for test\n";
     return nil;
 }

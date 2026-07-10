@@ -260,7 +260,7 @@ void dbg::run(const codegen& gen,
     const auto& file_list = linker.get_file_list();
     file_list_size = file_list.size();
 
-    vm_init_enrty(
+    vm_init_entry(
         gen.strs(),
         gen.nums(),
         gen.natives(),

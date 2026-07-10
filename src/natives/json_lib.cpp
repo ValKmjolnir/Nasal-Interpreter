@@ -43,7 +43,7 @@ std::string get_content(json_token_type type) {
     return "";
 }
 
-struct token {
+struct json_token {
     json_token_type type;
     std::string content;
 };
@@ -53,7 +53,7 @@ private:
     std::string text = "";
     usize line = 1;
     usize ptr = 0;
-    token this_token;
+    json_token this_token;
     var temp_stack = nil;
     std::string info = "";
 
@@ -267,7 +267,7 @@ void json::vector_member(nas_vec& vec, gc* ngc) {
     } else if (this_token.type==json_token_type::tok_lbrkt) {
         vec.elems.push_back(vector_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_str) {
-        vec.elems.push_back(ngc->newstr(this_token.content));
+        vec.elems.push_back(ngc->alloc_str(this_token.content));
         next();
     } else if (this_token.type==json_token_type::tok_num) {
         vec.elems.push_back(var::num(util::str_to_num(this_token.content.c_str())));
@@ -306,7 +306,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
         hash.elems.insert({name, vector_object_generate(ngc)});
     } else if (this_token.type==json_token_type::tok_str ||
         this_token.type==json_token_type::tok_bool) {
-        hash.elems.insert({name, ngc->newstr(this_token.content)});
+        hash.elems.insert({name, ngc->alloc_str(this_token.content)});
         next();
     } else if (this_token.type==json_token_type::tok_num) {
         hash.elems.insert({name, var::num(util::str_to_num(this_token.content.c_str()))});
@@ -386,7 +386,7 @@ var builtin_json_stringify(context* ctx, gc* ngc) {
         return nas_err("json::stringify", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
-    return ngc->newstr(json_ptr->stringify(object));
+    return ngc->alloc_str(json_ptr->stringify(object));
 }
 
 var builtin_json_parse(context* ctx, gc* ngc) {
@@ -408,7 +408,7 @@ var builtin_json_get_error(context* ctx, gc* ngc) {
         return nas_err("json::get_error", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
-    return ngc->newstr(json_ptr->get_error());
+    return ngc->alloc_str(json_ptr->get_error());
 }
 
 void load_json_builtin() {

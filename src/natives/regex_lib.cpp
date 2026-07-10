@@ -61,11 +61,11 @@ var builtin_regex_replace(context* ctx, gc* ngc) noexcept {
             std::regex(reg_str.str()),
             fmt.str()
         );
-        return ngc->newstr(res);
+        return ngc->alloc_str(res);
     } catch(const std::regex_error& e) {
         return nas_err("regex::replace", e.what());
     }
-    return ngc->newstr(source.str());
+    return ngc->alloc_str(source.str());
 }
 
 var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
@@ -84,7 +84,7 @@ var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
         auto begin = std::sregex_iterator(src.begin(), src.end(), words_regex);
         auto end = std::sregex_iterator();
         for (auto i = begin; i!=end; ++i) {
-            res.vec().elems.push_back(ngc->newstr((*i).str()));
+            res.vec().elems.push_back(ngc->alloc_str((*i).str()));
         }
     } catch(const std::regex_error& e) {
         return nas_err("regex::match_all", e.what());

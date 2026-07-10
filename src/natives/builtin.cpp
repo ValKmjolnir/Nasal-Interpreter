@@ -129,7 +129,7 @@ var builtin_split(context* ctx, gc* ngc) {
     // empty separator means split every char
     if (!sep.length()) {
         for (auto i : s) {
-            vec.push_back(ngc->newstr(i));
+            vec.push_back(ngc->alloc_str(i));
         }
         ngc->temp = nil;
         return res;
@@ -139,13 +139,13 @@ var builtin_split(context* ctx, gc* ngc) {
     usize pos = s.find(sep, 0);
     while (pos!=std::string::npos) {
         if (pos>last) {
-            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+            vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
     if (last!=s.length()) {
-        vec.push_back(ngc->newstr(s.substr(last)));
+        vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
     return res;
@@ -177,7 +177,7 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
     // empty separator means split every char
     if (!sep.length()) {
         for (auto i : s) {
-            vec.push_back(ngc->newstr(i));
+            vec.push_back(ngc->alloc_str(i));
         }
         ngc->temp = nil;
         return res;
@@ -187,13 +187,13 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
     usize pos = s.find(sep, 0);
     while (pos!=std::string::npos) {
         if (pos>=last) {
-            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+            vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
     if (last<=s.length()) {
-        vec.push_back(ngc->newstr(s.substr(last)));
+        vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
     return res;
@@ -223,7 +223,7 @@ var builtin_id(context* ctx, gc* ngc) {
         ss << "x" << std::hex;
         ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
     }
-    return ngc->newstr(ss.str());
+    return ngc->alloc_str(ss.str());
 }
 
 var builtin_int(context* ctx, gc* ngc) {
@@ -274,7 +274,7 @@ var builtin_pop(context* ctx, gc* ngc) {
 }
 
 var builtin_str(context* ctx, gc* ngc) {
-    return ngc->newstr(ctx->localr[1].to_str());
+    return ngc->alloc_str(ctx->localr[1].to_str());
 }
 
 var builtin_size(context* ctx, gc* ngc) {
@@ -342,11 +342,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto& vec = res.vec().elems;
     if (hash.is_hash()) {
         for (const auto& iter : hash.hash().elems) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     } else {
         for (const auto& iter : hash.map().mapper) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     }
     ngc->temp = nil;
@@ -370,19 +370,19 @@ var builtin_find(context* ctx, gc* ngc) {
 
 var builtin_type(context* ctx, gc* ngc) {
     switch (ctx->localr[1].type) {
-        case vm_type::vm_none: return ngc->newstr("undefined");
-        case vm_type::vm_nil: return ngc->newstr("nil");
-        case vm_type::vm_num: return ngc->newstr("num");
+        case vm_type::vm_none: return ngc->alloc_str("undefined");
+        case vm_type::vm_nil: return ngc->alloc_str("nil");
+        case vm_type::vm_num: return ngc->alloc_str("num");
         case vm_type::vm_gcobj:
             switch (ctx->localr[1].val.gcobj->type) {
-                case gc_type::gc_str: return ngc->newstr("str");
-                case gc_type::gc_vec: return ngc->newstr("vec");
-                case gc_type::gc_hash: return ngc->newstr("hash");
-                case gc_type::gc_func: return ngc->newstr("func");
-                case gc_type::gc_upval: return ngc->newstr("upvalue");
-                case gc_type::gc_ghost: return ngc->newstr("ghost");
-                case gc_type::gc_co: return ngc->newstr("coroutine");
-                case gc_type::gc_map: return ngc->newstr("namespace");
+                case gc_type::gc_str: return ngc->alloc_str("str");
+                case gc_type::gc_vec: return ngc->alloc_str("vec");
+                case gc_type::gc_hash: return ngc->alloc_str("hash");
+                case gc_type::gc_func: return ngc->alloc_str("func");
+                case gc_type::gc_upval: return ngc->alloc_str("upvalue");
+                case gc_type::gc_ghost: return ngc->alloc_str("ghost");
+                case gc_type::gc_co: return ngc->alloc_str("coroutine");
+                case gc_type::gc_map: return ngc->alloc_str("namespace");
             } break;
         default: break;
     }
@@ -411,7 +411,7 @@ var builtin_substr(context* ctx, gc* ngc) {
             "begin index out of range: " + std::to_string(begin)
         );
     }
-    return ngc->newstr(str.str().substr(begin, length));
+    return ngc->alloc_str(str.str().substr(begin, length));
 }
 
 var builtin_streq(context* ctx, gc* ngc) {
@@ -435,9 +435,9 @@ var builtin_left(context* ctx, gc* ngc) {
         return nas_err("native::left", "\"length\" must be number");
     }
     if (len.num() < 0) {
-        return ngc->newstr("");
+        return ngc->alloc_str("");
     }
-    return ngc->newstr(str.str().substr(0, len.num()));
+    return ngc->alloc_str(str.str().substr(0, len.num()));
 }
 
 var builtin_right(context* ctx, gc* ngc) {
@@ -461,7 +461,7 @@ var builtin_right(context* ctx, gc* ngc) {
         length = 0;
     }
 
-    return ngc->newstr(str.str().substr(srclen - length, srclen));
+    return ngc->alloc_str(str.str().substr(srclen - length, srclen));
 }
 
 var builtin_cmp(context* ctx, gc* ngc) {
@@ -498,15 +498,15 @@ var builtin_chr(context* ctx, gc* ngc) {
     };
     auto num = static_cast<i32>(ctx->localr[1].num());
     if (0<=num && num<128) {
-        return ngc->newstr(static_cast<char>(num));
+        return ngc->alloc_str(static_cast<char>(num));
     } else if (128<=num && num<256) {
-        return ngc->newstr(extend[num-128]);
+        return ngc->alloc_str(extend[num-128]);
     }
-    return ngc->newstr(" ");
+    return ngc->alloc_str(" ");
 }
 
 var builtin_char(context* ctx, gc* ngc) {
-    return ngc->newstr(static_cast<unsigned char>(ctx->localr[1].num()));
+    return ngc->alloc_str(static_cast<unsigned char>(ctx->localr[1].num()));
 }
 
 var builtin_values(context* ctx, gc* ngc) {
@@ -546,11 +546,11 @@ var builtin_sleep(context* ctx, gc* ngc) {
 }
 
 var builtin_platform(context* ctx, gc* ngc) {
-    return ngc->newstr(util::get_platform());
+    return ngc->alloc_str(util::get_platform());
 }
 
 var builtin_version(context* ctx, gc* ngc) {
-    return ngc->newstr(__nasver__);
+    return ngc->alloc_str(__nasver__);
 }
 
 var builtin_caller(context* ctx, gc* ngc) {
@@ -567,14 +567,14 @@ var builtin_caller(context* ctx, gc* ngc) {
     var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     res.vec().elems.push_back(ngc->alloc(gc_type::gc_hash));
     res.vec().elems.push_back(cs.caller);
-    res.vec().elems.push_back(ngc->newstr(ctx->files[cs.file_index]));
+    res.vec().elems.push_back(ngc->alloc_str(ctx->files[cs.file_index]));
     res.vec().elems.push_back(var::num(cs.line));
     ngc->temp = nil;
     return res;
 }
 
 var builtin_arch(context* ctx, gc* ngc) {
-    return ngc->newstr(util::get_arch());
+    return ngc->alloc_str(util::get_arch());
 }
 
 // md5 related functions
@@ -673,7 +673,7 @@ var builtin_md5(context* ctx, gc* ngc) {
     if (!str.is_str()) {
         return nas_err("native::md5", "\"str\" must be string");
     }
-    return ngc->newstr(md5(str.str()));
+    return ngc->alloc_str(md5(str.str()));
 }
 
 class time_stamp {
@@ -795,7 +795,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
         tm_t->tm_min,
         tm_t->tm_sec
     );
-    return ngc->newstr(s);
+    return ngc->alloc_str(s);
 }
 
 var builtin_ghosttype(context* ctx, gc* ngc) {
@@ -813,9 +813,9 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
         std::stringstream ss;
         ss << "0x" << std::hex;
         ss << arg.ghost().convert<u64>() << std::dec;
-        return ngc->newstr(ss.str());
+        return ngc->alloc_str(ss.str());
     }
-    return ngc->newstr(name);
+    return ngc->alloc_str(name);
 }
 
 var builtin_set_utf8_output(context* ctx, gc* ngc) {

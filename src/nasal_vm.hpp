@@ -56,7 +56,7 @@ protected:
 
 protected:
     /* vm initializing function */
-    void vm_init_enrty(const std::vector<std::string>&,
+    void vm_init_entry(const std::vector<std::string>&,
                        const std::vector<f64>&,
                        const std::vector<nasal_builtin_info>&,
                        const std::vector<opcode>&,
@@ -117,7 +117,7 @@ protected:
     void o_newf();
     void o_happ();
     void o_para();
-    void o_deft();
+    void o_default();
     void o_dyn();
     void o_lnot();
     void o_usub();
@@ -210,7 +210,7 @@ protected:
         &vm::o_newf,
         &vm::o_happ,
         &vm::o_para,
-        &vm::o_deft,
+        &vm::o_default,
         &vm::o_dyn,
         &vm::o_lnot,
         &vm::o_usub,

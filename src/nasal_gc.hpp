@@ -125,19 +125,19 @@ public:
     }
 
 public:
-    var newstr(char c) {
+    var alloc_str(char c) {
         var s = alloc(gc_type::gc_str);
         s.str() = c;
         return s;
     }
 
-    var newstr(const char* buff) {
+    var alloc_str(const char* buff) {
         var s = alloc(gc_type::gc_str);
         s.str() = std::string(buff);
         return s;
     }
 
-    var newstr(const std::string& buff) {
+    var alloc_str(const std::string& buff) {
         var s = alloc(gc_type::gc_str);
         s.str() = buff;
         return s;

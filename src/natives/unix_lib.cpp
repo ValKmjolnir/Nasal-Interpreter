@@ -69,10 +69,10 @@ var builtin_readdir(context* ctx, gc* ngc) {
     if (!FindNextFileA(handle.ghost().pointer, &data)) {
         return nil;
     }
-    return ngc->newstr(data.cFileName);
+    return ngc->alloc_str(data.cFileName);
 #else
     dirent* p = readdir(handle.ghost().get<DIR>());
-    return p? ngc->newstr(p->d_name):nil;
+    return p ? ngc->alloc_str(p->d_name) : nil;
 #endif
 }
 
@@ -97,7 +97,7 @@ var builtin_environ(context* ctx, gc* ngc) {
     var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
     for (char** env = environ; *env; ++env) {
-        vec.push_back(ngc->newstr(*env));
+        vec.push_back(ngc->alloc_str(*env));
     }
     ngc->temp = nil;
     return res;
@@ -108,7 +108,7 @@ var builtin_getcwd(context* ctx, gc* ngc) {
     if (!getcwd(buf, sizeof(buf))) {
         return nil;
     }
-    return ngc->newstr(buf);
+    return ngc->alloc_str(buf);
 }
 
 var builtin_getenv(context* ctx, gc* ngc) {
@@ -117,7 +117,7 @@ var builtin_getenv(context* ctx, gc* ngc) {
         return nas_err("unix::getenv", "\"envvar\" must be string");
     }
     char* res = getenv(envvar.str().c_str());
-    return res? ngc->newstr(res):nil;
+    return res? ngc->alloc_str(res):nil;
 }
 
 void load_unix_builtin() {

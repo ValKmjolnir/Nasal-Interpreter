@@ -496,11 +496,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto& vec = res.vec().elems;
     if (hash.type==vm_hash) {
         for (const auto& iter : hash.hash().elems) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     } else {
         for (const auto& iter : hash.map().mapper) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     }
     ngc->temp = nil;

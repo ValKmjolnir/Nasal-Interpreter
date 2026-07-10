@@ -4,7 +4,7 @@
 
 namespace nasal {
 
-void vm::vm_init_enrty(const std::vector<std::string>& strs,
+void vm::vm_init_entry(const std::vector<std::string>& strs,
                        const std::vector<f64>& nums,
                        const std::vector<nasal_builtin_info>& natives,
                        const std::vector<opcode>& code,
@@ -641,13 +641,13 @@ void vm::o_pstr() {
 
 void vm::o_newv() {
     var newv = ngc.alloc(gc_type::gc_vec);
-    auto& vec = newv.vec().elems;
-    vec.resize(imm[ctx.pc]);
-    // use top-=imm[pc]-1 here will cause error if imm[pc] is 0
-    ctx.top = ctx.top - imm[ctx.pc] + 1;
-
-    for (u64 i = 0; i<imm[ctx.pc]; ++i) {
-        vec[i] = ctx.top[i];
+    auto size = imm[ctx.pc];
+    // use top -= imm[pc] - 1 here will cause error if imm[pc] is 0
+    ctx.top = ctx.top - size + 1;
+    if (size) {
+        auto& vec = newv.vec().elems;
+        vec.resize(size);
+        memcpy(vec.data(), ctx.top, size * sizeof(var));
     }
     ctx.top[0] = newv;
 }
@@ -694,7 +694,7 @@ void vm::o_para() {
     func.local[func.parameter_size++] = var::none();
 }
 
-void vm::o_deft() {
+void vm::o_default() {
     var val = ctx.top[0];
     auto& func = (--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
@@ -769,6 +769,10 @@ void vm::o_lnk() {
     // concat two vectors into one
     if (ctx.top[-1].is_vec() && ctx.top[0].is_vec()) {
         ngc.temp = ngc.alloc(gc_type::gc_vec);
+        ngc.temp.vec().elems.reserve(
+            ctx.top[-1].vec().elems.size() +
+            ctx.top[0].vec().elems.size()
+        );
         for (auto& i : ctx.top[-1].vec().elems) {
             ngc.temp.vec().elems.push_back(i);
         }
@@ -781,7 +785,7 @@ void vm::o_lnk() {
         return;
     }
     // concat strings
-    ctx.top[-1] = ngc.newstr(ctx.top[-1].to_str() + ctx.top[0].to_str());
+    ctx.top[-1] = ngc.alloc_str(ctx.top[-1].to_str() + ctx.top[0].to_str());
     --ctx.top;
 }
 
@@ -793,14 +797,14 @@ void vm::o_subc() { op_calc_const(-); }
 void vm::o_mulc() { op_calc_const(*); }
 void vm::o_divc() { op_calc_const(/); }
 void vm::o_lnkc() {
-    ctx.top[0] = ngc.newstr(ctx.top[0].to_str() + const_string[imm[ctx.pc]]);
+    ctx.top[0] = ngc.alloc_str(ctx.top[0].to_str() + const_string[imm[ctx.pc]]);
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
-// so when the calculation ends, top-=1, then top-=imm[pc]
+// so when the calculation ends, top -= 1, then top -= imm[pc]
 // because this return value is meaningless if on stack when imm[pc] = 1
-// like this: func{a+=c;}(); the result of 'a+c' will no be used later, imm[pc] = 1
-// but if b+=a+=c; the result of 'a+c' will be used later, imm[pc] = 0
+// like this: func { a += c; }(); the result of 'a+c' will no be used later, imm[pc] = 1
+// but if b += a += c; the result of 'a + c' will be used later, imm[pc] = 0
 #define op_calc_eq(type)\
     ctx.top[-1] = ctx.memr[0] = var::num(\
         ctx.memr[0].to_num() type ctx.top[-1].to_num()\
@@ -829,7 +833,7 @@ void vm::o_lnkeq() {
         return;
     }
 
-    ctx.top[-1] = ctx.memr[0] = ngc.newstr(
+    ctx.top[-1] = ctx.memr[0] = ngc.alloc_str(
         ctx.memr[0].to_str() + ctx.top[-1].to_str()
     );
     ctx.memr = nullptr;
@@ -864,10 +868,10 @@ void vm::o_bxoreq() {
 }
 
 // top[0] stores the value of memr[0], to avoid being garbage-collected
-// so when the calculation ends, top-=imm[pc]>>31
-// because this return value is meaningless if on stack when imm[pc]>>31=1
-// like this: func{a+=1;}(); the result of 'a+1' will no be used later, imm[pc]>>31=1
-// but if b+=a+=1; the result of 'a+1' will be used later, imm[pc]>>31=0
+// so when the calculation ends, top -= imm[pc] >> 31
+// because this return value is meaningless if on stack when imm[pc] >> 31 = 1
+// like this: func { a += 1; }(); the result of 'a + 1' will no be used later, imm[pc] >> 31 = 1
+// but if b += a += 1; the result of 'a + 1' will be used later, imm[pc] >> 31 = 0
 #define op_calc_eq_const(type)\
     ctx.top[0] = ctx.memr[0] = var::num(\
         ctx.memr[0].to_num() type const_number[imm[ctx.pc]]\
@@ -879,7 +883,7 @@ void vm::o_subeqc() { op_calc_eq_const(-); }
 void vm::o_muleqc() { op_calc_eq_const(*); }
 void vm::o_diveqc() { op_calc_eq_const(/); }
 void vm::o_lnkeqc() {
-    ctx.top[0] = ctx.memr[0] = ngc.newstr(
+    ctx.top[0] = ctx.memr[0] = ngc.alloc_str(
         ctx.memr[0].to_str() + const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
@@ -897,7 +901,7 @@ void vm::o_subecp() { op_calc_eq_const_and_pop(-); }
 void vm::o_mulecp() { op_calc_eq_const_and_pop(*); }
 void vm::o_divecp() { op_calc_eq_const_and_pop(/); }
 void vm::o_lnkecp() {
-    ctx.top[0] = ctx.memr[0] = ngc.newstr(
+    ctx.top[0] = ctx.memr[0] = ngc.alloc_str(
         ctx.memr[0].to_str() + const_string[imm[ctx.pc]]
     );
     ctx.memr = nullptr;
@@ -1478,7 +1482,7 @@ void vm::o_ret() {
 void vm::run(const codegen& gen,
              const linker& linker,
              const std::vector<std::string>& argv) {
-    vm_init_enrty(
+    vm_init_entry(
         gen.strs(),
         gen.nums(),
         gen.natives(),
@@ -1589,6 +1593,8 @@ void vm::run(const codegen& gen,
         &&ret
     };
     std::vector<const void*> code;
+    code.reserve(gen.codes().size());
+    imm.reserve(gen.codes().size());
     for (const auto& i : gen.codes()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
@@ -1598,6 +1604,8 @@ void vm::run(const codegen& gen,
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
+    code.reserve(gen.codes().size());
+    imm.reserve(gen.codes().size());
     for (const auto& i : gen.codes()) {
         code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
@@ -1629,7 +1637,7 @@ vmexit:
 #define exec_check(op) {\
     op();\
     CHECK_INTERRUPT;\
-    if (ctx.top<ctx.canary)\
+    if (ctx.top < ctx.canary)\
         goto *code[++ctx.pc];\
     die("stack overflow");\
     goto *code[++ctx.pc];\
@@ -1655,7 +1663,7 @@ newh:   exec_check(o_newh  ); // +1
 newf:   exec_check(o_newf  ); // +1
 happ:   exec_nodie(o_happ  ); // -1
 para:   exec_nodie(o_para  ); // -0
-deft:   exec_nodie(o_deft  ); // -1
+deft:   exec_nodie(o_default); // -1
 dyn:    exec_nodie(o_dyn   ); // -0
 lnot:   exec_nodie(o_lnot  ); // -0
 usub:   exec_nodie(o_usub  ); // -0

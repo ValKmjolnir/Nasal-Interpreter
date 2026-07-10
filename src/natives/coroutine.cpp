@@ -117,12 +117,12 @@ var builtin_coyield(context* ctx, gc* ngc) {
 var builtin_costatus(context* ctx, gc* ngc) {
     auto coroutine_object = ctx->localr[1];
     if (!coroutine_object.is_coroutine()) {
-        return ngc->newstr("error");
+        return ngc->alloc_str("error");
     }
     switch (coroutine_object.co().status) {
-        case nas_co::status::suspended: return ngc->newstr("suspended");
-        case nas_co::status::running:   return ngc->newstr("running");
-        case nas_co::status::dead:      return ngc->newstr("dead");
+        case nas_co::status::suspended: return ngc->alloc_str("suspended");
+        case nas_co::status::running:   return ngc->alloc_str("running");
+        case nas_co::status::dead:      return ngc->alloc_str("dead");
     }
     return nil;
 }
