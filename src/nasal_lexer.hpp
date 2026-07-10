@@ -12,7 +12,7 @@
 #include <unordered_map>
 
 #include "nasal.hpp"
-#include "nasal_err.hpp"
+#include "error/error.hpp"
 
 namespace nasal {
 

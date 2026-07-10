@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal_err.hpp"
+#include "error/error.hpp"
 #include "opcode/opcode.hpp"
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"

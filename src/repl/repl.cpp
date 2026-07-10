@@ -4,7 +4,7 @@
 #include "nasal_import.hpp"
 #include "ast/optimizer.hpp"
 #include "nasal_codegen.hpp"
-#include "nasal_vm.hpp"
+#include "vm/vm.hpp"
 
 namespace nasal {
 namespace repl {

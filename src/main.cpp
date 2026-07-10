@@ -1,7 +1,6 @@
 #include "nasal.hpp"
 #include "nasal_type.hpp"
 #include "nasal_gc.hpp"
-#include "nasal_err.hpp"
 #include "nasal_lexer.hpp"
 
 #include "ast/ast.hpp"
@@ -13,8 +12,8 @@
 #include "nasal_parse.hpp"
 #include "nasal_import.hpp"
 #include "nasal_codegen.hpp"
-#include "nasal_vm.hpp"
-#include "nasal_dbg.hpp"
+#include "vm/vm.hpp"
+#include "dbg/dbg.hpp"
 
 #include "util/util.hpp"
 #include "repl/repl.hpp"

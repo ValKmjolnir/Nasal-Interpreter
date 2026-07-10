@@ -1,5 +1,6 @@
-#include "nasal_dbg.hpp"
+#include "dbg/dbg.hpp"
 #include "opcode/codestream.hpp"
+#include "util/colorful.hpp"
 
 namespace nasal {
 
@@ -173,10 +174,10 @@ void dbg::step_info() {
     );
 
     std::clog << "\nnext bytecode:\n";
-    for (u64 i = begin; i<end && bytecode[i].op!=op_exit; ++i) {
+    for (u64 i = begin; i < end && bytecode[i].op != op_exit; ++i) {
         std::clog
-        << (i==ctx.pc? back_white:reset)
-        << (i==ctx.pc? "--> ":"    ")
+        << (i == ctx.pc ? back_white : reset)
+        << (i == ctx.pc ? "--> " : "    ")
         << cs.create(bytecode[i], i)
         << reset << "\n";
     }
@@ -185,7 +186,7 @@ void dbg::step_info() {
 
 void dbg::interact() {
     // special operand, end execution
-    if (bytecode[ctx.pc].op==op_exit) {
+    if (bytecode[ctx.pc].op == op_exit) {
         return;
     }
 
@@ -196,7 +197,7 @@ void dbg::interact() {
 
     // is not break point and is not next stop command
     const auto& code = bytecode[ctx.pc];
-    if ((code.fidx!=break_file_index || code.line!=break_line) && !next) {
+    if ((code.fidx != break_file_index || code.line != break_line) && !next) {
         return;
     }
 
@@ -207,11 +208,11 @@ void dbg::interact() {
         std::clog << ">> ";
         std::getline(std::cin, cmd);
         auto res = parse(cmd);
-        if (res.size()==0) {
+        if (res.size() == 0) {
             // enter key without input using cmd_next by default
             next = true;
             return;
-        } else if (res.size()==1) {
+        } else if (res.size() == 1) {
             switch (get_cmd_type(res[0])) {
                 case cmd_kind::cmd_help: help(); break;
                 case cmd_kind::cmd_backtrace:
@@ -229,15 +230,15 @@ void dbg::interact() {
                 case cmd_kind::cmd_exit: std::exit(0);
                 default: err(); break;
             }
-        } else if (res.size()==3 &&
-            get_cmd_type(res[0])==cmd_kind::cmd_break_point) {
+        } else if (res.size() == 3 &&
+                   get_cmd_type(res[0]) == cmd_kind::cmd_break_point) {
             break_file_index = file_index(res[1]);
-            if (break_file_index==UINT16_MAX) {
+            if (break_file_index == UINT16_MAX) {
                 std::clog << "cannot find file named `" << res[1] << "`\n";
                 continue;
             }
             i32 tmp = atoi(res[2].c_str());
-            if (tmp<=0) {
+            if (tmp <= 0) {
                 std::clog << "incorrect line number `" << res[2] << "`\n";
             } else {
                 break_line = tmp;

@@ -1,4 +1,4 @@
-#include "nasal_vm.hpp"
+#include "vm/vm.hpp"
 #include "util/util.hpp"
 #include "opcode/codestream.hpp"
 

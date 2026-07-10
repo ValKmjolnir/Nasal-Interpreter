@@ -7,29 +7,9 @@
 #include <vector>
 
 #include "nasal.hpp"
+#include "error/span.hpp"
 
 namespace nasal {
-
-struct span {
-    u64 begin_line;
-    u64 begin_column;
-    u64 end_line;
-    u64 end_column;
-    std::string file;
-
-    void dump_begin(std::ostream& out) const {
-        out << file << ":" << begin_line << ":" << begin_column + 1;
-    }
-};
-
-std::ostream& clear_screen(std::ostream&);
-std::ostream& set_cursor(std::ostream&);
-std::ostream& back_white(std::ostream&);
-std::ostream& red(std::ostream&);
-std::ostream& cyan(std::ostream&);
-std::ostream& orange(std::ostream&);
-std::ostream& white(std::ostream&);
-std::ostream& reset(std::ostream&);
 
 class filestream {
 protected:

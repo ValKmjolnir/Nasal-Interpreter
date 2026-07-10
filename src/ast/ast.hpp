@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal.hpp"
-#include "nasal_err.hpp"
+#include "error/span.hpp"
 
 #include <vector>
 #include <unordered_map>

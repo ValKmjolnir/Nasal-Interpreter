@@ -1284,7 +1284,7 @@ void codegen::repl_mode_info_output_gen(expr* node) {
 void codegen::block_gen(code_block* node) {
     bool is_use_statement = true;
     for (auto tmp : node->get_expressions()) {
-        if (tmp->get_type()!=expr_type::ast_use) {
+        if (tmp->get_type() != expr_type::ast_use) {
             is_use_statement = false;
         }
         switch (tmp->get_type()) {
@@ -1344,7 +1344,7 @@ void codegen::block_gen(code_block* node) {
 }
 
 void codegen::ret_gen(return_expr* node) {
-    for (u32 i = 0; i<in_foreach_loop_level.back(); ++i) {
+    for (u32 i = 0; i < in_foreach_loop_level.back(); ++i) {
         emit(op_pop, 0, node->get_location());
         emit(op_pop, 0, node->get_location());
     }
@@ -1373,6 +1373,7 @@ const error& codegen::compile(parse& parse,
 
     // generate main block
     block_gen(parse.tree());
+
     // generate exit operand, vm stops here
     emit(op_exit, 0, parse.tree()->get_location());
 
