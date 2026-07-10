@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal_import.hpp"
+#include "parse/linker.hpp"
 #include "error/error.hpp"
 #include "opcode/opcode.hpp"
 #include "vm/vm.hpp"

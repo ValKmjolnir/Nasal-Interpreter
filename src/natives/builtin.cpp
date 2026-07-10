@@ -1,6 +1,6 @@
 ﻿#include "nasal.hpp"
 #include "nasal_type.hpp"
-#include "nasal_gc.hpp"
+#include "vm/gc.hpp"
 #include "natives/registry.hpp"
 #include "util/util.hpp"
 

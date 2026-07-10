@@ -1,5 +1,5 @@
 #include "ast/ast.hpp"
-#include "nasal_parse.hpp"
+#include "parse/parse.hpp"
 #include "util/util.hpp"
 
 namespace nasal {

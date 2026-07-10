@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal_type.hpp"
-#include "nasal_gc.hpp"
+#include "vm/gc.hpp"
 
 #include <string>
 #include <vector>

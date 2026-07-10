@@ -1,10 +1,10 @@
 #include "nasal_web.hpp"
 #include "vm/vm.hpp"
-#include "nasal_parse.hpp"
+#include "parse/parse.hpp"
 #include "nasal_codegen.hpp"
-#include "nasal_import.hpp"
+#include "parse/linker.hpp"
 #include "ast/optimizer.hpp"
-#include "nasal_lexer.hpp"
+#include "lexer/lexer.hpp"
 #include "repl/repl.hpp"
 
 #include <string>

@@ -135,7 +135,7 @@ println(tmp_f());
 # undefined symbol 'me'
 # this means that
 # when generating local_scope for function f,
-# nasal_gc will not count 'me' as one reference of this hash
+# nasal gc will not count 'me' as one reference of this hash
 
 var h1={str:'hello',f:func {return me.str;}};
 var h2={str:'world',f:func {return nil;}};

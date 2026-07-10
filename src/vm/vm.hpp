@@ -6,8 +6,8 @@
 #include <atomic>
 #include <cmath>
 
-#include "nasal_import.hpp"
-#include "nasal_gc.hpp"
+#include "parse/linker.hpp"
+#include "vm/gc.hpp"
 #include "nasal_codegen.hpp"
 #include "util/util.hpp"
 #include "natives/registry.hpp"

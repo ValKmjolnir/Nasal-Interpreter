@@ -1,7 +1,7 @@
 #include "nasal.hpp"
 #include "cli/cli.hpp"
 #include "util/util.hpp"
-#include "nasal_parse.hpp"
+#include "parse/parse.hpp"
 
 #include <iostream>
 #include <thread>

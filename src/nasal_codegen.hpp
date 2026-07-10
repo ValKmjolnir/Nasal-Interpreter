@@ -5,8 +5,8 @@
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
 #include "ast/symbol_finder.hpp"
-#include "nasal_parse.hpp"
-#include "nasal_import.hpp"
+#include "parse/parse.hpp"
+#include "parse/linker.hpp"
 
 #include "natives/registry.hpp"
 

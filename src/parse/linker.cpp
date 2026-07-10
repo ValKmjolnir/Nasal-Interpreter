@@ -1,4 +1,4 @@
-#include "nasal_import.hpp"
+#include "parse/linker.hpp"
 #include "ast/symbol_finder.hpp"
 #include "util/util.hpp"
 #include "util/fs.hpp"

@@ -4,7 +4,7 @@
 
 #include "nasal.hpp"
 #include "ast/ast.hpp"
-#include "nasal_lexer.hpp"
+#include "lexer/lexer.hpp"
 #include "error/error.hpp"
 
 namespace nasal {

@@ -10,8 +10,8 @@
 
 #include "nasal.hpp"
 #include "ast/ast.hpp"
-#include "nasal_lexer.hpp"
-#include "nasal_parse.hpp"
+#include "lexer/lexer.hpp"
+#include "parse/parse.hpp"
 #include "ast/symbol_finder.hpp"
 #include "util/fs.hpp"
 

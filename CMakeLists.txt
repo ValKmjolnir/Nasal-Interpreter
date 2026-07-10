@@ -39,6 +39,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
     ${CMAKE_SOURCE_DIR}/src/dbg/dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/error/error.cpp
+    ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/builtin.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/coroutine.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/fg_props.cpp
@@ -51,19 +52,18 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/registry.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/subprocess.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/opcode/codestream.cpp
+    ${CMAKE_SOURCE_DIR}/src/opcode/opcode.cpp
+    ${CMAKE_SOURCE_DIR}/src/parse/parse.cpp
+    ${CMAKE_SOURCE_DIR}/src/parse/linker.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
     ${CMAKE_SOURCE_DIR}/src/util/colorful.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/vm.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_import.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/src/opcode/codestream.cpp
-    ${CMAKE_SOURCE_DIR}/src/opcode/opcode.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
@@ -102,7 +102,7 @@ if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     )
 endif()
 
-# build module
+# build module and move shared library files to module dir
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
@@ -110,7 +110,7 @@ set(MODULE_USED_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp)
+    ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
 target_include_directories(module-used-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 

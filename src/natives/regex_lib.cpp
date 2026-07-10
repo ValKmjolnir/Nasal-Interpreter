@@ -1,7 +1,7 @@
 #include <regex>
 
 #include "nasal.hpp"
-#include "nasal_gc.hpp"
+#include "vm/gc.hpp"
 #include "natives/registry.hpp"
 
 namespace nasal {

@@ -4,7 +4,7 @@
 #pragma warning (disable:4102)
 #endif
 
-#include "nasal_lexer.hpp"
+#include "lexer/lexer.hpp"
 #include "repl/repl.hpp"
 #include "util/util.hpp"
 #include "util/fs.hpp"

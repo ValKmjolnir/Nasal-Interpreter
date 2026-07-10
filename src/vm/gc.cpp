@@ -1,4 +1,4 @@
-﻿#include "nasal_gc.hpp"
+﻿#include "vm/gc.hpp"
 
 namespace nasal {
 
@@ -266,7 +266,7 @@ void gc::clear() {
         delete i;
     }
     memory.clear();
-    for (u32 i = 0; i<GC_TYPE_SIZE; ++i) {
+    for (u32 i = 0; i < GC_TYPE_SIZE; ++i) {
         unused[i].clear();
     }
     for (auto& i : strs) {

@@ -1,7 +1,7 @@
 #include "nasal.hpp"
 #include "nasal_type.hpp"
-#include "nasal_gc.hpp"
-#include "nasal_lexer.hpp"
+#include "vm/gc.hpp"
+#include "lexer/lexer.hpp"
 
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
@@ -9,8 +9,8 @@
 #include "ast/symbol_finder.hpp"
 #include "ast/optimizer.hpp"
 
-#include "nasal_parse.hpp"
-#include "nasal_import.hpp"
+#include "parse/parse.hpp"
+#include "parse/linker.hpp"
 #include "nasal_codegen.hpp"
 #include "vm/vm.hpp"
 #include "dbg/dbg.hpp"
