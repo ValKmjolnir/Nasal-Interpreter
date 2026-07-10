@@ -72,14 +72,12 @@ jobs:
         git fetch --tags origin
         git tag -f next_windows_x86_64_msvc
         git push -f origin next_windows_x86_64_msvc
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v2
     - name: Build
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
-        MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+        cmake ..
+        cmake --build . --config Release -j 6
     - name: Package
       run: |
         python3 tools/msvc_move_file.py
