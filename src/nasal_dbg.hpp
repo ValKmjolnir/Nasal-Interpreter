@@ -2,7 +2,7 @@
 
 #include "nasal_import.hpp"
 #include "nasal_err.hpp"
-#include "nasal_opcode.hpp"
+#include "opcode/opcode.hpp"
 #include "nasal_vm.hpp"
 
 #include <cstring>

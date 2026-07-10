@@ -1,4 +1,5 @@
 #include "nasal_dbg.hpp"
+#include "opcode/codestream.hpp"
 
 namespace nasal {
 
@@ -163,7 +164,7 @@ void dbg::step_info() {
 
     begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
     end = (1+(ctx.pc>>3))<<3;
-    codestream::set(
+    auto cs = codestream(
         const_number,
         const_string,
         global_symbol_name,
@@ -176,7 +177,7 @@ void dbg::step_info() {
         std::clog
         << (i==ctx.pc? back_white:reset)
         << (i==ctx.pc? "--> ":"    ")
-        << codestream(bytecode[i], i)
+        << cs.create(bytecode[i], i)
         << reset << "\n";
     }
     stack_info(16);

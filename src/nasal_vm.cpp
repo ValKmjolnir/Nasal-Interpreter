@@ -1,5 +1,6 @@
 #include "nasal_vm.hpp"
 #include "util/util.hpp"
+#include "opcode/codestream.hpp"
 
 namespace nasal {
 
@@ -298,8 +299,8 @@ void vm::function_call_trace() {
 void vm::trace_back() {
     // generate trace back
     std::stack<u64> ret;
-    for (var* i = ctx.stack; i<=ctx.top; ++i) {
-        if (i->is_ret() && i->ret()!=0) {
+    for (var* i = ctx.stack; i <= ctx.top; ++i) {
+        if (i->is_ret() && i->ret() != 0) {
             ret.push(i->ret());
         }
     }
@@ -308,8 +309,8 @@ void vm::trace_back() {
     ret.push(ctx.pc);
 
     std::clog << "\nback trace ";
-    std::clog << (ngc.cort? "(coroutine)":"(main)") << "\n";
-    codestream::set(
+    std::clog << (ngc.cort ? "(coroutine)" : "(main)") << "\n";
+    auto cs = codestream(
         const_number,
         const_string,
         global_symbol_name,
@@ -318,7 +319,7 @@ void vm::trace_back() {
     );
 
     for (u64 p = 0, same = 0, prev = 0xffffffff; !ret.empty(); prev = p, ret.pop()) {
-        if ((p = ret.top())==prev) {
+        if ((p = ret.top()) == prev) {
             ++same;
             continue;
         } else if (same) {
@@ -328,7 +329,7 @@ void vm::trace_back() {
                       << same << " same call(s)\n";
             same = 0;
         }
-        std::clog << "  " << codestream(bytecode[p], p) << "\n";
+        std::clog << "  " << cs.create(bytecode[p], p) << "\n";
     }
     // the first called place has no same calls
 }

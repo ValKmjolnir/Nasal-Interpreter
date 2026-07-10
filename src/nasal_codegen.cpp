@@ -1,5 +1,6 @@
 #include "nasal_codegen.hpp"
 #include "util/util.hpp"
+#include "opcode/codestream.hpp"
 
 namespace nasal {
 
@@ -25,9 +26,8 @@ void codegen::init_native_function() {
 
     auto& registry = nasal_builtin_registry::get();
     for (const auto& intrinsic : registry.builtin_table) {
-        // check confliction
+        // skip confliction
         if (native_function_mapper.count(intrinsic.name)) {
-            err.err("code", "\"" + std::string(intrinsic.name) + "\" conflicts.");
             continue;
         }
 
@@ -1429,7 +1429,7 @@ void codegen::print(std::ostream& out) {
     }
 
     // print code
-    codestream::set(
+    auto cs = codestream(
         const_number_table.data(),
         const_string_table.data(),
         global,
@@ -1462,7 +1462,7 @@ void codegen::print(std::ostream& out) {
         }
 
         // output bytecode
-        out << "  " << codestream(c, i) << "\n";
+        out << "  " << cs.create(c, i) << "\n";
     }
 }
 

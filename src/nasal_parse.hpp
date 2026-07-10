@@ -10,10 +10,6 @@
 namespace nasal {
 
 class parse {
-
-#define thisspan (toks[ptr].loc)
-#define prevspan (ptr!=0? toks[ptr-1].loc:toks[ptr].loc)
-
 private:
     u64 ptr;
     u64 in_func_depth; // count function block
@@ -21,6 +17,12 @@ private:
     const token* toks;
     code_block* root;
     error err;
+
+private:
+    const auto& this_span() const { return toks[ptr].loc; }
+    const auto& prev_span() const {
+        return ptr != 0 ? toks[ptr - 1].loc : toks[ptr].loc;
+    }
 
 private:
     const std::unordered_map<tok, std::string> token_name_mapper = {

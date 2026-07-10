@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal_err.hpp"
-#include "nasal_opcode.hpp"
+#include "opcode/opcode.hpp"
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
 #include "ast/symbol_finder.hpp"

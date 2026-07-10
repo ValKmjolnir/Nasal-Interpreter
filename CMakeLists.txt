@@ -59,7 +59,8 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/nasal_gc.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_import.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_lexer.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_opcode.cpp
+    ${CMAKE_SOURCE_DIR}/src/opcode/codestream.cpp
+    ${CMAKE_SOURCE_DIR}/src/opcode/opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_parse.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_vm.cpp)

@@ -2,15 +2,15 @@
 
 ## MSVC / Visual Studio
 
-Need CMake and Visual Studio 2022. Remember to add MSBuild.exe to Path.
+Need CMake and Visual Studio. Remember to add MSBuild.exe to Path.
 
 Valid on powershell:
 
 ```sh
 mkdir cmake-windows-msvc
 cd cmake-windows-msvc
-cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
-MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+cmake ..
+cmake --build . --config Release -j 6
 ```
 
 ## MingW-W64

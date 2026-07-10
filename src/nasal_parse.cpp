@@ -17,7 +17,7 @@ const error& parse::compile(const lexer& lexer) {
         } else if (need_semi_check(root->get_expressions().back()) &&
                    !lookahead(tok::tk_eof)) {
             // the last expression can be recognized without semi
-            die(prevspan, "expected \";\" after this token");
+            die(prev_span(), "expected \";\" after this token");
         }
     }
     update_location(root);
@@ -75,15 +75,15 @@ void parse::next() {
 void parse::match(tok type, const char* info) {
     if (!lookahead(type)) {
         if (info) {
-            die(thisspan, info);
+            die(this_span(), info);
             return;
         }
         switch (type) {
-            case tok::tk_num: die(thisspan, "expected number"); break;
-            case tok::tk_str: die(thisspan, "expected string"); break;
-            case tok::tk_id: die(thisspan, "expected identifier"); break;
+            case tok::tk_num: die(this_span(), "expected number"); break;
+            case tok::tk_str: die(this_span(), "expected string"); break;
+            case tok::tk_id: die(this_span(), "expected identifier"); break;
             default:
-                die(thisspan,
+                die(this_span(),
                     "expected \"" + token_name_mapper.at(type)+"\""
                 );
                 break;
@@ -134,7 +134,7 @@ bool parse::is_call(tok type) {
 bool parse::check_comma(const tok* panic_set) {
     for (u32 i = 0; panic_set[i]!=tok::tk_null; ++i) {
         if (lookahead(panic_set[i])) {
-            die(prevspan, "expected \",\" between scalars");
+            die(prev_span(), "expected \",\" between scalars");
             return true;
         }
     }
@@ -329,7 +329,7 @@ hash_expr* parse::hash() {
             match(tok::tk_comma);
         } else if (lookahead(tok::tk_id) || lookahead(tok::tk_str)) {
             // first set of hashmember
-            die(prevspan, "expected \",\" between hash members");
+            die(prev_span(), "expected \",\" between hash members");
         } else {
             break;
         }
@@ -390,7 +390,7 @@ void parse::params(function* func_node) {
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
         } else if (lookahead(tok::tk_id)) { // first set of identifier
-            die(prevspan, "expected \",\" between identifiers");
+            die(prev_span(), "expected \",\" between identifiers");
         } else {
             break;
         }
@@ -409,7 +409,7 @@ expr* parse::lcurve_expr() {
 expr* parse::expression() {
     tok type = toks[ptr].type;
     if ((type == tok::tk_brk || type == tok::tk_cont) && !in_loop_depth) {
-        die(thisspan, "must use break/continue in loops");
+        die(this_span(), "must use break/continue in loops");
     }
     switch (type) {
         case tok::tk_use: return use_stmt_gen();
@@ -437,7 +437,7 @@ expr* parse::expression() {
         case tok::tk_ret: return return_expression();
         case tok::tk_semi: break;
         default:
-            die(thisspan, "incorrect token <"+toks[ptr].str+">");
+            die(this_span(), "incorrect token <"+toks[ptr].str+">");
             next();
             break;
     }
@@ -448,7 +448,7 @@ expr* parse::expression() {
 
 code_block* parse::expression_block() {
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected expression block");
+        die(this_span(), "expected expression block");
         return new code_block(toks[ptr].loc);
     }
     auto node = new code_block(toks[ptr].loc);
@@ -461,7 +461,7 @@ code_block* parse::expression_block() {
             } else if (need_semi_check(node->get_expressions().back()) &&
                        !lookahead(tok::tk_rbrace)) {
                 // the last expression can be recognized without semi
-                die(prevspan, "expected \";\" after this token");
+                die(prev_span(), "expected \";\" after this token");
             }
         }
         match(tok::tk_rbrace, "expected \"}\" when generating expressions");
@@ -741,7 +741,7 @@ expr* parse::scalar() {
         def_node->set_value(calc());
         node = def_node;
     } else {
-        die(thisspan, "expected scalar");
+        die(this_span(), "expected scalar");
         return null();
     }
     // check call and avoid ambiguous syntax:
@@ -814,7 +814,7 @@ call_vector* parse::callv() {
         }
     }
     if (node->get_slices().size()==0) {
-        die(thisspan, "expected index value");
+        die(this_span(), "expected index value");
     }
     update_location(node);
     match(tok::tk_rbracket, "expected \"]\" when calling vector");
@@ -870,7 +870,7 @@ expr* parse::definition() {
         switch (toks[ptr].type) {
             case tok::tk_id: node->set_identifier(id());break;
             case tok::tk_lcurve: node->set_multi_define(outcurve_def());break;
-            default: die(thisspan, "expected identifier");break;
+            default: die(this_span(), "expected identifier");break;
         }
     } else if (lookahead(tok::tk_lcurve)) {
         node->set_multi_define(incurve_def());
@@ -916,7 +916,7 @@ multi_identifier* parse::multi_id() {
         if (lookahead(tok::tk_comma)) {
             match(tok::tk_comma);
         } else if (lookahead(tok::tk_id)) { // first set of identifier
-            die(prevspan, "expected \",\" between identifiers");
+            die(prev_span(), "expected \",\" between identifiers");
         } else {
             break;
         }
@@ -956,7 +956,7 @@ multi_assign* parse::multi_assignment() {
     node->set_tuple(multi_scalar());
     match(tok::tk_eq);
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected value list");
+        die(this_span(), "expected value list");
         return node;
     }
     if (lookahead(tok::tk_lcurve)) {
@@ -977,7 +977,7 @@ expr* parse::loop() {
         case tok::tk_forindex:
         case tok::tk_foreach: node = forei_loop(); break;
         default:
-            die(thisspan, "unreachable");
+            die(this_span(), "unreachable");
             node = null();
             break;
     }
@@ -1003,7 +1003,7 @@ for_expr* parse::for_loop() {
 
     // first expression
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected definition");
+        die(this_span(), "expected definition");
     }
     if (lookahead(tok::tk_semi)) {
         node->set_initial(null());
@@ -1018,7 +1018,7 @@ for_expr* parse::for_loop() {
 
     // conditional expression
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected conditional expr");
+        die(this_span(), "expected conditional expr");
     }
     if (lookahead(tok::tk_semi)) {
         node->set_condition(null());
@@ -1029,7 +1029,7 @@ for_expr* parse::for_loop() {
 
     //after loop expression
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected calculation");
+        die(this_span(), "expected calculation");
     }
     if (lookahead(tok::tk_rcurve)) {
         node->set_step(null());
@@ -1059,12 +1059,12 @@ forei_expr* parse::forei_loop() {
     // first expression
     // foreach/forindex must have an iterator to loop through
     if (!lookahead(tok::tk_var) && !lookahead(tok::tk_id)) {
-        die(thisspan, "expected iterator");
+        die(this_span(), "expected iterator");
     }
     node->set_iterator(iter_gen());
     match(tok::tk_semi, "expected \";\" in foreach/forindex (iter;vector)");
     if (lookahead(tok::tk_eof)) {
-        die(thisspan, "expected vector");
+        die(this_span(), "expected vector");
     }
     node->set_value(calc());
     match(tok::tk_rcurve);
