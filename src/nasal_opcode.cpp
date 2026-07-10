@@ -3,6 +3,104 @@
 
 namespace nasal {
 
+const char* opcode::name(opcode_type op) {
+    const std::unordered_map<opcode_type, const char*> operand_name_table = {
+        { opcode_type::op_exit,    "exit  " },
+        { opcode_type::op_repl,    "repl  " },
+        { opcode_type::op_intl,    "intl  " },
+        { opcode_type::op_loadg,   "loadg " },
+        { opcode_type::op_loadl,   "loadl " },
+        { opcode_type::op_loadu,   "loadu " },
+        { opcode_type::op_dup,     "dup   " },
+        { opcode_type::op_pnum,    "pnum  " },
+        { opcode_type::op_pnil,    "pnil  " },
+        { opcode_type::op_pstr,    "pstr  " },
+        { opcode_type::op_newv,    "newv  " },
+        { opcode_type::op_newh,    "newh  " },
+        { opcode_type::op_newf,    "newf  " },
+        { opcode_type::op_happ,    "happ  " },
+        { opcode_type::op_para,    "para  " },
+        { opcode_type::op_deft,    "def   " },
+        { opcode_type::op_dyn,     "dyn   " },
+        { opcode_type::op_lnot,    "lnot  " },
+        { opcode_type::op_usub,    "usub  " },
+        { opcode_type::op_bnot,    "bitnot" },
+        { opcode_type::op_btor,    "bitor " },
+        { opcode_type::op_btxor,   "bitxor" },
+        { opcode_type::op_btand,   "bitand" },
+        { opcode_type::op_add,     "add   " },
+        { opcode_type::op_sub,     "sub   " },
+        { opcode_type::op_mul,     "mult  " },
+        { opcode_type::op_div,     "div   " },
+        { opcode_type::op_lnk,     "lnk   " },
+        { opcode_type::op_addc,    "addc  " },
+        { opcode_type::op_subc,    "subc  " },
+        { opcode_type::op_mulc,    "multc " },
+        { opcode_type::op_divc,    "divc  " },
+        { opcode_type::op_lnkc,    "lnkc  " },
+        { opcode_type::op_addeq,   "addeq " },
+        { opcode_type::op_subeq,   "subeq " },
+        { opcode_type::op_muleq,   "muleq " },
+        { opcode_type::op_diveq,   "diveq " },
+        { opcode_type::op_lnkeq,   "lnkeq " },
+        { opcode_type::op_btandeq, "bandeq" },
+        { opcode_type::op_btoreq,  "boreq " },
+        { opcode_type::op_btxoreq, "bxoreq" },
+        { opcode_type::op_addeqc,  "addeqc" },
+        { opcode_type::op_subeqc,  "subeqc" },
+        { opcode_type::op_muleqc,  "muleqc" },
+        { opcode_type::op_diveqc,  "diveqc" },
+        { opcode_type::op_lnkeqc,  "lnkeqc" },
+        { opcode_type::op_addecp,  "addecp" },
+        { opcode_type::op_subecp,  "subecp" },
+        { opcode_type::op_mulecp,  "mulecp" },
+        { opcode_type::op_divecp,  "divecp" },
+        { opcode_type::op_lnkecp,  "lnkecp" },
+        { opcode_type::op_meq,     "meq   " },
+        { opcode_type::op_eq,      "eq    " },
+        { opcode_type::op_neq,     "neq   " },
+        { opcode_type::op_less,    "less  " },
+        { opcode_type::op_leq,     "leq   " },
+        { opcode_type::op_grt,     "grt   " },
+        { opcode_type::op_geq,     "geq   " },
+        { opcode_type::op_lessc,   "lessc " },
+        { opcode_type::op_leqc,    "leqc  " },
+        { opcode_type::op_grtc,    "grtc  " },
+        { opcode_type::op_geqc,    "geqc  " },
+        { opcode_type::op_pop,     "pop   " },
+        { opcode_type::op_jmp,     "jmp   " },
+        { opcode_type::op_jt,      "jt    " },
+        { opcode_type::op_jf,      "jf    " },
+        { opcode_type::op_cnt,     "cnt   " },
+        { opcode_type::op_findex,  "findx " },
+        { opcode_type::op_feach,   "feach " },
+        { opcode_type::op_callg,   "callg " },
+        { opcode_type::op_calll,   "calll " },
+        { opcode_type::op_upval,   "upval " },
+        { opcode_type::op_callv,   "callv " },
+        { opcode_type::op_callvi,  "callvi" },
+        { opcode_type::op_callh,   "callh " },
+        { opcode_type::op_callfv,  "callfv" },
+        { opcode_type::op_callfh,  "callfh" },
+        { opcode_type::op_callb,   "callb " },
+        { opcode_type::op_slcbeg,  "slcbeg" },
+        { opcode_type::op_slcend,  "slcend" },
+        { opcode_type::op_slc,     "slice " },
+        { opcode_type::op_slc2,    "slice2" },
+        { opcode_type::op_mcallg,  "mcallg" },
+        { opcode_type::op_mcalll,  "mcalll" },
+        { opcode_type::op_mupval,  "mupval" },
+        { opcode_type::op_mcallv,  "mcallv" },
+        { opcode_type::op_mcallh,  "mcallh" },
+        { opcode_type::op_ret,     "ret   " }
+    };
+
+    if (operand_name_table.count(op)) {
+        return operand_name_table.at(op);
+    }
+    return "unknown";
+}
+
 void codestream::set(const f64* number_list,
                      const std::string* string_list,
                      const std::unordered_map<std::string, u64>& globals,
@@ -53,7 +151,7 @@ void codestream::dump(std::ostream& out) const {
     }
 
     // dump operand name
-    out << "    " << operand_name_table.at(static_cast<opcode_type>(op)) << "  ";
+    out << "    " << opcode::name(static_cast<opcode_type>(op)) << "  ";
 
     switch (op) {
         case op_addeq:
