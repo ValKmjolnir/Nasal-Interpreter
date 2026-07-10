@@ -240,7 +240,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
             continue;
         }
         strs[i] = var::gcobj(new nas_val(gc_type::gc_str));
-        strs[i].val.gcobj->immutable = 1;
+        strs[i].val.gcobj->immutable = true;
         strs[i].str() = constant_strings[i];
         total_object_count += strs[i].str().size();
         total_object_count += sizeof(std::string);
@@ -254,7 +254,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(gc_type::gc_str));
-        env_argv[i].val.gcobj->immutable = 1;
+        env_argv[i].val.gcobj->immutable = true;
         env_argv[i].str() = argv[i];
         total_object_count += env_argv[i].str().size();
         total_object_count += sizeof(std::string);

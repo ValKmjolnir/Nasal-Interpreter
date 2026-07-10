@@ -59,8 +59,8 @@ struct nas_val {
     };
 
     gc_status mark;
-    gc_type type; // value type
-    u8 immutable; // used to mark if a string is immutable
+    gc_type type;   // value type
+    bool immutable; // used to mark if a string is immutable
     union elem {
         std::string* str;
         nas_vec*     vec;

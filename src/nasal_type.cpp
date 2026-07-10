@@ -205,7 +205,7 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
 nas_val::nas_val(gc_type val_type) {
     mark = gc_status::collected;
     type = val_type;
-    immutable = 0;
+    immutable = false;
     switch (val_type) {
         case gc_type::gc_str:   ptr.str = new std::string; break;
         case gc_type::gc_vec:   ptr.vec = new nas_vec;     break;
