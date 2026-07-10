@@ -289,6 +289,7 @@ var builtin_size(context* ctx, gc* ngc) {
                 case gc_type::gc_vec:  num = val.vec().size(); break;
                 case gc_type::gc_hash: num = val.hash().size(); break;
                 case gc_type::gc_map:  num = val.map().mapper.size(); break;
+                default: break;
             } break;
         default: break;
     }

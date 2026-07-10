@@ -133,6 +133,8 @@ i32 main(i32 argc, const char* argv[]) {
         } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();
+        } else if (config.has(nasal::cli::option::cli_show_easter_egg)) {
+            nasal::parse::easter_egg();
         } else if (config.input_file_path.size()) {
             execute(config);
         } else {

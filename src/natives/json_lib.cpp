@@ -110,13 +110,20 @@ std::string json::var_generate(var& value) {
                 case gc_type::gc_vec: return vector_generate(value.vec());
                 case gc_type::gc_hash: return hash_generate(value.hash());
                 case gc_type::gc_func:
-                    error_info() += "json::stringify: cannot generate function\n"; break;
+                    error_info() += "json::stringify: cannot generate function\n";
+                    break;
                 case gc_type::gc_upval:
-                    error_info() += "json::stringify: cannot generate upvalue\n"; break;
+                    error_info() += "json::stringify: cannot generate upvalue\n";
+                    break;
                 case gc_type::gc_ghost:
-                    error_info() += "json::stringify: cannot generate ghost type\n"; break;
+                    error_info() += "json::stringify: cannot generate ghost type\n";
+                    break;
+                case gc_type::gc_co:
+                    error_info() += "json::stringify: cannot generate coroutine\n";
+                    break;
                 case gc_type::gc_map:
-                    error_info() += "json::stringify: cannot generate namespace type\n"; break;
+                    error_info() += "json::stringify: cannot generate namespace type\n";
+                    break;
             } break;
         default: break;
     }
