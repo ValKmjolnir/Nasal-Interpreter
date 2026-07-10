@@ -951,7 +951,7 @@ void vm::o_neq() {
 
 #define op_cmp(type)\
     --ctx.top;\
-    ctx.top[0] = (ctx.top[0].to_num() type ctx.top[1].to_num())? one : zero;
+    ctx.top[0] = (ctx.top[0].to_num() type ctx.top[1].to_num()) ? one : zero;
 
 void vm::o_less() { op_cmp(<); }
 void vm::o_leq() { op_cmp(<=); }
@@ -959,7 +959,7 @@ void vm::o_grt() { op_cmp(>); }
 void vm::o_geq() { op_cmp(>=); }
 
 #define op_cmp_const(type)\
-    ctx.top[0] = (ctx.top[0].to_num() type const_number[imm[ctx.pc]])? one : zero;
+    ctx.top[0] = (ctx.top[0].to_num() type const_number[imm[ctx.pc]]) ? one : zero;
 
 void vm::o_lessc() { op_cmp_const(<); }
 void vm::o_leqc() { op_cmp_const(<=); }
@@ -1061,7 +1061,7 @@ void vm::o_callv() {
         const auto& str = vec.str();
         i32 num = val.to_num();
         i32 len = str.length();
-        if (num<-len || num>=len) {
+        if (num < -len || num >= len) {
             die(report_out_of_range(num, str.size()));
             return;
         }
@@ -1146,29 +1146,27 @@ void vm::o_callfv() {
     };
 
     // top-argc+lsize(local) +1(old pc) +1(old localr) +1(old upvalr)
-    if (ctx.top-argc+func.local_size+3>=ctx.canary) {
+    if (ctx.top - argc + func.local_size + 3 >= ctx.canary) {
         die("stack overflow");
         return;
     }
     // parameter size is func->psize-1, 1 is reserved for "me"
-    const u64 parameter_size = func.parameter_size-1;
-    if (argc<parameter_size && func.local[argc+1].is_none()) {
+    const u64 parameter_size = func.parameter_size - 1;
+    if (argc < parameter_size && func.local[argc + 1].is_none()) {
         die(report_lack_arguments(argc, func));
         return;
     }
 
     // load dynamic argument, default nil, for better performance
     var dynamic = nil;
-    if (func.dynamic_parameter_index>=0) {
-        // load dynamic argument
+    if (func.dynamic_parameter_index >= 0 || parameter_size < argc) {
+        // load dynamic argument in 2 situations:
+        //   1. function has dynamic parameter
+        //   2. function has more arguments than parameters
+        //      - load arguments to default dynamic argument "arg"
+        //      - located at stack + 1
         dynamic = ngc.alloc(gc_type::gc_vec);
-        for (u64 i = parameter_size; i<argc; ++i) {
-            dynamic.vec().elems.push_back(local[i]);
-        }
-    } else if (parameter_size<argc) {
-        // load arguments to default dynamic argument "arg", located at stack+1
-        dynamic = ngc.alloc(gc_type::gc_vec);
-        for (u64 i = parameter_size; i<argc; ++i) {
+        for (u64 i = parameter_size; i < argc; ++i) {
             dynamic.vec().elems.push_back(local[i]);
         }
     }
@@ -1185,13 +1183,13 @@ void vm::o_callfv() {
     const u64 min_size = (std::min)(parameter_size, argc);
 
     // load arguments
-    for (u64 i = min_size; i>=1; --i) {
-        local[i] = local[i-1];
+    for (u64 i = min_size; i >= 1; --i) {
+        local[i] = local[i - 1];
     }
     local[0] = func.local[0]; // load "me"
 
     // load local scope & default arguments
-    for (u64 i = min_size + 1; i<func.local_size; ++i) {
+    for (u64 i = min_size + 1; i < func.local_size; ++i) {
         local[i] = func.local[i];
     }
 
