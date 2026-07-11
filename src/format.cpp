@@ -31,7 +31,8 @@ void execute(const nasal::cli::cli_config& config) {
 int main(i32 argc, const char* argv[]) {
     // output version info
     if (argc <= 1) {
-        err();
+        nasal::cli::version(std::clog, "nasal-format(beta)");
+        return 0;
     } else if (argc > 2) {
         err();
     }
@@ -43,7 +44,7 @@ int main(i32 argc, const char* argv[]) {
     if (config.has(nasal::cli::option::cli_help)) {
         std::clog << nasal::cli::nasal_format_help;
     } else if (config.has(nasal::cli::option::cli_version)) {
-        std::clog << nasal::cli::nasal_format_version;
+        nasal::cli::version(std::clog, "nasal-format(beta)");
     } else if (config.input_file_path.size()) {
         execute(config);
     } else {

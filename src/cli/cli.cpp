@@ -83,6 +83,23 @@ std::ostream& nasal_format_help(std::ostream& out) {
     return out;
 }
 
+std::ostream& nasal_linter_help(std::ostream& out) {
+    out
+    << "\n"
+    << "     ,--#-,\n"
+    << "<3  / \\____\\  <3\n"
+    << "    |_|__A_|\n"
+    << "\nnasal-linter <option>\n"
+    << "option:\n"
+    << "   -h,   --help     | get help.\n"
+    << "   -v,   --version  | get version.\n"
+    << "\nnasal-linter <file>\n"
+    << "file:\n"
+    << "   <filename>       | file to be checked.\n"
+    << "\n";
+    return out;
+}
+
 std::ostream& logo(std::ostream& out) {
     out
     << "\n"
@@ -110,20 +127,11 @@ std::ostream& logo(std::ostream& out) {
     return out;
 }
 
-std::ostream& version(std::ostream& out) {
-    out << "nasal version " << __nasver__;
+void version(std::ostream& out, const char* exe_name) {
+    out << exe_name << " version " << __nasver__;
     out << " " << nasal::util::get_platform();
     out << " " << nasal::util::get_arch();
     out << " (" << __DATE__ << " " << __TIME__ << ")\n";
-    return out;
-}
-
-std::ostream& nasal_format_version(std::ostream& out) {
-    out << "nasal-format version " << __nasver__ << "-beta";
-    out << " " << nasal::util::get_platform();
-    out << " " << nasal::util::get_arch();
-    out << " (" << __DATE__ << " " << __TIME__ << ")\n";
-    return out;
 }
 
 }

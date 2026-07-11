@@ -1,6 +1,44 @@
 #include "util/colorful.hpp"
 
+#ifdef _WIN32
+    #include <io.h>
+    #define isatty(fd) _isatty(fd)
+    #define fileno(fd) _fileno(fd)
+#else
+    #include <unistd.h>
+#endif
+
 namespace nasal {
+
+static bool stdout_is_tty() {
+    static bool init = false;
+    static bool tty = false;
+    if (!init) {
+        init = true;
+        tty = isatty(fileno(stdout));
+    }
+    return tty;
+}
+
+static bool stderr_is_tty() {
+    static bool init = false;
+    static bool tty = false;
+    if (!init) {
+        init = true;
+        tty = isatty(fileno(stderr));
+    }
+    return tty;
+}
+
+static bool enable_color(std::ostream& s) {
+    if (s.rdbuf() == std::cout.rdbuf()) {
+        return stdout_is_tty();
+    }
+    if (s.rdbuf() == std::cerr.rdbuf()) {
+        return stderr_is_tty();
+    }
+    return false;
+}
 
 #ifdef _WIN32
 #include <windows.h> // use SetConsoleTextAttribute
@@ -14,6 +52,10 @@ static for_reset windows_system_set;
 #endif
 
 std::ostream& clear_screen(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole == INVALID_HANDLE_VALUE) {
@@ -51,6 +93,10 @@ std::ostream& clear_screen(std::ostream& s) {
 }
 
 std::ostream& set_cursor(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), {0, 0});
 #else
@@ -60,6 +106,10 @@ std::ostream& set_cursor(std::ostream& s) {
 }
 
 std::ostream& back_white(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xf0);
 #else
@@ -69,6 +119,10 @@ std::ostream& back_white(std::ostream& s) {
 }
 
 std::ostream& red(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0c);
 #else
@@ -78,6 +132,10 @@ std::ostream& red(std::ostream& s) {
 }
 
 std::ostream& cyan(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x03);
 #else
@@ -87,6 +145,10 @@ std::ostream& cyan(std::ostream& s) {
 }
 
 std::ostream& orange(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0e);
 #else
@@ -96,6 +158,10 @@ std::ostream& orange(std::ostream& s) {
 }
 
 std::ostream& white(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0f);
 #else
@@ -105,6 +171,10 @@ std::ostream& white(std::ostream& s) {
 }
 
 std::ostream& reset(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
 #ifdef _WIN32
     SetConsoleTextAttribute(
         GetStdHandle(STD_OUTPUT_HANDLE),

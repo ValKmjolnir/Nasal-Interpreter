@@ -5,7 +5,7 @@ var COUNT = 16384;
 
 print("Initializing...\n");
 var v = [];
-for (var i=0; i<COUNT; i=i+1) { append(v, {}); }
+for (var i = 0; i < COUNT; i = i + 1) { append(v, {}); }
 
 
 print("Starting test\n");
@@ -79,16 +79,16 @@ func {for (var j=0; j<10; j=j+1) {
     var v = [];   var h1 = {};   var h2 = {};
 
     # Fill them
-    for (var i=0; i<65536; i=i+1) {
+    for (var i = 0; i < 65536; i = i + 1) {
         var str = "i" ~ i;
         append(v, str);
         h1[str] = i;
-        h2[i~""] = [str];
+        h2[i ~ ""] = [str];
     }
 
     # Check that we get back what we put in
-    for (i=0; i<65536; i=i+1) {
-        if (v[i] != h2[h1[v[i]~""]~""][0]) {
+    for (i = 0; i < 65536; i = i + 1) {
+        if (v[i] != h2[h1[v[i] ~ ""] ~ ""][0]) {
             print("Ack!\n");
             return;
         }

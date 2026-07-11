@@ -1,0 +1,17 @@
+space-infix-ops: expect space between parameter name, '=', and default value
+  --> test/linter/space-infix-default-param.nas:1:7
+1 | func (a =1) {}
+  |       ^^^^
+
+space-infix-ops: expect space between parameter name, '=', and default value
+  --> test/linter/space-infix-default-param.nas:2:7
+2 | func (a= 1) {}
+  |       ^^^^
+
+space-infix-ops: expect space between parameter name, '=', and default value
+  --> test/linter/space-infix-default-param.nas:3:7
+3 | func (a=1) {}
+  |       ^^^
+
+nasal-linter: 3 error(s) found
+

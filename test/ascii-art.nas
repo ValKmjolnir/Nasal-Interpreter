@@ -87,14 +87,14 @@ var curve2 = func(line=2) {
     var s="";
     for (var i=0;i<line;i+=1) {
         for (var j=0;j<90;j+=1)
-            s~=shadow[int(8*rand())];
-        s~='\n';
+            s ~= shadow[int(8*rand())];
+        s ~= '\n';
     }
     print(s);
 }
 
 var curve3 = func(line=2) {
-    var arr=[
+    var arr = [
         0,1,2,3,4,5,6,7,8,
         0,1,2,3,4,5,6,7,8,
         0,1,2,3,4,5,6,7,8,
@@ -174,7 +174,7 @@ var ansi_escape_sequence = func() {
     print("\n");
     for (var i=100;i<108;i+=1)
         print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
-    for (var i=100;i<108;i+=1)
+    for (var i=100;i <108; i += 1)
         print("\e[" ~ i ~ ";1m ",padding.rightpad(i,4),"\e[0m");
     print("\n");
 

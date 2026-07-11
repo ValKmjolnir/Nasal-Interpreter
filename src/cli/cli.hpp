@@ -72,9 +72,9 @@ cli_config parse(const std::vector<std::string>&);
 
 std::ostream& help(std::ostream&);
 std::ostream& nasal_format_help(std::ostream&);
+std::ostream& nasal_linter_help(std::ostream&);
 
 std::ostream& logo(std::ostream&);
-std::ostream& version(std::ostream&);
-std::ostream& nasal_format_version(std::ostream&);
+void version(std::ostream&, const char*);
 
 }

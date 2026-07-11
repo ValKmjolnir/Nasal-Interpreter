@@ -69,6 +69,13 @@ add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nasal-object nasal-ast)
 
+set(NASAL_LINTER_SOURCE_FILE
+    ${CMAKE_SOURCE_DIR}/src/linter/checker/manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/linter/checker/space_infix_ops.cpp)
+add_library(nasal-linter-object STATIC ${NASAL_LINTER_SOURCE_FILE})
+target_include_directories(nasal-linter-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(nasal-linter-object nasal-object)
+
 # build nasal
 add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
@@ -78,8 +85,8 @@ add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/format.cpp)
 target_link_libraries(nasal-format nasal-object)
 
 # build nasal-linter
-add_executable(nasal-linter ${CMAKE_SOURCE_DIR}/src/linter/linter.cpp)
-target_link_libraries(nasal-linter nasal-object)
+add_executable(nasal-linter ${CMAKE_SOURCE_DIR}/src/linter/main.cpp)
+target_link_libraries(nasal-linter nasal-linter-object)
 
 # link ldl and lpthread
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")

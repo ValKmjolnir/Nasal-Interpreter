@@ -1,13 +1,12 @@
 #include <iostream>
 
 #include "nasal.hpp"
-#include "linter/linter.hpp"
-#include "lexer/lexer.hpp"
-#include "parse/parse.hpp"
+#include "linter/checker/space_infix_ops.hpp"
 
-namespace nasal {
 
-bool linter::visit_binary_operator(binary_operator* node) {
+namespace nasal::linter {
+
+bool space_infix_ops::visit_binary_operator(binary_operator* node) {
     auto lhs = node->get_left();
     auto rhs = node->get_right();
 
@@ -19,14 +18,12 @@ bool linter::visit_binary_operator(binary_operator* node) {
 
     if (lhs_loc.end_line == rhs_loc.begin_line &&
         rhs_loc.begin_column - lhs_loc.end_column <= 2) {
-        err.err("space-check",
-                node->get_location(),
-                "no space between expressions and operator");
+        report(node, "no space between expressions and operator");
     }
     return true;
 }
 
-bool linter::visit_definition_expr(definition_expr* node) {
+bool space_infix_ops::visit_definition_expr(definition_expr* node) {
     auto lhs = node->get_variable_name()
             ? reinterpret_cast<expr*>(node->get_variable_name())
             : reinterpret_cast<expr*>(node->get_variables());
@@ -42,14 +39,12 @@ bool linter::visit_definition_expr(definition_expr* node) {
 
     if (lhs_loc.end_line == rhs_loc.begin_line &&
         rhs_loc.begin_column - lhs_loc.end_column <= 2) {
-        err.err("space-check",
-                node->get_location(),
-                "no space between expressions and `=`");
+        report(node, "no space between expressions and `=`");
     }
     return true;
 }
 
-bool linter::visit_assignment_expr(assignment_expr* node) {
+bool space_infix_ops::visit_assignment_expr(assignment_expr* node) {
     auto lhs = node->get_left();
     auto rhs = node->get_right();
 
@@ -62,37 +57,35 @@ bool linter::visit_assignment_expr(assignment_expr* node) {
     if (node->get_assignment_type() == assignment_expr::kind::equal) {
         if (lhs_loc.end_line == rhs_loc.begin_line &&
             rhs_loc.begin_column - lhs_loc.end_column <= 2) {
-            err.err("space-check",
-                    node->get_location(),
-                    "no space between expressions and `=`");
+            report(node, "no space between expressions and `=`");
         }
     } else {
         if (lhs_loc.end_line == rhs_loc.begin_line &&
             rhs_loc.begin_column - lhs_loc.end_column <= 3) {
-            err.err("space-check",
-                    node->get_location(),
-                    "no space between expressions and operator");
+            report(node, "no space between expressions and operator");
         }
     }
     return true;
 }
 
-}
-
-int main(i32 argc, const char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: nasal-linter <file>" << std::endl;
-        return -1;
+bool space_infix_ops::visit_parameter(parameter* node) {
+    if (node->get_default_value()) {
+        node->get_default_value()->accept(this);
     }
 
-    nasal::lexer lex;
-    nasal::parse parse;
+    if (!node->get_default_value()) {
+        return true;
+    }
 
-    lex.scan(argv[1]).chkerr();
-    parse.compile(lex).chkerr();
+    auto name_len = node->get_parameter_name().length();
+    auto node_loc = node->get_location();
+    auto dv_loc = node->get_default_value()->get_location();
+    if (node_loc.begin_line == dv_loc.begin_line &&
+        dv_loc.begin_column - (node_loc.begin_column + name_len) <= 2) {
+        report(node, "expect space between parameter name, '=', and default value");
+    }
 
-    nasal::linter lint;
-    parse.tree()->accept(&lint);
+    return true;
+}
 
-    return 0;
 }
