@@ -766,7 +766,7 @@ expr* parse::scalar() {
     // will be incorrectly recognized like:
     //   var f = func() {}(var a, b, c)
     if (is_call(toks[ptr].type) && !check_in_curve_multi_definition()) {
-        auto call_node = new call_expr(toks[ptr].loc);
+        auto call_node = new call_expr(node->get_location());
         call_node->set_first(node);
         while (is_call(toks[ptr].type)) {
             call_node->add_call(call_scalar());

@@ -115,13 +115,13 @@ var curve3 = func(line=2) {
         var shadow = [" ","░","▒","▓","█","▀","▄","▐","▌"];
         var s="";
         for (var i=0;i<size(arr);i+=1)
-            s~=shadow[arr[i]];
+            s ~= shadow[arr[i]];
         println(s);
     }
     return;
 }
 
-var curve4 = func(line=4) {
+var curve4 = func(line = 4) {
     var shadow = ["m░\e[0m","m▒\e[0m","m▓\e[0m","m█\e[0m","m▀\e[0m","m▄\e[0m","m▐\e[0m","m▌\e[0m"];
     var front = [
         "30","31","32","33","34","35","36","37",
@@ -139,13 +139,13 @@ var curve4 = func(line=4) {
     }
 }
 
-var curve5 = func(line=4) {
-    var vec=["▀▄─","▄▀─","▀─▄","▄─▀"];
+var curve5 = func(line = 4) {
+    var vec = ["▀▄─","▄▀─","▀─▄","▄─▀"];
     for (var (y,p) = (0,0);y != line;y+=1) {
         for (var x=0;x != 30;x+=1)
             print(vec[p]);
         print("\n");
-        p+=1;
+        p += 1;
         p=p >= 4?0:p;
     }
 }
@@ -153,42 +153,42 @@ var curve5 = func(line=4) {
 var ansi_escape_sequence = func() {
     # decoration
     for (var i=0;i<10;i+=1)
-        print("\e["~i~"m",padding.rightpad(i,4),"\e[0m");
+        print("\e[" ~ i ~ "m",padding.rightpad(i,4),"\e[0m");
     print("\n");
 
     # 8/16 color
-    for (var i=30;i<38;i+=1)
-        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
-    for (var i=30;i<38;i+=1)
-        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
-    print("\n");
-    for (var i=40;i<48;i+=1)
-        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
-    for (var i=40;i<48;i+=1)
-        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
-    print("\n");
-    for (var i=90;i<98;i+=1)
-        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
-    for (var i=90;i<98;i+=1)
-        print("\e["~i~";1m ",padding.rightpad(i,4),"\e[0m");
-    print("\n");
-    for (var i=100;i<108;i+=1)
-        print("\e["~i~"m ",padding.rightpad(i,4),"\e[0m");
-    for (var i=100;i <108; i += 1)
+    for (var i = 30; i < 38; i += 1)
+        print("\e[" ~ i ~ "m ",padding.rightpad(i,4),"\e[0m");
+    for (var i = 30; i < 38; i += 1)
         print("\e[" ~ i ~ ";1m ",padding.rightpad(i,4),"\e[0m");
+    print("\n");
+    for (var i = 40; i < 48; i += 1)
+        print("\e[" ~ i ~ "m ",padding.rightpad(i,4),"\e[0m");
+    for (var i = 40; i < 48; i += 1)
+        print("\e[" ~ i ~ ";1m ",padding.rightpad(i,4),"\e[0m");
+    print("\n");
+    for (var i = 90; i < 98; i += 1)
+        print("\e[" ~ i ~ "m ",padding.rightpad(i,4),"\e[0m");
+    for (var i = 90; i < 98; i += 1)
+        print("\e[" ~ i ~ ";1m ",padding.rightpad(i,4),"\e[0m");
+    print("\n");
+    for (var i = 100; i < 108; i += 1)
+        print("\e[" ~ i ~ "m ",padding.rightpad(i,4),"\e[0m");
+    for (var i = 100; i < 108; i += 1)
+        print("\e[" ~ i ~ ";1m ", padding.rightpad(i, 4), "\e[0m");
     print("\n");
 
     # 256 color
     for (var i = 0; i < 16; i += 1) {
         for (var j = 0; j < 16; j += 1) {
-            var code=str(i * 16 + j);
+            var code = str(i * 16 + j);
             print("\e[38;5;" ~ code ~ "m ",padding.rightpad(code,4),"\e[0m");
         }
         print("\n");
     }
     for (var i = 0; i < 16; i += 1) {
         for (var j = 0; j < 16; j += 1) {
-            var code=str(i * 16 + j);
+            var code = str(i * 16 + j);
             print("\e[48;5;" ~ code ~ "m ",padding.rightpad(code,4),"\e[0m");
         }
         print("\n");
@@ -202,9 +202,9 @@ var ansi_escape_sequence = func() {
         print("\e[1000D",bar.bar(i)," ",padding.rightpad(str(int(i * 100)),3)," % \n");
     }
     for (var i = 0; i < 1 / 0.03; i += 1) {
-        print("\e[1000D","\e["~str(size(progress)) ~ "A");
+        print("\e[1000D", "\e[" ~ str(size(progress)) ~ "A");
         forindex (var j;progress) {
-            progress[j]+=increase[j];
+            progress[j] += increase[j];
             progress[j]=progress[j] > 1?1:progress[j];
             print("\e[1000D",bar.bar(progress[j])," ",padding.rightpad(str(int(progress[j] * 100)),3)," % \n")
         }
