@@ -133,7 +133,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
             return ctx->last_error.c_str();
         }
 
-        if (parse.compile(lex).geterr()) {
+        if (parse.compile(lex.result()).geterr()) {
             ctx->last_error = error_output.str();
             std::cout.rdbuf(old_cout);
             std::cerr.rdbuf(old_cerr);
@@ -151,7 +151,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         auto opt = std::make_unique<nasal::optimizer>();
         opt->do_optimization(parse.tree());
 
-        if (gen.compile(parse, ld, false, true).geterr()) {
+        if (gen.compile(parse.tree(), ld.get_file_list(), false, true).geterr()) {
             ctx->last_error = error_output.str();
             std::cout.rdbuf(old_cout);
             std::cerr.rdbuf(old_cerr);

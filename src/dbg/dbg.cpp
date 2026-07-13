@@ -154,17 +154,17 @@ void dbg::step_info() {
     u64 begin = (line>>3)==0? 0:((line>>3)<<3);
     u64 end = (1+(line>>3))<<3;
 
-    src.load(files[bytecode[ctx.pc].fidx]);
+    fls.load(files[bytecode[ctx.pc].fidx]);
 
     std::clog << clear_screen << set_cursor;
     std::clog << "\nsource code:\n";
-    for (u64 i = begin; i<end && i<src.size(); ++i) {
-        std::clog << (i==line? back_white:reset);
-        std::clog << (i==line? "--> ":"    ") << src[i] << reset << "\n";
+    for (u64 i = begin; i < end && i < fls.size(); ++i) {
+        std::clog << (i == line ? back_white : reset);
+        std::clog << (i == line ? "--> " : "    ") << fls[i] << reset << "\n";
     }
 
-    begin = (ctx.pc>>3)==0? 0:((ctx.pc>>3)<<3);
-    end = (1+(ctx.pc>>3))<<3;
+    begin = (ctx.pc >> 3) == 0 ? 0 : ((ctx.pc >> 3) << 3);
+    end = (1 + (ctx.pc >> 3)) << 3;
     auto cs = codestream(
         const_number,
         const_string,

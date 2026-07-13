@@ -41,7 +41,7 @@ void execute(const nasal::cli::cli_config& config) {
     lex.scan(config.input_file_path).chkerr();
 
     // parser gets lexer's token list to compile
-    parse.compile(lex).chkerr();
+    parse.compile(lex.result()).chkerr();
     if (config.has(option::cli_view_raw_ast)) {
         nasal::ast_dumper().dump(parse.tree());
     }
@@ -65,7 +65,10 @@ void execute(const nasal::cli::cli_config& config) {
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false, config.has(option::cli_limit_mode)).chkerr();
+    gen.compile(parse.tree(),
+                ld.get_file_list(),
+                false,
+                config.has(option::cli_limit_mode)).chkerr();
     if (config.has(option::cli_view_code)) {
         gen.print(std::cout);
     }

@@ -124,7 +124,7 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_parser->compile(*nasal_lexer).geterr()) {
+    if (nasal_parser->compile(nasal_lexer->result()).geterr()) {
         return false;
     }
 
@@ -133,7 +133,10 @@ bool repl::run() {
     }
 
     nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true, false).geterr()) {
+    if (nasal_codegen->compile(nasal_parser->tree(),
+                               nasal_linker->get_file_list(),
+                               true,
+                               false).geterr()) {
         return false;
     }
 

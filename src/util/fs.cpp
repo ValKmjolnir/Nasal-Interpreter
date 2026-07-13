@@ -24,9 +24,9 @@ path& path::operator/(const path& another) {
 
 bool exists(const path& file_path) {
 #ifdef _MSC_VER
-    #define F_OK 0 // fuck msc
+    #define F_OK 0
 #endif
-    return access(file_path.c_str(), F_OK)==0;
+    return access(file_path.c_str(), F_OK) == 0;
 }
 
 bool is_regular(const path& file_path) {

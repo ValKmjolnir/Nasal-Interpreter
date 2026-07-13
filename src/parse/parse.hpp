@@ -4,7 +4,7 @@
 
 #include "nasal.hpp"
 #include "ast/ast.hpp"
-#include "lexer/lexer.hpp"
+#include "lexer/token.hpp"
 #include "error/error.hpp"
 
 namespace nasal {
@@ -165,7 +165,7 @@ public:
              in_loop_depth(0), toks(nullptr),
              root(nullptr) {}
     ~parse() {delete root;}
-    const error& compile(const lexer&);
+    const error& compile(const std::vector<token>&);
     static void easter_egg();
 };
 

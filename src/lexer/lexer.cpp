@@ -74,7 +74,7 @@ void lexer::err_char() {
 
 void lexer::open(const std::string& file) {
     if (repl::info::instance()->in_repl_mode &&
-        repl::info::instance()->repl_file_name==file) {
+        repl::info::instance()->repl_file_name == file) {
         err.load(file);
         filename = file;
         res = repl::info::instance()->repl_file_source;

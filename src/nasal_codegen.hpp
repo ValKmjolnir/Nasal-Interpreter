@@ -5,8 +5,6 @@
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
 #include "ast/symbol_finder.hpp"
-#include "parse/parse.hpp"
-#include "parse/linker.hpp"
 
 #include "natives/registry.hpp"
 
@@ -158,7 +156,7 @@ public:
 
 public:
     codegen() = default;
-    const error& compile(parse&, linker&, bool, bool);
+    const error& compile(code_block*, const std::vector<std::string>&, bool, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };

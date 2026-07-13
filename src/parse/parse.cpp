@@ -4,8 +4,8 @@
 
 namespace nasal {
 
-const error& parse::compile(const lexer& lexer) {
-    toks = lexer.result().data();
+const error& parse::compile(const std::vector<token>& token_list) {
+    toks = token_list.data();
     ptr = in_func_depth = in_loop_depth = 0;
 
     root = new code_block(toks[0].loc);
@@ -29,7 +29,7 @@ void parse::easter_egg() {
     std::clog
     << "              _,,,_                                          \n"
     << "            .'     `'.                                       \n"
-    << "           /     ____ \\      Fucking Nasal Parser           \n"
+    << "           /     ____ \\      Freaking Nasal Parser          \n"
     << "           |  .-'_  _\\/    /                                \n"
     << "           \\_/   a  a|    /                                 \n"
     << "           (,`     \\ |         .----.                       \n"
@@ -84,7 +84,7 @@ void parse::match(tok type, const char* info) {
             case tok::tk_id: die(this_span(), "expected identifier"); break;
             default:
                 die(this_span(),
-                    "expected \"" + token_name_mapper.at(type)+"\""
+                    "expected \"" + token_name_mapper.at(type) + "\""
                 );
                 break;
         }
@@ -127,12 +127,14 @@ bool parse::lookahead_expression() {
 }
 
 bool parse::is_call(tok type) {
-    return type==tok::tk_lcurve || type==tok::tk_lbracket ||
-           type==tok::tk_dot || type==tok::tk_quesdot;
+    return type == tok::tk_lcurve ||
+           type == tok::tk_lbracket ||
+           type == tok::tk_dot ||
+           type == tok::tk_quesdot;
 }
 
 bool parse::check_comma(const tok* panic_set) {
-    for (u32 i = 0; panic_set[i]!=tok::tk_null; ++i) {
+    for (u32 i = 0; panic_set[i] != tok::tk_null; ++i) {
         if (lookahead(panic_set[i])) {
             die(prev_span(), "expected \",\" between scalars");
             return true;
@@ -143,7 +145,7 @@ bool parse::check_comma(const tok* panic_set) {
 
 bool parse::check_tuple() {
     u64 check_ptr = ptr, curve = 1, bracket = 0, brace = 0;
-    while (toks[++check_ptr].type!=tok::tk_eof && curve) {
+    while (toks[++check_ptr].type != tok::tk_eof && curve) {
         switch (toks[check_ptr].type) {
             case tok::tk_lcurve:   ++curve;   break;
             case tok::tk_lbracket: ++bracket; break;
@@ -153,8 +155,8 @@ bool parse::check_tuple() {
             case tok::tk_rbrace:   --brace;   break;
             default: break;
         }
-        if (curve==1 && !bracket && !brace &&
-            toks[check_ptr].type==tok::tk_comma) {
+        if (curve == 1 && !bracket && !brace &&
+            toks[check_ptr].type == tok::tk_comma) {
             return true;
         }
     }
@@ -167,13 +169,13 @@ bool parse::check_func_end(expr* node) {
         return true;
     }
     const auto type = node->get_type();
-    if (type==expr_type::ast_func) {
+    if (type == expr_type::ast_func) {
         return true;
-    } else if (type==expr_type::ast_def) {
+    } else if (type == expr_type::ast_def) {
         return check_func_end(
             reinterpret_cast<definition_expr*>(node)->get_value()
         );
-    } else if (type==expr_type::ast_assign) {
+    } else if (type == expr_type::ast_assign) {
         return check_func_end(
             reinterpret_cast<assignment_expr*>(node)->get_right()
         );

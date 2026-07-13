@@ -16,7 +16,7 @@ void check_single_file(nasal::linter::checker_manager& cm,
     if (lex.scan(file).geterr()) {
         return;
     }
-    if (parse.compile(lex).geterr()) {
+    if (parse.compile(lex.result()).geterr()) {
         return;
     }
 

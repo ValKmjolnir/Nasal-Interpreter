@@ -22,8 +22,7 @@ const u32 VM_STACK_DEPTH = UINT16_MAX + 1;
 
 // avoid error loading function bug in MSVC version nasal.exe
 #ifdef _MSC_VER
-    // and fuck MSVC again
-    #define NASAL_EXPORT extern "C" __declspec(dllexport)
+#define NASAL_EXPORT extern "C" __declspec(dllexport)
 #else
-    #define NASAL_EXPORT extern "C" __attribute__((visibility("default")))
+#define NASAL_EXPORT extern "C" __attribute__((visibility("default")))
 #endif

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "util/filestream.hpp"
 #include "parse/linker.hpp"
-#include "error/error.hpp"
 #include "opcode/opcode.hpp"
 #include "vm/vm.hpp"
 
@@ -95,7 +95,7 @@ private:
     usize file_list_size;
     u16 break_file_index;
     u64 break_line;
-    error src;
+    filestream fls;
 
 private:
     operand_line_counter counter;

@@ -1352,14 +1352,14 @@ void codegen::ret_gen(return_expr* node) {
     emit(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(parse& parse,
-                              linker& import,
+const error& codegen::compile(code_block* tree,
+                              const std::vector<std::string>& file_list,
                               bool repl_flag,
                               bool limit_mode) {
     flag_need_repl_output = repl_flag;
     flag_limited_mode = limit_mode;
     init_native_function();
-    init_file_map(import.get_file_list());
+    init_file_map(file_list);
 
     in_foreach_loop_level.push_back(0);
 
@@ -1369,13 +1369,13 @@ const error& codegen::compile(parse& parse,
     regist_symbol("arg");
 
     // search global symbols first
-    find_symbol(parse.tree());
+    find_symbol(tree);
 
     // generate main block
-    block_gen(parse.tree());
+    block_gen(tree);
 
     // generate exit operand, vm stops here
-    emit(op_exit, 0, parse.tree()->get_location());
+    emit(op_exit, 0, tree->get_location());
 
     // size out of bound check
     if (const_number_table.size()>INT64_MAX) {

@@ -58,6 +58,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/parse/linker.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
     ${CMAKE_SOURCE_DIR}/src/util/colorful.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/filestream.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp

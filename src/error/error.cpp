@@ -4,46 +4,6 @@
 
 namespace nasal {
 
-void filestream::load(const std::string& f) {
-    if (file == f) { // don't need to load a loaded file
-        return;
-    }
-
-    // update file name
-    file = f;
-
-    // REPL: load from memory
-    if (repl::info::instance()->in_repl_mode &&
-        repl::info::instance()->repl_file_name == file) {
-        const auto& source = repl::info::instance()->repl_file_source;
-        res = {};
-        size_t pos = 0, last = 0;
-        while ((pos = source.find("\n", last)) != std::string::npos) {
-            res.push_back(source.substr(last, pos - last));
-            last = pos + 1;
-        }
-        if (last < source.length()) {
-            res.push_back(source.substr(last));
-        } else {
-            res.push_back("");
-        }
-        return;
-    }
-
-    res.clear();
-    std::ifstream in(f, std::ios::binary);
-    if (in.fail()) {
-        std::cerr << red << "src: " << reset << "cannot open <" << f << ">\n";
-        std::exit(1);
-    }
-
-    while (!in.eof()) {
-        std::string line;
-        std::getline(in, line);
-        res.push_back(line);
-    }
-}
-
 void error::err(const std::string& stage, const std::string& info) {
     ++cnt;
     std::cerr << red << stage << ": " << white << info << reset << "\n\n";
@@ -57,7 +17,7 @@ void error::err(const std::string& stage,
                 const span& loc,
                 const std::string& info) {
     // load error occurred file into string lines
-    load(loc.file);
+    fls.load(loc.file);
 
     ++cnt;
 
@@ -84,16 +44,16 @@ void error::err(const std::string& stage,
         }
 
         // if this line has nothing, skip
-        if (!res[line - 1].length() && line != loc.end_line) {
+        if (!fls[line - 1].length() && line != loc.end_line) {
             continue;
         }
 
         // line out of range
-        if (line - 1 >= res.size()) {
+        if (line - 1 >= fls.size()) {
             continue;
         }
 
-        const auto& code = res[line - 1];
+        const auto& code = fls[line - 1];
         std::cerr << cyan << leftpad(line, maxlen) << " | " << reset << code << "\n";
         // output underline
         std::cerr << cyan << iden << " | " << reset;

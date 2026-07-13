@@ -8,26 +8,14 @@
 
 #include "nasal.hpp"
 #include "error/span.hpp"
+#include "util/filestream.hpp"
 
 namespace nasal {
 
-class filestream {
-protected:
-    std::string file;
-    std::vector<std::string> res;
-
-public:
-    filestream(): file("") {}
-    void load(const std::string&);
-    const std::string& operator[](usize n) const {return res[n];}
-    const auto& name() const {return file;}
-    const auto& file_content() const {return res;}
-    usize size() const {return res.size();}
-};
-
-class error: public filestream {
+class error {
 private:
     u32 cnt; // counter for errors
+    filestream fls;
 
     std::string identation(usize len) {
         return std::string(len, ' ');
@@ -45,7 +33,9 @@ public:
     void err(const std::string&, const std::string&);
     void warn(const std::string&, const std::string&);
     void err(const std::string&, const span&, const std::string&);
-
+    void load(const std::string& f) {
+        fls.load(f);
+    }
     void chkerr() const {
         if (cnt) {
             std::exit(1);

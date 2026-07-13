@@ -1,3 +1,4 @@
+#include "lexer/lexer.hpp"
 #include "parse/linker.hpp"
 #include "ast/symbol_finder.hpp"
 #include "util/util.hpp"
@@ -216,7 +217,7 @@ code_block* linker::import_regular_file(
         );
         return new code_block({0, 0, 0, 0, filename});
     }
-    if (nasal_parser.compile(nasal_lexer).geterr())  {
+    if (nasal_parser.compile(nasal_lexer.result()).geterr())  {
         err.err("link",
             node->get_location(),
             "error occurred when analysing <" + filename + ">"
@@ -254,7 +255,7 @@ code_block* linker::import_nasal_lib() {
         );
         return new code_block({0, 0, 0, 0, path});
     }
-    if (nasal_parser.compile(nasal_lexer).geterr())  {
+    if (nasal_parser.compile(nasal_lexer.result()).geterr())  {
         err.err("link",
             "error occurred when analysing library <" + path + ">"
         );

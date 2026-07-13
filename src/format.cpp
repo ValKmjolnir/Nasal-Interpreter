@@ -23,7 +23,7 @@ void execute(const nasal::cli::cli_config& config) {
     lex.scan(config.input_file_path).chkerr();
 
     // parser gets lexer's token list to compile
-    parse.compile(lex).chkerr();
+    parse.compile(lex.result()).chkerr();
 
     nasal::ast_format("nasal-format-out.nas").do_format(parse.tree());
 }
