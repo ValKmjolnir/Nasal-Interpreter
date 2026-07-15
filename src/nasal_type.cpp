@@ -1,7 +1,6 @@
 #include "nasal_type.hpp"
-#include "util/util.hpp"
 
-#include <cstring>
+#include <string>
 #include <sstream>
 
 namespace nasal {

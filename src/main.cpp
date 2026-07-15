@@ -1,12 +1,8 @@
 #include "nasal.hpp"
-#include "nasal_type.hpp"
-#include "vm/gc.hpp"
 #include "lexer/lexer.hpp"
 
 #include "ast/ast.hpp"
-#include "ast/visitor.hpp"
 #include "ast/dumper.hpp"
-#include "ast/symbol_finder.hpp"
 #include "ast/optimizer.hpp"
 
 #include "parse/parse.hpp"
@@ -15,7 +11,6 @@
 #include "vm/vm.hpp"
 #include "dbg/dbg.hpp"
 
-#include "util/util.hpp"
 #include "repl/repl.hpp"
 #include "cli/cli.hpp"
 

@@ -4,8 +4,6 @@
 
 #include <iostream>
 #include <thread>
-#include <cstdlib>
-#include <ctime>
 
 namespace nasal::cli {
 

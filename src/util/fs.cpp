@@ -12,12 +12,11 @@
 
 #include "util/util.hpp"
 #include "util/fs.hpp"
-#include "nasal.hpp"
 
 namespace nasal::fs {
 
 path& path::operator/(const path& another) {
-    this->file_system_path += util::is_windows()? "\\":"/";
+    this->file_system_path += util::is_windows() ? "\\" : "/";
     this->file_system_path += another.file_system_path;
     return *this;
 }
@@ -31,10 +30,10 @@ bool exists(const path& file_path) {
 
 bool is_regular(const path& file_path) {
 #ifdef _MSC_VER
-    #define S_ISREG(m) (((m)&0xF000)==0x8000)
+    #define S_ISREG(m) (((m) & 0xF000) == 0x8000)
 #endif
     struct stat buffer;
-    if (stat(file_path.c_str(), &buffer)!=0) {
+    if (stat(file_path.c_str(), &buffer) != 0) {
         return false;
     }
     return S_ISREG(buffer.st_mode);

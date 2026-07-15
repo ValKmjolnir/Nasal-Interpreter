@@ -1,13 +1,10 @@
 #include "nasal.hpp"
 #include "lexer/lexer.hpp"
-#include "ast/ast.hpp"
 #include "parse/parse.hpp"
-#include "util/util.hpp"
 #include "cli/cli.hpp"
 #include "ast/format.hpp"
 
 #include <iostream>
-#include <thread>
 
 [[noreturn]]
 void err() {

@@ -1,5 +1,4 @@
 #include "error/error.hpp"
-#include "repl/repl.hpp"
 #include "util/colorful.hpp"
 
 namespace nasal {

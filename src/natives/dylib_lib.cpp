@@ -11,7 +11,6 @@
 
 #include <cstring>
 #include <sstream>
-#include <vector>
 
 #include "util/util.hpp"
 #include "util/fs.hpp"
