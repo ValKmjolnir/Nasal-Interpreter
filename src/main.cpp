@@ -7,7 +7,7 @@
 
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
-#include "nasal_codegen.hpp"
+#include "code/codegen.hpp"
 #include "vm/vm.hpp"
 #include "dbg/dbg.hpp"
 

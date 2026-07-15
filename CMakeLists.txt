@@ -37,6 +37,9 @@ target_include_directories(nasal-ast PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
+    ${CMAKE_SOURCE_DIR}/src/code/codegen.cpp
+    ${CMAKE_SOURCE_DIR}/src/code/codestream.cpp
+    ${CMAKE_SOURCE_DIR}/src/code/opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/dbg/dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/error/error.cpp
     ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
@@ -52,8 +55,6 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/registry.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/subprocess.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/unix_lib.cpp
-    ${CMAKE_SOURCE_DIR}/src/opcode/codestream.cpp
-    ${CMAKE_SOURCE_DIR}/src/opcode/opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/parse/parse.cpp
     ${CMAKE_SOURCE_DIR}/src/parse/linker.cpp
     ${CMAKE_SOURCE_DIR}/src/repl/repl.cpp
@@ -64,7 +65,6 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/vm.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)

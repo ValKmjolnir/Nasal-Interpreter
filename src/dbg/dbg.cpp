@@ -1,5 +1,5 @@
 #include "dbg/dbg.hpp"
-#include "opcode/codestream.hpp"
+#include "code/codestream.hpp"
 #include "util/colorful.hpp"
 
 namespace nasal {

@@ -3,14 +3,14 @@
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
 #include "ast/optimizer.hpp"
-#include "nasal_codegen.hpp"
+#include "code/codegen.hpp"
 #include "vm/vm.hpp"
 
 namespace nasal {
 namespace repl {
 
 void repl::add_command_history(const std::string& history) {
-    if (command_history.size() && command_history.back()==history) {
+    if (command_history.size() && command_history.back() == history) {
         return;
     }
     command_history.push_back(history);
@@ -64,7 +64,7 @@ bool repl::check_need_more_input() {
                 default: break;
             }
         }
-        if (in_curve<=0 && in_bracket<=0 && in_brace<=0) {
+        if (in_curve <= 0 && in_bracket <= 0 && in_brace <= 0) {
             break;
         }
 

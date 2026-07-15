@@ -96,8 +96,8 @@ public:
         expr(location, expr_type::ast_use) {}
     ~use_stmt() override;
     void accept(visitor*) override;
-    void add_path(identifier* node) {path.push_back(node);}
-    const auto& get_path() const {return path;}
+    void add_path(identifier* node) { path.push_back(node); }
+    const auto& get_path() const { return path; }
 };
 
 class call: public expr {
@@ -146,7 +146,7 @@ public:
     string_literal(const span& location, const std::string& str):
         expr(location, expr_type::ast_str), content(str) {}
     ~string_literal() override = default;
-    const std::string& get_content() const {return content;}
+    const std::string& get_content() const { return content; }
     void accept(visitor*) override;
 };
 
@@ -158,7 +158,7 @@ public:
     identifier(const span& location, const std::string& str):
         expr(location, expr_type::ast_id), name(str) {}
     ~identifier() override = default;
-    const std::string& get_name() const {return name;}
+    const std::string& get_name() const { return name; }
     void accept(visitor*) override;
 };
 
@@ -170,7 +170,7 @@ public:
     bool_literal(const span& location, const bool bool_flag):
         expr(location, expr_type::ast_bool), flag(bool_flag) {}
     ~bool_literal() override = default;
-    bool get_flag() const {return flag;}
+    bool get_flag() const { return flag; }
     void accept(visitor*) override;
 };
 
@@ -182,8 +182,8 @@ public:
     vector_expr(const span& location):
         expr(location, expr_type::ast_vec) {}
     ~vector_expr() override;
-    void add_element(expr* node) {elements.push_back(node);}
-    std::vector<expr*>& get_elements() {return elements;}
+    void add_element(expr* node) { elements.push_back(node); }
+    std::vector<expr*>& get_elements() { return elements; }
     void accept(visitor*) override;
 };
 
@@ -195,8 +195,8 @@ public:
     hash_expr(const span& location):
         expr(location, expr_type::ast_hash) {}
     ~hash_expr() override;
-    void add_member(hash_pair* node) {members.push_back(node);}
-    std::vector<hash_pair*>& get_members() {return members;}
+    void add_member(hash_pair* node) { members.push_back(node); }
+    std::vector<hash_pair*>& get_members() { return members; }
     void accept(visitor*) override;
 };
 
@@ -210,10 +210,10 @@ public:
         expr(location, expr_type::ast_pair),
         value(nullptr) {}
     ~hash_pair() override;
-    void set_name(const std::string& field_name) {name = field_name;}
-    void set_value(expr* node) {value = node;}
-    const std::string& get_name() const {return name;}
-    expr* get_value() {return value;}
+    void set_name(const std::string& field_name) { name = field_name; }
+    void set_value(expr* node) { value = node; }
+    const std::string& get_name() const { return name; }
+    expr* get_value() { return value; }
     void accept(visitor*) override;
 };
 
@@ -227,10 +227,10 @@ public:
         expr(location, expr_type::ast_func),
         block(nullptr) {}
     ~function() override;
-    void add_parameter(parameter* node) {parameter_list.push_back(node);}
-    void set_code_block(code_block* node) {block = node;}
-    std::vector<parameter*>& get_parameter_list() {return parameter_list;}
-    code_block* get_code_block() {return block;}
+    void add_parameter(parameter* node) { parameter_list.push_back(node); }
+    void set_code_block(code_block* node) { block = node; }
+    std::vector<parameter*>& get_parameter_list() { return parameter_list; }
+    code_block* get_code_block() { return block; }
     void accept(visitor*) override;
 };
 
@@ -242,8 +242,8 @@ public:
     code_block(const span& location):
         expr(location, expr_type::ast_block) {}
     ~code_block() override;
-    void add_expression(expr* node) {expressions.push_back(node);}
-    std::vector<expr*>& get_expressions() {return expressions;}
+    void add_expression(expr* node) { expressions.push_back(node); }
+    std::vector<expr*>& get_expressions() { return expressions; }
     void accept(visitor*) override;
 };
 
@@ -265,12 +265,12 @@ public:
         expr(location, expr_type::ast_param),
         name(""), default_value(nullptr) {}
     ~parameter() override;
-    void set_parameter_type(kind pt) {type = pt;}
-    void set_parameter_name(const std::string& pname) {name = pname;}
-    void set_default_value(expr* node) {default_value = node;}
-    auto get_parameter_type() {return type;}
-    const auto& get_parameter_name() const {return name;}
-    auto get_default_value() {return default_value;}
+    void set_parameter_type(kind pt) { type = pt; }
+    void set_parameter_name(const std::string& pname) { name = pname; }
+    void set_default_value(expr* node) { default_value = node; }
+    auto get_parameter_type() { return type; }
+    const auto& get_parameter_name() const { return name; }
+    auto get_default_value() { return default_value; }
     void accept(visitor*) override;
 };
 
@@ -285,12 +285,12 @@ public:
         expr(location, expr_type::ast_ternary),
         condition(nullptr), left(nullptr), right(nullptr) {}
     ~ternary_operator() override;
-    void set_condition(expr* node) {condition = node;}
-    void set_left(expr* node) {left = node;}
-    void set_right(expr* node) {right = node;}
-    expr* get_condition() {return condition;}
-    expr* get_left() {return left;}
-    expr* get_right() {return right;}
+    void set_condition(expr* node) { condition = node; }
+    void set_left(expr* node) { left = node; }
+    void set_right(expr* node) { right = node; }
+    expr* get_condition() { return condition; }
+    expr* get_left() { return left; }
+    expr* get_right() { return right; }
     void accept(visitor*) override;
 };
 
@@ -330,16 +330,16 @@ public:
         optimized_const_number(nullptr),
         optimized_const_string(nullptr) {}
     ~binary_operator() override;
-    void set_operator_type(kind operator_type) {type = operator_type;}
-    void set_left(expr* node) {left = node;}
-    void set_right(expr* node) {right = node;}
-    void set_optimized_number(number_literal* node) {optimized_const_number = node;}
-    void set_optimized_string(string_literal* node) {optimized_const_string = node;}
-    auto get_operator_type() const {return type;}
-    auto get_left() {return left;}
-    auto get_right() {return right;}
-    auto get_optimized_number() {return optimized_const_number;}
-    auto get_optimized_string() {return optimized_const_string;}
+    void set_operator_type(kind operator_type) { type = operator_type; }
+    void set_left(expr* node) { left = node; }
+    void set_right(expr* node) { right = node; }
+    void set_optimized_number(number_literal* node) { optimized_const_number = node; }
+    void set_optimized_string(string_literal* node) { optimized_const_string = node; }
+    auto get_operator_type() const { return type; }
+    auto get_left() { return left; }
+    auto get_right() { return right; }
+    auto get_optimized_number() { return optimized_const_number; }
+    auto get_optimized_string() { return optimized_const_string; }
     void accept(visitor*) override;
 };
 
@@ -361,12 +361,12 @@ public:
         expr(location, expr_type::ast_unary),
         value(nullptr), optimized_number(nullptr) {}
     ~unary_operator() override;
-    void set_operator_type(kind operator_type) {type = operator_type;}
-    void set_value(expr* node) {value = node;}
-    void set_optimized_number(number_literal* node) {optimized_number = node;}
-    auto get_operator_type() const {return type;}
-    auto get_value() {return value;}
-    auto get_optimized_number() {return optimized_number;}
+    void set_operator_type(kind operator_type) { type = operator_type; }
+    void set_value(expr* node) { value = node; }
+    void set_optimized_number(number_literal* node) { optimized_number = node; }
+    auto get_operator_type() const { return type; }
+    auto get_value() { return value; }
+    auto get_optimized_number() { return optimized_number; }
     void accept(visitor*) override;
 };
 
@@ -380,10 +380,10 @@ public:
         expr(location, expr_type::ast_call),
         first(nullptr) {}
     ~call_expr() override;
-    void set_first(expr* node) {first = node;}
-    void add_call(call* node) {calls.push_back(node);}
-    expr* get_first() {return first;}
-    auto& get_calls() {return calls;}
+    void set_first(expr* node) { first = node; }
+    void add_call(call* node) { calls.push_back(node); }
+    expr* get_first() { return first; }
+    auto& get_calls() { return calls; }
     void accept(visitor*) override;
 };
 
@@ -396,7 +396,7 @@ public:
         call(location, expr_type::ast_callh),
         field(name) {}
     ~call_hash() override = default;
-    const std::string& get_field() const {return field;}
+    const std::string& get_field() const { return field; }
     void accept(visitor*) override;
 };
 
@@ -409,7 +409,7 @@ public:
         call(location, expr_type::ast_null_access),
         field(name) {}
     ~null_access() override = default;
-    const std::string& get_field() const {return field;}
+    const std::string& get_field() const { return field; }
     void accept(visitor*) override;
 };
 
@@ -421,8 +421,8 @@ public:
     call_vector(const span& location):
         call(location, expr_type::ast_callv) {}
     ~call_vector() override;
-    void add_slice(slice_vector* node) {calls.push_back(node);}
-    std::vector<slice_vector*>& get_slices() {return calls;}
+    void add_slice(slice_vector* node) { calls.push_back(node); }
+    std::vector<slice_vector*>& get_slices() { return calls; }
     void accept(visitor*) override;
 };
 
@@ -434,8 +434,8 @@ public:
     call_function(const span& location):
         call(location, expr_type::ast_callf) {}
     ~call_function() override;
-    void add_argument(expr* node) {args.push_back(node);}
-    std::vector<expr*>& get_argument() {return args;}
+    void add_argument(expr* node) { args.push_back(node); }
+    std::vector<expr*>& get_argument() { return args; }
     void accept(visitor*) override;
 };
 
@@ -449,10 +449,10 @@ public:
         expr(location, expr_type::ast_subvec),
         begin(nullptr), end(nullptr) {}
     ~slice_vector() override;
-    void set_begin(expr* node) {begin = node;}
-    void set_end(expr* node) {end = node;}
-    expr* get_begin() {return begin;}
-    expr* get_end() {return end;}
+    void set_begin(expr* node) { begin = node; }
+    void set_end(expr* node) { end = node; }
+    expr* get_begin() { return begin; }
+    expr* get_end() { return end; }
     void accept(visitor*) override;
 };
 
@@ -469,14 +469,14 @@ public:
         variable_name(nullptr), variables(nullptr),
         tuple(nullptr), value(nullptr) {}
     ~definition_expr() override;
-    void set_identifier(identifier* node) {variable_name = node;}
-    void set_multi_define(multi_identifier* node) {variables = node;}
-    void set_tuple(tuple_expr* node) {tuple = node;}
-    void set_value(expr* node) {value = node;}
-    identifier* get_variable_name() {return variable_name;}
-    multi_identifier* get_variables() {return variables;}
-    tuple_expr* get_tuple() {return tuple;}
-    expr* get_value() {return value;}
+    void set_identifier(identifier* node) { variable_name = node; }
+    void set_multi_define(multi_identifier* node) { variables = node; }
+    void set_tuple(tuple_expr* node) { tuple = node; }
+    void set_value(expr* node) { value = node; }
+    identifier* get_variable_name() { return variable_name; }
+    multi_identifier* get_variables() { return variables; }
+    tuple_expr* get_tuple() { return tuple; }
+    expr* get_value() { return value; }
     void accept(visitor*) override;
 };
 
@@ -504,12 +504,12 @@ public:
         expr(location, expr_type::ast_assign),
         left(nullptr), right(nullptr) {}
     ~assignment_expr() override;
-    void set_assignment_type(kind operator_type) {type = operator_type;}
-    void set_left(expr* node) {left = node;}
-    void set_right(expr* node) {right = node;}
-    auto get_assignment_type() const {return type;}
-    auto get_left() {return left;}
-    auto get_right() {return right;}
+    void set_assignment_type(kind operator_type) { type = operator_type; }
+    void set_left(expr* node) { left = node; }
+    void set_right(expr* node) { right = node; }
+    auto get_assignment_type() const { return type; }
+    auto get_left() { return left; }
+    auto get_right() { return right; }
     void accept(visitor*) override;
 };
 
@@ -521,8 +521,8 @@ public:
     multi_identifier(const span& location):
         expr(location, expr_type::ast_multi_id) {}
     ~multi_identifier() override;
-    void add_var(identifier* node) {variables.push_back(node);}
-    std::vector<identifier*>& get_variables() {return variables;}
+    void add_var(identifier* node) { variables.push_back(node); }
+    std::vector<identifier*>& get_variables() { return variables; }
     void accept(visitor*) override;
 };
 
@@ -534,8 +534,8 @@ public:
     tuple_expr(const span& location):
         expr(location, expr_type::ast_tuple) {}
     ~tuple_expr() override;
-    void add_element(expr* node) {elements.push_back(node);}
-    std::vector<expr*>& get_elements() {return elements;}
+    void add_element(expr* node) { elements.push_back(node); }
+    std::vector<expr*>& get_elements() { return elements; }
     void accept(visitor*) override;
 };
 
@@ -549,10 +549,10 @@ public:
         expr(location, expr_type::ast_multi_assign),
         tuple(nullptr), value(nullptr) {}
     ~multi_assign() override;
-    void set_tuple(tuple_expr* node) {tuple = node;}
-    void set_value(expr* node) {value = node;}
-    tuple_expr* get_tuple() {return tuple;}
-    expr* get_value() {return value;}
+    void set_tuple(tuple_expr* node) { tuple = node; }
+    void set_value(expr* node) { value = node; }
+    tuple_expr* get_tuple() { return tuple; }
+    expr* get_value() { return value; }
     void accept(visitor*) override;
 };
 
@@ -566,10 +566,10 @@ public:
         expr(location, expr_type::ast_while),
         condition(nullptr), block(nullptr) {}
     ~while_expr() override;
-    void set_condition(expr* node) {condition = node;}
-    void set_code_block (code_block* node) {block = node;}
-    expr* get_condition() {return condition;}
-    code_block* get_code_block() {return block;}
+    void set_condition(expr* node) { condition = node; }
+    void set_code_block (code_block* node) { block = node; }
+    expr* get_condition() { return condition; }
+    code_block* get_code_block() { return block; }
     void accept(visitor*) override;
 };
 
@@ -586,14 +586,14 @@ public:
         initializing(nullptr), condition(nullptr),
         step(nullptr), block(nullptr) {}
     ~for_expr() override;
-    void set_initial(expr* node) {initializing = node;}
-    void set_condition(expr* node) {condition = node;}
-    void set_step(expr* node) {step = node;}
-    void set_code_block(code_block* node) {block = node;}
-    expr* get_initial() {return initializing;}
-    expr* get_condition() {return condition;}
-    expr* get_step() {return step;}
-    code_block* get_code_block() {return block;}
+    void set_initial(expr* node) { initializing = node; }
+    void set_condition(expr* node) { condition = node; }
+    void set_step(expr* node) { step = node; }
+    void set_code_block(code_block* node) { block = node; }
+    expr* get_initial() { return initializing; }
+    expr* get_condition() { return condition; }
+    expr* get_step() { return step; }
+    code_block* get_code_block() { return block; }
     void accept(visitor*) override;
 };
 
@@ -609,12 +609,12 @@ public:
         is_iterator_definition(false),
         name(nullptr), call(nullptr) {}
     ~iter_expr() override;
-    void set_name(identifier* node) {name = node;}
-    void set_call(call_expr* node) {call = node;}
-    void set_is_definition(bool flag) {is_iterator_definition = flag;}
-    identifier* get_name() {return name;}
-    call_expr* get_call() {return call;}
-    bool is_definition() const {return is_iterator_definition;}
+    void set_name(identifier* node) { name = node; }
+    void set_call(call_expr* node) { call = node; }
+    void set_is_definition(bool flag) { is_iterator_definition = flag; }
+    identifier* get_name() { return name; }
+    call_expr* get_call() { return call; }
+    bool is_definition() const { return is_iterator_definition; }
     void accept(visitor*) override;
 };
 
@@ -637,14 +637,14 @@ public:
         type(kind::foreach), iterator(nullptr),
         vector_node(nullptr), block(nullptr) {}
     ~forei_expr() override;
-    void set_loop_type(kind ft) {type = ft;}
-    void set_iterator(iter_expr* node) {iterator = node;}
-    void set_value(expr* node) {vector_node = node;}
-    void set_code_block(code_block* node) {block = node;}
-    auto get_loop_type() const {return type;}
-    auto get_iterator() {return iterator;}
-    auto get_value() {return vector_node;}
-    auto get_code_block() {return block;}
+    void set_loop_type(kind ft) { type = ft; }
+    void set_iterator(iter_expr* node) { iterator = node; }
+    void set_value(expr* node) { vector_node = node; }
+    void set_code_block(code_block* node) { block = node; }
+    auto get_loop_type() const { return type; }
+    auto get_iterator() { return iterator; }
+    auto get_value() { return vector_node; }
+    auto get_code_block() { return block; }
     void accept(visitor*) override;
 };
 
@@ -659,12 +659,12 @@ public:
         expr(location, expr_type::ast_cond),
         if_stmt(nullptr), else_stmt(nullptr) {}
     ~condition_expr() override;
-    void set_if_statement(if_expr* node) {if_stmt = node;}
-    void add_elsif_statement(if_expr* node) {elsif_stmt.push_back(node);}
-    void set_else_statement(if_expr* node) {else_stmt = node;}
-    if_expr* get_if_statement() {return if_stmt;}
-    std::vector<if_expr*>& get_elsif_stataments() {return elsif_stmt;}
-    if_expr* get_else_statement() {return else_stmt;}
+    void set_if_statement(if_expr* node) { if_stmt = node; }
+    void add_elsif_statement(if_expr* node) { elsif_stmt.push_back(node); }
+    void set_else_statement(if_expr* node) { else_stmt = node; }
+    if_expr* get_if_statement() { return if_stmt; }
+    std::vector<if_expr*>& get_elsif_stataments() { return elsif_stmt; }
+    if_expr* get_else_statement() { return else_stmt; }
     void accept(visitor*) override;
 };
 
@@ -678,10 +678,10 @@ public:
         expr(location, expr_type::ast_if),
         condition(nullptr), block(nullptr) {}
     ~if_expr() override;
-    void set_condition(expr* node) {condition = node;}
-    void set_code_block(code_block* node) {block = node;}
-    expr* get_condition() {return condition;}
-    code_block* get_code_block() {return block;}
+    void set_condition(expr* node) { condition = node; }
+    void set_code_block(code_block* node) { block = node; }
+    expr* get_condition() { return condition; }
+    code_block* get_code_block() { return block; }
     void accept(visitor*) override;
 };
 
@@ -710,8 +710,8 @@ public:
         expr(location, expr_type::ast_ret),
         value(nullptr) {}
     ~return_expr() override;
-    void set_value(expr* node) {value = node;}
-    expr* get_value() {return value;}
+    void set_value(expr* node) { value = node; }
+    expr* get_value() { return value; }
     void accept(visitor*) override;
 };
 

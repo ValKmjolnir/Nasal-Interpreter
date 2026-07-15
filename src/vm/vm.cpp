@@ -1,6 +1,6 @@
 #include "vm/vm.hpp"
 #include "util/util.hpp"
-#include "opcode/codestream.hpp"
+#include "code/codestream.hpp"
 
 namespace nasal {
 

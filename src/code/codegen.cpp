@@ -1,5 +1,5 @@
-#include "nasal_codegen.hpp"
-#include "opcode/codestream.hpp"
+#include "code/codegen.hpp"
+#include "code/codestream.hpp"
 
 namespace nasal {
 

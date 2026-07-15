@@ -120,7 +120,7 @@ public:
              filename(""), res(""),
              invalid_char(0) {}
     const error& scan(const std::string&);
-    const auto& result() const {return toks;}
+    const auto& result() const { return toks; }
 };
 
 }

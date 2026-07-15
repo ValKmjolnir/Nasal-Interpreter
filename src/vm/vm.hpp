@@ -8,7 +8,7 @@
 
 #include "parse/linker.hpp"
 #include "vm/gc.hpp"
-#include "nasal_codegen.hpp"
+#include "code/codegen.hpp"
 #include "util/util.hpp"
 #include "natives/registry.hpp"
 

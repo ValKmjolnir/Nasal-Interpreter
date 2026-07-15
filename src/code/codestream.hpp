@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal.hpp"
-#include "opcode/opcode.hpp"
+#include "code/opcode.hpp"
 
 #include <iostream>
 #include <string>

@@ -2,7 +2,7 @@
 
 #include "util/filestream.hpp"
 #include "parse/linker.hpp"
-#include "opcode/opcode.hpp"
+#include "code/opcode.hpp"
 #include "vm/vm.hpp"
 
 #include <cstring>

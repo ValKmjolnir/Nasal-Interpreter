@@ -1,7 +1,7 @@
 #pragma once
 
 #include "error/error.hpp"
-#include "opcode/opcode.hpp"
+#include "code/opcode.hpp"
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
 #include "ast/symbol_finder.hpp"

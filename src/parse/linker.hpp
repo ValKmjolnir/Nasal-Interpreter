@@ -49,7 +49,7 @@ private:
 public:
     linker();
     const error& link(parse&, bool);
-    const auto& get_file_list() const {return imported_files;}
+    const auto& get_file_list() const { return imported_files; }
 };
 
 }

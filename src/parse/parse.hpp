@@ -151,7 +151,7 @@ private:
     return_expr* return_expression();
 
 public:
-    code_block* tree() {return root;}
+    code_block* tree() { return root; }
 
     // swap root pointer with another pointer(maybe nullptr)
     code_block* swap(code_block* another) {
@@ -164,7 +164,7 @@ public:
     parse(): ptr(0), in_func_depth(0),
              in_loop_depth(0), toks(nullptr),
              root(nullptr) {}
-    ~parse() {delete root;}
+    ~parse() { delete root; }
     const error& compile(const std::vector<token>&);
     static void easter_egg();
 };

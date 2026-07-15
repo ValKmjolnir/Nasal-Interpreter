@@ -1,4 +1,4 @@
-#include "opcode/opcode.hpp"
+#include "code/opcode.hpp"
 
 namespace nasal {
 
