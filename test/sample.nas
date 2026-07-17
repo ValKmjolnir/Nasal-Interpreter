@@ -139,14 +139,14 @@ for (var i=0; i < 3; i = i+1) {
     doSomething(elem);
 }
 
-foreach(var elem; list1) { doSomething(elem) }  # Shorthand for above
+foreach (var elem; list1) { doSomething(elem) }  # Shorthand for above
 
 #
 # There is also a "forindex", which is like foreach except that it
 # assigns the index of each element, instead of the value, to the loop
 # variable.
 #
-forindex(var i; list1) { doSomething(list1[i]); }
+forindex (var i; list1) { doSomething(list1[i]); }
 
 #
 # Define a class object with one method, one field and one "new"
@@ -276,7 +276,7 @@ var vecfind = func(vec, elem) { return invert(vec)[elem]; }
 #
 var join = func {
     var s = "";
-    foreach(var elem; arg) { s = s ~ elem; }
+    foreach (var elem; arg) { s = s ~ elem; }
     return s;
 }
 

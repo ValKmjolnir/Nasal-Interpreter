@@ -16,8 +16,8 @@ sort(module, func(a, b) {return cmp(a, b)<0});
 
 var longest = func(vec...) {
     var len = 0;
-    foreach(var v; vec)
-        foreach(var f; v)
+    foreach (var v; vec)
+        foreach (var f; v)
             len = size(f)>len? size(f):len;
     return len;
 }
@@ -30,7 +30,7 @@ var blank = func(s) {
     var space = [" "[0],"\n"[0],"\t"[0],"\r"[0]];
     for (var i = 0; i<size(s); i+=1) {
         var flag = 0;
-        foreach(var j; space) {
+        foreach (var j; space) {
             if (s[i]==j) {
                 flag = 1;
             }
@@ -44,7 +44,7 @@ var blank = func(s) {
 
 var count = func(s, c) {
     var cnt = 0;
-    foreach(var i; split(c, s))
+    foreach (var i; split(c, s))
         cnt += !blank(i);
     return cnt;
 }
@@ -57,7 +57,7 @@ var column = func(number) {
 var calc = func(codetype, files, path = "") {
     println(codetype);
     var (bytes, ctx, line, semi, line_cnt, semi_cnt) = (0, "", 0, 0, 0, 0);
-    forindex(var i; files) {
+    forindex (var i; files) {
         var s = io.exists(path~files[i])? io.readfile(path~files[i]):"";
         (line_cnt, semi_cnt) = (count(s, '\n'), count(s, ';'));
         println(padding.rightpad(files[i], padding_length), '|',

@@ -35,7 +35,7 @@ var bfs = func(begin,end) {
     while (!que.empty()) {
         var vertex=que.front();
         que.pop();
-        foreach(var i;move) {
+        foreach (var i;move) {
             var x=vertex[0]+i[0];
             var y=vertex[1]+i[1];
             if (x==end[0] and y==end[1]) {

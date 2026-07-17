@@ -152,7 +152,7 @@ var (ptr,pc,paper,inum)=(0,0,[],[]);
 var character = func() {
     var res=[];
     setsize(res,256);
-    forindex(var i;res) {
+    forindex (var i;res) {
         res[i]="\e[38;5;"~i~"m"~chr(i)~"\e[0m";
     }
     return res;

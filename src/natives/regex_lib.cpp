@@ -1,4 +1,8 @@
-#include "natives/regex_lib.h"
+#include <regex>
+
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -57,11 +61,11 @@ var builtin_regex_replace(context* ctx, gc* ngc) noexcept {
             std::regex(reg_str.str()),
             fmt.str()
         );
-        return ngc->newstr(res);
+        return ngc->alloc_str(res);
     } catch(const std::regex_error& e) {
         return nas_err("regex::replace", e.what());
     }
-    return ngc->newstr(source.str());
+    return ngc->alloc_str(source.str());
 }
 
 var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
@@ -73,14 +77,14 @@ var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
     if (!reg_str.is_str()) {
         return nas_err("regex::match_all", "\"reg\" must be a format string");
     }
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     try {
         const auto& src = source.str();
         auto words_regex = std::regex(reg_str.str());
         auto begin = std::sregex_iterator(src.begin(), src.end(), words_regex);
         auto end = std::sregex_iterator();
         for (auto i = begin; i!=end; ++i) {
-            res.vec().elems.push_back(ngc->newstr((*i).str()));
+            res.vec().elems.push_back(ngc->alloc_str((*i).str()));
         }
     } catch(const std::regex_error& e) {
         return nas_err("regex::match_all", e.what());
@@ -88,12 +92,17 @@ var builtin_regex_match_all(context* ctx, gc* ngc) noexcept {
     return res;
 }
 
-nasal_builtin_table regex_lib_native[] = {
-    {"__regex_match", builtin_regex_match},
-    {"__regex_search", builtin_regex_search},
-    {"__regex_replace", builtin_regex_replace},
-    {"__regex_match_all", builtin_regex_match_all},
-    {nullptr, nullptr}
-};
+void load_regex_builtin() {
+    nasal_builtin_info regex_lib_native[] = {
+        {"__regex_match", builtin_regex_match},
+        {"__regex_search", builtin_regex_search},
+        {"__regex_replace", builtin_regex_replace},
+        {"__regex_match_all", builtin_regex_match_all}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : regex_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

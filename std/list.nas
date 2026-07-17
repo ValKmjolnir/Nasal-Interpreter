@@ -10,7 +10,7 @@ var new = func() {
                 prev: nil,
                 next: nil
             };
-            if (end!=nil) {
+            if (end != nil) {
                 end.next = tmp;
                 tmp.prev = end;
                 end = tmp;
@@ -25,7 +25,7 @@ var new = func() {
                 prev: nil,
                 next: nil
             };
-            if (begin!=nil) {
+            if (begin != nil) {
                 begin.prev = tmp;
                 tmp.next = begin;
                 begin = tmp;
@@ -35,10 +35,10 @@ var new = func() {
             len += 1;
         },
         pop_back: func() {
-            if (end!=nil) {
+            if (end != nil) {
                 end = end.prev;
             }
-            if (end==nil) {
+            if (end == nil) {
                 begin = nil;
             } else {
                 end.next = nil;
@@ -48,10 +48,10 @@ var new = func() {
             }
         },
         pop_front: func() {
-            if (begin!=nil) {
+            if (begin != nil) {
                 begin = begin.next;
             }
-            if (begin==nil) {
+            if (begin == nil) {
                 end = nil;
             } else {
                 begin.prev = nil;
@@ -61,12 +61,12 @@ var new = func() {
             }
         },
         front: func() {
-            if (begin!=nil) {
+            if (begin != nil) {
                 return begin.elem;
             }
         },
         back: func() {
-            if (end!=nil) {
+            if (end != nil) {
                 return end.elem;
             }
         },

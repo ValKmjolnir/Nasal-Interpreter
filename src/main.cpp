@@ -1,22 +1,18 @@
-#include "nasal.h"
-#include "nasal_type.h"
-#include "nasal_gc.h"
-#include "nasal_err.h"
-#include "nasal_lexer.h"
-#include "ast/ast.h"
-#include "ast/ast_visitor.h"
-#include "ast/ast_dumper.h"
-#include "nasal_parse.h"
-#include "nasal_import.h"
-#include "symbol_finder.h"
-#include "optimizer.h"
-#include "nasal_codegen.h"
-#include "nasal_vm.h"
-#include "nasal_dbg.h"
+#include "nasal.hpp"
+#include "lexer/lexer.hpp"
 
-#include "util/util.h"
-#include "repl/repl.h"
-#include "cli/cli.h"
+#include "ast/ast.hpp"
+#include "ast/dumper.hpp"
+#include "ast/optimizer.hpp"
+
+#include "parse/parse.hpp"
+#include "parse/linker.hpp"
+#include "code/codegen.hpp"
+#include "vm/vm.hpp"
+#include "dbg/dbg.hpp"
+
+#include "repl/repl.hpp"
+#include "cli/cli.hpp"
 
 #include <cstdlib>
 
@@ -40,7 +36,7 @@ void execute(const nasal::cli::cli_config& config) {
     lex.scan(config.input_file_path).chkerr();
 
     // parser gets lexer's token list to compile
-    parse.compile(lex).chkerr();
+    parse.compile(lex.result()).chkerr();
     if (config.has(option::cli_view_raw_ast)) {
         nasal::ast_dumper().dump(parse.tree());
     }
@@ -64,7 +60,10 @@ void execute(const nasal::cli::cli_config& config) {
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse, ld, false, config.has(option::cli_limit_mode)).chkerr();
+    gen.compile(parse.tree(),
+                ld.get_file_list(),
+                false,
+                config.has(option::cli_limit_mode)).chkerr();
     if (config.has(option::cli_view_code)) {
         gen.print(std::cout);
     }
@@ -102,7 +101,7 @@ void execute(const nasal::cli::cli_config& config) {
     // get running time
     const auto end = clk::now();
     if (config.has(option::cli_show_execute_time)) {
-        double execute_time_sec = static_cast<f64>((end - start).count())/den;
+        double execute_time_sec = static_cast<f64>((end - start).count()) / den;
         double gc_time_sec = gc_time_ms / 1000.0;
         std::clog << "process exited after ";
         std::clog << execute_time_sec << "s, gc time: ";
@@ -127,10 +126,12 @@ i32 main(i32 argc, const char* argv[]) {
         if (config.has(nasal::cli::option::cli_help)) {
             std::clog << nasal::cli::help;
         } else if (config.has(nasal::cli::option::cli_version)) {
-            std::clog << nasal::cli::version;
+            nasal::cli::version(std::clog, "nasal");
         } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();
+        } else if (config.has(nasal::cli::option::cli_show_easter_egg)) {
+            nasal::parse::easter_egg();
         } else if (config.input_file_path.size()) {
             execute(config);
         } else {

@@ -33,7 +33,7 @@ var map = func() {
     var (vec,x,s)=(nil,nil,size(table));
     var generator = func() {
         var tmp=[];
-        foreach(var elem;table)
+        foreach (var elem;table)
             if (elem[1]==vec[0][0][3] and elem[2]==0)
                 append(tmp,elem);
         vec[1][0]=tmp[rand()*size(tmp)];
@@ -45,7 +45,7 @@ var map = func() {
             }
 
             tmp=[];
-            foreach(var elem;table)
+            foreach (var elem;table)
                 if (elem[2]==vec[1][j-1][4] and elem[1]==vec[0][j][3]) {
                     if ((j==x-1 and elem[4]==0) or j<x-1)
                         append(tmp,elem);
@@ -64,14 +64,14 @@ var map = func() {
             }
 
             var tmp=[];
-            foreach(var elem;table)
+            foreach (var elem;table)
                 if (elem[1]==0 and elem[2]==0)
                     append(tmp,elem);
             vec[0][0]=tmp[rand()*size(tmp)];
 
             for (var i=1;i<x;i+=1) {
                 tmp=[];
-                foreach(var elem;table)
+                foreach (var elem;table)
                     if (elem[2]==vec[0][i-1][4] and elem[1]==0) {
                         if ((i==x-1 and elem[4]==0) or i<x-1)
                             append(tmp,elem);
@@ -83,7 +83,7 @@ var map = func() {
         },
         print:func(index) {
             var str="";
-            foreach(var _x;vec[index])
+            foreach (var _x;vec[index])
                 str~=_x[0];
             str~="\n";
             print(str);

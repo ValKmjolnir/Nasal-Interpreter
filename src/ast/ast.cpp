@@ -1,9 +1,9 @@
-#include "ast.h"
-#include "ast_visitor.h"
+#include "ast.hpp"
+#include "visitor.hpp"
 
 namespace nasal {
 
-void expr::accept(ast_visitor* visitor) {
+void expr::accept(visitor* visitor) {
     visitor->visit_expr(this);
 }
 
@@ -13,35 +13,35 @@ use_stmt::~use_stmt() {
     }
 }
 
-void use_stmt::accept(ast_visitor* visitor) {
+void use_stmt::accept(visitor* visitor) {
     visitor->visit_use_stmt(this);
 }
 
-void call::accept(ast_visitor* visitor) {
+void call::accept(visitor* visitor) {
     visitor->visit_call(this);
 }
 
-void null_expr::accept(ast_visitor* visitor) {
+void null_expr::accept(visitor* visitor) {
     visitor->visit_null_expr(this);
 }
 
-void nil_expr::accept(ast_visitor* visitor) {
+void nil_expr::accept(visitor* visitor) {
     visitor->visit_nil_expr(this);
 }
 
-void number_literal::accept(ast_visitor* visitor) {
+void number_literal::accept(visitor* visitor) {
     visitor->visit_number_literal(this);
 }
 
-void string_literal::accept(ast_visitor* visitor) {
+void string_literal::accept(visitor* visitor) {
     visitor->visit_string_literal(this);
 }
 
-void identifier::accept(ast_visitor* visitor) {
+void identifier::accept(visitor* visitor) {
     visitor->visit_identifier(this);
 }
 
-void bool_literal::accept(ast_visitor* visitor) {
+void bool_literal::accept(visitor* visitor) {
     visitor->visit_bool_literal(this);
 }
 
@@ -51,7 +51,7 @@ vector_expr::~vector_expr() {
     }
 }
 
-void vector_expr::accept(ast_visitor* visitor) {
+void vector_expr::accept(visitor* visitor) {
     visitor->visit_vector_expr(this);
 }
 
@@ -61,7 +61,7 @@ hash_expr::~hash_expr() {
     }
 }
 
-void hash_expr::accept(ast_visitor* visitor) {
+void hash_expr::accept(visitor* visitor) {
     visitor->visit_hash_expr(this);
 }
 
@@ -71,7 +71,7 @@ hash_pair::~hash_pair() {
     }
 }
 
-void hash_pair::accept(ast_visitor* visitor) {
+void hash_pair::accept(visitor* visitor) {
     visitor->visit_hash_pair(this);
 }
 
@@ -84,7 +84,7 @@ function::~function() {
     }
 }
 
-void function::accept(ast_visitor* visitor) {
+void function::accept(visitor* visitor) {
     visitor->visit_function(this);
 }
 
@@ -94,7 +94,7 @@ code_block::~code_block() {
     }
 }
 
-void code_block::accept(ast_visitor* visitor) {
+void code_block::accept(visitor* visitor) {
     visitor->visit_code_block(this);
 }
 
@@ -104,7 +104,7 @@ parameter::~parameter() {
     }
 }
 
-void parameter::accept(ast_visitor* visitor) {
+void parameter::accept(visitor* visitor) {
     visitor->visit_parameter(this);
 }
 
@@ -120,7 +120,7 @@ ternary_operator::~ternary_operator() {
     }
 }
 
-void ternary_operator::accept(ast_visitor* visitor) {
+void ternary_operator::accept(visitor* visitor) {
     visitor->visit_ternary_operator(this);
 }
 
@@ -139,7 +139,7 @@ binary_operator::~binary_operator() {
     }
 }
 
-void binary_operator::accept(ast_visitor* visitor) {
+void binary_operator::accept(visitor* visitor) {
     visitor->visit_binary_operator(this);
 }
 
@@ -152,7 +152,7 @@ unary_operator::~unary_operator() {
     }
 }
 
-void unary_operator::accept(ast_visitor* visitor) {
+void unary_operator::accept(visitor* visitor) {
     visitor->visit_unary_operator(this);
 }
 
@@ -165,15 +165,15 @@ call_expr::~call_expr() {
     }
 }
 
-void call_expr::accept(ast_visitor* visitor) {
+void call_expr::accept(visitor* visitor) {
     visitor->visit_call_expr(this);
 }
 
-void call_hash::accept(ast_visitor* visitor) {
+void call_hash::accept(visitor* visitor) {
     visitor->visit_call_hash(this);
 }
 
-void null_access::accept(ast_visitor* visitor) {
+void null_access::accept(visitor* visitor) {
     visitor->visit_null_access(this);
 }
 
@@ -183,7 +183,7 @@ call_vector::~call_vector() {
     }
 }
 
-void call_vector::accept(ast_visitor* visitor) {
+void call_vector::accept(visitor* visitor) {
     visitor->visit_call_vector(this);
 }
 
@@ -193,7 +193,7 @@ call_function::~call_function() {
     }
 }
 
-void call_function::accept(ast_visitor* visitor) {
+void call_function::accept(visitor* visitor) {
     visitor->visit_call_function(this);
 }
 
@@ -206,7 +206,7 @@ slice_vector::~slice_vector() {
     }
 }
 
-void slice_vector::accept(ast_visitor* visitor) {
+void slice_vector::accept(visitor* visitor) {
     visitor->visit_slice_vector(this);
 }
 
@@ -225,7 +225,7 @@ definition_expr::~definition_expr() {
     }
 }
 
-void definition_expr::accept(ast_visitor* visitor) {
+void definition_expr::accept(visitor* visitor) {
     visitor->visit_definition_expr(this);
 }
 
@@ -238,7 +238,7 @@ assignment_expr::~assignment_expr() {
     }
 }
 
-void assignment_expr::accept(ast_visitor* visitor) {
+void assignment_expr::accept(visitor* visitor) {
     visitor->visit_assignment_expr(this);
 }
 
@@ -248,7 +248,7 @@ multi_identifier::~multi_identifier() {
     }
 }
 
-void multi_identifier::accept(ast_visitor* visitor) {
+void multi_identifier::accept(visitor* visitor) {
     visitor->visit_multi_identifier(this);
 }
 
@@ -258,7 +258,7 @@ tuple_expr::~tuple_expr() {
     }
 }
 
-void tuple_expr::accept(ast_visitor* visitor) {
+void tuple_expr::accept(visitor* visitor) {
     visitor->visit_tuple_expr(this);
 }
 
@@ -271,7 +271,7 @@ multi_assign::~multi_assign() {
     }
 }
 
-void multi_assign::accept(ast_visitor* visitor) {
+void multi_assign::accept(visitor* visitor) {
     visitor->visit_multi_assign(this);
 }
 
@@ -284,7 +284,7 @@ while_expr::~while_expr() {
     }
 }
 
-void while_expr::accept(ast_visitor* visitor) {
+void while_expr::accept(visitor* visitor) {
     visitor->visit_while_expr(this);
 }
 
@@ -303,7 +303,7 @@ for_expr::~for_expr() {
     }
 }
 
-void for_expr::accept(ast_visitor* visitor) {
+void for_expr::accept(visitor* visitor) {
     visitor->visit_for_expr(this);
 }
 
@@ -316,7 +316,7 @@ iter_expr::~iter_expr() {
     }
 }
 
-void iter_expr::accept(ast_visitor* visitor) {
+void iter_expr::accept(visitor* visitor) {
     visitor->visit_iter_expr(this);
 }
 
@@ -332,7 +332,7 @@ forei_expr::~forei_expr() {
     }
 }
 
-void forei_expr::accept(ast_visitor* visitor) {
+void forei_expr::accept(visitor* visitor) {
     visitor->visit_forei_expr(this);
 }
 
@@ -348,7 +348,7 @@ condition_expr::~condition_expr() {
     }
 }
 
-void condition_expr::accept(ast_visitor* visitor) {
+void condition_expr::accept(visitor* visitor) {
     visitor->visit_condition_expr(this);
 }
 
@@ -361,15 +361,15 @@ if_expr::~if_expr() {
     }
 }
 
-void if_expr::accept(ast_visitor* visitor) {
+void if_expr::accept(visitor* visitor) {
     visitor->visit_if_expr(this);
 }
 
-void continue_expr::accept(ast_visitor* visitor) {
+void continue_expr::accept(visitor* visitor) {
     visitor->visit_continue_expr(this);
 }
 
-void break_expr::accept(ast_visitor* visitor) {
+void break_expr::accept(visitor* visitor) {
     visitor->visit_break_expr(this);
 }
 
@@ -379,7 +379,7 @@ return_expr::~return_expr() {
     }
 }
 
-void return_expr::accept(ast_visitor* visitor) {
+void return_expr::accept(visitor* visitor) {
     visitor->visit_return_expr(this);
 }
 

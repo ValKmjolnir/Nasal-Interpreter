@@ -1,8 +1,19 @@
-#include "natives/fg_props.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
 
 #include <fstream>
 
 namespace nasal {
+
+#define SG_LOG_BULK 1
+#define SG_LOG_DEBUG 2
+#define SG_LOG_INFO 3
+#define SG_LOG_WARN 4
+#define SG_LOG_ALERT 5
+#define SG_DEV_WARN 7
+#define SG_DEV_ALERT 8
+#define SG_MANDATORY_INFO 9
 
 var builtin_logprint(context* ctx, gc* ngc) {
     auto local = ctx->localr;
@@ -33,9 +44,14 @@ var builtin_logprint(context* ctx, gc* ngc) {
     return nil;
 }
 
-nasal_builtin_table flight_gear_native[] = {
-    {"_logprint", builtin_logprint},
-    {nullptr, nullptr}
-};
+void load_flightgear_builtin() {
+    nasal_builtin_info flight_gear_native[] = {
+        {"_logprint", builtin_logprint}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : flight_gear_native) {
+        registry.regist(i);
+    }
+}
 
 }

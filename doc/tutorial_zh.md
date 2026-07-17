@@ -96,7 +96,7 @@ var f = func(x, y, z, deft = 1) {
 }
 var f = func(args...) {
     var sum = 0;
-    foreach(var i; args) {
+    foreach (var i; args) {
         sum += i;
     }
     return sum;
@@ -260,7 +260,7 @@ for (var i = 0; i<10; i += 1) {
 `forindex` 会获取列表的下标，依次递增. 下标会从`0`递增到`size(elem)-1`结束。
 
 ```javascript
-forindex(var i; elem) {
+forindex (var i; elem) {
     print(elem[i]);
 }
 ```
@@ -268,7 +268,7 @@ forindex(var i; elem) {
 `foreach`会依次直接获取列表中的数据. 这些数据会从`elem[0]`依次获取到`elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i; elem) {
+foreach (var i; elem) {
     print(i);
 }
 ```
@@ -484,11 +484,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto& vec = res.vec().elems;
     if (hash.type==vm_hash) {
         for (const auto& iter : hash.hash().elems) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     } else {
         for (const auto& iter : hash.map().mapper) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     }
     ngc->temp = nil;
@@ -562,7 +562,7 @@ var limitcall = func(arg_size = 0) {
 
 ```C++
 // 这个头文件得加上，因为我们需要拿到nasal的api
-#include "nasal.h"
+#include "nasal.hpp"
 double fibonaci(double x) {
     if (x<=2) {
         return x;

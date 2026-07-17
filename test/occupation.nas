@@ -62,7 +62,7 @@ var mem_occupation = func() {
         return {MemTotal:math.inf,MemFree:math.inf};
     var meminfo = split("\n",io.readfile("/proc/meminfo"));
     var mem_res = {};
-    forindex(var i; meminfo) {
+    forindex (var i; meminfo) {
         var tmp = split(" ", meminfo[i])[0:1];
         tmp[0] = substr(tmp[0], 0, size(tmp[0])-1);
         mem_res[tmp[0]] = num(tmp[1]);
@@ -82,7 +82,7 @@ var random_generator = func() {
             statistics[int(size(statistics)/2+u*size(statistics)/2)]+=1;
         }
         var s = ["", "", ""];
-        foreach(var st; statistics) {
+        foreach (var st; statistics) {
             var max_rate=100/size(statistics);
             var rate=st/total*100;
             for (var i=size(s)-1;i>=0;i-=1) {
@@ -168,7 +168,7 @@ func() {
         }
 
         var s=["","",""];
-        foreach(var occ;cpu_occupation_log) {
+        foreach (var occ;cpu_occupation_log) {
             var max_rate=50/size(s);
             var rate=occ;
             for (var i=size(s)-1;i>=0;i-=1) {
@@ -188,7 +188,7 @@ func() {
         println("\e[11;1H \e[32m├"~tmp~"┤\e[0m");
 
         var s=["","",""];
-        foreach(var occ;mem_occupation_log) {
+        foreach (var occ;mem_occupation_log) {
             var max_rate=100/size(s);
             var rate=occ;
             for (var i=size(s)-1;i>=0;i-=1) {

@@ -1,5 +1,21 @@
-﻿#include "natives/builtin.h"
-#include "util/util.h"
+﻿#include "nasal.hpp"
+#include "vm/type.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+#include "util/util.hpp"
+
+#ifdef _MSC_VER
+#pragma warning (disable:4566) // i know i'm using utf-8
+#pragma warning (disable:4244)
+#pragma warning (disable:4267)
+#pragma warning (disable:4996)
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
+
+#include <sstream>
+#include <cmath>
+#include <thread>
 
 #include <chrono>
 
@@ -84,7 +100,7 @@ var builtin_system(context* ctx, gc* ngc) {
 var builtin_input(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     var end = local[1];
-    var ret = ngc->alloc(vm_type::vm_str);
+    var ret = ngc->alloc(gc_type::gc_str);
     if (!end.is_str() || end.str().length()>1 || !end.str().length()) {
         std::cin >> ret.str();
     } else {
@@ -107,13 +123,13 @@ var builtin_split(context* ctx, gc* ngc) {
     const auto& s = str.str();
 
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
 
     // empty separator means split every char
     if (!sep.length()) {
         for (auto i : s) {
-            vec.push_back(ngc->newstr(i));
+            vec.push_back(ngc->alloc_str(i));
         }
         ngc->temp = nil;
         return res;
@@ -123,13 +139,13 @@ var builtin_split(context* ctx, gc* ngc) {
     usize pos = s.find(sep, 0);
     while (pos!=std::string::npos) {
         if (pos>last) {
-            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+            vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
     if (last!=s.length()) {
-        vec.push_back(ngc->newstr(s.substr(last)));
+        vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
     return res;
@@ -155,13 +171,13 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
     const auto& s = str.str();
 
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
 
     // empty separator means split every char
     if (!sep.length()) {
         for (auto i : s) {
-            vec.push_back(ngc->newstr(i));
+            vec.push_back(ngc->alloc_str(i));
         }
         ngc->temp = nil;
         return res;
@@ -171,13 +187,13 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
     usize pos = s.find(sep, 0);
     while (pos!=std::string::npos) {
         if (pos>=last) {
-            vec.push_back(ngc->newstr(s.substr(last, pos-last)));
+            vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
     if (last<=s.length()) {
-        vec.push_back(ngc->newstr(s.substr(last)));
+        vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
     return res;
@@ -207,7 +223,7 @@ var builtin_id(context* ctx, gc* ngc) {
         ss << "x" << std::hex;
         ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
     }
-    return ngc->newstr(ss.str());
+    return ngc->alloc_str(ss.str());
 }
 
 var builtin_int(context* ctx, gc* ngc) {
@@ -258,21 +274,26 @@ var builtin_pop(context* ctx, gc* ngc) {
 }
 
 var builtin_str(context* ctx, gc* ngc) {
-    return ngc->newstr(ctx->localr[1].to_str());
+    return ngc->alloc_str(ctx->localr[1].to_str());
 }
 
 var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
 
     usize num = 0;
-    switch(val.type) {
-        case vm_type::vm_num:  return val;
-        case vm_type::vm_str:  num = val.str().length(); break;
-        case vm_type::vm_vec:  num = val.vec().size(); break;
-        case vm_type::vm_hash: num = val.hash().size(); break;
-        case vm_type::vm_map:  num = val.map().mapper.size(); break;
+    switch (val.type) {
+        case vm_type::vm_num: return val;
+        case vm_type::vm_gcobj:
+            switch (val.val.gcobj->type) {
+                case gc_type::gc_str:  num = val.str().length(); break;
+                case gc_type::gc_vec:  num = val.vec().size(); break;
+                case gc_type::gc_hash: num = val.hash().size(); break;
+                case gc_type::gc_map:  num = val.map().mapper.size(); break;
+                default: break;
+            } break;
         default: break;
     }
+
     return var::num(static_cast<f64>(num));
 }
 
@@ -317,15 +338,15 @@ var builtin_keys(context* ctx, gc* ngc) {
         return nas_err("native::keys", "\"hash\" must be hash");
     }
     // avoid being sweeped
-    auto res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    auto res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
     if (hash.is_hash()) {
         for (const auto& iter : hash.hash().elems) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     } else {
         for (const auto& iter : hash.map().mapper) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     }
     ngc->temp = nil;
@@ -348,17 +369,21 @@ var builtin_find(context* ctx, gc* ngc) {
 }
 
 var builtin_type(context* ctx, gc* ngc) {
-    switch(ctx->localr[1].type) {
-        case vm_type::vm_none: return ngc->newstr("undefined");
-        case vm_type::vm_nil: return ngc->newstr("nil");
-        case vm_type::vm_num: return ngc->newstr("num");
-        case vm_type::vm_str: return ngc->newstr("str");
-        case vm_type::vm_vec: return ngc->newstr("vec");
-        case vm_type::vm_hash: return ngc->newstr("hash");
-        case vm_type::vm_func: return ngc->newstr("func");
-        case vm_type::vm_ghost: return ngc->newstr("ghost");
-        case vm_type::vm_co: return ngc->newstr("coroutine");
-        case vm_type::vm_map: return ngc->newstr("namespace");
+    switch (ctx->localr[1].type) {
+        case vm_type::vm_none: return ngc->alloc_str("undefined");
+        case vm_type::vm_nil: return ngc->alloc_str("nil");
+        case vm_type::vm_num: return ngc->alloc_str("num");
+        case vm_type::vm_gcobj:
+            switch (ctx->localr[1].val.gcobj->type) {
+                case gc_type::gc_str: return ngc->alloc_str("str");
+                case gc_type::gc_vec: return ngc->alloc_str("vec");
+                case gc_type::gc_hash: return ngc->alloc_str("hash");
+                case gc_type::gc_func: return ngc->alloc_str("func");
+                case gc_type::gc_upval: return ngc->alloc_str("upvalue");
+                case gc_type::gc_ghost: return ngc->alloc_str("ghost");
+                case gc_type::gc_co: return ngc->alloc_str("coroutine");
+                case gc_type::gc_map: return ngc->alloc_str("namespace");
+            } break;
         default: break;
     }
     return nil;
@@ -386,7 +411,7 @@ var builtin_substr(context* ctx, gc* ngc) {
             "begin index out of range: " + std::to_string(begin)
         );
     }
-    return ngc->newstr(str.str().substr(begin, length));
+    return ngc->alloc_str(str.str().substr(begin, length));
 }
 
 var builtin_streq(context* ctx, gc* ngc) {
@@ -410,9 +435,9 @@ var builtin_left(context* ctx, gc* ngc) {
         return nas_err("native::left", "\"length\" must be number");
     }
     if (len.num() < 0) {
-        return ngc->newstr("");
+        return ngc->alloc_str("");
     }
-    return ngc->newstr(str.str().substr(0, len.num()));
+    return ngc->alloc_str(str.str().substr(0, len.num()));
 }
 
 var builtin_right(context* ctx, gc* ngc) {
@@ -436,7 +461,7 @@ var builtin_right(context* ctx, gc* ngc) {
         length = 0;
     }
 
-    return ngc->newstr(str.str().substr(srclen - length, srclen));
+    return ngc->alloc_str(str.str().substr(srclen - length, srclen));
 }
 
 var builtin_cmp(context* ctx, gc* ngc) {
@@ -473,15 +498,15 @@ var builtin_chr(context* ctx, gc* ngc) {
     };
     auto num = static_cast<i32>(ctx->localr[1].num());
     if (0<=num && num<128) {
-        return ngc->newstr(static_cast<char>(num));
+        return ngc->alloc_str(static_cast<char>(num));
     } else if (128<=num && num<256) {
-        return ngc->newstr(extend[num-128]);
+        return ngc->alloc_str(extend[num-128]);
     }
-    return ngc->newstr(" ");
+    return ngc->alloc_str(" ");
 }
 
 var builtin_char(context* ctx, gc* ngc) {
-    return ngc->newstr(static_cast<unsigned char>(ctx->localr[1].num()));
+    return ngc->alloc_str(static_cast<unsigned char>(ctx->localr[1].num()));
 }
 
 var builtin_values(context* ctx, gc* ngc) {
@@ -489,7 +514,7 @@ var builtin_values(context* ctx, gc* ngc) {
     if (!hash.is_hash() && !hash.is_map()) {
         return nas_err("native::values", "\"hash\" must be hash or namespace");
     }
-    auto vec = ngc->alloc(vm_type::vm_vec);
+    auto vec = ngc->alloc(gc_type::gc_vec);
     auto& v = vec.vec().elems;
     if (hash.is_hash()) {
         for (auto& i : hash.hash().elems) {
@@ -521,11 +546,11 @@ var builtin_sleep(context* ctx, gc* ngc) {
 }
 
 var builtin_platform(context* ctx, gc* ngc) {
-    return ngc->newstr(util::get_platform());
+    return ngc->alloc_str(util::get_platform());
 }
 
 var builtin_version(context* ctx, gc* ngc) {
-    return ngc->newstr(__nasver__);
+    return ngc->alloc_str(__nasver__);
 }
 
 var builtin_caller(context* ctx, gc* ngc) {
@@ -539,17 +564,17 @@ var builtin_caller(context* ctx, gc* ngc) {
         return nil;
     }
     const auto& cs = ctx->func_top[-level_num - 1];
-    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
-    res.vec().elems.push_back(ngc->alloc(vm_type::vm_hash));
+    var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
+    res.vec().elems.push_back(ngc->alloc(gc_type::gc_hash));
     res.vec().elems.push_back(cs.caller);
-    res.vec().elems.push_back(ngc->newstr(ctx->files[cs.file_index]));
+    res.vec().elems.push_back(ngc->alloc_str(ctx->files[cs.file_index]));
     res.vec().elems.push_back(var::num(cs.line));
     ngc->temp = nil;
     return res;
 }
 
 var builtin_arch(context* ctx, gc* ngc) {
-    return ngc->newstr(util::get_arch());
+    return ngc->alloc_str(util::get_arch());
 }
 
 // md5 related functions
@@ -648,7 +673,7 @@ var builtin_md5(context* ctx, gc* ngc) {
     if (!str.is_str()) {
         return nas_err("native::md5", "\"str\" must be string");
     }
-    return ngc->newstr(md5(str.str()));
+    return ngc->alloc_str(md5(str.str()));
 }
 
 class time_stamp {
@@ -680,7 +705,7 @@ void time_stamp_destructor(void* ptr) {
 }
 
 var builtin_maketimestamp(context* ctx, gc* ngc) {
-    auto res = ngc->alloc(vm_type::vm_ghost);
+    auto res = ngc->alloc(gc_type::gc_ghost);
     res.ghost().set(
         "nasal-time-stamp",
         time_stamp_destructor,
@@ -725,25 +750,25 @@ var builtin_gcextend(context* ctx, gc* ngc) {
     }
     const auto& s = type.str();
     if (s=="str") {
-        ngc->extend(vm_type::vm_str);
+        ngc->extend(gc_type::gc_str);
     } else if (s=="vec") {
-        ngc->extend(vm_type::vm_vec);
+        ngc->extend(gc_type::gc_vec);
     } else if (s=="hash") {
-        ngc->extend(vm_type::vm_hash);
+        ngc->extend(gc_type::gc_hash);
     } else if (s=="func") {
-        ngc->extend(vm_type::vm_func);
+        ngc->extend(gc_type::gc_func);
     } else if (s=="upval") {
-        ngc->extend(vm_type::vm_upval);
+        ngc->extend(gc_type::gc_upval);
     } else if (s=="ghost") {
-        ngc->extend(vm_type::vm_ghost);
+        ngc->extend(gc_type::gc_ghost);
     } else if (s=="co") {
-        ngc->extend(vm_type::vm_co);
+        ngc->extend(gc_type::gc_co);
     }
     return nil;
 }
 
 var builtin_gcinfo(context* ctx, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->alloc(gc_type::gc_hash);
     auto& map = res.hash().elems;
     // using ms
     map["total"] = var::num(ngc->status.gc_time_ms());
@@ -770,7 +795,7 @@ var builtin_logtime(context* ctx, gc* ngc) {
         tm_t->tm_min,
         tm_t->tm_sec
     );
-    return ngc->newstr(s);
+    return ngc->alloc_str(s);
 }
 
 var builtin_ghosttype(context* ctx, gc* ngc) {
@@ -788,9 +813,9 @@ var builtin_ghosttype(context* ctx, gc* ngc) {
         std::stringstream ss;
         ss << "0x" << std::hex;
         ss << arg.ghost().convert<u64>() << std::dec;
-        return ngc->newstr(ss.str());
+        return ngc->alloc_str(ss.str());
     }
-    return ngc->newstr(name);
+    return ngc->alloc_str(name);
 }
 
 var builtin_set_utf8_output(context* ctx, gc* ngc) {
@@ -803,7 +828,7 @@ var builtin_set_utf8_output(context* ctx, gc* ngc) {
 }
 
 var builtin_terminal_size(context* ctx, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->alloc(gc_type::gc_hash);
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
@@ -821,58 +846,74 @@ var builtin_terminal_size(context* ctx, gc* ngc) {
     return res;
 }
 
-nasal_builtin_table builtin[] = {
-    {"__print", builtin_print},
-    {"__println", builtin_println},
-    {"__exit", builtin_exit},
-    {"__abort", builtin_abort},
-    {"__append", builtin_append},
-    {"__setsize", builtin_setsize},
-    {"__system", builtin_system},
-    {"__input", builtin_input},
-    {"__split", builtin_split},
-    {"__split_with_empty_substr", builtin_split_with_empty_substr},
-    {"__rand", builtin_rand},
-    {"__id", builtin_id},
-    {"__int", builtin_int},
-    {"__floor", builtin_floor},
-    {"__ceil", builtin_ceil},
-    {"__num", builtin_num},
-    {"__pop", builtin_pop},
-    {"__str", builtin_str},
-    {"__size", builtin_size},
-    {"__time", builtin_time},
-    {"__contains", builtin_contains},
-    {"__delete", builtin_delete},
-    {"__keys", builtin_keys},
-    {"__die", builtin_die},
-    {"__find", builtin_find},
-    {"__type", builtin_type},
-    {"__substr", builtin_substr},
-    {"__streq", builtin_streq},
-    {"__left", builtin_left},
-    {"__right", builtin_right},
-    {"__cmp", builtin_cmp},
-    {"__chr", builtin_chr},
-    {"__char", builtin_char},
-    {"__values", builtin_values},
-    {"__sleep", builtin_sleep},
-    {"__platform", builtin_platform},
-    {"__arch", builtin_arch},
-    {"__version", builtin_version},
-    {"__caller", builtin_caller},
-    {"__md5", builtin_md5},
-    {"__maketimestamp", builtin_maketimestamp},
-    {"__time_stamp", builtin_time_stamp},
-    {"__elapsed_millisecond", builtin_elapsed_millisecond},
-    {"__elapsed_microsecond", builtin_elapsed_microsecond},
-    {"__gcextd", builtin_gcextend},
-    {"__gcinfo", builtin_gcinfo},
-    {"__logtime", builtin_logtime},
-    {"__ghosttype", builtin_ghosttype},
-    {"__set_utf8_output", builtin_set_utf8_output},
-    {"__terminal_size", builtin_terminal_size},
-    {nullptr, nullptr}
-};
+nasal_builtin_info unsafe_builtin_info() {
+    return {
+        "__unsafe_redirect",
+        builtin_unsafe
+    };
+}
+
+void load_standard_builtin() {
+    nasal_builtin_info builtin[] = {
+        {"__print", builtin_print},
+        {"__println", builtin_println},
+        {"__exit", builtin_exit},
+        {"__abort", builtin_abort},
+        {"__append", builtin_append},
+        {"__setsize", builtin_setsize},
+        {"__system", builtin_system},
+        {"__input", builtin_input},
+        {"__split", builtin_split},
+        {"__split_with_empty_substr", builtin_split_with_empty_substr},
+        {"__rand", builtin_rand},
+        {"__id", builtin_id},
+        {"__int", builtin_int},
+        {"__floor", builtin_floor},
+        {"__ceil", builtin_ceil},
+        {"__num", builtin_num},
+        {"__pop", builtin_pop},
+        {"__str", builtin_str},
+        {"__size", builtin_size},
+        {"__time", builtin_time},
+        {"__contains", builtin_contains},
+        {"__delete", builtin_delete},
+        {"__keys", builtin_keys},
+        {"__die", builtin_die},
+        {"__find", builtin_find},
+        {"__type", builtin_type},
+        {"__substr", builtin_substr},
+        {"__streq", builtin_streq},
+        {"__left", builtin_left},
+        {"__right", builtin_right},
+        {"__cmp", builtin_cmp},
+        {"__chr", builtin_chr},
+        {"__char", builtin_char},
+        {"__values", builtin_values},
+        {"__sleep", builtin_sleep},
+        {"__platform", builtin_platform},
+        {"__arch", builtin_arch},
+        {"__version", builtin_version},
+        {"__caller", builtin_caller},
+        {"__md5", builtin_md5},
+        {"__maketimestamp", builtin_maketimestamp},
+        {"__time_stamp", builtin_time_stamp},
+        {"__elapsed_millisecond", builtin_elapsed_millisecond},
+        {"__elapsed_microsecond", builtin_elapsed_microsecond},
+        {"__gcextd", builtin_gcextend},
+        {"__gcinfo", builtin_gcinfo},
+        {"__logtime", builtin_logtime},
+        {"__ghosttype", builtin_ghosttype},
+        {"__set_utf8_output", builtin_set_utf8_output},
+        {"__terminal_size", builtin_terminal_size}
+    };
+
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& info: builtin) {
+        if (info.name) {
+            registry.registered_builtin.insert(info.name);
+            registry.builtin_table.push_back(info);
+        }
+    }
+}
 
 }

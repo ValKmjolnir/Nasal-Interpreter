@@ -66,7 +66,7 @@ while (1) {
         println(os_time(), modified_hd(), filename);
 
         var cmd = "nasal " ~ filename;
-        foreach(var i; args) {
+        foreach (var i; args) {
             cmd ~= " " ~ i;
         }
         println(os_time(), info_hd(), "executing command \"", cmd, "\"");

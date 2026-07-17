@@ -1,6 +1,6 @@
-#include "../src/nasal.h"
-#include "../src/nasal_type.h"
-#include "../src/nasal_gc.h"
+#include "../src/nasal.hpp"
+#include "../src/vm/type.hpp"
+#include "../src/vm/gc.hpp"
 
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -128,10 +128,10 @@ var nas_accept(var* args, usize size, gc* ngc) {
         reinterpret_cast<socklen_t*>(&socklen)
     );
 #endif
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     hash["sd"] = var::num(static_cast<double>(client_sd));
-    hash["ip"] = ngc->newstr(inet_ntoa(client.sin_addr));
+    hash["ip"] = ngc->alloc_str(inet_ntoa(client.sin_addr));
     ngc->temp = nil;
     return res;
 }
@@ -187,13 +187,13 @@ var nas_recv(var* args, usize size, gc* ngc) {
         return nas_err("recv", "\"len\" out of range");
     if (!args[2].is_num())
         return nas_err("recv", "\"flags\" muse be a number");
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     char* buf = new char[static_cast<int>(args[1].num())];
     auto recvsize = recv(args[0].num(), buf, args[1].num(), args[2].num());
     hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
-    hash["str"] = ngc->newstr(buf);
+    hash["str"] = ngc->alloc_str(buf);
     delete[] buf;
     ngc->temp = nil;
     return res;
@@ -210,7 +210,7 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
         return nas_err("recvfrom", "\"flags\" muse be a number");
     sockaddr_in addr;
     int socklen = sizeof(sockaddr_in);
-    var res = ngc->temp = ngc->alloc(vm_type::vm_hash);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_hash);
     auto& hash = res.hash().elems;
     char* buf = new char[static_cast<int>(args[1].num()+1)];
 #ifdef _WIN32
@@ -234,16 +234,16 @@ var nas_recvfrom(var* args, usize size, gc* ngc) {
 #endif
     hash["size"] = var::num(static_cast<double>(recvsize));
     buf[recvsize>=0? recvsize:0] = 0;
-    hash["str"] = ngc->newstr(buf);
+    hash["str"] = ngc->alloc_str(buf);
     delete[] buf;
-    hash["fromip"] = ngc->newstr(inet_ntoa(addr.sin_addr));
+    hash["fromip"] = ngc->alloc_str(inet_ntoa(addr.sin_addr));
     hash["port"] = var::num(ntohs(addr.sin_port));
     ngc->temp = nil;
     return res;
 }
 
 var nas_errno(var* args, usize size, gc* ngc) {
-    return ngc->newstr(strerror(errno));
+    return ngc->alloc_str(strerror(errno));
 }
 
 module_func_info func_tbl[] = {

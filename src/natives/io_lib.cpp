@@ -1,5 +1,14 @@
-#include "natives/io_lib.h"
-#include "util/fs.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
+#include "util/fs.hpp"
 
 #include <fstream>
 #include <sys/stat.h>
@@ -22,7 +31,7 @@ var builtin_readfile(context* ctx, gc* ngc) {
     if (!in.fail()) {
         rd << in.rdbuf();
     }
-    return ngc->newstr(rd.str());
+    return ngc->alloc_str(rd.str());
 }
 
 var builtin_fout(context* ctx, gc* ngc) {
@@ -63,7 +72,7 @@ var builtin_open(context* ctx, gc* ngc) {
     if (!file_descriptor) {
         return nil;
     }
-    var return_object = ngc->alloc(vm_type::vm_ghost);
+    var return_object = ngc->alloc(gc_type::gc_ghost);
     return_object.ghost().set(
         file_type_name, filehandle_destructor, nullptr, file_descriptor
     );
@@ -156,7 +165,7 @@ var builtin_readln(context* ctx, gc* ngc) {
     if (!file_descriptor.object_check(file_type_name)) {
         return nas_err("io::readln", "not a valid filehandle");
     }
-    auto result = ngc->alloc(vm_type::vm_str);
+    auto result = ngc->alloc(gc_type::gc_str);
     char c;
     while ((c = fgetc(file_descriptor.ghost().get<FILE>()))!=EOF) {
         if (c=='\r') {
@@ -183,7 +192,7 @@ var builtin_stat(context* ctx, gc* ngc) {
     if (stat(name.str().c_str(), &buffer) < 0) {
         return nil;
     }
-    auto result = ngc->alloc(vm_type::vm_vec);
+    auto result = ngc->alloc(gc_type::gc_vec);
     result.vec().elems = {
         var::num(static_cast<f64>(buffer.st_dev)),
         var::num(static_cast<f64>(buffer.st_ino)),
@@ -211,41 +220,45 @@ var builtin_eof(context* ctx, gc* ngc) {
 }
 
 var builtin_stdin(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdin);
     return file_descriptor;
 }
 
 var builtin_stdout(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stdout);
     return file_descriptor;
 }
 
 var builtin_stderr(context* ctx, gc* ngc) {
-    auto file_descriptor = ngc->alloc(vm_type::vm_ghost);
+    auto file_descriptor = ngc->alloc(gc_type::gc_ghost);
     file_descriptor.ghost().set(file_type_name, nullptr, nullptr, stderr);
     return file_descriptor;
 }
 
-
-nasal_builtin_table io_lib_native[] = {
-    {"__readfile", builtin_readfile},
-    {"__fout", builtin_fout},
-    {"__exists", builtin_exists},
-    {"__open", builtin_open},
-    {"__close", builtin_close},
-    {"__read", builtin_read},
-    {"__write", builtin_write},
-    {"__seek", builtin_seek},
-    {"__tell", builtin_tell},
-    {"__readln", builtin_readln},
-    {"__stat", builtin_stat},
-    {"__eof", builtin_eof},
-    {"__stdin", builtin_stdin},
-    {"__stdout", builtin_stdout},
-    {"__stderr", builtin_stderr},
-    {nullptr, nullptr}
-};
+void load_io_builtin() {
+    nasal_builtin_info io_lib_native[] = {
+        {"__readfile", builtin_readfile},
+        {"__fout", builtin_fout},
+        {"__exists", builtin_exists},
+        {"__open", builtin_open},
+        {"__close", builtin_close},
+        {"__read", builtin_read},
+        {"__write", builtin_write},
+        {"__seek", builtin_seek},
+        {"__tell", builtin_tell},
+        {"__readln", builtin_readln},
+        {"__stat", builtin_stat},
+        {"__eof", builtin_eof},
+        {"__stdin", builtin_stdin},
+        {"__stdout", builtin_stdout},
+        {"__stderr", builtin_stderr}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : io_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

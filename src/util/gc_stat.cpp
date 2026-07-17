@@ -1,5 +1,5 @@
-#include "util/util.h"
-#include "util/gc_stat.h"
+#include "util/util.hpp"
+#include "util/gc_stat.hpp"
 
 #include <chrono>
 #include <iomanip>

@@ -37,7 +37,7 @@ var project = func(n) {
 
     ts.stamp();
     var cnt=0;
-    foreach(var c;color) {
+    foreach (var c;color) {
         var data=c[2];
         cnt+=1;
     }
@@ -79,7 +79,7 @@ var select = func(n) {
     sort(message,func(a,b) {return a[0]<b[0]});
 
     var cnt=0;
-    foreach(var c;color) {
+    foreach (var c;color) {
         var left=0;
         var right=size(message)-1;
         var data=c[2];
@@ -132,13 +132,13 @@ var cartesian = func(n) {
     ts.stamp();
 
     var res=[];
-    foreach(var c;color) {
-        foreach(var m;message) {
+    foreach (var c;color) {
+        foreach (var m;message) {
             var tmp=[];
-            foreach(var k;c) {
+            foreach (var k;c) {
                 append(tmp,k);
             }
-            foreach(var k;m) {
+            foreach (var k;m) {
                 append(tmp,k);
             }
             append(res,tmp);
@@ -187,18 +187,18 @@ var maybe_know_data = [];
 
 var temp = [];
 
-foreach(var i; know_data) {
-    foreach(var j; know_data) {
+foreach (var i; know_data) {
+    foreach (var j; know_data) {
         append(temp, [i[0], i[1], j[0], j[1]]);
     }
 }
 
-foreach(var i; temp) {
+foreach (var i; temp) {
     if (!cmp(i[1], i[2])) {
         append(maybe_know_data, [i, i[0], i[3]]);
     }
 }
 
-foreach(var res; maybe_know_data) {
+foreach (var res; maybe_know_data) {
     println(res[0], " -> ", res[1], " ", res[2]);
 }

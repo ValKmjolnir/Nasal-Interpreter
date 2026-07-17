@@ -1,4 +1,6 @@
-#include "natives/bits_lib.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -142,23 +144,29 @@ var builtin_buf(context* ctx, gc* ngc) {
     if (!length.is_num() || length.num()<=0) {
         return nas_err("bits::buf", "\"len\" must be number greater than 0");
     }
-    var str = ngc->alloc(vm_type::vm_str);
+    var str = ngc->alloc(gc_type::gc_str);
     auto& s = str.str();
     s.resize(length.num(), '\0');
     return str;
 }
 
-nasal_builtin_table bits_native[] = {
-    {"__u32xor", builtin_u32xor},
-    {"__u32and", builtin_u32and},
-    {"__u32or", builtin_u32or},
-    {"__u32nand", builtin_u32nand},
-    {"__u32not", builtin_u32not},
-    {"__fld", builtin_fld},
-    {"__sfld", builtin_sfld},
-    {"__setfld", builtin_setfld},
-    {"__buf", builtin_buf},
-    {nullptr, nullptr}
-};
+void load_bits_builtin() {
+    nasal_builtin_info bits_native[] = {
+        {"__u32xor", builtin_u32xor},
+        {"__u32and", builtin_u32and},
+        {"__u32or", builtin_u32or},
+        {"__u32nand", builtin_u32nand},
+        {"__u32not", builtin_u32not},
+        {"__fld", builtin_fld},
+        {"__sfld", builtin_sfld},
+        {"__setfld", builtin_setfld},
+        {"__buf", builtin_buf}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : bits_native) {
+        registry.regist(i);
+    }
+}
+
 
 }

@@ -37,13 +37,13 @@ screen_state.put_pixel = func(x, y, c) {
 
 var test_flush = func() {
     screen_state.clear_screen();
-    for (var i=0; i<1e6; i+=1) {
+    for (var i = 0; i < 1e6; i += 1) {
         unix.sleep(0.001);
         screen_state.update();
         screen_state.put_pixel(
-            rand()*screen_state.width,
-            rand()*screen_state.height,
-            "\e[38;5;" ~ int(256*rand()) ~ "m" ~ char(65 + 26*rand()) ~ "\e[0m"
+            rand() * screen_state.width,
+            rand() * screen_state.height,
+            "\e[38;5;" ~ int(256 * rand()) ~ "m" ~ char(65 + 26 * rand()) ~ "\e[0m"
         );
         print("\e[0;0H", i);
     }

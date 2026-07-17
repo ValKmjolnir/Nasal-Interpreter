@@ -1,0 +1,29 @@
+#pragma once
+
+#include "ast/ast.hpp"
+#include "ast/visitor.hpp"
+
+#include <cstring>
+#include <sstream>
+#include <vector>
+
+namespace nasal {
+
+class symbol_finder: public visitor {
+public:
+    struct symbol_info {
+        std::string name;
+        identifier* pos_node;
+    };
+
+private:
+    std::vector<symbol_info> symbols;
+
+public:
+    bool visit_definition_expr(definition_expr*) override;
+    bool visit_function(function*) override;
+    bool visit_iter_expr(iter_expr*) override;
+    const std::vector<symbol_finder::symbol_info>& do_find(code_block*);
+};
+
+}

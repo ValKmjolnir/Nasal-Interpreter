@@ -70,30 +70,38 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM)
 ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-下载最新代码包编译，项目非常小巧, 没有使用任何第三方库，只需要这两样即可编译: C++ 编译器以及 make 程序。
-
-### __Windows 平台 (MinGW-w64)__
-
-确保 thread model 是 `posix thread model`, 否则没有 thread 库。
-
-> mkdir build;
-> mingw32-make nasal.exe -j4
-
-### __Windows 平台 (Vistual Studio)__
-
-项目提供了 [__CMakeLists.txt__](../CMakeLists.txt) 用于在`Visual Studio`中创建项目。
-最近我们总结了命令行编译的方法 [__如何在 Windows 平台编译 Nasal-Interpreter__](./windows-build.md)。
+下载最新代码包编译，项目非常小巧，没有使用任何第三方库，只需要这两样即可编译: C++17 编译器以及 `cmake` 程序。
 
 ### __Linux / macOS / Unix 平台__
 
 ![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU)
 ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
 
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release
+>
 > make -j
 
-你也可以通过如下的其中一行命令来指定你想要使用的编译器：
+### __Windows 平台 (MinGW-w64)__
 
-> make nasal CXX=... -j
+确保 thread model 是 `posix thread model`, 否则没有 thread 库。
+
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+>
+> mingw32-make -j4
+
+### __Windows 平台 (Visual Studio)__
+
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+>
+> MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+
+也可以直接在 Visual Studio 中打开 [__CMakeLists.txt__](./CMakeLists.txt) 作为项目。更多细节参考 [__如何在 Windows 平台编译 Nasal-Interpreter__](./doc/windows-build.md)。
 
 ## __使用方法__
 
@@ -127,7 +135,7 @@ runtime.windows.set_utf8_output();
 在Andy的解释器中:
 
 ```javascript
-foreach(i; [0, 1, 2, 3])
+foreach (i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -137,9 +145,9 @@ foreach(i; [0, 1, 2, 3])
 
 ```javascript
 code: undefined symbol "i"
- --> test.nas:1:9
+ --> test.nas:1:10
   | 
-1 | foreach(i; [0, 1, 2, 3])
+1 | foreach (i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"
@@ -327,11 +335,11 @@ local (0x55dcb5b43190 <+7>)
 ```javascript
 source code:
 --> var fib = func(x) {
-        if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+        if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i +=1 )
+        print(fib(i), '\n');
 
 
 next bytecode:
@@ -360,11 +368,11 @@ vm stack (0x7fca7e9f1010, limit 16, total 0)
 ```javascript
 source code:
     var fib = func(x) {
--->     if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+-->     if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:

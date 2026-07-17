@@ -8,7 +8,7 @@ import sys
 build_directory = pathlib.Path("build")
 if not os.path.exists(build_directory):
     print("pack binaries failed: build directory not found")
-    exit(-1)
+    sys.exit(-1)
 
 nasal_executable = pathlib.Path("nasal")
 if platform.system() == "Windows":
@@ -16,21 +16,27 @@ if platform.system() == "Windows":
 nasal_format_executable = pathlib.Path("nasal-format")
 if platform.system() == "Windows":
     nasal_format_executable = pathlib.Path("nasal-format.exe")
+nasal_linter_executable = pathlib.Path("nasal-linter")
+if platform.system() == "Windows":
+    nasal_linter_executable = pathlib.Path("nasal-linter.exe")
 nasal_standard_library = pathlib.Path("std")
 if not os.path.exists(nasal_executable):
     print("pack binaries failed: nasal executable not found")
-    exit(-1)
+    sys.exit(-1)
 if not os.path.exists(nasal_format_executable):
     print("pack binaries failed: nasal-format executable not found")
-    exit(-1)
+    sys.exit(-1)
+if not os.path.exists(nasal_linter_executable):
+    print("pack binaries failed: nasal-linter executable not found")
+    sys.exit(-1)
 if not os.path.exists(nasal_standard_library):
     print("pack binaries failed: nasal standard library not found")
-    exit(-1)
+    sys.exit(-1)
 
 nasal_module_directory = pathlib.Path("module")
 if not os.path.exists(nasal_module_directory):
     print("pack binaries failed: nasal module directory not found")
-    exit(-1)
+    sys.exit(-1)
 
 dynamic_library_suffix = ""
 if platform.system()=="Windows":
@@ -47,11 +53,11 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
     path = pathlib.Path("module").joinpath(m + dynamic_library_suffix)
     if not os.path.exists(path):
         print("pack binaries failed: nasal module `{}` not found".format(m))
-        exit(-1)
+        sys.exit(-1)
     lib = pathlib.Path("module").joinpath(m + ".nas")
     if not os.path.exists(lib):
         print("pack binaries failed: nasal module lib `{}.nas` not found".format(m))
-        exit(-1)
+        sys.exit(-1)
     nasal_modules.append(path)
     nasal_modules.append(lib)
 
@@ -79,6 +85,7 @@ if not os.path.exists(package_directory):
 print("pack nasal executable")
 shutil.copy(nasal_executable, package_directory.joinpath(nasal_executable))
 shutil.copy(nasal_format_executable, package_directory.joinpath(nasal_format_executable))
+shutil.copy(nasal_linter_executable, package_directory.joinpath(nasal_linter_executable))
 
 print("pack nasal standard library")
 shutil.copytree(nasal_standard_library, package_directory.joinpath(nasal_standard_library))

@@ -16,7 +16,7 @@ var is_prime_sqrt = func(x) {
 
 var primes=[];
 var filter = func(x) {
-    foreach(var i;primes) {
+    foreach (var i;primes) {
         if (x/i==int(x/i))
             return 0;
         if (x>=i) {

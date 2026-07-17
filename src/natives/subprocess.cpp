@@ -1,6 +1,16 @@
-#include "natives/subprocess.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
 
-// if you ask why, i will say: only MSVC
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+
+#ifndef WIN32
+#include <sys/wait.h>
+#endif
+
+// if you ask why, i will say: only MSVC can do
 #ifdef _MSC_VER
 #define popen _popen
 #define pclose _pclose
@@ -24,6 +34,21 @@
 
 namespace nasal {
 
+struct subprocess {
+#ifndef WIN32
+    pid_t pid;
+    int status = 0;
+#else
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+#endif
+
+public:
+    static const char* name() {
+        return "nasal::subprocess";
+    }
+};
+
 void subprocess_desc_dtor(void* ptr) {
 #ifdef WIN32
     auto pi = &static_cast<subprocess*>(ptr)->pi;
@@ -39,7 +64,7 @@ void subprocess_desc_dtor(void* ptr) {
     pid_t result = waitpid(pid, &status, WNOHANG);
 
     // child process running
-    if (result==0) {
+    if (result == 0) {
         kill(pid, SIGTERM);
     }
 #endif
@@ -61,7 +86,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
         }
     }
 
-    auto obj = ngc->alloc(vm_type::vm_ghost);
+    auto obj = ngc->alloc(gc_type::gc_ghost);
     obj.ghost().set(
         subprocess::name(),
         subprocess_desc_dtor,
@@ -224,11 +249,16 @@ var builtin_subprocess_terminate(context* ctx, gc* ngc) {
 #endif
 }
 
-nasal_builtin_table subprocess_native[] = {
-    {"__subprocess_create", builtin_subprocess_create},
-    {"__subprocess_active", builtin_subprocess_active},
-    {"__subprocess_terminate", builtin_subprocess_terminate},
-    {nullptr, nullptr}
-};
+void load_subprocess_builtin() {
+    nasal_builtin_info subprocess_native[] = {
+        {"__subprocess_create", builtin_subprocess_create},
+        {"__subprocess_active", builtin_subprocess_active},
+        {"__subprocess_terminate", builtin_subprocess_terminate}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : subprocess_native) {
+        registry.regist(i);
+    }
+}
 
 }

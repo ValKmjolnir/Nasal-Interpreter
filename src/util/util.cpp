@@ -1,4 +1,4 @@
-#include "util/util.h"
+#include "util/util.hpp"
 
 #include <cmath>
 
@@ -148,7 +148,7 @@ std::string rawstr(const std::string& str, const usize maxlen) {
             ret += "\\x" + char_to_hex(i);
             continue;
         }
-        switch(i) {
+        switch (i) {
             case '\0':  ret += "\\0";  break;
             case '\a':  ret += "\\a";  break;
             case '\b':  ret += "\\b";  break;

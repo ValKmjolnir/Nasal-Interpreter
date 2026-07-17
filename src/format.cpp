@@ -1,13 +1,10 @@
-#include "nasal.h"
-#include "nasal_lexer.h"
-#include "ast/ast.h"
-#include "nasal_parse.h"
-#include "util/util.h"
-#include "cli/cli.h"
-#include "ast/ast_format.h"
+#include "nasal.hpp"
+#include "lexer/lexer.hpp"
+#include "parse/parse.hpp"
+#include "cli/cli.hpp"
+#include "ast/format.hpp"
 
 #include <iostream>
-#include <thread>
 
 [[noreturn]]
 void err() {
@@ -23,7 +20,7 @@ void execute(const nasal::cli::cli_config& config) {
     lex.scan(config.input_file_path).chkerr();
 
     // parser gets lexer's token list to compile
-    parse.compile(lex).chkerr();
+    parse.compile(lex.result()).chkerr();
 
     nasal::ast_format("nasal-format-out.nas").do_format(parse.tree());
 }
@@ -31,7 +28,8 @@ void execute(const nasal::cli::cli_config& config) {
 int main(i32 argc, const char* argv[]) {
     // output version info
     if (argc <= 1) {
-        err();
+        nasal::cli::version(std::clog, "nasal-format(beta)");
+        return 0;
     } else if (argc > 2) {
         err();
     }
@@ -43,7 +41,7 @@ int main(i32 argc, const char* argv[]) {
     if (config.has(nasal::cli::option::cli_help)) {
         std::clog << nasal::cli::nasal_format_help;
     } else if (config.has(nasal::cli::option::cli_version)) {
-        std::clog << nasal::cli::nasal_format_version;
+        nasal::cli::version(std::clog, "nasal-format(beta)");
     } else if (config.input_file_path.size()) {
         execute(config);
     } else {

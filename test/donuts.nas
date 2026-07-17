@@ -17,7 +17,7 @@ var main = func(run_time) {
     print("\e[2J");
     for (var run=0;run<run_time;run+=1) {
         ts.stamp();
-        forindex(var i;b) {
+        forindex (var i;b) {
             b[i]=" ";
             z[i]=0;
         }

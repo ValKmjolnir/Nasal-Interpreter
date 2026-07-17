@@ -135,7 +135,7 @@ println(tmp_f());
 # undefined symbol 'me'
 # this means that
 # when generating local_scope for function f,
-# nasal_gc will not count 'me' as one reference of this hash
+# nasal gc will not count 'me' as one reference of this hash
 
 var h1={str:'hello',f:func {return me.str;}};
 var h2={str:'world',f:func {return nil;}};
@@ -198,10 +198,10 @@ println(isa(a.new2(),a));# 0
 
 var a=[10,-10,0,1,2,3,nil,"string","hello",[],[0,1,2,3],{},{a:0,b:1,c:2},func {}];
 println("type\tsize\tnum\tsrc");
-foreach(var i;a) {
+foreach (var i;a) {
     println(typeof(i),'\t',size(i),'\t',num(i),'\t',i);
 }
-foreach(i;a) {
+foreach (i;a) {
     ;
 }
 println(runtime.argv());
@@ -242,13 +242,13 @@ print(num("4.94065645841246544176568792868e-324"), "\n");
 
 var test_call_iterator = {iter: 0};
 
-foreach(test_call_iterator.iter; [0, 1, 2, 3]) {
+foreach (test_call_iterator.iter; [0, 1, 2, 3]) {
     println(test_call_iterator);
 }
 
 var test_single_id_iterator = 0;
 
-foreach(test_single_id_iterator; [0, 1, 2, 3]) {
+foreach (test_single_id_iterator; [0, 1, 2, 3]) {
     println(test_single_id_iterator);
 }
 
@@ -261,9 +261,9 @@ var closure_tester = func() {
     ];
 }();
 
-for (var i = 1; i<=10; i += 1) {
+for (var i = 1; i <= 10; i += 1) {
     closure_tester[0]();
-    if (closure_tester[1]()!=i) {
+    if (closure_tester[1]() != i) {
         die("test failed: expect " ~ i ~ ", but get " ~ closure_tester[1]());
     }
 }
@@ -272,7 +272,7 @@ func() {
     var a = nil;
     var b = nil;
     var c = nil;
-    println(a??b??c??"a??b??c?? -> should print this text");
+    println(a ?? b ?? c ?? "a ?? b ?? c ?? -> should print this text");
 
     var a = {b: 2};
     println(a?.b); # should be 2

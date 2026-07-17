@@ -1,4 +1,8 @@
-#include "natives/math_lib.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+
+#include <cmath>
 
 namespace nasal {
 
@@ -60,18 +64,23 @@ var builtin_isnan(context* ctx, gc* ngc) {
     return (x.is_num() && std::isnan(x.num()))? one:zero;
 }
 
-nasal_builtin_table math_lib_native[] = {
-    {"__pow", builtin_pow},
-    {"__sin", builtin_sin},
-    {"__cos", builtin_cos},
-    {"__tan", builtin_tan},
-    {"__exp", builtin_exp},
-    {"__lg", builtin_lg},
-    {"__ln", builtin_ln},
-    {"__sqrt", builtin_sqrt},
-    {"__atan2", builtin_atan2},
-    {"__isnan", builtin_isnan},
-    {nullptr, nullptr}
-};
+void load_math_builtin() {
+    nasal_builtin_info math_lib_native[] = {
+        {"__pow", builtin_pow},
+        {"__sin", builtin_sin},
+        {"__cos", builtin_cos},
+        {"__tan", builtin_tan},
+        {"__exp", builtin_exp},
+        {"__lg", builtin_lg},
+        {"__ln", builtin_ln},
+        {"__sqrt", builtin_sqrt},
+        {"__atan2", builtin_atan2},
+        {"__isnan", builtin_isnan}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : math_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

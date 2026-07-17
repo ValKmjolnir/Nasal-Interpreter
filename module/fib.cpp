@@ -1,9 +1,9 @@
 // module for test
 
 #include <iostream>
-#include "../src/nasal.h"
-#include "../src/nasal_type.h"
-#include "../src/nasal_gc.h"
+#include "../src/nasal.hpp"
+#include "../src/vm/type.hpp"
+#include "../src/vm/gc.hpp"
 
 namespace nasal {
 namespace fib_module {
@@ -73,7 +73,7 @@ void ghost_for_test_gc_marker(void* ptr, std::queue<var>* bfs_queue) {
 }
 
 var create_new_ghost(var* args, usize size, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_ghost);
+    var res = ngc->alloc(gc_type::gc_ghost);
     res.ghost().set(
         ghost_for_test,
         ghost_for_test_destructor,
@@ -94,7 +94,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
     res.ghost().get<ghost_obj>()->number = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";
 
-    res.ghost().get<ghost_obj>()->test_string = ngc->newstr("just for test");
+    res.ghost().get<ghost_obj>()->test_string = ngc->alloc_str("just for test");
     std::cout << "set_new_ghost: successfully set ghost.test_string = just for test\n";
     return nil;
 }

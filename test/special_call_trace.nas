@@ -3,7 +3,7 @@ var f = func() {
 }
 
 var b = func(f...) {
-    foreach(var i; f) {
+    foreach (var i; f) {
         i();
     }
 }

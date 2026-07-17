@@ -21,7 +21,7 @@ var makeConnect = func(n,connections) {
     var cnt=n-1;
     var parent=[];
     setsize(parent,n);
-    foreach(var i;connections)
+    foreach (var i;connections)
         if (union_root(i[0],i[1],parent))
             cnt-=1;
     return cnt;

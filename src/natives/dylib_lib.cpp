@@ -1,6 +1,19 @@
-#include "natives/dylib_lib.h"
-#include "util/util.h"
-#include "util/fs.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#include <sys/wait.h>
+#endif
+
+#include <cstring>
+#include <sstream>
+
+#include "util/util.hpp"
+#include "util/fs.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -117,8 +130,8 @@ var builtin_dlopen(context* ctx, gc* ngc) {
             "cannot open dynamic lib <" + dl.str() + ">"
         );
     }
-    auto return_hash = ngc->temp = ngc->alloc(vm_type::vm_hash);
-    auto library_object = ngc->alloc(vm_type::vm_ghost);
+    auto return_hash = ngc->temp = ngc->alloc(gc_type::gc_hash);
+    auto library_object = ngc->alloc(gc_type::gc_ghost);
     library_object.ghost().set(
         dynamic_library_type_name,
         dynamic_library_destructor,
@@ -148,7 +161,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
     }
     for (u32 i = 0; table[i].name; ++i) {
         auto function_pointer = reinterpret_cast<void*>(table[i].fd);
-        auto function_object = ngc->alloc(vm_type::vm_ghost);
+        auto function_object = ngc->alloc(gc_type::gc_ghost);
         function_object.ghost().set(
             function_address_type_name,
             nullptr,
@@ -206,12 +219,17 @@ var builtin_dlcall(context* ctx, gc* ngc) {
     );
 }
 
-nasal_builtin_table dylib_lib_native[] = {
-    {"__dlopen", builtin_dlopen},
-    {"__dlclose", builtin_dlclose},
-    {"__dlcallv", builtin_dlcallv},
-    {"__dlcall", builtin_dlcall},
-    {nullptr, nullptr}
-};
+void load_dylib_builtin() {
+    nasal_builtin_info dylib_lib_native[] = {
+        {"__dlopen", builtin_dlopen},
+        {"__dlclose", builtin_dlclose},
+        {"__dlcallv", builtin_dlcallv},
+        {"__dlcall", builtin_dlcall}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : dylib_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

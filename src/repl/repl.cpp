@@ -1,16 +1,16 @@
-#include "repl.h"
-#include "nasal_lexer.h"
-#include "nasal_parse.h"
-#include "nasal_import.h"
-#include "optimizer.h"
-#include "nasal_codegen.h"
-#include "nasal_vm.h"
+#include "repl/repl.hpp"
+#include "lexer/lexer.hpp"
+#include "parse/parse.hpp"
+#include "parse/linker.hpp"
+#include "ast/optimizer.hpp"
+#include "code/codegen.hpp"
+#include "vm/vm.hpp"
 
 namespace nasal {
 namespace repl {
 
 void repl::add_command_history(const std::string& history) {
-    if (command_history.size() && command_history.back()==history) {
+    if (command_history.size() && command_history.back() == history) {
         return;
     }
     command_history.push_back(history);
@@ -54,7 +54,7 @@ bool repl::check_need_more_input() {
         i64 in_bracket = 0;
         i64 in_brace = 0;
         for (const auto& t : nasal_lexer->result()) {
-            switch(t.type) {
+            switch (t.type) {
                 case tok::tk_lcurve: ++in_curve; break;
                 case tok::tk_rcurve: --in_curve; break;
                 case tok::tk_lbracket: ++in_bracket; break;
@@ -64,7 +64,7 @@ bool repl::check_need_more_input() {
                 default: break;
             }
         }
-        if (in_curve<=0 && in_bracket<=0 && in_brace<=0) {
+        if (in_curve <= 0 && in_bracket <= 0 && in_brace <= 0) {
             break;
         }
 
@@ -86,7 +86,7 @@ int repl::check_need_more_input(std::vector<std::string>& src) {
     i64 in_bracket = 0;
     i64 in_brace = 0;
     for (const auto& t : nasal_lexer->result()) {
-        switch(t.type) {
+        switch (t.type) {
             case tok::tk_lcurve: ++in_curve; break;
             case tok::tk_rcurve: --in_curve; break;
             case tok::tk_lbracket: ++in_bracket; break;
@@ -124,7 +124,7 @@ bool repl::run() {
         return false;
     }
 
-    if (nasal_parser->compile(*nasal_lexer).geterr()) {
+    if (nasal_parser->compile(nasal_lexer->result()).geterr()) {
         return false;
     }
 
@@ -133,7 +133,10 @@ bool repl::run() {
     }
 
     nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(*nasal_parser, *nasal_linker, true, false).geterr()) {
+    if (nasal_codegen->compile(nasal_parser->tree(),
+                               nasal_linker->get_file_list(),
+                               true,
+                               false).geterr()) {
         return false;
     }
 

@@ -99,7 +99,7 @@ var f = func(x, y, z, deft = 1) {
 }
 var f = func(args...) {
     var sum = 0;
-    foreach(var i; args) {
+    foreach (var i; args) {
         sum += i;
     }
     return sum;
@@ -268,7 +268,7 @@ Nasal has another two kinds of loops that iterates through a vector:
 `forindex` will get the index of a vector. Index will be `0` to `size(elem)-1`.
 
 ```javascript
-forindex(var i; elem) {
+forindex (var i; elem) {
     print(elem[i]);
 }
 ```
@@ -276,7 +276,7 @@ forindex(var i; elem) {
 `foreach` will get the element of a vector. Element will be `elem[0]` to `elem[size(elem)-1]`.
 
 ```javascript
-foreach(var i; elem) {
+foreach (var i; elem) {
     print(i);
 }
 ```
@@ -496,11 +496,11 @@ var builtin_keys(context* ctx, gc* ngc) {
     auto& vec = res.vec().elems;
     if (hash.type==vm_hash) {
         for (const auto& iter : hash.hash().elems) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     } else {
         for (const auto& iter : hash.map().mapper) {
-            vec.push_back(ngc->newstr(iter.first));
+            vec.push_back(ngc->alloc_str(iter.first));
         }
     }
     ngc->temp = nil;
@@ -579,7 +579,7 @@ First, write a cpp file that you want to generate the dynamic lib, take the `fib
 
 ```C++
 // add header file nasal.h to get api
-#include "nasal.h"
+#include "nasal.hpp"
 double fibonaci(double x) {
     if (x<=2) {
         return x;

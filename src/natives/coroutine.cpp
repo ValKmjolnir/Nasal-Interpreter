@@ -1,4 +1,6 @@
-#include "natives/coroutine.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
 
 namespace nasal {
 
@@ -30,7 +32,7 @@ var builtin_cocreate(context* ctx, gc* ngc) {
             "cannot create another coroutine in a coroutine"
         );
     }
-    auto coroutine_object = ngc->alloc(vm_type::vm_co);
+    auto coroutine_object = ngc->alloc(gc_type::gc_co);
     auto& coroutine = coroutine_object.co();
     coroutine.ctx.pc = coroutine_function.func().entry-1;
 
@@ -115,27 +117,32 @@ var builtin_coyield(context* ctx, gc* ngc) {
 var builtin_costatus(context* ctx, gc* ngc) {
     auto coroutine_object = ctx->localr[1];
     if (!coroutine_object.is_coroutine()) {
-        return ngc->newstr("error");
+        return ngc->alloc_str("error");
     }
-    switch(coroutine_object.co().status) {
-        case nas_co::status::suspended: return ngc->newstr("suspended");
-        case nas_co::status::running:   return ngc->newstr("running");
-        case nas_co::status::dead:      return ngc->newstr("dead");
+    switch (coroutine_object.co().status) {
+        case nas_co::status::suspended: return ngc->alloc_str("suspended");
+        case nas_co::status::running:   return ngc->alloc_str("running");
+        case nas_co::status::dead:      return ngc->alloc_str("dead");
     }
     return nil;
 }
 
 var builtin_corun(context* ctx, gc* ngc) {
-    return ngc->cort? one:zero;
+    return ngc->cort ? one : zero;
 }
 
-nasal_builtin_table coroutine_native[] = {
-    {"__cocreate", builtin_cocreate},
-    {"__coresume", builtin_coresume},
-    {"__coyield", builtin_coyield},
-    {"__costatus", builtin_costatus},
-    {"__corun", builtin_corun},
-    {nullptr, nullptr}
-};
+void load_coroutine_builtin() {
+    nasal_builtin_info coroutine_native[] = {
+        {"__cocreate", builtin_cocreate},
+        {"__coresume", builtin_coresume},
+        {"__coyield", builtin_coyield},
+        {"__costatus", builtin_costatus},
+        {"__corun", builtin_corun}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : coroutine_native) {
+        registry.regist(i);
+    }
+}
 
 }

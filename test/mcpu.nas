@@ -32,8 +32,8 @@ var inst={
 
 var hex = func() {
     var vec=[];
-    foreach(var i;['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'])
-        foreach(var j;['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'])
+    foreach (var i;['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'])
+        foreach (var j;['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'])
             append(vec,i~j);
     return func(n) {
         return vec[n];
@@ -70,7 +70,7 @@ init();
 var load = func() {
     var vec=split(" ",disk_file);
     println("[",os.time(),"] loading boot from disk: ",size(vec)," byte.");
-    forindex(var i;vec)
+    forindex (var i;vec)
         mem[i]=int("0x"~vec[i]);
     println("[",os.time(),"] loading complete.");
 }

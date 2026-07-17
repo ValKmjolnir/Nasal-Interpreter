@@ -5,6 +5,7 @@ use std.process_bar;
 use std.padding;
 use std.os;
 use std.runtime;
+use std.unix;
 
 if (os.platform() == "windows") {
     runtime.windows.set_utf8_output();
@@ -111,9 +112,13 @@ for (var t = 0; t < 10; t += 1) {
             coroutine.resume(co);
         if (counter - int(counter / 2500) * 2500 == 0) {
             var rate = counter / 2e5;
+            var elapsed = tm.elapsedMSec();
+            if (elapsed == 0) {
+                elapsed = 1;
+            }
             print(" ", bar.bar(rate), " ",
-                padding.leftpad(str(int(rate*100)),3), "% | ",
-                str(1e3 * int(counter / tm.elapsedMSec())),
+                padding.leftpad(str(int(rate * 100)), 3), "% | ",
+                str(1e3 * int(counter / elapsed)),
                 " tasks/s         \r"
             );
         }

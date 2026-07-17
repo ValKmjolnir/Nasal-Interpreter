@@ -1,10 +1,13 @@
-#include "natives/json_lib.h"
-#include "util/util.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+#include "util/util.hpp"
 
 #include <iostream>
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 namespace nasal {
 
@@ -23,7 +26,7 @@ enum class json_token_type {
 };
 
 std::string get_content(json_token_type type) {
-    switch(type) {
+    switch (type) {
         case json_token_type::tok_eof: return "eof";
         case json_token_type::tok_lbrace: return "`{`";
         case json_token_type::tok_rbrace: return "`}`";
@@ -40,7 +43,7 @@ std::string get_content(json_token_type type) {
     return "";
 }
 
-struct token {
+struct json_token {
     json_token_type type;
     std::string content;
 };
@@ -50,7 +53,7 @@ private:
     std::string text = "";
     usize line = 1;
     usize ptr = 0;
-    token this_token;
+    json_token this_token;
     var temp_stack = nil;
     std::string info = "";
 
@@ -89,7 +92,7 @@ public:
 };
 
 std::string json::var_generate(var& value) {
-    switch(value.type) {
+    switch (value.type) {
         case vm_type::vm_num: {
             std::stringstream out;
             out << value.num();
@@ -101,17 +104,30 @@ std::string json::var_generate(var& value) {
             }
             return out.str();
         }
-        case vm_type::vm_str: return "\"" + value.str() + "\"";
-        case vm_type::vm_vec: return vector_generate(value.vec());
-        case vm_type::vm_hash: return hash_generate(value.hash());
-        case vm_type::vm_func:
-            error_info() += "json::stringify: cannot generate function\n"; break;
-        case vm_type::vm_ghost:
-            error_info() += "json::stringify: cannot generate ghost type\n"; break;
-        case vm_type::vm_map:
-            error_info() += "json::stringify: cannot generate namespace type\n"; break;
+        case vm_type::vm_gcobj:
+            switch (value.val.gcobj->type) {
+                case gc_type::gc_str: return "\"" + value.str() + "\"";
+                case gc_type::gc_vec: return vector_generate(value.vec());
+                case gc_type::gc_hash: return hash_generate(value.hash());
+                case gc_type::gc_func:
+                    error_info() += "json::stringify: cannot generate function\n";
+                    break;
+                case gc_type::gc_upval:
+                    error_info() += "json::stringify: cannot generate upvalue\n";
+                    break;
+                case gc_type::gc_ghost:
+                    error_info() += "json::stringify: cannot generate ghost type\n";
+                    break;
+                case gc_type::gc_co:
+                    error_info() += "json::stringify: cannot generate coroutine\n";
+                    break;
+                case gc_type::gc_map:
+                    error_info() += "json::stringify: cannot generate namespace type\n";
+                    break;
+            } break;
         default: break;
     }
+
     return "\"undefined\"";
 }
 
@@ -181,7 +197,7 @@ void json::next() {
         return;
     }
     auto c = text[ptr];
-    switch(c) {
+    switch (c) {
         case '{': this_token = {json_token_type::tok_lbrace, "{"}; ++ptr; return;
         case '}': this_token = {json_token_type::tok_rbrace, "}"}; ++ptr; return;
         case '[': this_token = {json_token_type::tok_lbrkt, "["}; ++ptr; return;
@@ -251,7 +267,7 @@ void json::vector_member(nas_vec& vec, gc* ngc) {
     } else if (this_token.type==json_token_type::tok_lbrkt) {
         vec.elems.push_back(vector_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_str) {
-        vec.elems.push_back(ngc->newstr(this_token.content));
+        vec.elems.push_back(ngc->alloc_str(this_token.content));
         next();
     } else if (this_token.type==json_token_type::tok_num) {
         vec.elems.push_back(var::num(util::str_to_num(this_token.content.c_str())));
@@ -260,7 +276,7 @@ void json::vector_member(nas_vec& vec, gc* ngc) {
 }
 
 var json::vector_object_generate(gc* ngc) {
-    auto vect_object = ngc->alloc(vm_type::vm_vec);
+    auto vect_object = ngc->alloc(gc_type::gc_vec);
     temp_stack.vec().elems.push_back(vect_object);
     match(json_token_type::tok_lbrkt);
     vector_member(vect_object.vec(), ngc);
@@ -290,7 +306,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
         hash.elems.insert({name, vector_object_generate(ngc)});
     } else if (this_token.type==json_token_type::tok_str ||
         this_token.type==json_token_type::tok_bool) {
-        hash.elems.insert({name, ngc->newstr(this_token.content)});
+        hash.elems.insert({name, ngc->alloc_str(this_token.content)});
         next();
     } else if (this_token.type==json_token_type::tok_num) {
         hash.elems.insert({name, var::num(util::str_to_num(this_token.content.c_str()))});
@@ -299,7 +315,7 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
 }
 
 var json::hash_object_generate(gc* ngc) {
-    auto hash_object = ngc->alloc(vm_type::vm_hash);
+    auto hash_object = ngc->alloc(gc_type::gc_hash);
     temp_stack.vec().elems.push_back(hash_object);
     match(json_token_type::tok_lbrace);
     hash_member(hash_object.hash(), ngc);
@@ -338,13 +354,13 @@ var json::parse(const std::string& input, gc* ngc) {
     text = input;
     next();
     if (this_token.type==json_token_type::tok_lbrkt) {
-        ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
+        ngc->temp = temp_stack = ngc->alloc(gc_type::gc_vec);
         auto result = vector_object_generate(ngc);
         check_eof();
         ngc->temp = temp_stack = nil;
         return result;
     } else {
-        ngc->temp = temp_stack = ngc->alloc(vm_type::vm_vec);
+        ngc->temp = temp_stack = ngc->alloc(gc_type::gc_vec);
         auto result = hash_object_generate(ngc);
         check_eof();
         ngc->temp = temp_stack = nil;
@@ -358,7 +374,7 @@ void json_destructor(void* ptr) {
 }
 
 var builtin_json_new(context* ctx, gc* ngc) {
-    var res = ngc->alloc(vm_type::vm_ghost);
+    var res = ngc->alloc(gc_type::gc_ghost);
     res.ghost().set("nasal::json", json_destructor, nullptr, new json);
     return res;
 }
@@ -370,7 +386,7 @@ var builtin_json_stringify(context* ctx, gc* ngc) {
         return nas_err("json::stringify", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
-    return ngc->newstr(json_ptr->stringify(object));
+    return ngc->alloc_str(json_ptr->stringify(object));
 }
 
 var builtin_json_parse(context* ctx, gc* ngc) {
@@ -392,15 +408,20 @@ var builtin_json_get_error(context* ctx, gc* ngc) {
         return nas_err("json::get_error", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
-    return ngc->newstr(json_ptr->get_error());
+    return ngc->alloc_str(json_ptr->get_error());
 }
 
-nasal_builtin_table json_lib_native[] = {
-    {"_json_new", builtin_json_new},
-    {"_json_stringify", builtin_json_stringify},
-    {"_json_parse", builtin_json_parse},
-    {"_json_get_error", builtin_json_get_error},
-    {nullptr, nullptr}
-};
+void load_json_builtin() {
+    nasal_builtin_info json_lib_native[] = {
+        {"_json_new", builtin_json_new},
+        {"_json_stringify", builtin_json_stringify},
+        {"_json_parse", builtin_json_parse},
+        {"_json_get_error", builtin_json_get_error}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : json_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

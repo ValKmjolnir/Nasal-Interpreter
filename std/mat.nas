@@ -3,7 +3,7 @@ use std.math;
 var mat = func(width,height) {
     var res=[];
     setsize(res,width*height);
-    forindex(var i;res) {
+    forindex (var i;res) {
         res[i]=0;
     }
     return {
@@ -15,7 +15,7 @@ var mat = func(width,height) {
 
 var rand_init = func(a) {
     var ref=a.mat;
-    forindex(var i;ref) {
+    forindex (var i;ref) {
         ref[i]=rand()*2-1;
     }
 }
@@ -93,7 +93,7 @@ var hardamard = func(a,b) {
 var neg = func(a) {
     var res=mat(a.width,a.height);
     var (aref,ref)=(a.mat,res.mat);
-    forindex(var i;aref) {
+    forindex (var i;aref) {
         ref[i]=-aref[i];
     }
     return res;
@@ -102,7 +102,7 @@ var neg = func(a) {
 var sum = func(a) {
     var res=0;
     var aref=a.mat;
-    forindex(var i;aref) {
+    forindex (var i;aref) {
         res+=aref[i];
     }
     return res;
@@ -112,7 +112,7 @@ var mult_num = func(a,c) {
     var res=mat(a.width,a.height);
     var ref=res.mat;
     var aref=a.mat;
-    forindex(var i;aref) {
+    forindex (var i;aref) {
         ref[i]=aref[i]*c;
     }
     return res;
@@ -133,7 +133,7 @@ var trans = func(a) {
 var activate = func(a,f) {
     var res=mat(a.width,a.height);
     var (aref,ref)=(a.mat,res.mat);
-    forindex(var i;aref) {
+    forindex (var i;aref) {
         ref[i]=f(aref[i]);
     }
     return res;
@@ -228,7 +228,7 @@ var bp_example = func() {
         }
 
         total=0;
-        forindex(var i;input) {
+        forindex (var i;input) {
             hidden.in=add(mult(input[i],hidden.weight),hidden.bias);
             hidden.out=activate(hidden.in,tanh);
 
@@ -253,7 +253,7 @@ var bp_example = func() {
         println("Training succeeded after ",epoch," epoch.");
     }
 
-    forindex(var i;input) {
+    forindex (var i;input) {
         hidden.in=add(mult(input[i],hidden.weight),hidden.bias);
         hidden.out=activate(hidden.in,tanh);
 

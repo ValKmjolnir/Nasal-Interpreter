@@ -7,7 +7,7 @@ use std.unix;
 var new_map = func(width,height) {
     var tmp=[];
     setsize(tmp,height);
-    forindex(var i;tmp) {
+    forindex (var i;tmp) {
         tmp[i]=[];
         setsize(tmp[i],width);
     }
@@ -16,8 +16,8 @@ var new_map = func(width,height) {
 
 var prt = func(map) {
     var s='\e[H';
-    foreach(var line;map) {
-        foreach(var elem;line)
+    foreach (var line;map) {
+        foreach (var elem;line)
             s~=elem~' ';
         s~='\n';
     }
@@ -41,8 +41,8 @@ var run = func(width,height) {
     var map=new_map(width,height);
     var tmp=new_map(width,height);
 
-    forindex(var i;map)
-        forindex(var j;map[i])
+    forindex (var i;map)
+        forindex (var j;map[i])
             map[i][j]=rand()<0.45?'O':'.';
 
     for (var r=0;r<100;r+=1) {
@@ -92,7 +92,7 @@ var ppm_gen = func(width,height) {
             res[i]=0;
 
         for (var i=int(height/5*2);i<int(height/5*3);i+=1)
-            forindex(var j;res[i])
+            forindex (var j;res[i])
                 res[i*width+j]=rand()<0.5?1:0;
         return res;
     }

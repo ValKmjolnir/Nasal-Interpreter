@@ -4,7 +4,7 @@ var check = func(dir_name) {
     var ts = maketimestamp();
     var files = file.recursive_find_files_with_extension(dir_name, "nas");
     var res = [];
-    foreach(var f; files) {
+    foreach (var f; files) {
         ts.stamp();
         if (system("nasal -c "~f~" 1>/dev/null 2>/dev/null")!=0) {
             println("\e[31merror\e[0m ", f);
@@ -22,8 +22,8 @@ var result = [
     check("./test")
 ];
 println();
-foreach(var i; result) {
-    foreach(var j; i) {
+foreach (var i; result) {
+    foreach (var j; i) {
         println("\e[31merror\e[0m ", j);
     }
 }

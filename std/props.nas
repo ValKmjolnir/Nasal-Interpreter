@@ -321,7 +321,7 @@ Node.getValues = func {
     if (!size(children)) return me.getValue();
     var val = {};
     var numchld = {};
-    foreach(var c; children) {
+    foreach (var c; children) {
         var name = c.getName();
         if (contains(numchld, name)) { var nc = numchld[name]; }
         else {
@@ -381,7 +381,7 @@ var dump = func {
     # Don't recurse into aliases, lest we get stuck in a loop
     if (type != "ALIAS") {
         var children = node.getChildren();
-        foreach(var c; children) { dump(name ~ "/", c); }
+        foreach (var c; children) { dump(name ~ "/", c); }
     }
 }
 
@@ -403,7 +403,7 @@ var copy = func(src, dest, attr = 0) {
         dp = subvec(dp, 1);
     }
 
-    foreach(var c; src.getChildren()) {
+    foreach (var c; src.getChildren()) {
         var name = c.getName();
         var i = c.getIndex();
         if (i) name ~= "["~i~"]";
@@ -475,7 +475,7 @@ var setAll = func(base, child, value) {
     node = node.getParent();
     if (node == nil) return;
     var children = node.getChildren();
-    foreach(var c; children)
+    foreach (var c; children)
         if (c.getName() == name)
             c.getNode(child, 1).setValue(value);
 }
@@ -514,16 +514,16 @@ var createNodeObjectsFromHash = func (property_list, namespace = nil) {
 #
 var nodeList = func {
     var list = [];
-    foreach(var a; arg) {
+    foreach (var a; arg) {
         if (isa(a, Node))
             append(list, a);
         elsif (isscalar(a))
             append(list, props.globals.getNode(a, 1));
         elsif (isvec(a))
-            foreach(var i; a)
+            foreach (var i; a)
                 list ~= nodeList(i);
         elsif (ishash(a))
-            foreach(var i; keys(a))
+            foreach (var i; keys(a))
                 list ~= nodeList(a[i]);
         elsif (isfunc(a))
             list ~= nodeList(a());
@@ -561,13 +561,13 @@ var condition = func(p) {
 }
 
 var _cond_and = func(p) {
-    foreach(var c; p.getChildren())
+    foreach (var c; p.getChildren())
         if (!_cond(c)) return 0;
     return 1;
 }
 
 var _cond_or = func(p) {
-    foreach(var c; p.getChildren())
+    foreach (var c; p.getChildren())
         if (_cond(c)) return 1;
     return 0;
 }
@@ -675,7 +675,7 @@ var runBinding = func(node, module = nil) {
 #
 #==== the update loop then becomes ======
 #
-#        foreach(var update_item; me.update_items)
+#        foreach (var update_item; me.update_items)
 #        {
 #            # hdp is a data provider that can be used as the hashlist for the property
 #            # update from hash methods.

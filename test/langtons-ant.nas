@@ -28,11 +28,11 @@ var map = [];
 var map_color = [];
 setsize(map, 60*30);
 setsize(map_color, 60*30);
-forindex(var i; map) {
+forindex (var i; map) {
     map[i] = 0;
     map_color[i] = 0;
 }
-foreach(var a; ants) {
+foreach (var a; ants) {
     map_color[a.pos_x + a.pos_y*60] = a.color;
 }
 
@@ -58,10 +58,10 @@ var move = func {
     ];
     var temp_map = [];
     setsize(temp_map, 60*30);
-    forindex(var i; map) {
+    forindex (var i; map) {
         temp_map[i] = map[i];
     }
-    foreach(var a; ants) {
+    foreach (var a; ants) {
         var map_state = map[a.pos_x + a.pos_y*60];
         temp_map[a.pos_x + a.pos_y*60] = map_state==0? 1:0;
         if (map_state==1) {

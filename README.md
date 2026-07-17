@@ -78,28 +78,37 @@ Nightly build could be found here:
 
 ![g++](https://img.shields.io/badge/GNU-g++-A42E2B?style=flat-square&logo=GNU) ![clang++](https://img.shields.io/badge/LLVM-clang++-262D3A?style=flat-square&logo=LLVM) ![vs](https://img.shields.io/badge/Visual_Studio-MSVC-5C2D91?style=flat-square&logo=visualstudio)
 
-Download the latest source of the interpreter and build it! It's quite easy to build, what you need are only two things: C++ compiler and the `make`. There is no third-party library used in this project.
-
-### __Windows (MinGW-w64)__
-
-Make sure thread model is `posix thread model`, otherwise no thread library exists.
-
-> mkdir build;
-> mingw32-make nasal.exe -j4
-
-### __Windows (Visual Studio)__
-
-There is a [__CMakelists.txt__](./CMakeLists.txt) to create project. Recently we find how to build it with command line tools: [__Build Nasal-Interpreter on Windows__](./doc/windows-build.md).
+Download the latest source of the interpreter and build it! It's quite easy to build, what you need are only two things: C++17 compiler and `cmake`. There is no third-party library used in this project.
 
 ### __Linux / macOS / Unix__
 
 ![linux](https://img.shields.io/badge/GNU-Linux-green?style=flat-square&logo=GNU) ![macOS](https://img.shields.io/badge/Apple%20Inc.-MacOS-green?style=flat-square&logo=apple)
 
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release
+>
 > make -j
 
-You could choose which compiler you want to use:
+### __Windows (MinGW-w64)__
 
-> make nasal CXX=... -j
+Make sure thread model is `posix thread model`, otherwise no thread library exists.
+
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+>
+> mingw32-make -j4
+
+### __Windows (Visual Studio)__
+
+> mkdir build && cd build
+>
+> cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+>
+> MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+
+You may also open the [__CMakeLists.txt__](./CMakeLists.txt) as a project directly in Visual Studio. See [__Build Nasal-Interpreter on Windows__](./doc/windows-build.md) for more details.
 
 ## __How to Use__
 
@@ -134,7 +143,7 @@ So do not use variable without using `var` to declare it.
 In Andy's interpreter:
 
 ```javascript
-foreach(i; [0, 1, 2, 3])
+foreach (i; [0, 1, 2, 3])
     print(i)
 ```
 
@@ -149,9 +158,9 @@ If you forget to add the keyword `var`, you will get this:
 
 ```javascript
 code: undefined symbol "i"
- --> test.nas:1:9
+ --> test.nas:1:10
   |
-1 | foreach(i; [0, 1, 2, 3])
+1 | foreach (i; [0, 1, 2, 3])
   |         ^ undefined symbol "i"
 
 code: undefined symbol "i"
@@ -342,11 +351,11 @@ and the debugger will print this:
 ```javascript
 source code:
 --> var fib = func(x) {
-        if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+        if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:
@@ -375,11 +384,11 @@ This will help you debugging or learning how the vm works:
 ```javascript
 source code:
     var fib = func(x) {
--->     if (x<2) return x;
-        return fib(x-1)+fib(x-2);
+-->     if (x < 2) return x;
+        return fib(x - 1) + fib(x - 2);
     }
-    for (var i=0;i<31;i+=1)
-        print(fib(i),'\n');
+    for (var i = 0; i < 31; i += 1)
+        print(fib(i), '\n');
 
 
 next bytecode:

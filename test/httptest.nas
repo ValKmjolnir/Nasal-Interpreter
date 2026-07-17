@@ -5,32 +5,32 @@ use std.unix;
 
 var socket = libnasock.socket;
 
-var http = func() {
-    var sd=nil;
+var http_builder = func() {
+    var sd = nil;
     return {
-        establish:func(ip,port) {
-            sd=socket.socket(socket.AF_INET,socket.SOCK_STREAM,socket.IPPROTO_IP);
-            while (socket.bind(sd,ip,port)<0) {
+        establish: func(ip, port) {
+            sd = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP);
+            while (socket.bind(sd,ip,port) < 0) {
                 println("[",os.time(),"] failed to bind socket "~sd~" at IP: "~ip~" port: "~port~".");
                 unix.sleep(5);
                 println("[",os.time(),"] retrying...");
             }
-            socket.listen(sd,1);
+            socket.listen(sd, 8);
             println("[",os.time(),"] start server at [",ip,":",port,"]");
         },
-        shutdown:func() {
+        shutdown: func() {
             println("[",os.time(),"] shutdown server");
             socket.closesocket(sd);
         },
-        accept:func() {
+        accept: func() {
             return socket.accept(sd);
         },
-        disconnect:func(client,log=0) {
+        disconnect: func(client,log=0) {
             if (log)
                 println("[",os.time(),"] [",client.ip,"] disconnected");
             return socket.closesocket(client.sd);
         },
-        recv:func(client) {
+        recv: func(client) {
             var data=socket.recv(client.sd,2048);
             if (!data.size) {
                 println("[",os.time(),"] [",client.ip,"] closed connection");
@@ -41,12 +41,14 @@ var http = func() {
             println("[",os.time(),"] [",client.ip,"] request ",type," [",path,"]");
             return {type:type,path:path};
         },
-        send:func(client,content) {
+        send: func(client,content) {
             println("[",os.time(),"] [",client.ip,"] get size ",size(content)," byte(s)");
             return socket.send(client.sd,content);
         }
     };
-}();
+}
+
+var http = http_builder();
 http.establish("127.0.0.1",8080);
 
 var highlight_style="
@@ -81,7 +83,12 @@ var highlight_style="
 var html_read_file = func(filename) {
     var timer=maketimestamp();
     timer.stamp();
-    var keyword=["var","func","for","while","foreach","forindex","break","continue","return","if","else","elsif","nil"];
+    var keyword = [
+        "var",     "func",     "for",   "while",
+        "foreach", "forindex", "break", "continue",
+        "return",  "if",       "else",  "elsif",
+        "nil"
+    ];
     var file_text=io.readfile(filename);
     var (s,index,len)=("",-1,size(file_text));
     var content="";
@@ -122,7 +129,7 @@ var html_read_file = func(filename) {
                 }
             }
             var is_key=0;
-            foreach(var i;keyword)
+            foreach (var i;keyword)
                 if (tmp==i) {
                     is_key=1;
                     content~="<code class=\"key\">"~tmp~"</code>";

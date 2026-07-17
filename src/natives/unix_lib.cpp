@@ -1,4 +1,28 @@
-#include "natives/unix_lib.h"
+#include "nasal.hpp"
+#include "vm/gc.hpp"
+#include "natives/registry.hpp"
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#include <dirent.h>
+#else
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#include <io.h>
+#include <direct.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/wait.h>
+#endif
+
+// for environ
+#if defined __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
 
 namespace nasal {
 
@@ -30,7 +54,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
         return nas_err("unix::opendir", "cannot open dir <"+path.str()+">");
     }
 #endif
-    var ret = ngc->alloc(vm_type::vm_ghost);
+    var ret = ngc->alloc(gc_type::gc_ghost);
     ret.ghost().set(dir_type_name, dir_entry_destructor, nullptr, p);
     return ret;
 }
@@ -45,10 +69,10 @@ var builtin_readdir(context* ctx, gc* ngc) {
     if (!FindNextFileA(handle.ghost().pointer, &data)) {
         return nil;
     }
-    return ngc->newstr(data.cFileName);
+    return ngc->alloc_str(data.cFileName);
 #else
     dirent* p = readdir(handle.ghost().get<DIR>());
-    return p? ngc->newstr(p->d_name):nil;
+    return p ? ngc->alloc_str(p->d_name) : nil;
 #endif
 }
 
@@ -70,10 +94,10 @@ var builtin_chdir(context* ctx, gc* ngc) {
 }
 
 var builtin_environ(context* ctx, gc* ngc) {
-    var res = ngc->temp = ngc->alloc(vm_type::vm_vec);
+    var res = ngc->temp = ngc->alloc(gc_type::gc_vec);
     auto& vec = res.vec().elems;
     for (char** env = environ; *env; ++env) {
-        vec.push_back(ngc->newstr(*env));
+        vec.push_back(ngc->alloc_str(*env));
     }
     ngc->temp = nil;
     return res;
@@ -84,7 +108,7 @@ var builtin_getcwd(context* ctx, gc* ngc) {
     if (!getcwd(buf, sizeof(buf))) {
         return nil;
     }
-    return ngc->newstr(buf);
+    return ngc->alloc_str(buf);
 }
 
 var builtin_getenv(context* ctx, gc* ngc) {
@@ -93,18 +117,23 @@ var builtin_getenv(context* ctx, gc* ngc) {
         return nas_err("unix::getenv", "\"envvar\" must be string");
     }
     char* res = getenv(envvar.str().c_str());
-    return res? ngc->newstr(res):nil;
+    return res? ngc->alloc_str(res):nil;
 }
 
-nasal_builtin_table unix_lib_native[] = {
-    {"__opendir", builtin_opendir},
-    {"__readdir", builtin_readdir},
-    {"__closedir", builtin_closedir},
-    {"__chdir", builtin_chdir},
-    {"__environ", builtin_environ},
-    {"__getcwd", builtin_getcwd},
-    {"__getenv", builtin_getenv},
-    {nullptr, nullptr}
-};
+void load_unix_builtin() {
+    nasal_builtin_info unix_lib_native[] = {
+        {"__opendir", builtin_opendir},
+        {"__readdir", builtin_readdir},
+        {"__closedir", builtin_closedir},
+        {"__chdir", builtin_chdir},
+        {"__environ", builtin_environ},
+        {"__getcwd", builtin_getcwd},
+        {"__getenv", builtin_getenv}
+    };
+    auto& registry = nasal_builtin_registry::get();
+    for (auto& i : unix_lib_native) {
+        registry.regist(i);
+    }
+}
 
 }

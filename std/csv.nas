@@ -5,7 +5,7 @@ use std.io;
 var read = func(path, delimeter = ",", endline = "\n") {
     var context = io.readfile(path);
     context = split(endline, context);
-    forindex(var i; context) {
+    forindex (var i; context) {
         context[i] = split(delimeter, context[i]);
     }
     if (size(context) <= 1) {
