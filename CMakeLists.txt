@@ -28,7 +28,6 @@ endif()
 set(NASAL_AST_MODULE_FILE
     ${CMAKE_SOURCE_DIR}/src/ast/ast.cpp
     ${CMAKE_SOURCE_DIR}/src/ast/dumper.cpp
-    ${CMAKE_SOURCE_DIR}/src/ast/format.cpp
     ${CMAKE_SOURCE_DIR}/src/ast/optimizer.cpp
     ${CMAKE_SOURCE_DIR}/src/ast/symbol_finder.cpp
     ${CMAKE_SOURCE_DIR}/src/ast/visitor.cpp)
@@ -70,9 +69,15 @@ add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nasal-object nasal-ast)
 
+set(NASAL_FORMAT_SOURCE_FILE
+    ${CMAKE_SOURCE_DIR}/src/tools/format/format.cpp)
+add_library(nasal-format-object STATIC ${NASAL_FORMAT_SOURCE_FILE})
+target_include_directories(nasal-format-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(nasal-format-object nasal-object)
+
 set(NASAL_LINTER_SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/linter/checker/manager.cpp
-    ${CMAKE_SOURCE_DIR}/src/linter/checker/space_infix_ops.cpp)
+    ${CMAKE_SOURCE_DIR}/src/tools/linter/checker/manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/tools/linter/checker/space_infix_ops.cpp)
 add_library(nasal-linter-object STATIC ${NASAL_LINTER_SOURCE_FILE})
 target_include_directories(nasal-linter-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nasal-linter-object nasal-object)
@@ -82,11 +87,11 @@ add_executable(nasal ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(nasal nasal-object)
 
 # build nasal-format
-add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/format.cpp)
-target_link_libraries(nasal-format nasal-object)
+add_executable(nasal-format ${CMAKE_SOURCE_DIR}/src/tools/format/main.cpp)
+target_link_libraries(nasal-format nasal-format-object)
 
 # build nasal-linter
-add_executable(nasal-linter ${CMAKE_SOURCE_DIR}/src/linter/main.cpp)
+add_executable(nasal-linter ${CMAKE_SOURCE_DIR}/src/tools/linter/main.cpp)
 target_link_libraries(nasal-linter nasal-linter-object)
 
 # link ldl and lpthread

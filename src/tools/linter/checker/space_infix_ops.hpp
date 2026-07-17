@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast/ast.hpp"
-#include "linter/checker/manager.hpp"
+#include "tools/linter/checker/manager.hpp"
 
 namespace nasal::linter {
 

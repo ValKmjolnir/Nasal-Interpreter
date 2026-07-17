@@ -44,7 +44,7 @@ __Contact us if having great ideas to share!__
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 is an ECMAscript-like language used in [FlightGear](https://www.flightgear.org/).
 The designer is [Andy Ross](https://github.com/andyross).
-This interpreter is rewritten by [ValKmjolnir](https://github.com/ValKmjolnir) using `C++`(`-std=c++17`).
+This interpreter is rewritten using `C++`(`-std=c++17`).
 We really appreciate that Andy created this amazing programming language: [Andy Ross's nasal interpreter](https://github.com/andyross/nasal).
 
 Old version of this project uses __MIT license__ (2019/7 ~ 2021/5/4 ~ 2023/5). Now it uses __GPL v2 license__ (since 2023/6).
@@ -104,9 +104,9 @@ Make sure thread model is `posix thread model`, otherwise no thread library exis
 
 > mkdir build && cd build
 >
-> cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+> cmake ..
 >
-> MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+> cmake --build . --config Release -j 6
 
 You may also open the [__CMakeLists.txt__](./CMakeLists.txt) as a project directly in Visual Studio. See [__Build Nasal-Interpreter on Windows__](./doc/windows-build.md) for more details.
 
@@ -117,7 +117,7 @@ You may also open the [__CMakeLists.txt__](./CMakeLists.txt) as a project direct
 If your system is `Windows` and you want to output unicode, you could write this in nasal code:
 
 ```javascript
-if (os.platform()=="windows") {
+if (os.platform() == "windows") {
     system("chcp 65001");
 }
 ```

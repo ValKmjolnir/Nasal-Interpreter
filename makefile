@@ -1,19 +1,3 @@
-STD = c++17
-
-ifndef OS
-	OS = $(shell uname)
-endif
-ifeq ($(OS), Darwin)
-	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -mmacosx-version-min=10.15 -I src
-else
-	CXXFLAGS = -std=$(STD) -c -O3 -fPIC -I src
-endif
-
-.PHONY: clean
-clean:
-	@ echo "[clean] nasal" && if [ -e nasal ]; then rm nasal; fi
-	@ echo "[clean] nasal.exe" && if [ -e nasal.exe ]; then rm nasal.exe; fi
-
 .PHONY: test
 test:
 	@ ./nasal -t -d test/andy_gc_test.nas

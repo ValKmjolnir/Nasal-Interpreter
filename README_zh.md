@@ -41,7 +41,7 @@ __如果有好的意见或建议，欢迎联系我们!__
 [Nasal](http://wiki.flightgear.org/Nasal_scripting_language)
 是一款语法与 ECMAscript 相似的编程语言，并作为脚本语言被著名开源飞行模拟器 [FlightGear](https://www.flightgear.org/) 所使用。
 该语言的设计者为 [Andy Ross](https://github.com/andyross)。
-该解释器由 [ValKmjolnir](https://github.com/ValKmjolnir) 使用 `C++`(`-std=c++17`)重新实现。非常感谢 Andy 为我们设计了这个神奇且简洁的编程语言: [Andy Ross 的 nasal 解释器](https://github.com/andyross/nasal)。
+该解释器使用 `C++`(`-std=c++17`)重新实现。非常感谢 Andy 为我们设计了这个神奇且简洁的编程语言: [Andy Ross 的 nasal 解释器](https://github.com/andyross/nasal)。
 
 该项目旧版本使用 __MIT__ 协议开源 (2019/7 ~ 2021/5/4 ~ 2023/5)，从 2023/6 开始新版本使用 __GPL v2__ 协议。
 
@@ -97,9 +97,9 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 
 > mkdir build && cd build
 >
-> cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+> cmake ..
 >
-> MSBuild.exe nasal.sln /p:Configuration=Release /p:Platform=x64
+> cmake --build . --config Release -j 6
 
 也可以直接在 Visual Studio 中打开 [__CMakeLists.txt__](./CMakeLists.txt) 作为项目。更多细节参考 [__如何在 Windows 平台编译 Nasal-Interpreter__](./doc/windows-build.md)。
 
@@ -110,7 +110,7 @@ Windows 平台的预览版解释器现在还没配置相关流水线，
 如果你是 `Windows` 用户且想正常输出 unicode，可以这样开启 unicode 代码页:
 
 ```javascript
-if (os.platform()=="windows") {
+if (os.platform() == "windows") {
     system("chcp 65001");
 }
 ```
@@ -123,7 +123,7 @@ use std.runtime;
 runtime.windows.set_utf8_output();
 ```
 
-## __与andy解释器的不同之处__
+## __与 Andy 的解释器的不同之处__
 
 ![error](doc/gif/error.gif)
 

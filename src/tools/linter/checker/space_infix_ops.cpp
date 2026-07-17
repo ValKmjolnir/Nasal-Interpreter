@@ -1,4 +1,4 @@
-#include "linter/checker/space_infix_ops.hpp"
+#include "tools/linter/checker/space_infix_ops.hpp"
 
 namespace nasal::linter {
 
