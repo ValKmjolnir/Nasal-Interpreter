@@ -83,7 +83,7 @@ var abort = func() {
 
 # abs gets absolute number.
 var abs = func(n) {
-    return n>0? n:-n;
+    return n > 0 ? n : -n;
 }
 
 # num will change all the other types into number.
@@ -155,7 +155,7 @@ var typeof = func(object) {
 
 # subvec is used to get part of a vector
 var subvec = func(vec, begin, length = nil) {
-    return vec[begin:(length==nil? nil:begin+length-1)];
+    return vec[begin:(length == nil ? nil : begin + length - 1)];
 }
 
 # substr will get the sub-string.
@@ -202,7 +202,7 @@ var char = func(code) {
 
 # mut is used to change unmutable strings to mutable.
 var mut = func(str) {
-    return str~"";
+    return str ~ "";
 }
 
 # srand wraps up rand, using time(0) as the seed.
@@ -227,54 +227,54 @@ var println = func(elems...) {
 var sort = func() {
     srand();  # be aware! this causes global changes
     var quick_sort_core = func(vec, left, right, cmp) {
-        if (left>=right) return nil;
-        var base = left+int(rand()*(right-left));
+        if (left >= right) return nil;
+        var base = left + int(rand() * (right - left));
         (vec[left], vec[base]) = (vec[base], vec[left]);
         var (i, j, tmp) = (left, right, vec[left]);
-        while (i<j) {
-            while (i<j and cmp(tmp,vec[j])) {
+        while (i < j) {
+            while (i < j and cmp(tmp, vec[j])) {
                 j -= 1;
             }
             vec[i] = vec[j];
-            while (i<j and cmp(vec[i],tmp)) {
+            while (i < j and cmp(vec[i], tmp)) {
                 i += 1;
             }
             vec[j] = vec[i];
             j -= 1;
         }
         vec[i] = tmp;
-        quick_sort_core(vec, left, i-1, cmp);
-        quick_sort_core(vec, i+1, right, cmp);
+        quick_sort_core(vec, left, i - 1, cmp);
+        quick_sort_core(vec, i + 1, right, cmp);
         return nil;
     }
-    return func(vec, cmp = func(a, b) {return a<b;}) {
-        quick_sort_core(vec, 0, size(vec)-1, cmp);
+    return func(vec, cmp = func(a, b) { return a < b; }) {
+        quick_sort_core(vec, 0, size(vec) - 1, cmp);
         return nil;
     }
 }();
 
 var isfunc = func(f) {
-    return typeof(f)=="func";
+    return typeof(f) == "func";
 }
 
 var isghost = func(g) {
-    return typeof(g)=="obj";
+    return typeof(g) == "obj";
 }
 
 var ishash = func(h) {
-    return typeof(h)=="hash";
+    return typeof(h) == "hash";
 }
 
 var isint = func(x) {
-    return x==floor(x);
+    return x == floor(x);
 }
 
 var isnum = func(x) {
-    if (typeof(x)=="num") {
+    if (typeof(x) == "num") {
         return true;
     }
     x = num(x);
-    if (!__isnan(x) and x!=nil) {
+    if (!__isnan(x) and x != nil) {
         return true;
     }
     return false;
@@ -282,15 +282,15 @@ var isnum = func(x) {
 
 var isscalar = func(s) {
     var t = typeof(s);
-    return (t=="num" or t=="str")? 1:0;
+    return (t == "num" or t == "str") ? 1 : 0;
 }
 
 var isstr = func(s) {
-    return typeof(s)=="str";
+    return typeof(s) == "str";
 }
 
 var isvec = func(v) {
-    return typeof(v)=="vec";
+    return typeof(v) == "vec";
 }
 
 var ghosttype = func(ghost_object) {
@@ -300,7 +300,7 @@ var ghosttype = func(ghost_object) {
 # get the index of val in the vec
 var vecindex = func(vec, val) {
     forindex (var i; vec) {
-        if (val==vec[i]) {
+        if (val == vec[i]) {
             return i;
         }
     }
@@ -316,7 +316,7 @@ var isa = func(object, class) {
         return false;
     }
     foreach (var elem; object.parents) {
-        if (elem==class or isa(elem, class)) {
+        if (elem == class or isa(elem, class)) {
             return true;
         }
     }
@@ -411,7 +411,7 @@ var logprint = func(level, elem...) {
     return _logprint(level, elem);
 }
 
-var fgcommand = func(cmd, node=nil) {
+var fgcommand = func(cmd, node = nil) {
     # if (isa(node, props.Node)) node = node._g;
     # elsif (ishash(node)) node = props.Node.new(node)._g;
     # _fgcommand(cmd, node);

@@ -31,7 +31,7 @@ var new = func(filename, mode = "r") {
 var find_all_files_with_extension = func(path, extensions...) {
     var in_vec = func(ext) {
         foreach (var i; extensions) {
-            if (ext==i) {
+            if (ext == i) {
                 return 1;
             }
         }
@@ -40,7 +40,7 @@ var find_all_files_with_extension = func(path, extensions...) {
     var res = [];
     foreach (var f; find_all_files(path)) {
         var tmp = split('.', f);
-        if (size(tmp)>1 and in_vec(tmp[-1])) {
+        if (size(tmp) > 1 and in_vec(tmp[-1])) {
             append(res, f);
         }
     }

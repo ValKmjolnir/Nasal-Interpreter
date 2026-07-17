@@ -540,21 +540,21 @@ props.getNode("/controls/flight/rudder",1).setValue('/',0.114);
 
 func() {
     srand();
-    var tmp=nil;
-    var vec=[props.globals];
+    var tmp = nil;
+    var vec = [props.globals];
     while (size(vec)) {
-        tmp=[];
-        foreach (var i;vec) {
-            if (typeof(i.val)=="hash") {
-                if (size(i.val)==0) {
-                    i.setDoubleValue(rand()*10);
+        tmp = [];
+        foreach (var i; vec) {
+            if (typeof(i.val) == "hash") {
+                if (size(i.val) == 0) {
+                    i.setDoubleValue(rand() * 10);
                 } else {
-                    foreach (var j;keys(i.val))
-                        append(tmp,i.val[j]);
+                    foreach (var j; keys(i.val))
+                        append(tmp, i.val[j]);
                 }
             }
         }
-        vec=tmp;
+        vec = tmp;
     }
 }();
 

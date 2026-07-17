@@ -64,7 +64,7 @@ var bit = func() {
     var append = func(vec, arg...) {
         return __append;
     }
-    for (var i = 1; i<32; i += 1) {
+    for (var i = 1; i < 32; i += 1) {
         append(res, __ += __);
     }
     return res;
@@ -72,30 +72,30 @@ var bit = func() {
 
 var test = func(n, b) {
     n /= bit[b];
-    return int(n) != int(n/2)*2;
+    return int(n) != int(n / 2) * 2;
 }
 
 # returns number <n> with bit <b> set
 var set = func(n, b) {
-    return n+!test(n, b)*bit[b];
+    return n + !test(n, b) * bit[b];
 }
 
 
 # returns number <n> with bit <b> cleared
 var clear = func(n, b) {
-    return n-test(n, b)*bit[b];
+    return n - test(n, b) * bit[b];
 }
 
 
 # returns number <n> with bit <b> toggled
 var toggle = func(n, b) {
-    return test(n, b) ? (n-bit[b]):(n+bit[b]);
+    return test(n, b) ? (n - bit[b]) : (n + bit[b]);
 }
 
 
 # returns number <n> with bit <b> set to value <v>
 var switch = func(n, b, v) {
-    return n-(test(n, b)-!!v)*bit[b];
+    return n - (test(n, b) - !!v) * bit[b];
 }
 
 
@@ -105,12 +105,12 @@ var switch = func(n, b, v) {
 var string = func(n, len = 1) {
 	var s = "";
 	while (n) {
-		var v = int(n/2);
-		s = (v+v!=n)~s;
+		var v = int(n / 2);
+		s = (v + v != n) ~ s;
 		n = v;
 	}
-	for (var i = size(s); i<len; i += 1)
-		s = '0'~s;
+	for (var i = size(s); i < len; i += 1)
+		s = '0' ~ s;
 	return s;
 }
 
@@ -119,7 +119,7 @@ var string = func(n, len = 1) {
 var value = func(s) {
 	var n = 0;
 	var len = size(s);
-	for (var i = 0; i<len; i += 1)
-		n += n+(s[i]!= `0`);
+	for (var i = 0; i < len; i += 1)
+		n += n + (s[i] != `0`);
 	return n;
 }
