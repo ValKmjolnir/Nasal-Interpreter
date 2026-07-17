@@ -236,7 +236,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
     strs.resize(constant_strings.size());
     for (u64 i = 0; i < strs.size(); ++i) {
         // incremental initialization, avoid memory leak in repl mode
-        if (strs[i].is_str() && strs[i].str()==constant_strings[i]) {
+        if (strs[i].is_str() && strs[i].str() == constant_strings[i]) {
             continue;
         }
         strs[i] = var::gcobj(new nas_val(gc_type::gc_str));

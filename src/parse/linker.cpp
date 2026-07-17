@@ -34,7 +34,7 @@ linker::linker(): show_path_flag(false), this_file("") {
 }
 
 std::string linker::get_path(expr* node) {
-    if (node->get_type()==expr_type::ast_use) {
+    if (node->get_type() == expr_type::ast_use) {
         auto file_relative_path = std::string("");
         const auto& path = reinterpret_cast<use_stmt*>(node)->get_path();
         for (auto i : path) {
@@ -95,7 +95,7 @@ std::string linker::find_real_file_path(const std::string& filename,
 }
 
 bool linker::import_check(expr* node) {
-    if (node->get_type()==expr_type::ast_use) {
+    if (node->get_type() == expr_type::ast_use) {
         return true;
     }
 /*
@@ -104,15 +104,15 @@ bool linker::import_check(expr* node) {
     |_call_func
       |_string:'filename'
 */
-    if (node->get_type()!=expr_type::ast_call) {
+    if (node->get_type() != expr_type::ast_call) {
         return false;
     }
     auto call_node = reinterpret_cast<call_expr*>(node);
     auto first_expr = call_node->get_first();
-    if (first_expr->get_type()!=expr_type::ast_id) {
+    if (first_expr->get_type() != expr_type::ast_id) {
         return false;
     }
-    if (reinterpret_cast<identifier*>(first_expr)->get_name()!="import") {
+    if (reinterpret_cast<identifier*>(first_expr)->get_name() != "import") {
         return false;
     }
     if (!call_node->get_calls().size()) {
@@ -120,18 +120,18 @@ bool linker::import_check(expr* node) {
     }
 
     // import("xxx");
-    if (call_node->get_calls().size()!=1) {
+    if (call_node->get_calls().size() != 1) {
         return false;
     }
     auto maybe_func_call = call_node->get_calls()[0];
-    if (maybe_func_call->get_type()!=expr_type::ast_callf) {
+    if (maybe_func_call->get_type() != expr_type::ast_callf) {
         return false;
     }
     auto func_call = reinterpret_cast<call_function*>(maybe_func_call);
-    if (func_call->get_argument().size()!=1) {
+    if (func_call->get_argument().size() != 1) {
         return false;
     }
-    if (func_call->get_argument()[0]->get_type()!=expr_type::ast_str) {
+    if (func_call->get_argument()[0]->get_type() != expr_type::ast_str) {
         return false;
     }
     return true;
@@ -315,8 +315,8 @@ std::string linker::generate_module_name(const std::string& file_path) {
         return module_name;
     }
     if (std::isdigit(module_name[0]) ||
-        module_name.find(".")!=std::string::npos ||
-        module_name.find("-")!=std::string::npos) {
+        module_name.find(".") != std::string::npos ||
+        module_name.find("-") != std::string::npos) {
         err.warn("link",
             "get module <" + module_name + "> from <" + file_path + ">, " +
             "will not be easily accessed."

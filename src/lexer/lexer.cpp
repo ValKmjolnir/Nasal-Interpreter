@@ -114,7 +114,7 @@ tok lexer::get_type(const std::string& str) {
 
 std::string lexer::utf8_gen() {
     std::string str = "";
-    while (ptr<res.size() && res[ptr]<0) {
+    while (ptr < res.size() && res[ptr] < 0) {
         std::string tmp = "";
         u32 nbytes = util::utf8_hdchk(res[ptr]);
         if (!nbytes) {
@@ -125,13 +125,13 @@ std::string lexer::utf8_gen() {
 
         tmp += res[ptr++];
         for (u32 i = 0; i<nbytes; ++i, ++ptr) {
-            if (ptr<res.size() && (res[ptr]&0xc0)==0x80) {
+            if (ptr < res.size() && (res[ptr]&0xc0) == 0x80) {
                 tmp += res[ptr];
             }
         }
 
         // utf8 character's total length is 1+nbytes
-        if (tmp.length()!=1+nbytes) {
+        if (tmp.length() != 1 + nbytes) {
             ++column;
             std::string utf_info = "0x" + util::char_to_hex(tmp[0]);
             for (u32 i = 1; i<tmp.size(); ++i) {
@@ -205,7 +205,7 @@ token lexer::num_gen() {
             str += res[ptr++];
         }
         column += str.length();
-        if (str.length()==2 || erfmt) {
+        if (str.length() == 2 || erfmt) {
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
                 "invalid number `"+str+"`"
@@ -229,7 +229,7 @@ token lexer::num_gen() {
             str += res[ptr++];
         }
         // "xxxx." is not a correct number
-        if (str.back()=='.') {
+        if (str.back() == '.') {
             column += str.length();
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
@@ -251,11 +251,12 @@ token lexer::num_gen() {
             str += res[ptr++];
         }
         // "xxxe(-|+)" is not a correct number
-        if (str.back()=='e' || str.back()=='E' || str.back()=='-' || str.back()=='+') {
+        if (str.back() == 'e' || str.back() == 'E' ||
+            str.back() == '-' || str.back() == '+') {
             column += str.length();
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
-                "invalid number `"+str+"`"
+                "invalid number `" + str + "`"
             );
             return {
                 {begin_line, begin_column, line, column, filename},
@@ -326,7 +327,7 @@ token lexer::str_gen() {
     ++column;
 
     // if is not utf8, 1+utf8_hdchk should be 1
-    if (begin=='`' && str.length()!=1+util::utf8_hdchk(str[0])) {
+    if (begin=='`' && str.length() != 1 + util::utf8_hdchk(str[0])) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "\'`\' is used for string including one character"

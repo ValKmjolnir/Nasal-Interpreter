@@ -17,9 +17,9 @@ private:
 private:
     void push_indent() {
         if (indent.size()) {
-            if (indent.back()=="├──") {
+            if (indent.back() == "├──") {
                 indent.back() = "│  ";
-            } else if (indent.back()=="╰──") {
+            } else if (indent.back() == "╰──") {
                 indent.back() = "   ";
             }
         }
@@ -35,7 +35,7 @@ private:
     }
 
     void dump_indent() {
-        if (indent.size() && indent.back()=="│  ") {
+        if (indent.size() && indent.back() == "│  ") {
             indent.back() = "├──";
         }
         for (const auto& i : indent) {
@@ -45,7 +45,7 @@ private:
 
     std::string format_location(expr* node) {
         std::stringstream ss;
-        ss << " ⇒ [";
+        ss << " => [";
         node->get_location().dump_begin(ss);
         ss << "]\n";
         return ss.str();

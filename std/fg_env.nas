@@ -150,7 +150,7 @@ var simulation = func() {
         foreach (var i;keys(fg_globals.task)) {
             if (!contains(fg_globals.task,i))
                 continue;
-            if (coroutine.resume(fg_globals.task[i])!=nil) {
+            if (coroutine.resume(fg_globals.task[i]) != nil) {
                 running=1;
             } else {
                 remove_task(i);
@@ -159,7 +159,7 @@ var simulation = func() {
         foreach (var i;keys(fg_globals.event)) {
             if (!contains(fg_globals.event,i))
                 continue;
-            if (coroutine.resume(fg_globals.event[i])!=nil) {
+            if (coroutine.resume(fg_globals.event[i]) != nil) {
                 running=1;
             } else {
                 remove_event(i);
@@ -247,7 +247,7 @@ props.Node={
             type:'GHOST',
             parent:nil
         };
-        if (typeof(values)=="hash")
+        if (typeof(values) == "hash")
             res.val=values;
         return res;
     },
@@ -273,13 +273,13 @@ props.Node={
         foreach (var label;path)
             tmp=tmp.val[label];
         tmp.val=val;
-        if (typeof(val)=='str') {
+        if (typeof(val) == 'str') {
             if (val=='true' or val=='false')
                 tmp.type='BOOL';
             else
                 tmp.type='STRING';
         }
-        elsif (typeof(val)=='num')
+        elsif (typeof(val) == 'num')
             tmp.type='DOUBLE';
         return;
     },
@@ -315,7 +315,7 @@ props.Node={
     },
     equals:func(node) {return me==node;},
     debug:func(s='') {
-        if (typeof(me.val)=='hash') {
+        if (typeof(me.val) == 'hash') {
             var key=keys(me.val);
             if (!size(key)) {
                 println("\e[91m{}\e[0m");

@@ -419,7 +419,7 @@ var builtin_streq(context* ctx, gc* ngc) {
     var a = local[1];
     var b = local[2];
     return var::num(static_cast<f64>(
-        (!a.is_str() || !b.is_str())? 0:(a.str()==b.str())
+        (!a.is_str() || !b.is_str()) ? 0 : (a.str() == b.str())
     ));
 }
 

@@ -150,9 +150,9 @@ void dbg::list_file() const {
 }
 
 void dbg::step_info() {
-    u64 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
-    u64 begin = (line>>3)==0? 0:((line>>3)<<3);
-    u64 end = (1+(line>>3))<<3;
+    u64 line = bytecode[ctx.pc].line == 0 ? 0 : bytecode[ctx.pc].line - 1;
+    u64 begin = (line >> 3) == 0 ? 0 : ((line >> 3) << 3);
+    u64 end = (1 + (line >> 3)) << 3;
 
     fls.load(files[bytecode[ctx.pc].fidx]);
 

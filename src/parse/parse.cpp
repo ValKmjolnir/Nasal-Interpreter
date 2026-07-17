@@ -831,7 +831,7 @@ call_vector* parse::callv() {
             break;
         }
     }
-    if (node->get_slices().size()==0) {
+    if (node->get_slices().size() == 0) {
         die(this_span(), "expected index value");
     }
     update_location(node);

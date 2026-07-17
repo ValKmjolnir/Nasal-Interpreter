@@ -434,7 +434,7 @@ bool ast_dumper::visit_iter_expr(iter_expr* node) {
 
 bool ast_dumper::visit_forei_expr(forei_expr* node) {
     dump_indent();
-    if (node->get_loop_type()==forei_expr::kind::foreach) {
+    if (node->get_loop_type() == forei_expr::kind::foreach) {
         std::cout << "foreach";
     } else {
         std::cout << "forindex";

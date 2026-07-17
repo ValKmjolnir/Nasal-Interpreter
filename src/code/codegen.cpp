@@ -392,7 +392,7 @@ void codegen::null_access_gen(null_access* node) {
 
 void codegen::call_vector_gen(call_vector* node) {
     // maybe this place can use callv-const if ast's first child is ast_num
-    if (node->get_slices().size()==1 &&
+    if (node->get_slices().size() == 1 &&
         !node->get_slices()[0]->get_end()) {
         calc_gen(node->get_slices()[0]->get_begin());
         emit(op_callv, 0, node->get_slices()[0]->get_location());
@@ -414,7 +414,7 @@ void codegen::call_vector_gen(call_vector* node) {
 
 void codegen::call_func_gen(call_function* node) {
     if (node->get_argument().size() &&
-        node->get_argument()[0]->get_type()==expr_type::ast_pair) {
+        node->get_argument()[0]->get_type() == expr_type::ast_pair) {
         emit(op_newh, 0, node->get_location());
         for (auto child : node->get_argument()) {
             auto pair_node = reinterpret_cast<hash_pair*>(child);
@@ -441,13 +441,13 @@ void codegen::call_func_gen(call_function* node) {
 *  you could see the notes in `vm::opr_mcallv()`.
 */
 void codegen::mcall(expr* node) {
-    if (node->get_type()!=expr_type::ast_id &&
-        node->get_type()!=expr_type::ast_call) {
+    if (node->get_type() != expr_type::ast_id &&
+        node->get_type() != expr_type::ast_call) {
         die("bad left-value: cannot get memory space", node);
         return;
     }
     // generate symbol call if node is just ast_id and return
-    if (node->get_type()==expr_type::ast_id) {
+    if (node->get_type() == expr_type::ast_id) {
         mcall_identifier(reinterpret_cast<identifier*>(node));
         return;
     }
@@ -597,11 +597,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             emit(op_meq, 0, node->get_location());
             break;
         case assignment_expr::kind::add_equal:
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
             mcall(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 emit(op_addeq, 0, node->get_location());
             } else {
                 auto num = reinterpret_cast<number_literal*>(node->get_right())
@@ -611,11 +611,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             break;
         case assignment_expr::kind::sub_equal:
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
             mcall(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 emit(op_subeq, 0, node->get_location());
             } else {
                 auto num = reinterpret_cast<number_literal*>(node->get_right())
@@ -625,11 +625,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             break;
         case assignment_expr::kind::mult_equal:
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
             mcall(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 emit(op_muleq, 0, node->get_location());
             } else {
                 auto num = reinterpret_cast<number_literal*>(node->get_right())
@@ -639,11 +639,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             break;
         case assignment_expr::kind::div_equal:
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
             }
             mcall(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 emit(op_diveq, 0, node->get_location());
             } else {
                 auto num = reinterpret_cast<number_literal*>(node->get_right())
@@ -653,11 +653,11 @@ void codegen::assignment_expression(assignment_expr* node) {
             }
             break;
         case assignment_expr::kind::concat_equal:
-            if (node->get_right()->get_type()!=expr_type::ast_str) {
+            if (node->get_right()->get_type() != expr_type::ast_str) {
                 calc_gen(node->get_right());
             }
             mcall(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_str) {
+            if (node->get_right()->get_type() != expr_type::ast_str) {
                 emit(op_lnkeq, 0, node->get_location());
             } else {
                 const auto& str = reinterpret_cast<string_literal*>(
@@ -689,7 +689,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     // what is symbol load assignment? example:
     //     a = 1;         # this is symbol load
     //     a.foo = "bar"; # this is not symbol load
-    if (node->get_left()->get_type()!=expr_type::ast_id) {
+    if (node->get_left()->get_type() != expr_type::ast_id) {
         calc_gen(node);
         if (code.back().op==op_meq) {
             code.back().num = 1; // 1 means need pop after op_meq
@@ -754,7 +754,7 @@ void codegen::assignment_statement(assignment_expr* node) {
 void codegen::multi_assign_gen(multi_assign* node) {
     auto tuple_node = node->get_tuple();
     auto value_node = node->get_value();
-    if (value_node->get_type()==expr_type::ast_tuple) {
+    if (value_node->get_type() == expr_type::ast_tuple) {
         auto tuple_size = tuple_node->get_elements().size();
         auto value_size = reinterpret_cast<tuple_expr*>(value_node)
                           ->get_elements().size();
@@ -779,7 +779,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
 
     i64 size = static_cast<i64>(tuple_node->get_elements().size());
     // generate multiple assignment: (a, b, c) = (1, 2, 3);
-    if (value_node->get_type()==expr_type::ast_tuple) {
+    if (value_node->get_type() == expr_type::ast_tuple) {
         const auto& value_tuple = reinterpret_cast<tuple_expr*>(value_node)
                                   ->get_elements();
         for (i64 i = size-1; i>=0; --i) {
@@ -886,7 +886,7 @@ void codegen::while_gen(while_expr* node) {
 void codegen::for_gen(for_expr* node) {
     statement_generation(node->get_initial());
     usize jmp_place = code.size();
-    if (node->get_condition()->get_type()==expr_type::ast_null) {
+    if (node->get_condition()->get_type() == expr_type::ast_null) {
         regist_number(1);
         emit(op_pnum, const_number_map.at(1), node->get_condition()->get_location());
     } else {
@@ -908,7 +908,7 @@ void codegen::forei_gen(forei_expr* node) {
     calc_gen(node->get_value());
     emit(op_cnt, 0, node->get_value()->get_location());
     usize loop_begin = code.size();
-    if (node->get_loop_type()==forei_expr::kind::forindex) {
+    if (node->get_loop_type() == forei_expr::kind::forindex) {
         emit(op_findex, 0, node->get_location());
     } else {
         emit(op_feach, 0, node->get_location());
@@ -1079,7 +1079,7 @@ void codegen::binary_gen(binary_operator* node) {
     switch (node->get_operator_type()) {
         case binary_operator::kind::add:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_add, 0, node->get_location());
             } else {
@@ -1091,7 +1091,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::sub:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_sub, 0, node->get_location());
             } else {
@@ -1103,7 +1103,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::mult:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_mul, 0, node->get_location());
             } else {
@@ -1115,7 +1115,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::div:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_div, 0, node->get_location());
             } else {
@@ -1127,7 +1127,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::concat:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_str) {
+            if (node->get_right()->get_type() != expr_type::ast_str) {
                 calc_gen(node->get_right());
                 emit(op_lnk, 0, node->get_location());
             } else {
@@ -1139,7 +1139,7 @@ void codegen::binary_gen(binary_operator* node) {
             break;
         case binary_operator::kind::less:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_less, 0, node->get_location());
             } else {
@@ -1151,7 +1151,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::leq:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_leq, 0, node->get_location());
             } else {
@@ -1163,7 +1163,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::grt:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_grt, 0, node->get_location());
             } else {
@@ -1175,7 +1175,7 @@ void codegen::binary_gen(binary_operator* node) {
             return;
         case binary_operator::kind::geq:
             calc_gen(node->get_left());
-            if (node->get_right()->get_type()!=expr_type::ast_num) {
+            if (node->get_right()->get_type() != expr_type::ast_num) {
                 calc_gen(node->get_right());
                 emit(op_geq, 0, node->get_location());
             } else {

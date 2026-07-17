@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
     usize iter = 0, size = vec.elems.size();
     out << "[";
     for (auto& i:vec.elems) {
-        out << i << ",]"[(++iter)==size];
+        out << i << ",]"[(++iter) == size];
     }
     vec.printed = false;
     return out;
@@ -71,7 +71,7 @@ var* nas_hash::get_memory(const std::string& key) {
 
 std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     if (!hash.elems.size() || hash.printed) {
-        out << (hash.elems.size()? "{..}":"{}");
+        out << (hash.elems.size() ? "{..}" : "{}");
         return out;
     }
 
@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& out, nas_hash& hash) {
     usize iter = 0, size = hash.elems.size();
     out << "{";
     for (auto& i : hash.elems) {
-        out << i.first << ": " << i.second << sep[(++iter)==size];
+        out << i.first << ": " << i.second << sep[(++iter) == size];
     }
 
     // restore flag
@@ -193,7 +193,7 @@ std::ostream& operator<<(std::ostream& out, nas_map& mp) {
     usize iter = 0, size = mp.mapper.size();
     out << "{";
     for (auto& i : mp.mapper) {
-        out << i.first << ": " << *i.second << sep[(++iter)==size];
+        out << i.first << ": " << *i.second << sep[(++iter) == size];
     }
 
     // restore flag

@@ -925,10 +925,10 @@ void vm::o_eq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = one;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()==val2.str())? one : zero;
+        ctx.top[0] = (val1.str() == val2.str()) ? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()==val2.to_num())? one : zero;
+        ctx.top[0] = (val1.to_num() == val2.to_num()) ? one : zero;
     } else {
         ctx.top[0] = (val1==val2)? one : zero;
     }
@@ -940,10 +940,10 @@ void vm::o_neq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = zero;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()!=val2.str())? one : zero;
+        ctx.top[0] = (val1.str() != val2.str()) ? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()!=val2.to_num())? one : zero;
+        ctx.top[0] = (val1.to_num() != val2.to_num()) ? one : zero;
     } else {
         ctx.top[0] = (val1!=val2)? one : zero;
     }
