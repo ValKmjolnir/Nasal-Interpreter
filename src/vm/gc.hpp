@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "nasal.hpp"
-#include "nasal_type.hpp"
+#include "vm/type.hpp"
 #include "util/gc_stat.hpp"
 
 namespace nasal {

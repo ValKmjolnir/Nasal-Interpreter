@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nasal_type.hpp"
+#include "vm/type.hpp"
 #include "vm/gc.hpp"
 
 #include <string>

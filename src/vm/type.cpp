@@ -1,4 +1,4 @@
-#include "nasal_type.hpp"
+#include "vm/type.hpp"
 
 #include <string>
 #include <sstream>

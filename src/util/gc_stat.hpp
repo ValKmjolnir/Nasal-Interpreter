@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nasal.hpp"
-#include "nasal_type.hpp"
+#include "vm/type.hpp"
 
 #include <chrono>
 

@@ -1,4 +1,4 @@
-#include "nasal_web.hpp"
+#include "web/web.hpp"
 #include "vm/vm.hpp"
 #include "parse/parse.hpp"
 #include "code/codegen.hpp"

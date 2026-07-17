@@ -1,5 +1,5 @@
 #include "../src/nasal.hpp"
-#include "../src/nasal_type.hpp"
+#include "../src/vm/type.hpp"
 #include "../src/vm/gc.hpp"
 #include <cmath>
 

@@ -6,6 +6,8 @@ if os.path.exists(f"{BUILD_DIR}\\Release\\nasal.exe"):
     shutil.move(f"{BUILD_DIR}\\Release\\nasal.exe", ".\\nasal.exe")
 if os.path.exists(f"{BUILD_DIR}\\Release\\nasal-format.exe"):
     shutil.move(f"{BUILD_DIR}\\Release\\nasal-format.exe", ".\\nasal-format.exe")
+if os.path.exists(f"{BUILD_DIR}\\Release\\nasal-linter.exe"):
+    shutil.move(f"{BUILD_DIR}\\Release\\nasal-linter.exe", ".\\nasal-linter.exe")
 
 for root, dirs, files in os.walk(f"{BUILD_DIR}\\Release"):
     for file in files:

@@ -16,12 +16,18 @@ if platform.system() == "Windows":
 nasal_format_executable = pathlib.Path("nasal-format")
 if platform.system() == "Windows":
     nasal_format_executable = pathlib.Path("nasal-format.exe")
+nasal_linter_executable = pathlib.Path("nasal-linter")
+if platform.system() == "Windows":
+    nasal_linter_executable = pathlib.Path("nasal-linter.exe")
 nasal_standard_library = pathlib.Path("std")
 if not os.path.exists(nasal_executable):
     print("pack binaries failed: nasal executable not found")
     sys.exit(-1)
 if not os.path.exists(nasal_format_executable):
     print("pack binaries failed: nasal-format executable not found")
+    sys.exit(-1)
+if not os.path.exists(nasal_linter_executable):
+    print("pack binaries failed: nasal-linter executable not found")
     sys.exit(-1)
 if not os.path.exists(nasal_standard_library):
     print("pack binaries failed: nasal standard library not found")
@@ -79,6 +85,7 @@ if not os.path.exists(package_directory):
 print("pack nasal executable")
 shutil.copy(nasal_executable, package_directory.joinpath(nasal_executable))
 shutil.copy(nasal_format_executable, package_directory.joinpath(nasal_format_executable))
+shutil.copy(nasal_linter_executable, package_directory.joinpath(nasal_linter_executable))
 
 print("pack nasal standard library")
 shutil.copytree(nasal_standard_library, package_directory.joinpath(nasal_standard_library))

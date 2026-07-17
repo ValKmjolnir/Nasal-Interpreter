@@ -65,7 +65,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/vm.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp)
+    ${CMAKE_SOURCE_DIR}/src/vm/type.cpp)
 add_library(nasal-object STATIC ${NASAL_OBJECT_SOURCE_FILE})
 target_include_directories(nasal-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nasal-object nasal-ast)
@@ -129,7 +129,7 @@ set(MODULE_USED_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
-    ${CMAKE_SOURCE_DIR}/src/nasal_type.cpp
+    ${CMAKE_SOURCE_DIR}/src/vm/type.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
 target_include_directories(module-used-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
@@ -156,7 +156,7 @@ target_link_libraries(nasock module-used-object)
 # Add web library, not for MSVC now
 if (NOT MSVC)
     add_library(nasal-web SHARED
-        src/nasal_web.cpp
+        src/web/web.cpp
     )
     target_include_directories(nasal-web PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(nasal-web nasal-object)
