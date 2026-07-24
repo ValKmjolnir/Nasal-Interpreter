@@ -18,7 +18,7 @@
 
 #include "nasal.hpp"
 #include "vm/type.hpp"
-#include "util/gc_stat.hpp"
+#include "vm/gc_stat.hpp"
 
 namespace nasal {
 

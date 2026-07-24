@@ -60,8 +60,8 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/colorful.cpp
     ${CMAKE_SOURCE_DIR}/src/util/filestream.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
-    ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/vm/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/vm.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/type.cpp)
@@ -132,9 +132,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/module)
 
 set(MODULE_USED_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
-    ${CMAKE_SOURCE_DIR}/src/util/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/type.cpp
+    ${CMAKE_SOURCE_DIR}/src/vm/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp)
 add_library(module-used-object STATIC ${MODULE_USED_OBJECT_SOURCE_FILE})
 target_include_directories(module-used-object PRIVATE ${CMAKE_SOURCE_DIR}/src)
