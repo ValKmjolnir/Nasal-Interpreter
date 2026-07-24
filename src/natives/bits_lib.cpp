@@ -58,14 +58,14 @@ var builtin_fld(context* ctx, gc* ngc) {
     }
     u32 bit = static_cast<u32>(startbit.num());
     u32 len = static_cast<u32>(length.num());
-    if (bit+len>8*str.str().length()) {
+    if (bit + len > 8 * str.str().length()) {
         return nas_err("bits::fld", "bitfield out of bounds");
     }
     u32 res = 0;
     auto& s = str.str();
-    for (u32 i = bit; i<bit+len; ++i) {
-        if (s[i>>3]&(1<<(7-(i&7)))) {
-            res |= 1<<(bit+len-i-1);
+    for (u32 i = bit; i < bit + len; ++i) {
+        if (s[i >> 3] & (1 << (7 - (i & 7)))) {
+            res |= 1 << (bit + len - i - 1);
         }
     }
     return var::num(static_cast<f64>(res));
@@ -88,18 +88,18 @@ var builtin_sfld(context* ctx, gc* ngc) {
     }
     u32 bit = static_cast<u32>(startbit.num());
     u32 len = static_cast<u32>(length.num());
-    if (bit+len>8*str.str().length()) {
+    if (bit + len > 8 * str.str().length()) {
         return nas_err("bits::sfld", "bitfield out of bounds");
     }
     u32 res = 0;
     auto& s = str.str();
-    for (u32 i = bit; i<bit+len; ++i) {
-        if (s[i>>3]&(1<<(7-(i&7)))) {
-            res |= 1<<(bit+len-i-1);
+    for (u32 i = bit; i < bit + len; ++i) {
+        if (s[i >> 3] & (1 << (7 - (i & 7)))) {
+            res |= 1 << (bit + len - i - 1);
         }
     }
-    if (res&(1<<(len-1))) {
-        res |= ~((1<<len)-1);
+    if (res & (1 << (len - 1))) {
+        res |= ~((1 << len) - 1);
     }
     return var::num(static_cast<f64>(static_cast<i32>(res)));
 }
@@ -125,15 +125,15 @@ var builtin_setfld(context* ctx, gc* ngc) {
     u32 bit = static_cast<u32>(startbit.num());
     u32 len = static_cast<u32>(length.num());
     u64 val = static_cast<u64>(value.num());
-    if (bit+len>8*str.str().length()) {
+    if (bit + len > 8 * str.str().length()) {
         return nas_err("bits::setfld", "bitfield out of bounds");
     }
     auto& s = str.str();
-    for (u32 i = bit; i<bit+len; ++i) {
-        if (val&(1<<(i-bit))) {
-            s[i>>3] |= (1<<(7-(i&7)));
+    for (u32 i = bit; i < bit + len; ++i) {
+        if (val & (1 << (i - bit))) {
+            s[i >> 3] |= (1 << (7 - (i & 7)));
         } else {
-            s[i>>3] &= ~(1<<(7-(i&7)));
+            s[i >> 3] &= ~(1 << (7 - (i & 7)));
         }
     }
     return nil;

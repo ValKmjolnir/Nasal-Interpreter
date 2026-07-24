@@ -137,14 +137,14 @@ var builtin_split(context* ctx, gc* ngc) {
 
     usize last = 0;
     usize pos = s.find(sep, 0);
-    while (pos!=std::string::npos) {
+    while (pos != std::string::npos) {
         if (pos>last) {
             vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
-    if (last!=s.length()) {
+    if (last != s.length()) {
         vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
@@ -185,14 +185,14 @@ var builtin_split_with_empty_substr(context* ctx, gc* ngc) {
 
     usize last = 0;
     usize pos = s.find(sep, 0);
-    while (pos!=std::string::npos) {
-        if (pos>=last) {
-            vec.push_back(ngc->alloc_str(s.substr(last, pos-last)));
+    while (pos != std::string::npos) {
+        if (pos >= last) {
+            vec.push_back(ngc->alloc_str(s.substr(last, pos - last)));
         }
         last = pos + sep.length();
         pos = s.find(sep, last);
     }
-    if (last<=s.length()) {
+    if (last <= s.length()) {
         vec.push_back(ngc->alloc_str(s.substr(last)));
     }
     ngc->temp = nil;
@@ -209,8 +209,8 @@ var builtin_rand(context* ctx, gc* ngc) {
         return nil;
     }
     f64 num = 0;
-    for (u32 i = 0; i<5; ++i) {
-        num = (num+rand())*(1.0/(RAND_MAX+1.0));
+    for (u32 i = 0; i < 5; ++i) {
+        num = (num + rand()) * (1.0 / (RAND_MAX + 1.0));
     }
     return var::num(num);
 }
@@ -219,7 +219,7 @@ var builtin_id(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     std::stringstream ss;
     ss << "0";
-    if (val.type>vm_type::vm_num) {
+    if (val.type > vm_type::vm_num) {
         ss << "x" << std::hex;
         ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
     }
@@ -313,7 +313,7 @@ var builtin_contains(context* ctx, gc* ngc) {
     if (!hash.is_hash() || !key.is_str()) {
         return zero;
     }
-    return hash.hash().elems.count(key.str())? one:zero;
+    return hash.hash().elems.count(key.str()) ? one : zero;
 }
 
 var builtin_delete(context* ctx, gc* ngc) {
@@ -362,7 +362,7 @@ var builtin_find(context* ctx, gc* ngc) {
     var needle = local[1];
     var haystack = local[2];
     usize pos = haystack.to_str().find(needle.to_str());
-    if (pos==std::string::npos) {
+    if (pos == std::string::npos) {
         return var::num(-1.0);
     }
     return var::num(static_cast<f64>(pos));
@@ -497,10 +497,10 @@ var builtin_chr(context* ctx, gc* ngc) {
         "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
     };
     auto num = static_cast<i32>(ctx->localr[1].num());
-    if (0<=num && num<128) {
+    if (0 <= num && num < 128) {
         return ngc->alloc_str(static_cast<char>(num));
-    } else if (128<=num && num<256) {
-        return ngc->alloc_str(extend[num-128]);
+    } else if (128 <= num && num < 256) {
+        return ngc->alloc_str(extend[num - 128]);
     }
     return ngc->alloc_str(" ");
 }
@@ -536,10 +536,10 @@ var builtin_sleep(context* ctx, gc* ngc) {
 #if defined(_WIN32) && !defined(_GLIBCXX_HAS_GTHREADS)
     // mingw-w64 win32 thread model has no std::this_thread
     // also msvc will use this
-    Sleep(static_cast<i64>(val.num()*1e3));
+    Sleep(static_cast<i64>(val.num() * 1e3));
 #else
     std::this_thread::sleep_for (
-        std::chrono::microseconds(static_cast<i64>(val.num()*1e6))
+        std::chrono::microseconds(static_cast<i64>(val.num() * 1e6))
     );
 #endif
     return nil;
@@ -581,10 +581,10 @@ var builtin_arch(context* ctx, gc* ngc) {
 std::string tohex(u32 num) {
     const char str16[] = "0123456789abcdef";
     std::string str = "";
-    for (u32 i = 0; i<4; i++, num >>= 8) {
+    for (u32 i = 0; i < 4; i++, num >>= 8) {
         std::string tmp = "";
-        for (u32 j = 0, b = num&0xff; j<2; j++, b >>= 4) {
-            tmp.insert(0, 1, str16[b&0xf]);
+        for (u32 j = 0, b = num & 0xff; j < 2; j++, b >>= 4) {
+            tmp.insert(0, 1, str16[b & 0xf]);
         }
         str += tmp;
     }
@@ -593,15 +593,15 @@ std::string tohex(u32 num) {
 
 std::string md5(const std::string& src) {
     std::vector<u32> buff;
-    usize num = ((src.length()+8)>>6)+1;
-    usize buffsize = num<<4;
+    usize num = ((src.length() + 8) >> 6) + 1;
+    usize buffsize = num << 4;
     buff.resize(buffsize, 0);
-    for (usize i = 0; i<src.length(); i++) {
-        buff[i>>2] |= (static_cast<u8>(src[i]))<<((i&0x3)<<3);
+    for (usize i = 0; i < src.length(); i++) {
+        buff[i >> 2] |= (static_cast<u8>(src[i])) << ((i & 0x3) << 3);
     }
-    buff[src.length()>>2] |= 0x80<<(((src.length()%4))<<3);
-    buff[buffsize-2] = (src.length()<<3)&0xffffffff;
-    buff[buffsize-1] = ((src.length()<<3)>>32)&0xffffffff;
+    buff[src.length() >> 2] |= 0x80 << (((src.length() % 4)) << 3);
+    buff[buffsize - 2] = (src.length() << 3) & 0xffffffff;
+    buff[buffsize - 1] = ((src.length() << 3) >> 32) & 0xffffffff;
 
     // u32(abs(sin(i+1))*(2pow32))
     const u32 k[] = {
@@ -639,25 +639,25 @@ std::string md5(const std::string& src) {
         0, 7, 14, 5,  12, 3,  10, 1,  8,  15, 6,  13, 4,  11, 2,  9   // g=(7*i)%16;
     };
 
-#define shift(x, n)  (((x)<<(n))|((x)>>(32-(n)))) // cycle left shift
-#define md5f(x, y, z) (((x)&(y))|((~x)&(z)))
-#define md5g(x, y, z) (((x)&(z))|((y)&(~z)))
-#define md5h(x, y, z) ((x)^(y)^(z))
-#define md5i(x, y, z) ((y)^((x)|(~z)))
+#define shift(x, n)  (((x) << (n)) | ((x) >> (32 - (n)))) // cycle left shift
+#define md5f(x, y, z) (((x) & (y)) | ((~x) & (z)))
+#define md5g(x, y, z) (((x) & (z)) | ((y) & (~z)))
+#define md5h(x, y, z) ((x) ^ (y) ^ (z))
+#define md5i(x, y, z) ((y) ^ ((x) | (~z)))
 
     u32 atmp = 0x67452301, btmp = 0xefcdab89;
     u32 ctmp = 0x98badcfe, dtmp = 0x10325476;
-    for (u32 i = 0; i<buffsize; i += 16) {
+    for (u32 i = 0; i < buffsize; i += 16) {
         u32 f, a = atmp, b = btmp, c = ctmp, d = dtmp;
-        for (u32 j = 0; j<64; j++) {
-            if (j<16)      f = md5f(b, c, d);
-            else if (j<32) f = md5g(b, c, d);
-            else if (j<48) f = md5h(b, c, d);
-            else           f = md5i(b, c, d);
+        for (u32 j = 0; j < 64; j++) {
+            if (j < 16)      f = md5f(b, c, d);
+            else if (j < 32) f = md5g(b, c, d);
+            else if (j < 48) f = md5h(b, c, d);
+            else             f = md5i(b, c, d);
             u32 tmp = d;
             d = c;
             c = b;
-            b = b+shift((a+f+k[j]+buff[i+idx[j]]), s[j]);
+            b = b + shift((a + f + k[j] + buff[i + idx[j]]), s[j]);
             a = tmp;
         }
         atmp += a;
@@ -665,7 +665,7 @@ std::string md5(const std::string& src) {
         ctmp += c;
         dtmp += d;
     }
-    return tohex(atmp)+tohex(btmp)+tohex(ctmp)+tohex(dtmp);
+    return tohex(atmp) + tohex(btmp) + tohex(ctmp) + tohex(dtmp);
 }
 
 var builtin_md5(context* ctx, gc* ngc) {
@@ -749,19 +749,19 @@ var builtin_gcextend(context* ctx, gc* ngc) {
         return nil;
     }
     const auto& s = type.str();
-    if (s=="str") {
+    if (s == "str") {
         ngc->extend(gc_type::gc_str);
-    } else if (s=="vec") {
+    } else if (s == "vec") {
         ngc->extend(gc_type::gc_vec);
-    } else if (s=="hash") {
+    } else if (s == "hash") {
         ngc->extend(gc_type::gc_hash);
-    } else if (s=="func") {
+    } else if (s == "func") {
         ngc->extend(gc_type::gc_func);
-    } else if (s=="upval") {
+    } else if (s == "upval") {
         ngc->extend(gc_type::gc_upval);
-    } else if (s=="ghost") {
+    } else if (s == "ghost") {
         ngc->extend(gc_type::gc_ghost);
-    } else if (s=="co") {
+    } else if (s == "co") {
         ngc->extend(gc_type::gc_co);
     }
     return nil;
@@ -788,8 +788,8 @@ var builtin_logtime(context* ctx, gc* ngc) {
     char s[64];
     snprintf(
         s, 64, "%d-%.2d-%.2d %.2d:%.2d:%.2d",
-        tm_t->tm_year+1900,
-        tm_t->tm_mon+1,
+        tm_t->tm_year + 1900,
+        tm_t->tm_mon + 1,
         tm_t->tm_mday,
         tm_t->tm_hour,
         tm_t->tm_min,

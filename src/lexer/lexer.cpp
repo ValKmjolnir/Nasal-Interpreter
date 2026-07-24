@@ -12,11 +12,11 @@
 namespace nasal {
 
 bool lexer::skip(char c) {
-    return c==' ' || c=='\n' || c=='\t' || c=='\r' || c==0;
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == 0;
 }
 
 bool lexer::is_id(char c) {
-    return (c=='_') || std::isalpha(c) || (c<0);
+    return (c == '_') || std::isalpha(c) || (c < 0);
 }
 
 bool lexer::is_hex(char c) {
@@ -24,7 +24,7 @@ bool lexer::is_hex(char c) {
 }
 
 bool lexer::is_oct(char c) {
-    return '0'<=c && c<='7';
+    return '0' <= c && c <= '7';
 }
 
 bool lexer::is_dec(char c) {
@@ -32,7 +32,7 @@ bool lexer::is_dec(char c) {
 }
 
 bool lexer::is_str(char c) {
-    return c=='\'' || c=='\"' || c=='`';
+    return c == '\'' || c == '\"' || c == '`';
 }
 
 bool lexer::is_quesmark(char c) {
@@ -41,32 +41,32 @@ bool lexer::is_quesmark(char c) {
 
 bool lexer::is_single_opr(char c) {
     return (
-        c=='(' || c==')' || c=='[' || c==']' ||
-        c=='{' || c=='}' || c==',' || c==';' ||
-        c==':' || c=='`' || c=='@' || c=='%' ||
-        c=='$' || c=='\\'
+        c == '(' || c == ')' || c == '[' || c == ']' ||
+        c == '{' || c == '}' || c == ',' || c == ';' ||
+        c == ':' || c == '`' || c == '@' || c == '%' ||
+        c == '$' || c == '\\'
     );
 }
 
 bool lexer::is_calc_opr(char c) {
     return (
-        c=='=' || c=='+' || c=='-' || c=='*' ||
-        c=='!' || c=='/' || c=='<' || c=='>' ||
-        c=='~' || c=='|' || c=='&' || c=='^'
+        c == '=' || c == '+' || c == '-' || c == '*' ||
+        c == '!' || c == '/' || c == '<' || c == '>' ||
+        c == '~' || c == '|' || c == '&' || c == '^'
     );
 }
 
 void lexer::skip_note() {
     // avoid note, after this process ptr will point to '\n'
     // so next loop line counter+1
-    while (++ptr<res.size() && res[ptr]!='\n') {}
+    while (++ptr < res.size() && res[ptr] != '\n') {}
 }
 
 void lexer::err_char() {
     ++column;
     char c = res[ptr++];
     err.err("lexer",
-        {line, column-1, line, column, filename},
+        {line, column - 1, line, column, filename},
         "invalid character 0x" + util::char_to_hex(c)
     );
     ++invalid_char;
@@ -88,7 +88,7 @@ void lexer::open(const std::string& file) {
 
     // check file exsits and it is a regular file
     if (!fs::is_regular(file)) {
-        err.err("lexer", "<"+file+"> is not a regular file");
+        err.err("lexer", "<" + file + "> is not a regular file");
         err.chkerr();
     }
 
@@ -109,7 +109,7 @@ void lexer::open(const std::string& file) {
 tok lexer::get_type(const std::string& str) {
     // search token type from mapper
     // if cannot find, just return null
-    return token_mapper.count(str)? token_mapper.at(str):tok::tk_null;
+    return token_mapper.count(str) ? token_mapper.at(str) : tok::tk_null;
 }
 
 std::string lexer::utf8_gen() {
@@ -124,8 +124,8 @@ std::string lexer::utf8_gen() {
         }
 
         tmp += res[ptr++];
-        for (u32 i = 0; i<nbytes; ++i, ++ptr) {
-            if (ptr < res.size() && (res[ptr]&0xc0) == 0x80) {
+        for (u32 i = 0; i < nbytes; ++i, ++ptr) {
+            if (ptr < res.size() && (res[ptr] & 0xc0) == 0x80) {
                 tmp += res[ptr];
             }
         }
@@ -134,12 +134,12 @@ std::string lexer::utf8_gen() {
         if (tmp.length() != 1 + nbytes) {
             ++column;
             std::string utf_info = "0x" + util::char_to_hex(tmp[0]);
-            for (u32 i = 1; i<tmp.size(); ++i) {
+            for (u32 i = 1; i < tmp.size(); ++i) {
                 utf_info += " 0x" + util::char_to_hex(tmp[i]);
             }
             err.err("lexer",
-                {line, column-1, line, column, filename},
-                "invalid utf-8 <"+utf_info+">"
+                {line, column - 1, line, column, filename},
+                "invalid utf-8 <" + utf_info + ">"
             );
             ++invalid_char;
         }
@@ -154,8 +154,8 @@ token lexer::id_gen() {
     u64 begin_line = line;
     u64 begin_column = column;
     std::string str = "";
-    while (ptr<res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
-        if (res[ptr]<0) { // utf-8
+    while (ptr < res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
+        if (res[ptr] < 0) { // utf-8
             str += utf8_gen();
         } else { // ascii
             str += res[ptr++];
@@ -165,7 +165,7 @@ token lexer::id_gen() {
     tok type = get_type(str);
     return {
         {begin_line, begin_column, line, column, filename},
-        (type!=tok::tk_null)? type:tok::tk_id,
+        (type != tok::tk_null) ? type : tok::tk_id,
         str
     };
 }
@@ -174,18 +174,18 @@ token lexer::num_gen() {
     u64 begin_line = line;
     u64 begin_column = column;
     // generate hex number
-    if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='x') {
+    if (ptr + 1 < res.size() && res[ptr] == '0' && res[ptr + 1] == 'x') {
         std::string str = "0x";
         ptr += 2;
-        while (ptr<res.size() && is_hex(res[ptr])) {
+        while (ptr < res.size() && is_hex(res[ptr])) {
             str += res[ptr++];
         }
         column += str.length();
         // "0x"
-        if (str.length()<3) {
+        if (str.length() < 3) {
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
-                "invalid number `"+str+"`"
+                "invalid number `" + str + "`"
             );
         }
         return {
@@ -193,14 +193,14 @@ token lexer::num_gen() {
             tok::tk_num,
             str
         };
-    } else if (ptr+1<res.size() && res[ptr]=='0' && res[ptr+1]=='o') { // generate oct number
+    } else if (ptr + 1 < res.size() && res[ptr] == '0' && res[ptr + 1] == 'o') { // generate oct number
         std::string str = "0o";
         ptr += 2;
-        while (ptr<res.size() && is_oct(res[ptr])) {
+        while (ptr < res.size() && is_oct(res[ptr])) {
             str += res[ptr++];
         }
         bool erfmt = false;
-        while (ptr<res.size() && (is_dec(res[ptr]) || is_hex(res[ptr]))) {
+        while (ptr < res.size() && (is_dec(res[ptr]) || is_hex(res[ptr]))) {
             erfmt = true;
             str += res[ptr++];
         }
@@ -208,7 +208,7 @@ token lexer::num_gen() {
         if (str.length() == 2 || erfmt) {
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
-                "invalid number `"+str+"`"
+                "invalid number `" + str + "`"
             );
         }
         return {
@@ -220,12 +220,12 @@ token lexer::num_gen() {
     // generate dec number
     // dec number -> [0~9][0~9]*(.[0~9]*)(e|E(+|-)0|[1~9][0~9]*)
     std::string str = "";
-    while (ptr<res.size() && is_dec(res[ptr])) {
+    while (ptr < res.size() && is_dec(res[ptr])) {
         str += res[ptr++];
     }
-    if (ptr<res.size() && res[ptr]=='.') {
+    if (ptr < res.size() && res[ptr] == '.') {
         str += res[ptr++];
-        while (ptr<res.size() && is_dec(res[ptr])) {
+        while (ptr < res.size() && is_dec(res[ptr])) {
             str += res[ptr++];
         }
         // "xxxx." is not a correct number
@@ -233,7 +233,7 @@ token lexer::num_gen() {
             column += str.length();
             err.err("lexer",
                 {begin_line, begin_column, line, column, filename},
-                "invalid number `"+str+"`"
+                "invalid number `" + str + "`"
             );
             return {
                 {begin_line, begin_column, line, column, filename},
@@ -242,12 +242,12 @@ token lexer::num_gen() {
             };
         }
     }
-    if (ptr<res.size() && (res[ptr]=='e' || res[ptr]=='E')) {
+    if (ptr < res.size() && (res[ptr] == 'e' || res[ptr] == 'E')) {
         str += res[ptr++];
-        if (ptr<res.size() && (res[ptr]=='-' || res[ptr]=='+')) {
+        if (ptr < res.size() && (res[ptr] == '-' || res[ptr] == '+')) {
             str += res[ptr++];
         }
-        while (ptr<res.size() && is_dec(res[ptr])) {
+        while (ptr < res.size() && is_dec(res[ptr])) {
             str += res[ptr++];
         }
         // "xxxe(-|+)" is not a correct number
@@ -279,13 +279,13 @@ token lexer::str_gen() {
     std::string str = "";
     const char begin = res[ptr];
     ++column;
-    while (++ptr<res.size() && res[ptr]!=begin) {
+    while (++ptr < res.size() && res[ptr] != begin) {
         ++column;
-        if (res[ptr]=='\n') {
+        if (res[ptr] == '\n') {
             column = 0;
             ++line;
         }
-        if (res[ptr]=='\\' && ptr+1<res.size()) {
+        if (res[ptr] == '\\' && ptr + 1 < res.size()) {
             ++column;
             ++ptr;
             switch (res[ptr]) {
@@ -304,7 +304,7 @@ token lexer::str_gen() {
                 case '\"':str += '\"';    break;
                 default:  str += res[ptr];break;
             }
-            if (res[ptr]=='\n') {
+            if (res[ptr] == '\n') {
                 column = 0;
                 ++line;
             }
@@ -313,7 +313,7 @@ token lexer::str_gen() {
         str += res[ptr];
     }
     // check if this string ends with a " or '
-    if (ptr++>=res.size()) {
+    if (ptr++ >= res.size()) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "get EOF when generating string"
@@ -327,7 +327,7 @@ token lexer::str_gen() {
     ++column;
 
     // if is not utf8, 1+utf8_hdchk should be 1
-    if (begin=='`' && str.length() != 1 + util::utf8_hdchk(str[0])) {
+    if (begin == '`' && str.length() != 1 + util::utf8_hdchk(str[0])) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "\'`\' is used for string including one character"
@@ -346,7 +346,7 @@ token lexer::quesmark_gen() {
     std::string str(1, res[ptr]);
     ++column;
     ++ptr;
-    if (ptr < res.size() && (res[ptr]=='?' || res[ptr]=='.')) {
+    if (ptr < res.size() && (res[ptr] == '?' || res[ptr] == '.')) {
         str += res[ptr];
         ++column;
         ++ptr;
@@ -364,10 +364,10 @@ token lexer::single_opr() {
     std::string str(1, res[ptr]);
     ++column;
     tok type = get_type(str);
-    if (type==tok::tk_null) {
+    if (type == tok::tk_null) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
-            "invalid operator `"+str+"`"
+            "invalid operator `" + str + "`"
         );
     }
     ++ptr;
@@ -378,7 +378,7 @@ token lexer::dots() {
     u64 begin_line = line;
     u64 begin_column = column;
     std::string str = ".";
-    if (ptr+2<res.size() && res[ptr+1]=='.' && res[ptr+2]=='.') {
+    if (ptr + 2 < res.size() && res[ptr + 1] == '.' && res[ptr + 2] == '.') {
         str += "..";
     }
     ptr += str.length();
@@ -391,7 +391,7 @@ token lexer::calc_opr() {
     u64 begin_column = column;
     // get calculation operator
     std::string str(1, res[ptr++]);
-    if (ptr<res.size() && res[ptr]=='=') {
+    if (ptr < res.size() && res[ptr] == '=') {
         str += res[ptr++];
     }
     column += str.length();
@@ -405,16 +405,16 @@ const error& lexer::scan(const std::string& file) {
     toks = {};
     open(file);
 
-    while (ptr<res.size()) {
-        while (ptr<res.size() && skip(res[ptr])) {
+    while (ptr < res.size()) {
+        while (ptr < res.size() && skip(res[ptr])) {
             // these characters will be ignored, and '\n' will cause ++line
             ++column;
-            if (res[ptr++]=='\n') {
+            if (res[ptr++] == '\n') {
                 ++line;
                 column = 0;
             }
         }
-        if (ptr>=res.size()) {
+        if (ptr >= res.size()) {
             break;
         }
         if (is_id(res[ptr])) {
@@ -427,16 +427,16 @@ const error& lexer::scan(const std::string& file) {
             toks.push_back(quesmark_gen());
         } else if (is_single_opr(res[ptr])) {
             toks.push_back(single_opr());
-        } else if (res[ptr]=='.') {
+        } else if (res[ptr] == '.') {
             toks.push_back(dots());
         } else if (is_calc_opr(res[ptr])) {
             toks.push_back(calc_opr());
-        } else if (res[ptr]=='#') {
+        } else if (res[ptr] == '#') {
             skip_note();
         } else {
             err_char();
         }
-        if (invalid_char>10) {
+        if (invalid_char > 10) {
             err.err("lexer", "too many invalid characters, stop");
             break;
         }
