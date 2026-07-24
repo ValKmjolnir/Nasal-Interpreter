@@ -125,11 +125,11 @@ i64 codegen::local_symbol_find(const std::string& name) {
     if (local.empty()) {
         return -1;
     }
-    return local.back().count(name)? local.back().at(name):-1;
+    return local.back().count(name) ? local.back().at(name) : -1;
 }
 
 i64 codegen::global_symbol_find(const std::string& name) {
-    return global.count(name)? global.at(name):-1;
+    return global.count(name) ? global.at(name) : -1;
 }
 
 i64 codegen::upvalue_symbol_find(const std::string& name) {
@@ -144,20 +144,20 @@ i64 codegen::upvalue_symbol_find(const std::string& name) {
     }
 
     auto iter = local.begin();
-    for (u64 i = 0; i<size-1; ++i, ++iter) {
+    for (u64 i = 0; i < size - 1; ++i, ++iter) {
         if (iter->count(name)) {
-            index = ((i<<16)|(*iter).at(name));
+            index = ((i << 16) | (*iter).at(name));
         }
     }
     return index;
 }
 
-void codegen::emit(u8 operation_code, u64 immediate_num, const span& location) {
+void codegen::emit(u8 op, u64 imm, const span& loc) {
     code.push_back({
-        operation_code,
-        static_cast<u16>(resm.get_file_index_map().at(location.file)),
-        immediate_num,
-        location.begin_line
+        op,
+        static_cast<u16>(resm.get_file_index_map().at(loc.file)),
+        imm,
+        loc.begin_line
     });
 }
 
@@ -447,7 +447,7 @@ void codegen::mcall(expr* node) {
     // generate call expression until the last sub-node
     auto call_node = static_cast<call_expr*>(node);
     calc_gen(call_node->get_first());
-    for (usize i = 0; i<call_node->get_calls().size()-1; ++i) {
+    for (usize i = 0; i < call_node->get_calls().size() - 1; ++i) {
         auto tmp = call_node->get_calls()[i];
         switch (tmp->get_type()) {
             case expr_type::ast_callh:
@@ -485,15 +485,15 @@ void codegen::mcall_identifier(identifier* node) {
     }
 
     i64 index;
-    if ((index = local_symbol_find(name))>=0) {
+    if ((index = local_symbol_find(name)) >= 0) {
         emit(op_mcalll, index, node->get_location());
         return;
     }
-    if ((index = upvalue_symbol_find(name))>=0) {
+    if ((index = upvalue_symbol_find(name)) >= 0) {
         emit(op_mupval, index, node->get_location());
         return;
     }
-    if ((index = global_symbol_find(name))>=0) {
+    if ((index = global_symbol_find(name)) >= 0) {
         emit(op_mcallg, index, node->get_location());
         return;
     }
@@ -501,7 +501,7 @@ void codegen::mcall_identifier(identifier* node) {
 }
 
 void codegen::mcall_vec(call_vector* node) {
-    if (node->get_slices().size()>1) {
+    if (node->get_slices().size() > 1) {
         die("bad left-value: subvec call", node);
         return;
     }
@@ -539,14 +539,14 @@ void codegen::multi_def(definition_expr* node) {
     // (var a, b, c) = (c, b, a);
     if (node->get_tuple()) {
         auto& vals = node->get_tuple()->get_elements();
-        if (identifiers.size()>vals.size()) {
+        if (identifiers.size() > vals.size()) {
             die("lack values in multi-definition, expect " +
                 std::to_string(identifiers.size()) + " but get " +
                 std::to_string(vals.size()),
                 node->get_tuple()
             );
             return;
-        } else if (identifiers.size()<vals.size()) {
+        } else if (identifiers.size() < vals.size()) {
             die("too many values in multi-definition, expect " +
                 std::to_string(identifiers.size()) + " but get " +
                 std::to_string(vals.size()),
@@ -554,23 +554,23 @@ void codegen::multi_def(definition_expr* node) {
             );
             return;
         }
-        for (usize i = 0; i<size; ++i) {
+        for (usize i = 0; i < size; ++i) {
             calc_gen(vals[i]);
             const auto& name = identifiers[i]->get_name();
-            local.empty()?
-                emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
-                emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
+            local.empty()
+                ? emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location())
+                : emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
         }
         return;
     }
     // (var a, b, c) = [0, 1, 2];
     calc_gen(node->get_value());
-    for (usize i = 0; i<size; ++i) {
+    for (usize i = 0; i < size; ++i) {
         emit(op_callvi, i, node->get_value()->get_location());
         const auto& name = identifiers[i]->get_name();
-        local.empty()?
-            emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location()):
-            emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
+        local.empty()
+            ? emit(op_loadg, global_symbol_find(name), identifiers[i]->get_location())
+            : emit(op_loadl, local_symbol_find(name), identifiers[i]->get_location());
     }
     emit(op_pop, 0, node->get_location());
 }
@@ -579,7 +579,7 @@ void codegen::definition_gen(definition_expr* node) {
     if (node->get_variable_name() && node->get_tuple()) {
         die("cannot accept too many values", node->get_value());
     }
-    node->get_variable_name()? single_def(node):multi_def(node);
+    node->get_variable_name() ? single_def(node) : multi_def(node);
 }
 
 void codegen::assignment_expression(assignment_expr* node) {
@@ -684,7 +684,7 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     //     a.foo = "bar"; # this is not symbol load
     if (node->get_left()->get_type() != expr_type::ast_id) {
         calc_gen(node);
-        if (code.back().op==op_meq) {
+        if (code.back().op == op_meq) {
             code.back().num = 1; // 1 means need pop after op_meq
         } else {
             emit(op_pop, 0, node->get_location());
@@ -733,10 +733,10 @@ void codegen::assignment_statement(assignment_expr* node) {
         case assignment_expr::kind::bitwise_or_equal:
         case assignment_expr::kind::bitwise_xor_equal:
             calc_gen(node);
-            if (op_addeq<=code.back().op && code.back().op<=op_btxoreq) {
+            if (op_addeq <= code.back().op && code.back().op <= op_btxoreq) {
                 code.back().num = 1;
-            } else if (op_addeqc<=code.back().op && code.back().op<=op_lnkeqc) {
-                code.back().op = code.back().op-op_addeqc+op_addecp;
+            } else if (op_addeqc <= code.back().op && code.back().op <= op_lnkeqc) {
+                code.back().op = code.back().op - op_addeqc + op_addecp;
             } else {
                 emit(op_pop, 0, node->get_location());
             }
@@ -751,7 +751,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
         auto tuple_size = tuple_node->get_elements().size();
         auto value_size = reinterpret_cast<tuple_expr*>(value_node)
                           ->get_elements().size();
-        if (tuple_size>value_size) {
+        if (tuple_size > value_size) {
             die(
                 "lack value(s) in multi-assignment, expect " +
                 std::to_string(tuple_size) + " but get " +
@@ -759,7 +759,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
                 value_node
             );
             return;
-        } else if (tuple_size<value_size) {
+        } else if (tuple_size < value_size) {
             die(
                 "too many values in multi-assignment, expect " +
                 std::to_string(tuple_size) + " but get " +
@@ -775,11 +775,11 @@ void codegen::multi_assign_gen(multi_assign* node) {
     if (value_node->get_type() == expr_type::ast_tuple) {
         const auto& value_tuple = reinterpret_cast<tuple_expr*>(value_node)
                                   ->get_elements();
-        for (i64 i = size-1; i>=0; --i) {
+        for (i64 i = size-1; i >= 0; --i) {
             calc_gen(value_tuple[i]);
         }
         auto& tuple = tuple_node->get_elements();
-        for (i64 i = 0; i<size; ++i) {
+        for (i64 i = 0; i < size; ++i) {
             mcall(tuple[i]);
             // use load operands to avoid meq's pop operand
             // and this operation changes local and global value directly
@@ -791,7 +791,7 @@ void codegen::multi_assign_gen(multi_assign* node) {
     // generate multiple assignment: (a, b, c) = [1, 2, 3];
     calc_gen(value_node);
     auto& tuple = tuple_node->get_elements();
-    for (i64 i = 0; i<size; ++i) {
+    for (i64 i = 0; i < size; ++i) {
         emit(op_callvi, i, value_node->get_location());
         mcall(tuple[i]);
         // use load operands to avoid meq's pop operand
@@ -822,18 +822,18 @@ void codegen::cond_gen(condition_expr* node) {
         emit(op_jf, 0, tmp->get_location());
         block_gen(tmp->get_code_block());
         // the last condition doesn't need to jmp
-        if (tmp!=node->get_elsif_stataments().back() ||
+        if (tmp != node->get_elsif_stataments().back() ||
             node->get_else_statement()) {
             jmp_label.push_back(code.size());
             emit(op_jmp, 0, tmp->get_location());
         }
-        code[ptr].num=code.size();
+        code[ptr].num = code.size();
     }
 
     if (node->get_else_statement()) {
         block_gen(node->get_else_statement()->get_code_block());
     }
-    for (auto i:jmp_label) {
+    for (auto i : jmp_label) {
         code[i].num = code.size();
     }
 }
@@ -873,7 +873,7 @@ void codegen::while_gen(while_expr* node) {
     block_gen(node->get_code_block());
     emit(op_jmp, loop_ptr, node->get_code_block()->get_location());
     code[condition_ptr].num = code.size();
-    load_continue_break(code.size()-1, code.size());
+    load_continue_break(code.size() - 1, code.size());
 }
 
 void codegen::for_gen(for_expr* node) {
@@ -912,9 +912,9 @@ void codegen::forei_gen(forei_expr* node) {
         // define a new iterator
         const auto name_node = iterator_node->get_name();
         const auto& str = name_node->get_name();
-        local.empty()?
-            emit(op_loadg, global_symbol_find(str), name_node->get_location()):
-            emit(op_loadl, local_symbol_find(str), name_node->get_location());
+        local.empty()
+            ? emit(op_loadg, global_symbol_find(str), name_node->get_location())
+            : emit(op_loadl, local_symbol_find(str), name_node->get_location());
     } else if (!iterator_node->is_definition() && iterator_node->get_name()) {
         mcall(node->get_iterator()->get_name());
         replace_left_assignment_with_load(node->get_iterator()->get_location());
@@ -931,8 +931,8 @@ void codegen::forei_gen(forei_expr* node) {
 
     // jump to loop begin
     emit(op_jmp, loop_begin, node->get_location());
-    code[loop_begin].num=code.size();
-    load_continue_break(code.size()-1, code.size());
+    code[loop_begin].num = code.size();
+    load_continue_break(code.size() - 1, code.size());
 
     // pop source vector
     emit(op_pop, 0, node->get_value()->get_location());
@@ -989,14 +989,14 @@ void codegen::or_gen(binary_operator* node) {
 
 void codegen::and_gen(binary_operator* node) {
     calc_gen(node->get_left());
-    emit(op_jt, code.size()+2, node->get_left()->get_location());
+    emit(op_jt, code.size() + 2, node->get_left()->get_location());
 
     usize lable_jump_false = code.size();
     emit(op_jmp, 0, node->get_left()->get_location());
     emit(op_pop, 0, node->get_right()->get_location()); // jt jumps here
 
     calc_gen(node->get_right());
-    emit(op_jt, code.size()+3, node->get_right()->get_location());
+    emit(op_jt, code.size() + 3, node->get_right()->get_location());
 
     code[lable_jump_false].num = code.size();
     emit(op_pop, 0, node->get_right()->get_location());
@@ -1366,13 +1366,13 @@ const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode)
     emit(op_exit, 0, tree->get_location());
 
     // size out of bound check
-    if (const_number_table.size()>INT64_MAX) {
+    if (const_number_table.size() > INT64_MAX) {
         err.err("code",
             "too many constant numbers: " +
             std::to_string(const_number_table.size())
         );
     }
-    if (const_string_table.size()>INT64_MAX) {
+    if (const_string_table.size() > INT64_MAX) {
         err.err("code",
             "too many constant strings: " +
             std::to_string(const_string_table.size())
@@ -1380,7 +1380,7 @@ const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode)
     }
 
     // check global variables size
-    if (global.size()>=VM_STACK_DEPTH) {
+    if (global.size() >= VM_STACK_DEPTH) {
         err.err("code",
             "too many global variables: " +
             std::to_string(global.size())
@@ -1388,7 +1388,7 @@ const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode)
     }
 
     // check generated code size
-    if (code.size()>INT64_MAX) {
+    if (code.size() > INT64_MAX) {
         err.err("code",
             "bytecode size overflow: " +
             std::to_string(code.size())
@@ -1425,13 +1425,13 @@ void codegen::print(std::ostream& out) {
         native_function.data()
     );
 
-    for (u64 i = 0; i<code.size(); ++i) {
+    for (u64 i = 0; i < code.size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = code[i];
-        if (!func_end_stack.empty() && i==func_end_stack.top()) {
+        if (!func_end_stack.empty() && i == func_end_stack.top()) {
             out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
             // avoid two empty lines
-            if (c.op!=op_newf) {
+            if (c.op != op_newf) {
                 out << "\n";
             }
             func_begin_stack.pop();
@@ -1439,10 +1439,12 @@ void codegen::print(std::ostream& out) {
         }
 
         // get function begin index and end index
-        if (c.op==op_newf) {
-            out << std::hex << "\nfunc <0x" << i << std::dec << ">:\n";
-            for (u64 j = i; j<code.size(); ++j) {
-                if (code[j].op==op_jmp) {
+        if (c.op == op_newf) {
+            out << std::hex << "\nfunc <0x" << i << std::dec << " @ ";
+            out << resm.get_ordered_file_list()[c.fidx] << ":" << c.line;
+            out << ">:\n";
+            for (u64 j = i; j < code.size(); ++j) {
+                if (code[j].op == op_jmp) {
                     func_begin_stack.push(i);
                     func_end_stack.push(code[j].num);
                     break;
