@@ -5,7 +5,7 @@ namespace nasal {
 
 void codegen::init_file_map(const std::vector<std::string>& file_list) {
     file_map = {};
-    for (usize i = 0; i<file_list.size(); ++i) {
+    for (usize i = 0; i < file_list.size(); ++i) {
         file_map.insert({file_list[i], i});
     }
 }
@@ -286,7 +286,7 @@ void codegen::func_gen(function* node) {
     //     var f = func(a, arg...) {return(arg)}
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
-    while (local_symbol_find(arg)>=0) {
+    while (local_symbol_find(arg) >= 0) {
         arg = "0" + arg;
     }
     regist_symbol(arg);

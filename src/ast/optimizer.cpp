@@ -2,26 +2,24 @@
 
 namespace nasal {
 
-void optimizer::const_string(
-    binary_operator* node,
-    string_literal* left_node,
-    string_literal* right_node) {
+void optimizer::const_string(binary_operator* node,
+                             string_literal* lhs,
+                             string_literal* rhs) {
     if (node->get_operator_type() != binary_operator::kind::concat) {
         return;
     }
-    const auto& left = left_node->get_content();
-    const auto& right = right_node->get_content();
+    const auto& left = lhs->get_content();
+    const auto& right = rhs->get_content();
     node->set_optimized_string(
         new string_literal(node->get_location(), left + right)
     );
 }
 
-void optimizer::const_number(
-    binary_operator* node,
-    number_literal* left_node,
-    number_literal* right_node) {
-    const auto left = left_node->get_number();
-    const auto right = right_node->get_number();
+void optimizer::const_number(binary_operator* node,
+                             number_literal* lhs,
+                             number_literal* rhs) {
+    const auto left = lhs->get_number();
+    const auto right = rhs->get_number();
     f64 res;
     switch (node->get_operator_type()) {
         case binary_operator::kind::add: res = left + right; break;
@@ -48,9 +46,8 @@ void optimizer::const_number(
     );
 }
 
-void optimizer::const_number(
-    unary_operator* node,
-    number_literal* value_node) {
+void optimizer::const_number(unary_operator* node,
+                             number_literal* value_node) {
     auto res = value_node->get_number();
     switch (node->get_operator_type()) {
         case unary_operator::kind::negative:
@@ -69,50 +66,50 @@ void optimizer::const_number(
 }
 
 bool optimizer::visit_binary_operator(binary_operator* node) {
-    auto left_node = node->get_left();
-    auto right_node = node->get_right();
-    left_node->accept(this);
-    right_node->accept(this);
+    auto lhs = node->get_left();
+    auto rhs = node->get_right();
+    lhs->accept(this);
+    rhs->accept(this);
 
     number_literal* left_num_node = nullptr;
     number_literal* right_num_node = nullptr;
     string_literal* left_str_node = nullptr;
     string_literal* right_str_node = nullptr;
-    if (left_node->get_type() == expr_type::ast_num) {
-        left_num_node = reinterpret_cast<number_literal*>(left_node);
-    } else if (left_node->get_type() == expr_type::ast_binary &&
-               reinterpret_cast<binary_operator*>(left_node)->get_optimized_number()) {
-        auto optimized = reinterpret_cast<binary_operator*>(left_node);
+    if (lhs->get_type() == expr_type::ast_num) {
+        left_num_node = reinterpret_cast<number_literal*>(lhs);
+    } else if (lhs->get_type() == expr_type::ast_binary &&
+               reinterpret_cast<binary_operator*>(lhs)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<binary_operator*>(lhs);
         left_num_node = optimized->get_optimized_number();
-    } else if (left_node->get_type() == expr_type::ast_unary &&
-               reinterpret_cast<unary_operator*>(left_node)->get_optimized_number()) {
-        auto optimized = reinterpret_cast<unary_operator*>(left_node);
+    } else if (lhs->get_type() == expr_type::ast_unary &&
+               reinterpret_cast<unary_operator*>(lhs)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<unary_operator*>(lhs);
         left_num_node = optimized->get_optimized_number();
     }
-    if (right_node->get_type() == expr_type::ast_num) {
-        right_num_node = reinterpret_cast<number_literal*>(right_node);
-    } else if (right_node->get_type() == expr_type::ast_binary &&
-               reinterpret_cast<binary_operator*>(right_node)->get_optimized_number()) {
-        auto optimized = reinterpret_cast<binary_operator*>(right_node);
+    if (rhs->get_type() == expr_type::ast_num) {
+        right_num_node = reinterpret_cast<number_literal*>(rhs);
+    } else if (rhs->get_type() == expr_type::ast_binary &&
+               reinterpret_cast<binary_operator*>(rhs)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<binary_operator*>(rhs);
         right_num_node = optimized->get_optimized_number();
-    } else if (right_node->get_type() == expr_type::ast_unary &&
-               reinterpret_cast<unary_operator*>(right_node)->get_optimized_number()) {
-        auto optimized = reinterpret_cast<unary_operator*>(right_node);
+    } else if (rhs->get_type() == expr_type::ast_unary &&
+               reinterpret_cast<unary_operator*>(rhs)->get_optimized_number()) {
+        auto optimized = reinterpret_cast<unary_operator*>(rhs);
         right_num_node = optimized->get_optimized_number();
     }
 
-    if (left_node->get_type() == expr_type::ast_str) {
-        left_str_node = reinterpret_cast<string_literal*>(left_node);
-    } else if (left_node->get_type() == expr_type::ast_binary &&
-               reinterpret_cast<binary_operator*>(left_node)->get_optimized_string()) {
-        auto optimized = reinterpret_cast<binary_operator*>(left_node);
+    if (lhs->get_type() == expr_type::ast_str) {
+        left_str_node = reinterpret_cast<string_literal*>(lhs);
+    } else if (lhs->get_type() == expr_type::ast_binary &&
+               reinterpret_cast<binary_operator*>(lhs)->get_optimized_string()) {
+        auto optimized = reinterpret_cast<binary_operator*>(lhs);
         left_str_node = optimized->get_optimized_string();
     }
-    if (right_node->get_type() == expr_type::ast_str) {
-        right_str_node = reinterpret_cast<string_literal*>(right_node);
-    } else if (right_node->get_type() == expr_type::ast_binary &&
-               reinterpret_cast<binary_operator*>(right_node)->get_optimized_string()) {
-        auto optimized = reinterpret_cast<binary_operator*>(right_node);
+    if (rhs->get_type() == expr_type::ast_str) {
+        right_str_node = reinterpret_cast<string_literal*>(rhs);
+    } else if (rhs->get_type() == expr_type::ast_binary &&
+               reinterpret_cast<binary_operator*>(rhs)->get_optimized_string()) {
+        auto optimized = reinterpret_cast<binary_operator*>(rhs);
         right_str_node = optimized->get_optimized_string();
     }
     if (left_num_node && right_num_node) {
