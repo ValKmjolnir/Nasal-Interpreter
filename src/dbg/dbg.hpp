@@ -1,9 +1,9 @@
 #pragma once
 
 #include "util/filestream.hpp"
-#include "parse/linker.hpp"
 #include "code/opcode.hpp"
 #include "vm/vm.hpp"
+#include "util/resource_manager.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -96,6 +96,7 @@ private:
     u16 break_file_index;
     u64 break_line;
     filestream fls;
+    const resource_manager& resm;
 
 private:
     operand_line_counter counter;
@@ -111,11 +112,10 @@ private:
     void interact();
 
 public:
-    dbg(): next(true), file_list_size(0),
+    dbg(const resource_manager& r): next(true), file_list_size(0),
            break_file_index(0), break_line(0),
-           do_operand_count(false) {}
+           resm(r), do_operand_count(false) {}
     void run(const codegen&,
-             const linker&,
              const std::vector<std::string>&,
              bool,
              bool);

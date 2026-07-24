@@ -13,6 +13,7 @@
 #include "ast/symbol_finder.hpp"
 #include "parse/parse.hpp"
 #include "util/fs.hpp"
+#include "util/resource_manager.hpp"
 
 #include <cstring>
 #include <sstream>
@@ -27,7 +28,7 @@ private:
     bool show_path_flag;
     std::string this_file;
     error err;
-    std::vector<std::string> imported_files;
+    resource_manager& resm;
     std::vector<std::string> module_load_stack;
     std::vector<fs::path> envpath;
 
@@ -47,9 +48,8 @@ private:
     void load(code_block*, const std::string&);
 
 public:
-    linker();
+    linker(resource_manager&);
     const error& link(parse&, bool);
-    const auto& get_file_list() const { return imported_files; }
 };
 
 }

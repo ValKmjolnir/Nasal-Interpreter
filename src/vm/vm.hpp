@@ -6,10 +6,10 @@
 #include <atomic>
 #include <cmath>
 
-#include "parse/linker.hpp"
 #include "vm/gc.hpp"
 #include "code/codegen.hpp"
 #include "util/util.hpp"
+#include "util/resource_manager.hpp"
 #include "natives/registry.hpp"
 
 #ifdef _MSC_VER
@@ -299,7 +299,7 @@ public:
 
     /* execution entry */
     void run(const codegen&,                   // get generated code
-             const linker&,                    // get list of used files
+             const resource_manager&,          // get list of used files
              const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */

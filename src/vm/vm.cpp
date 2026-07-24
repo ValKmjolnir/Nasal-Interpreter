@@ -1478,7 +1478,7 @@ void vm::o_ret() {
 }
 
 void vm::run(const codegen& gen,
-             const linker& linker,
+             const resource_manager& resm,
              const std::vector<std::string>& argv) {
     vm_init_entry(
         gen.strs(),
@@ -1486,7 +1486,7 @@ void vm::run(const codegen& gen,
         gen.natives(),
         gen.codes(),
         gen.globals(),
-        linker.get_file_list(),
+        resm.get_ordered_file_list(),
         argv
     );
 

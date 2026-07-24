@@ -14,6 +14,8 @@
 #include "repl/repl.hpp"
 #include "cli/cli.hpp"
 
+#include "util/resource_manager.hpp"
+
 #include <cstdlib>
 
 [[noreturn]]
@@ -27,10 +29,11 @@ void execute(const nasal::cli::cli_config& config) {
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
+    nasal::resource_manager resm;
     nasal::lexer   lex;
     nasal::parse   parse;
-    nasal::linker  ld;
-    nasal::codegen gen;
+    nasal::linker  ld(resm);
+    nasal::codegen gen(resm);
 
     // lexer scans file to get tokens
     lex.scan(config.input_file_path).chkerr();
@@ -44,10 +47,10 @@ void execute(const nasal::cli::cli_config& config) {
     // linker gets parser's ast and load import files to this ast
     ld.link(parse, config.has(option::cli_detail_info)).chkerr();
     if (config.has(option::cli_show_referenced_file)) {
-        if (ld.get_file_list().size()) {
+        if (resm.size()) {
             std::cout << "referenced file(s):\n";
         }
-        for (const auto& file: ld.get_file_list()) {
+        for (const auto& file: resm.get_ordered_file_list()) {
             std::cout << "  " << file << "\n";
         }
     }
@@ -61,7 +64,6 @@ void execute(const nasal::cli::cli_config& config) {
 
     // code generator gets parser's ast and import file list to generate code
     gen.compile(parse.tree(),
-                ld.get_file_list(),
                 false,
                 config.has(option::cli_limit_mode)).chkerr();
     if (config.has(option::cli_view_code)) {
@@ -76,10 +78,9 @@ void execute(const nasal::cli::cli_config& config) {
     double gc_time_ms = 0.0;
     double gc_total_memory = 0.0;
     if (config.has(option::cli_debug_mode)) {
-        auto debugger = std::make_unique<nasal::dbg>();
+        auto debugger = std::make_unique<nasal::dbg>(resm);
         debugger->run(
             gen,
-            ld,
             config.nasal_vm_args,
             config.has(option::cli_profile),
             config.has(option::cli_profile_all)
@@ -93,7 +94,7 @@ void execute(const nasal::cli::cli_config& config) {
         auto runtime = std::make_unique<nasal::vm>();
         runtime->set_detail_report_info(config.has(option::cli_detail_info));
         runtime->set_limit_mode_flag(config.has(option::cli_limit_mode));
-        runtime->run(gen, ld, config.nasal_vm_args);
+        runtime->run(gen, resm, config.nasal_vm_args);
         gc_time_ms = runtime->get_gc_time_ms();
         gc_total_memory = runtime->get_total_memory();
     }

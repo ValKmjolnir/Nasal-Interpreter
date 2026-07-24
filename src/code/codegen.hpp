@@ -5,7 +5,7 @@
 #include "ast/ast.hpp"
 #include "ast/visitor.hpp"
 #include "ast/symbol_finder.hpp"
-
+#include "util/resource_manager.hpp"
 #include "natives/registry.hpp"
 
 #include <iomanip>
@@ -24,6 +24,7 @@ namespace nasal {
 class codegen {
 private:
     error err;
+    const resource_manager& resm;
 
     // repl output flag, will generate op_repl to output stack top value if true
     bool flag_need_repl_output = false;
@@ -51,10 +52,6 @@ private:
         "__subprocess_active",
         "__subprocess_terminate"
     };
-
-    // file mapper for file -> index
-    std::unordered_map<std::string, usize> file_map;
-    void init_file_map(const std::vector<std::string>&);
 
     // used for generate pop in return expression
     std::vector<u32> in_foreach_loop_level;
@@ -155,8 +152,8 @@ public:
     const auto& globals() const { return global; }
 
 public:
-    codegen() = default;
-    const error& compile(code_block*, const std::vector<std::string>&, bool, bool);
+    codegen(const resource_manager& r): resm(r) {}
+    const error& compile(code_block*, bool, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;
 };

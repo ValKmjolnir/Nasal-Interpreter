@@ -3,13 +3,6 @@
 
 namespace nasal {
 
-void codegen::init_file_map(const std::vector<std::string>& file_list) {
-    file_map = {};
-    for (usize i = 0; i < file_list.size(); ++i) {
-        file_map.insert({file_list[i], i});
-    }
-}
-
 void codegen::init_native_function() {
     load_standard_builtin();
     load_io_builtin();
@@ -162,7 +155,7 @@ i64 codegen::upvalue_symbol_find(const std::string& name) {
 void codegen::emit(u8 operation_code, u64 immediate_num, const span& location) {
     code.push_back({
         operation_code,
-        static_cast<u16>(file_map.at(location.file)),
+        static_cast<u16>(resm.get_file_index_map().at(location.file)),
         immediate_num,
         location.begin_line
     });
@@ -1351,14 +1344,10 @@ void codegen::ret_gen(return_expr* node) {
     emit(op_ret, 0, node->get_location());
 }
 
-const error& codegen::compile(code_block* tree,
-                              const std::vector<std::string>& file_list,
-                              bool repl_flag,
-                              bool limit_mode) {
+const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode) {
     flag_need_repl_output = repl_flag;
     flag_limited_mode = limit_mode;
     init_native_function();
-    init_file_map(file_list);
 
     in_foreach_loop_level.push_back(0);
 

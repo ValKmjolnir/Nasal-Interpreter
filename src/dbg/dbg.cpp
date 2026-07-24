@@ -250,7 +250,6 @@ void dbg::interact() {
 }
 
 void dbg::run(const codegen& gen,
-              const linker& linker,
               const std::vector<std::string>& argv,
               bool profile,
               bool show_all_prof_result) {
@@ -258,7 +257,7 @@ void dbg::run(const codegen& gen,
     set_detail_report_info(true);
     do_operand_count = profile || show_all_prof_result;
 
-    const auto& file_list = linker.get_file_list();
+    const auto& file_list = resm.get_ordered_file_list();
     file_list_size = file_list.size();
 
     vm_init_entry(

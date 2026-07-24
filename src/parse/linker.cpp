@@ -9,7 +9,8 @@
 
 namespace nasal {
 
-linker::linker(): show_path_flag(false), this_file("") {
+linker::linker(resource_manager& r):
+    show_path_flag(false), this_file(""), resm(r) {
     const auto env_get_path = getenv("PATH");
     if (!env_get_path) {
         err.warn("link", "cannot get env \"PATH\".");
@@ -139,18 +140,14 @@ bool linker::import_check(expr* node) {
 
 bool linker::check_exist_or_record_file(const std::string& file) {
     // avoid importing the same file
-    for (const auto& name : imported_files) {
-        if (file==name) {
-            return true;
-        }
-    }
-    imported_files.push_back(file);
-    return false;
+    auto result = resm.exist(file);
+    resm.register_file(file);
+    return result;
 }
 
 bool linker::check_self_import(const std::string& file) {
     for (const auto& name : module_load_stack) {
-        if (file==name) {
+        if (file == name) {
             return true;
         }
     }
@@ -403,8 +400,8 @@ const error& linker::link(parse& parse, bool spath = false) {
 
     // initializing file map
     this_file = parse.tree()->get_location().file;
-    imported_files = {this_file};
-    module_load_stack = {this_file};
+    resm.register_file(this_file);
+    module_load_stack = { this_file };
 
     // scan root and import files
     // then generate a new ast and return to import_ast
@@ -417,10 +414,10 @@ const error& linker::link(parse& parse, bool spath = false) {
     // swap tree root, and delete old root
     delete parse.swap(library);
 
-    if (imported_files.size()>=UINT16_MAX) {
+    if (resm.size() >= UINT16_MAX) {
         err.err("link",
             "too many imported files: " +
-            std::to_string(imported_files.size())
+            std::to_string(resm.size())
         );
     }
     return err;

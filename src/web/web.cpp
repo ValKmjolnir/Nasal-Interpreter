@@ -95,10 +95,11 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
     auto* ctx = static_cast<NasalContext*>(context);
 
     try {
+        nasal::resource_manager resm;
         nasal::lexer lex;
         nasal::parse parse;
-        nasal::linker ld;
-        nasal::codegen gen;
+        nasal::linker ld(resm);
+        nasal::codegen gen(resm);
 
         // Create a unique temporary file
         char temp_filename[256];
@@ -151,7 +152,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         auto opt = std::make_unique<nasal::optimizer>();
         opt->do_optimization(parse.tree());
 
-        if (gen.compile(parse.tree(), ld.get_file_list(), false, true).geterr()) {
+        if (gen.compile(parse.tree(), false, true).geterr()) {
             ctx->last_error = error_output.str();
             std::cout.rdbuf(old_cout);
             std::cerr.rdbuf(old_cerr);
@@ -165,7 +166,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         auto future = std::async(std::launch::async, [&]() {
             // Wrap VM execution in try/catch
             try {
-                ctx->vm_instance->run(gen, ld, {});
+                ctx->vm_instance->run(gen, resm, {});
             } catch (const std::exception& e) {
                 ctx->last_error = e.what();
                 throw std::runtime_error(ctx->last_error);
