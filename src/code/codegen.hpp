@@ -76,7 +76,7 @@ private:
 
     // symbol table
     // global : max VM_STACK_DEPTH-1 values
-    std::unordered_map<std::string, u64> global;
+    std::unordered_map<std::string, u32> global;
 
     // nasal namespace
     // stores all global symbols of each file
@@ -84,7 +84,7 @@ private:
 
     // local  : max 32768 upvalues 65536 values
     // but in fact local scope also has less than VM_STACK_DEPTH value
-    std::list<std::unordered_map<std::string, u64>> local;
+    std::list<std::unordered_map<std::string, u32>> local;
 
     void check_id_exist(identifier*);
 
@@ -96,11 +96,11 @@ private:
     void regist_string(const std::string&);
     void find_symbol(code_block*);
     void regist_symbol(const std::string&);
-    i64 local_symbol_find(const std::string&);
-    i64 global_symbol_find(const std::string&);
-    i64 upvalue_symbol_find(const std::string&);
+    i32 local_symbol_find(const std::string&);
+    i32 global_symbol_find(const std::string&);
+    i32 upvalue_symbol_find(const std::string&);
 
-    void emit(u8, u64, const span&);
+    void emit(u8, u32, const span&);
 
     void number_gen(number_literal*);
     void string_gen(string_literal*);

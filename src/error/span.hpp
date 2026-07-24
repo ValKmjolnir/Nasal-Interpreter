@@ -8,10 +8,10 @@
 namespace nasal {
 
 struct span {
-    u64 begin_line;
-    u64 begin_column;
-    u64 end_line;
-    u64 end_column;
+    u32 begin_line;
+    u32 begin_column;
+    u32 end_line;
+    u32 end_column;
     std::string file;
 
     void dump_begin(std::ostream& out) const {

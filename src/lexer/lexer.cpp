@@ -151,8 +151,8 @@ std::string lexer::utf8_gen() {
 }
 
 token lexer::id_gen() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     std::string str = "";
     while (ptr < res.size() && (is_id(res[ptr]) || is_dec(res[ptr]))) {
         if (res[ptr] < 0) { // utf-8
@@ -171,8 +171,8 @@ token lexer::id_gen() {
 }
 
 token lexer::num_gen() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     // generate hex number
     if (ptr + 1 < res.size() && res[ptr] == '0' && res[ptr + 1] == 'x') {
         std::string str = "0x";
@@ -274,8 +274,8 @@ token lexer::num_gen() {
 }
 
 token lexer::str_gen() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     std::string str = "";
     const char begin = res[ptr];
     ++column;
@@ -341,8 +341,8 @@ token lexer::str_gen() {
 }
 
 token lexer::quesmark_gen() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     std::string str(1, res[ptr]);
     ++column;
     ++ptr;
@@ -359,8 +359,8 @@ token lexer::quesmark_gen() {
 }
 
 token lexer::single_opr() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     std::string str(1, res[ptr]);
     ++column;
     tok type = get_type(str);
@@ -375,8 +375,8 @@ token lexer::single_opr() {
 }
 
 token lexer::dots() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     std::string str = ".";
     if (ptr + 2 < res.size() && res[ptr + 1] == '.' && res[ptr + 2] == '.') {
         str += "..";
@@ -387,8 +387,8 @@ token lexer::dots() {
 }
 
 token lexer::calc_opr() {
-    u64 begin_line = line;
-    u64 begin_column = column;
+    u32 begin_line = line;
+    u32 begin_column = column;
     // get calculation operator
     std::string str(1, res[ptr++]);
     if (ptr < res.size() && res[ptr] == '=') {

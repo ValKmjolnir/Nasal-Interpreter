@@ -19,8 +19,8 @@ namespace nasal {
 
 class lexer {
 private:
-    u64 line;
-    u64 column;
+    u32 line;
+    u32 column;
     usize ptr;
     std::string filename;
     std::string res;

@@ -60,7 +60,7 @@ protected:
                        const std::vector<f64>&,
                        const std::vector<nasal_builtin_info>&,
                        const std::vector<opcode>&,
-                       const std::unordered_map<std::string, u64>&,
+                       const std::unordered_map<std::string, u32>&,
                        const std::vector<std::string>&,
                        const std::vector<std::string>&);
     void context_and_global_init();

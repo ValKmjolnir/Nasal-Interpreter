@@ -121,30 +121,34 @@ void codegen::regist_symbol(const std::string& name) {
     local.back()[name] = index;
 }
 
-i64 codegen::local_symbol_find(const std::string& name) {
+i32 codegen::local_symbol_find(const std::string& name) {
     if (local.empty()) {
         return -1;
     }
-    return local.back().count(name) ? local.back().at(name) : -1;
+    return local.back().count(name)
+        ? static_cast<i32>(local.back().at(name))
+        : -1;
 }
 
-i64 codegen::global_symbol_find(const std::string& name) {
-    return global.count(name) ? global.at(name) : -1;
+i32 codegen::global_symbol_find(const std::string& name) {
+    return global.count(name)
+        ? static_cast<i32>(global.at(name))
+        : -1;
 }
 
-i64 codegen::upvalue_symbol_find(const std::string& name) {
+i32 codegen::upvalue_symbol_find(const std::string& name) {
     // 32768 level 65536 upvalues
     // may cause some errors if local scope depth is too deep or
     // local scope's symbol list size is greater than 65536,
     // but we check the local size in codegen::func_gen
-    i64 index = -1;
+    i32 index = -1;
     usize size = local.size();
     if (size <= 1) {
         return -1;
     }
 
     auto iter = local.begin();
-    for (u64 i = 0; i < size - 1; ++i, ++iter) {
+    for (u32 i = 0; i < size - 1; ++i, ++iter) {
         if (iter->count(name)) {
             index = ((i << 16) | (*iter).at(name));
         }
@@ -152,7 +156,7 @@ i64 codegen::upvalue_symbol_find(const std::string& name) {
     return index;
 }
 
-void codegen::emit(u8 op, u64 imm, const span& loc) {
+void codegen::emit(u8 op, u32 imm, const span& loc) {
     code.push_back({
         op,
         static_cast<u16>(resm.get_file_index_map().at(loc.file)),
@@ -291,9 +295,10 @@ void codegen::func_gen(function* node) {
 
     // we must check the local scope symbol list size
     // the local scope should not cause stack overflow
-    // and should not greater than upvalue's max size(65536)
+    // and should not greater than or equal to upvalue's max size(65536)
     code[lsize].num = local.back().size();
-    if (local.back().size() >= VM_STACK_DEPTH || local.back().size() >= UINT16_MAX) {
+    if (local.back().size() >= VM_STACK_DEPTH ||
+        local.back().size() >= UINT16_MAX) {
         die("too many local variants: " +
             std::to_string(local.back().size()),
             block
@@ -1366,13 +1371,13 @@ const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode)
     emit(op_exit, 0, tree->get_location());
 
     // size out of bound check
-    if (const_number_table.size() > INT64_MAX) {
+    if (const_number_table.size() > INT32_MAX) {
         err.err("code",
             "too many constant numbers: " +
             std::to_string(const_number_table.size())
         );
     }
-    if (const_string_table.size() > INT64_MAX) {
+    if (const_string_table.size() > INT32_MAX) {
         err.err("code",
             "too many constant strings: " +
             std::to_string(const_string_table.size())
@@ -1388,7 +1393,7 @@ const error& codegen::compile(code_block* tree, bool repl_flag, bool limit_mode)
     }
 
     // check generated code size
-    if (code.size() > INT64_MAX) {
+    if (code.size() > INT32_MAX) {
         err.err("code",
             "bytecode size overflow: " +
             std::to_string(code.size())

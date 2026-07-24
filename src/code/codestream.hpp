@@ -22,7 +22,7 @@ private:
 public:
     codestream(const f64*,
                const std::string*,
-               const std::unordered_map<std::string, u64>&,
+               const std::unordered_map<std::string, u32>&,
                const nasal_builtin_info*,
                const std::string* file_list = nullptr);
     codestream(const f64*,
