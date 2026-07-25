@@ -27,8 +27,8 @@ public:
         return ordered_used_files;
     }
 
-    const auto& get_file_index_map() const {
-        return file_index_map;
+    auto file_index(const std::string& f) const {
+        return file_index_map.at(f);
     }
 };
 

@@ -66,9 +66,16 @@ public:
     u64 native_index(const std::string&) const;
 
 public:
-    auto& get_code() { return code; }
-    const auto& get_code() const { return code; }
+    // mutation helpers for codegen
+    void code_push(const opcode& c) { code.push_back(c); }
+    auto& code_back() { return code.back(); }
+    const auto& code_back() const { return code.back(); }
+    auto& code_at(u64 i) { return code[i]; }
+    const auto& code_at(u64 i) const { return code[i]; }
     auto code_size() const { return code.size(); }
+
+    // const access for iteration
+    const auto& get_code() const { return code; }
     const auto& get_number_table() const { return const_number_table; }
     const auto& get_string_table() const { return const_string_table; }
     const auto& get_native_functions() const { return native_function; }

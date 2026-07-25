@@ -100,9 +100,9 @@ i32 codegen::upvalue_symbol_find(const std::string& name) {
 }
 
 void codegen::emit(u8 op, u32 imm, const span& loc) {
-    comp.get_code().push_back({
+    comp.code_push({
         op,
-        static_cast<u16>(resm.get_file_index_map().at(loc.file)),
+        static_cast<u16>(resm.file_index(loc.file)),
         imm,
         loc.begin_line
     });
@@ -206,7 +206,7 @@ void codegen::func_gen(function* node) {
         regist_symbol(name);
     }
 
-    comp.get_code()[newf].num = comp.code_size() + 1; // entry
+    comp.code_at(newf).num = comp.code_size() + 1; // entry
     usize jmp_ptr = comp.code_size();
     emit(op_jmp, 0, node->get_location());
 
@@ -239,7 +239,7 @@ void codegen::func_gen(function* node) {
     // we must check the local scope symbol list size
     // the local scope should not cause stack overflow
     // and should not greater than or equal to upvalue's max size(65536)
-    comp.get_code()[lsize].num = local.back().size();
+    comp.code_at(lsize).num = local.back().size();
     if (local.back().size() >= VM_STACK_DEPTH ||
         local.back().size() >= UINT16_MAX) {
         die("too many local variants: " +
@@ -254,12 +254,12 @@ void codegen::func_gen(function* node) {
         emit(op_pnil, 0, block->get_location());
         emit(op_ret, 0, block->get_location());
     }
-    comp.get_code()[jmp_ptr].num = comp.code_size();
+    comp.code_at(jmp_ptr).num = comp.code_size();
 }
 
 void codegen::call_gen(call_expr* node) {
     calc_gen(node->get_first());
-    if (comp.code_size() && comp.get_code().back().op == op_callb) {
+    if (comp.code_size() && comp.code_back().op == op_callb) {
         return;
     }
     for (auto i : node->get_calls()) {
@@ -326,9 +326,9 @@ void codegen::null_access_gen(null_access* node) {
     const auto jmp_direct_point = comp.code_size();
     emit(op_jmp, 0, node->get_location());
 
-    comp.get_code()[jmp_false_point].num = comp.code_size();
+    comp.code_at(jmp_false_point).num = comp.code_size();
     emit(op_callh, comp.string_index(node->get_field()), node->get_location());
-    comp.get_code()[jmp_direct_point].num = comp.code_size();
+    comp.code_at(jmp_direct_point).num = comp.code_size();
 }
 
 void codegen::call_vector_gen(call_vector* node) {
@@ -632,8 +632,8 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     //     a.foo = "bar"; # this is not symbol load
     if (node->get_left()->get_type() != expr_type::ast_id) {
         calc_gen(node);
-        if (comp.get_code().back().op == op_meq) {
-            comp.get_code().back().num = 1; // 1 means need pop after op_meq
+        if (comp.code_back().op == op_meq) {
+            comp.code_back().num = 1; // 1 means need pop after op_meq
         } else {
             emit(op_pop, 0, node->get_location());
         }
@@ -645,10 +645,10 @@ void codegen::gen_assignment_equal_statement(assignment_expr* node) {
     // get memory space of left identifier
     mcall_identifier(reinterpret_cast<identifier*>(node->get_left()));
     // check memory get operand type and replace it with load operand
-    switch (comp.get_code().back().op) {
-        case op_mcallg: comp.get_code().back().op = op_loadg; break;
-        case op_mcalll: comp.get_code().back().op = op_loadl; break;
-        case op_mupval: comp.get_code().back().op = op_loadu; break;
+    switch (comp.code_back().op) {
+        case op_mcallg: comp.code_back().op = op_loadg; break;
+        case op_mcalll: comp.code_back().op = op_loadl; break;
+        case op_mupval: comp.code_back().op = op_loadu; break;
         default: die("unexpected operand to replace", node);
     }
 }
@@ -658,10 +658,10 @@ void codegen::replace_left_assignment_with_load(const span& location) {
     // because mcall needs meq(1) (meq-pop) after it to load,
     // but load to mcall-meq-pop in one operand.
     // if is not mcall operand, emit meq(1) (meq-pop).
-    switch (comp.get_code().back().op) {
-        case op_mcallg: comp.get_code().back().op = op_loadg; break;
-        case op_mcalll: comp.get_code().back().op = op_loadl; break;
-        case op_mupval: comp.get_code().back().op = op_loadu; break;
+    switch (comp.code_back().op) {
+        case op_mcallg: comp.code_back().op = op_loadg; break;
+        case op_mcalll: comp.code_back().op = op_loadl; break;
+        case op_mupval: comp.code_back().op = op_loadu; break;
         default: emit(op_meq, 1, location); break;
     }
     return;
@@ -681,12 +681,12 @@ void codegen::assignment_statement(assignment_expr* node) {
         case assignment_expr::kind::bitwise_or_equal:
         case assignment_expr::kind::bitwise_xor_equal:
             calc_gen(node);
-            if (op_addeq <= comp.get_code().back().op &&
-                comp.get_code().back().op <= op_btxoreq) {
-                comp.get_code().back().num = 1;
-            } else if (op_addeqc <= comp.get_code().back().op &&
-                       comp.get_code().back().op <= op_lnkeqc) {
-                comp.get_code().back().op = comp.get_code().back().op
+            if (op_addeq <= comp.code_back().op &&
+                comp.code_back().op <= op_btxoreq) {
+                comp.code_back().num = 1;
+            } else if (op_addeqc <= comp.code_back().op &&
+                       comp.code_back().op <= op_lnkeqc) {
+                comp.code_back().op = comp.code_back().op
                                             - op_addeqc
                                             + op_addecp;
             } else {
@@ -766,7 +766,7 @@ void codegen::cond_gen(condition_expr* node) {
         jmp_label.push_back(comp.code_size());
         emit(op_jmp, 0, node->get_if_statement()->get_location());
     }
-    comp.get_code()[ptr].num = comp.code_size();
+    comp.code_at(ptr).num = comp.code_size();
 
     for (auto tmp : node->get_elsif_stataments()) {
         calc_gen(tmp->get_condition());
@@ -779,14 +779,14 @@ void codegen::cond_gen(condition_expr* node) {
             jmp_label.push_back(comp.code_size());
             emit(op_jmp, 0, tmp->get_location());
         }
-        comp.get_code()[ptr].num = comp.code_size();
+        comp.code_at(ptr).num = comp.code_size();
     }
 
     if (node->get_else_statement()) {
         block_gen(node->get_else_statement()->get_code_block());
     }
     for (auto i : jmp_label) {
-        comp.get_code()[i].num = comp.code_size();
+        comp.code_at(i).num = comp.code_size();
     }
 }
 
@@ -807,10 +807,10 @@ void codegen::loop_gen(expr* node) {
 
 void codegen::load_continue_break(u64 continue_place, u64 break_place) {
     for (auto i : continue_ptr.front()) {
-        comp.get_code()[i].num = continue_place;
+        comp.code_at(i).num = continue_place;
     }
     for (auto i : break_ptr.front()) {
-        comp.get_code()[i].num = break_place;
+        comp.code_at(i).num = break_place;
     }
     continue_ptr.pop_front();
     break_ptr.pop_front();
@@ -824,7 +824,7 @@ void codegen::while_gen(while_expr* node) {
 
     block_gen(node->get_code_block());
     emit(op_jmp, loop_ptr, node->get_code_block()->get_location());
-    comp.get_code()[condition_ptr].num = comp.code_size();
+    comp.code_at(condition_ptr).num = comp.code_size();
     load_continue_break(comp.code_size() - 1, comp.code_size());
 }
 
@@ -844,7 +844,7 @@ void codegen::for_gen(for_expr* node) {
     usize continue_place = comp.code_size();
     statement_generation(node->get_step());
     emit(op_jmp, jmp_place, node->get_step()->get_location());
-    comp.get_code()[label_exit].num = comp.code_size();
+    comp.code_at(label_exit).num = comp.code_size();
 
     load_continue_break(continue_place, comp.code_size());
 }
@@ -883,7 +883,7 @@ void codegen::forei_gen(forei_expr* node) {
 
     // jump to loop begin
     emit(op_jmp, loop_begin, node->get_location());
-    comp.get_code()[loop_begin].num = comp.code_size();
+    comp.code_at(loop_begin).num = comp.code_size();
     load_continue_break(comp.code_size() - 1, comp.code_size());
 
     // pop source vector
@@ -936,8 +936,8 @@ void codegen::or_gen(binary_operator* node) {
     emit(op_pop, 0, node->get_right()->get_location());
     emit(op_pnil, 0, node->get_right()->get_location());
 
-    comp.get_code()[label_jump_true_1].num = comp.code_size();
-    comp.get_code()[label_jump_true_2].num = comp.code_size();
+    comp.code_at(label_jump_true_1).num = comp.code_size();
+    comp.code_at(label_jump_true_2).num = comp.code_size();
 }
 
 void codegen::and_gen(binary_operator* node) {
@@ -951,7 +951,7 @@ void codegen::and_gen(binary_operator* node) {
     calc_gen(node->get_right());
     emit(op_jt, comp.code_size() + 3, node->get_right()->get_location());
 
-    comp.get_code()[lable_jump_false].num = comp.code_size();
+    comp.code_at(lable_jump_false).num = comp.code_size();
     emit(op_pop, 0, node->get_right()->get_location());
     emit(op_pnil, 0, node->get_right()->get_location());
     // jt jumps here, avoid pop and pnil
@@ -1147,9 +1147,9 @@ void codegen::null_chain_gen(binary_operator* node) {
     const auto jmp_direct_point = comp.code_size();
     emit(op_jmp, 0, node->get_location());
 
-    comp.get_code()[jmp_false_point].num = comp.code_size();
+    comp.code_at(jmp_false_point).num = comp.code_size();
     emit(op_pop, 0, node->get_location());
-    comp.get_code()[jmp_direct_point].num = comp.code_size();
+    comp.code_at(jmp_direct_point).num = comp.code_size();
 }
 
 void codegen::trino_gen(ternary_operator* node) {
@@ -1159,9 +1159,9 @@ void codegen::trino_gen(ternary_operator* node) {
     calc_gen(node->get_left());
     usize label_jump_to_exit = comp.code_size();
     emit(op_jmp, 0, node->get_left()->get_location());
-    comp.get_code()[label_jump_false].num = comp.code_size();
+    comp.code_at(label_jump_false).num = comp.code_size();
     calc_gen(node->get_right());
-    comp.get_code()[label_jump_to_exit].num = comp.code_size();
+    comp.code_at(label_jump_to_exit).num = comp.code_size();
 }
 
 void codegen::calc_gen(expr* node) {
@@ -1378,7 +1378,7 @@ void codegen::print(std::ostream& out) {
 
     for (u64 i = 0; i < comp.code_size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
-        const auto& c = comp.get_code()[i];
+        const auto& c = comp.code_at(i);
         if (!func_end_stack.empty() && i == func_end_stack.top()) {
             out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
             // avoid two empty lines
@@ -1395,9 +1395,9 @@ void codegen::print(std::ostream& out) {
             out << resm.get_ordered_file_list()[c.fidx] << ":" << c.line;
             out << ">:\n";
             for (u64 j = i; j < comp.code_size(); ++j) {
-                if (comp.get_code()[j].op == op_jmp) {
+                if (comp.code_at(j).op == op_jmp) {
                     func_begin_stack.push(i);
-                    func_end_stack.push(comp.get_code()[j].num);
+                    func_end_stack.push(comp.code_at(j).num);
                     break;
                 }
             }

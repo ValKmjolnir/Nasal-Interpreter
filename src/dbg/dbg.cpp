@@ -112,7 +112,7 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
 
 u16 dbg::file_index(const std::string& filename) const {
     if (resm.exist(filename)) {
-        return static_cast<u16>(resm.get_file_index_map().at(filename));
+        return static_cast<u16>(resm.file_index(filename));
     }
     return UINT16_MAX;
 }

@@ -46,6 +46,7 @@ private:
     // but in fact local scope also has less than VM_STACK_DEPTH value
     std::list<std::unordered_map<std::string, u32>> local;
 
+private:
     void check_id_exist(identifier*);
 
     void die(const std::string& info, expr* node) {
