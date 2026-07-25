@@ -67,7 +67,7 @@ public:
     expr(const span& location, expr_type node_type):
         nd_loc(location), nd_type(node_type), in_curve(false) {}
     virtual ~expr() = default;
-    void set_begin(u64 line, u64 column) {
+    void set_begin(u32 line, u32 column) {
         nd_loc.begin_line = line;
         nd_loc.begin_column = column;
     }
