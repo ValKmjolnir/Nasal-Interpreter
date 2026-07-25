@@ -2,6 +2,8 @@
 #include "util/util.hpp"
 #include "code/codestream.hpp"
 
+#include <stack>
+
 namespace nasal {
 
 void vm::vm_init_entry(const std::vector<std::string>& strs,
@@ -1477,15 +1479,15 @@ void vm::o_ret() {
     }
 }
 
-void vm::run(const codegen& gen,
+void vm::run(const compilation& comp,
              const resource_manager& resm,
              const std::vector<std::string>& argv) {
     vm_init_entry(
-        gen.strs(),
-        gen.nums(),
-        gen.natives(),
-        gen.codes(),
-        gen.globals(),
+        comp.get_string_table(),
+        comp.get_number_table(),
+        comp.get_native_functions(),
+        comp.get_code(),
+        comp.get_globals(),
         resm.get_ordered_file_list(),
         argv
     );
@@ -1591,9 +1593,9 @@ void vm::run(const codegen& gen,
         &&ret
     };
     std::vector<const void*> code;
-    code.reserve(gen.codes().size());
-    imm.reserve(gen.codes().size());
-    for (const auto& i : gen.codes()) {
+    code.reserve(comp.get_code().size());
+    imm.reserve(comp.get_code().size());
+    for (const auto& i : comp.get_code()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -1602,9 +1604,9 @@ void vm::run(const codegen& gen,
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
-    code.reserve(gen.codes().size());
-    imm.reserve(gen.codes().size());
-    for (const auto& i : gen.codes()) {
+    code.reserve(comp.get_code().size());
+    imm.reserve(comp.get_code().size());
+    for (const auto& i : comp.get_code()) {
         code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
     }

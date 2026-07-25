@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "vm/gc.hpp"
-#include "code/codegen.hpp"
+#include "code/compilation.hpp"
 #include "util/util.hpp"
 #include "util/resource_manager.hpp"
 #include "natives/registry.hpp"
@@ -298,7 +298,7 @@ public:
     }
 
     /* execution entry */
-    void run(const codegen&,                   // get generated code
+    void run(const compilation&,               // get compilation context
              const resource_manager&,          // get list of used files
              const std::vector<std::string>&); // get command line arguments
 

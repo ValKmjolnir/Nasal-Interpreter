@@ -3,6 +3,7 @@
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
 #include "ast/optimizer.hpp"
+#include "code/compilation.hpp"
 #include "code/codegen.hpp"
 #include "vm/vm.hpp"
 #include "util/resource_manager.hpp"
@@ -119,7 +120,8 @@ bool repl::run() {
     auto nasal_parser = std::make_unique<parse>();
     auto nasal_linker = std::make_unique<linker>(*resm);
     auto nasal_opt = std::make_unique<optimizer>();
-    auto nasal_codegen = std::make_unique<codegen>(*resm);
+    auto nasal_comp = std::make_unique<compilation>(false);
+    auto nasal_codegen = std::make_unique<codegen>(*nasal_comp, *resm);
 
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
@@ -135,13 +137,11 @@ bool repl::run() {
     }
 
     nasal_opt->do_optimization(nasal_parser->tree());
-    if (nasal_codegen->compile(nasal_parser->tree(),
-                               true,
-                               false).geterr()) {
+    if (nasal_codegen->compile(nasal_parser->tree(), true).geterr()) {
         return false;
     }
 
-    runtime.run(*nasal_codegen, *resm, {});
+    runtime.run(*nasal_comp, *resm, {});
     return true;
 }
 

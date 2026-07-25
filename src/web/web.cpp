@@ -1,6 +1,7 @@
 #include "web/web.hpp"
 #include "vm/vm.hpp"
 #include "parse/parse.hpp"
+#include "code/compilation.hpp"
 #include "code/codegen.hpp"
 #include "parse/linker.hpp"
 #include "ast/optimizer.hpp"
@@ -99,7 +100,8 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         nasal::lexer lex;
         nasal::parse parse;
         nasal::linker ld(resm);
-        nasal::codegen gen(resm);
+        nasal::compilation comp(true);
+        nasal::codegen gen(comp, resm);
 
         // Create a unique temporary file
         char temp_filename[256];
@@ -152,7 +154,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         auto opt = std::make_unique<nasal::optimizer>();
         opt->do_optimization(parse.tree());
 
-        if (gen.compile(parse.tree(), false, true).geterr()) {
+        if (gen.compile(parse.tree(), false).geterr()) {
             ctx->last_error = error_output.str();
             std::cout.rdbuf(old_cout);
             std::cerr.rdbuf(old_cerr);
@@ -166,7 +168,7 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
         auto future = std::async(std::launch::async, [&]() {
             // Wrap VM execution in try/catch
             try {
-                ctx->vm_instance->run(gen, resm, {});
+                ctx->vm_instance->run(comp, resm, {});
             } catch (const std::exception& e) {
                 ctx->last_error = e.what();
                 throw std::runtime_error(ctx->last_error);

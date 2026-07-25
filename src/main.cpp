@@ -7,6 +7,7 @@
 
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
+#include "code/compilation.hpp"
 #include "code/codegen.hpp"
 #include "vm/vm.hpp"
 #include "dbg/dbg.hpp"
@@ -33,7 +34,8 @@ void execute(const nasal::cli::cli_config& config) {
     nasal::lexer   lex;
     nasal::parse   parse;
     nasal::linker  ld(resm);
-    nasal::codegen gen(resm);
+    nasal::compilation comp(config.has(option::cli_limit_mode));
+    nasal::codegen gen(comp, resm);
 
     // lexer scans file to get tokens
     lex.scan(config.input_file_path).chkerr();
@@ -63,9 +65,7 @@ void execute(const nasal::cli::cli_config& config) {
     }
 
     // code generator gets parser's ast and import file list to generate code
-    gen.compile(parse.tree(),
-                false,
-                config.has(option::cli_limit_mode)).chkerr();
+    gen.compile(parse.tree(), false).chkerr();
     if (config.has(option::cli_view_code)) {
         gen.print(std::cout);
     }
@@ -80,7 +80,7 @@ void execute(const nasal::cli::cli_config& config) {
     if (config.has(option::cli_debug_mode)) {
         auto debugger = std::make_unique<nasal::dbg>(resm);
         debugger->run(
-            gen,
+            comp,
             config.nasal_vm_args,
             config.has(option::cli_profile),
             config.has(option::cli_profile_all)
@@ -94,7 +94,7 @@ void execute(const nasal::cli::cli_config& config) {
         auto runtime = std::make_unique<nasal::vm>();
         runtime->set_detail_report_info(config.has(option::cli_detail_info));
         runtime->set_limit_mode_flag(config.has(option::cli_limit_mode));
-        runtime->run(gen, resm, config.nasal_vm_args);
+        runtime->run(comp, resm, config.nasal_vm_args);
         gc_time_ms = runtime->get_gc_time_ms();
         gc_total_memory = runtime->get_total_memory();
     }

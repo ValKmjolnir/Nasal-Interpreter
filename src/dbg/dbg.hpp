@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/filestream.hpp"
-#include "code/opcode.hpp"
+#include "code/compilation.hpp"
 #include "vm/vm.hpp"
 #include "util/resource_manager.hpp"
 
@@ -115,7 +115,7 @@ public:
     dbg(const resource_manager& r): next(true), file_list_size(0),
            break_file_index(0), break_line(0),
            resm(r), do_operand_count(false) {}
-    void run(const codegen&,
+    void run(const compilation&,
              const std::vector<std::string>&,
              bool,
              bool);

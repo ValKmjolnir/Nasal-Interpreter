@@ -38,6 +38,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/cli/cli.cpp
     ${CMAKE_SOURCE_DIR}/src/code/codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/code/codestream.cpp
+    ${CMAKE_SOURCE_DIR}/src/code/compilation.cpp
     ${CMAKE_SOURCE_DIR}/src/code/opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/dbg/dbg.cpp
     ${CMAKE_SOURCE_DIR}/src/error/error.cpp

@@ -247,7 +247,7 @@ void dbg::interact() {
     }
 }
 
-void dbg::run(const codegen& gen,
+void dbg::run(const compilation& comp,
               const std::vector<std::string>& argv,
               bool profile,
               bool show_all_prof_result) {
@@ -259,11 +259,11 @@ void dbg::run(const codegen& gen,
     file_list_size = file_list.size();
 
     vm_init_entry(
-        gen.strs(),
-        gen.nums(),
-        gen.natives(),
-        gen.codes(),
-        gen.globals(),
+        comp.get_string_table(),
+        comp.get_number_table(),
+        comp.get_native_functions(),
+        comp.get_code(),
+        comp.get_globals(),
         file_list,
         argv
     );
@@ -272,7 +272,7 @@ void dbg::run(const codegen& gen,
     std::vector<u8> code;
     std::vector<u16> code_file_index;
     std::vector<u64> code_line;
-    for (const auto& i : gen.codes()) {
+    for (const auto& i : comp.get_code()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);
         code_line.push_back(i.line);
