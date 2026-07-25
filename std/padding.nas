@@ -2,7 +2,7 @@
 # ValKmjolnir 2022/9/4
 
 var leftpad = func(input_string, length, char=" ") {
-    if (typeof(input_string)=="num") {
+    if (typeof(input_string) == "num") {
         input_string = str(input_string);
     }
     var strlen = size(input_string);
@@ -13,7 +13,7 @@ var leftpad = func(input_string, length, char=" ") {
 }
 
 var rightpad = func(input_string, length, char=" ") {
-    if (typeof(input_string)=="num") {
+    if (typeof(input_string) == "num") {
         input_string = str(input_string);
     }
     var strlen = size(input_string);

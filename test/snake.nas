@@ -99,7 +99,7 @@ var game = func(x,y) {
 
             if (eat and snake.length()!=x*y)
                 setapple();
-            elsif (snake.length()==x*y)
+            elsif (snake.length() == x*y)
                 gameover=2;
         },
         move:func(c) {
@@ -141,7 +141,7 @@ var main = func(argv) {
     print("\r                         \r");
     var counter=20;
     while (1) {
-        while ((var ch=coroutine.resume(co)[0])==nil);
+        while ((var ch = coroutine.resume(co)[0]) == nil);
         if (ch!=nil and ch!=-1) {
             if (ch=='q'[0]) {
                 break;

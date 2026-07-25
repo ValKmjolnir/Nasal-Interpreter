@@ -210,14 +210,14 @@ struct nas_vec {
 
     auto size() const { return elems.size(); }
     var get_value(const i32 index) {
-        i32 size = elems.size();
+        auto size = static_cast<i32>(elems.size());
         if (index < -size || index >= size) {
             return var::none();
         }
         return elems[index >= 0 ? index : index + size];
     }
     var* get_memory(const i32 index) {
-        i32 size = elems.size();
+        auto size = static_cast<i32>(elems.size());
         if (index < -size || index >= size) {
             return nullptr;
         }

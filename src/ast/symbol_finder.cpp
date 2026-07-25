@@ -40,7 +40,8 @@ bool symbol_finder::visit_iter_expr(iter_expr* node) {
     return true;
 }
 
-const std::vector<symbol_finder::symbol_info>& symbol_finder::do_find(code_block* root) {
+const std::vector<symbol_finder::symbol_info>&
+symbol_finder::do_find(code_block* root) {
     symbols.clear();
     root->accept(this);
     return symbols;

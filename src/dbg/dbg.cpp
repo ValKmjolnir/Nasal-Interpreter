@@ -59,7 +59,7 @@ void operand_line_counter::dump_all_code_line_counter(std::ostream& os) const {
     u64 max_call_time = 0;
     for (const auto& context : file_line_counter) {
         for (const auto& count : context) {
-            max_call_time = count>max_call_time? count:max_call_time;
+            max_call_time = count > max_call_time ? count : max_call_time;
         }
     }
     auto pad_length = std::to_string(max_call_time).length();
@@ -111,10 +111,8 @@ std::vector<std::string> dbg::parse(const std::string& cmd) {
 }
 
 u16 dbg::file_index(const std::string& filename) const {
-    for (u16 i = 0; i<file_list_size; ++i) {
-        if (filename==files[i]) {
-            return i;
-        }
+    if (resm.exist(filename)) {
+        return static_cast<u16>(resm.file_index(filename));
     }
     return UINT16_MAX;
 }
@@ -150,9 +148,9 @@ void dbg::list_file() const {
 }
 
 void dbg::step_info() {
-    u64 line = bytecode[ctx.pc].line==0? 0:bytecode[ctx.pc].line-1;
-    u64 begin = (line>>3)==0? 0:((line>>3)<<3);
-    u64 end = (1+(line>>3))<<3;
+    u64 line = bytecode[ctx.pc].line == 0 ? 0 : bytecode[ctx.pc].line - 1;
+    u64 begin = (line >> 3) == 0 ? 0 : ((line >> 3) << 3);
+    u64 end = (1 + (line >> 3)) << 3;
 
     fls.load(files[bytecode[ctx.pc].fidx]);
 
@@ -249,8 +247,7 @@ void dbg::interact() {
     }
 }
 
-void dbg::run(const codegen& gen,
-              const linker& linker,
+void dbg::run(const compilation& comp,
               const std::vector<std::string>& argv,
               bool profile,
               bool show_all_prof_result) {
@@ -258,15 +255,15 @@ void dbg::run(const codegen& gen,
     set_detail_report_info(true);
     do_operand_count = profile || show_all_prof_result;
 
-    const auto& file_list = linker.get_file_list();
+    const auto& file_list = resm.get_ordered_file_list();
     file_list_size = file_list.size();
 
     vm_init_entry(
-        gen.strs(),
-        gen.nums(),
-        gen.natives(),
-        gen.codes(),
-        gen.globals(),
+        comp.get_string_table(),
+        comp.get_number_table(),
+        comp.get_native_functions(),
+        comp.get_code(),
+        comp.get_globals(),
         file_list,
         argv
     );
@@ -275,7 +272,7 @@ void dbg::run(const codegen& gen,
     std::vector<u8> code;
     std::vector<u16> code_file_index;
     std::vector<u64> code_line;
-    for (const auto& i : gen.codes()) {
+    for (const auto& i : comp.get_code()) {
         code.push_back(i.op);
         code_file_index.push_back(i.fidx);
         code_line.push_back(i.line);

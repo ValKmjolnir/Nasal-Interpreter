@@ -6,10 +6,10 @@
 #include <atomic>
 #include <cmath>
 
-#include "parse/linker.hpp"
 #include "vm/gc.hpp"
-#include "code/codegen.hpp"
+#include "code/compilation.hpp"
 #include "util/util.hpp"
+#include "util/resource_manager.hpp"
 #include "natives/registry.hpp"
 
 #ifdef _MSC_VER
@@ -60,7 +60,7 @@ protected:
                        const std::vector<f64>&,
                        const std::vector<nasal_builtin_info>&,
                        const std::vector<opcode>&,
-                       const std::unordered_map<std::string, u64>&,
+                       const std::unordered_map<std::string, u32>&,
                        const std::vector<std::string>&,
                        const std::vector<std::string>&);
     void context_and_global_init();
@@ -298,8 +298,8 @@ public:
     }
 
     /* execution entry */
-    void run(const codegen&,                   // get generated code
-             const linker&,                    // get list of used files
+    void run(const compilation&,               // get compilation context
+             const resource_manager&,          // get list of used files
              const std::vector<std::string>&); // get command line arguments
 
     /* set detail report info flag */

@@ -2,13 +2,15 @@
 #include "util/util.hpp"
 #include "code/codestream.hpp"
 
+#include <stack>
+
 namespace nasal {
 
 void vm::vm_init_entry(const std::vector<std::string>& strs,
                        const std::vector<f64>& nums,
                        const std::vector<nasal_builtin_info>& natives,
                        const std::vector<opcode>& code,
-                       const std::unordered_map<std::string, u64>& global_symbol,
+                       const std::unordered_map<std::string, u32>& global_symbol,
                        const std::vector<std::string>& filenames,
                        const std::vector<std::string>& argv) {
     const_number = nums.data();
@@ -925,10 +927,10 @@ void vm::o_eq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = one;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()==val2.str())? one : zero;
+        ctx.top[0] = (val1.str() == val2.str()) ? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()==val2.to_num())? one : zero;
+        ctx.top[0] = (val1.to_num() == val2.to_num()) ? one : zero;
     } else {
         ctx.top[0] = (val1==val2)? one : zero;
     }
@@ -940,10 +942,10 @@ void vm::o_neq() {
     if (val1.is_nil() && val2.is_nil()) {
         ctx.top[0] = zero;
     } else if (val1.is_str() && val2.is_str()) {
-        ctx.top[0] = (val1.str()!=val2.str())? one : zero;
+        ctx.top[0] = (val1.str() != val2.str()) ? one : zero;
     } else if ((val1.is_num() || val2.is_num())
         && !val1.is_nil() && !val2.is_nil()) {
-        ctx.top[0] = (val1.to_num()!=val2.to_num())? one : zero;
+        ctx.top[0] = (val1.to_num() != val2.to_num()) ? one : zero;
     } else {
         ctx.top[0] = (val1!=val2)? one : zero;
     }
@@ -1477,16 +1479,16 @@ void vm::o_ret() {
     }
 }
 
-void vm::run(const codegen& gen,
-             const linker& linker,
+void vm::run(const compilation& comp,
+             const resource_manager& resm,
              const std::vector<std::string>& argv) {
     vm_init_entry(
-        gen.strs(),
-        gen.nums(),
-        gen.natives(),
-        gen.codes(),
-        gen.globals(),
-        linker.get_file_list(),
+        comp.get_string_table(),
+        comp.get_number_table(),
+        comp.get_native_functions(),
+        comp.get_code(),
+        comp.get_globals(),
+        resm.get_ordered_file_list(),
         argv
     );
 
@@ -1591,9 +1593,9 @@ void vm::run(const codegen& gen,
         &&ret
     };
     std::vector<const void*> code;
-    code.reserve(gen.codes().size());
-    imm.reserve(gen.codes().size());
-    for (const auto& i : gen.codes()) {
+    code.reserve(comp.get_code().size());
+    imm.reserve(comp.get_code().size());
+    for (const auto& i : comp.get_code()) {
         code.push_back(oprs[i.op]);
         imm.push_back(i.num);
     }
@@ -1602,9 +1604,9 @@ void vm::run(const codegen& gen,
     goto *code[ctx.pc];
 #else
     std::vector<nasal_vm_func> code;
-    code.reserve(gen.codes().size());
-    imm.reserve(gen.codes().size());
-    for (const auto& i : gen.codes()) {
+    code.reserve(comp.get_code().size());
+    imm.reserve(comp.get_code().size());
+    for (const auto& i : comp.get_code()) {
         code.push_back(operand_function[i.op]);
         imm.push_back(i.num);
     }

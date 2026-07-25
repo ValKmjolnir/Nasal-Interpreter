@@ -9,7 +9,8 @@
 
 namespace nasal {
 
-linker::linker(): show_path_flag(false), this_file("") {
+linker::linker(resource_manager& r):
+    show_path_flag(false), this_file(""), resm(r) {
     const auto env_get_path = getenv("PATH");
     if (!env_get_path) {
         err.warn("link", "cannot get env \"PATH\".");
@@ -34,7 +35,7 @@ linker::linker(): show_path_flag(false), this_file("") {
 }
 
 std::string linker::get_path(expr* node) {
-    if (node->get_type()==expr_type::ast_use) {
+    if (node->get_type() == expr_type::ast_use) {
         auto file_relative_path = std::string("");
         const auto& path = reinterpret_cast<use_stmt*>(node)->get_path();
         for (auto i : path) {
@@ -95,7 +96,7 @@ std::string linker::find_real_file_path(const std::string& filename,
 }
 
 bool linker::import_check(expr* node) {
-    if (node->get_type()==expr_type::ast_use) {
+    if (node->get_type() == expr_type::ast_use) {
         return true;
     }
 /*
@@ -104,15 +105,15 @@ bool linker::import_check(expr* node) {
     |_call_func
       |_string:'filename'
 */
-    if (node->get_type()!=expr_type::ast_call) {
+    if (node->get_type() != expr_type::ast_call) {
         return false;
     }
     auto call_node = reinterpret_cast<call_expr*>(node);
     auto first_expr = call_node->get_first();
-    if (first_expr->get_type()!=expr_type::ast_id) {
+    if (first_expr->get_type() != expr_type::ast_id) {
         return false;
     }
-    if (reinterpret_cast<identifier*>(first_expr)->get_name()!="import") {
+    if (reinterpret_cast<identifier*>(first_expr)->get_name() != "import") {
         return false;
     }
     if (!call_node->get_calls().size()) {
@@ -120,18 +121,18 @@ bool linker::import_check(expr* node) {
     }
 
     // import("xxx");
-    if (call_node->get_calls().size()!=1) {
+    if (call_node->get_calls().size() != 1) {
         return false;
     }
     auto maybe_func_call = call_node->get_calls()[0];
-    if (maybe_func_call->get_type()!=expr_type::ast_callf) {
+    if (maybe_func_call->get_type() != expr_type::ast_callf) {
         return false;
     }
     auto func_call = reinterpret_cast<call_function*>(maybe_func_call);
-    if (func_call->get_argument().size()!=1) {
+    if (func_call->get_argument().size() != 1) {
         return false;
     }
-    if (func_call->get_argument()[0]->get_type()!=expr_type::ast_str) {
+    if (func_call->get_argument()[0]->get_type() != expr_type::ast_str) {
         return false;
     }
     return true;
@@ -139,18 +140,14 @@ bool linker::import_check(expr* node) {
 
 bool linker::check_exist_or_record_file(const std::string& file) {
     // avoid importing the same file
-    for (const auto& name : imported_files) {
-        if (file==name) {
-            return true;
-        }
-    }
-    imported_files.push_back(file);
-    return false;
+    auto result = resm.exist(file);
+    resm.register_file(file);
+    return result;
 }
 
 bool linker::check_self_import(const std::string& file) {
     for (const auto& name : module_load_stack) {
-        if (file==name) {
+        if (file == name) {
             return true;
         }
     }
@@ -315,8 +312,8 @@ std::string linker::generate_module_name(const std::string& file_path) {
         return module_name;
     }
     if (std::isdigit(module_name[0]) ||
-        module_name.find(".")!=std::string::npos ||
-        module_name.find("-")!=std::string::npos) {
+        module_name.find(".") != std::string::npos ||
+        module_name.find("-") != std::string::npos) {
         err.warn("link",
             "get module <" + module_name + "> from <" + file_path + ">, " +
             "will not be easily accessed."
@@ -403,8 +400,8 @@ const error& linker::link(parse& parse, bool spath = false) {
 
     // initializing file map
     this_file = parse.tree()->get_location().file;
-    imported_files = {this_file};
-    module_load_stack = {this_file};
+    resm.register_file(this_file);
+    module_load_stack = { this_file };
 
     // scan root and import files
     // then generate a new ast and return to import_ast
@@ -417,10 +414,10 @@ const error& linker::link(parse& parse, bool spath = false) {
     // swap tree root, and delete old root
     delete parse.swap(library);
 
-    if (imported_files.size()>=UINT16_MAX) {
+    if (resm.size() >= UINT16_MAX) {
         err.err("link",
             "too many imported files: " +
-            std::to_string(imported_files.size())
+            std::to_string(resm.size())
         );
     }
     return err;

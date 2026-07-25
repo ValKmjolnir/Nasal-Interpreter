@@ -4,8 +4,8 @@
 #include "parse/parse.hpp"
 #include "error/error.hpp"
 
-#include "linter/checker/manager.hpp"
-#include "linter/checker/space_infix_ops.hpp"
+#include "tools/linter/checker/manager.hpp"
+#include "tools/linter/checker/space_infix_ops.hpp"
 #include "cli/cli.hpp"
 
 void check_single_file(nasal::linter::checker_manager& cm,

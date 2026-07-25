@@ -2,7 +2,7 @@
 #include "lexer/lexer.hpp"
 #include "parse/parse.hpp"
 #include "cli/cli.hpp"
-#include "ast/format.hpp"
+#include "tools/format/format.hpp"
 
 #include <iostream>
 

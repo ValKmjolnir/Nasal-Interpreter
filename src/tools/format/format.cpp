@@ -1,4 +1,4 @@
-#include "format.hpp"
+#include "tools/format/format.hpp"
 #include "util/util.hpp"
 
 #include <iostream>
@@ -377,7 +377,7 @@ bool ast_format::visit_iter_expr(iter_expr* node) {
 
 bool ast_format::visit_forei_expr(forei_expr* node) {
     dump_formating_node_info(node, "forindex/foreach statement");
-    if (node->get_loop_type()==forei_expr::kind::foreach) {
+    if (node->get_loop_type() == forei_expr::kind::foreach) {
         out << "foreach ";
     } else {
         out << "forindex ";

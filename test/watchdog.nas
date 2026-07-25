@@ -46,7 +46,7 @@ if (!io.exists(filename)) {
 }
 
 var args = [];
-if (size(argv)==2) {
+if (size(argv) == 2) {
     println(os_time(), info_hd(), "with argument(s) ", argv[1]);
     args = split(" ", argv[1]);
 }

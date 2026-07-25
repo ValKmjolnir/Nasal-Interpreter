@@ -39,11 +39,11 @@ if not os.path.exists(nasal_module_directory):
     sys.exit(-1)
 
 dynamic_library_suffix = ""
-if platform.system()=="Windows":
+if platform.system() == "Windows":
     dynamic_library_suffix = ".dll"
-elif platform.system()=="Linux":
+elif platform.system() == "Linux":
     dynamic_library_suffix = ".so"
-elif platform.system()=="Darwin":
+elif platform.system() == "Darwin":
     dynamic_library_suffix = ".dylib"
 else:
     print("pack binaries failed: unsupported platform")
@@ -63,15 +63,15 @@ for m in ["libfib", "libkey", "libmat", "libnasock"]:
 
 
 tar_file_name = "nasal"
-if platform.system()=="Windows":
+if platform.system() == "Windows":
     tar_file_name += "-windows-x86_64"
     if len(sys.argv) == 2 and sys.argv[1] == "msvc":
         tar_file_name += "-msvc"
     else:
         tar_file_name += "-mingw"
-elif platform.system()=="Linux":
+elif platform.system() == "Linux":
     tar_file_name += "-linux-x86_64"
-elif platform.system()=="Darwin":
+elif platform.system() == "Darwin":
     tar_file_name += "-macos-aarch64"
 else:
     print("pack binaries failed: unsupported platform")

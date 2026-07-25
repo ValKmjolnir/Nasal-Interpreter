@@ -27,4 +27,4 @@ while (math.mod(size(content), 256*3)!=0) {
 }
 println("filled ", tail_len);
 println("size ", size(content));
-ppm(size(arg)==2? arg[1]:"out.ppm", content);
+ppm(size(arg) == 2 ? arg[1] : "out.ppm", content);

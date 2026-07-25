@@ -1,4 +1,4 @@
-#include "linter/checker/manager.hpp"
+#include "tools/linter/checker/manager.hpp"
 
 namespace nasal::linter {
 

@@ -167,7 +167,7 @@ var builtin_readln(context* ctx, gc* ngc) {
     }
     auto result = ngc->alloc(gc_type::gc_str);
     char c;
-    while ((c = fgetc(file_descriptor.ghost().get<FILE>()))!=EOF) {
+    while ((c = fgetc(file_descriptor.ghost().get<FILE>())) != EOF) {
         if (c=='\r') {
             continue;
         }
