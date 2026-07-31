@@ -27,7 +27,7 @@ private:
     const u32 MAX_RECURSION_DEPTH = 256;
     bool show_path_flag;
     std::string this_file;
-    error err;
+    error& err;
     resource_manager& resm;
     std::vector<std::string> module_load_stack;
     std::vector<fs::path> envpath;
@@ -48,7 +48,7 @@ private:
     void load(code_block*, const std::string&);
 
 public:
-    linker(resource_manager&);
+    linker(error&, resource_manager&);
     const error& link(parse&, bool);
 };
 

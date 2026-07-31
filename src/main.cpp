@@ -30,12 +30,13 @@ void execute(const nasal::cli::cli_config& config) {
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
+    nasal::error err;
     nasal::resource_manager resm;
-    nasal::lexer   lex;
-    nasal::parse   parse;
-    nasal::linker  ld(resm);
+    nasal::lexer lex(err);
+    nasal::parse parse(err);
+    nasal::linker ld(err, resm);
     nasal::compilation comp(config.has(option::cli_limit_mode));
-    nasal::codegen gen(comp, resm);
+    nasal::codegen gen(err, comp, resm);
 
     // lexer scans file to get tokens
     lex.scan(config.input_file_path).chkerr();

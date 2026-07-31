@@ -58,8 +58,7 @@ void vm::context_and_global_init() {
 }
 
 void vm::return_address_info(const var& val) {
-    std::clog << "0x";
-    std::clog << std::hex << val.ret() << std::dec;
+    std::clog << "0x" << std::hex << val.ret() << std::dec;
 }
 
 void vm::memory_address_info(const var& val) {
@@ -601,6 +600,8 @@ void vm::set_frame(const nas_func& func, var* local) {
 
 void vm::o_repl() {
     // reserved for repl mode stack top value output
+    // set allow_repl_output flag to true after initializing vm
+    // to avoid printing too much informations in standard library
     if (allow_repl_output) {
         std::cout << ctx.top[0] << "\n";
     }

@@ -96,12 +96,13 @@ const char* nasal_eval(void* context, const char* code, int show_time) {
     auto* ctx = static_cast<NasalContext*>(context);
 
     try {
+        nasal::error err;
         nasal::resource_manager resm;
-        nasal::lexer lex;
-        nasal::parse parse;
-        nasal::linker ld(resm);
+        nasal::lexer lex(err);
+        nasal::parse parse(err);
+        nasal::linker ld(err, resm);
         nasal::compilation comp(true);
-        nasal::codegen gen(comp, resm);
+        nasal::codegen gen(err, comp, resm);
 
         // Create a unique temporary file
         char temp_filename[256];

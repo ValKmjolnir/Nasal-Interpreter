@@ -1,5 +1,5 @@
 #include "natives/registry.hpp"
-
+#include "error/error.hpp"
 #include "lexer/lexer.hpp"
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
@@ -19,12 +19,13 @@ var builtin_compile(context* ctx, gc* ngc) {
         return nas_err("compile", "input must be a string");
     }
 
+    nasal::error err;
     nasal::resource_manager resm;
-    nasal::lexer   lex;
-    nasal::parse   parse;
-    nasal::linker  ld(resm);
+    nasal::lexer lex(err);
+    nasal::parse parse(err);
+    nasal::linker ld(err, resm);
     nasal::compilation comp(false);
-    nasal::codegen gen(comp, resm);
+    nasal::codegen gen(err, comp, resm);
 
     auto virt_src_name = "<compile-" + std::to_string(
         virtual_source_registry::instance().size()

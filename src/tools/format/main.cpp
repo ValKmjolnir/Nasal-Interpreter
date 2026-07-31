@@ -1,4 +1,5 @@
 #include "nasal.hpp"
+#include "error/error.hpp"
 #include "lexer/lexer.hpp"
 #include "parse/parse.hpp"
 #include "cli/cli.hpp"
@@ -13,8 +14,9 @@ void err() {
 }
 
 void execute(const nasal::cli::cli_config& config) {
-    nasal::lexer lex;
-    nasal::parse parse;
+    nasal::error err;
+    nasal::lexer lex(err);
+    nasal::parse parse(err);
 
     // lexer scans file to get tokens
     lex.scan(config.input_file_path).chkerr();

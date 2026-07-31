@@ -1,4 +1,5 @@
 #include "repl/repl.hpp"
+#include "error/error.hpp"
 #include "lexer/lexer.hpp"
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
@@ -47,7 +48,8 @@ void repl::update_temp_file(const std::vector<std::string>& src) {
 bool repl::check_need_more_input() {
     while (true) {
         update_temp_file();
-        auto nasal_lexer = std::make_unique<lexer>();
+        auto err = std::make_unique<error>();
+        auto nasal_lexer = std::make_unique<lexer>(*err);
         if (nasal_lexer->scan("<nasal-repl>").geterr()) {
             return false;
         }
@@ -79,7 +81,8 @@ bool repl::check_need_more_input() {
 
 int repl::check_need_more_input(std::vector<std::string>& src) {
     update_temp_file(src);
-    auto nasal_lexer = std::make_unique<lexer>();
+    auto err = std::make_unique<error>();
+    auto nasal_lexer = std::make_unique<lexer>(*err);
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return -1;
     }
@@ -115,13 +118,14 @@ void repl::help() {
 }
 
 bool repl::run() {
+    auto err = std::make_unique<error>();
     auto resm = std::make_unique<resource_manager>();
-    auto nasal_lexer = std::make_unique<lexer>();
-    auto nasal_parser = std::make_unique<parse>();
-    auto nasal_linker = std::make_unique<linker>(*resm);
+    auto nasal_lexer = std::make_unique<lexer>(*err);
+    auto nasal_parser = std::make_unique<parse>(*err);
+    auto nasal_linker = std::make_unique<linker>(*err, *resm);
     auto nasal_opt = std::make_unique<optimizer>();
     auto nasal_comp = std::make_unique<compilation>(false);
-    auto nasal_codegen = std::make_unique<codegen>(*nasal_comp, *resm);
+    auto nasal_codegen = std::make_unique<codegen>(*err, *nasal_comp, *resm);
 
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {

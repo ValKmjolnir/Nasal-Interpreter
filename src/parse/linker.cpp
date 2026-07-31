@@ -9,8 +9,8 @@
 
 namespace nasal {
 
-linker::linker(resource_manager& r):
-    show_path_flag(false), this_file(""), resm(r) {
+linker::linker(error& e, resource_manager& r):
+    show_path_flag(false), this_file(""), err(e), resm(r) {
     const auto env_get_path = getenv("PATH");
     if (!env_get_path) {
         err.warn("link", "cannot get env \"PATH\".");
@@ -205,8 +205,8 @@ code_block* linker::import_regular_file(
         return new code_block({0, 0, 0, 0, filename});
     }
     // start importing...
-    lexer nasal_lexer;
-    parse nasal_parser;
+    lexer nasal_lexer(err);
+    parse nasal_parser(err);
     if (nasal_lexer.scan(filename).geterr()) {
         err.err("link",
             node->get_location(),
@@ -244,8 +244,8 @@ code_block* linker::import_nasal_lib() {
     }
 
     // start importing...
-    lexer nasal_lexer;
-    parse nasal_parser;
+    lexer nasal_lexer(err);
+    parse nasal_parser(err);
     if (nasal_lexer.scan(path).geterr()) {
         err.err("link",
             "error occurred when analysing library <" + path + ">"
