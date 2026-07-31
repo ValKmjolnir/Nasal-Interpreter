@@ -51,6 +51,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/natives/json_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/math_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/dylib_lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/natives/eval.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/regex_lib.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/registry.cpp
     ${CMAKE_SOURCE_DIR}/src/natives/subprocess.cpp
@@ -61,7 +62,6 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/colorful.cpp
     ${CMAKE_SOURCE_DIR}/src/util/filestream.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
-    ${CMAKE_SOURCE_DIR}/src/util/resource_manager.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp

@@ -8,6 +8,7 @@ compilation::compilation(bool enable_limited_mode) {
 
 void compilation::init_native_function(bool limited_mode) {
     load_standard_builtin();
+    load_eval_builtin();
     load_io_builtin();
     load_math_builtin();
     load_bits_builtin();

@@ -42,7 +42,9 @@ private:
         // subprocess
         "__subprocess_create",
         "__subprocess_active",
-        "__subprocess_terminate"
+        "__subprocess_terminate",
+        // eval
+        "__compile"
     };
 
     // generated opcodes

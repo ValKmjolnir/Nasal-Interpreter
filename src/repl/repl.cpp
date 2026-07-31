@@ -16,7 +16,7 @@ void repl::add_command_history(const std::string& history) {
         return;
     }
     command_history.push_back(history);
-    if (command_history.size()>1000) {
+    if (command_history.size() > 1000) {
         command_history.pop_front();
     }
 }
@@ -33,7 +33,7 @@ void repl::update_temp_file() {
     for (const auto& i : source) {
         content += i + "\n";
     }
-    info::instance()->repl_file_source = content + " ";
+    info::instance().repl_file_source = content + " ";
 }
 
 void repl::update_temp_file(const std::vector<std::string>& src) {
@@ -41,7 +41,7 @@ void repl::update_temp_file(const std::vector<std::string>& src) {
     for (const auto& i : src) {
         content += i + "\n";
     }
-    info::instance()->repl_file_source = content + " ";
+    info::instance().repl_file_source = content + " ";
 }
 
 bool repl::check_need_more_input() {
@@ -148,7 +148,7 @@ bool repl::run() {
 void repl::execute() {
     source = {};
     // mark we are in repl mode
-    info::instance()->in_repl_mode = true;
+    info::instance().in_repl_mode = true;
     std::cout << "[nasal-repl] Initializating enviroment...\n";
     // run on pass for initializing basic modules, without output
     if (!run()) {
@@ -183,7 +183,7 @@ void repl::execute() {
             continue;
         } else if (line == ".s" || line == ".source") {
             update_temp_file();
-            std::cout << info::instance()->repl_file_source << "\n";
+            std::cout << info::instance().repl_file_source << "\n";
             continue;
         } else if (line[0] == "."[0]) {
             std::cout << "no such command \"" << line;

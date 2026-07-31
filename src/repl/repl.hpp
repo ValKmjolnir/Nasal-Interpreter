@@ -19,9 +19,9 @@ struct info {
     std::string repl_file_source = "";
 
     // singleton
-    static info* instance() {
+    static auto& instance() {
         static info info;
-        return &info;
+        return info;
     }
 };
 
