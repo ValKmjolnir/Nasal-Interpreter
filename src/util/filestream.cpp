@@ -30,15 +30,9 @@ void filestream::load(const std::string& f) {
     // update file name
     file = f;
 
+    // load virtual file if filename hits
     if (auto* src = virtual_source_registry::instance().get(f)) {
         split_lines(*src, res);
-        return;
-    }
-
-    // REPL: load from memory
-    if (repl::info::instance().in_repl_mode &&
-        repl::info::instance().repl_file_name == file) {
-        split_lines(repl::info::instance().repl_file_source, res);
         return;
     }
 

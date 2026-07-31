@@ -227,7 +227,6 @@ void* nasal_repl_init() {
 
     try {
         // Initialize environment silently
-        nasal::repl::info::instance().in_repl_mode = true;
         ctx->repl_instance->get_runtime().set_repl_mode_flag(true);
         ctx->repl_instance->get_runtime().set_detail_report_info(false);
 

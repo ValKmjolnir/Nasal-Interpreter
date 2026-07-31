@@ -2,6 +2,7 @@
 
 #include "nasal.hpp"
 #include "vm/vm.hpp"
+#include "util/virtual_source.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -13,20 +14,9 @@
 namespace nasal {
 namespace repl {
 
-struct info {
-    bool in_repl_mode = false;
-    const std::string repl_file_name = "<nasal-repl>";
-    std::string repl_file_source = "";
-
-    // singleton
-    static auto& instance() {
-        static info info;
-        return info;
-    }
-};
-
 class repl {
 private:
+    const std::string repl_file_name = "<nasal-repl>";
     std::vector<std::string> source;
     std::deque<std::string> command_history;
     vm runtime;
@@ -47,6 +37,8 @@ public:
         runtime.set_detail_report_info(false);
         // set empty history
         command_history = {""};
+        // regist virtual file
+        virtual_source_registry::instance().regist(repl_file_name, "");
     }
 
     // Make these methods public for web REPL

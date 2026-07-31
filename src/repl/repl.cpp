@@ -34,7 +34,7 @@ void repl::update_temp_file() {
     for (const auto& i : source) {
         content += i + "\n";
     }
-    info::instance().repl_file_source = content + " ";
+    virtual_source_registry::instance().regist(repl_file_name, content + " ");
 }
 
 void repl::update_temp_file(const std::vector<std::string>& src) {
@@ -42,7 +42,7 @@ void repl::update_temp_file(const std::vector<std::string>& src) {
     for (const auto& i : src) {
         content += i + "\n";
     }
-    info::instance().repl_file_source = content + " ";
+    virtual_source_registry::instance().regist(repl_file_name, content + " ");
 }
 
 bool repl::check_need_more_input() {
@@ -152,7 +152,6 @@ bool repl::run() {
 void repl::execute() {
     source = {};
     // mark we are in repl mode
-    info::instance().in_repl_mode = true;
     std::cout << "[nasal-repl] Initializating enviroment...\n";
     // run on pass for initializing basic modules, without output
     if (!run()) {
@@ -187,7 +186,8 @@ void repl::execute() {
             continue;
         } else if (line == ".s" || line == ".source") {
             update_temp_file();
-            std::cout << info::instance().repl_file_source << "\n";
+            const auto* src = virtual_source_registry::instance().get(repl_file_name);
+            std::cout << *src << "\n";
             continue;
         } else if (line[0] == "."[0]) {
             std::cout << "no such command \"" << line;
@@ -211,6 +211,8 @@ void repl::execute() {
 
         std::cout << "\n";
     }
+
+    std::cout << "[nasal-repl] Shutting down...\n";
 }
 
 }
