@@ -17,7 +17,7 @@ public:
         densemap* map_;
 
         void skip_empty() {
-            while (index_ < map_->capacity_ && map_->map_used_[index_] == 0) {
+            while (index_ < map_->capacity_ && map_->map_used_[index_] != 1) {
                 ++ index_;
             }
         }
@@ -56,7 +56,7 @@ public:
         const densemap* map_;
 
         void skip_empty() {
-            while (index_ < map_->capacity_ && map_->map_used_[index_] == 0) {
+            while (index_ < map_->capacity_ && map_->map_used_[index_] != 1) {
                 ++ index_;
             }
         }
@@ -76,12 +76,12 @@ public:
         const reference operator*() const {
             return reinterpret_cast<const reference>(map_->map_[index_]);
         }
-        iterator& operator++() {
+        const_iterator& operator++() {
             ++ index_;
             skip_empty();
             return *this;
         }
-        iterator operator++(int) {
+        const_iterator operator++(int) {
             auto t = *this;
             ++ (*this);
             return t;
@@ -226,9 +226,64 @@ public:
         throw std::out_of_range("dense_map::at");
     }
 
-    iterator begin() { return iterator(0, this); }
+    void erase(const K& key) {
+        const std::uint32_t h = std::hash<K>{}(key);
+        std::uint32_t index = h & (capacity_ - 1);
+
+        while (map_used_[index] != 0) {
+            if (map_[index].first == key) {
+                break;
+            }
+            index ++;
+            if (index >= capacity_) {
+                index = 0;
+            }
+        }
+
+        if (map_used_[index] == 0) {
+            return;
+        }
+
+        map_used_[index] = 0;
+        size_ --;
+
+        std::uint32_t gap = index;
+        std::uint32_t next = gap + 1;
+        if (next >= capacity_) {
+            next = 0;
+        }
+
+        while (map_used_[next] != 0) {
+            const std::uint32_t nh = std::hash<K>{}(map_[next].first);
+            std::uint32_t new_index = nh & (capacity_ - 1);
+
+            if (std::uint32_t(gap - new_index) < std::uint32_t(next - new_index)) {
+                map_[gap] = std::move(map_[next]);
+                map_used_[gap] = 1;
+                map_used_[next] = 0;
+                gap = next;
+            }
+            
+            next ++;
+            if (next >= capacity_) {
+                next = 0;
+            }
+        }
+    }
+
+    iterator begin() {
+        if (size_ == 0) {
+            return iterator(capacity_, this);
+        }
+        return iterator(0, this);
+    }
     iterator end() { return iterator(capacity_, this); }
-    const_iterator begin() const { return const_iterator(0, this); }
+    const_iterator begin() const {
+        if (size_ == 0) {
+            return const_iterator(capacity_, this);
+        }
+        return const_iterator(0, this);
+    }
     const_iterator end() const { return const_iterator(capacity_, this); }
 };
 

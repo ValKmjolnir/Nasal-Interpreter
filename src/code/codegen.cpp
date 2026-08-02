@@ -221,7 +221,7 @@ void codegen::func_gen(function* node) {
             case parameter::kind::default_parameter:
                 check_default_const(tmp->get_default_value());
                 calc_gen(tmp->get_default_value());
-                fi.add_param(name);
+                fi.add_default_param(name);
                 emit(op_deft, comp.string_index(name), tmp->get_location());
                 break;
             case parameter::kind::dynamic_parameter:

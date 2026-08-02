@@ -19,6 +19,7 @@ struct func_info {
     // parameter table, u32 begins from 1
     util::densemap<std::string, u32> param_index_map;
     std::vector<std::string> param_table;
+    std::vector<u8> default_param_flags;
 
     // dynamic param name
     std::string dynamic_parameter_name;
@@ -31,6 +32,13 @@ public:
         param_table.push_back(p);
         // param index starts from 1, 0 is reserved for 'me'
         param_index_map.insert(p, param_table.size());
+        default_param_flags.push_back(0);
+    }
+    void add_default_param(const std::string& p) {
+        param_table.push_back(p);
+        // param index starts from 1, 0 is reserved for 'me'
+        param_index_map.insert(p, param_table.size());
+        default_param_flags.push_back(1);
     }
     void add_dynamic_param(const std::string& p) {
         // if called, make sure it is called after all parameters are loaded

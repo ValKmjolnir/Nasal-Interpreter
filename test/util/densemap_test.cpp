@@ -162,10 +162,74 @@ void test_operator_bracket() {
     std::cout << "  densemap:      " << t_dense << " ms\n\n";
 }
 
+void test_erase() {
+    auto ks = keys(N);
+    auto order = shuffled_indices(N);
+    std::unordered_map<std::string, int> ref;
+    nasal::util::densemap<std::string, int> dm;
+
+    for (int i = 0; i < N; i++) {
+        ref.insert({ks[i], i});
+        dm.insert(ks[i], i);
+    }
+
+    auto t_stl = time_ms([&] {
+        for (int i : order) ref.erase(ks[i]);
+        ref.erase("foo");
+
+        assert(ref.size() == 0);
+    });
+    auto t_dense = time_ms([&] {
+        for (int i : order) dm.erase(ks[i]);
+        dm.erase("foo");
+
+        assert(dm.size() == 0);
+    });
+
+    std::cout << "erase (" << N << " keys):\n";
+    std::cout << "  unordered_map: " << t_stl << " ms\n";
+    std::cout << "  densemap:      " << t_dense << " ms\n\n";
+}
+
+void test_erase_insert() {
+    auto ks = keys(N);
+    auto order = shuffled_indices(N);
+    std::unordered_map<std::string, int> ref;
+    nasal::util::densemap<std::string, int> dm;
+
+    for (int i = 0; i < N; i++) {
+        ref.insert({ks[i], i});
+        dm.insert(ks[i], i);
+    }
+
+    auto t_stl = time_ms([&] {
+        for (int i : order) {
+            ref.erase(ks[i]);
+            ref.insert({ks[i], i});
+        }
+
+        assert(ref.size() == order.size());
+    });
+    auto t_dense = time_ms([&] {
+        for (int i : order) {
+            dm.erase(ks[i]);
+            dm.insert(ks[i], i);
+        }
+
+        assert(dm.size() == order.size());
+    });
+
+    std::cout << "erase and insert (" << N << " keys):\n";
+    std::cout << "  unordered_map: " << t_stl << " ms\n";
+    std::cout << "  densemap:      " << t_dense << " ms\n\n";
+}
+
 int main() {
     test_random_insert();
     test_random_lookup();
     test_mixed_workload();
     test_operator_bracket();
+    test_erase();
+    test_erase_insert();
     return 0;
 }

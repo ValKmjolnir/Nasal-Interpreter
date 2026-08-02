@@ -4,11 +4,12 @@ namespace nasal {
 
 void func_info::dump(std::ostream& os) const {
     os << "func (";
-    for (const auto& i: param_table) {
-        os << i;
-        if (i != param_table.back()) {
-            os << ", ";
+    for (u64 i = 0; i < param_table.size(); i++) {
+        os << param_table[i];
+        if (default_param_flags[i]) {
+            os << " = {default-value}";
         }
+        os << (i != param_table.size() - 1 ? ", " : "");
     }
 
     if (dynamic_parameter_index != -1) {
