@@ -247,7 +247,7 @@ struct nas_func {
     std::vector<var> upval; // closure
 
     // parameter table, u32 begins from 1
-    std::unordered_map<std::string, u32> keys;
+    std::unordered_map<std::string, u32> param_index_map;
 
     // dynamic parameter name
     std::string dynamic_parameter_name;

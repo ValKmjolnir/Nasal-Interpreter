@@ -94,8 +94,8 @@ std::ostream& operator<<(std::ostream& out, nas_func& func) {
     out << "func(";
 
     std::vector<std::string> argument_list = {};
-    argument_list.resize(func.keys.size());
-    for (const auto& key : func.keys) {
+    argument_list.resize(func.param_index_map.size());
+    for (const auto& key : func.param_index_map) {
         argument_list[key.second-1] = key.first;
     }
 
@@ -120,7 +120,7 @@ void nas_func::clear() {
     dynamic_parameter_index = -1;
     local.clear();
     upval.clear();
-    keys.clear();
+    param_index_map.clear();
 }
 
 void nas_ghost::set(const std::string& ghost_type_name,

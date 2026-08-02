@@ -187,8 +187,8 @@ void vm::function_detail_info(const nas_func& func) {
     std::clog << "func ";
 
     std::vector<std::string> argument_list = {};
-    argument_list.resize(func.keys.size());
-    for (const auto& key : func.keys) {
+    argument_list.resize(func.param_index_map.size());
+    for (const auto& key : func.param_index_map) {
         argument_list[key.second-1] = key.first;
     }
 
@@ -439,8 +439,8 @@ void vm::all_state_detail() {
 std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
-    argument_list.resize(func.keys.size());
-    for (const auto& i : func.keys) {
+    argument_list.resize(func.param_index_map.size());
+    for (const auto& i : func.param_index_map) {
         argument_list[i.second-1] = i.first;
     }
     for (u32 i = 0; i<argument_list.size(); ++i) {
@@ -468,12 +468,12 @@ std::string vm::report_special_call_lack_arguments(var* local,
                                                    const nas_func& func) const {
     auto result = std::string("lack argument(s) when calling function:\n  func(");
     std::vector<std::string> argument_list = {};
-    argument_list.resize(func.keys.size());
-    for (const auto& i : func.keys) {
+    argument_list.resize(func.param_index_map.size());
+    for (const auto& i : func.param_index_map) {
         argument_list[i.second-1] = i.first;
     }
     for (const auto& key : argument_list) {
-        if (local[func.keys.at(key)].is_none()) {
+        if (local[func.param_index_map.at(key)].is_none()) {
             result += key + ", ";
         } else {
             result += key + "[get], ";
@@ -693,7 +693,7 @@ void vm::o_happ() {
 void vm::o_para() {
     auto& func = ctx.top[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[const_string[imm[ctx.pc]]] = func.parameter_size;
+    func.param_index_map[const_string[imm[ctx.pc]]] = func.parameter_size;
     func.local[func.parameter_size++] = var::none();
 }
 
@@ -701,7 +701,7 @@ void vm::o_default() {
     var val = ctx.top[0];
     auto& func = (--ctx.top)[0].func();
     // func->size has 1 place reserved for "me"
-    func.keys[const_string[imm[ctx.pc]]] = func.parameter_size;
+    func.param_index_map[const_string[imm[ctx.pc]]] = func.parameter_size;
     func.local[func.parameter_size++] = val;
 }
 
@@ -1240,7 +1240,7 @@ void vm::o_callfh() {
     }
 
     bool lack_arguments_flag = false;
-    for (const auto& i : func.keys) {
+    for (const auto& i : func.param_index_map) {
         const auto& key = i.first;
         if (hash.count(key)) {
             local[i.second] = hash.at(key);

@@ -121,7 +121,7 @@ void codegen::string_gen(string_literal* node) {
 }
 
 void codegen::bool_gen(bool_literal* node) {
-    f64 num = node->get_flag()? 1:0;
+    f64 num = node->get_flag() ? 1 : 0;
     comp.regist_number(num);
     emit(op_pnum, comp.number_index(num), node->get_location());
 }
@@ -143,7 +143,29 @@ void codegen::hash_gen(hash_expr* node) {
     }
 }
 
+bool codegen::check_default_const(expr* node) {
+    if (node->get_type() == expr_type::ast_unary) {
+        auto un = static_cast<unary_operator*>(node);
+        if (!check_default_const(un->get_value())) {
+            die("invalid default parameter, expect number, strin, boolean or function", node);
+            return false;
+        }
+        return true;
+    }
+    if (node->get_type() != expr_type::ast_num &&
+        node->get_type() != expr_type::ast_str &&
+        node->get_type() != expr_type::ast_bool &&
+        node->get_type() != expr_type::ast_nil &&
+        node->get_type() != expr_type::ast_func) {
+        die("invalid default parameter, expect number, string, boolean or function", node);
+        return false;
+    }
+    return true;
+}
+
 void codegen::func_gen(function* node) {
+    func_info fi;
+
     // parameter list format check
     bool checked_default = false;
     bool checked_dynamic = false;
@@ -187,25 +209,30 @@ void codegen::func_gen(function* node) {
     // generate parameter list
     for (auto tmp : node->get_parameter_list()) {
         const auto& name = tmp->get_parameter_name();
-        if (name=="me") {
+        if (name == "me") {
             die("\"me\" should not be parameter", tmp);
         }
         comp.regist_string(name);
         switch (tmp->get_parameter_type()) {
             case parameter::kind::normal_parameter:
+                fi.add_param(name);
                 emit(op_para, comp.string_index(name), tmp->get_location());
                 break;
             case parameter::kind::default_parameter:
+                check_default_const(tmp->get_default_value());
                 calc_gen(tmp->get_default_value());
+                fi.add_param(name);
                 emit(op_deft, comp.string_index(name), tmp->get_location());
                 break;
             case parameter::kind::dynamic_parameter:
+                fi.add_dynamic_param(name);
                 emit(op_dyn, comp.string_index(name), tmp->get_location());
                 break;
         }
         regist_symbol(name);
     }
 
+    fi.set_entry(comp.code_size() + 1);
     comp.code_at(newf).num = comp.code_size() + 1; // entry
     usize jmp_ptr = comp.code_size();
     emit(op_jmp, 0, node->get_location());
@@ -240,6 +267,7 @@ void codegen::func_gen(function* node) {
     // the local scope should not cause stack overflow
     // and should not greater than or equal to upvalue's max size(65536)
     comp.code_at(lsize).num = local.back().size();
+    fi.set_local_size(local.back().size());
     if (local.back().size() >= VM_STACK_DEPTH ||
         local.back().size() >= UINT16_MAX) {
         die("too many local variants: " +
@@ -255,6 +283,8 @@ void codegen::func_gen(function* node) {
         emit(op_ret, 0, block->get_location());
     }
     comp.code_at(jmp_ptr).num = comp.code_size();
+
+    comp.regist_function(fi);
 }
 
 void codegen::call_gen(call_expr* node) {
@@ -1361,6 +1391,13 @@ void codegen::print(std::ostream& out) {
     // print const strings
     for (const auto& str : comp.get_string_table()) {
         out << "  .symbol \"" << util::rawstr(str) << "\"\n";
+    }
+
+    // print const functions
+    for (const auto& func : comp.get_function_table()) {
+        out << "  .function ";
+        func.dump(out);
+        out << "\n";
     }
 
     // print blank line

@@ -60,6 +60,10 @@ void compilation::regist_string(const std::string& str) {
     const_string_table.push_back(str);
 }
 
+void compilation::regist_function(const func_info& func) {
+    const_function_table.push_back(func);
+}
+
 void compilation::regist_global(const std::string& name) {
     if (global.count(name)) {
         return;
