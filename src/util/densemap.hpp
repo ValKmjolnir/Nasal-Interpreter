@@ -63,7 +63,7 @@ public:
 
     public:
         using value_type = std::pair<K, V>;
-        using reference = value_type&;
+        using reference = const value_type&;
 
         const_iterator(std::uint64_t i, const densemap* m) : index_(i), map_(m) {}
 
@@ -73,8 +73,8 @@ public:
         bool operator!=(const iterator& other) const {
             return index_ != other.index_ || map_ != other.map_;
         }
-        const reference operator*() const {
-            return reinterpret_cast<const reference>(map_->map_[index_]);
+        reference operator*() const {
+            return reinterpret_cast<reference>(map_->map_[index_]);
         }
         const_iterator& operator++() {
             ++ index_;
