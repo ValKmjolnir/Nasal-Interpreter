@@ -26,7 +26,9 @@ public:
         using value_type = std::pair<K, V>;
         using reference = value_type&;
 
-        iterator(std::uint64_t i, densemap* m) : index_(i), map_(m) {}
+        iterator(std::uint64_t i, densemap* m) : index_(i), map_(m) {
+            skip_empty();
+        }
 
         bool operator==(const iterator& other) const {
             return index_ == other.index_ && map_ == other.map_;
@@ -65,12 +67,14 @@ public:
         using value_type = std::pair<K, V>;
         using reference = const value_type&;
 
-        const_iterator(std::uint64_t i, const densemap* m) : index_(i), map_(m) {}
+        const_iterator(std::uint64_t i, const densemap* m) : index_(i), map_(m) {
+            skip_empty();
+        }
 
-        bool operator==(const iterator& other) const {
+        bool operator==(const const_iterator& other) const {
             return index_ == other.index_ && map_ == other.map_;
         }
-        bool operator!=(const iterator& other) const {
+        bool operator!=(const const_iterator& other) const {
             return index_ != other.index_ || map_ != other.map_;
         }
         reference operator*() const {
@@ -109,8 +113,8 @@ private:
             if (old_map_used[i] == 0) {
                 continue;
             }
-            const std::uint32_t h = std::hash<K>{}(old_map[i].first);
-            std::uint32_t index = h & (capacity_ - 1);
+            const std::uint64_t h = std::hash<K>{}(old_map[i].first);
+            std::uint64_t index = h & (capacity_ - 1);
 
             while (map_used_[index] != 0) {
                 index ++;
@@ -144,8 +148,8 @@ public:
     }
 
     bool contains(const K& key) const {
-        const std::uint32_t h = std::hash<K>{}(key);
-        std::uint32_t index = h & (capacity_ - 1);
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
 
         while (map_used_[index] != 0) {
             if (map_[index].first == key) {
@@ -164,8 +168,8 @@ public:
             expand();
         }
 
-        const std::uint32_t h = std::hash<K>{}(key);
-        std::uint32_t index = h & (capacity_ - 1);
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
 
         while (map_used_[index] != 0) {
             index ++;
@@ -180,8 +184,8 @@ public:
     }
 
     auto& operator[](const K& key) {
-        const std::uint32_t h = std::hash<K>{}(key);
-        std::uint32_t index = h & (capacity_ - 1);
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
 
         while (map_used_[index] != 0) {
             if (map_[index].first == key) {
@@ -211,8 +215,8 @@ public:
     }
 
     auto& at(const K& key) {
-        const std::uint32_t h = std::hash<K>{}(key);
-        std::uint32_t index = h & (capacity_ - 1);
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
 
         while (map_used_[index] != 0) {
             if (map_[index].first == key) {
@@ -226,9 +230,25 @@ public:
         throw std::out_of_range("dense_map::at");
     }
 
+    const auto& at(const K& key) const {
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
+
+        while (map_used_[index] != 0) {
+            if (map_[index].first == key) {
+                return map_[index].second;
+            }
+            index ++;
+            if (index >= capacity_) {
+                index = 0;
+            }
+        }
+        throw std::out_of_range("dense_map::at const");
+    }
+
     void erase(const K& key) {
-        const std::uint32_t h = std::hash<K>{}(key);
-        std::uint32_t index = h & (capacity_ - 1);
+        const std::uint64_t h = std::hash<K>{}(key);
+        std::uint64_t index = h & (capacity_ - 1);
 
         while (map_used_[index] != 0) {
             if (map_[index].first == key) {
@@ -247,17 +267,17 @@ public:
         map_used_[index] = 0;
         size_ --;
 
-        std::uint32_t gap = index;
-        std::uint32_t next = gap + 1;
+        std::uint64_t gap = index;
+        std::uint64_t next = gap + 1;
         if (next >= capacity_) {
             next = 0;
         }
 
         while (map_used_[next] != 0) {
-            const std::uint32_t nh = std::hash<K>{}(map_[next].first);
-            std::uint32_t new_index = nh & (capacity_ - 1);
+            const std::uint64_t nh = std::hash<K>{}(map_[next].first);
+            std::uint64_t new_index = nh & (capacity_ - 1);
 
-            if (std::uint32_t(gap - new_index) < std::uint32_t(next - new_index)) {
+            if (std::uint64_t(gap - new_index) < std::uint64_t(next - new_index)) {
                 map_[gap] = std::move(map_[next]);
                 map_used_[gap] = 1;
                 map_used_[next] = 0;
