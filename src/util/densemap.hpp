@@ -129,14 +129,16 @@ private:
     }
 
 public:
-    densemap() : size_(0), capacity_(32) {
+    densemap() : size_(0), capacity_(8) {
         map_.resize(capacity_);
         map_used_.resize(capacity_, 0);
     }
 
     void clear() {
         size_ = 0;
-        map_used_.resize(capacity_, 0);
+        map_.clear();
+        map_.resize(capacity_);
+        map_used_.assign(capacity_, 0);
     }
 
     bool empty() const {

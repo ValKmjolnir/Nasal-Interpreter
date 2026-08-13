@@ -301,15 +301,15 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
     }
     match(json_token_type::tok_colon);
     if (this_token.type==json_token_type::tok_lbrace) {
-        hash.elems.insert({name, hash_object_generate(ngc)});
+        hash.elems.insert(name, hash_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_lbrkt) {
-        hash.elems.insert({name, vector_object_generate(ngc)});
+        hash.elems.insert(name, vector_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_str ||
         this_token.type==json_token_type::tok_bool) {
-        hash.elems.insert({name, ngc->alloc_str(this_token.content)});
+        hash.elems.insert(name, ngc->alloc_str(this_token.content));
         next();
     } else if (this_token.type==json_token_type::tok_num) {
-        hash.elems.insert({name, var::num(util::str_to_num(this_token.content.c_str()))});
+        hash.elems.insert(name, var::num(util::str_to_num(this_token.content.c_str())));
         next();
     }
 }

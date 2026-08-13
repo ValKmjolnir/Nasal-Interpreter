@@ -4,7 +4,6 @@
 #include "util/densemap.hpp"
 
 #include <string>
-#include <unordered_map>
 #include <iostream>
 #include <vector>
 

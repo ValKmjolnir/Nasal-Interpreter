@@ -21,10 +21,10 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
 }
 
 var nas_hash::get_value(const std::string& key) {
-    if (elems.count(key)) {
+    if (elems.contains(key)) {
         return elems.at(key);
     }
-    if (!elems.count("parents")) {
+    if (!elems.contains("parents")) {
         return var::none();
     }
 
@@ -45,10 +45,10 @@ var nas_hash::get_value(const std::string& key) {
 }
 
 var* nas_hash::get_memory(const std::string& key) {
-    if (elems.count(key)) {
+    if (elems.contains(key)) {
         return &elems.at(key);
     }
-    if (!elems.count("parents")) {
+    if (!elems.contains("parents")) {
         return nullptr;
     }
 
@@ -167,14 +167,14 @@ std::ostream& operator<<(std::ostream& out, const nas_co& co) {
 }
 
 var nas_map::get_value(const std::string& key) {
-    if (mapper.count(key)) {
+    if (mapper.contains(key)) {
         return *mapper.at(key);
     }
     return var::none();
 }
 
 var* nas_map::get_memory(const std::string& key) {
-    if (mapper.count(key)) {
+    if (mapper.contains(key)) {
         return mapper.at(key);
     }
     return nullptr;

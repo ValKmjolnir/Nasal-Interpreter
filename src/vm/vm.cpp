@@ -1242,7 +1242,7 @@ void vm::o_callfh() {
     bool lack_arguments_flag = false;
     for (const auto& i : func.param_index_map) {
         const auto& key = i.first;
-        if (hash.count(key)) {
+        if (hash.contains(key)) {
             local[i.second] = hash.at(key);
         } else if (local[i.second].is_none()) {
             lack_arguments_flag = true;

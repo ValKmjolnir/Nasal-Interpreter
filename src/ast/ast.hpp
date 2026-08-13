@@ -4,7 +4,6 @@
 #include "error/span.hpp"
 
 #include <vector>
-#include <unordered_map>
 
 namespace nasal {
 

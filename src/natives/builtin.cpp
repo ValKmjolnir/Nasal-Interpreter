@@ -313,7 +313,7 @@ var builtin_contains(context* ctx, gc* ngc) {
     if (!hash.is_hash() || !key.is_str()) {
         return zero;
     }
-    return hash.hash().elems.count(key.str()) ? one : zero;
+    return hash.hash().elems.contains(key.str()) ? one : zero;
 }
 
 var builtin_delete(context* ctx, gc* ngc) {
@@ -326,7 +326,7 @@ var builtin_delete(context* ctx, gc* ngc) {
     if (!key.is_str()) {
         return nil;
     }
-    if (hash.hash().elems.count(key.str())) {
+    if (hash.hash().elems.contains(key.str())) {
         hash.hash().elems.erase(key.str());
     }
     return nil;

@@ -2,6 +2,7 @@
 
 #include "nasal.hpp"
 #include "util/util.hpp"
+#include "util/densemap.hpp"
 
 #include <cstring>
 #include <sstream>
@@ -227,7 +228,7 @@ struct nas_vec {
 };
 
 struct nas_hash {
-    std::unordered_map<std::string, var> elems;
+    util::densemap<std::string, var> elems;
 
     // mark if this is printed, avoid stack overflow
     bool printed = false;
@@ -247,7 +248,7 @@ struct nas_func {
     std::vector<var> upval; // closure
 
     // parameter table, u32 begins from 1
-    std::unordered_map<std::string, u32> param_index_map;
+    util::densemap<std::string, u32> param_index_map;
 
     // dynamic parameter name
     std::string dynamic_parameter_name;
@@ -393,7 +394,7 @@ struct nas_co {
 
 struct nas_map {
     bool printed = false;
-    std::unordered_map<std::string, var*> mapper;
+    util::densemap<std::string, var*> mapper;
 
 public:
     void clear() {
