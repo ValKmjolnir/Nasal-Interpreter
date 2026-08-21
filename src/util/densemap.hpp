@@ -11,37 +11,29 @@ template <typename K, typename V>
 class densemap {
 public:
     class iterator {
-    private:
-        friend class densemap;
-        std::uint64_t index_;
-        densemap* map_;
-
-        void skip_empty() {
-            while (index_ < map_->capacity_ && map_->map_used_[index_] != 1) {
-                ++ index_;
-            }
-        }
-
     public:
         using value_type = std::pair<K, V>;
         using reference = value_type&;
 
-        iterator(std::uint64_t i, densemap* m) : index_(i), map_(m) {
-            skip_empty();
-        }
+    private:
+        friend class densemap;
+        value_type* data_;
+
+    public:
+
+        iterator(value_type* d) : data_(d) {}
 
         bool operator==(const iterator& other) const {
-            return index_ == other.index_ && map_ == other.map_;
+            return data_ == other.data_;
         }
         bool operator!=(const iterator& other) const {
-            return index_ != other.index_ || map_ != other.map_;
+            return data_ != other.data_;
         }
         reference operator*() const {
-            return reinterpret_cast<reference>(map_->map_[index_]);
+            return reinterpret_cast<reference>(*data_);
         }
         iterator& operator++() {
-            ++ index_;
-            skip_empty();
+            ++ data_;
             return *this;
         }
         iterator operator++(int) {
@@ -52,37 +44,29 @@ public:
     };
 
     class const_iterator {
-    private:
-        friend class densemap;
-        std::uint64_t index_;
-        const densemap* map_;
-
-        void skip_empty() {
-            while (index_ < map_->capacity_ && map_->map_used_[index_] != 1) {
-                ++ index_;
-            }
-        }
-
     public:
         using value_type = std::pair<K, V>;
         using reference = const value_type&;
 
-        const_iterator(std::uint64_t i, const densemap* m) : index_(i), map_(m) {
-            skip_empty();
-        }
+    private:
+        friend class densemap;
+        const value_type* data_;
+
+    public:
+
+        const_iterator(const value_type* d) : data_(d) {}
 
         bool operator==(const const_iterator& other) const {
-            return index_ == other.index_ && map_ == other.map_;
+            return data_ == other.data_;
         }
         bool operator!=(const const_iterator& other) const {
-            return index_ != other.index_ || map_ != other.map_;
+            return data_ != other.data_;
         }
         reference operator*() const {
-            return reinterpret_cast<reference>(map_->map_[index_]);
+            return reinterpret_cast<reference>(*data_);
         }
         const_iterator& operator++() {
-            ++ index_;
-            skip_empty();
+            ++ data_;
             return *this;
         }
         const_iterator operator++(int) {
@@ -93,8 +77,11 @@ public:
     };
 
 private:
-    std::vector<std::pair<K, V>> map_;
-    std::vector<std::uint8_t> map_used_;
+    std::vector<std::pair<K, V>> entries_;
+    std::vector<std::int32_t> slots_;
+
+    static constexpr std::int32_t EMPTY = -1;
+    static constexpr std::int32_t DELETED = -2;
 
     std::uint64_t size_;
     std::uint64_t capacity_;
@@ -102,43 +89,37 @@ private:
 private:
     void expand() {
         capacity_ *= 2;
-        
-        std::vector<std::pair<K, V>> old_map = std::move(map_);
-        std::vector<std::uint8_t> old_map_used = std::move(map_used_);
 
-        map_.resize(capacity_);
-        map_used_.resize(capacity_, 0);
+        std::vector<std::int32_t> old_slots = std::move(slots_);
+        slots_.assign(capacity_, EMPTY);
 
-        for (std::uint64_t i = 0; i < old_map.size(); i ++) {
-            if (old_map_used[i] == 0) {
+        for (std::uint64_t i = 0; i < old_slots.size(); i ++) {
+            if (old_slots[i] == EMPTY || old_slots[i] == DELETED) {
                 continue;
             }
-            const std::uint64_t h = std::hash<K>{}(old_map[i].first);
+            const std::uint64_t h = std::hash<K>{}(entries_[old_slots[i]].first);
             std::uint64_t index = h & (capacity_ - 1);
 
-            while (map_used_[index] != 0) {
+            while (slots_[index] != EMPTY) {
                 index ++;
                 if (index >= capacity_) {
                     index = 0;
                 }
             }
 
-            map_[index] = std::move(old_map[i]);
-            map_used_[index] = 1;
+            slots_[index] = old_slots[i];
         }
     }
 
 public:
     densemap() : size_(0), capacity_(8) {
-        map_.resize(capacity_);
-        map_used_.resize(capacity_, 0);
+        slots_.resize(capacity_, EMPTY);
     }
 
     void clear() {
         size_ = 0;
-        map_.clear();
-        map_.resize(capacity_);
-        map_used_.assign(capacity_, 0);
+        entries_.clear();
+        slots_.assign(capacity_, EMPTY);
     }
 
     bool empty() const {
@@ -153,8 +134,16 @@ public:
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
-            if (map_[index].first == key) {
+        while (slots_[index] != EMPTY) {
+            if (slots_[index] == DELETED) {
+                index ++;
+                if (index >= capacity_) {
+                    index = 0;
+                }
+                continue;
+            }
+            std::int32_t entry = slots_[index];
+            if (entries_[entry].first == key) {
                 return true;
             }
             index ++;
@@ -173,15 +162,19 @@ public:
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
+        while (slots_[index] != EMPTY && slots_[index] != DELETED) {
+            if (entries_[slots_[index]].first == key) {
+                entries_[slots_[index]].second = value;
+                return;
+            }
             index ++;
             if (index >= capacity_) {
                 index = 0;
             }
         }
 
-        map_[index] = std::make_pair(key, value);
-        map_used_[index] = 1;
+        entries_.emplace_back(key, value);
+        slots_[index] = entries_.size() - 1;
         size_ ++;
     }
 
@@ -189,9 +182,9 @@ public:
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
-            if (map_[index].first == key) {
-                return map_[index].second;
+        while (slots_[index] != EMPTY && slots_[index] != DELETED) {
+            if (entries_[slots_[index]].first == key) {
+                return entries_[slots_[index]].second;
             }
             index ++;
             if (index >= capacity_) {
@@ -202,7 +195,7 @@ public:
         if (size_ >= capacity_ * 0.75) {
             expand();
             index = h & (capacity_ - 1);
-            while (map_used_[index] != 0) {
+            while (slots_[index] != EMPTY) {
                 index ++;
                 if (index >= capacity_) {
                     index = 0;
@@ -210,19 +203,26 @@ public:
             }
         }
 
-        map_[index] = std::make_pair(key, V());
-        map_used_[index] = 1;
+        entries_.emplace_back(key, V());
+        slots_[index] = entries_.size() - 1;
         size_ ++;
-        return map_[index].second;
+        return entries_[slots_[index]].second;
     }
 
     auto& at(const K& key) {
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
-            if (map_[index].first == key) {
-                return map_[index].second;
+        while (slots_[index] != EMPTY) {
+            if (slots_[index] == DELETED) {
+                index ++;
+                if (index >= capacity_) {
+                    index = 0;
+                }
+                continue;
+            }
+            if (entries_[slots_[index]].first == key) {
+                return entries_[slots_[index]].second;
             }
             index ++;
             if (index >= capacity_) {
@@ -236,9 +236,16 @@ public:
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
-            if (map_[index].first == key) {
-                return map_[index].second;
+        while (slots_[index] != EMPTY) {
+            if (slots_[index] == DELETED) {
+                index ++;
+                if (index >= capacity_) {
+                    index = 0;
+                }
+                continue;
+            }
+            if (entries_[slots_[index]].first == key) {
+                return entries_[slots_[index]].second;
             }
             index ++;
             if (index >= capacity_) {
@@ -252,8 +259,15 @@ public:
         const std::uint64_t h = std::hash<K>{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
-        while (map_used_[index] != 0) {
-            if (map_[index].first == key) {
+        while (slots_[index] != EMPTY) {
+            if (slots_[index] == DELETED) {
+                index ++;
+                if (index >= capacity_) {
+                    index = 0;
+                }
+                continue;
+            }
+            if (entries_[slots_[index]].first == key) {
                 break;
             }
             index ++;
@@ -262,51 +276,46 @@ public:
             }
         }
 
-        if (map_used_[index] == 0) {
+        if (slots_[index] == EMPTY || slots_[index] == DELETED) {
             return;
         }
 
-        map_used_[index] = 0;
+        std::int32_t entry = slots_[index];
+        std::int32_t back_entry = entries_.size() - 1;
+        slots_[index] = DELETED;
         size_ --;
+        if (entry != back_entry) {
+            entries_[entry] = std::move(entries_.back());
 
-        std::uint64_t gap = index;
-        std::uint64_t next = gap + 1;
-        if (next >= capacity_) {
-            next = 0;
-        }
+            const std::uint64_t h2 = std::hash<K>{}(entries_[entry].first);
+            std::uint64_t index2 = h2 & (capacity_ - 1);
 
-        while (map_used_[next] != 0) {
-            const std::uint64_t nh = std::hash<K>{}(map_[next].first);
-            std::uint64_t new_index = nh & (capacity_ - 1);
-
-            if (std::uint64_t(gap - new_index) < std::uint64_t(next - new_index)) {
-                map_[gap] = std::move(map_[next]);
-                map_used_[gap] = 1;
-                map_used_[next] = 0;
-                gap = next;
+            while (slots_[index2] != EMPTY) {
+                if (slots_[index2] == DELETED) {
+                    index2 ++;
+                    if (index2 >= capacity_) {
+                        index2 = 0;
+                    }
+                    continue;
+                }
+                if (slots_[index2] == back_entry) {
+                    break;
+                }
+                index2 ++;
+                if (index2 >= capacity_) {
+                    index2 = 0;
+                }
             }
-            
-            next ++;
-            if (next >= capacity_) {
-                next = 0;
-            }
+
+            slots_[index2] = entry;
         }
+        entries_.pop_back();
     }
 
-    iterator begin() {
-        if (size_ == 0) {
-            return iterator(capacity_, this);
-        }
-        return iterator(0, this);
-    }
-    iterator end() { return iterator(capacity_, this); }
-    const_iterator begin() const {
-        if (size_ == 0) {
-            return const_iterator(capacity_, this);
-        }
-        return const_iterator(0, this);
-    }
-    const_iterator end() const { return const_iterator(capacity_, this); }
+    iterator begin() { return iterator(entries_.data()); }
+    iterator end() { return iterator(entries_.data() + entries_.size()); }
+    const_iterator begin() const { return const_iterator(entries_.data()); }
+    const_iterator end() const { return const_iterator(entries_.data() + entries_.size()); }
 };
 
 }
