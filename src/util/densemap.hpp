@@ -94,6 +94,7 @@ private:
 
     std::uint64_t size_;
     std::uint64_t capacity_;
+    std::uint64_t deleted_;
 
 private:
     void expand() {
@@ -118,20 +119,24 @@ private:
 
             slots_[index] = old_slots[i];
         }
+
+        deleted_ = 0;
     }
 
 public:
-    densemap() : size_(0), capacity_(8) {
+    densemap() : size_(0), capacity_(8), deleted_(0) {
         slots_.resize(capacity_, EMPTY);
     }
 
     densemap(densemap&& other) :
         size_(other.size_),
         capacity_(other.capacity_),
+        deleted_(other.deleted_),
         entries_(std::move(other.entries_)),
         slots_(std::move(other.slots_)) {
         other.size_ = 0;
         other.capacity_ = 8;
+        other.deleted_ = 0;
         other.entries_.clear();
         other.slots_.assign(8, EMPTY);
     }
@@ -142,10 +147,12 @@ public:
         }
         size_ = other.size_;
         capacity_ = other.capacity_;
+        deleted_ = other.deleted_;
         entries_ = std::move(other.entries_);
         slots_ = std::move(other.slots_);
         other.size_ = 0;
         other.capacity_ = 8;
+        other.deleted_ = 0;
         other.entries_.clear();
         other.slots_.assign(8, EMPTY);
         return *this;
@@ -154,6 +161,7 @@ public:
     densemap(const densemap& other) :
         size_(other.size_),
         capacity_(other.capacity_),
+        deleted_(other.deleted_),
         entries_(other.entries_),
         slots_(other.slots_) {}
 
@@ -163,6 +171,7 @@ public:
         }
         size_ = other.size_;
         capacity_ = other.capacity_;
+        deleted_ = other.deleted_;
         entries_ = other.entries_;
         slots_ = other.slots_;
         return *this;
@@ -170,6 +179,7 @@ public:
 
     void clear() {
         size_ = 0;
+        deleted_ = 0;
         entries_.clear();
         slots_.assign(capacity_, EMPTY);
     }
@@ -178,7 +188,7 @@ public:
         return size_ == 0;
     }
 
-    const auto& size() const {
+    std::uint64_t size() const {
         return size_;
     }
 
@@ -233,7 +243,7 @@ public:
         }
 
         const std::uint64_t limit = capacity_ - capacity_ / 4;
-        if (size_ >= limit) {
+        if (size_ + deleted_ >= limit) {
             expand();
             index = h & (capacity_ - 1);
             deleted_index = UINT64_MAX;
@@ -246,12 +256,15 @@ public:
         }
 
         index = deleted_index == UINT64_MAX ? index : deleted_index;
+        if (deleted_index != UINT64_MAX) {
+            deleted_ --;
+        }
         entries_.emplace_back(key, value);
         slots_[index] = entries_.size() - 1;
         size_ ++;
     }
 
-    auto& operator[](const K& key) {
+    V& operator[](const K& key) {
         const std::uint64_t h = Hash{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
@@ -277,7 +290,7 @@ public:
         }
 
         const std::uint64_t limit = capacity_ - capacity_ / 4;
-        if (size_ >= limit) {
+        if (size_ + deleted_ >= limit) {
             expand();
             index = h & (capacity_ - 1);
             deleted_index = UINT64_MAX;
@@ -290,13 +303,16 @@ public:
         }
 
         index = deleted_index == UINT64_MAX ? index : deleted_index;
+        if (deleted_index != UINT64_MAX) {
+            deleted_ --;
+        }
         entries_.emplace_back(key, V());
         slots_[index] = entries_.size() - 1;
         size_ ++;
         return entries_.back().second;
     }
 
-    auto& at(const K& key) {
+    V& at(const K& key) {
         const std::uint64_t h = Hash{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
@@ -319,7 +335,7 @@ public:
         throw std::out_of_range("dense_map::at");
     }
 
-    const auto& at(const K& key) const {
+    const V& at(const K& key) const {
         const std::uint64_t h = Hash{}(key);
         std::uint64_t index = h & (capacity_ - 1);
 
@@ -371,6 +387,7 @@ public:
         std::int32_t back_entry = entries_.size() - 1;
         slots_[index] = DELETED;
         size_ --;
+        deleted_ ++;
         if (entry != back_entry) {
             entries_[entry] = std::move(entries_.back());
 
