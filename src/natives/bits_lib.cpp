@@ -7,38 +7,38 @@ namespace nasal {
 var builtin_u32xor(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     return var::num(static_cast<f64>(
-        static_cast<u32>(local[1].num()) ^
-        static_cast<u32>(local[2].num())
+        static_cast<u32>(local[1].to_num()) ^
+        static_cast<u32>(local[2].to_num())
     ));
 }
 
 var builtin_u32and(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     return var::num(static_cast<f64>(
-        static_cast<u32>(local[1].num()) &
-        static_cast<u32>(local[2].num())
+        static_cast<u32>(local[1].to_num()) &
+        static_cast<u32>(local[2].to_num())
     ));
 }
 
 var builtin_u32or(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     return var::num(static_cast<f64>(
-        static_cast<u32>(local[1].num()) |
-        static_cast<u32>(local[2].num())
+        static_cast<u32>(local[1].to_num()) |
+        static_cast<u32>(local[2].to_num())
     ));
 }
 
 var builtin_u32nand(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     return var::num(static_cast<f64>(~(
-        static_cast<u32>(local[1].num()) &
-        static_cast<u32>(local[2].num())
+        static_cast<u32>(local[1].to_num()) &
+        static_cast<u32>(local[2].to_num())
     )));
 }
 
 var builtin_u32not(context* ctx, gc* ngc) {
     return var::num(static_cast<f64>(
-        ~static_cast<u32>(ctx->localr[1].num())
+        ~static_cast<u32>(ctx->localr[1].to_num())
     ));
 }
 
@@ -50,7 +50,7 @@ var builtin_fld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (!str.is_str() || str.val.gcobj->immutable) {
+    if (!str.is_str() || str.get_gcobj_ptr()->immutable) {
         return nas_err("bits::fld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num()) {
@@ -80,7 +80,7 @@ var builtin_sfld(context* ctx, gc* ngc) {
     auto str = local[1];
     auto startbit = local[2];
     auto length = local[3];
-    if (!str.is_str() || str.val.gcobj->immutable) {
+    if (!str.is_str() || str.get_gcobj_ptr()->immutable) {
         return nas_err("bits::sfld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num()) {
@@ -114,7 +114,7 @@ var builtin_setfld(context* ctx, gc* ngc) {
     auto startbit = local[2];
     auto length = local[3];
     auto value = local[4];
-    if (!str.is_str() || str.val.gcobj->immutable) {
+    if (!str.is_str() || str.get_gcobj_ptr()->immutable) {
         return nas_err("bits::setfld", "\"str\" must be mutable string");
     }
     if (!startbit.is_num() || !length.is_num() || !value.is_num()) {
@@ -141,7 +141,7 @@ var builtin_setfld(context* ctx, gc* ngc) {
 
 var builtin_buf(context* ctx, gc* ngc) {
     var length = ctx->localr[1];
-    if (!length.is_num() || length.num()<=0) {
+    if (!length.is_num() || length.num() <= 0) {
         return nas_err("bits::buf", "\"len\" must be number greater than 0");
     }
     var str = ngc->alloc(gc_type::gc_str);

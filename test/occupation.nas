@@ -75,6 +75,9 @@ var random_generator = func() {
     var total = 0;
     var statistics = [];
     setsize(statistics, 70);
+    forindex (var i; statistics) {
+        statistics[i] = 0;
+    }
     while (1) {
         for (var i=0;i<10;i+=1) {
             total+=1;
@@ -121,6 +124,10 @@ func() {
     var mem_occupation_log=[];
     setsize(cpu_occupation_log,70);
     setsize(mem_occupation_log,70);
+    forindex (var i; cpu_occupation_log) {
+        cpu_occupation_log[i] = 0;
+        mem_occupation_log[i] = 0;
+    }
 
     var co=coroutine.create(cpu_occupation);
     var rd=coroutine.create(random_generator);

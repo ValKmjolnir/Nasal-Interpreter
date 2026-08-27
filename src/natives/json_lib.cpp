@@ -92,7 +92,7 @@ public:
 };
 
 std::string json::var_generate(var& value) {
-    switch (value.type) {
+    switch (value.type()) {
         case vm_type::vm_num: {
             std::stringstream out;
             out << value.num();
@@ -105,7 +105,7 @@ std::string json::var_generate(var& value) {
             return out.str();
         }
         case vm_type::vm_gcobj:
-            switch (value.val.gcobj->type) {
+            switch (value.get_gcobj_ptr()->type) {
                 case gc_type::gc_str: return "\"" + value.str() + "\"";
                 case gc_type::gc_vec: return vector_generate(value.vec());
                 case gc_type::gc_hash: return hash_generate(value.hash());

@@ -89,7 +89,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
         std::cout << "set_new_ghost: not ghost for test type.\n";
         return nil;
     }
-    f64 num = args[1].num();
+    f64 num = args[1].to_num();
 
     res.ghost().get<ghost_obj>()->number = static_cast<u32>(num);
     std::cout << "set_new_ghost: successfully set ghost.number = " << num << "\n";

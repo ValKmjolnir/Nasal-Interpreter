@@ -249,7 +249,7 @@ void nas_val::clear() {
 std::string var::to_str() {
     if (is_str()) {
         return str();
-    } else if (type == vm_type::vm_num) {
+    } else if (is_num()) {
         auto tmp = std::to_string(num());
         tmp.erase(tmp.find_last_not_of('0') + 1, std::string::npos);
         tmp.erase(tmp.find_last_not_of('.') + 1, std::string::npos);
@@ -262,12 +262,12 @@ std::string var::to_str() {
 }
 
 std::ostream& operator<<(std::ostream& out, var& ref) {
-    switch (ref.type) {
+    switch (ref.type()) {
         case vm_type::vm_none:  out << "undefined"; break;
         case vm_type::vm_nil:   out << "nil";       break;
-        case vm_type::vm_num:   out << ref.val.num; break;
+        case vm_type::vm_num:   out << ref.num(); break;
         case vm_type::vm_gcobj:
-            switch (ref.val.gcobj->type) {
+            switch (ref.get_gcobj_ptr()->type) {
                 case gc_type::gc_str:   out << ref.str();   break;
                 case gc_type::gc_vec:   out << ref.vec();   break;
                 case gc_type::gc_hash:  out << ref.hash();  break;

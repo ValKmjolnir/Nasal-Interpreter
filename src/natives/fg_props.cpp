@@ -23,7 +23,7 @@ var builtin_logprint(context* ctx, gc* ngc) {
         return nas_err("fg_env::logprint", "received argument is not vector.");
     }
     std::ofstream out("fgfs.log", std::ios::app);
-    switch (static_cast<u32>(level.num())) {
+    switch (static_cast<u32>(level.to_num())) {
         case SG_LOG_BULK: out << "[LOG_BULK]"; break;
         case SG_LOG_DEBUG: out << "[LOG_DEBUG]"; break;
         case SG_LOG_INFO: out << "[LOG_INFO]"; break;

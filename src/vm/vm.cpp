@@ -111,7 +111,7 @@ void vm::coroutine_value_info(var& val) {
         case nas_co::status::suspended: std::clog << "suspended"; break;
     }
     std::clog << " ] @0x";
-    std::clog << std::hex << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
+    std::clog << std::hex << reinterpret_cast<u64>(val.get_gcobj_ptr()) << std::dec;
 }
 
 void vm::namespace_value_info(var& val, const usize max_show_elems) {
@@ -136,14 +136,14 @@ void vm::namespace_value_info(var& val, const usize max_show_elems) {
 
 void vm::value_name_form(const var& val) {
     std::clog << "| ";
-    switch (val.type) {
+    switch (val.type()) {
         case vm_type::vm_none: std::clog << "null "; break;
         case vm_type::vm_ret:  std::clog << "ret  "; break;
         case vm_type::vm_addr: std::clog << "addr "; break;
         case vm_type::vm_nil:  std::clog << "nil  "; break;
         case vm_type::vm_num:  std::clog << "num  "; break;
         case vm_type::vm_gcobj:
-            switch (val.val.gcobj->type) {
+            switch (val.get_gcobj_ptr()->type) {
                 case gc_type::gc_str:   std::clog << "str  "; break;
                 case gc_type::gc_func:  std::clog << "func "; break;
                 case gc_type::gc_upval: std::clog << "upval"; break;
@@ -161,14 +161,14 @@ void vm::value_name_form(const var& val) {
 void vm::value_info(var& val) {
     value_name_form(val);
 
-    switch (val.type) {
+    switch (val.type()) {
         case vm_type::vm_none: break;
         case vm_type::vm_ret: return_address_info(val); break;
         case vm_type::vm_addr: memory_address_info(val); break;
         case vm_type::vm_nil: break;
         case vm_type::vm_num: std::clog << val.num(); break;
         case vm_type::vm_gcobj:
-            switch (val.val.gcobj->type) {
+            switch (val.get_gcobj_ptr()->type) {
                 case gc_type::gc_str: raw_string_info(val); break;
                 case gc_type::gc_func: std::clog << val.func(); break;
                 case gc_type::gc_upval: upvalue_info(val); break;
@@ -513,14 +513,14 @@ std::string vm::report_out_of_range(f64 index, usize real_size) const {
 }
 
 std::string vm::type_name_string(const var& value) const {
-    switch (value.type) {
+    switch (value.type()) {
         case vm_type::vm_none: return "none";
         case vm_type::vm_addr: return "address";
         case vm_type::vm_ret:  return "program counter";
         case vm_type::vm_nil:  return "nil";
         case vm_type::vm_num:  return "number";
         case vm_type::vm_gcobj:
-            switch (value.val.gcobj->type) {
+            switch (value.get_gcobj_ptr()->type) {
                 case gc_type::gc_str:   return "string";
                 case gc_type::gc_vec:   return "vector";
                 case gc_type::gc_hash:  return "hash";
@@ -733,7 +733,7 @@ void vm::o_usub() {
 }
 
 void vm::o_bnot() {
-    ctx.top[0] = var::num(~static_cast<int32_t>(ctx.top[0].num()));
+    ctx.top[0] = var::num(~static_cast<int32_t>(ctx.top[0].to_num()));
 }
 
 void vm::o_btor() {
@@ -1314,35 +1314,33 @@ void vm::o_slc2() {
     const auto& ref = ctx.top[-1].vec().elems;
     auto& aim = ctx.top[0].vec().elems;
 
-    vm_type type1 = val1.type;
-    vm_type type2 = val2.type;
     i32 num1 = val1.to_num();
     i32 num2 = val2.to_num();
     i32 size = ref.size();
     if (val1.is_nil() && val2.is_nil()) {
         num1 = 0;
-        num2 = size-1;
-    } else if (val1.is_nil() && type2!=vm_type::vm_nil) {
-        num1 = num2<0? -size:0;
-    } else if (type1!=vm_type::vm_nil && val2.is_nil()) {
-        num2 = num1<0? -1:size-1;
+        num2 = size - 1;
+    } else if (val1.is_nil() && !val2.is_nil()) {
+        num1 = num2 < 0 ? -size : 0;
+    } else if (!val1.is_nil() && val2.is_nil()) {
+        num2 = num1 < 0 ? -1 : size - 1;
     }
 
-    if (num1<-size || num1>=size || num2<-size || num2>=size) {
+    if (num1 < -size || num1 >= size || num2 < -size || num2 >= size) {
         die("index " + std::to_string(num1) + ":" +
             std::to_string(num2) + " out of range, real size is " +
             std::to_string(size)
         );
         return;
-    } else if (num1<=num2) {
-        for (i32 i = num1; i<=num2; ++i) {
-            aim.push_back(i>=0? ref[i]:ref[i+size]);
+    } else if (num1 <= num2) {
+        for (i32 i = num1; i <= num2; ++i) {
+            aim.push_back(i >= 0 ? ref[i] : ref[i + size]);
         }
     }
 }
 
 void vm::o_mcallg() {
-    ctx.memr = global+imm[ctx.pc];
+    ctx.memr = global + imm[ctx.pc];
     (++ctx.top)[0] = ctx.memr[0];
     // push value in this memory space on stack
     // to avoid being garbage collected

@@ -3,6 +3,7 @@
 #include "nasal.hpp"
 #include "util/util.hpp"
 #include "util/densemap.hpp"
+#include "util/bit_cast.hpp"
 
 #include <cstring>
 #include <sstream>
@@ -15,7 +16,7 @@ namespace nasal {
 
 enum class vm_type: u8 {
     /* none-gc object */
-    vm_none = 0, // error type
+    vm_none = 1, // error type, set to 1 to avoid 0x7ff8000000000000 canonical NaN
     vm_addr,     // var* address
     vm_ret,      // return address (program counter)
     vm_nil,      // nil
@@ -78,124 +79,139 @@ struct nas_val {
     void clear();
 };
 
+#define QNAN_BASE ((u64)0x7ff8000000000000)
+#define TYPE_MASK ((u64)0x0007000000000000)
+#define PAYLOAD_MASK ((u64)0x0000ffffffffffff)
+
 struct var {
-public:
-    vm_type type = vm_type::vm_none;
-    union {
-        u64 ret;
-        f64 num;
-        var* addr;
-        nas_val* gcobj;
-    } val;
+private:
+    u64 raw;
 
 private:
-    var(vm_type t, u64 pc) { type = t; val.ret = pc; }
-    var(vm_type t, f64 n) { type = t; val.num = n; }
-    var(vm_type t, var* p) { type = t; val.addr = p; }
-    var(vm_type t, nas_val* p) { type = t; val.gcobj = p; }
+    explicit constexpr var(u64 v): raw(v) {}
+    static u64 make_tagged(vm_type t, u64 payload) {
+        u64 type = static_cast<u64>(t);
+        return QNAN_BASE | (type << 48) | (payload & PAYLOAD_MASK);
+    }
 
 public:
     var() = default;
     var(const var&) = default;
-    bool operator==(const var& nr) const {
-        return type == nr.type && val.gcobj == nr.val.gcobj;
-    }
-    bool operator!=(const var& nr) const {
-        return type != nr.type || val.gcobj != nr.val.gcobj;
-    }
+    bool operator==(const var& nr) const { return raw == nr.raw; }
+    bool operator!=(const var& nr) const { return raw != nr.raw; }
 
 public:
     // create new var object
-    static var none() {
-        return var(vm_type::vm_none, static_cast<u64>(0));
-    }
-    static var nil() {
-        return var(vm_type::vm_nil, static_cast<u64>(0));
-    }
-    static var ret(u64 pc) {
-        return var(vm_type::vm_ret, pc);
-    }
-    static var num(f64 n) {
-        return var(vm_type::vm_num, n);
-    }
+    static var none() { return var(make_tagged(vm_type::vm_none, 0)); }
+    static var nil() { return var(make_tagged(vm_type::vm_nil, 0)); }
+    static var ret(u64 pc) { return var(make_tagged(vm_type::vm_ret, pc)); }
+    static var num(f64 n) { return var(bit_cast<u64>(n)); }
     static var gcobj(nas_val* p) {
-        return var(vm_type::vm_gcobj, p);
+        // std::cout << std::hex << "gcobj: 0x" << (u64)p << std::dec << std::endl;
+        u64 payload = ((u64)(std::uintptr_t)p);
+        // u64 tmp = make_tagged(vm_type::vm_gcobj, payload);
+        // std::cout << std::hex << "after: 0x" << tmp << std::dec << std::endl;
+        // std::cout << std::hex << "type: 0x" << (u64)var(tmp).type() << std::dec << std::endl;
+        // std::cout << std::hex << "gcobj: 0x" << (u64)var(tmp).get_gcobj_ptr() << std::dec << std::endl;
+        return var(make_tagged(vm_type::vm_gcobj, payload));
     }
     static var addr(var* p) {
-        return var(vm_type::vm_addr, p);
+        return var(make_tagged(vm_type::vm_addr, (u64)(std::uintptr_t)p));
     }
 
 public:
     // get value
-    var* addr() const { return val.addr; }
-    u64 ret() const { return val.ret; }
-    f64 num() const { return val.num; }
+    var* addr() const { return (var*)(raw & PAYLOAD_MASK); }
+    u64 ret() const { return raw & PAYLOAD_MASK; }
+    f64 num() const { return bit_cast<f64>(raw); }
 
 public:
-    // get gc object
-    std::string& str() { return *val.gcobj->ptr.str; }
-    nas_vec& vec() { return *val.gcobj->ptr.vec; }
-    nas_hash& hash() { return *val.gcobj->ptr.hash; }
-    nas_func& func() { return *val.gcobj->ptr.func; }
-    nas_upval& upval() { return *val.gcobj->ptr.upval; }
-    nas_ghost& ghost() { return *val.gcobj->ptr.obj; }
-    nas_co& co() { return *val.gcobj->ptr.co; }
-    nas_map& map() { return *val.gcobj->ptr.map; }
+    nas_val* get_gcobj_ptr() const {
+        return (nas_val*)(raw & PAYLOAD_MASK);
+    }
+
+    // get gc object reference
+    std::string& str() { return *get_gcobj_ptr()->ptr.str; }
+    nas_vec& vec() { return *get_gcobj_ptr()->ptr.vec; }
+    nas_hash& hash() { return *get_gcobj_ptr()->ptr.hash; }
+    nas_func& func() { return *get_gcobj_ptr()->ptr.func; }
+    nas_upval& upval() { return *get_gcobj_ptr()->ptr.upval; }
+    nas_ghost& ghost() { return *get_gcobj_ptr()->ptr.obj; }
+    nas_co& co() { return *get_gcobj_ptr()->ptr.co; }
+    nas_map& map() { return *get_gcobj_ptr()->ptr.map; }
 
 public:
     // get const gc object
-    const std::string& str() const { return *val.gcobj->ptr.str; }
-    const nas_vec& vec() const { return *val.gcobj->ptr.vec; }
-    const nas_hash& hash() const { return *val.gcobj->ptr.hash; }
-    const nas_func& func() const { return *val.gcobj->ptr.func; }
-    const nas_upval& upval() const { return *val.gcobj->ptr.upval; }
-    const nas_ghost& ghost() const { return *val.gcobj->ptr.obj; }
-    const nas_co& co() const { return *val.gcobj->ptr.co; }
-    const nas_map& map() const { return *val.gcobj->ptr.map; }
+    const std::string& str() const { return *get_gcobj_ptr()->ptr.str; }
+    const nas_vec& vec() const { return *get_gcobj_ptr()->ptr.vec; }
+    const nas_hash& hash() const { return *get_gcobj_ptr()->ptr.hash; }
+    const nas_func& func() const { return *get_gcobj_ptr()->ptr.func; }
+    const nas_upval& upval() const { return *get_gcobj_ptr()->ptr.upval; }
+    const nas_ghost& ghost() const { return *get_gcobj_ptr()->ptr.obj; }
+    const nas_co& co() const { return *get_gcobj_ptr()->ptr.co; }
+    const nas_map& map() const { return *get_gcobj_ptr()->ptr.map; }
 
 public:
-    bool is_none() const { return type == vm_type::vm_none; }
-    bool is_addr() const { return type == vm_type::vm_addr; }
-    bool is_ret() const { return type == vm_type::vm_ret; }
-    bool is_nil() const { return type == vm_type::vm_nil; }
-    bool is_num() const { return type == vm_type::vm_num; }
+    vm_type type() const {
+        if (is_num()) {
+            return vm_type::vm_num;
+        }
+        return static_cast<vm_type>((raw & TYPE_MASK) >> 48);
+    }
+    bool is_none() const { return type() == vm_type::vm_none; }
+    bool is_addr() const { return type() == vm_type::vm_addr; }
+    bool is_ret() const { return type() == vm_type::vm_ret; }
+    bool is_nil() const { return type() == vm_type::vm_nil; }
+    bool is_num() const {
+        return ((raw & QNAN_BASE) != QNAN_BASE) || // not NaN
+               (raw & TYPE_MASK) == 0; // if is NaN, should be quiet NaN (e.g. std::nan(""))
+    }
+    bool is_gcobj() const {
+        return type() == vm_type::vm_gcobj;
+    }
     bool is_str() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_str;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_str;
     }
     bool is_vec() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_vec;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_vec;
     }
     bool is_hash() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_hash;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_hash;
     }
     bool is_func() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_func;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_func;
     }
     bool is_upval() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_upval;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_upval;
     }
     bool is_ghost() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_ghost;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_ghost;
     }
     bool is_coroutine() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_co;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_co;
     }
     bool is_map() const {
-        return type == vm_type::vm_gcobj &&
-               val.gcobj->type == gc_type::gc_map;
+        return type() == vm_type::vm_gcobj &&
+               get_gcobj_ptr()->type == gc_type::gc_map;
     }
 
 public:
     // convert to number
     f64 to_num() const {
-        return !is_str() ? val.num : util::str_to_num(str().c_str());
+        if (is_num()) {
+            return num();
+        }
+        if (is_str()) {
+            return util::str_to_num(str().c_str());
+        }
+        return 0.0;
     }
     // convert to string
     std::string to_str();
