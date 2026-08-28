@@ -116,9 +116,9 @@ var fmod = func(n, m) {
 }
 
 var clamp = func(value, min, max) {
-    return (value<min)? min:((value>max)? max:value);
+    return (value < min) ? min : ((value>max) ? max : value);
 }
 
 var approx_eq = func(a, b, d = 0.000001) {
-    return abs(a-b)<d;
+    return abs(a - b) < d;
 }

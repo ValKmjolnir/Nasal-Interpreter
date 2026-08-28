@@ -3,7 +3,7 @@ use std.unix;
 
 var process = subprocess.create([
     "./nasal",
-    "test/for_subprocess_test/infinite_loop.nas"
+    "test/subprocess_test/infinite_loop.nas"
 ]);
 
 unix.sleep(1);

@@ -16,7 +16,7 @@ namespace nasal {
 
 enum class vm_type: u8 {
     /* none-gc object */
-    vm_none = 1, // error type, set to 1 to avoid 0x7ff8000000000000 canonical NaN
+    vm_none = 1, // error type, set to 1 to avoid 0x7ff8000000000000 quiet NaN
     vm_addr,     // var* address
     vm_ret,      // return address (program counter)
     vm_nil,      // nil
@@ -95,7 +95,7 @@ private:
     }
 
 public:
-    var() = default;
+    var() { raw = make_tagged(vm_type::vm_none, 0); }
     var(const var&) = default;
     bool operator==(const var& nr) const { return raw == nr.raw; }
     bool operator!=(const var& nr) const { return raw != nr.raw; }
@@ -107,13 +107,7 @@ public:
     static var ret(u64 pc) { return var(make_tagged(vm_type::vm_ret, pc)); }
     static var num(f64 n) { return var(bit_cast<u64>(n)); }
     static var gcobj(nas_val* p) {
-        // std::cout << std::hex << "gcobj: 0x" << (u64)p << std::dec << std::endl;
-        u64 payload = ((u64)(std::uintptr_t)p);
-        // u64 tmp = make_tagged(vm_type::vm_gcobj, payload);
-        // std::cout << std::hex << "after: 0x" << tmp << std::dec << std::endl;
-        // std::cout << std::hex << "type: 0x" << (u64)var(tmp).type() << std::dec << std::endl;
-        // std::cout << std::hex << "gcobj: 0x" << (u64)var(tmp).get_gcobj_ptr() << std::dec << std::endl;
-        return var(make_tagged(vm_type::vm_gcobj, payload));
+        return var(make_tagged(vm_type::vm_gcobj, (u64)(std::uintptr_t)p));
     }
     static var addr(var* p) {
         return var(make_tagged(vm_type::vm_addr, (u64)(std::uintptr_t)p));
