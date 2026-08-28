@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -29,26 +30,28 @@ def find_nasal_interpreter() -> Path | None:
 
 def test_cpp_tests(cpp_compiler: Path, files_dir: Path, include_directory: Path) -> TestResult:
     tr = TestResult(0, 0)
-    test_executable = Path(".") / "test.exe"
+    test_executable = os.path.join(".", "test.exe")
     for file in files_dir.glob("*.cpp"):
         tr.total += 1
         print(f"[INFO] testing {file}")
         res = subprocess.run([str(cpp_compiler), "-std=c++17",
                               "-I", str(include_directory),
-                              "-O3", "-o", str(test_executable), str(file)],
+                              "-O2", "-o", test_executable, str(file)],
                              stdout=subprocess.DEVNULL,
                              stderr=subprocess.PIPE)
         if res.returncode != 0:
-            print(f"[FAIL] {file} failed to compile:", res.stderr.decode())
+            print(f"  [FAIL] {file} failed to compile:", res.stderr.decode())
             continue
-        res = subprocess.run([str(test_executable)], stdout=subprocess.DEVNULL)
+        else:
+            print(f"  [INFO] {file} successfully compiled")
+        res = subprocess.run([test_executable], stdout=subprocess.DEVNULL)
         if res.returncode == 0:
             tr.passed += 1
-            print(f"[INFO] {file} passed")
+            print(f"  [INFO] {file} passed")
         else:
-            print(f"[INFO] {file} failed")
-    if test_executable.exists():
-        test_executable.unlink()
+            print(f"  [INFO] {file} failed")
+    if os.path.exists(test_executable):
+        os.remove(test_executable)
     return tr
 
 def test_util_densemap(cpp_compiler: Path) -> TestResult:
