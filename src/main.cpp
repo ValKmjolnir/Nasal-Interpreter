@@ -116,7 +116,7 @@ void execute(const nasal::cli::cli_config& config) {
 i32 main(i32 argc, const char* argv[]) {
     // output version info
     if (argc <= 1) {
-        std::clog << nasal::cli::logo;
+        std::cout << nasal::cli::logo;
         return 0;
     }
 
