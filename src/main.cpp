@@ -126,9 +126,9 @@ i32 main(i32 argc, const char* argv[]) {
     // run directly or show help
     if (argc == 2) {
         if (config.has(nasal::cli::option::cli_help)) {
-            std::clog << nasal::cli::help;
+            std::cout << nasal::cli::help;
         } else if (config.has(nasal::cli::option::cli_version)) {
-            nasal::cli::version(std::clog, "nasal");
+            nasal::cli::version(std::cout, "nasal");
         } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();

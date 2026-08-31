@@ -717,7 +717,7 @@ var builtin_maketimestamp(context* ctx, gc* ngc) {
 
 var builtin_time_stamp(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return nil;
     }
     auto stamp = object.ghost().get<time_stamp>();
@@ -727,7 +727,7 @@ var builtin_time_stamp(context* ctx, gc* ngc) {
 
 var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
     auto stamp = object.ghost().get<time_stamp>();
@@ -736,7 +736,7 @@ var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
 
 var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
     auto stamp = object.ghost().get<time_stamp>();

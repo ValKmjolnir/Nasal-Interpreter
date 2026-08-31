@@ -730,7 +730,7 @@ var create_new_ghost(var* args, usize size, gc* ngc) {
 
 var set_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
-    if (!res.object_check(ghost_for_test)) {
+    if (!res.ghost_object_check(ghost_for_test)) {
         std::cout << "set_new_ghost: not ghost for test type.\n";
         return nil;
     }
@@ -743,7 +743,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
 var print_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
     // check ghost type by the type name
-    if (!res.object_check(ghost_for_test)) {
+    if (!res.ghost_object_check(ghost_for_test)) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
@@ -765,6 +765,6 @@ We use this function to create a new ghost type:
 
 And we use this function to check if value is the correct ghost type:
 
-`bool var::object_check(const std::string&);`
+`bool var::ghost_object_check(const std::string&);`
 
 The parameter is the name of the ghost type.

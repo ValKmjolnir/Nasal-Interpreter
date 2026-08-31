@@ -209,7 +209,7 @@ public:
     }
     // convert to string
     std::string to_str();
-    inline bool object_check(const std::string&) const;
+    bool ghost_object_check(const std::string&) const;
     friend std::ostream& operator<<(std::ostream&, var&);
 };
 
@@ -421,14 +421,7 @@ const var zero = var::num(0);
 const var one = var::num(1);
 const var nil = var::nil();
 
-inline bool var::object_check(const std::string& name) const {
-    return is_ghost() && ghost().type_name == name && ghost().pointer;
-}
-
 // use to print error log and return error value
-static var nas_err(const std::string& func, const std::string& info) {
-    std::cerr << "[vm] " << func << ": " << info << "\n";
-    return var::none();
-}
+var nas_err(const std::string& func, const std::string& info);
 
 }

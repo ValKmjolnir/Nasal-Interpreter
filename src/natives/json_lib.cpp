@@ -382,7 +382,7 @@ var builtin_json_new(context* ctx, gc* ngc) {
 var builtin_json_stringify(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
     auto object = ctx->localr[2];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::stringify", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
@@ -392,7 +392,7 @@ var builtin_json_stringify(context* ctx, gc* ngc) {
 var builtin_json_parse(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
     auto input_string = ctx->localr[2];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::parse", "expect a json object.");
     }
     if (!input_string.is_str()) {
@@ -404,7 +404,7 @@ var builtin_json_parse(context* ctx, gc* ngc) {
 
 var builtin_json_get_error(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::get_error", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();

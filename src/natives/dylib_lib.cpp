@@ -177,7 +177,7 @@ var builtin_dlopen(context* ctx, gc* ngc) {
 
 var builtin_dlclose(context* ctx, gc* ngc) {
     auto library_pointer = ctx->localr[1];
-    if (!library_pointer.object_check(dynamic_library_type_name)) {
+    if (!library_pointer.ghost_object_check(dynamic_library_type_name)) {
         return nas_err("dylib::dlclose", "\"lib\" is not a valid dynamic lib");
     }
     library_pointer.ghost().clear();
@@ -187,7 +187,7 @@ var builtin_dlclose(context* ctx, gc* ngc) {
 var builtin_dlcallv(context* ctx, gc* ngc) {
     auto function_object = ctx->localr[1];
     auto arguments = ctx->localr[2];
-    if (!function_object.object_check(function_address_type_name)) {
+    if (!function_object.ghost_object_check(function_address_type_name)) {
         return nas_err("dylib::dlcall",
             "\"ptr\" is not a valid function pointer"
         );
@@ -202,7 +202,7 @@ var builtin_dlcallv(context* ctx, gc* ngc) {
 
 var builtin_dlcall(context* ctx, gc* ngc) {
     auto function_object = ctx->localr[1];
-    if (!function_object.object_check(function_address_type_name)) {
+    if (!function_object.ghost_object_check(function_address_type_name)) {
         return nas_err("dylib::dlcall",
             "\"ptr\" is not a valid function pointer"
         );

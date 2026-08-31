@@ -261,6 +261,10 @@ std::string var::to_str() {
     return ss.str();
 }
 
+bool var::ghost_object_check(const std::string& name) const {
+    return is_ghost() && ghost().type_name == name && ghost().pointer;
+}
+
 std::ostream& operator<<(std::ostream& out, var& ref) {
     switch (ref.type()) {
         case vm_type::vm_none:  out << "undefined"; break;
@@ -280,6 +284,11 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         default: break;
     }
     return out;
+}
+
+var nas_err(const std::string& func, const std::string& info) {
+    std::cerr << "[vm] " << func << ": " << info << "\n";
+    return var::none();
 }
 
 }

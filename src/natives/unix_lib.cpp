@@ -61,7 +61,7 @@ var builtin_opendir(context* ctx, gc* ngc) {
 
 var builtin_readdir(context* ctx, gc* ngc) {
     auto handle = ctx->localr[1];
-    if (!handle.object_check(dir_type_name)) {
+    if (!handle.ghost_object_check(dir_type_name)) {
         return nas_err("unix::readdir", "not a valid dir handle");
     }
 #ifdef _MSC_VER
@@ -78,7 +78,7 @@ var builtin_readdir(context* ctx, gc* ngc) {
 
 var builtin_closedir(context* ctx, gc* ngc) {
     auto handle = ctx->localr[1];
-    if (!handle.object_check(dir_type_name)) {
+    if (!handle.ghost_object_check(dir_type_name)) {
         return nas_err("unix::closedir", "not a valid dir handle");
     }
     handle.ghost().clear();

@@ -81,7 +81,7 @@ var builtin_open(context* ctx, gc* ngc) {
 
 var builtin_close(context* ctx, gc* ngc) {
     var file_descriptor = ctx->localr[1];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::close", "not a valid filehandle");
     }
     file_descriptor.ghost().clear();
@@ -93,7 +93,7 @@ var builtin_read(context* ctx, gc* ngc) {
     auto file_descriptor = local[1];
     auto buffer = local[2];
     auto length = local[3];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::read", "not a valid filehandle");
     }
     if (!buffer.is_str() || buffer.get_gcobj_ptr()->immutable) {
@@ -123,7 +123,7 @@ var builtin_write(context* ctx, gc* ngc) {
     auto local = ctx->localr;
     auto file_descriptor = local[1];
     auto source = local[2];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::write", "not a valid filehandle");
     }
     if (!source.is_str()) {
@@ -140,7 +140,7 @@ var builtin_seek(context* ctx, gc* ngc) {
     auto file_descriptor = local[1];
     auto position = local[2];
     auto whence = local[3];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::seek", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(fseek(
@@ -152,7 +152,7 @@ var builtin_seek(context* ctx, gc* ngc) {
 
 var builtin_tell(context* ctx, gc* ngc) {
     auto file_descriptor = ctx->localr[1];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::tell", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(
@@ -162,7 +162,7 @@ var builtin_tell(context* ctx, gc* ngc) {
 
 var builtin_readln(context* ctx, gc* ngc) {
     auto file_descriptor = ctx->localr[1];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::readln", "not a valid filehandle");
     }
     auto result = ngc->alloc(gc_type::gc_str);
@@ -211,7 +211,7 @@ var builtin_stat(context* ctx, gc* ngc) {
 
 var builtin_eof(context* ctx, gc* ngc) {
     auto file_descriptor = ctx->localr[1];
-    if (!file_descriptor.object_check(file_type_name)) {
+    if (!file_descriptor.ghost_object_check(file_type_name)) {
         return nas_err("io::readln", "not a valid filehandle");
     }
     return var::num(static_cast<f64>(

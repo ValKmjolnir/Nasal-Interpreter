@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __nasver__
-#define __nasver__ "12.1.0"
+#define __nasver__ "12.1.1"
 #endif
 
 #include "util/type_alias.hpp"
