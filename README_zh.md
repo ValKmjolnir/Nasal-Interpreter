@@ -55,14 +55,12 @@ __如果有好的意见或建议，欢迎联系我们!__
 
 ## __下载__
 
-现在支持下载预览版(Nightly Build)。
-Windows 平台的预览版解释器现在还没配置相关流水线，
-请耐心等候或者直接在本地编译。
-我们提供了一份 Cmake 文件，可以很方便地在 Visual Studio 中编译:
+现在支持下载预览版(Nightly Build):
 
 * [MacOS-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_macOS)
 * [Linux-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_linux_x86_64)
-* [Windows-nightly-build](#下载) [施工中]
+* [Windows-MSVC-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_windows_x86_64_msvc)
+* [Windows-MINGW-nightly-build](https://github.com/ValKmjolnir/Nasal-Interpreter/releases/tag/next_windows_x86_64_mingw)
 
 ## __编译__
 
