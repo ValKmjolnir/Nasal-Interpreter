@@ -1,7 +1,6 @@
 #include "util/util.hpp"
 
 #include <cmath>
-#include <charconv>
 
 namespace nasal::util {
 
@@ -183,6 +182,61 @@ static f64 oct_to_f64(const char* str) {
     return ret;
 }
 
+// we have the same reason not using atof here
+// just as andy's interpreter does.
+// it is not platform independent, and may have strange output.
+// so we write a new function here to convert str to number manually.
+// but this also makes 0.1+0.2==0.3,
+// not another result that you may get in other languages.
+//
+// prepare to use std::from_chars, but macOS supports it from 26.0
+// for compatibility, we continue using this function.
+static f64 dec_to_f64(const char* str) {
+    f64 ret = 0, num_pow = 0;
+    bool negative = false;
+    while ('0'<=*str && *str<='9') {
+        ret = ret*10+(*str++-'0');
+    }
+    if (!*str) {
+        return ret;
+    }
+    if (*str=='.') {
+        if (!*++str) {
+            return nan("");
+        }
+        num_pow = 0.1;
+        while ('0'<=*str && *str<='9') {
+            ret += num_pow*(*str++-'0');
+            num_pow *= 0.1;
+        }
+        if (!*str) {
+            return ret;
+        }
+    }
+    if (*str!='e' && *str!='E') {
+        return nan("");
+    }
+    if (!*++str) {
+        return nan("");
+    }
+    if (*str=='-' || *str=='+') {
+        negative = (*str++=='-');
+    }
+    if (!*str) {
+        return nan("");
+    }
+    num_pow = 0;
+    while ('0'<=*str && *str<='9') {
+        num_pow = num_pow*10+(*str++-'0');
+    }
+    if (*str) {
+        return nan("");
+    }
+    return negative
+        ? ret * std::pow(10, 1 - num_pow) * 0.1
+        : ret * std::pow(10, num_pow - 1) * 10;
+}
+
 f64 str_to_num(const char* str) {
     bool negative = false;
     f64 res = 0;
@@ -197,11 +251,7 @@ f64 str_to_num(const char* str) {
     } else if (str[0]=='0' && str[1]=='o') {
         res = oct_to_f64(str+2);
     } else {
-        const char* end = str + std::strlen(str);
-        auto [p, ec] = std::from_chars(str, end, res);
-        if (ec != std::errc{} || p != end) {
-            return nan("");
-        }
+        res = dec_to_f64(str);
     }
     return negative ? -res : res;
 }
