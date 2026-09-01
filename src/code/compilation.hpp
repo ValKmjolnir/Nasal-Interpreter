@@ -63,9 +63,9 @@ private:
 
 public:
     compilation(bool enable_limited_mode);
-    void regist_number(const f64);
-    void regist_string(const std::string&);
-    void regist_function(const func_info&);
+    u64 regist_number(const f64);
+    u64 regist_string(const std::string&);
+    u64 regist_function(const func_info&);
     void regist_global(const std::string&);
     u64 number_index(const f64) const;
     u64 string_index(const std::string&) const;

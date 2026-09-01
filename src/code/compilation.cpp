@@ -40,28 +40,31 @@ void compilation::init_native_function(bool limited_mode) {
     }
 }
 
-void compilation::regist_number(const f64 num) {
+u64 compilation::regist_number(const f64 num) {
     if (const_number_map.count(num)) {
-        return;
+        return const_number_map.at(num);
     }
 
     auto size = const_number_map.size();
     const_number_map[num] = size;
     const_number_table.push_back(num);
+    return size;
 }
 
-void compilation::regist_string(const std::string& str) {
+u64 compilation::regist_string(const std::string& str) {
     if (const_string_map.count(str)) {
-        return;
+        return const_string_map.at(str);
     }
 
     auto size = const_string_map.size();
     const_string_map[str] = size;
     const_string_table.push_back(str);
+    return size;
 }
 
-void compilation::regist_function(const func_info& func) {
+u64 compilation::regist_function(const func_info& func) {
     const_function_table.push_back(func);
+    return static_cast<u64>(const_function_table.size() - 1);
 }
 
 void compilation::regist_global(const std::string& name) {

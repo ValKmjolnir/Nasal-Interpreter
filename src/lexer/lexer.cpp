@@ -7,6 +7,7 @@
 #include "lexer/lexer.hpp"
 #include "repl/repl.hpp"
 #include "util/util.hpp"
+#include "util/utf8.hpp"
 #include "util/fs.hpp"
 #include "util/virtual_source.hpp"
 
@@ -116,7 +117,7 @@ std::string lexer::utf8_gen() {
     std::string str = "";
     while (ptr < res.size() && res[ptr] < 0) {
         std::string tmp = "";
-        u32 nbytes = util::utf8_hdchk(res[ptr]);
+        u32 nbytes = utf8::utf8_hdchk(res[ptr]);
         if (!nbytes) {
             ++ptr;
             ++column;
@@ -327,7 +328,7 @@ token lexer::str_gen() {
     ++column;
 
     // if is not utf8, 1+utf8_hdchk should be 1
-    if (begin == '`' && str.length() != 1 + util::utf8_hdchk(str[0])) {
+    if (begin == '`' && str.length() != 1 + utf8::utf8_hdchk(str[0])) {
         err.err("lexer",
             {begin_line, begin_column, line, column, filename},
             "\'`\' is used for string including one character"

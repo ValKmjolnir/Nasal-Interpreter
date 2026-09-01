@@ -39,6 +39,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/code/codegen.cpp
     ${CMAKE_SOURCE_DIR}/src/code/codestream.cpp
     ${CMAKE_SOURCE_DIR}/src/code/compilation.cpp
+    ${CMAKE_SOURCE_DIR}/src/code/constant.cpp
     ${CMAKE_SOURCE_DIR}/src/code/func_info.cpp
     ${CMAKE_SOURCE_DIR}/src/code/opcode.cpp
     ${CMAKE_SOURCE_DIR}/src/dbg/dbg.cpp
@@ -63,6 +64,7 @@ set(NASAL_OBJECT_SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/util/colorful.cpp
     ${CMAKE_SOURCE_DIR}/src/util/filestream.cpp
     ${CMAKE_SOURCE_DIR}/src/util/fs.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/utf8.cpp
     ${CMAKE_SOURCE_DIR}/src/util/util.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc_stat.cpp
     ${CMAKE_SOURCE_DIR}/src/vm/gc.cpp

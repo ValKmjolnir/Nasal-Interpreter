@@ -163,7 +163,7 @@ bool codegen::check_default_const(expr* node) {
     return true;
 }
 
-void codegen::func_gen(function* node) {
+u64 codegen::func_gen(function* node) {
     func_info fi;
 
     // parameter list format check
@@ -284,7 +284,7 @@ void codegen::func_gen(function* node) {
     }
     comp.code_at(jmp_ptr).num = comp.code_size();
 
-    comp.regist_function(fi);
+    return comp.regist_function(fi);
 }
 
 void codegen::call_gen(call_expr* node) {
@@ -1396,7 +1396,7 @@ void codegen::print(std::ostream& out) {
     // print const functions
     for (const auto& func : comp.get_function_table()) {
         out << "  .function ";
-        func.dump(out);
+        func.dump(out, comp);
         out << "\n";
     }
 

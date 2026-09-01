@@ -67,7 +67,7 @@ private:
     void vector_gen(vector_expr*);
     void hash_gen(hash_expr*);
     bool check_default_const(expr*);
-    void func_gen(function*);
+    u64 func_gen(function*);
     void call_gen(call_expr*);
     void call_identifier(identifier*);
     void call_hash_gen(call_hash*);
