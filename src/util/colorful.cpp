@@ -157,6 +157,19 @@ std::ostream& orange(std::ostream& s) {
     return s;
 }
 
+std::ostream& green(std::ostream& s) {
+    if (!enable_color(s)) {
+        return s;
+    }
+
+#ifdef _WIN32
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x02);
+#else
+    s << "\033[32;1m";
+#endif
+    return s;
+}
+
 std::ostream& white(std::ostream& s) {
     if (!enable_color(s)) {
         return s;

@@ -30,12 +30,13 @@ void execute(const nasal::cli::cli_config& config) {
     using clk = std::chrono::high_resolution_clock;
     const auto den = clk::duration::period::den;
 
+    nasal::error err;
     nasal::resource_manager resm;
-    nasal::lexer   lex;
-    nasal::parse   parse;
-    nasal::linker  ld(resm);
+    nasal::lexer lex(err);
+    nasal::parse parse(err);
+    nasal::linker ld(err, resm);
     nasal::compilation comp(config.has(option::cli_limit_mode));
-    nasal::codegen gen(comp, resm);
+    nasal::codegen gen(err, comp, resm);
 
     // lexer scans file to get tokens
     lex.scan(config.input_file_path).chkerr();
@@ -115,7 +116,7 @@ void execute(const nasal::cli::cli_config& config) {
 i32 main(i32 argc, const char* argv[]) {
     // output version info
     if (argc <= 1) {
-        std::clog << nasal::cli::logo;
+        std::cout << nasal::cli::logo;
         return 0;
     }
 
@@ -125,9 +126,9 @@ i32 main(i32 argc, const char* argv[]) {
     // run directly or show help
     if (argc == 2) {
         if (config.has(nasal::cli::option::cli_help)) {
-            std::clog << nasal::cli::help;
+            std::cout << nasal::cli::help;
         } else if (config.has(nasal::cli::option::cli_version)) {
-            nasal::cli::version(std::clog, "nasal");
+            nasal::cli::version(std::cout, "nasal");
         } else if (config.has(nasal::cli::option::cli_repl_mode)) {
             auto repl = std::make_unique<nasal::repl::repl>();
             repl->execute();

@@ -1,6 +1,7 @@
 #include "nasal.hpp"
 #include "cli/cli.hpp"
 #include "util/util.hpp"
+#include "util/colorful.hpp"
 
 #include <iostream>
 #include <thread>
@@ -29,9 +30,11 @@ cli_config parse(const std::vector<std::string>& args) {
 std::ostream& help(std::ostream& out) {
     out
     << "\n"
+    << cyan
     << "     ,--#-,\n"
     << "<3  / \\____\\  <3\n"
     << "    |_|__A_|\n"
+    << reset
     << "\nnasal <option>\n"
     << "option:\n"
     << "   -h,   --help       | get help.\n"
@@ -98,29 +101,32 @@ std::ostream& nasal_linter_help(std::ostream& out) {
 }
 
 std::ostream& logo(std::ostream& out) {
+    const auto cores = std::thread::hardware_concurrency();
     out
     << "\n"
-    << "       __                _\n"
-    << "    /\\ \\ \\__ _ ___  __ _| |\n"
-    << "   /  \\/ / _` / __|/ _` | |\n"
-    << "  / /\\  / (_| \\__ \\ (_| | |\n"
-    << "  \\_\\ \\/ \\__,_|___/\\__,_|_|\n"
-    << "\n"
+    << cyan << "         __                _      " << reset
     << "ver  : " << __nasver__
     << " " << nasal::util::get_platform()
     << " " << nasal::util::get_arch()
     << " (" << __DATE__ << " " << __TIME__ << ")\n"
-    << "std  : c++ " << __cplusplus << "\n"
-    << "core : " << std::thread::hardware_concurrency() << " core(s)\n"
+    << cyan << "      /\\ \\ \\__ _ ___  __ _| |     " << reset
+    << "std  : c++" << __cplusplus << "\n"
+    << cyan << "     /  \\/ / _` / __|/ _` | |     " << reset
+    << "core : " << cores << " core" << (cores > 1 ? "s" : "") << "\n"
+    << cyan << "    / /\\  / (_| \\__ \\ (_| | |     " << reset
     << "repo : https://github.com/ValKmjolnir/Nasal-Interpreter\n"
+    << cyan << "    \\_\\ \\/ \\__,_|___/\\__,_|_|     " << reset
     << "repo : https://gitee.com/valkmjolnir/Nasal-Interpreter\n"
+    << cyan << "  ------------------------------  " << reset
     << "wiki : https://wiki.flightgear.org/Nasal_scripting_language\n"
-    << "\n"
-    << "presented by fgprc members:\n"
+    << cyan << "  Not Another Scripting Language  " << reset
+    << "Copyright (C) 2019-2026 FGPRC members. (" << green << "GPLv2" << reset << ")"
+    << "\n\n"
+    << "Presented by FGPRC members:\n"
     << " - http://fgprc.org\n"
     << " - http://fgprc.org.cn\n"
     << "\n"
-    << "input <nasal -h> to get help.\n\n";
+    << "Input <nasal -h> to get help.\n\n";
     return out;
 }
 

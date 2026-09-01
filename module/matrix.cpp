@@ -28,8 +28,8 @@ var nas_vec2_add(var* args, usize size, gc* ngc) {
     if (v0.size() != 2 || v1.size() != 2)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num() + v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num() + v1[1].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num() + v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num() + v1[1].to_num()));
     return res;
 }
 
@@ -41,8 +41,8 @@ var nas_vec2_sub(var* args, usize size, gc* ngc) {
     if (v0.size() != 2 || v1.size() != 2)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()-v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()-v1[1].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()-v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()-v1[1].to_num()));
     return res;
 }
 
@@ -54,8 +54,8 @@ var nas_vec2_mult(var* args, usize size, gc* ngc) {
     if (v0.size() != 2 || v1.size() != 2)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()*v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()*v1[1].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()*v1[1].to_num()));
     return res;
 }
 
@@ -67,8 +67,8 @@ var nas_vec2_div(var* args, usize size, gc* ngc) {
     if (v0.size() != 2 || v1.size() != 2)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()/v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()/v1[1].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()/v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()/v1[1].to_num()));
     return res;
 }
 
@@ -79,8 +79,8 @@ var nas_vec2_neg(var* args, usize size, gc* ngc) {
     if (v0.size() != 2)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(-v0[0].num()));
-    res.vec().elems.push_back(var::num(-v0[1].num()));
+    res.vec().elems.push_back(var::num(-v0[0].to_num()));
+    res.vec().elems.push_back(var::num(-v0[1].to_num()));
     return res;
 }
 
@@ -90,8 +90,8 @@ var nas_vec2_norm(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 2)
         return nil;
-    auto x = v0[0].num();
-    auto y = v0[1].num();
+    auto x = v0[0].to_num();
+    auto y = v0[1].to_num();
     auto t = std::sqrt(x * x + y * y);
     var res = ngc->alloc(gc_type::gc_vec);
     res.vec().elems.push_back(var::num(x / t));
@@ -105,8 +105,8 @@ var nas_vec2_len(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 2)
         return nil;
-    auto x = v0[0].num();
-    auto y = v0[1].num();
+    auto x = v0[0].to_num();
+    auto y = v0[1].to_num();
     return var::num(std::sqrt(x * x + y * y));
 }
 
@@ -117,7 +117,7 @@ var nas_vec2_dot(var* args, usize size, gc* ngc) {
     auto& v1 = args[1].vec().elems;
     if (v0.size() != 2 || v1.size() != 2)
         return nil;
-    return var::num(v0[0].num() * v1[0].num() + v0[1].num() * v1[1].num());
+    return var::num(v0[0].to_num() * v1[0].to_num() + v0[1].to_num() * v1[1].to_num());
 }
 
 var nas_vec3_add(var* args, usize size, gc* ngc) {
@@ -128,9 +128,9 @@ var nas_vec3_add(var* args, usize size, gc* ngc) {
     if (v0.size() != 3 || v1.size() != 3)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()+v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()+v1[1].num()));
-    res.vec().elems.push_back(var::num(v0[2].num()+v1[2].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()+v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()+v1[1].to_num()));
+    res.vec().elems.push_back(var::num(v0[2].to_num()+v1[2].to_num()));
     return res;
 }
 
@@ -142,9 +142,9 @@ var nas_vec3_sub(var* args, usize size, gc* ngc) {
     if (v0.size() != 3 || v1.size() != 3)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()-v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()-v1[1].num()));
-    res.vec().elems.push_back(var::num(v0[2].num()-v1[2].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()-v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()-v1[1].to_num()));
+    res.vec().elems.push_back(var::num(v0[2].to_num()-v1[2].to_num()));
     return res;
 }
 
@@ -156,9 +156,9 @@ var nas_vec3_mult(var* args, usize size, gc* ngc) {
     if (v0.size() != 3 || v1.size() != 3)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()*v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()*v1[1].num()));
-    res.vec().elems.push_back(var::num(v0[2].num()*v1[2].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()*v1[1].to_num()));
+    res.vec().elems.push_back(var::num(v0[2].to_num()*v1[2].to_num()));
     return res;
 }
 
@@ -170,9 +170,9 @@ var nas_vec3_div(var* args, usize size, gc* ngc) {
     if (v0.size() != 3 || v1.size() != 3)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()/v1[0].num()));
-    res.vec().elems.push_back(var::num(v0[1].num()/v1[1].num()));
-    res.vec().elems.push_back(var::num(v0[2].num()/v1[2].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()/v1[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[1].to_num()/v1[1].to_num()));
+    res.vec().elems.push_back(var::num(v0[2].to_num()/v1[2].to_num()));
     return res;
 }
 
@@ -183,9 +183,9 @@ var nas_vec3_neg(var* args, usize size, gc* ngc) {
     if (v0.size() != 3)
         return nil;
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(-v0[0].num()));
-    res.vec().elems.push_back(var::num(-v0[1].num()));
-    res.vec().elems.push_back(var::num(-v0[2].num()));
+    res.vec().elems.push_back(var::num(-v0[0].to_num()));
+    res.vec().elems.push_back(var::num(-v0[1].to_num()));
+    res.vec().elems.push_back(var::num(-v0[2].to_num()));
     return res;
 }
 
@@ -195,9 +195,9 @@ var nas_vec3_norm(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 3)
         return nil;
-    auto x = v0[0].num();
-    auto y = v0[1].num();
-    auto z = v0[2].num();
+    auto x = v0[0].to_num();
+    auto y = v0[1].to_num();
+    auto z = v0[2].to_num();
     auto t = std::sqrt(x*x+y*y+z*z);
     var res = ngc->alloc(gc_type::gc_vec);
     res.vec().elems.push_back(var::num(x/t));
@@ -212,9 +212,9 @@ var nas_vec3_len(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 3)
         return nil;
-    auto x = v0[0].num();
-    auto y = v0[1].num();
-    auto z = v0[2].num();
+    auto x = v0[0].to_num();
+    auto y = v0[1].to_num();
+    auto z = v0[2].to_num();
     return var::num(std::sqrt(x*x+y*y+z*z));
 }
 
@@ -224,11 +224,11 @@ var nas_rotate_x(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 3)
         return nil;
-    auto angle = args[1].num();
+    auto angle = args[1].to_num();
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()));
-    res.vec().elems.push_back(var::num(v0[2].num()*std::sin(angle)+v0[1].num()*std::cos(angle)));
-    res.vec().elems.push_back(var::num(v0[2].num()*std::cos(angle)-v0[1].num()*std::sin(angle)));
+    res.vec().elems.push_back(var::num(v0[0].to_num()));
+    res.vec().elems.push_back(var::num(v0[2].to_num()*std::sin(angle)+v0[1].to_num()*std::cos(angle)));
+    res.vec().elems.push_back(var::num(v0[2].to_num()*std::cos(angle)-v0[1].to_num()*std::sin(angle)));
     return res;
 }
 
@@ -238,11 +238,11 @@ var nas_rotate_y(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 3)
         return nil;
-    auto angle = args[1].num();
+    auto angle = args[1].to_num();
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()*std::cos(angle)-v0[2].num()*std::sin(angle)));
-    res.vec().elems.push_back(var::num(v0[1].num()));
-    res.vec().elems.push_back(var::num(v0[0].num()*std::sin(angle)+v0[2].num()*std::cos(angle)));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*std::cos(angle)-v0[2].to_num()*std::sin(angle)));
+    res.vec().elems.push_back(var::num(v0[1].to_num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*std::sin(angle)+v0[2].to_num()*std::cos(angle)));
     return res;
 }
 
@@ -252,11 +252,11 @@ var nas_rotate_z(var* args, usize size, gc* ngc) {
     auto& v0 = args[0].vec().elems;
     if (v0.size() != 3)
         return nil;
-    auto angle = args[1].num();
+    auto angle = args[1].to_num();
     var res = ngc->alloc(gc_type::gc_vec);
-    res.vec().elems.push_back(var::num(v0[0].num()*std::cos(angle)-v0[1].num()*std::sin(angle)));
-    res.vec().elems.push_back(var::num(v0[0].num()*std::sin(angle)+v0[1].num()*std::cos(angle)));
-    res.vec().elems.push_back(var::num(v0[2].num()));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*std::cos(angle)-v0[1].to_num()*std::sin(angle)));
+    res.vec().elems.push_back(var::num(v0[0].to_num()*std::sin(angle)+v0[1].to_num()*std::cos(angle)));
+    res.vec().elems.push_back(var::num(v0[2].to_num()));
     return res;
 }
 
@@ -267,7 +267,11 @@ var nas_vec3_dot(var* args, usize size, gc* ngc) {
     auto& v1 = args[1].vec().elems;
     if (v0.size() != 3 || v1.size() != 3)
         return nil;
-    return var::num(v0[0].num()*v1[0].num()+v0[1].num()*v1[1].num()+v0[2].num()*v1[2].num());
+    return var::num(
+        v0[0].to_num()*v1[0].to_num() +
+        v0[1].to_num()*v1[1].to_num() +
+        v0[2].to_num()*v1[2].to_num()
+    );
 }
 
 module_func_info func_tbl[] = {

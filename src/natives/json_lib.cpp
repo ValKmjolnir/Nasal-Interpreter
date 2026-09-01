@@ -92,7 +92,7 @@ public:
 };
 
 std::string json::var_generate(var& value) {
-    switch (value.type) {
+    switch (value.type()) {
         case vm_type::vm_num: {
             std::stringstream out;
             out << value.num();
@@ -105,7 +105,7 @@ std::string json::var_generate(var& value) {
             return out.str();
         }
         case vm_type::vm_gcobj:
-            switch (value.val.gcobj->type) {
+            switch (value.get_gcobj_ptr()->type) {
                 case gc_type::gc_str: return "\"" + value.str() + "\"";
                 case gc_type::gc_vec: return vector_generate(value.vec());
                 case gc_type::gc_hash: return hash_generate(value.hash());
@@ -301,15 +301,15 @@ void json::hash_member(nas_hash& hash, gc* ngc) {
     }
     match(json_token_type::tok_colon);
     if (this_token.type==json_token_type::tok_lbrace) {
-        hash.elems.insert({name, hash_object_generate(ngc)});
+        hash.elems.insert(name, hash_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_lbrkt) {
-        hash.elems.insert({name, vector_object_generate(ngc)});
+        hash.elems.insert(name, vector_object_generate(ngc));
     } else if (this_token.type==json_token_type::tok_str ||
         this_token.type==json_token_type::tok_bool) {
-        hash.elems.insert({name, ngc->alloc_str(this_token.content)});
+        hash.elems.insert(name, ngc->alloc_str(this_token.content));
         next();
     } else if (this_token.type==json_token_type::tok_num) {
-        hash.elems.insert({name, var::num(util::str_to_num(this_token.content.c_str()))});
+        hash.elems.insert(name, var::num(util::str_to_num(this_token.content.c_str())));
         next();
     }
 }
@@ -382,7 +382,7 @@ var builtin_json_new(context* ctx, gc* ngc) {
 var builtin_json_stringify(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
     auto object = ctx->localr[2];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::stringify", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();
@@ -392,7 +392,7 @@ var builtin_json_stringify(context* ctx, gc* ngc) {
 var builtin_json_parse(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
     auto input_string = ctx->localr[2];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::parse", "expect a json object.");
     }
     if (!input_string.is_str()) {
@@ -404,7 +404,7 @@ var builtin_json_parse(context* ctx, gc* ngc) {
 
 var builtin_json_get_error(context* ctx, gc* ngc) {
     auto json_object = ctx->localr[1];
-    if (!json_object.object_check("nasal::json")) {
+    if (!json_object.ghost_object_check("nasal::json")) {
         return nas_err("json::get_error", "expect a json object.");
     }
     auto json_ptr = json_object.ghost().get<json>();

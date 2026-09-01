@@ -32,6 +32,7 @@ struct nasal_builtin_registry {
 };
 
 void load_standard_builtin();
+void load_eval_builtin();
 void load_io_builtin();
 void load_math_builtin();
 void load_bits_builtin();

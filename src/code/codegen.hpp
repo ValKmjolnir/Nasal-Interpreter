@@ -24,7 +24,7 @@ namespace nasal {
 
 class codegen {
 private:
-    error err;
+    error& err;
     compilation& comp;
     const resource_manager& resm;
 
@@ -66,6 +66,7 @@ private:
     void bool_gen(bool_literal*);
     void vector_gen(vector_expr*);
     void hash_gen(hash_expr*);
+    bool check_default_const(expr*);
     void func_gen(function*);
     void call_gen(call_expr*);
     void call_identifier(identifier*);
@@ -104,7 +105,8 @@ private:
     void ret_gen(return_expr*);
 
 public:
-    codegen(compilation& c, const resource_manager& r): comp(c), resm(r) {}
+    codegen(error& e, compilation& c, const resource_manager& r):
+        err(e), comp(c), resm(r) {}
     const error& compile(code_block*, bool);
     void print(std::ostream&);
     void symbol_dump(std::ostream&) const;

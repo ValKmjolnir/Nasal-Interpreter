@@ -16,7 +16,7 @@ private:
     u64 in_loop_depth; // count loop block
     const token* toks;
     code_block* root;
-    error err;
+    error& err;
 
 private:
     const auto& this_span() const { return toks[ptr].loc; }
@@ -161,9 +161,9 @@ public:
     }
 
 public:
-    parse(): ptr(0), in_func_depth(0),
+    parse(error& e): ptr(0), in_func_depth(0),
              in_loop_depth(0), toks(nullptr),
-             root(nullptr) {}
+             root(nullptr), err(e) {}
     ~parse() { delete root; }
     const error& compile(const std::vector<token>&);
     static void easter_egg();

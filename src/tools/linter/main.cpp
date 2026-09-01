@@ -10,8 +10,9 @@
 
 void check_single_file(nasal::linter::checker_manager& cm,
                        const std::string& file) {
-    nasal::lexer lex;
-    nasal::parse parse;
+    nasal::error err;
+    nasal::lexer lex(err);
+    nasal::parse parse(err);
 
     if (lex.scan(file).geterr()) {
         return;

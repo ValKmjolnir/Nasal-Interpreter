@@ -175,7 +175,7 @@ var builtin_subprocess_create(context* ctx, gc* ngc) {
 
 var builtin_subprocess_active(context* ctx, gc* ngc) {
     auto obj = ctx->localr[1];
-    if (!obj.object_check(subprocess::name())) {
+    if (!obj.ghost_object_check(subprocess::name())) {
         return nas_err("subprocess::active",
             "need correct subprocess object"
         );
@@ -205,7 +205,7 @@ var builtin_subprocess_active(context* ctx, gc* ngc) {
 
 var builtin_subprocess_terminate(context* ctx, gc* ngc) {
     auto obj = ctx->localr[1];
-    if (!obj.object_check(subprocess::name())) {
+    if (!obj.ghost_object_check(subprocess::name())) {
         return nas_err("subprocess::terminate",
             "need correct subprocess object"
         );

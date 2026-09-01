@@ -21,10 +21,10 @@ std::ostream& operator<<(std::ostream& out, nas_vec& vec) {
 }
 
 var nas_hash::get_value(const std::string& key) {
-    if (elems.count(key)) {
+    if (elems.contains(key)) {
         return elems.at(key);
     }
-    if (!elems.count("parents")) {
+    if (!elems.contains("parents")) {
         return var::none();
     }
 
@@ -45,10 +45,10 @@ var nas_hash::get_value(const std::string& key) {
 }
 
 var* nas_hash::get_memory(const std::string& key) {
-    if (elems.count(key)) {
+    if (elems.contains(key)) {
         return &elems.at(key);
     }
-    if (!elems.count("parents")) {
+    if (!elems.contains("parents")) {
         return nullptr;
     }
 
@@ -94,8 +94,8 @@ std::ostream& operator<<(std::ostream& out, nas_func& func) {
     out << "func(";
 
     std::vector<std::string> argument_list = {};
-    argument_list.resize(func.keys.size());
-    for (const auto& key : func.keys) {
+    argument_list.resize(func.param_index_map.size());
+    for (const auto& key : func.param_index_map) {
         argument_list[key.second-1] = key.first;
     }
 
@@ -120,7 +120,7 @@ void nas_func::clear() {
     dynamic_parameter_index = -1;
     local.clear();
     upval.clear();
-    keys.clear();
+    param_index_map.clear();
 }
 
 void nas_ghost::set(const std::string& ghost_type_name,
@@ -167,14 +167,14 @@ std::ostream& operator<<(std::ostream& out, const nas_co& co) {
 }
 
 var nas_map::get_value(const std::string& key) {
-    if (mapper.count(key)) {
+    if (mapper.contains(key)) {
         return *mapper.at(key);
     }
     return var::none();
 }
 
 var* nas_map::get_memory(const std::string& key) {
-    if (mapper.count(key)) {
+    if (mapper.contains(key)) {
         return mapper.at(key);
     }
     return nullptr;
@@ -249,7 +249,7 @@ void nas_val::clear() {
 std::string var::to_str() {
     if (is_str()) {
         return str();
-    } else if (type == vm_type::vm_num) {
+    } else if (is_num()) {
         auto tmp = std::to_string(num());
         tmp.erase(tmp.find_last_not_of('0') + 1, std::string::npos);
         tmp.erase(tmp.find_last_not_of('.') + 1, std::string::npos);
@@ -261,13 +261,17 @@ std::string var::to_str() {
     return ss.str();
 }
 
+bool var::ghost_object_check(const std::string& name) const {
+    return is_ghost() && ghost().type_name == name && ghost().pointer;
+}
+
 std::ostream& operator<<(std::ostream& out, var& ref) {
-    switch (ref.type) {
+    switch (ref.type()) {
         case vm_type::vm_none:  out << "undefined"; break;
         case vm_type::vm_nil:   out << "nil";       break;
-        case vm_type::vm_num:   out << ref.val.num; break;
+        case vm_type::vm_num:   out << ref.num(); break;
         case vm_type::vm_gcobj:
-            switch (ref.val.gcobj->type) {
+            switch (ref.get_gcobj_ptr()->type) {
                 case gc_type::gc_str:   out << ref.str();   break;
                 case gc_type::gc_vec:   out << ref.vec();   break;
                 case gc_type::gc_hash:  out << ref.hash();  break;
@@ -280,6 +284,11 @@ std::ostream& operator<<(std::ostream& out, var& ref) {
         default: break;
     }
     return out;
+}
+
+var nas_err(const std::string& func, const std::string& info) {
+    std::cerr << "[vm] " << func << ": " << info << "\n";
+    return var::none();
 }
 
 }

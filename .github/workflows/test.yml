@@ -17,7 +17,9 @@ jobs:
         mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
         make -j6
     - name: Test
-      run: make test
+      run: |
+        make test
+        python3 tools/test.py
     
   linux-x86_64:
     runs-on: ubuntu-latest
@@ -28,4 +30,6 @@ jobs:
         mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
         make -j6
     - name: Test
-      run: make test
+      run: |
+        make test
+        python3 tools/test.py

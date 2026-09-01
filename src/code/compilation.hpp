@@ -6,6 +6,7 @@
 
 #include "util/type_alias.hpp"
 #include "code/opcode.hpp"
+#include "code/func_info.hpp"
 #include "natives/registry.hpp"
 
 namespace nasal {
@@ -19,6 +20,9 @@ private:
     // constant strings
     std::unordered_map<std::string, u64> const_string_map;
     std::vector<std::string> const_string_table;
+
+    // constant nasal function
+    std::vector<func_info> const_function_table;
 
     // native functions (intrinsics)
     std::unordered_map<std::string, usize> native_function_mapper;
@@ -42,7 +46,9 @@ private:
         // subprocess
         "__subprocess_create",
         "__subprocess_active",
-        "__subprocess_terminate"
+        "__subprocess_terminate",
+        // eval
+        "__compile"
     };
 
     // generated opcodes
@@ -59,6 +65,7 @@ public:
     compilation(bool enable_limited_mode);
     void regist_number(const f64);
     void regist_string(const std::string&);
+    void regist_function(const func_info&);
     void regist_global(const std::string&);
     u64 number_index(const f64) const;
     u64 string_index(const std::string&) const;
@@ -78,6 +85,7 @@ public:
     const auto& get_code() const { return code; }
     const auto& get_number_table() const { return const_number_table; }
     const auto& get_string_table() const { return const_string_table; }
+    const auto& get_function_table() const { return const_function_table; }
     const auto& get_native_functions() const { return native_function; }
     const auto& get_globals() const { return global; }
 };

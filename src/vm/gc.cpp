@@ -33,11 +33,11 @@ void gc::mark() {
     while (!bfs.empty()) {
         var value = bfs.front();
         bfs.pop();
-        if (value.type != vm_type::vm_gcobj) {
+        if (value.type() != vm_type::vm_gcobj) {
             continue;
         }
-        if (value.val.gcobj->mark != nas_val::gc_status::uncollected &&
-            value.val.gcobj->mark != nas_val::gc_status::alloc_in_sweep_stage) {
+        if (value.get_gcobj_ptr()->mark != nas_val::gc_status::uncollected &&
+            value.get_gcobj_ptr()->mark != nas_val::gc_status::alloc_in_sweep_stage) {
             continue;
         }
         mark_var(bfs, value);
@@ -48,13 +48,13 @@ void gc::mark_context_root(std::queue<var>& bfs_queue) {
     // scan global
     for (usize i = 0; i < main_context_global_size; ++i) {
         auto& val = main_context_global[i];
-        if (val.type > vm_type::vm_num) {
+        if (val.type() > vm_type::vm_num) {
             bfs_queue.push(val);
         }
     }
     // scan now running context, this context maybe related to coroutine or main
     for (var* i = running_context->stack; i <= running_context->top; ++i) {
-        if (i->type > vm_type::vm_num) {
+        if (i->type() > vm_type::vm_num) {
             bfs_queue.push(*i);
         }
     }
@@ -68,7 +68,7 @@ void gc::mark_context_root(std::queue<var>& bfs_queue) {
 
     // coroutine is running, so scan main process stack from mctx
     for (var* i = main_context.stack; i <= main_context.top; ++i) {
-        if (i->type > vm_type::vm_num) {
+        if (i->type() > vm_type::vm_num) {
             bfs_queue.push(*i);
         }
     }
@@ -77,8 +77,8 @@ void gc::mark_context_root(std::queue<var>& bfs_queue) {
 }
 
 void gc::mark_var(std::queue<var>& bfs_queue, var& value) {
-    value.val.gcobj->mark = nas_val::gc_status::found;
-    switch (value.val.gcobj->type) {
+    value.get_gcobj_ptr()->mark = nas_val::gc_status::found;
+    switch (value.get_gcobj_ptr()->type) {
         case gc_type::gc_vec: mark_vec(bfs_queue, value.vec()); break;
         case gc_type::gc_hash: mark_hash(bfs_queue, value.hash()); break;
         case gc_type::gc_func: mark_func(bfs_queue, value.func()); break;
@@ -92,7 +92,7 @@ void gc::mark_var(std::queue<var>& bfs_queue, var& value) {
 
 void gc::mark_vec(std::queue<var>& bfs_queue, nas_vec& vec) {
     for (auto& i : vec.elems) {
-        if (i.type > vm_type::vm_num) {
+        if (i.type() > vm_type::vm_num) {
             bfs_queue.push(i);
         }
     }
@@ -100,7 +100,7 @@ void gc::mark_vec(std::queue<var>& bfs_queue, nas_vec& vec) {
 
 void gc::mark_hash(std::queue<var>& bfs_queue, nas_hash& hash) {
     for (auto& i : hash.elems) {
-        if (i.second.type > vm_type::vm_num) {
+        if (i.second.type() > vm_type::vm_num) {
             bfs_queue.push(i.second);
         }
     }
@@ -108,7 +108,7 @@ void gc::mark_hash(std::queue<var>& bfs_queue, nas_hash& hash) {
 
 void gc::mark_func(std::queue<var>& bfs_queue, nas_func& function) {
     for (auto& i : function.local) {
-        if (i.type > vm_type::vm_num) {
+        if (i.type() > vm_type::vm_num) {
             bfs_queue.push(i);
         }
     }
@@ -120,7 +120,7 @@ void gc::mark_func(std::queue<var>& bfs_queue, nas_func& function) {
 void gc::mark_upval(std::queue<var>& bfs_queue, nas_upval& upval) {
     if (upval.on_stack) {
         for (u64 i = 0; i < upval.size; ++i) {
-            if (upval.stack_frame_offset[i].type > vm_type::vm_num) {
+            if (upval.stack_frame_offset[i].type() > vm_type::vm_num) {
                 bfs_queue.push(upval.stack_frame_offset[i]);
             }
         }
@@ -128,7 +128,7 @@ void gc::mark_upval(std::queue<var>& bfs_queue, nas_upval& upval) {
     }
 
     for (auto& i : upval.elems) {
-        if (i.type > vm_type::vm_num) {
+        if (i.type() > vm_type::vm_num) {
             bfs_queue.push(i);
         }
     }
@@ -145,7 +145,7 @@ void gc::mark_co(std::queue<var>& bfs_queue, nas_co& co) {
     bfs_queue.push(co.ctx.funcr);
     bfs_queue.push(co.ctx.upvalr);
     for (var* i = co.ctx.stack; i <= co.ctx.top; ++i) {
-        if (i->type > vm_type::vm_num) {
+        if (i->type() > vm_type::vm_num) {
             bfs_queue.push(*i);
         }
     }
@@ -153,7 +153,7 @@ void gc::mark_co(std::queue<var>& bfs_queue, nas_co& co) {
 
 void gc::mark_map(std::queue<var>& bfs_queue, nas_map& mp) {
     for (const auto& i : mp.mapper) {
-        if (i.second->type > vm_type::vm_num) {
+        if (i.second->type() > vm_type::vm_num) {
             bfs_queue.push(*i.second);
         }
     }
@@ -240,7 +240,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
             continue;
         }
         strs[i] = var::gcobj(new nas_val(gc_type::gc_str));
-        strs[i].val.gcobj->immutable = true;
+        strs[i].get_gcobj_ptr()->immutable = true;
         strs[i].str() = constant_strings[i];
         total_object_count += strs[i].str().size();
         total_object_count += sizeof(std::string);
@@ -254,7 +254,7 @@ void gc::init(const std::vector<std::string>& constant_strings,
             continue;
         }
         env_argv[i] = var::gcobj(new nas_val(gc_type::gc_str));
-        env_argv[i].val.gcobj->immutable = true;
+        env_argv[i].get_gcobj_ptr()->immutable = true;
         env_argv[i].str() = argv[i];
         total_object_count += env_argv[i].str().size();
         total_object_count += sizeof(std::string);
@@ -270,7 +270,7 @@ void gc::clear() {
         unused[i].clear();
     }
     for (auto& i : strs) {
-        delete i.val.gcobj;
+        delete i.get_gcobj_ptr();
     }
     strs.clear();
     env_argv.clear();
@@ -299,7 +299,7 @@ var gc::alloc(const gc_type type) {
     }
 
     var ret = var::gcobj(unused[index].back());
-    ret.val.gcobj->clear();
+    ret.get_gcobj_ptr()->clear();
 
     // if incremental sweep stage, mark it with special state.
     // to avoid miss-marking objects inside them, because mark stage
@@ -307,7 +307,7 @@ var gc::alloc(const gc_type type) {
     // if we mark it with "found" mark, objects inside it will not be marked
     // so they may be treated as unreferenced, which is not expected.
     // be aware that it will be collected in next gc cycle
-    ret.val.gcobj->mark = in_incremental_sweep_stage
+    ret.get_gcobj_ptr()->mark = in_incremental_sweep_stage
         ? nas_val::gc_status::alloc_in_sweep_stage
         : nas_val::gc_status::uncollected;
     unused[index].pop_back();

@@ -52,7 +52,7 @@ var builtin_println(context* ctx, gc* ngc) {
 }
 
 var builtin_exit(context* ctx, gc* ngc) {
-    std::exit(ctx->localr[1].num());
+    std::exit(ctx->localr[1].to_num());
     return nil;
 }
 
@@ -219,9 +219,9 @@ var builtin_id(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
     std::stringstream ss;
     ss << "0";
-    if (val.type > vm_type::vm_num) {
+    if (val.type() > vm_type::vm_num) {
         ss << "x" << std::hex;
-        ss << reinterpret_cast<u64>(val.val.gcobj) << std::dec;
+        ss << reinterpret_cast<u64>(val.get_gcobj_ptr()) << std::dec;
     }
     return ngc->alloc_str(ss.str());
 }
@@ -236,12 +236,12 @@ var builtin_int(context* ctx, gc* ngc) {
 
 var builtin_floor(context* ctx, gc* ngc) {
     auto value = ctx->localr[1];
-    return var::num(std::floor(value.num()));
+    return var::num(std::floor(value.to_num()));
 }
 
 var builtin_ceil(context* ctx, gc* ngc) {
     auto value = ctx->localr[1];
-    return var::num(std::ceil(value.num()));
+    return var::num(std::ceil(value.to_num()));
 }
 
 var builtin_num(context* ctx, gc* ngc) {
@@ -281,10 +281,10 @@ var builtin_size(context* ctx, gc* ngc) {
     auto val = ctx->localr[1];
 
     usize num = 0;
-    switch (val.type) {
+    switch (val.type()) {
         case vm_type::vm_num: return val;
         case vm_type::vm_gcobj:
-            switch (val.val.gcobj->type) {
+            switch (val.get_gcobj_ptr()->type) {
                 case gc_type::gc_str:  num = val.str().length(); break;
                 case gc_type::gc_vec:  num = val.vec().size(); break;
                 case gc_type::gc_hash: num = val.hash().size(); break;
@@ -313,7 +313,7 @@ var builtin_contains(context* ctx, gc* ngc) {
     if (!hash.is_hash() || !key.is_str()) {
         return zero;
     }
-    return hash.hash().elems.count(key.str()) ? one : zero;
+    return hash.hash().elems.contains(key.str()) ? one : zero;
 }
 
 var builtin_delete(context* ctx, gc* ngc) {
@@ -326,7 +326,7 @@ var builtin_delete(context* ctx, gc* ngc) {
     if (!key.is_str()) {
         return nil;
     }
-    if (hash.hash().elems.count(key.str())) {
+    if (hash.hash().elems.contains(key.str())) {
         hash.hash().elems.erase(key.str());
     }
     return nil;
@@ -369,12 +369,12 @@ var builtin_find(context* ctx, gc* ngc) {
 }
 
 var builtin_type(context* ctx, gc* ngc) {
-    switch (ctx->localr[1].type) {
+    switch (ctx->localr[1].type()) {
         case vm_type::vm_none: return ngc->alloc_str("undefined");
         case vm_type::vm_nil: return ngc->alloc_str("nil");
         case vm_type::vm_num: return ngc->alloc_str("num");
         case vm_type::vm_gcobj:
-            switch (ctx->localr[1].val.gcobj->type) {
+            switch (ctx->localr[1].get_gcobj_ptr()->type) {
                 case gc_type::gc_str: return ngc->alloc_str("str");
                 case gc_type::gc_vec: return ngc->alloc_str("vec");
                 case gc_type::gc_hash: return ngc->alloc_str("hash");
@@ -496,7 +496,7 @@ var builtin_chr(context* ctx, gc* ngc) {
         "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷",
         "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
     };
-    auto num = static_cast<i32>(ctx->localr[1].num());
+    auto num = static_cast<i32>(ctx->localr[1].to_num());
     if (0 <= num && num < 128) {
         return ngc->alloc_str(static_cast<char>(num));
     } else if (128 <= num && num < 256) {
@@ -506,7 +506,7 @@ var builtin_chr(context* ctx, gc* ngc) {
 }
 
 var builtin_char(context* ctx, gc* ngc) {
-    return ngc->alloc_str(static_cast<unsigned char>(ctx->localr[1].num()));
+    return ngc->alloc_str(static_cast<unsigned char>(ctx->localr[1].to_num()));
 }
 
 var builtin_values(context* ctx, gc* ngc) {
@@ -717,7 +717,7 @@ var builtin_maketimestamp(context* ctx, gc* ngc) {
 
 var builtin_time_stamp(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return nil;
     }
     auto stamp = object.ghost().get<time_stamp>();
@@ -727,7 +727,7 @@ var builtin_time_stamp(context* ctx, gc* ngc) {
 
 var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
     auto stamp = object.ghost().get<time_stamp>();
@@ -736,7 +736,7 @@ var builtin_elapsed_millisecond(context* ctx, gc* ngc) {
 
 var builtin_elapsed_microsecond(context* ctx, gc* ngc) {
     auto object = ctx->localr[1];
-    if (!object.object_check("nasal-time-stamp")) {
+    if (!object.ghost_object_check("nasal-time-stamp")) {
         return var::num(-1);
     }
     auto stamp = object.ghost().get<time_stamp>();

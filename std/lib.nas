@@ -394,7 +394,8 @@ var closure = func(function, level = 1) {
 }
 
 var compile = func(code, filename = "<compile>") {
-    die("this runtime uses static code generator");
+    println("experimental feature: compile");
+    return __compile(code, filename);
 }
 
 # for log print

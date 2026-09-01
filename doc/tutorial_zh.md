@@ -708,7 +708,7 @@ var create_new_ghost(var* args, usize size, gc* ngc) {
 
 var set_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
-    if (!res.object_check(ghost_for_test)) {
+    if (!res.ghost_object_check(ghost_for_test)) {
         std::cout << "set_new_ghost: not ghost for test type.\n";
         return nil;
     }
@@ -721,7 +721,7 @@ var set_new_ghost(var* args, usize size, gc* ngc) {
 var print_new_ghost(var* args, usize size, gc* ngc) {
     var res = args[0];
     // 用自定义类型的名字来检查是否是正确的自定义类型
-    if (!res.object_check(ghost_for_test)) {
+    if (!res.ghost_object_check(ghost_for_test)) {
         std::cout << "print_new_ghost: not ghost for test type.\n";
         return nil;
     }
@@ -743,6 +743,6 @@ var print_new_ghost(var* args, usize size, gc* ngc) {
 
 我们使用下面的这个函数检测是否是正确的自定义类型：
 
-`bool var::object_check(const std::string&);`
+`bool var::ghost_object_check(const std::string&);`
 
 参数是自定义类型的类型名。

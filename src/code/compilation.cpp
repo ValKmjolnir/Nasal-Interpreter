@@ -8,6 +8,7 @@ compilation::compilation(bool enable_limited_mode) {
 
 void compilation::init_native_function(bool limited_mode) {
     load_standard_builtin();
+    load_eval_builtin();
     load_io_builtin();
     load_math_builtin();
     load_bits_builtin();
@@ -57,6 +58,10 @@ void compilation::regist_string(const std::string& str) {
     auto size = const_string_map.size();
     const_string_map[str] = size;
     const_string_table.push_back(str);
+}
+
+void compilation::regist_function(const func_info& func) {
+    const_function_table.push_back(func);
 }
 
 void compilation::regist_global(const std::string& name) {

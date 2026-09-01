@@ -1,4 +1,5 @@
 #include "repl/repl.hpp"
+#include "error/error.hpp"
 #include "lexer/lexer.hpp"
 #include "parse/parse.hpp"
 #include "parse/linker.hpp"
@@ -16,7 +17,7 @@ void repl::add_command_history(const std::string& history) {
         return;
     }
     command_history.push_back(history);
-    if (command_history.size()>1000) {
+    if (command_history.size() > 1000) {
         command_history.pop_front();
     }
 }
@@ -33,7 +34,7 @@ void repl::update_temp_file() {
     for (const auto& i : source) {
         content += i + "\n";
     }
-    info::instance()->repl_file_source = content + " ";
+    virtual_source_registry::instance().regist(repl_file_name, content + " ");
 }
 
 void repl::update_temp_file(const std::vector<std::string>& src) {
@@ -41,13 +42,14 @@ void repl::update_temp_file(const std::vector<std::string>& src) {
     for (const auto& i : src) {
         content += i + "\n";
     }
-    info::instance()->repl_file_source = content + " ";
+    virtual_source_registry::instance().regist(repl_file_name, content + " ");
 }
 
 bool repl::check_need_more_input() {
     while (true) {
         update_temp_file();
-        auto nasal_lexer = std::make_unique<lexer>();
+        auto err = std::make_unique<error>();
+        auto nasal_lexer = std::make_unique<lexer>(*err);
         if (nasal_lexer->scan("<nasal-repl>").geterr()) {
             return false;
         }
@@ -79,7 +81,8 @@ bool repl::check_need_more_input() {
 
 int repl::check_need_more_input(std::vector<std::string>& src) {
     update_temp_file(src);
-    auto nasal_lexer = std::make_unique<lexer>();
+    auto err = std::make_unique<error>();
+    auto nasal_lexer = std::make_unique<lexer>(*err);
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
         return -1;
     }
@@ -115,13 +118,14 @@ void repl::help() {
 }
 
 bool repl::run() {
+    auto err = std::make_unique<error>();
     auto resm = std::make_unique<resource_manager>();
-    auto nasal_lexer = std::make_unique<lexer>();
-    auto nasal_parser = std::make_unique<parse>();
-    auto nasal_linker = std::make_unique<linker>(*resm);
+    auto nasal_lexer = std::make_unique<lexer>(*err);
+    auto nasal_parser = std::make_unique<parse>(*err);
+    auto nasal_linker = std::make_unique<linker>(*err, *resm);
     auto nasal_opt = std::make_unique<optimizer>();
     auto nasal_comp = std::make_unique<compilation>(false);
-    auto nasal_codegen = std::make_unique<codegen>(*nasal_comp, *resm);
+    auto nasal_codegen = std::make_unique<codegen>(*err, *nasal_comp, *resm);
 
     update_temp_file();
     if (nasal_lexer->scan("<nasal-repl>").geterr()) {
@@ -148,7 +152,6 @@ bool repl::run() {
 void repl::execute() {
     source = {};
     // mark we are in repl mode
-    info::instance()->in_repl_mode = true;
     std::cout << "[nasal-repl] Initializating enviroment...\n";
     // run on pass for initializing basic modules, without output
     if (!run()) {
@@ -183,7 +186,8 @@ void repl::execute() {
             continue;
         } else if (line == ".s" || line == ".source") {
             update_temp_file();
-            std::cout << info::instance()->repl_file_source << "\n";
+            const auto* src = virtual_source_registry::instance().get(repl_file_name);
+            std::cout << *src << "\n";
             continue;
         } else if (line[0] == "."[0]) {
             std::cout << "no such command \"" << line;
@@ -207,6 +211,8 @@ void repl::execute() {
 
         std::cout << "\n";
     }
+
+    std::cout << "[nasal-repl] Shutting down...\n";
 }
 
 }
