@@ -122,14 +122,14 @@ const char* get_arch() {
 
 std::string char_to_hex(const char c) {
     const char hextbl[] = "0123456789abcdef";
-    return {hextbl[(c&0xf0)>>4], hextbl[c&0x0f]};
+    return { hextbl[(c & 0xf0) >> 4], hextbl[c & 0x0f] };
 }
 
 std::string rawstr(const std::string& str, const usize maxlen) {
     std::string ret("");
     for (auto i : str) {
         // windows doesn't output unicode normally, so we output the hex
-        if (util::is_windows() && i<=0) {
+        if (util::is_windows() && i <= 0) {
             ret += "\\x" + char_to_hex(i);
             continue;
         }
@@ -149,8 +149,8 @@ std::string rawstr(const std::string& str, const usize maxlen) {
             default:    ret += i;      break;
         }
     }
-    if (maxlen && ret.length()>maxlen) {
-        ret = ret.substr(0, maxlen)+"...";
+    if (maxlen && ret.length() > maxlen) {
+        ret = ret.substr(0, maxlen) + "...";
     }
     return ret;
 }
@@ -173,8 +173,8 @@ static f64 hex_to_f64(const char* str) {
 
 static f64 oct_to_f64(const char* str) {
     f64 ret = 0;
-    while ('0'<=*str && *str<'8') {
-        ret = ret*8+(*str++-'0');
+    while ('0' <= *str && *str < '8') {
+        ret = ret * 8 + (*str++ - '0');
     }
     if (*str) {
         return nan("");
@@ -192,46 +192,52 @@ static f64 oct_to_f64(const char* str) {
 // prepare to use std::from_chars, but macOS supports it from 26.0
 // for compatibility, we continue using this function.
 static f64 dec_to_f64(const char* str) {
-    f64 ret = 0, num_pow = 0;
+    f64 ret = 0;
     bool negative = false;
-    while ('0'<=*str && *str<='9') {
-        ret = ret*10+(*str++-'0');
+    while ('0' <= *str && *str <= '9') {
+        ret = ret * 10 + (*str++ - '0');
     }
     if (!*str) {
         return ret;
     }
-    if (*str=='.') {
+
+    if (*str == '.') {
         if (!*++str) {
             return nan("");
         }
-        num_pow = 0.1;
-        while ('0'<=*str && *str<='9') {
-            ret += num_pow*(*str++-'0');
-            num_pow *= 0.1;
+        i64 frac = 0;
+        i32 fraclen = 0;
+        while ('0' <= *str && *str <= '9') {
+            frac = frac * 10 + (*str++ - '0');
+            fraclen++;
         }
+        ret += frac * std::pow(10.0, -fraclen);
         if (!*str) {
             return ret;
         }
     }
-    if (*str!='e' && *str!='E') {
+
+    if (*str != 'e' && *str != 'E') {
         return nan("");
     }
     if (!*++str) {
         return nan("");
     }
-    if (*str=='-' || *str=='+') {
-        negative = (*str++=='-');
+    if (*str == '-' || *str == '+') {
+        negative = (*str++ == '-');
     }
     if (!*str) {
         return nan("");
     }
-    num_pow = 0;
-    while ('0'<=*str && *str<='9') {
-        num_pow = num_pow*10+(*str++-'0');
+
+    f64 num_pow = 0;
+    while ('0' <= *str && *str <= '9') {
+        num_pow = num_pow * 10 + (*str++ - '0');
     }
     if (*str) {
         return nan("");
     }
+
     return negative
         ? ret * std::pow(10, 1 - num_pow) * 0.1
         : ret * std::pow(10, num_pow - 1) * 10;
@@ -240,16 +246,17 @@ static f64 dec_to_f64(const char* str) {
 f64 str_to_num(const char* str) {
     bool negative = false;
     f64 res = 0;
-    if (*str=='-' || *str=='+') {
-        negative = (*str++=='-');
+    if (*str == '-' || *str == '+') {
+        negative = (*str++ == '-');
     }
     if (!*str) {
         return nan("");
     }
-    if (str[0]=='0' && str[1]=='x') {
-        res = hex_to_f64(str+2);
-    } else if (str[0]=='0' && str[1]=='o') {
-        res = oct_to_f64(str+2);
+
+    if (str[0] == '0' && str[1] == 'x') {
+        res = hex_to_f64(str + 2);
+    } else if (str[0] == '0' && str[1] == 'o') {
+        res = oct_to_f64(str + 2);
     } else {
         res = dec_to_f64(str);
     }

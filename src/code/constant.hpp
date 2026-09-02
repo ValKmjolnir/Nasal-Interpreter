@@ -7,7 +7,6 @@
 
 namespace nasal {
 
-struct func_info;
 class compilation;
 
 class const_value {

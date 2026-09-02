@@ -27,6 +27,8 @@ var _globals = func {
     return _fg_props_globals;
 }
 
+var props = { globals : globals };
+
 var getprop = func(arg...) {
     die("unimplemented");
 }

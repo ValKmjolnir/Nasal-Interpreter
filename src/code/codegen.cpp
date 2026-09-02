@@ -110,20 +110,20 @@ void codegen::emit(u8 op, u32 imm, const span& loc) {
 
 void codegen::number_gen(number_literal* node) {
     f64 num = node->get_number();
-    comp.regist_number(num);
-    emit(op_pnum, comp.number_index(num), node->get_location());
+    auto index = comp.regist_number(num);
+    emit(op_pnum, index, node->get_location());
 }
 
 void codegen::string_gen(string_literal* node) {
     const auto& str = node->get_content();
-    comp.regist_string(str);
-    emit(op_pstr, comp.string_index(str), node->get_location());
+    auto index = comp.regist_string(str);
+    emit(op_pstr, index, node->get_location());
 }
 
 void codegen::bool_gen(bool_literal* node) {
     f64 num = node->get_flag() ? 1 : 0;
-    comp.regist_number(num);
-    emit(op_pnum, comp.number_index(num), node->get_location());
+    auto index = comp.regist_number(num);
+    emit(op_pnum, index, node->get_location());
 }
 
 void codegen::vector_gen(vector_expr* node) {
