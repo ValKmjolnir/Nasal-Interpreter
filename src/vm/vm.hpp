@@ -29,6 +29,7 @@ protected:
     /* constants */
     const f64* const_number = nullptr;
     const std::string* const_string = nullptr;
+    const func_info* func_table = nullptr;
     std::vector<u64> imm; // immediate number table
 
     /* nasal native functions */
@@ -56,11 +57,7 @@ protected:
 
 protected:
     /* vm initializing function */
-    void vm_init_entry(const std::vector<std::string>&,
-                       const std::vector<f64>&,
-                       const std::vector<nasal_builtin_info>&,
-                       const std::vector<opcode>&,
-                       const std::unordered_map<std::string, u32>&,
+    void vm_init_entry(const compilation&,
                        const std::vector<std::string>&,
                        const std::vector<std::string>&);
     void context_and_global_init();
@@ -100,11 +97,11 @@ protected:
     /* vm calculation functions*/
     bool boolify(const var&);
     void set_frame(const nas_func&, var*);
+    void init_function(nas_func&, const func_info&);
 
 protected:
     /* vm operands */
     void o_repl();
-    void o_intl();
     void o_loadg();
     void o_loadl();
     void o_loadu();
@@ -114,11 +111,8 @@ protected:
     void o_pstr();
     void o_newv();
     void o_newh();
-    void o_newf();
+    void o_pushf();
     void o_happ();
-    void o_para();
-    void o_default();
-    void o_dyn();
     void o_lnot();
     void o_usub();
     void o_bnot();
@@ -197,7 +191,6 @@ protected:
     const nasal_vm_func operand_function[op_ret + 1] = {
         nullptr,
         &vm::o_repl,
-        &vm::o_intl,
         &vm::o_loadg,
         &vm::o_loadl,
         &vm::o_loadu,
@@ -207,11 +200,8 @@ protected:
         &vm::o_pstr,
         &vm::o_newv,
         &vm::o_newh,
-        &vm::o_newf,
+        &vm::o_pushf,
         &vm::o_happ,
-        &vm::o_para,
-        &vm::o_default,
-        &vm::o_dyn,
         &vm::o_lnot,
         &vm::o_usub,
         &vm::o_bnot,

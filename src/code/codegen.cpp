@@ -143,26 +143,6 @@ void codegen::hash_gen(hash_expr* node) {
     }
 }
 
-// bool codegen::check_default_const(expr* node) {
-//     if (node->get_type() == expr_type::ast_unary) {
-//         auto un = static_cast<unary_operator*>(node);
-//         if (!check_default_const(un->get_value())) {
-//             die("invalid default parameter, expect number, strin, boolean or function", node);
-//             return false;
-//         }
-//         return true;
-//     }
-//     if (node->get_type() != expr_type::ast_num &&
-//         node->get_type() != expr_type::ast_str &&
-//         node->get_type() != expr_type::ast_bool &&
-//         node->get_type() != expr_type::ast_nil &&
-//         node->get_type() != expr_type::ast_func) {
-//         die("invalid default parameter, expect number, string, boolean or function", node);
-//         return false;
-//     }
-//     return true;
-// }
-
 const_value codegen::const_inner_gen(expr* node) {
     if (node->get_type() == expr_type::ast_func) {
         die("cannot calculate functions", node);
@@ -217,11 +197,10 @@ const_value codegen::const_inner_gen(expr* node) {
 
 const_value codegen::const_gen(expr* node) {
     if (node->get_type() == expr_type::ast_func) {
-        auto index = func_gen(static_cast<function*>(node));
+        auto index = func_gen(static_cast<function*>(node), false);
         return const_value::func(index);
     }
 
-    calc_gen(node);
     if (node->get_type() != expr_type::ast_nil &&
         node->get_type() != expr_type::ast_num &&
         node->get_type() != expr_type::ast_str &&
@@ -234,10 +213,7 @@ const_value codegen::const_gen(expr* node) {
     return const_inner_gen(node);
 }
 
-u64 codegen::func_gen(function* node) {
-    func_info fi;
-
-    // parameter list format check
+void codegen::check_parameter_list(function* node) {
     bool checked_default = false;
     bool checked_dynamic = false;
     std::unordered_map<std::string, bool> argname;
@@ -264,11 +240,18 @@ u64 codegen::func_gen(function* node) {
             argname[name] = true;
         }
     }
+}
+
+u64 codegen::func_gen(function* node, bool need_push) {
+    func_info fi;
+
+    // parameter list format check
+    check_parameter_list(node);
 
     const auto newf = comp.code_size();
-    emit(op_newf, 0, node->get_location());
-    const auto op_intl_index = comp.code_size();
-    emit(op_intl, 0, node->get_location());
+    if (need_push) {
+        emit(op_pushf, 0, node->get_location());
+    }
 
     // add special keyword 'me' into symbol table
     // this symbol is only used in local scope(function's scope)
@@ -287,23 +270,19 @@ u64 codegen::func_gen(function* node) {
         switch (tmp->get_parameter_type()) {
             case parameter::kind::normal_parameter:
                 fi.add_param(name);
-                emit(op_para, comp.string_index(name), tmp->get_location());
                 break;
             case parameter::kind::default_parameter: {
                 auto res = const_gen(tmp->get_default_value());
                 fi.add_default_param(name, res);
-                emit(op_deft, comp.string_index(name), tmp->get_location());
             } break;
             case parameter::kind::dynamic_parameter:
                 fi.add_dynamic_param(name);
-                emit(op_dyn, comp.string_index(name), tmp->get_location());
                 break;
         }
         regist_symbol(name);
     }
 
-    fi.set_entry(comp.code_size() + 1);
-    comp.code_at(newf).num = comp.code_size() + 1; // entry
+    fi.set_entry(comp.code_size() + 1); // entry
     usize jmp_ptr = comp.code_size();
     emit(op_jmp, 0, node->get_location());
 
@@ -336,7 +315,6 @@ u64 codegen::func_gen(function* node) {
     // we must check the local scope symbol list size
     // the local scope should not cause stack overflow
     // and should not greater than or equal to upvalue's max size(65536)
-    comp.code_at(op_intl_index).num = local.back().size();
     fi.set_local_size(local.back().size());
     if (local.back().size() >= VM_STACK_DEPTH ||
         local.back().size() >= UINT16_MAX) {
@@ -354,7 +332,11 @@ u64 codegen::func_gen(function* node) {
     }
     comp.code_at(jmp_ptr).num = comp.code_size();
 
-    return comp.regist_function(fi);
+    auto index = comp.regist_function(fi);
+    if (need_push) {
+        comp.code_at(newf).num = index;
+    }
+    return index;
 }
 
 void codegen::call_gen(call_expr* node) {
@@ -1281,7 +1263,7 @@ void codegen::calc_gen(expr* node) {
         case expr_type::ast_hash:
             hash_gen(reinterpret_cast<hash_expr*>(node)); break;
         case expr_type::ast_func:
-            func_gen(reinterpret_cast<function*>(node)); break;
+            func_gen(reinterpret_cast<function*>(node), true); break;
         case expr_type::ast_call:
             call_gen(reinterpret_cast<call_expr*>(node)); break;
         case expr_type::ast_assign:
@@ -1489,7 +1471,7 @@ void codegen::print(std::ostream& out) {
         if (!func_end_stack.empty() && i == func_end_stack.top()) {
             out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
             // avoid two empty lines
-            if (c.op != op_newf) {
+            if (c.op != op_pushf) {
                 out << "\n";
             }
             func_begin_stack.pop();
@@ -1497,7 +1479,7 @@ void codegen::print(std::ostream& out) {
         }
 
         // get function begin index and end index
-        if (c.op == op_newf) {
+        if (c.op == op_pushf) {
             out << std::hex << "\nfunc <0x" << i << std::dec << " @ ";
             out << resm.get_ordered_file_list()[c.fidx] << ":" << c.line;
             out << ">:\n";

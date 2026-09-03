@@ -14,7 +14,6 @@ namespace nasal {
 enum opcode_type: u8 {
     op_exit,    // stop the virtual machine
     op_repl,    // in repl mode: print value on stack top
-    op_intl,    // local scope size
     op_loadg,   // load global value
     op_loadl,   // load local value
     op_loadu,   // load upvalue
@@ -24,11 +23,8 @@ enum opcode_type: u8 {
     op_pstr,    // push constant std::string to the stack
     op_newv,    // push new vector with initial values from stack
     op_newh,    // push new hash to the stack
-    op_newf,    // push new function to the stack
+    op_pushf,   // push new function to the stack
     op_happ,    // hash append
-    op_para,    // normal  parameter
-    op_deft,    // default parameter
-    op_dyn,     // dynamic parameter
     op_lnot,    // ! logical negation
     op_usub,    // - negation
     op_bnot,    // ~ bitwise not static_cast<i32>

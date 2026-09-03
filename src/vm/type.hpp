@@ -250,7 +250,7 @@ struct nas_hash {
 };
 
 struct nas_func {
-    i64 dynamic_parameter_index; // dynamic parameter name index in hash.
+    i64 dynamic_parameter_index; // dynamic param position
     u64 entry; // pc will set to entry-1 to call this function
     u32 parameter_size; // used to load default parameters to a new function
     u64 local_size; // used to expand memory space for local values on stack

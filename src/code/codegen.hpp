@@ -68,7 +68,8 @@ private:
     void hash_gen(hash_expr*);
     const_value const_inner_gen(expr*);
     const_value const_gen(expr*);
-    u64 func_gen(function*);
+    void check_parameter_list(function*);
+    u64 func_gen(function*, bool);
     void call_gen(call_expr*);
     void call_identifier(identifier*);
     void call_hash_gen(call_hash*);

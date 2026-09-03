@@ -110,10 +110,9 @@ void codestream::dump(std::ostream& out, const codestream_dump& cd) const {
         case op_newv:
         case op_callfv:
         case op_repl:
-        case op_intl:
         case op_findex:
         case op_feach:
-        case op_newf:
+        case op_pushf:
         case op_jmp:
         case op_jt:
         case op_jf:
@@ -143,9 +142,6 @@ void codestream::dump(std::ostream& out, const codestream_dump& cd) const {
         case op_lnkc:
         case op_callh:
         case op_mcallh:
-        case op_para:
-        case op_deft:
-        case op_dyn:
             out << hex << "0x" << num << dec;
             out << " (\"" << util::rawstr(const_string[num], 32) << "\")";
             break;

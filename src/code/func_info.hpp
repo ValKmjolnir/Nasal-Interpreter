@@ -13,10 +13,11 @@ namespace nasal {
 class compilation;
 
 struct func_info {
-    i64 dynamic_parameter_index = -1; // dynamic param index in hash.
-    u64 entry;                        // pc will set to entry-1 to call this function
-    u32 parameter_size;               // used to load default parameters to a new function
-    u64 local_size;                   // used to expand memory space for local values on stack
+    i64 dynamic_parameter_index = -1; // dynamic param position
+    u64 entry = 0;                    // pc will set to entry-1 to call this function
+    u32 parameter_size = 1;           // used to load default parameters to a new function
+                                      // starts from 1, for index 0 is reserved for 'me'
+    u64 local_size = 0;               // used to expand memory space for local values on stack
 
     // parameter table, u32 begins from 1
     util::densemap<std::string, u32> param_index_map;
@@ -25,7 +26,7 @@ struct func_info {
     std::vector<const_value> default_param_values;
 
     // dynamic param name
-    std::string dynamic_parameter_name;
+    std::string dynamic_parameter_name = "";
 
 public:
     void dump(std::ostream&, const compilation&) const;
@@ -37,6 +38,7 @@ public:
         param_index_map.insert(p, param_table.size());
         default_param_flags.push_back(0);
         default_param_values.push_back(const_value::nil());
+        ++parameter_size;
     }
     void add_default_param(const std::string& p, const_value v = const_value::nil()) {
         param_table.push_back(p);
@@ -44,6 +46,7 @@ public:
         param_index_map.insert(p, param_table.size());
         default_param_flags.push_back(1);
         default_param_values.push_back(v);
+        ++parameter_size;
     }
     void add_dynamic_param(const std::string& p) {
         // if called, make sure it is called after all parameters are loaded

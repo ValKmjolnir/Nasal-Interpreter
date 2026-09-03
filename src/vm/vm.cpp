@@ -6,21 +6,18 @@
 
 namespace nasal {
 
-void vm::vm_init_entry(const std::vector<std::string>& strs,
-                       const std::vector<f64>& nums,
-                       const std::vector<nasal_builtin_info>& natives,
-                       const std::vector<opcode>& code,
-                       const std::unordered_map<std::string, u32>& global_symbol,
+void vm::vm_init_entry(const compilation& comp,
                        const std::vector<std::string>& filenames,
                        const std::vector<std::string>& argv) {
-    const_number = nums.data();
-    const_string = strs.data();
-    bytecode = code.data();
+    const_number = comp.get_number_table().data();
+    const_string = comp.get_string_table().data();
+    func_table = comp.get_function_table().data();
+    bytecode = comp.get_code().data();
     files = filenames.data();
-    global_size = global_symbol.size();
+    global_size = comp.get_globals().size();
 
     /* set native functions */
-    native_function = natives;
+    native_function = comp.get_native_functions();
 
     /* set context and global */
     if (!is_repl_mode || first_exec_flag) {
@@ -30,20 +27,20 @@ void vm::vm_init_entry(const std::vector<std::string>& strs,
 
     /* init gc */
     ngc.set(&ctx, global, global_size);
-    ngc.init(strs, argv);
+    ngc.init(comp.get_string_table(), argv);
 
     /* init vm globals */
     auto map_instance = ngc.alloc(gc_type::gc_map);
-    global_symbol_name.resize(global_symbol.size());
-    global[global_symbol.at("globals")] = map_instance;
-    for (const auto& i : global_symbol) {
+    global_symbol_name.resize(comp.get_globals().size());
+    global[comp.get_globals().at("globals")] = map_instance;
+    for (const auto& i : comp.get_globals()) {
         map_instance.map().mapper[i.first] = global + i.second;
         global_symbol_name[i.second] = i.first;
     }
 
     /* init vm arg */
     auto arg_instance = ngc.alloc(gc_type::gc_vec);
-    global[global_symbol.at("arg")] = arg_instance;
+    global[comp.get_globals().at("arg")] = arg_instance;
     arg_instance.vec().elems = ngc.env_argv;
 }
 
@@ -454,7 +451,7 @@ std::string vm::report_lack_arguments(u32 argc, const nas_func& func) const {
     }
     if (func.dynamic_parameter_index>=0) {
         result += argument_list.size()? ", ":"";
-        result += const_string[func.dynamic_parameter_index] + "[dynamic]";
+        result += func.dynamic_parameter_name + "[dynamic]";
     }
     result += ") ";
     std::stringstream out;
@@ -598,6 +595,66 @@ void vm::set_frame(const nas_func& func, var* local) {
     ctx.upvalr = nil;
 }
 
+void vm::init_function(nas_func& func, const func_info& info) {
+    func.entry = info.entry;
+
+    func.local_size = info.local_size;
+    func.local.resize(func.local_size, nil);
+
+    func.parameter_size = info.parameter_size;
+    func.param_index_map = info.param_index_map;
+
+    func.dynamic_parameter_index = info.dynamic_parameter_index;
+    func.dynamic_parameter_name = info.dynamic_parameter_name;
+
+    for (size_t i = 0; i < info.default_param_flags.size(); ++i) {
+        if (info.default_param_flags[i] == 0) {
+            // normal parameter, mark as undefined so a missing
+            // argument can be detected at call time
+            func.local[i + 1] = var::none();
+            continue;
+        }
+        auto value = info.default_param_values[i];
+        switch (value.get_type()) {
+            case const_value::type::CONST_NIL:
+                func.local[i + 1] = nil;
+                break;
+            case const_value::type::CONST_NUM:
+                func.local[i + 1] = var::num(const_number[value.get_index()]);
+                break;
+            case const_value::type::CONST_STR:
+                func.local[i + 1] = ngc.strs[value.get_index()];
+                break;
+            case const_value::type::CONST_FUNC:
+                func.local[i + 1] = ngc.alloc(gc_type::gc_func);
+                init_function(func.local[i + 1].func(), func_table[value.get_index()]);
+                break;
+            default:
+                func.local[i + 1] = var::none();
+                break;
+        }
+    }
+
+    /* this means you create a new function in local scope */
+    if (ctx.localr) {
+        // copy upval scope list from upper level function
+        func.upval = ctx.funcr.func().upval;
+
+        // function created in the same local scope shares same closure
+        var upval = (ctx.upvalr.is_nil())
+            ? ngc.alloc(gc_type::gc_upval)
+            : ctx.upvalr;
+        // if no upval scope exists, now it's time to create one
+        if (ctx.upvalr.is_nil()) {
+            upval.upval().size = ctx.funcr.func().local_size;
+            upval.upval().stack_frame_offset = ctx.localr;
+            ctx.upvalr = upval;
+        }
+
+        func.upval.push_back(upval);
+    }
+}
+
 void vm::o_repl() {
     // reserved for repl mode stack top value output
     // set allow_repl_output flag to true after initializing vm
@@ -605,11 +662,6 @@ void vm::o_repl() {
     if (allow_repl_output) {
         std::cout << ctx.top[0] << "\n";
     }
-}
-
-void vm::o_intl() {
-    ctx.top[0].func().local.resize(imm[ctx.pc], nil);
-    ctx.top[0].func().local_size = imm[ctx.pc];
 }
 
 void vm::o_loadg() {
@@ -659,55 +711,15 @@ void vm::o_newh() {
     (++ctx.top)[0] = ngc.alloc(gc_type::gc_hash);
 }
 
-void vm::o_newf() {
+void vm::o_pushf() {
     (++ctx.top)[0] = ngc.alloc(gc_type::gc_func);
     auto& func = ctx.top[0].func();
-    func.entry = imm[ctx.pc];
-    func.parameter_size = 1;
-
-    /* this means you create a new function in local scope */
-    if (ctx.localr) {
-        // copy upval scope list from upper level function
-        func.upval = ctx.funcr.func().upval;
-
-        // function created in the same local scope shares same closure
-        var upval = (ctx.upvalr.is_nil())
-            ? ngc.alloc(gc_type::gc_upval)
-            : ctx.upvalr;
-        // if no upval scope exists, now it's time to create one
-        if (ctx.upvalr.is_nil()) {
-            upval.upval().size = ctx.funcr.func().local_size;
-            upval.upval().stack_frame_offset = ctx.localr;
-            ctx.upvalr = upval;
-        }
-
-        func.upval.push_back(upval);
-    }
+    init_function(func, func_table[imm[ctx.pc]]);
 }
 
 void vm::o_happ() {
     ctx.top[-1].hash().elems[const_string[imm[ctx.pc]]] = ctx.top[0];
     --ctx.top;
-}
-
-void vm::o_para() {
-    auto& func = ctx.top[0].func();
-    // func->size has 1 place reserved for "me"
-    func.param_index_map[const_string[imm[ctx.pc]]] = func.parameter_size;
-    func.local[func.parameter_size++] = var::none();
-}
-
-void vm::o_default() {
-    var val = ctx.top[0];
-    auto& func = (--ctx.top)[0].func();
-    // func->size has 1 place reserved for "me"
-    func.param_index_map[const_string[imm[ctx.pc]]] = func.parameter_size;
-    func.local[func.parameter_size++] = val;
-}
-
-void vm::o_dyn() {
-    ctx.top[0].func().dynamic_parameter_index = imm[ctx.pc];
-    ctx.top[0].func().dynamic_parameter_name = const_string[imm[ctx.pc]];
 }
 
 void vm::o_lnot() {
@@ -1228,7 +1240,7 @@ void vm::o_callfh() {
     // dynamic parameter is not allowed in this kind of function call
     if (func.dynamic_parameter_index>=0) {
         die("special call cannot use dynamic argument \"" +
-            const_string[func.dynamic_parameter_index] + "\""
+            func.dynamic_parameter_name + "\""
         );
         return;
     }
@@ -1481,15 +1493,7 @@ void vm::o_ret() {
 void vm::run(const compilation& comp,
              const resource_manager& resm,
              const std::vector<std::string>& argv) {
-    vm_init_entry(
-        comp.get_string_table(),
-        comp.get_number_table(),
-        comp.get_native_functions(),
-        comp.get_code(),
-        comp.get_globals(),
-        resm.get_ordered_file_list(),
-        argv
-    );
+    vm_init_entry( comp, resm.get_ordered_file_list(), argv);
 
 #ifndef _MSC_VER
 
@@ -1504,7 +1508,6 @@ void vm::run(const compilation& comp,
     const void* oprs[] = {
         &&vmexit,
         &&repl,
-        &&intl,
         &&loadg,
         &&loadl,
         &&loadu,
@@ -1514,11 +1517,8 @@ void vm::run(const compilation& comp,
         &&pstr,
         &&newv,
         &&newh,
-        &&newf,
+        &&pushf,
         &&happ,
-        &&para,
-        &&deft,
-        &&dyn,
         &&lnot,
         &&usub,
         &&bnot,
@@ -1649,7 +1649,6 @@ vmexit:
 }
 
 repl:   exec_nodie(o_repl  ); // 0
-intl:   exec_nodie(o_intl  ); // -0
 loadg:  exec_nodie(o_loadg ); // -1
 loadl:  exec_nodie(o_loadl ); // -1
 loadu:  exec_nodie(o_loadu ); // -1
@@ -1659,11 +1658,8 @@ pnil:   exec_check(o_pnil  ); // +1
 pstr:   exec_check(o_pstr  ); // +1
 newv:   exec_check(o_newv  ); // +1-imm[pc]
 newh:   exec_check(o_newh  ); // +1
-newf:   exec_check(o_newf  ); // +1
+pushf:  exec_check(o_pushf ); // +1
 happ:   exec_nodie(o_happ  ); // -1
-para:   exec_nodie(o_para  ); // -0
-deft:   exec_nodie(o_default); // -1
-dyn:    exec_nodie(o_dyn   ); // -0
 lnot:   exec_nodie(o_lnot  ); // -0
 usub:   exec_nodie(o_usub  ); // -0
 bnot:   exec_nodie(o_bnot  ); // -0

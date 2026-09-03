@@ -258,15 +258,7 @@ void dbg::run(const compilation& comp,
     const auto& file_list = resm.get_ordered_file_list();
     file_list_size = file_list.size();
 
-    vm_init_entry(
-        comp.get_string_table(),
-        comp.get_number_table(),
-        comp.get_native_functions(),
-        comp.get_code(),
-        comp.get_globals(),
-        file_list,
-        argv
-    );
+    vm_init_entry(comp, file_list, argv);
     counter.init(file_list);
 
     std::vector<u8> code;
@@ -291,9 +283,9 @@ void dbg::run(const compilation& comp,
 
     counter.dump_operand_count();
     if (do_operand_count) {
-        show_all_prof_result?
-            counter.dump_all_code_line_counter(std::clog):
-            counter.dump_this_file_line_counter(std::clog);
+        show_all_prof_result
+            ? counter.dump_all_code_line_counter(std::clog)
+            : counter.dump_this_file_line_counter(std::clog);
     }
     ngc.status.dump_info();
     ngc.clear();
