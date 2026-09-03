@@ -263,4 +263,8 @@ f64 str_to_num(const char* str) {
     return negative ? -res : res;
 }
 
+f64 str_to_num(const std::string& str) {
+    return str_to_num(str.c_str());
+}
+
 }

@@ -6,6 +6,7 @@
 #include <windows.h>
 #endif
 
+#include <string>
 #include <cstring>
 #include <sstream>
 
@@ -28,6 +29,7 @@ const char* get_arch();
 std::string char_to_hex(const char);
 std::string rawstr(const std::string&, const usize maxlen = 0);
 f64 str_to_num(const char*);
+f64 str_to_num(const std::string&);
 
 class windows_code_page_manager {
 private:

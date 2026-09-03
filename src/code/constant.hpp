@@ -31,6 +31,10 @@ public:
     static const_value num(u64 i) { return const_value(type::CONST_NUM, i); }
     static const_value str(u64 i) { return const_value(type::CONST_STR, i); }
     static const_value func(u64 i) { return const_value(type::CONST_FUNC, i); }
+
+public:
+    type get_type() const { return type_; }
+    u64 get_index() const { return index_; }
     void dump(std::ostream&, const compilation&) const;
 };
 

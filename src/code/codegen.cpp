@@ -143,24 +143,95 @@ void codegen::hash_gen(hash_expr* node) {
     }
 }
 
-bool codegen::check_default_const(expr* node) {
-    if (node->get_type() == expr_type::ast_unary) {
-        auto un = static_cast<unary_operator*>(node);
-        if (!check_default_const(un->get_value())) {
-            die("invalid default parameter, expect number, strin, boolean or function", node);
-            return false;
-        }
-        return true;
+// bool codegen::check_default_const(expr* node) {
+//     if (node->get_type() == expr_type::ast_unary) {
+//         auto un = static_cast<unary_operator*>(node);
+//         if (!check_default_const(un->get_value())) {
+//             die("invalid default parameter, expect number, strin, boolean or function", node);
+//             return false;
+//         }
+//         return true;
+//     }
+//     if (node->get_type() != expr_type::ast_num &&
+//         node->get_type() != expr_type::ast_str &&
+//         node->get_type() != expr_type::ast_bool &&
+//         node->get_type() != expr_type::ast_nil &&
+//         node->get_type() != expr_type::ast_func) {
+//         die("invalid default parameter, expect number, string, boolean or function", node);
+//         return false;
+//     }
+//     return true;
+// }
+
+const_value codegen::const_inner_gen(expr* node) {
+    if (node->get_type() == expr_type::ast_func) {
+        die("cannot calculate functions", node);
+        return const_value::nil();
+    } else if (node->get_type() == expr_type::ast_nil) {
+        return const_value::nil();
+    } else if (node->get_type() == expr_type::ast_num) {
+        auto n = static_cast<number_literal*>(node);
+        auto index = comp.regist_number(n->get_number());
+        return const_value::num(index);
+    } else if (node->get_type() == expr_type::ast_str) {
+        auto n = static_cast<string_literal*>(node);
+        auto index = comp.regist_string(n->get_content());
+        return const_value::str(index);
+    } else if (node->get_type() == expr_type::ast_bool) {
+        auto n = static_cast<bool_literal*>(node);
+        auto index = comp.regist_number(n->get_flag() ? 1.0 : 0.0);
+        return const_value::num(index);
     }
-    if (node->get_type() != expr_type::ast_num &&
+
+    if (node->get_type() != expr_type::ast_unary) {
+        die("invalid default value, expect nil, number, string or boolean here", node);
+        return const_value::nil();
+    }
+
+    auto n = static_cast<unary_operator*>(node);
+    auto inner = const_inner_gen(n->get_value());
+    f64 num = 0;
+    switch (inner.get_type()) {
+        case const_value::type::CONST_NIL: num = 0.0; break;
+        case const_value::type::CONST_NUM:
+            num = comp.get_number_table().at(inner.get_index());
+            break;
+        case const_value::type::CONST_STR:
+            num = util::str_to_num(comp.get_string_table().at(inner.get_index()));
+            break;
+        default:
+            die("invalid default value, expect nil, number, string or boolean here", node);
+            return const_value::nil();
+    }
+
+    if (n->get_operator_type() == unary_operator::kind::negative) {
+        num = -num;
+    } else if (n->get_operator_type() == unary_operator::kind::bitwise_not) {
+        num = static_cast<f64>(~static_cast<i32>(num));
+    } else if (n->get_operator_type() == unary_operator::kind::logical_not) {
+        num = num == 0.0 ? 1.0 : 0.0;
+    }
+    auto index = comp.regist_number(num);
+    return const_value::num(index);
+}
+
+const_value codegen::const_gen(expr* node) {
+    if (node->get_type() == expr_type::ast_func) {
+        auto index = func_gen(static_cast<function*>(node));
+        return const_value::func(index);
+    }
+
+    calc_gen(node);
+    if (node->get_type() != expr_type::ast_nil &&
+        node->get_type() != expr_type::ast_num &&
         node->get_type() != expr_type::ast_str &&
         node->get_type() != expr_type::ast_bool &&
-        node->get_type() != expr_type::ast_nil &&
-        node->get_type() != expr_type::ast_func) {
-        die("invalid default parameter, expect number, string, boolean or function", node);
-        return false;
+        node->get_type() != expr_type::ast_unary) {
+        die("invalid default value, expect nil, number, string or boolean here", node);
+        return const_value::nil();
     }
-    return true;
+
+    return const_inner_gen(node);
 }
 
 u64 codegen::func_gen(function* node) {
@@ -196,7 +267,7 @@ u64 codegen::func_gen(function* node) {
 
     const auto newf = comp.code_size();
     emit(op_newf, 0, node->get_location());
-    const auto lsize = comp.code_size();
+    const auto op_intl_index = comp.code_size();
     emit(op_intl, 0, node->get_location());
 
     // add special keyword 'me' into symbol table
@@ -218,12 +289,11 @@ u64 codegen::func_gen(function* node) {
                 fi.add_param(name);
                 emit(op_para, comp.string_index(name), tmp->get_location());
                 break;
-            case parameter::kind::default_parameter:
-                check_default_const(tmp->get_default_value());
-                calc_gen(tmp->get_default_value());
-                fi.add_default_param(name);
+            case parameter::kind::default_parameter: {
+                auto res = const_gen(tmp->get_default_value());
+                fi.add_default_param(name, res);
                 emit(op_deft, comp.string_index(name), tmp->get_location());
-                break;
+            } break;
             case parameter::kind::dynamic_parameter:
                 fi.add_dynamic_param(name);
                 emit(op_dyn, comp.string_index(name), tmp->get_location());
@@ -266,7 +336,7 @@ u64 codegen::func_gen(function* node) {
     // we must check the local scope symbol list size
     // the local scope should not cause stack overflow
     // and should not greater than or equal to upvalue's max size(65536)
-    comp.code_at(lsize).num = local.back().size();
+    comp.code_at(op_intl_index).num = local.back().size();
     fi.set_local_size(local.back().size());
     if (local.back().size() >= VM_STACK_DEPTH ||
         local.back().size() >= UINT16_MAX) {
