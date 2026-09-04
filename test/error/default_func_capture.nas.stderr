@@ -1,0 +1,5 @@
+code: undefined symbol "a"
+  --> test/error/default_func_capture.nas:3:38
+3 | var f1 = func(a, g = func() { return a; }) {
+  |                                      ^
+

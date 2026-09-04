@@ -234,6 +234,9 @@ void codegen::check_parameter_list(function* node) {
         }
         // check redefinition
         const auto& name = tmp->get_parameter_name();
+        if (name == "me") {
+            die("\"me\" should not be parameter", tmp);
+        }
         if (argname.count(name)) {
             die("redefinition of parameter: " + name, tmp);
         } else {
@@ -253,19 +256,11 @@ u64 codegen::func_gen(function* node, bool need_push) {
         emit(op_pushf, 0, node->get_location());
     }
 
-    // add special keyword 'me' into symbol table
-    // this symbol is only used in local scope(function's scope)
-    // this keyword is set to nil as default value
-    // after calling a hash, this keyword is set to this hash
-    // this symbol's index will be 0
-    local.push_back({{"me", 0}});
-
-    // generate parameter list
+    // generate default values
+    std::vector<std::string> param_list;
     for (auto tmp : node->get_parameter_list()) {
         const auto& name = tmp->get_parameter_name();
-        if (name == "me") {
-            die("\"me\" should not be parameter", tmp);
-        }
+        param_list.push_back(name);
         comp.regist_string(name);
         switch (tmp->get_parameter_type()) {
             case parameter::kind::normal_parameter:
@@ -279,6 +274,15 @@ u64 codegen::func_gen(function* node, bool need_push) {
                 fi.add_dynamic_param(name);
                 break;
         }
+    }
+
+    // add special keyword 'me' into symbol table
+    // this symbol is only used in local scope(function's scope)
+    // this keyword is set to nil as default value
+    // after calling a hash, this keyword is set to this hash
+    // this symbol's index will be 0
+    local.push_back({{"me", 0}});
+    for (const auto& name : param_list) {
         regist_symbol(name);
     }
 
@@ -295,11 +299,11 @@ u64 codegen::func_gen(function* node, bool need_push) {
     // add special varibale "arg", which is used to store overflowed args
     // but if dynamic parameter is declared, this variable will be useless
     // for example:
-    //     var f = func(a) {print(arg)}
+    //     var f = func(a) { print(arg) }
     //     f(1, 2, 3);
     // then the arg is [2, 3], because 1 is accepted by "a"
     // so in fact "f" is the same as:
-    //     var f = func(a, arg...) {return(arg)}
+    //     var f = func(a, arg...) { return(arg) }
     auto arg = std::string("arg");
     // this is used to avoid confliction with defined parameter
     while (local_symbol_find(arg) >= 0) {

@@ -1,6 +1,6 @@
-use c;
-use a;
-use b;
+use self_ref_c;
+use self_ref_a;
+use self_ref_b;
 
 println(a);
 println(b);
