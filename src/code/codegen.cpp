@@ -252,6 +252,7 @@ u64 codegen::func_gen(function* node, bool need_push) {
     check_parameter_list(node);
 
     const auto newf = comp.code_size();
+    const auto segment_begin = comp.code_size();
     if (need_push) {
         emit(op_pushf, 0, node->get_location());
     }
@@ -335,6 +336,9 @@ u64 codegen::func_gen(function* node, bool need_push) {
         emit(op_ret, 0, block->get_location());
     }
     comp.code_at(jmp_ptr).num = comp.code_size();
+
+    const auto segment_end = comp.code_size();
+    fi.set_segment(need_push ? segment_begin : jmp_ptr, segment_end);
 
     auto index = comp.regist_function(fi);
     if (need_push) {
@@ -1435,9 +1439,8 @@ const error& codegen::compile(code_block* tree, bool repl_flag) {
 }
 
 void codegen::print(std::ostream& out) {
-    // func end stack, reserved for code print
-    std::stack<u64> func_begin_stack;
-    std::stack<u64> func_end_stack;
+    std::unordered_map<u64, const func_info*> segment_begins;
+    std::unordered_map<u64, u64> segment_ends;
 
     // print const numbers
     for (auto num : comp.get_number_table()) {
@@ -1454,6 +1457,12 @@ void codegen::print(std::ostream& out) {
         out << "  .function ";
         func.dump(out, comp);
         out << "\n";
+
+        segment_begins.insert({ func.get_segment_begin(), &func });
+        segment_ends.insert({
+            func.get_segment_end(),
+            func.get_segment_begin()
+        });
     }
 
     // print blank line
@@ -1472,28 +1481,23 @@ void codegen::print(std::ostream& out) {
     for (u64 i = 0; i < comp.code_size(); ++i) {
         // print opcode index, opcode name, opcode immediate number
         const auto& c = comp.code_at(i);
-        if (!func_end_stack.empty() && i == func_end_stack.top()) {
-            out << std::hex << "<0x" << func_begin_stack.top() << std::dec << ">;\n";
+        if (segment_ends.count(i)) {
+            out << std::hex << "<0x" << segment_ends.at(i) << std::dec << ">;\n";
             // avoid two empty lines
-            if (c.op != op_pushf) {
+            if (!segment_begins.count(i)) {
                 out << "\n";
             }
-            func_begin_stack.pop();
-            func_end_stack.pop();
         }
 
         // get function begin index and end index
-        if (c.op == op_pushf) {
+        if (segment_begins.count(i)) {
             out << std::hex << "\nfunc <0x" << i << std::dec << " @ ";
             out << resm.get_ordered_file_list()[c.fidx] << ":" << c.line;
             out << ">:\n";
-            for (u64 j = i; j < comp.code_size(); ++j) {
-                if (comp.code_at(j).op == op_jmp) {
-                    func_begin_stack.push(i);
-                    func_end_stack.push(comp.code_at(j).num);
-                    break;
-                }
-            }
+
+            out << "  -> ";
+            segment_begins.at(i)->dump(out, comp);
+            out << "\n";
         }
 
         // output bytecode
